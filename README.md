@@ -5,10 +5,10 @@ This project aims to provide an adapter that when used will expose a wii guitar 
 
 # How to use this repo
 ## You will need:
-An Arduino with USB hid compatibility and 3.3v compatibility (pro micro recommended)
-A wii extension cable or breakout board
-A gravity switch
-A 2 pin connector (optional)
+1. An Arduino with USB hid compatibility and 3.3v compatibility (pro micro recommended)
+2. A wii extension cable or breakout board
+3. A gravity switch
+4. A 2 pin connector (optional)
 
 ## Setting up an Arduino IDE
 It is recommended to set aside a separate Arduino IDE for this project, as LUFA will overwrite many core Arduino USB files, and as a result will lead to some issues with other sketches.

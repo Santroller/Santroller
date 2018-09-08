@@ -1,7 +1,7 @@
-# Wiitar Xbox360 Adapter
+# Wii Xbox360 Adapter
 ![adaptor.jpg](adaptor.jpg)
 
-This project aims to provide an adapter that when used will expose a wii guitar hero controller as an xbox 360 controller, so that games such as Clone Hero can immediately use these controllers without calibration.
+This project aims to provide an adapter that when used will expose a wii guitar hero controller as an xbox 360 controller, so that games such as Clone Hero can immediately use these controllers without calibration. Note that this does not take care of authentication, so your controllers will not work on a real xbox 360.
 
 # How to use this repo
 ## You will need:
@@ -23,3 +23,8 @@ It is recommended to set aside a separate Arduino IDE for this project, as LUFA 
 1. Find the I2C pins on your Arduino, and connect them to the extension / breakout board. Also connect ground to ground and 3.3v to 3.3v on the Arduino.
 2. Connect the gravity switch between digital pin 4 and ground. Optionally put some sort of connector between the gravity switch and the Arduino if you would like this to be easily removable.
 3. Use double sided tape to adhere the gravity switch to the guitar. Note that the angle the switch is mounted can be used to calibrate when the switch activates, and so it is useful to open some tool that allows you to visualise the right joystick Y axis in order to calibrate this in a way that suits you.
+
+## Used projects:
+https://github.com/bootsector/XInputPadMicro/
+https://github.com/Palatis/Arduino-Lufa
+https://github.com/dmadison/NintendoExtensionCtrl

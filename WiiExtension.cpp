@@ -5,7 +5,9 @@ extern "C" {
 }
 void WiiExtension::setup() {
     extension.begin();
-    extension.connect();
+    while (!extension.connect()) {
+      delay(1000);
+    }
 }
 void WiiExtension::read_controller(WiiController* controller) {
     boolean success = extension.update();

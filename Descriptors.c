@@ -238,7 +238,7 @@ const USB_Descriptor_String_t PROGMEM ProductString =
 {
 	.Header                 = {.Size = USB_STRING_LEN(31), .Type = DTYPE_String},
 
-	.UnicodeString          = L"Wii Guitar Hero Controller"
+	.UnicodeString          = L"Wii Controller Xbox Adaptor"
 };
 
 const USB_Descriptor_String_t PROGMEM VersionString =

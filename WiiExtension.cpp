@@ -62,8 +62,8 @@ void WiiExtension::read_controller(WiiController* controller) {
             controller->l_y = (classic.leftJoyY()-32)*1024;
             controller->r_x = (classic.rightJoyX()-16)*2048;
             controller->r_y = (classic.rightJoyY()-16)*2048;
-            controller->lt = (classic.triggerL()-16)*2048;
-            controller->rt = (classic.triggerR()-16)*2048;
+            controller->lt = (classic.triggerL()-16)*16;
+            controller->rt = (classic.triggerR()-16)*16;
             bit_write(classic.dpadUp(), controller->digital_buttons_1, XBOX_DPAD_UP);
             bit_write(classic.dpadDown(), controller->digital_buttons_1, XBOX_DPAD_DOWN);
             bit_write(classic.dpadLeft(), controller->digital_buttons_1, XBOX_DPAD_LEFT);

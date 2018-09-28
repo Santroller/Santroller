@@ -61,7 +61,10 @@ void WiiExtension::read_controller(WiiController* controller) {
             yAng = map(yRead, yMinVal, yMaxVal, -90, 90);
             
             z = RAD_TO_DEG * (atan2(-yAng, -xAng) + PI);
-            t = (((z*512))-28000)*-4;
+            t = (((z*512))-28000)*-1;
+            if (t > 1) {
+              t = pow(t,1.1f);
+            }
             t = max(t, -32767);
             t = min(t, 32767);
             controller->r_y = (int)t;

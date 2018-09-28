@@ -60,13 +60,12 @@ void WiiExtension::read_controller(WiiController* controller) {
             xAng = map(xRead, xMinVal, xMaxVal, -90, 90);
             yAng = map(yRead, yMinVal, yMaxVal, -90, 90);
             
-            z = RAD_TO_DEG * (atan2(-yAng, -xAng) + PI);
-            t = (((z*512))-28000)*-1;
-            if (t > 1) {
-              t = pow(t,1.1f);
+            z = RAD_TO_DEG * ((atan2(-yAng, -xAng) + PI)-1);
+            t = z*-512;
+            if (t > 0) {
+              t = pow(t,1.15f);
             }
-            t = max(t, -32767);
-            t = min(t, 32767);
+            t = constrain(t, -32767, 32767);
             controller->r_y = (int)t;
             bit_write(guitar.strumUp() || guitar.joyY()>40, controller->digital_buttons_1, XBOX_DPAD_UP);
             bit_write(guitar.strumDown() || guitar.joyY()<20, controller->digital_buttons_1, XBOX_DPAD_DOWN);

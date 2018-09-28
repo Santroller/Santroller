@@ -13,6 +13,10 @@ void setup()
   bit_set(MCUCR, 1 << JTD);
   pinMode(4, INPUT_PULLUP); 
   controller.setup();
+  pinMode(21, OUTPUT);
+  pinMode(15, OUTPUT);
+  digitalWrite(21, HIGH);
+  digitalWrite(15, LOW);
 }
 void loop()
 {

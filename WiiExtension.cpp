@@ -3,6 +3,7 @@ extern "C" {
   #include "XInputPad.h"
   #include "util.h"
 }
+#define zero_acc 512
 void WiiExtension::setup() {
     extension.begin();
 }
@@ -13,9 +14,6 @@ void WiiExtension::read_controller(WiiController* controller) {
         return;
     }
     ExtensionType conType = extension.getConnectedID();
-    float VREF = 3.5;
-    int xMinVal = 265; int yMinVal = 259;int zMinVal = 281;
-    int xMaxVal = 398; int yMaxVal = 393;int zMaxVal = 413;
     
     int xRead=0, yRead=0, zRead=0;
     int xAng=0, yAng=0, zAng=0;
@@ -48,7 +46,7 @@ void WiiExtension::read_controller(WiiController* controller) {
         break;
         case(ExtensionType::GuitarController):
             controller->r_x = (guitar.whammyBar()-14)*1024;
-            for(int i=0; i<ave ; i++)
+             for(int i=0; i<ave ; i++)
             {
               xRead += analogRead(A2);
               yRead += analogRead(A1);
@@ -56,14 +54,14 @@ void WiiExtension::read_controller(WiiController* controller) {
             
             xRead = xRead/ave;
             yRead = yRead/ave;
-            
-            xAng = map(xRead, xMinVal, xMaxVal, -90, 90);
-            yAng = map(yRead, yMinVal, yMaxVal, -90, 90);
-            
-            z = RAD_TO_DEG * ((atan2(-yAng, -xAng) + PI)-1);
-            t = z*-512;
+            xAng = (xRead - zero_acc);
+            yAng = (yRead - zero_acc);
+            z = RAD_TO_DEG * ((atan2(-yAng, -xAng) + PI));
+            z = 90 - z;
+            if (z < -90) z = -180 - z;
+            t = z * (32767 / 90);
             if (t > 0) {
-              t = pow(t,1.15f);
+              t = pow(t,1.05f);
             }
             t = constrain(t, -32767, 32767);
             controller->r_y = (int)t;

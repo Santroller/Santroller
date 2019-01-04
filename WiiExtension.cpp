@@ -3,24 +3,18 @@ extern "C" {
   #include "XInputPad.h"
   #include "util.h"
 }
-#define zero_acc 512
+WiiExtension::WiiExtension(): nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
 void WiiExtension::setup() {
-    extension.begin();
+    port.begin();
 }
-void WiiExtension::read_controller(WiiController* controller) {
-    boolean success = extension.update();
-    if (!success) {
-        extension.connect();
-        return;
+
+boolean WiiExtension::read_controller(WiiController* controller, float* ypr) {
+    if (!port.update()) {
+        port.connect();
+        return false;
     }
-    ExtensionType conType = extension.getConnectedID();
-    
-    int xRead=0, yRead=0, zRead=0;
-    int xAng=0, yAng=0, zAng=0;
-    double x=0, y=0, z=0;
-    
-    int ave = 10;
-    double t;
+    ExtensionType conType = port.getControllerType();
+    double z;
 		switch (conType) {
         case(ExtensionType::DJTurntableController):
         break;
@@ -45,26 +39,12 @@ void WiiExtension::read_controller(WiiController* controller) {
             bit_write(drum.buttonMinus(), controller->digital_buttons_1, XBOX_BACK);
         break;
         case(ExtensionType::GuitarController):
-            controller->r_x = (guitar.whammyBar()-14)*1024;
-             for(int i=0; i<ave ; i++)
-            {
-              xRead += analogRead(A2);
-              yRead += analogRead(A1);
-            }
-            
-            xRead = xRead/ave;
-            yRead = yRead/ave;
-            xAng = (xRead - zero_acc);
-            yAng = (yRead - zero_acc);
-            z = RAD_TO_DEG * ((atan2(-yAng, -xAng) + PI));
-            z = 90 - z;
-            if (z < -90) z = -180 - z;
-            t = z * (32767 / 90);
-            if (t > 0) {
-              t = pow(t,1.05f);
-            }
-            t = constrain(t, -32767, 32767);
-            controller->r_y = (int)t;
+            controller->r_x = -(guitar.whammyBar()-14)*1024;
+            z = 180+(ypr[2] * 180/M_PI);
+            if (z > 180) z -= 360;
+            z *= (32767 / 90);
+            z = pow(z,1.02f);
+            controller->r_y = (int)z;
             bit_write(guitar.strumUp() || guitar.joyY()>40, controller->digital_buttons_1, XBOX_DPAD_UP);
             bit_write(guitar.strumDown() || guitar.joyY()<20, controller->digital_buttons_1, XBOX_DPAD_DOWN);
             bit_write(guitar.joyX()<20, controller->digital_buttons_1, XBOX_DPAD_LEFT);
@@ -76,6 +56,9 @@ void WiiExtension::read_controller(WiiController* controller) {
             bit_write(guitar.fretYellow(), controller->digital_buttons_2, XBOX_Y);
             bit_write(guitar.fretBlue(), controller->digital_buttons_2, XBOX_X);
             bit_write(guitar.fretOrange(), controller->digital_buttons_2, XBOX_LB);
+            if (guitar.buttonPlus() && guitar.buttonMinus()) {
+              return true;
+            }
         break;
 
   			case(ExtensionType::ClassicController):
@@ -98,8 +81,12 @@ void WiiExtension::read_controller(WiiController* controller) {
             bit_write(classic.buttonX(), controller->digital_buttons_2, XBOX_X);
             bit_write(classic.buttonZL(), controller->digital_buttons_2, XBOX_LB);
             bit_write(classic.buttonZR(), controller->digital_buttons_2, XBOX_RB);
+            if (classic.buttonStart() && classic.buttonSelect()) {
+              return true;
+            }
 				break;
 			default:
         break;
+        return false;
     }
 }

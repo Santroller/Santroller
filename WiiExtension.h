@@ -1,6 +1,10 @@
 #ifndef _WiiExtension_H_
 #define _WiiExtension_H_
 #include <NintendoExtensionCtrl.h>
+#include "Wire.h"
+#define INTERRUPT_PIN 7
+#define LED_PIN 13
+
 typedef struct {
 	uint8_t rid;
 	uint8_t rsize;
@@ -16,14 +20,15 @@ typedef struct {
 } WiiController;
 class WiiExtension {
   public:
-  ExtensionController extension;
-  Nunchuk::Data nchuk = Nunchuk::Data(extension);
-  ClassicController::Data classic = ClassicController::Data(extension);
-  DrumController::Data drum = DrumController::Data(extension);
-  GuitarController::Data guitar = GuitarController::Data(extension);
-  DJTurntableController::Data dj = DJTurntableController::Data(extension);
-  void read_controller(WiiController* controller);
+  ExtensionPort port;
+  Nunchuk::Shared nchuk;
+  ClassicController::Shared classic;
+  DrumController::Shared drum;
+  GuitarController::Shared guitar;
+  DJTurntableController::Shared dj;
+  boolean read_controller(WiiController* controller, float* ypr);
   void setup();
+  WiiExtension();
 };
 
 #endif

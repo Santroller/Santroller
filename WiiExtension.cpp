@@ -1,16 +1,15 @@
 #include "WiiExtension.h"
 extern "C" {
-  #include "XInputPad.h"
   #include "util.h"
 }
 WiiExtension::WiiExtension(): nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
 void WiiExtension::setup() {
-    port.begin();
+    port.connect();
 }
 
 boolean WiiExtension::read_controller(WiiController* controller, float* ypr) {
-    if (!port.update()) {
-        port.connect();
+    valid = port.update();
+    if (!valid) {
         return false;
     }
     ExtensionType conType = port.getControllerType();
@@ -40,10 +39,19 @@ boolean WiiExtension::read_controller(WiiController* controller, float* ypr) {
         break;
         case(ExtensionType::GuitarController):
             controller->r_x = -(guitar.whammyBar()-14)*1024;
-            z = 180+(ypr[2] * 180/M_PI);
-            if (z > 180) z -= 360;
-            z *= (32767 / 90);
-            z = pow(z,1.02f);
+            if (guitar.whammyBar() <= 18) {
+              controller->r_x = 0;
+            }
+            z = 32767 + (ypr[2]* (32767 / M_PI));
+            if (z > 32767) {
+              z = 0;
+            }
+            z = z * 2;
+            if (z > 32767) {
+              z = 65535 - z;
+            }
+            z = pow(z,1.1f);
+            z = constrain(z, -32767, 32767);
             controller->r_y = (int)z;
             bit_write(guitar.strumUp() || guitar.joyY()>40, controller->digital_buttons_1, XBOX_DPAD_UP);
             bit_write(guitar.strumDown() || guitar.joyY()<20, controller->digital_buttons_1, XBOX_DPAD_DOWN);

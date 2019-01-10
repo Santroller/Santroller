@@ -465,7 +465,7 @@ micro3v3.build.usb_product="Arduino Micro"
 micro3v3.build.board=AVR_MICRO
 micro3v3.build.core=arduino
 micro3v3.build.variant=micro
-micro3v3.build.extra_flags={build.usb_flags}
+micro3v3.build.extra_flags={build.usb_flags} -DSerial=Serial1
 
 ##############################################################
 

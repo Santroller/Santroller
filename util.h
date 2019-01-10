@@ -37,16 +37,11 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef UTIL_H_
-#define UTIL_H_
+#pragma once
 
 #include <inttypes.h>
-
-#define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
 #define bit_set(p,m) ((p) |= (m))
 #define bit_clear(p,m) ((p) &= ~(m))
 #define bit_write(c,p,m) (c ? bit_set(p,m) : bit_clear(p,m))
 #define bit_check(value, bit) (((value) >> (bit)) & 0x01)
-
-#endif /* UTIL_H_ */

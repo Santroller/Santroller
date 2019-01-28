@@ -6,8 +6,8 @@ encoding utf-8
 Sheet 1 1
 Title "Ardwiino"
 Date "2019-01-25"
-Rev "1"
-Comp "Sebastiaan Jansen"
+Rev "1.0"
+Comp "Sebastiaan Jansen & Sanjay Govind"
 Comment1 ""
 Comment2 ""
 Comment3 ""

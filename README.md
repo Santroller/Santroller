@@ -19,6 +19,9 @@ This project aims to provide an adapter that when used will expose a wii guitar 
 2. Connect your MPU6050 to the same pins. Note that the interrupt pin is not used in this sketch.
 3. Use double sided tape to adhere the MPU6050 to the guitar. Note that the MPU6050 needs to be placed in a horizontal position during normal use.
 
+![pcb/ardwiino_schematic.png](pcb/ardwiino_schematic.png)
+
+
 ## Used projects:
 * https://github.com/bootsector/XInputPadMicro
 * https://github.com/dmadison/NintendoExtensionCtrl

@@ -49,7 +49,6 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
 
 #include "Descriptors.h"
 
-#include <LUFA.h>
 
 /* Type Defines: */
 /** Type define for the joystick HID report structure, for creating and sending HID reports to the host PC.

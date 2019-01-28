@@ -14,7 +14,6 @@
  *      @details    All functions are preceded by the dmp_ prefix to
  *                  differentiate among MPL and general driver function calls.
  */
-#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,10 +29,9 @@
  * i2c_read(unsigned char slave_addr, unsigned char reg_addr,
  *      unsigned char length, unsigned char *data)
  * delay_ms(unsigned long num_ms)
- * get_ms(unsigned long *count)
  */
 
-#define delay_ms    delay
+#define delay_ms    _delay_ms
 
 #define log_i(...)     do {} while (0)
 #define log_e(...)     do {} while (0)
@@ -619,7 +617,7 @@ int dmp_set_accel_bias(long *bias)
 
     mpu_get_accel_sens(&accel_sens);
     accel_sf = (long long)accel_sens << 15;
-    delay(1);
+    _delay_ms(1);
 
     accel_bias_body[0] = bias[dmp->orient & 3];
     if (dmp->orient & 4)
@@ -1264,7 +1262,6 @@ int dmp_read_fifo(short *gyro, short *accel, long *quat,
      * cache this value and save some cycles.
      */
     sensors[0] = 0;
-
     /* Get a packet. */
     if ((errCode = mpu_read_fifo_stream(dmp->packet_length, fifo_data, more)))
         return errCode;
@@ -1331,8 +1328,6 @@ int dmp_read_fifo(short *gyro, short *accel, long *quat,
     if (dmp->feature_mask & (DMP_FEATURE_TAP | DMP_FEATURE_ANDROID_ORIENT))
         decode_gesture(fifo_data + ii);
 #endif // MPU_MAXIMAL
-    if (timestamp)
-	get_ms(timestamp);
     return 0;
 }
 

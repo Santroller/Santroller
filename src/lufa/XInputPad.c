@@ -135,7 +135,7 @@ void xbox_init(bool watchdog) {
 
 	xbox_reset_pad_status();
 
-	USB_Init(1);
+	USB_Init();
 
 	sei();
 }

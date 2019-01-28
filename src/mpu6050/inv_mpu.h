@@ -21,7 +21,8 @@
 #ifndef _INV_MPU_H_
 #define _INV_MPU_H_
 
-#include "I2Cdev.h"
+#include "../twi/I2Cdev.h"
+#include <avr/pgmspace.h>
 
 //  Define this symbol to get debug messages
 
@@ -38,11 +39,6 @@
 //  Call this function before using the MPU to select the correct device
 
 int mpu_select_device(int device);
-
-inline void get_ms(long unsigned int *timestamp)
-{
-    *timestamp = millis(); 
-}
 
 //  IMU hardware device defines
 

@@ -41,8 +41,9 @@
 
 #ifndef _LUFA_CONFIG_H_
 #define _LUFA_CONFIG_H_
-#include <Arduino.h>
+#ifndef F_USB
 #define F_USB F_CPU
+#endif
 	#if (ARCH == ARCH_AVR8)
 
 		/* Non-USB Related Configuration Tokens: */

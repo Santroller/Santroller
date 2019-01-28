@@ -113,14 +113,14 @@ const uint8_t PROGMEM ConfigurationDescriptor[] =
 	0x81,        // bEndpointAddress (IN/D2H)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x04,        // bInterval 4 (unit depends on device speed)
+	0x01,        // bInterval 4 (unit depends on device speed)
 	
 	0x07,        // bLength
 	0x05,        // bDescriptorType (Endpoint)
 	0x01,        // bEndpointAddress (OUT/H2D)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x08,        // bInterval 8 (unit depends on device speed)
+	0x01,        // bInterval 8 (unit depends on device speed)
 	
 	0x09,        // bLength
 	0x04,        // bDescriptorType (Interface)
@@ -145,28 +145,28 @@ const uint8_t PROGMEM ConfigurationDescriptor[] =
 	0x82,        // bEndpointAddress (IN/D2H)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x02,        // bInterval 2 (unit depends on device speed)
+	0x01,        // bInterval 2 (unit depends on device speed)
 	
 	0x07,        // bLength
 	0x05,        // bDescriptorType (Endpoint)
 	0x02,        // bEndpointAddress (OUT/H2D)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x04,        // bInterval 4 (unit depends on device speed)
+	0x01,        // bInterval 4 (unit depends on device speed)
 	
 	0x07,        // bLength
 	0x05,        // bDescriptorType (Endpoint)
 	0x83,        // bEndpointAddress (IN/D2H)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x40,        // bInterval 64 (unit depends on device speed)
+	0x1,        // bInterval 64 (unit depends on device speed)
 	
 	0x07,        // bLength
 	0x05,        // bDescriptorType (Endpoint)
 	0x03,        // bEndpointAddress (OUT/H2D)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x10,        // bInterval 16 (unit depends on device speed)
+	0x1,        // bInterval 16 (unit depends on device speed)
 	
 	0x09,        // bLength
 	0x04,        // bDescriptorType (Interface)
@@ -191,7 +191,7 @@ const uint8_t PROGMEM ConfigurationDescriptor[] =
 	0x84,        // bEndpointAddress (IN/D2H)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x10,        // bInterval 16 (unit depends on device speed)
+	0x1,        // bInterval 16 (unit depends on device speed)
 	
 	0x09,        // bLength
 	0x04,        // bDescriptorType (Interface)
@@ -255,13 +255,8 @@ const USB_Descriptor_String_t PROGMEM VersionString =
  *  USB host.
  */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
-                                          const uint16_t wIndex,
-                                          const void** const DescriptorAddress
-      #if (defined(ARCH_HAS_MULTI_ADDRESS_SPACE) || defined(__DOXYGEN__)) && \
-          !(defined(USE_FLASH_DESCRIPTORS) || defined(USE_EEPROM_DESCRIPTORS) || defined(USE_RAM_DESCRIPTORS))
-                                          , uint8_t* const DescriptorMemorySpace
-      #endif
-                                          )
+                                    const uint16_t wIndex,
+                                    const void** const DescriptorAddress)
 {
 	const uint8_t  DescriptorType   = (wValue >> 8);
 	const uint8_t  DescriptorNumber = (wValue & 0xFF);
@@ -306,3 +301,4 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 	*DescriptorAddress = Address;
 	return Size;
 }
+

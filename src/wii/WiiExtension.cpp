@@ -11,7 +11,7 @@ WiiExtension::WiiExtension()
     : nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
 void WiiExtension::init() {
   I2Cdev::TWIInit();
-  mympu_open(10);
+  mympu_open(5);
 }
 void WiiExtension::read_controller() {
   if (!port.update()) {
@@ -42,8 +42,8 @@ void WiiExtension::read_controller() {
     bit_write(drum.buttonMinus(), gamepad_state.digital_buttons_1, XBOX_BACK);
     break;
   case (ExtensionType::GuitarController):
-    gamepad_state.l_x = rand();
     gamepad_state.r_x = -(guitar.whammyBar() - 14) * 1024;
+    gamepad_state.l_x = rand();
     if (guitar.whammyBar() <= 18) {
       gamepad_state.r_x = 0;
     }

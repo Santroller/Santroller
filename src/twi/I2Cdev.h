@@ -63,7 +63,7 @@ THE SOFTWARE.
 #define TXMAXBUFLEN 32
 // Receive buffer length
 #define RXMAXBUFLEN 32
-#define WAIT_TWI while (!I2Cdev::isTWIReady()){ _delay_ms(1);}
+#define WAIT_TWI while (!I2Cdev::isTWIReady()){ _delay_us(200);}
 // TWI Status Codes
 #define TWI_START_SENT			0x08 // Start sent
 #define TWI_REP_START_SENT		0x10 // Repeated Start sent

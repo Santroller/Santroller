@@ -20,6 +20,6 @@ This project aims to provide an adapter that when used will expose a wii guitar 
 3. Use double sided tape to adhere the MPU6050 to the guitar. Note that the MPU6050 needs to be placed in a horizontal position during normal use.
 
 ## Used projects:
-https://github.com/bootsector/XInputPadMicro
-https://github.com/dmadison/NintendoExtensionCtrl
-https://github.com/abcminiuser/lufa/
+* https://github.com/bootsector/XInputPadMicro
+* https://github.com/dmadison/NintendoExtensionCtrl
+* https://github.com/abcminiuser/lufa/

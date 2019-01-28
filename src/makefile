@@ -22,7 +22,7 @@ CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/XInputPadMicro
+TARGET       = $(BIN)/Ardwiino
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -P /dev/ttyACM0 reset
 # ----- No changes should be necessary below this line -----

@@ -43,7 +43,6 @@ void WiiExtension::read_controller() {
     break;
   case (ExtensionType::GuitarController):
     gamepad_state.r_x = -(guitar.whammyBar() - 14) * 1024;
-    gamepad_state.l_x = rand();
     if (guitar.whammyBar() <= 18) {
       gamepad_state.r_x = 0;
     }

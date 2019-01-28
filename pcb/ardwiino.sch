@@ -1,5 +1,4 @@
 EESchema Schematic File Version 4
-LIBS:ardwiino-cache
 EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
@@ -26,7 +25,7 @@ F 3 "" H 8950 2450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L ardwiino-rescue:ProMicro-promicro 3.3V1
+L promicro:ProMicro 3.3V1
 U 1 1 5BB743DF
 P 4250 3650
 F 0 "3.3V1" H 4250 4687 60  0000 C CNN
@@ -37,7 +36,7 @@ F 3 "" H 4350 2600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L ardwiino-rescue:GY-521-gy-521 MPU6050
+L gy-521:GY-521 MPU6050
 U 1 1 5C4AF883
 P 7800 3300
 F 0 "MPU6050" H 7800 4100 60  0000 C CNN

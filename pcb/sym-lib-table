@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name nunchuck)(type Legacy)(uri ${KIPRJMOD}/nunchuck.lib)(options "")(descr ""))
+  (lib (name ardwiino-rescue)(type Legacy)(uri ${KIPRJMOD}/ardwiino-rescue.lib)(options "")(descr ""))
+  (lib (name promicro)(type Legacy)(uri ${KIPRJMOD}/promicro.lib)(options "")(descr ""))
+  (lib (name gy-521)(type Legacy)(uri ${KIPRJMOD}/gy-521.lib)(options "")(descr ""))
+)

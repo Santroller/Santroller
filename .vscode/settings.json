@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "wiiextension.h": "c"
+        "wiiextension.h": "c",
+        "controller.h": "c"
     }
 }

@@ -3,6 +3,7 @@
 #include "../twi/I2Cdev.h"
 #include "util/delay.h"
 #include "../mpu6050/mpu.h"
+#include "../mpu6050/inv_mpu.h"
 #include "NintendoExtensionCtrl.h"
 
 class WiiExtension {
@@ -17,5 +18,5 @@ public:
   void read_controller();
   WiiExtension();
   void init();
-  int counter;
+  short counter;
 };

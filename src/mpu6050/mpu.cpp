@@ -22,12 +22,9 @@ union u_quat {
 } q;
 
 static int ret;
-static short gyro[3];
 static short sensors;
 static unsigned char fifoCount;
 int mympu_open(unsigned int rate) {
-  mpu_select_device(0);
-  mpu_init_structures();
 
   ret = mpu_init(NULL);
 #ifdef MPU_DEBUG
@@ -65,9 +62,6 @@ int mympu_open(unsigned int rate) {
     return 60 + ret;
 #endif
 
-  dmp_select_device(0);
-  dmp_init_structures();
-
   ret = dmp_load_motion_driver_firmware();
 #ifdef MPU_DEBUG
   if (ret)
@@ -86,10 +80,9 @@ int mympu_open(unsigned int rate) {
     return 100 + ret;
 #endif
 
-  ret = dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_CAL_GYRO |
-                           DMP_FEATURE_GYRO_CAL);
+  ret = dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 //	ret =
-//dmp_enable_feature(DMP_FEATURE_SEND_CAL_GYRO|DMP_FEATURE_GYRO_CAL);
+// dmp_enable_feature(DMP_FEATURE_SEND_CAL_GYRO|DMP_FEATURE_GYRO_CAL);
 #ifdef MPU_DEBUG
   if (ret)
     return 110 + ret;
@@ -114,16 +107,16 @@ static void quaternionToEuler(const struct s_quat *q, float *x, float *y,
 
   if (test > 0.5f - EPSILON) {
     *x = 2.f * atan2(q->y, q->w);
-    *y = PI_2;
-    *z = 0;
+    // *y = PI_2;
+    // *z = 0;
   } else if (test < -0.5f + EPSILON) {
     *x = -2.f * atan2(q->y, q->w);
-    *y = -PI_2;
-    *z = 0;
+    // *y = -PI_2;
+    // *z = 0;
   } else {
     *x = atan2(2.f * (q->x * q->w + q->y * q->z), 1.f - 2.f * (sqz + sqw));
-    *y = asin(2.f * test);
-    *z = atan2(2.f * (q->x * q->y - q->z * q->w), 1.f - 2.f * (sqy + sqz));
+    // *y = asin(2.f * test);
+    // *z = atan2(2.f * (q->x * q->y - q->z * q->w), 1.f - 2.f * (sqy + sqz));
   }
 }
 
@@ -133,7 +126,7 @@ static inline float wrap_pi(float x) {
 
 int mympu_update() {
 
-  ret = dmp_read_fifo(gyro, NULL, q._l, NULL, &sensors, &fifoCount);
+  ret = dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
   if (ret != 0)
     return ret;
 
@@ -144,10 +137,6 @@ int mympu_update() {
 
   quaternionToEuler(&q._f, &mympu.ypr[2], &mympu.ypr[1], &mympu.ypr[0]);
   mympu.ypr[2] = wrap_pi(mympu.ypr[2]);
-  /* need to adjust signs depending on the MPU mount orientation */
-  mympu.gyro[0] = -(float)gyro[2] / GYRO_SENS;
-  mympu.gyro[1] = (float)gyro[1] / GYRO_SENS;
-  mympu.gyro[2] = (float)gyro[0] / GYRO_SENS;
 
   return 0;
 }

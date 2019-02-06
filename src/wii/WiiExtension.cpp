@@ -1,24 +1,31 @@
 #include "WiiExtension.h"
 #include "../util.h"
 #include <util/delay.h>
-extern "C" {
+extern "C"
+{
 #include "lufa/XInputPad.h"
 }
-#define constrain(amt, low, high)                                              \
+#define constrain(amt, low, high) \
   ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
 WiiExtension::WiiExtension()
-    : nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
-void WiiExtension::init() {
-  I2Cdev::TWIInit();
-  mympu_open(5);
+    : nchuk(port), classic(port), dj(port), guitar(port), drum(port)
+{
 }
-void WiiExtension::read_controller() {
-  if (!port.update()) {
+void WiiExtension::init()
+{
+  I2Cdev::TWIInit();
+  mympu_open(15);
+}
+void WiiExtension::read_controller()
+{
+  if (!port.update())
+  {
     port.connect();
     return;
   }
-  switch (port.getControllerType()) {
+  switch (port.getControllerType())
+  {
   case (ExtensionType::DJTurntableController):
     break;
   case (ExtensionType::Nunchuk):
@@ -42,19 +49,24 @@ void WiiExtension::read_controller() {
     bit_write(drum.buttonMinus(), gamepad_state.digital_buttons_1, XBOX_BACK);
     break;
   case (ExtensionType::GuitarController):
+    // gamepad_state.l_x = rand();
     gamepad_state.r_x = -(guitar.whammyBar() - 14) * 1024;
-    if (guitar.whammyBar() <= 18) {
+    if (guitar.whammyBar() <= 18)
+    {
       gamepad_state.r_x = 0;
     }
-    if (counter % 20 == 0) {
+    if (counter % 20 == 0)
+    {
       double z;
       mympu_update();
       z = 32767 + (mympu.ypr[2] * (32767 / M_PI));
-      if (z > 32767) {
+      if (z > 32767)
+      {
         z = 0;
       }
       z = z * 2;
-      if (z > 32767) {
+      if (z > 32767)
+      {
         z = 65535 - z;
       }
       z = pow(z, 1.1f);

@@ -17,7 +17,7 @@ F_USB        = $(F_CPU)
 OPTIMIZATION = s
 SRC = $(shell find . -type f -name '*.c' -not -path "./lufa/lufa/*") $(shell find . -type f -name '*.cpp' -not -path "./lufa/lufa/*") $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = lufa/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -Ilufa/
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -Ilufa/ 
 CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj

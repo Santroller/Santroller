@@ -56,7 +56,7 @@ THE SOFTWARE.
 // 1000ms default read timeout (modify with "I2Cdev::readTimeout = [ms];")
 #define I2CDEV_DEFAULT_READ_TIMEOUT     1000
 // TWI bit rate
-#define TWI_FREQ 360000
+#define TWI_FREQ 350000
 // Get TWI status
 #define TWI_STATUS	(TWSR & 0xF8) 
 // Transmit buffer length

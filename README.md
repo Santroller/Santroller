@@ -13,7 +13,7 @@ This repository contains code for both the uno, and the pro micro. It could very
 
 ## Flashing the software
 1. Install an AVR toolchain + make
-2. run make avrdude
+2. run `make uno` or `make micro`, depending on your microcontroller family 
 3. For updates, hit + and - to jump to bootloader mode.
 
 ## Building the hardware

@@ -10,7 +10,7 @@
 
 WiiExtension controller;
 
-volatile int i = 0;
+size_t current_index = 0;
 USB_JoystickReport_Data_t data;
 int main() {
   sei();
@@ -23,13 +23,13 @@ int main() {
 }
 ISR(USART_UDRE_vect) {
   uint8_t a = UDR0;
-  if (i < 2) {
-    UDR0 = i == 0 ? 'm' : 'a';
+  if (current_index < 2) {
+    UDR0 = current_index == 0 ? 'm' : 'a';
   } else {
-    UDR0 = ((uint8_t *)&data)[i - 2];
+    UDR0 = ((uint8_t *)&data)[current_index - 2];
   }
-  i++;
-  if (i >= sizeof(data) + 2) {
-    i = 0;
+  current_index++;
+  if (current_index >= sizeof(data) + 2) {
+    current_index = 0;
   }
 }

@@ -1,7 +1,11 @@
 all:
 
-upload:
-	$(MAKE) -C src avrdude
+micro:
+	$(MAKE) -C src/micro avrdude
 
-%:
-	$(MAKE) -C src $@
+uno:
+	$(MAKE) -C src/uno upload
+
+clean:
+	$(MAKE) -C src/micro clean
+	$(MAKE) -C src/uno clean

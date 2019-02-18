@@ -3,9 +3,11 @@
 
 This project aims to provide an adapter that when used will expose a wii guitar hero controller as an xbox 360 controller, so that games such as Clone Hero can immediately use these controllers without calibration. Note that this does not take care of authentication, so your controllers will not work on a real xbox 360.
 
+This repository contains code for both the uno, and the pro micro. It could very easily be modified to support many other AVR microcontrollers, as long as the AVR supports HID, either directly or via another AVR microcontroller (aka the uno).
+
 # How to use this repo
 ## You will need:
-1. An Arduino with USB hid compatibility and 3.3v compatibility (pro micro recommended)
+1. An AVR microcontroller with USB hid compatibility and 3.3v compatibility (pro micro recommended)
 2. A wii extension cable or breakout board
 3. A MPU6050 or similar
 

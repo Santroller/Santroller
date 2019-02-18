@@ -17,8 +17,8 @@ int main() {
   controller.init();
   for (;;) {
     controller.read_controller(&gamepad_state);
-    if (bit_is_set(gamepad_state.digital_buttons_1, XBOX_BACK) &&
-        bit_is_set(gamepad_state.digital_buttons_1, XBOX_START)) {
+    if (bit_check(gamepad_state.digital_buttons_1, XBOX_BACK) &&
+        bit_check(gamepad_state.digital_buttons_1, XBOX_START)) {
       bootloader();
     }
     xbox_send_pad_state();

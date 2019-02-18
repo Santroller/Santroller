@@ -1,6 +1,7 @@
 #include "../../shared/Controller.h"
 #include "../../shared/bootloader/bootloader.h"
 #include "../../shared/controller/XInputPad.h"
+#include "../../shared/util.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -26,17 +27,17 @@ ISR(USART1_RX_vect) {
       current_control = 0;
     break;
   default:
-    ((uint8_t*)&gamepad_state)[current_control-2] = data;
+    ((uint8_t *)&gamepad_state)[current_control - 2] = data;
     current_control++;
-    if (bit_is_set(gamepad_state.digital_buttons_1, XBOX_START) &&
-        bit_is_set(gamepad_state.digital_buttons_1, XBOX_BACK)) {
-      bootloader();
-    }
     if (current_control == sizeof(USB_JoystickReport_Data_t)) {
+      if (bit_check(gamepad_state.digital_buttons_1, XBOX_START) &&
+          bit_check(gamepad_state.digital_buttons_1, XBOX_BACK)) {
+        bootloader();
+      }
+      xbox_send_pad_state();
+      xbox_reset_watchdog();
       current_control = 0;
     }
-    xbox_send_pad_state();
-    xbox_reset_watchdog();
   }
 }
 

@@ -45,6 +45,7 @@ S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
  */
 
 #include "Descriptors.h"
+#include "../../config/config.h"
 
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
  *  device characteristics, including the supported USB version, control endpoint size and the
@@ -113,7 +114,7 @@ const uint8_t PROGMEM ConfigurationDescriptor[] =
 	0x81,        // bEndpointAddress (IN/D2H)
 	0x03,        // bmAttributes (Interrupt)
 	0x20, 0x00,  // wMaxPacketSize 32
-	0x04,        // bInterval 4 (unit depends on device speed)
+	POLL_RATE,        // bInterval 4 (unit depends on device speed)
 	
 	0x07,        // bLength
 	0x05,        // bDescriptorType (Endpoint)

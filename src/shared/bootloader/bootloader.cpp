@@ -1,6 +1,10 @@
 #include <avr/wdt.h>
 #include <avr/interrupt.h>
-#define MAGIC_KEY_POS (RAMEND-1)
+#ifdef __AVR_ATmega32U4__
+  #define MAGIC_KEY_POS 0x0800
+#else
+  #define MAGIC_KEY_POS (RAMEND - 1)
+#endif
 void bootloader() {
   // close interrupts
   cli();

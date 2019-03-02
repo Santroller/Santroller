@@ -43,7 +43,7 @@ ISR(USART1_RX_vect) {
 
 void USART_Init() {
   // Set baud rate
-  UBRR1 = 16;
+  UBRR1 = 6;
   // UCSR1A = _BV(U2X1);
   // Enable receiver and interrupt
   UCSR1B = _BV(RXEN1) | _BV(RXCIE1);
@@ -60,6 +60,5 @@ int main(void) {
   // Init XBOX pad emulation
   xbox_init(true);
   sei();
-  for (;;) {
-  }
+  for (;;) {}
 }

@@ -1,305 +1,279 @@
-/*
-     .k8GOGGNqkSFS5XkqXPSkSkkqXXFS5kSkSS15U22F2515U2uujuu1U1u2U1U2uUuFS.
-   :0qE     JS5uuJuuFFX51jU2SSk12jU2SSXF5uuu15SFS5k12ujj21S5kFS5S12jJYu11
-  5XS:        1UYYLu.   vUUX    U22r     SUF         SUF           ;YYLuU5
- 1F5i  NNSkS7  2uLJui   51u     S5.      .PX         .XX           LJvLLu1.
- kUk  0iLk5FFu vuYY2:   5F    Xkk7        78    E0    i0    GEXPXk2uLLvLLuk
-X25, 8O   2kX0  5YJUi   M    555    PkXk   i    q1FU   7    ONNkP12YLvLvLYS
-S25  8888  888  5uY5         FuS    PS50   .    FuUU   7          uJvLvLLJ2i
-kUF             SJjU.      P02UF    P25k   .    Su2Y   v          2LLvLvLL17
-S21  XJj88  0u  1uY2.        X2k           .    k11E   v    7;ii:JuJvLvLvJ2:
-2257 jqv   Pqq  1LJur         PP.          7    EX:    q    OqqXP51JYvLvYYS.
- X2F  kXkXSXk  kJYLU:   O     ,Z    0PXZ   i    ii    q0    i:::,,.jLLvLLuF'
- ik1k  ;qkPj  .uJvYu:   UN      :   XU2F   :         S5S           iJLLvjUF8
-  :PSq       72uLLLui   uSi    .;   2uY1   r.       72j1           LYYLYJSU88
-    XqE2   rP12juJuu1FX55U5FqXXSXkXF1juUkkPSXSPXPXPF1Jju5FkFSFXFSF5uujUu5j28V
-      .uGOZESS5S5SFkkPkPkXkPXqXPXqXXFkSkkPXPXPkqSkSS1521252121U2u2u12Suv7
-
-*
-* Arduino Micro (Leonardo) XInput Pad Emulator firmware
-*
-* Copyright (c) 2017
-* Bruno Freitas - bruno@brunofreitas.com
-* Jon Wilson    - degenatrons@gmail.com
-* Kevin Mackett - kevin@sharpfork.com
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /** \file
  *
- *  USB Device Descriptors, for library use when in USB device mode. Descriptors are special
- *  computer-readable structures which the host requests upon device enumeration, to determine
- *  the device's capabilities and functions.
+ *  USB Device Descriptors, for library use when in USB device mode. Descriptors
+ * are special computer-readable structures which the host requests upon device
+ * enumeration, to determine the device's capabilities and functions.
  */
 
 #include "Descriptors.h"
 #include "../../config/config.h"
 
-/** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall
- *  device characteristics, including the supported USB version, control endpoint size and the
- *  number of device configurations. The descriptor is read out by the USB host when the enumeration
- *  process begins.
+/** Device descriptor structure. This descriptor, located in FLASH memory,
+ * describes the overall device characteristics, including the supported USB
+ * version, control endpoint size and the number of device configurations. The
+ * descriptor is read out by the USB host when the enumeration process begins.
  */
-const uint8_t PROGMEM DeviceDescriptor[] =
+const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
 {
-	0x12,        // bLength
-	0x01,        // bDescriptorType (Device)
-	0x00, 0x02,  // bcdUSB 2.00
-	0xFF,        // bDeviceClass 
-	0xFF,        // bDeviceSubClass 
-	0xFF,        // bDeviceProtocol 
-	0x40,        // bMaxPacketSize0 64
-	0x5E, 0x04,  // idVendor 0x045E
-	0x8E, 0x02,  // idProduct 0x028E
-	0x14, 0x01,  // bcdDevice 2.14
-	0x01,        // iManufacturer (String Index)
-	0x02,        // iProduct (String Index)
-	0x03,        // iSerialNumber (String Index)
-	0x01        // bNumConfigurations 1
+	.Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
+
+	.USBSpecification       = VERSION_BCD(1,0,0),
+	.Class                  = 0xFF,
+	.SubClass               = 0xFF,
+	.Protocol               = 0xFF,
+
+	.Endpoint0Size          = 0x40,
+
+	.VendorID               = 0x045E,
+	.ProductID              = 0x204F,
+	.ReleaseNumber          = VERSION_BCD(0,0,1),
+
+	.ManufacturerStrIndex   = 0x01,
+	.ProductStrIndex        = 0x02,
+	.SerialNumStrIndex      = 0x03,
+
+	.NumberOfConfigurations = 0x01
+};
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM GenericReport[] =
+{
+	HID_DESCRIPTOR_VENDOR(0x00, 0x01, 0x02, 0x03, GENERIC_REPORT_SIZE)
+};
+/** Configuration descriptor structure. This descriptor, located in FLASH
+ * memory, describes the usage of the device in one of its supported
+ * configurations, including information about any device interfaces and
+ * endpoints. The descriptor is read out by the USB host during the enumeration
+ * process when selecting a configuration so that the host may correctly
+ * communicate with the USB device.
+ */
+const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =  
+{
+	.Config =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
+
+			.TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
+			.TotalInterfaces        = 1,
+
+			.ConfigurationNumber    = 1,
+			.ConfigurationStrIndex  = NO_DESCRIPTOR,
+
+			.ConfigAttributes       = USB_CONFIG_ATTR_REMOTEWAKEUP,
+
+			.MaxPowerConsumption    = USB_CONFIG_POWER_MA(500)
+		},
+
+	.Interface0 =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+
+			.InterfaceNumber        = 0,
+			.AlternateSetting       = 0x00,
+
+			.TotalEndpoints         = 2,
+
+			.Class                  = 0xFF,
+			.SubClass               = 0x5D,
+			.Protocol               = 0x01,
+
+			.InterfaceStrIndex      = NO_DESCRIPTOR
+		},
+
+	.HID0 =
+		{
+			.Header                 = {.Size = sizeof(USB_HID_XBOX_Descriptor_HID_t), .Type = HID_DTYPE_HID},
+
+			.HIDSpec                = VERSION_BCD(1,0,0),
+			.CountryCode            = 0x00,
+			.TotalReportDescriptors = 0x25,
+			.HIDReportType0          = 0x81,
+			.HIDReportLength0        = 20,
+			.HIDReportType1          = 0x00,
+			.HIDReportLength1        = 0,
+			.HIDReportType2          = 0x13,
+			.HIDReportLength2        = 0x0801,
+			.HIDReportType3          = 0x00,
+			.HIDReportLength3        = 0x00
+		},
+
+	.DataInEndpoint0 =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = 0x81,
+			.Attributes             = EP_TYPE_INTERRUPT,
+			.EndpointSize           = XBOX_EPSIZE,
+			.PollingIntervalMS      = POLL_RATE
+		},
+	.DataOutEndpoint0 =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = 0x01,
+			.Attributes             = EP_TYPE_INTERRUPT,
+			.EndpointSize           = XBOX_EPSIZE,
+			.PollingIntervalMS      = 0x08
+		},
 };
 
-/** Configuration descriptor structure. This descriptor, located in FLASH memory, describes the usage
- *  of the device in one of its supported configurations, including information about any device interfaces
- *  and endpoints. The descriptor is read out by the USB host during the enumeration process when selecting
- *  a configuration so that the host may correctly communicate with the USB device.
+/** Language descriptor structure. This descriptor, located in FLASH memory, is
+ * returned when the host requests the string descriptor with index 0 (the first
+ * index). It is actually an array of 16-bit integers, which indicate via the
+ * language ID table available at USB.org what languages the device supports for
+ * its string descriptors.
  */
-const uint8_t PROGMEM ConfigurationDescriptor[] =
-{
-	0x09,        // bLength
-	0x02,        // bDescriptorType (Configuration)
-	0x99, 0x00,  // wTotalLength 153
-	0x04,        // bNumInterfaces 4
-	0x01,        // bConfigurationValue
-	0x00,        // iConfiguration (String Index)
-	0xA0,        // bmAttributes Remote Wakeup
-	0xFA,        // bMaxPower 500mA
-	
-	0x09,        // bLength
-	0x04,        // bDescriptorType (Interface)
-	0x00,        // bInterfaceNumber 0
-	0x00,        // bAlternateSetting
-	0x02,        // bNumEndpoints 2
-	0xFF,        // bInterfaceClass
-	0x5D,        // bInterfaceSubClass
-	0x01,        // bInterfaceProtocol
-	0x00,        // iInterface (String Index)
-	
-	0x11,        // bLength
-	0x21,        // bDescriptorType (HID)
-	0x00, 0x01,  // bcdHID 1.00
-	0x01,        // bCountryCode
-	0x25,        // bNumDescriptors
-	0x81,        // bDescriptorType[0] (Unknown 0x81)
-	0x14, 0x00,  // wDescriptorLength[0] 20
-	0x00,        // bDescriptorType[1] (Unknown 0x00)
-	0x00, 0x00,  // wDescriptorLength[1] 0
-	0x13,        // bDescriptorType[2] (Unknown 0x13)
-	0x01, 0x08,  // wDescriptorLength[2] 2049
-	0x00,        // bDescriptorType[3] (Unknown 0x00)
-	0x00, 
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x81,        // bEndpointAddress (IN/D2H)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	POLL_RATE,        // bInterval 4 (unit depends on device speed)
-	
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x01,        // bEndpointAddress (OUT/H2D)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	0x08,        // bInterval 8 (unit depends on device speed)
-	
-	0x09,        // bLength
-	0x04,        // bDescriptorType (Interface)
-	0x01,        // bInterfaceNumber 1
-	0x00,        // bAlternateSetting
-	0x04,        // bNumEndpoints 4
-	0xFF,        // bInterfaceClass
-	0x5D,        // bInterfaceSubClass
-	0x03,        // bInterfaceProtocol
-	0x00,        // iInterface (String Index)
-	
-	0x1B,        // bLength
-	0x21,        // bDescriptorType (HID)
-	0x00, 0x01,  // bcdHID 1.00
-	0x01,        // bCountryCode
-	0x01,        // bNumDescriptors
-	0x82,        // bDescriptorType[0] (Unknown 0x82)
-	0x40, 0x01,  // wDescriptorLength[0] 320
-	0x02, 0x20, 0x16, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x82,        // bEndpointAddress (IN/D2H)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	0x02,        // bInterval 2 (unit depends on device speed)
-	
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x02,        // bEndpointAddress (OUT/H2D)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	0x04,        // bInterval 4 (unit depends on device speed)
-	
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x83,        // bEndpointAddress (IN/D2H)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	0x64,        // bInterval 64 (unit depends on device speed)
-	
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x03,        // bEndpointAddress (OUT/H2D)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	0x16,        // bInterval 16 (unit depends on device speed)
-	
-	0x09,        // bLength
-	0x04,        // bDescriptorType (Interface)
-	0x02,        // bInterfaceNumber 2
-	0x00,        // bAlternateSetting
-	0x01,        // bNumEndpoints 1
-	0xFF,        // bInterfaceClass
-	0x5D,        // bInterfaceSubClass
-	0x02,        // bInterfaceProtocol
-	0x00,        // iInterface (String Index)
-	
-	0x09,        // bLength
-	0x21,        // bDescriptorType (HID)
-	0x00, 0x01,  // bcdHID 1.00
-	0x01,        // bCountryCode
-	0x22,        // bNumDescriptors
-	0x84,        // bDescriptorType[0] (Unknown 0x84)
-	0x07, 0x00,  // wDescriptorLength[0] 7
-	
-	0x07,        // bLength
-	0x05,        // bDescriptorType (Endpoint)
-	0x84,        // bEndpointAddress (IN/D2H)
-	0x03,        // bmAttributes (Interrupt)
-	0x20, 0x00,  // wMaxPacketSize 32
-	0x16,        // bInterval 16 (unit depends on device speed)
-	
-	0x09,        // bLength
-	0x04,        // bDescriptorType (Interface)
-	0x03,        // bInterfaceNumber 3
-	0x00,        // bAlternateSetting
-	0x00,        // bNumEndpoints 0
-	0xFF,        // bInterfaceClass
-	0xFD,        // bInterfaceSubClass
-	0x13,        // bInterfaceProtocol
-	0x04,        // iInterface (String Index)
-	
-	0x06,        // bLength
-	0x41,        // bDescriptorType (Unknown)
-	0x00, 0x01, 0x01, 0x03
-};
+const USB_Descriptor_String_t PROGMEM LanguageString = USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 
-/** Language descriptor structure. This descriptor, located in FLASH memory, is returned when the host requests
- *  the string descriptor with index 0 (the first index). It is actually an array of 16-bit integers, which indicate
- *  via the language ID table available at USB.org what languages the device supports for its string descriptors.
- */
-const USB_Descriptor_String_t PROGMEM LanguageString =
-{
-	.Header                 = {.Size = USB_STRING_LEN(1), .Type = DTYPE_String},
-
-	.UnicodeString          = {LANGUAGE_ID_ENG}
-};
-
-/** Manufacturer descriptor string. This is a Unicode string containing the manufacturer's details in human readable
- *  form, and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
+/** Manufacturer descriptor string. This is a Unicode string containing the
+ * manufacturer's details in human readable form, and is read out upon request
+ * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ManufacturerString =
-{
-	.Header                 = {.Size = USB_STRING_LEN(12), .Type = DTYPE_String},
+const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR(L"sanjay900");
 
-	.UnicodeString          = L"sanjay900"
-};
-
-/** Product descriptor string. This is a Unicode string containing the product's details in human readable form,
- *  and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
- *  Descriptor.
+/** Product descriptor string. This is a Unicode string containing the product's
+ * details in human readable form, and is read out upon request by the host when
+ * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ProductString =
-{
-	.Header                 = {.Size = USB_STRING_LEN(31), .Type = DTYPE_String},
+const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Wii Controller Xbox Adaptor");
 
-	.UnicodeString          = L"Wii Controller Xbox Adaptor"
+const USB_Descriptor_String_t PROGMEM VersionString = USB_STRING_DESCRIPTOR(L"1.0");
+
+const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
+	Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
+	Signature : L"MSFT100",
+	VendorCode : REQ_GetOSFeatureDescriptor
 };
 
-const USB_Descriptor_String_t PROGMEM VersionString =
-{
-	.Header                 = {.Size = USB_STRING_LEN(3), .Type = DTYPE_String},
-
-	.UnicodeString          = L"1.0"
+const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
+	TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
+	Version : 0x0100,
+	Index : EXTENDED_COMPAT_ID_DESCRIPTOR,
+	TotalSections : 1,
+	CompatID : {
+		FirstInterfaceNumber : WCID_IF_NUMBER,
+		Reserved : 0x04,
+		CompatibleID : "XUSB10"
+	}
 };
 
-/** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"
- *  documentation) by the application code so that the address and size of a requested descriptor can be given
- *  to the USB library. When the device receives a Get Descriptor request on the control endpoint, this function
- *  is called so that the descriptor details can be passed back and the appropriate descriptor sent back to the
- *  USB host.
+const USB_OSPropertiesDescriptor_t PROGMEM DevProperties =
+{
+	.Header =
+		{
+			TotalLength: sizeof(USB_OSPropertiesHeader_t) + PROPERTY_SIZE(1) + PROPERTY_SIZE(2),
+			Version: 0x0100,
+			Index: EXTENDED_PROPERTIES_DESCRIPTOR,
+			TotalSections: NB_PROPERTIES
+		},
+
+	.Property =
+		{
+			{
+				Length: PROPERTY_SIZE(1),
+				Type: PROPERTY1_TYPE,
+				Name: {Length: sizeof(PROPERTY1_NAME), Value: PROPERTY1_NAME},
+				Data: {Length: sizeof(PROPERTY1_DATA), Value: PROPERTY1_DATA}
+			},
+			{
+				Length: PROPERTY_SIZE(2),
+				Type: PROPERTY2_TYPE,
+				Name: {Length: sizeof(PROPERTY2_NAME), Value: PROPERTY2_NAME},
+				Data: {Length: sizeof(PROPERTY2_DATA), Value: PROPERTY2_DATA}
+			},
+		}
+};
+/** This function is called by the library when in device mode, and must be
+ * overridden (see library "USB Descriptors" documentation) by the application
+ * code so that the address and size of a requested descriptor can be given to
+ * the USB library. When the device receives a Get Descriptor request on the
+ * control endpoint, this function is called so that the descriptor details can
+ * be passed back and the appropriate descriptor sent back to the USB host.
  */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
-                                    const uint16_t wIndex,
-                                    const void** const DescriptorAddress)
+									const uint16_t wIndex,
+									const void **const DescriptorAddress)
 {
-	const uint8_t  DescriptorType   = (wValue >> 8);
-	const uint8_t  DescriptorNumber = (wValue & 0xFF);
+	const uint8_t DescriptorType = (wValue >> 8);
+	const uint8_t DescriptorNumber = (wValue & 0xFF);
 
-	const void* Address = NULL;
-	uint16_t    Size    = NO_DESCRIPTOR;
+	const void *Address = NULL;
+	uint16_t Size = NO_DESCRIPTOR;
 
 	switch (DescriptorType)
 	{
-		case DTYPE_Device:
-			Address = &DeviceDescriptor;
-			Size    = sizeof(DeviceDescriptor);
+	case DTYPE_Device:
+		Address = &DeviceDescriptor;
+		Size = sizeof(DeviceDescriptor);
+		break;
+	case DTYPE_Configuration:
+		Address = &ConfigurationDescriptor;
+		Size = sizeof(ConfigurationDescriptor);
+		break;
+	case DTYPE_String:
+		switch (DescriptorNumber)
+		{
+		case 0x00:
+			Address = &LanguageString;
+			Size = pgm_read_byte(&LanguageString.Header.Size);
 			break;
-		case DTYPE_Configuration:
-			Address = &ConfigurationDescriptor;
-			Size    = sizeof(ConfigurationDescriptor);
+		case 0x01:
+			Address = &ManufacturerString;
+			Size = pgm_read_byte(&ManufacturerString.Header.Size);
 			break;
-		case DTYPE_String:
-			switch (DescriptorNumber)
-			{
-				case 0x00:
-					Address = &LanguageString;
-					Size    = pgm_read_byte(&LanguageString.Header.Size);
-					break;
-				case 0x01:
-					Address = &ManufacturerString;
-					Size    = pgm_read_byte(&ManufacturerString.Header.Size);
-					break;
-				case 0x02:
-					Address = &ProductString;
-					Size    = pgm_read_byte(&ProductString.Header.Size);
-					break;
-				case 0x03:
-					Address = &VersionString;
-					Size    = pgm_read_byte(&VersionString.Header.Size);
-					break;
+		case 0x02:
+			Address = &ProductString;
+			Size = pgm_read_byte(&ProductString.Header.Size);
+			break;
+		case 0x03:
+			Address = &VersionString;
+			Size = pgm_read_byte(&VersionString.Header.Size);
+			break;
+		case 0xEE:
+			/* A Microsoft-proprietary extension. String address 0xEE is used by
+         Windows for "OS Descriptors", which in this case allows us to indicate
+         that our device has a Compatible ID to provide. */
+			Address = &OSDescriptorString;
+			Size = pgm_read_byte(&OSDescriptorString.Header.Size);
+			break;
 		}
 
-			break;
+		break;
 	}
 
 	*DescriptorAddress = Address;
 	return Size;
 }
+uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
+									const uint8_t wIndex,
+									const uint8_t Recipient,
+									const void **const DescriptorAddress)
+{
+	const void *Address = NULL;
+	uint16_t Size = NO_DESCRIPTOR;
 
+	/* Check if an OS Feature Descriptor is being requested */
+	switch (wIndex)
+	{
+	case EXTENDED_COMPAT_ID_DESCRIPTOR:
+		if (Recipient == REQREC_DEVICE)
+		{ /* Ignore InterfaceNumber as this is a
+                                         Device Request */
+			Address = &DevCompatIDs;
+			Size = DevCompatIDs.TotalLength;
+		}
+		break;
+	case EXTENDED_PROPERTIES_DESCRIPTOR:
+		if ((InterfaceNumber == WCID_IF_NUMBER) &&
+			((Recipient == REQREC_INTERFACE) ||
+			 (Recipient ==
+			  REQREC_DEVICE)))
+		{ 
+			Address = &DevProperties;
+			Size = DevProperties.Header.TotalLength;
+		}
+		break;
+	}
+
+	*DescriptorAddress = Address;
+	return Size;
+}

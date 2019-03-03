@@ -38,6 +38,8 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
  * along unhandled control requests to the library for processing internally.
  */
 void EVENT_USB_Device_ControlRequest(void) {
+  const void* DescriptorPointer;
+	uint16_t    DescriptorSize;
   /* Handle HID Class specific requests */
   switch (USB_ControlRequest.bRequest) {
   case HID_REQ_GetReport:
@@ -51,6 +53,21 @@ void EVENT_USB_Device_ControlRequest(void) {
     }
 
     break;
+  case REQ_GetOSFeatureDescriptor:
+    if ((USB_ControlRequest.bmRequestType &
+         (CONTROL_REQTYPE_DIRECTION | CONTROL_REQTYPE_TYPE)) ==
+        (REQDIR_DEVICETOHOST | REQTYPE_VENDOR)) {
+
+      DescriptorSize = USB_GetOSFeatureDescriptor(
+          USB_ControlRequest.wValue >> 8, USB_ControlRequest.wIndex,
+          USB_ControlRequest.bmRequestType & CONTROL_REQTYPE_RECIPIENT,
+          &DescriptorPointer);
+      if (DescriptorSize == NO_DESCRIPTOR)
+        return;
+      Endpoint_ClearSETUP();
+      Endpoint_Write_Control_PStream_LE(DescriptorPointer, DescriptorSize);
+      Endpoint_ClearOUT();
+    }
   }
 }
 

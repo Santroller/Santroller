@@ -1,4 +1,5 @@
 #include "XInputPad.h"
+#if OUTPUT_TYPE == XINPUT
 USB_JoystickReport_Data_t gamepad_state;
 
 void (*padUSBConnectEventCallback)(void) = NULL;
@@ -124,3 +125,4 @@ void xbox_set_connect_callback(void (*callbackPtr)(void)) {
 void xbox_set_disconnect_callback(void (*callbackPtr)(void)) {
   padUSBDisconnectEventCallback = callbackPtr;
 }
+#endif

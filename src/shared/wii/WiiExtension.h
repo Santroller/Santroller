@@ -1,9 +1,7 @@
 #pragma once
-#include "../Controller.h"
+#include "../controller/Controller.h"
 #include "../twi/I2Cdev.h"
 #include "util/delay.h"
-#include "../mpu6050/mpu.h"
-#include "../mpu6050/inv_mpu.h"
 #include "NintendoExtensionCtrl.h"
 
 class WiiExtension {
@@ -15,7 +13,7 @@ public:
   GuitarController::Shared guitar;
   DrumController::Shared drum;
 
-  void read_controller(USB_JoystickReport_Data_t* data);
+  void read_controller(Controller* data);
   WiiExtension();
   void init();
   short counter;

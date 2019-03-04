@@ -1,17 +1,19 @@
-#include "../../shared/Controller.h"
-#include "../../shared/bootloader/bootloader.h"
-#include "../../shared/controller/XInputPad.h"
+#include <stdlib.h>
+#include "../../shared/controller/Controller.h"
+#include "../../shared/controller/output/OutputProcessor.h"
+#include "../../shared/bootloader/Bootloader.h"
 #include "../../shared/util.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
-#include <stdlib.h>
 #include <util/delay.h>
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
 uint8_t current_control;
+Controller controller;
+OutputProcessor out;
 ISR(USART1_RX_vect) {
   char data = UDR1;
   switch (current_control) {
@@ -27,15 +29,10 @@ ISR(USART1_RX_vect) {
       current_control = 0;
     break;
   default:
-    ((uint8_t *)&gamepad_state)[current_control - 2] = data;
+    ((uint8_t *)&controller)[current_control - 2] = data;
     current_control++;
-    if (current_control == sizeof(USB_JoystickReport_Data_t)) {
-      if (bit_check(gamepad_state.digital_buttons_1, XBOX_START) &&
-          bit_check(gamepad_state.digital_buttons_1, XBOX_BACK)) {
-        bootloader();
-      }
-      xbox_send_pad_state();
-      xbox_reset_watchdog();
+    if (current_control == sizeof(Controller) + 2) {
+      out.process(&controller);
       current_control = 0;
     }
   }
@@ -58,7 +55,7 @@ int main(void) {
   CPU_PRESCALE(0);
 
   // Init XBOX pad emulation
-  xbox_init(true);
+  out.init();
   sei();
-  for (;;) {}
+  while (true) {};
 }

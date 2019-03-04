@@ -1,6 +1,16 @@
 {
     "files.associations": {
         "wiiextension.h": "c",
-        "controller.h": "c"
+        "controller.h": "c",
+        "config.h": "c",
+        "util.h": "c",
+        "delay.h": "c",
+        "mpu.h": "c",
+        "inv_mpu.h": "c",
+        "descriptors.h": "c",
+        "kdescriptors.h": "c",
+        "xinputpad.h": "c",
+        "keyboard.h": "c",
+        "sfr_defs.h": "c"
     }
 }

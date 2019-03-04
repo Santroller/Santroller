@@ -22,8 +22,8 @@ DUDE = /usr/bin/avrdude -V -p $(MCU)
 # ----- No changes should be necessary below this line -----
 C_FILES = $(shell find ../../shared -type f -name '*.c' -not -path "../../shared/lufa/lufa/*") $(shell find ../../shared -type f -name '*.cpp' -not -path "../../shared/lufa/lufa/*") $(shell find . -type f -name '*.c') $(shell find . -type f -name '*.cpp')
 OBJECTS = \
-	$(patsubst %.$(EXT_C),obj/%.o,$(shell find ../../shared -type f -name '*.${EXT_C}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/*")) \
-	$(patsubst %.$(EXT_C++),obj/%.o,$(shell find ../../shared -type f -name '*.${EXT_C++}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/*")) \
+	$(patsubst %.$(EXT_C),obj/%.o,$(shell find ../../shared -type f -name '*.${EXT_C}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")) \
+	$(patsubst %.$(EXT_C++),obj/%.o,$(shell find ../../shared -type f -name '*.${EXT_C++}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")) \
 	obj/uart.o \
 	obj/main.o
 
@@ -35,6 +35,7 @@ CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums
 CFLAGS += -Wall -Wstrict-prototypes
 CFLAGS += -DF_OSC=$(OSC)
 CFLAGS += -DF_CPU=$(OSC)
+CFLAGS += -DBOARD=UNO
 CFLAGS += -mmcu=$(MCU)
 
 C++FLAGS = $(INC)
@@ -43,6 +44,7 @@ C++FLAGS += -funsigned-char -funsigned-bitfields -fshort-enums
 C++FLAGS += -Wall
 C++FLAGS += -DF_OSC=$(OSC)
 C++FLAGS += -DF_CPU=$(OSC)
+C++FLAGS += -DBOARD=UNO
 C++FLAGS += -mmcu=$(MCU)
 
 default: $(PROJECT).elf

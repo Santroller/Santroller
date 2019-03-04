@@ -1,27 +1,29 @@
-#include "../shared/Controller.h"
+#include "../config/config.h"
+#include "../shared/bootloader/Bootloader.h"
+#include "../shared/controller/ControllerProcessor.h"
+#include "../shared/controller/XInputPad.h"
 #include "../shared/twi/I2Cdev.h"
 #include "../shared/util.h"
 #include "../shared/wii/WiiExtension.h"
-#include "../shared/bootloader/bootloader.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
 #include <util/delay.h>
-#include "../shared/controller/XInputPad.h"
+#include "pins.h"
 
-WiiExtension controller;
+ControllerProcessor controller;
 
 int main() {
+#if DEVICE_TYPE == XINPUT
   xbox_init(true);
+#endif
   sei();
   controller.init();
-  for (;;) {
-    controller.read_controller(&gamepad_state);
-    if (bit_check(gamepad_state.digital_buttons_1, XBOX_BACK) &&
-        bit_check(gamepad_state.digital_buttons_1, XBOX_START)) {
-      bootloader();
-    }
+  while (true) {
+    controller.process();
+#if DEVICE_TYPE == XINPUT
     xbox_send_pad_state();
     xbox_reset_watchdog();
+#endif DEVICE_TYPE == XINPUT
   }
 }

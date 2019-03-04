@@ -1,7 +1,6 @@
 all:
 
 upload:
-	make
 	@echo Uploading all elements.
 	@echo
 	$(MAKE) -C main upload
@@ -12,7 +11,7 @@ upload:
 %:
 	@echo Executing \"make $@\" on all elements.
 	@echo
-	$(MAKE) -C main
-	$(MAKE) -C usb
+	$(MAKE) -C main $@
+	$(MAKE) -C usb $@
 	@echo
 	@echo \"Make $@\" operation complete.

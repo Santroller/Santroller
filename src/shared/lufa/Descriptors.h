@@ -3,6 +3,7 @@
 /* Includes: */
 #include <LUFA/Drivers/USB/USB.h>
 
+#include "../../../config/config.h"
 #include <avr/pgmspace.h>
 /* Enums */
 enum registry_props_type {
@@ -17,6 +18,10 @@ enum registry_props_type {
 /* Macros: */
 /** Endpoint address of the Joystick HID reporting IN endpoint. */
 #define JOYSTICK_EPADDR_IN (ENDPOINT_DIR_IN | 1)
+#define KEYBOARD_EPADDR (ENDPOINT_DIR_IN | 1)
+
+/** Size in bytes of the Keyboard HID reporting IN endpoint. */
+#define KEYBOARD_EPSIZE 8
 #define REQ_GetOSFeatureDescriptor 0x20
 
 /** Descriptor index for a Microsoft Proprietary Extended Device Compatibility
@@ -72,7 +77,7 @@ typedef struct {
   uint8_t HIDReportType3;
   uint16_t HIDReportLength3;
 } USB_HID_XBOX_Descriptor_HID_t;
-
+#if OUTPUT_TYPE == XINPUT
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_t Interface0;
@@ -80,7 +85,35 @@ typedef struct {
   USB_Descriptor_Endpoint_t DataInEndpoint0;
   USB_Descriptor_Endpoint_t DataOutEndpoint0;
 } USB_Descriptor_Configuration_t;
+#elif OUTPUT_TYPE == KEYBOARD
+typedef struct {
+  USB_Descriptor_Configuration_Header_t Config;
 
+  // Keyboard HID Interface
+  USB_Descriptor_Interface_t HID_Interface;
+  USB_HID_Descriptor_HID_t HID_KeyboardHID;
+  USB_Descriptor_Endpoint_t HID_ReportINEndpoint;
+} USB_Descriptor_Configuration_t;
+
+#endif
+/** Enum for the device interface descriptor IDs within the device. Each
+ * interface descriptor should have a unique ID index associated with it, which
+ * can be used to refer to the interface from other descriptors.
+ */
+enum InterfaceDescriptors_t {
+  INTERFACE_ID_Keyboard = 0, /**< Keyboard interface descriptor ID */
+};
+
+/** Enum for the device string descriptor IDs within the device. Each string
+ * descriptor should have a unique ID index associated with it, which can be
+ * used to refer to the string from other descriptors.
+ */
+enum StringDescriptors_t {
+  STRING_ID_Language =
+      0, /**< Supported Languages string descriptor ID (must be zero) */
+  STRING_ID_Manufacturer = 1, /**< Manufacturer string ID */
+  STRING_ID_Product = 2,      /**< Product string ID */
+};
 typedef struct {
   USB_Descriptor_Header_t Header;
   int Signature[7];

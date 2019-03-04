@@ -9,7 +9,7 @@
 #define KEYBOARD 2
 #define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
 #define DEVICE_TYPE WII // this can be either WII or DIRECT
-#define OUTPUT_TYPE KEYBOARD // this can be either XINPUT or KEYBOARD
+#define OUTPUT_TYPE XINPUT // this can be either XINPUT or KEYBOARD
 #if DEVICE_TYPE == DIRECT
     #define PIN_GREEN 4
     #define PIN_RED 5

@@ -28,6 +28,6 @@ extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
 #define INPUT_PULLUP 2
 class Direct {
 public:
-  void process(Controller *controller);
+  void read_controller(Controller *controller);
   void init();
 };

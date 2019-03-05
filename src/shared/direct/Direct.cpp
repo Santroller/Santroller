@@ -110,36 +110,36 @@ void pinMode(uint8_t pin, uint8_t mode) {
     SREG = oldSREG;
   }
 }
-void Direct::process(Controller *controller) {
+void Direct::read_controller(Controller *controller) {
 #if DEVICE_TYPE == DIRECT
-  bit_write(digitalRead(PIN_GREEN), controller->buttons, GREEN);
-  bit_write(digitalRead(PIN_RED), controller->buttons, RED);
-  bit_write(digitalRead(PIN_YELLOW), controller->buttons, YELLOW);
-  bit_write(digitalRead(PIN_BLUE), controller->buttons, BLUE);
-  bit_write(digitalRead(PIN_ORANGE), controller->buttons, ORANGE);
-  bit_write(digitalRead(PIN_START), controller->buttons, START);
-  bit_write(digitalRead(PIN_SELECT), controller->buttons, SELECT);
-  bit_write(digitalRead(PIN_LEFT), controller->buttons, LEFT);
-  bit_write(digitalRead(PIN_RIGHT), controller->buttons, RIGHT);
-  bit_write(digitalRead(PIN_UP), controller->buttons, UP);
-  bit_write(digitalRead(PIN_DOWN), controller->buttons, DOWN);
-  controller->r_x = analogRead(PIN_WHAMMY);
+  bit_write(!digitalRead(PIN_GREEN), controller->buttons, GREEN);
+  bit_write(!digitalRead(PIN_RED), controller->buttons, RED);
+  bit_write(!digitalRead(PIN_YELLOW), controller->buttons, YELLOW);
+  bit_write(!digitalRead(PIN_BLUE), controller->buttons, BLUE);
+  bit_write(!digitalRead(PIN_ORANGE), controller->buttons, ORANGE);
+  bit_write(!digitalRead(PIN_START), controller->buttons, START);
+  bit_write(!digitalRead(PIN_SELECT), controller->buttons, SELECT);
+  bit_write(!digitalRead(PIN_LEFT), controller->buttons, LEFT);
+  bit_write(!digitalRead(PIN_RIGHT), controller->buttons, RIGHT);
+  bit_write(!digitalRead(PIN_UP), controller->buttons, UP);
+  bit_write(!digitalRead(PIN_DOWN), controller->buttons, DOWN);
+  controller->r_x = 1024-analogRead(PIN_WHAMMY);
 #endif
 }
 
 void Direct::init() {
 #if DEVICE_TYPE == DIRECT
-  pinMode(GREEN, INPUT_PULLUP);
-  pinMode(RED, INPUT_PULLUP);
-  pinMode(YELLOW, INPUT_PULLUP);
-  pinMode(BLUE, INPUT_PULLUP);
-  pinMode(ORANGE, INPUT_PULLUP);
-  pinMode(START, INPUT_PULLUP);
-  pinMode(SELECT, INPUT_PULLUP);
-  pinMode(LEFT, INPUT_PULLUP);
-  pinMode(RIGHT, INPUT_PULLUP);
-  pinMode(UP, INPUT_PULLUP);
-  pinMode(DOWN, INPUT_PULLUP);
+  pinMode(PIN_GREEN, INPUT_PULLUP);
+  pinMode(PIN_RED, INPUT_PULLUP);
+  pinMode(PIN_YELLOW, INPUT_PULLUP);
+  pinMode(PIN_BLUE, INPUT_PULLUP);
+  pinMode(PIN_ORANGE, INPUT_PULLUP);
+  pinMode(PIN_START, INPUT_PULLUP);
+  pinMode(PIN_SELECT, INPUT_PULLUP);
+  pinMode(PIN_LEFT, INPUT_PULLUP);
+  pinMode(PIN_RIGHT, INPUT_PULLUP);
+  pinMode(PIN_UP, INPUT_PULLUP);
+  pinMode(PIN_DOWN, INPUT_PULLUP);
   pinMode(PIN_WHAMMY, INPUT_PULLUP);
 #endif
 }

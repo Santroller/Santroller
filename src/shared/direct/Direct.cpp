@@ -123,7 +123,7 @@ void Direct::read_controller(Controller *controller) {
   bit_write(!digitalRead(PIN_RIGHT), controller->buttons, RIGHT);
   bit_write(!digitalRead(PIN_UP), controller->buttons, UP);
   bit_write(!digitalRead(PIN_DOWN), controller->buttons, DOWN);
-  controller->r_x = 1024-analogRead(PIN_WHAMMY);
+  controller->r_x = analogRead(PIN_WHAMMY);
 #endif
 }
 
@@ -140,6 +140,5 @@ void Direct::init() {
   pinMode(PIN_RIGHT, INPUT_PULLUP);
   pinMode(PIN_UP, INPUT_PULLUP);
   pinMode(PIN_DOWN, INPUT_PULLUP);
-  pinMode(PIN_WHAMMY, INPUT_PULLUP);
 #endif
 }

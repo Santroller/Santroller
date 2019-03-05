@@ -56,6 +56,5 @@ int main(void) {
 
   // Init XBOX pad emulation
   out.init();
-  sei();
   while (true) {};
 }

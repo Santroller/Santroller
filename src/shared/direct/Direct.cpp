@@ -47,9 +47,9 @@ int analogRead(uint8_t pin) {
 #if defined(ADMUX)
 #if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) ||                  \
     defined(__AVR_ATtiny85__)
-  ADMUX = (analog_reference << 4) | (pin & 0x07);
+  ADMUX = (1 << 4) | (pin & 0x07);
 #else
-  ADMUX = (0 << 6) | (pin & 0x07);
+  ADMUX = (1 << 6) | (pin & 0x07);
 #endif
 #endif
 
@@ -119,15 +119,55 @@ void Direct::read_controller(Controller *controller) {
   bit_write(!digitalRead(PIN_ORANGE), controller->buttons, ORANGE);
   bit_write(!digitalRead(PIN_START), controller->buttons, START);
   bit_write(!digitalRead(PIN_SELECT), controller->buttons, SELECT);
-  bit_write(!digitalRead(PIN_LEFT), controller->buttons, LEFT);
-  bit_write(!digitalRead(PIN_RIGHT), controller->buttons, RIGHT);
+  controller->r_x = (analogRead(PIN_WHAMMY) * 32) * WHAMMY_DIR + WHAMMY_START;
+#if MOVE_MODE == JOY
+  bit_write(!digitalRead(PIN_UP) || analogRead(PIN_JOY_Y) > 600,
+            controller->buttons, UP);
+  bit_write(!digitalRead(PIN_DOWN) || analogRead(PIN_JOY_Y) < 400,
+            controller->buttons, DOWN);
+  bit_write(analogRead(PIN_JOY_X) < 400, controller->buttons, LEFT);
+  bit_write(analogRead(PIN_JOY_X) > 600, controller->buttons, RIGHT);
+#elif MOVE_MODE == DPAD
   bit_write(!digitalRead(PIN_UP), controller->buttons, UP);
   bit_write(!digitalRead(PIN_DOWN), controller->buttons, DOWN);
-  controller->r_x = analogRead(PIN_WHAMMY);
+  bit_write(!digitalRead(PIN_LEFT), controller->buttons, LEFT);
+  bit_write(!digitalRead(PIN_RIGHT), controller->buttons, RIGHT);
+#endif
 #endif
 }
 
 void Direct::init() {
+#if defined(ADCSRA)
+// set a2d prescaler so we are inside the desired 50-200 KHz range.
+#if F_CPU >= 16000000 // 16 MHz / 128 = 125 KHz
+  sbi(ADCSRA, ADPS2);
+  sbi(ADCSRA, ADPS1);
+  sbi(ADCSRA, ADPS0);
+#elif F_CPU >= 8000000 // 8 MHz / 64 = 125 KHz
+  sbi(ADCSRA, ADPS2);
+  sbi(ADCSRA, ADPS1);
+  cbi(ADCSRA, ADPS0);
+#elif F_CPU >= 4000000 // 4 MHz / 32 = 125 KHz
+  sbi(ADCSRA, ADPS2);
+  cbi(ADCSRA, ADPS1);
+  sbi(ADCSRA, ADPS0);
+#elif F_CPU >= 2000000 // 2 MHz / 16 = 125 KHz
+  sbi(ADCSRA, ADPS2);
+  cbi(ADCSRA, ADPS1);
+  cbi(ADCSRA, ADPS0);
+#elif F_CPU >= 1000000 // 1 MHz / 8 = 125 KHz
+  cbi(ADCSRA, ADPS2);
+  sbi(ADCSRA, ADPS1);
+  sbi(ADCSRA, ADPS0);
+#else // 128 kHz / 2 = 64 KHz -> This is the closest you can get, the prescaler
+      // is 2
+  cbi(ADCSRA, ADPS2);
+  cbi(ADCSRA, ADPS1);
+  sbi(ADCSRA, ADPS0);
+#endif
+  // enable a2d conversions
+  sbi(ADCSRA, ADEN);
+#endif
 #if DEVICE_TYPE == DIRECT
   pinMode(PIN_GREEN, INPUT_PULLUP);
   pinMode(PIN_RED, INPUT_PULLUP);
@@ -136,9 +176,15 @@ void Direct::init() {
   pinMode(PIN_ORANGE, INPUT_PULLUP);
   pinMode(PIN_START, INPUT_PULLUP);
   pinMode(PIN_SELECT, INPUT_PULLUP);
-  pinMode(PIN_LEFT, INPUT_PULLUP);
-  pinMode(PIN_RIGHT, INPUT_PULLUP);
   pinMode(PIN_UP, INPUT_PULLUP);
   pinMode(PIN_DOWN, INPUT_PULLUP);
+  pinMode(PIN_WHAMMY, INPUT);
+#if MOVE_MODE == JOY
+  pinMode(PIN_JOY_X, INPUT);
+  pinMode(PIN_JOY_Y, INPUT);
+#elif MOVE_MODE == DPAD
+  pinMode(PIN_LEFT, INPUT_PULLUP);
+  pinMode(PIN_RIGHT, INPUT_PULLUP);
+#endif
 #endif
 }

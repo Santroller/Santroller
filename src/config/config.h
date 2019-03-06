@@ -10,19 +10,26 @@
 #define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
 #define DEVICE_TYPE DIRECT // this can be either WII or DIRECT
 #define OUTPUT_TYPE XINPUT // this can be either XINPUT or KEYBOARD
+#define DPAD 1
+#define JOY 2
 #if DEVICE_TYPE == DIRECT
     #define PIN_GREEN 4
     #define PIN_RED 5
     #define PIN_YELLOW 6
     #define PIN_BLUE 7
     #define PIN_ORANGE 8
-    #define PIN_WHAMMY 10
     #define PIN_START 16
     #define PIN_SELECT 9
-    #define PIN_LEFT 14
-    #define PIN_RIGHT 15
-    #define PIN_UP 2
-    #define PIN_DOWN 3
+    #define PIN_LEFT 10
+    #define PIN_RIGHT 21
+    #define PIN_UP 14
+    #define PIN_DOWN 15
+    #define PIN_WHAMMY 18
+    #define PIN_JOY_X 19
+    #define PIN_JOY_Y 20
+    #define MOVE_MODE JOY // this can either be JOY or DPAD
+    #define WHAMMY_DIR -1
+    #define WHAMMY_START 16863
 #endif
 //For a list of keyboard bindings, visit http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 #if OUTPUT_TYPE == KEYBOARD

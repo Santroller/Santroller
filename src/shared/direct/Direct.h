@@ -9,6 +9,10 @@ extern const uint16_t PROGMEM port_to_output_PGM[];
 extern const uint16_t PROGMEM port_to_input_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
+#if defined(__AVR_ATmega32U4__)
+#define analogPinToChannel(P)  ( pgm_read_byte( analog_pin_to_channel_PGM + (P) ) )
+extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
+#endif
 }
 #ifndef sbi
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))

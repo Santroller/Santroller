@@ -13,7 +13,7 @@ void ControllerProcessor::init() {
 #elif DEVICE_TYPE == DIRECT
   direct.init();
 #endif
-  // mympu_open(15);
+  mympu_open(15);
 }
 
 void ControllerProcessor::processTilt() {

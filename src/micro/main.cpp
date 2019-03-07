@@ -1,7 +1,7 @@
 #include "../config/config.h"
 #include "../shared/bootloader/Bootloader.h"
 #include "../shared/controller/ControllerProcessor.h"
-#include "../shared/controller/output/OutputProcessor.h"
+#include "../shared/controller/output/OutputHandler.h"
 #include "../shared/twi/I2Cdev.h"
 #include "../shared/util.h"
 #include "../shared/wii/WiiExtension.h"
@@ -12,7 +12,7 @@
 #include "pins.h"
 
 ControllerProcessor controller;
-OutputProcessor out;
+OutputHandler out;
 
 int main() {
   out.init();

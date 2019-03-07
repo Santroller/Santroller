@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "../../shared/controller/Controller.h"
-#include "../../shared/controller/output/OutputProcessor.h"
+#include "../../shared/controller/output/OutputHandler.h"
 #include "../../shared/bootloader/Bootloader.h"
 #include "../../shared/util.h"
 #include <avr/eeprom.h>
@@ -13,7 +13,7 @@
 
 uint8_t current_control;
 Controller controller;
-OutputProcessor out;
+OutputHandler out;
 ISR(USART1_RX_vect) {
   char data = UDR1;
   switch (current_control) {

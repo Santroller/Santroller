@@ -26,8 +26,8 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
     .SubClass = USB_CSCP_NoDeviceSubclass,
     .Protocol = USB_CSCP_NoDeviceProtocol,
     #endif
-    .VendorID = 0x045E,
-    .ProductID = 0x2042,
+    .VendorID = 0x1209,
+    .ProductID = 0x2882,
     .ReleaseNumber = VERSION_BCD(0, 0, 1),
 
     .ManufacturerStrIndex = 0x01,

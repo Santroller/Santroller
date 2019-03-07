@@ -10,10 +10,18 @@
 class OutputHandler {
 public:
 #if OUTPUT_TYPE == XINPUT
-  XInputOutput output;
+  static XInputOutput output;
 #elif OUTPUT_TYPE == KEYBOARD
-  KeyboardOutput output;
+  static KeyboardOutput output;
 #endif
   void process(Controller *controller);
   void init();
 };
+
+extern "C" {
+void EVENT_USB_Device_Connect(void);
+void EVENT_USB_Device_Disconnect(void);
+void EVENT_USB_Device_ConfigurationChanged(void);
+void EVENT_USB_Device_ControlRequest(void);
+void EVENT_USB_Device_StartOfFrame(void);
+}

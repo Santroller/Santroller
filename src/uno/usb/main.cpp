@@ -54,7 +54,6 @@ int main(void) {
   // Set clock @ 16Mhz
   CPU_PRESCALE(0);
 
-  // Init XBOX pad emulation
   out.init();
   while (true) {};
 }

@@ -83,6 +83,8 @@ void XInputOutput::update(Controller controller) {
   gamepad_state.r_y = controller.r_y;
   gamepad_state.lt = controller.lt;
   gamepad_state.rt = controller.rt;
+  USB_USBTask();
+  wdt_reset();
   /* Device must be connected and configured for the task to run */
   if (USB_DeviceState != DEVICE_STATE_Configured)
     return;
@@ -98,6 +100,4 @@ void XInputOutput::update(Controller controller) {
     /* Finalize the stream transfer to send the last packet */
     Endpoint_ClearIN();
   }
-  USB_USBTask();
-  wdt_reset();
 }

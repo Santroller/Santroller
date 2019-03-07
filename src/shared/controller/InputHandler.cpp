@@ -1,9 +1,9 @@
-#include "ControllerProcessor.h"
-void ControllerProcessor::process() {
+#include "InputHandler.h"
+void InputHandler::process() {
   input.read_controller(&controller);
   processTilt();
 }
-void ControllerProcessor::init() {
+void InputHandler::init() {
   input.init();
 #if TILT_SENSOR == MPU_6050
   mympu_open(15);
@@ -12,12 +12,15 @@ void ControllerProcessor::init() {
 #endif
 }
 
-void ControllerProcessor::processTilt() {
+void InputHandler::processTilt() {
 #if TILT_SENSOR == MPU_6050
   if (counter % 20 == 0) {
     double z;
     mympu_update();
-    z = 32767 + (mympu.ypr[2] * (32767 / M_PI));
+    z = (mympu.ypr[2] * (32767 / M_PI));
+    #if FLIP_MPU_6050 == 0 
+      z += 32767;
+    #endif
     if (z > 32767) {
       z = 0;
     }

@@ -7,7 +7,7 @@
 #elif DEVICE_TYPE == DIRECT || TILT_SENSOR == GRAVITY
   #include "../direct/Direct.h"
 #endif
-class ControllerProcessor {
+class InputHandler {
 public:
   Controller controller;
   int counter;

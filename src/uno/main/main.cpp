@@ -1,4 +1,4 @@
-#include "../../shared/controller/ControllerProcessor.h"
+#include "../../shared/controller/InputHandler.h"
 #include "../../shared/twi/I2Cdev.h"
 #include "../../shared/util.h"
 #include "../../shared/wii/WiiExtension.h"
@@ -11,7 +11,7 @@ extern "C" {
 #include "pins.h"
 }
 
-ControllerProcessor controller;
+InputHandler controller;
 
 size_t current_index = 0;
 int main() {
@@ -24,7 +24,6 @@ int main() {
   }
 }
 ISR(USART_UDRE_vect) {
-  uint8_t a = UDR0;
   if (current_index < 2) {
     UDR0 = current_index == 0 ? 'm' : 'a';
   } else {

@@ -16,8 +16,8 @@ public:
   void process();
 
 #if DEVICE_TYPE == WII
-  WiiExtension extension;
+  WiiExtension input;
 #elif DEVICE_TYPE == DIRECT || TILT_SENSOR == GRAVITY
-  Direct direct;
+  Direct input;
 #endif
 };

@@ -1,19 +1,15 @@
 #include "ControllerProcessor.h"
 void ControllerProcessor::process() {
-#if DEVICE_TYPE == WII
-  extension.read_controller(&controller);
-#elif DEVICE_TYPE == DIRECT
-  direct.read_controller(&controller);
-#endif
+  input.read_controller(&controller);
   processTilt();
 }
 void ControllerProcessor::init() {
-#if DEVICE_TYPE == WII
-  extension.init();
-#elif DEVICE_TYPE == DIRECT
-  direct.init();
-#endif
+  input.init();
+#if TILT_SENSOR == MPU_6050
   mympu_open(15);
+#elif TILT_SENSOR == GRAVITY
+  pinMode(PIN_GRAVITY, INPUT);
+#endif
 }
 
 void ControllerProcessor::processTilt() {
@@ -35,6 +31,6 @@ void ControllerProcessor::processTilt() {
   }
   counter++;
 #elif TILT_SENSOR == GRAVITY
-  controller.r_y = direct->analogueRead(PIN_GRAVITY);
+  controller.r_y = direct->digitalRead(PIN_GRAVITY) * 32767;
 #endif
 }

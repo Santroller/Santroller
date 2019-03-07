@@ -1,7 +1,13 @@
 #include "KeyboardOutput.h"
 #if OUTPUT_TYPE == KEYBOARD
-#define CHECK_KEY(key) if (bit_check(controller.buttons, key)) { keys[usedKeys++] = KEY_##key; }
-#define CHECK_KEY2(key, condition) if (bit_check(controller.buttons, key) || condition) { keys[usedKeys++] = KEY_##key; }
+#define CHECK_KEY(key)                                                         \
+  if (bit_check(controller.buttons, key)) {                                    \
+    keys[usedKeys++] = KEY_##key;                                              \
+  }
+#define CHECK_KEY2(key, condition)                                             \
+  if (bit_check(controller.buttons, key) || condition) {                       \
+    keys[usedKeys++] = KEY_##key;                                              \
+  }
 void KeyboardOutput::usb_connect() {}
 void KeyboardOutput::usb_disconnect() {}
 
@@ -32,7 +38,7 @@ void KeyboardOutput::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
   usedKeys = 0;
-  if (controller.r_x < -300) {
+  if (controller.r_x < -8000) {
     keys[usedKeys++] = KEY_WHAMMY;
   }
   CHECK_KEY(UP);

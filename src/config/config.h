@@ -1,7 +1,6 @@
 // How fast should your controller poll (note that this is expressed in 1ms
-// frames. (depending on speed)) Note that a 1ms poll will use a lot of
-// bandwith, and as a result will break the ability to use Multiple guitars on a
-// Hub.
+// frames.) Note that a 1ms poll will use a lot of bandwith, and as a result
+// will break the ability to use Multiple guitars on a Hub.
 #define POLL_RATE 1
 #define MPU_6050 1
 #define WII 1
@@ -9,7 +8,7 @@
 #define XINPUT 1
 #define KEYBOARD 2
 #define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
-#define DEVICE_TYPE WII   // this can be either WII or DIRECT
+#define DEVICE_TYPE WII      // this can be either WII or DIRECT
 #define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD
 #define DPAD 1
 #define JOY 2
@@ -55,5 +54,5 @@
 #if TILT_SENSOR == GRAVITY
 #define PIN_GRAVITY 11
 #elif TILT_SENSOR == MPU_6050
-    #define FLIP_MPU_6050 1
+#define FLIP_MPU_6050 1
 #endif

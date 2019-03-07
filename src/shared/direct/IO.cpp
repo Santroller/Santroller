@@ -112,3 +112,36 @@ void IO::pinMode(uint8_t pin, uint8_t mode) {
     SREG = oldSREG;
   }
 }
+
+void IO::enableADC() {
+#if defined(ADCSRA)
+// set a2d prescaler so we are inside the desired 50-200 KHz range.
+#if F_CPU >= 16000000 // 16 MHz / 128 = 125 KHz
+    sbi(ADCSRA, ADPS2);
+    sbi(ADCSRA, ADPS1);
+    sbi(ADCSRA, ADPS0);
+#elif F_CPU >= 8000000 // 8 MHz / 64 = 125 KHz
+    sbi(ADCSRA, ADPS2);
+    sbi(ADCSRA, ADPS1);
+    cbi(ADCSRA, ADPS0);
+#elif F_CPU >= 4000000 // 4 MHz / 32 = 125 KHz
+    sbi(ADCSRA, ADPS2);
+    cbi(ADCSRA, ADPS1);
+    sbi(ADCSRA, ADPS0);
+#elif F_CPU >= 2000000 // 2 MHz / 16 = 125 KHz
+    sbi(ADCSRA, ADPS2);
+    cbi(ADCSRA, ADPS1);
+    cbi(ADCSRA, ADPS0);
+#elif F_CPU >= 1000000 // 1 MHz / 8 = 125 KHz
+    cbi(ADCSRA, ADPS2);
+    sbi(ADCSRA, ADPS1);
+    sbi(ADCSRA, ADPS0);
+#else // 128 kHz / 2 = 64 KHz -> This is the closest you can get, the prescaler is 2
+    cbi(ADCSRA, ADPS2);
+    cbi(ADCSRA, ADPS1);
+    sbi(ADCSRA, ADPS0);
+#endif
+    // enable a2d conversions
+    sbi(ADCSRA, ADEN);
+#endif
+  }

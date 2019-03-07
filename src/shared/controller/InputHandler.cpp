@@ -10,6 +10,9 @@ void InputHandler::init() {
 #elif TILT_SENSOR == GRAVITY
   pinMode(PIN_GRAVITY, INPUT);
 #endif
+#if TILT_SENSOR == GRAVITY || DEVICE_TYPE == DIRECT
+  IO::enableADC();
+#endif
 }
 
 void InputHandler::processTilt() {
@@ -18,9 +21,9 @@ void InputHandler::processTilt() {
     double z;
     mympu_update();
     z = (mympu.ypr[2] * (32767 / M_PI));
-    #if FLIP_MPU_6050 == 0 
-      z += 32767;
-    #endif
+#if FLIP_MPU_6050 == 0
+    z += 32767;
+#endif
     if (z > 32767) {
       z = 0;
     }
@@ -34,6 +37,6 @@ void InputHandler::processTilt() {
   }
   counter++;
 #elif TILT_SENSOR == GRAVITY
-  controller.r_y = direct->digitalRead(PIN_GRAVITY) * 32767;
+  controller.r_y = IO::digitalRead(PIN_GRAVITY) * 32767;
 #endif
 }

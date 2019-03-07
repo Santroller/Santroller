@@ -191,7 +191,7 @@ const USB_Descriptor_String_t PROGMEM ManufacturerString =
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
 const USB_Descriptor_String_t PROGMEM ProductString =
-    USB_STRING_DESCRIPTOR(L"Wii Controller Xbox Adaptor");
+    USB_STRING_DESCRIPTOR(L"Ardwiino");
 
 const USB_Descriptor_String_t PROGMEM VersionString =
     USB_STRING_DESCRIPTOR(L"1.0");

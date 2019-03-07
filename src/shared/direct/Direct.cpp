@@ -112,11 +112,15 @@ void pinMode(uint8_t pin, uint8_t mode) {
 }
 void Direct::read_controller(Controller *controller) {
 #if DEVICE_TYPE == DIRECT
-  bit_write(!digitalRead(PIN_GREEN), controller->buttons, GREEN);
-  bit_write(!digitalRead(PIN_RED), controller->buttons, RED);
-  bit_write(!digitalRead(PIN_YELLOW), controller->buttons, YELLOW);
-  bit_write(!digitalRead(PIN_BLUE), controller->buttons, BLUE);
-  bit_write(!digitalRead(PIN_ORANGE), controller->buttons, ORANGE);
+  bool fret_inv = -1;
+  #if FRETS_LED == 1 
+    fret_inv = 1;
+  #endif
+  bit_write(fret_inv * digitalRead(PIN_GREEN), controller->buttons, GREEN);
+  bit_write(fret_inv * digitalRead(PIN_RED), controller->buttons, RED);
+  bit_write(fret_inv * digitalRead(PIN_YELLOW), controller->buttons, YELLOW);
+  bit_write(fret_inv * digitalRead(PIN_BLUE), controller->buttons, BLUE);
+  bit_write(fret_inv * digitalRead(PIN_ORANGE), controller->buttons, ORANGE);
   bit_write(!digitalRead(PIN_START), controller->buttons, START);
   bit_write(!digitalRead(PIN_SELECT), controller->buttons, SELECT);
   controller->r_x = (analogRead(PIN_WHAMMY) * 32) * WHAMMY_DIR + WHAMMY_START;
@@ -169,11 +173,15 @@ void Direct::init() {
   sbi(ADCSRA, ADEN);
 #endif
 #if DEVICE_TYPE == DIRECT
-  pinMode(PIN_GREEN, INPUT_PULLUP);
-  pinMode(PIN_RED, INPUT_PULLUP);
-  pinMode(PIN_YELLOW, INPUT_PULLUP);
-  pinMode(PIN_BLUE, INPUT_PULLUP);
-  pinMode(PIN_ORANGE, INPUT_PULLUP);
+  int fret_type = INPUT_PULLUP;
+  #if FRETS_LED == 1 
+    fret_type = INPUT;
+  #endif
+  pinMode(PIN_GREEN, fret_type);
+  pinMode(PIN_RED, fret_type);
+  pinMode(PIN_YELLOW, fret_type);
+  pinMode(PIN_BLUE, fret_type);
+  pinMode(PIN_ORANGE, fret_type);
   pinMode(PIN_START, INPUT_PULLUP);
   pinMode(PIN_SELECT, INPUT_PULLUP);
   pinMode(PIN_UP, INPUT_PULLUP);

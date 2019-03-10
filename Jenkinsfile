@@ -9,7 +9,7 @@ pipeline {
         string(name: 'KEYBOARD', defaultValue: '2', description: '')
         string(name: 'TILT_SENSOR', defaultValue: 'MPU_6050', description: '')
         string(name: 'DEVICE_TYPE', defaultValue: 'WII', description: '')
-        string(name: 'OUTPUT_TYPE', defaultValue: 'XINPUT', description: '')
+        string(name: 'OUTPUT_TYPE', defaultValue: 'KEYBOARD', description: '')
         string(name: 'DPAD', defaultValue: '1', description: '')
         string(name: 'JOY', defaultValue: '2', description: '')
         string(name: 'PIN_GREEN', defaultValue: '4', description: '')
@@ -45,7 +45,7 @@ pipeline {
         string(name: 'PIN_GRAVITY', defaultValue: '11', description: '')
         string(name: 'FLIP_MPU_6050', defaultValue: '0', description: '')
         string(name: 'MPU_6050_START', defaultValue: '28000', description: '')
-
+        string(name: 'F_CPU', defaultValue: '16000000', description: '')
     }
     stages {
         stage('Build') {

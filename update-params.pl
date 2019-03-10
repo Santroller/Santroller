@@ -7,7 +7,7 @@ while ( my $line = <$fh2> ) {
         $repl=$repl."        string(name: '$fields[1]', defaultValue: '$fields[2]', description: '')\n"
     }
 }
-$repl=$repl."string(name: 'F_CPU', defaultValue: '16000000', description: '')\n    }";
+$repl=$repl."        string(name: 'F_CPU', defaultValue: '16000000', description: '')\n    }";
 open my $fh, '+<', 'Jenkinsfile' or die "Can't open file $!";
 my $var = do { local $/; <$fh> };
 my $re = qr/(parameters \{[^}]+\}?)/;

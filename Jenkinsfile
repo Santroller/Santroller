@@ -9,7 +9,7 @@ pipeline {
         string(name: 'KEYBOARD', defaultValue: '2', description: '')
         string(name: 'TILT_SENSOR', defaultValue: 'MPU_6050', description: '')
         string(name: 'DEVICE_TYPE', defaultValue: 'WII', description: '')
-        string(name: 'OUTPUT_TYPE', defaultValue: 'KEYBOARD', description: '')
+        string(name: 'OUTPUT_TYPE', defaultValue: 'XINPUT', description: '')
         string(name: 'DPAD', defaultValue: '1', description: '')
         string(name: 'JOY', defaultValue: '2', description: '')
         string(name: 'PIN_GREEN', defaultValue: '4', description: '')
@@ -63,4 +63,5 @@ pipeline {
 def updateParams(file) {
     env.getEnvironment().each { name, value -> file = file.replaceAll(/#define ${name} .*\n/, "#define ${name} ${value}\n")}
     return file
+}
 }

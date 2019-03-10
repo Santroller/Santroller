@@ -4,8 +4,8 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                writeFile file: "src/config/config.h", text: updateParams(readFile "src/config/config.h")
-                writeFile file: "src/micro/makefile", text: (readFile "src/micro/makefile").replace("F_CPU.*\n","F_CPU=${env.F_CPU}")
+                writeFile file: "src/config/config.h", text: updateParams(readFile("src/config/config.h")
+                writeFile file: "src/micro/makefile", text: readFile("src/micro/makefile").replace("F_CPU.*\n","F_CPU=${env.F_CPU}")
                 sh 'make build' 
                 archiveArtifacts artifacts: "src/micro/bin/Ardwiino.hex", fingerprint: true 
             }

@@ -1,6 +1,3 @@
-[submodule "src/lufa/lufa"]
-	path = src/lufa/lufa
-	url = git@github.com:abcminiuser/lufa.git
 [submodule "src/shared/lufa/lufa"]
 	path = src/shared/lufa/lufa
 	url = git@github.com:abcminiuser/lufa.git

@@ -12,6 +12,13 @@
 #define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD
 #define DPAD 1
 #define JOY 2
+#if TILT_SENSOR == GRAVITY
+#define PIN_GRAVITY 11
+#elif TILT_SENSOR == MPU_6050
+#define FLIP_MPU_6050 0
+#define MPU_6050_START 28000
+#endif
+
 #if DEVICE_TYPE == DIRECT
 #define PIN_GREEN 4
 #define PIN_RED 5
@@ -50,10 +57,4 @@
 #define KEY_RIGHT HID_KEYBOARD_SC_RIGHT_ARROW
 #define KEY_UP HID_KEYBOARD_SC_UP_ARROW
 #define KEY_DOWN HID_KEYBOARD_SC_DOWN_ARROW
-#endif
-#if TILT_SENSOR == GRAVITY
-#define PIN_GRAVITY 11
-#elif TILT_SENSOR == MPU_6050
-#define FLIP_MPU_6050 0
-#define MPU_6050_START 28000
 #endif

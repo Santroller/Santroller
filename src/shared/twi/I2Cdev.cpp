@@ -118,7 +118,9 @@ int8_t I2Cdev::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data,
                         uint16_t timeout) {
   return readBytes(devAddr, regAddr, 1, data, timeout);
 }
-
+int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
+  return I2Cdev::readBytes(devAddr, regAddr, length, data, 0);
+}
 /** Read multiple bytes from an 8-bit device register.
  * @param devAddr I2C slave device address
  * @param regAddr First register regAddr to read from
@@ -144,6 +146,10 @@ int8_t I2Cdev::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
  */
 bool I2Cdev::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
   return writeBytes(devAddr, regAddr, 1, &data);
+}
+int8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
+                        uint8_t *data) {
+  return I2Cdev::writeBytes(devAddr, regAddr, length, data);
 }
 /** Write multiple bytes to an 8-bit device register.
  * @param devAddr I2C slave device address

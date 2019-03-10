@@ -32,12 +32,12 @@ extern "C"
 #define INV_XYZ_GYRO    (INV_X_GYRO | INV_Y_GYRO | INV_Z_GYRO)
 #define INV_XYZ_ACCEL   (0x08)
 #define INV_XYZ_COMPASS (0x01)
-/*
+
 struct int_param_s {
     unsigned short interrupt;
     void (*cb)(void*);
 };
-*/
+
 #define MPU_INT_STATUS_DATA_READY       (0x0001)
 #define MPU_INT_STATUS_DMP              (0x0002)
 #define MPU_INT_STATUS_PLL_READY        (0x0004)

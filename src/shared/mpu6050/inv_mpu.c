@@ -38,8 +38,8 @@
   } while (0);
 #define delay_ms _delay_ms
 #define min(a, b) ((a < b) ? a : b)
-#define i2c_write !I2Cdev::writeBytes
-#define i2c_read !I2Cdev::readBytes
+#define i2c_write !writeBytes
+#define i2c_read !readBytes
 static inline int reg_int_cb(struct int_param_s *int_param) { return 1; }
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #error Which gyro are you using? Define MPUxxxx in your compiler options.

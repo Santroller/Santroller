@@ -1,6 +1,6 @@
 pipeline {
     agent { label 'Main' }
-
+    parameters(generateParams())
     stages {
         stage('Build') {
             steps {
@@ -17,4 +17,19 @@ pipeline {
 def updateParams(file) {
     env.getEnvironment().each { name, value -> file.replace("#define ${name}.*\n", "#define ${name} ${value}\n")}
     return file
+}
+
+def generateParams() {
+    def list = []
+
+    if (env.BRANCH_NAME != 'master') {
+        readFile("src/config/config.h").eachLine { line ->
+            if (line.startsWith("#define")) {
+                def split = line.split(" ")
+                list << stringParam(description: '', name: split[1], defaultValue: split[2])
+            }
+        }
+        
+    }
+    return list
 }

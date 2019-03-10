@@ -15,17 +15,17 @@ static uint8_t PrevKeyboardHIDReportBuffer[sizeof(USB_KeyboardReport_Data_t)];
 uint8_t keys[SIMULTANEOUS_KEYS];
 uint8_t usedKeys = 0;
 USB_ClassInfo_HID_Device_t Keyboard_HID_Interface = {
-    Config =
+    Config:
         {
-            InterfaceNumber = INTERFACE_ID_Keyboard,
-            ReportINEndpoint =
+            InterfaceNumber: INTERFACE_ID_Keyboard,
+            ReportINEndpoint:
                 {
-                    Address = KEYBOARD_EPADDR,
-                    Size = KEYBOARD_EPSIZE,
-                    Banks = 1,
+                    Address: KEYBOARD_EPADDR,
+                    Size: KEYBOARD_EPSIZE,
+                    Banks: 1,
                 },
-            PrevReportINBuffer = PrevKeyboardHIDReportBuffer,
-            PrevReportINBufferSize = sizeof(PrevKeyboardHIDReportBuffer),
+            PrevReportINBuffer: PrevKeyboardHIDReportBuffer,
+            PrevReportINBufferSize: sizeof(PrevKeyboardHIDReportBuffer),
         },
 };
 void KeyboardOutput::init() {

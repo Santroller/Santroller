@@ -46,6 +46,7 @@ C++FLAGS += -DF_OSC=$(OSC)
 C++FLAGS += -DF_CPU=$(OSC)
 C++FLAGS += -DBOARD=UNO
 C++FLAGS += -mmcu=$(MCU)
+C++FLAGS += -std=c++11
 
 default: $(PROJECT).elf
 	echo $(OBJECTS)

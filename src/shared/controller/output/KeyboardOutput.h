@@ -15,6 +15,7 @@
 #include "Descriptors.h"
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Platform/Platform.h>
+#include "KeyboardHID.h"
 #define SIMULTANEOUS_KEYS 10
 extern "C" {
 extern uint8_t keys[SIMULTANEOUS_KEYS];

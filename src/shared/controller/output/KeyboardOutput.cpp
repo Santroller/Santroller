@@ -11,30 +11,9 @@
 void KeyboardOutput::usb_connect() {}
 void KeyboardOutput::usb_disconnect() {}
 
-static uint8_t PrevKeyboardHIDReportBuffer[sizeof(USB_KeyboardReport_Data_t)];
 uint8_t keys[SIMULTANEOUS_KEYS];
 uint8_t usedKeys = 0;
-USB_ClassInfo_HID_Device_t Keyboard_HID_Interface = {
-    Config:
-        {
-            InterfaceNumber: INTERFACE_ID_Keyboard,
-            ReportINEndpoint:
-                {
-                    Address: KEYBOARD_EPADDR,
-                    Size: KEYBOARD_EPSIZE,
-                    Banks: 1,
-                },
-            PrevReportINBuffer: PrevKeyboardHIDReportBuffer,
-            PrevReportINBufferSize: sizeof(PrevKeyboardHIDReportBuffer),
-        },
-    State: 
-        {
-          UsingReportProtocol: false,
-          PrevFrameNum: 0,
-          IdleCount: 0,
-          IdleMSRemaining: 0
-        }
-};
+
 void KeyboardOutput::init() {
   wdt_enable(WDTO_2S);
   USB_Init();

@@ -51,7 +51,7 @@ pipeline {
         stage('Build') {
             steps {
                 writeFile file: "src/config/config.h", text: updateParams(readFile("src/config/config.h"))
-                writeFile file: "src/micro/makefile", text: readFile("src/micro/makefile").replaceAll(/^F_CPU.*$/,"F_CPU=${env.F_CPU}")
+                writeFile file: "src/micro/makefile", text: readFile("src/micro/makefile").replaceAll(/\nF_CPU.*\n/,"F_CPU=${env.F_CPU}\n")
                 sh 'make build' 
                 archiveArtifacts artifacts: "src/micro/bin/Ardwiino.hex", fingerprint: true 
             }

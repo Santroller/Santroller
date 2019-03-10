@@ -21,9 +21,7 @@ void InputHandler::processTilt() {
     double z;
     mympu_update();
     z = (mympu.ypr[2] * (32767 / M_PI));
-#if FLIP_MPU_6050 == 0
-    z += 32767;
-#endif
+    z += MPU_6050_START;
     if (z > 32767) {
       z = 0;
     }

@@ -15,8 +15,8 @@
 #if DEVICE_TYPE == DIRECT
 #define PIN_GREEN 4
 #define PIN_RED 5
-#define PIN_YELLOW 6
-#define PIN_BLUE 7
+#define PIN_YELLOW 7
+#define PIN_BLUE 6
 #define PIN_ORANGE 8
 #define PIN_START 16
 #define PIN_SELECT 9
@@ -54,5 +54,6 @@
 #if TILT_SENSOR == GRAVITY
 #define PIN_GRAVITY 11
 #elif TILT_SENSOR == MPU_6050
-#define FLIP_MPU_6050 1
+#define FLIP_MPU_6050 0
+#define MPU_6050_START 28000
 #endif

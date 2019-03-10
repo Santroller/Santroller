@@ -27,6 +27,13 @@ USB_ClassInfo_HID_Device_t Keyboard_HID_Interface = {
             PrevReportINBuffer: PrevKeyboardHIDReportBuffer,
             PrevReportINBufferSize: sizeof(PrevKeyboardHIDReportBuffer),
         },
+    State: 
+        {
+          UsingReportProtocol: false,
+          PrevFrameNum: 0,
+          IdleCount: 0,
+          IdleMSRemaining: 0
+        }
 };
 void KeyboardOutput::init() {
   wdt_enable(WDTO_2S);

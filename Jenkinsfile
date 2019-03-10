@@ -61,6 +61,7 @@ pipeline {
 
 @NonCPS
 def updateParams(file) {
+    print env.getEnvironment()
     env.getEnvironment().each { name, value -> file.replace("#define ${name}.*\n", "#define ${name} ${value}\n")}
     return file
 }

@@ -1,6 +1,6 @@
 pipeline {
     agent { label 'Main' }
-    properties([parameters(generateParams())]) 
+    options([parameters(generateParams())]) 
     stages {
         stage('Build') {
             steps {

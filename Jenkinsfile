@@ -1,6 +1,5 @@
 pipeline {
     agent { label 'Main' }
-    authenticationToken('1234')
     parameters {
         string(name: 'POLL_RATE', defaultValue: '1', description: '')
         string(name: 'MPU_6050', defaultValue: '1', description: '')

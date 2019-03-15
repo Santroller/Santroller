@@ -30,7 +30,7 @@
 #define MOVE_MODE JOY // this can either be JOY or DPAD
 #define WHAMMY_DIR -1
 #define WHAMMY_START 16863
-#define FRETS_LED 1
+#define FRETS_LED 0
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.

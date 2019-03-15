@@ -5,7 +5,7 @@
 #include "../direct/IO.h"
 #if DEVICE_TYPE == WII 
   #include "../wii/WiiExtension.h"
-#elif DEVICE_TYPE == DIRECT || TILT_SENSOR == GRAVITY
+#elif DEVICE_TYPE == DIRECT
   #include "../direct/Direct.h"
 #endif
 class InputHandler {

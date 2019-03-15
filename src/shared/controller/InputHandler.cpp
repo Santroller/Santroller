@@ -8,7 +8,7 @@ void InputHandler::init() {
 #if TILT_SENSOR == MPU_6050
   mympu_open(15);
 #elif TILT_SENSOR == GRAVITY
-  pinMode(PIN_GRAVITY, INPUT);
+  IO::pinMode(PIN_GRAVITY, INPUT);
 #endif
 #if TILT_SENSOR == GRAVITY || DEVICE_TYPE == DIRECT
   IO::enableADC();

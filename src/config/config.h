@@ -7,9 +7,9 @@
 #define DIRECT 2
 #define XINPUT 1
 #define KEYBOARD 2
-#define TILT_SENSOR GRAVITY // this can either be none, MPU_6050 or GRAVITY
+#define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
 #define DEVICE_TYPE DIRECT      // this can be either WII or DIRECT
-#define OUTPUT_TYPE KEYBOARD   // this can be either XINPUT or KEYBOARD
+#define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD
 #define DPAD 1
 #define JOY 2
 #if DEVICE_TYPE == DIRECT
@@ -30,7 +30,7 @@
 #define MOVE_MODE JOY // this can either be JOY or DPAD
 #define WHAMMY_DIR -1
 #define WHAMMY_START 16863
-#define FRETS_LED 0
+#define FRETS_LED 1
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.

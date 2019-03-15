@@ -194,7 +194,7 @@ const USB_Descriptor_String_t PROGMEM ProductString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
 
 const USB_Descriptor_String_t PROGMEM VersionString =
-    USB_STRING_DESCRIPTOR(L"1.1");
+    USB_STRING_DESCRIPTOR(L"1.2");
 
 const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
   Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},

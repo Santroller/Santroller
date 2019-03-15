@@ -12,7 +12,7 @@
 MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
-F_CPU        = 8000000
+F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 SRC = $(shell find ../shared -type f -name '*.c' -not -path "../shared/lufa/lufa/*") $(shell find ../shared -type f -name '*.cpp' -not -path "../shared/lufa/lufa/*") $(shell find . -type f -name '*.c') $(shell find . -type f -name '*.cpp') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)

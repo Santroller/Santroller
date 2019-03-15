@@ -27,7 +27,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
     .Protocol = USB_CSCP_NoDeviceProtocol,
     #endif
     .VendorID = 0x1209,
-    .ProductID = 0x2882,
+    .ProductID = 0x2883,
     .ReleaseNumber = VERSION_BCD(0, 0, 1),
 
     .ManufacturerStrIndex = 0x01,
@@ -194,7 +194,7 @@ const USB_Descriptor_String_t PROGMEM ProductString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
 
 const USB_Descriptor_String_t PROGMEM VersionString =
-    USB_STRING_DESCRIPTOR(L"1.0");
+    USB_STRING_DESCRIPTOR(L"1.1");
 
 const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
   Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
@@ -209,7 +209,7 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   TotalSections : 1,
   CompatID : {
     FirstInterfaceNumber : WCID_IF_NUMBER,
-    Reserved : 0x04,
+    Reserved : 0x01,
     CompatibleID : "XUSB10"
   }
 };

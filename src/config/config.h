@@ -7,9 +7,9 @@
 #define DIRECT 2
 #define XINPUT 1
 #define KEYBOARD 2
-#define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
-#define DEVICE_TYPE WII      // this can be either WII or DIRECT
-#define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD
+#define TILT_SENSOR GRAVITY // this can either be none, MPU_6050 or GRAVITY
+#define DEVICE_TYPE DIRECT      // this can be either WII or DIRECT
+#define OUTPUT_TYPE KEYBOARD   // this can be either XINPUT or KEYBOARD
 #define DPAD 1
 #define JOY 2
 #if DEVICE_TYPE == DIRECT

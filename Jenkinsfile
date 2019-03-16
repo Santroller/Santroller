@@ -26,7 +26,7 @@ pipeline {
         string(name: 'PIN_WHAMMY', defaultValue: '18', description: '')
         string(name: 'PIN_JOY_X', defaultValue: '19', description: '')
         string(name: 'PIN_JOY_Y', defaultValue: '20', description: '')
-        string(name: 'MOVE_MODE', defaultValue: 'JOY', description: '')
+        string(name: 'MOVE_MODE', defaultValue: 'DPAD', description: '')
         string(name: 'WHAMMY_DIR', defaultValue: '-1', description: '')
         string(name: 'WHAMMY_START', defaultValue: '16863', description: '')
         string(name: 'FRETS_LED', defaultValue: '0', description: '')

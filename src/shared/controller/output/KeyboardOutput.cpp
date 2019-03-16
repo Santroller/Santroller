@@ -20,24 +20,24 @@ void KeyboardOutput::init() {
   sei();
 }
 void KeyboardOutput::update(Controller controller) {
-  HID_Device_USBTask(&Keyboard_HID_Interface);
   USB_USBTask();
   wdt_reset();
   usedKeys = 0;
   if (controller.r_x < -8000) {
     keys[usedKeys++] = KEY_WHAMMY;
   }
+  CHECK_KEY(GREEN);
+  CHECK_KEY(RED);
+  CHECK_KEY(YELLOW);
+  CHECK_KEY(BLUE);
+  CHECK_KEY(ORANGE);
   CHECK_KEY(UP);
   CHECK_KEY(DOWN);
   CHECK_KEY(LEFT);
   CHECK_KEY(RIGHT);
   CHECK_KEY(START);
   CHECK_KEY2(SELECT, controller.r_y == 32767);
-  CHECK_KEY(GREEN);
-  CHECK_KEY(RED);
-  CHECK_KEY(YELLOW);
-  CHECK_KEY(BLUE);
-  CHECK_KEY(ORANGE);
+  HID_Device_USBTask(&Keyboard_HID_Interface);
 }
 
 void KeyboardOutput::usb_configuration_changed() {

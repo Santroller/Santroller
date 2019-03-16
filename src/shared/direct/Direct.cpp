@@ -1,15 +1,11 @@
 #include "./Direct.h"
 void Direct::read_controller(Controller *controller) {
 #if DEVICE_TYPE == DIRECT
-  bool fret_inv = -1;
-  #if FRETS_LED == 1 
-    fret_inv = 1;
-  #endif
-  bit_write(fret_inv * IO::digitalRead(PIN_GREEN), controller->buttons, GREEN);
-  bit_write(fret_inv * IO::digitalRead(PIN_RED), controller->buttons, RED);
-  bit_write(fret_inv * IO::digitalRead(PIN_YELLOW), controller->buttons, YELLOW);
-  bit_write(fret_inv * IO::digitalRead(PIN_BLUE), controller->buttons, BLUE);
-  bit_write(fret_inv * IO::digitalRead(PIN_ORANGE), controller->buttons, ORANGE);
+  bit_write(IO::digitalRead(PIN_GREEN) == FRETS_LED, controller->buttons, GREEN);
+  bit_write(IO::digitalRead(PIN_RED) == FRETS_LED, controller->buttons, RED);
+  bit_write(IO::digitalRead(PIN_YELLOW) == FRETS_LED, controller->buttons, YELLOW);
+  bit_write(IO::digitalRead(PIN_BLUE) == FRETS_LED, controller->buttons, BLUE);
+  bit_write(IO::digitalRead(PIN_ORANGE) == FRETS_LED, controller->buttons, ORANGE);
   bit_write(!IO::digitalRead(PIN_START), controller->buttons, START);
   bit_write(!IO::digitalRead(PIN_SELECT), controller->buttons, SELECT);
   controller->r_x = (IO::analogRead(PIN_WHAMMY) * 32) * WHAMMY_DIR + WHAMMY_START;

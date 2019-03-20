@@ -8,7 +8,7 @@
 #define XINPUT 1
 #define KEYBOARD 2
 #define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
-#define DEVICE_TYPE DIRECT      // this can be either WII or DIRECT
+#define DEVICE_TYPE DIRECT   // this can be either WII or DIRECT
 #define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD
 #define DPAD 1
 #define JOY 2
@@ -27,9 +27,15 @@
 #define PIN_WHAMMY 18
 #define PIN_JOY_X 19
 #define PIN_JOY_Y 20
-#define MOVE_MODE JOY // this can either be JOY or DPAD
-#define WHAMMY_DIR -1
-#define WHAMMY_START 16863
+#define DIRECTION_MODE JOY
+// Set this to JOY if your controller has a joystick, and set Joy X and Joy Y to
+// the X and Y for your joystick Set this to DPAD if your controller has a DPAD,
+// and set Left and Right to left and right on your dpad. Reuse pins for up and
+// down and strumming, if required.
+#define WHAMMY_DIRECTION -1
+// If your whammy bar appears inverted, set this to -1 to invert the output of your whammy bar.
+#define WHAMMY_INITIAL_VALUE 16863
+// Set this value to define where 0 is on your whammy bar.
 #define FRETS_LED 1
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in

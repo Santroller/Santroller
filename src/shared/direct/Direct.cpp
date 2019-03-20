@@ -8,15 +8,15 @@ void Direct::read_controller(Controller *controller) {
   bit_write(IO::digitalRead(PIN_ORANGE) == FRETS_LED, controller->buttons, ORANGE);
   bit_write(!IO::digitalRead(PIN_START), controller->buttons, START);
   bit_write(!IO::digitalRead(PIN_SELECT), controller->buttons, SELECT);
-  controller->r_x = (IO::analogRead(PIN_WHAMMY) * 32) * WHAMMY_DIR + WHAMMY_START;
-#if MOVE_MODE == JOY
+  controller->r_x = (IO::analogRead(PIN_WHAMMY) * 32) * WHAMMY_DIRECTION + WHAMMY_INITIAL_VALUE;
+#if DIRECTION_MODE == JOY
   bit_write(!IO::digitalRead(PIN_UP) || IO::analogRead(PIN_JOY_Y) > 600,
             controller->buttons, UP);
   bit_write(!IO::digitalRead(PIN_DOWN) || IO::analogRead(PIN_JOY_Y) < 400,
             controller->buttons, DOWN);
   bit_write(IO::analogRead(PIN_JOY_X) < 400, controller->buttons, LEFT);
   bit_write(IO::analogRead(PIN_JOY_X) > 600, controller->buttons, RIGHT);
-#elif MOVE_MODE == DPAD
+#elif DIRECTION_MODE == DPAD
   bit_write(!IO::digitalRead(PIN_UP), controller->buttons, UP);
   bit_write(!IO::digitalRead(PIN_DOWN), controller->buttons, DOWN);
   bit_write(!IO::digitalRead(PIN_LEFT), controller->buttons, LEFT);
@@ -41,10 +41,10 @@ void Direct::init() {
   IO::pinMode(PIN_UP, INPUT_PULLUP);
   IO::pinMode(PIN_DOWN, INPUT_PULLUP);
   IO::pinMode(PIN_WHAMMY, INPUT);
-#if MOVE_MODE == JOY
+#if DIRECTION_MODE == JOY
   IO::pinMode(PIN_JOY_X, INPUT);
   IO::pinMode(PIN_JOY_Y, INPUT);
-#elif MOVE_MODE == DPAD
+#elif DIRECTION_MODE == DPAD
   IO::pinMode(PIN_LEFT, INPUT_PULLUP);
   IO::pinMode(PIN_RIGHT, INPUT_PULLUP);
 #endif

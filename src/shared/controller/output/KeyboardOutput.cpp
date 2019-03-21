@@ -2,11 +2,11 @@
 #if OUTPUT_TYPE == KEYBOARD
 #define CHECK_KEY(key)                                                         \
   if (bit_check(controller.buttons, key)) {                                    \
-    keys[usedKeys++] = KEY_##key;                                              \
+    keys[usedKeys++] = KEY_##key_FRET;                                              \
   }
 #define CHECK_KEY2(key, condition)                                             \
   if (bit_check(controller.buttons, key) || condition) {                       \
-    keys[usedKeys++] = KEY_##key;                                              \
+    keys[usedKeys++] = KEY_##key_FRET;                                              \
   }
 void KeyboardOutput::usb_connect() {}
 void KeyboardOutput::usb_disconnect() {}

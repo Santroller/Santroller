@@ -2,11 +2,15 @@
 #if OUTPUT_TYPE == KEYBOARD
 #define CHECK_KEY(key)                                                         \
   if (bit_check(controller.buttons, key)) {                                    \
-    keys[usedKeys++] = KEY_##key_FRET;                                              \
+    keys[usedKeys++] = KEY_##key;                                              \
+  }
+#define CHECK_FRET(key)                                                        \
+  if (bit_check(controller.buttons, key)) {                                    \
+    keys[usedKeys++] = KEY_##key##_FRET;                                       \
   }
 #define CHECK_KEY2(key, condition)                                             \
   if (bit_check(controller.buttons, key) || condition) {                       \
-    keys[usedKeys++] = KEY_##key_FRET;                                              \
+    keys[usedKeys++] = KEY_##key;                                              \
   }
 void KeyboardOutput::usb_connect() {}
 void KeyboardOutput::usb_disconnect() {}
@@ -26,11 +30,11 @@ void KeyboardOutput::update(Controller controller) {
   if (controller.r_x < -8000) {
     keys[usedKeys++] = KEY_WHAMMY;
   }
-  CHECK_KEY(GREEN);
-  CHECK_KEY(RED);
-  CHECK_KEY(YELLOW);
-  CHECK_KEY(BLUE);
-  CHECK_KEY(ORANGE);
+  CHECK_FRET(GREEN);
+  CHECK_FRET(RED);
+  CHECK_FRET(YELLOW);
+  CHECK_FRET(BLUE);
+  CHECK_FRET(ORANGE);
   CHECK_KEY(UP);
   CHECK_KEY(DOWN);
   CHECK_KEY(LEFT);

@@ -20,11 +20,11 @@
 #define PIN_ORANGE 8
 #define PIN_START 16
 #define PIN_SELECT 9
-#define PIN_LEFT 10
-#define PIN_RIGHT 21
+#define PIN_WHAMMY 18
 #define PIN_UP 14
 #define PIN_DOWN 15
-#define PIN_WHAMMY 18
+#define PIN_LEFT 10
+#define PIN_RIGHT 21
 #define PIN_JOY_X 19
 #define PIN_JOY_Y 20
 #define DIRECTION_MODE JOY

@@ -33,7 +33,8 @@
 // and set Left and Right to left and right on your dpad. Reuse pins for up and
 // down and strumming, if required.
 #define INVERT_WHAMMY false
-// If your whammy bar appears inverted, set this to -1 to invert the output of your whammy bar.
+// If your whammy bar appears inverted, set this to -1 to invert the output of
+// your whammy bar.
 #define WHAMMY_INITIAL_VALUE 16863
 // Set this value to define where 0 is on your whammy bar.
 #define FRETS_LED 1
@@ -56,6 +57,8 @@
 #define KEY_RIGHT HID_KEYBOARD_SC_RIGHT_ARROW
 #define KEY_UP HID_KEYBOARD_SC_UP_ARROW
 #define KEY_DOWN HID_KEYBOARD_SC_DOWN_ARROW
+#elif OUTPUT_TYPE == XINPUT
+#define XINPUT_SUBTYPE 7
 #endif
 #if TILT_SENSOR == GRAVITY
 #define PIN_GRAVITY 11

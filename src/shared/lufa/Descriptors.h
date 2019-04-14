@@ -63,11 +63,15 @@ enum registry_props_type {
   (14 + sizeof(PROPERTY##idx##_NAME) + sizeof(PROPERTY##idx##_DATA))
 /* Type Defines: */
 
+typedef struct {
+  USB_Descriptor_Header_t Header;
+  uint8_t data[15];
+} USB_HID_XBOX_Descriptor_HID_t;
 #if OUTPUT_TYPE == XINPUT
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_t Interface0;
-  uint8_t XInputUnknown[17];
+  USB_HID_XBOX_Descriptor_HID_t XInputUnknown;
   USB_Descriptor_Endpoint_t DataInEndpoint0;
   USB_Descriptor_Endpoint_t DataOutEndpoint0;
 } USB_Descriptor_Configuration_t;

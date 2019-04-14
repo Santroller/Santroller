@@ -41,21 +41,19 @@ void XInputOutput::usb_control_request() {
     }
 
     if (USB_ControlRequest.wLength == 0x04) {
-      uint8_t data[] = {0x00, 0x12, 0x28, 0x61}; //DeviceID
+      uint8_t data[4]; //DeviceID
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 8 &&
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[] = {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      uint8_t data[8] = {0x00, 0x08}; //Flags
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 20 &&
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[20] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
-                        0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //Capabilities
+      uint8_t data[20]; //Capabilities
       sendControl(data, sizeof(data));
     }
 

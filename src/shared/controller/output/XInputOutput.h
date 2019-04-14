@@ -35,6 +35,7 @@ class XInputOutput : public Output {
 public:
   void init();
   void update(Controller controller);
+  bool ready();
   void usb_connect();
   void usb_disconnect();
   void usb_configuration_changed();
@@ -57,4 +58,5 @@ private:
     uint8_t reserved_1[6];
   } USB_JoystickReport_Data_t;
   USB_JoystickReport_Data_t gamepad_state;
+  bool isReady;
 };

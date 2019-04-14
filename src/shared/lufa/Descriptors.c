@@ -11,24 +11,25 @@
  * version, control endpoint size and the number of device configurations. The
  * descriptor is read out by the USB host when the enumeration process begins.
  */
+
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
     .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
     .USBSpecification = VERSION_BCD(2, 0, 0),
-    #if OUTPUT_TYPE == XINPUT
-    .Endpoint0Size = 0x40,
+#if OUTPUT_TYPE == XINPUT
+    .Endpoint0Size = 0x08,
     .Class = 0xFF,
     .SubClass = 0xFF,
     .Protocol = 0xFF,
-    #elif OUTPUT_TYPE == KEYBOARD
+#elif OUTPUT_TYPE == KEYBOARD
     .Endpoint0Size = KEYBOARD_EPSIZE,
     .Class = USB_CSCP_NoDeviceClass,
     .SubClass = USB_CSCP_NoDeviceSubclass,
     .Protocol = USB_CSCP_NoDeviceProtocol,
-    #endif
+#endif
     .VendorID = 0x1209,
     .ProductID = 0x2882,
-    .ReleaseNumber = VERSION_BCD(0, 0, 1),
+    .ReleaseNumber = 0x3122,
 
     .ManufacturerStrIndex = 0x01,
     .ProductStrIndex = 0x02,
@@ -44,7 +45,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM GenericReport[] = {
  * process when selecting a configuration so that the host may correctly
  * communicate with the USB device.
  */
-#if OUTPUT_TYPE==XINPUT
+#if OUTPUT_TYPE == XINPUT
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     .Config = {.Header = {.Size = sizeof(USB_Descriptor_Configuration_Header_t),
                           .Type = DTYPE_Configuration},
@@ -72,21 +73,9 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
                    .Protocol = 0x01,
 
                    .InterfaceStrIndex = NO_DESCRIPTOR},
-
-    .HID0 = {.Header = {.Size = sizeof(USB_HID_XBOX_Descriptor_HID_t),
-                        .Type = HID_DTYPE_HID},
-
-             .HIDSpec = VERSION_BCD(1, 0, 0),
-             .CountryCode = 0x00,
-             .TotalReportDescriptors = 0x25,
-             .HIDReportType0 = 0x81,
-             .HIDReportLength0 = 20,
-             .HIDReportType1 = 0x00,
-             .HIDReportLength1 = 0,
-             .HIDReportType2 = 0x13,
-             .HIDReportLength2 = 0x0801,
-             .HIDReportType3 = 0x00,
-             .HIDReportLength3 = 0x00},
+    //0x11, 0x21, 0x10, Type, SubType
+    .XInputUnknown = {0x11, 0x21, 0x10, 0x01, 0x07, 0x25, 0x81, 0x14, 0x03, 0x03,
+                   0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03},
 
     .DataInEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
                                    .Type = DTYPE_Endpoint},
@@ -98,13 +87,13 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     .DataOutEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
                                     .Type = DTYPE_Endpoint},
 
-                         .EndpointAddress = 0x01,
+                         .EndpointAddress = 0x02,
                          .Attributes = EP_TYPE_INTERRUPT,
                          .EndpointSize = XBOX_EPSIZE,
-                         .PollingIntervalMS = 0x08},
+                         .PollingIntervalMS = POLL_RATE},
 };
 
-#elif OUTPUT_TYPE==KEYBOARD
+#elif OUTPUT_TYPE == KEYBOARD
 /** HID class report descriptor. This is a special descriptor constructed with
  * values from the USBIF HID class specification to describe the reports and
  * capabilities of the HID device. This descriptor is parsed by the host and its
@@ -209,7 +198,7 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   TotalSections : 1,
   CompatID : {
     FirstInterfaceNumber : WCID_IF_NUMBER,
-    Reserved : 0x01,
+    Reserved : 0x04,
     CompatibleID : "XUSB10"
   }
 };
@@ -280,7 +269,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       Address = &VersionString;
       Size = pgm_read_byte(&VersionString.Header.Size);
       break;
-#if OUTPUT_TYPE==XINPUT
+#if OUTPUT_TYPE == XINPUT
     case 0xEE:
       /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
@@ -291,7 +280,7 @@ that our device has a Compatible ID to provide. */
 #endif
     }
     break;
-#if OUTPUT_TYPE==KEYBOARD
+#if OUTPUT_TYPE == KEYBOARD
   case HID_DTYPE_HID:
     Address = &ConfigurationDescriptor.HID_KeyboardHID;
     Size = sizeof(USB_HID_Descriptor_HID_t);

@@ -11,9 +11,19 @@ void XInputOutput::init() {
   USB_Init();
   sei();
 }
+bool XInputOutput::ready() {
+  return USB_DeviceState == DEVICE_STATE_Configured;
+}
 void XInputOutput::usb_configuration_changed() {
   Endpoint_ConfigureEndpoint(JOYSTICK_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
   Endpoint_ConfigureEndpoint((ENDPOINT_DIR_IN | 3), EP_TYPE_INTERRUPT, 32, 1);
+}
+void sendControl(uint8_t *out, uint8_t outSize) {
+  Endpoint_ClearStall();
+  Endpoint_ClearSETUP();
+  /* Write the report data to the control endpoint */
+  Endpoint_Write_Control_Stream_LE(out, outSize);
+  Endpoint_ClearOUT();
 }
 void XInputOutput::usb_control_request() {
   const void *DescriptorPointer;
@@ -28,6 +38,25 @@ void XInputOutput::usb_control_request() {
       /* Write the report data to the control endpoint */
       Endpoint_Write_Control_Stream_LE(&gamepad_state, 20);
       Endpoint_ClearOUT();
+    }
+
+    if (USB_ControlRequest.wLength == 0x04) {
+      uint8_t data[] = {0x00, 0x12, 0x28, 0x61}; //DeviceID
+      sendControl(data, sizeof(data));
+    }
+    if (USB_ControlRequest.wLength == 8 &&
+        USB_ControlRequest.bmRequestType ==
+            (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
+      uint8_t data[] = {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      sendControl(data, sizeof(data));
+    }
+    if (USB_ControlRequest.wLength == 20 &&
+        USB_ControlRequest.bmRequestType ==
+            (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
+      uint8_t data[20] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
+                        0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //Capabilities
+      sendControl(data, sizeof(data));
     }
 
     break;
@@ -50,43 +79,10 @@ void XInputOutput::usb_control_request() {
 }
 void XInputOutput::usb_start_of_frame() {}
 void XInputOutput::update(Controller controller) {
-  bit_write(bit_check(controller.buttons, UP), gamepad_state.digital_buttons_1,
-            XBOX_DPAD_UP);
-  bit_write(bit_check(controller.buttons, DOWN),
-            gamepad_state.digital_buttons_1, XBOX_DPAD_DOWN);
-  bit_write(bit_check(controller.buttons, LEFT),
-            gamepad_state.digital_buttons_1, XBOX_DPAD_LEFT);
-  bit_write(bit_check(controller.buttons, RIGHT),
-            gamepad_state.digital_buttons_1, XBOX_DPAD_RIGHT);
-  bit_write(bit_check(controller.buttons, START),
-            gamepad_state.digital_buttons_1, XBOX_START);
-  bit_write(bit_check(controller.buttons, SELECT),
-            gamepad_state.digital_buttons_1, XBOX_BACK);
-  bit_write(bit_check(controller.buttons, GREEN),
-            gamepad_state.digital_buttons_2, XBOX_A);
-  bit_write(bit_check(controller.buttons, RED),
-            gamepad_state.digital_buttons_2, XBOX_B);
-  bit_write(bit_check(controller.buttons, YELLOW),
-            gamepad_state.digital_buttons_2, XBOX_Y);
-  bit_write(bit_check(controller.buttons, BLUE),
-            gamepad_state.digital_buttons_2, XBOX_X);
-  bit_write(bit_check(controller.buttons, ORANGE),
-            gamepad_state.digital_buttons_2, XBOX_LB);
-  bit_write(bit_check(controller.buttons, RB), gamepad_state.digital_buttons_2,
-            XBOX_RB);
-  bit_write(bit_check(controller.buttons, HOME),
-            gamepad_state.digital_buttons_2, XBOX_HOME);
-
-  gamepad_state.l_x = controller.l_x;
-  gamepad_state.l_y = controller.l_y;
-  gamepad_state.r_x = controller.r_x;
-  gamepad_state.r_y = controller.r_y;
-  gamepad_state.lt = controller.lt;
-  gamepad_state.rt = controller.rt;
   USB_USBTask();
   wdt_reset();
   /* Device must be connected and configured for the task to run */
-  if (USB_DeviceState != DEVICE_STATE_Configured)
+  if (!ready())
     return;
 
   /* Select the Joystick Report Endpoint */
@@ -94,6 +90,39 @@ void XInputOutput::update(Controller controller) {
 
   /* Check to see if the host is ready for another packet */
   if (Endpoint_IsINReady()) {
+    bit_write(bit_check(controller.buttons, UP),
+              gamepad_state.digital_buttons_1, XBOX_DPAD_UP);
+    bit_write(bit_check(controller.buttons, DOWN),
+              gamepad_state.digital_buttons_1, XBOX_DPAD_DOWN);
+    bit_write(bit_check(controller.buttons, LEFT),
+              gamepad_state.digital_buttons_1, XBOX_DPAD_LEFT);
+    bit_write(bit_check(controller.buttons, RIGHT),
+              gamepad_state.digital_buttons_1, XBOX_DPAD_RIGHT);
+    bit_write(bit_check(controller.buttons, START),
+              gamepad_state.digital_buttons_1, XBOX_START);
+    bit_write(bit_check(controller.buttons, SELECT),
+              gamepad_state.digital_buttons_1, XBOX_BACK);
+    bit_write(bit_check(controller.buttons, GREEN),
+              gamepad_state.digital_buttons_2, XBOX_A);
+    bit_write(bit_check(controller.buttons, RED),
+              gamepad_state.digital_buttons_2, XBOX_B);
+    bit_write(bit_check(controller.buttons, YELLOW),
+              gamepad_state.digital_buttons_2, XBOX_Y);
+    bit_write(bit_check(controller.buttons, BLUE),
+              gamepad_state.digital_buttons_2, XBOX_X);
+    bit_write(bit_check(controller.buttons, ORANGE),
+              gamepad_state.digital_buttons_2, XBOX_LB);
+    bit_write(bit_check(controller.buttons, RB),
+              gamepad_state.digital_buttons_2, XBOX_RB);
+    bit_write(bit_check(controller.buttons, HOME),
+              gamepad_state.digital_buttons_2, XBOX_HOME);
+
+    gamepad_state.l_x = controller.l_x;
+    gamepad_state.l_y = controller.l_y;
+    gamepad_state.r_x = controller.r_x;
+    gamepad_state.r_y = controller.r_y;
+    gamepad_state.lt = controller.lt;
+    gamepad_state.rt = controller.rt;
     /* Write Joystick Report Data */
     Endpoint_Write_Stream_LE(&gamepad_state, 20, NULL);
 

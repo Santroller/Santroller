@@ -13,10 +13,8 @@ void Direct::read_controller(Controller *controller) {
             ORANGE);
   bit_write(!IO::digitalRead(PIN_START_BUTTON), controller->buttons, START);
   bit_write(!IO::digitalRead(PIN_SELECT_BUTTON), controller->buttons, SELECT);
-  controller->r_x =
-      (IO::analogRead(PIN_WHAMMY_POTENIOMETER) * 32) * INVERT_WHAMMY
-          ? -1
-          : 1 + WHAMMY_INITIAL_VALUE;
+  controller->r_x = (IO::analogRead(PIN_WHAMMY_POTENIOMETER) * 32) +
+                    WHAMMY_INITIAL_VALUE * (INVERT_WHAMMY ? -1 : 1);
 #if DIRECTION_MODE == JOY
   bit_write(!IO::digitalRead(PIN_STRUM_UP_BUTTON) ||
                 IO::analogRead(PIN_JOYSTICK_Y_POTENIOMETER) > 600,

@@ -16,6 +16,7 @@ public:
 #endif
   void process(Controller *controller);
   void init();
+  bool ready();
 };
 
 extern "C" {

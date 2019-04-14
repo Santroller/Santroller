@@ -16,6 +16,9 @@ void OutputHandler::init() {
   output.init();
 }
 
+bool OutputHandler::ready() {
+  return output.ready();
+}
 extern "C" {
 void EVENT_USB_Device_Connect(void) { OutputHandler::output.usb_connect(); }
 void EVENT_USB_Device_Disconnect(void) { OutputHandler::output.usb_disconnect(); }

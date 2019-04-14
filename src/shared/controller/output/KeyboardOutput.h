@@ -33,6 +33,7 @@ class KeyboardOutput : public Output {
 public:
   void init();
   void update(Controller controller);
+  bool ready();
   void usb_connect();
   void usb_disconnect();
   void usb_configuration_changed();

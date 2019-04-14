@@ -18,7 +18,9 @@ int main() {
   out.init();
   controller.init();
   while (true) {
-    controller.process();
+    if (out.ready()) {
+      controller.process();
+    }
     out.process(&controller.controller);
   }
 }

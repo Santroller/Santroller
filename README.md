@@ -1,7 +1,9 @@
 # Ardwiino
 ![https://i.imgur.com/QeoAx7B.jpg](https://i.imgur.com/QeoAx7B.jpg)
 
-This project aims to provide an adapter that when used will expose a wii guitar hero controller as an xbox 360 controller, so that games such as Clone Hero can immediately use these controllers without calibration. Note that this does not take care of authentication, so your controllers will not work on a real xbox 360.
+This project aims to provide a AVR solution that supports both direct and WII based guitar configurations. By editing config.h, you can set your guitar up with any configuration, and configure the wiring type, and also if you want to emulate xinput or a keyboard.
+
+Note that xinput mode does not take care of xinput security, so your controllers will not work on a real xbox 360.
 
 This repository contains code for both the uno, and the pro micro. It could very easily be modified to support many other AVR microcontrollers, as long as the AVR supports HID, either directly or via another AVR microcontroller (aka the uno).
 

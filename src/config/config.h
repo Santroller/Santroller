@@ -1,6 +1,17 @@
 // How fast should your controller poll (note that this is expressed in 1ms
 // frames.) Note that a 1ms poll will use a lot of bandwith, and as a result
 // will break the ability to use Multiple guitars on a Hub.
+//https://docs.microsoft.com/en-us/windows/desktop/xinput/xinput-and-controller-subtypes
+#define GUITAR_SUBTYPE 6
+#define GAMEPAD_SUBTYPE 1
+#define DANCE_PAD_SUBTYPE 5
+#define GUITAR_ALTERNATE_SUBTYPE 7
+#define DRUM_SUBTYPE 8
+#define GUITAR_BASS_SUBTYPE 11
+#define ARCADE_STICK_SUBTYPE 3
+#define ARCADE_PAD_SUBTYPE 19
+#define WHEEL_SUBTYPE 2
+#define FLIGHT_STICK_SUBTYPE 4
 #define POLL_RATE 1
 #define MPU_6050 1
 #define WII 1
@@ -12,16 +23,6 @@
 #define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD
 #define DPAD 1
 #define JOY 2
-#define GUITAR_SUBTYPE 6
-#define GAMEPAD_SUBTYPE 1
-#define DANCE_PAD_SUBTYPE 5
-#define GUITAR_ALTERNATE_SUBTYPE 7
-#define DRUM_SUBTYPE 8
-#define GUITAR_BASS_SUBTYPE 11
-#define ARCADE_STICK_SUBTYPE 3
-#define ARCADE_PAD_SUBTYPE 19
-#define WHEEL_SUBTYPE 2
-#define FLIGHT_STICK_SUBTYPE 4
 #if DEVICE_TYPE == DIRECT
 #define PIN_GREEN_FRET 4
 #define PIN_RED_FRET 5

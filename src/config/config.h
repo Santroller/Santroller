@@ -44,8 +44,8 @@
 // and set Left and Right to left and right on your dpad. Reuse pins for up and
 // down and strumming, if required.
 #define INVERT_WHAMMY false
-// If your whammy bar appears inverted, set this to -1 to invert the output of your whammy bar.
-#define WHAMMY_INITIAL_VALUE -16863
+// If your whammy bar appears inverted, set this to true to invert the output of your whammy bar.
+#define WHAMMY_INITIAL_VALUE 16863
 // Set this value to define where 0 is on your whammy bar.
 #define FRETS_LED 1
 // If this is set to true, the FRET pins will not use pullups, and will require
@@ -73,6 +73,6 @@
 #if TILT_SENSOR == GRAVITY
 #define PIN_GRAVITY 11
 #elif TILT_SENSOR == MPU_6050
-#define FLIP_MPU_6050 1
-#define MPU_6050_START 29000
+#define FLIP_MPU_6050 0
+#define MPU_6050_START 28000
 #endif

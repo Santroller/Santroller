@@ -44,8 +44,7 @@
 // and set Left and Right to left and right on your dpad. Reuse pins for up and
 // down and strumming, if required.
 #define INVERT_WHAMMY false
-// If your whammy bar appears inverted, set this to -1 to invert the output of
-// your whammy bar.
+// If your whammy bar appears inverted, set this to true to invert the output of your whammy bar.
 #define WHAMMY_INITIAL_VALUE 16863
 // Set this value to define where 0 is on your whammy bar.
 #define FRETS_LED 1

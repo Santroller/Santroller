@@ -1,5 +1,6 @@
 #include "./Direct.h"
-void Direct::read_controller(Controller *controller) {
+void Direct::read_controller(Controller *controller)
+{
 #if DEVICE_TYPE == DIRECT
   bit_write(IO::digitalRead(PIN_GREEN_FRET) == FRETS_LED, controller->buttons,
             GREEN);
@@ -36,7 +37,8 @@ void Direct::read_controller(Controller *controller) {
 #endif
 }
 
-void Direct::init() {
+void Direct::init()
+{
 #if DEVICE_TYPE == DIRECT
   int fret_type = INPUT_PULLUP;
 #if FRETS_LED == 1

@@ -30,7 +30,7 @@ ISR(USART_UDRE_vect) {
     UDR0 = ((uint8_t *)&controller.controller)[current_index - 2];
   }
   current_index++;
-  if (current_index >= sizeof(controller.controller) + 2) {
+  if (current_index >= sizeof(Controller) + 2) {
     current_index = 0;
   }
 }

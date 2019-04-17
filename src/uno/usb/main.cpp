@@ -31,7 +31,7 @@ ISR(USART1_RX_vect) {
   default:
     ((uint8_t *)&controller)[current_control - 2] = data;
     current_control++;
-    if (current_control == sizeof(Controller) + 2) {
+    if (current_control >= sizeof(Controller) + 2) {
       out.process(&controller);
       current_control = 0;
     }
@@ -40,7 +40,7 @@ ISR(USART1_RX_vect) {
 
 void USART_Init() {
   // Set baud rate
-  UBRR1 = 6;
+  UBRR1 = 8;
   // UCSR1A = _BV(U2X1);
   // Enable receiver and interrupt
   UCSR1B = _BV(RXEN1) | _BV(RXCIE1);

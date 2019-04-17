@@ -20,12 +20,17 @@ PGMER       = -c arduino -b 115200 -P /dev/ttyACM0
 PGMERISP    = -c avrispv2 -P /dev/ttyACM0
 DUDE = /usr/bin/avrdude -V -p $(MCU)
 # ----- No changes should be necessary below this line -----
-C_FILES = $(shell find ../../shared -type f -name '*.c' -not -path "../../shared/lufa/lufa/*") $(shell find ../../shared -type f -name '*.cpp' -not -path "../../shared/lufa/lufa/*") $(shell find . -type f -name '*.c') $(shell find . -type f -name '*.cpp')
+C_FILES2 = $(shell find ../../shared -type f -name '*.${EXT_C}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")
+CPP_FILES2 = $(shell find ../../shared -type f -name '*.${EXT_C++}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")
+OBJECTS2 = \
+	$(patsubst %.$(EXT_C),objshared/%.o,$(C_FILES2:../../%=%)) \
+	$(patsubst %.$(EXT_C++),objshared/%.o,$(CPP_FILES2:../../%=%))
+
+C_FILES = $(shell find . -type f -name '*.${EXT_C}')
+CPP_FILES = $(shell find . -type f -name '*.${EXT_C++}')
 OBJECTS = \
-	$(patsubst %.$(EXT_C),obj/%.o,$(shell find ../../shared -type f -name '*.${EXT_C}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")) \
-	$(patsubst %.$(EXT_C++),obj/%.o,$(shell find ../../shared -type f -name '*.${EXT_C++}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")) \
-	obj/uart.o \
-	obj/main.o
+	$(patsubst %.$(EXT_C),obj/%.o,$(C_FILES:./%=%)) \
+	$(patsubst %.$(EXT_C++),obj/%.o,$(CPP_FILES:./%=%))
 
 
 # TODO explain these flags, make them configurable
@@ -51,9 +56,17 @@ C++FLAGS += -std=c++11
 default: $(PROJECT).elf
 	echo $(OBJECTS)
 
-%.elf: $(OBJECTS)
+%.elf: $(OBJECTS) $(OBJECTS2)
 	@mkdir -p $(@D)
-	$(GCC) $(CFLAGS) $(OBJECTS) --output $@ $(LDFLAGS)
+	$(GCC) $(CFLAGS) $(OBJECTS) $(OBJECTS2) --output $@ $(LDFLAGS)
+
+objshared/%.o : ../../%.$(EXT_C)
+	@mkdir -p $(@D)
+	$(GCC) $< $(CFLAGS) -c -o $@
+
+objshared/%.o : ../../%.$(EXT_C++)
+	@mkdir -p $(@D)
+	$(G++) $< $(C++FLAGS) -c -o $@
 
 obj/%.o : %.$(EXT_C)
 	@mkdir -p $(@D)
@@ -65,6 +78,9 @@ obj/%.o : %.$(EXT_C++)
 
 clean:
 	$(RM) -R bin obj
+
+objects:
+	echo $(OBJECTS) $(OBJECTS2)
 
 $(PROJECT).hex: $(PROJECT).elf
 	avr-objcopy -j .text -j .data -O ihex $(PROJECT).elf $(PROJECT).hex

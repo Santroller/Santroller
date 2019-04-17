@@ -17,7 +17,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
 
     .USBSpecification = VERSION_BCD(2, 0, 0),
 #if OUTPUT_TYPE == XINPUT
-    .Endpoint0Size = 0x08,
+    .Endpoint0Size = 0x40,
     .Class = 0xFF,
     .SubClass = 0xFF,
     .Protocol = 0xFF,

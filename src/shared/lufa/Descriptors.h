@@ -106,7 +106,7 @@ enum StringDescriptors_t {
 };
 typedef struct {
   USB_Descriptor_Header_t Header;
-  int Signature[7];
+  WCHAR Signature[7];
   uint8_t VendorCode;
   uint8_t Reserved;
 } USB_OSDescriptor_t;

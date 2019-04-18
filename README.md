@@ -14,9 +14,13 @@ This repository contains code for both the uno, and the pro micro. It could very
 3. A MPU6050 or similar
 
 ## Flashing the software
-1. Install an AVR toolchain + make
-2. run `make uno` or `make micro`, depending on your microcontroller family 
-3. For updates, hit + and - to jump to bootloader mode.
+There are two ways to flash the software to your arduino:
+* Guitar configurator (recommended)
+   1. Use https://github.com/sanjay900/guitar-configurator, and follow the instructions, or
+* Manually (note that this only works on unix systems)
+    1. Install an AVR toolchain + make
+    2. run `make uno` or `make micro`, depending on your microcontroller family 
+    3. For updates, hit + and - to jump to bootloader mode.
 
 ## Building the hardware
 1. Find the I2C pins on your Arduino, and connect them to the extension / breakout board. Also connect ground to ground and 3.3v to 3.3v on the Arduino.

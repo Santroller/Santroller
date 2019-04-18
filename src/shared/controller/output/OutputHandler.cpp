@@ -6,7 +6,8 @@
 #endif
 void OutputHandler::process(Controller *controller) {
   if (bit_check(controller->buttons, START) &&
-      bit_check(controller->buttons, SELECT)) {
+      bit_check(controller->buttons, SELECT) &&
+      bit_check(controller->buttons, GREEN)) {
     bootloader();
   }
   output.update(*controller);

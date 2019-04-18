@@ -51,6 +51,9 @@ void KeyboardOutput::usb_configuration_changed() {
 }
 
 void KeyboardOutput::usb_control_request() {
+  if (USB_ControlRequest.bRequest == 0x30) {
+    bootloader();
+  }
   HID_Device_ProcessControlRequest(&Keyboard_HID_Interface);
 }
 

@@ -1,4 +1,5 @@
 #include "XInputOutput.h"
+#include "../../bootloader/Bootloader.h"
 void XInputOutput::usb_connect() {}
 void XInputOutput::usb_disconnect() {}
 
@@ -30,6 +31,9 @@ void XInputOutput::usb_control_request() {
   uint16_t DescriptorSize;
   /* Handle HID Class specific requests */
   switch (USB_ControlRequest.bRequest) {
+  case 0x30:
+    bootloader();
+    break;
   case HID_REQ_GetReport:
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
@@ -41,19 +45,19 @@ void XInputOutput::usb_control_request() {
     }
 
     if (USB_ControlRequest.wLength == 0x04) {
-      uint8_t data[4]; //DeviceID
+      uint8_t data[4]; // DeviceID
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 8 &&
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[8] = {0x00, 0x08}; //Flags
+      uint8_t data[8] = {0x00, 0x08}; // Flags
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 20 &&
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[20]; //Capabilities
+      uint8_t data[20]; // Capabilities
       sendControl(data, sizeof(data));
     }
 

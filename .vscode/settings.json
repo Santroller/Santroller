@@ -12,6 +12,8 @@
         "xinputpad.h": "c",
         "keyboard.h": "c",
         "sfr_defs.h": "c",
-        "keyboardhid.h": "c"
+        "keyboardhid.h": "c",
+        "platform.h": "c",
+        "usb.h": "c"
     }
 }

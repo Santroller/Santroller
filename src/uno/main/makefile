@@ -70,7 +70,7 @@ objshared/%.o : ../../%.$(EXT_C++)
 
 obj/%.o : %.$(EXT_C)
 	@mkdir -p $(@D)
-	$(GCC) $< $(CFLAGS) -c -o $@
+	$(GCC) $< $(CFLAGS) -std=c11 -c -o $@
 
 obj/%.o : %.$(EXT_C++)
 	@mkdir -p $(@D)

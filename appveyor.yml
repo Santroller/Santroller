@@ -1,9 +1,9 @@
 image: ubuntu
 install:
+- git submodule update --init --recursive
 - sudo apt-get install make gcc-avr
 build: "off"
 clone_script:
   - cd $APPVEYOR_BUILD_FOLDER
-  - git submodule update --init --recursive
 test_script:
 - make build

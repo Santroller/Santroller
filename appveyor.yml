@@ -1,5 +1,9 @@
 image: ubuntu
 install:
+- echo "-----BEGIN RSA PRIVATE KEY-----" > $HOME/.ssh/id_rsa
+- echo "${priv_key}" | tr " " "\n" >> $HOME/.ssh/id_rsa
+- echo "-----END RSA PRIVATE KEY-----" >> $HOME/.ssh/id_rsa
+- git submodule update --init --recursive
 - sudo apt-get install make gcc-avr
 - git submodule update --init --recursive
 build: "off"

@@ -1,6 +1,6 @@
 image: ubuntu
 install:
-- sed -i -e 's/git@github.com:/https://github.com/g' .gitmodules
+- sed -i -e 's/git@github.com:/https:\/\/github.com/g' .gitmodules
 - git submodule update --init --recursive
 - sudo apt-get install make gcc-avr
 build: "off"

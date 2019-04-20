@@ -1,6 +1,6 @@
 image: ubuntu
 install:
-- sudo apt-get install make avr-gcc
+- sudo apt-get install make gcc-avr
 build: "off"
 test_script:
 - make micro

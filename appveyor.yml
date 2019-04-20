@@ -2,7 +2,7 @@ image: ubuntu
 install:
 - sed -i -e 's/git@github.com:/https:\/\/github.com\//g' .gitmodules
 - git submodule update --init --recursive
-- sudo apt-get install make gcc-avr
+- sudo apt-get install make gcc-avr avr-libc binutils
 build: "off"
 test_script:
 - make build

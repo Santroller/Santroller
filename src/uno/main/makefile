@@ -74,7 +74,7 @@ obj/%.o : %.$(EXT_C)
 
 obj/%.o : %.$(EXT_C++)
 	@mkdir -p $(@D)
-	$(G++) $< $(C++FLAGS) -c -o $@
+	$(G++) $< $(C++FLAGS) -std=c++11 -c -o $@
 
 clean:
 	$(RM) -R bin obj

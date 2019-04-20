@@ -1,8 +1,7 @@
 image: ubuntu
 install:
 - sudo apt-get install make gcc-avr
-build: "off"
-before_build:
 - git submodule update --init --recursive
+build: "off"
 test_script:
 - make build

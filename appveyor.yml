@@ -6,3 +6,7 @@ install:
 build: "off"
 test_script:
 - make build
+
+artifacts:
+  - path: src/micro/bin/Ardwiino.hex
+    name: Ardwiino.hex

@@ -30,18 +30,18 @@ USB_ClassInfo_HID_Device_t Keyboard_HID_Interface = {
   if (bit_check(controller.buttons, key) || condition) {                       \
     keys[usedKeys++] = KEY_##key;                                              \
   }
-void KeyboardOutput::usb_connect() {}
-void KeyboardOutput::usb_disconnect() {}
+void Output::usb_connect() {}
+void Output::usb_disconnect() {}
 
 uint8_t keys[SIMULTANEOUS_KEYS];
 uint8_t usedKeys = 0;
 
-void KeyboardOutput::init() {
+void Output::init() {
   wdt_enable(WDTO_2S);
   USB_Init();
   sei();
 }
-void KeyboardOutput::update(Controller controller) {
+void Output::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
   usedKeys = 0;
@@ -62,25 +62,25 @@ void KeyboardOutput::update(Controller controller) {
   HID_Device_USBTask(&Keyboard_HID_Interface);
 }
 
-void KeyboardOutput::usb_configuration_changed() {
+void Output::usb_configuration_changed() {
   bool ConfigSuccess = true;
   ConfigSuccess &= HID_Device_ConfigureEndpoints(&Keyboard_HID_Interface);
   USB_Device_EnableSOFEvents();
 }
 
-void KeyboardOutput::usb_control_request() {
+void Output::usb_control_request() {
   if (USB_ControlRequest.bRequest == 0x30) {
     bootloader();
   }
   HID_Device_ProcessControlRequest(&Keyboard_HID_Interface);
 }
 
-void KeyboardOutput::usb_start_of_frame() {
+void Output::usb_start_of_frame() {
   HID_Device_MillisecondElapsed(&Keyboard_HID_Interface);
 }
 
-KeyboardOutput::KeyboardOutput() {}
-bool KeyboardOutput::ready() { return true; }
+Output::Output() {}
+bool Output::ready() { return true; }
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {

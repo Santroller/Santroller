@@ -8,7 +8,7 @@
 
 #include "../../../config/config.h"
 extern "C" {
-  #include "../lufa/Descriptors.h"
+#include "../lufa/Descriptors.h"
 }
 #include "Output.h"
 #include "stdint.h"
@@ -30,33 +30,3 @@ extern "C" {
 #define XBOX_B 5
 #define XBOX_X 6
 #define XBOX_Y 7
-
-class XInputOutput : public Output {
-public:
-  void init();
-  void update(Controller controller);
-  bool ready();
-  void usb_connect();
-  void usb_disconnect();
-  void usb_configuration_changed();
-  void usb_control_request();
-  void usb_start_of_frame();
-  XInputOutput();
-
-private:
-  typedef struct {
-    uint8_t rid;
-    uint8_t rsize;
-    uint8_t digital_buttons_1;
-    uint8_t digital_buttons_2;
-    uint8_t lt;
-    uint8_t rt;
-    int l_x;
-    int l_y;
-    int r_x;
-    int r_y;
-    uint8_t reserved_1[6];
-  } USB_JoystickReport_Data_t;
-  USB_JoystickReport_Data_t gamepad_state;
-  bool isReady;
-};

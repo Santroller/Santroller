@@ -1,21 +1,37 @@
 #include "XInputOutput.h"
 #include "../../bootloader/Bootloader.h"
-void XInputOutput::usb_connect() {}
-void XInputOutput::usb_disconnect() {}
+void Output::usb_connect() {}
+void Output::usb_disconnect() {}
 
-XInputOutput::XInputOutput() {
+typedef struct {
+  uint8_t rid;
+  uint8_t rsize;
+  uint8_t digital_buttons_1;
+  uint8_t digital_buttons_2;
+  uint8_t lt;
+  uint8_t rt;
+  int l_x;
+  int l_y;
+  int r_x;
+  int r_y;
+  uint8_t reserved_1[6];
+} USB_JoystickReport_Data_t;
+USB_JoystickReport_Data_t gamepad_state;
+bool isReady;
+
+Output::Output() {
   memset(&gamepad_state, 0x00, sizeof(USB_JoystickReport_Data_t));
   gamepad_state.rsize = 20;
 }
-void XInputOutput::init() {
+void Output::init() {
   wdt_enable(WDTO_2S);
   USB_Init();
   sei();
 }
-bool XInputOutput::ready() {
+bool Output::ready() {
   return USB_DeviceState == DEVICE_STATE_Configured;
 }
-void XInputOutput::usb_configuration_changed() {
+void Output::usb_configuration_changed() {
   Endpoint_ConfigureEndpoint(JOYSTICK_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
   Endpoint_ConfigureEndpoint((ENDPOINT_DIR_IN | 3), EP_TYPE_INTERRUPT, 32, 1);
 }
@@ -26,7 +42,7 @@ void sendControl(uint8_t *out, uint8_t outSize) {
   Endpoint_Write_Control_Stream_LE(out, outSize);
   Endpoint_ClearOUT();
 }
-void XInputOutput::usb_control_request() {
+void Output::usb_control_request() {
   const void *DescriptorPointer;
   uint16_t DescriptorSize;
   /* Handle HID Class specific requests */
@@ -79,8 +95,8 @@ void XInputOutput::usb_control_request() {
     }
   }
 }
-void XInputOutput::usb_start_of_frame() {}
-void XInputOutput::update(Controller controller) {
+void Output::usb_start_of_frame() {}
+void Output::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
   /* Device must be connected and configured for the task to run */

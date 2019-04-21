@@ -9,11 +9,7 @@
 #include "../util.h"
 class OutputHandler {
 public:
-#if OUTPUT_TYPE == XINPUT
-  static XInputOutput output;
-#elif OUTPUT_TYPE == KEYBOARD
-  static KeyboardOutput output;
-#endif
+  static Output output;
   void process(Controller *controller);
   void init();
   bool ready();

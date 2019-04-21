@@ -1,9 +1,5 @@
 #include "OutputHandler.h"
-#if OUTPUT_TYPE == XINPUT
-  XInputOutput OutputHandler::output;
-#elif OUTPUT_TYPE == KEYBOARD
-  KeyboardOutput OutputHandler::output;
-#endif
+Output OutputHandler::output;
 void OutputHandler::process(Controller *controller) {
   if (bit_check(controller->buttons, START) &&
       bit_check(controller->buttons, SELECT)) {

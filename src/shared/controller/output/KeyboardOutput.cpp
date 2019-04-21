@@ -1,5 +1,23 @@
 #include "KeyboardOutput.h"
 #if OUTPUT_TYPE == KEYBOARD
+extern "C" {
+static uint8_t PrevKeyboardHIDReportBuffer[sizeof(USB_KeyboardReport_Data_t)];
+
+USB_ClassInfo_HID_Device_t Keyboard_HID_Interface = {
+    .Config =
+        {
+            .InterfaceNumber = INTERFACE_ID_Keyboard,
+            .ReportINEndpoint =
+                {
+                    .Address = KEYBOARD_EPADDR,
+                    .Size = KEYBOARD_EPSIZE,
+                    .Banks = 1,
+                },
+            .PrevReportINBuffer = PrevKeyboardHIDReportBuffer,
+            .PrevReportINBufferSize = sizeof(PrevKeyboardHIDReportBuffer),
+        },
+};
+}
 #define CHECK_KEY(key)                                                         \
   if (bit_check(controller.buttons, key)) {                                    \
     keys[usedKeys++] = KEY_##key;                                              \
@@ -62,7 +80,7 @@ void KeyboardOutput::usb_start_of_frame() {
 }
 
 KeyboardOutput::KeyboardOutput() {}
-bool KeyboardOutput::ready() {return true;}
+bool KeyboardOutput::ready() { return true; }
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {

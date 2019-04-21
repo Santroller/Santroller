@@ -15,11 +15,11 @@
 #include "Descriptors.h"
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Platform/Platform.h>
-#include "KeyboardHID.h"
 #define SIMULTANEOUS_KEYS 10
 extern "C" {
 extern uint8_t keys[SIMULTANEOUS_KEYS];
 extern uint8_t usedKeys;
+extern USB_ClassInfo_HID_Device_t Keyboard_HID_Interface;
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize);

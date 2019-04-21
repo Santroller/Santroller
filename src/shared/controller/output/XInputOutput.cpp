@@ -1,4 +1,5 @@
 #include "XInputOutput.h"
+#if OUTPUT_TYPE == XINPUT
 #include "../../bootloader/Bootloader.h"
 void Output::usb_connect() {}
 void Output::usb_disconnect() {}
@@ -28,9 +29,7 @@ void Output::init() {
   USB_Init();
   sei();
 }
-bool Output::ready() {
-  return USB_DeviceState == DEVICE_STATE_Configured;
-}
+bool Output::ready() { return USB_DeviceState == DEVICE_STATE_Configured; }
 void Output::usb_configuration_changed() {
   Endpoint_ConfigureEndpoint(JOYSTICK_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
   Endpoint_ConfigureEndpoint((ENDPOINT_DIR_IN | 3), EP_TYPE_INTERRUPT, 32, 1);
@@ -148,3 +147,121 @@ void Output::update(Controller controller) {
     Endpoint_ClearIN();
   }
 }
+const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
+    .Header = {.Size = sizeof(USB_OSDescriptor_t), .Type = DTYPE_String},
+    .Signature = {'M', 'S', 'F', 'T', '1', '0', '0'},
+    .VendorCode = REQ_GetOSFeatureDescriptor,
+    .Reserved = 0};
+
+const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
+    sizeof(USB_OSCompatibleIDDescriptor_t),
+    0x0100,
+    EXTENDED_COMPAT_ID_DESCRIPTOR,
+    1,
+    {},
+    WCID_IF_NUMBER,
+    0x04,
+    "XUSB10"};
+
+uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
+                                    const uint8_t wIndex,
+                                    const uint8_t Recipient,
+                                    const void **const DescriptorAddress) {
+  const void *Address = NULL;
+  uint16_t Size = NO_DESCRIPTOR;
+
+  /* Check if an OS Feature Descriptor is being requested */
+  switch (wIndex) {
+  case EXTENDED_COMPAT_ID_DESCRIPTOR:
+    if (Recipient ==
+        REQREC_DEVICE) { /* Ignore InterfaceNumber as this is a
+                                                                                                                      Device Request */
+      Address = &DevCompatIDs;
+      Size = DevCompatIDs.TotalLength;
+    }
+    break;
+  }
+
+  *DescriptorAddress = Address;
+  return Size;
+}
+/** Configuration descriptor structure. This descriptor, located in FLASH
+ * memory, describes the usage of the device in one of its supported
+ * configurations, including information about any device interfaces and
+ * endpoints. The descriptor is read out by the USB host during the enumeration
+ * process when selecting a configuration so that the host may correctly
+ * communicate with the USB device.
+ */
+static const Xinput_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
+    .Config = {.Header = {.Size = sizeof(USB_Descriptor_Configuration_Header_t),
+                          .Type = DTYPE_Configuration},
+
+               .TotalConfigurationSize = sizeof(Xinput_Descriptor_Configuration_t),
+               .TotalInterfaces = 1,
+
+               .ConfigurationNumber = 1,
+               .ConfigurationStrIndex = NO_DESCRIPTOR,
+
+               .ConfigAttributes = USB_CONFIG_ATTR_REMOTEWAKEUP,
+
+               .MaxPowerConsumption = USB_CONFIG_POWER_MA(500)},
+
+    .Interface0 = {.Header = {.Size = sizeof(USB_Descriptor_Interface_t),
+                              .Type = DTYPE_Interface},
+
+                   .InterfaceNumber = 0,
+                   .AlternateSetting = 0x00,
+
+                   .TotalEndpoints = 2,
+
+                   .Class = 0xFF,
+                   .SubClass = 0x5D,
+                   .Protocol = 0x01,
+
+                   .InterfaceStrIndex = NO_DESCRIPTOR},
+
+    .XInputUnknown = {.Header = {.Size = sizeof(USB_HID_XBOX_Descriptor_HID_t),
+                                 .Type = 0x21},
+                      {0x00, 0x00, XINPUT_SUBTYPE, 0x25, 0x81, 0x14, 0x03, 0x03, 0x03,
+                       0x04, 0x13, 0x02, 0x08, 0x03, 0x00}},
+
+    .DataInEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
+                                   .Type = DTYPE_Endpoint},
+
+                        .EndpointAddress = 0x81,
+                        .Attributes = EP_TYPE_INTERRUPT,
+                        .EndpointSize = XBOX_EPSIZE,
+                        .PollingIntervalMS = POLL_RATE},
+    .DataOutEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
+                                    .Type = DTYPE_Endpoint},
+
+                         .EndpointAddress = 0x02,
+                         .Attributes = EP_TYPE_INTERRUPT,
+                         .EndpointSize = XBOX_EPSIZE,
+                         .PollingIntervalMS = POLL_RATE},
+};
+
+uint16_t Output::get_descriptor(const uint8_t DescriptorType, const uint8_t DescriptorNumber, const void **const DescriptorAddress) {
+  uint16_t Size = NO_DESCRIPTOR;
+  const void *Address = NULL;
+  switch (DescriptorType) {
+  case DTYPE_Configuration:
+    Address = &ConfigurationDescriptor;
+    Size = sizeof(ConfigurationDescriptor);
+    break;
+  case DTYPE_String:
+    switch (DescriptorNumber) {
+    case 0xEE:
+      /* A Microsoft-proprietary extension. String address 0xEE is used by
+Windows for "OS Descriptors", which in this case allows us to indicate
+that our device has a Compatible ID to provide. */
+      Address = &OSDescriptorString;
+      Size = pgm_read_byte(&OSDescriptorString.Header.Size);
+      break;
+    }
+    break;
+  }
+  *DescriptorAddress = Address;
+  return Size;
+}
+#endif

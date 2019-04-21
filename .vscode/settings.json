@@ -7,13 +7,15 @@
         "delay.h": "c",
         "mpu.h": "c",
         "inv_mpu.h": "c",
-        "descriptors.h": "c",
-        "kdescriptors.h": "c",
+        "DescriptorHandler.h": "c",
+        "kDescriptorHandler.h": "c",
         "xinputpad.h": "c",
         "keyboard.h": "c",
         "sfr_defs.h": "c",
         "keyboardhid.h": "c",
         "platform.h": "c",
-        "usb.h": "c"
+        "usb.h": "c",
+        "descriptors.h": "c",
+        "pgmspace.h": "c"
     }
 }

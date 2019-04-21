@@ -24,3 +24,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 void EVENT_USB_Device_ControlRequest(void) { OutputHandler::output.usb_control_request(); }
 void EVENT_USB_Device_StartOfFrame(void) { OutputHandler::output.usb_start_of_frame(); }
 }
+
+uint16_t get_descriptor(const uint8_t DescriptorType, const uint8_t DescriptorNumber, const void **const DescriptorAddress) {
+  return OutputHandler::output.get_descriptor(DescriptorType, DescriptorNumber, DescriptorAddress);
+}

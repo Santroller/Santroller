@@ -1,6 +1,7 @@
 #pragma once
 #include "../../../config/config.h"
 #include "../Controller.h"
+#include "Output.h"
 #if OUTPUT_TYPE == XINPUT
 #include "XInputOutput.h"
 #elif OUTPUT_TYPE == KEYBOARD
@@ -21,4 +22,5 @@ void EVENT_USB_Device_Disconnect(void);
 void EVENT_USB_Device_ConfigurationChanged(void);
 void EVENT_USB_Device_ControlRequest(void);
 void EVENT_USB_Device_StartOfFrame(void);
+uint16_t get_descriptor(const uint8_t DescriptorType, const uint8_t DescriptorNumber, const void **const DescriptorAddress);
 }

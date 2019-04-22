@@ -1,6 +1,8 @@
 #include "../Controller.h"
 #include "../../../config/config.h"
 #include "../../io/pins/Pins.h"
+#include "../../io/mpu6050/inv_mpu.h"
+#include "../../io/mpu6050/mpu.h"
 #if DEVICE_TYPE == WII 
   #include "../input/WiiExtensionInput.h"
 #elif DEVICE_TYPE == DIRECT

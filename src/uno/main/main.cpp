@@ -1,4 +1,4 @@
-#include "../../shared/controller/InputHandler.h"
+#include "../../shared/controller/input/InputHandler.h"
 #include "../../shared/util.h"
 #include "uart.h"
 #include <avr/interrupt.h>

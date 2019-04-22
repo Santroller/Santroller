@@ -1,8 +1,9 @@
 #pragma once
-#include "../controller/Controller.h"
-#include "../io/twi/I2Cdev.h"
-#include "util/delay.h"
-#include "NintendoExtensionCtrl.h"
+#include "../Controller.h"
+#include "../../io/twi/I2Cdev.h"
+#include "../../io/wii/NintendoExtensionCtrl.h"
+#include "../../util.h"
+#include <util/delay.h>
 
 class WiiExtension {
 public:

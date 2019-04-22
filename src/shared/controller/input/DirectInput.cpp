@@ -1,4 +1,4 @@
-#include "./Direct.h"
+#include "./DirectInput.h"
 void Direct::read_controller(Controller *controller)
 {
 #if DEVICE_TYPE == DIRECT

@@ -1,10 +1,10 @@
-#include "Controller.h"
-#include "../../config/config.h"
-#include "../direct/IO.h"
+#include "../Controller.h"
+#include "../../../config/config.h"
+#include "../../io/pins/Pins.h"
 #if DEVICE_TYPE == WII 
-  #include "../wii/WiiExtension.h"
+  #include "../input/WiiExtensionInput.h"
 #elif DEVICE_TYPE == DIRECT
-  #include "../direct/Direct.h"
+  #include "../input/DirectInput.h"
 #endif
 class InputHandler {
 public:
@@ -16,7 +16,7 @@ public:
 
 #if DEVICE_TYPE == WII
   WiiExtension input;
-#elif DEVICE_TYPE == DIRECT || TILT_SENSOR == GRAVITY
+#elif DEVICE_TYPE == DIRECT
   Direct input;
 #endif
 };

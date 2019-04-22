@@ -1,6 +1,4 @@
-#include "WiiExtension.h"
-#include "../util.h"
-#include <util/delay.h>
+#include "WiiExtensionInput.h"
 
 WiiExtension::WiiExtension()
     : nchuk(port), classic(port), dj(port), guitar(port), drum(port)

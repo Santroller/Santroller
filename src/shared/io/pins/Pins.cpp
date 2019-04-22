@@ -1,4 +1,4 @@
-#include "IO.h"
+#include "Pins.h"
 
 int IO::digitalRead(uint8_t pin) {
   uint8_t bit = digitalPinToBitMask(pin);

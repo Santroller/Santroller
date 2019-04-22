@@ -1,6 +1,5 @@
-#include "../shared/controller/InputHandler.h"
+#include "../shared/controller/input/InputHandler.h"
 #include "../shared/controller/output/OutputHandler.h"
-#include "../shared/wii/WiiExtension.h"
 #include "pins.h"
 
 InputHandler controller;

@@ -23,7 +23,7 @@
 #ifndef NXC_Comms_h
 #define NXC_Comms_h
 
-#include "../../twi/I2Cdev.h"
+#include "../../io/twi/I2Cdev.h"
 #include "NXC_Identity.h"
 #include <stdlib.h>
 

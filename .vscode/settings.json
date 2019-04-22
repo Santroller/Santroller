@@ -16,6 +16,8 @@
         "platform.h": "c",
         "usb.h": "c",
         "descriptors.h": "c",
-        "pgmspace.h": "c"
+        "pgmspace.h": "c",
+        "i2cdev.h": "c",
+        "nintendoextensionctrl.h": "c"
     }
 }

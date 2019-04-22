@@ -7,7 +7,7 @@
 #elif OUTPUT_TYPE == KEYBOARD
 #include "KeyboardOutput.h"
 #endif
-#include "../util.h"
+#include "../../util.h"
 class OutputHandler {
 public:
   static Output output;

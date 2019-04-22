@@ -1,7 +1,5 @@
 #include "Controller.h"
 #include "../../config/config.h"
-#include "../mpu6050/inv_mpu.h"
-#include "../mpu6050/mpu.h"
 #include "../direct/IO.h"
 #if DEVICE_TYPE == WII 
   #include "../wii/WiiExtension.h"

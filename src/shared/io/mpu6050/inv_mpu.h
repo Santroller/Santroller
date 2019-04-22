@@ -100,13 +100,13 @@ int8_t mpu_read_6500_accel_bias(long *accel_bias);
 int8_t mpu_set_accel_bias_6500_reg(const long *accel_bias);
 
 /* Data getter/setter APIs */
-int8_t mpu_get_gyro_reg(short *data, unsigned long *timestamp);
-int8_t mpu_get_accel_reg(short *data, unsigned long *timestamp);
-int8_t mpu_get_compass_reg(short *data, unsigned long *timestamp);
-int8_t mpu_get_temperature(long *data, unsigned long *timestamp);
+int8_t mpu_get_gyro_reg(short *data);
+int8_t mpu_get_accel_reg(short *data);
+int8_t mpu_get_compass_reg(short *data);
+int8_t mpu_get_temperature(long *data);
 
 int8_t mpu_get_int_status(short *status);
-int8_t mpu_read_fifo(short *gyro, short *accel, unsigned long *timestamp, unsigned char *sensors, unsigned char *more);
+int8_t mpu_read_fifo(short *gyro, short *accel, unsigned char *sensors, unsigned char *more);
 int8_t mpu_read_fifo_stream(unsigned short length, unsigned char *data, unsigned char *more);
 int8_t mpu_reset_fifo(void);
 

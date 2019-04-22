@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "../../config/config.h"
+#include "../../../config/config.h"
 #include "../lufa/Descriptors.h"
 #include "../Controller.h"
 #include "Output.h"

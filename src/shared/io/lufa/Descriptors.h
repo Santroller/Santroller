@@ -3,7 +3,7 @@
 /* Includes: */
 #include <LUFA/Drivers/USB/USB.h>
 
-#include "../../config/config.h"
+#include "../../../config/config.h"
 #include <avr/pgmspace.h>
 
 /** Enum for the device string descriptor IDs within the device. Each string
@@ -16,7 +16,7 @@ enum StringDescriptors_t {
   STRING_ID_Manufacturer = 1, /**< Manufacturer string ID */
   STRING_ID_Product = 2,      /**< Product string ID */
 };
-
+extern uint16_t get_descriptor(const uint8_t DescriptorType, const uint8_t DescriptorNumber, const void **const DescriptorAddress);
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,

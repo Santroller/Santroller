@@ -20,8 +20,8 @@ PGMER       = -c arduino -b 115200 -P /dev/ttyACM0
 PGMERISP    = -c avrispv2 -P /dev/ttyACM0
 DUDE = /usr/bin/avrdude -V -p $(MCU)
 # ----- No changes should be necessary below this line -----
-C_FILES2 = $(shell find ../../shared -type f -name '*.${EXT_C}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")
-CPP_FILES2 = $(shell find ../../shared -type f -name '*.${EXT_C++}' -not -path "../../shared/lufa/*" -not -path "../../shared/controller/output*")
+C_FILES2 = $(shell find ../../shared -type f -name '*.${EXT_C}' -not -path "../../shared/io/lufa/*" -not -path "../../shared/controller/output*")
+CPP_FILES2 = $(shell find ../../shared -type f -name '*.${EXT_C++}' -not -path "../../shared/io/lufa/*" -not -path "../../shared/controller/output*")
 OBJECTS2 = \
 	$(patsubst %.$(EXT_C),objshared/%.o,$(C_FILES2:../../%=%)) \
 	$(patsubst %.$(EXT_C++),objshared/%.o,$(CPP_FILES2:../../%=%))

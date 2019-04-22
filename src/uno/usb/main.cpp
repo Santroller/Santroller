@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "../../shared/controller/Controller.h"
 #include "../../shared/controller/output/OutputHandler.h"
-#include "../../shared/bootloader/Bootloader.h"
+#include "../../shared/io/bootloader/Bootloader.h"
 #include "../../shared/util.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>

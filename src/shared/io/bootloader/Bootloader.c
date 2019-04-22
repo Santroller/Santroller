@@ -5,7 +5,7 @@
 #else
   #define MAGIC_KEY_POS (RAMEND - 1)
 #endif
-void bootloader() {
+void bootloader(void) {
   // close interrupts
   cli();
 

@@ -1,7 +1,5 @@
 #include "../../shared/controller/InputHandler.h"
-#include "../../shared/twi/I2Cdev.h"
 #include "../../shared/util.h"
-#include "../../shared/wii/WiiExtension.h"
 #include "uart.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>

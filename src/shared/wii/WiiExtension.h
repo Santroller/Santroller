@@ -1,6 +1,6 @@
 #pragma once
 #include "../controller/Controller.h"
-#include "../twi/I2Cdev.h"
+#include "../io/twi/I2Cdev.h"
 #include "util/delay.h"
 #include "NintendoExtensionCtrl.h"
 

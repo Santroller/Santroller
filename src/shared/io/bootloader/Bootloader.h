@@ -2,7 +2,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void bootloader();
+extern void bootloader(void);
 #ifdef __cplusplus
 }
 #endif

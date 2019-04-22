@@ -1,4 +1,5 @@
 obj
+objshared
 bin
 pcb/ardwiino.bak
 pcb/ardwiino-cache.lib

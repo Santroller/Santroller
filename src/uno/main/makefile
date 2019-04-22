@@ -77,7 +77,7 @@ obj/%.o : %.$(EXT_C++)
 	$(G++) $< $(C++FLAGS) -std=c++11 -c -o $@
 
 clean:
-	$(RM) -R bin obj
+	$(RM) -R bin obj objshared
 
 objects:
 	echo $(OBJECTS) $(OBJECTS2)

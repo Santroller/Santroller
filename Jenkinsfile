@@ -29,7 +29,7 @@ pipeline {
         string(name: 'DIRECTION_MODE', defaultValue: 'JOY', description: '')
         string(name: 'INVERT_WHAMMY', defaultValue: 'true', description: '')
         string(name: 'WHAMMY_INITIAL_VALUE', defaultValue: '16863', description: '')
-        string(name: 'FRETS_LED', defaultValue: '1', description: '')
+        string(name: 'FRETS_LED', defaultValue: '0', description: '')
         string(name: 'KEY_GREEN_FRET', defaultValue: 'HID_KEYBOARD_SC_A', description: '')
         string(name: 'KEY_RED_FRET', defaultValue: 'HID_KEYBOARD_SC_S', description: '')
         string(name: 'KEY_YELLOW_FRET', defaultValue: 'HID_KEYBOARD_SC_J', description: '')

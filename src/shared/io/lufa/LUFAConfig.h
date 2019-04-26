@@ -57,7 +57,7 @@
 
 		/* General USB Driver Related Tokens: */
 //		#define ORDERED_EP_CONFIG
-		#define USE_STATIC_OPTIONS             (USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)  //(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
+		#define USE_STATIC_OPTIONS             (USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
 		#define USB_DEVICE_ONLY
 //		#define USB_HOST_ONLY
 //		#define USB_STREAM_TIMEOUT_MS            {Insert Value Here}

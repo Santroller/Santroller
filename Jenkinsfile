@@ -43,7 +43,6 @@ pipeline {
         string(name: 'KEY_UP', defaultValue: 'HID_KEYBOARD_SC_UP_ARROW', description: '')
         string(name: 'KEY_DOWN', defaultValue: 'HID_KEYBOARD_SC_DOWN_ARROW', description: '')
         string(name: 'PIN_GRAVITY', defaultValue: '11', description: '')
-        string(name: 'FLIP_MPU_6050', defaultValue: '0', description: '')
         string(name: 'MPU_6050_START', defaultValue: '28000', description: '')
         string(name: 'F_CPU', defaultValue: '16000000', description: '')
     }

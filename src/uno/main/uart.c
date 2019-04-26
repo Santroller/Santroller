@@ -2,7 +2,7 @@
 
 void uart_init(void) {
      // Set baud rate
-  UBRR0 = 8;
+  UBRR0 = 6;
 //   UCSR0A = _BV(U2X0);
   // Enable transmitter, enable transmit interrupt
   UCSR0B = _BV(TXEN0);

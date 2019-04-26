@@ -40,7 +40,7 @@ ISR(USART1_RX_vect) {
 
 void USART_Init() {
   // Set baud rate
-  UBRR1 = 8;
+  UBRR1 = 6;
   // UCSR1A = _BV(U2X1);
   // Enable receiver and interrupt
   UCSR1B = _BV(RXEN1) | _BV(RXCIE1);

@@ -73,6 +73,5 @@
 #if TILT_SENSOR == GRAVITY
 #define PIN_GRAVITY 11
 #elif TILT_SENSOR == MPU_6050
-#define FLIP_MPU_6050 0
 #define MPU_6050_START 28000
 #endif

@@ -1,5 +1,4 @@
 #include "KeyboardOutput.h"
-#if OUTPUT_TYPE == KEYBOARD
 /** HID class report descriptor. This is a special descriptor constructed
 with
  * values from the USBIF HID class specification to describe the reports and
@@ -20,7 +19,7 @@ const size_t PrevHIDReport_size = sizeof(USB_KeyboardReport_Data_t);
 
 uint8_t keys[SIMULTANEOUS_KEYS];
 uint8_t usedKeys = 0;
-void Output::update(Controller controller) {
+void KeyboardOutput::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
   usedKeys = 0;
@@ -41,7 +40,7 @@ void Output::update(Controller controller) {
   HID_Device_USBTask(&HID_Interface);
 }
 
-bool CALLBACK_HID_Device_CreateHIDReport(
+bool KeyboardOutput::hid_create_report(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
   USB_KeyboardReport_Data_t *KeyboardReport =
@@ -52,6 +51,3 @@ bool CALLBACK_HID_Device_CreateHIDReport(
   *ReportSize = sizeof(USB_KeyboardReport_Data_t);
   return false;
 }
-
-
-#endif

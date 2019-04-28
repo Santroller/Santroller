@@ -1,10 +1,15 @@
 #include "InputHandler.h"
 void InputHandler::process() {
-  input.read_controller(&controller);
+  input->read_controller(&controller);
   processTilt();
 }
 void InputHandler::init() {
-  input.init();
+  #if DEVICE_TYPE == WII
+    input = new WiiExtension();
+  #elif DEVICE_TYPE == DIRECT
+    input = new Direct();
+  #endif
+  input->init();
 #if TILT_SENSOR == MPU_6050
   mympu_open(15);
 #elif TILT_SENSOR == GRAVITY

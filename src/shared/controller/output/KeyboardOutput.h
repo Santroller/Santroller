@@ -1,9 +1,9 @@
 #pragma once
-#include "Output.h"
 #include "HidOutput.h"
+#include "Output.h"
+#include <LUFA/Drivers/USB/USB.h>
 #include <avr/wdt.h>
 #include <stdint.h>
-#include <LUFA/Drivers/USB/USB.h>
 #define SIMULTANEOUS_KEYS 6
 
 #define CHECK_KEY(key)                                                         \
@@ -22,3 +22,10 @@ extern "C" {
 extern uint8_t keys[SIMULTANEOUS_KEYS];
 extern uint8_t usedKeys;
 }
+class KeyboardOutput : public HIDOutput {
+public:
+  void update(Controller controller);
+  bool hid_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+                         uint8_t *const ReportID, const uint8_t ReportType,
+                         void *ReportData, uint16_t *const ReportSize);
+};

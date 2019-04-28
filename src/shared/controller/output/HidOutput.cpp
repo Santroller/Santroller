@@ -1,7 +1,5 @@
 #include "HidOutput.h"
 
-#if OUTPUT_TYPE == KEYBOARD || OUTPUT_TYPE == GAMEPAD
-
 /** Buffer to hold the previously generated HID report, for comparison purposes
  * inside the HID class driver. */
 static uint8_t PrevHIDReport[HID_REPORTSIZE];
@@ -16,7 +14,7 @@ USB_ClassInfo_HID_Device_t HID_Interface = {
                     .Banks = 1,
                 },
             .PrevReportINBuffer = PrevHIDReport,
-            .PrevReportINBufferSize = PrevHIDReport_size,
+            .PrevReportINBufferSize = ((HIDOutput*)OutputHandler::output)->HIDReport_Datasize,
         },
 };
 /** Configuration descriptor structure. This descriptor, located in FLASH
@@ -74,33 +72,29 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         .EndpointSize = HID_EPSIZE,
         .PollingIntervalMS = POLL_RATE}};
 
-Output::Output() {}
-
-bool Output::ready() { return true; }
-
-void Output::init() {
+void HIDOutput::init() {
   wdt_enable(WDTO_2S);
   USB_Init();
   sei();
 }
 
-void Output::usb_connect() {}
+void HIDOutput::usb_connect() {}
 
-void Output::usb_disconnect() {}
+void HIDOutput::usb_disconnect() {}
 
-void Output::usb_configuration_changed() {
+void HIDOutput::usb_configuration_changed() {
   HID_Device_ConfigureEndpoints(&HID_Interface);
   USB_Device_EnableSOFEvents();
 }
 
-void Output::usb_control_request() {
+void HIDOutput::usb_control_request() {
   if (USB_ControlRequest.bRequest == 0x30) {
     bootloader();
   }
   HID_Device_ProcessControlRequest(&HID_Interface);
 }
 
-void Output::usb_start_of_frame() {
+void HIDOutput::usb_start_of_frame() {
   HID_Device_MillisecondElapsed(&HID_Interface);
 }
 
@@ -109,9 +103,17 @@ void CALLBACK_HID_Device_ProcessHIDReport(
     const uint8_t ReportType, const void *ReportData,
     const uint16_t ReportSize) {}
 
-uint16_t Output::get_descriptor(const uint8_t DescriptorType,
-                                const uint8_t DescriptorNumber,
-                                const void **const DescriptorAddress) {
+bool CALLBACK_HID_Device_CreateHIDReport(
+    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
+    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
+  return ((HIDOutput *)OutputHandler::output)
+      ->hid_create_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
+                          ReportSize);
+}
+
+uint16_t HIDOutput::get_descriptor(const uint8_t DescriptorType,
+                                   const uint8_t DescriptorNumber,
+                                   const void **const DescriptorAddress) {
   uint16_t Size = NO_DESCRIPTOR;
   const void *Address = NULL;
   switch (DescriptorType) {
@@ -131,4 +133,3 @@ uint16_t Output::get_descriptor(const uint8_t DescriptorType,
   *DescriptorAddress = Address;
   return Size;
 }
-#endif

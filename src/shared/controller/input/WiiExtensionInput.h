@@ -1,11 +1,12 @@
 #pragma once
 #include "../Controller.h"
+#include "Input.h"
 #include "../../io/twi/I2Cdev.h"
 #include "../../io/wii/NintendoExtensionCtrl.h"
 #include "../../util.h"
 #include <util/delay.h>
 
-class WiiExtension {
+class WiiExtension: public Input {
 public:
   ExtensionPort port;
   Nunchuk::Shared nchuk;

@@ -1,22 +1,18 @@
 #include "XInputOutput.h"
-#if OUTPUT_TYPE == XINPUT
 #include "../../bootloader/Bootloader.h"
-void Output::usb_connect() {}
-void Output::usb_disconnect() {}
+void XInputOutput::usb_connect() {}
+void XInputOutput::usb_disconnect() {}
 
 USB_JoystickReport_Data_t gamepad_state;
 
-Output::Output() {
+void XInputOutput::init() {
   memset(&gamepad_state, 0x00, sizeof(USB_JoystickReport_Data_t));
   gamepad_state.rsize = 20;
-}
-void Output::init() {
   wdt_enable(WDTO_2S);
   USB_Init();
   sei();
 }
-bool Output::ready() { return USB_DeviceState == DEVICE_STATE_Configured; }
-void Output::usb_configuration_changed() {
+void XInputOutput::usb_configuration_changed() {
   Endpoint_ConfigureEndpoint(JOYSTICK_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
   Endpoint_ConfigureEndpoint((ENDPOINT_DIR_IN | 3), EP_TYPE_INTERRUPT, 32, 1);
 }
@@ -27,7 +23,7 @@ void sendControl(uint8_t *out, uint8_t outSize) {
   Endpoint_Write_Control_Stream_LE(out, outSize);
   Endpoint_ClearOUT();
 }
-void Output::usb_control_request() {
+void XInputOutput::usb_control_request() {
   const void *DescriptorPointer;
   uint16_t DescriptorSize;
   /* Handle HID Class specific requests */
@@ -80,12 +76,12 @@ void Output::usb_control_request() {
     }
   }
 }
-void Output::usb_start_of_frame() {}
-void Output::update(Controller controller) {
+void XInputOutput::usb_start_of_frame() {}
+void XInputOutput::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
   /* Device must be connected and configured for the task to run */
-  if (!ready())
+  if (USB_DeviceState != DEVICE_STATE_Configured)
     return;
 
   /* Select the Joystick Report Endpoint */
@@ -201,7 +197,7 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
     .VendorCode = REQ_GetOSFeatureDescriptor,
     .Reserved = 0};
 
-uint16_t Output::get_descriptor(const uint8_t DescriptorType,
+uint16_t XInputOutput::get_descriptor(const uint8_t DescriptorType,
                                 const uint8_t DescriptorNumber,
                                 const void **const DescriptorAddress) {
   uint16_t Size = NO_DESCRIPTOR;
@@ -226,7 +222,6 @@ that our device has a Compatible ID to provide. */
   *DescriptorAddress = Address;
   return Size;
 }
-#endif
 
 const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
     sizeof(USB_OSCompatibleIDDescriptor_t),

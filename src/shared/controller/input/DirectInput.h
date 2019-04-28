@@ -4,7 +4,8 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include "../../io/pins/Pins.h"
-class Direct {
+#include "Input.h"
+class Direct: public Input {
 public:
   void read_controller(Controller *controller);
   void init();

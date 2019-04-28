@@ -9,9 +9,7 @@ int main() {
   out.init();
   controller.init();
   while (true) {
-    if (out.ready()) {
-      controller.process();
-    }
+    controller.process();
     out.process(&controller.controller);
   }
 }

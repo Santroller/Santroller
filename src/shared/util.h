@@ -1,7 +1,6 @@
 #pragma once
 #include <avr/sfr_defs.h>
 
-
 /** wchar_t is not available on all platforms */
 #if ((ARCH == ARCH_AVR8) || (ARCH == ARCH_XMEGA))
 #define WCHAR wchar_t

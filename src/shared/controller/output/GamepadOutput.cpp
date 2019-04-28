@@ -1,7 +1,5 @@
 #include "GamepadOutput.h"
 
-#if OUTPUT_TYPE == GAMEPAD
-
 /** HID class report descriptor. This is a special descriptor constructed with
  * values from the USBIF HID class specification to describe the reports and
  * capabilities of the HID device. This descriptor is parsed by the host and its
@@ -40,7 +38,7 @@ uint16_t last_controller_buttons = 0;
 uint16_t last_controller_r_x = 0;
 uint16_t last_controller_r_y = 0;
 
-void Output::update(Controller controller) {
+void GamepadOutput::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
 
@@ -51,7 +49,7 @@ void Output::update(Controller controller) {
   HID_Device_USBTask(&HID_Interface);
 }
 
-bool CALLBACK_HID_Device_CreateHIDReport(
+bool GamepadOutput::hid_create_report(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
 
@@ -68,4 +66,3 @@ bool CALLBACK_HID_Device_CreateHIDReport(
 
   return false;
 }
-#endif

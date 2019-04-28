@@ -27,3 +27,11 @@ typedef struct
   uint16_t r_y;
   uint16_t Button; /**< Bit mask of the currently pressed gamepad buttons */
 } USB_GamepadReport_Data_t;
+
+class GamepadOutput : public HIDOutput {
+public:
+  void update(Controller controller);
+  bool hid_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+                         uint8_t *const ReportID, const uint8_t ReportType,
+                         void *ReportData, uint16_t *const ReportSize);
+};

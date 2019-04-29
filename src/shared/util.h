@@ -13,3 +13,5 @@
 #define bit_check(value, bit) (value & _BV(bit))
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+ #define STR1(x)  #x
+ #define STR(x)  STR1(x)

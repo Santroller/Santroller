@@ -10,9 +10,9 @@
 extern "C" {
 #include "../lufa/Descriptors.h"
 }
+#include "../lufa/wcid.h"
 #include "Output.h"
 #include "stdint.h"
-#include "../lufa/wcid.h"
 
 #define XBOX_DPAD_UP 0
 #define XBOX_DPAD_DOWN 1
@@ -43,7 +43,6 @@ typedef struct {
   uint8_t data[15];
 } USB_HID_XBOX_Descriptor_HID_t;
 
-
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_t Interface0;
@@ -51,7 +50,6 @@ typedef struct {
   USB_Descriptor_Endpoint_t DataInEndpoint0;
   USB_Descriptor_Endpoint_t DataOutEndpoint0;
 } Xinput_Descriptor_Configuration_t;
-
 
 typedef struct {
   uint8_t rid;
@@ -67,7 +65,7 @@ typedef struct {
   uint8_t reserved_1[6];
 } USB_JoystickReport_Data_t;
 
-class XInputOutput: public Output {
+class XInputOutput : public Output {
 public:
   void init();
   void update(Controller controller);
@@ -76,5 +74,8 @@ public:
   void usb_configuration_changed();
   void usb_control_request();
   void usb_start_of_frame();
-  uint16_t get_descriptor(const uint8_t DescriptorType, const uint8_t DescriptorNumber, const void **const DescriptorAddress);
+  uint16_t get_descriptor(const uint8_t DescriptorType,
+                          const uint8_t DescriptorNumber,
+                          const void **const DescriptorAddress,
+                          uint8_t *const DescriptorMemorySpace);
 };

@@ -1,3 +1,4 @@
+#pragma once
 #define GUITAR_SUBTYPE 6
 #define GAMEPAD_SUBTYPE 1
 #define DANCE_PAD_SUBTYPE 5

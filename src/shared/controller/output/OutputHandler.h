@@ -2,15 +2,13 @@
 #include "../../../config/config.h"
 #include "../Controller.h"
 #include "Output.h"
-#if OUTPUT_TYPE == XINPUT
 #include "XInputOutput.h"
-#elif OUTPUT_TYPE == KEYBOARD
 #include "KeyboardOutput.h"
-#endif
+#include "GamepadOutput.h"
+#include "SerialOutput.h"
 #include "../../util.h"
 class OutputHandler {
 public:
-  static Output* output;
   void process(Controller *controller);
   void init();
   bool ready();

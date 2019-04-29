@@ -1,22 +1,14 @@
 #include "WiiExtensionInput.h"
 
 WiiExtension::WiiExtension()
-    : nchuk(port), classic(port), dj(port), guitar(port), drum(port)
-{
-}
-void WiiExtension::init()
-{
-  I2Cdev::TWIInit();
-}
-void WiiExtension::read_controller(Controller* data)
-{
-  if (!port.update())
-  {
+    : nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
+void WiiExtension::init() { I2Cdev::TWIInit(); }
+void WiiExtension::read_controller(Controller *data) {
+  if (!port.update()) {
     port.connect();
     return;
   }
-  switch (port.getControllerType())
-  {
+  switch (port.getControllerType()) {
   case (ExtensionType::DJTurntableController):
     break;
   case (ExtensionType::Nunchuk):
@@ -41,8 +33,7 @@ void WiiExtension::read_controller(Controller* data)
     break;
   case (ExtensionType::GuitarController):
     data->r_x = -(guitar.whammyBar() - 14) * 1024;
-    if (guitar.whammyBar() <= 18)
-    {
+    if (guitar.whammyBar() <= 18) {
       data->r_x = 0;
     }
     bit_write(guitar.fretGreen(), data->buttons, GREEN);

@@ -1,7 +1,6 @@
 #include "./DirectInput.h"
 void Direct::read_controller(Controller *controller)
 {
-#if DEVICE_TYPE == DIRECT
   bit_write(IO::digitalRead(PIN_GREEN_FRET) == FRETS_LED, controller->buttons,
             GREEN);
   bit_write(IO::digitalRead(PIN_RED_FRET) == FRETS_LED, controller->buttons,
@@ -34,12 +33,10 @@ void Direct::read_controller(Controller *controller)
   bit_write(!IO::digitalRead(PIN_DPAD_RIGHT_BUTTON), controller->buttons,
             RIGHT);
 #endif
-#endif
 }
 
 void Direct::init()
 {
-#if DEVICE_TYPE == DIRECT
   int fret_type = INPUT_PULLUP;
 #if FRETS_LED == 1
   fret_type = INPUT;
@@ -60,6 +57,5 @@ void Direct::init()
 #elif DIRECTION_MODE == DPAD
   IO::pinMode(PIN_DPAD_LEFT_BUTTON, INPUT_PULLUP);
   IO::pinMode(PIN_DPAD_RIGHT_BUTTON, INPUT_PULLUP);
-#endif
 #endif
 }

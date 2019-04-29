@@ -14,9 +14,34 @@ USB_ClassInfo_HID_Device_t HID_Interface = {
                     .Banks = 1,
                 },
             .PrevReportINBuffer = PrevHIDReport,
-            .PrevReportINBufferSize = ((HIDOutput*)OutputHandler::output)->HIDReport_Datasize,
+            .PrevReportINBufferSize =
+                ((HIDOutput *)Output::output)->HIDReport_Datasize,
         },
 };
+
+/** Device descriptor structure. This descriptor, located in FLASH memory,
+ * describes the overall device characteristics, including the supported USB
+ * version, control endpoint size and the number of device configurations. The
+ * descriptor is read out by the USB host when the enumeration process begins.
+ */
+
+const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
+    .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
+
+    .USBSpecification = VERSION_BCD(2, 0, 0),
+    .Class = USB_CSCP_NoDeviceClass,
+    .SubClass = USB_CSCP_NoDeviceSubclass,
+    .Protocol = USB_CSCP_NoDeviceProtocol,
+    .Endpoint0Size = 0x08,
+    .VendorID = 0x1209,
+    .ProductID = 0x2882,
+    .ReleaseNumber = 0x3122,
+
+    .ManufacturerStrIndex = 0x01,
+    .ProductStrIndex = 0x02,
+    .SerialNumStrIndex = 0x03,
+
+    .NumberOfConfigurations = 0x01};
 /** Configuration descriptor structure. This descriptor, located in FLASH
  * memory, describes the usage of the device in one of its supported
  * configurations, including information about any device interfaces and
@@ -106,17 +131,23 @@ void CALLBACK_HID_Device_ProcessHIDReport(
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-  return ((HIDOutput *)OutputHandler::output)
+  return ((HIDOutput *)Output::output)
       ->hid_create_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
                           ReportSize);
 }
 
 uint16_t HIDOutput::get_descriptor(const uint8_t DescriptorType,
                                    const uint8_t DescriptorNumber,
-                                   const void **const DescriptorAddress) {
+                                   const void **const DescriptorAddress,
+                                   uint8_t *const DescriptorMemorySpace) {
+  uint8_t memorySpace = MEMSPACE_FLASH;
   uint16_t Size = NO_DESCRIPTOR;
   const void *Address = NULL;
   switch (DescriptorType) {
+  case DTYPE_Device:
+    Address = &DeviceDescriptor;
+    Size = sizeof(DeviceDescriptor);
+    break;
   case DTYPE_Configuration:
     Address = &ConfigurationDescriptor;
     Size = sizeof(ConfigurationDescriptor);
@@ -131,5 +162,6 @@ uint16_t HIDOutput::get_descriptor(const uint8_t DescriptorType,
     break;
   }
   *DescriptorAddress = Address;
+  *DescriptorMemorySpace = memorySpace;
   return Size;
 }

@@ -1,7 +1,6 @@
-
+#pragma once
 #include "../../../config/config.h"
 #include "Output.h"
-#include "OutputHandler.h"
 #include <LUFA/Drivers/USB/USB.h>
 #include <avr/wdt.h>
 enum InterfaceDescriptors_t { INTERFACE_ID_HID = 0 };
@@ -44,5 +43,6 @@ public:
                     void *ReportData, uint16_t *const ReportSize) = 0;
   virtual uint16_t get_descriptor(const uint8_t DescriptorType,
                                   const uint8_t DescriptorNumber,
-                                  const void **const DescriptorAddress) = 0;
+                                  const void **const DescriptorAddress,
+                               uint8_t *const DescriptorMemorySpace) = 0;
 };

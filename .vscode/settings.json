@@ -18,6 +18,8 @@
         "descriptors.h": "c",
         "pgmspace.h": "c",
         "i2cdev.h": "c",
-        "nintendoextensionctrl.h": "c"
-    }
+        "nintendoextensionctrl.h": "c",
+        "interrupt.h": "c"
+    },
+    "python.pythonPath": "/usr/bin/python3"
 }

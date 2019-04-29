@@ -26,37 +26,6 @@ const USB_Descriptor_String_t PROGMEM ProductString =
 
 const USB_Descriptor_String_t PROGMEM VersionString =
     USB_STRING_DESCRIPTOR(L"1.2");
-    
-/** Device descriptor structure. This descriptor, located in FLASH memory,
- * describes the overall device characteristics, including the supported USB
- * version, control endpoint size and the number of device configurations. The
- * descriptor is read out by the USB host when the enumeration process begins.
- */
-
-const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
-    .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
-
-    .USBSpecification = VERSION_BCD(2, 0, 0),
-#if OUTPUT_TYPE == XINPUT
-    .Class = 0xFF,
-    .SubClass = 0xFF,
-    .Protocol = 0xFF,
-    .Endpoint0Size = 0x40,
-#elif OUTPUT_TYPE == KEYBOARD || OUTPUT_TYPE == GAMEPAD
-    .Class = USB_CSCP_NoDeviceClass,
-    .SubClass = USB_CSCP_NoDeviceSubclass,
-    .Protocol = USB_CSCP_NoDeviceProtocol,
-    .Endpoint0Size = 0x08,
-#endif
-    .VendorID = 0x1209,
-    .ProductID = 0x2882,
-    .ReleaseNumber = 0x3122,
-
-    .ManufacturerStrIndex = 0x01,
-    .ProductStrIndex = 0x02,
-    .SerialNumStrIndex = 0x03,
-
-    .NumberOfConfigurations = 0x01};
 
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
@@ -67,22 +36,19 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
  */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void **const DescriptorAddress) {
+                                    const void **const DescriptorAddress,
+                                    uint8_t *const DescriptorMemorySpace) {
   const uint8_t DescriptorType = (wValue >> 8);
   const uint8_t DescriptorNumber = (wValue & 0xFF);
 
-  const void *Address = NULL;
   uint16_t Size =
-      get_descriptor(DescriptorType, DescriptorNumber, DescriptorAddress);
+      get_descriptor(DescriptorType, DescriptorNumber, DescriptorAddress, DescriptorMemorySpace);
   if (Size) {
     return Size;
   }
 
+  const void *Address = NULL;
   switch (DescriptorType) {
-  case DTYPE_Device:
-    Address = &DeviceDescriptor;
-    Size = sizeof(DeviceDescriptor);
-    break;
   case DTYPE_String:
     switch (DescriptorNumber) {
     case 0x00:
@@ -105,6 +71,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     break;
   }
 
+  *DescriptorMemorySpace = MEMSPACE_FLASH;
   *DescriptorAddress = Address;
   return Size;
 }

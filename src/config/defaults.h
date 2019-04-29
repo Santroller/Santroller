@@ -1,3 +1,5 @@
+#pragma once
+#include "./defines.h"
 #define TILT_SENSOR MPU_6050 // this can either be none, MPU_6050 or GRAVITY
 #define DEVICE_TYPE DIRECT   // this can be either WII or DIRECT
 #define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD or GAMEPAD

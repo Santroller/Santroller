@@ -28,12 +28,6 @@ void XInputOutput::usb_control_request() {
   uint16_t DescriptorSize;
   /* Handle HID Class specific requests */
   switch (USB_ControlRequest.bRequest) {
-  case 0x30:
-    bootloader();
-    break;
-  case 0x31:
-    serial();
-    break;
   case HID_REQ_GetReport:
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {

@@ -8,8 +8,6 @@ try:
     val = 0x30
     if len(sys.argv) > 1 and sys.argv[1] == "serial":
         val = 0x31
-
-    print(hex(val))
     if dev is None:
         raise ValueError('Device not found')
     else:

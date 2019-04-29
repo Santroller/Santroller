@@ -28,4 +28,11 @@ public:
   bool hid_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                          uint8_t *const ReportID, const uint8_t ReportType,
                          void *ReportData, uint16_t *const ReportSize);
+  USB_ClassInfo_HID_Device_t* createHIDInterface();
+  const size_t ReportDatatypeSize();
+  uint16_t get_hid_descriptor(const uint8_t DescriptorType,
+                          const uint8_t DescriptorNumber,
+                          const void **const DescriptorAddress,
+                          uint8_t *const DescriptorMemorySpace);
+  
 };

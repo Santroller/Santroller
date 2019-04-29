@@ -7,7 +7,7 @@ extern "C" {
 extern void bootloader(void);
 extern void check_freq(void);
 extern void serial(void);
-extern bool check_serial();
+extern bool check_serial(void);
 #ifdef __cplusplus
 }
 #endif

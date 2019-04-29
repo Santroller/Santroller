@@ -1,24 +1,5 @@
 #include "HidOutput.h"
 
-/** Buffer to hold the previously generated HID report, for comparison purposes
- * inside the HID class driver. */
-static uint8_t PrevHIDReport[HID_REPORTSIZE];
-USB_ClassInfo_HID_Device_t HID_Interface = {
-    .Config =
-        {
-            .InterfaceNumber = INTERFACE_ID_HID,
-            .ReportINEndpoint =
-                {
-                    .Address = HID_EPADDR,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-            .PrevReportINBuffer = PrevHIDReport,
-            .PrevReportINBufferSize =
-                ((HIDOutput *)Output::output)->HIDReport_Datasize,
-        },
-};
-
 /** Device descriptor structure. This descriptor, located in FLASH memory,
  * describes the overall device characteristics, including the supported USB
  * version, control endpoint size and the number of device configurations. The
@@ -49,7 +30,10 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
  * process when selecting a configuration so that the host may correctly
  * communicate with the USB device.
  */
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
+
+void HIDOutput::init() {
+  HID_Interface = createHIDInterface();
+  ConfigurationDescriptor = {
     .Config = {.Header = {.Size = sizeof(USB_Descriptor_Configuration_Header_t),
                           .Type = DTYPE_Configuration},
 
@@ -85,7 +69,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
                        .CountryCode = 0x00,
                        .TotalReportDescriptors = 1,
                        .HIDReportType = HID_DTYPE_Report,
-                       .HIDReportLength = HID_REPORTSIZE},
+                       .HIDReportLength = ReportDatatypeSize()},
 
     .HID_ReportINEndpoint = {
         .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
@@ -96,8 +80,6 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
             (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         .EndpointSize = HID_EPSIZE,
         .PollingIntervalMS = POLL_RATE}};
-
-void HIDOutput::init() {
   wdt_enable(WDTO_2S);
   USB_Init();
   sei();
@@ -108,19 +90,16 @@ void HIDOutput::usb_connect() {}
 void HIDOutput::usb_disconnect() {}
 
 void HIDOutput::usb_configuration_changed() {
-  HID_Device_ConfigureEndpoints(&HID_Interface);
+  HID_Device_ConfigureEndpoints(HID_Interface);
   USB_Device_EnableSOFEvents();
 }
 
 void HIDOutput::usb_control_request() {
-  if (USB_ControlRequest.bRequest == 0x30) {
-    bootloader();
-  }
-  HID_Device_ProcessControlRequest(&HID_Interface);
+  HID_Device_ProcessControlRequest(HID_Interface);
 }
 
 void HIDOutput::usb_start_of_frame() {
-  HID_Device_MillisecondElapsed(&HID_Interface);
+  HID_Device_MillisecondElapsed(HID_Interface);
 }
 
 void CALLBACK_HID_Device_ProcessHIDReport(
@@ -150,16 +129,16 @@ uint16_t HIDOutput::get_descriptor(const uint8_t DescriptorType,
     break;
   case DTYPE_Configuration:
     Address = &ConfigurationDescriptor;
-    Size = sizeof(ConfigurationDescriptor);
+    Size = sizeof(USB_Descriptor_Configuration_t);
+    memorySpace = MEMSPACE_RAM;
     break;
   case HID_DTYPE_HID:
     Address = &ConfigurationDescriptor.HID_GamepadHID;
     Size = sizeof(USB_HID_Descriptor_HID_t);
+    memorySpace = MEMSPACE_RAM;
     break;
   case HID_DTYPE_Report:
-    Address = &HIDReport_Datatype;
-    Size = HID_REPORTSIZE;
-    break;
+    return get_hid_descriptor(DescriptorType, DescriptorNumber, DescriptorAddress, DescriptorMemorySpace);
   }
   *DescriptorAddress = Address;
   *DescriptorMemorySpace = memorySpace;

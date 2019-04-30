@@ -10,16 +10,14 @@ void OutputHandler::process(Controller *controller) {
 }
 
 void OutputHandler::init() {
-  if (check_serial()) {
+  if (check_serial() || config.output_type == SERIAL) {
     Output::output = new SerialOutput();
-  } else {
-#if OUTPUT_TYPE == XINPUT
+  } else if(config.output_type == XINPUT) {
     Output::output = new XInputOutput();
-#elif OUTPUT_TYPE == GAMEPAD
+  } else if(config.output_type == GAMEPAD) {
     Output::output = new GamepadOutput();
-#elif OUTPUT_TYPE == KEYBOARD
+  } else if(config.output_type == KEYBOARD) {
     Output::output = new KeyboardOutput();
-#endif
   }
   Output::output->init();
 }

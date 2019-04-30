@@ -1,4 +1,5 @@
 #include "Bootloader.h"
+#include "../../util.h"
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #ifdef __AVR_ATmega32U4__
@@ -8,7 +9,9 @@
 #endif
 #define MAGIC_KEY 0x7777
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)MAGIC_KEY_POS;
-volatile uint16_t *const bootKeyPtrCDC = (volatile uint16_t *)(MAGIC_KEY_POS-2);
+volatile uint16_t *const bootKeyPtrCDC =
+    (volatile uint16_t *)(MAGIC_KEY_POS - 2);
+uint16_t bootKeyVal;
 int i = 1;
 void bootloader(void) {
   // close interrupts
@@ -22,17 +25,20 @@ void bootloader(void) {
   for (;;) {
   }
 }
-
+// Jump to bootloader if F_CPU is incorrect.
 void check_freq(void) {
+  bootKeyVal = *bootKeyPtrCDC;
+  *bootKeyPtrCDC = 0;
   cli();
   wdt_enable(WDTO_15MS);
-  _WD_CONTROL_REG = (1<<WDIE) | (1<<WDP2) | (1<<WDP0);
+  _WD_CONTROL_REG = (1 << WDIE) | (1 << WDP2) | (1 << WDP0);
   sei();
   _delay_ms(60);
+  // 60 / 15 = 4, since the watchdog timer does not rely on F_CPU, both the
+  // delay and the timer should be the same
   if (i != 4) {
     bootloader();
   }
-  wdt_disable();
 }
 
 void serial(void) {
@@ -48,14 +54,14 @@ void serial(void) {
   }
 }
 
-bool check_serial() { 
-  uint16_t bootKeyVal = *bootKeyPtrCDC;
-  *bootKeyPtrCDC = 0;
-  return bootKeyVal == MAGIC_KEY; 
+bool check_serial() {
+  return bootKeyVal == MAGIC_KEY;
 }
 
-ISR(WDT_vect)        // interrupt service routine that wraps a user defined function supplied by attachInterrupt
-{
-  _WD_CONTROL_REG |= (1<<WDIE);
+ISR(WDT_vect) {
+  _WD_CONTROL_REG |= (1 << WDIE);
   i++;
+  if (i > 4 && !check_serial()) {
+    bootloader();
+  }
 }

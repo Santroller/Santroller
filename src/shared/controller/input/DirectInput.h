@@ -1,4 +1,4 @@
-#include "../../../config/config.h"
+#include "../../../config/eeprom.h"
 #include "../Controller.h"
 #include <stdint.h>
 #include <avr/pgmspace.h>

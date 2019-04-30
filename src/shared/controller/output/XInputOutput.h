@@ -6,7 +6,7 @@
 #include <avr/wdt.h>
 #include <string.h>
 
-#include "../../../config/config.h"
+#include "../../../config/eeprom.h"
 extern "C" {
 #include "../lufa/Descriptors.h"
 }

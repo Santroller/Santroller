@@ -1,5 +1,4 @@
 #pragma once
-#include "../../config/config.h"
 #include "../io/bootloader/Bootloader.h"
 #include "../util.h"
 #include <stdint.h>

@@ -1,4 +1,4 @@
-#include "../../../config/config.h"
+#include "../../../config/eeprom.h"
 #include "../../io/mpu6050/inv_mpu.h"
 #include "../../io/mpu6050/mpu.h"
 #include "../../io/pins/Pins.h"

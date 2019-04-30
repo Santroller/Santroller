@@ -61,7 +61,6 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
     .NumberOfConfigurations = 0x01};
 
 void SerialOutput::init() {
-  wdt_enable(WDTO_2S);
   USB_Init();
   CDC_Device_CreateStream(&VirtualSerial_CDC_Interface, &USBSerialStream);
   sei();
@@ -82,6 +81,9 @@ void SerialOutput::update(Controller controller) {
   if (recv == 'f') {
       fputs(STR(F_CPU), &USBSerialStream);
   };
+  if (recv == 'c') {
+      CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config, sizeof(config_t));
+  }
   CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
   USB_USBTask();
 }

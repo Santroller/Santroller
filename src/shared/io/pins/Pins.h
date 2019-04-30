@@ -1,5 +1,4 @@
 #pragma once
-#include "../../../config/config.h"
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <stdint.h>

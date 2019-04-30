@@ -1,4 +1,5 @@
 #pragma once
+#define NONE 0
 #define GUITAR_SUBTYPE 6
 #define GAMEPAD_SUBTYPE 1
 #define DANCE_PAD_SUBTYPE 5
@@ -11,9 +12,12 @@
 #define FLIGHT_STICK_SUBTYPE 4
 #define POLL_RATE 1
 #define MPU_6050 1
+#define GRAVITY 2
 #define WII 1
 #define DIRECT 2
+#define SERIAL 0
 #define XINPUT 1
 #define KEYBOARD 2
+#define GAMEPAD 3
 #define DPAD 1
 #define JOY 2

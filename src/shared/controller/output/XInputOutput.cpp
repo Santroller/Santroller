@@ -8,7 +8,6 @@ USB_JoystickReport_Data_t gamepad_state;
 void XInputOutput::init() {
   memset(&gamepad_state, 0x00, sizeof(USB_JoystickReport_Data_t));
   gamepad_state.rsize = 20;
-  wdt_enable(WDTO_2S);
   USB_Init();
   sei();
 }
@@ -167,7 +166,7 @@ static const Xinput_Descriptor_Configuration_t PROGMEM
         .XInputUnknown = {.Header = {.Size =
                                          sizeof(USB_HID_XBOX_Descriptor_HID_t),
                                      .Type = 0x21},
-                          {0x00, 0x00, XINPUT_SUBTYPE, 0x25, 0x81, 0x14, 0x03,
+                          {0x00, 0x00, config.subtype, 0x25, 0x81, 0x14, 0x03,
                            0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x00}},
 
         .DataInEndpoint0 = {.Header = {.Size =
@@ -177,7 +176,7 @@ static const Xinput_Descriptor_Configuration_t PROGMEM
                             .EndpointAddress = 0x81,
                             .Attributes = EP_TYPE_INTERRUPT,
                             .EndpointSize = XBOX_EPSIZE,
-                            .PollingIntervalMS = POLL_RATE},
+                            .PollingIntervalMS = config.pollrate},
         .DataOutEndpoint0 = {.Header = {.Size =
                                             sizeof(USB_Descriptor_Endpoint_t),
                                         .Type = DTYPE_Endpoint},
@@ -185,7 +184,7 @@ static const Xinput_Descriptor_Configuration_t PROGMEM
                              .EndpointAddress = 0x02,
                              .Attributes = EP_TYPE_INTERRUPT,
                              .EndpointSize = XBOX_EPSIZE,
-                             .PollingIntervalMS = POLL_RATE},
+                             .PollingIntervalMS = config.pollrate},
 };
 
 /** Device descriptor structure. This descriptor, located in FLASH memory,

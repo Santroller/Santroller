@@ -3,7 +3,6 @@
 /* Includes: */
 #include <LUFA/Drivers/USB/USB.h>
 
-#include "../../../config/config.h"
 #include <avr/pgmspace.h>
 
 /** Enum for the device string descriptor IDs within the device. Each string

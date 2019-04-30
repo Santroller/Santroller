@@ -1,45 +1,51 @@
 #include "InputHandler.h"
+#include "../bootloader/Bootloader.h"
 void InputHandler::process() {
-  input->read_controller(&controller);
-  processTilt();
+  if (input != NULL) {
+    input->read_controller(&controller);
+    processTilt();
+  }
 }
 void InputHandler::init() {
-  #if DEVICE_TYPE == WII
+  if (check_serial()) return;
+  if (config.input_type == WII) {
     input = new WiiExtension();
-  #elif DEVICE_TYPE == DIRECT
+  } else if (config.input_type == DIRECT) {
     input = new Direct();
-  #endif
+  } else {
+    return;
+  }
   input->init();
-#if TILT_SENSOR == MPU_6050
-  mympu_open(15);
-#elif TILT_SENSOR == GRAVITY
-  IO::pinMode(PIN_GRAVITY, INPUT);
-#endif
-#if TILT_SENSOR == GRAVITY || DEVICE_TYPE == DIRECT
-  IO::enableADC();
-#endif
+  if (config.tilt_type == MPU_6050) {
+    mympu_open(15);
+  } else if (config.tilt_type == GRAVITY) {
+    IO::pinMode(config.pins.gravity, INPUT);
+  }
+  if (config.tilt_type == GRAVITY || config.input_type == DIRECT) {
+    IO::enableADC();
+  }
 }
 
 void InputHandler::processTilt() {
-#if TILT_SENSOR == MPU_6050
-  if (counter % 20 == 0) {
-    double z;
-    mympu_update();
-    z = (mympu.ypr[2] * (32767 / M_PI));
-    z += MPU_6050_START;
-    if (z > 32767) {
-      z = 0;
+  if (config.tilt_type == MPU_6050) {
+    if (counter % 20 == 0) {
+      double z;
+      mympu_update();
+      z = (mympu.ypr[2] * (32767 / M_PI));
+      z += config.mpu_6050_calibration;
+      if (z > 32767) {
+        z = 0;
+      }
+      z = z * 2;
+      if (z > 32767) {
+        z = 65535 - z;
+      }
+      z = pow(z, 1.1f);
+      z = constrain(z, -32767, 32767);
+      controller.r_y = z;
     }
-    z = z * 2;
-    if (z > 32767) {
-      z = 65535 - z;
-    }
-    z = pow(z, 1.1f);
-    z = constrain(z, -32767, 32767);
-    controller.r_y = z;
+    counter++;
+  } else if (config.tilt_type == GRAVITY) {
+    controller.r_y = IO::digitalRead(config.pins.gravity) * 32767;
   }
-  counter++;
-#elif TILT_SENSOR == GRAVITY
-  controller.r_y = IO::digitalRead(PIN_GRAVITY) * 32767;
-#endif
 }

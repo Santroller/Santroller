@@ -80,7 +80,6 @@ void HIDOutput::init() {
             (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         .EndpointSize = HID_EPSIZE,
         .PollingIntervalMS = POLL_RATE}};
-  wdt_enable(WDTO_2S);
   USB_Init();
   sei();
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../config/config.h"
+#include "../../../config/eeprom.h"
 #include "../Controller.h"
 #include "Output.h"
 #include "XInputOutput.h"

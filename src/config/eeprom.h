@@ -2,7 +2,9 @@
 #include "defaults.h"
 #include <avr/eeprom.h>
 #include <stdint.h>
+//Instead of importing keyboard defines, we should hardcode them to remove this dep
 #include <LUFA/Drivers/USB/USB.h>
+#define ATTR_PACKED __attribute__ ((packed))
 typedef struct {
   uint8_t green;
   uint8_t red;
@@ -44,18 +46,15 @@ typedef struct {
   uint8_t direction_mode;
   uint16_t whammy_calibration;
   uint16_t mpu_6050_calibration;
-  bool frets_led_mode;
+  uint8_t frets_led_mode;
   keys_t keys;
 } ATTR_PACKED config_t;
 
-const config_t EEMEM config = {OUTPUT_TYPE,
-                               DEVICE_TYPE,
-                               TILT_SENSOR,
-                               XINPUT_SUBTYPE,
-                               POLL_RATE,
-                               PINS,
-                               DIRECTION_MODE,
-                               WHAMMY_INITIAL_VALUE,
-                               MPU_6050_START,
-                               FRETS_LED,
-                               KEYS};
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern config_t config;
+extern config_t EEMEM config_pointer;
+#ifdef __cplusplus
+}
+#endif

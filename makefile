@@ -6,6 +6,12 @@ micro:
 	sleep 0.5
 	$(MAKE) -C src/micro avrdude
 
+micro-ee:
+	$(MAKE) -C src/micro
+	./upload.py
+	sleep 0.5
+	$(MAKE) -C src/micro avrdude-ee
+
 uno:
 	$(MAKE) -C src/uno
 	./upload.py

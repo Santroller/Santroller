@@ -67,6 +67,7 @@ typedef struct {
 
 class XInputOutput : public Output {
 public:
+  Xinput_Descriptor_Configuration_t ConfigurationDescriptor;
   void init();
   void update(Controller controller);
   void usb_connect();

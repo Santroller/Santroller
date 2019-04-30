@@ -83,15 +83,11 @@ void SerialOutput::update(Controller controller) {
     fputs(STR(F_CPU), &USBSerialStream);
   };
   if (recv == 'r') {
-    //We need to read all of the config from eeprom, so lets read the block of data and then send
-    config_t c;
-    eeprom_read_block(&c, &config, sizeof(config_t));
-    CDC_Device_SendData(&VirtualSerial_CDC_Interface, &c, sizeof(config_t));
+    CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config, sizeof(config_t));
   }
   if (recv == 'w') {
-    config_t c;
-    fread(&c, sizeof(config_t), 1, &USBSerialStream);
-    eeprom_write_block(&c, (uint8_t*)&config, sizeof(config_t));
+    fread(&config, sizeof(config_t), 1, &USBSerialStream);
+    eeprom_write_block(&config, &config_pointer, sizeof(config_t));
   }
 
   if (recv == 'b') {

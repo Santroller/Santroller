@@ -19,7 +19,8 @@
         "pgmspace.h": "c",
         "i2cdev.h": "c",
         "nintendoextensionctrl.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "eeprom.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

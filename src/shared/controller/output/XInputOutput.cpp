@@ -6,6 +6,57 @@ void XInputOutput::usb_disconnect() {}
 USB_JoystickReport_Data_t gamepad_state;
 
 void XInputOutput::init() {
+  ConfigurationDescriptor = {
+      .Config = {.Header = {.Size =
+                                sizeof(USB_Descriptor_Configuration_Header_t),
+                            .Type = DTYPE_Configuration},
+
+                 .TotalConfigurationSize =
+                     sizeof(Xinput_Descriptor_Configuration_t),
+                 .TotalInterfaces = 1,
+
+                 .ConfigurationNumber = 1,
+                 .ConfigurationStrIndex = NO_DESCRIPTOR,
+
+                 .ConfigAttributes = USB_CONFIG_ATTR_REMOTEWAKEUP,
+
+                 .MaxPowerConsumption = USB_CONFIG_POWER_MA(500)},
+
+      .Interface0 = {.Header = {.Size = sizeof(USB_Descriptor_Interface_t),
+                                .Type = DTYPE_Interface},
+
+                     .InterfaceNumber = 0,
+                     .AlternateSetting = 0x00,
+
+                     .TotalEndpoints = 2,
+
+                     .Class = 0xFF,
+                     .SubClass = 0x5D,
+                     .Protocol = 0x01,
+
+                     .InterfaceStrIndex = NO_DESCRIPTOR},
+
+      .XInputUnknown = {.Header = {.Size =
+                                       sizeof(USB_HID_XBOX_Descriptor_HID_t),
+                                   .Type = 0x21},
+                        {0x00, 0x00, config.subtype, 0x25, 0x81, 0x14, 0x03,
+                         0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x00}},
+
+      .DataInEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
+                                     .Type = DTYPE_Endpoint},
+
+                          .EndpointAddress = 0x81,
+                          .Attributes = EP_TYPE_INTERRUPT,
+                          .EndpointSize = XBOX_EPSIZE,
+                          .PollingIntervalMS = config.pollrate},
+      .DataOutEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
+                                      .Type = DTYPE_Endpoint},
+
+                           .EndpointAddress = 0x02,
+                           .Attributes = EP_TYPE_INTERRUPT,
+                           .EndpointSize = XBOX_EPSIZE,
+                           .PollingIntervalMS = config.pollrate},
+  };
   memset(&gamepad_state, 0x00, sizeof(USB_JoystickReport_Data_t));
   gamepad_state.rsize = 20;
   USB_Init();
@@ -132,60 +183,6 @@ void XInputOutput::update(Controller controller) {
  * process when selecting a configuration so that the host may correctly
  * communicate with the USB device.
  */
-static const Xinput_Descriptor_Configuration_t PROGMEM
-    ConfigurationDescriptor = {
-        .Config = {.Header = {.Size =
-                                  sizeof(USB_Descriptor_Configuration_Header_t),
-                              .Type = DTYPE_Configuration},
-
-                   .TotalConfigurationSize =
-                       sizeof(Xinput_Descriptor_Configuration_t),
-                   .TotalInterfaces = 1,
-
-                   .ConfigurationNumber = 1,
-                   .ConfigurationStrIndex = NO_DESCRIPTOR,
-
-                   .ConfigAttributes = USB_CONFIG_ATTR_REMOTEWAKEUP,
-
-                   .MaxPowerConsumption = USB_CONFIG_POWER_MA(500)},
-
-        .Interface0 = {.Header = {.Size = sizeof(USB_Descriptor_Interface_t),
-                                  .Type = DTYPE_Interface},
-
-                       .InterfaceNumber = 0,
-                       .AlternateSetting = 0x00,
-
-                       .TotalEndpoints = 2,
-
-                       .Class = 0xFF,
-                       .SubClass = 0x5D,
-                       .Protocol = 0x01,
-
-                       .InterfaceStrIndex = NO_DESCRIPTOR},
-
-        .XInputUnknown = {.Header = {.Size =
-                                         sizeof(USB_HID_XBOX_Descriptor_HID_t),
-                                     .Type = 0x21},
-                          {0x00, 0x00, config.subtype, 0x25, 0x81, 0x14, 0x03,
-                           0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x00}},
-
-        .DataInEndpoint0 = {.Header = {.Size =
-                                           sizeof(USB_Descriptor_Endpoint_t),
-                                       .Type = DTYPE_Endpoint},
-
-                            .EndpointAddress = 0x81,
-                            .Attributes = EP_TYPE_INTERRUPT,
-                            .EndpointSize = XBOX_EPSIZE,
-                            .PollingIntervalMS = config.pollrate},
-        .DataOutEndpoint0 = {.Header = {.Size =
-                                            sizeof(USB_Descriptor_Endpoint_t),
-                                        .Type = DTYPE_Endpoint},
-
-                             .EndpointAddress = 0x02,
-                             .Attributes = EP_TYPE_INTERRUPT,
-                             .EndpointSize = XBOX_EPSIZE,
-                             .PollingIntervalMS = config.pollrate},
-};
 
 /** Device descriptor structure. This descriptor, located in FLASH memory,
  * describes the overall device characteristics, including the supported USB
@@ -218,11 +215,12 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
     .Reserved = 0};
 
 uint16_t XInputOutput::get_descriptor(const uint8_t DescriptorType,
-                                const uint8_t DescriptorNumber,
-                                const void **const DescriptorAddress,
-                               uint8_t *const DescriptorMemorySpace) {
+                                      const uint8_t DescriptorNumber,
+                                      const void **const DescriptorAddress,
+                                      uint8_t *const DescriptorMemorySpace) {
   uint16_t Size = NO_DESCRIPTOR;
   const void *Address = NULL;
+  uint8_t MemorySpace = MEMSPACE_FLASH;
   switch (DescriptorType) {
   case DTYPE_Device:
     Address = &DeviceDescriptor;
@@ -231,6 +229,7 @@ uint16_t XInputOutput::get_descriptor(const uint8_t DescriptorType,
   case DTYPE_Configuration:
     Address = &ConfigurationDescriptor;
     Size = sizeof(ConfigurationDescriptor);
+    MemorySpace = MEMSPACE_RAM;
     break;
   case DTYPE_String:
     switch (DescriptorNumber) {
@@ -244,7 +243,7 @@ that our device has a Compatible ID to provide. */
     }
     break;
   }
-  *DescriptorMemorySpace = MEMSPACE_FLASH;
+  *DescriptorMemorySpace = MemorySpace;
   *DescriptorAddress = Address;
   return Size;
 }

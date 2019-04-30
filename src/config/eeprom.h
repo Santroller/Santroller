@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <LUFA/Drivers/USB/USB.h>
 typedef struct {
-  uint8_t red;
   uint8_t green;
+  uint8_t red;
   uint8_t yellow;
   uint8_t blue;
   uint8_t orange;
@@ -19,10 +19,10 @@ typedef struct {
   uint8_t joy_x;
   uint8_t joy_y;
   uint8_t gravity;
-} pins_t;
+} ATTR_PACKED pins_t;
 typedef struct {
-  uint8_t red;
   uint8_t green;
+  uint8_t red;
   uint8_t yellow;
   uint8_t blue;
   uint8_t orange;
@@ -33,7 +33,7 @@ typedef struct {
   uint8_t start;
   uint8_t select;
   uint8_t whammy;
-} keys_t;
+} ATTR_PACKED keys_t;
 typedef struct {
   uint8_t output_type;
   uint8_t input_type;
@@ -46,7 +46,7 @@ typedef struct {
   uint16_t mpu_6050_calibration;
   bool frets_led_mode;
   keys_t keys;
-} config_t;
+} ATTR_PACKED config_t;
 
 const config_t EEMEM config = {OUTPUT_TYPE,
                                DEVICE_TYPE,

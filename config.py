@@ -6,6 +6,7 @@ import sys
 import time
 import binascii
 import ctypes
+import sys
 
 try:
     dev = usb.core.find(idVendor=0x1209, idProduct=0x2882)
@@ -20,6 +21,5 @@ except:
 time.sleep(1)
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
 ser.write(b'c')
-data = ser.read(100)
-for x in range(0, len(data)):
-    print('{0:#0{1}x}'.format(data[x], 4))
+ser.flush()
+sys.stdout.buffer.write(ser.read(100))

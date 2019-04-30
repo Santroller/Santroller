@@ -1,5 +1,6 @@
 #include "SerialOutput.h"
 #include "../../bootloader/Bootloader.h"
+#include <avr/eeprom.h>
 void SerialOutput::usb_connect() {}
 void SerialOutput::usb_disconnect() {}
 /** Standard file stream for the CDC interface when set up, so that the virtual
@@ -76,14 +77,26 @@ void SerialOutput::update(Controller controller) {
   wdt_reset();
   char recv = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
   if (recv == 't') {
-      bootloader();
+    bootloader();
   };
   if (recv == 'f') {
-      fputs(STR(F_CPU), &USBSerialStream);
+    fputs(STR(F_CPU), &USBSerialStream);
   };
-  if (recv == 'c') {
-      CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config, sizeof(config_t));
+  if (recv == 'r') {
+    //We need to read all of the config from eeprom, so lets read the block of data and then send
+    config_t c;
+    eeprom_read_block(&c, &config, sizeof(config_t));
+    CDC_Device_SendData(&VirtualSerial_CDC_Interface, &c, sizeof(config_t));
   }
+  if (recv == 'w') {
+    config_t c;
+    fread(&c, sizeof(config_t), 1, &USBSerialStream);
+    eeprom_write_block(&c, (uint8_t*)&config, sizeof(config_t));
+  }
+
+  if (recv == 'b') {
+      reboot();
+  } 
   CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
   USB_USBTask();
 }
@@ -225,10 +238,10 @@ uint16_t SerialOutput::get_descriptor(const uint8_t DescriptorType,
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
   /* You can get changes to the virtual CDC lines in this callback; a common
-   use-case is to use the Data Terminal Ready (DTR) flag to enable and
-   disable CDC communications in your application when set to avoid the
-   application blocking while waiting for a host to become ready and read
-   in the pending data from the USB endpoints.
+ use-case is to use the Data Terminal Ready (DTR) flag to enable and
+ disable CDC communications in your application when set to avoid the
+ application blocking while waiting for a host to become ready and read
+ in the pending data from the USB endpoints.
 */
   bool HostReady = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
                     CDC_CONTROL_LINE_OUT_DTR) != 0;

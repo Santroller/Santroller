@@ -13,18 +13,6 @@ volatile uint16_t *const bootKeyPtrCDC =
     (volatile uint16_t *)(MAGIC_KEY_POS - 2);
 uint16_t bootKeyVal;
 int i = 1;
-void bootloader(void) {
-  // close interrupts
-  cli();
-
-  // write magic key to ram
-  *bootKeyPtr = MAGIC_KEY;
-
-  // watchdog reset
-  wdt_enable(WDTO_15MS);
-  for (;;) {
-  }
-}
 // Jump to bootloader if F_CPU is incorrect.
 void check_freq(void) {
   bootKeyVal = *bootKeyPtrCDC;
@@ -41,22 +29,28 @@ void check_freq(void) {
   }
 }
 
-void serial(void) {
-  // close interrupts
+void reboot(void) {
   cli();
-
-  // write magic key to ram
-  *bootKeyPtrCDC = MAGIC_KEY;
-
-  // watchdog reset
   wdt_enable(WDTO_15MS);
   for (;;) {
   }
 }
 
-bool check_serial() {
-  return bootKeyVal == MAGIC_KEY;
+void serial(void) {
+  // write magic key to ram
+  *bootKeyPtrCDC = MAGIC_KEY;
+
+  reboot();
 }
+
+void bootloader(void) {
+  // write magic key to ram
+  *bootKeyPtr = MAGIC_KEY;
+
+  reboot();
+}
+
+bool check_serial() { return bootKeyVal == MAGIC_KEY; }
 
 ISR(WDT_vect) {
   _WD_CONTROL_REG |= (1 << WDIE);

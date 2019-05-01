@@ -9,14 +9,11 @@
 #endif
 #define MAGIC_KEY 0x7777
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)MAGIC_KEY_POS;
-volatile uint16_t *const bootKeyPtrCDC =
-    (volatile uint16_t *)(MAGIC_KEY_POS - 2);
+volatile uint16_t CDCJumpKey __attribute__ ((section (".noinit")));
 uint16_t bootKeyVal;
 int i = 1;
 // Jump to bootloader if F_CPU is incorrect.
 void check_freq(void) {
-  bootKeyVal = *bootKeyPtrCDC;
-  *bootKeyPtrCDC = 0;
   cli();
   wdt_enable(WDTO_15MS);
   _WD_CONTROL_REG = (1 << WDIE) | (1 << WDP2) | (1 << WDP0);
@@ -29,6 +26,11 @@ void check_freq(void) {
   }
 }
 
+void serial_jump_init() {
+  bootKeyVal = CDCJumpKey;
+  CDCJumpKey = 0;
+}
+
 void reboot(void) {
   cli();
   wdt_enable(WDTO_15MS);
@@ -38,7 +40,7 @@ void reboot(void) {
 
 void serial(void) {
   // write magic key to ram
-  *bootKeyPtrCDC = MAGIC_KEY;
+  CDCJumpKey = MAGIC_KEY;
 
   reboot();
 }

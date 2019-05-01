@@ -7,5 +7,5 @@
 #include "config/eeprom.h"
 void Main::main() {
   eeprom_read_block(&config, &config_pointer, sizeof(config_t));
-  check_freq();
+  serial_jump_init();
 }

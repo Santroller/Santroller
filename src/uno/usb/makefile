@@ -15,9 +15,10 @@ BOARD        = UNO
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
-SRC          = $(shell find ../../shared/controller/output -type f -name '*.c*') ../../shared/config/eeprom.c ../../shared/io/bootloader/Bootloader.cpp ../../shared/io/lufa/Descriptors.c main.cpp $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC          = $(shell find ../../shared/controller/output -type f -name '*.c*') ../../shared/sharedmain.cpp ../../shared/config/eeprom.c ../../shared/io/uart/uart.c  ../../shared/io/bootloader/Bootloader.cpp ../../shared/io/lufa/Descriptors.c main.cpp $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../shared/io/lufa/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/io/lufa
+CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin

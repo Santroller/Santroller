@@ -3,7 +3,7 @@ all:
 upload:
 	@echo Uploading all elements.
 	@echo
-	$(MAKE) -C main upload
+	$(MAKE) -C main avrdude
 	$(MAKE) -C usb avrdude
 	@echo
 	@echo Upload operation complete.

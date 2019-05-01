@@ -1,0 +1,3 @@
+BreakBeforeBraces: Attach
+IndentPPDirectives: AfterHash
+AllowShortLoopsOnASingleLine: true

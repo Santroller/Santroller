@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../config/eeprom.h"
+#include "../../config/eeprom.h"
 #include "Output.h"
 #include <LUFA/Drivers/USB/USB.h>
 #include <avr/wdt.h>

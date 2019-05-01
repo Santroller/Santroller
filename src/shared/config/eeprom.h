@@ -2,8 +2,6 @@
 #include "defaults.h"
 #include <avr/eeprom.h>
 #include <stdint.h>
-//Instead of importing keyboard defines, we should hardcode them to remove this dep
-#include <LUFA/Drivers/USB/USB.h>
 #define ATTR_PACKED __attribute__ ((packed))
 typedef struct {
   uint8_t green;
@@ -37,6 +35,7 @@ typedef struct {
   uint8_t whammy;
 } ATTR_PACKED keys_t;
 typedef struct {
+  uint8_t version;
   uint8_t output_type;
   uint8_t input_type;
   uint8_t tilt_type;

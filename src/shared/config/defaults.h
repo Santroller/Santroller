@@ -1,8 +1,9 @@
 #pragma once
 #include "./defines.h"
-#define TILT_SENSOR NONE // this can either be none, MPU_6050 or GRAVITY
-#define DEVICE_TYPE DIRECT   // this can be either WII or DIRECT
-#define OUTPUT_TYPE XINPUT   // this can be either XINPUT or KEYBOARD or GAMEPAD
+#define PROTOCOL_VERSION 0
+#define TILT_SENSOR NONE   // this can either be none, MPU_6050 or GRAVITY
+#define DEVICE_TYPE DIRECT // this can be either WII or DIRECT
+#define OUTPUT_TYPE XINPUT // this can be either XINPUT or KEYBOARD or GAMEPAD
 #define PINS                                                                   \
   { 4, 5, 7, 6, 8, 16, 9, 18, 14, 15, 10, 21, 19, 20, 11 }
 #define DIRECTION_MODE JOY
@@ -22,13 +23,6 @@
 // For a list of keyboard bindings, visit
 // http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 #define KEYS                                                                   \
-  {                                                                            \
-    HID_KEYBOARD_SC_A, HID_KEYBOARD_SC_S, HID_KEYBOARD_SC_J,                   \
-        HID_KEYBOARD_SC_K, HID_KEYBOARD_SC_L,                                  \
-        HID_KEYBOARD_SC_SEMICOLON_AND_COLON, HID_KEYBOARD_SC_ENTER,            \
-        HID_KEYBOARD_SC_H, HID_KEYBOARD_SC_LEFT_ARROW,                         \
-        HID_KEYBOARD_SC_RIGHT_ARROW, HID_KEYBOARD_SC_UP_ARROW,                 \
-        HID_KEYBOARD_SC_DOWN_ARROW                                             \
-  }
+  { 0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51 }
 #define XINPUT_SUBTYPE GUITAR_SUBTYPE
 #define MPU_6050_START 35000

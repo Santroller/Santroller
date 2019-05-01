@@ -1,5 +1,5 @@
 #include "InputHandler.h"
-#include "../bootloader/Bootloader.h"
+#include "../../io/bootloader/Bootloader.h"
 void InputHandler::process() {
   if (input != NULL) {
     input->read_controller(&controller);

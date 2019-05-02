@@ -1,0 +1,24 @@
+language: shell
+matrix:
+  include:
+  - name: "3.3V Build"
+    env: F_CPU=8000000
+  - name: "5V Build"
+    env: F_CPU=16000000
+install:
+- sed -i -e 's/git@github.com:/https:\/\/github.com\//g' .gitmodules
+- git submodule update --init --recursive
+- sudo apt-get install -y make gcc-avr avr-libc binutils
+script:
+- make build
+deploy:
+  provider: releases
+  file_glob: true
+  api_key: "GITHUB OAUTH TOKEN"
+  file:
+    - "src/micro/bin/*"
+    - "src/uno/usb/bin/*"
+    - "src/uno/main/bin/*"
+  skip_cleanup: true
+  on:
+    tags: true

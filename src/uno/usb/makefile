@@ -22,7 +22,7 @@ CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/XInputPadMicro
+TARGET       = $(BIN)/ardwiino-uno-usb
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))

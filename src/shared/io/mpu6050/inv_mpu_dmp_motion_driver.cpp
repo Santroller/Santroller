@@ -23,9 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define get_ms                                                                 \
-  do {                                                                         \
-  } while (0);
 /* These defines are copied from dmpDefaultMPU6050.c in the general MPL
  * releases. These defines may change for each DMP image, so be sure to modify
  * these values when switching to a new image.
@@ -499,10 +496,10 @@ static const unsigned short sStartAddress = 0x0400;
 
 #define FIFO_CORRUPTION_CHECK
 #ifdef FIFO_CORRUPTION_CHECK
-#define QUAT_ERROR_THRESH (1L << 24)
-#define QUAT_MAG_SQ_NORMALIZED (1L << 28)
-#define QUAT_MAG_SQ_MIN (QUAT_MAG_SQ_NORMALIZED - QUAT_ERROR_THRESH)
-#define QUAT_MAG_SQ_MAX (QUAT_MAG_SQ_NORMALIZED + QUAT_ERROR_THRESH)
+#  define QUAT_ERROR_THRESH (1L << 24)
+#  define QUAT_MAG_SQ_NORMALIZED (1L << 28)
+#  define QUAT_MAG_SQ_MIN (QUAT_MAG_SQ_NORMALIZED - QUAT_ERROR_THRESH)
+#  define QUAT_MAG_SQ_MAX (QUAT_MAG_SQ_NORMALIZED + QUAT_ERROR_THRESH)
 #endif
 
 struct dmp_s {
@@ -514,12 +511,14 @@ struct dmp_s {
   unsigned char packet_length;
 };
 
-static struct dmp_s dmp = {.tap_cb = NULL,
-                           .android_orient_cb = NULL,
-                           .orient = 0,
-                           .feature_mask = 0,
-                           .fifo_rate = 0,
-                           .packet_length = 0};
+static struct dmp_s dmp = {
+  tap_cb : NULL,
+  android_orient_cb : NULL,
+  orient : 0,
+  feature_mask : 0,
+  fifo_rate : 0,
+  packet_length : 0
+};
 
 /**
  *  @brief  Load the DMP with this image.
@@ -1348,8 +1347,6 @@ int8_t dmp_read_fifo(short *gyro, short *accel, long *quat,
   if (dmp.feature_mask & (DMP_FEATURE_TAP | DMP_FEATURE_ANDROID_ORIENT))
     decode_gesture(fifo_data + ii);
 #endif // MPU_EXTRAS
-
-  get_ms(timestamp);
   return 0;
 }
 

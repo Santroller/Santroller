@@ -7,55 +7,63 @@ USB_JoystickReport_Data_t gamepad_state;
 
 void XInputOutput::init() {
   ConfigurationDescriptor = {
-      .Config = {.Header = {.Size =
-                                sizeof(USB_Descriptor_Configuration_Header_t),
-                            .Type = DTYPE_Configuration},
+    Config : {
+      Header : {
+        Size : sizeof(USB_Descriptor_Configuration_Header_t),
+        Type : DTYPE_Configuration
+      },
 
-                 .TotalConfigurationSize =
-                     sizeof(Xinput_Descriptor_Configuration_t),
-                 .TotalInterfaces = 1,
+      TotalConfigurationSize : sizeof(Xinput_Descriptor_Configuration_t),
+      TotalInterfaces : 1,
 
-                 .ConfigurationNumber = 1,
-                 .ConfigurationStrIndex = NO_DESCRIPTOR,
+      ConfigurationNumber : 1,
+      ConfigurationStrIndex : NO_DESCRIPTOR,
 
-                 .ConfigAttributes = USB_CONFIG_ATTR_REMOTEWAKEUP,
+      ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
 
-                 .MaxPowerConsumption = USB_CONFIG_POWER_MA(500)},
+      MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
+    },
 
-      .Interface0 = {.Header = {.Size = sizeof(USB_Descriptor_Interface_t),
-                                .Type = DTYPE_Interface},
+    Interface0 : {
+      Header :
+          {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
 
-                     .InterfaceNumber = 0,
-                     .AlternateSetting = 0x00,
+      InterfaceNumber : 0,
+      AlternateSetting : 0x00,
 
-                     .TotalEndpoints = 2,
+      TotalEndpoints : 2,
 
-                     .Class = 0xFF,
-                     .SubClass = 0x5D,
-                     .Protocol = 0x01,
+      Class : 0xFF,
+      SubClass : 0x5D,
+      Protocol : 0x01,
 
-                     .InterfaceStrIndex = NO_DESCRIPTOR},
+      InterfaceStrIndex : NO_DESCRIPTOR
+    },
 
-      .XInputUnknown = {.Header = {.Size =
-                                       sizeof(USB_HID_XBOX_Descriptor_HID_t),
-                                   .Type = 0x21},
-                        {0x00, 0x00, config.subtype, 0x25, 0x81, 0x14, 0x03,
-                         0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x00}},
+    XInputUnknown : {
+      Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+      {0x00, 0x00, config.subtype, 0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04,
+       0x13, 0x02, 0x08, 0x03, 0x00}
+    },
 
-      .DataInEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
-                                     .Type = DTYPE_Endpoint},
+    DataInEndpoint0 : {
+      Header :
+          {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
 
-                          .EndpointAddress = 0x81,
-                          .Attributes = EP_TYPE_INTERRUPT,
-                          .EndpointSize = XBOX_EPSIZE,
-                          .PollingIntervalMS = config.pollrate},
-      .DataOutEndpoint0 = {.Header = {.Size = sizeof(USB_Descriptor_Endpoint_t),
-                                      .Type = DTYPE_Endpoint},
+      EndpointAddress : 0x81,
+      Attributes : EP_TYPE_INTERRUPT,
+      EndpointSize : XBOX_EPSIZE,
+      PollingIntervalMS : config.pollrate
+    },
+    DataOutEndpoint0 : {
+      Header :
+          {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
 
-                           .EndpointAddress = 0x02,
-                           .Attributes = EP_TYPE_INTERRUPT,
-                           .EndpointSize = XBOX_EPSIZE,
-                           .PollingIntervalMS = config.pollrate},
+      EndpointAddress : 0x02,
+      Attributes : EP_TYPE_INTERRUPT,
+      EndpointSize : XBOX_EPSIZE,
+      PollingIntervalMS : config.pollrate
+    },
   };
   memset(&gamepad_state, 0x00, sizeof(USB_JoystickReport_Data_t));
   gamepad_state.rsize = 20;
@@ -191,28 +199,30 @@ void XInputOutput::update(Controller controller) {
  */
 
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
-    .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
+  Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
 
-    .USBSpecification = VERSION_BCD(2, 0, 0),
-    .Class = 0xFF,
-    .SubClass = 0xFF,
-    .Protocol = 0xFF,
-    .Endpoint0Size = 0x40,
-    .VendorID = 0x1209,
-    .ProductID = 0x2882,
-    .ReleaseNumber = 0x3122,
+  USBSpecification : VERSION_BCD(2, 0, 0),
+  Class : 0xFF,
+  SubClass : 0xFF,
+  Protocol : 0xFF,
+  Endpoint0Size : 0x40,
+  VendorID : 0x1209,
+  ProductID : 0x2882,
+  ReleaseNumber : 0x3122,
 
-    .ManufacturerStrIndex = 0x01,
-    .ProductStrIndex = 0x02,
-    .SerialNumStrIndex = 0x03,
+  ManufacturerStrIndex : 0x01,
+  ProductStrIndex : 0x02,
+  SerialNumStrIndex : 0x03,
 
-    .NumberOfConfigurations = 0x01};
+  NumberOfConfigurations : 0x01
+};
 
 const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
-    .Header = {.Size = sizeof(USB_OSDescriptor_t), .Type = DTYPE_String},
-    .Signature = {'M', 'S', 'F', 'T', '1', '0', '0'},
-    .VendorCode = REQ_GetOSFeatureDescriptor,
-    .Reserved = 0};
+  Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
+  Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
+  VendorCode : REQ_GetOSFeatureDescriptor,
+  Reserved : 0
+};
 
 uint16_t XInputOutput::get_descriptor(const uint8_t DescriptorType,
                                       const uint8_t DescriptorNumber,

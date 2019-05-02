@@ -25,7 +25,7 @@ uint8_t I2Cdev::isTWIReady() {
   return (TWIInfo.mode == Ready) || (TWIInfo.mode == RepeatedStartSent);
 }
 uint8_t I2Cdev::TWIWriteRegister(uint8_t device, uint8_t addr, uint8_t value) {
-  uint8_t msg[] = {(device << 1) & 0xFE, addr, value};
+  uint8_t msg[] = {(uint8_t)((device << 1) & 0xFE), addr, value};
   TWITransmitData(msg, 3, 0);
   WAIT_TWI;
   return 1;
@@ -45,7 +45,7 @@ uint8_t I2Cdev::TWIWriteRegisterMultiple(uint8_t device, uint8_t addr,
 }
 uint8_t I2Cdev::TWIReadRegister(uint8_t device, uint8_t address,
                                 uint8_t bytesToRead) {
-  uint8_t msg[] = {(device << 1) & 0xFE, address};
+  uint8_t msg[] = {(uint8_t)((device << 1) & 0xFE), address};
   TWITransmitData(msg, 2, 0);
   WAIT_TWI;
   TWIReadData(device, bytesToRead, 0);

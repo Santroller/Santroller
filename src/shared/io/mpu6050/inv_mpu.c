@@ -33,7 +33,7 @@
 #define i2c_read !readBytes
 static inline int reg_int_cb(struct int_param_s *int_param) { return 1; }
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
-#error Which gyro are you using? Define MPUxxxx in your compiler options.
+#  error Which gyro are you using? Define MPUxxxx in your compiler options.
 #endif
 
 /* Time for some messy macro work. =]
@@ -48,27 +48,27 @@ static inline int reg_int_cb(struct int_param_s *int_param) { return 1; }
  * #define AK8963_SECONDARY
  */
 #if defined MPU9150
-#ifndef MPU6050
-#define MPU6050
-#endif /* #ifndef MPU6050 */
-#if defined AK8963_SECONDARY
-#error "MPU9150 and AK8963_SECONDARY cannot both be defined."
-#elif !defined AK8975_SECONDARY /* #if defined AK8963_SECONDARY */
-#define AK8975_SECONDARY
-#endif                /* #if defined AK8963_SECONDARY */
+#  ifndef MPU6050
+#    define MPU6050
+#  endif /* #ifndef MPU6050 */
+#  if defined AK8963_SECONDARY
+#    error "MPU9150 and AK8963_SECONDARY cannot both be defined."
+#  elif !defined AK8975_SECONDARY /* #if defined AK8963_SECONDARY */
+#    define AK8975_SECONDARY
+#  endif              /* #if defined AK8963_SECONDARY */
 #elif defined MPU9250 /* #if defined MPU9150 */
-#ifndef MPU6500
-#define MPU6500
-#endif /* #ifndef MPU6500 */
-#if defined AK8975_SECONDARY
-#error "MPU9250 and AK8975_SECONDARY cannot both be defined."
-#elif !defined AK8963_SECONDARY /* #if defined AK8975_SECONDARY */
-#define AK8963_SECONDARY
-#endif /* #if defined AK8975_SECONDARY */
-#endif /* #if defined MPU9150 */
+#  ifndef MPU6500
+#    define MPU6500
+#  endif /* #ifndef MPU6500 */
+#  if defined AK8975_SECONDARY
+#    error "MPU9250 and AK8975_SECONDARY cannot both be defined."
+#  elif !defined AK8963_SECONDARY /* #if defined AK8975_SECONDARY */
+#    define AK8963_SECONDARY
+#  endif /* #if defined AK8975_SECONDARY */
+#endif   /* #if defined MPU9150 */
 
 #if defined AK8975_SECONDARY || defined AK8963_SECONDARY
-#define AK89xx_SECONDARY
+#  define AK89xx_SECONDARY
 #else
 /* #warning "No compass = less profit for Invensense. Lame." */
 #endif
@@ -331,39 +331,39 @@ enum lp_accel_rate_e {
 #define BIT_ACCL_FC_B (0x08)
 
 #if defined AK8975_SECONDARY
-#define SUPPORTS_AK89xx_HIGH_SENS (0x00)
-#define AK89xx_FSR (9830)
+#  define SUPPORTS_AK89xx_HIGH_SENS (0x00)
+#  define AK89xx_FSR (9830)
 #elif defined AK8963_SECONDARY
-#define SUPPORTS_AK89xx_HIGH_SENS (0x10)
-#define AK89xx_FSR (4915)
+#  define SUPPORTS_AK89xx_HIGH_SENS (0x10)
+#  define AK89xx_FSR (4915)
 #endif
 
 #ifdef AK89xx_SECONDARY
-#define AKM_REG_WHOAMI (0x00)
+#  define AKM_REG_WHOAMI (0x00)
 
-#define AKM_REG_ST1 (0x02)
-#define AKM_REG_HXL (0x03)
-#define AKM_REG_ST2 (0x09)
+#  define AKM_REG_ST1 (0x02)
+#  define AKM_REG_HXL (0x03)
+#  define AKM_REG_ST2 (0x09)
 
-#define AKM_REG_CNTL (0x0A)
-#define AKM_REG_ASTC (0x0C)
-#define AKM_REG_ASAX (0x10)
-#define AKM_REG_ASAY (0x11)
-#define AKM_REG_ASAZ (0x12)
+#  define AKM_REG_CNTL (0x0A)
+#  define AKM_REG_ASTC (0x0C)
+#  define AKM_REG_ASAX (0x10)
+#  define AKM_REG_ASAY (0x11)
+#  define AKM_REG_ASAZ (0x12)
 
-#define AKM_DATA_READY (0x01)
-#define AKM_DATA_OVERRUN (0x02)
-#define AKM_OVERFLOW (0x80)
-#define AKM_DATA_ERROR (0x40)
+#  define AKM_DATA_READY (0x01)
+#  define AKM_DATA_OVERRUN (0x02)
+#  define AKM_OVERFLOW (0x80)
+#  define AKM_DATA_ERROR (0x40)
 
-#define AKM_BIT_SELF_TEST (0x40)
+#  define AKM_BIT_SELF_TEST (0x40)
 
-#define AKM_POWER_DOWN (0x00 | SUPPORTS_AK89xx_HIGH_SENS)
-#define AKM_SINGLE_MEASUREMENT (0x01 | SUPPORTS_AK89xx_HIGH_SENS)
-#define AKM_FUSE_ROM_ACCESS (0x0F | SUPPORTS_AK89xx_HIGH_SENS)
-#define AKM_MODE_SELF_TEST (0x08 | SUPPORTS_AK89xx_HIGH_SENS)
+#  define AKM_POWER_DOWN (0x00 | SUPPORTS_AK89xx_HIGH_SENS)
+#  define AKM_SINGLE_MEASUREMENT (0x01 | SUPPORTS_AK89xx_HIGH_SENS)
+#  define AKM_FUSE_ROM_ACCESS (0x0F | SUPPORTS_AK89xx_HIGH_SENS)
+#  define AKM_MODE_SELF_TEST (0x08 | SUPPORTS_AK89xx_HIGH_SENS)
 
-#define AKM_WHOAMI (0x48)
+#  define AKM_WHOAMI (0x48)
 #endif
 
 #if defined MPU6050
@@ -394,7 +394,7 @@ const struct gyro_reg_s reg = {.who_am_i = 0x75,
                                .bank_sel = 0x6D,
                                .mem_start_addr = 0x6E,
                                .prgm_start_h = 0x70
-#ifdef AK89xx_SECONDARY
+#  ifdef AK89xx_SECONDARY
                                ,
                                .raw_compass = 0x49,
                                .yg_offs_tc = 0x01,
@@ -408,7 +408,7 @@ const struct gyro_reg_s reg = {.who_am_i = 0x75,
                                .s0_do = 0x63,
                                .s1_do = 0x64,
                                .i2c_delay_ctrl = 0x67
-#endif
+#  endif
 };
 const struct hw_s hw = {.addr = 0x68,
                         .max_fifo = 1024,
@@ -416,10 +416,10 @@ const struct hw_s hw = {.addr = 0x68,
                         .temp_sens = 340,
                         .temp_offset = -521,
                         .bank_size = 256
-#if defined AK89xx_SECONDARY
+#  if defined AK89xx_SECONDARY
                         ,
                         .compass_fsr = AK89xx_FSR
-#endif
+#  endif
 };
 
 const struct test_s test = {.gyro_sens = 32768 / 250,
@@ -469,7 +469,7 @@ const struct gyro_reg_s reg = {.who_am_i = 0x75,
                                .bank_sel = 0x6D,
                                .mem_start_addr = 0x6E,
                                .prgm_start_h = 0x70
-#ifdef AK89xx_SECONDARY
+#  ifdef AK89xx_SECONDARY
                                ,
                                .raw_compass = 0x49,
                                .s0_addr = 0x25,
@@ -482,7 +482,7 @@ const struct gyro_reg_s reg = {.who_am_i = 0x75,
                                .s0_do = 0x63,
                                .s1_do = 0x64,
                                .i2c_delay_ctrl = 0x67
-#endif
+#  endif
 };
 const struct hw_s hw = {.addr = 0x68,
                         .max_fifo = 1024,
@@ -490,10 +490,10 @@ const struct hw_s hw = {.addr = 0x68,
                         .temp_sens = 321,
                         .temp_offset = 0,
                         .bank_size = 256
-#if defined AK89xx_SECONDARY
+#  if defined AK89xx_SECONDARY
                         ,
                         .compass_fsr = AK89xx_FSR
-#endif
+#  endif
 };
 
 const struct test_s test = {
@@ -520,12 +520,12 @@ static struct gyro_state_s st = {.reg = &reg, .hw = &hw, .test = &test};
 
 #define MAX_PACKET_LENGTH (12)
 #ifdef MPU6500
-#define HWST_MAX_PACKET_LENGTH (512)
+#  define HWST_MAX_PACKET_LENGTH (512)
 #endif
 
 #ifdef AK89xx_SECONDARY
 static int8_t setup_compass(void);
-#define MAX_COMPASS_SAMPLE_RATE (100)
+#  define MAX_COMPASS_SAMPLE_RATE (100)
 #endif
 
 /**
@@ -1533,12 +1533,12 @@ int8_t mpu_set_sensors(unsigned char sensors) {
     mpu_set_int_latched(0);
 
 #ifdef AK89xx_SECONDARY
-#ifdef AK89xx_BYPASS
+#  ifdef AK89xx_BYPASS
   if (sensors & INV_XYZ_COMPASS)
     mpu_set_bypass(1);
   else
     mpu_set_bypass(0);
-#else
+#  else
   if (i2c_read(st.hw->addr, st.reg->user_ctrl, 1, &user_ctrl))
     return -1;
   /* Handle AKM power management. */
@@ -1558,7 +1558,7 @@ int8_t mpu_set_sensors(unsigned char sensors) {
   /* Enable/disable I2C master mode. */
   if (i2c_write(st.hw->addr, st.reg->user_ctrl, 1, &user_ctrl))
     return -1;
-#endif
+#  endif
 #endif
 
   st.chip_cfg.sensors = sensors;
@@ -1600,8 +1600,8 @@ int8_t mpu_get_int_status(short *status) {
  *  @param[out] more        Number of remaining packets.
  *  @return     0 if successful.
  */
-int8_t mpu_read_fifo(short *gyro, short *accel,
-                     unsigned char *sensors, unsigned char *more) {
+int8_t mpu_read_fifo(short *gyro, short *accel, unsigned char *sensors,
+                     unsigned char *more) {
   /* Assumes maximum packet size is gyro (6) + accel (6). */
   unsigned char data[MAX_PACKET_LENGTH];
   unsigned char packet_size = 0;
@@ -1814,8 +1814,7 @@ static int8_t get_accel_prod_shift(float *st_shift) {
      * st_shift[ii] = 0.34f * powf(0.92f/0.34f, (shift_code[ii]-1) / 30.f)
      */
     st_shift[ii] = 0.34f;
-    while (--shift_code[ii])
-      st_shift[ii] *= 1.034f;
+    while (--shift_code[ii]) st_shift[ii] *= 1.034f;
   }
   return 0;
 }
@@ -1854,8 +1853,7 @@ static int8_t gyro_self_test(long *bias_regular, long *bias_st) {
     st_shift_cust = labs(bias_regular[jj] - bias_st[jj]) / 65536.f;
     if (tmp[jj]) {
       st_shift = 3275.f / test.gyro_sens;
-      while (--tmp[jj])
-        st_shift *= 1.046f;
+      while (--tmp[jj]) st_shift *= 1.046f;
       st_shift_var = st_shift_cust / st_shift - 1.f;
       if (fabs(st_shift_var) > test.max_gyro_var)
         result |= 1 << jj;
@@ -1899,7 +1897,7 @@ static int8_t compass_self_test(void) {
     goto AKM_restore;
 
   result = 0;
-#if defined MPU9150
+#  if defined MPU9150
   data = (short)(tmp[1] << 8) | tmp[0];
   if ((data > 100) || (data < -100))
     result |= 0x01;
@@ -1909,7 +1907,7 @@ static int8_t compass_self_test(void) {
   data = (short)(tmp[5] << 8) | tmp[4];
   if ((data > -300) || (data < -1000))
     result |= 0x04;
-#elif defined MPU9250
+#  elif defined MPU9250
   data = (short)(tmp[1] << 8) | tmp[0];
   if ((data > 200) || (data < -200))
     result |= 0x01;
@@ -1919,7 +1917,7 @@ static int8_t compass_self_test(void) {
   data = (short)(tmp[5] << 8) | tmp[4];
   if ((data > -800) || (data < -3200))
     result |= 0x04;
-#endif
+#  endif
 AKM_restore:
   tmp[0] = 0 | SUPPORTS_AK89xx_HIGH_SENS;
   i2c_write(st.chip_cfg.compass_addr, AKM_REG_ASTC, 1, tmp);
@@ -2050,8 +2048,8 @@ static int8_t get_st_biases(long *gyro, long *accel, unsigned char hw_test) {
 }
 
 #ifdef MPU6500
-#define REG_6500_XG_ST_DATA 0x0
-#define REG_6500_XA_ST_DATA 0xD
+#  define REG_6500_XG_ST_DATA 0x0
+#  define REG_6500_XA_ST_DATA 0xD
 static const unsigned short mpu_6500_st_tb[256] = {
     2620,  2646,  2672,  2699,  2726,  2753,  2781,  2808, // 7
     2837,  2865,  2894,  2923,  2952,  2981,  3011,  3041, // 15
@@ -2401,9 +2399,9 @@ int8_t mpu_run_6500_self_test(long *gyro, long *accel, unsigned char debug) {
   const unsigned char tries = 2;
   long gyro_st[3], accel_st[3];
   unsigned char accel_result, gyro_result;
-#ifdef AK89xx_SECONDARY
+#  ifdef AK89xx_SECONDARY
   unsigned char compass_result;
-#endif
+#  endif
   int ii;
 
   int8_t result;
@@ -2468,15 +2466,15 @@ int8_t mpu_run_6500_self_test(long *gyro, long *accel, unsigned char debug) {
   if (!accel_result)
     result |= 0x02;
 
-#ifdef AK89xx_SECONDARY
+#  ifdef AK89xx_SECONDARY
   compass_result = compass_self_test();
   if (debug)
 
     if (!compass_result)
       result |= 0x04;
-#else
+#  else
   result |= 0x04;
-#endif
+#  endif
 restore:
   if (debug)
 
@@ -2513,9 +2511,9 @@ int8_t mpu_run_self_test(long *gyro, long *accel) {
   const unsigned char tries = 2;
   long gyro_st[3], accel_st[3];
   unsigned char accel_result, gyro_result;
-#ifdef AK89xx_SECONDARY
+#  ifdef AK89xx_SECONDARY
   unsigned char compass_result;
-#endif
+#  endif
   int ii;
 #endif
   int8_t result;
@@ -2566,13 +2564,13 @@ int8_t mpu_run_self_test(long *gyro, long *accel) {
   if (!accel_result)
     result |= 0x02;
 
-#ifdef AK89xx_SECONDARY
+#  ifdef AK89xx_SECONDARY
   compass_result = compass_self_test();
   if (!compass_result)
     result |= 0x04;
-#else
+#  else
   result |= 0x04;
-#endif
+#  endif
 restore:
 #elif defined MPU6500
   /* For now, this function will return a "pass" result for all three sensors
@@ -2692,9 +2690,8 @@ int8_t mpu_load_firmware(unsigned short length, const unsigned char *firmware,
 
   for (ii = 0; ii < length; ii += this_write) {
     this_write = min(LOAD_CHUNK, length - ii);
-
-    int index = 0;
-    for (index; index < this_write; index++)
+    
+    for (int index = 0; index < this_write; index++)
       firmware_chunk[index] = pgm_read_byte(firmware + ii + index);
 
     if (mpu_write_mem(ii, this_write, firmware_chunk))
@@ -2856,12 +2853,12 @@ static int8_t setup_compass(void) {
   if (i2c_write(st.hw->addr, st.reg->i2c_delay_ctrl, 1, data))
     return -1;
 
-#ifdef MPU9150
+#  ifdef MPU9150
   /* For the MPU9150, the auxiliary I2C bus needs to be set to VDD. */
   data[0] = BIT_I2C_MST_VDDIO;
   if (i2c_write(st.hw->addr, st.reg->yg_offs_tc, 1, data))
     return -1;
-#endif
+#  endif
 
   return 0;
 }
@@ -2880,30 +2877,30 @@ int8_t mpu_get_compass_reg(short *data) {
   if (!(st.chip_cfg.sensors & INV_XYZ_COMPASS))
     return -1;
 
-#ifdef AK89xx_BYPASS
+#  ifdef AK89xx_BYPASS
   if (i2c_read(st.chip_cfg.compass_addr, AKM_REG_ST1, 8, tmp))
     return -1;
   tmp[8] = AKM_SINGLE_MEASUREMENT;
   if (i2c_write(st.chip_cfg.compass_addr, AKM_REG_CNTL, 1, tmp + 8))
     return -1;
-#else
+#  else
   if (i2c_read(st.hw->addr, st.reg->raw_compass, 8, tmp))
     return -1;
-#endif
+#  endif
 
-#if defined AK8975_SECONDARY
+#  if defined AK8975_SECONDARY
   /* AK8975 doesn't have the overrun error bit. */
   if (!(tmp[0] & AKM_DATA_READY))
     return -2;
   if ((tmp[7] & AKM_OVERFLOW) || (tmp[7] & AKM_DATA_ERROR))
     return -3;
-#elif defined AK8963_SECONDARY
+#  elif defined AK8963_SECONDARY
   /* AK8963 doesn't have the data read error bit. */
   if (!(tmp[0] & AKM_DATA_READY) || (tmp[0] & AKM_DATA_OVERRUN))
     return -2;
   if (tmp[7] & AKM_OVERFLOW)
     return -3;
-#endif
+#  endif
   data[0] = (tmp[2] << 8) | tmp[1];
   data[1] = (tmp[4] << 8) | tmp[3];
   data[2] = (tmp[6] << 8) | tmp[5];

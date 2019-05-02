@@ -14,18 +14,16 @@ static uint8_t PrevHIDReport[sizeof(USB_KeyboardReport_Data_t)];
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM HIDReport_Datatype[] = {
     HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 USB_ClassInfo_HID_Device_t interface = {
-    .Config =
-        {
-            .InterfaceNumber = INTERFACE_ID_HID,
-            .ReportINEndpoint =
-                {
-                    .Address = HID_EPADDR,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-            .PrevReportINBuffer = PrevHIDReport,
-            .PrevReportINBufferSize = sizeof(PrevHIDReport),
-        },
+  Config : {
+    InterfaceNumber : INTERFACE_ID_HID,
+    ReportINEndpoint : {
+      Address : HID_EPADDR,
+      Size : HID_EPSIZE,
+      Banks : 1,
+    },
+    PrevReportINBuffer : PrevHIDReport,
+    PrevReportINBufferSize : sizeof(PrevHIDReport),
+  },
 };
 USB_ClassInfo_HID_Device_t *KeyboardOutput::createHIDInterface() {
   return &interface;
@@ -41,11 +39,11 @@ void KeyboardOutput::update(Controller controller) {
   usedKeys = 0;
   for (int i = 0; i < SELECT; i++) {
     if (bit_check(controller.buttons, i)) {
-      keys[usedKeys++] = ((uint8_t*)&config.keys)[i];
+      keys[usedKeys++] = ((uint8_t *)&config.keys)[i];
     }
   }
   if (bit_check(controller.buttons, SELECT) || controller.r_y == 32767) {
-      keys[usedKeys++] = config.keys.select;
+    keys[usedKeys++] = config.keys.select;
   }
   if (controller.r_x < -8000) {
     keys[usedKeys++] = config.keys.whammy;

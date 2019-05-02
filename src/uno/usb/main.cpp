@@ -55,7 +55,6 @@ int main(void) {
   }
   out.init();
   sei();
-  _WD_CONTROL_REG |= (1 << WDIE);
   // clang-format off
   while (true);
   // clang-format on

@@ -8,6 +8,13 @@ upload:
 	@echo
 	@echo Upload operation complete.
 
+upload-ee:
+	@echo Uploading eeprom to usb.
+	@echo
+	$(MAKE) -C usb avrdude-ee
+	@echo
+	@echo Upload operation complete.
+
 clean:
 	@echo Cleaning all elements.
 	@echo

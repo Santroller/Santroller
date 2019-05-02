@@ -18,6 +18,12 @@ uno:
 	sleep 0.5
 	$(MAKE) -C src/uno upload
 
+uno-ee:
+	$(MAKE) -C src/uno
+	./upload.py
+	sleep 0.5
+	$(MAKE) -C src/uno upload-ee
+
 clean:
 	$(MAKE) -C src/micro clean
 	$(MAKE) -C src/uno clean

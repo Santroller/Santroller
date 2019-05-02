@@ -44,7 +44,7 @@ int main(void) {
   UCSR1B = _BV(TXEN1) | _BV(RXEN1) | _BV(RXCIE1);
   UCSR1C = _BV(UCSZ10) | _BV(UCSZ11);
   uint8_t data = 0;
-  //Wait for the main processor to notify us that it is about to wait for data.
+  // Wait for the main processor to notify us that it is about to wait for data.
   while (data != 0xFE) {
     loop_until_bit_is_set(UCSR1A, RXC1);
     data = UDR1;
@@ -55,7 +55,10 @@ int main(void) {
   }
   out.init();
   sei();
+  _WD_CONTROL_REG |= (1 << WDIE);
   // clang-format off
   while (true);
   // clang-format on
 }
+
+extern "C" void before_reboot() { UDR1 = 0xEF; }

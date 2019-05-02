@@ -18,16 +18,19 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
     DataINEndpoint : {
       Address : CDC_TX_EPADDR,
       Size : CDC_TXRX_EPSIZE,
+      Type: EP_TYPE_CONTROL,
       Banks : 1,
     },
     DataOUTEndpoint : {
       Address : CDC_RX_EPADDR,
       Size : CDC_TXRX_EPSIZE,
+      Type: EP_TYPE_CONTROL,
       Banks : 1,
     },
     NotificationEndpoint : {
       Address : CDC_NOTIFICATION_EPADDR,
       Size : CDC_NOTIFICATION_EPSIZE,
+      Type: EP_TYPE_CONTROL,
       Banks : 1,
     },
   },

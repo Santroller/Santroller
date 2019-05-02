@@ -2,7 +2,7 @@
 
 WiiExtension::WiiExtension()
     : nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
-void WiiExtension::init() { I2Cdev::TWIInit(); }
+void WiiExtension::init() {  }
 void WiiExtension::read_controller(Controller *data) {
   if (!port.update()) {
     port.connect();

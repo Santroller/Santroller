@@ -7,7 +7,11 @@ void InputHandler::process() {
   }
 }
 void InputHandler::init() {
-  if (check_serial()) return;
+  if (check_serial())
+    return;
+  if (config.input_type == WII || config.tilt_type == MPU_6050) {
+    I2Cdev::TWIInit();
+  }
   if (config.input_type == WII) {
     input = new WiiExtension();
   } else if (config.input_type == DIRECT) {
@@ -42,6 +46,10 @@ void InputHandler::processTilt() {
       }
       z = pow(z, 1.1f);
       z = constrain(z, -32767, 32767);
+
+      if (isnan(z)) {
+        z = 0;
+      }
       controller.r_y = z;
     }
     counter++;

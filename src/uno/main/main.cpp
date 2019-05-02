@@ -28,8 +28,8 @@ int main() {
     loop_until_bit_is_set(UCSR0A, RXC0);
     ((uint8_t *)&config)[i] = UDR0;
   }
-  controller.init();
   sei();
+  controller.init();
   while (true) {
     controller.process();
     if (bit_is_set(UCSR0A, RXC0)) {

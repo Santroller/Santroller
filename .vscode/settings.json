@@ -20,7 +20,8 @@
         "i2cdev.h": "c",
         "nintendoextensionctrl.h": "c",
         "interrupt.h": "c",
-        "eeprom.h": "c"
+        "eeprom.h": "c",
+        "stdlib.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

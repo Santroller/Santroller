@@ -27,7 +27,7 @@ extern "C" {
 #define CDC_NOTIFICATION_EPSIZE 8
 
 /** Size in bytes of the CDC data IN and OUT endpoints. */
-#define CDC_TXRX_EPSIZE 16
+#define CDC_TXRX_EPSIZE 64
 
 /** Enum for the device interface descriptor IDs within the device. Each
  * interface descriptor should have a unique ID index associated with it, which

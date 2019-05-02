@@ -23,4 +23,4 @@ deploy:
     - src/uno/main/bin/*
   on:
     repo: sanjay900/Ardwiino
-    branch: single-firmware
+    tags: true

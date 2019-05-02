@@ -19,6 +19,7 @@ USB_ClassInfo_HID_Device_t interface = {
     ReportINEndpoint : {
       Address : HID_EPADDR,
       Size : HID_EPSIZE,
+      Type: EP_TYPE_CONTROL,
       Banks : 1,
     },
     PrevReportINBuffer : PrevHIDReport,

@@ -34,20 +34,21 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM HIDReport_Datatype[] = {
     HID_RI_REPORT_COUNT(8, GAMEPAD_BTN_COUNT),
     HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
     HID_RI_END_COLLECTION(0)};
-const size_t GamepadOutput::ReportDatatypeSize() { return sizeof(HIDReport_Datatype); }
+const size_t GamepadOutput::ReportDatatypeSize() {
+  return sizeof(HIDReport_Datatype);
+}
 USB_ClassInfo_HID_Device_t GamepadInterface = {
-    .Config =
-        {
-            .InterfaceNumber = INTERFACE_ID_HID,
-            .ReportINEndpoint =
-                {
-                    .Address = HID_EPADDR,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-            .PrevReportINBuffer = PrevHIDReport,
-            .PrevReportINBufferSize = sizeof(PrevHIDReport),
-        },
+  Config : {
+    InterfaceNumber : INTERFACE_ID_HID,
+    ReportINEndpoint : {
+      Address : HID_EPADDR,
+      Size : HID_EPSIZE,
+      Type : EP_TYPE_CONTROL,
+      Banks : 1,
+    },
+    PrevReportINBuffer : PrevHIDReport,
+    PrevReportINBufferSize : sizeof(PrevHIDReport),
+  },
 };
 USB_ClassInfo_HID_Device_t *GamepadOutput::createHIDInterface() {
   return &GamepadInterface;

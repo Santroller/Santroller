@@ -1,26 +1,19 @@
 # Ardwiino
 ![https://i.imgur.com/QeoAx7B.jpg](https://i.imgur.com/QeoAx7B.jpg)
 
-This project aims to provide a AVR solution that supports both direct and WII based guitar configurations. By editing `src/config/config.h`, you can set your guitar up with any configuration, and configure the wiring type, and also if you want to emulate xinput or a keyboard.
+This project aims to provide a AVR solution that supports both direct and WII based guitar configurations.
+This project supports acting as either a keyboard, gamepad or xinput device.
 
 Note that xinput mode does not take care of xinput security, so your controllers will not work on a real xbox 360.
 
 This repository contains code for both the uno, and the pro micro. It could very easily be modified to support many other AVR microcontrollers, as long as the AVR supports HID, either directly or via another AVR microcontroller (aka the uno).
+It is recommended to use https://github.com/sanjay900/guitar-configurator for configuring, as it takes care of everything.
 
 # How to use this repo (for a wii adaptor)
 ## You will need:
 1. An AVR microcontroller with USB hid compatibility and 3.3v compatibility (pro micro recommended)
 2. A wii extension cable or breakout board
-3. A MPU6050 or similar
-
-## Flashing the software
-There are two ways to flash the software to your arduino:
-* Guitar configurator (recommended)
-   1. Use https://github.com/sanjay900/guitar-configurator, and follow the instructions, or
-* Manually (note that this only works on unix systems)
-    1. Install an AVR toolchain + make
-    2. run `make uno` or `make micro`, depending on your microcontroller family 
-    3. For updates, hit + and - to jump to bootloader mode.
+3. A MPU6050 or similar (optional)
 
 ## Building the hardware
 1. Find the I2C pins on your Arduino, and connect them to the extension / breakout board. Also connect ground to ground and 3.3v to 3.3v on the Arduino.

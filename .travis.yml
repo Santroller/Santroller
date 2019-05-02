@@ -18,9 +18,12 @@ deploy:
   file_glob: true
   skip_cleanup: true
   file:
-    - src/micro/bin/*
-    - src/uno/usb/bin/*
-    - src/uno/main/bin/*
+    - src/micro/bin/*.hex
+    - src/uno/usb/bin/*.hex
+    - src/uno/main/bin/*.hex
+    - src/micro/bin/*.eep
+    - src/uno/usb/bin/*.eep
+    - src/uno/main/bin/*.eep
   on:
     repo: sanjay900/Ardwiino
     tags: true

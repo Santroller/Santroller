@@ -7,7 +7,6 @@ OutputHandler out;
 Main main2;
 
 int main() {
-  check_freq();
   main2.main();
   out.init();
   controller.init();

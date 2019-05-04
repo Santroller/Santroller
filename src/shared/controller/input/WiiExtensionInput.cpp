@@ -32,7 +32,7 @@ void WiiExtension::read_controller(Controller *data) {
     bit_write(drum.bassPedal(), data->buttons, RB);
     break;
   case (ExtensionType::GuitarController):
-    data->r_x = -(guitar.whammyBar() - 14) * 1024;
+    data->r_x = (guitar.whammyBar() - 14) * 2048;
     if (guitar.whammyBar() <= 18) {
       data->r_x = 0;
     }

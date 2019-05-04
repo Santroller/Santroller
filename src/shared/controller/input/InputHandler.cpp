@@ -9,9 +9,6 @@ void InputHandler::process() {
 void InputHandler::init() {
   if (check_serial())
     return;
-  if (config.input_type == WII || config.tilt_type == MPU_6050) {
-    I2Cdev::TWIInit();
-  }
   if (config.input_type == WII) {
     input = new WiiExtension();
   } else if (config.input_type == DIRECT) {
@@ -20,6 +17,9 @@ void InputHandler::init() {
     return;
   }
   input->init();
+  if (config.input_type == WII || config.tilt_type == MPU_6050) {
+    I2Cdev::TWIInit();
+  }
   if (config.tilt_type == MPU_6050) {
     mympu_open(15);
   } else if (config.tilt_type == GRAVITY) {

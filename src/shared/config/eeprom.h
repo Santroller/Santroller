@@ -48,6 +48,7 @@ typedef struct {
   uint8_t frets_led_mode;
   keys_t keys;
   uint32_t cpu_freq;
+  uint32_t signature;
 } ATTR_PACKED config_t;
 
 #ifdef __cplusplus

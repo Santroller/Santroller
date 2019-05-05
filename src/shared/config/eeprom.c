@@ -11,6 +11,7 @@ config_t EEMEM config_pointer = {PROTOCOL_VERSION,
                                  MPU_6050_START,
                                  FRETS_LED,
                                  KEYS,
-                                 F_CPU};
+                                 F_CPU,
+                                 0xFEA123};
 
 config_t config;

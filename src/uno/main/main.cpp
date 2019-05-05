@@ -1,7 +1,6 @@
 #include "../../shared/controller/input/InputHandler.h"
 #include "../../shared/io/uart/uart.h"
 #include "../../shared/util.h"
-#include "../../shared/sharedmain.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
@@ -12,19 +11,32 @@ extern "C" {
 }
 
 InputHandler controller;
-Main sharedMain;
 
 size_t controller_index = 0;
 bool done = false;
 int main() {
-  sharedMain.main();
   UBRR0 = 6;
-  UCSR0B = _BV(TXEN0) | _BV(UDRIE0);
+  UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UDRIE0);
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
-  sei();
+  // Notify the usb processor so that it knows we are about to wait for the
+  // config
+  while (!bit_is_set(UCSR0A, RXC0)) {
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = 0xFE;
+  }
+  for (size_t i = 0; i < sizeof(config_t); i++) {
+    loop_until_bit_is_set(UCSR0A, RXC0);
+    ((uint8_t *)&config)[i] = UDR0;
+  }
   controller.init();
+  sei();
   while (true) {
     controller.process();
+    if (bit_is_set(UCSR0A, RXC0)) {
+      if (UDR0 == 0xEF) {
+        wdt_enable(WDTO_120MS);
+      }
+    }
   }
 }
 ISR(USART_UDRE_vect) {
@@ -38,3 +50,5 @@ ISR(USART_UDRE_vect) {
     controller_index = 0;
   }
 }
+
+extern "C" void before_reboot() {}

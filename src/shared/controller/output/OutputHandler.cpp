@@ -4,15 +4,13 @@ Output *Output::output;
 void OutputHandler::process(Controller *controller) {
   if (bit_check(controller->buttons, START) &&
       bit_check(controller->buttons, SELECT)) {
-    serial();
+    bootloader();
   }
   Output::output->update(*controller);
 }
 
 void OutputHandler::init() {
-  if (check_serial() || config.output_type == SERIAL) {
-    Output::output = new SerialOutput();
-  } else if(config.output_type == XINPUT) {
+  if(config.output_type == XINPUT) {
     Output::output = new XInputOutput();
   } else if(config.output_type == GAMEPAD) {
     Output::output = new GamepadOutput();
@@ -40,9 +38,6 @@ void EVENT_USB_Device_ControlRequest(void) {
   switch (USB_ControlRequest.bRequest) {
   case 0x30:
     bootloader();
-    break;
-  case 0x31:
-    serial();
     break;
   }
   Output::output->usb_control_request();

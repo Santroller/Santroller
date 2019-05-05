@@ -47,6 +47,7 @@ typedef struct {
   uint16_t mpu_6050_calibration;
   uint8_t frets_led_mode;
   keys_t keys;
+  uint32_t cpu_freq;
 } ATTR_PACKED config_t;
 
 #ifdef __cplusplus

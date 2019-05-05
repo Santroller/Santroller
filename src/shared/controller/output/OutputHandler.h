@@ -5,7 +5,6 @@
 #include "XInputOutput.h"
 #include "KeyboardOutput.h"
 #include "GamepadOutput.h"
-#include "SerialOutput.h"
 #include "../../util.h"
 class OutputHandler {
 public:

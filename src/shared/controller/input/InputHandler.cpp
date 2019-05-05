@@ -7,8 +7,6 @@ void InputHandler::process() {
   }
 }
 void InputHandler::init() {
-  if (check_serial())
-    return;
   if (config.input_type == WII) {
     input = new WiiExtension();
   } else if (config.input_type == DIRECT) {

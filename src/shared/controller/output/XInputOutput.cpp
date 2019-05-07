@@ -42,8 +42,8 @@ void XInputOutput::init() {
 
     XInputUnknown : {
       Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-      {0x00, 0x00, config.subtype, 0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04,
-       0x13, 0x02, 0x08, 0x03, 0x00}
+      {0x10, 0x01, config.subtype, 0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04,
+       0x13, 0x02, 0x08, 0x03, 0x03}
     },
 
     DataInEndpoint0 : {
@@ -97,19 +97,21 @@ void XInputOutput::usb_control_request() {
     }
 
     if (USB_ControlRequest.wLength == 0x04) {
-      uint8_t data[4]; // DeviceID
+      uint8_t data[] = {0x00, 0x12, 0x28, 0x61}; //DeviceID
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 8 &&
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[8] = {0x00, 0x08}; // Flags
+      uint8_t data[] = {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 20 &&
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[20]; // Capabilities
+      uint8_t data[20] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
+                        0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //Capabilities
       sendControl(data, sizeof(data));
     }
 

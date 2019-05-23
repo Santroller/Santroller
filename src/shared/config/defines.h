@@ -1,22 +1,31 @@
 #pragma once
 #define NONE 0
-#define GUITAR_SUBTYPE 6
-#define GAMEPAD_SUBTYPE 1
-#define DANCE_PAD_SUBTYPE 5
-#define GUITAR_ALTERNATE_SUBTYPE 7
-#define DRUM_SUBTYPE 8
-#define GUITAR_BASS_SUBTYPE 11
-#define ARCADE_STICK_SUBTYPE 3
-#define ARCADE_PAD_SUBTYPE 19
-#define WHEEL_SUBTYPE 2
-#define FLIGHT_STICK_SUBTYPE 4
+
+//Tilt detection
 #define MPU_6050 1
 #define GRAVITY 2
+
+//Input types
 #define WII 1
 #define DIRECT 2
-#define SERIAL 0
+
+//Output types
 #define XINPUT 1
 #define KEYBOARD 2
 #define GAMEPAD 3
+
+//Joystick type for a guitar
 #define DPAD 1
 #define JOY 2
+
+//Subtypes for XINPUT
+#define GAMEPAD_SUBTYPE 1
+#define WHEEL_SUBTYPE 2
+#define ARCADE_STICK_SUBTYPE 3
+#define FLIGHT_STICK_SUBTYPE 4
+#define DANCE_PAD_SUBTYPE 5
+#define GUITAR_SUBTYPE 6
+#define GUITAR_ALTERNATE_SUBTYPE 7
+#define DRUM_SUBTYPE 8
+#define GUITAR_BASS_SUBTYPE 11
+#define ARCADE_PAD_SUBTYPE 19

@@ -17,11 +17,23 @@ public:
   bool hid_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                          uint8_t *const ReportID, const uint8_t ReportType,
                          void *ReportData, uint16_t *const ReportSize);
-  USB_ClassInfo_HID_Device_t* createHIDInterface();
+  USB_ClassInfo_HID_Device_t *createHIDInterface();
   const size_t ReportDatatypeSize();
   uint16_t get_hid_descriptor(const uint8_t DescriptorType,
-                          const uint8_t DescriptorNumber,
-                          const void **const DescriptorAddress,
-                          uint8_t *const DescriptorMemorySpace);
-  
+                              const uint8_t DescriptorNumber,
+                              const void **const DescriptorAddress,
+                              uint8_t *const DescriptorMemorySpace);
 };
+
+#define CHECK_JOY(joy)                                                         \
+  if (config.keys.joy.neg && controller.joy < -config.threshold_joy) {         \
+    keys[usedKeys++] = config.keys.joy.neg;                                    \
+  }                                                                            \
+  if (config.keys.joy.pos && controller.joy > config.threshold_joy) {          \
+    keys[usedKeys++] = config.keys.joy.pos;                                    \
+  }
+
+#define CHECK_TRIGGER(trigger)                                                 \
+  if (config.keys.trigger && controller.trigger > config.threshold_trigger) {  \
+    keys[usedKeys++] = config.keys.trigger;                                    \
+  }

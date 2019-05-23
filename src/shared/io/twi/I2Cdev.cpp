@@ -266,14 +266,6 @@ void I2Cdev::interrupt() {
     TWIInfo.mode = RepeatedStartSent;
     break;
 
-  // ----\/ ---- SLAVE RECEIVER ----\/ ----  //
-
-  // TODO  IMPLEMENT SLAVE RECEIVER FUNCTIONALITY
-
-  // ----\/ ---- SLAVE TRANSMITTER ----\/ ----  //
-
-  // TODO  IMPLEMENT SLAVE TRANSMITTER FUNCTIONALITY
-
   // ----\/ ---- MISCELLANEOUS STATES ----\/ ----  //
   case TWI_NO_RELEVANT_INFO: // It is not really possible to get into this ISR
                              // on this condition Rather, it is there to be

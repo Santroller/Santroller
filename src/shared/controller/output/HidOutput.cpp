@@ -1,11 +1,5 @@
 #include "HidOutput.h"
 
-/** Device descriptor structure. This descriptor, located in FLASH memory,
- * describes the overall device characteristics, including the supported USB
- * version, control endpoint size and the number of device configurations. The
- * descriptor is read out by the USB host when the enumeration process begins.
- */
-
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
 
@@ -24,13 +18,6 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
 
   NumberOfConfigurations : 0x01
 };
-/** Configuration descriptor structure. This descriptor, located in FLASH
- * memory, describes the usage of the device in one of its supported
- * configurations, including information about any device interfaces and
- * endpoints. The descriptor is read out by the USB host during the enumeration
- * process when selecting a configuration so that the host may correctly
- * communicate with the USB device.
- */
 
 void HIDOutput::init() {
   HID_Interface = createHIDInterface();

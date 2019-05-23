@@ -2,8 +2,8 @@
 #include <avr/eeprom.h>
 Output *Output::output;
 void OutputHandler::process(Controller *controller) {
-  if (bit_check(controller->buttons, START) &&
-      bit_check(controller->buttons, SELECT)) {
+  if (bit_check(controller->buttons, XBOX_START) &&
+      bit_check(controller->buttons, XBOX_BACK)) {
     bootloader();
   }
   Output::output->update(*controller);

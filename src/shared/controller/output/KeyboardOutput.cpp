@@ -19,7 +19,7 @@ USB_ClassInfo_HID_Device_t interface = {
     ReportINEndpoint : {
       Address : HID_EPADDR,
       Size : HID_EPSIZE,
-      Type: EP_TYPE_CONTROL,
+      Type : EP_TYPE_CONTROL,
       Banks : 1,
     },
     PrevReportINBuffer : PrevHIDReport,
@@ -34,21 +34,23 @@ const size_t KeyboardOutput::ReportDatatypeSize() {
 }
 uint8_t keys[SIMULTANEOUS_KEYS];
 uint8_t usedKeys = 0;
+
 void KeyboardOutput::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
   usedKeys = 0;
-  for (int i = 0; i < SELECT; i++) {
-    if (bit_check(controller.buttons, i)) {
-      keys[usedKeys++] = ((uint8_t *)&config.keys)[i];
+  for (int i = 0; i <= XBOX_Y; i++) {
+    auto binding = ((uint8_t *)&config.keys)[i];
+    if (binding && bit_check(controller.buttons, i)) {
+      keys[usedKeys++] = binding;
     }
   }
-  if (bit_check(controller.buttons, SELECT) || controller.r_y == 32767) {
-    keys[usedKeys++] = config.keys.select;
-  }
-  if (controller.r_x < -8000) {
-    keys[usedKeys++] = config.keys.whammy;
-  }
+  CHECK_JOY(l_x);
+  CHECK_JOY(l_y);
+  CHECK_JOY(r_x);
+  CHECK_JOY(r_y);
+  CHECK_TRIGGER(lt);
+  CHECK_TRIGGER(rt);
   HID_Device_USBTask(HID_Interface);
 }
 

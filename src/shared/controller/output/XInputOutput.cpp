@@ -97,7 +97,7 @@ void XInputOutput::usb_control_request() {
     }
 
     if (USB_ControlRequest.wLength == 0x04) {
-      uint8_t data[] = {0x00, 0x12, 0x28, 0x61}; //DeviceID
+      uint8_t data[] = {0x00, 0x12, 0x28, 0x61}; // DeviceID
       sendControl(data, sizeof(data));
     }
     if (USB_ControlRequest.wLength == 8 &&
@@ -110,8 +110,8 @@ void XInputOutput::usb_control_request() {
         USB_ControlRequest.bmRequestType ==
             (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
       uint8_t data[20] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
-                        0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; //Capabilities
+                          0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
+                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Capabilities
       sendControl(data, sizeof(data));
     }
 
@@ -146,39 +146,12 @@ void XInputOutput::update(Controller controller) {
 
   /* Check to see if the host is ready for another packet */
   if (Endpoint_IsINReady()) {
-    bit_write(bit_check(controller.buttons, UP),
-              gamepad_state.digital_buttons_1, XBOX_DPAD_UP);
-    bit_write(bit_check(controller.buttons, DOWN),
-              gamepad_state.digital_buttons_1, XBOX_DPAD_DOWN);
-    bit_write(bit_check(controller.buttons, LEFT),
-              gamepad_state.digital_buttons_1, XBOX_DPAD_LEFT);
-    bit_write(bit_check(controller.buttons, RIGHT),
-              gamepad_state.digital_buttons_1, XBOX_DPAD_RIGHT);
-    bit_write(bit_check(controller.buttons, START),
-              gamepad_state.digital_buttons_1, XBOX_START);
-    bit_write(bit_check(controller.buttons, SELECT),
-              gamepad_state.digital_buttons_1, XBOX_BACK);
-    bit_write(bit_check(controller.buttons, GREEN),
-              gamepad_state.digital_buttons_2, XBOX_A);
-    bit_write(bit_check(controller.buttons, RED),
-              gamepad_state.digital_buttons_2, XBOX_B);
-    bit_write(bit_check(controller.buttons, YELLOW),
-              gamepad_state.digital_buttons_2, XBOX_Y);
-    bit_write(bit_check(controller.buttons, BLUE),
-              gamepad_state.digital_buttons_2, XBOX_X);
-    bit_write(bit_check(controller.buttons, ORANGE),
-              gamepad_state.digital_buttons_2, XBOX_LB);
-    bit_write(bit_check(controller.buttons, RB),
-              gamepad_state.digital_buttons_2, XBOX_RB);
-    bit_write(bit_check(controller.buttons, HOME),
-              gamepad_state.digital_buttons_2, XBOX_HOME);
-
-    gamepad_state.l_x = controller.l_x;
-    gamepad_state.l_y = controller.l_y;
-    gamepad_state.r_x = controller.r_x;
-    gamepad_state.r_y = controller.r_y;
-    gamepad_state.lt = controller.lt;
-    gamepad_state.rt = controller.rt;
+    // We want to only overwrite the controller portion of the report, so we
+    // work out what offset that is
+    auto start = offsetof(USB_JoystickReport_Data_t, digital_buttons_1);
+    auto casted = (uint8_t *)&controller;
+    auto casted_state = (uint8_t *)&gamepad_state + start;
+    memcpy(casted_state, casted, sizeof(Controller));
     /* Write Joystick Report Data */
     Endpoint_Write_Stream_LE(&gamepad_state, 20, NULL);
 
@@ -186,19 +159,6 @@ void XInputOutput::update(Controller controller) {
     Endpoint_ClearIN();
   }
 }
-/** Configuration descriptor structure. This descriptor, located in FLASH
- * memory, describes the usage of the device in one of its supported
- * configurations, including information about any device interfaces and
- * endpoints. The descriptor is read out by the USB host during the enumeration
- * process when selecting a configuration so that the host may correctly
- * communicate with the USB device.
- */
-
-/** Device descriptor structure. This descriptor, located in FLASH memory,
- * describes the overall device characteristics, including the supported USB
- * version, control endpoint size and the number of device configurations. The
- * descriptor is read out by the USB host when the enumeration process begins.
- */
 
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},

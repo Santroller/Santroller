@@ -1,0 +1,57 @@
+Controller Bindings:
+lt
+rt
+l_x
+l_y
+r_x
+r_y
+up
+down
+left
+right
+start
+back
+l_click
+r_click
+LB
+RB
+home
+a
+b
+x
+y
+
+Keyboard Bindings:
+//Add a threshold for keys to trigger
+//Have seperate trigger and joy threshold
+l_x - left,right
+l_y - up,down
+r_x - ;
+up - up
+down - down
+left - left
+right - right
+start - enter
+back - h
+a - a
+b - s
+x - j
+y - k
+LB - l
+l_click - 
+r_click -
+lt - 
+rt -
+r_y - 
+RB -
+home -
+
+Guitar bindings:
+a - green - a
+b - red - s
+y - yellow - j
+x - blue - k
+LB - orange - l
+select - starpower - h
+r_x - whammy - ;
+start - return - enter

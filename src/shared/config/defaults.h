@@ -19,10 +19,6 @@
   { 0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51 }
 
 // Guitar specific defaults
-// Set this to JOY if your controller has a joystick, and set Joy X and Joy Y to
-// the X and Y for your joystick Set this to DPAD if your controller has a DPAD,
-// and set Left and Right to left and right on your dpad. Reuse pins for up and
-// down and strumming, if required.
 #define DIRECTION_MODE JOY
 // If your whammy bar appears inverted, set this to true to invert the output of
 // your whammy bar.

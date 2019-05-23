@@ -9,22 +9,12 @@ static uint8_t PrevHIDReport[sizeof(USB_GamepadReport_Data_t)];
  * send, and what it may be sent back from the host. Refer to the HID
  * specification for more details on HID report descriptors.
  */
-#define GAMEPAD_BTN_COUNT 0x10
+#define GAMEPAD_BTN_COUNT 14
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM HIDReport_Datatype[] = {
     HID_RI_USAGE_PAGE(8, 0x01),
     HID_RI_USAGE(8, 0x04),
     HID_RI_COLLECTION(8, 0x01),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_COLLECTION(8, 0x00),
-    HID_RI_USAGE(8, 0x30),
-    HID_RI_USAGE(8, 0x31),
-    HID_RI_LOGICAL_MINIMUM(16, -32767),
-    HID_RI_LOGICAL_MAXIMUM(16, 32767),
-    HID_RI_REPORT_SIZE(8, 16),
-    HID_RI_REPORT_COUNT(8, 2),
-    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_END_COLLECTION(0),
     HID_RI_USAGE_PAGE(8, 0x09),
     HID_RI_USAGE_MINIMUM(8, 0x01),
     HID_RI_USAGE_MAXIMUM(8, GAMEPAD_BTN_COUNT),
@@ -33,7 +23,21 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM HIDReport_Datatype[] = {
     HID_RI_REPORT_SIZE(8, 0x01),
     HID_RI_REPORT_COUNT(8, GAMEPAD_BTN_COUNT),
     HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_COLLECTION(8, 0x00),
+    HID_RI_USAGE(8, 0x32), // LT+RT = Z
+    HID_RI_USAGE(8, 0x30), // l_x = X
+    HID_RI_USAGE(8, 0x31), // l_y = Y
+    HID_RI_USAGE(8, 0x33), // r_x = Rx
+    HID_RI_USAGE(8, 0x34), // r_y = Ry
+    HID_RI_LOGICAL_MINIMUM(16, -32767),
+    HID_RI_LOGICAL_MAXIMUM(16, 32767),
+    HID_RI_REPORT_SIZE(8, 16),
+    HID_RI_REPORT_COUNT(8, 5),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_END_COLLECTION(0),
     HID_RI_END_COLLECTION(0)};
+
 const size_t GamepadOutput::ReportDatatypeSize() {
   return sizeof(HIDReport_Datatype);
 }
@@ -54,18 +58,12 @@ USB_ClassInfo_HID_Device_t *GamepadOutput::createHIDInterface() {
   return &GamepadInterface;
 }
 
-uint16_t last_controller_buttons = 0;
-uint16_t last_controller_r_x = 0;
-uint16_t last_controller_r_y = 0;
+Controller last_controller;
 
 void GamepadOutput::update(Controller controller) {
   USB_USBTask();
   wdt_reset();
-
-  // grab button state from controller
-  last_controller_buttons = controller.buttons;
-  last_controller_r_x = controller.r_x;
-  last_controller_r_y = controller.r_y;
+  last_controller = controller;
   HID_Device_USBTask(HID_Interface);
 }
 
@@ -73,14 +71,8 @@ bool GamepadOutput::hid_create_report(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
 
-  USB_GamepadReport_Data_t *JoystickReport =
-      (USB_GamepadReport_Data_t *)ReportData;
-
-  // update report
-  JoystickReport->Button = last_controller_buttons;
-
-  JoystickReport->r_x = last_controller_r_x;
-  JoystickReport->r_y = last_controller_r_y;
+  auto JoystickReport = (USB_GamepadReport_Data_t *)ReportData;
+  memcpy(JoystickReport, &last_controller, sizeof(Controller));
 
   *ReportSize = sizeof(USB_GamepadReport_Data_t);
 

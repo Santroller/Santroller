@@ -18,10 +18,11 @@ void InputHandler::init() {
   if (config.input_type == WII || config.tilt_type == MPU_6050) {
     I2Cdev::TWIInit();
   }
+  //TODO: move tilt stuff to a dedicated guitar handler
   if (config.tilt_type == MPU_6050) {
     mympu_open(15);
   } else if (config.tilt_type == GRAVITY) {
-    IO::pinMode(config.pins.gravity, INPUT);
+    // IO::pinMode(config.pins.gravity, INPUT);
   }
   if (config.tilt_type == GRAVITY || config.input_type == DIRECT) {
     IO::enableADC();
@@ -52,6 +53,6 @@ void InputHandler::processTilt() {
     }
     counter++;
   } else if (config.tilt_type == GRAVITY) {
-    controller.r_y = IO::digitalRead(config.pins.gravity) * 32767;
+    // controller.r_y = IO::digitalRead(config.pins.gravity) * 32767;
   }
 }

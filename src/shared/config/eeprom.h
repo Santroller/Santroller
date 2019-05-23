@@ -4,36 +4,56 @@
 #include <stdint.h>
 #define ATTR_PACKED __attribute__ ((packed))
 typedef struct {
-  uint8_t green;
-  uint8_t red;
-  uint8_t yellow;
-  uint8_t blue;
-  uint8_t orange;
-  uint8_t start;
-  uint8_t select;
-  uint8_t whammy;
-  uint8_t strum_up;
-  uint8_t strum_down;
-  uint8_t dpad_left;
-  uint8_t dpad_right;
-  uint8_t joy_x;
-  uint8_t joy_y;
-  uint8_t gravity;
-} ATTR_PACKED pins_t;
-typedef struct {
-  uint8_t green;
-  uint8_t red;
-  uint8_t yellow;
-  uint8_t blue;
-  uint8_t orange;
   uint8_t up;
   uint8_t down;
   uint8_t left;
   uint8_t right;
   uint8_t start;
-  uint8_t select;
-  uint8_t whammy;
+  uint8_t back;
+  uint8_t left_stick;
+  uint8_t right_stick;
+  uint8_t LB;
+  uint8_t RB;
+  uint8_t home;
+  uint8_t a;
+  uint8_t b;
+  uint8_t x;
+  uint8_t y;
+  uint8_t lt;
+  uint8_t rt;
+  uint8_t l_x;
+  uint8_t l_y;
+  uint8_t r_x;
+  uint8_t r_y;
+} ATTR_PACKED pins_t;
+typedef struct {
+  uint8_t neg;
+  uint8_t pos;
+} ATTR_PACKED analogue_keys_t;
+typedef struct {
+  uint8_t up;
+  uint8_t down;
+  uint8_t left;
+  uint8_t right;
+  uint8_t start;
+  uint8_t back;
+  uint8_t left_stick;
+  uint8_t right_stick;
+  uint8_t LB;
+  uint8_t RB;
+  uint8_t home;
+  uint8_t a;
+  uint8_t b;
+  uint8_t x;
+  uint8_t y;
+  uint8_t lt;
+  uint8_t rt;
+  analogue_keys_t l_x;
+  analogue_keys_t l_y;
+  analogue_keys_t r_x;
+  analogue_keys_t r_y;
 } ATTR_PACKED keys_t;
+
 typedef struct {
   uint8_t version;
   uint8_t output_type;
@@ -47,6 +67,8 @@ typedef struct {
   uint16_t mpu_6050_calibration;
   uint8_t frets_led_mode;
   keys_t keys;
+  int8_t threshold_trigger;
+  int8_t threshold_joy;
   uint32_t cpu_freq;
   uint32_t signature;
 } ATTR_PACKED config_t;

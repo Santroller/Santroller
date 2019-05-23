@@ -219,13 +219,6 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   NumberOfConfigurations : 0x01
 };
 
-const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
-  Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
-  Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
-  VendorCode : REQ_GetOSFeatureDescriptor,
-  Reserved : 0
-};
-
 uint16_t XInputOutput::get_descriptor(const uint8_t DescriptorType,
                                       const uint8_t DescriptorNumber,
                                       const void **const DescriptorAddress,
@@ -242,17 +235,6 @@ uint16_t XInputOutput::get_descriptor(const uint8_t DescriptorType,
     Address = &ConfigurationDescriptor;
     Size = sizeof(ConfigurationDescriptor);
     MemorySpace = MEMSPACE_RAM;
-    break;
-  case DTYPE_String:
-    switch (DescriptorNumber) {
-    case 0xEE:
-      /* A Microsoft-proprietary extension. String address 0xEE is used by
-Windows for "OS Descriptors", which in this case allows us to indicate
-that our device has a Compatible ID to provide. */
-      Address = &OSDescriptorString;
-      Size = pgm_read_byte(&OSDescriptorString.Header.Size);
-      break;
-    }
     break;
   }
   *DescriptorMemorySpace = MemorySpace;

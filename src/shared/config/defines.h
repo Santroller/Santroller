@@ -10,7 +10,6 @@
 #define ARCADE_PAD_SUBTYPE 19
 #define WHEEL_SUBTYPE 2
 #define FLIGHT_STICK_SUBTYPE 4
-#define POLL_RATE 1
 #define MPU_6050 1
 #define GRAVITY 2
 #define WII 1

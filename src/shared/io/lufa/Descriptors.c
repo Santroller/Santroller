@@ -1,4 +1,5 @@
 #include "Descriptors.h"
+#include "wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
@@ -27,6 +28,16 @@ const USB_Descriptor_String_t PROGMEM ProductString =
 const USB_Descriptor_String_t PROGMEM VersionString =
     USB_STRING_DESCRIPTOR(L"1.2");
 
+/* A Microsoft-proprietary extension. String address 0xEE is used by
+Windows for "OS Descriptors", which in this case allows us to indicate
+that our device has a Compatible ID to provide. */
+const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
+  Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
+  Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
+  VendorCode : REQ_GetOSFeatureDescriptor,
+  Reserved : 0
+};
+
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
  * code so that the address and size of a requested descriptor can be given to
@@ -41,8 +52,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   const uint8_t DescriptorType = (wValue >> 8);
   const uint8_t DescriptorNumber = (wValue & 0xFF);
 
-  uint16_t Size =
-      get_descriptor(DescriptorType, DescriptorNumber, DescriptorAddress, DescriptorMemorySpace);
+  uint16_t Size = get_descriptor(DescriptorType, DescriptorNumber,
+                                 DescriptorAddress, DescriptorMemorySpace);
   if (Size) {
     return Size;
   }
@@ -66,6 +77,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     case 0x03:
       Address = &VersionString;
       Size = pgm_read_byte(&VersionString.Header.Size);
+      break;
+    case 0xEE:
+      Address = &OSDescriptorString;
+      Size = pgm_read_byte(&OSDescriptorString.Header.Size);
       break;
     }
     break;

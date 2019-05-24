@@ -3,6 +3,10 @@
 void InputHandler::process() {
   if (input != NULL) {
     input->read_controller(&controller);
+    if (config.map_joy_to_dpad) {
+      CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
+      CHECK_JOY(l_y, XBOX_DPAD_UP, XBOX_DPAD_DOWN);
+    }
     processTilt();
   }
 }
@@ -21,12 +25,8 @@ void InputHandler::init() {
   //TODO: move tilt stuff to a dedicated guitar handler
   if (config.tilt_type == MPU_6050) {
     mympu_open(15);
-  } else if (config.tilt_type == GRAVITY) {
-    // IO::pinMode(config.pins.gravity, INPUT);
-  }
-  if (config.tilt_type == GRAVITY || config.input_type == DIRECT) {
-    IO::enableADC();
-  }
+  } 
+  IO::enableADC();
 }
 
 void InputHandler::processTilt() {
@@ -52,7 +52,5 @@ void InputHandler::processTilt() {
       controller.r_y = z;
     }
     counter++;
-  } else if (config.tilt_type == GRAVITY) {
-    // controller.r_y = IO::digitalRead(config.pins.gravity) * 32767;
-  }
+  } 
 }

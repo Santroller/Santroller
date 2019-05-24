@@ -9,9 +9,12 @@
 class InputHandler {
 public:
   Controller controller;
-  Input* input;
+  Input *input;
   int counter;
   void processTilt();
   void init();
   void process();
 };
+#define CHECK_JOY(joy, neg, pos)                                               \
+  bit_write(controller.joy < -config.threshold_joy, controller.buttons, neg);  \
+  bit_write(controller.joy > config.threshold_joy, controller.buttons, pos);

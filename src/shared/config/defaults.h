@@ -10,6 +10,7 @@
   { 4, 5, 7, 6, 8, 16, 9, 18, 14, 15, 10, 21, 19, 20, 11 }
 // Set this if you have inverted your frets to make it easier to wire leds inline
 #define FRETS_LED 0
+#define MAP_JOY_TO_DPAD 1
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.

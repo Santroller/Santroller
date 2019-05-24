@@ -66,6 +66,7 @@ typedef struct {
   uint16_t whammy_calibration;
   uint16_t mpu_6050_calibration;
   uint8_t frets_led_mode;
+  uint8_t map_joy_to_dpad;
   keys_t keys;
   int8_t threshold_trigger;
   int8_t threshold_joy;

@@ -22,8 +22,6 @@ x
 y
 
 Keyboard Bindings:
-//Add a threshold for keys to trigger
-//Have seperate trigger and joy threshold
 l_x - left,right
 l_y - up,down
 r_x - ;
@@ -52,6 +50,6 @@ b - red - s
 y - yellow - j
 x - blue - k
 LB - orange - l
-select - starpower - h
+back - select - h
 r_x - whammy - ;
 start - return - enter

@@ -32,11 +32,7 @@ int main() {
   sei();
   while (true) {
     controller.process();
-    if (bit_is_set(UCSR0A, RXC0)) {
-      if (UDR0 == 0xEF) {
-        wdt_enable(WDTO_120MS);
-      }
-    }
+    bit_set(UCSR0B, UDRIE0);
   }
 }
 ISR(USART_UDRE_vect) {
@@ -48,5 +44,6 @@ ISR(USART_UDRE_vect) {
   controller_index++;
   if (controller_index >= sizeof(Controller) + 2) {
     controller_index = 0;
+    bit_clear(UCSR0B, UDRIE0);
   }
 }

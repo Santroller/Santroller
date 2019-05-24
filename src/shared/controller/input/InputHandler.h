@@ -6,6 +6,15 @@
 #include "../input/DirectInput.h"
 #include "../input/WiiExtensionInput.h"
 #include "Input.h"
+
+#define CHECK_JOY(joy, neg, pos)                                               \
+  if (controller.joy < -(int)config.threshold_joy) {                           \
+    bit_set(controller.buttons, neg);                                          \
+  }                                                                            \
+  if (controller.joy > (int)config.threshold_joy) {                            \
+    bit_set(controller.buttons, pos);                                          \
+  }
+
 class InputHandler {
 public:
   Controller controller;
@@ -15,6 +24,3 @@ public:
   void init();
   void process();
 };
-#define CHECK_JOY(joy, neg, pos)                                               \
-  bit_write(controller.joy < -config.threshold_joy, controller.buttons, neg);  \
-  bit_write(controller.joy > config.threshold_joy, controller.buttons, pos);

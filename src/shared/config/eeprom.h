@@ -67,9 +67,9 @@ typedef struct {
   uint16_t mpu_6050_calibration;
   uint8_t frets_led_mode;
   uint8_t map_joy_to_dpad;
+  uint16_t threshold_trigger;
+  uint16_t threshold_joy;
   keys_t keys;
-  int8_t threshold_trigger;
-  int8_t threshold_joy;
   uint32_t cpu_freq;
   uint32_t signature;
 } ATTR_PACKED config_t;

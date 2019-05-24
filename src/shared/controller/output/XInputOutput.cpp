@@ -150,8 +150,8 @@ void XInputOutput::update(Controller controller) {
     // work out what offset that is
     auto start = offsetof(USB_JoystickReport_Data_t, digital_buttons_1);
     auto casted = (uint8_t *)&controller;
-    auto casted_state = (uint8_t *)&gamepad_state + start;
-    memcpy(casted_state, casted, sizeof(Controller));
+    auto casted_state = (uint8_t *)(&gamepad_state) + start;
+    memcpy(casted_state, casted, sizeof(controller));
     /* Write Joystick Report Data */
     Endpoint_Write_Stream_LE(&gamepad_state, 20, NULL);
 

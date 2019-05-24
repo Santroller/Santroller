@@ -1,4 +1,5 @@
 #pragma once
+#include "../../util.h"
 #include "HidOutput.h"
 #include "Output.h"
 #include <LUFA/Drivers/USB/USB.h>
@@ -6,6 +7,19 @@
 #include <stdint.h>
 #define SIMULTANEOUS_KEYS 6
 
+#define CHECK_JOY(joy)                                                         \
+  if (config.keys.joy.neg && controller.joy < -(int)config.threshold_joy) {    \
+    keys[usedKeys++] = config.keys.joy.neg;                                    \
+  }                                                                            \
+  if (config.keys.joy.pos && controller.joy > (int)config.threshold_joy) {     \
+    keys[usedKeys++] = config.keys.joy.pos;                                    \
+  }
+
+#define CHECK_TRIGGER(trigger)                                                 \
+  if (config.keys.trigger &&                                                   \
+      controller.trigger > (int)config.threshold_trigger) {                    \
+    keys[usedKeys++] = config.keys.trigger;                                    \
+  }
 extern "C" {
 extern uint8_t keys[SIMULTANEOUS_KEYS];
 extern uint8_t usedKeys;
@@ -24,16 +38,3 @@ public:
                               const void **const DescriptorAddress,
                               uint8_t *const DescriptorMemorySpace);
 };
-
-#define CHECK_JOY(joy)                                                         \
-  if (config.keys.joy.neg && controller.joy < -config.threshold_joy) {         \
-    keys[usedKeys++] = config.keys.joy.neg;                                    \
-  }                                                                            \
-  if (config.keys.joy.pos && controller.joy > config.threshold_joy) {          \
-    keys[usedKeys++] = config.keys.joy.pos;                                    \
-  }
-
-#define CHECK_TRIGGER(trigger)                                                 \
-  if (config.keys.trigger && controller.trigger > config.threshold_trigger) {  \
-    keys[usedKeys++] = config.keys.trigger;                                    \
-  }

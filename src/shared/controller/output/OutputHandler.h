@@ -6,6 +6,7 @@
 #include "KeyboardOutput.h"
 #include "GamepadOutput.h"
 #include "../../util.h"
+#include "../../io/bootloader/Bootloader.h"
 class OutputHandler {
 public:
   void process(Controller *controller);

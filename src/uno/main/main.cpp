@@ -50,5 +50,3 @@ ISR(USART_UDRE_vect) {
     controller_index = 0;
   }
 }
-
-extern "C" void before_reboot() {}

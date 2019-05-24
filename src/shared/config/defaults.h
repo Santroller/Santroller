@@ -2,10 +2,13 @@
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR MPU_6050
-#define DEVICE_TYPE DIRECT 
+#define DEVICE_TYPE WII 
 #define OUTPUT_TYPE XINPUT
 #define SUB_TYPE GUITAR_SUBTYPE
 #define POLL_RATE 1
+//Thresholds
+#define TRIGGER_THRESHOLD 12767
+#define JOY_THRESHOLD 12767
 #define PINS                                                                   \
   { 4, 5, 7, 6, 8, 16, 9, 18, 14, 15, 10, 21, 19, 20, 11 }
 // Set this if you have inverted your frets to make it easier to wire leds inline

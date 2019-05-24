@@ -9,7 +9,7 @@ static uint8_t PrevHIDReport[sizeof(USB_GamepadReport_Data_t)];
  * send, and what it may be sent back from the host. Refer to the HID
  * specification for more details on HID report descriptors.
  */
-#define GAMEPAD_BTN_COUNT 14
+#define GAMEPAD_BTN_COUNT 15
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM HIDReport_Datatype[] = {
     HID_RI_USAGE_PAGE(8, 0x01),

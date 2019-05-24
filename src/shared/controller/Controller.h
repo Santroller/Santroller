@@ -1,6 +1,4 @@
 #pragma once
-#include "../io/bootloader/Bootloader.h"
-#include "../util.h"
 #include <stdint.h>
 
 #define XBOX_DPAD_UP 0
@@ -15,12 +13,12 @@
 #define XBOX_LB 8
 #define XBOX_RB 9
 #define XBOX_HOME 10
-#define XBOX_A 11
-#define XBOX_B 12
-#define XBOX_X 13
-#define XBOX_Y 14
+#define XBOX_A 12
+#define XBOX_B 13
+#define XBOX_X 14
+#define XBOX_Y 15
 
-#define XBOX_BTN_COUNT 14
+#define XBOX_BTN_COUNT 15
 
 #ifdef __cplusplus
 class Controller {

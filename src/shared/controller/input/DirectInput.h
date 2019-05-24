@@ -1,5 +1,6 @@
 #include "../../config/eeprom.h"
 #include "../../io/pins/Pins.h"
+#include "../../util.h"
 #include "../Controller.h"
 #include "Input.h"
 #include <avr/interrupt.h>

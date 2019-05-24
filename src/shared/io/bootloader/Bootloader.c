@@ -8,7 +8,6 @@
 #  define MAGIC_KEY_POS (RAMEND - 1)
 #endif
 #define MAGIC_KEY 0x7777
-extern void before_reboot(void);
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)MAGIC_KEY_POS;
 uint16_t bootKeyVal;
 void reboot(void) {

@@ -15,4 +15,3 @@ int main() {
     out.process(&controller.controller);
   }
 }
-extern "C" void before_reboot() {}

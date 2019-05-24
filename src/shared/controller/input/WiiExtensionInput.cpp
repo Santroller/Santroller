@@ -1,76 +1,64 @@
 #include "WiiExtensionInput.h"
+uint8_t classic_bindings[16] = {
+    INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
+    XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
+    XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
+    XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
+uint16_t WiiExtension::read_ext_id() {
+  uint8_t data[6];
+  I2Cdev::readBytes(I2C_ADDR, 0xFA, 6, data);
+  // 0100 a420 0101 -> #1#######101
+  return ((data[0] >> 4) & 0xf) << 12 | (data[4] & 0xf) << 8 | data[5];
+}
+void WiiExtension::init_controller() {
+  I2Cdev::writeByte(I2C_ADDR, 0xF0, 0x55);
+  I2Cdev::writeByte(I2C_ADDR, 0xFB, 0x00);
+  id = read_ext_id();
+  if (id == GUITAR || id == CLASSIC || id == CLASSIC_PRO || id == GUITAR_2) {
+    // Enable high-res mode
+    I2Cdev::writeByte(I2C_ADDR, 0xFE, 0x03);
+  }
+}
+boolean verifyData(const uint8_t *dataIn, uint8_t dataSize) {
+  byte orCheck = 0x00;  // Check if data is zeroed (bad connection)
+  byte andCheck = 0xFF; // Check if data is maxed (bad init)
 
-WiiExtension::WiiExtension()
-    : nchuk(port), classic(port), dj(port), guitar(port), drum(port) {}
-void WiiExtension::init() {  }
-void WiiExtension::read_controller(Controller *data) {
-  if (!port.update()) {
-    port.connect();
+  for (int i = 0; i < dataSize; i++) {
+    orCheck |= dataIn[i];
+    andCheck &= dataIn[i];
+  }
+
+  if (orCheck == 0x00 || andCheck == 0xFF) {
+    return false; // No data or bad data
+  }
+
+  return true;
+}
+void WiiExtension::init() {}
+void WiiExtension::read_controller(Controller *controller) {
+  uint8_t data[8];
+  I2Cdev::readBytes(I2C_ADDR, 0x00, 8, data);
+  if (!verifyData(data, 8)) {
+    init_controller();
     return;
   }
-  switch (port.getControllerType()) {
-  case (ExtensionType::DJTurntableController):
-    break;
-  case (ExtensionType::Nunchuk):
-    bit_write(nchuk.buttonC(), data->buttons, XBOX_A);
-    bit_write(nchuk.buttonZ(), data->buttons, XBOX_B);
-    data->l_x = (nchuk.joyX() - 128) * 256;
-    data->l_y = (nchuk.joyY() - 128) * 256;
-    data->r_x = (nchuk.rollAngle()) * 182;
-    data->r_y = (nchuk.pitchAngle()) * 182;
-    break;
-  case (ExtensionType::DrumController):
-    data->l_x = (drum.joyX() - 32) * 2048;
-    data->l_y = (drum.joyY() - 32) * 2048;
-    bit_write(drum.drumGreen(), data->buttons, XBOX_A);
-    bit_write(drum.drumRed(), data->buttons, XBOX_B);
-    bit_write(drum.cymbalYellow(), data->buttons, XBOX_Y);
-    bit_write(drum.drumBlue(), data->buttons, XBOX_X);
-    bit_write(drum.cymbalOrange(), data->buttons, XBOX_LB);
-    bit_write(drum.buttonPlus(), data->buttons, XBOX_START);
-    bit_write(drum.buttonMinus(), data->buttons, XBOX_BACK);
-    bit_write(drum.bassPedal(), data->buttons, XBOX_RB);
-    break;
-  case (ExtensionType::GuitarController):
-    data->r_x = (guitar.whammyBar() - 14) * 2048;
-    if (guitar.whammyBar() <= 18) {
-      data->r_x = 0;
-    }
-    bit_write(guitar.fretGreen(), data->buttons, XBOX_A);
-    bit_write(guitar.fretRed(), data->buttons, XBOX_B);
-    bit_write(guitar.fretYellow(), data->buttons, XBOX_Y);
-    bit_write(guitar.fretBlue(), data->buttons, XBOX_X);
-    bit_write(guitar.fretOrange(), data->buttons, XBOX_LB);
-    bit_write(guitar.strumUp() || guitar.joyY() > 40, data->buttons, XBOX_DPAD_UP);
-    bit_write(guitar.strumDown() || guitar.joyY() < 20, data->buttons, XBOX_DPAD_DOWN);
-    bit_write(guitar.joyX() < 20, data->buttons, XBOX_DPAD_LEFT);
-    bit_write(guitar.joyX() > 40, data->buttons, XBOX_DPAD_RIGHT);
-    bit_write(guitar.buttonPlus(), data->buttons, XBOX_START);
-    bit_write(guitar.buttonMinus(), data->buttons, XBOX_BACK);
-    break;
+  controller->l_x = (data[0] - 0x80) * 256;
+  controller->l_y = (data[2] - 0x80) * 256;
 
-  case (ExtensionType::ClassicController):
-    data->l_x = (classic.leftJoyX() - 32) * 1024;
-    data->l_y = (classic.leftJoyY() - 32) * 1024;
-    data->r_x = (classic.rightJoyX() - 16) * 2048;
-    data->r_y = (classic.rightJoyY() - 16) * 2048;
-    data->lt = (classic.triggerL() - 16) * 16;
-    data->rt = (classic.triggerR() - 16) * 16;
-    bit_write(classic.dpadUp(), data->buttons, XBOX_DPAD_UP);
-    bit_write(classic.dpadDown(), data->buttons, XBOX_DPAD_DOWN);
-    bit_write(classic.dpadLeft(), data->buttons, XBOX_DPAD_LEFT);
-    bit_write(classic.dpadRight(), data->buttons, XBOX_DPAD_RIGHT);
-    bit_write(classic.buttonPlus(), data->buttons, XBOX_START);
-    bit_write(classic.buttonMinus(), data->buttons, XBOX_BACK);
-    bit_write(classic.buttonHome(), data->buttons, XBOX_HOME);
-    bit_write(classic.buttonA(), data->buttons, XBOX_A);
-    bit_write(classic.buttonB(), data->buttons, XBOX_B);
-    bit_write(classic.buttonY(), data->buttons, XBOX_Y);
-    bit_write(classic.buttonX(), data->buttons, XBOX_X);
-    bit_write(classic.buttonZL(), data->buttons, XBOX_LB);
-    bit_write(classic.buttonZR(), data->buttons, XBOX_RB);
-    break;
-  default:
-    break;
+  if (id == GUITAR || id == GUITAR_2) {
+    int32_t whammy = (data[5] - 0x80) * 500L;
+    controller->r_x = constrain(whammy, 0, 32767);
+  } else {
+    controller->r_x = (data[1] - 0x80) * 256;
+    controller->r_y = (data[3] - 0x80) * 256;
+    controller->lt = data[4];
+    controller->rt = data[5];
+  }
+  uint16_t buttons = data[6] | (data[7] << 8);
+  for (uint8_t i = 2; i < sizeof(classic_bindings); i++) {
+    auto idx = classic_bindings[i];
+    if (idx == INVALID_PIN)
+      continue;
+    bit_write(!bit_check(buttons, i), controller->buttons, idx);
   }
 }

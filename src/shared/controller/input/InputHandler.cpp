@@ -50,7 +50,7 @@ void InputHandler::processTilt() {
       }
       controller.r_y = z;
     }
-    controller.r_x = rand() * 100;
+    // controller.r_x = rand() * 100;
   }
 }
 

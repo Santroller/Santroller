@@ -21,36 +21,37 @@ void InputHandler::init() {
   input->init();
   if (config.input_type == WII || config.tilt_type == MPU_6050) {
     I2Cdev::TWIInit();
+    _delay_ms(500);
   }
-  //TODO: move tilt stuff to a dedicated guitar handler
+  IO::enableADC();
+  // TODO: move tilt stuff to a dedicated guitar handler
   if (config.tilt_type == MPU_6050) {
     mympu_open(15);
-  } 
-  IO::enableADC();
+    EICRA = 0;
+    bit_set(EIMSK, INT0);
+    IO::pinMode(2, INPUT_PULLUP);
+  }
 }
 
+volatile bool ready = false;
 void InputHandler::processTilt() {
   if (config.tilt_type == MPU_6050) {
-    if (counter % 20 == 0) {
-      double z;
+    if (ready) {
+      ready = false;
       mympu_update();
-      z = (mympu.ypr[2] * (32767 / M_PI));
-      z += config.mpu_6050_calibration;
-      if (z > 32767) {
-        z = 0;
-      }
-      z = z * 2;
+      int32_t z = (mympu.ypr[2] * (65535 / M_PI));
       if (z > 32767) {
         z = 65535 - z;
       }
       z = pow(z, 1.1f);
-      z = constrain(z, -32767, 32767);
-
+      z = constrain(z, 0, 32767);
       if (isnan(z)) {
         z = 0;
       }
       controller.r_y = z;
     }
-    counter++;
-  } 
+    controller.r_x = rand() * 100;
+  }
 }
+
+ISR(INT0_vect) { ready = true; }

@@ -33,6 +33,7 @@ extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 #define OUTPUT 0
 #define INPUT 1
 #define INPUT_PULLUP 2
+#define INTERRUPT 3
 class IO {
 public:
   static int digitalRead(uint8_t pin);

@@ -6,17 +6,20 @@ uint8_t classic_bindings[16] = {
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t WiiExtension::read_ext_id() {
   uint8_t data[6];
-  I2Cdev::readBytes(I2C_ADDR, 0xFA, 6, data);
+  I2Cdev::readBytes(I2C_ADDR, 0xFA, 6, data, true);
   // 0100 a420 0101 -> #1#######101
   return ((data[0] >> 4) & 0xf) << 12 | (data[4] & 0xf) << 8 | data[5];
 }
 void WiiExtension::init_controller() {
   I2Cdev::writeByte(I2C_ADDR, 0xF0, 0x55);
+    _delay_us(10);
   I2Cdev::writeByte(I2C_ADDR, 0xFB, 0x00);
+    _delay_us(10);
   id = read_ext_id();
   if (id == GUITAR || id == CLASSIC || id == CLASSIC_PRO || id == GUITAR_2) {
     // Enable high-res mode
     I2Cdev::writeByte(I2C_ADDR, 0xFE, 0x03);
+    _delay_us(10);
   }
 }
 boolean verifyData(const uint8_t *dataIn, uint8_t dataSize) {
@@ -37,7 +40,7 @@ boolean verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 void WiiExtension::init() {}
 void WiiExtension::read_controller(Controller *controller) {
   uint8_t data[8];
-  I2Cdev::readBytes(I2C_ADDR, 0x00, 8, data);
+  I2Cdev::readBytes(I2C_ADDR, 0x00, 8, data, true);
   if (!verifyData(data, 8)) {
     init_controller();
     return;

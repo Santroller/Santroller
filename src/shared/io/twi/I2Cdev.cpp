@@ -6,8 +6,6 @@ int I2Cdev::RXBuffIndex;
 volatile int I2Cdev::TXBuffIndex;
 volatile uint8_t I2Cdev::TWIReceiveBuffer[RXMAXBUFLEN];
 uint8_t I2Cdev::TWITransmitBuffer[TXMAXBUFLEN];
-/** Default constructor.
- */
 I2Cdev::I2Cdev() {}
 void I2Cdev::TWIInit() {
   TWIInfo.mode = Ready;
@@ -45,9 +43,12 @@ uint8_t I2Cdev::TWIWriteRegisterMultiple(uint8_t device, uint8_t addr,
   return 1;
 }
 uint8_t I2Cdev::TWIReadRegister(uint8_t device, uint8_t address,
-                                uint8_t bytesToRead) {
+                                uint8_t bytesToRead, bool isWii) {
   uint8_t msg[] = {(uint8_t)((device << 1) & 0xFE), address};
   TWITransmitData(msg, 2, 0);
+  if (isWii) {
+    _delay_us(200);
+  }
   WAIT_TWI;
   TWIReadData(device, bytesToRead, 0);
   WAIT_TWI;
@@ -115,12 +116,11 @@ uint8_t I2Cdev::TWIReadData(uint8_t TWIaddr, uint8_t bytesToRead,
  * to use default class value in I2Cdev::readTimeout)
  * @return Status of read operation (true = success)
  */
-int8_t I2Cdev::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data,
-                        uint16_t timeout) {
-  return readBytes(devAddr, regAddr, 1, data, timeout);
+int8_t I2Cdev::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, bool isWii) {
+  return readBytes(devAddr, regAddr, 1, data, isWii);
 }
 int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
-  return I2Cdev::readBytes(devAddr, regAddr, length, data, 0);
+  return I2Cdev::readBytes(devAddr, regAddr, length, data, false);
 }
 /** Read multiple bytes from an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -132,8 +132,8 @@ int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data
  * @return Number of bytes read (-1 indicates failure)
  */
 int8_t I2Cdev::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
-                         uint8_t *data, uint16_t timeout) {
-  TWIReadRegister(devAddr, regAddr, length);
+                         uint8_t *data, bool isWii) {
+  TWIReadRegister(devAddr, regAddr, length, isWii);
   for (int i = 0; i < length; i++) {
     data[i] = TWIReceiveBuffer[i];
   }
@@ -278,8 +278,4 @@ void I2Cdev::interrupt() {
     break;
   }
 }
-/** Default timeout value for read operations.
- * Set this to 0 to disable timeout detection.
- */
-uint16_t I2Cdev::readTimeout = I2CDEV_DEFAULT_READ_TIMEOUT;
 ISR(TWI_vect) { I2Cdev::interrupt(); }

@@ -68,59 +68,57 @@ int8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
 #ifdef __cplusplus
 }
 
-// 1000ms default read timeout (modify with "I2Cdev::readTimeout = [ms];")
-#define I2CDEV_DEFAULT_READ_TIMEOUT 1000
 // TWI bit rate
-#define TWI_FREQ 350000
+#  define TWI_FREQ 350000
 // Get TWI status
-#define TWI_STATUS (TWSR & 0xF8)
+#  define TWI_STATUS (TWSR & 0xF8)
 // Transmit buffer length
-#define TXMAXBUFLEN 32
+#  define TXMAXBUFLEN 32
 // Receive buffer length
-#define RXMAXBUFLEN 32
-#define WAIT_TWI                                                               \
-  while (!I2Cdev::isTWIReady()) {                                              \
-    _delay_us(200);                                                            \
-  }
+#  define RXMAXBUFLEN 32
+#  define WAIT_TWI                                                             \
+    while (!I2Cdev::isTWIReady()) {                                            \
+      __asm__ __volatile__("nop");                                             \
+    }
 // TWI Status Codes
-#define TWI_START_SENT 0x08     // Start sent
-#define TWI_REP_START_SENT 0x10 // Repeated Start sent
+#  define TWI_START_SENT 0x08     // Start sent
+#  define TWI_REP_START_SENT 0x10 // Repeated Start sent
 // Master Transmitter Mode
-#define TWI_MT_SLAW_ACK 0x18  // SLA+W sent and ACK received
-#define TWI_MT_SLAW_NACK 0x20 // SLA+W sent and NACK received
-#define TWI_MT_DATA_ACK 0x28  // DATA sent and ACK received
-#define TWI_MT_DATA_NACK 0x30 // DATA sent and NACK received
+#  define TWI_MT_SLAW_ACK 0x18  // SLA+W sent and ACK received
+#  define TWI_MT_SLAW_NACK 0x20 // SLA+W sent and NACK received
+#  define TWI_MT_DATA_ACK 0x28  // DATA sent and ACK received
+#  define TWI_MT_DATA_NACK 0x30 // DATA sent and NACK received
 // Master Receiver Mode
-#define TWI_MR_SLAR_ACK 0x40  // SLA+R sent, ACK received
-#define TWI_MR_SLAR_NACK 0x48 // SLA+R sent, NACK received
-#define TWI_MR_DATA_ACK 0x50  // Data received, ACK returned
-#define TWI_MR_DATA_NACK 0x58 // Data received, NACK returned
+#  define TWI_MR_SLAR_ACK 0x40  // SLA+R sent, ACK received
+#  define TWI_MR_SLAR_NACK 0x48 // SLA+R sent, NACK received
+#  define TWI_MR_DATA_ACK 0x50  // Data received, ACK returned
+#  define TWI_MR_DATA_NACK 0x58 // Data received, NACK returned
 
 // Miscellaneous States
-#define TWI_LOST_ARBIT 0x38       // Arbitration has been lost
-#define TWI_NO_RELEVANT_INFO 0xF8 // No relevant information available
-#define TWI_ILLEGAL_START_STOP                                                 \
-  0x00 // Illegal START or STOP condition has been detected
-#define TWI_SUCCESS 0xFF
+#  define TWI_LOST_ARBIT 0x38       // Arbitration has been lost
+#  define TWI_NO_RELEVANT_INFO 0xF8 // No relevant information available
+#  define TWI_ILLEGAL_START_STOP                                               \
+    0x00 // Illegal START or STOP condition has been detected
+#  define TWI_SUCCESS 0xFF
 // Successful transfer, this state is impossible from TWSR as bit2 is 0 and read
 // only
 
-#define TWISendStart()                                                         \
-  (TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN) | (1 << TWIE))
+#  define TWISendStart()                                                       \
+    (TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN) | (1 << TWIE))
 // Send the START signal, enable interrupts and TWI, clear TWINT flag to resume
 // transfer.
-#define TWISendStop()                                                          \
-  (TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN) | (1 << TWIE))
+#  define TWISendStop()                                                        \
+    (TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN) | (1 << TWIE))
 // Send the STOP signal, enable interrupts and TWI, clear TWINT flag.
-#define TWISendTransmit() (TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWIE))
+#  define TWISendTransmit() (TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWIE))
 // Used to resume a transfer, clear TWINT and ensure that  TWI and interrupts
 // are enabled.
-#define TWISendACK()                                                           \
-  (TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWIE) | (1 << TWEA))
+#  define TWISendACK()                                                         \
+    (TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWIE) | (1 << TWEA))
 // FOR MR mode. Resume a transfer, ensure that TWI and  interrupts are enabled
 // and respond with an ACK if the  device is addressed as a slave or after it
 // receives a byte
-#define TWISendNACK() (TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWIE))
+#  define TWISendNACK() (TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWIE))
 // FOR MR mode. Resume a transfer, ensure that TWI and // interrupts are enabled
 // but DO NOT respond with an ACK  if the device is addressed as a slave or
 // after it receives a byte.
@@ -163,18 +161,16 @@ public:
   static uint8_t TWIWriteRegisterMultiple(uint8_t device, uint8_t address,
                                           uint8_t *value, uint8_t length);
   static uint8_t TWIReadRegister(uint8_t device, uint8_t address,
-                                 uint8_t bytesToRead);
+                                 uint8_t bytesToRead, bool isWii = false);
   static void interrupt();
   static int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data,
-                         uint16_t timeout = I2Cdev::readTimeout);
+                         bool isWii = false);
   static int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
-                          uint8_t *data,
-                          uint16_t timeout = I2Cdev::readTimeout);
+                          uint8_t *data, bool isWii = false);
 
   static bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data);
   static bool writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
                          uint8_t *data);
-  static uint16_t readTimeout;
 };
 
 #endif

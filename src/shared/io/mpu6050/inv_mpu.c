@@ -614,7 +614,7 @@ int8_t mpu_init(struct int_param_s *int_param) {
   data[0] = BIT_RESET;
   if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
     return -1;
-  delay_ms(100);
+  delay_ms(500);
 
   /* Wake up chip. */
   data[0] = 0x00;

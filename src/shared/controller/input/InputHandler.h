@@ -1,11 +1,10 @@
 #include "../../config/eeprom.h"
-#include "../../io/mpu6050/inv_mpu.h"
-#include "../../io/mpu6050/mpu.h"
 #include "../../io/pins/Pins.h"
 #include "../Controller.h"
 #include "../input/DirectInput.h"
 #include "../input/WiiExtensionInput.h"
 #include "Input.h"
+#include "GuitarHandler.h"
 
 #define CHECK_JOY(joy, neg, pos)                                               \
   if (controller.joy < -(int)config.threshold_joy) {                           \
@@ -17,6 +16,7 @@
 
 class InputHandler {
 public:
+  GuitarHandler guitar;
   Controller controller;
   Input *input;
   int counter;

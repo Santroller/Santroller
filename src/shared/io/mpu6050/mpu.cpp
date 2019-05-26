@@ -27,17 +27,16 @@ static unsigned char fifoCount;
 int mympu_open(unsigned int rate) {
 
   ret = mpu_init(NULL);
-  ret = mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
-  ret = mpu_set_gyro_fsr(FSR);
-  ret = mpu_set_accel_fsr(2);
-  mpu_get_power_state((unsigned char *)&ret);
-  ret = mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL);
-  ret = dmp_load_motion_driver_firmware();
-  ret = dmp_set_fifo_rate(rate);
-  ret = mpu_set_dmp_state(1);
-  ret = dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
-  ret = dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);
-  return 0;
+  ret += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
+  ret += mpu_set_gyro_fsr(FSR);
+  ret += mpu_set_accel_fsr(2);
+  ret += mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL);
+  ret += dmp_load_motion_driver_firmware();
+  ret += dmp_set_fifo_rate(rate);
+  ret += mpu_set_dmp_state(1);
+  ret += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
+  ret += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);
+  return ret;
 }
 
 static inline float rad2deg(float rad) {

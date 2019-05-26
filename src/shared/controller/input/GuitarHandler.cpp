@@ -1,5 +1,6 @@
 #include "GuitarHandler.h"
 #include <stdlib.h>
+#include <util/delay.h>
 bool GuitarHandler::isGuitar() {
   return config.subtype == GUITAR_SUBTYPE ||
          config.subtype == GUITAR_BASS_SUBTYPE ||
@@ -7,7 +8,10 @@ bool GuitarHandler::isGuitar() {
 }
 void GuitarHandler::init() {
   if (config.tilt_type == MPU_6050) {
-    mympu_open(15);
+    _delay_ms(1000);
+    while (mympu_open(15) != 0) {
+
+    }
     EN_PCI(MPU_6050_INTERRUPT_PIN);
   } else if (config.tilt_type == GRAVITY) {
     IO::pinMode(config.pins.r_y, INPUT_PULLUP);

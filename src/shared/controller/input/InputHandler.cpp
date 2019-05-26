@@ -22,7 +22,6 @@ void InputHandler::init() {
   input->init();
   if (config.input_type == WII || config.tilt_type == MPU_6050) {
     I2Cdev::TWIInit();
-    _delay_ms(500);
   }
   IO::enableADC();
   guitar.init();

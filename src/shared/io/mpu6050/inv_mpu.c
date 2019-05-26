@@ -1475,15 +1475,10 @@ int8_t mpu_configure_fifo(unsigned char sensors) {
 
 /**
  *  @brief      Get current power state.
- *  @param[in]  power_on    1 if turned on, 0 if suspended.
- *  @return     0 if successful.
+ *  @return     1 if turned on, 0 if suspended.
  */
 int8_t mpu_get_power_state(unsigned char *power_on) {
-  if (st.chip_cfg.sensors)
-    power_on[0] = 1;
-  else
-    power_on[0] = 0;
-  return 0;
+  return st.chip_cfg.sensors;
 }
 
 /**

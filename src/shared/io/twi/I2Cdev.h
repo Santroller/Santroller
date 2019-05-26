@@ -69,7 +69,7 @@ int8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
 }
 
 // TWI bit rate
-#  define TWI_FREQ 350000
+#  define TWI_FREQ 300000
 // Get TWI status
 #  define TWI_STATUS (TWSR & 0xF8)
 // Transmit buffer length
@@ -78,7 +78,7 @@ int8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
 #  define RXMAXBUFLEN 32
 #  define WAIT_TWI                                                             \
     while (!I2Cdev::isTWIReady()) {                                            \
-      __asm__ __volatile__("nop");                                             \
+      _delay_us(1);                                                            \
     }
 // TWI Status Codes
 #  define TWI_START_SENT 0x08     // Start sent

@@ -1,4 +1,5 @@
 #include "GuitarHandler.h"
+#include <stdlib.h>
 bool GuitarHandler::isGuitar() {
   return config.subtype == GUITAR_SUBTYPE ||
          config.subtype == GUITAR_BASS_SUBTYPE ||
@@ -19,7 +20,10 @@ void GuitarHandler::handle(Controller *controller) {
     if (ready) {
       ready = false;
       mympu_update();
-      int32_t z = (mympu.ypr[2] * (65535 / M_PI));
+      int32_t z = (mympu.ypr[config.mpu_6050_orientation / 2] * (65535 / M_PI));
+      if (config.mpu_6050_orientation & 1) {
+        z = -z;
+      }
       if (z > 32767) {
         z = 65535 - z;
       }
@@ -30,15 +34,16 @@ void GuitarHandler::handle(Controller *controller) {
       }
       controller->r_y = z;
     }
-    // controller.r_x = rand() * 100;
   } else if (config.tilt_type == GRAVITY) {
     controller->r_y = IO::digitalRead(config.pins.r_y) * 32767;
   }
-  //Whammy needs to be scaled so that it is picked up
-  int32_t whammy = controller->r_x * 2;
-  controller->r_x = constrain(whammy, 0, 32767);;
+  // Whammy needs to be scaled so that it is picked up
+  int32_t whammy = controller->r_x * 2L;
+  controller->r_x = constrain(whammy, 0, 32767);
 }
 
 ISR(PCINT0_vect) { ready = true; }
+#if defined(PCINT1_vect)
 ISR(PCINT1_vect) { ready = true; }
 ISR(PCINT2_vect) { ready = true; }
+#endif

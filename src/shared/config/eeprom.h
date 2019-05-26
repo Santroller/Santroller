@@ -71,8 +71,7 @@ typedef struct {
   uint8_t subtype;
   uint8_t pollrate;
   pins_t pins;
-  uint16_t whammy_calibration;
-  uint16_t mpu_6050_calibration;
+  uint16_t mpu_6050_orientation;
   uint8_t frets_led_mode;
   uint8_t map_joy_to_dpad;
   axis_invert_t inversions;

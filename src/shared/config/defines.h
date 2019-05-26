@@ -31,3 +31,11 @@
 #define ARCADE_PAD_SUBTYPE 19
 
 #define INVALID_PIN 0xFF
+
+//Orientations for gyros
+#define Z_P 0
+#define Z_N 1
+#define Y_P 2
+#define Y_N 3
+#define X_P 4
+#define X_N 5

@@ -16,7 +16,7 @@
         INVALID_PIN, 19, 20, 18, INVALID_PIN                                   \
   }
 #define INVERSIONS                                                             \
-  { 0, 0, 0, 0, 1, 0 }
+  { 0, 0, 0, 0, 0, 0 }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
 #define FRETS_LED 1
@@ -29,8 +29,8 @@
 #define KEYS                                                                   \
   { 0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51 }
 
-// Set this value to define where 0 is on your mpu_6050.
-#define MPU_6050_START 35000
+// Set this value to define the orientation of your mpu6050
+#define MPU_6050_ORIENTATION X_N
 #if defined(__AVR_ATmega328P__)
 #  define MPU_6050_INTERRUPT_PIN 2
 #elif defined(__AVR_ATmega32U4__)

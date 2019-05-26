@@ -48,24 +48,24 @@ static inline float rad2deg(float rad) {
 static float test, sqy, sqz, sqw;
 static void quaternionToEuler(const struct s_quat *q, float *x, float *y,
                               float *z) {
-  // sqy = q->y * q->y;
 
   test = q->x * q->z - q->w * q->y;
 
   if (test > 0.5f - EPSILON) {
     *x = 2.f * atan2(q->y, q->w);
-    // *y = PI_2;
-    // *z = 0;
+    *y = PI_2;
+    *z = 0;
   } else if (test < -0.5f + EPSILON) {
     *x = -2.f * atan2(q->y, q->w);
-    // *y = -PI_2;
-    // *z = 0;
+    *y = -PI_2;
+    *z = 0;
   } else {
-  sqz = q->z * q->z;
-  sqw = q->w * q->w;
+    sqy = q->y * q->y;
+    sqz = q->z * q->z;
+    sqw = q->w * q->w;
     *x = atan2(2.f * (q->x * q->w + q->y * q->z), 1.f - 2.f * (sqz + sqw));
-    // *y = asin(2.f * test);
-    // *z = atan2(2.f * (q->x * q->y - q->z * q->w), 1.f - 2.f * (sqy + sqz));
+    *y = asin(2.f * test);
+    *z = atan2(2.f * (q->x * q->y - q->z * q->w), 1.f - 2.f * (sqy + sqz));
   }
 }
 

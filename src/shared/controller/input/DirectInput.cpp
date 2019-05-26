@@ -2,8 +2,10 @@
 void Direct::read_controller(Controller *controller) {
   auto pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
-    auto eq = i < XBOX_LB ? false : config.frets_led_mode;
-    bit_write(IO::digitalRead(pins[i]) == eq, controller->buttons, i);
+    if (pins[i] != INVALID_PIN) {
+      auto eq = i < XBOX_LB ? false : config.frets_led_mode;
+      bit_write(IO::digitalRead(pins[i]) == eq, controller->buttons, i);
+    }
   }
   READ_JOY(l_x);
   READ_JOY(l_y);

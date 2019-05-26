@@ -45,12 +45,12 @@ void KeyboardOutput::update(Controller controller) {
       keys[usedKeys++] = binding;
     }
   }
-  CHECK_JOY(l_x);
-  CHECK_JOY(l_y);
-  CHECK_JOY(r_x);
-  CHECK_JOY(r_y);
-  CHECK_TRIGGER(lt);
-  CHECK_TRIGGER(rt);
+  CHECK_JOY_KEY(l_x);
+  CHECK_JOY_KEY(l_y);
+  CHECK_JOY_KEY(r_x);
+  CHECK_JOY_KEY(r_y);
+  CHECK_TRIGGER_KEY(lt);
+  CHECK_TRIGGER_KEY(rt);
   HID_Device_USBTask(HID_Interface);
 }
 

@@ -1,17 +1,13 @@
 #include "GuitarHandler.h"
 bool GuitarHandler::isGuitar() {
-  return config.subtype == GUITAR_ALTERNATE_SUBTYPE ||
+  return config.subtype == GUITAR_SUBTYPE ||
          config.subtype == GUITAR_BASS_SUBTYPE ||
          config.subtype == GUITAR_ALTERNATE_SUBTYPE;
 }
 void GuitarHandler::init() {
-  if (!isGuitar())
-    return;
   if (config.tilt_type == MPU_6050) {
     mympu_open(15);
-    EICRA = 0;
-    bit_set(EIMSK, INT0);
-    IO::pinMode(2, INPUT_PULLUP);
+    EN_PCI(MPU_6050_INTERRUPT_PIN);
   } else if (config.tilt_type == GRAVITY) {
     IO::pinMode(config.pins.r_y, INPUT_PULLUP);
   }
@@ -19,8 +15,6 @@ void GuitarHandler::init() {
 
 volatile bool ready = false;
 void GuitarHandler::handle(Controller *controller) {
-  if (!isGuitar())
-    return;
   if (config.tilt_type == MPU_6050) {
     if (ready) {
       ready = false;
@@ -42,4 +36,6 @@ void GuitarHandler::handle(Controller *controller) {
   }
 }
 
-ISR(INT0_vect) { ready = true; }
+ISR(PCINT0_vect) { ready = true; }
+ISR(PCINT1_vect) { ready = true; }
+ISR(PCINT2_vect) { ready = true; }

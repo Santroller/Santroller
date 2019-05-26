@@ -18,7 +18,7 @@ OPTIMIZATION = s
 # Compile everything that isnt related to the output stage, as that comes under usb
 SRC = $(shell find ../../shared -type f -name '*.c*' -not -path "../../shared/io/lufa/*" -not -path "../../shared/controller/output*") $(shell find . -type f -name '*.c*')
 LUFA_PATH    = ../../shared/io/lufa/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/io/lufa
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/io/lufa -Iinclude
 CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj

@@ -2,17 +2,22 @@
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR MPU_6050
-#define DEVICE_TYPE WII 
+#define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT
 #define SUB_TYPE GUITAR_SUBTYPE
 #define POLL_RATE 1
-//Thresholds
+// Thresholds
 #define TRIGGER_THRESHOLD 12767
 #define JOY_THRESHOLD 12767
 #define PINS                                                                   \
-  { 4, 5, 7, 6, 8, 16, 9, 18, 14, 15, 10, 21, 19, 20, 11 }
-// Set this if you have inverted your frets to make it easier to wire leds inline
-#define FRETS_LED 0
+  {                                                                            \
+    14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN,         \
+        8, INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,     \
+        INVALID_PIN, 19, 20, 18, INVALID_PIN                                   \
+  }
+// Set this if you have inverted your frets to make it easier to wire leds
+// inline
+#define FRETS_LED 1
 #define MAP_JOY_TO_DPAD 1
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
@@ -26,8 +31,13 @@
 #define DIRECTION_MODE JOY
 // If your whammy bar appears inverted, set this to true to invert the output of
 // your whammy bar.
-#define INVERT_WHAMMY false
+#define INVERT_WHAMMY true
 // Set this value to define where 0 is on your whammy bar.
 #define WHAMMY_INITIAL_VALUE 16863
 // Set this value to define where 0 is on your mpu_6050.
 #define MPU_6050_START 35000
+#if defined(__AVR_ATmega328P__)
+#  define MPU_6050_INTERRUPT_PIN 2
+#elif defined(__AVR_ATmega32U4__)
+#  define MPU_6050_INTERRUPT_PIN 10
+#endif

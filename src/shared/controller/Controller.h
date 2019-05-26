@@ -13,12 +13,13 @@
 #define XBOX_LB 8
 #define XBOX_RB 9
 #define XBOX_HOME 10
+#define XBOX_UNUSED 11
 #define XBOX_A 12
 #define XBOX_B 13
 #define XBOX_X 14
 #define XBOX_Y 15
 
-#define XBOX_BTN_COUNT 15
+#define XBOX_BTN_COUNT 16
 
 #ifdef __cplusplus
 class Controller {

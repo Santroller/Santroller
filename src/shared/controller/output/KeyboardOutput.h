@@ -7,7 +7,7 @@
 #include <stdint.h>
 #define SIMULTANEOUS_KEYS 6
 
-#define CHECK_JOY(joy)                                                         \
+#define CHECK_JOY_KEY(joy)                                                         \
   if (config.keys.joy.neg && controller.joy < -(int)config.threshold_joy) {    \
     keys[usedKeys++] = config.keys.joy.neg;                                    \
   }                                                                            \
@@ -15,7 +15,7 @@
     keys[usedKeys++] = config.keys.joy.pos;                                    \
   }
 
-#define CHECK_TRIGGER(trigger)                                                 \
+#define CHECK_TRIGGER_KEY(trigger)                                                 \
   if (config.keys.trigger &&                                                   \
       controller.trigger > (int)config.threshold_trigger) {                    \
     keys[usedKeys++] = config.keys.trigger;                                    \

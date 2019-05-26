@@ -8,9 +8,9 @@
 #include <stdint.h>
 
 #define READ_JOY(axis)                                                         \
-  controller->axis = config.pins.axis == INVALID_PIN                           \
-                         ? 0                                                   \
-                         : (IO::analogRead(config.pins.l_x) * 32)
+  if (config.pins.axis != INVALID_PIN) {                                       \
+    controller->axis = ((IO::analogRead(config.pins.axis) - 512) * 64);        \
+  }
 
 #define DEFINE_JOY(axis)                                                       \
   if (config.pins.axis != INVALID_PIN)                                         \

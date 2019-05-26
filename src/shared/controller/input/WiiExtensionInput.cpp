@@ -49,7 +49,7 @@ void WiiExtension::read_controller(Controller *controller) {
   controller->l_y = (data[2] - 0x80) * 256;
 
   if (id == GUITAR || id == GUITAR_2) {
-    int32_t whammy = (data[5] - 0x80) * 500L;
+    int32_t whammy = (data[5] - 0x80) * 256L;
     controller->r_x = constrain(whammy, 0, 32767);
   } else {
     controller->r_x = (data[1] - 0x80) * 256;

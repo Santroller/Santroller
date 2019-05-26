@@ -28,6 +28,14 @@ typedef struct {
   uint8_t r_y;
 } ATTR_PACKED pins_t;
 typedef struct {
+  uint8_t lt;
+  uint8_t rt;
+  uint8_t l_x;
+  uint8_t l_y;
+  uint8_t r_x;
+  uint8_t r_y;
+} ATTR_PACKED axis_invert_t;
+typedef struct {
   uint8_t neg;
   uint8_t pos;
 } ATTR_PACKED analogue_keys_t;
@@ -63,11 +71,11 @@ typedef struct {
   uint8_t subtype;
   uint8_t pollrate;
   pins_t pins;
-  uint8_t direction_mode;
   uint16_t whammy_calibration;
   uint16_t mpu_6050_calibration;
   uint8_t frets_led_mode;
   uint8_t map_joy_to_dpad;
+  axis_invert_t inversions;
   uint16_t threshold_trigger;
   uint16_t threshold_joy;
   keys_t keys;

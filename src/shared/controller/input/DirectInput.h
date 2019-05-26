@@ -9,7 +9,8 @@
 
 #define READ_JOY(axis)                                                         \
   if (config.pins.axis != INVALID_PIN) {                                       \
-    controller->axis = ((IO::analogRead(config.pins.axis) - 512) * 64);        \
+    controller->axis = (config.inversions.axis ? -1 : 1) *                     \
+                       ((IO::analogRead(config.pins.axis) - 512) * 64);        \
   }
 
 #define DEFINE_JOY(axis)                                                       \

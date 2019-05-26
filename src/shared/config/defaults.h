@@ -11,10 +11,12 @@
 #define JOY_THRESHOLD 12767
 #define PINS                                                                   \
   {                                                                            \
-    14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN,         \
-        8, INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,     \
+    14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
         INVALID_PIN, 19, 20, 18, INVALID_PIN                                   \
   }
+#define INVERSIONS                                                             \
+  { 0, 0, 0, 0, 1, 0 }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
 #define FRETS_LED 1
@@ -27,13 +29,6 @@
 #define KEYS                                                                   \
   { 0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51 }
 
-// Guitar specific defaults
-#define DIRECTION_MODE JOY
-// If your whammy bar appears inverted, set this to true to invert the output of
-// your whammy bar.
-#define INVERT_WHAMMY true
-// Set this value to define where 0 is on your whammy bar.
-#define WHAMMY_INITIAL_VALUE 16863
 // Set this value to define where 0 is on your mpu_6050.
 #define MPU_6050_START 35000
 #if defined(__AVR_ATmega328P__)

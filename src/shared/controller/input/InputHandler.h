@@ -3,8 +3,8 @@
 #include "../Controller.h"
 #include "../input/DirectInput.h"
 #include "../input/WiiExtensionInput.h"
-#include "Input.h"
 #include "GuitarHandler.h"
+#include "Input.h"
 
 #define CHECK_JOY(joy, neg, pos)                                               \
   if (controller.joy < -(int)config.threshold_joy) {                           \

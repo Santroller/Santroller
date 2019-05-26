@@ -5,11 +5,10 @@
             "includePath": [
                 "/home/sanjay/.arduino15/packages/arduino/tools/**",
                 "/home/sanjay/.arduino15/packages/arduino/hardware/avr/1.6.23/**",
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/../lufa/**"
+                "${workspaceFolder}/**"
             ],
             "defines": [
-                "__AVR_ATmega32U4__", "USE_STATIC_OPTIONS"
+                "__AVR_ATmega32U4__", "USE_STATIC_OPTIONS", "F_CPU"
             ],
             "compilerPath": "/usr/bin/avr-gcc",
             "cStandard": "c11",

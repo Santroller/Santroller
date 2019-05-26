@@ -34,6 +34,9 @@ void GuitarHandler::handle(Controller *controller) {
   } else if (config.tilt_type == GRAVITY) {
     controller->r_y = IO::digitalRead(config.pins.r_y) * 32767;
   }
+  //Whammy needs to be scaled so that it is picked up
+  int32_t whammy = controller->r_x * 2;
+  controller->r_x = constrain(whammy, 0, 32767);;
 }
 
 ISR(PCINT0_vect) { ready = true; }

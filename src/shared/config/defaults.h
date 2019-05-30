@@ -30,7 +30,7 @@
 #elif defined(__AVR_ATmega32U4__)
 #  define MPU_6050_INTERRUPT_PIN 10
 #endif
-
+#define FIRMWARE GUITAR_FIRMWARE
 #define PINS                                                                   \
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \

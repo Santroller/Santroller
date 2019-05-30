@@ -2,6 +2,7 @@
 #include "defaults.h"
 #include <avr/eeprom.h>
 #include <stdint.h>
+#include <stdbool.h>
 #define ATTR_PACKED __attribute__ ((packed))
 typedef struct {
   uint8_t up;
@@ -29,12 +30,12 @@ typedef struct {
   uint8_t mpu_6050_interrupt;
 } ATTR_PACKED pins_t;
 typedef struct {
-  uint8_t lt;
-  uint8_t rt;
-  uint8_t l_x;
-  uint8_t l_y;
-  uint8_t r_x;
-  uint8_t r_y;
+  bool lt;
+  bool rt;
+  bool l_x;
+  bool l_y;
+  bool r_x;
+  bool r_y;
 } ATTR_PACKED axis_invert_t;
 typedef struct {
   uint8_t neg;
@@ -73,8 +74,8 @@ typedef struct {
   uint8_t pollrate;
   pins_t pins;
   uint16_t mpu_6050_orientation;
-  uint8_t frets_led_mode;
-  uint8_t map_joy_to_dpad;
+  bool frets_led_mode;
+  bool map_joy_to_dpad;
   axis_invert_t inversions;
   uint16_t threshold_trigger;
   uint16_t threshold_joy;

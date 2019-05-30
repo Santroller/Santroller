@@ -14,6 +14,6 @@ config_t EEMEM config_pointer = {PROTOCOL_VERSION,
                                  JOY_THRESHOLD,
                                  KEYS,
                                  F_CPU,
-                                 0xFEA123};
+                                 GUITAR_FIRMWARE};
 
 config_t config;

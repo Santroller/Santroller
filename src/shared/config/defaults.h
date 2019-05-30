@@ -21,7 +21,12 @@
 // For a list of keyboard bindings, visit
 // http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 #define KEYS                                                                   \
-  { 0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51 }
+  {                                                                            \
+    0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51,    \
+        0x51, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,              \
+        {INVALID_PIN, INVALID_PIN}, {INVALID_PIN, INVALID_PIN},                \
+        {INVALID_PIN, INVALID_PIN}, {INVALID_PIN, INVALID_PIN},                \
+  }
 
 // Set this value to define the orientation of your mpu6050
 #define MPU_6050_ORIENTATION NEGATIVE_X

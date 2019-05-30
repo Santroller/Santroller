@@ -10,7 +10,7 @@
 #define DIRECT 2
 
 //Output types
-#define XINPUT 1
+#define X_INPUT 1
 #define KEYBOARD 2
 #define GAMEPAD 3
 
@@ -33,9 +33,9 @@
 #define INVALID_PIN 0xFF
 
 //Orientations for gyros
-#define Z_P 0
-#define Z_N 1
-#define Y_P 2
-#define Y_N 3
-#define X_P 4
-#define X_N 5
+#define POSITIVE_Z 0
+#define NEGATIVE_Z 1
+#define POSITIVE_Y 2
+#define NEGATIVE_Y 3
+#define POSITIVE_X 4
+#define NEGATIVE_X 5

@@ -3,7 +3,7 @@
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR MPU_6050
 #define DEVICE_TYPE DIRECT
-#define OUTPUT_TYPE XINPUT
+#define OUTPUT_TYPE X_INPUT
 #define SUB_TYPE GUITAR_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
@@ -30,7 +30,7 @@
   { 0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51 }
 
 // Set this value to define the orientation of your mpu6050
-#define MPU_6050_ORIENTATION X_N
+#define MPU_6050_ORIENTATION NEGATIVE_X
 #if defined(__AVR_ATmega328P__)
 #  define MPU_6050_INTERRUPT_PIN 2
 #elif defined(__AVR_ATmega32U4__)

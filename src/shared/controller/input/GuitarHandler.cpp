@@ -12,7 +12,7 @@ void GuitarHandler::init() {
     while (mympu_open(15) != 0) {
 
     }
-    EN_PCI(MPU_6050_INTERRUPT_PIN);
+    EN_PCI(config.pins.mpu_6050_interrupt);
   } else if (config.tilt_type == GRAVITY) {
     IO::pinMode(config.pins.r_y, INPUT_PULLUP);
   }

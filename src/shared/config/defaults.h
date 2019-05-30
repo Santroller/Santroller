@@ -9,12 +9,6 @@
 // Thresholds
 #define TRIGGER_THRESHOLD 12767
 #define JOY_THRESHOLD 12767
-#define PINS                                                                   \
-  {                                                                            \
-    14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
-        INVALID_PIN, 19, 20, 18, INVALID_PIN                                   \
-  }
 #define INVERSIONS                                                             \
   { 0, 0, 0, 0, 0, 0 }
 // Set this if you have inverted your frets to make it easier to wire leds
@@ -36,3 +30,10 @@
 #elif defined(__AVR_ATmega32U4__)
 #  define MPU_6050_INTERRUPT_PIN 10
 #endif
+
+#define PINS                                                                   \
+  {                                                                            \
+    14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
+        INVALID_PIN, 19, 20, 18, INVALID_PIN, MPU_6050_INTERRUPT_PIN           \
+  }

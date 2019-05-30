@@ -10,7 +10,7 @@
 #define DIRECT 2
 
 //Output types
-#define X_INPUT 1
+#define XINPUT 1
 #define KEYBOARD 2
 #define GAMEPAD 3
 

@@ -41,4 +41,4 @@
 #define NEGATIVE_X 5
 
 //Firmware types
-#define GUITAR_FIRMWARE 0xfea123
+#define GUITAR_DEVICE_TYPE 0xfea123

@@ -6,9 +6,6 @@
 #include <avr/sfr_defs.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
-extern "C" {
-#include "pins.h"
-}
 
 InputHandler controller;
 

@@ -33,7 +33,7 @@
 #define MPU_6050_ORIENTATION NEGATIVE_X
 #if defined(__AVR_ATmega328P__)
 #  define MPU_6050_INTERRUPT_PIN 2
-#elif defined(__AVR_ATmega32U4__)
+#else
 #  define MPU_6050_INTERRUPT_PIN 10
 #endif
 #define PINS                                                                   \

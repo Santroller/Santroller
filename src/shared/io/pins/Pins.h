@@ -2,7 +2,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <stdint.h>
-#include "pins.h"
+#include "arduino_pins.h"
 
 // Enable a pinchangeinterrupt
 #define EN_PCI(pin)                                                            \

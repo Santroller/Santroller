@@ -10,7 +10,7 @@
 #define TRIGGER_THRESHOLD 12767
 #define JOY_THRESHOLD 12767
 #define INVERSIONS                                                             \
-  { false, false, false, false, false, false }
+  { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
 #define FRETS_LED true

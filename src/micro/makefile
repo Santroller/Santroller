@@ -22,7 +22,7 @@ CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-micro-${F_CPU}
+TARGET       = $(BIN)/ardwiino-micro-${MCU}-${F_CPU}
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -P /dev/ttyACM0 reset
 # ----- No changes should be necessary below this line -----

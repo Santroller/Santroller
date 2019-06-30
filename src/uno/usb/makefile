@@ -9,7 +9,7 @@
 #         LUFA Project Makefile.
 # --------------------------------------
 
-MCU          = atmega16u2
+MCU          ?= atmega16u2
 ARCH         = AVR8
 BOARD        = UNO
 F_CPU        = 16000000
@@ -22,7 +22,7 @@ CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-uno-usb
+TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))

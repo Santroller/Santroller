@@ -10,6 +10,7 @@
 InputHandler controller;
 
 size_t controller_index = 0;
+size_t config_index = 0;
 bool done = false;
 int main() {
   UBRR0 = 6;
@@ -34,3 +35,11 @@ ISR(USART_UDRE_vect) {
     bit_clear(UCSR0B, UDRIE0);
   }
 }
+ISR(USART_RX_vect) {
+  ((uint8_t *)&config)[config_index] = UDR0;
+  config_index++;
+  if (config_index >= sizeof(config_t)) {
+    config_index = 0;
+  }
+}
+void configChangeHandler() {}

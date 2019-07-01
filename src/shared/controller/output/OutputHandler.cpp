@@ -38,7 +38,20 @@ void EVENT_USB_Device_ControlRequest(void) {
   switch (USB_ControlRequest.bRequest) {
   case 0x30:
     bootloader();
-    break;
+    return;
+  case 0x31:
+    Endpoint_ClearSETUP();
+    Endpoint_Read_Control_EStream_LE(&config_pointer, sizeof(config_t));
+    eeprom_read_block(&config, &config_pointer, sizeof(config_t));
+    configChangeHandler();
+    Endpoint_ClearIN();
+    reboot();
+    return;
+  case 0x32:
+    Endpoint_ClearSETUP();
+    Endpoint_Write_Control_EStream_LE(&config_pointer, sizeof(config_t));
+    Endpoint_ClearOUT();
+    return;
   }
   Output::output->usb_control_request();
 }

@@ -49,3 +49,10 @@ int main(void) {
   while (true);
   // clang-format on
 }
+
+void configChangeHandler() {
+  for (size_t i = 0; i < sizeof(config_t); i++) {
+    loop_until_bit_is_set(UCSR1A, UDRE1);
+    UDR1 = ((uint8_t *)&config)[i];
+  }
+}

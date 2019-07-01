@@ -39,7 +39,10 @@ ISR(USART_RX_vect) {
   ((uint8_t *)&config)[config_index] = UDR0;
   config_index++;
   if (config_index >= sizeof(config_t)) {
-    config_index = 0;
+    cli();
+    wdt_enable(WDTO_15MS);
+    for (;;) {
+    }
   }
 }
 void configChangeHandler() {}

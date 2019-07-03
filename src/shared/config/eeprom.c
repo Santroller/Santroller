@@ -1,9 +1,8 @@
 #include "eeprom.h"
 config_t EEMEM config_pointer = {PROTOCOL_VERSION,
-                                 OUTPUT_TYPE,
                                  DEVICE_TYPE,
+                                 OUTPUT_TYPE,
                                  TILT_SENSOR,
-                                 SUB_TYPE,
                                  POLL_RATE,
                                  PINS,
                                  MPU_6050_ORIENTATION,

@@ -10,12 +10,12 @@ void OutputHandler::process(Controller *controller) {
 }
 
 void OutputHandler::init() {
-  if(config.output_type == XINPUT) {
-    Output::output = new XInputOutput();
-  } else if(config.output_type == GAMEPAD) {
+  if(config.sub_type == PS3_SUBTYPE) {
     Output::output = new GamepadOutput();
-  } else if(config.output_type == KEYBOARD) {
+  } else if(config.sub_type == KEYBOARD_SUBTYPE) {
     Output::output = new KeyboardOutput();
+  } else {
+    Output::output = new XInputOutput();
   }
   Output::output->init();
 }
@@ -43,7 +43,6 @@ void EVENT_USB_Device_ControlRequest(void) {
     Endpoint_ClearSETUP();
     Endpoint_Read_Control_EStream_LE(&config_pointer, sizeof(config_t));
     eeprom_read_block(&config, &config_pointer, sizeof(config_t));
-    configChangeHandler();
     Endpoint_ClearIN();
     reboot();
     return;

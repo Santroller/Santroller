@@ -2,41 +2,98 @@
 
 static uint8_t PrevHIDReport[sizeof(USB_GamepadReport_Data_t)];
 
-/** HID class report descriptor. This is a special descriptor constructed with
- * values from the USBIF HID class specification to describe the reports and
- * capabilities of the HID device. This descriptor is parsed by the host and its
- * contents used to determine what data (and in what encoding) the device will
- * send, and what it may be sent back from the host. Refer to the HID
- * specification for more details on HID report descriptors.
- */
-#define GAMEPAD_BTN_COUNT 15
+// Bindings to go from controller to ps3
+static uint8_t buttonBindings[] = {5, 6, 7,  4,  0,  3,  1, 2,
+                                   9, 8, 15, 13, 12, 14, 10};
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM HIDReport_Datatype[] = {
-    HID_RI_USAGE_PAGE(8, 0x01),
-    HID_RI_USAGE(8, 0x04),
-    HID_RI_COLLECTION(8, 0x01),
-    HID_RI_USAGE_PAGE(8, 0x09),
-    HID_RI_USAGE_MINIMUM(8, 0x01),
-    HID_RI_USAGE_MAXIMUM(8, GAMEPAD_BTN_COUNT),
-    HID_RI_LOGICAL_MINIMUM(8, 0x00),
-    HID_RI_LOGICAL_MAXIMUM(8, 0x01),
-    HID_RI_REPORT_SIZE(8, 0x01),
-    HID_RI_REPORT_COUNT(8, GAMEPAD_BTN_COUNT),
-    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_COLLECTION(8, 0x00),
-    HID_RI_USAGE(8, 0x32), // LT+RT = Z
-    HID_RI_USAGE(8, 0x30), // l_x = X
-    HID_RI_USAGE(8, 0x31), // l_y = Y
-    HID_RI_USAGE(8, 0x33), // r_x = Rx
-    HID_RI_USAGE(8, 0x34), // r_y = Ry
-    HID_RI_LOGICAL_MINIMUM(16, -32767),
-    HID_RI_LOGICAL_MAXIMUM(16, 32767),
-    HID_RI_REPORT_SIZE(8, 16),
-    HID_RI_REPORT_COUNT(8, 5),
-    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_END_COLLECTION(0),
-    HID_RI_END_COLLECTION(0)};
+    0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x04,       // Usage (Joystick)
+    0xA1, 0x01,       // Collection (Physical)
+    0xA1, 0x02,       //   Collection (Application)
+    0x85, 0x01,       //     Report ID (1)
+    0x75, 0x08,       //     Report Size (8)
+    0x95, 0x01,       //     Report Count (1)
+    0x15, 0x00,       //     Logical Minimum (0)
+    0x26, 0xFF, 0x00, //     Logical Maximum (255)
+    0x81, 0x03, //     Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position) NOTE: reserved byte
+    0x75, 0x01, //     Report Size (1)
+    0x95, 0x13, //     Report Count (19)
+    0x15, 0x00, //     Logical Minimum (0)
+    0x25, 0x01, //     Logical Maximum (1)
+    0x35, 0x00, //     Physical Minimum (0)
+    0x45, 0x01, //     Physical Maximum (1)
+    0x05, 0x09, //     Usage Page (Button)
+    0x19, 0x01, //     Usage Minimum (0x01)
+    0x29, 0x13, //     Usage Maximum (0x13)
+    0x81, 0x02, //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position)
+    0x75, 0x01, //     Report Size (1)
+    0x95, 0x0D, //     Report Count (13)
+    0x06, 0x00, 0xFF, //     Usage Page (Vendor Defined 0xFF00)
+    0x81, 0x03, //     Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position) NOTE: 32 bit integer, where 0:18 are
+                //     buttons and 19:31 are reserved
+    0x15, 0x00, //     Logical Minimum (0)
+    0x26, 0xFF, 0x00, //     Logical Maximum (255)
+    0x05, 0x01,       //     Usage Page (Generic Desktop Ctrls)
+    0x09, 0x01,       //     Usage (Pointer)
+    0xA1, 0x00,       //     Collection (Undefined)
+    0x75, 0x08,       //       Report Size (8)
+    0x95, 0x04,       //       Report Count (4)
+    0x35, 0x00,       //       Physical Minimum (0)
+    0x46, 0xFF, 0x00, //       Physical Maximum (255)
+    0x09, 0x30,       //       Usage (X)
+    0x09, 0x31,       //       Usage (Y)
+    0x09, 0x32,       //       Usage (Z)
+    0x09, 0x35,       //       Usage (Rz)
+    0x81, 0x02, //       Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //       Null Position) NOTE: four joysticks
+    0xC0,       //     End Collection
+    0x05, 0x01, //     Usage Page (Generic Desktop Ctrls)
+    0x75, 0x08, //     Report Size (8)
+    0x95, 0x27, //     Report Count (39)
+    0x09, 0x01, //     Usage (Pointer)
+    0x81, 0x02, //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position)
+    0x75, 0x08, //     Report Size (8)
+    0x95, 0x30, //     Report Count (48)
+    0x09, 0x01, //     Usage (Pointer)
+    0x91, 0x02, //     Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position,Non-volatile)
+    0x75, 0x08, //     Report Size (8)
+    0x95, 0x30, //     Report Count (48)
+    0x09, 0x01, //     Usage (Pointer)
+    0xB1, 0x02, //     Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position,Non-volatile)
+    0xC0,       //   End Collection
+    0xA1, 0x02, //   Collection (Application)
+    0x85, 0x02, //     Report ID (2)
+    0x75, 0x08, //     Report Size (8)
+    0x95, 0x30, //     Report Count (48)
+    0x09, 0x01, //     Usage (Pointer)
+    0xB1, 0x02, //     Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position,Non-volatile)
+    0xC0,       //   End Collection
+    0xA1, 0x02, //   Collection (Application)
+    0x85, 0xEE, //     Report ID (238)
+    0x75, 0x08, //     Report Size (8)
+    0x95, 0x30, //     Report Count (48)
+    0x09, 0x01, //     Usage (Pointer)
+    0xB1, 0x02, //     Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position,Non-volatile)
+    0xC0,       //   End Collection
+    0xA1, 0x02, //   Collection (Application)
+    0x85, 0xEF, //     Report ID (239)
+    0x75, 0x08, //     Report Size (8)
+    0x95, 0x30, //     Report Count (48)
+    0x09, 0x01, //     Usage (Pointer)
+    0xB1, 0x02, //     Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //     Null Position,Non-volatile)
+    0xC0,       //   End Collection
+    0xC0,       // End Collection
+};
 
 const size_t GamepadOutput::ReportDatatypeSize() {
   return sizeof(HIDReport_Datatype);
@@ -72,7 +129,25 @@ bool GamepadOutput::hid_create_report(
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
 
   auto JoystickReport = (USB_GamepadReport_Data_t *)ReportData;
-  memcpy(JoystickReport, &last_controller, sizeof(Controller));
+  auto reportAnalogue =
+      (uint8_t *)(JoystickReport +
+                  offsetof(USB_GamepadReport_Data_t, dpad_up_a));
+  auto bitSet = false;
+  for (uint8_t i = 0; i > sizeof(buttonBindings); i++) {
+    bitSet = bit_check(last_controller.buttons, i);
+    bit_write(bitSet, JoystickReport->buttons, buttonBindings[i]);
+    if (i > 4 && i < 16) {
+      reportAnalogue[i - 4] = bitSet ? 0xFF : 0x00;
+    }
+  }
+  JoystickReport->lx = last_controller.l_x;
+  JoystickReport->ly = last_controller.l_y;
+  JoystickReport->rx = last_controller.r_x;
+  JoystickReport->ry = last_controller.r_y;
+  JoystickReport->l2_a = last_controller.lt;
+  JoystickReport->r2_a = last_controller.rt;
+  bit_write(last_controller.lt > 0, JoystickReport->buttons, 16);
+  bit_write(last_controller.rt > 0, JoystickReport->buttons, 17);
 
   *ReportSize = sizeof(USB_GamepadReport_Data_t);
 

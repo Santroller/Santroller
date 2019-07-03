@@ -9,11 +9,6 @@
 #define WII 1
 #define DIRECT 2
 
-//Output types
-#define XINPUT 1
-#define KEYBOARD 2
-#define GAMEPAD 3
-
 //Joystick type for a guitar
 #define DPAD 1
 #define JOY 2
@@ -29,6 +24,9 @@
 #define DRUM_SUBTYPE 8
 #define GUITAR_BASS_SUBTYPE 11
 #define ARCADE_PAD_SUBTYPE 19
+#define KEYBOARD_SUBTYPE 20
+#define PS3_SUBTYPE 21
+#define SWITCH_SUBTYPE 22
 
 #define INVALID_PIN 0xFF
 

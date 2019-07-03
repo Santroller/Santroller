@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <util/delay.h>
 bool GuitarHandler::isGuitar() {
-  return config.subtype == GUITAR_SUBTYPE ||
-         config.subtype == GUITAR_BASS_SUBTYPE ||
-         config.subtype == GUITAR_ALTERNATE_SUBTYPE;
+  return config.input_type == GUITAR_SUBTYPE ||
+         config.input_type == GUITAR_BASS_SUBTYPE ||
+         config.input_type == GUITAR_ALTERNATE_SUBTYPE;
 }
 void GuitarHandler::init() {
   if (config.tilt_type == MPU_6050) {

@@ -14,4 +14,3 @@ int main() {
     out.process(&controller.controller);
   }
 }
-void configChangeHandler() {}

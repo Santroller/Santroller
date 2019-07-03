@@ -67,10 +67,9 @@ typedef struct {
 
 typedef struct {
   uint8_t version;
-  uint8_t output_type;
   uint8_t input_type;
+  uint8_t sub_type;
   uint8_t tilt_type;
-  uint8_t subtype;
   uint8_t pollrate;
   pins_t pins;
   uint16_t mpu_6050_orientation;

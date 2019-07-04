@@ -10,6 +10,7 @@
 InputHandler controller;
 
 size_t controller_index = 0;
+bool done = false;
 int main() {
   UBRR0 = 6;
   UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UDRIE0);
@@ -28,8 +29,12 @@ int main() {
   sei();
   while (true) {
     controller.process();
-    bit_set(UCSR0B, UDRIE0);
-}
+    if (bit_is_set(UCSR0A, RXC0)) {
+      if (UDR0 == 0xEF) {
+        wdt_enable(WDTO_120MS);
+      }
+    }
+  }
 }
 ISR(USART_UDRE_vect) {
   if (controller_index < 2) {
@@ -40,6 +45,5 @@ ISR(USART_UDRE_vect) {
   controller_index++;
   if (controller_index >= sizeof(Controller) + 2) {
     controller_index = 0;
-    bit_clear(UCSR0B, UDRIE0);
   }
 }

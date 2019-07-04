@@ -2,15 +2,15 @@
 #include <avr/eeprom.h>
 Output *Output::output;
 void OutputHandler::process(Controller *controller) {
-  if (bit_check(controller->buttons, XBOX_START) &&
-      bit_check(controller->buttons, XBOX_BACK)) {
-    bootloader();
-  }
+  // if (bit_check(controller->buttons, XBOX_START) &&
+  //     bit_check(controller->buttons, XBOX_BACK)) {
+  //   bootloader();
+  // }
   Output::output->update(*controller);
 }
 
 void OutputHandler::init() {
-  if(config.sub_type == PS3_SUBTYPE) {
+  if(config.sub_type >= SWITCH_SUBTYPE) {
     Output::output = new GamepadOutput();
   } else if(config.sub_type == KEYBOARD_SUBTYPE) {
     Output::output = new KeyboardOutput();
@@ -56,4 +56,17 @@ void EVENT_USB_Device_ControlRequest(void) {
 }
 void EVENT_USB_Device_StartOfFrame(void) {
   Output::output->usb_start_of_frame();
+}
+
+void CALLBACK_HID_Device_ProcessHIDReport(
+    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, const uint8_t ReportID,
+    const uint8_t ReportType, const void *ReportData,
+    const uint16_t ReportSize) {}
+
+bool CALLBACK_HID_Device_CreateHIDReport(
+    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
+    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
+  return ((HIDOutput *)Output::output)
+      ->hid_create_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
+                          ReportSize);
 }

@@ -4,8 +4,6 @@ void InputHandler::process() {
   if (input != NULL) {
     input->read_controller(&controller);
     if (config.map_joy_to_dpad) {
-      bit_clear(controller.buttons, XBOX_DPAD_LEFT);
-      bit_clear(controller.buttons, XBOX_DPAD_RIGHT);
       CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
       CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
     }

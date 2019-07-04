@@ -53,7 +53,9 @@ void KeyboardOutput::update(Controller controller) {
   CHECK_TRIGGER_KEY(rt);
   HID_Device_USBTask(HID_Interface);
 }
-
+void KeyboardOutput::usb_control_request() {
+  HID_Device_ProcessControlRequest(HID_Interface);
+}
 bool KeyboardOutput::hid_create_report(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {

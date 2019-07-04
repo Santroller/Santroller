@@ -54,20 +54,14 @@ back - select - h
 r_x - whammy - ;
 start - return - enter
 
-#define XBOX_DPAD_UP 0 - 4
-#define XBOX_DPAD_DOWN 1 - 6
-#define XBOX_DPAD_LEFT 2 - 7
-#define XBOX_DPAD_RIGHT 3 - 5
-#define XBOX_START 4 - 3
-#define XBOX_BACK 5 - 2
-#define XBOX_LEFT_STICK 6 - 1
-#define XBOX_RIGHT_STICK 7 - 2
-
-#define XBOX_LB 8 - 10
-#define XBOX_RB 9 - 9
-#define XBOX_A 12 - 14
-#define XBOX_B 13 - 13
-#define XBOX_X 14 - 15
-#define XBOX_Y 15 - 12
-
-#define XBOX_HOME 10 - 16
+#define XBOX_A 12 - 0
+#define XBOX_B 13 - 1
+#define XBOX_X 14 - 2
+#define XBOX_Y 15 - 3
+#define XBOX_LB 8 - 4
+#define XBOX_RB 9 - 5
+#define XBOX_BACK 5 - 8
+#define XBOX_START 4 - 9
+#define XBOX_LEFT_STICK 6 - 10
+#define XBOX_RIGHT_STICK 7 - 11
+#define XBOX_HOME 10 - 12

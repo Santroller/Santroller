@@ -10,9 +10,9 @@
 #include <string.h>
 
 #include "../../config/eeprom.h"
+#include "../../util.h"
 #include "../Controller.h"
 #include "../lufa/Descriptors.h"
-#include "../../util.h"
 #include "Descriptors.h"
 #include "HidOutput.h"
 #include <LUFA/Drivers/USB/USB.h>
@@ -23,29 +23,12 @@
  * the HID report descriptor, in Descriptors.c.
  */
 typedef struct {
-  uint8_t reportID;
-  uint8_t reserved;
-  uint32_t buttons;
-  uint8_t lx;
-  uint8_t ly;
-  uint8_t rx;
-  uint8_t ry;
-  uint8_t dpad_up_a;
-  uint8_t dpad_right_a;
-  uint8_t dpad_down_a;
-  uint8_t dpad_left_a;
-  uint8_t l2_a;
-  uint8_t r2_a;
-  uint8_t l1_a;
-  uint8_t r1_a;
-  uint8_t triangle_a;
-  uint8_t circle_a;
-  uint8_t cross_a;
-  uint8_t square_a;
-  uint16_t axis_x;
-  uint16_t axis_y;
-  uint16_t axis_z;
-  uint16_t gyroscope;
+  uint16_t buttons;
+  uint8_t hat;
+  uint8_t l_x;
+  uint8_t l_y;
+  uint8_t r_x;
+  uint8_t r_y;
 } USB_GamepadReport_Data_t;
 
 class GamepadOutput : public HIDOutput {
@@ -56,6 +39,7 @@ public:
                          void *ReportData, uint16_t *const ReportSize);
   USB_ClassInfo_HID_Device_t *createHIDInterface();
   const size_t ReportDatatypeSize();
+  void usb_control_request();
   uint16_t get_hid_descriptor(const uint8_t DescriptorType,
                               const uint8_t DescriptorNumber,
                               const void **const DescriptorAddress,

@@ -33,6 +33,7 @@ public:
                          void *ReportData, uint16_t *const ReportSize);
   USB_ClassInfo_HID_Device_t *createHIDInterface();
   const size_t ReportDatatypeSize();
+  void usb_control_request();
   uint16_t get_hid_descriptor(const uint8_t DescriptorType,
                               const uint8_t DescriptorNumber,
                               const void **const DescriptorAddress,

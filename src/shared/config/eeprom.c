@@ -14,5 +14,7 @@ config_t EEMEM config_pointer = {PROTOCOL_VERSION,
                                  KEYS,
                                  F_CPU,
                                  FIRMWARE};
-
 config_t config;
+void load_config() {
+    eeprom_read_block(&config, &config_pointer, sizeof(config_t));
+}

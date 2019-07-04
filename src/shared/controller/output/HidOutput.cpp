@@ -7,7 +7,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Class : USB_CSCP_NoDeviceClass,
   SubClass : USB_CSCP_NoDeviceSubclass,
   Protocol : USB_CSCP_NoDeviceProtocol,
-  Endpoint0Size : 0x08,
+  Endpoint0Size : 64,
   VendorID : 0x1209,
   ProductID : 0x2882,
   ReleaseNumber : 0x3122,
@@ -90,25 +90,8 @@ void HIDOutput::usb_configuration_changed() {
   USB_Device_EnableSOFEvents();
 }
 
-void HIDOutput::usb_control_request() {
-  HID_Device_ProcessControlRequest(HID_Interface);
-}
-
 void HIDOutput::usb_start_of_frame() {
   HID_Device_MillisecondElapsed(HID_Interface);
-}
-
-void CALLBACK_HID_Device_ProcessHIDReport(
-    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, const uint8_t ReportID,
-    const uint8_t ReportType, const void *ReportData,
-    const uint16_t ReportSize) {}
-
-bool CALLBACK_HID_Device_CreateHIDReport(
-    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
-    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-  return ((HIDOutput *)Output::output)
-      ->hid_create_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
-                          ReportSize);
 }
 
 uint16_t HIDOutput::get_descriptor(const uint8_t DescriptorType,

@@ -20,6 +20,21 @@
 #define XBOX_Y 15
 
 #define XBOX_BTN_COUNT 16
+//TODO: y and x seem to be swapped when using a wii controller.
+#define SWITCH_Y 0
+#define SWITCH_B 1
+#define SWITCH_A 2
+#define SWITCH_X 3
+#define SWITCH_L 4
+#define SWITCH_R 5
+#define SWITCH_ZL 6
+#define SWITCH_ZR 7
+#define SWITCH_SELECT 8
+#define SWITCH_START 9
+#define SWITCH_LEFT_STICK 10
+#define SWITCH_RIGHT_STICK 11
+#define SWITCH_HOME 12
+#define SWITCH_CAPTURE 13
 
 #ifdef __cplusplus
 class Controller {

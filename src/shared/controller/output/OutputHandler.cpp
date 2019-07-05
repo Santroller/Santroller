@@ -10,7 +10,9 @@ void OutputHandler::process(Controller *controller) {
 }
 
 void OutputHandler::init() {
-  if(config.sub_type >= SWITCH_SUBTYPE) {
+  if(config.sub_type == SWITCH_SUBTYPE) {
+    // Output::output = new SwitchOutput();
+  } else if(config.sub_type >= PS3_CONTROLLER_SUBTYPE) {
     Output::output = new GamepadOutput();
   } else if(config.sub_type == KEYBOARD_SUBTYPE) {
     Output::output = new KeyboardOutput();

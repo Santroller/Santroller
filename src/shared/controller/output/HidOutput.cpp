@@ -7,9 +7,9 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Class : USB_CSCP_NoDeviceClass,
   SubClass : USB_CSCP_NoDeviceSubclass,
   Protocol : USB_CSCP_NoDeviceProtocol,
-  Endpoint0Size : 64,
-  VendorID : 0x1209,
-  ProductID : 0x2882,
+  Endpoint0Size : HID_EPSIZE,
+  VendorID : 0x12ba,
+  ProductID : 0x0210,
   ReleaseNumber : 0x3122,
 
   ManufacturerStrIndex : 0x01,
@@ -34,8 +34,7 @@ void HIDOutput::init() {
       ConfigurationNumber : 1,
       ConfigurationStrIndex : NO_DESCRIPTOR,
 
-      ConfigAttributes :
-          (USB_CONFIG_ATTR_RESERVED | USB_CONFIG_ATTR_SELFPOWERED),
+      ConfigAttributes : USB_CONFIG_ATTR_RESERVED,
 
       MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
     },

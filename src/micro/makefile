@@ -15,9 +15,9 @@ BOARD        = AVR_MICRO
 F_CPU        ?= 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
-SRC = $(shell find ../shared -type f -name '*.c' -not -path "../shared/io/lufa/lufa/*") $(shell find ../shared -type f -name '*.cpp' -not -path "../shared/io/lufa/lufa/*") $(shell find . -type f -name '*.c') $(shell find . -type f -name '*.cpp') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
-LUFA_PATH    = ../shared/io/lufa/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/io/lufa/
+SRC = $(shell find ../shared -type f -name '*.c') main.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+LUFA_PATH    = ../../lib/lufa/LUFA
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb/
 CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj

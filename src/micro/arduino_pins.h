@@ -20,8 +20,7 @@
   Boston, MA  02111-1307  USA
 */
 
-#ifndef Pins_Arduino_h
-#define Pins_Arduino_h
+#pragma once
 
 #include <avr/pgmspace.h>
 #include "../shared/arduino.h"
@@ -388,5 +387,3 @@ const uint8_t PROGMEM analog_pin_to_channel_PGM[] = {
 
 // Alias SerialUSB to Serial
 #define SerialUSB SERIAL_PORT_USBVIRTUAL
-
-#endif /* Pins_Arduino_h */

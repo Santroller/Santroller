@@ -23,7 +23,13 @@
         "eeprom.h": "c",
         "stdlib.h": "c",
         "*.log": "cpp",
-        "ps3hid": "cpp"
+        "ps3hid": "cpp",
+        "i2c_dev.h": "c",
+        "input_wii_ext.h": "c",
+        "output_handler.h": "c",
+        "input_direct.h": "c",
+        "input_guitar.h": "c",
+        "stdbool.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

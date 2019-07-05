@@ -187,8 +187,8 @@ uint8_t I2CReadData(uint8_t I2Caddr, uint8_t bytesToRead, uint8_t repStart) {
  * to use default class value in readTimeout)
  * @return Status of read operation (true = success)
  */
-int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, bool isWii) {
-  return readBytes(devAddr, regAddr, 1, data, isWii);
+int8_t i2c_read_byte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, bool isWii) {
+  return i2c_read_bytes(devAddr, regAddr, 1, data, isWii);
 }
 /** Read multiple bytes from an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -199,7 +199,7 @@ int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, bool isWii) {
  * to use default class value in readTimeout)
  * @return Number of bytes read (-1 indicates failure)
  */
-int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
+int8_t i2c_read_bytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
                  uint8_t *data, bool isWii) {
   I2CReadRegister(devAddr, regAddr, length, isWii);
   for (int i = 0; i < length; i++) {
@@ -213,8 +213,8 @@ int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
  * @param data New byte value to write
  * @return Status of operation (true = success)
  */
-bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
-  return writeBytes(devAddr, regAddr, 1, &data);
+bool i2c_write_byte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
+  return i2c_write_bytes(devAddr, regAddr, 1, &data);
 }
 /** Write multiple bytes to an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -223,7 +223,7 @@ bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
  * @param data Buffer to copy new data from
  * @return Status of operation (true = success)
  */
-bool writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
+bool i2c_write_bytes(uint8_t devAddr, uint8_t regAddr, uint8_t length,
                 uint8_t *data) {
   return I2CWriteRegisterMultiple(devAddr, regAddr, data, length);
 }

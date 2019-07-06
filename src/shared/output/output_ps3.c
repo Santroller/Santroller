@@ -147,4 +147,19 @@ void ps3_init(event_pointers *events, const void **const report_descriptor,
   *report_descriptor_size = sizeof(ps3_report_descriptor);
   hid_device->Config.PrevReportINBuffer = &prev_ps3_report;
   hid_device->Config.PrevReportINBufferSize = sizeof(prev_ps3_report);
+  if (config.sub_type != PS3_GAMEPAD_SUBTYPE) {
+    DeviceDescriptor->VendorID = 0x12ba;
+  }
+  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
+    DeviceDescriptor->ProductID = 0x0100;
+  }
+  if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    DeviceDescriptor->ProductID = 0x0200;
+  }
+  if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
+    DeviceDescriptor->ProductID = 0x0120;
+  }
+  if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
+    DeviceDescriptor->ProductID = 0x0210;
+  }
 }

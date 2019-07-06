@@ -90,7 +90,6 @@ void i2c_init() {
   TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
   // Enable I2C and interrupt
   TWCR = (1 << TWIE) | (1 << TWEN);
-  sei();
 }
 
 uint8_t isI2CReady() {

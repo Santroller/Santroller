@@ -15,10 +15,6 @@ enum StringDescriptors_t {
   STRING_ID_Manufacturer = 1, /**< Manufacturer string ID */
   STRING_ID_Product = 2,      /**< Product string ID */
 };
-extern uint16_t get_descriptor(const uint8_t DescriptorType,
-                               const uint8_t DescriptorNumber,
-                               const void **const DescriptorAddress,
-                               uint8_t *const DescriptorMemorySpace);
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,

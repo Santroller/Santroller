@@ -29,7 +29,16 @@
         "output_handler.h": "c",
         "input_direct.h": "c",
         "input_guitar.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "wcid.h": "c",
+        "output_xinput.h": "c",
+        "bootloader.h": "c",
+        "stdint.h": "c",
+        "output_hid.h": "c",
+        "hidclass.h": "c",
+        "usbmode.h": "c",
+        "output_keyboard.h": "c",
+        "output_ps3.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

@@ -2729,7 +2729,9 @@ int8_t mpu_set_dmp_state(unsigned char enable) {
     mpu_set_sample_rate(st.chip_cfg.dmp_sample_rate);
     /* Remove FIFO elements. */
     tmp = 0;
-    i2c_write(st.hw->addr, 0x23, 1, &tmp);
+    if(!i2c_write(st.hw->addr, 0x23, 1, &tmp)) {
+      return -1;
+    }
     st.chip_cfg.dmp_on = 1;
     /* Enable DMP interrupt. */
     set_int_enable(1);
@@ -2739,7 +2741,9 @@ int8_t mpu_set_dmp_state(unsigned char enable) {
     set_int_enable(0);
     /* Restore FIFO settings. */
     tmp = st.chip_cfg.fifo_enable;
-    i2c_write(st.hw->addr, 0x23, 1, &tmp);
+    if(!i2c_write(st.hw->addr, 0x23, 1, &tmp)) {
+      return -1;
+    }
     st.chip_cfg.dmp_on = 0;
     mpu_reset_fifo();
   }

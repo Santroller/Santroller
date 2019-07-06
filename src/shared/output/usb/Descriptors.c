@@ -1,6 +1,7 @@
 #include "Descriptors.h"
 #include "wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
+#include "../output_handler.h"
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the
@@ -52,7 +53,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   const uint8_t DescriptorType = (wValue >> 8);
   const uint8_t DescriptorNumber = (wValue & 0xFF);
 
-  uint16_t Size = get_descriptor(DescriptorType, DescriptorNumber,
+  uint16_t Size = events.get_descriptor(DescriptorType, DescriptorNumber,
                                  DescriptorAddress, DescriptorMemorySpace);
   if (Size) {
     return Size;

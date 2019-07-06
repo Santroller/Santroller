@@ -16,6 +16,7 @@ void input_init(void) {
     direct_init();
     tick_function = direct_tick;
   }
+  sei();
   i2c_init();
   enableADC();
   guitar_init();

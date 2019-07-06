@@ -35,7 +35,7 @@ ISR(USART1_RX_vect) {
 }
 int main(void) {
   load_config();
-  UBRR1 = 6;
+  UBRR1 = 8;
   UCSR1B = _BV(TXEN1) | _BV(RXEN1) | _BV(RXCIE1);
   UCSR1C = _BV(UCSZ10) | _BV(UCSZ11);
   uint8_t data = 0;
@@ -50,7 +50,6 @@ int main(void) {
     UDR1 = cfg[i];
   }
   output_init();
-  sei();
   // clang-format off
   while (true);
   // clang-format on

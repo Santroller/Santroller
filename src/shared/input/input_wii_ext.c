@@ -10,7 +10,7 @@ uint8_t classic_bindings[16] = {
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t counter;
 uint16_t id;
-uint16_t read_ext_id() {
+uint16_t read_ext_id(void) {
   uint8_t data[6];
   i2c_read_bytes(I2C_ADDR, 0xFA, 6, data, true);
   // 0100 a420 0101 -> #1#######101
@@ -29,8 +29,8 @@ void init_controller(void) {
   }
 }
 bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
-  byte orCheck = 0x00;  // Check if data is zeroed (bad connection)
-  byte andCheck = 0xFF; // Check if data is maxed (bad init)
+  uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
+  uint8_t andCheck = 0xFF; // Check if data is maxed (bad init)
 
   for (int i = 0; i < dataSize; i++) {
     orCheck |= dataIn[i];
@@ -65,7 +65,7 @@ void wii_ext_tick(controller_t *controller) {
   }
   uint16_t buttons = data[6] | (data[7] << 8);
   for (uint8_t i = 2; i < sizeof(classic_bindings); i++) {
-    auto idx = classic_bindings[i];
+    uint8_t idx = classic_bindings[i];
     if (idx == INVALID_PIN) continue;
     bit_write(!bit_check(buttons, i), controller->buttons, idx);
   }

@@ -6,7 +6,7 @@ void direct_init(void) {
   uint8_t *pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
-      auto fret_type_2 = i < XBOX_LB ? INPUT_PULLUP : fret_type;
+      uint8_t fret_type_2 = i < XBOX_LB ? INPUT_PULLUP : fret_type;
       pinMode(pins[i], fret_type_2);
     }
   }
@@ -23,7 +23,7 @@ void direct_tick(controller_t *controller) {
   uint8_t *pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
-      auto eq = i < XBOX_LB ? false : config.frets_led_mode;
+      bool eq = i < XBOX_LB ? false : config.frets_led_mode;
       bit_write(digitalRead(pins[i]) == eq, controller->buttons, i);
     }
   }

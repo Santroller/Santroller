@@ -2,7 +2,7 @@
 
 import usb.core
 import sys
-
+#Make this also handle ps3 guitars
 try:
     dev = usb.core.find(idVendor=0x1209, idProduct=0x2882)
     val = 0x30

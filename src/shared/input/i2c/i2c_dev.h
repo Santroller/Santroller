@@ -4,8 +4,6 @@
 #include <avr/io.h>
 #include <inttypes.h>
 #include <stdbool.h>
-#define byte uint8_t
-#define boolean bool
 
 // TWI bit rate
 #define TWI_FREQ 300000

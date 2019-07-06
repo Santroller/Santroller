@@ -137,12 +137,16 @@ uint16_t hid_get_descriptor(const uint8_t DescriptorType,
   *DescriptorMemorySpace = memorySpace;
   return Size;
 }
+void hid_process_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+                        uint8_t *const ReportID, const uint8_t ReportType,
+                        void *ReportData, uint16_t *const ReportSize) {}
 void hid_init(event_pointers *events) {
   events->tick = hid_tick;
   events->get_descriptor = hid_get_descriptor;
   events->control_request = hid_control_request;
   events->start_of_frame = hid_start_of_frame;
   events->configuration_changed = hid_configuration_changed;
+  events->process_hid_report = hid_process_report;
   if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     switch_init(events, &hid_report_address, &hid_report_size, &interface,
                 &DeviceDescriptor);

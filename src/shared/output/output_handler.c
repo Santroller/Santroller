@@ -1,7 +1,7 @@
 #include "output_handler.h"
 #include "bootloader/bootloader.h"
-#include "output_xinput.h"
 #include "output_hid.h"
+#include "output_xinput.h"
 event_pointers events;
 void output_init(void) {
   if (config.sub_type >= KEYBOARD_SUBTYPE) {
@@ -13,9 +13,7 @@ void output_init(void) {
   sei();
 }
 
-void output_tick(controller_t controller) {
-  events.tick(controller);
-}
+void output_tick(controller_t controller) { events.tick(controller); }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   events.configuration_changed();
 }
@@ -45,13 +43,13 @@ void CALLBACK_HID_Device_ProcessHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, const uint8_t ReportID,
     const uint8_t ReportType, const void *ReportData,
     const uint16_t ReportSize) {
-  // events.process_hid_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
-  //                           ReportSize);
+  events.process_hid_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
+                            ReportSize);
 }
 
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-  return events.create_hid_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
-                           ReportSize);
+  return events.create_hid_report(HIDInterfaceInfo, ReportID, ReportType,
+                                  ReportData, ReportSize);
 }

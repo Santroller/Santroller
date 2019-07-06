@@ -44,3 +44,4 @@
 
 //Firmware types
 #define GUITAR_DEVICE_TYPE 0xfea123
+#define ARDWIINO_DEVICE_TYPE 0xa2d414

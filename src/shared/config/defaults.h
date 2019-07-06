@@ -12,7 +12,7 @@
   { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
-#define FRETS_LED true
+#define FRETS_LED false
 #define MAP_JOY_TO_DPAD true
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
@@ -41,4 +41,4 @@
         INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
         INVALID_PIN, 19, 20, 18, INVALID_PIN, MPU_6050_INTERRUPT_PIN           \
   }
-#define FIRMWARE GUITAR_DEVICE_TYPE
+#define FIRMWARE ARDWIINO_DEVICE_TYPE

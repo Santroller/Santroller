@@ -138,8 +138,8 @@ uint16_t hid_get_descriptor(const uint8_t DescriptorType,
   return Size;
 }
 void hid_process_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
-                        uint8_t *const ReportID, const uint8_t ReportType,
-                        void *ReportData, uint16_t *const ReportSize) {}
+                        const uint8_t ReportID, const uint8_t ReportType,
+                        const void *ReportData, const uint16_t ReportSize) {}
 void hid_init(event_pointers *events) {
   events->tick = hid_tick;
   events->get_descriptor = hid_get_descriptor;

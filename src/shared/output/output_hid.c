@@ -97,7 +97,7 @@ USB_Descriptor_Device_t DeviceDescriptor = {
 void hid_tick(controller_t controller) {
   USB_USBTask();
   wdt_reset();
-  last_controller = controller;
+  memcpy(&last_controller, &controller, sizeof(controller_t));
   HID_Device_USBTask(&interface);
 }
 void hid_control_request(void) { HID_Device_ProcessControlRequest(&interface); }
@@ -128,7 +128,7 @@ uint16_t hid_get_descriptor(const uint8_t DescriptorType,
     Size = sizeof(USB_HID_Descriptor_HID_t);
     break;
   case HID_DTYPE_Report:
-    Address = &hid_report_address;
+    Address = hid_report_address;
     Size = hid_report_size;
     memorySpace = MEMSPACE_FLASH;
     break;
@@ -138,20 +138,20 @@ uint16_t hid_get_descriptor(const uint8_t DescriptorType,
   return Size;
 }
 void hid_init(event_pointers *events) {
+  events->tick = hid_tick;
+  events->get_descriptor = hid_get_descriptor;
+  events->control_request = hid_control_request;
+  events->start_of_frame = hid_start_of_frame;
+  events->configuration_changed = hid_configuration_changed;
   if (config.sub_type == SWITCH_SUBTYPE) {
     switch_init(events, &hid_report_address, &hid_report_size, &interface,
                 &DeviceDescriptor);
   } else if (config.sub_type == KEYBOARD_SUBTYPE) {
     keyboard_init(events, &hid_report_address, &hid_report_size, &interface,
                   &DeviceDescriptor);
-  } else if (config.sub_type >= PS3_CONTROLLER_SUBTYPE) {
+  } else if (config.sub_type >= PS3_GAMEPAD_SUBTYPE) {
     ps3_init(events, &hid_report_address, &hid_report_size, &interface,
              &DeviceDescriptor);
   }
   configuration_descriptor.HID_GamepadHID.HIDReportLength = hid_report_size;
-  events->tick = hid_tick;
-  events->get_descriptor = hid_get_descriptor;
-  events->control_request = hid_control_request;
-  events->start_of_frame = hid_start_of_frame;
-  events->configuration_changed = hid_configuration_changed;
 }

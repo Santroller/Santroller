@@ -5,15 +5,6 @@ static uint8_t prev_keyboard_report[sizeof(USB_KeyboardReport_Data_t)];
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 extern controller_t last_controller;
-void keyboard_init(event_pointers *events, const void **const report_descriptor,
-                   uint16_t *report_descriptor_size,
-                   USB_ClassInfo_HID_Device_t *hid_device,
-                   USB_Descriptor_Device_t *DeviceDescriptor) {
-  *report_descriptor = keyboard_report_descriptor;
-  *report_descriptor_size = sizeof(keyboard_report_descriptor);
-  hid_device->Config.PrevReportINBuffer = &prev_keyboard_report;
-  hid_device->Config.PrevReportINBufferSize = sizeof(prev_keyboard_report);
-}
 
 bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                             uint8_t *const ReportID, const uint8_t ReportType,
@@ -21,8 +12,9 @@ bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   USB_KeyboardReport_Data_t *KeyboardReport =
       (USB_KeyboardReport_Data_t *)ReportData;
   uint8_t usedKeys = 0;
-  for (int i = 0; i <= XBOX_Y; i++) {
-    uint8_t binding = ((uint8_t *)&config.keys)[i];
+  uint8_t *keys = (uint8_t *)&config.keys;
+  for (int i = 0; i <= XBOX_Y && usedKeys < SIMULTANEOUS_KEYS; i++) {
+    uint8_t binding = keys[i];
     if (binding && bit_check(last_controller.buttons, i)) {
       KeyboardReport->KeyCode[usedKeys++] = binding;
     }
@@ -35,4 +27,14 @@ bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   CHECK_TRIGGER_KEY(rt);
   *ReportSize = sizeof(USB_KeyboardReport_Data_t);
   return false;
+}
+void keyboard_init(event_pointers *events, const void **const report_descriptor,
+                   uint16_t *report_descriptor_size,
+                   USB_ClassInfo_HID_Device_t *hid_device,
+                   USB_Descriptor_Device_t *DeviceDescriptor) {
+  events->create_hid_report = keyboard_create_report;
+  *report_descriptor = keyboard_report_descriptor;
+  *report_descriptor_size = sizeof(keyboard_report_descriptor);
+  hid_device->Config.PrevReportINBuffer = &prev_keyboard_report;
+  hid_device->Config.PrevReportINBufferSize = sizeof(prev_keyboard_report);
 }

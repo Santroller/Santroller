@@ -4,19 +4,23 @@
 #define SIMULTANEOUS_KEYS 6
 
 #define CHECK_JOY_KEY(joy)                                                     \
-  if (config.keys.joy.neg &&                                                   \
-      last_controller.joy < -(int)config.threshold_joy) {                      \
-    KeyboardReport->KeyCode[usedKeys++] = config.keys.joy.neg;                 \
-  }                                                                            \
-  if (config.keys.joy.pos &&                                                   \
-      last_controller.joy > (int)config.threshold_joy) {                       \
-    KeyboardReport->KeyCode[usedKeys++] = config.keys.joy.pos;                 \
+  if (usedKeys < SIMULTANEOUS_KEYS) {                                          \
+    if (config.keys.joy.neg &&                                                 \
+        last_controller.joy < -(int)config.threshold_joy) {                    \
+      KeyboardReport->KeyCode[usedKeys++] = config.keys.joy.neg;               \
+    }                                                                          \
+    if (config.keys.joy.pos &&                                                 \
+        last_controller.joy > (int)config.threshold_joy) {                     \
+      KeyboardReport->KeyCode[usedKeys++] = config.keys.joy.pos;               \
+    }                                                                          \
   }
 
 #define CHECK_TRIGGER_KEY(trigger)                                             \
-  if (config.keys.trigger &&                                                   \
-      last_controller.trigger > (int)config.threshold_trigger) {               \
-    KeyboardReport->KeyCode[usedKeys++] = config.keys.trigger;                 \
+  if (usedKeys < SIMULTANEOUS_KEYS) {                                          \
+    if (config.keys.trigger &&                                                 \
+        last_controller.trigger > (int)config.threshold_trigger) {             \
+      KeyboardReport->KeyCode[usedKeys++] = config.keys.trigger;               \
+    }                                                                          \
   }
 
 void keyboard_init(event_pointers *events, const void **const report_descriptor,

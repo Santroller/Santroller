@@ -143,7 +143,7 @@ void hid_init(event_pointers *events) {
   events->control_request = hid_control_request;
   events->start_of_frame = hid_start_of_frame;
   events->configuration_changed = hid_configuration_changed;
-  if (config.sub_type == SWITCH_SUBTYPE) {
+  if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     switch_init(events, &hid_report_address, &hid_report_size, &interface,
                 &DeviceDescriptor);
   } else if (config.sub_type == KEYBOARD_SUBTYPE) {

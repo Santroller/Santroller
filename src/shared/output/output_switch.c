@@ -125,4 +125,6 @@ void switch_init(event_pointers *events,
   *report_descriptor_size = sizeof(switch_report_descriptor);
   hid_device->Config.PrevReportINBuffer = &prev_switch_report;
   hid_device->Config.PrevReportINBufferSize = sizeof(prev_switch_report);
+  DeviceDescriptor->VendorID = 0x0F0D;
+  DeviceDescriptor->ProductID = 0x0092;
 }

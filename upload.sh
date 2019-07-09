@@ -1,1 +1,0 @@
-echo r > /dev/ttyACM0

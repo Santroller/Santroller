@@ -1,4 +1,5 @@
 #include "output_ps3.h"
+#include "usb/Descriptors.h"
 // Bindings to go from controller to ps3
 static const uint8_t PROGMEM ps3ButtonBindings[] = {
     15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
@@ -137,29 +138,26 @@ void ps3_control_request(void) {
   HID_Device_ProcessControlRequest(&interface);
 }
 
-void ps3_init(event_pointers *events, const void **const report_descriptor,
-              uint16_t *report_descriptor_size,
-              USB_ClassInfo_HID_Device_t *hid_device,
-              USB_Descriptor_Device_t *DeviceDescriptor) {
+void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
   events->create_hid_report = ps3_create_report;
   events->control_request = ps3_control_request;
-  *report_descriptor = ps3_report_descriptor;
-  *report_descriptor_size = sizeof(ps3_report_descriptor);
+  hid_report_address = ps3_report_descriptor;
+  hid_report_size = sizeof(ps3_report_descriptor);
   hid_device->Config.PrevReportINBuffer = &prev_ps3_report;
   hid_device->Config.PrevReportINBufferSize = sizeof(prev_ps3_report);
   if (config.sub_type != PS3_GAMEPAD_SUBTYPE) {
-    DeviceDescriptor->VendorID = 0x12ba;
+    DeviceDescriptor.VendorID = 0x12ba;
   }
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
-    DeviceDescriptor->ProductID = 0x0100;
+    DeviceDescriptor.ProductID = 0x0100;
   }
   if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
-    DeviceDescriptor->ProductID = 0x0200;
+    DeviceDescriptor.ProductID = 0x0200;
   }
   if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
-    DeviceDescriptor->ProductID = 0x0120;
+    DeviceDescriptor.ProductID = 0x0120;
   }
   if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
-    DeviceDescriptor->ProductID = 0x0210;
+    DeviceDescriptor.ProductID = 0x0210;
   }
 }

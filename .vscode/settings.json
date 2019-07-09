@@ -38,7 +38,8 @@
         "hidclass.h": "c",
         "usbmode.h": "c",
         "output_keyboard.h": "c",
-        "output_ps3.h": "c"
+        "output_ps3.h": "c",
+        "wdt.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

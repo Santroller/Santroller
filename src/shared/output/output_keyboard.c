@@ -1,5 +1,6 @@
 #include "output_keyboard.h"
 #include "../util.h"
+#include "usb/Descriptors.h"
 
 static uint8_t prev_keyboard_report[sizeof(USB_KeyboardReport_Data_t)];
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
@@ -28,13 +29,10 @@ bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   *ReportSize = sizeof(USB_KeyboardReport_Data_t);
   return false;
 }
-void keyboard_init(event_pointers *events, const void **const report_descriptor,
-                   uint16_t *report_descriptor_size,
-                   USB_ClassInfo_HID_Device_t *hid_device,
-                   USB_Descriptor_Device_t *DeviceDescriptor) {
+void keyboard_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
   events->create_hid_report = keyboard_create_report;
-  *report_descriptor = keyboard_report_descriptor;
-  *report_descriptor_size = sizeof(keyboard_report_descriptor);
+  hid_report_address = keyboard_report_descriptor;
+  hid_report_size = sizeof(keyboard_report_descriptor);
   hid_device->Config.PrevReportINBuffer = &prev_keyboard_report;
   hid_device->Config.PrevReportINBufferSize = sizeof(prev_keyboard_report);
 }

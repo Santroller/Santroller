@@ -1,12 +1,12 @@
+#include "../../shared/config/eeprom.h"
 #include "../../shared/input/input_handler.h"
 #include "../../shared/util.h"
-#include "../../shared/config/eeprom.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
 #include <avr/wdt.h>
-#include <util/delay.h>
 #include <stddef.h>
+#include <util/delay.h>
 
 size_t controller_index = 0;
 controller_t controller;
@@ -28,6 +28,11 @@ int main(void) {
   input_init();
   while (true) {
     input_tick(&controller);
+    if (bit_is_set(UCSR0A, RXC0) && UDR0 == 'r') {
+      cli();
+      wdt_enable(WDTO_15MS);
+      for (;;) {}
+    }
   }
 }
 ISR(USART_UDRE_vect) {
@@ -37,7 +42,5 @@ ISR(USART_UDRE_vect) {
     UDR0 = ((uint8_t *)&controller)[controller_index - 2];
   }
   controller_index++;
-  if (controller_index >= sizeof(controller_t) + 2) {
-    controller_index = 0;
-  }
+  if (controller_index >= sizeof(controller_t) + 2) { controller_index = 0; }
 }

@@ -2,25 +2,25 @@ all:
 
 micro:
 	$(MAKE) -C src/micro
-	./upload.py
+	echo b > /dev/ttyACM0
 	sleep 0.5
 	$(MAKE) -C src/micro avrdude
 
 micro-ee:
 	$(MAKE) -C src/micro
-	./upload.py
+	echo b > /dev/ttyACM0
 	sleep 0.5
 	$(MAKE) -C src/micro avrdude-ee
 
 uno:
 	$(MAKE) -C src/uno
-	./upload.py
+	echo b > /dev/ttyACM0
 	sleep 0.5
 	$(MAKE) -C src/uno upload
 
 uno-ee:
 	$(MAKE) -C src/uno
-	./upload.py
+	echo b > /dev/ttyACM0
 	sleep 0.5
 	$(MAKE) -C src/uno upload-ee
 

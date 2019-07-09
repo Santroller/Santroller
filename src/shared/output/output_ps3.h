@@ -35,7 +35,4 @@ typedef struct {
   uint8_t l2_axis;
   uint8_t r2_axis;
 } USB_PS3Report_Data_t;
-void ps3_init(event_pointers *events, const void **const report_descriptor,
-              uint16_t *report_descriptor_size,
-              USB_ClassInfo_HID_Device_t *hid_device,
-              USB_Descriptor_Device_t *DeviceDescriptor);
+void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device);

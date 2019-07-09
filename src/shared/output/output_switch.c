@@ -1,4 +1,5 @@
 #include "output_switch.h"
+#include "usb/Descriptors.h"
 static uint8_t prev_switch_report[sizeof(USB_SwitchReport_Data_t)];
 
 // Bindings to go from controller to ps3
@@ -114,17 +115,13 @@ bool switch_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   return false;
 }
 
-void switch_init(event_pointers *events,
-                 const void **const report_descriptor,
-                 uint16_t* report_descriptor_size,
-                 USB_ClassInfo_HID_Device_t *hid_device,
-                 USB_Descriptor_Device_t *DeviceDescriptor) {
+void switch_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
 
   events->create_hid_report = switch_create_report;
-  *report_descriptor = &switch_report_descriptor;
-  *report_descriptor_size = sizeof(switch_report_descriptor);
+  hid_report_address = &switch_report_descriptor;
+  hid_report_size = sizeof(switch_report_descriptor);
   hid_device->Config.PrevReportINBuffer = &prev_switch_report;
   hid_device->Config.PrevReportINBufferSize = sizeof(prev_switch_report);
-  DeviceDescriptor->VendorID = 0x0F0D;
-  DeviceDescriptor->ProductID = 0x0092;
+  DeviceDescriptor.VendorID = 0x0F0D;
+  DeviceDescriptor.ProductID = 0x0092;
 }

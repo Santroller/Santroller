@@ -1,6 +1,6 @@
+#include "../../shared/config/eeprom.h"
 #include "../../shared/output/output_handler.h"
 #include "../../shared/util.h"
-#include "../../shared/config/eeprom.h"
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -14,9 +14,7 @@ ISR(USART1_RX_vect) {
   char data = UDR1;
   switch (controller_index) {
   case 0:
-    if (data == 'm') {
-      controller_index++;
-    }
+    if (data == 'm') { controller_index++; }
     break;
   case 1:
     if (data == 'a')
@@ -44,7 +42,7 @@ int main(void) {
     loop_until_bit_is_set(UCSR1A, RXC1);
     data = UDR1;
   }
-  uint8_t * cfg = (uint8_t *)&config;
+  uint8_t *cfg = (uint8_t *)&config;
   for (size_t i = 0; i < sizeof(config_t); i++) {
     loop_until_bit_is_set(UCSR1A, UDRE1);
     UDR1 = cfg[i];
@@ -53,4 +51,8 @@ int main(void) {
   // clang-format off
   while (true);
   // clang-format on
+}
+void before_reset(void) {
+  loop_until_bit_is_set(UCSR1A, UDRE1);
+  UDR1 = 'r';
 }

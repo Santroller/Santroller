@@ -1,66 +1,8 @@
 #include "output_xinput.h"
+#include "usb/Descriptors.h"
 #include "usb/wcid.h"
 #include <avr/wdt.h>
 USB_XInputReport_Data_t gamepad_state;
-extern USB_Descriptor_Device_t DeviceDescriptor;
-Xinput_Descriptor_Configuration_t ConfigurationDescriptor = {
-  Config : {
-    Header : {
-      Size : sizeof(USB_Descriptor_Configuration_Header_t),
-      Type : DTYPE_Configuration
-    },
-
-    TotalConfigurationSize : sizeof(Xinput_Descriptor_Configuration_t),
-    TotalInterfaces : 1,
-
-    ConfigurationNumber : 1,
-    ConfigurationStrIndex : NO_DESCRIPTOR,
-
-    ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
-
-    MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
-  },
-
-  Interface0 : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-
-    InterfaceNumber : 0,
-    AlternateSetting : 0x00,
-
-    TotalEndpoints : 2,
-
-    Class : 0xFF,
-    SubClass : 0x5D,
-    Protocol : 0x01,
-
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-
-  XInputUnknown : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    {0x10, 0x01},
-    0,
-    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
-  },
-
-  DataInEndpoint0 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-
-    EndpointAddress : 0x81,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : XBOX_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  DataOutEndpoint0 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-
-    EndpointAddress : 0x02,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : XBOX_EPSIZE,
-    PollingIntervalMS : 1
-  },
-};
 const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
   Version : 0x0100,
@@ -77,18 +19,15 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
 };
 
 void xinput_configuration_changed(void) {
-  Endpoint_ConfigureEndpoint(JOYSTICK_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
-  Endpoint_ConfigureEndpoint((ENDPOINT_DIR_IN | 3), EP_TYPE_INTERRUPT, 32, 1);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
 }
 void xinput_start_of_frame(void) {}
 void xinput_tick(controller_t controller) {
-  USB_USBTask();
-  wdt_reset();
   /* Device must be connected and configured for the task to run */
   if (USB_DeviceState != DEVICE_STATE_Configured) return;
 
   /* Select the Joystick Report Endpoint */
-  Endpoint_SelectEndpoint(JOYSTICK_EPADDR_IN);
+  Endpoint_SelectEndpoint(HID_EPADDR_IN);
 
   /* Check to see if the host is ready for another packet */
   if (Endpoint_IsINReady()) {
@@ -157,36 +96,15 @@ void xinput_control_request(void) {
     }
   }
 }
-uint16_t xinput_get_descriptor(const uint8_t DescriptorType,
-                               const uint8_t DescriptorNumber,
-                               const void **const DescriptorAddress,
-                               uint8_t *const DescriptorMemorySpace) {
-  uint16_t Size = NO_DESCRIPTOR;
-  const void *Address = NULL;
-  uint8_t MemorySpace = MEMSPACE_RAM;
-  switch (DescriptorType) {
-  case DTYPE_Device:
-    Address = &DeviceDescriptor;
-    Size = sizeof(DeviceDescriptor);
-    break;
-  case DTYPE_Configuration:
-    Address = &ConfigurationDescriptor;
-    Size = sizeof(ConfigurationDescriptor);
-    break;
-  }
-  *DescriptorMemorySpace = MemorySpace;
-  *DescriptorAddress = Address;
-  return Size;
-}
 void xinput_init(event_pointers *events) {
   events->configuration_changed = xinput_configuration_changed;
   events->start_of_frame = xinput_start_of_frame;
   events->control_request = xinput_control_request;
   events->tick = xinput_tick;
-  events->get_descriptor = xinput_get_descriptor;
-  ConfigurationDescriptor.DataInEndpoint0.PollingIntervalMS = config.pollrate;
-  ConfigurationDescriptor.DataOutEndpoint0.PollingIntervalMS = config.pollrate;
   ConfigurationDescriptor.XInputUnknown.subtype = config.sub_type;
+  ConfigurationDescriptor.HID_Interface.Class = 0xFF;
+  ConfigurationDescriptor.HID_Interface.SubClass = 0x5D;
+  ConfigurationDescriptor.HID_Interface.Protocol = 0x01;
   memset(&gamepad_state, 0x00, sizeof(USB_XInputReport_Data_t));
   gamepad_state.rsize = 20;
 }

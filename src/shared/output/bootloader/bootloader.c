@@ -10,13 +10,13 @@
 #define MAGIC_KEY 0x7777
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)MAGIC_KEY_POS;
 uint16_t bootKeyVal;
+extern void before_reset(void);
 void reboot(void) {
+  before_reset();
   cli();
   wdt_enable(WDTO_15MS);
-  for (;;) {
-  }
+  for (;;) {}
 }
-
 void bootloader(void) {
   // write magic key to ram
   *bootKeyPtr = MAGIC_KEY;

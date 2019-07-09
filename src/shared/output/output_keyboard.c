@@ -1,11 +1,11 @@
 #include "output_keyboard.h"
 #include "../util.h"
 #include "usb/Descriptors.h"
+#include "output_hid.h"
 
 static uint8_t prev_keyboard_report[sizeof(USB_KeyboardReport_Data_t)];
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
-extern controller_t last_controller;
 
 bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                             uint8_t *const ReportID, const uint8_t ReportType,

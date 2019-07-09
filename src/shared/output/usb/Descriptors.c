@@ -76,8 +76,8 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     InterfaceStrIndex : NO_DESCRIPTOR
   },
 
-  XInputUnknown : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+  XInputReserved : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : DTYPE_Other},
     {0x10, 0x01},
     0,
     {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
@@ -257,10 +257,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     Size = sizeof(ConfigurationDescriptor);
     break;
   case HID_DTYPE_Report:
-    if (hid_report_address) {
-      Address = hid_report_address;
-      Size = hid_report_size;
-    }
+    Address = hid_report_address;
+    Size = hid_report_size;
     break;
   case DTYPE_String:
     switch (DescriptorNumber) {

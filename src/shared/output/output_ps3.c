@@ -1,5 +1,6 @@
 #include "output_ps3.h"
 #include "usb/Descriptors.h"
+#include "output_hid.h"
 // Bindings to go from controller to ps3
 static const uint8_t PROGMEM ps3ButtonBindings[] = {
     15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
@@ -61,7 +62,6 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     0xc0              // END_COLLECTION
 };
 
-extern controller_t last_controller;
 bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                        uint8_t *const ReportID, const uint8_t ReportType,
                        void *ReportData, uint16_t *const ReportSize) {
@@ -116,7 +116,6 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
 
   return false;
 }
-extern USB_ClassInfo_HID_Device_t interface;
 uint8_t ps3_init_data[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void ps3_control_request(void) {
   if (USB_ControlRequest.wIndex == interface.Config.InterfaceNumber) {

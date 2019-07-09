@@ -53,7 +53,7 @@ typedef struct {
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_t HID_Interface;
-  USB_HID_XBOX_Descriptor_HID_t XInputUnknown;
+  USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_HID_Descriptor_HID_t HID_GamepadHID;
   USB_Descriptor_Endpoint_t HID_ReportINEndpoint;
   USB_Descriptor_Endpoint_t HID_ReportOUTEndpoint;

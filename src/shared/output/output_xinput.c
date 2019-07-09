@@ -101,10 +101,11 @@ void xinput_init(event_pointers *events) {
   events->start_of_frame = xinput_start_of_frame;
   events->control_request = xinput_control_request;
   events->tick = xinput_tick;
-  ConfigurationDescriptor.XInputUnknown.subtype = config.sub_type;
+  ConfigurationDescriptor.XInputReserved.subtype = config.sub_type;
   ConfigurationDescriptor.HID_Interface.Class = 0xFF;
   ConfigurationDescriptor.HID_Interface.SubClass = 0x5D;
   ConfigurationDescriptor.HID_Interface.Protocol = 0x01;
+  ConfigurationDescriptor.XInputReserved.Header.Type = 0x21;
   memset(&gamepad_state, 0x00, sizeof(USB_XInputReport_Data_t));
   gamepad_state.rsize = 20;
 }

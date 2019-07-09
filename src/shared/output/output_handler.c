@@ -59,7 +59,7 @@ void output_tick(controller_t controller) {
     CDC_Device_SendData(&SerialInterface, &config, sizeof(config_t));
   }
   if (b == 'w') {
-    uint8_t* data = &config;
+    uint8_t* data = (uint8_t*)&config;
     size_t i = 0;
     while (i < sizeof(config_t)) {
       data[i] = CDC_Device_ReceiveByte(&SerialInterface);

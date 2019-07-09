@@ -1,11 +1,11 @@
 #include "output_switch.h"
 #include "usb/Descriptors.h"
+#include "output_hid.h"
 static uint8_t prev_switch_report[sizeof(USB_SwitchReport_Data_t)];
 
 // Bindings to go from controller to ps3
 static const uint8_t PROGMEM buttonBindings[] = {
     15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
-extern controller_t last_controller;
 // Based on https://github.com/progmem/Switch-Fightstick
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM switch_report_descriptor[] = {
     HID_RI_USAGE_PAGE(8, 1), /* Generic Desktop */

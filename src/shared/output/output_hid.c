@@ -62,8 +62,7 @@ void hid_init(event_pointers *events) {
           sizeof(ConfigurationDescriptor.Controller.XInput.Endpoints));
   hid_descriptor.HIDReportLength = hid_report_size;
   ConfigurationDescriptor.Controller.HID.HIDDescriptor = hid_descriptor;
-  ConfigurationDescriptor.Config.TotalConfigurationSize -= sizeof(ConfigurationDescriptor.Controller.XInput);
-  ConfigurationDescriptor.Config.TotalConfigurationSize += sizeof(ConfigurationDescriptor.Controller.HID.HIDDescriptor) + sizeof(ConfigurationDescriptor.Controller.HID.Endpoints);
+  ConfigurationDescriptor.Config.TotalConfigurationSize -= sizeof(USB_HID_XBOX_Descriptor_HID_t) - sizeof(USB_HID_Descriptor_HID_t);
 
   ConfigurationDescriptor.Interface0.Class = HID_CSCP_HIDClass;
   ConfigurationDescriptor.Interface0.SubClass = HID_CSCP_NonBootSubclass;

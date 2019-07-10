@@ -44,7 +44,14 @@ void xinput_tick(controller_t controller) {
     Endpoint_ClearIN();
   }
 }
-void sendControl(uint8_t *out, uint8_t outSize) {
+
+const uint8_t PROGMEM dataLen8[] = {0x00, 0x08, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00};
+const uint8_t PROGMEM deviceID[] = {0x00, 0x12, 0x28, 0x61};
+const uint8_t PROGMEM dataLen20[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
+                                     0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+void sendControl(const uint8_t *out, uint8_t outSize) {
   Endpoint_ClearStall();
   Endpoint_ClearSETUP();
   /* Write the report data to the control endpoint */
@@ -58,31 +65,24 @@ void xinput_control_request(void) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
-
       /* Write the report data to the control endpoint */
       Endpoint_Write_Control_Stream_LE(&gamepad_state, 20);
       Endpoint_ClearOUT();
     }
-
-    if (USB_ControlRequest.wLength == 0x04) {
-      uint8_t data[] = {0x00, 0x12, 0x28, 0x61}; // DeviceID
-      sendControl(data, sizeof(data));
+    if (USB_ControlRequest.bmRequestType ==
+        (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
+      switch (USB_ControlRequest.wLength) {
+      case 0x04:
+        sendControl(deviceID, sizeof(deviceID));
+        break;
+      case 0x08:
+        sendControl(dataLen8, sizeof(dataLen8));
+        break;
+      case 0x20:
+        sendControl(dataLen20, sizeof(dataLen20));
+        break;
+      }
     }
-    if (USB_ControlRequest.wLength == 8 &&
-        USB_ControlRequest.bmRequestType ==
-            (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[] = {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-      sendControl(data, sizeof(data));
-    }
-    if (USB_ControlRequest.wLength == 20 &&
-        USB_ControlRequest.bmRequestType ==
-            (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
-      uint8_t data[20] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
-                          0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
-                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Capabilities
-      sendControl(data, sizeof(data));
-    }
-
     break;
   case REQ_GetOSFeatureDescriptor:
     if ((USB_ControlRequest.bmRequestType &
@@ -101,7 +101,8 @@ void xinput_init(event_pointers *events) {
   events->start_of_frame = xinput_start_of_frame;
   events->control_request = xinput_control_request;
   events->tick = xinput_tick;
-  ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype = config.sub_type;
+  ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype =
+      config.sub_type;
   memset(&gamepad_state, 0x00, sizeof(USB_XInputReport_Data_t));
   gamepad_state.rsize = 20;
 }

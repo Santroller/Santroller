@@ -37,13 +37,13 @@ USB_ClassInfo_CDC_Device_t SerialInterface = {
 };
 event_pointers events;
 void output_init(void) {
+  ConfigurationDescriptor.Controller.XInput.Endpoints.DataInEndpoint0
+      .PollingIntervalMS = config.pollrate;
   if (config.sub_type >= KEYBOARD_SUBTYPE) {
     hid_init(&events);
   } else {
     xinput_init(&events);
   }
-  // ConfigurationDescriptor.HID_ReportINEndpoint.PollingIntervalMS =
-  //     config.pollrate;
   USB_Init();
   sei();
 }
@@ -59,13 +59,11 @@ void output_tick(controller_t controller) {
     CDC_Device_SendData(&SerialInterface, &config, sizeof(config_t));
   }
   if (b == 'w') {
-    uint8_t* data = (uint8_t*)&config;
+    uint8_t *data = (uint8_t *)&config;
     size_t i = 0;
     while (i < sizeof(config_t)) {
       data[i] = CDC_Device_ReceiveByte(&SerialInterface);
-      if (data[i] != EOF) {
-        i++;
-      }
+      if (data[i] != EOF) { i++; }
     }
     reboot();
   }

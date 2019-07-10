@@ -51,11 +51,11 @@ typedef struct {
   uint8_t reserved2[15];
 } USB_HID_XBOX_Descriptor_HID_t;
 typedef struct {
-  USB_Descriptor_Configuration_Header_t Config;
-  USB_Descriptor_Interface_t Interface0;
-  USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Endpoint_t DataInEndpoint0;
   USB_Descriptor_Endpoint_t DataOutEndpoint0;
+} ControllerEndpoints;
+typedef struct {
+  USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_Association_t CDC_IAD;
   USB_Descriptor_Interface_t CDC_CCI_Interface;
   USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
@@ -65,8 +65,18 @@ typedef struct {
   USB_Descriptor_Interface_t CDC_DCI_Interface;
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
+  USB_Descriptor_Interface_t Interface0;
+  union {
+    struct {
+      USB_HID_XBOX_Descriptor_HID_t XInputReserved;
+      ControllerEndpoints Endpoints;
+    } XInput;
+    struct {
+      USB_HID_Descriptor_HID_t HIDDescriptor;
+      ControllerEndpoints Endpoints;
+    } HID;
+  } Controller;
 } USB_Descriptor_Configuration_t;
-
 extern const void *hid_report_address;
 extern uint16_t hid_report_size;
 extern USB_Descriptor_Device_t DeviceDescriptor;

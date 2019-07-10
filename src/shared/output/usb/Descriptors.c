@@ -59,46 +59,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 
     MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
   },
-
-  Interface0 : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-
-    InterfaceNumber : 0,
-    AlternateSetting : 0x00,
-
-    TotalEndpoints : 2,
-
-    Class : 0xFF,
-    SubClass : 0x5D,
-    Protocol : 0x01,
-
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-
-  XInputReserved : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    {0x10, 0x01},
-    0,
-    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
-  },
-
-  DataInEndpoint0 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-
-    EndpointAddress : 0x81,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  DataOutEndpoint0 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-
-    EndpointAddress : 0x02,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
   CDC_IAD : {
     Header : {
       Size : sizeof(USB_Descriptor_Interface_Association_t),
@@ -205,6 +165,51 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     EndpointSize : CDC_TXRX_EPSIZE,
     PollingIntervalMS : 0x05
   },
+  Interface0 : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+
+    InterfaceNumber : 0,
+    AlternateSetting : 0x00,
+
+    TotalEndpoints : 2,
+
+    Class : 0xFF,
+    SubClass : 0x5D,
+    Protocol : 0x01,
+
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+  Controller : {
+    XInput : {
+      XInputReserved : {
+        Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+        {0x10, 0x01},
+        0,
+        {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
+      },
+      Endpoints : {
+        DataInEndpoint0 : {
+          Header :
+              {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+
+          EndpointAddress : 0x81,
+          Attributes : EP_TYPE_INTERRUPT,
+          EndpointSize : HID_EPSIZE,
+          PollingIntervalMS : 1
+        },
+        DataOutEndpoint0 : {
+          Header :
+              {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+
+          EndpointAddress : 0x02,
+          Attributes : EP_TYPE_INTERRUPT,
+          EndpointSize : HID_EPSIZE,
+          PollingIntervalMS : 1
+        },
+      }
+    }
+  }
 };
 USB_Descriptor_Device_t DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},

@@ -19,6 +19,15 @@ USB_ClassInfo_HID_Device_t interface = {
   },
 };
 
+USB_HID_Descriptor_HID_t hid_descriptor = {
+  Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
+
+  HIDSpec : VERSION_BCD(1, 1, 1),
+  CountryCode : 0x00,
+  TotalReportDescriptors : 1,
+  HIDReportType : HID_DTYPE_Report,
+  HIDReportLength : 0
+};
 
 void hid_tick(controller_t controller) {
   memcpy(&last_controller, &controller, sizeof(controller_t));
@@ -48,9 +57,15 @@ void hid_init(event_pointers *events) {
   } else if (config.sub_type >= PS3_GAMEPAD_SUBTYPE) {
     ps3_init(events, &interface);
   }
-  // ConfigurationDescriptor.HID_GamepadHID.HIDReportLength = hid_report_size;
+  memmove(&ConfigurationDescriptor.Controller.HID.Endpoints,
+          &ConfigurationDescriptor.Controller.XInput.Endpoints,
+          sizeof(ConfigurationDescriptor.Controller.XInput.Endpoints));
+  hid_descriptor.HIDReportLength = hid_report_size;
+  ConfigurationDescriptor.Controller.HID.HIDDescriptor = hid_descriptor;
+  ConfigurationDescriptor.Config.TotalConfigurationSize -= sizeof(ConfigurationDescriptor.Controller.XInput);
+  ConfigurationDescriptor.Config.TotalConfigurationSize += sizeof(ConfigurationDescriptor.Controller.HID.HIDDescriptor) + sizeof(ConfigurationDescriptor.Controller.HID.Endpoints);
 
-  // ConfigurationDescriptor.HID_Interface.Class = 0xFF;
-  // ConfigurationDescriptor.HID_Interface.SubClass = 0x5D;
-  // ConfigurationDescriptor.HID_Interface.Protocol = 0x01;
+  ConfigurationDescriptor.Interface0.Class = HID_CSCP_HIDClass;
+  ConfigurationDescriptor.Interface0.SubClass = HID_CSCP_NonBootSubclass;
+  ConfigurationDescriptor.Interface0.Protocol = HID_CSCP_NonBootProtocol;
 }

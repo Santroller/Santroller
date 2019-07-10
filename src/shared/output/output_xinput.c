@@ -101,7 +101,7 @@ void xinput_init(event_pointers *events) {
   events->start_of_frame = xinput_start_of_frame;
   events->control_request = xinput_control_request;
   events->tick = xinput_tick;
-  ConfigurationDescriptor.XInputReserved.subtype = config.sub_type;
+  ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype = config.sub_type;
   memset(&gamepad_state, 0x00, sizeof(USB_XInputReport_Data_t));
   gamepad_state.rsize = 20;
 }

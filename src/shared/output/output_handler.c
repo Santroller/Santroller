@@ -42,8 +42,8 @@ void output_init(void) {
   } else {
     xinput_init(&events);
   }
-  ConfigurationDescriptor.HID_ReportINEndpoint.PollingIntervalMS =
-      config.pollrate;
+  // ConfigurationDescriptor.HID_ReportINEndpoint.PollingIntervalMS =
+  //     config.pollrate;
   USB_Init();
   sei();
 }

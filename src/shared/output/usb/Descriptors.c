@@ -49,62 +49,56 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
       Type : DTYPE_Configuration
     },
 
-    TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t) - XBOX_SIZE,
+    TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
     TotalInterfaces : 3,
 
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
 
-    ConfigAttributes : USB_CONFIG_ATTR_RESERVED,
+    ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
 
     MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
   },
 
-  HID_Interface : {
+  Interface0 : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
 
-    InterfaceNumber : INTERFACE_ID_HID,
+    InterfaceNumber : 0,
     AlternateSetting : 0x00,
 
     TotalEndpoints : 2,
 
-    Class : HID_CSCP_HIDClass,
-    SubClass : HID_CSCP_NonBootSubclass,
-    Protocol : HID_CSCP_NonBootProtocol,
+    Class : 0xFF,
+    SubClass : 0x5D,
+    Protocol : 0x01,
 
     InterfaceStrIndex : NO_DESCRIPTOR
   },
-  HID_GamepadHID : {
-    Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
 
-    HIDSpec : VERSION_BCD(1, 1, 1),
-    CountryCode : 0x00,
-    TotalReportDescriptors : 1,
-    HIDReportType : HID_DTYPE_Report,
-    HIDReportLength : 0
+  XInputUnknown : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+    {0x10, 0x01},
+    0,
+    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
   },
 
-  HID_ReportINEndpoint : {
+  DataInEndpoint0 : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
 
-    EndpointAddress : HID_EPADDR_IN,
-    Attributes :
-        (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    EndpointAddress : 0x81,
+    Attributes : EP_TYPE_INTERRUPT,
     EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : POLL_RATE
+    PollingIntervalMS : 1
   },
-
-  HID_ReportOUTEndpoint : {
+  DataOutEndpoint0 : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
 
-    EndpointAddress : HID_EPADDR_OUT,
-    Attributes :
-        (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    EndpointAddress : 0x02,
+    Attributes : EP_TYPE_INTERRUPT,
     EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : POLL_RATE
+    PollingIntervalMS : 1
   },
-
   CDC_IAD : {
     Header : {
       Size : sizeof(USB_Descriptor_Interface_Association_t),
@@ -210,13 +204,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
     EndpointSize : CDC_TXRX_EPSIZE,
     PollingIntervalMS : 0x05
-  },
-
-  XInputReserved : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    {0x10, 0x01},
-    0,
-    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
   },
 };
 USB_Descriptor_Device_t DeviceDescriptor = {

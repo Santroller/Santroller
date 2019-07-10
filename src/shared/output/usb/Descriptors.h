@@ -5,7 +5,7 @@
 
 #include <avr/pgmspace.h>
 
-#define HID_EPSIZE 64
+#define HID_EPSIZE 32
 #define HID_REPORTSIZE 64
 /** Endpoint address of the HID IN endpoint. */
 #define HID_EPADDR_IN (ENDPOINT_DIR_IN | 1)
@@ -52,22 +52,19 @@ typedef struct {
 } USB_HID_XBOX_Descriptor_HID_t;
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
-  USB_Descriptor_Interface_t HID_Interface;
-  USB_HID_Descriptor_HID_t HID_GamepadHID;
-  USB_Descriptor_Endpoint_t HID_ReportINEndpoint;
-  USB_Descriptor_Endpoint_t HID_ReportOUTEndpoint;
+  USB_Descriptor_Interface_t Interface0;
+  USB_HID_XBOX_Descriptor_HID_t XInputUnknown;
+  USB_Descriptor_Endpoint_t DataInEndpoint0;
+  USB_Descriptor_Endpoint_t DataOutEndpoint0;
   USB_Descriptor_Interface_Association_t CDC_IAD;
   USB_Descriptor_Interface_t CDC_CCI_Interface;
   USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
   USB_CDC_Descriptor_FunctionalACM_t CDC_Functional_ACM;
   USB_CDC_Descriptor_FunctionalUnion_t CDC_Functional_Union;
   USB_Descriptor_Endpoint_t CDC_NotificationEndpoint;
-
-  /* CDC Data Interface */
   USB_Descriptor_Interface_t CDC_DCI_Interface;
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
-  USB_HID_XBOX_Descriptor_HID_t XInputReserved;
 } USB_Descriptor_Configuration_t;
 
 extern const void *hid_report_address;

@@ -48,5 +48,5 @@ void hid_init(event_pointers *events) {
   } else if (config.sub_type >= PS3_GAMEPAD_SUBTYPE) {
     ps3_init(events, &interface);
   }
-  ConfigurationDescriptor.HID_GamepadHID.HIDReportLength = hid_report_size;
+  // ConfigurationDescriptor.HID_GamepadHID.HIDReportLength = hid_report_size;
 }

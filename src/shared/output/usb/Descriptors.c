@@ -76,7 +76,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     InterfaceStrIndex : NO_DESCRIPTOR
   },
 
-  XInputUnknown : {
+  XInputReserved : {
     Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
     {0x10, 0x01},
     0,

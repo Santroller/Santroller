@@ -49,4 +49,8 @@ void hid_init(event_pointers *events) {
     ps3_init(events, &interface);
   }
   // ConfigurationDescriptor.HID_GamepadHID.HIDReportLength = hid_report_size;
+
+  // ConfigurationDescriptor.HID_Interface.Class = 0xFF;
+  // ConfigurationDescriptor.HID_Interface.SubClass = 0x5D;
+  // ConfigurationDescriptor.HID_Interface.Protocol = 0x01;
 }

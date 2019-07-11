@@ -61,9 +61,6 @@ static const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[]
     0x09, 0x2b,       //   Unknown
     0x95, 0x0c,       //   REPORT_COUNT (12)
     0x81, 0x02,       //   INPUT (Data,Var,Abs)
-    HID_RI_USAGE_PAGE(16, 65280),
-    HID_RI_USAGE(8, 32),
-    HID_RI_REPORT_COUNT(8, 1),
     0x0a, 0x21, 0x26, //   Unknown
     0x95, 0x08,       //   REPORT_COUNT (8)
     0xb1, 0x02,       //   FEATURE (Data,Var,Abs)
@@ -125,7 +122,7 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   return false;
 }
 void ps3_control_request(void) {
-  if (USB_ControlRequest.wIndex == interface.Config.InterfaceNumber) {
+  if (config.sub_type != SWITCH_GAMEPAD_SUBTYPE && USB_ControlRequest.wIndex == interface.Config.InterfaceNumber) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
       if (USB_ControlRequest.bRequest == HID_REQ_GetReport) {

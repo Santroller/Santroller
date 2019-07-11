@@ -1,7 +1,7 @@
 #pragma once
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
-#define TILT_SENSOR MPU_6050
+#define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE PS3_GAMEPAD_SUBTYPE
 #define POLL_RATE 1
@@ -38,7 +38,7 @@
 #define PINS                                                                   \
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
+        INVALID_PIN, 2, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
         INVALID_PIN, 19, 20, 18, INVALID_PIN, MPU_6050_INTERRUPT_PIN           \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE

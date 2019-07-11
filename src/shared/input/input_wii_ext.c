@@ -3,6 +3,8 @@
 #include "../util.h"
 #include "i2c/i2c_dev.h"
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 uint8_t classic_bindings[16] = {
     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
@@ -48,6 +50,7 @@ void wii_ext_tick(controller_t *controller) {
   uint8_t data[8];
   i2c_read_bytes(I2C_ADDR, 0x00, 8, data, true);
   if (!verifyData(data, 8)) {
+    controller->l_x = rand();
     init_controller();
     return;
   }
@@ -69,4 +72,5 @@ void wii_ext_tick(controller_t *controller) {
     if (idx == INVALID_PIN) continue;
     bit_write(!bit_check(buttons, i), controller->buttons, idx);
   }
+  controller->rt = rand();
 }

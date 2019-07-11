@@ -43,7 +43,8 @@
         "output_serial.h": "c",
         "board.h": "c",
         "lightweight_ring_buffer.h": "c",
-        "serial.h": "c"
+        "serial.h": "c",
+        "twi.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

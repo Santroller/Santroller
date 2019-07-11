@@ -44,7 +44,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     HID_RI_USAGE(8, 0x2b), HID_RI_REPORT_COUNT(8, 12),
     // End of vendor specific
     // Vendor Specific (Switch) (1 byte)
-    HID_RI_USAGE_PAGE(16, 65280), HID_RI_USAGE(8, 32),
+    HID_RI_INPUT(8, 2), HID_RI_USAGE_PAGE(16, 65280), HID_RI_USAGE(8, 32),
     HID_RI_REPORT_COUNT(8, 1),
     // End of Switch Vendor Specific
     HID_RI_INPUT(8, 2),
@@ -136,7 +136,7 @@ void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
   hid_device->Config.PrevReportINBuffer = &prev_ps3_report;
   hid_device->Config.PrevReportINBufferSize = sizeof(prev_ps3_report);
   if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
-    //TODO: check if this is actually a requirement
+    // TODO: check if this is actually a requirement
     DeviceDescriptor.VendorID = 0x0F0D;
     DeviceDescriptor.ProductID = 0x0092;
   }

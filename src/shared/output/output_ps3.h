@@ -6,7 +6,7 @@
  * the HID report descriptor, in Descriptors.c.
  */
 typedef struct {
-  uint16_t buttons : 15;
+  uint16_t buttons;
   uint8_t hat;
 
   // left and right analog sticks, 0x00 left/up, 0x80 middle, 0xff right/down

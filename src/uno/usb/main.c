@@ -7,6 +7,7 @@
 #include <avr/wdt.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include "../../shared/output/output_serial.h"
 
 uint8_t controller_index;
 controller_t controller;
@@ -30,6 +31,7 @@ ISR(USART1_RX_vect) {
       controller_index = 0;
     }
   }
+  serial_receive(data);
 }
 int main(void) {
   load_config();

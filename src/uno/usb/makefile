@@ -15,7 +15,7 @@ BOARD        = UNO
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
-SRC          = $(shell find ../../shared/output -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') main.cpp $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC          = $(shell find ../../shared/output -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') main.c output_serial.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -flto -fuse-linker-plugin
 CPP_FLAGS	 = -std=c++11

@@ -50,20 +50,25 @@ void hid_init(event_pointers *events) {
   events->start_of_frame = hid_start_of_frame;
   events->configuration_changed = hid_configuration_changed;
   events->process_hid_report = hid_process_report;
-  if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
-    switch_init(events, &interface);
-  } else if (config.sub_type == KEYBOARD_SUBTYPE) {
+  if (config.sub_type == KEYBOARD_SUBTYPE) {
     keyboard_init(events, &interface);
-  } else if (config.sub_type >= PS3_GAMEPAD_SUBTYPE) {
+  } else {
     ps3_init(events, &interface);
   }
+  // if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+  //   switch_init(events, &interface);
+  // }  
+  // Swap from XInput layout to HID layout
   memmove(&ConfigurationDescriptor.Controller.HID.Endpoints,
           &ConfigurationDescriptor.Controller.XInput.Endpoints,
           sizeof(ConfigurationDescriptor.Controller.XInput.Endpoints));
+  // And now adjust the total size as the HID layout is actually smaller
+  ConfigurationDescriptor.Config.TotalConfigurationSize -=
+      sizeof(USB_HID_XBOX_Descriptor_HID_t) - sizeof(USB_HID_Descriptor_HID_t);
+
   hid_descriptor.HIDReportLength = hid_report_size;
   ConfigurationDescriptor.Controller.HID.HIDDescriptor = hid_descriptor;
-  ConfigurationDescriptor.Config.TotalConfigurationSize -= sizeof(USB_HID_XBOX_Descriptor_HID_t) - sizeof(USB_HID_Descriptor_HID_t);
-
+  // Report that we have an HID device
   ConfigurationDescriptor.Interface0.Class = HID_CSCP_HIDClass;
   ConfigurationDescriptor.Interface0.SubClass = HID_CSCP_NonBootSubclass;
   ConfigurationDescriptor.Interface0.Protocol = HID_CSCP_NonBootProtocol;

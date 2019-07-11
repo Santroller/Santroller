@@ -51,10 +51,10 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM switch_report_descriptor[] = {
     HID_RI_REPORT_COUNT(8, 4),
     HID_RI_INPUT(8, 2),
     // ??? Vendor Specific (1 byte)
-    // This byte requires additional investigation.
     HID_RI_USAGE_PAGE(16, 65280),
     HID_RI_USAGE(8, 32),
     HID_RI_REPORT_COUNT(8, 1),
+    //End of vendor specific.
     HID_RI_INPUT(8, 2),
     // Output (8 bytes)
     // Original observation of this suggests it to be a mirror of the inputs
@@ -62,7 +62,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM switch_report_descriptor[] = {
     HID_RI_USAGE(16, 9761),
     HID_RI_REPORT_COUNT(8, 8),
     HID_RI_OUTPUT(8, 2),
-    HID_RI_END_COLLECTION(0),
+    HID_RI_END_COLLECTION(0)
 };
 bool switch_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                           uint8_t *const ReportID, const uint8_t ReportType,
@@ -103,10 +103,10 @@ bool switch_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   default:
     JoystickReport->hat = 0x08;
   }
-  JoystickReport->l_x = (last_controller.l_x / 256) + 128;
-  JoystickReport->l_y = (last_controller.l_y / 256) + 128;
-  JoystickReport->r_x = (last_controller.r_x / 256) + 128;
-  JoystickReport->r_y = (last_controller.r_y / 256) + 128;
+  JoystickReport->l_x = (last_controller.l_x >> 2) + 128;
+  JoystickReport->l_y = (last_controller.l_y >> 2) + 128;
+  JoystickReport->r_x = (last_controller.r_x >> 2) + 128;
+  JoystickReport->r_y = (last_controller.r_y >> 2) + 128;
   bit_write(last_controller.lt > 50, JoystickReport->buttons, 4);
   bit_write(last_controller.rt > 50, JoystickReport->buttons, 5);
 

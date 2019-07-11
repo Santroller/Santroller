@@ -7,12 +7,12 @@
 #include <avr/wdt.h>
 #include <stddef.h>
 #include <util/delay.h>
-
+#define SERIAL_UBBRVAL(Baud)    ((((F_CPU / 16) + (Baud / 2)) / (Baud)) - 1)
 size_t controller_index = 0;
 controller_t controller;
 bool done = false;
 int main(void) {
-  UBRR0 = 8;
+  UBRR0 = SERIAL_UBBRVAL(57600);
   UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UDRIE0);
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
   // Notify the usb processor so that it knows we are about to wait for the

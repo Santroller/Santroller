@@ -40,7 +40,10 @@
         "output_keyboard.h": "c",
         "output_ps3.h": "c",
         "wdt.h": "c",
-        "output_serial.h": "c"
+        "output_serial.h": "c",
+        "board.h": "c",
+        "lightweight_ring_buffer.h": "c",
+        "serial.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

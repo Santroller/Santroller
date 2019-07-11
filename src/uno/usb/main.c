@@ -11,7 +11,7 @@
 
 uint8_t controller_index;
 controller_t controller;
-ISR(USART1_RX_vect) {
+ISR(USART1_RX_vect, ISR_BLOCK) {
   char data = UDR1;
   switch (controller_index) {
   case 0:
@@ -35,15 +35,7 @@ ISR(USART1_RX_vect) {
 }
 int main(void) {
   load_config();
-  UBRR1 = 8;
-  UCSR1B = _BV(TXEN1) | _BV(RXEN1) | _BV(RXCIE1);
-  UCSR1C = _BV(UCSZ10) | _BV(UCSZ11);
-  uint8_t data = 0;
-  // Wait for the main processor to notify us that it is about to wait for data.
-  while (data != 0xFE) {
-    loop_until_bit_is_set(UCSR1A, RXC1);
-    data = UDR1;
-  }
+  serial_init();
   uint8_t *cfg = (uint8_t *)&config;
   for (size_t i = 0; i < sizeof(config_t); i++) {
     loop_until_bit_is_set(UCSR1A, UDRE1);
@@ -51,7 +43,9 @@ int main(void) {
   }
   output_init();
   // clang-format off
-  while (true);
+  while (true) {
+    serial_tick();
+  }
   // clang-format on
 }
 void before_reset(void) {

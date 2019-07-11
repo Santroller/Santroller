@@ -15,14 +15,12 @@ void output_init(void) {
   } else {
     xinput_init(&events);
   }
-  serial_init();
   USB_Init();
   sei();
 }
 
 void output_tick(controller_t controller) {
   wdt_reset();
-  serial_tick();
   events.tick(controller);
   USB_USBTask();
 }

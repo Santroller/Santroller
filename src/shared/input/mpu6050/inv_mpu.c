@@ -18,7 +18,7 @@
  *                  MPU9250 (or MPU6500 w/ AK8963 on the auxiliary bus)
  */
 #include "inv_mpu.h"
-#include "../i2c/i2c_dev.h"
+#include "../i2c/twi.h"
 #include "util/delay.h"
 #include <avr/pgmspace.h>
 #include <math.h>
@@ -29,8 +29,8 @@
 #define MPU6050
 #define delay_ms _delay_ms
 #define min(a, b) ((a < b) ? a : b)
-#define i2c_write !i2c_write_bytes
-#define i2c_read(devAddr, regAddr, length, data) !i2c_read_bytes(devAddr, regAddr, length, data, false)
+#define i2c_write twi_writeToPointer
+#define i2c_read twi_readFromPointer
 static inline int reg_int_cb(struct int_param_s *int_param) { return 1; }
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #  error Which gyro are you using? Define MPUxxxx in your compiler options.

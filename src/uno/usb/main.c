@@ -31,7 +31,6 @@ ISR(USART1_RX_vect) {
       controller_index = 0;
     }
   }
-  // serial_receive(data);
 }
 int main(void) {
   load_config();

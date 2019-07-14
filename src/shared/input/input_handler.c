@@ -1,6 +1,6 @@
 #include "input_handler.h"
 #include "../config/eeprom.h"
-#include "i2c/i2c_dev.h"
+#include "i2c/twi.h"
 #include "input_direct.h"
 #include "input_guitar.h"
 #include "input_wii_ext.h"
@@ -16,7 +16,7 @@ void input_init(void) {
     direct_init();
     tick_function = direct_tick;
   }
-  // i2c_init();
+  twi_init();
   enableADC();
   sei();
   guitar_init();

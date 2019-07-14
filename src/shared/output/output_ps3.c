@@ -1,5 +1,5 @@
 #include "output_ps3.h"
-#include "output_hid.h"
+#include "output_handler.h"
 #include "usb/Descriptors.h"
 #include <stdlib.h>
 // Data that we need to send in order for the PS3 to identify our controller

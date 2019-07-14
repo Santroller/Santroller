@@ -1,7 +1,7 @@
 #include "output_keyboard.h"
 #include "../util.h"
 #include "usb/Descriptors.h"
-#include "output_hid.h"
+#include "output_handler.h"
 
 static uint8_t prev_keyboard_report[sizeof(USB_KeyboardReport_Data_t)];
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM

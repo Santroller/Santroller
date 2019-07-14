@@ -1,8 +1,8 @@
 #include "output_xinput.h"
+#include "output_handler.h"
 #include "usb/Descriptors.h"
 #include "usb/wcid.h"
 #include <avr/wdt.h>
-USB_XInputReport_Data_t gamepad_state;
 const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
   Version : 0x0100,
@@ -18,31 +18,19 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   }
 };
 
-void xinput_configuration_changed(void) {
-  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, 20, 1);
-}
-void xinput_start_of_frame(void) {}
-void xinput_tick(controller_t controller) {
-  /* Device must be connected and configured for the task to run */
-  if (USB_DeviceState != DEVICE_STATE_Configured) return;
+static uint8_t prev_xinput_report[sizeof(USB_XInputReport_Data_t)];
+bool xinput_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+                          uint8_t *const ReportID, const uint8_t ReportType,
+                          void *ReportData, uint16_t *const ReportSize) {
 
-  /* Select the Joystick Report Endpoint */
-  Endpoint_SelectEndpoint(HID_EPADDR_IN);
+  *ReportSize = sizeof(USB_XInputReport_Data_t);
 
-  /* Check to see if the host is ready for another packet */
-  if (Endpoint_IsINReady()) {
-    // We want to only overwrite the controller portion of the report, so we
-    // work out what offset that is
-    uint8_t start = offsetof(USB_XInputReport_Data_t, digital_buttons_1);
-    uint8_t *casted = (uint8_t *)&controller;
-    uint8_t *casted_state = (uint8_t *)(&gamepad_state) + start;
-    memcpy(casted_state, casted, sizeof(controller));
-    /* Write Joystick Report Data */
-    Endpoint_Write_Stream_LE(&gamepad_state, 20, NULL);
+  USB_XInputReport_Data_t *JoystickReport =
+      (USB_XInputReport_Data_t *)ReportData;
+  JoystickReport->rsize = sizeof(USB_XInputReport_Data_t);
+  memcpy(&JoystickReport->buttons, &last_controller, sizeof(controller_t));
 
-    /* Finalize the stream transfer to send the last packet */
-    Endpoint_ClearIN();
-  }
+  return false;
 }
 
 const uint8_t PROGMEM dataLen8[] = {0x00, 0x08, 0x00, 0x00,
@@ -63,24 +51,17 @@ void xinput_control_request(void) {
   switch (USB_ControlRequest.bRequest) {
   case HID_REQ_GetReport:
     if (USB_ControlRequest.bmRequestType ==
-        (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-      Endpoint_ClearSETUP();
-      /* Write the report data to the control endpoint */
-      Endpoint_Write_Control_Stream_LE(&gamepad_state, 20);
-      Endpoint_ClearOUT();
-    }
-    if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
       switch (USB_ControlRequest.wLength) {
       case 0x04:
         sendControl(deviceID, sizeof(deviceID));
-        break;
+        return;
       case 0x08:
         sendControl(dataLen8, sizeof(dataLen8));
-        break;
+        return;
       case 0x20:
         sendControl(dataLen20, sizeof(dataLen20));
-        break;
+        return;
       }
     }
     break;
@@ -93,16 +74,17 @@ void xinput_control_request(void) {
       Endpoint_Write_Control_PStream_LE(&DevCompatIDs,
                                         DevCompatIDs.TotalLength);
       Endpoint_ClearOUT();
+      return;
     }
   }
+  HID_Device_ProcessControlRequest(&interface);
 }
-void xinput_init(event_pointers *events) {
-  events->configuration_changed = xinput_configuration_changed;
-  events->start_of_frame = xinput_start_of_frame;
+void xinput_init(event_pointers *events,
+                 USB_ClassInfo_HID_Device_t *hid_device) {
+  events->create_hid_report = xinput_create_report;
   events->control_request = xinput_control_request;
-  events->tick = xinput_tick;
+  hid_device->Config.PrevReportINBuffer = &prev_xinput_report;
+  hid_device->Config.PrevReportINBufferSize = sizeof(prev_xinput_report);
   ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype =
       config.sub_type;
-  memset(&gamepad_state, 0x00, sizeof(USB_XInputReport_Data_t));
-  gamepad_state.rsize = 20;
 }

@@ -79,7 +79,6 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     //   JoystickReport->button_analogue[i] = bitSet ? 0xFF : 0x00;
     // }
   }
-  bit_write(rand(), JoystickReport->buttons, SWITCH_HOME);
   switch (last_controller.buttons & 0xF) {
   case 0x01: // Top
     JoystickReport->hat = 0x00;

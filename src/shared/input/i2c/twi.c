@@ -374,13 +374,14 @@ uint8_t twi_readFromPointerSlow(uint8_t address, uint8_t pointer,
   uint8_t ret = twi_writeTo(address, &pointer, 1, true, true);
   if (ret != 0) return ret;
   _delay_us(200);
-  return twi_readFrom(address, data, length, true);
+  return !twi_readFrom(address, data, length, true);
 }
 uint8_t twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,
                             uint8_t *data) {
-  uint8_t ret = twi_writeTo(address, &pointer, 1, true, false);
+                              //TODO: will not closing here help with speed?
+  uint8_t ret = twi_writeTo(address, &pointer, 1, true, true);
   if (ret != 0) return ret;
-  return twi_readFrom(address, data, length, true);
+  return !twi_readFrom(address, data, length, true);
 }
 uint8_t twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
                            uint8_t *data) {

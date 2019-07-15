@@ -1,9 +1,9 @@
 #pragma once
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
-#define TILT_SENSOR NONE
-#define DEVICE_TYPE WII
-#define OUTPUT_TYPE XINPUT_GAMEPAD_SUBTYPE
+#define TILT_SENSOR MPU_6050
+#define DEVICE_TYPE DIRECT
+#define OUTPUT_TYPE PS3_GUITAR_GH_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 12767
@@ -12,7 +12,7 @@
   { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
-#define FRETS_LED false
+#define FRETS_LED true
 #define MAP_JOY_TO_DPAD true
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in

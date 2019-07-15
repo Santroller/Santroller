@@ -23,6 +23,7 @@ void input_init(void) {
 }
 
 void input_tick(controller_t *controller) {
+  controller->buttons = 0;
   tick_function(controller);
   if (config.map_joy_to_dpad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);

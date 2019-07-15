@@ -46,7 +46,8 @@
         "serial.h": "c",
         "twi.h": "c",
         "pins.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "math.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

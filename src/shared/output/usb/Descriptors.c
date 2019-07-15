@@ -57,7 +57,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 
     ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
 
-    MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
+    MaxPowerConsumption : USB_CONFIG_POWER_MA(250)
   },
   CDC_IAD : {
     Header : {

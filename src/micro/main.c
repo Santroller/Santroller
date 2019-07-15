@@ -10,6 +10,7 @@ int main(void) {
   while (true) {
     input_tick(&controller);
     output_tick(controller);
+    serial_tick();
   }
 }
 void before_reset(void) {}

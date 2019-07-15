@@ -6,9 +6,13 @@
 // correctly.
 const static uint8_t PROGMEM ps3_init_data[] = {0x21, 0x26, 0x01, 0x07,
                                                 0x00, 0x00, 0x00, 0x00};
+static const uint8_t PROGMEM switchButtonBindings[] = {
+    15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
 // Bindings to go from controller to ps3
 static const uint8_t PROGMEM ps3ButtonBindings[] = {
-    15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
+    15, 12, 13, 14, 0xff, 0xff, 8, 9, 5, 4, 6, 7, 10, 11};
+static uint8_t currentBindings[14];
+static uint8_t currentBindingLen;
 static uint8_t prev_ps3_report[sizeof(USB_PS3Report_Data_t)];
 static const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     ps3_report_descriptor[] = {
@@ -73,8 +77,8 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
 
   USB_PS3Report_Data_t *JoystickReport = (USB_PS3Report_Data_t *)ReportData;
   uint8_t button;
-  for (uint8_t i = 0; i < sizeof(ps3ButtonBindings); i++) {
-    button = pgm_read_byte(&ps3ButtonBindings[i]);
+  for (uint8_t i = 0; i < currentBindingLen; i++) {
+    button = currentBindings[i];
     if (button == 0xff) continue;
     bool bitSet = bit_check(last_controller.buttons, button);
     bit_write(bitSet, JoystickReport->buttons, i);
@@ -108,15 +112,26 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   default:
     JoystickReport->hat = 0x08;
   }
-  JoystickReport->l_x = (last_controller.l_x >> 2) + 128;
-  JoystickReport->l_y = (last_controller.l_y >> 2) + 128;
-  JoystickReport->r_x = (last_controller.r_x >> 2) + 128;
-  JoystickReport->r_y = (last_controller.r_y >> 2) + 128;
-  bit_write(last_controller.lt > 50, JoystickReport->buttons, 4);
-  bit_write(last_controller.rt > 50, JoystickReport->buttons, 5);
-  JoystickReport->l2_axis = last_controller.lt;
-  JoystickReport->r2_axis = last_controller.rt;
-
+  JoystickReport->l_x = (last_controller.l_x >> 8) + 128;
+  JoystickReport->l_y = (last_controller.l_y >> 8) + 128;
+  JoystickReport->r_x = (last_controller.r_x >> 8) + 128;
+  JoystickReport->r_y = (last_controller.r_y >> 8) + 128;
+  if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    JoystickReport->r_x = -JoystickReport->r_x;
+  }
+  if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
+    // XINPUT guitars use LB for orange, PS3 uses L
+    bit_write(bit_check(last_controller.buttons, XBOX_LB),
+              JoystickReport->buttons, 4);
+    // PS3 guitars use ZL for a tilt bit i think
+    bit_write(JoystickReport->r_y > 50, JoystickReport->buttons, 6);
+    JoystickReport->r2_axis = JoystickReport->r_y;
+  } else {
+    bit_write(last_controller.lt > 50, JoystickReport->buttons, 4);
+    bit_write(last_controller.rt > 50, JoystickReport->buttons, 5);
+    JoystickReport->l2_axis = last_controller.lt;
+    JoystickReport->r2_axis = last_controller.rt;
+  }
   *ReportSize = sizeof(USB_PS3Report_Data_t);
 
   return false;
@@ -152,20 +167,25 @@ void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
   if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     DeviceDescriptor.VendorID = 0x0F0D;
     DeviceDescriptor.ProductID = 0x0092;
+    memcpy(currentBindings, switchButtonBindings, sizeof(switchButtonBindings));
+    currentBindingLen = sizeof(switchButtonBindings);
+  }
+  if (config.sub_type == PS3_GAMEPAD_SUBTYPE) {
+    memcpy(currentBindings, ps3ButtonBindings, sizeof(ps3ButtonBindings));
+    currentBindingLen = sizeof(ps3ButtonBindings);
   }
   if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
     DeviceDescriptor.VendorID = 0x12ba;
+    memcpy(currentBindings, ps3ButtonBindings, sizeof(ps3ButtonBindings));
+    currentBindingLen = sizeof(ps3ButtonBindings) - 2;
   }
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     DeviceDescriptor.ProductID = 0x0100;
-  }
-  if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+  } else if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     DeviceDescriptor.ProductID = 0x0200;
-  }
-  if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
+  } else if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
     DeviceDescriptor.ProductID = 0x0120;
-  }
-  if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
+  } else if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
     DeviceDescriptor.ProductID = 0x0210;
   }
 }

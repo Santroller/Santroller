@@ -37,7 +37,7 @@ void serial_configuration_changed() {
 void serial_control_request() {
   CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
-void serial_init() {}
+void serial_init(controller_t* controller) {}
 void serial_tick() {
 
   int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);

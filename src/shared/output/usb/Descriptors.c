@@ -2,7 +2,6 @@
 #include "../output_handler.h"
 #include "wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
-#define XBOX_SIZE sizeof(USB_HID_XBOX_Descriptor_HID_t)
 const void *hid_report_address;
 uint16_t hid_report_size;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is

@@ -25,7 +25,6 @@ int main(void) {
     loop_until_bit_is_set(UCSR0A, RXC0);
     ((uint8_t *)&config)[i] = UDR0;
   }
-  config.input_type = WII;
   input_init();
   while (1) {
     input_tick(&controller);

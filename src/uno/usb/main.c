@@ -11,30 +11,10 @@
 
 uint8_t controller_index;
 controller_t controller;
-ISR(USART1_RX_vect) {
-  char data = UDR1;
-  switch (controller_index) {
-  case 0:
-    if (data == 'm') { controller_index++; }
-    break;
-  case 1:
-    if (data == 'a')
-      controller_index++;
-    else
-      controller_index = 0;
-    break;
-  default:
-    ((uint8_t *)&controller)[controller_index - 2] = data;
-    controller_index++;
-    if (controller_index >= sizeof(controller_t) + 2) {
-      output_tick(controller);
-      controller_index = 0;
-    }
-  }
-}
 int main(void) {
   load_config();
-  UBRR1 = 8;
+  UBRR1 = 16;
+  UCSR1A = (1 << U2X1);
   UCSR1B = _BV(TXEN1) | _BV(RXEN1) | _BV(RXCIE1);
   UCSR1C = _BV(UCSZ10) | _BV(UCSZ11);
   uint8_t data = 0;
@@ -48,7 +28,7 @@ int main(void) {
     UDR1 = cfg[i];
   }
   output_init();
-  serial_init();
+  serial_init(&controller);
   // clang-format off
   while (true) {
     serial_tick();

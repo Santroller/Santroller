@@ -12,7 +12,8 @@ size_t controller_index = 0;
 controller_t controller;
 bool done = false;
 int main(void) {
-  UBRR0 = 8;
+  UBRR0 = 16;
+  UCSR0A = (1 << U2X0);
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
   // Notify the usb processor so that it knows we are about to wait for the

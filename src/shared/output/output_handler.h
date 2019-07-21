@@ -3,6 +3,9 @@
 #include "../controller/controller.h"
 #include <LUFA/Drivers/USB/USB.h>
 #include <stdbool.h>
+#include "controller_structs.h"
+
+
 typedef struct {
   void (*control_request)(void);
   bool (*create_hid_report)(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
@@ -14,10 +17,10 @@ typedef struct {
                              uint8_t *const DescriptorMemorySpace);
 } event_pointers;
 event_pointers events;
-extern controller_t last_controller;
+extern controller_t controller;
 extern USB_ClassInfo_HID_Device_t interface;
 void output_init(void);
-void output_tick(controller_t controller);
+void output_tick(void);
 void EVENT_USB_Device_ConfigurationChanged(void);
 void EVENT_USB_Device_ControlRequest(void);
 void EVENT_USB_Device_StartOfFrame(void);

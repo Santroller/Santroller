@@ -1,16 +1,22 @@
 all:
 
-upload:
+upload: 
 	@echo Uploading all elements.
 	@echo
+	echo q > /dev/ttyACM0
 	$(MAKE) -C main avrdude
-	$(MAKE) -C usb avrdude
+	sleep 1
+	echo b > /dev/ttyACM0
+	sleep 0.5
+	$(MAKE) -C usb dfu
 	@echo
 	@echo Upload operation complete.
 
 upload-ee:
 	@echo Uploading eeprom to usb.
 	@echo
+	echo b > /dev/ttyACM0
+	sleep 0.5
 	$(MAKE) -C usb avrdude-ee
 	@echo
 	@echo Upload operation complete.

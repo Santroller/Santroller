@@ -28,7 +28,7 @@ bool xinput_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   USB_XInputReport_Data_t *JoystickReport =
       (USB_XInputReport_Data_t *)ReportData;
   JoystickReport->rsize = sizeof(USB_XInputReport_Data_t);
-  memcpy(&JoystickReport->buttons, &last_controller, sizeof(controller_t));
+  memcpy(&JoystickReport->buttons, &controller, sizeof(controller_t));
 
   return false;
 }

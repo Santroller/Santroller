@@ -8,7 +8,7 @@
 #include "usb/Descriptors.h"
 
 event_pointers events;
-controller_t last_controller;
+previous_buffer_t buffer;
 USB_ClassInfo_HID_Device_t interface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -18,8 +18,8 @@ USB_ClassInfo_HID_Device_t interface = {
       Type : EP_TYPE_CONTROL,
       Banks : 1,
     },
-    PrevReportINBuffer : NULL,
-    PrevReportINBufferSize : 0,
+    PrevReportINBuffer : &buffer,
+    PrevReportINBufferSize : sizeof(buffer),
   },
 };
 USB_HID_Descriptor_HID_t hid_descriptor = {
@@ -64,9 +64,8 @@ void output_init(void) {
   sei();
 }
 
-void output_tick(controller_t controller) {
+void output_tick() {
   wdt_reset();
-  memcpy(&last_controller, &controller, sizeof(controller_t));
   HID_Device_USBTask(&interface);
   USB_USBTask();
 }

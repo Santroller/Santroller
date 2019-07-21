@@ -14,13 +14,11 @@ micro-ee:
 
 uno:
 	$(MAKE) -C src/uno
-	echo b > /dev/ttyACM0
 	sleep 0.5
 	$(MAKE) -C src/uno upload
 
 uno-ee:
 	$(MAKE) -C src/uno
-	echo b > /dev/ttyACM0
 	sleep 0.5
 	$(MAKE) -C src/uno upload-ee
 

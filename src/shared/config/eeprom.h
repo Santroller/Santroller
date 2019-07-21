@@ -53,6 +53,7 @@ typedef struct {
   uint8_t LB;
   uint8_t RB;
   uint8_t home;
+  uint8_t unused;
   uint8_t a;
   uint8_t b;
   uint8_t x;

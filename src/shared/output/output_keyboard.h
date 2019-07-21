@@ -6,11 +6,11 @@
 #define CHECK_JOY_KEY(joy)                                                     \
   if (usedKeys < SIMULTANEOUS_KEYS) {                                          \
     if (config.keys.joy.neg &&                                                 \
-        last_controller.joy < -(int)config.threshold_joy) {                    \
+        controller.joy < -(int)config.threshold_joy) {                    \
       KeyboardReport->KeyCode[usedKeys++] = config.keys.joy.neg;               \
     }                                                                          \
     if (config.keys.joy.pos &&                                                 \
-        last_controller.joy > (int)config.threshold_joy) {                     \
+        controller.joy > (int)config.threshold_joy) {                     \
       KeyboardReport->KeyCode[usedKeys++] = config.keys.joy.pos;               \
     }                                                                          \
   }
@@ -18,7 +18,7 @@
 #define CHECK_TRIGGER_KEY(trigger)                                             \
   if (usedKeys < SIMULTANEOUS_KEYS) {                                          \
     if (config.keys.trigger &&                                                 \
-        last_controller.trigger > (int)config.threshold_trigger) {             \
+        controller.trigger > (int)config.threshold_trigger) {             \
       KeyboardReport->KeyCode[usedKeys++] = config.keys.trigger;               \
     }                                                                          \
   }

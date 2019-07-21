@@ -16,7 +16,7 @@ bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   uint8_t *keys = (uint8_t *)&config.keys;
   for (int i = 0; i <= XBOX_Y && usedKeys < SIMULTANEOUS_KEYS; i++) {
     uint8_t binding = keys[i];
-    if (binding && bit_check(last_controller.buttons, i)) {
+    if (binding && bit_check(controller.buttons, i)) {
       KeyboardReport->KeyCode[usedKeys++] = binding;
     }
   }

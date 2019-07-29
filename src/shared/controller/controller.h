@@ -18,7 +18,6 @@
 #define XBOX_B 13
 #define XBOX_X 14
 #define XBOX_Y 15
-
 #define XBOX_BTN_COUNT 16
 #define SWITCH_Y 0
 #define SWITCH_B 1

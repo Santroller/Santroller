@@ -24,6 +24,8 @@ void guitar_init(void) {
     enablePCI(config.pins.mpu_6050_interrupt);
   } else if (config.tilt_type == GRAVITY) {
     pinMode(config.pins.r_y, INPUT_PULLUP);
+  } else if (config.tilt_type == GRAVITY) {
+    pinMode(config.pins.r_y, INPUT);
   }
 }
 
@@ -36,13 +38,16 @@ void guitar_tick(controller_t *controller) {
       int32_t z = (mympu.ypr[config.mpu_6050_orientation / 2] * (65535 / M_PI));
       if (config.mpu_6050_orientation & 1) { z = -z; }
       if (z > 32767) { z = 65535 - z; }
-      z = pow(z, 1.1f);
+      //Make this into a sensitivity option.
+      z = pow(z, 1.05f);
       z = constrain(z, 0, 32767);
       if (isnan(z)) { z = 0; }
       controller->r_y = z;
     }
   } else if (config.tilt_type == GRAVITY) {
     controller->r_y = digitalRead(config.pins.r_y) * 32767;
+  } else if (config.tilt_type == ANALOGUE) {
+    controller->r_y = analogRead(config.pins.r_y);
   }
   // Whammy needs to be scaled so that it is picked up
   int32_t whammy = controller->r_x * 2L;

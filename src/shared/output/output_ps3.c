@@ -11,66 +11,97 @@ static const uint8_t PROGMEM switchButtonBindings[] = {
 // Bindings to go from controller to ps3
 static const uint8_t PROGMEM ps3ButtonBindings[] = {
     15, 12, 13, 14, 0xff, 0xff, 8, 9, 5, 4, 6, 7, 10, 11};
-static const uint8_t PROGMEM hat_bindings[] = {0x08, 0x00, 0x4, 0x8, 0x6, 0x7,
-                                       0x5,  0x8,  0x2, 0x1, 0x3};
+static const uint8_t PROGMEM ps3AxisBindings[] = {
+    XBOX_DPAD_UP, XBOX_DPAD_RIGHT, XBOX_DPAD_DOWN, XBOX_DPAD_LEFT, 0xFF,
+    0xFF,         XBOX_LB,         XBOX_RB,        XBOX_Y,         XBOX_B,
+    XBOX_A,       XBOX_X};
+static const uint8_t PROGMEM ghAxisBindings[] = {
+    XBOX_DPAD_RIGHT, XBOX_DPAD_LEFT, XBOX_DPAD_UP, XBOX_DPAD_DOWN,
+    XBOX_X,          XBOX_A,         XBOX_B,       XBOX_Y,
+    XBOX_LB,         0xff,           0xff,         0xff,
+};
+static const uint8_t PROGMEM hat_bindings[] = {
+    0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 static const uint8_t *currentBindings;
+static const uint8_t *currentAxisBindings;
 static uint8_t currentBindingLen;
 static const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     ps3_report_descriptor[] = {
-        0x05, 0x01,       // USAGE_PAGE (Generic Desktop)
-        0x09, 0x05,       // USAGE (Gamepad)
-        0xa1, 0x01,       // COLLECTION (Application)
-        0x15, 0x00,       //   LOGICAL_MINIMUM (0)
-        0x25, 0x01,       //   LOGICAL_MAXIMUM (1)
-        0x35, 0x00,       //   PHYSICAL_MINIMUM (0)
-        0x45, 0x01,       //   PHYSICAL_MAXIMUM (1)
-        0x75, 0x01,       //   REPORT_SIZE (1)
-        0x95, 0x0e,       //   REPORT_COUNT (16)
-        0x05, 0x09,       //   USAGE_PAGE (Button)
-        0x19, 0x01,       //   USAGE_MINIMUM (Button 1)
-        0x29, 0x0e,       //   USAGE_MAXIMUM (Button 16)
-        0x81, 0x02,       //   INPUT (Data,Var,Abs)
-        0x95, 0x02,       //   REPORT_COUNT (3)
-        0x81, 0x01,       //   INPUT (Cnst,Ary,Abs)
-        0x05, 0x01,       //   USAGE_PAGE (Generic Desktop)
-        0x25, 0x07,       //   LOGICAL_MAXIMUM (7)
-        0x46, 0x3b, 0x01, //   PHYSICAL_MAXIMUM (315)
-        0x75, 0x04,       //   REPORT_SIZE (4)
-        0x95, 0x01,       //   REPORT_COUNT (1)
-        0x65, 0x14,       //   UNIT (Eng Rot:Angular Pos)
-        0x09, 0x39,       //   USAGE (Hat switch)
-        0x81, 0x42,       //   INPUT (Data,Var,Abs,Null)
-        0x65, 0x00,       //   UNIT (None)
-        0x95, 0x01,       //   REPORT_COUNT (1)
-        0x81, 0x01,       //   INPUT (Cnst,Ary,Abs)
-        0x26, 0xff, 0x00, //   LOGICAL_MAXIMUM (255)
-        0x46, 0xff, 0x00, //   PHYSICAL_MAXIMUM (255)
-        0x09, 0x30,       //   USAGE (X)
-        0x09, 0x31,       //   USAGE (Y)
-        0x09, 0x32,       //   USAGE (Z)
-        0x09, 0x35,       //   USAGE (Rz)
-        0x75, 0x08,       //   REPORT_SIZE (8)
-        0x95, 0x04,       //   REPORT_COUNT (6)
-        0x81, 0x02,       //   INPUT (Data,Var,Abs)
-        0x06, 0x00, 0xff, //   USAGE_PAGE (Vendor Specific)
-        0x09, 0x20,       //   Unknown
-        0x09, 0x21,       //   Unknown
-        0x09, 0x22,       //   Unknown
-        0x09, 0x23,       //   Unknown
-        0x09, 0x24,       //   Unknown
-        0x09, 0x25,       //   Unknown
-        0x09, 0x26,       //   Unknown
-        0x09, 0x27,       //   Unknown
-        0x09, 0x28,       //   Unknown
-        0x09, 0x29,       //   Unknown
-        0x09, 0x2a,       //   Unknown
-        0x09, 0x2b,       //   Unknown
-        0x95, 0x0c,       //   REPORT_COUNT (12)
-        0x81, 0x02,       //   INPUT (Data,Var,Abs)
-        0x0a, 0x21, 0x26, //   Unknown
-        0x95, 0x08,       //   REPORT_COUNT (8)
-        0xb1, 0x02,       //   FEATURE (Data,Var,Abs)
-        0xc0              // END_COLLECTION
+        0x05, 0x01, // Usage Page (Generic Desktop Ctrls)
+        0x09, 0x05, // Usage (Game Pad)
+        0xA1, 0x01, // Collection (Application)
+        0x15, 0x00, //   Logical Minimum (0)
+        0x25, 0x01, //   Logical Maximum (1)
+        0x35, 0x00, //   Physical Minimum (0)
+        0x45, 0x01, //   Physical Maximum (1)
+        0x75, 0x01, //   Report Size (1)
+        0x95, 0x0D, //   Report Count (13)
+        0x05, 0x09, //   Usage Page (Button)
+        0x19, 0x01, //   Usage Minimum (0x01)
+        0x29, 0x0D, //   Usage Maximum (0x0D)
+        0x81, 0x02, //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                    //   Null Position)
+        0x95, 0x03, //   Report Count (3)
+        0x81, 0x01, //   Input (Const,Array,Abs,No Wrap,Linear,Preferred
+                    //   State,No Null Position)
+        0x05, 0x01, //   Usage Page (Generic Desktop Ctrls)
+        0x25, 0x07, //   Logical Maximum (7)
+        0x46, 0x3B, 0x01, //   Physical Maximum (315)
+        0x75, 0x04,       //   Report Size (4)
+        0x95, 0x01,       //   Report Count (1)
+        0x65, 0x14, //   Unit (System: English Rotation, Length: Centimeter)
+        0x09, 0x39, //   Usage (Hat switch)
+        0x81, 0x42, //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null
+                    //   State)
+        0x65, 0x00, //   Unit (None)
+        0x95, 0x01, //   Report Count (1)
+        0x81, 0x01, //   Input (Const,Array,Abs,No Wrap,Linear,Preferred
+                    //   State,No Null Position)
+        0x26, 0xFF, 0x00, //   Logical Maximum (255)
+        0x46, 0xFF, 0x00, //   Physical Maximum (255)
+        0x09, 0x30,       //   Usage (X)
+        0x09, 0x31,       //   Usage (Y)
+        0x09, 0x32,       //   Usage (Z)
+        0x09, 0x35,       //   Usage (Rz)
+        0x75, 0x08,       //   Report Size (8)
+        0x95, 0x04,       //   Report Count (4)
+        0x81, 0x02, //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                    //   Null Position)
+        0x06, 0x00, 0xFF, //   Usage Page (Vendor Defined 0xFF00)
+        0x09, 0x20,       //   Usage (0x20)
+        0x09, 0x21,       //   Usage (0x21)
+        0x09, 0x22,       //   Usage (0x22)
+        0x09, 0x23,       //   Usage (0x23)
+        0x09, 0x24,       //   Usage (0x24)
+        0x09, 0x25,       //   Usage (0x25)
+        0x09, 0x26,       //   Usage (0x26)
+        0x09, 0x27,       //   Usage (0x27)
+        0x09, 0x28,       //   Usage (0x28)
+        0x09, 0x29,       //   Usage (0x29)
+        0x09, 0x2A,       //   Usage (0x2A)
+        0x09, 0x2B,       //   Usage (0x2B)
+        0x95, 0x0C,       //   Report Count (12)
+        0x81, 0x02, //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                    //   Null Position)
+        0x0A, 0x21, 0x26, //   Usage (0x2621)
+        0x95, 0x08,       //   Report Count (8)
+        0xB1, 0x02, //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                    //   Null Position,Non-volatile)
+        0x0A, 0x21, 0x26, //   Usage (0x2621)
+        0x91, 0x02, //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                    //   Null Position,Non-volatile)
+        0x26, 0xFF, 0x03, //   Logical Maximum (1023)
+        0x46, 0xFF, 0x03, //   Physical Maximum (1023)
+        0x09, 0x2C,       //   Usage (0x2C)
+        0x09, 0x2D,       //   Usage (0x2D)
+        0x09, 0x2E,       //   Usage (0x2E)
+        0x09, 0x2F,       //   Usage (0x2F)
+        0x75, 0x10,       //   Report Size (16)
+        0x95, 0x04,       //   Report Count (4)
+        0x81, 0x02, //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                    //   Null Position)
+        0xC0,       // End Collection
+
 };
 bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                        uint8_t *const ReportID, const uint8_t ReportType,
@@ -81,36 +112,62 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   for (uint8_t i = 0; i < currentBindingLen; i++) {
     button = pgm_read_byte(currentBindings + i);
     if (button == 0xff) continue;
-    bool bitSet = bit_check(controller.buttons, button);
-    bit_write(bitSet, JoystickReport->buttons, i);
-    // if (i < 8) { JoystickReport->button_analogue[i] = bitSet ? 0xFF : 0x00; }
+    bool bit_set = bit_check(controller.buttons, button);
+    bit_write(bit_set, JoystickReport->buttons, i);
   }
+  // for (uint8_t i = 0; i < sizeof(ps3AxisBindings); i++) {
+  //   button = pgm_read_byte(currentAxisBindings + i);
+  //   if (button == 0xff) continue;
+  //   bool bit_set = bit_check(controller.buttons, button);
+  //   JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
+  // }
   button = controller.buttons & 0xF;
   if (button > 0x0a) {
     JoystickReport->hat = 0x08;
   } else {
-    JoystickReport->hat = pgm_read_byte(hat_bindings+button);
+    JoystickReport->hat = pgm_read_byte(hat_bindings + button);
   }
-  JoystickReport->l_x = (controller.l_x >> 8) + 128;
-  JoystickReport->l_y = (controller.l_y >> 8) + 128;
-  JoystickReport->r_x = (controller.r_x >> 8) + 128;
-  JoystickReport->r_y = (controller.r_y >> 8) + 128;
-  if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
-    JoystickReport->r_x = -JoystickReport->r_x;
-  }
-  if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
+
+  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
+      config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    JoystickReport->l_x = 0x80;
+    JoystickReport->l_y = 0x80;
     // XINPUT guitars use LB for orange, PS3 uses L
     bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
-              4);
-    // PS3 guitars use ZL for a tilt bit i think
-    bit_write(JoystickReport->r_y > 50, JoystickReport->buttons, 6);
-    JoystickReport->r2_axis = JoystickReport->r_y;
-  } else {
-    bit_write(controller.lt > 50, JoystickReport->buttons, 4);
-    bit_write(controller.rt > 50, JoystickReport->buttons, 5);
-    JoystickReport->l2_axis = controller.lt;
-    JoystickReport->r2_axis = controller.rt;
+              SWITCH_L);
   }
+  bool tilt = controller.r_y == 32768;
+  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
+    JoystickReport->r_x = (controller.r_x >> 8) + 128;
+    JoystickReport->r_y = 0x00;
+    if (JoystickReport->hat == 0x08) JoystickReport->hat = 0x0f;
+    // GH PS3 Guitars use the first accel byte for tilt
+    JoystickReport->accel[0] = tilt ? 0x84 : 0x00;
+    JoystickReport->accel[1] = 0x01;
+  }
+  if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    JoystickReport->r_x = 128 - (controller.r_x >> 8);
+    // r_y is tap bar, can we do better than just disabling it
+    JoystickReport->r_y = 0x7f;
+    // RB PS3 guitars use R for a tilt bit
+    bit_write(tilt, JoystickReport->buttons, SWITCH_R);
+    // Swap y and x, as RB controllers have them inverted
+    bit_write(bit_check(controller.buttons, XBOX_Y), JoystickReport->buttons,
+              SWITCH_X);
+    bit_write(bit_check(controller.buttons, XBOX_X), JoystickReport->buttons,
+              SWITCH_Y);
+  }
+  if (config.sub_type == PS3_GAMEPAD_SUBTYPE) {
+    bit_write(controller.lt > 50, JoystickReport->buttons, SWITCH_L);
+    bit_write(controller.rt > 50, JoystickReport->buttons, SWITCH_R);
+    JoystickReport->axis[4] = controller.lt;
+    JoystickReport->axis[5] = controller.rt;
+    JoystickReport->l_x = (controller.l_x >> 8) + 128;
+    JoystickReport->l_y = (controller.l_y >> 8) + 128;
+    JoystickReport->r_x = (controller.r_x >> 8) + 128;
+    JoystickReport->r_y = (controller.r_y >> 8) + 128;
+  }
+
   *ReportSize = sizeof(USB_PS3Report_Data_t);
 
   return false;
@@ -146,23 +203,25 @@ void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
     DeviceDescriptor.ProductID = 0x0092;
     currentBindings = switchButtonBindings;
     currentBindingLen = sizeof(switchButtonBindings);
-  }
-  if (config.sub_type == PS3_GAMEPAD_SUBTYPE) {
+  } else {
+    currentAxisBindings = ps3AxisBindings;
     currentBindings = ps3ButtonBindings;
     currentBindingLen = sizeof(ps3ButtonBindings);
-  }
-  if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
-    DeviceDescriptor.VendorID = 0x12ba;
-    currentBindings = ps3ButtonBindings;
-    currentBindingLen = sizeof(ps3ButtonBindings) - 2;
-  }
-  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
-    DeviceDescriptor.ProductID = 0x0100;
-  } else if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
-    DeviceDescriptor.ProductID = 0x0200;
-  } else if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
-    DeviceDescriptor.ProductID = 0x0120;
-  } else if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
-    DeviceDescriptor.ProductID = 0x0210;
+    if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
+      DeviceDescriptor.VendorID = 0x12ba;
+      currentBindings = ps3ButtonBindings;
+      currentBindingLen = sizeof(ps3ButtonBindings) - 2;
+    }
+    if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
+      DeviceDescriptor.ProductID = 0x0100;
+      currentAxisBindings = ghAxisBindings;
+    } else if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+      DeviceDescriptor.ProductID = 0x0200;
+    } else if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
+      DeviceDescriptor.ProductID = 0x0120;
+      currentAxisBindings = ghAxisBindings;
+    } else if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
+      DeviceDescriptor.ProductID = 0x0210;
+    }
   }
 }

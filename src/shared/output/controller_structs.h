@@ -6,34 +6,19 @@
  * the HID report descriptor, in Descriptors.c.
  */
 typedef struct {
-  uint16_t buttons;
-  uint8_t hat;
+  uint16_t buttons; //0
+  uint8_t hat; //2
 
   // left and right analog sticks, 0x00 left/up, 0x80 middle, 0xff right/down
 
-  uint8_t l_x;
-  uint8_t l_y;
-  uint8_t r_x;
-  uint8_t r_y;
+  uint8_t l_x; //3
+  uint8_t l_y; //4
+  uint8_t r_x; //5
+  uint8_t r_y; //6
 
-  // Gonna assume these are button analog values for the d-pad.
-  // NOTE: NOT EVEN SURE THIS IS RIGHT, OR IN THE CORRECT ORDER
-  uint8_t right_axis;
-  uint8_t left_axis;
-  uint8_t up_axis;
-  uint8_t down_axis;
+  uint8_t axis[12]; //7
+  uint8_t accel[7]; //19
 
-  // button axis, 0x00 = unpressed, 0xff = fully pressed
-
-  uint8_t triangle_axis;
-  uint8_t circle_axis;
-  uint8_t cross_axis;
-  uint8_t square_axis;
-
-  uint8_t l1_axis;
-  uint8_t r1_axis;
-  uint8_t l2_axis;
-  uint8_t r2_axis;
 } USB_PS3Report_Data_t;
 typedef struct {
   uint8_t rid;

@@ -4,6 +4,7 @@
 //Tilt detection
 #define MPU_6050 1
 #define GRAVITY 2
+#define ANALOGUE 3
 
 //Input types
 #define WII 1
@@ -29,8 +30,8 @@
 #define PS3_GAMEPAD_SUBTYPE 22
 #define PS3_GUITAR_GH_SUBTYPE 23
 #define PS3_GUITAR_RB_SUBTYPE 24
-#define PS3_DRUM_GH_SUBTYPE 23
-#define PS3_DRUM_RB_SUBTYPE 24
+#define PS3_DRUM_GH_SUBTYPE 25
+#define PS3_DRUM_RB_SUBTYPE 26
 
 #define INVALID_PIN 0xFF
 

@@ -115,40 +115,37 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     bool bit_set = bit_check(controller.buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
   }
-  // for (uint8_t i = 0; i < sizeof(ps3AxisBindings); i++) {
-  //   button = pgm_read_byte(currentAxisBindings + i);
-  //   if (button == 0xff) continue;
-  //   bool bit_set = bit_check(controller.buttons, button);
-  //   JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
-  // }
+  for (uint8_t i = 0; i < sizeof(ps3AxisBindings); i++) {
+    button = pgm_read_byte(currentAxisBindings + i);
+    if (button == 0xff) continue;
+    bool bit_set = bit_check(controller.buttons, button);
+    JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
+  }
   button = controller.buttons & 0xF;
   if (button > 0x0a) {
     JoystickReport->hat = 0x08;
   } else {
     JoystickReport->hat = pgm_read_byte(hat_bindings + button);
   }
-
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
       config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
+    // r_y is tap, so lets disable it.
+    JoystickReport->r_y = 0x7f;
     // XINPUT guitars use LB for orange, PS3 uses L
     bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
               SWITCH_L);
   }
-  bool tilt = controller.r_y == 32768;
+  bool tilt = controller.r_y == 32767;
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
-    JoystickReport->r_y = 0x00;
-    if (JoystickReport->hat == 0x08) JoystickReport->hat = 0x0f;
     // GH PS3 Guitars use the first accel byte for tilt
-    JoystickReport->accel[0] = tilt ? 0x84 : 0x00;
-    JoystickReport->accel[1] = 0x01;
+    // WHY DOESNT THIS WORK
+    JoystickReport->accel[0] = tilt ? 0x84 : 0xff;
   }
   if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     JoystickReport->r_x = 128 - (controller.r_x >> 8);
-    // r_y is tap bar, can we do better than just disabling it
-    JoystickReport->r_y = 0x7f;
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
     // Swap y and x, as RB controllers have them inverted

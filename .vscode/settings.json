@@ -49,7 +49,8 @@
         "string.h": "c",
         "math.h": "c",
         "lwb.h": "c",
-        "cdcclassdevice.h": "c"
+        "cdcclassdevice.h": "c",
+        "defines.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

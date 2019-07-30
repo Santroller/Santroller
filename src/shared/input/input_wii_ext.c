@@ -77,8 +77,4 @@ void wii_ext_tick(controller_t *controller) {
     if (idx == INVALID_PIN) continue;
     bit_write(!bit_check(buttons, i), controller->buttons, idx);
   }
-  // for (int i = 0; i < sizeof(data); i++) {
-  //   loop_until_bit_is_set(UCSR0A, UDRE0);
-  //   UDR0 = data[i];
-  // }
 }

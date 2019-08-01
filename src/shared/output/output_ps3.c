@@ -2,18 +2,18 @@
 #include "output_handler.h"
 #include "usb/Descriptors.h"
 #include <stdlib.h>
-// Data that we need to send in order for the PS3 to identify our controller
-// correctly.
-const static uint8_t PROGMEM ps3_init_data[] = {0x21, 0x26, 0x01};
-static const uint8_t PROGMEM switchButtonBindings[] = {
-    15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
 // Bindings to go from controller to ps3
 static const uint8_t PROGMEM ps3ButtonBindings[] = {
-    15, 12, 13, 14, 0xff, 0xff, 8, 9, 5, 4, 6, 7, 10, 11};
+    XBOX_Y,    XBOX_A,     XBOX_B,          XBOX_X,
+    0xff,      0xff,       XBOX_LB,         XBOX_RB,
+    XBOX_BACK, XBOX_START, XBOX_LEFT_STICK, XBOX_RIGHT_STICK,
+    XBOX_HOME, XBOX_UNUSED};
+
 static const uint8_t PROGMEM ps3AxisBindings[] = {
     XBOX_DPAD_UP, XBOX_DPAD_RIGHT, XBOX_DPAD_DOWN, XBOX_DPAD_LEFT, 0xFF,
     0xFF,         XBOX_LB,         XBOX_RB,        XBOX_Y,         XBOX_B,
     XBOX_A,       XBOX_X};
+
 static const uint8_t PROGMEM ghAxisBindings[] = {
     XBOX_DPAD_RIGHT, XBOX_DPAD_LEFT, XBOX_DPAD_UP, XBOX_DPAD_DOWN,
     XBOX_X,          XBOX_A,         XBOX_B,       XBOX_Y,
@@ -21,9 +21,7 @@ static const uint8_t PROGMEM ghAxisBindings[] = {
 };
 static const uint8_t PROGMEM hat_bindings[] = {
     0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
-static const uint8_t *currentBindings;
 static const uint8_t *currentAxisBindings;
-static uint8_t currentBindingLen;
 static const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     ps3_report_descriptor[] = {
         0x05, 0x01, // Usage Page (Generic Desktop Ctrls)
@@ -108,37 +106,34 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
 
   USB_PS3Report_Data_t *JoystickReport = (USB_PS3Report_Data_t *)ReportData;
   uint8_t button;
-  for (uint8_t i = 0; i < currentBindingLen; i++) {
-    button = pgm_read_byte(currentBindings + i);
+  for (uint8_t i = 0; i < sizeof(ps3ButtonBindings); i++) {
+    button = pgm_read_byte(ps3ButtonBindings + i);
     if (button == 0xff) continue;
     bool bit_set = bit_check(controller.buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
   }
-  for (uint8_t i = 0; i < sizeof(ps3AxisBindings); i++) {
-    button = pgm_read_byte(currentAxisBindings + i);
-    if (button == 0xff) continue;
-    bool bit_set = bit_check(controller.buttons, button);
-    JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
+  if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+    // Swap a and b on the switch
+    bit_write(bit_check(controller.buttons, XBOX_A), JoystickReport->buttons,
+              SWITCH_B);
+    bit_write(bit_check(controller.buttons, XBOX_B), JoystickReport->buttons,
+              SWITCH_A);
+  } else {
+    for (uint8_t i = 0; i < sizeof(ps3AxisBindings); i++) {
+      button = pgm_read_byte(currentAxisBindings + i);
+      if (button == 0xff) continue;
+      bool bit_set = bit_check(controller.buttons, button);
+      JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
+    }
   }
   button = controller.buttons & 0xF;
-  if (button > 0x0a) {
-    JoystickReport->hat = 0x08;
-  } else {
-    JoystickReport->hat = pgm_read_byte(hat_bindings + button);
-  }
-  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
-      config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
-    JoystickReport->l_x = 0x80;
-    JoystickReport->l_y = 0x80;
-    // r_y is tap, so lets disable it.
-    JoystickReport->r_y = 0x7d;
-    // XINPUT guitars use LB for orange, PS3 uses L
-    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
-              SWITCH_L);
-  }
+  JoystickReport->hat =
+      button > 0x0a ? 0x08 : pgm_read_byte(hat_bindings + button);
+
   bool tilt = controller.r_y == 32767;
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
+    // GH PS3 guitars have a tilt axis, but it is 10 bits wide
     JoystickReport->accel[0] = tilt ? 0x84 : 0xf7;
     JoystickReport->accel[1] = 0x01;
   }
@@ -152,7 +147,7 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     bit_write(bit_check(controller.buttons, XBOX_X), JoystickReport->buttons,
               SWITCH_Y);
   }
-  if (config.sub_type == PS3_GAMEPAD_SUBTYPE) {
+  if (config.sub_type == PS3_GAMEPAD_SUBTYPE || config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     bit_write(controller.lt > 50, JoystickReport->buttons, SWITCH_L);
     bit_write(controller.rt > 50, JoystickReport->buttons, SWITCH_R);
     JoystickReport->axis[4] = controller.lt;
@@ -162,13 +157,14 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
     JoystickReport->r_y = (controller.r_y >> 8) + 128;
   } else {
-    //Map start+select to home
-    if (bit_check(controller.buttons, XBOX_START) &&
-        bit_check(controller.buttons, XBOX_BACK)) {
-      bit_set(JoystickReport->buttons, SWITCH_HOME);
-    }
+    JoystickReport->l_x = 0x80;
+    JoystickReport->l_y = 0x80;
+    // r_y is tap, so lets disable it.
+    JoystickReport->r_y = 0x7d;
+    // XINPUT guitars use LB for orange, PS3 uses L
+    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
+              SWITCH_L);
   }
-
   *ReportSize = sizeof(USB_PS3Report_Data_t);
 
   return false;
@@ -179,12 +175,13 @@ void ps3_control_request(void) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
       if (USB_ControlRequest.bRequest == HID_REQ_GetReport) {
+        // Send out init packets for the ps3
         Endpoint_ClearSETUP();
         while (!(Endpoint_IsINReady()))
           ;
-        for (uint8_t i = 0; i < sizeof(ps3_init_data); i++) {
-          Endpoint_Write_8(ps3_init_data[i]);
-        }
+        Endpoint_Write_8(0x21);
+        Endpoint_Write_8(0x26);
+        Endpoint_Write_8(0x01);
         switch (config.sub_type) {
         case PS3_DRUM_GH_SUBTYPE:
         case PS3_GUITAR_GH_SUBTYPE:
@@ -216,16 +213,10 @@ void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
   if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     DeviceDescriptor.VendorID = 0x0F0D;
     DeviceDescriptor.ProductID = 0x0092;
-    currentBindings = switchButtonBindings;
-    currentBindingLen = sizeof(switchButtonBindings);
   } else {
     currentAxisBindings = ps3AxisBindings;
-    currentBindings = ps3ButtonBindings;
-    currentBindingLen = sizeof(ps3ButtonBindings);
     if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
       DeviceDescriptor.VendorID = 0x12ba;
-      currentBindings = ps3ButtonBindings;
-      currentBindingLen = sizeof(ps3ButtonBindings) - 2;
     }
     if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0100;

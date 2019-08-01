@@ -53,7 +53,7 @@ typedef struct {
   uint8_t LB;
   uint8_t RB;
   uint8_t home;
-  uint8_t unused;
+  uint8_t capture;
   uint8_t a;
   uint8_t b;
   uint8_t x;
@@ -76,6 +76,7 @@ typedef struct {
   uint16_t mpu_6050_orientation;
   bool frets_led_mode;
   bool map_joy_to_dpad;
+  bool map_start_select_to_home;
   axis_invert_t inversions;
   uint16_t threshold_trigger;
   uint16_t threshold_joy;

@@ -14,6 +14,7 @@
 // inline
 #define FRETS_LED true
 #define MAP_JOY_TO_DPAD true
+#define MAP_START_SELECT_TO_HOME true
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.
@@ -24,8 +25,8 @@
 #define KEYS                                                                   \
   {                                                                            \
     0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51,    \
-        0x51, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, EMPTY,       \
-        EMPTY, EMPTY, EMPTY,                                                   \
+        0x51, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, \
+        EMPTY, EMPTY, EMPTY, EMPTY,                                            \
   }
 
 // Set this value to define the orientation of your mpu6050
@@ -38,7 +39,7 @@
 #define PINS                                                                   \
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
-        INVALID_PIN, 2, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
         INVALID_PIN, 19, 20, 18, INVALID_PIN, MPU_6050_INTERRUPT_PIN           \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE

@@ -4,8 +4,7 @@
 #include <stdlib.h>
 // Data that we need to send in order for the PS3 to identify our controller
 // correctly.
-const static uint8_t PROGMEM ps3_init_data[] = {0x21, 0x26, 0x01, 0x07,
-                                                0x00, 0x00, 0x00, 0x00};
+const static uint8_t PROGMEM ps3_init_data[] = {0x21, 0x26, 0x01};
 static const uint8_t PROGMEM switchButtonBindings[] = {
     15, 13, 12, 14, 0xff, 0xff, 8, 9, 4, 5, 6, 7, 10, 11};
 // Bindings to go from controller to ps3
@@ -132,7 +131,7 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
     // r_y is tap, so lets disable it.
-    JoystickReport->r_y = 0x7f;
+    JoystickReport->r_y = 0x7d;
     // XINPUT guitars use LB for orange, PS3 uses L
     bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
               SWITCH_L);
@@ -140,9 +139,8 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   bool tilt = controller.r_y == 32767;
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
-    // GH PS3 Guitars use the first accel byte for tilt
-    // WHY DOESNT THIS WORK
-    JoystickReport->accel[0] = tilt ? 0x84 : 0xff;
+    JoystickReport->accel[0] = tilt ? 0x84 : 0xf7;
+    JoystickReport->accel[1] = 0x01;
   }
   if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     JoystickReport->r_x = 128 - (controller.r_x >> 8);
@@ -163,6 +161,12 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     JoystickReport->l_y = (controller.l_y >> 8) + 128;
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
     JoystickReport->r_y = (controller.r_y >> 8) + 128;
+  } else {
+    //Map start+select to home
+    if (bit_check(controller.buttons, XBOX_START) &&
+        bit_check(controller.buttons, XBOX_BACK)) {
+      bit_set(JoystickReport->buttons, SWITCH_HOME);
+    }
   }
 
   *ReportSize = sizeof(USB_PS3Report_Data_t);
@@ -181,6 +185,20 @@ void ps3_control_request(void) {
         for (uint8_t i = 0; i < sizeof(ps3_init_data); i++) {
           Endpoint_Write_8(ps3_init_data[i]);
         }
+        switch (config.sub_type) {
+        case PS3_DRUM_GH_SUBTYPE:
+        case PS3_GUITAR_GH_SUBTYPE:
+          Endpoint_Write_8(0x06);
+          break;
+        case PS3_DRUM_RB_SUBTYPE:
+        case PS3_GUITAR_RB_SUBTYPE:
+          Endpoint_Write_8(0x00);
+          break;
+        default:
+          Endpoint_Write_8(0x07);
+          break;
+        }
+        for (uint8_t i = 0; i < 4; i++) { Endpoint_Write_8(0x00); }
         Endpoint_ClearIN();
         Endpoint_ClearStatusStage();
         return;

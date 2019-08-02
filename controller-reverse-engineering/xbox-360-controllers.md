@@ -65,6 +65,6 @@ If a request with `bRequest` set to `HID_GetReport` (0x01) and with 'wLength' of
 |      0x00     |      0x00     |      0x00     |      0x00     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-The above information was discovered from the following page: https://forums.vigem.org/topic/45/rogue-xinput-capabilities-bug-part-2.
+The above information was taken from the following page: https://forums.vigem.org/topic/45/rogue-xinput-capabilities-bug-part-2.
 
-This is all implemented in [XInputOutput.cpp](/src/shared/output/output_xinput.c). 
+A LUFA implementation of this controller is in [XInputOutput.cpp](/src/shared/output/output_xinput.c). 

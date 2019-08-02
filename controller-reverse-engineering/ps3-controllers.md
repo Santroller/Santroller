@@ -142,4 +142,8 @@ When the device receives a control request, with a `bmRequestType` of `device to
 |      0x00     |      0x00     |      0x00     |      0x00     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
- A LUFA implementation of this is in [output_ps3.c](/src/shared/output/output_ps3.c)
+
+## VID and PID
+Note that a specific VID and PID is not required at all for the controller to work.
+
+A LUFA implementation of this controller is in [output_ps3.c](/src/shared/output/output_ps3.c)

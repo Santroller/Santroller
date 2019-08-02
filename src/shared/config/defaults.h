@@ -2,8 +2,8 @@
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR MPU_6050
-#define DEVICE_TYPE WII
-#define OUTPUT_TYPE PS3_DRUM_GH_SUBTYPE
+#define DEVICE_TYPE DIRECT
+#define OUTPUT_TYPE XINPUT_GUITAR_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 12767

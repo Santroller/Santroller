@@ -133,9 +133,8 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   bool tilt = controller.r_y == 32767;
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
-    // GH PS3 guitars have a tilt axis, but it is 10 bits wide
-    JoystickReport->accel[0] = tilt ? 0x84 : 0xf7;
-    JoystickReport->accel[1] = 0x01;
+    // GH PS3 guitars have a tilt axis
+    JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
   }
   if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     JoystickReport->r_x = 128 - (controller.r_x >> 8);

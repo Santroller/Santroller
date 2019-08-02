@@ -6,18 +6,19 @@
  * the HID report descriptor, in Descriptors.c.
  */
 typedef struct {
-  uint16_t buttons; 
-  uint8_t hat; 
+  uint16_t buttons;
+  uint8_t hat;
 
   // left and right analog sticks, 0x00 left/up, 0x80 middle, 0xff right/down
 
-  uint8_t l_x; 
-  uint8_t l_y; 
-  uint8_t r_x; 
-  uint8_t r_y; 
+  uint8_t l_x;
+  uint8_t l_y;
+  uint8_t r_x;
+  uint8_t r_y;
 
-  uint8_t axis[12]; 
-  uint8_t accel[8]; 
+  uint8_t axis[12];
+  //Accel values are 10 bits with padding.
+  uint16_t accel[4];
 
 } USB_PS3Report_Data_t;
 typedef struct {

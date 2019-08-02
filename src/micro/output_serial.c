@@ -30,14 +30,14 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
                 },
         },
 };
-
+controller_t *controller;
 void serial_configuration_changed() {
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
 }
 void serial_control_request() {
   CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
-void serial_init(controller_t* controller) {}
+void serial_init(controller_t *c) { controller = c; }
 void serial_tick() {
 
   int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);

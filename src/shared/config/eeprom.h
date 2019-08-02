@@ -77,6 +77,7 @@ typedef struct {
   bool frets_led_mode;
   bool map_joy_to_dpad;
   bool map_start_select_to_home;
+  bool map_accel_to_right;
   axis_invert_t inversions;
   uint16_t threshold_trigger;
   uint16_t threshold_joy;

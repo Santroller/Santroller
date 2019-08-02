@@ -147,7 +147,25 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     bit_write(bit_check(controller.buttons, XBOX_X), JoystickReport->buttons,
               SWITCH_Y);
   }
-  if (config.sub_type == PS3_GAMEPAD_SUBTYPE || config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
+      config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+
+    // XINPUT guitars use LB for orange, PS3 uses L
+    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
+              SWITCH_L);
+  }
+  if (config.sub_type == PS3_DRUM_GH_SUBTYPE ||
+      config.sub_type == PS3_DRUM_RB_SUBTYPE) {
+
+    // XINPUT guitars use LB for orange, PS3 uses R
+    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
+              SWITCH_R);
+    // XINPUT guitars use RB for bass, PS3 uses L
+    bit_write(bit_check(controller.buttons, XBOX_RB), JoystickReport->buttons,
+              SWITCH_L);
+  }
+  if (config.sub_type == PS3_GAMEPAD_SUBTYPE ||
+      config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     bit_write(controller.lt > 50, JoystickReport->buttons, SWITCH_L);
     bit_write(controller.rt > 50, JoystickReport->buttons, SWITCH_R);
     JoystickReport->axis[4] = controller.lt;
@@ -161,9 +179,6 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     JoystickReport->l_y = 0x80;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
-    // XINPUT guitars use LB for orange, PS3 uses L
-    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
-              SWITCH_L);
   }
   *ReportSize = sizeof(USB_PS3Report_Data_t);
 

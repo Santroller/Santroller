@@ -27,7 +27,6 @@ typedef struct {
   uint8_t l_y;
   uint8_t r_x;
   uint8_t r_y;
-  uint8_t mpu_6050_interrupt;
 } ATTR_PACKED pins_t;
 typedef struct {
   bool lt;

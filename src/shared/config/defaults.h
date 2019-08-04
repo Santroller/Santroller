@@ -1,8 +1,8 @@
 #pragma once
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
-#define TILT_SENSOR MPU_6050
-#define DEVICE_TYPE DIRECT
+#define TILT_SENSOR ANALOGUE
+#define DEVICE_TYPE WII
 #define OUTPUT_TYPE XINPUT_GUITAR_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
@@ -15,7 +15,7 @@
 #define FRETS_LED true
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
-//When using a nunchunk, map acceleration to l
+// When using a nunchunk, map acceleration to l
 #define MAP_ACCEL_TO_R true
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
@@ -42,6 +42,6 @@
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
-        INVALID_PIN, 19, 20, 18, INVALID_PIN, MPU_6050_INTERRUPT_PIN           \
+        INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE

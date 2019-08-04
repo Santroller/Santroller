@@ -21,7 +21,7 @@ void guitar_init(void) {
   if (config.tilt_type == MPU_6050) {
     _delay_ms(1000);
     while (mympu_open(15) != 0) {}
-    enablePCI(config.pins.mpu_6050_interrupt);
+    enablePCI(config.pins.r_y);
   } else if (config.tilt_type == GRAVITY) {
     pinMode(config.pins.r_y, INPUT_PULLUP);
   } else if (config.tilt_type == GRAVITY) {

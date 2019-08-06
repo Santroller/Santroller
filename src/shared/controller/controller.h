@@ -37,9 +37,9 @@ typedef struct {
   uint16_t buttons;
   uint8_t lt;
   uint8_t rt;
-  int l_x;
-  int l_y;
-  int r_x;
-  int r_y;
+  int16_t l_x;
+  int16_t l_y;
+  int16_t r_x;
+  int16_t r_y;
   uint16_t device_info;
 } controller_t;

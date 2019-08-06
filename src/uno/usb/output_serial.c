@@ -134,6 +134,8 @@ void serial_tick() {
     if (b == 'r') {
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                           sizeof(config_t));
+      CDC_Device_SendData(&VirtualSerial_CDC_Interface, controller_data,
+                          sizeof(controller_t));
     }
     if (b == 'w') {
       uint8_t *data = (uint8_t *)&config;

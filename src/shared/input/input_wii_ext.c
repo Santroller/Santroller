@@ -170,5 +170,6 @@ void wii_ext_tick(controller_t *controller) {
     init_controller();
     return;
   }
+  controller->device_info = id;
   readFunction(controller, data);
 }

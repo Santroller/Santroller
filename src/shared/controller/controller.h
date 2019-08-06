@@ -41,4 +41,5 @@ typedef struct {
   int l_y;
   int r_x;
   int r_y;
+  uint16_t device_info;
 } controller_t;

@@ -45,3 +45,11 @@
         INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
+
+#define DEFAULT_CONFIG                                                         \
+  {                                                                            \
+    PROTOCOL_VERSION, DEVICE_TYPE, OUTPUT_TYPE, TILT_SENSOR, POLL_RATE, PINS,  \
+        MPU_6050_ORIENTATION, FRETS_LED, MAP_JOY_TO_DPAD,                      \
+        MAP_START_SELECT_TO_HOME, MAP_ACCEL_TO_R, INVERSIONS,                  \
+        TRIGGER_THRESHOLD, JOY_THRESHOLD, KEYS, F_CPU, FIRMWARE                \
+  }

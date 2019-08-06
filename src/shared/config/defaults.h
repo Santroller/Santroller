@@ -53,3 +53,4 @@
         MAP_START_SELECT_TO_HOME, MAP_ACCEL_TO_R, INVERSIONS,                  \
         TRIGGER_THRESHOLD, JOY_THRESHOLD, KEYS, F_CPU, FIRMWARE                \
   }
+

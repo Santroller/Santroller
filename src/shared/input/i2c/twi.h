@@ -21,6 +21,7 @@
 #define twi_h
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 //#define ATMEGA8
 
@@ -48,7 +49,7 @@ uint8_t twi_transmit(const uint8_t *, uint8_t);
 void twi_attachSlaveRxEvent(void (*)(uint8_t *, int));
 void twi_attachSlaveTxEvent(void (*)(void));
 void twi_reply(uint8_t);
-void twi_stop(void);
+bool twi_stop(void);
 void twi_releaseBus(void);
 uint8_t twi_endTransmission(uint8_t txAddress, uint8_t sendStop);
 uint8_t twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,

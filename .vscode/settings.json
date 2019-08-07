@@ -50,7 +50,8 @@
         "math.h": "c",
         "lwb.h": "c",
         "cdcclassdevice.h": "c",
-        "defines.h": "c"
+        "defines.h": "c",
+        "pins_arduino.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

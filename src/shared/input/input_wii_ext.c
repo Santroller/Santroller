@@ -15,8 +15,8 @@ uint8_t classic_bindings[16] = {
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t counter;
-uint16_t id;
-void (*readFunction)(controller_t *, uint8_t *);
+uint16_t id = NO_DEVICE;
+void (*readFunction)(controller_t *, uint8_t *) = NULL;
 
 void read_buttons(controller_t *controller, uint16_t buttons) {
   for (uint8_t i = 0; i < sizeof(classic_bindings); i++) {
@@ -28,7 +28,9 @@ void read_buttons(controller_t *controller, uint16_t buttons) {
 
 uint16_t read_ext_id(void) {
   uint8_t data[6];
-  twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
+  if (twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data)) {
+    return NO_DEVICE;
+  }
   // 0100 a420 0101 -> #1#######101
   // 0100 a420 0103 -> #1#######101
   return (data[0] & 0xf) << 12 | (data[4] & 0xf) << 8 | data[5];
@@ -121,31 +123,33 @@ void init_controller(void) {
     _delay_us(10);
   }
   switch (id) {
-    case GUITAR:
-      readFunction = guitar_cnt_tick;
-      break;
-    case CLASSIC:
-    case CLASSIC_PRO:
-      readFunction = classic_tick;
-      break;
-    case NUNCHUK:
-      readFunction = nunchuk_tick;
-      break;
-    case DRUMS:
-      readFunction = drum_tick;
-      break;
-    case UDRAW:
-      readFunction = udraw_tick;
-      break;
-    case DRAWSOME:
-      readFunction = drawsome_tick;
-      break;
-    case TURNTABLE:
-      readFunction = dj_tick;
-      break;
-    case TATACON:
-      readFunction = tatacon_tick;
-      break;
+  case GUITAR:
+    readFunction = guitar_cnt_tick;
+    break;
+  case CLASSIC:
+  case CLASSIC_PRO:
+    readFunction = classic_tick;
+    break;
+  case NUNCHUK:
+    readFunction = nunchuk_tick;
+    break;
+  case DRUMS:
+    readFunction = drum_tick;
+    break;
+  case UDRAW:
+    readFunction = udraw_tick;
+    break;
+  case DRAWSOME:
+    readFunction = drawsome_tick;
+    break;
+  case TURNTABLE:
+    readFunction = dj_tick;
+    break;
+  case TATACON:
+    readFunction = tatacon_tick;
+    break;
+  default:
+    readFunction = NULL;
   }
 }
 bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
@@ -164,12 +168,11 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
   return true;
 }
 void wii_ext_tick(controller_t *controller) {
+  controller->device_info = id;
   uint8_t data[8];
-  twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data);
-  if (!verifyData(data, sizeof(data))) {
+  if (twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) || !verifyData(data, sizeof(data))) {
     init_controller();
     return;
   }
-  controller->device_info = id;
   readFunction(controller, data);
 }

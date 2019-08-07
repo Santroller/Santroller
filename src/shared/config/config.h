@@ -1,4 +1,4 @@
-
+#pragma once
 #include <stdbool.h>
 #include <stdint.h>
 #define ATTR_PACKED __attribute__ ((packed))

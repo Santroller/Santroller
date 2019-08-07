@@ -1,7 +1,7 @@
 #include "../shared/output/output_serial.h"
-#include "../shared/output/output_handler.h"
 #include "../shared/config/eeprom.h"
 #include "../shared/output/bootloader/bootloader.h"
+#include "../shared/output/output_handler.h"
 /** LUFA CDC Class driver interface configuration and state information. This
  * structure is passed to all CDC Class driver functions, so that multiple
  * instances of the same class within a device can be differentiated from one
@@ -46,8 +46,6 @@ void serial_tick() {
   if (b == 'r') {
     CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                         sizeof(config_t));
-  }
-  if (b == 'i') {
     CDC_Device_SendData(&VirtualSerial_CDC_Interface, &controller,
                         sizeof(controller_t));
   }

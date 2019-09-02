@@ -1,9 +1,9 @@
 #pragma once
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
-#define TILT_SENSOR NONE
+#define TILT_SENSOR MPU_6050
 #define DEVICE_TYPE DIRECT
-#define OUTPUT_TYPE XINPUT_GAMEPAD_SUBTYPE
+#define OUTPUT_TYPE XINPUT_GUITAR_ALTERNATE_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 12767

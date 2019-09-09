@@ -1,7 +1,7 @@
 #pragma once
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
-#define TILT_SENSOR MPU_6050
+#define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_ALTERNATE_SUBTYPE
 #define POLL_RATE 1
@@ -12,7 +12,7 @@
   { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
-#define FRETS_LED true
+#define FRETS_LED false
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to l
@@ -32,7 +32,7 @@
   }
 
 // Set this value to define the orientation of your mpu6050
-#define MPU_6050_ORIENTATION NEGATIVE_X
+#define MPU_6050_ORIENTATION NEGATIVE_Z
 #if defined(__AVR_ATmega328P__)
 #  define MPU_6050_INTERRUPT_PIN 2
 #else
@@ -42,7 +42,7 @@
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
-        INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 19, MPU_6050_INTERRUPT_PIN      \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
@@ -53,4 +53,3 @@
         MAP_START_SELECT_TO_HOME, MAP_ACCEL_TO_R, INVERSIONS,                  \
         TRIGGER_THRESHOLD, JOY_THRESHOLD, KEYS, F_CPU, FIRMWARE                \
   }
-

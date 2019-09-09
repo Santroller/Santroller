@@ -3,7 +3,7 @@
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR MPU_6050
 #define DEVICE_TYPE DIRECT
-#define OUTPUT_TYPE PS3_GUITAR_GH_SUBTYPE
+#define OUTPUT_TYPE XINPUT_GUITAR_ALTERNATE_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 12767
@@ -14,6 +14,9 @@
 // inline
 #define FRETS_LED true
 #define MAP_JOY_TO_DPAD true
+#define MAP_START_SELECT_TO_HOME true
+// When using a nunchunk, map acceleration to l
+#define MAP_ACCEL_TO_R true
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.
@@ -24,8 +27,8 @@
 #define KEYS                                                                   \
   {                                                                            \
     0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51,    \
-        0x51, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, EMPTY,       \
-        EMPTY, EMPTY, EMPTY,                                                   \
+        0x51, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, \
+        EMPTY, EMPTY, EMPTY, EMPTY,                                            \
   }
 
 // Set this value to define the orientation of your mpu6050
@@ -38,7 +41,16 @@
 #define PINS                                                                   \
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
-        INVALID_PIN, 2, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
-        INVALID_PIN, 19, 20, 18, INVALID_PIN, MPU_6050_INTERRUPT_PIN           \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
+        INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
+
+#define DEFAULT_CONFIG                                                         \
+  {                                                                            \
+    PROTOCOL_VERSION, DEVICE_TYPE, OUTPUT_TYPE, TILT_SENSOR, POLL_RATE, PINS,  \
+        MPU_6050_ORIENTATION, FRETS_LED, MAP_JOY_TO_DPAD,                      \
+        MAP_START_SELECT_TO_HOME, MAP_ACCEL_TO_R, INVERSIONS,                  \
+        TRIGGER_THRESHOLD, JOY_THRESHOLD, KEYS, F_CPU, FIRMWARE                \
+  }
+

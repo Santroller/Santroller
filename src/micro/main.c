@@ -8,6 +8,7 @@ int main(void) {
   load_config();
   input_init();
   output_init();
+  serial_init(&controller);
   while (true) {
     input_tick(&controller);
     output_tick();

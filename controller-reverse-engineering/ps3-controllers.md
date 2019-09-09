@@ -1,5 +1,6 @@
-PS3 Controller HID report descriptor:
-
+# PS3 Controller Breakdown
+## HID report:
+The HID Report layout is below:
 ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -19,9 +20,11 @@ PS3 Controller HID report descriptor:
 |               |           gyroscope           |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-
+### Axis Fields
 The axis fields are there as all face buttons are actually pressure sensitive and can measure a value from 0x00 being not pressed, to 0xFF being fully pressed. Triggers are handled here too.
 Accelerometer and gyroscope are 10 bit numbers
+
+### Buttons
 Buttons are broken up as follows, with one bit per button
 
 ```
@@ -36,7 +39,8 @@ Buttons are broken up as follows, with one bit per button
 +-+-+-+-+-+-+-+-+
 ```
 
-The hat values look like the below diagram. 0x08 is used for a neutral value.
+### POV Hat (DPad)
+The hat values look like the below diagram. 0x08 is used when holding no buttons. So for example, holding both left and up results in a value of 0x01.
 
 ```
  7  0  1
@@ -45,11 +49,10 @@ The hat values look like the below diagram. 0x08 is used for a neutral value.
   / | \
  5  4  3
 ```
+## HID Report Descriptor:
 
-USB Descriptor:
-
-````c
-static const USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
+```c
+{
         0x05, 0x01, // Usage Page (Generic Desktop Ctrls)
         0x09, 0x05, // Usage (Game Pad)
         0xA1, 0x01, // Collection (Application)
@@ -125,8 +128,22 @@ static const USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
                     //   Null Position)
         0xC0,       // End Collection
 
-};```
-
+};
+```
+## ID Control Request
 For making the PS button work, there are some extra requirements
-When the device receives a control request, with `bmRequestType` (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE), and a `bmRequest` of HID_GET_REPORT, it needs to respond with the following bytes: `{0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00}`. A LUFA implementation of this is in [output_ps3.c](../src/shared/output/output_ps3.c)
-````
+When the device receives a control request, with a `bmRequestType` of `device to host, class and interface` and a `bmRequest` of `HID_GET_REPORT (0x01)`, It needs to respond with the following bytes: 
+```
+ 0                   1                   2                   3  
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      0x21     |      0x26     |      0x01     |      0x07     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      0x00     |      0x00     |      0x00     |      0x00     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+## VID and PID
+Note that a specific VID and PID is not required at all for the controller to work.
+
+A LUFA implementation of this controller is in [output_ps3.c](/src/shared/output/output_ps3.c)

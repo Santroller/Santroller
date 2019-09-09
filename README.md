@@ -25,5 +25,4 @@ It is recommended to use https://github.com/sanjay900/guitar-configurator for co
 
 ## Used projects:
 * https://github.com/bootsector/XInputPadMicro
-* https://github.com/dmadison/NintendoExtensionCtrl
 * https://github.com/abcminiuser/lufa/

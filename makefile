@@ -31,7 +31,7 @@ build:
 	$(MAKE) -C src/uno
 
 build-all:
-	rm -r output
+	rm -rf output
 	mkdir output
 	$(MAKE) clean
 	MCU=atmega8u2 $(MAKE) build

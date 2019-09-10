@@ -15,7 +15,7 @@
 #define FRETS_LED false
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
-// When using a nunchunk, map acceleration to l
+// When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in

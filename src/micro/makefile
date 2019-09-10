@@ -12,8 +12,6 @@
 MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
-F_CPU        ?= 16000000
-F_USB        = $(F_CPU)
 OPTIMIZATION = s
 SRC = $(shell find ../shared -type f -name '*.c') main.c output_serial.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA

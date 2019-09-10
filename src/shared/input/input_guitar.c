@@ -24,7 +24,7 @@ void guitar_init(void) {
     enablePCI(config.pins.r_y);
   } else if (config.tilt_type == GRAVITY) {
     pinMode(config.pins.r_y, INPUT_PULLUP);
-  } else if (config.tilt_type == GRAVITY) {
+  } else if (config.tilt_type == ANALOGUE) {
     pinMode(config.pins.r_y, INPUT);
   }
 }

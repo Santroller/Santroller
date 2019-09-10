@@ -9,7 +9,7 @@
 #         LUFA Project Makefile.
 # --------------------------------------
 
-MCU          ?= atmega16u2
+MCU          = atmega16u2
 ARCH         = AVR8
 BOARD        = UNO
 F_CPU        = 16000000

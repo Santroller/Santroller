@@ -42,7 +42,6 @@ void serial_tick() {
 
   int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
   if (b > 0) { CDC_Device_SendByte(&VirtualSerial_CDC_Interface, b); }
-  if (b == 'b') { bootloader(); }
   if (b == 'r') {
     CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                         sizeof(config_t));

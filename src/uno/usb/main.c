@@ -29,11 +29,9 @@ int main(void) {
   }
   output_init();
   serial_init(&controller);
-  // clang-format off
   while (true) {
     serial_tick();
   }
-  // clang-format on
 }
 void before_reset(void) {
   loop_until_bit_is_set(UCSR1A, UDRE1);

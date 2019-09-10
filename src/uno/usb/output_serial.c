@@ -37,13 +37,14 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
 };
 uint8_t *controller_data;
 uint8_t controller_index;
+#define BUFF_SIZE 16
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
 static RingBuffer_t USBtoUSART_Buffer;
 
 /** Underlying data buffer for \ref USBtoUSART_Buffer, where the stored bytes
  * are located. */
-static uint8_t USBtoUSART_Buffer_Data[32];
+static uint8_t USBtoUSART_Buffer_Data[BUFF_SIZE];
 
 /** Circular buffer to hold data from the serial port before it is sent to the
  * host. */
@@ -51,7 +52,7 @@ static RingBuffer_t USARTtoUSB_Buffer;
 
 /** Underlying data buffer for \ref USARTtoUSB_Buffer, where the stored bytes
  * are located. */
-static uint8_t USARTtoUSB_Buffer_Data[32];
+static uint8_t USARTtoUSB_Buffer_Data[BUFF_SIZE];
 bool currentlyUploading = false;
 void serial_configuration_changed() {
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
@@ -59,7 +60,9 @@ void serial_configuration_changed() {
 void serial_control_request() {
   CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
-void serial_init(controller_t *c) { controller_data = (uint8_t *)c; }
+void serial_init(controller_t *c) {
+   controller_data = (uint8_t *)c; 
+}
 void serial_tick() {
   if (currentlyUploading) {
     if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
@@ -115,22 +118,6 @@ void serial_tick() {
   } else {
     int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
     if (b > 0) { CDC_Device_SendByte(&VirtualSerial_CDC_Interface, b); }
-    if (b == 'q') {
-
-      /* Start the flush timer so that overflows occur rapidly to push received
-       * bytes to the USB interface */
-      TCCR0B = (1 << CS02);
-
-      // /* Pull target /RESET line high */
-      AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-      AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-      RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
-                            sizeof(USBtoUSART_Buffer_Data));
-      RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data,
-                            sizeof(USARTtoUSB_Buffer_Data));
-      currentlyUploading = true;
-    }
-    if (b == 'b') { bootloader(); }
     if (b == 'r') {
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                           sizeof(config_t));
@@ -172,8 +159,8 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
     default:
       if (controller_index < sizeof(controller_t) + 2) {
         controller_data[controller_index - 2] = data;
-        controller_index++;
       }
+      controller_index++;
     }
   }
 }
@@ -192,8 +179,20 @@ void EVENT_CDC_Device_ControLineStateChanged(
 
   if (rst)
     AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
-  else
+  else {
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-  hasReset += !rst;
-  if (hasReset > 3) { reboot(); }
+    /* Start the flush timer so that overflows occur rapidly to push received
+       * bytes to the USB interface */
+      TCCR0B = (1 << CS02);
+
+      // /* Pull target /RESET line high */
+      AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+      AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+      RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
+                            sizeof(USBtoUSART_Buffer_Data));
+      RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data,
+                            sizeof(USARTtoUSB_Buffer_Data));
+      currentlyUploading = true;
+  }
+
 }

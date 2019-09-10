@@ -33,9 +33,6 @@ build:
 build-all:
 	rm -rf output
 	mkdir output
-	$(MAKE) -C src/uno/usb clean MCU=atmega8u2
-	$(MAKE) -C src/uno/usb MCU=atmega8u2
-	cp src/uno/usb/bin/*.{hex,eep} output/
 	$(MAKE) -C src/uno/usb clean
 	$(MAKE) -C src/uno/usb
 	cp src/uno/usb/bin/*.{hex,eep} output/

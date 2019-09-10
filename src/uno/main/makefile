@@ -24,7 +24,7 @@ LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-uno-main-${MCU}-${F_CPU}
-AVRDUDE_PROGRAMMER = usbasp
+AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
 $(info $(shell mkdir -p $(BIN)))
 

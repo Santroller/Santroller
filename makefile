@@ -33,13 +33,18 @@ build:
 build-all:
 	rm -rf output
 	mkdir output
-	$(MAKE) clean
-	MCU=atmega8u2 $(MAKE) build
-	cp src/uno/usb/bin/*.hex output/
-	cp src/uno/usb/bin/*.eep output/
-	F_CPU=16000000 $(MAKE) build
-	F_CPU=8000000 $(MAKE) build
-	cp src/micro/bin/*.hex output/
-	cp src/micro/bin/*.eep output/
-	cp src/uno/main/bin/*.hex output/
-	cp src/uno/main/bin/*.eep output/
+	$(MAKE) -C src/uno/usb clean MCU=atmega8u2
+	$(MAKE) -C src/uno/usb MCU=atmega8u2
+	cp src/uno/usb/bin/*.{hex,eep} output/
+	$(MAKE) -C src/uno/usb clean
+	$(MAKE) -C src/uno/usb
+	cp src/uno/usb/bin/*.{hex,eep} output/
+	$(MAKE) -C src/uno/main clean
+	$(MAKE) -C src/uno/main
+	cp src/uno/main/bin/*.{hex,eep} output/
+	$(MAKE) -C src/micro clean F_CPU=16000000 F_USB=16000000
+	$(MAKE) -C src/micro F_CPU=16000000 F_USB=16000000
+	cp src/micro/bin/*.{hex,eep} output/
+	$(MAKE) -C src/micro clean F_CPU=8000000 F_USB=8000000
+	$(MAKE) -C src/micro F_CPU=8000000 F_USB=8000000
+	cp src/micro/bin/*.{hex,eep} output/

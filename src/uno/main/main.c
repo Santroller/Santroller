@@ -39,10 +39,5 @@ int main(void) {
       controller_index++;
     }
     controller_index = 0;
-    if (bit_is_set(UCSR0A, RXC0) && UDR0 == 'r') {
-      cli();
-      wdt_enable(WDTO_15MS);
-      for (;;) {}
-    }
   }
 }

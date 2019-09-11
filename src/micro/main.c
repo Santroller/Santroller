@@ -15,4 +15,3 @@ int main(void) {
     serial_tick();
   }
 }
-void before_reset(void) {}

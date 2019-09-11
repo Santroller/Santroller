@@ -6,9 +6,7 @@
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)MAGIC_KEY_POS;
 #define MAGIC_KEY 0x7777
 uint16_t bootKeyVal;
-extern void before_reset(void);
 void reboot(void) {
-  before_reset();
   cli();
   wdt_enable(WDTO_15MS);
   for (;;) {}

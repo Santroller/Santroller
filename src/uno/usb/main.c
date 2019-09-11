@@ -8,6 +8,7 @@
 #include <avr/wdt.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include <LUFA/Drivers/Board/Board.h>
 
 uint8_t controller_index;
 controller_t controller;
@@ -36,8 +37,4 @@ int main(void) {
   while (true) {
     serial_tick();
   }
-}
-void before_reset(void) {
-  loop_until_bit_is_set(UCSR1A, UDRE1);
-  UDR1 = 'r';
 }

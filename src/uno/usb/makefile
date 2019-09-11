@@ -23,7 +23,7 @@ LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
-AVRDUDE_PROGRAMMER = usbasp
+AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))
 

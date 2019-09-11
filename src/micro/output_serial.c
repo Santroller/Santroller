@@ -43,17 +43,14 @@ static char* FW = "Micro";
 void serial_tick() {
 
   int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-  if (b > 0) { CDC_Device_SendByte(&VirtualSerial_CDC_Interface, b); }
   if (b == 'r') {
     CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                         sizeof(config_t));
     CDC_Device_SendData(&VirtualSerial_CDC_Interface, &controller,
                         sizeof(controller_t));
-  }
-  if (b == 'f') {
+  } else if (b == 'f') {
     CDC_Device_SendString(&VirtualSerial_CDC_Interface, FW);
-  }
-  if (b == 'w') {
+  } else if (b == 'w') {
     uint8_t *data = (uint8_t *)&config;
     size_t i = 0;
     while (i < sizeof(config_t)) {

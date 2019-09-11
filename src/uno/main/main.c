@@ -29,6 +29,7 @@ int main(void) {
   input_init();
   while (1) {
     input_tick(&controller);
+    controller_index = 0;
     while (controller_index < sizeof(controller_t) + 2) {
       loop_until_bit_is_set(UCSR0A, UDRE0);
       if (controller_index < 2) {
@@ -38,6 +39,5 @@ int main(void) {
       }
       controller_index++;
     }
-    controller_index = 0;
   }
 }

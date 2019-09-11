@@ -63,6 +63,15 @@ void serial_control_request() {
 }
 void serial_init(controller_t *c) {
    controller_data = (uint8_t *)c; 
+    /* Start the flush timer so that overflows occur rapidly to push received
+       * bytes to the USB interface */
+    TCCR0B = (1 << CS02);
+    AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+  	// AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+    RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
+                          sizeof(USBtoUSART_Buffer_Data));
+    RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data,
+                            sizeof(USARTtoUSB_Buffer_Data));
 }
 void serial_tick() {
   if (currentlyUploading) {
@@ -118,17 +127,14 @@ void serial_tick() {
     USB_USBTask();
   } else {
     int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-    if (b > 0) { CDC_Device_SendByte(&VirtualSerial_CDC_Interface, b); }
     if (b == 'r') {
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                           sizeof(config_t));
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, controller_data,
                           sizeof(controller_t));
-    }
-    if (b == 'f') {
+    } else if (b == 'f') {
       CDC_Device_SendString(&VirtualSerial_CDC_Interface, FW);
-    }
-    if (b == 'w') {
+    } else if (b == 'w') {
       uint8_t *data = (uint8_t *)&config;
       size_t i = 0;
       while (i < sizeof(config_t)) {
@@ -178,24 +184,17 @@ Changed
  */
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
-  bool rst = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
-              CDC_CONTROL_LINE_OUT_DTR);
+  if (currentlyUploading) {
+    bool CurrentDTRState = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice & CDC_CONTROL_LINE_OUT_DTR);
 
-  if (rst)
-    AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
-  else {
-    /* Start the flush timer so that overflows occur rapidly to push received
-       * bytes to the USB interface */
-      TCCR0B = (1 << CS02);
-
-      // /* Pull target /RESET line high */
+    if (CurrentDTRState) {
+      AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
+    } else {
       AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-      AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-      RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
-                            sizeof(USBtoUSART_Buffer_Data));
-      RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data,
-                            sizeof(USARTtoUSB_Buffer_Data));
-      currentlyUploading = true;
+    }
   }
-
+}
+void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
+{
+	currentlyUploading = CDCInterfaceInfo->State.LineEncoding.BaudRateBPS != 57600;
 }

@@ -13,10 +13,6 @@
 uint8_t controller_index;
 controller_t controller;
 int main(void) {
-  //Reset the main MPU when this MPU boots
-  AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-  AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
   load_config();
   UBRR1 = 16;
   UCSR1A = (1 << U2X1);

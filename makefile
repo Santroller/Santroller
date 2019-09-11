@@ -2,14 +2,14 @@ all:
 
 micro:
 	$(MAKE) -C src/micro
-	echo b > /dev/ttyACM0
-	sleep 0.5
+	stty -F /dev/ttyACM0 1200
+	sleep 1
 	$(MAKE) -C src/micro avrdude
 
 micro-ee:
 	$(MAKE) -C src/micro
-	echo b > /dev/ttyACM0
-	sleep 0.5
+	stty -F /dev/ttyACM0 1200
+	sleep 1
 	$(MAKE) -C src/micro avrdude-ee
 
 uno:

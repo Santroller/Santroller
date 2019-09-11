@@ -53,6 +53,7 @@ static RingBuffer_t USARTtoUSB_Buffer;
 /** Underlying data buffer for \ref USARTtoUSB_Buffer, where the stored bytes
  * are located. */
 static uint8_t USARTtoUSB_Buffer_Data[BUFF_SIZE];
+static char* FW = "DFU - Uno";
 bool currentlyUploading = false;
 void serial_configuration_changed() {
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
@@ -123,6 +124,9 @@ void serial_tick() {
                           sizeof(config_t));
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, controller_data,
                           sizeof(controller_t));
+    }
+    if (b == 'f') {
+      CDC_Device_SendString(&VirtualSerial_CDC_Interface, FW);
     }
     if (b == 'w') {
       uint8_t *data = (uint8_t *)&config;

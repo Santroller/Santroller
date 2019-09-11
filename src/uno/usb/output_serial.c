@@ -184,17 +184,14 @@ Changed
  */
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
-  if (currentlyUploading) {
+  if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS != 57600) {
     bool CurrentDTRState = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice & CDC_CONTROL_LINE_OUT_DTR);
 
     if (CurrentDTRState) {
       AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
     } else {
       AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+      currentlyUploading = true;
     }
   }
-}
-void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
-{
-	currentlyUploading = CDCInterfaceInfo->State.LineEncoding.BaudRateBPS != 57600;
 }

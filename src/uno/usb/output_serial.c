@@ -180,7 +180,6 @@ void EVENT_CDC_Device_ControLineStateChanged(
   if (rst)
     AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
   else {
-    AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     /* Start the flush timer so that overflows occur rapidly to push received
        * bytes to the USB interface */
       TCCR0B = (1 << CS02);

@@ -10,10 +10,6 @@
 #define WII 1
 #define DIRECT 2
 
-//Joystick type for a guitar
-#define DPAD 1
-#define JOY 2
-
 //Controller Types
 #define XINPUT_GAMEPAD_SUBTYPE 1
 #define XINPUT_WHEEL_SUBTYPE 2

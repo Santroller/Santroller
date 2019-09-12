@@ -127,9 +127,10 @@ void serial_tick() {
     USB_USBTask();
   } else {
     int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-    if (b == 'r') {
+    if (b == 'c') {
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
                           sizeof(config_t));
+    } else if (b == 'r') {
       CDC_Device_SendData(&VirtualSerial_CDC_Interface, controller_data,
                           sizeof(controller_t));
     } else if (b == 'f') {

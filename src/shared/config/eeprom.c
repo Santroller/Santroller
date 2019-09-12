@@ -4,3 +4,6 @@ config_t config;
 void load_config(void) {
     eeprom_read_block(&config, &config_pointer, sizeof(config_t));
 }
+void write_config(void) {
+    eeprom_write_block(&config, &config_pointer, sizeof(config_t));
+}

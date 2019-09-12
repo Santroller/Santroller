@@ -56,8 +56,9 @@ void serial_tick() {
     size_t i = 0;
     while (i < sizeof(config_t)) {
       data[i] = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-      if (data[i] != EOF) { i++; }
+      if (data[i] >= 0) { i++; }
     }
+    write_config();
     reboot();
   }
   CDC_Device_USBTask(&VirtualSerial_CDC_Interface);

@@ -4,9 +4,9 @@ git:
 matrix:
   include:
   - name: 3.3V Build
-    env: F_CPU=8000000
+    env: F_CPU=8000000 F_USB=8000000
   - name: 5V Build
-    env: F_CPU=16000000
+    env: F_CPU=16000000 F_USB=16000000
 install:
 - sudo apt-get install -y make gcc-avr avr-libc binutils
 script:

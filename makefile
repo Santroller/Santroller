@@ -39,9 +39,15 @@ build-all:
 	$(MAKE) -C src/uno/main clean
 	$(MAKE) -C src/uno/main
 	cp src/uno/main/bin/*.{hex,eep} output/
-	$(MAKE) -C src/micro clean F_CPU=16000000 F_USB=16000000
-	$(MAKE) -C src/micro F_CPU=16000000 F_USB=16000000
+	$(MAKE) -C src/micro clean ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
+	$(MAKE) -C src/micro ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
 	cp src/micro/bin/*.{hex,eep} output/
-	$(MAKE) -C src/micro clean F_CPU=8000000 F_USB=8000000
-	$(MAKE) -C src/micro F_CPU=8000000 F_USB=8000000
+	$(MAKE) -C src/micro clean ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000
+	$(MAKE) -C src/micro ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000
+	cp src/micro/bin/*.{hex,eep} output/
+	$(MAKE) -C src/micro clean ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
+	$(MAKE) -C src/micro ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
+	cp src/micro/bin/*.{hex,eep} output/
+	$(MAKE) -C src/micro clean ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
+	$(MAKE) -C src/micro ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
 	cp src/micro/bin/*.{hex,eep} output/

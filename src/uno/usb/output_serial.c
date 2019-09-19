@@ -53,7 +53,7 @@ static RingBuffer_t USARTtoUSB_Buffer;
 /** Underlying data buffer for \ref USARTtoUSB_Buffer, where the stored bytes
  * are located. */
 static uint8_t USARTtoUSB_Buffer_Data[BUFF_SIZE];
-static char* FW = "DFU - Uno";
+static char* FW = ARDWIINO_BOARD;
 bool currentlyUploading = false;
 void serial_configuration_changed() {
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
@@ -62,16 +62,16 @@ void serial_control_request() {
   CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
 void serial_init(controller_t *c) {
-   controller_data = (uint8_t *)c; 
-    /* Start the flush timer so that overflows occur rapidly to push received
-       * bytes to the USB interface */
-    TCCR0B = (1 << CS02);
-    AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-  	// AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-    RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
-                          sizeof(USBtoUSART_Buffer_Data));
-    RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data,
-                            sizeof(USARTtoUSB_Buffer_Data));
+  controller_data = (uint8_t *)c;
+  /* Start the flush timer so that overflows occur rapidly to push received
+   * bytes to the USB interface */
+  TCCR0B = (1 << CS02);
+  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+  // AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+  RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
+                        sizeof(USBtoUSART_Buffer_Data));
+  RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data,
+                        sizeof(USARTtoUSB_Buffer_Data));
 }
 void serial_tick() {
   if (currentlyUploading) {
@@ -135,6 +135,8 @@ void serial_tick() {
                           sizeof(controller_t));
     } else if (b == 'f') {
       CDC_Device_SendString(&VirtualSerial_CDC_Interface, FW);
+    } else if (b == 'd') {
+      CDC_Device_SendByte(&VirtualSerial_CDC_Interface, 0x01);
     } else if (b == 'w') {
       uint8_t *data = (uint8_t *)&config;
       size_t i = 0;
@@ -187,7 +189,9 @@ Changed
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
   if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS != 57600) {
-    bool CurrentDTRState = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice & CDC_CONTROL_LINE_OUT_DTR);
+    bool CurrentDTRState =
+        (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
+         CDC_CONTROL_LINE_OUT_DTR);
 
     if (CurrentDTRState) {
       AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;

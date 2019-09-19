@@ -12,17 +12,18 @@
 MCU          = atmega16u2
 ARCH         = AVR8
 BOARD        = UNO
+ARDWIINO_BOARD = uno-usb
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 SRC          = $(shell find ../../shared/output -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') main.c output_serial.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -flto -fuse-linker-plugin
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -flto -fuse-linker-plugin -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
 CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
+TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-${MCU}-${F_CPU}
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))

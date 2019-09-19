@@ -38,8 +38,7 @@ void serial_control_request() {
   CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
 void serial_init(controller_t *c) {}
-
-static char* FW = "Micro";
+static char* FW = ARDWIINO_BOARD;
 void serial_tick() {
 
   int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
@@ -51,6 +50,8 @@ void serial_tick() {
                         sizeof(controller_t));
   } else if (b == 'f') {
     CDC_Device_SendString(&VirtualSerial_CDC_Interface, FW);
+  } else if (b == 'd') {
+    CDC_Device_SendByte(&VirtualSerial_CDC_Interface, 0x00);
   } else if (b == 'w') {
     uint8_t *data = (uint8_t *)&config;
     size_t i = 0;

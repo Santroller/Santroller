@@ -12,15 +12,17 @@
 MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
+ARDWIINO_BOARD = micro
+F_CPU 		 = 8000000
+F_USB		 = ${F_CPU}
 OPTIMIZATION = s
 SRC = $(shell find ../shared -type f -name '*.c') main.c output_serial.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb/
-CPP_FLAGS	 = -std=c++11
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb/ -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-micro-${MCU}-${F_CPU}
+TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-${MCU}-${F_CPU}
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -P /dev/ttyACM0 reset
 # ----- No changes should be necessary below this line -----

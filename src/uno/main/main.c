@@ -16,12 +16,6 @@ int main(void) {
   UCSR0A = (1 << U2X0);
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
-  // Notify the usb processor so that it knows we are about to wait for the
-  // config
-  while (!bit_is_set(UCSR0A, RXC0)) {
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = 0xFE;
-  }
   for (size_t i = 0; i < sizeof(config_t); i++) {
     loop_until_bit_is_set(UCSR0A, RXC0);
     ((uint8_t *)&config)[i] = UDR0;

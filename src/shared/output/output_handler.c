@@ -67,7 +67,6 @@ void output_init(void) {
 void output_tick() {
   wdt_reset();
   HID_Device_USBTask(&interface);
-  USB_USBTask();
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   HID_Device_ConfigureEndpoints(&interface);

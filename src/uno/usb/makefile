@@ -28,6 +28,9 @@ AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))
 
+dfu-all:
+	(make dfu || true) && sleep 1 && make dfu-ee && sleep 1 && make dfu
+
 # Default target
 all:
 

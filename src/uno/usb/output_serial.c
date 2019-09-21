@@ -66,7 +66,6 @@ void serial_init(controller_t *c) {
   /* Start the flush timer so that overflows occur rapidly to push received
    * bytes to the USB interface */
   TCCR0B = (1 << CS02);
-  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   // AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data,
                         sizeof(USBtoUSART_Buffer_Data));
@@ -147,6 +146,7 @@ void serial_tick() {
       reboot();
     }
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
+    USB_USBTask();
     if (controller_index >= sizeof(controller_t) + 2) {
       output_tick();
       controller_index = 0;
@@ -177,7 +177,58 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
     }
   }
 }
-int hasReset = 0;
+
+/** Event handler for the CDC Class driver Line Encoding Changed event.
+ *
+ *  \param[in] CDCInterfaceInfo  Pointer to the CDC class interface configuration structure being referenced
+ */
+void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
+{
+  if (currentlyUploading) {
+    uint8_t ConfigMask = 0;
+
+    switch (CDCInterfaceInfo->State.LineEncoding.ParityType)
+    {
+      case CDC_PARITY_Odd:
+        ConfigMask = ((1 << UPM11) | (1 << UPM10));		
+        break;
+      case CDC_PARITY_Even:
+        ConfigMask = (1 << UPM11);		
+        break;
+    }
+
+    if (CDCInterfaceInfo->State.LineEncoding.CharFormat == CDC_LINEENCODING_TwoStopBits)
+      ConfigMask |= (1 << USBS1);
+
+    switch (CDCInterfaceInfo->State.LineEncoding.DataBits)
+    {
+      case 6:
+        ConfigMask |= (1 << UCSZ10);
+        break;
+      case 7:
+        ConfigMask |= (1 << UCSZ11);
+        break;
+      case 8:
+        ConfigMask |= ((1 << UCSZ11) | (1 << UCSZ10));
+        break;
+    }
+
+    /* Must turn off USART before reconfiguring it, otherwise incorrect operation may occur */
+    UCSR1B = 0;
+    UCSR1A = 0;
+    UCSR1C = 0;
+
+    /* Special case 57600 baud for compatibility with the ATmega328 bootloader. */	
+    UBRR1  = (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600)
+        ? 16
+        : SERIAL_2X_UBBRVAL(CDCInterfaceInfo->State.LineEncoding.BaudRateBPS);	
+
+    UCSR1C = ConfigMask;
+    UCSR1A = (1 << U2X1);
+    UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
+  }
+}
+
 /** Event handler for the CDC Class driver Host-to-Device Line Encoding
 Changed
  * event.

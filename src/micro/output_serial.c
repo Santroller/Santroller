@@ -62,6 +62,7 @@ void serial_tick() {
     reboot();
   }
   CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
+  USB_USBTask();
 }
 
 void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo)

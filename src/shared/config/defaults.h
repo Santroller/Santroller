@@ -13,7 +13,7 @@
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
 #define FRETS_LED false
-#define MAP_JOY_TO_DPAD true
+#define MAP_JOY_TO_DPAD false
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true

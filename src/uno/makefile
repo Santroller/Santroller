@@ -1,50 +1,38 @@
 all:
 
-micro:
-	$(MAKE) -C src/micro
+upload: 
+	@echo Uploading all elements.
+	@echo
+	echo q > /dev/ttyACM0
+	$(MAKE) -C main avrdude
+	sleep 1
 	echo b > /dev/ttyACM0
 	sleep 0.5
-	$(MAKE) -C src/micro avrdude
+	$(MAKE) -C usb dfu
+	@echo
+	@echo Upload operation complete.
 
-micro-ee:
-	$(MAKE) -C src/micro
+upload-ee:
+	@echo Uploading eeprom to usb.
+	@echo
 	echo b > /dev/ttyACM0
 	sleep 0.5
-	$(MAKE) -C src/micro avrdude-ee
-
-uno:
-	$(MAKE) -C src/uno
-	sleep 0.5
-	$(MAKE) -C src/uno upload
-
-uno-ee:
-	$(MAKE) -C src/uno
-	sleep 0.5
-	$(MAKE) -C src/uno upload-ee
+	$(MAKE) -C usb avrdude-ee
+	@echo
+	@echo Upload operation complete.
 
 clean:
-	$(MAKE) -C src/micro clean
-	$(MAKE) -C src/uno clean
+	@echo Cleaning all elements.
+	@echo
+	$(MAKE) -C main clean
+	$(MAKE) -C usb clean
+	@echo
+	@echo Clean operation complete.
 
-build:
-	$(MAKE) -C src/micro
-	$(MAKE) -C src/uno
-
-build-all:
-	rm -rf output
-	mkdir output
-	$(MAKE) -C src/uno/usb clean MCU=atmega8u2
-	$(MAKE) -C src/uno/usb MCU=atmega8u2
-	cp src/uno/usb/bin/*.{hex,eep} output/
-	$(MAKE) -C src/uno/usb clean
-	$(MAKE) -C src/uno/usb
-	cp src/uno/usb/bin/*.{hex,eep} output/
-	$(MAKE) -C src/uno/main clean
-	$(MAKE) -C src/uno/main
-	cp src/uno/main/bin/*.{hex,eep} output/
-	$(MAKE) -C src/micro clean F_CPU=16000000 F_USB=16000000
-	$(MAKE) -C src/micro F_CPU=16000000 F_USB=16000000
-	cp src/micro/bin/*.{hex,eep} output/
-	$(MAKE) -C src/micro clean F_CPU=8000000 F_USB=8000000
-	$(MAKE) -C src/micro F_CPU=8000000 F_USB=8000000
-	cp src/micro/bin/*.{hex,eep} output/
+%:
+	@echo Executing \"make $@\" on all elements.
+	@echo
+	$(MAKE) -C main
+	$(MAKE) -C usb
+	@echo
+	@echo \"Make $@\" operation complete.

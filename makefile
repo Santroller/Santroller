@@ -35,25 +35,25 @@ build-all:
 	mkdir output
 	$(MAKE) -C src/uno/usb clean
 	$(MAKE) -C src/uno/usb
-	cp src/uno/usb/bin/*.hex output/
-	cp src/uno/usb/bin/*.eep output/
+	cp -rf src/uno/usb/bin/*.hex output/
+	cp -rf src/uno/usb/bin/*.eep output/
 	$(MAKE) -C src/uno/main clean
 	$(MAKE) -C src/uno/main
-	cp src/uno/main/bin/*.hex output/
-	cp src/uno/main/bin/*.eep output/
+	cp -rf src/uno/main/bin/*.hex output/
+	cp -rf src/uno/main/bin/*.eep output/
 	$(MAKE) -C src/micro clean ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
 	$(MAKE) -C src/micro ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
-	cp src/micro/bin/*.hex output/
-	cp src/micro/bin/*.eep output/
+	cp -rf src/micro/bin/*.hex output/
+	cp -rf src/micro/bin/*.eep output/
 	$(MAKE) -C src/micro clean ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000
 	$(MAKE) -C src/micro ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000
-	cp src/micro/bin/*.hex output/
-	cp src/micro/bin/*.eep output/
+	cp -rf src/micro/bin/*.hex output/
+	cp -rf src/micro/bin/*.eep output/
 	$(MAKE) -C src/micro clean ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
 	$(MAKE) -C src/micro ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
-	cp src/micro/bin/*.hex output/
-	cp src/micro/bin/*.eep output/
+	cp -rf src/micro/bin/*.hex output/
+	cp -rf src/micro/bin/*.eep output/
 	$(MAKE) -C src/micro clean ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
 	$(MAKE) -C src/micro ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
-	cp src/micro/bin/*.hex output/
-	cp src/micro/bin/*.eep output/
+	cp -rf src/micro/bin/*.hex output/
+	cp -rf src/micro/bin/*.eep output/

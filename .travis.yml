@@ -13,8 +13,7 @@ deploy:
   skip_cleanup: true
   overwrite: true
   file:
-    - output/*.hex
-    - output/*.eep
+    - output/*
   on:
     repo: sanjay900/Ardwiino
     tags: true

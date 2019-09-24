@@ -1,16 +1,10 @@
 language: shell
 git:
   depth: 3
-matrix:
-  include:
-  - name: 3.3V Build
-    env: F_CPU=8000000 F_USB=8000000
-  - name: 5V Build
-    env: F_CPU=16000000 F_USB=16000000
 install:
 - sudo apt-get install -y make gcc-avr avr-libc binutils
 script:
-- make build
+- make build-all
 deploy:
   provider: releases
   api_key:
@@ -19,12 +13,8 @@ deploy:
   skip_cleanup: true
   overwrite: true
   file:
-    - src/micro/bin/*.hex
-    - src/uno/usb/bin/*.hex
-    - src/uno/main/bin/*.hex
-    - src/micro/bin/*.eep
-    - src/uno/usb/bin/*.eep
-    - src/uno/main/bin/*.eep
+    - output/*.hex
+    - output/*.eep
   on:
     repo: sanjay900/Ardwiino
     tags: true

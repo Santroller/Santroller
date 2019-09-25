@@ -1,7 +1,7 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#define ATTR_PACKED __attribute__ ((packed))
+#pragma pack(push, 1)
 typedef struct {
   uint8_t up;
   uint8_t down;
@@ -25,7 +25,7 @@ typedef struct {
   uint8_t l_y;
   uint8_t r_x;
   uint8_t r_y;
-} ATTR_PACKED pins_t;
+} pins_t;
 typedef struct {
   bool lt;
   bool rt;
@@ -33,11 +33,11 @@ typedef struct {
   bool l_y;
   bool r_x;
   bool r_y;
-} ATTR_PACKED axis_invert_t;
+} axis_invert_t;
 typedef struct {
   uint8_t neg;
   uint8_t pos;
-} ATTR_PACKED analogue_keys_t;
+} analogue_keys_t;
 typedef struct {
   uint8_t up;
   uint8_t down;
@@ -61,7 +61,7 @@ typedef struct {
   analogue_keys_t l_y;
   analogue_keys_t r_x;
   analogue_keys_t r_y;
-} ATTR_PACKED keys_t;
+} keys_t;
 
 typedef struct {
   uint8_t version;
@@ -81,4 +81,5 @@ typedef struct {
   keys_t keys;
   uint32_t cpu_freq;
   uint32_t signature;
-} ATTR_PACKED config_t;
+} config_t;
+#pragma pack(pop)

@@ -26,11 +26,11 @@ BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-uno-main-${MCU}-${F_CPU}
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
+OUT_DIR 	 = ../../../output
 $(info $(shell mkdir -p $(BIN)))
 
 # Default target
-all:
-
+all: 
 # Include LUFA build script makefiles
 include $(LUFA_PATH)/Build/lufa_core.mk
 include $(LUFA_PATH)/Build/lufa_sources.mk

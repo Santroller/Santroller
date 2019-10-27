@@ -63,7 +63,7 @@ static volatile uint8_t twi_rxBufferIndex;
 static volatile uint8_t twi_error;
 
 // === MODIFIED ===
-static uint16_t TIMEOUT = 1000;
+static uint16_t TIMEOUT = 10000;
 
 /*
  * Function twi_init

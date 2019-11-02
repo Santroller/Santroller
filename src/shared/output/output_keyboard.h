@@ -23,4 +23,4 @@
     }                                                                          \
   }
 
-void keyboard_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device);
+void keyboard_init(event_pointers *events);

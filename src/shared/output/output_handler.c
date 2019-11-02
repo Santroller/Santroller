@@ -8,7 +8,6 @@
 #include "usb/Descriptors.h"
 
 event_pointers events;
-previous_buffer_t buffer;
 USB_ClassInfo_HID_Device_t interface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -18,8 +17,8 @@ USB_ClassInfo_HID_Device_t interface = {
       Type : EP_TYPE_CONTROL,
       Banks : 1,
     },
-    PrevReportINBuffer : &buffer,
-    PrevReportINBufferSize : sizeof(buffer),
+    PrevReportINBuffer : NULL,
+    PrevReportINBufferSize : sizeof(output_report_size_t),
   },
 };
 USB_HID_Descriptor_HID_t hid_descriptor = {
@@ -51,13 +50,13 @@ void output_init(void) {
       .PollingIntervalMS = config.pollrate;
   if (config.sub_type >= KEYBOARD_SUBTYPE) {
     if (config.sub_type == KEYBOARD_SUBTYPE) {
-      keyboard_init(&events, &interface);
+      keyboard_init(&events);
     } else {
-      ps3_init(&events, &interface);
+      ps3_init(&events);
     }
     hid_init();
   } else {
-    xinput_init(&events, &interface);
+    xinput_init(&events);
   }
 
   USB_Init();
@@ -90,7 +89,6 @@ bool CALLBACK_HID_Device_CreateHIDReport(
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
     events.create_hid_report(HIDInterfaceInfo, ReportID, ReportType,
                                   ReportData, ReportSize);
-    //update immediately, don't bother comparing
     return true;
 }
 

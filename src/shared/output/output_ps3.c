@@ -217,7 +217,7 @@ void ps3_control_request(void) {
   HID_Device_ProcessControlRequest(&interface);
 }
 
-void ps3_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
+void ps3_init(event_pointers *events) {
   events->create_hid_report = ps3_create_report;
   events->control_request = ps3_control_request;
   hid_report_address = ps3_report_descriptor;

@@ -18,7 +18,6 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   }
 };
 
-static uint8_t prev_xinput_report[sizeof(USB_XInputReport_Data_t)];
 void xinput_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                           uint8_t *const ReportID, const uint8_t ReportType,
                           void *ReportData, uint16_t *const ReportSize) {
@@ -78,12 +77,9 @@ void xinput_control_request(void) {
   }
   HID_Device_ProcessControlRequest(&interface);
 }
-void xinput_init(event_pointers *events,
-                 USB_ClassInfo_HID_Device_t *hid_device) {
+void xinput_init(event_pointers *events) {
   events->create_hid_report = xinput_create_report;
   events->control_request = xinput_control_request;
-  hid_device->Config.PrevReportINBuffer = &prev_xinput_report;
-  hid_device->Config.PrevReportINBufferSize = sizeof(prev_xinput_report);
   ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype =
       config.sub_type;
 }

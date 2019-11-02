@@ -19,7 +19,7 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
 };
 
 static uint8_t prev_xinput_report[sizeof(USB_XInputReport_Data_t)];
-bool xinput_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+void xinput_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                           uint8_t *const ReportID, const uint8_t ReportType,
                           void *ReportData, uint16_t *const ReportSize) {
 
@@ -30,8 +30,6 @@ bool xinput_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   JoystickReport->rsize = sizeof(USB_XInputReport_Data_t);
   //Don't copy the extra device information tagged on the end of the controller.
   memcpy(&JoystickReport->buttons, &controller, sizeof(controller_t) - sizeof(uint16_t));
-
-  return false;
 }
 
 const uint8_t PROGMEM dataLen8[] = {0x00, 0x08, 0x00, 0x00,

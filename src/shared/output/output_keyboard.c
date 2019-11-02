@@ -7,7 +7,7 @@ static uint8_t prev_keyboard_report[sizeof(USB_KeyboardReport_Data_t)];
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 
-bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+void keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                             uint8_t *const ReportID, const uint8_t ReportType,
                             void *ReportData, uint16_t *const ReportSize) {
   USB_KeyboardReport_Data_t *KeyboardReport =
@@ -27,7 +27,6 @@ bool keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   CHECK_TRIGGER_KEY(lt);
   CHECK_TRIGGER_KEY(rt);
   *ReportSize = sizeof(USB_KeyboardReport_Data_t);
-  return false;
 }
 void keyboard_init(event_pointers *events, USB_ClassInfo_HID_Device_t *hid_device) {
   events->create_hid_report = keyboard_create_report;

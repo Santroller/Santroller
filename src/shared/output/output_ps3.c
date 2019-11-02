@@ -100,7 +100,7 @@ static const USB_Descriptor_HIDReport_Datatype_t PROGMEM
         0xC0,       // End Collection
 
 };
-bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                        uint8_t *const ReportID, const uint8_t ReportType,
                        void *ReportData, uint16_t *const ReportSize) {
 
@@ -180,8 +180,6 @@ bool ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     JoystickReport->r_y = 0x7d;
   }
   *ReportSize = sizeof(USB_PS3Report_Data_t);
-
-  return false;
 }
 void ps3_control_request(void) {
   if (config.sub_type != SWITCH_GAMEPAD_SUBTYPE &&

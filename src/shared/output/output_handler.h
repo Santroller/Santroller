@@ -8,7 +8,7 @@
 
 typedef struct {
   void (*control_request)(void);
-  bool (*create_hid_report)(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+  void (*create_hid_report)(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                             uint8_t *const ReportID, const uint8_t ReportType,
                             void *ReportData, uint16_t *const ReportSize);
   uint16_t (*get_descriptor)(const uint8_t DescriptorType,

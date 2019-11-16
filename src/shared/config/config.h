@@ -88,3 +88,15 @@ typedef struct {
   keys_t keys;
 } config_t;
 #pragma pack(pop)
+
+#define MAIN_CMD_R 'm'
+#define MAIN_CMD_W 'n'
+#define PIN_CMD_R 'p'
+#define PIN_CMD_W 'o'
+#define AXIS_CMD_R 'a'
+#define AXIS_CMD_W 'b'
+#define KEY_CMD_R 'k'
+#define KEY_CMD_W 'l'
+#define FW_CMD_R 'f'
+#define CONTROLLER_CMD_R 'c'
+#define REBOOT_CMD 'r'

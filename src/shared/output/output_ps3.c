@@ -13,15 +13,19 @@ static const uint8_t PROGMEM ps3AxisBindings[] = {
     XBOX_DPAD_UP, XBOX_DPAD_RIGHT, XBOX_DPAD_DOWN, XBOX_DPAD_LEFT, 0xFF,
     0xFF,         XBOX_LB,         XBOX_RB,        XBOX_Y,         XBOX_B,
     XBOX_A,       XBOX_X};
-
 static const uint8_t PROGMEM ghAxisBindings[] = {
-    XBOX_DPAD_RIGHT, XBOX_DPAD_LEFT, XBOX_DPAD_UP, XBOX_DPAD_DOWN,
-    XBOX_X,          XBOX_A,         XBOX_B,       XBOX_Y,
-    XBOX_LB,         0xff,           0xff,         0xff,
-};
+    XBOX_DPAD_LEFT, XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
+    XBOX_DPAD_UP,   XBOX_X,         XBOX_B};
+// Annoyingly, axis bindings for GH guitars overlap. This is the set of axis
+// that overlap the previous list.
+static const uint8_t PROGMEM ghAxisBindings2[] = {0xff, XBOX_LB, XBOX_Y,
+                                                  XBOX_A};
 static const uint8_t PROGMEM hat_bindings[] = {
     0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 static const uint8_t *currentAxisBindings;
+static uint8_t currentAxisBindingsLen = 0;
+
+static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 static const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     ps3_report_descriptor[] = {
         0x05, 0x01, // Usage Page (Generic Desktop Ctrls)
@@ -114,22 +118,27 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   }
   if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     // Swap a and b on the switch
-    bit_write(bit_check(controller.buttons, XBOX_A), JoystickReport->buttons,
-              SWITCH_B);
-    bit_write(bit_check(controller.buttons, XBOX_B), JoystickReport->buttons,
-              SWITCH_A);
-  } else {
-    for (uint8_t i = 0; i < sizeof(ps3AxisBindings); i++) {
-      button = pgm_read_byte(currentAxisBindings + i);
-      if (button == 0xff) continue;
-      bool bit_set = bit_check(controller.buttons, button);
-      JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
-    }
+    COPY(A, B);
+    COPY(B, A);
   }
+  for (uint8_t i = 0; i < currentAxisBindingsLen; i++) {
+    button = pgm_read_byte(currentAxisBindings + i);
+    if (button == 0xff) continue;
+    bool bit_set = bit_check(controller.buttons, button);
+    if (config.sub_type == PS3_GUITAR_GH_SUBTYPE &&
+        i < sizeof(ghAxisBindings2)) {
+      button = pgm_read_byte(ghAxisBindings2 + i);
+      bit_set |= bit_check(controller.buttons, button);
+    }
+    JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
+  }
+
+  // Hat Switch
   button = controller.buttons & 0xF;
   JoystickReport->hat =
       button > 0x0a ? 0x08 : pgm_read_byte(hat_bindings + button);
 
+  // Tilt / whammy
   bool tilt = controller.r_y == 32767;
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
@@ -141,27 +150,21 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
     // Swap y and x, as RB controllers have them inverted
-    bit_write(bit_check(controller.buttons, XBOX_Y), JoystickReport->buttons,
-              SWITCH_X);
-    bit_write(bit_check(controller.buttons, XBOX_X), JoystickReport->buttons,
-              SWITCH_Y);
+    COPY(X, Y);
+    COPY(Y, X);
   }
   if (config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
       config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
-
     // XINPUT guitars use LB for orange, PS3 uses L
-    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
-              SWITCH_L);
+    COPY(LB, L);
   }
   if (config.sub_type == PS3_DRUM_GH_SUBTYPE ||
       config.sub_type == PS3_DRUM_RB_SUBTYPE) {
 
     // XINPUT guitars use LB for orange, PS3 uses R
-    bit_write(bit_check(controller.buttons, XBOX_LB), JoystickReport->buttons,
-              SWITCH_R);
+    COPY(LB, R);
     // XINPUT guitars use RB for bass, PS3 uses L
-    bit_write(bit_check(controller.buttons, XBOX_RB), JoystickReport->buttons,
-              SWITCH_L);
+    COPY(RB, L);
   }
   if (config.sub_type == PS3_GAMEPAD_SUBTYPE ||
       config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
@@ -191,23 +194,9 @@ void ps3_control_request(void) {
         Endpoint_ClearSETUP();
         while (!(Endpoint_IsINReady()))
           ;
-        Endpoint_Write_8(0x21);
-        Endpoint_Write_8(0x26);
-        Endpoint_Write_8(0x01);
-        switch (config.sub_type) {
-        case PS3_DRUM_GH_SUBTYPE:
-        case PS3_GUITAR_GH_SUBTYPE:
-          Endpoint_Write_8(0x06);
-          break;
-        case PS3_DRUM_RB_SUBTYPE:
-        case PS3_GUITAR_RB_SUBTYPE:
-          Endpoint_Write_8(0x00);
-          break;
-        default:
-          Endpoint_Write_8(0x07);
-          break;
-        }
-        for (uint8_t i = 0; i < 4; i++) { Endpoint_Write_8(0x00); }
+          // TODO: Does this work okay with a console? check with an emulator.
+        // Endpoint_Write_Control_Stream_LE(id, sizeof(id));
+        for (uint8_t i = 0; i < sizeof(id); i++) { Endpoint_Write_8(id[i]); }
         Endpoint_ClearIN();
         Endpoint_ClearStatusStage();
         return;
@@ -216,7 +205,16 @@ void ps3_control_request(void) {
   }
   HID_Device_ProcessControlRequest(&interface);
 }
-
+struct ps3info {
+  uint16_t pro_id;
+  const uint8_t *axisBindings;
+  uint8_t axisBindingLen;
+  int id;
+};
+// Could we fill this with the binding data, and then store it as an offset from
+// PS3_GAMEPAD_SUBTYPE or SWITCH_GAMEPAD_SUBTYPE? It would be cleaner than the if
+// else chain below.
+struct ps3info infos[] = {{}};
 void ps3_init(event_pointers *events) {
   events->create_hid_report = ps3_create_report;
   events->control_request = ps3_control_request;
@@ -227,19 +225,25 @@ void ps3_init(event_pointers *events) {
     DeviceDescriptor.ProductID = 0x0092;
   } else {
     currentAxisBindings = ps3AxisBindings;
+    currentAxisBindingsLen = sizeof(ps3AxisBindings);
     if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
       DeviceDescriptor.VendorID = 0x12ba;
+      currentAxisBindings = ghAxisBindings;
+      currentAxisBindingsLen = sizeof(ghAxisBindings);
     }
+    // Is the id stuff below actually important? check with a ps3 emulator.
     if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0100;
-      currentAxisBindings = ghAxisBindings;
+      id[3] = 0x06;
     } else if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0200;
+      id[3] = 0x00;
     } else if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0120;
-      currentAxisBindings = ghAxisBindings;
+      id[3] = 0x06;
     } else if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0210;
+      id[3] = 0x00;
     }
   }
 }

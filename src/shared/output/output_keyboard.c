@@ -1,11 +1,17 @@
 #include "output_keyboard.h"
 #include "../util.h"
-#include "usb/Descriptors.h"
 #include "output_handler.h"
+#include "usb/Descriptors.h"
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
-
+void check_joy_key(int neg, int pos, int val, int thresh, uint8_t *used,
+                   USB_KeyboardReport_Data_t *KeyboardReport) {
+  if (*used < SIMULTANEOUS_KEYS) {
+    if (neg && val < -thresh) { KeyboardReport->KeyCode[*used++] = neg; }
+    if (pos && val > thresh) { KeyboardReport->KeyCode[*used++] = pos; }
+  }
+}
 void keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
                             uint8_t *const ReportID, const uint8_t ReportType,
                             void *ReportData, uint16_t *const ReportSize) {

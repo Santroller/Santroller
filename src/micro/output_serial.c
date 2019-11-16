@@ -39,7 +39,7 @@ void serial_control_request() {
 }
 void serial_init(controller_t *c) {}
 void serial_tick() {
-  process_serial(&VirtualSerial_CDC_Interface, false);
+  process_serial(&VirtualSerial_CDC_Interface);
 }
 
 void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo)

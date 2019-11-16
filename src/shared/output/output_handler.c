@@ -98,8 +98,7 @@ void CALLBACK_HID_Device_ProcessHIDReport(
     const uint16_t ReportSize) {}
 
 static char *FW = ARDWIINO_BOARD;
-void process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface,
-                    bool is_dfu) {
+void process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) {
   int16_t b = CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface);
   void* buffer;
   uint16_t size = 0;
@@ -147,9 +146,6 @@ void process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface,
     break;
   case FW_CMD_R:
     CDC_Device_SendString(VirtualSerial_CDC_Interface, FW);
-    break;
-  case DFU_CMD_R:
-    CDC_Device_SendByte(VirtualSerial_CDC_Interface, is_dfu);
     break;
   case REBOOT_CMD:
     reboot();

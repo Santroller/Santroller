@@ -124,7 +124,7 @@ void serial_tick() {
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     USB_USBTask();
   } else {
-    process_serial(&VirtualSerial_CDC_Interface, true);
+    process_serial(&VirtualSerial_CDC_Interface);
     if (controller_index >= sizeof(controller_t) + 2) {
       output_tick();
       controller_index = 0;

@@ -7,35 +7,35 @@
 #include "../util.h"
 volatile bool ready = false;
 bool isXboxGuitar(void) {
-  return config.sub_type == XINPUT_GUITAR_SUBTYPE ||
-         config.sub_type == XINPUT_GUITAR_ALTERNATE_SUBTYPE ||
-         config.sub_type == XINPUT_GUITAR_BASS_SUBTYPE;
+  return config.main.sub_type == XINPUT_GUITAR_SUBTYPE ||
+         config.main.sub_type == XINPUT_GUITAR_ALTERNATE_SUBTYPE ||
+         config.main.sub_type == XINPUT_GUITAR_BASS_SUBTYPE;
 }
 bool isPS3Guitar(void) {
-  return config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
-         config.sub_type == PS3_GUITAR_RB_SUBTYPE;
+  return config.main.sub_type == PS3_GUITAR_GH_SUBTYPE ||
+         config.main.sub_type == PS3_GUITAR_RB_SUBTYPE;
 }
 bool isGuitar(void) { return isXboxGuitar() || isPS3Guitar(); }
 void guitar_init(void) {
   if (!isGuitar()) return;
-  if (config.tilt_type == MPU_6050) {
+  if (config.main.tilt_type == MPU_6050) {
     while (mympu_open(15) != 0) {}
     enablePCI(config.pins.r_y);
-  } else if (config.tilt_type == GRAVITY) {
+  } else if (config.main.tilt_type == GRAVITY) {
     pinMode(config.pins.r_y, INPUT_PULLUP);
-  } else if (config.tilt_type == ANALOGUE) {
+  } else if (config.main.tilt_type == ANALOGUE) {
     pinMode(config.pins.r_y, INPUT);
   }
 }
 int32_t z;
 void guitar_tick(controller_t *controller) {
   if (!isGuitar()) return;
-  if (config.tilt_type == MPU_6050) {
+  if (config.main.tilt_type == MPU_6050) {
     if (ready) {
       ready = false;
       mympu_update();
-      z = (mympu.ypr[config.mpu_6050_orientation / 2] * (65535 / M_PI));
-      if (config.mpu_6050_orientation & 1) { z = -z; }
+      z = (mympu.ypr[config.axis.mpu_6050_orientation / 2] * (65535 / M_PI));
+      if (config.axis.mpu_6050_orientation & 1) { z = -z; }
       if (z > 32767) { z = 65535 - z; }
       //Make this into a sensitivity option.
       z = pow(z, 1.05f);
@@ -43,9 +43,9 @@ void guitar_tick(controller_t *controller) {
       if (isnan(z)) { z = 0; }
     }
     controller->r_y = z;
-  } else if (config.tilt_type == GRAVITY) {
+  } else if (config.main.tilt_type == GRAVITY) {
     controller->r_y = digitalRead(config.pins.r_y) * 32767;
-  } else if (config.tilt_type == ANALOGUE) {
+  } else if (config.main.tilt_type == ANALOGUE) {
     controller->r_y = analogRead(config.pins.r_y);
   }
   // Whammy needs to be scaled so that it is picked up

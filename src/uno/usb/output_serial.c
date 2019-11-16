@@ -125,28 +125,7 @@ void serial_tick() {
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     USB_USBTask();
   } else {
-    int16_t b = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-    if (b == 'c') {
-      CDC_Device_SendData(&VirtualSerial_CDC_Interface, &config,
-                          sizeof(config_t));
-    } else if (b == 'r') {
-      CDC_Device_SendData(&VirtualSerial_CDC_Interface, controller_data,
-                          sizeof(controller_t));
-    } else if (b == 'f') {
-      CDC_Device_SendString(&VirtualSerial_CDC_Interface, FW);
-    } else if (b == 'd') {
-      CDC_Device_SendByte(&VirtualSerial_CDC_Interface, 0x01);
-    } else if (b == 'w') {
-      uint8_t *data = (uint8_t *)&config_pointer;
-      size_t i = 0;
-      while (i < sizeof(config_t)) {
-        eeprom_write_byte(data+i, CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface));
-        i++;
-      }
-      reboot();
-    }
-    CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-    USB_USBTask();
+    process_serial(&VirtualSerial_CDC_Interface, true);
     if (controller_index >= sizeof(controller_t) + 2) {
       output_tick();
       controller_index = 0;

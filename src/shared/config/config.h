@@ -62,24 +62,29 @@ typedef struct {
   analogue_keys_t r_x;
   analogue_keys_t r_y;
 } keys_t;
-
 typedef struct {
   uint8_t version;
   uint8_t input_type;
   uint8_t sub_type;
   uint8_t tilt_type;
-  uint8_t pollrate;
-  pins_t pins;
-  uint16_t mpu_6050_orientation;
+  uint8_t poll_rate;
+  uint32_t cpu_freq;
   bool frets_led_mode;
   bool map_joy_to_dpad;
   bool map_start_select_to_home;
   bool map_accel_to_right;
+  uint32_t signature;
+} main_config_t;
+typedef struct {
   axis_invert_t inversions;
   uint16_t threshold_trigger;
   uint16_t threshold_joy;
+  uint8_t mpu_6050_orientation;
+} axis_config_t;
+typedef struct {
+  main_config_t main;
+  pins_t pins;
+  axis_config_t axis;
   keys_t keys;
-  uint32_t cpu_freq;
-  uint32_t signature;
 } config_t;
 #pragma pack(pop)

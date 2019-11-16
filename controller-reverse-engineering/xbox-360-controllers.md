@@ -24,6 +24,8 @@ This descriptor is laid out like the following:
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 This is implemented in [Descriptors.c](../src/shared/output/usb/Descriptors.c). 
+
+### The below requests are not necessary, but they are still documented below.
 ### Control Requests
 Step two is to reply with capabilities packets when specific control requests are sent. These are laid out below:
 #### ID

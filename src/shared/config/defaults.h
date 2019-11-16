@@ -12,7 +12,7 @@
   { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
-#define FRETS_LED false
+#define FRETS_LED true
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
@@ -32,7 +32,7 @@
   }
 
 // Set this value to define the orientation of your mpu6050
-#define MPU_6050_ORIENTATION NEGATIVE_Z
+#define MPU_6050_ORIENTATION NEGATIVE_X
 #if defined(__AVR_ATmega328P__)
 #  define MPU_6050_INTERRUPT_PIN 2
 #else
@@ -42,14 +42,17 @@
   {                                                                            \
     14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, 19, MPU_6050_INTERRUPT_PIN      \
+        INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
 #define DEFAULT_CONFIG                                                         \
   {                                                                            \
-    PROTOCOL_VERSION, DEVICE_TYPE, OUTPUT_TYPE, TILT_SENSOR, POLL_RATE, PINS,  \
-        MPU_6050_ORIENTATION, FRETS_LED, MAP_JOY_TO_DPAD,                      \
-        MAP_START_SELECT_TO_HOME, MAP_ACCEL_TO_R, INVERSIONS,                  \
-        TRIGGER_THRESHOLD, JOY_THRESHOLD, KEYS, F_CPU, FIRMWARE                \
+    {PROTOCOL_VERSION, DEVICE_TYPE,     OUTPUT_TYPE,                           \
+     TILT_SENSOR,      POLL_RATE,       F_CPU,                                 \
+     FRETS_LED,        MAP_JOY_TO_DPAD, MAP_START_SELECT_TO_HOME,              \
+     MAP_ACCEL_TO_R,   FIRMWARE},                                              \
+        PINS,                                                                  \
+        {INVERSIONS, TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION},  \
+        KEYS,                                                                  \
   }

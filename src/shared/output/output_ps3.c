@@ -116,7 +116,7 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     bool bit_set = bit_check(controller.buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
   }
-  if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+  if (config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     // Swap a and b on the switch
     COPY(A, B);
     COPY(B, A);
@@ -125,7 +125,7 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     button = pgm_read_byte(currentAxisBindings + i);
     if (button == 0xff) continue;
     bool bit_set = bit_check(controller.buttons, button);
-    if (config.sub_type == PS3_GUITAR_GH_SUBTYPE &&
+    if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE &&
         i < sizeof(ghAxisBindings2)) {
       button = pgm_read_byte(ghAxisBindings2 + i);
       bit_set |= bit_check(controller.buttons, button);
@@ -140,12 +140,12 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
 
   // Tilt / whammy
   bool tilt = controller.r_y == 32767;
-  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
+  if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE) {
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
     // GH PS3 guitars have a tilt axis
     JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
   }
-  if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+  if (config.main.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     JoystickReport->r_x = 128 - (controller.r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
@@ -153,21 +153,21 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
     COPY(X, Y);
     COPY(Y, X);
   }
-  if (config.sub_type == PS3_GUITAR_GH_SUBTYPE ||
-      config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+  if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE ||
+      config.main.sub_type == PS3_GUITAR_RB_SUBTYPE) {
     // XINPUT guitars use LB for orange, PS3 uses L
     COPY(LB, L);
   }
-  if (config.sub_type == PS3_DRUM_GH_SUBTYPE ||
-      config.sub_type == PS3_DRUM_RB_SUBTYPE) {
+  if (config.main.sub_type == PS3_DRUM_GH_SUBTYPE ||
+      config.main.sub_type == PS3_DRUM_RB_SUBTYPE) {
 
     // XINPUT guitars use LB for orange, PS3 uses R
     COPY(LB, R);
     // XINPUT guitars use RB for bass, PS3 uses L
     COPY(RB, L);
   }
-  if (config.sub_type == PS3_GAMEPAD_SUBTYPE ||
-      config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+  if (config.main.sub_type == PS3_GAMEPAD_SUBTYPE ||
+      config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     bit_write(controller.lt > 50, JoystickReport->buttons, SWITCH_L);
     bit_write(controller.rt > 50, JoystickReport->buttons, SWITCH_R);
     JoystickReport->axis[4] = controller.lt;
@@ -185,7 +185,7 @@ void ps3_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   *ReportSize = sizeof(USB_PS3Report_Data_t);
 }
 void ps3_control_request(void) {
-  if (config.sub_type != SWITCH_GAMEPAD_SUBTYPE &&
+  if (config.main.sub_type != SWITCH_GAMEPAD_SUBTYPE &&
       USB_ControlRequest.wIndex == interface.Config.InterfaceNumber) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
@@ -220,28 +220,28 @@ void ps3_init(event_pointers *events) {
   events->control_request = ps3_control_request;
   hid_report_address = ps3_report_descriptor;
   hid_report_size = sizeof(ps3_report_descriptor);
-  if (config.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+  if (config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
     DeviceDescriptor.VendorID = 0x0F0D;
     DeviceDescriptor.ProductID = 0x0092;
   } else {
     currentAxisBindings = ps3AxisBindings;
     currentAxisBindingsLen = sizeof(ps3AxisBindings);
-    if (config.sub_type > PS3_GAMEPAD_SUBTYPE) {
+    if (config.main.sub_type > PS3_GAMEPAD_SUBTYPE) {
       DeviceDescriptor.VendorID = 0x12ba;
       currentAxisBindings = ghAxisBindings;
       currentAxisBindingsLen = sizeof(ghAxisBindings);
     }
     // Is the id stuff below actually important? check with a ps3 emulator.
-    if (config.sub_type == PS3_GUITAR_GH_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0100;
       id[3] = 0x06;
-    } else if (config.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    } else if (config.main.sub_type == PS3_GUITAR_RB_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0200;
       id[3] = 0x00;
-    } else if (config.sub_type == PS3_DRUM_GH_SUBTYPE) {
+    } else if (config.main.sub_type == PS3_DRUM_GH_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0120;
       id[3] = 0x06;
-    } else if (config.sub_type == PS3_DRUM_RB_SUBTYPE) {
+    } else if (config.main.sub_type == PS3_DRUM_RB_SUBTYPE) {
       DeviceDescriptor.ProductID = 0x0210;
       id[3] = 0x00;
     }

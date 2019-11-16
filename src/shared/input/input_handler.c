@@ -8,7 +8,7 @@
 #include "pins/pins.h"
 void (*tick_function)(controller_t *);
 void input_init(void) {
-  switch (config.input_type) {
+  switch (config.main.input_type) {
   case WII:
     tick_function = wii_ext_tick;
     break;
@@ -25,11 +25,11 @@ void input_init(void) {
 void input_tick(controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);
-  if (config.map_joy_to_dpad) {
+  if (config.main.map_joy_to_dpad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
   }
-  if (config.map_start_select_to_home) {
+  if (config.main.map_start_select_to_home) {
     if (bit_check(controller->buttons, XBOX_START) &&
         bit_check(controller->buttons, XBOX_BACK)) {
       bit_clear(controller->buttons, XBOX_START);

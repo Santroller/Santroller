@@ -51,5 +51,5 @@ void xinput_init(event_pointers *events) {
   events->create_hid_report = xinput_create_report;
   events->control_request = xinput_control_request;
   ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype =
-      config.sub_type;
+      config.main.sub_type;
 }

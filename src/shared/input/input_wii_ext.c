@@ -66,7 +66,7 @@ void classic_tick(controller_t *controller, uint8_t *data) {
 void nunchuk_tick(controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;
   controller->l_y = (data[2] - 0x80) << 8;
-  if (config.map_accel_to_right) {
+  if (config.main.map_accel_to_right) {
     uint16_t accX = (data[2] << 2) | ((data[5] & 0xC0) >> 6);
     uint16_t accY = (data[3] << 2) | ((data[5] & 0x30) >> 4);
     uint16_t accZ = (data[4] << 2) | ((data[5] & 0xC) >> 2);

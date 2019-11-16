@@ -53,7 +53,6 @@ static RingBuffer_t USARTtoUSB_Buffer;
 /** Underlying data buffer for \ref USARTtoUSB_Buffer, where the stored bytes
  * are located. */
 static uint8_t USARTtoUSB_Buffer_Data[BUFF_SIZE];
-static char* FW = ARDWIINO_BOARD;
 bool currentlyUploading = false;
 void serial_configuration_changed() {
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);

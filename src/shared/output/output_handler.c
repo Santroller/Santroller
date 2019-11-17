@@ -145,16 +145,18 @@ void process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) {
     reboot();
     break;
   }
-  if (w) {
-    uint8_t *data = ((uint8_t *)&config_pointer) + offset;
-    size_t i = 0;
-    while (i < size) {
-      eeprom_write_byte(data + i,
-                        CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
-      i++;
+  if (size > 0) {
+    if (w) {
+      uint8_t *data = ((uint8_t *)&config_pointer) + offset;
+      size_t i = 0;
+      while (i < size) {
+        eeprom_write_byte(data + i,
+                          CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
+        i++;
+      }
+    } else {
+      CDC_Device_SendData(VirtualSerial_CDC_Interface, buffer, size);
     }
-  } else {
-    CDC_Device_SendData(VirtualSerial_CDC_Interface, buffer, size);
   }
   CDC_Device_USBTask(VirtualSerial_CDC_Interface);
   USB_USBTask();

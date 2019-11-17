@@ -100,71 +100,61 @@ void CALLBACK_HID_Device_ProcessHIDReport(
 static char *FW = ARDWIINO_BOARD;
 void process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) {
   int16_t b = CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface);
-  void* buffer;
+  void *buffer;
+  size_t offset;
   uint16_t size = 0;
   bool w = false;
   switch (b) {
+  case MAIN_CMD_W:
+    w = true;
   case MAIN_CMD_R:
     buffer = &config.main;
+    offset = offsetof(config_t, main);
     size = sizeof(main_config_t);
-    break;
-  case MAIN_CMD_W:
-    buffer = &config.main;
-    size = sizeof(main_config_t);
-    w = true;
-    break;
-  case PIN_CMD_R:
-    buffer = &config.pins;
-    size = sizeof(pins_t);
     break;
   case PIN_CMD_W:
-    buffer = &config.pins;
-    size = sizeof(pins_t);
     w = true;
-    break;
-  case AXIS_CMD_R:
-    buffer = &config.axis;
-    size = sizeof(axis_config_t);
+  case PIN_CMD_R:
+    buffer = &config.pins;
+    offset = offsetof(config_t, pins);
+    size = sizeof(pins_t);
     break;
   case AXIS_CMD_W:
-    buffer = &config.axis;
-    size = sizeof(axis_config_t);
     w = true;
-    break;
-  case KEY_CMD_R:
-    buffer = &config.keys;
-    size = sizeof(keys_t);
+  case AXIS_CMD_R:
+    buffer = &config.axis;
+    offset = offsetof(config_t, axis);
+    size = sizeof(axis_config_t);
     break;
   case KEY_CMD_W:
-    buffer = &config.keys;
-    size = sizeof(keys_t);
     w = true;
+  case KEY_CMD_R:
+    buffer = &config.keys;
+    offset = offsetof(config_t, keys);
+    size = sizeof(keys_t);
     break;
   case CONTROLLER_CMD_R:
     buffer = &controller;
     size = sizeof(controller_t);
     break;
   case FW_CMD_R:
-    CDC_Device_SendString(VirtualSerial_CDC_Interface, FW);
+    buffer = FW;
+    size = strlen(FW);
     break;
   case REBOOT_CMD:
     reboot();
     break;
   }
-  if (size > 0) {
-    if (w) {
-      uint8_t *data = (uint8_t *)&config_pointer;
-      size_t i = 0;
-      uint16_t ptr = (size_t)buffer - (size_t)&config;
-      while (i < size) {
-        eeprom_write_byte(data + i + ptr,
-                          CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
-        i++;
-      }
-      reboot();
-    } else {
-      CDC_Device_SendData(VirtualSerial_CDC_Interface, buffer, size);
+  if (w) {
+    uint8_t *data = ((uint8_t *)&config_pointer) + offset;
+    size_t i = 0;
+    while (i < size) {
+      eeprom_write_byte(data + i,
+                        CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
+      i++;
     }
+  } else {
+    CDC_Device_SendData(VirtualSerial_CDC_Interface, buffer, size);
   }
   CDC_Device_USBTask(VirtualSerial_CDC_Interface);
   USB_USBTask();

@@ -216,7 +216,7 @@ Changed
  */
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
-  if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS != 57600) {
+  if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 115200) {
     bool CurrentDTRState =
         (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
          CDC_CONTROL_LINE_OUT_DTR);

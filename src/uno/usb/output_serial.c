@@ -124,7 +124,9 @@ void serial_tick() {
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     USB_USBTask();
   } else {
-    process_serial(&VirtualSerial_CDC_Interface);
+    if (process_serial(&VirtualSerial_CDC_Interface) == BOOTLOADER_CMD) {
+      currentlyUploading = true;
+    }
     if (controller_index >= sizeof(controller_t) + 2) {
       output_tick();
       controller_index = 0;
@@ -225,7 +227,6 @@ void EVENT_CDC_Device_ControLineStateChanged(
       AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
     } else {
       AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-      currentlyUploading = true;
     }
   }
 }

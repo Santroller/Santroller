@@ -100,3 +100,4 @@ typedef struct {
 #define FW_CMD_R 'f'
 #define CONTROLLER_CMD_R 'c'
 #define REBOOT_CMD 'r'
+#define BOOTLOADER_CMD 'd'

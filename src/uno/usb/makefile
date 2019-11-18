@@ -23,7 +23,7 @@ CPP_FLAGS	 = -std=c++11
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-${MCU}-${F_CPU}
+TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 $(info $(shell mkdir -p $(BIN)))

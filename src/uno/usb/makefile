@@ -12,7 +12,7 @@
 MCU          = atmega16u2
 ARCH         = AVR8
 BOARD        = UNO
-ARDWIINO_BOARD = uno-usb
+ARDWIINO_BOARD = uno-main
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s

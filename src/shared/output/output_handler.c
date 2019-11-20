@@ -147,11 +147,16 @@ int16_t process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) 
   }
   if (size > 0) {
     if (w) {
-      size_t i = 0;
-      while (i < size) {
-        eeprom_write_byte((void*)(to+i), CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
-        i++;
+      while (size > 0) {
+        // char test[10];
+        // uint8_t rec = CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface);
+        // sprintf(test, "%p: %c ", to, rec);
+        // CDC_Device_SendString(VirtualSerial_CDC_Interface, test);
+        // eeprom_write_byte(to++, rec);
+        eeprom_update_byte(to++, CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
+        size--;
       }
+      CDC_Device_SendString(VirtualSerial_CDC_Interface, "OK");
     } else {
       CDC_Device_SendData(VirtualSerial_CDC_Interface, from, size);
     }

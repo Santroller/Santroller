@@ -148,11 +148,6 @@ int16_t process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) 
   if (size > 0) {
     if (w) {
       while (size > 0) {
-        // char test[10];
-        // uint8_t rec = CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface);
-        // sprintf(test, "%p: %c ", to, rec);
-        // CDC_Device_SendString(VirtualSerial_CDC_Interface, test);
-        // eeprom_write_byte(to++, rec);
         eeprom_update_byte(to++, CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
         size--;
       }

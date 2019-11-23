@@ -42,4 +42,7 @@ typedef struct {
   int16_t r_x;
   int16_t r_y;
   uint16_t device_info;
+  int32_t t_x;
+  int32_t t_y;
+  int32_t t_z;
 } controller_t;

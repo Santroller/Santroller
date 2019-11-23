@@ -34,10 +34,10 @@ void guitar_tick(controller_t *controller) {
     if (ready) {
       ready = false;
       mympu_update();
-      controller->t_z = (mympu.ypr[0] * (65535 / M_PI));
-      controller->t_y = (mympu.ypr[1] * (65535 / M_PI));
-      controller->t_x = (mympu.ypr[2] * (65535 / M_PI));
-      z = *((&controller->t_x) + config.axis.mpu_6050_orientation / 2);
+      controller->t_z = mympu.ypr[0];
+      controller->t_y = mympu.ypr[1];
+      controller->t_x = mympu.ypr[2];
+      z = (mympu.ypr[config.axis.mpu_6050_orientation / 2] * (65535 / M_PI));
       if (config.axis.mpu_6050_orientation & 1) { z = -z; }
       if (z > 32767) { z = 65535 - z; }
       //Make this into a sensitivity option.

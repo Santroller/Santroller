@@ -19,7 +19,7 @@ bool isGuitar(void) { return isXboxGuitar() || isPS3Guitar(); }
 void guitar_init(void) {
   if (!isGuitar()) return;
   if (config.main.tilt_type == MPU_6050) {
-    while (mympu_open(15) != 0) {}
+    mympu_open(15);
     enablePCI(config.pins.r_y);
   } else if (config.main.tilt_type == GRAVITY) {
     pinMode(config.pins.r_y, INPUT_PULLUP);

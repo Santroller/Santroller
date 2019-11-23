@@ -28,15 +28,16 @@ void guitar_init(void) {
   }
 }
 int32_t z;
+float y,p,r;
 void guitar_tick(controller_t *controller) {
   if (!isGuitar()) return;
   if (config.main.tilt_type == MPU_6050) {
     if (ready) {
       ready = false;
       mympu_update();
-      controller->t_z = mympu.ypr[0];
-      controller->t_y = mympu.ypr[1];
-      controller->t_x = mympu.ypr[2];
+      y = mympu.ypr[0] * (65535 / M_PI);
+      p = mympu.ypr[1] * (65535 / M_PI);
+      r = mympu.ypr[2] * (65535 / M_PI);
       z = (mympu.ypr[config.axis.mpu_6050_orientation / 2] * (65535 / M_PI));
       if (config.axis.mpu_6050_orientation & 1) { z = -z; }
       if (z > 32767) { z = 65535 - z; }
@@ -45,6 +46,9 @@ void guitar_tick(controller_t *controller) {
       z = constrain(z, 0, 32767);
       if (isnan(z)) { z = 0; }
     }
+    controller->t_x = r;
+    controller->t_y = p;
+    controller->t_z = y;
     controller->r_y = z;
   } else if (config.main.tilt_type == GRAVITY) {
     controller->r_y = digitalRead(config.pins.r_y) * 32767;

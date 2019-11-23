@@ -39,11 +39,6 @@ int mympu_open(unsigned int rate) {
   return ret;
 }
 
-static inline float rad2deg(float rad) {
-  // return (180.f/PI) * rad;
-  return 57.2957795131f * rad;
-}
-
 static float test, sqy, sqz, sqw;
 static void quaternionToEuler(const struct s_quat *q, float *x, float *y,
                               float *z) {
@@ -84,6 +79,8 @@ int mympu_update(void) {
   q._f.z = (float)q._l[3] / (float)QUAT_SENS;
 
   quaternionToEuler(&q._f, &mympu.ypr[2], &mympu.ypr[1], &mympu.ypr[0]);
+  mympu.ypr[0] = wrap_pi(mympu.ypr[0]);
+  mympu.ypr[1] = wrap_pi(mympu.ypr[1]);
   mympu.ypr[2] = wrap_pi(mympu.ypr[2]);
 
   return 0;

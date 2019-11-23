@@ -42,5 +42,4 @@ typedef struct {
   int16_t r_x;
   int16_t r_y;
   uint16_t device_info;
-  int32_t tilt[3];
 } controller_t;

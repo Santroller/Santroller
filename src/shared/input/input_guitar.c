@@ -27,30 +27,23 @@ void guitar_init(void) {
     pinMode(config.pins.r_y, INPUT);
   }
 }
-int32_t z, xz,xy,xx;
+int32_t z, t0,t1,t2;
 void guitar_tick(controller_t *controller) {
   if (!isGuitar()) return;
   if (config.main.tilt_type == MPU_6050) {
     if (ready) {
       ready = false;
       mympu_update();
-      xz = mympu.ypr[0] * (65535 / M_PI);
-      xy = mympu.ypr[1] * (65535 / M_PI);
-      xx = mympu.ypr[2] * (65535 / M_PI);
       z = (mympu.ypr[config.axis.mpu_6050_orientation / 2] * (65535 / M_PI));
       if (config.axis.mpu_6050_orientation & 1) { z = -z; }
       if (z > 32767) { z = 65535 - z; }
-      //Make this into a sensitivity option.
-      z = pow(z, 1.05f);
+      z += config.axis.tilt_sensitivity;
       z = constrain(z, 0, 32767);
       if (isnan(z)) { z = 0; }
     }
-    controller->tilt[0] = xz;
-    controller->tilt[1] = xy;
-    controller->tilt[2] = xx;
     controller->r_y = z;
   } else if (config.main.tilt_type == GRAVITY) {
-    controller->r_y = digitalRead(config.pins.r_y) * 32767;
+    controller->r_y = digitalRead(config.pins.r_y) * 32767 + config.axis.tilt_sensitivity;
   } else if (config.main.tilt_type == ANALOGUE) {
     controller->r_y = analogRead(config.pins.r_y);
   }

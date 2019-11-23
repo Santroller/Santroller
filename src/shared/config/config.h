@@ -80,6 +80,7 @@ typedef struct {
   uint16_t threshold_trigger;
   uint16_t threshold_joy;
   uint8_t mpu_6050_orientation;
+  uint16_t tilt_sensitivity;
 } axis_config_t;
 typedef struct {
   main_config_t main;

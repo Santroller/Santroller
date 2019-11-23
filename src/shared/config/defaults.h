@@ -1,13 +1,14 @@
 #pragma once
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
-#define TILT_SENSOR NONE
+#define TILT_SENSOR MPU_6050
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_ALTERNATE_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 12767
 #define JOY_THRESHOLD 12767
+#define TILT_SENSITIVITY 3000
 #define INVERSIONS                                                             \
   { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
@@ -53,6 +54,6 @@
      FRETS_LED,        MAP_JOY_TO_DPAD, MAP_START_SELECT_TO_HOME,              \
      MAP_ACCEL_TO_R,   FIRMWARE},                                              \
         PINS,                                                                  \
-        {INVERSIONS, TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION},  \
+        {INVERSIONS, TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION, TILT_SENSITIVITY},  \
         KEYS,                                                                  \
   }

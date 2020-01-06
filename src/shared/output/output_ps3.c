@@ -194,8 +194,6 @@ void ps3_control_request(void) {
         Endpoint_ClearSETUP();
         while (!(Endpoint_IsINReady()))
           ;
-          // TODO: Does this work okay with a console? check with an emulator.
-        // Endpoint_Write_Control_Stream_LE(id, sizeof(id));
         for (uint8_t i = 0; i < sizeof(id); i++) { Endpoint_Write_8(id[i]); }
         Endpoint_ClearIN();
         Endpoint_ClearStatusStage();
@@ -205,19 +203,9 @@ void ps3_control_request(void) {
   }
   HID_Device_ProcessControlRequest(&interface);
 }
-struct ps3info {
-  uint16_t pro_id;
-  const uint8_t *axisBindings;
-  uint8_t axisBindingLen;
-  int id;
-};
-// Could we fill this with the binding data, and then store it as an offset from
-// PS3_GAMEPAD_SUBTYPE or SWITCH_GAMEPAD_SUBTYPE? It would be cleaner than the if
-// else chain below.
-struct ps3info infos[] = {{}};
-void ps3_init(event_pointers *events) {
-  events->create_hid_report = ps3_create_report;
-  events->control_request = ps3_control_request;
+void ps3_init() {
+  create_hid_report = ps3_create_report;
+  control_request = ps3_control_request;
   hid_report_address = ps3_report_descriptor;
   hid_report_size = sizeof(ps3_report_descriptor);
   if (config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {

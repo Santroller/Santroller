@@ -6,8 +6,10 @@
 #include "output_serial.h"
 #include "output_xinput.h"
 #include "usb/Descriptors.h"
-
-event_pointers events;
+void (*control_request)(void);
+void (*create_hid_report)(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
+                            uint8_t *const ReportID, const uint8_t ReportType,
+                            void *ReportData, uint16_t *const ReportSize);
 USB_ClassInfo_HID_Device_t interface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -50,13 +52,13 @@ void output_init(void) {
       .PollingIntervalMS = config.main.poll_rate;
   if (config.main.sub_type >= KEYBOARD_SUBTYPE) {
     if (config.main.sub_type == KEYBOARD_SUBTYPE) {
-      keyboard_init(&events);
+      keyboard_init();
     } else {
-      ps3_init(&events);
+      ps3_init();
     }
     hid_init();
   } else {
-    xinput_init(&events);
+    xinput_init();
   }
 
   USB_Init();
@@ -73,8 +75,8 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   serial_configuration_changed();
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  if (events.control_request) {
-    events.control_request();
+  if (control_request) {
+    control_request();
   } else {
     HID_Device_ProcessControlRequest(&interface);
   }
@@ -87,7 +89,7 @@ void EVENT_USB_Device_StartOfFrame(void) {
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-  events.create_hid_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
+  create_hid_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
                            ReportSize);
   return true;
 }
@@ -147,6 +149,7 @@ int16_t process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) 
   }
   if (size > 0) {
     if (w) {
+      CDC_Device_SendString(VirtualSerial_CDC_Interface, "READY");
       while (size > 0) {
         eeprom_update_byte(to++, CDC_Device_ReceiveByte(VirtualSerial_CDC_Interface));
         size--;

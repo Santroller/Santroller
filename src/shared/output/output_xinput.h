@@ -7,5 +7,5 @@
 /* Enums */
 #define XBOX_EPSIZE 32
 
-void xinput_init(event_pointers *);
+void xinput_init(void);
 void xinput_tick(controller_t);

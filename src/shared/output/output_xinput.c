@@ -47,9 +47,9 @@ void xinput_control_request(void) {
   }
   HID_Device_ProcessControlRequest(&interface);
 }
-void xinput_init(event_pointers *events) {
-  events->create_hid_report = xinput_create_report;
-  events->control_request = xinput_control_request;
+void xinput_init() {
+  create_hid_report = xinput_create_report;
+  control_request = xinput_control_request;
   ConfigurationDescriptor.Controller.XInput.XInputReserved.subtype =
       config.main.sub_type;
 }

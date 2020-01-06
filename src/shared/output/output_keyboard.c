@@ -33,8 +33,8 @@ void keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
   CHECK_TRIGGER_KEY(rt);
   *ReportSize = sizeof(USB_KeyboardReport_Data_t);
 }
-void keyboard_init(event_pointers *events) {
-  events->create_hid_report = keyboard_create_report;
+void keyboard_init() {
+  create_hid_report = keyboard_create_report;
   hid_report_address = keyboard_report_descriptor;
   hid_report_size = sizeof(keyboard_report_descriptor);
 }

@@ -43,7 +43,7 @@ void guitar_tick(controller_t *controller) {
     }
     controller->r_y = z;
   } else if (config.main.tilt_type == GRAVITY) {
-    controller->r_y = digitalRead(config.pins.r_y) * 32767 + config.axis.tilt_sensitivity;
+    controller->r_y = (!digitalRead(config.pins.r_y)) * 32767 + config.axis.tilt_sensitivity;
   } else if (config.main.tilt_type == ANALOGUE) {
     controller->r_y = analogRead(config.pins.r_y);
   }

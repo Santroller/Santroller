@@ -28,27 +28,19 @@ void output_tick() {
   wdt_reset();
   HID_Device_USBTask(&interface);
 }
+void output_config_changed(void) {
+
+}
+void output_sof(void) {
+  
+}
 void EVENT_USB_Device_ConfigurationChanged(void) {
   HID_Device_ConfigureEndpoints(&interface);
   USB_Device_EnableSOFEvents();
-  serial_configuration_changed();
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  // By not using the config here, we can get away with the UNO not having
-  // access to the config.
-  if (ConfigurationDescriptor.Controller.HID.HIDDescriptor.Header.Type ==
-      0x29) { //0x29 - xinput reserved type
-    // XINPUT
-  } else if (ConfigurationDescriptor.Controller.HID.HIDDescriptor
-                 .HIDReportLength == 137) { // ps3 descriptor has a size of 137
-    // PS3
-
-  } else {
-    // KEYBOARD
-  }
   if (control_request) { control_request(); }
   HID_Device_ProcessControlRequest(&interface);
-  serial_control_request();
 }
 void EVENT_USB_Device_StartOfFrame(void) {
   HID_Device_MillisecondElapsed(&interface);

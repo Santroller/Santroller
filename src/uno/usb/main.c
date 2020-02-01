@@ -89,6 +89,19 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
 /* USARTtoUSB_ReadPtr needs to be visible to CDC LineEncoding Event. */
 static volatile uint8_t USBtoUSART_WritePtr = 0;
 static volatile uint8_t USARTtoUSB_ReadPtr = 0;
+USB_ClassInfo_HID_Device_t interface = {
+  Config : {
+    InterfaceNumber : INTERFACE_ID_HID,
+    ReportINEndpoint : {
+      Address : HID_EPADDR_IN,
+      Size : HID_EPSIZE,
+      Type : EP_TYPE_CONTROL,
+      Banks : 1,
+    },
+    PrevReportINBuffer : NULL,
+    PrevReportINBufferSize : sizeof(output_report_size_t),
+  },
+};
 
 // Bootloader timeout timer in ms
 #define EXT_RESET_TIMEOUT_PERIOD 750
@@ -122,7 +135,27 @@ int main(void) {
         else
           break;
       }
+      Endpoint_SelectEndpoint(HID_EPADDR_IN);
+      if (Endpoint_IsReadWriteAllowed())
+      {
+        uint8_t  ReportINData[sizeof(output_report_size_t)];
+        uint8_t  ReportID     = 0;
+        uint16_t ReportINSize = 0;
 
+        memset(ReportINData, 0, sizeof(ReportINData));
+
+        CALLBACK_HID_Device_CreateHIDReport(&interface, &ReportID, HID_REPORT_ITEM_In,
+                                                                    ReportINData, &ReportINSize);
+     
+
+        if (ReportINSize)
+        {
+
+          Endpoint_Write_Stream_LE(ReportINData, ReportINSize, NULL);
+
+          Endpoint_ClearIN();
+        }
+      }
       /* Check if endpoint has a command in it sent from the host */
       Endpoint_SelectEndpoint(CDC_RX_EPADDR);
       uint8_t countRX = 0;
@@ -310,6 +343,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 
   Endpoint_ConfigureEndpoint(CDC_RX_EPADDR, EP_TYPE_BULK, CDC_RX_EPSIZE,
                              CDC_RX_BANK_SIZE);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 }
 
 /** Event handler for the USB_ControlRequest event. This is used to catch and
@@ -317,6 +351,8 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
  * along unhandled control requests to the library for processing internally.
  */
 void EVENT_USB_Device_ControlRequest(void) {
+
+  HID_Device_ProcessControlRequest(&interface);
   /* Ignore any requests that aren't directed to the CDC interface */
   if ((USB_ControlRequest.bmRequestType &
        (CONTROL_REQTYPE_TYPE | CONTROL_REQTYPE_RECIPIENT)) !=
@@ -342,48 +378,7 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
-
-      // Read the line coding data in from the host into the global struct (made
-      // inline)
-      // Endpoint_Read_Control_Stream_LE(&LineEncoding,
-      // sizeof(CDC_LineEncoding_t));
-
-      uint8_t Length = sizeof(CDC_LineEncoding_t);
-      uint8_t *DataStream = (uint8_t *)&LineEncoding;
-
-      bool skip = false;
-      while (Length) {
-        uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-        if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) ||
-            (USB_DeviceState_LCL == DEVICE_STATE_Suspended) ||
-            (Endpoint_IsSETUPReceived())) {
-          skip = true;
-          break;
-        }
-
-        if (Endpoint_IsOUTReceived()) {
-          while (Length && Endpoint_BytesInEndpoint()) {
-            *DataStream = Endpoint_Read_8();
-            DataStream++;
-            Length--;
-          }
-
-          Endpoint_ClearOUT();
-        }
-      }
-
-      if (!skip) {
-        do {
-          uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-          if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) ||
-              (USB_DeviceState_LCL == DEVICE_STATE_Suspended))
-            break;
-        } while (!(Endpoint_IsINReady()));
-      }
-
-      // end of inline Endpoint_Read_Control_Stream_LE
+      Endpoint_Read_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
 
       Endpoint_ClearIN();
 
@@ -549,3 +544,14 @@ static void CDC_Device_LineEncodingChanged(void) {
   /* Release the TX line after the USART has been reconfigured */
   PORTD &= ~(1 << 3);
 }
+bool CALLBACK_HID_Device_CreateHIDReport(
+    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
+    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
+
+  return true;
+}
+
+void CALLBACK_HID_Device_ProcessHIDReport(
+    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, const uint8_t ReportID,
+    const uint8_t ReportType, const void *ReportData,
+    const uint16_t ReportSize) {}

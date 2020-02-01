@@ -67,6 +67,7 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 		#include <stdbool.h>
 
 		#include "../../shared/output/usb/Descriptors.h"
+		#include "../../shared/output/controller_structs.h"
 
 		#include <LUFA/Drivers/USB/USB.h>
 		#include <LUFA/Platform/Platform.h>
@@ -95,50 +96,6 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 
 		/** Eight character bootloader firmware identifier reported to the host when requested. */
 		#define SOFTWARE_IDENTIFIER          "HL2.0.5"
-
-	/* Enums: */
-		/** Possible memory types that can be addressed via the bootloader. */
-		enum AVR109_Memories
-		{
-			MEMORY_TYPE_FLASH  = 'F',
-			MEMORY_TYPE_EEPROM = 'E',
-		};
-
-		/** Possible commands that can be issued to the bootloader. */
-		enum AVR109_Commands
-		{
-			AVR109_COMMAND_Sync                     = 27,
-			AVR109_COMMAND_ReadEEPROM               = 'd',
-			AVR109_COMMAND_WriteEEPROM              = 'D',
-			AVR109_COMMAND_ReadFLASHWord            = 'R',
-			AVR109_COMMAND_WriteFlashPage           = 'm',
-			AVR109_COMMAND_FillFlashPageWordLow     = 'c',
-			AVR109_COMMAND_FillFlashPageWordHigh    = 'C',
-			AVR109_COMMAND_GetBlockWriteSupport     = 'b',
-			AVR109_COMMAND_BlockWrite               = 'B',
-			AVR109_COMMAND_BlockRead                = 'g',
-			AVR109_COMMAND_ReadExtendedFuses        = 'Q',
-			AVR109_COMMAND_ReadHighFuses            = 'N',
-			AVR109_COMMAND_ReadLowFuses             = 'F',
-			AVR109_COMMAND_ReadLockbits             = 'r',
-			AVR109_COMMAND_WriteLockbits            = 'l',
-			AVR109_COMMAND_EraseFLASH               = 'e',
-			AVR109_COMMAND_ReadSignature            = 's',
-			AVR109_COMMAND_ReadBootloaderSWVersion  = 'V',
-			AVR109_COMMAND_ReadBootloaderHWVersion  = 'v',
-			AVR109_COMMAND_ReadBootloaderIdentifier = 'S',
-			AVR109_COMMAND_ReadBootloaderInterface  = 'p',
-			AVR109_COMMAND_SetCurrentAddress        = 'A',
-			AVR109_COMMAND_ReadAutoAddressIncrement = 'a',
-			AVR109_COMMAND_ReadPartCode             = 't',
-			AVR109_COMMAND_EnterProgrammingMode     = 'P',
-			AVR109_COMMAND_LeaveProgrammingMode     = 'L',
-			AVR109_COMMAND_SelectDeviceType         = 'T',
-			AVR109_COMMAND_SetLED                   = 'x',
-			AVR109_COMMAND_ClearLED                 = 'y',
-			AVR109_COMMAND_ExitBootloader           = 'E',
-		};
-
 	/* Type Defines: */
 		/** Type define for a non-returning pointer to the start of the loaded application in flash memory. */
 		typedef void (*AppPtr_t)(void) ATTR_NO_RETURN;

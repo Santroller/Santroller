@@ -14,7 +14,6 @@ extern controller_t controller;
 extern USB_ClassInfo_HID_Device_t interface;
 void output_init(void);
 void output_tick(void);
-int16_t process_serial(USB_ClassInfo_CDC_Device_t* VirtualSerial_CDC_Interface);
 void EVENT_USB_Device_ConfigurationChanged(void);
 void EVENT_USB_Device_ControlRequest(void);
 void EVENT_USB_Device_StartOfFrame(void);

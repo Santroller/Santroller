@@ -43,9 +43,9 @@ void guitar_tick(controller_t *controller) {
     }
     controller->r_y = z;
   } else if (config.main.tilt_type == GRAVITY) {
-    controller->r_y = (!digitalRead(config.pins.r_y)) * 32767 + config.axis.tilt_sensitivity;
+    controller->r_y = (!digitalRead(config.pins.r_y)) * 32767;
   } else if (config.main.tilt_type == ANALOGUE) {
-    controller->r_y = analogRead(config.pins.r_y);
+    controller->r_y = analogRead(config.pins.r_y) + config.axis.tilt_sensitivity;
   }
   // Whammy needs to be scaled so that it is picked up
   int32_t whammy = controller->r_x * 2L;

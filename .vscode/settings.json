@@ -51,7 +51,10 @@
         "lwb.h": "c",
         "cdcclassdevice.h": "c",
         "defines.h": "c",
-        "pins_arduino.h": "c"
+        "pins_arduino.h": "c",
+        "output_init.h": "c",
+        "cdcclass.h": "c",
+        "main.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

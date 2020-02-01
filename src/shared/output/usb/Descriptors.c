@@ -1,6 +1,5 @@
 #include "Descriptors.h"
-#include "../output_handler.h"
-#include "wcid.h"
+#include "../../../shared/output/usb/wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
 const void *hid_report_address;
 uint16_t hid_report_size;
@@ -41,7 +40,7 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
   Reserved : 0
 };
 
-USB_Descriptor_Configuration_t ConfigurationDescriptor = {
+USB_Descriptor_Configuration_t EEMEM ConfigurationDescriptor = {
   Config : {
     Header : {
       Size : sizeof(USB_Descriptor_Configuration_Header_t),
@@ -152,7 +151,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 
     EndpointAddress : CDC_RX_EPADDR,
     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-    EndpointSize : CDC_TXRX_EPSIZE,
+    EndpointSize : CDC_RX_EPSIZE,
     PollingIntervalMS : 0x05
   },
 
@@ -161,7 +160,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 
     EndpointAddress : CDC_TX_EPADDR,
     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-    EndpointSize : CDC_TXRX_EPSIZE,
+    EndpointSize : CDC_TX_EPSIZE,
     PollingIntervalMS : 0x05
   },
   Interface0 : {
@@ -210,14 +209,14 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     }
   }
 };
-USB_Descriptor_Device_t DeviceDescriptor = {
+USB_Descriptor_Device_t EEMEM DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
 
   USBSpecification : VERSION_BCD(2, 0, 0),
   Class : USB_CSCP_NoDeviceClass,
   SubClass : USB_CSCP_NoDeviceSubclass,
   Protocol : USB_CSCP_NoDeviceProtocol,
-  Endpoint0Size : HID_EPSIZE,
+  Endpoint0Size : FIXED_CONTROL_ENDPOINT_SIZE,
   VendorID : 0x1209,
   ProductID : 0x2882,
   ReleaseNumber : 0x3122,
@@ -226,7 +225,7 @@ USB_Descriptor_Device_t DeviceDescriptor = {
   ProductStrIndex : 0x02,
   SerialNumStrIndex : 0x03,
 
-  NumberOfConfigurations : 0x01
+  NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
 
 /** This function is called by the library when in device mode, and must be
@@ -249,12 +248,12 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   uint8_t MemorySpace = MEMSPACE_FLASH;
   switch (DescriptorType) {
   case DTYPE_Device:
-    MemorySpace = MEMSPACE_RAM;
+    MemorySpace = MEMSPACE_EEPROM;
     Address = &DeviceDescriptor;
     Size = sizeof(DeviceDescriptor);
     break;
   case DTYPE_Configuration:
-    MemorySpace = MEMSPACE_RAM;
+    MemorySpace = MEMSPACE_EEPROM;
     Address = &ConfigurationDescriptor;
     Size = ConfigurationDescriptor.Config.TotalConfigurationSize;
     break;

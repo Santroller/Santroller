@@ -2,7 +2,7 @@
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR MPU_6050
-#define DEVICE_TYPE DIRECT
+#define DEVICE_TYPE WII
 #define OUTPUT_TYPE XINPUT_GUITAR_ALTERNATE_SUBTYPE
 #define POLL_RATE 1
 // Thresholds
@@ -13,7 +13,7 @@
   { false, false, false, false, true, false }
 // Set this if you have inverted your frets to make it easier to wire leds
 // inline
-#define FRETS_LED false
+#define FRETS_LED true
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
@@ -41,8 +41,8 @@
 #endif
 #define PINS                                                                   \
   {                                                                            \
-    14, 15, INVALID_PIN, INVALID_PIN, 16, 9, INVALID_PIN, INVALID_PIN, 8,      \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, 4, 5, 6, 7, INVALID_PIN,        \
+    21, 16, INVALID_PIN, INVALID_PIN, 15, 14, INVALID_PIN, INVALID_PIN, 9,      \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 5, 6, 8, 7, INVALID_PIN,        \
         INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE

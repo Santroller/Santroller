@@ -1,8 +1,10 @@
 #include "Descriptors.h"
+#include "../../../shared/config/defines.h"
+#include "../../../shared/output/output_keyboard.h"
 #include "../../../shared/output/usb/wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
-const void *hid_report_address;
-uint16_t hid_report_size;
+uint8_t device_type = XINPUT_GUITAR_ALTERNATE_SUBTYPE;
+uint8_t polling_rate = 1;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the
@@ -40,7 +42,88 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
   Reserved : 0
 };
 
-USB_Descriptor_Configuration_t EEMEM ConfigurationDescriptor = {
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
+    0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x05,       // Usage (Game Pad)
+    0xA1, 0x01,       // Collection (Application)
+    0x15, 0x00,       //   Logical Minimum (0)
+    0x25, 0x01,       //   Logical Maximum (1)
+    0x35, 0x00,       //   Physical Minimum (0)
+    0x45, 0x01,       //   Physical Maximum (1)
+    0x75, 0x01,       //   Report Size (1)
+    0x95, 0x0D,       //   Report Count (13)
+    0x05, 0x09,       //   Usage Page (Button)
+    0x19, 0x01,       //   Usage Minimum (0x01)
+    0x29, 0x0D,       //   Usage Maximum (0x0D)
+    0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                      //   Null Position)
+    0x95, 0x03,       //   Report Count (3)
+    0x81, 0x01,       //   Input (Const,Array,Abs,No Wrap,Linear,Preferred
+                      //   State,No Null Position)
+    0x05, 0x01,       //   Usage Page (Generic Desktop Ctrls)
+    0x25, 0x07,       //   Logical Maximum (7)
+    0x46, 0x3B, 0x01, //   Physical Maximum (315)
+    0x75, 0x04,       //   Report Size (4)
+    0x95, 0x01,       //   Report Count (1)
+    0x65, 0x14,       //   Unit (System: English Rotation, Length: Centimeter)
+    0x09, 0x39,       //   Usage (Hat switch)
+    0x81, 0x42, //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null
+                //   State)
+    0x65, 0x00, //   Unit (None)
+    0x95, 0x01, //   Report Count (1)
+    0x81, 0x01, //   Input (Const,Array,Abs,No Wrap,Linear,Preferred
+                //   State,No Null Position)
+    0x26, 0xFF, 0x00, //   Logical Maximum (255)
+    0x46, 0xFF, 0x00, //   Physical Maximum (255)
+    0x09, 0x30,       //   Usage (X)
+    0x09, 0x31,       //   Usage (Y)
+    0x09, 0x32,       //   Usage (Z)
+    0x09, 0x35,       //   Usage (Rz)
+    0x75, 0x08,       //   Report Size (8)
+    0x95, 0x04,       //   Report Count (4)
+    0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                      //   Null Position)
+    0x06, 0x00, 0xFF, //   Usage Page (Vendor Defined 0xFF00)
+    0x09, 0x20,       //   Usage (0x20)
+    0x09, 0x21,       //   Usage (0x21)
+    0x09, 0x22,       //   Usage (0x22)
+    0x09, 0x23,       //   Usage (0x23)
+    0x09, 0x24,       //   Usage (0x24)
+    0x09, 0x25,       //   Usage (0x25)
+    0x09, 0x26,       //   Usage (0x26)
+    0x09, 0x27,       //   Usage (0x27)
+    0x09, 0x28,       //   Usage (0x28)
+    0x09, 0x29,       //   Usage (0x29)
+    0x09, 0x2A,       //   Usage (0x2A)
+    0x09, 0x2B,       //   Usage (0x2B)
+    0x95, 0x0C,       //   Report Count (12)
+    0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                      //   Null Position)
+    0x0A, 0x21, 0x26, //   Usage (0x2621)
+    0x95, 0x08,       //   Report Count (8)
+    0xB1, 0x02, //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //   Null Position,Non-volatile)
+    0x0A, 0x21, 0x26, //   Usage (0x2621)
+    0x91, 0x02, //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                //   Null Position,Non-volatile)
+    0x26, 0xFF, 0x03, //   Logical Maximum (1023)
+    0x46, 0xFF, 0x03, //   Physical Maximum (1023)
+    0x09, 0x2C,       //   Usage (0x2C)
+    0x09, 0x2D,       //   Usage (0x2D)
+    0x09, 0x2E,       //   Usage (0x2E)
+    0x09, 0x2F,       //   Usage (0x2F)
+    0x75, 0x10,       //   Report Size (16)
+    0x95, 0x04,       //   Report Count (4)
+    0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
+                      //   Null Position)
+    0xC0,             // End Collection
+
+};
+
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM
+    keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
+
+const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
     Header : {
       Size : sizeof(USB_Descriptor_Configuration_Header_t),
@@ -209,7 +292,7 @@ USB_Descriptor_Configuration_t EEMEM ConfigurationDescriptor = {
     }
   }
 };
-USB_Descriptor_Device_t EEMEM DeviceDescriptor = {
+const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
 
   USBSpecification : VERSION_BCD(2, 0, 0),
@@ -226,6 +309,16 @@ USB_Descriptor_Device_t EEMEM DeviceDescriptor = {
   SerialNumStrIndex : 0x03,
 
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
+};
+
+const USB_HID_Descriptor_HID_t PROGMEM hid_descriptor = {
+  Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
+
+  HIDSpec : VERSION_BCD(1, 1, 1),
+  CountryCode : 0x00,
+  TotalReportDescriptors : 1,
+  HIDReportType : HID_DTYPE_Report,
+  HIDReportLength : 0
 };
 
 /** This function is called by the library when in device mode, and must be
@@ -248,18 +341,69 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   uint8_t MemorySpace = MEMSPACE_FLASH;
   switch (DescriptorType) {
   case DTYPE_Device:
-    MemorySpace = MEMSPACE_EEPROM;
-    Address = &DeviceDescriptor;
+    // 0x100 is the space used by the serial buffers. since those buffers are
+    // not in use during init, we can reuse them for editing the descriptors.
+    MemorySpace = MEMSPACE_RAM;
+    USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)0x100;
+    Address = dev;
     Size = sizeof(DeviceDescriptor);
+    memcpy_P(dev, &DeviceDescriptor, Size);
+    if (device_type == SWITCH_GAMEPAD_SUBTYPE) {
+      dev->VendorID = 0x0F0D;
+      dev->ProductID = 0x0092;
+    } else {
+      if (device_type > PS3_GAMEPAD_SUBTYPE) { dev->VendorID = 0x12ba; }
+      // Is the id stuff below actually important? check with a ps3 emulator.
+      if (device_type == PS3_GUITAR_GH_SUBTYPE) {
+        dev->ProductID = 0x0100;
+      } else if (device_type == PS3_GUITAR_RB_SUBTYPE) {
+        dev->ProductID = 0x0200;
+      } else if (device_type == PS3_DRUM_GH_SUBTYPE) {
+        dev->ProductID = 0x0120;
+      } else if (device_type == PS3_DRUM_RB_SUBTYPE) {
+        dev->ProductID = 0x0210;
+      }
+    }
     break;
   case DTYPE_Configuration:
-    MemorySpace = MEMSPACE_EEPROM;
-    Address = &ConfigurationDescriptor;
-    Size = ConfigurationDescriptor.Config.TotalConfigurationSize;
+    MemorySpace = MEMSPACE_RAM;
+    USB_Descriptor_Configuration_t *conf =
+        (USB_Descriptor_Configuration_t *)0x100;
+    Address = conf;
+    Size = sizeof(ConfigurationDescriptor);
+    memcpy_P(conf, &ConfigurationDescriptor, Size);
+    conf->Controller.XInput.Endpoints.DataInEndpoint0.PollingIntervalMS =
+        polling_rate;
+    if (device_type >= KEYBOARD_SUBTYPE) {
+      // Switch from Xinput to HID descriptor layout
+      memmove(&conf->Controller.HID.Endpoints,
+              &conf->Controller.XInput.Endpoints,
+              sizeof(conf->Controller.XInput.Endpoints));
+      // And now adjust the total size as the HID layout is actually smaller
+      conf->Config.TotalConfigurationSize -=
+          sizeof(USB_HID_XBOX_Descriptor_HID_t) -
+          sizeof(USB_HID_Descriptor_HID_t);
+      
+      memcpy_P(&conf->Controller.HID.HIDDescriptor, &hid_descriptor, sizeof(hid_descriptor));
+      if (device_type == KEYBOARD_SUBTYPE) {
+        conf->Controller.HID.HIDDescriptor.HIDReportLength = sizeof(keyboard_report_descriptor);
+      } else {
+        conf->Controller.HID.HIDDescriptor.HIDReportLength = sizeof(ps3_report_descriptor);
+      }
+      // Report that we have an HID device
+      conf->Interface0.Class = HID_CSCP_HIDClass;
+      conf->Interface0.SubClass = HID_CSCP_NonBootSubclass;
+      conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
+    }
     break;
   case HID_DTYPE_Report:
-    Address = hid_report_address;
-    Size = hid_report_size;
+    if (device_type == KEYBOARD_SUBTYPE) {
+      Address = keyboard_report_descriptor;
+      Size = sizeof(keyboard_report_descriptor);
+    } else {
+      Address = ps3_report_descriptor;
+      Size = sizeof(ps3_report_descriptor);
+    }
     break;
   case DTYPE_String:
     switch (DescriptorNumber) {

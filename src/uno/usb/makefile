@@ -9,7 +9,7 @@
 #         LUFA Project Makefile.
 # --------------------------------------
 
-MCU          = atmega8u2
+MCU          = atmega16u2
 ARCH         = AVR8
 BOARD        = USER
 ARDWIINO_BOARD = uno-main

@@ -3,8 +3,6 @@
 #include "output_handler.h"
 #include "usb/Descriptors.h"
 
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM
-    keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 void check_joy_key(int neg, int pos, int val, int thresh, uint8_t *used,
                    USB_KeyboardReport_Data_t *KeyboardReport) {
   if (*used < SIMULTANEOUS_KEYS) {
@@ -35,6 +33,4 @@ void keyboard_create_report(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
 }
 void keyboard_init() {
   create_hid_report = keyboard_create_report;
-  hid_report_address = keyboard_report_descriptor;
-  hid_report_size = sizeof(keyboard_report_descriptor);
 }

@@ -80,10 +80,10 @@ typedef struct {
     } HID;
   } Controller;
 } USB_Descriptor_Configuration_t;
-extern const void *hid_report_address;
-extern uint16_t hid_report_size;
-extern USB_Descriptor_Device_t DeviceDescriptor;
-extern USB_Descriptor_Configuration_t ConfigurationDescriptor;
+extern uint8_t device_type;
+extern uint8_t polling_rate;
+extern const USB_Descriptor_Device_t DeviceDescriptor;
+extern const USB_Descriptor_Configuration_t ConfigurationDescriptor;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,

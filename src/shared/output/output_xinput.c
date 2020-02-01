@@ -45,7 +45,6 @@ void xinput_control_request(void) {
       return;
     }
   }
-  HID_Device_ProcessControlRequest(&interface);
 }
 void xinput_init() {
   create_hid_report = xinput_create_report;

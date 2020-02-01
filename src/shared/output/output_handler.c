@@ -8,8 +8,8 @@
 #include "usb/Descriptors.h"
 void (*control_request)(void);
 void (*create_hid_report)(USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo,
-                            uint8_t *const ReportID, const uint8_t ReportType,
-                            void *ReportData, uint16_t *const ReportSize);
+                          uint8_t *const ReportID, const uint8_t ReportType,
+                          void *ReportData, uint16_t *const ReportSize);
 USB_ClassInfo_HID_Device_t interface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -34,11 +34,20 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   serial_configuration_changed();
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  if (control_request) {
-    control_request();
+  // By not using the config here, we can get away with the UNO not having
+  // access to the config.
+  if (ConfigurationDescriptor.Controller.HID.HIDDescriptor.Header.Type ==
+      0x29) { //0x29 - xinput reserved type
+    // XINPUT
+  } else if (ConfigurationDescriptor.Controller.HID.HIDDescriptor
+                 .HIDReportLength == 137) { // ps3 descriptor has a size of 137
+    // PS3
+
   } else {
-    HID_Device_ProcessControlRequest(&interface);
+    // KEYBOARD
   }
+  if (control_request) { control_request(); }
+  HID_Device_ProcessControlRequest(&interface);
   serial_control_request();
 }
 void EVENT_USB_Device_StartOfFrame(void) {
@@ -49,7 +58,7 @@ bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
   create_hid_report(HIDInterfaceInfo, ReportID, ReportType, ReportData,
-                           ReportSize);
+                    ReportSize);
   return true;
 }
 

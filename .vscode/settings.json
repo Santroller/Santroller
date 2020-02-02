@@ -55,7 +55,8 @@
         "output_init.h": "c",
         "cdcclass.h": "c",
         "main.h": "c",
-        "controller_structs.h": "c"
+        "controller_structs.h": "c",
+        "reports.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

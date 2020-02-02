@@ -1,9 +1,9 @@
 #include "Descriptors.h"
 #include "../../../shared/config/defines.h"
-#include "../../../shared/output/output_keyboard.h"
+#include "../../../shared/output/reports.h"
 #include "../../../shared/output/usb/wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
-uint8_t device_type = XINPUT_GUITAR_ALTERNATE_SUBTYPE;
+uint8_t device_type = DEVICE_TYPE;
 uint8_t polling_rate = 1;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first

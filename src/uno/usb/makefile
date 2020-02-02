@@ -18,8 +18,8 @@ F_USB        = $(F_CPU)
 OPTIMIZATION = s
 SRC          = main.c ../../shared/output/usb/Descriptors.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' $(REGS) -flto -fuse-linker-plugin
 CPP_FLAGS	 = -std=c++11
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' $(REGS) -flto -fuse-linker-plugin
 LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin

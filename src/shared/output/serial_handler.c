@@ -59,6 +59,5 @@ int16_t process_serial(USB_ClassInfo_CDC_Device_t *VirtualSerial_CDC_Interface) 
       CDC_Device_SendData(VirtualSerial_CDC_Interface, from, size);
     }
   }
-  CDC_Device_USBTask(VirtualSerial_CDC_Interface);
   return b;
 }

@@ -68,6 +68,7 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 
 		#include "../../shared/output/usb/Descriptors.h"
 		#include "../../shared/output/controller_structs.h"
+		#include "../../shared/output/control_requests.h"
 
 		#include <LUFA/Drivers/USB/USB.h>
 		#include <LUFA/Platform/Platform.h>

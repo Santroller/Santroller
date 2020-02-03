@@ -1,5 +1,9 @@
 #pragma once
-#include <LUFA/Drivers/USB/USB.h>
+#define __INCLUDE_FROM_HID_DRIVER
+#define __INCLUDE_FROM_USB_DRIVER
+#define USB_DEVICE_ONLY
+#define USB_CAN_BE_DEVICE
+#include <LUFA/Drivers/USB/Class/Common/HIDClassCommon.h>
 #include <stdbool.h>
 /** Type define for the gamepad HID report structure, for creating and sending
  * HID reports to the host PC. This mirrors the layout described to the host in

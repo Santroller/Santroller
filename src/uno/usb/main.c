@@ -56,7 +56,7 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 
 #define INCLUDE_FROM_BOOTLOADERCDC_C
 #include "main.h"
-
+#include "../../shared/config/defines.h"
 /** Contains the current baud rate and other settings of the first virtual
  * serial port. This must be retained as some operating systems will not open
  * the port unless the settings can be set successfully.
@@ -85,6 +85,7 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
 #define USBtoUSART_ReadPtr GPIOR0 // to use cbi()
 #define USARTtoUSB_WritePtr GPIOR1
 
+bool is_ardwiino = false;
 /* USBtoUSART_WritePtr needs to be visible to ISR. */
 /* USARTtoUSB_ReadPtr needs to be visible to CDC LineEncoding Event. */
 static volatile uint8_t USBtoUSART_WritePtr = 0;
@@ -106,12 +107,26 @@ USB_ClassInfo_HID_Device_t interface = {
 // Bootloader timeout timer in ms
 #define EXT_RESET_TIMEOUT_PERIOD 750
 int main(void) {
+  // LineEncoding.BaudRateBPS = 115200;
+  // CDC_Device_LineEncodingChanged();
+  UCSR1B = 0;
+  UCSR1A = 0;
+  UCSR1C = 0;
+
+  UBRR1 = SERIAL_2X_UBBRVAL(115200);
+
+  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
+  UCSR1A = (1 << U2X1);
+  UCSR1B = ((1 << TXEN1) | (1 << RXEN1));
+  loop_until_bit_is_set(UCSR1A, RXC1);
+  device_type = UDR1;
+  loop_until_bit_is_set(UCSR1A, RXC1);
+  polling_rate = UDR1;
+  is_ardwiino = true;
   /* Setup hardware required for the bootloader */
   SetupHardware();
-
   /* Enable global interrupts so that the USB stack can function */
   GlobalInterruptEnable();
-
   while (true) {
 // Pulse generation counters to keep track of the number of milliseconds
 // remaining for each pulse type
@@ -135,27 +150,56 @@ int main(void) {
         else
           break;
       }
-      Endpoint_SelectEndpoint(HID_EPADDR_IN);
-      if (Endpoint_IsReadWriteAllowed())
-      {
-        uint8_t  ReportINData[sizeof(output_report_size_t)];
-        uint8_t  ReportID     = 0;
-        uint16_t ReportINSize = 0;
 
-        memset(ReportINData, 0, sizeof(ReportINData));
+      // HID
 
-        CALLBACK_HID_Device_CreateHIDReport(&interface, &ReportID, HID_REPORT_ITEM_In,
-                                                                    ReportINData, &ReportINSize);
-     
-
-        if (ReportINSize)
-        {
-
-          Endpoint_Write_Stream_LE(ReportINData, ReportINSize, NULL);
-
-          Endpoint_ClearIN();
+      if (is_ardwiino) {
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        if (Endpoint_IsReadWriteAllowed()) {
+          uint16_t ReportINSize = 0;
+          if (device_type <= XINPUT_ARCADE_PAD_SUBTYPE) {
+            ReportINSize = sizeof(USB_XInputReport_Data_t);
+          } else if (device_type == KEYBOARD_SUBTYPE) {
+            ReportINSize = sizeof(USB_KeyboardReport_Data_t);
+          } else {
+            ReportINSize = sizeof(USB_PS3Report_Data_t);
+          }
+          bool first = true;
+          while (ReportINSize) {
+            // Prepare temporary pointer
+            uint16_t tmp; // = 0x100 | USARTtoUSBReadPtr
+            asm(
+                // Do not initialize high byte, it will be done in first loop
+                // below.
+                "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
+                                              // lower byte
+                // Outputs
+                : [ tmp ] "=&e"(tmp) // Pointer register, output only
+                // Inputs
+                : [ readPtr ] "m"(USARTtoUSB_ReadPtr) // Memory location
+            );
+            uint8_t txcount = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
+            // Write all bytes from USART to the USB endpoint
+            do {
+              register uint8_t data;
+              asm("ldi %B[tmp] , 0x01\n\t"     // (1) Force high byte to 0x01
+                  "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte, wraps
+                                               // around 255
+                  // Outputs
+                  : [ data ] "=&r"(data), // Output only
+                    [ tmp ] "=e"(tmp)     // Input and output
+                  // Inputs
+                  : "1"(tmp));
+              if (tmp != 'm' && first) { continue; }
+              first = false;
+              Endpoint_Write_8(data);
+              ReportINSize--;
+            } while (--txcount);
+            Endpoint_ClearIN();
+          }
         }
       }
+
       /* Check if endpoint has a command in it sent from the host */
       Endpoint_SelectEndpoint(CDC_RX_EPADDR);
       uint8_t countRX = 0;
@@ -222,71 +266,72 @@ int main(void) {
         LEDs_TurnOnRXLED;
         RxLEDPulse = TX_RX_LED_PULSE_MS;
       }
+      if (!is_ardwiino) {
+        //================================================================================
+        // USARTtoUSB
+        //================================================================================
 
-      //================================================================================
-      // USARTtoUSB
-      //================================================================================
+        // This requires the USART RX buffer to be 256 bytes.
+        uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
 
-      // This requires the USART RX buffer to be 256 bytes.
-      uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
+        // Check if we have something worth to send
+        if (count) {
 
-      // Check if we have something worth to send
-      if (count) {
+          // Check if the UART receive buffer flush timer has expired or the
+          // buffer is nearly full
+          if ((TIFR0 & (1 << TOV0)) || (count >= (CDC_TX_EPSIZE - 1))) {
+            // Send data to the USB host
+            Endpoint_SelectEndpoint(CDC_TX_EPADDR);
 
-        // Check if the UART receive buffer flush timer has expired or the
-        // buffer is nearly full
-        if ((TIFR0 & (1 << TOV0)) || (count >= (CDC_TX_EPSIZE - 1))) {
-          // Send data to the USB host
-          Endpoint_SelectEndpoint(CDC_TX_EPADDR);
+            // CDC device is ready for receiving bytes
+            if (Endpoint_IsINReady()) {
+              // Send a maximum of up to one bank minus one.
+              // If we fill the whole bank we'd have to send an empty Zero
+              // Length Packet (ZLP) afterwards to determine the end of the
+              // transfer. Since this is more complicated we only send single
+              // packets with one byte less than the maximum.
+              uint8_t txcount = CDC_TX_EPSIZE - 1;
+              if (txcount > count) txcount = count;
 
-          // CDC device is ready for receiving bytes
-          if (Endpoint_IsINReady()) {
-            // Send a maximum of up to one bank minus one.
-            // If we fill the whole bank we'd have to send an empty Zero Length
-            // Packet (ZLP) afterwards to determine the end of the transfer.
-            // Since this is more complicated we only send single packets
-            // with one byte less than the maximum.
-            uint8_t txcount = CDC_TX_EPSIZE - 1;
-            if (txcount > count) txcount = count;
-
-            // Prepare temporary pointer
-            uint16_t tmp; // = 0x100 | USARTtoUSBReadPtr
-            asm(
-                // Do not initialize high byte, it will be done in first loop
-                // below.
-                "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
-                                              // lower byte
-                // Outputs
-                : [ tmp ] "=&e"(tmp) // Pointer register, output only
-                // Inputs
-                : [ readPtr ] "m"(USARTtoUSB_ReadPtr) // Memory location
-            );
-
-            // Write all bytes from USART to the USB endpoint
-            do {
-              register uint8_t data;
-              asm("ldi %B[tmp] , 0x01\n\t"     // (1) Force high byte to 0x01
-                  "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte, wraps
-                                               // around 255
+              // Prepare temporary pointer
+              uint16_t tmp; // = 0x100 | USARTtoUSBReadPtr
+              asm(
+                  // Do not initialize high byte, it will be done in first loop
+                  // below.
+                  "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
+                                                // lower byte
                   // Outputs
-                  : [ data ] "=&r"(data), // Output only
-                    [ tmp ] "=e"(tmp)     // Input and output
+                  : [ tmp ] "=&e"(tmp) // Pointer register, output only
                   // Inputs
-                  : "1"(tmp));
-              Endpoint_Write_8(data);
-            } while (--txcount);
+                  : [ readPtr ] "m"(USARTtoUSB_ReadPtr) // Memory location
+              );
 
-            // Send data to USB Host now
-            Endpoint_ClearIN();
+              // Write all bytes from USART to the USB endpoint
+              do {
+                register uint8_t data;
+                asm("ldi %B[tmp] , 0x01\n\t"     // (1) Force high byte to 0x01
+                    "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte,
+                                                 // wraps around 255
+                    // Outputs
+                    : [ data ] "=&r"(data), // Output only
+                      [ tmp ] "=e"(tmp)     // Input and output
+                    // Inputs
+                    : "1"(tmp));
+                Endpoint_Write_8(data);
+              } while (--txcount);
 
-            // Save new pointer position
-            USARTtoUSB_ReadPtr = tmp & 0xFF;
+              // Send data to USB Host now
+              Endpoint_ClearIN();
+
+              // Save new pointer position
+              USARTtoUSB_ReadPtr = tmp & 0xFF;
+            }
           }
-        }
 
-        // Light TX led if there is data to be send
-        LEDs_TurnOnTXLED;
-        TxLEDPulse = TX_RX_LED_PULSE_MS;
+          // Light TX led if there is data to be send
+          LEDs_TurnOnTXLED;
+          TxLEDPulse = TX_RX_LED_PULSE_MS;
+        }
       }
 
       // LED timer overflow.
@@ -304,9 +349,9 @@ int main(void) {
       }
     };
 
-    // Reset CDC Serial settings and disable USART properly
-    LineEncoding.BaudRateBPS = 0;
-    CDC_Device_LineEncodingChanged();
+    // // Reset CDC Serial settings and disable USART properly
+    // LineEncoding.BaudRateBPS = 0;
+    // CDC_Device_LineEncodingChanged();
 
     // Dont forget LEDs on if suddenly unconfigured.
     LEDs_TurnOffTXLED;
@@ -351,7 +396,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
  * along unhandled control requests to the library for processing internally.
  */
 void EVENT_USB_Device_ControlRequest(void) {
-
+  controller_control_request();
   HID_Device_ProcessControlRequest(&interface);
   /* Ignore any requests that aren't directed to the CDC interface */
   if ((USB_ControlRequest.bmRequestType &
@@ -378,7 +423,8 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
-      Endpoint_Read_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
+      Endpoint_Read_Control_Stream_LE(&LineEncoding,
+                                      sizeof(CDC_LineEncoding_t));
 
       Endpoint_ClearIN();
 
@@ -398,6 +444,7 @@ void EVENT_USB_Device_ControlRequest(void) {
       // far as I tested, no way.
       // TODO do not reset main MCU (not possible?)
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
+      is_ardwiino = false;
     }
   }
 }
@@ -490,7 +537,7 @@ static void CDC_Device_LineEncodingChanged(void) {
   // Only reconfigure USART if we are not in self reprogramming mode
   // and if the CDC Serial is not disabled
   uint32_t BaudRateBPS = LineEncoding.BaudRateBPS;
-  
+
   uint8_t ConfigMask = 0;
 
   switch (LineEncoding.ParityType) {
@@ -544,14 +591,12 @@ static void CDC_Device_LineEncodingChanged(void) {
   /* Release the TX line after the USART has been reconfigured */
   PORTD &= ~(1 << 3);
 }
-bool CALLBACK_HID_Device_CreateHIDReport(
-    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
-    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-
-  return true;
-}
-
 void CALLBACK_HID_Device_ProcessHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, const uint8_t ReportID,
     const uint8_t ReportType, const void *ReportData,
     const uint16_t ReportSize) {}
+bool CALLBACK_HID_Device_CreateHIDReport(
+    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
+    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
+  return true;
+}

@@ -53,6 +53,8 @@
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Drivers/USB/Class/CDCClass.h>
 #include "../../shared/output/control_requests.h"
+#include "../../shared/output/controller_structs.h"
+#include "../../shared/config/defines.h"
 
 /* Macros: */
 /** LED mask for the library LED driver, to indicate TX activity. */
@@ -77,9 +79,6 @@ void EVENT_USB_Device_Disconnect(void);
 void EVENT_USB_Device_ConfigurationChanged(void);
 void EVENT_USB_Device_UnhandledControlRequest(void);
 
-void EVENT_CDC_Device_LineEncodingChanged(
-    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo);
-void EVENT_CDC_Device_ControLineStateChanged(
-    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo);
+void CDC_Device_LineEncodingChanged(void);
 
 #endif /* _ARDUINO_USBSERIAL_H_ */

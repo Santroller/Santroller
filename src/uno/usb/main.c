@@ -54,95 +54,133 @@ volatile struct {
                                ping-pong LED pulse */
 } PulseMSRemaining;
 
-/** LUFA CDC Class driver interface configuration and state information. This
- * structure is passed to all CDC Class driver functions, so that multiple
- * instances of the same class within a device can be differentiated from one
- * another.
+/** Contains the current baud rate and other settings of the first virtual
+ * serial port. This must be retained as some operating systems will not open
+ * the port unless the settings can be set successfully.
  */
-USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
-    .Config =
-        {
-            .ControlInterfaceNumber = INTERFACE_ID_CDC_CCI,
-            .DataINEndpoint =
-                {
-                    .Address = CDC_TX_EPADDR,
-                    .Size = CDC_TX_EPSIZE,
-                    .Banks = 1,
-                },
-            .DataOUTEndpoint =
-                {
-                    .Address = CDC_RX_EPADDR,
-                    .Size = CDC_RX_EPSIZE,
-                    .Banks = 1,
-                },
-            .NotificationEndpoint =
-                {
-                    .Address = CDC_NOTIFICATION_EPADDR,
-                    .Size = CDC_NOTIFICATION_EPSIZE,
-                    .Banks = 1,
-                },
-        },
-};
-
+static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
+                                          .CharFormat =
+                                              CDC_LINEENCODING_OneStopBit,
+                                          .ParityType = CDC_PARITY_None,
+                                          .DataBits = 8};
+bool is_ardwiino = true;
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
 int main(void) {
   SetupHardware();
 
-  RingBuffer_InitBuffer(&USBtoUSART_Buffer);
-  RingBuffer_InitBuffer(&USARTtoUSB_Buffer);
+  RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
+  RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x200);
 
+  // Reset CDC Serial settings and disable USART properly
+  UCSR1B = 0;
+  UCSR1A = 0;
+  UCSR1C = 0;
+
+  UBRR1 = SERIAL_2X_UBBRVAL(115200);
+
+  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
+  UCSR1A = (1 << U2X1);
+  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
   sei();
-
   for (;;) {
-    #define TX_RX_LED_PULSE_MS 5
-    /* Only try to read in bytes from the CDC interface if the transmit buffer
-     * is not full */
-    if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
-      int16_t ReceivedByte =
-          CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+    for (;;) {
+      // USB Task
+      uint8_t lastState = USB_DeviceState;
+      Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+      if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
 
-      /* Read bytes from the USB OUT endpoint into the USART transmit buffer */
-      if (!(ReceivedByte < 0))
-        RingBuffer_Insert(&USBtoUSART_Buffer, ReceivedByte);
-    }
-
-    /* Check if the UART receive buffer flush timer has expired or the buffer is
-     * nearly full */
-    RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
-    if ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL)) {
-      TIFR0 |= (1 << TOV0);
-
-      if (USARTtoUSB_Buffer.Count) {
-        LEDs_TurnOnLEDs(LEDMASK_TX);
-        PulseMSRemaining.TxLEDPulse = TX_RX_LED_PULSE_MS;
+      // Compare last with new state
+      uint8_t newState = USB_DeviceState;
+      if (newState != DEVICE_STATE_Configured) {
+        // Try to reconnect if communication is still broken
+        if (lastState != DEVICE_STATE_Configured) continue;
+        // Break and disable USART on connection lost
+        else
+          break;
       }
 
-      /* Read bytes from the USART receive buffer into the USB IN endpoint */
-      while (BufferCount--)
-        CDC_Device_SendByte(&VirtualSerial_CDC_Interface,
-                            RingBuffer_Remove(&USARTtoUSB_Buffer));
+#define TX_RX_LED_PULSE_MS 5
+      /* Only try to read in bytes from the CDC interface if the transmit buffer
+       * is not full */
+      if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
+        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+        /* Read bytes from the USB OUT endpoint into the USART transmit buffer
+         */
+        if (Endpoint_IsOUTReceived()) {
+          if (Endpoint_BytesInEndpoint())
+            RingBuffer_Insert(&USBtoUSART_Buffer, Endpoint_Read_8());
 
-      /* Turn off TX LED(s) once the TX pulse period has elapsed */
-      if (PulseMSRemaining.TxLEDPulse && !(--PulseMSRemaining.TxLEDPulse))
-        LEDs_TurnOffLEDs(LEDMASK_TX);
+          if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
+        }
+      }
+      if (is_ardwiino) {
+        uint8_t ReportSize;
+        if (device_type <= XINPUT_ARCADE_PAD_SUBTYPE) {
+          ReportSize = sizeof(USB_XInputReport_Data_t);
+        } else if (device_type == KEYBOARD_SUBTYPE) {
+          ReportSize = sizeof(USB_KeyboardReport_Data_t);
+        } else {
+          ReportSize = sizeof(USB_PS3Report_Data_t);
+        }
+        if (USARTtoUSB_Buffer.Count > ReportSize) {
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          if (Endpoint_IsReadWriteAllowed()) {
+            if (Endpoint_IsINReady()) {
+              while (ReportSize--) {
+                Endpoint_Write_8(RingBuffer_Remove(&USARTtoUSB_Buffer));
+              }
+              Endpoint_ClearIN();
+            }
+          }
+        }
+      } else {
 
-      /* Turn off RX LED(s) once the RX pulse period has elapsed */
-      if (PulseMSRemaining.RxLEDPulse && !(--PulseMSRemaining.RxLEDPulse))
-        LEDs_TurnOffLEDs(LEDMASK_RX);
+        /* Check if the UART receive buffer flush timer has expired or the
+        buffer
+         * is nearly full */
+        RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
+        if ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL)) {
+          TIFR0 |= (1 << TOV0);
+
+          if (USARTtoUSB_Buffer.Count) {
+            LEDs_TurnOnLEDs(LEDMASK_TX);
+            PulseMSRemaining.TxLEDPulse = TX_RX_LED_PULSE_MS;
+          }
+
+          Endpoint_SelectEndpoint(CDC_TX_EPADDR);
+          // CDC device is ready for receiving bytes
+          if (Endpoint_IsINReady()) {
+            /* Read bytes from the USART receive buffer into the USB IN
+            endpoint
+             */
+            while (BufferCount--)
+              Endpoint_Write_8(RingBuffer_Remove(&USARTtoUSB_Buffer));
+            Endpoint_ClearIN();
+          }
+          /* Turn off TX LED(s) once the TX pulse period has elapsed */
+          if (PulseMSRemaining.TxLEDPulse && !(--PulseMSRemaining.TxLEDPulse))
+            LEDs_TurnOffLEDs(LEDMASK_TX);
+
+          /* Turn off RX LED(s) once the RX pulse period has elapsed */
+          if (PulseMSRemaining.RxLEDPulse && !(--PulseMSRemaining.RxLEDPulse))
+            LEDs_TurnOffLEDs(LEDMASK_RX);
+        }
+      }
+
+      /* Load the next byte from the USART transmit buffer into the USART */
+      if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
+        Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
+
+        LEDs_TurnOnLEDs(LEDMASK_RX);
+        PulseMSRemaining.RxLEDPulse = TX_RX_LED_PULSE_MS;
+      }
     }
 
-    /* Load the next byte from the USART transmit buffer into the USART */
-    if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
-      Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
-
-      LEDs_TurnOnLEDs(LEDMASK_RX);
-      PulseMSRemaining.RxLEDPulse = TX_RX_LED_PULSE_MS;
-    }
-
-    CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-    USB_USBTask();
+    // Dont forget LEDs on if suddenly unconfigured.
+    LEDs_TurnOffTXLED;
+    LEDs_TurnOffRXLED;
   }
 }
 
@@ -169,66 +207,71 @@ void SetupHardware(void) {
 
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
+
+  /* Setup CDC Notification, Rx and Tx Endpoints */
+  Endpoint_ConfigureEndpoint(CDC_NOTIFICATION_EPADDR, EP_TYPE_INTERRUPT,
+                             CDC_NOTIFICATION_EPSIZE, 1);
+
+  Endpoint_ConfigureEndpoint(CDC_TX_EPADDR, EP_TYPE_BULK, CDC_TX_EPSIZE,
+                             CDC_TX_BANK_SIZE);
+
+  Endpoint_ConfigureEndpoint(CDC_RX_EPADDR, EP_TYPE_BULK, CDC_RX_EPSIZE,
+                             CDC_RX_BANK_SIZE);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 }
 
 /** Event handler for the library USB Unhandled Control Request event. */
 void EVENT_USB_Device_ControlRequest(void) {
-  CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
   controller_control_request();
-}
-
-/** Event handler for the CDC Class driver Line Encoding Changed event.
- *
- *  \param[in] CDCInterfaceInfo  Pointer to the CDC class interface
- * configuration structure being referenced
- */
-void EVENT_CDC_Device_LineEncodingChanged(
-    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
-  uint8_t ConfigMask = 0;
-
-  switch (CDCInterfaceInfo->State.LineEncoding.ParityType) {
-  case CDC_PARITY_Odd:
-    ConfigMask = ((1 << UPM11) | (1 << UPM10));
-    break;
-  case CDC_PARITY_Even:
-    ConfigMask = (1 << UPM11);
-    break;
+  /* Ignore any requests that aren't directed to the CDC interface */
+  if ((USB_ControlRequest.bmRequestType &
+       (CONTROL_REQTYPE_TYPE | CONTROL_REQTYPE_RECIPIENT)) !=
+      (REQTYPE_CLASS | REQREC_INTERFACE)) {
+    return;
   }
 
-  if (CDCInterfaceInfo->State.LineEncoding.CharFormat ==
-      CDC_LINEENCODING_TwoStopBits)
-    ConfigMask |= (1 << USBS1);
+  /* Process CDC specific control requests */
+  uint8_t bRequest = USB_ControlRequest.bRequest;
+  if (bRequest == CDC_REQ_GetLineEncoding) {
+    if (USB_ControlRequest.bmRequestType ==
+        (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
+      Endpoint_ClearSETUP();
 
-  switch (CDCInterfaceInfo->State.LineEncoding.DataBits) {
-  case 6:
-    ConfigMask |= (1 << UCSZ10);
-    break;
-  case 7:
-    ConfigMask |= (1 << UCSZ11);
-    break;
-  case 8:
-    ConfigMask |= ((1 << UCSZ11) | (1 << UCSZ10));
-    break;
+      /* Write the line coding data to the control endpoint */
+      // this one is not inline because its already used somewhere in the usb
+      // core, so it will dupe code
+      Endpoint_Write_Control_Stream_LE(&LineEncoding,
+                                       sizeof(CDC_LineEncoding_t));
+      Endpoint_ClearOUT();
+    }
+  } else if (bRequest == CDC_REQ_SetLineEncoding) {
+    if (USB_ControlRequest.bmRequestType ==
+        (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+      Endpoint_ClearSETUP();
+
+      // Read the line coding data in from the host into the global struct (made
+      // inline)
+      Endpoint_Read_Control_Stream_LE(&LineEncoding,
+                                      sizeof(CDC_LineEncoding_t));
+
+      Endpoint_ClearIN();
+    }
+  } else if (bRequest == CDC_REQ_SetControlLineState) {
+    if (USB_ControlRequest.bmRequestType ==
+        (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+      Endpoint_ClearSETUP();
+      Endpoint_ClearStatusStage();
+
+      // check DTR state and reset the MCU
+      // You could add the OUTPUT declaration here but it wont help since the pc
+      // always tries to open the serial port once. At least if the usb is
+      // connected this always results in a main MCU reset if the bootloader is
+      // executed. From my testings there is no way to avoid this. Its needed as
+      // far as I tested, no way.
+      // TODO do not reset main MCU (not possible?)
+      Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
+    }
   }
-
-  /* Must turn off USART before reconfiguring it, otherwise incorrect operation
-   * may occur */
-  UCSR1B = 0;
-  UCSR1A = 0;
-  UCSR1C = 0;
-
-  /* Special case 57600 baud for compatibility with the ATmega328 bootloader. */
-  UBRR1 =
-      (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600)
-          ? SERIAL_UBBRVAL(CDCInterfaceInfo->State.LineEncoding.BaudRateBPS)
-          : SERIAL_2X_UBBRVAL(CDCInterfaceInfo->State.LineEncoding.BaudRateBPS);
-
-  UCSR1C = ConfigMask;
-  UCSR1A = (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600)
-               ? 0
-               : (1 << U2X1);
-  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 }
 
 /** ISR to manage the reception of data from the serial port, placing received
@@ -239,22 +282,4 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
 
   if (USB_DeviceState == DEVICE_STATE_Configured)
     RingBuffer_Insert(&USARTtoUSB_Buffer, ReceivedByte);
-}
-
-/** Event handler for the CDC Class driver Host-to-Device Line Encoding Changed
- * event.
- *
- *  \param[in] CDCInterfaceInfo  Pointer to the CDC class interface
- * configuration structure being referenced
- */
-void EVENT_CDC_Device_ControLineStateChanged(
-    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
-  bool CurrentDTRState =
-      (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
-       CDC_CONTROL_LINE_OUT_DTR);
-
-  if (CurrentDTRState)
-    AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
-  else
-    AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
 }

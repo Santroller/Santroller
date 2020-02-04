@@ -19,13 +19,11 @@ OPTIMIZATION = s
 SRC          = main.c ../../shared/output/usb/Descriptors.c ../../shared/output/control_requests.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -flto -fuse-linker-plugin
-LD_FLAGS     = -flto -fuse-linker-plugin
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' $(REGS) -flto -fuse-linker-plugin
+LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
-# CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' $(REGS) -flto -fuse-linker-plugin
-# LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 

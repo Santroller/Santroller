@@ -69,7 +69,7 @@
 		 */
 		typedef struct
 		{
-			RingBuff_Data_t  Buffer[BUFFER_SIZE]; /**< Internal ring buffer data, referenced by the buffer pointers. */
+			RingBuff_Data_t* Buffer; /**< Internal ring buffer data, referenced by the buffer pointers. */
 			RingBuff_Data_t* In; /**< Current storage location in the circular buffer */
 			RingBuff_Data_t* Out; /**< Current retrieval location in the circular buffer */
 			RingBuff_Count_t Count;
@@ -82,10 +82,11 @@
 		 *
 		 *  \param[out] Buffer  Pointer to a ring buffer structure to initialize
 		 */
-		static inline void RingBuffer_InitBuffer(RingBuff_t* const Buffer)
+		static inline void RingBuffer_InitBuffer(RingBuff_t* const Buffer, RingBuff_Data_t* buf)
 		{
 			ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 			{
+				Buffer->Buffer = buf;
 				Buffer->In  = Buffer->Buffer;
 				Buffer->Out = Buffer->Buffer;
 			}

@@ -57,7 +57,8 @@
         "main.h": "c",
         "controller_structs.h": "c",
         "reports.h": "c",
-        "serial_avr8.h": "c"
+        "serial_avr8.h": "c",
+        "leds.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

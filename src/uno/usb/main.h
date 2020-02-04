@@ -1,13 +1,13 @@
 /*
              LUFA Library
-     Copyright (C) Dean Camera, 2014.
+     Copyright (C) Dean Camera, 2010.
 
   dean [at] fourwalledcubicle [dot] com
-           www.lufa-lib.org
+      www.fourwalledcubicle.com
 */
 
 /*
-  Copyright 2014  Dean Camera (dean [at] fourwalledcubicle [dot] com)
+  Copyright 2010  Dean Camera (dean [at] fourwalledcubicle [dot] com)
 
   Permission to use, copy, modify, distribute, and sell this
   software and its documentation for any purpose is hereby granted
@@ -18,7 +18,7 @@
   advertising or publicity pertaining to distribution of the
   software without specific, written prior permission.
 
-  The author disclaims all warranties with regard to this
+  The author disclaim all warranties with regard to this
   software, including all implied warranties of merchantability
   and fitness.  In no event shall the author be liable for any
   special, indirect or consequential damages or any damages
@@ -28,85 +28,58 @@
   this software.
 */
 
-/*
-Copyright(c) 2014-2015 NicoHood
-See the readme for credit to other people.
-
-This file is part of Hoodloader2.
-
-Hoodloader2 is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-Hoodloader2 is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /** \file
  *
- *  Header file for BootloaderCDC.c.
+ *  Header file for Arduino-usbserial.c.
  */
 
-#ifndef _CDC_H_
-#define _CDC_H_
+#ifndef _ARDUINO_USBSERIAL_H_
+#define _ARDUINO_USBSERIAL_H_
 
-	/* Includes: */
-		#include <avr/io.h>
-		#include <avr/wdt.h>
-		#include <avr/boot.h>
-		#include <avr/eeprom.h>
-		#include <avr/power.h>
-		#include <avr/interrupt.h>
-		#include <util/atomic.h>
-		#include <stdbool.h>
+/* Includes: */
+#include <avr/io.h>
+#include <avr/wdt.h>
+#include <avr/interrupt.h>
+#include <avr/power.h>
 
-		#include "../../shared/output/usb/Descriptors.h"
-		#include "../../shared/output/controller_structs.h"
-		#include "../../shared/output/control_requests.h"
+#include "../../shared/output/usb/Descriptors.h"
 
-		#include <LUFA/Drivers/USB/USB.h>
-		#include <LUFA/Platform/Platform.h>
+#include "Lib/LightweightRingBuff.h"
 
-		#include <LUFA/Drivers/Peripheral/Serial.h>
-		#include <LUFA/Drivers/Board/Board.h>
-		#include <util/delay.h>
+#include <LUFA/Version.h>
+#include <LUFA/Drivers/Board/Board.h>
+#include <LUFA/Drivers/Board/LEDs.h>
+#include <LUFA/Drivers/Peripheral/Serial.h>
+#include <LUFA/Drivers/USB/USB.h>
+#include <LUFA/Drivers/USB/Class/CDCClass.h>
+#include "../../shared/output/control_requests.h"
 
-	/* Preprocessor Checks: */
-		#if !defined(__OPTIMIZE_SIZE__)
-			#error This bootloader requires that it be optimized for size, not speed, to fit into the target device. Change optimization settings and try again.
-		#endif
+/* Macros: */
+/** LED mask for the library LED driver, to indicate TX activity. */
+#define LEDMASK_TX LEDS_LED1
 
-	/* Macros: */
-		/** Version major of the CDC bootloader. */
-		#define BOOTLOADER_VERSION_MAJOR     0x01
+/** LED mask for the library LED driver, to indicate RX activity. */
+#define LEDMASK_RX LEDS_LED2
 
-		/** Version minor of the CDC bootloader. */
-		#define BOOTLOADER_VERSION_MINOR     0x00
+/** LED mask for the library LED driver, to indicate that an error has occurred
+ * in the USB interface. */
+#define LEDMASK_ERROR (LEDS_LED1 | LEDS_LED2)
 
-		/** Hardware version major of the CDC bootloader. */
-		#define BOOTLOADER_HWVERSION_MAJOR   0x01
+/** LED mask for the library LED driver, to indicate that the USB interface is
+ * busy. */
+#define LEDMASK_BUSY (LEDS_LED1 | LEDS_LED2)
 
-		/** Hardware version minor of the CDC bootloader. */
-		#define BOOTLOADER_HWVERSION_MINOR   0x00
+/* Function Prototypes: */
+void SetupHardware(void);
 
-		/** Eight character bootloader firmware identifier reported to the host when requested. */
-		#define SOFTWARE_IDENTIFIER          "HL2.0.5"
-	/* Type Defines: */
-		/** Type define for a non-returning pointer to the start of the loaded application in flash memory. */
-		typedef void (*AppPtr_t)(void) ATTR_NO_RETURN;
+void EVENT_USB_Device_Connect(void);
+void EVENT_USB_Device_Disconnect(void);
+void EVENT_USB_Device_ConfigurationChanged(void);
+void EVENT_USB_Device_UnhandledControlRequest(void);
 
-	/* Function Prototypes: */
-		static void CDC_Device_LineEncodingChanged(void);
-		static void SetupHardware(void);
+void EVENT_CDC_Device_LineEncodingChanged(
+    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo);
+void EVENT_CDC_Device_ControLineStateChanged(
+    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo);
 
-		void EVENT_USB_Device_ConfigurationChanged(void);
-
-
-#endif
-
+#endif /* _ARDUINO_USBSERIAL_H_ */

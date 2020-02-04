@@ -33,9 +33,6 @@ int main(void) {
   UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
   UCSR0A = (1 << U2X0);
   UCSR0B = ((1 << TXEN0) | (1 << RXEN0));
-  // // 0x1F activates ardwiino mode
-  // UDR0 = 0x1F;
-  // loop_until_bit_is_set(UCSR0A, UDRE0);
   UDR0 = config.main.sub_type;
   loop_until_bit_is_set(UCSR0A, UDRE0);
   UDR0 = config.main.poll_rate;

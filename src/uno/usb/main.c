@@ -64,6 +64,18 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
 bool is_ardwiino = true;
+static void jump_atmel_bootloader(void) {
+  USB_Disable();
+  // disable interrupts
+  cli();
+
+  // Relocate the interrupt vector table to the bootloader section
+  MCUCR = (1 << IVCE);
+  MCUCR = (1 << IVSEL);
+
+  // Jump to the bootloader section
+  asm volatile("jmp 0x1000");
+}
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
@@ -72,17 +84,6 @@ int main(void) {
 
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
   RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x200);
-
-  // Reset CDC Serial settings and disable USART properly
-  UCSR1B = 0;
-  UCSR1A = 0;
-  UCSR1C = 0;
-
-  UBRR1 = SERIAL_2X_UBBRVAL(115200);
-
-  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
-  UCSR1A = (1 << U2X1);
-  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
   sei();
   for (;;) {
     for (;;) {
@@ -109,8 +110,14 @@ int main(void) {
         /* Read bytes from the USB OUT endpoint into the USART transmit buffer
          */
         if (Endpoint_IsOUTReceived()) {
-          if (Endpoint_BytesInEndpoint())
-            RingBuffer_Insert(&USBtoUSART_Buffer, Endpoint_Read_8());
+          if (Endpoint_BytesInEndpoint()) {
+            uint8_t b = Endpoint_Read_8();
+            if (is_ardwiino) {
+              if (b == 'b') is_ardwiino = false;
+              if (b == 'n') jump_atmel_bootloader();
+            }
+            RingBuffer_Insert(&USBtoUSART_Buffer, b);
+          }
 
           if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
         }
@@ -124,7 +131,8 @@ int main(void) {
         } else {
           ReportSize = sizeof(USB_PS3Report_Data_t);
         }
-        if (USARTtoUSB_Buffer.Count > ReportSize) {
+        if (USARTtoUSB_Buffer.Count > ReportSize + 1 &&
+            RingBuffer_Remove(&USARTtoUSB_Buffer) == 'm') {
           Endpoint_SelectEndpoint(HID_EPADDR_IN);
           if (Endpoint_IsReadWriteAllowed()) {
             if (Endpoint_IsINReady()) {
@@ -192,7 +200,8 @@ void SetupHardware(void) {
   wdt_disable();
 
   /* Hardware Initialization */
-  Serial_Init(9600, false);
+  Serial_Init(115200, true);
+  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
   LEDs_Init();
   USB_Init();
 

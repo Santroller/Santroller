@@ -40,13 +40,18 @@ RAM_OFFSET            = 0x800282
 REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
 $(info $(shell mkdir -p $(BIN)))
 
-
-
 # Default target
 all:
 
-dfu-all:
-	(make dfu || true) && sleep 1 && make dfu-ee && sleep 1 && make dfu
+dfuc:
+	echo n > /dev/ttyACM0 || true
+	sleep 1
+	dfu-programmer $(MCU) erase || true
+	sleep 1
+	make dfu || true
+	sleep 2
+	dfu-programmer $(MCU) launch --no-reset || true
+
 
 # Include LUFA build script makefiles
 include $(LUFA_PATH)/Build/lufa_core.mk

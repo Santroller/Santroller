@@ -168,7 +168,6 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
   return true;
 }
 void wii_ext_tick(controller_t *controller) {
-  controller->device_info = id;
   uint8_t data[8];
   if (twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) || !verifyData(data, sizeof(data))) {
     init_controller();

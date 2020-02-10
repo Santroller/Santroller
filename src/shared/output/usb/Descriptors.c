@@ -11,7 +11,7 @@ uint8_t polling_rate = 1;
  * language ID table available at USB.org what languages the device supports for
  * its string descriptors.
  */
-const USB_Descriptor_String_t PROGMEM LanguageString =
+const USB_Descriptor_String_t LanguageString =
     USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 
 /** Manufacturer descriptor string. This is a Unicode string containing the
@@ -19,30 +19,30 @@ const USB_Descriptor_String_t PROGMEM LanguageString =
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ManufacturerString =
+const USB_Descriptor_String_t ManufacturerString =
     USB_STRING_DESCRIPTOR(L"sanjay900");
 
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ProductString =
+const USB_Descriptor_String_t ProductString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
 
-const USB_Descriptor_String_t PROGMEM VersionString =
+const USB_Descriptor_String_t VersionString =
     USB_STRING_DESCRIPTOR(L"1.2");
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
-const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
+const USB_OSDescriptor_t OSDescriptorString = {
   Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
   Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
   VendorCode : REQ_GetOSFeatureDescriptor,
   Reserved : 0
 };
 
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
+const USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
     0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
     0x09, 0x05,       // Usage (Game Pad)
     0xA1, 0x01,       // Collection (Application)
@@ -120,7 +120,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
 
 };
 
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM
+const USB_Descriptor_HIDReport_Datatype_t
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
@@ -338,15 +338,13 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   uint16_t Size = NO_DESCRIPTOR;
 
   const void *Address = NULL;
-  uint8_t MemorySpace = MEMSPACE_FLASH;
+  uint8_t MemorySpace = MEMSPACE_RAM;
+  // We set aside 0x200 as an area to work with descriptors.
   switch (DescriptorType) {
   case DTYPE_Device:
-    // 0x100 is the space used by the serial buffers. since those buffers are
-    // not in use during init, we can reuse them for editing the descriptors.
-    MemorySpace = MEMSPACE_RAM;
+    Size = sizeof(DeviceDescriptor);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)0x100;
     Address = dev;
-    Size = sizeof(DeviceDescriptor);
     memcpy_P(dev, &DeviceDescriptor, Size);
     if (device_type == SWITCH_GAMEPAD_SUBTYPE) {
       dev->VendorID = 0x0F0D;
@@ -366,11 +364,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     }
     break;
   case DTYPE_Configuration:
-    MemorySpace = MEMSPACE_RAM;
+    Size = sizeof(ConfigurationDescriptor);
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)0x100;
     Address = conf;
-    Size = sizeof(ConfigurationDescriptor);
     memcpy_P(conf, &ConfigurationDescriptor, Size);
     conf->Controller.XInput.Endpoints.DataInEndpoint0.PollingIntervalMS =
         polling_rate;

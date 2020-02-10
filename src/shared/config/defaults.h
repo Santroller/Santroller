@@ -41,7 +41,7 @@
 #endif
 #define PINS                                                                   \
   {                                                                            \
-    21, 16, INVALID_PIN, INVALID_PIN, 15, 14, INVALID_PIN, INVALID_PIN, 9,      \
+    21, 16, INVALID_PIN, INVALID_PIN, 15, 14, INVALID_PIN, INVALID_PIN, 9,     \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, 5, 6, 8, 7, INVALID_PIN,        \
         INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
   }
@@ -49,11 +49,16 @@
 
 #define DEFAULT_CONFIG                                                         \
   {                                                                            \
-    {PROTOCOL_VERSION, DEVICE_TYPE,     OUTPUT_TYPE,                           \
-     TILT_SENSOR,      POLL_RATE,       F_CPU,                                 \
-     FRETS_LED,        MAP_JOY_TO_DPAD, MAP_START_SELECT_TO_HOME,              \
-     MAP_ACCEL_TO_R,   FIRMWARE},                                              \
+    {DEVICE_TYPE,                                                              \
+     OUTPUT_TYPE,                                                              \
+     TILT_SENSOR,                                                              \
+     POLL_RATE,                                                                \
+     FRETS_LED,                                                                \
+     MAP_JOY_TO_DPAD,                                                          \
+     MAP_START_SELECT_TO_HOME,                                                 \
+     MAP_ACCEL_TO_R},                                                                \
         PINS,                                                                  \
-        {INVERSIONS, TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION, TILT_SENSITIVITY},  \
+        {INVERSIONS, TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,   \
+         TILT_SENSITIVITY},                                                    \
         KEYS,                                                                  \
   }

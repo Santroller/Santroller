@@ -28,8 +28,12 @@ void controller_control_request(void) {
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
           USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
         Endpoint_ClearSETUP();
-        Endpoint_Write_Control_PStream_LE(&DevCompatIDs,
-                                          DevCompatIDs.TotalLength);
+        uint8_t *buf = (uint8_t *)&DevCompatIDs;
+        for (uint8_t i = 0; i < DevCompatIDs.TotalLength; i++) {
+          Endpoint_Write_8(*(buf++));
+        }
+        // Endpoint_Write_Control_PStream_LE(&DevCompatIDs,
+        //                                   DevCompatIDs.TotalLength);
         Endpoint_ClearOUT();
         return;
       }
@@ -54,11 +58,9 @@ void controller_control_request(void) {
           }
           // Send out init packets for the ps3
           Endpoint_ClearSETUP();
-          while (!(Endpoint_IsINReady()))
-            ;
+          // Endpoint_Write_Control_PStream_LE(id, sizeof(id));
           for (uint8_t i = 0; i < sizeof(id); i++) { Endpoint_Write_8(id[i]); }
-          Endpoint_ClearIN();
-          Endpoint_ClearStatusStage();
+          Endpoint_ClearOUT();
           return;
         }
       }

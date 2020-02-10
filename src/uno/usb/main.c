@@ -36,6 +36,7 @@
  */
 
 #include "main.h"
+#include "../../shared/output/usb/API.h"
 
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
@@ -63,7 +64,18 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
                                               CDC_LINEENCODING_OneStopBit,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
-bool is_ardwiino = true;
+#define STATE_ARDWIINO 0
+#define STATE_CONFIG 1
+#define STATE_AVRDUDE 2
+eeprom_config_t EEMEM config_mem = {.polling_rate = POLL_RATE,
+                                    .device_type = DEVICE_TYPE,
+                                    .id = ARDWIINO_DEVICE_TYPE};
+
+eeprom_config_t config = {.id = ARDWIINO_DEVICE_TYPE};
+bool entered_prog = false;
+int state = STATE_ARDWIINO;
+int lastCommand = 0;
+int lastAddr = 0;
 static void jump_atmel_bootloader(void) {
   USB_Disable();
   // disable interrupts
@@ -76,12 +88,19 @@ static void jump_atmel_bootloader(void) {
   // Jump to the bootloader section
   asm volatile("jmp 0x1000");
 }
+
+const char *mcu = MCU;
+const char *freq = STR(F_CPU);
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
 int main(void) {
   SetupHardware();
-
+  eeprom_read_block(&config, &config_mem, sizeof(eeprom_config_t));
+  if (config.id == ARDWIINO_DEVICE_TYPE) {
+    polling_rate = config.polling_rate;
+    device_type = config.device_type;
+  }
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
   RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x200);
   sei();
@@ -112,17 +131,57 @@ int main(void) {
         if (Endpoint_IsOUTReceived()) {
           if (Endpoint_BytesInEndpoint()) {
             uint8_t b = Endpoint_Read_8();
-            if (is_ardwiino) {
-              if (b == 'b') is_ardwiino = false;
-              if (b == 'n') jump_atmel_bootloader();
-            }
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
+            if (state == STATE_CONFIG) {
+              if (lastCommand == COMMAND_READ_INFO) {
+                const char *c = NULL;
+                if (b == INFO_USB_MCU) {
+                  c = mcu;
+                } else if (b == INFO_USB_CPU_FREQ) {
+                  c = freq;
+                }
+                if (c != NULL) {
+                  while (*(c) != 0) {
+                    RingBuffer_Insert(&USARTtoUSB_Buffer, *(c++));
+                  }
+                }
+                lastCommand = 0;
+              } else if (lastCommand == 0) {
+                if (b == COMMAND_APPLY_CONFIG) {
+                  USB_ResetInterface();
+                  config.id = ARDWIINO_DEVICE_TYPE;
+                  config.polling_rate = polling_rate;
+                  config.device_type = device_type;
+                  eeprom_update_block(&config, &config_mem,
+                                      sizeof(eeprom_config_t));
+                  state = STATE_ARDWIINO;
+                }
+                if (b == COMMAND_JUMP_BOOTLOADER) state = STATE_AVRDUDE;
+                if (b == COMMAND_WRITE_CONFIG_VALUE) {
+                  b = Endpoint_Read_8();
+                  if (b == CONFIG_SUB_TYPE) {
+                    device_type = Endpoint_Read_8();
+                  } else if (b == CONFIG_POLL_RATE) {
+                    polling_rate = Endpoint_Read_8();
+                  }
+                }
+                if (b == COMMAND_READ_INFO) { lastCommand = b; }
+              }
+            } else if (state == STATE_ARDWIINO) {
+              if (b == COMMAND_START_CONFIG) state = STATE_CONFIG;
+              if (b == COMMAND_JUMP_BOOTLOADER) state = STATE_AVRDUDE;
+              if (b == COMMAND_JUMP_BOOTLOADER_UNO) jump_atmel_bootloader();
+            } else {
+              if (b == COMMAND_STK_500_ENTER_PROG && !entered_prog) {
+                entered_prog = true;
+              }
+            }
           }
 
           if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
         }
       }
-      if (is_ardwiino) {
+      if (state == STATE_ARDWIINO) {
         uint8_t ReportSize;
         if (device_type <= XINPUT_ARCADE_PAD_SUBTYPE) {
           ReportSize = sizeof(USB_XInputReport_Data_t);
@@ -238,7 +297,6 @@ void EVENT_USB_Device_ControlRequest(void) {
       (REQTYPE_CLASS | REQREC_INTERFACE)) {
     return;
   }
-
   /* Process CDC specific control requests */
   uint8_t bRequest = USB_ControlRequest.bRequest;
   if (bRequest == CDC_REQ_GetLineEncoding) {
@@ -257,11 +315,47 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
-
       // Read the line coding data in from the host into the global struct (made
       // inline)
-      Endpoint_Read_Control_Stream_LE(&LineEncoding,
-                                      sizeof(CDC_LineEncoding_t));
+      // Endpoint_Read_Control_Stream_LE(&LineEncoding,
+      // sizeof(CDC_LineEncoding_t));
+
+      uint8_t Length = sizeof(CDC_LineEncoding_t);
+      uint8_t *DataStream = (uint8_t *)&LineEncoding;
+
+      bool skip = false;
+      while (Length) {
+        uint8_t USB_DeviceState_LCL = USB_DeviceState;
+
+        if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) ||
+            (USB_DeviceState_LCL == DEVICE_STATE_Suspended) ||
+            (Endpoint_IsSETUPReceived())) {
+          skip = true;
+          break;
+        }
+
+        if (Endpoint_IsOUTReceived()) {
+          while (Length && Endpoint_BytesInEndpoint()) {
+            *DataStream = Endpoint_Read_8();
+            DataStream++;
+            Length--;
+          }
+
+          Endpoint_ClearOUT();
+        }
+      }
+
+      if (!skip) {
+        do {
+          uint8_t USB_DeviceState_LCL = USB_DeviceState;
+
+          if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) ||
+              (USB_DeviceState_LCL == DEVICE_STATE_Suspended))
+            break;
+        } while (!(Endpoint_IsINReady()));
+      }
+
+      // end of inline Endpoint_Read_Control_Stream_LE
 
       Endpoint_ClearIN();
     }
@@ -270,15 +364,12 @@ void EVENT_USB_Device_ControlRequest(void) {
         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
       Endpoint_ClearStatusStage();
-
-      // check DTR state and reset the MCU
-      // You could add the OUTPUT declaration here but it wont help since the pc
-      // always tries to open the serial port once. At least if the usb is
-      // connected this always results in a main MCU reset if the bootloader is
-      // executed. From my testings there is no way to avoid this. Its needed as
-      // far as I tested, no way.
-      // TODO do not reset main MCU (not possible?)
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
+      // The next dtr after programming will reset the device.
+      if (entered_prog) {
+        entered_prog = false;
+        state = STATE_CONFIG;
+      }
     }
   }
 }

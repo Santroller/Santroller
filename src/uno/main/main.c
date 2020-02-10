@@ -22,6 +22,7 @@ size_t controller_index = 0;
 controller_t controller;
 uint8_t report[sizeof(output_report_size_t)];
 bool done = false;
+bool in_config_mode = false;
 int main(void) {
   load_config();
   UCSR0B = 0;
@@ -42,11 +43,16 @@ int main(void) {
     uint16_t Size;
     create_report(report, &Size, controller);
     controller_index = 0;
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = 'm';
-    while (controller_index < Size) {
+    if (bit_is_set(UCSR0A, RXC0) && UDR0 == 's') {
+      in_config_mode = true;
+    }
+    if (!in_config_mode) {
       loop_until_bit_is_set(UCSR0A, UDRE0);
-      UDR0 = report[controller_index++];
+      UDR0 = 'm';
+      while (controller_index < Size) {
+        loop_until_bit_is_set(UCSR0A, UDRE0);
+        UDR0 = report[controller_index++];
+      }
     }
   }
 }

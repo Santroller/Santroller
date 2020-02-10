@@ -28,7 +28,7 @@ AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
 OUT_DIR 	 = ../../../output
 $(info $(shell mkdir -p $(BIN)))
-$(info $(shell echo b > /dev/ttyACM0))
+$(info $(shell echo e > /dev/ttyACM0))
 
 # Default target
 all: 

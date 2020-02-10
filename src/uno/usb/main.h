@@ -55,6 +55,7 @@
 #include "../../shared/output/control_requests.h"
 #include "../../shared/output/controller_structs.h"
 #include "../../shared/config/defines.h"
+#include "../../shared/config/defaults.h"
 
 /* Macros: */
 /** LED mask for the library LED driver, to indicate TX activity. */
@@ -70,6 +71,11 @@
 /** LED mask for the library LED driver, to indicate that the USB interface is
  * busy. */
 #define LEDMASK_BUSY (LEDS_LED1 | LEDS_LED2)
+typedef struct {
+  uint32_t id;
+  uint8_t polling_rate;
+  uint8_t device_type;
+} eeprom_config_t;
 
 /* Function Prototypes: */
 void SetupHardware(void);

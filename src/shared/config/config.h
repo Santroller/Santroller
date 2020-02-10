@@ -1,7 +1,6 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#pragma pack(push, 1)
 typedef struct {
   uint8_t up;
   uint8_t down;
@@ -14,7 +13,7 @@ typedef struct {
   uint8_t LB;
   uint8_t RB;
   uint8_t home;
-  uint8_t unused;
+  uint8_t capture;
   uint8_t a;
   uint8_t b;
   uint8_t x;
@@ -63,17 +62,14 @@ typedef struct {
   analogue_keys_t r_y;
 } keys_t;
 typedef struct {
-  uint8_t version;
   uint8_t input_type;
   uint8_t sub_type;
   uint8_t tilt_type;
   uint8_t poll_rate;
-  uint32_t cpu_freq;
-  bool frets_led_mode;
+  uint8_t frets_led_mode;
   bool map_joy_to_dpad;
   bool map_start_select_to_home;
   bool map_accel_to_right;
-  uint32_t signature;
 } main_config_t;
 typedef struct {
   axis_invert_t inversions;
@@ -88,7 +84,6 @@ typedef struct {
   axis_config_t axis;
   keys_t keys;
 } config_t;
-#pragma pack(pop)
 
 #define MAIN_CMD_R 'm'
 #define MAIN_CMD_W 'n'

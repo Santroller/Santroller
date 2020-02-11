@@ -28,12 +28,10 @@ void controller_control_request(void) {
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
           USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
         Endpoint_ClearSETUP();
-        uint8_t *buf = (uint8_t *)&DevCompatIDs;
-        for (uint8_t i = 0; i < DevCompatIDs.TotalLength; i++) {
-          Endpoint_Write_8(*(buf++));
-        }
-        // Endpoint_Write_Control_PStream_LE(&DevCompatIDs,
-        //                                   DevCompatIDs.TotalLength);
+        USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)0x200;
+        memcpy_P(dev, &DevCompatIDs, DevCompatIDs.TotalLength);
+        Endpoint_Write_Control_Stream_LE(&dev,
+                                         DevCompatIDs.TotalLength);
         Endpoint_ClearOUT();
         return;
       }
@@ -47,19 +45,16 @@ void controller_control_request(void) {
         if (USB_ControlRequest.bRequest == HID_REQ_GetReport) {
           // Is the id stuff below actually important? check with a ps3
           // emulator.
-          if (device_type == PS3_GUITAR_GH_SUBTYPE) {
+          if (device_type == PS3_GUITAR_GH_SUBTYPE ||
+              device_type == PS3_DRUM_GH_SUBTYPE) {
             id[3] = 0x06;
-          } else if (device_type == PS3_GUITAR_RB_SUBTYPE) {
-            id[3] = 0x00;
-          } else if (device_type == PS3_DRUM_GH_SUBTYPE) {
-            id[3] = 0x06;
-          } else if (device_type == PS3_DRUM_RB_SUBTYPE) {
+          } else if (device_type == PS3_GUITAR_RB_SUBTYPE ||
+                     device_type == PS3_DRUM_RB_SUBTYPE) {
             id[3] = 0x00;
           }
           // Send out init packets for the ps3
           Endpoint_ClearSETUP();
-          // Endpoint_Write_Control_PStream_LE(id, sizeof(id));
-          for (uint8_t i = 0; i < sizeof(id); i++) { Endpoint_Write_8(id[i]); }
+          Endpoint_Write_Control_Stream_LE(id, sizeof(id));
           Endpoint_ClearOUT();
           return;
         }

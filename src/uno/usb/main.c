@@ -102,7 +102,7 @@ int main(void) {
     device_type = config.device_type;
   }
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
-  RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x200);
+  RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x180);
   sei();
   for (;;) {
     for (;;) {
@@ -135,10 +135,13 @@ int main(void) {
             if (state == STATE_CONFIG) {
               if (lastCommand == COMMAND_READ_INFO) {
                 const char *c = NULL;
-                if (b == INFO_USB_MCU) {
+                switch (b) {
+                case INFO_USB_MCU:
                   c = mcu;
-                } else if (b == INFO_USB_CPU_FREQ) {
+                  break;
+                case INFO_USB_CPU_FREQ:
                   c = freq;
+                  break;
                 }
                 if (c != NULL) {
                   while (*(c) != 0) {
@@ -168,9 +171,17 @@ int main(void) {
                 if (b == COMMAND_READ_INFO) { lastCommand = b; }
               }
             } else if (state == STATE_ARDWIINO) {
-              if (b == COMMAND_START_CONFIG) state = STATE_CONFIG;
-              if (b == COMMAND_JUMP_BOOTLOADER) state = STATE_AVRDUDE;
-              if (b == COMMAND_JUMP_BOOTLOADER_UNO) jump_atmel_bootloader();
+              switch (b) {
+              case COMMAND_START_CONFIG:
+                state = STATE_CONFIG;
+                break;
+              case COMMAND_JUMP_BOOTLOADER:
+                state = STATE_AVRDUDE;
+                break;
+              case COMMAND_JUMP_BOOTLOADER_UNO:
+                jump_atmel_bootloader();
+                break;
+              }
             } else {
               if (b == COMMAND_STK_500_ENTER_PROG && !entered_prog) {
                 entered_prog = true;

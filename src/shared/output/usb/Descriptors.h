@@ -82,8 +82,6 @@ typedef struct {
 } USB_Descriptor_Configuration_t;
 extern uint8_t device_type;
 extern uint8_t polling_rate;
-extern const USB_Descriptor_Device_t DeviceDescriptor;
-extern const USB_Descriptor_Configuration_t ConfigurationDescriptor;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,
@@ -93,6 +91,5 @@ uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
 /* Function Prototypes: */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void **const DescriptorAddress,
-                                    uint8_t *const DescriptorMemorySpace)
+                                    const void **const DescriptorAddress)
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);

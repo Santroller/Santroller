@@ -11,7 +11,7 @@ uint8_t polling_rate = 1;
  * language ID table available at USB.org what languages the device supports for
  * its string descriptors.
  */
-const USB_Descriptor_String_t LanguageString =
+const USB_Descriptor_String_t PROGMEM LanguageString =
     USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 
 /** Manufacturer descriptor string. This is a Unicode string containing the
@@ -19,30 +19,30 @@ const USB_Descriptor_String_t LanguageString =
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t ManufacturerString =
+const USB_Descriptor_String_t PROGMEM ManufacturerString =
     USB_STRING_DESCRIPTOR(L"sanjay900");
 
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const USB_Descriptor_String_t ProductString =
+const USB_Descriptor_String_t PROGMEM ProductString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
 
-const USB_Descriptor_String_t VersionString =
+const USB_Descriptor_String_t PROGMEM VersionString =
     USB_STRING_DESCRIPTOR(L"1.2");
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
-const USB_OSDescriptor_t OSDescriptorString = {
+const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
   Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
   Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
   VendorCode : REQ_GetOSFeatureDescriptor,
   Reserved : 0
 };
 
-const USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
     0x09, 0x05,       // Usage (Game Pad)
     0xA1, 0x01,       // Collection (Application)
@@ -120,7 +120,7 @@ const USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
 
 };
 
-const USB_Descriptor_HIDReport_Datatype_t
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
@@ -330,28 +330,25 @@ const USB_HID_Descriptor_HID_t PROGMEM hid_descriptor = {
  */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void **const DescriptorAddress,
-                                    uint8_t *const DescriptorMemorySpace) {
+                                    const void **const DescriptorAddress) {
   const uint8_t DescriptorType = (wValue >> 8);
   const uint8_t DescriptorNumber = (wValue & 0xFF);
 
   uint16_t Size = NO_DESCRIPTOR;
 
   const void *Address = NULL;
-  uint8_t MemorySpace = MEMSPACE_RAM;
+  uint8_t *buf = (uint8_t *)0x200;
   // We set aside 0x200 as an area to work with descriptors.
   switch (DescriptorType) {
   case DTYPE_Device:
+    Address = &DeviceDescriptor;
     Size = sizeof(DeviceDescriptor);
-    USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)0x100;
-    Address = dev;
-    memcpy_P(dev, &DeviceDescriptor, Size);
+    USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)buf;
     if (device_type == SWITCH_GAMEPAD_SUBTYPE) {
       dev->VendorID = 0x0F0D;
       dev->ProductID = 0x0092;
     } else {
       if (device_type > PS3_GAMEPAD_SUBTYPE) { dev->VendorID = 0x12ba; }
-      // Is the id stuff below actually important? check with a ps3 emulator.
       if (device_type == PS3_GUITAR_GH_SUBTYPE) {
         dev->ProductID = 0x0100;
       } else if (device_type == PS3_GUITAR_RB_SUBTYPE) {
@@ -364,28 +361,30 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     }
     break;
   case DTYPE_Configuration:
+    Address = &ConfigurationDescriptor;
     Size = sizeof(ConfigurationDescriptor);
     USB_Descriptor_Configuration_t *conf =
-        (USB_Descriptor_Configuration_t *)0x100;
-    Address = conf;
-    memcpy_P(conf, &ConfigurationDescriptor, Size);
+        (USB_Descriptor_Configuration_t *)buf;
     conf->Controller.XInput.Endpoints.DataInEndpoint0.PollingIntervalMS =
         polling_rate;
     if (device_type >= KEYBOARD_SUBTYPE) {
       // Switch from Xinput to HID descriptor layout
-      memmove(&conf->Controller.HID.Endpoints,
-              &conf->Controller.XInput.Endpoints,
-              sizeof(conf->Controller.XInput.Endpoints));
+      memcpy_P(&conf->Controller.HID.Endpoints,
+               &ConfigurationDescriptor.Controller.XInput.Endpoints,
+               sizeof(conf->Controller.XInput.Endpoints));
       // And now adjust the total size as the HID layout is actually smaller
       conf->Config.TotalConfigurationSize -=
           sizeof(USB_HID_XBOX_Descriptor_HID_t) -
           sizeof(USB_HID_Descriptor_HID_t);
-      
-      memcpy_P(&conf->Controller.HID.HIDDescriptor, &hid_descriptor, sizeof(hid_descriptor));
+
+      memcpy_P(&conf->Controller.HID.HIDDescriptor, &hid_descriptor,
+               sizeof(hid_descriptor));
       if (device_type == KEYBOARD_SUBTYPE) {
-        conf->Controller.HID.HIDDescriptor.HIDReportLength = sizeof(keyboard_report_descriptor);
+        conf->Controller.HID.HIDDescriptor.HIDReportLength =
+            sizeof(keyboard_report_descriptor);
       } else {
-        conf->Controller.HID.HIDDescriptor.HIDReportLength = sizeof(ps3_report_descriptor);
+        conf->Controller.HID.HIDDescriptor.HIDReportLength =
+            sizeof(ps3_report_descriptor);
       }
       // Report that we have an HID device
       conf->Interface0.Class = HID_CSCP_HIDClass;
@@ -406,29 +405,31 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     switch (DescriptorNumber) {
     case 0x00:
       Address = &LanguageString;
-      Size = pgm_read_byte(&LanguageString.Header.Size);
+      Size = LanguageString.Header.Size;
       break;
     case 0x01:
       Address = &ManufacturerString;
-      Size = pgm_read_byte(&ManufacturerString.Header.Size);
+      Size = ManufacturerString.Header.Size;
       break;
     case 0x02:
       Address = &ProductString;
-      Size = pgm_read_byte(&ProductString.Header.Size);
+      Size = ProductString.Header.Size;
       break;
     case 0x03:
       Address = &VersionString;
-      Size = pgm_read_byte(&VersionString.Header.Size);
+      Size = VersionString.Header.Size;
       break;
     case 0xEE:
       Address = &OSDescriptorString;
-      Size = pgm_read_byte(&OSDescriptorString.Header.Size);
+      Size = OSDescriptorString.Header.Size;
       break;
     }
     break;
   }
-
-  *DescriptorMemorySpace = MemorySpace;
+  if (Size != NO_DESCRIPTOR) {
+    memcpy_P(buf, Address, Size);
+    Address = buf;
+  }
   *DescriptorAddress = Address;
   return Size;
 }

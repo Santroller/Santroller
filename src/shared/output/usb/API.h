@@ -1,6 +1,5 @@
 #pragma once
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
+#include "../../util.h"
 #define COMMAND_START_CONFIG 's'
 #define COMMAND_APPLY_CONFIG 'a'
 #define COMMAND_WRITE_CONFIG_VALUE 'w'
@@ -18,7 +17,6 @@
 #define INFO_USB_CPU_FREQ 5
 #define INFO_BOARD 6
 #define INFO_WII_EXT 7
-#define INFO_CONTROLLER_TYPE 8
 
 #define CONFIG_INPUT_TYPE 0
 #define CONFIG_SUB_TYPE 1

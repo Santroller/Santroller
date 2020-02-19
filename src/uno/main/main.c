@@ -1,6 +1,7 @@
 #include "../../shared/config/eeprom.h"
 #include "../../shared/input/input_handler.h"
 #include "../../shared/output/reports.h"
+#include "../../shared/output/usb/API.h"
 #include "../../shared/util.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -23,6 +24,13 @@ controller_t controller;
 uint8_t report[sizeof(output_report_size_t)];
 bool done = false;
 bool in_config_mode = false;
+const char *mcu = MCU;
+const char *board = ARDWIINO_BOARD;
+const char *version = VERSION;
+const char *signature = SIGNATURE;
+const char *freq = STR(F_CPU);
+
+extern uint16_t id;
 int main(void) {
   load_config();
   UCSR0B = 0;
@@ -43,15 +51,50 @@ int main(void) {
     uint16_t Size;
     create_report(report, &Size, controller);
     controller_index = 0;
-    if (bit_is_set(UCSR0A, RXC0) && UDR0 == 's') {
-      in_config_mode = true;
-    }
     if (!in_config_mode) {
+      if (bit_is_set(UCSR0A, RXC0) && UDR0 == 's') { in_config_mode = true; }
       loop_until_bit_is_set(UCSR0A, UDRE0);
       UDR0 = 'm';
       while (controller_index < Size) {
         loop_until_bit_is_set(UCSR0A, UDRE0);
         UDR0 = report[controller_index++];
+      }
+    } else if (bit_is_set(UCSR0A, RXC0)) {
+      // TODO: move this crap to serial_handler, and use ifdefs to make it compatible with the micro and CDC
+      const uint8_t *buf = NULL;
+      switch (UDR0) {
+      case COMMAND_READ_INFO:
+        loop_until_bit_is_set(UCSR0A, RXC0);
+        switch (UDR0) {
+        case INFO_MAIN_MCU:
+          buf = (uint8_t *)mcu;
+          break;
+        case INFO_CPU_FREQ:
+          buf = (uint8_t *)freq;
+          break;
+        case INFO_BOARD:
+          buf = (uint8_t *)board;
+          break;
+        case INFO_VERSION:
+          buf = (uint8_t *)version;
+          break;
+        case INFO_SIGNATURE:
+          buf = (uint8_t *)signature;
+          break;
+        case INFO_WII_EXT: {
+          char str[4];
+          itoa(id, str, 16);
+          buf = (uint8_t *)str;
+        } break;
+        }
+      }
+      if (buf != NULL) {
+        while (*(buf)) {
+          loop_until_bit_is_set(UCSR0A, UDRE0);
+          UDR0 = *(buf++);
+        }
+        loop_until_bit_is_set(UCSR0A, UDRE0);
+        UDR0 = '\n';
       }
     }
   }

@@ -19,10 +19,10 @@ F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 # Compile everything that isnt related to the output stage, as that comes under usb
-SRC =  ../../shared/output/reports.c $(shell find ../../shared/input -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') $(shell find . -type f -name '*.c*') 
+SRC =  ../../shared/output/reports.c $(shell find ../../shared/input -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') $(shell find . -type f -name '*.c*') $(shell find ../../../lib/FastLED -type f -name '*.c*')
 LUFA_PATH    = ../../../lib/lufa/LUFA
-CC_FLAGS     = -Werror -flto -fuse-linker-plugin -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
-CPP_FLAGS	 = -std=c++11
+CC_FLAGS     = -Werror -flto -fuse-linker-plugin -I. -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'  -include ../../shared/arduino.h
+CPP_FLAGS	 = -std=c++11 -I. -include ../../shared/arduino.h
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin

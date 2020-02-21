@@ -1,16 +1,16 @@
 #pragma once
 #define NONE 0
 
-//Tilt detection
+// Tilt detection
 #define MPU_6050 1
 #define GRAVITY 2
 #define ANALOGUE 3
 
-//Input types
+// Input types
 #define WII 1
 #define DIRECT 2
 
-//Controller Types
+// Controller Types
 #define XINPUT_GAMEPAD_SUBTYPE 1
 #define XINPUT_WHEEL_SUBTYPE 2
 #define XINPUT_ARCADE_STICK_SUBTYPE 3
@@ -31,7 +31,7 @@
 
 #define INVALID_PIN 0xFF
 
-//Orientations for gyros
+// Orientations for gyros
 #define POSITIVE_Z 0
 #define NEGATIVE_Z 1
 #define POSITIVE_Y 2
@@ -39,6 +39,11 @@
 #define POSITIVE_X 4
 #define NEGATIVE_X 5
 
-//Firmware types
+// Firmware types
 #define GUITAR_DEVICE_TYPE 0xfea123
 #define ARDWIINO_DEVICE_TYPE 0xa2d414
+
+// Fret Modes 
+#define FRET_MODE_NEGATIVE 0
+#define FRET_MODE_POSITIVE 1
+#define FRET_MODE_FASTLED 2

@@ -1,4 +1,11 @@
 #pragma once
+#include <stdint.h>
+#include <avr/pgmspace.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define ARDUINO_MAIN
 #define NOT_A_PIN 0
 #define NOT_A_PORT 0
@@ -42,6 +49,16 @@
 #ifndef sbi
 #  define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
+// On the ATmega1280, the addresses of some of the port registers are
+// greater than 255, so we can't store them in uint8_t's.
+extern const uint16_t PROGMEM port_to_mode_PGM[];
+extern const uint16_t PROGMEM port_to_input_PGM[];
+extern const uint16_t PROGMEM port_to_output_PGM[];
+
+extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
+// extern const uint8_t PROGMEM digital_pin_to_bit_PGM[];
+extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
+extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 #define digitalPinToPort(P) (pgm_read_byte(digital_pin_to_port_PGM + (P)))
 #define digitalPinToBitMask(P)                                                 \
   (pgm_read_byte(digital_pin_to_bit_mask_PGM + (P)))
@@ -55,3 +72,20 @@
   ((volatile uint8_t *)(pgm_read_word(port_to_mode_PGM + (P))))
 
 #define NOT_AN_INTERRUPT -1
+#define clockCyclesPerMicrosecond() (F_CPU / 1000000L)
+
+#define clockCyclesToMicroseconds(a) ((a) / clockCyclesPerMicrosecond())
+
+#define microsecondsToClockCycles(a) ((a)*clockCyclesPerMicrosecond())
+
+int digitalRead(uint8_t pin);
+int analogRead(uint8_t pin);
+void pinMode(uint8_t pin, uint8_t mode);
+void enableADC(void);
+void enablePCI(uint8_t pin);
+unsigned long millis(void);
+unsigned long micros(void);
+void delay(unsigned long ms);
+#ifdef __cplusplus
+}
+#endif

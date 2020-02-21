@@ -6,6 +6,7 @@
 #include "input_guitar.h"
 #include "input_wii_ext.h"
 #include "pins/pins.h"
+#include "leds.h"
 void (*tick_function)(controller_t *);
 void input_init(void) {
   switch (config.main.input_type) {
@@ -20,6 +21,9 @@ void input_init(void) {
   enableADC();
   sei();
   guitar_init();
+  if (config.main.fret_mode == FRET_MODE_FASTLED) {
+    led_init();
+  }
 }
 
 void input_tick(controller_t *controller) {
@@ -38,4 +42,7 @@ void input_tick(controller_t *controller) {
     }
   }
   guitar_tick(controller);
+  if (config.main.fret_mode == FRET_MODE_FASTLED) {
+    led_tick(controller);
+  }
 }

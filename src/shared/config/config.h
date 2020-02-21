@@ -2,6 +2,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 typedef struct {
+  uint8_t pin;
+  bool inverted;
+} analogue_pin_t;
+typedef struct {
   uint8_t up;
   uint8_t down;
   uint8_t left;
@@ -18,21 +22,14 @@ typedef struct {
   uint8_t b;
   uint8_t x;
   uint8_t y;
-  uint8_t lt;
-  uint8_t rt;
-  uint8_t l_x;
-  uint8_t l_y;
-  uint8_t r_x;
-  uint8_t r_y;
+  analogue_pin_t lt;
+  analogue_pin_t rt;
+  analogue_pin_t l_x;
+  analogue_pin_t l_y;
+  analogue_pin_t r_x;
+  analogue_pin_t r_y;
 } pins_t;
-typedef struct {
-  bool lt;
-  bool rt;
-  bool l_x;
-  bool l_y;
-  bool r_x;
-  bool r_y;
-} axis_invert_t;
+
 typedef struct {
   uint8_t neg;
   uint8_t pos;
@@ -66,13 +63,12 @@ typedef struct {
   uint8_t sub_type;
   uint8_t tilt_type;
   uint8_t poll_rate;
-  uint8_t frets_led_mode;
+  uint8_t fret_mode;
   bool map_joy_to_dpad;
   bool map_start_select_to_home;
   bool map_accel_to_right;
 } main_config_t;
 typedef struct {
-  axis_invert_t inversions;
   uint16_t threshold_trigger;
   uint16_t threshold_joy;
   uint8_t mpu_6050_orientation;

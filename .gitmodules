@@ -1,3 +1,6 @@
 [submodule "src/shared/io/lufa/lufa"]
 	path = lib/lufa
 	url = https://github.com/abcminiuser/lufa.git
+[submodule "lib/FastLED"]
+	path = lib/FastLED
+	url = https://github.com/FastLED/FastLED

@@ -9,11 +9,9 @@
 #define TRIGGER_THRESHOLD 12767
 #define JOY_THRESHOLD 12767
 #define TILT_SENSITIVITY 3000
-#define INVERSIONS                                                             \
-  { false, false, false, false, true, false }
-// Set this if you have inverted your frets to make it easier to wire leds
-// inline
-#define FRETS_LED true
+
+#define FRET_MODE FRET_MODE_FASTLED
+
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
@@ -42,8 +40,11 @@
 #define PINS                                                                   \
   {                                                                            \
     21, 16, INVALID_PIN, INVALID_PIN, 15, 14, INVALID_PIN, INVALID_PIN, 9,     \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, 5, 6, 8, 7, INVALID_PIN,        \
-        INVALID_PIN, 19, 20, 18, MPU_6050_INTERRUPT_PIN                        \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, 5, 6, 8, 7,                     \
+        {INVALID_PIN, false}, {INVALID_PIN, false}, {19, false}, {20, false},  \
+        {18, true}, {                                                          \
+      MPU_6050_INTERRUPT_PIN, false                                            \
+    }                                                                          \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
@@ -53,12 +54,12 @@
      OUTPUT_TYPE,                                                              \
      TILT_SENSOR,                                                              \
      POLL_RATE,                                                                \
-     FRETS_LED,                                                                \
+     FRET_MODE,                                                                \
      MAP_JOY_TO_DPAD,                                                          \
      MAP_START_SELECT_TO_HOME,                                                 \
-     MAP_ACCEL_TO_R},                                                                \
+     MAP_ACCEL_TO_R},                                                          \
         PINS,                                                                  \
-        {INVERSIONS, TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,   \
+        {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \
         KEYS,                                                                  \
   }

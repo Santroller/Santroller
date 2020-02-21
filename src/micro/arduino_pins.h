@@ -23,7 +23,6 @@
 #pragma once
 
 #include <avr/pgmspace.h>
-#include "../shared/arduino.h"
 
 // Workaround for wrong definitions in "iom32u4.h".
 // This should be fixed in the AVR toolchain.

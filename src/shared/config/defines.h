@@ -46,4 +46,4 @@
 // Fret Modes 
 #define FRET_MODE_NEGATIVE 0
 #define FRET_MODE_POSITIVE 1
-#define FRET_MODE_FASTLED 2
+#define FRET_MODE_WS2812 2

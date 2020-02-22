@@ -2,7 +2,6 @@
 #include "../config/eeprom.h"
 #include "../util.h"
 #include "pins/pins.h"
-#include "../arduino.h"
 void direct_init(void) {
   int fret_type = config.main.fret_mode == FRET_MODE_POSITIVE ? INPUT : INPUT_PULLUP;
   uint8_t *pins = (uint8_t *)&config.pins;

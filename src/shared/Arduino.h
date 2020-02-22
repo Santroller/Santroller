@@ -3,9 +3,12 @@
 #include <avr/pgmspace.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <string.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define interrupts() sei()
+#define noInterrupts() cli()
 #define ARDUINO_MAIN
 #define NOT_A_PIN 0
 #define NOT_A_PORT 0

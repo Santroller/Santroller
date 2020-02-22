@@ -48,6 +48,7 @@ int main(void) {
   input_init();
   while (1) {
     input_tick(&controller);
+    controller.buttons += 1;
     uint16_t Size;
     create_report(report, &Size, controller);
     controller_index = 0;

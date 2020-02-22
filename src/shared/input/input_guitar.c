@@ -5,7 +5,6 @@
 #include <util/delay.h>
 #include <stdbool.h>
 #include "../util.h"
-#include "../arduino.h"
 volatile bool ready = false;
 bool isXboxGuitar(void) {
   return config.main.sub_type == XINPUT_GUITAR_SUBTYPE ||

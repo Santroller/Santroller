@@ -21,7 +21,7 @@ void input_init(void) {
   enableADC();
   sei();
   guitar_init();
-  if (config.main.fret_mode == FRET_MODE_FASTLED) {
+  if (config.main.fret_mode == FRET_MODE_WS2812) {
     led_init();
   }
 }
@@ -42,7 +42,7 @@ void input_tick(controller_t *controller) {
     }
   }
   guitar_tick(controller);
-  if (config.main.fret_mode == FRET_MODE_FASTLED) {
+  if (config.main.fret_mode == FRET_MODE_WS2812) {
     led_tick(controller);
   }
 }

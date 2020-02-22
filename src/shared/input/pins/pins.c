@@ -1,4 +1,3 @@
-#include "../../arduino.h"
 #include "arduino_pins.h"
 #include "pins.h"
 void enablePCI(uint8_t pin) {
@@ -116,23 +115,8 @@ void pinMode(uint8_t pin, uint8_t mode) {
 // the overflow handler is called every 256 ticks.
 #define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
 
-typedef union { unsigned long _long; uint8_t raw[4]; } tBytesForLong;
-// tBytesForLong FastLED_timer0_overflow_count;
 volatile unsigned long FastLED_timer0_overflow_count=0;
 volatile unsigned long timer0_millis = 0;
-
-// LIB8STATIC void  __attribute__((always_inline)) fastinc32 (volatile uint32_t _long) {
-//   uint8_t b = ++((tBytesForLong&)_long).raw[0];
-//   if(!b) {
-//     b = ++((tBytesForLong&)_long).raw[1];
-//     if(!b) {
-//       b = ++((tBytesForLong&)_long).raw[2];
-//       if(!b) {
-//         ++((tBytesForLong&)_long).raw[3];
-//       }
-//     }
-//   }
-// }
 
 #if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
 ISR(TIM0_OVF_vect)

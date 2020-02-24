@@ -1,14 +1,12 @@
 /*
              LUFA Library
      Copyright (C) Dean Camera, 2010.
-
   dean [at] fourwalledcubicle [dot] com
       www.fourwalledcubicle.com
 */
 
 /*
   Copyright 2010  Dean Camera (dean [at] fourwalledcubicle [dot] com)
-
   Permission to use, copy, modify, distribute, and sell this
   software and its documentation for any purpose is hereby granted
   without fee, provided that the above copyright notice appear in
@@ -17,7 +15,6 @@
   documentation, and that the name of the author not be used in
   advertising or publicity pertaining to distribution of the
   software without specific, written prior permission.
-
   The author disclaim all warranties with regard to this
   software, including all implied warranties of merchantability
   and fitness.  In no event shall the author be liable for any
@@ -36,6 +33,7 @@
  */
 
 #include "main.h"
+#include "../../shared/output/bootloader/bootloader.h"
 #include "../../shared/output/usb/API.h"
 
 /** Circular buffer to hold data from the host before it is sent to the device
@@ -67,27 +65,15 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
 #define STATE_ARDWIINO 0
 #define STATE_CONFIG 1
 #define STATE_AVRDUDE 2
-eeprom_config_t EEMEM config_mem = {.polling_rate = POLL_RATE,
-                                    .device_type = DEVICE_TYPE,
-                                    .id = ARDWIINO_DEVICE_TYPE};
+eeprom_config_t EEMEM config_mem;
 
-eeprom_config_t config = {.id = ARDWIINO_DEVICE_TYPE};
+eeprom_config_t config;
 bool entered_prog = false;
 int state = STATE_ARDWIINO;
 int lastCommand = 0;
 int lastAddr = 0;
-static void jump_atmel_bootloader(void) {
-  USB_Disable();
-  // disable interrupts
-  cli();
-
-  // Relocate the interrupt vector table to the bootloader section
-  MCUCR = (1 << IVCE);
-  MCUCR = (1 << IVSEL);
-
-  // Jump to the bootloader section
-  asm volatile("jmp 0x1000");
-}
+// 0x289 is the final address we have set aside for our own use
+bool *jmpToBootloader = (bool *)0x289;
 
 const char *mcu = MCU;
 const char *freq = STR(F_CPU);
@@ -95,11 +81,22 @@ const char *freq = STR(F_CPU);
  * including initial setup of all components and the main program loop.
  */
 int main(void) {
+  // jmpToBootloader is only valid after a watchdog reset.
+  if (!bit_is_set(MCUSR, WDRF)) { *jmpToBootloader = false; }
+  if (*jmpToBootloader) {
+     *jmpToBootloader = false;
+    // Bootloader is at address 0x1000
+    asm volatile("jmp 0x1000");
+  }
   SetupHardware();
   eeprom_read_block(&config, &config_mem, sizeof(eeprom_config_t));
   if (config.id == ARDWIINO_DEVICE_TYPE) {
     polling_rate = config.polling_rate;
     device_type = config.device_type;
+  } else {
+    config.id = ARDWIINO_DEVICE_TYPE;
+    config.polling_rate = polling_rate;
+    config.device_type = device_type;
   }
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
   RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x180);
@@ -150,26 +147,29 @@ int main(void) {
                   RingBuffer_Insert(&USARTtoUSB_Buffer, '\n');
                 }
                 lastCommand = 0;
+              } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
+                lastCommand = b;
+              } else if (lastCommand == CONFIG_SUB_TYPE) {
+                // How strange, this value appears to be offset. For example 25
+                // seems to make switch controllers work, instead of 21?
+                config.device_type = b;
+                lastCommand = 0;
+              } else if (lastCommand == CONFIG_POLL_RATE) {
+                config.polling_rate = b;
+                lastCommand = 0;
               } else if (lastCommand == 0) {
                 if (b == COMMAND_APPLY_CONFIG) {
-                  USB_ResetInterface();
-                  config.id = ARDWIINO_DEVICE_TYPE;
-                  config.polling_rate = polling_rate;
-                  config.device_type = device_type;
                   eeprom_update_block(&config, &config_mem,
                                       sizeof(eeprom_config_t));
-                  state = STATE_ARDWIINO;
+                  *jmpToBootloader = false;
+                  reboot();
+                } else if (b == COMMAND_JUMP_BOOTLOADER) {
+                  state = STATE_AVRDUDE;
                 }
-                if (b == COMMAND_JUMP_BOOTLOADER) state = STATE_AVRDUDE;
-                if (b == COMMAND_WRITE_CONFIG_VALUE) {
-                  b = Endpoint_Read_8();
-                  if (b == CONFIG_SUB_TYPE) {
-                    device_type = Endpoint_Read_8();
-                  } else if (b == CONFIG_POLL_RATE) {
-                    polling_rate = Endpoint_Read_8();
-                  }
-                }
+                if (b == COMMAND_WRITE_CONFIG_VALUE) { lastCommand = b; }
                 if (b == COMMAND_READ_INFO) { lastCommand = b; }
+              } else {
+                lastCommand = 0;
               }
             } else if (state == STATE_ARDWIINO) {
               switch (b) {
@@ -180,7 +180,8 @@ int main(void) {
                 state = STATE_AVRDUDE;
                 break;
               case COMMAND_JUMP_BOOTLOADER_UNO:
-                jump_atmel_bootloader();
+                *jmpToBootloader = true;
+                reboot();
                 break;
               }
             } else {
@@ -380,7 +381,7 @@ void EVENT_USB_Device_ControlRequest(void) {
       // The next dtr after programming will reset the device.
       if (entered_prog) {
         entered_prog = false;
-        state = STATE_CONFIG;
+        state = STATE_ARDWIINO;
       }
     }
   }

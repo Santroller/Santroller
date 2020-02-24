@@ -3,8 +3,8 @@
 #include "../../../shared/output/reports.h"
 #include "../../../shared/output/usb/wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
-uint8_t device_type = DEVICE_TYPE;
-uint8_t polling_rate = 1;
+uint8_t device_type = OUTPUT_TYPE;
+uint8_t polling_rate = POLL_RATE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the
@@ -338,11 +338,13 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 
   const void *Address = NULL;
   uint8_t *buf = (uint8_t *)0x200;
+  *DescriptorAddress = buf;
   // We set aside 0x200 as an area to work with descriptors.
   switch (DescriptorType) {
   case DTYPE_Device:
     Address = &DeviceDescriptor;
-    Size = sizeof(DeviceDescriptor);
+    Size = DeviceDescriptor.Header.Size;
+    memcpy_P(buf, Address, Size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)buf;
     if (device_type == SWITCH_GAMEPAD_SUBTYPE) {
       dev->VendorID = 0x0F0D;
@@ -359,10 +361,11 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         dev->ProductID = 0x0210;
       }
     }
-    break;
+    return Size;
   case DTYPE_Configuration:
     Address = &ConfigurationDescriptor;
-    Size = sizeof(ConfigurationDescriptor);
+    Size = ConfigurationDescriptor.Config.TotalConfigurationSize;
+    memcpy_P(buf, Address, Size);
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)buf;
     conf->Controller.XInput.Endpoints.DataInEndpoint0.PollingIntervalMS =
@@ -391,7 +394,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       conf->Interface0.SubClass = HID_CSCP_NonBootSubclass;
       conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
     }
-    break;
+    return Size;
   case HID_DTYPE_Report:
     if (device_type == KEYBOARD_SUBTYPE) {
       Address = keyboard_report_descriptor;
@@ -428,8 +431,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   }
   if (Size != NO_DESCRIPTOR) {
     memcpy_P(buf, Address, Size);
-    Address = buf;
-  }
-  *DescriptorAddress = Address;
+  } 
   return Size;
 }

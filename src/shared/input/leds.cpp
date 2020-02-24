@@ -5,13 +5,10 @@ extern "C" {
     #include "../util.h"
 #include "input_handler.h"
 #include "../config/eeprom.h"
-// CRGB leds[NUM_LEDS];
 uint8_t pixels[2*NUM_LEDS];
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(NUM_LEDS, 2, NEO_GRB + NEO_KHZ800, pixels);
 void led_init(void) {
     pinMode(2, OUTPUT);
-    // // We might have to do some ugly code to handle configurable pins, as the pin needs to be a constant.
-    // FastLED.addLeds<NEOPIXEL, 2>(leds, NUM_LEDS);
 }
 void led_tick(controller_t *controller) {
     leds.setPixelColor(0, bit_check(controller->buttons, XBOX_A) ? Colors::Green : Colors::Black);

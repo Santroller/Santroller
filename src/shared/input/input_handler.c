@@ -7,6 +7,7 @@
 #include "input_wii_ext.h"
 #include "pins/pins.h"
 #include "leds.h"
+// #include <stdlib.h>
 void (*tick_function)(controller_t *);
 void input_init(void) {
   switch (config.main.input_type) {
@@ -29,6 +30,7 @@ void input_init(void) {
 void input_tick(controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);
+  // controller->l_x=rand();
   if (config.main.map_joy_to_dpad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);

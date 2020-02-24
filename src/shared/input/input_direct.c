@@ -11,7 +11,6 @@ void direct_init(void) {
       pinMode(pins[i], fret_type_2);
     }
   }
-
   DEFINE_JOY(l_x);
   DEFINE_JOY(l_y);
   DEFINE_JOY(r_x);
@@ -28,6 +27,7 @@ void direct_tick(controller_t *controller) {
       bit_write(digitalRead(pins[i]) == eq, controller->buttons, i);
     }
   }
+  // Why does this ADC stuff add so much of a delay?
   READ_JOY(l_x);
   READ_JOY(l_y);
   READ_JOY(r_x);

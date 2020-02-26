@@ -12,18 +12,23 @@
 MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
-ARDWIINO_BOARD = micro
-MOSI = PB2
-MOSI_DDR = DDRB
-MOSI_PORT = PORTB
-SS = PB0
-SS_DDR = DDRB
-SS_PORT = PORTB
-SCK = PB1
-SCK_DDR = DDRB
+OPTIMIZATION = s
 F_CPU 		 = 8000000
 F_USB		 = ${F_CPU}
-OPTIMIZATION = s
+
+ARDWIINO_BOARD = micro
+VERSION = $(shell git describe --abbrev=0 --tags)
+SIGNATURE = ardwiino
+
+MOSI         = PB2
+MOSI_DDR     = DDRB
+MOSI_PORT    = PORTB
+SS           = PB0
+SS_DDR       = DDRB
+SS_PORT      = PORTB
+SCK          = PB1
+SCK_DDR      = DDRB
+
 SRC = $(shell find ../shared -type f -name '*.c*') main.c  $(shell find ../../lib/Adafruit_NeoPixel_Static -type f -name '*.c*') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb -I ../shared -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin  -include ../shared/Arduino.h
@@ -36,6 +41,7 @@ LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -DARDUINO=1000 -D
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-${MCU}-${F_CPU}
+
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -P /dev/ttyACM0 reset
 # ----- No changes should be necessary below this line -----

@@ -12,21 +12,24 @@
 MCU          = atmega16u2
 ARCH         = AVR8
 BOARD        = USER
+OPTIMIZATION = s
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
+
 ARDWIINO_BOARD = uno
 VERSION = $(shell git describe --abbrev=0 --tags)
 SIGNATURE = ardwiino
-OPTIMIZATION = s
+
 SRC          = main.c ../../shared/output/usb/Descriptors.c ../../shared/output/control_requests.c ../../shared/output/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
-CC_FLAGS     += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
+CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
 LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
+
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 
@@ -41,6 +44,7 @@ RAM_OFFSET            = 0x800290
 # r2-5 used for faster USART ISRs
 # r6 used for 32u4 optimization
 REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
+
 $(info $(shell mkdir -p $(BIN)))
 # dfu-programmer detects the 8u2 as a at90usb82 instead of a 8u2.
 ifeq ($(MCU),atmega8u2)

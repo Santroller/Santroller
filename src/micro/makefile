@@ -13,12 +13,24 @@ MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
 ARDWIINO_BOARD = micro
+MOSI = PB2
+MOSI_DDR = DDRB
+MOSI_PORT = PORTB
+SS = PB0
+SS_DDR = DDRB
+SS_PORT = PORTB
+SCK = PB1
+SCK_DDR = DDRB
 F_CPU 		 = 8000000
 F_USB		 = ${F_CPU}
 OPTIMIZATION = s
 SRC = $(shell find ../shared -type f -name '*.c*') main.c  $(shell find ../../lib/Adafruit_NeoPixel_Static -type f -name '*.c*') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb -I ../shared -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' $(REGS)  -DARDUINO=1000  -flto -fuse-linker-plugin  -include ../shared/Arduino.h
+CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"'
+CC_FLAGS	 += -DMOSI=$(MOSI) -DMOSI_DDR=$(MOSI_DDR) -DMOSI_PORT=$(MOSI_PORT)
+CC_FLAGS += -DSS=$(SS) -DSS_DDR=$(SS_DDR) -DSS_PORT=$(SS_PORT)
+CC_FLAGS += -DSCK=$(SCK) -DSCK_DDR=$(SCK_DDR)
 LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin  -include ../shared/Arduino.h
 OBJDIR		 = obj
 BIN		 	 = bin

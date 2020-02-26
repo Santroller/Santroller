@@ -59,10 +59,17 @@ int main(void) {
   sei();
   while (true) {
     input_tick(&controller);
-    process_serial(&VirtualSerial_CDC_Interface);
+    process_serial();
     HID_Device_USBTask(&interface);
     USB_USBTask();
   }
+}
+uint8_t read_usb(void) {
+  return CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+}
+
+void write_usb(uint8_t data) {
+  CDC_Device_SendByte(&VirtualSerial_CDC_Interface, data);
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   HID_Device_ConfigureEndpoints(&interface);

@@ -4,3 +4,6 @@
 [submodule "lib/Adafruit_NeoPixel_Static"]
 	path = lib/Adafruit_NeoPixel_Static
 	url = https://github.com/SpenceKonde/Adafruit_NeoPixel_Static
+[submodule "lib/AVR-APA102-library"]
+	path = lib/AVR-APA102-library
+	url = https://github.com/Rave-Saber/AVR-APA102-library

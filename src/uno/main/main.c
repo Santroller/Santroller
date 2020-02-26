@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include "../../shared/output/serial_handler.h"
 
 /** Macro for calculating the baud value from a given baud rate when the \c U2X
  * (double speed) bit is set.
@@ -24,13 +25,15 @@ controller_t controller;
 uint8_t report[sizeof(output_report_size_t)];
 bool done = false;
 bool in_config_mode = false;
-const char *mcu = MCU;
-const char *board = ARDWIINO_BOARD;
-const char *version = VERSION;
-const char *signature = SIGNATURE;
-const char *freq = STR(F_CPU);
+uint8_t read_usb(void) {
+  loop_until_bit_is_set(UCSR0A, RXC0);
+  return UDR0;
+}
 
-extern uint16_t id;
+void write_usb(uint8_t data) {
+  loop_until_bit_is_set(UCSR0A, UDRE0);
+  UDR0 = data;
+}
 int main(void) {
   load_config();
   UCSR0B = 0;
@@ -61,42 +64,7 @@ int main(void) {
         UDR0 = report[controller_index++];
       }
     } else if (bit_is_set(UCSR0A, RXC0)) {
-      // TODO: move this crap to serial_handler, and use ifdefs to make it compatible with the micro and CDC
-      const uint8_t *buf = NULL;
-      switch (UDR0) {
-      case COMMAND_READ_INFO:
-        loop_until_bit_is_set(UCSR0A, RXC0);
-        switch (UDR0) {
-        case INFO_MAIN_MCU:
-          buf = (uint8_t *)mcu;
-          break;
-        case INFO_CPU_FREQ:
-          buf = (uint8_t *)freq;
-          break;
-        case INFO_BOARD:
-          buf = (uint8_t *)board;
-          break;
-        case INFO_VERSION:
-          buf = (uint8_t *)version;
-          break;
-        case INFO_SIGNATURE:
-          buf = (uint8_t *)signature;
-          break;
-        case INFO_WII_EXT: {
-          char str[4];
-          itoa(id, str, 16);
-          buf = (uint8_t *)str;
-        } break;
-        }
-      }
-      if (buf != NULL) {
-        while (*(buf)) {
-          loop_until_bit_is_set(UCSR0A, UDRE0);
-          UDR0 = *(buf++);
-        }
-        loop_until_bit_is_set(UCSR0A, UDRE0);
-        UDR0 = '\n';
-      }
+      process_serial();
     }
   }
 }

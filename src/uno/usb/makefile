@@ -38,7 +38,7 @@ RAM_OFFSET            = 0x800290
 # r6 used for 32u4 optimization
 REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
 $(info $(shell mkdir -p $(BIN)))
-
+# dfu-programmer detects the 8u2 as a at90usb82 instead of a 8u2.
 ifeq ($(MCU),atmega8u2)
 MCU_DFU=at90usb82
 else

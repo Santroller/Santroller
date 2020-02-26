@@ -112,10 +112,10 @@ static const uint8_t SCL = PIN_WIRE_SCL;
 #define PIN_SPI_MISO  (14)
 #define PIN_SPI_SCK   (15)
 
-static const uint8_t SS   = PIN_SPI_SS;
-static const uint8_t MOSI = PIN_SPI_MOSI;
-static const uint8_t MISO = PIN_SPI_MISO;
-static const uint8_t SCK  = PIN_SPI_SCK;
+// static const uint8_t SS   = PIN_SPI_SS;
+// static const uint8_t MOSI = PIN_SPI_MOSI;
+// static const uint8_t MISO = PIN_SPI_MISO;
+// static const uint8_t SCK  = PIN_SPI_SCK;
 
 // Mapping of analog pins as digital I/O
 // A6-A11 share with digital pins

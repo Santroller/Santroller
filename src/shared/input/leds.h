@@ -8,7 +8,6 @@ extern "C" {
 void led_init(void);
 void led_tick(controller_t *controller);
 
-
 typedef enum {
   AliceBlue = 0xF0F8FF,
   Amethyst = 0x9966CC,

@@ -63,7 +63,8 @@
         "arduino_pins.h": "c",
         "arduino.h": "c",
         "input_handler.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "serial_handler.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

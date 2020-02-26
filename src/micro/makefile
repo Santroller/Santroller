@@ -26,7 +26,8 @@ F_USB		 = ${F_CPU}
 OPTIMIZATION = s
 SRC = $(shell find ../shared -type f -name '*.c*') main.c  $(shell find ../../lib/Adafruit_NeoPixel_Static -type f -name '*.c*') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb -I ../shared -Werror -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' $(REGS)  -DARDUINO=1000  -flto -fuse-linker-plugin  -include ../shared/Arduino.h
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb -I ../shared -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin  -include ../shared/Arduino.h
+CC_FLAGS     += -DUSB_MCU='"${MCU}"' -DF_CPU_USB='"${F_CPU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 
 CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"'
 CC_FLAGS	 += -DMOSI=$(MOSI) -DMOSI_DDR=$(MOSI_DDR) -DMOSI_PORT=$(MOSI_PORT)
 CC_FLAGS += -DSS=$(SS) -DSS_DDR=$(SS_DDR) -DSS_PORT=$(SS_PORT)

@@ -2,11 +2,7 @@
 #include "usb/API.h"
 #include <stdlib.h>
 
-const char *mcu = MCU;
-const char *board = ARDWIINO_BOARD;
-const char *version = VERSION;
-const char *signature = SIGNATURE;
-const char *freq = STR(F_CPU);
+
 extern uint16_t id;
 void process_serial(void) {
   const uint8_t *buf = NULL;

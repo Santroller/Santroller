@@ -36,6 +36,13 @@
 #include "../../shared/output/bootloader/bootloader.h"
 #include "../../shared/output/usb/API.h"
 
+const char *mcu = "";
+const char *freq = "";
+const char *board = ARDWIINO_BOARD;
+const char *version = VERSION;
+const char *signature = SIGNATURE;
+const char *usb_mcu = MCU;
+const char *usb_freq = STR(F_CPU);
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
 RingBuff_t USBtoUSART_Buffer;
@@ -75,8 +82,6 @@ int lastAddr = 0;
 // 0x289 is the final address we have set aside for our own use
 bool *jmpToBootloader = (bool *)0x289;
 
-const char *mcu = MCU;
-const char *freq = STR(F_CPU);
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
@@ -134,10 +139,10 @@ int main(void) {
                 const char *c = NULL;
                 switch (b) {
                 case INFO_USB_MCU:
-                  c = mcu;
+                  c = usb_mcu;
                   break;
                 case INFO_USB_CPU_FREQ:
-                  c = freq;
+                  c = usb_freq;
                   break;
                 }
                 if (c != NULL) {

@@ -30,7 +30,7 @@ const USB_Descriptor_String_t PROGMEM ProductString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
 
 const USB_Descriptor_String_t PROGMEM VersionString =
-    USB_STRING_DESCRIPTOR(L"1.2");
+    USB_STRING_DESCRIPTOR(L"" VERSION);
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate

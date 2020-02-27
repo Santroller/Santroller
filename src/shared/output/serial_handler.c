@@ -2,7 +2,6 @@
 #include "usb/API.h"
 #include <stdlib.h>
 
-
 extern uint16_t id;
 void process_serial(void) {
   const uint8_t *buf = NULL;
@@ -14,6 +13,12 @@ void process_serial(void) {
       break;
     case INFO_CPU_FREQ:
       buf = (uint8_t *)freq;
+      break;
+    case INFO_USB_MCU:
+      buf = (uint8_t *)usb_mcu;
+      break;
+    case INFO_USB_CPU_FREQ:
+      buf = (uint8_t *)usb_freq;
       break;
     case INFO_BOARD:
       buf = (uint8_t *)board;
@@ -32,9 +37,7 @@ void process_serial(void) {
     }
   }
   if (buf != NULL) {
-    while (*(buf)) {
-      write_usb(*(buf++));
-    }
+    while (*(buf)) { write_usb(*(buf++)); }
     write_usb('\n');
   }
 }

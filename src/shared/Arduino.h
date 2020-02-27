@@ -85,6 +85,8 @@ extern const char *board;
 extern const char *version;
 extern const char *signature;
 extern const char *freq;
+extern const char *usb_mcu;
+extern const char *usb_freq;
 uint8_t read_usb(void);
 void write_usb(uint8_t data);
 int digitalRead(uint8_t pin);

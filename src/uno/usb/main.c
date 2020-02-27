@@ -155,8 +155,6 @@ int main(void) {
               } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
                 lastCommand = b;
               } else if (lastCommand == CONFIG_SUB_TYPE) {
-                // TODO: How strange, this value appears to be offset. For example 25
-                // seems to make switch controllers work, instead of 21?
                 config.device_type = b;
                 lastCommand = 0;
               } else if (lastCommand == CONFIG_POLL_RATE) {

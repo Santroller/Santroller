@@ -28,9 +28,7 @@ void read_buttons(controller_t *controller, uint16_t buttons) {
 
 uint16_t read_ext_id(void) {
   uint8_t data[6];
-  if (twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data)) {
-    return NO_DEVICE;
-  }
+  if (twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data)) { return NO_DEVICE; }
   // 0100 a420 0101 -> #1#######101
   // 0100 a420 0103 -> #1#######101
   return (data[0] & 0xf) << 12 | (data[4] & 0xf) << 8 | data[5];
@@ -169,9 +167,57 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 }
 void wii_ext_tick(controller_t *controller) {
   uint8_t data[8];
-  if (twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) || !verifyData(data, sizeof(data))) {
+  if (twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
+      !verifyData(data, sizeof(data))) {
     init_controller();
     return;
   }
   readFunction(controller, data);
+}
+
+void get_wii_device_name(char *str) {
+  switch (id) {
+  case NUNCHUK:
+    str = "Nunchuk";
+    break;
+  case CLASSIC:
+    str = "Classic Controller";
+    break;
+  case CLASSIC_PRO:
+    str = "Classic Controller Pro";
+    break;
+  case UDRAW:
+    str = "THQ uDraw Tablet";
+    break;
+  case DRAWSOME:
+    str = "Ubisoft Drawsome Tablet";
+    break;
+  case GUITAR:
+    str = "Guitar Hero Guitar Controller";
+    break;
+  case DRUMS:
+    str = "Guitar Hero Drum Controller";
+    break;
+  case TURNTABLE:
+    str = "DJ Hero Turntable";
+    break;
+  case TATACON:
+    str = "Taiko no Tatsujin controller";
+    break;
+  case MOTION_PLUS:
+    str = "Motion Plus (No Passthrough)";
+    break;
+  case MOTION_PLUS_NUNCHUK:
+    str = "Motion Plus (Nunchuk Mode Passthrough Mode)";
+    break;
+  case MOTION_PLUS_CLASSIC:
+    str = "Motion Plus (Classic Controller Passthrough Mode)";
+    break;
+  case NO_DEVICE:
+    str = "No Device";
+    break;
+  default:
+    str = "Unknown Device";
+    break;
+  }
 }

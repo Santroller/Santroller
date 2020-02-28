@@ -16,3 +16,4 @@
 #define NO_DEVICE           0xFFFF
 void wii_ext_init(void);
 void wii_ext_tick(controller_t* controller);
+void get_wii_device_name(char* buf);

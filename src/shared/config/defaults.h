@@ -2,7 +2,7 @@
 #include "./defines.h"
 #define PROTOCOL_VERSION 0
 #define TILT_SENSOR NONE
-#define DEVICE_TYPE DIRECT
+#define DEVICE_TYPE WII
 #define OUTPUT_TYPE XINPUT_GUITAR_ALTERNATE_SUBTYPE
 #define POLL_RATE 1
 // Thresholds

@@ -1,4 +1,5 @@
 #include "serial_handler.h"
+#include "../input/input_wii_ext.h"
 #include "usb/API.h"
 #include <stdlib.h>
 
@@ -30,9 +31,9 @@ void process_serial(void) {
       buf = (uint8_t *)signature;
       break;
     case INFO_WII_EXT: {
-      char str[4];
-      itoa(id, str, 16);
-      buf = (uint8_t *)str;
+      uint8_t str[50];
+      get_wii_device_name((char*)str);
+      buf = str;
     } break;
     }
   }

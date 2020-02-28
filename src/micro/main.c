@@ -61,6 +61,7 @@ int main(void) {
   while (true) {
     input_tick(&controller);
     process_serial();
+    CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     HID_Device_USBTask(&interface);
     USB_USBTask();
   }

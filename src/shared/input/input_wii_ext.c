@@ -208,7 +208,7 @@ void get_wii_device_name(char *str) {
     str = "Motion Plus (No Passthrough)";
     break;
   case MOTION_PLUS_NUNCHUK:
-    str = "Motion Plus (Nunchuk Mode Passthrough Mode)";
+    str = "Motion Plus (Nunchuk Passthrough Mode)";
     break;
   case MOTION_PLUS_CLASSIC:
     str = "Motion Plus (Classic Controller Passthrough Mode)";

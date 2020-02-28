@@ -44,6 +44,16 @@ void input_tick(controller_t *controller) {
     }
   }
   guitar_tick(controller);
+  if (config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+    // Swap A and B for switch controllers
+    bool B = bit_is_set(controller->buttons, XBOX_A);
+    bool A = bit_is_set(controller->buttons, XBOX_B);
+    bit_write(A, controller->buttons, XBOX_A);
+    bit_write(B, controller->buttons, XBOX_B);
+    // Y axis is inverted on switch controllers
+    controller->l_y = -controller->l_y;
+    controller->r_y = -controller->r_y;
+  }
   if (config.main.fret_mode == FRET_MODE_WS2812) {
     led_tick(controller);
   }

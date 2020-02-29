@@ -1,5 +1,4 @@
 #pragma once
-#include "../../util.h"
 #define COMMAND_START_CONFIG 's'
 #define COMMAND_APPLY_CONFIG 'a'
 #define COMMAND_WRITE_CONFIG_VALUE 'w'

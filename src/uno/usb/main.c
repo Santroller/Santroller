@@ -35,6 +35,7 @@
 #include "main.h"
 #include "../../shared/output/bootloader/bootloader.h"
 #include "../../shared/output/usb/API.h"
+#include "../../shared/util.h"
 
 const char *mcu = "";
 const char *freq = "";
@@ -89,7 +90,7 @@ int main(void) {
   // jmpToBootloader is only valid after a watchdog reset.
   if (!bit_is_set(MCUSR, WDRF)) { *jmpToBootloader = false; }
   if (*jmpToBootloader) {
-     *jmpToBootloader = false;
+    *jmpToBootloader = false;
     // Bootloader is at address 0x1000
     asm volatile("jmp 0x1000");
   }
@@ -168,6 +169,11 @@ int main(void) {
                   reboot();
                 } else if (b == COMMAND_JUMP_BOOTLOADER) {
                   state = STATE_AVRDUDE;
+                }
+                if (b == COMMAND_ABORT_CONFIG) {
+                  state = STATE_ARDWIINO;
+                  config.device_type = device_type;
+                  config.polling_rate = polling_rate;
                 }
                 if (b == COMMAND_WRITE_CONFIG_VALUE) { lastCommand = b; }
                 if (b == COMMAND_READ_INFO) { lastCommand = b; }

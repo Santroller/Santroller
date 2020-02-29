@@ -13,6 +13,10 @@ void process_serial(void) {
   switch (cmd) {
   case COMMAND_START_CONFIG:
     new_config = config;
+    write_usb('\n');
+    break;
+  case COMMAND_ABORT_CONFIG:
+    write_usb('\n');
     break;
   case COMMAND_APPLY_CONFIG:
     config = new_config;
@@ -243,7 +247,7 @@ void process_serial(void) {
       break;
     }
   }
-  if (buf != NULL) {
+  if (size != 0) {
     if (cmd == COMMAND_WRITE_CONFIG_VALUE) {
       while (size--) { *(buf++) = read_usb(); }
     } else {

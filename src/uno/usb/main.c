@@ -71,8 +71,11 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
 #define STATE_ARDWIINO 0
-#define STATE_CONFIG 1
 #define STATE_AVRDUDE 2
+#define FRAME_START_1 0x7c
+#define FRAME_START_2 0x7e
+#define FRAME_END 0x7f
+#define ESC 0x7b
 eeprom_config_t EEMEM config_mem;
 
 eeprom_config_t config;
@@ -80,9 +83,9 @@ bool entered_prog = false;
 int state = STATE_ARDWIINO;
 int lastCommand = 0;
 int lastAddr = 0;
+uint8_t frame = 0;
 // 0x289 is the final address we have set aside for our own use
 bool *jmpToBootloader = (bool *)0x289;
-
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
@@ -135,7 +138,7 @@ int main(void) {
           if (Endpoint_BytesInEndpoint()) {
             uint8_t b = Endpoint_Read_8();
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
-            if (state == STATE_CONFIG) {
+            if (state == STATE_ARDWIINO) {
               if (lastCommand == COMMAND_READ_INFO) {
                 const char *c = NULL;
                 switch (b) {
@@ -168,29 +171,14 @@ int main(void) {
                   reboot();
                 } else if (b == COMMAND_JUMP_BOOTLOADER) {
                   state = STATE_AVRDUDE;
-                }
-                if (b == COMMAND_ABORT_CONFIG) {
-                  state = STATE_ARDWIINO;
-                  config.device_type = device_type;
-                  config.polling_rate = polling_rate;
+                } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
+                  *jmpToBootloader = true;
+                  reboot();
                 }
                 if (b == COMMAND_WRITE_CONFIG_VALUE) { lastCommand = b; }
                 if (b == COMMAND_READ_INFO) { lastCommand = b; }
               } else {
                 lastCommand = 0;
-              }
-            } else if (state == STATE_ARDWIINO) {
-              switch (b) {
-              case COMMAND_START_CONFIG:
-                state = STATE_CONFIG;
-                break;
-              case COMMAND_JUMP_BOOTLOADER:
-                state = STATE_AVRDUDE;
-                break;
-              case COMMAND_JUMP_BOOTLOADER_UNO:
-                *jmpToBootloader = true;
-                reboot();
-                break;
               }
             } else {
               if (b == COMMAND_STK_500_ENTER_PROG && !entered_prog) {
@@ -202,29 +190,22 @@ int main(void) {
           if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
         }
       }
-      if (state == STATE_ARDWIINO) {
-        uint8_t ReportSize;
-        if (device_type <= XINPUT_ARCADE_PAD_SUBTYPE) {
-          ReportSize = sizeof(USB_XInputReport_Data_t);
-        } else if (device_type == KEYBOARD_SUBTYPE) {
-          ReportSize = sizeof(USB_KeyboardReport_Data_t);
-        } else {
-          ReportSize = sizeof(USB_PS3Report_Data_t);
+      uint8_t b;
+      if (frame == FRAME_START_1) {
+        RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        bool ready = Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady();
+        while (BufferCount--) {
+          b = RingBuffer_Remove(&USARTtoUSB_Buffer);
+          if (b == FRAME_START_2) {
+            frame = b;
+            break;
+          };
+          if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
+          if (ready) Endpoint_Write_8(b);
         }
-        if (USARTtoUSB_Buffer.Count > ReportSize + 1 &&
-            RingBuffer_Remove(&USARTtoUSB_Buffer) == 'm') {
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          if (Endpoint_IsReadWriteAllowed()) {
-            if (Endpoint_IsINReady()) {
-              while (ReportSize--) {
-                Endpoint_Write_8(RingBuffer_Remove(&USARTtoUSB_Buffer));
-              }
-              Endpoint_ClearIN();
-            }
-          }
-        }
-      } else {
-
+        if (ready) Endpoint_ClearIN();
+      } else if (state == STATE_AVRDUDE || frame == FRAME_START_2) {
         /* Check if the UART receive buffer flush timer has expired or the
         buffer
          * is nearly full */
@@ -243,8 +224,17 @@ int main(void) {
             /* Read bytes from the USART receive buffer into the USB IN
             endpoint
              */
-            while (BufferCount--)
-              Endpoint_Write_8(RingBuffer_Remove(&USARTtoUSB_Buffer));
+            while (BufferCount--) {
+              b = RingBuffer_Remove(&USARTtoUSB_Buffer);
+              if (state != STATE_AVRDUDE) {
+                if (b == FRAME_END) {
+                  frame = 0;
+                  break;
+                };
+                if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
+              }
+              Endpoint_Write_8(b);
+            }
             Endpoint_ClearIN();
           }
           /* Turn off TX LED(s) once the TX pulse period has elapsed */
@@ -255,6 +245,11 @@ int main(void) {
           if (PulseMSRemaining.RxLEDPulse && !(--PulseMSRemaining.RxLEDPulse))
             LEDs_TurnOffLEDs(LEDMASK_RX);
         }
+      } else if (state != STATE_AVRDUDE && RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
+        RingBuffer_Remove(&USARTtoUSB_Buffer);
+        frame = FRAME_START_1;
+      } else {
+        RingBuffer_Remove(&USARTtoUSB_Buffer);
       }
 
       /* Load the next byte from the USART transmit buffer into the USART */

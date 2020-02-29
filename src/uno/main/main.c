@@ -1,6 +1,7 @@
 #include "../../shared/config/eeprom.h"
 #include "../../shared/input/input_handler.h"
 #include "../../shared/output/reports.h"
+#include "../../shared/output/serial_handler.h"
 #include "../../shared/output/usb/API.h"
 #include "../../shared/util.h"
 #include <avr/interrupt.h>
@@ -10,8 +11,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
-#include "../../shared/output/serial_handler.h"
-
+#define FRAME_START_1 0x7c
+#define FRAME_START_2 0x7e
+#define FRAME_END 0x7f
+#define ESC 0x7b
 /** Macro for calculating the baud value from a given baud rate when the \c U2X
  * (double speed) bit is set.
  *
@@ -23,19 +26,23 @@
 size_t controller_index = 0;
 controller_t controller;
 uint8_t report[sizeof(output_report_size_t)];
-bool done = false;
-bool in_config_mode = false;
 uint8_t read_usb(void) {
   loop_until_bit_is_set(UCSR0A, RXC0);
   return UDR0;
 }
-bool can_read_usb(void) {
-  return bit_is_set(UCSR0A, RXC0);
-}
+bool can_read_usb(void) { return bit_is_set(UCSR0A, RXC0); }
 
 void write_usb(uint8_t data) {
-  loop_until_bit_is_set(UCSR0A, UDRE0);
-  UDR0 = data;
+  // https://eli.thegreenplace.net/2009/08/12/framing-in-serial-communications/
+  if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC || data == FRAME_END) {
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = ESC;
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = data ^ 0x20;
+  } else {
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = data;
+  }
 }
 int main(void) {
   load_config();
@@ -51,20 +58,16 @@ int main(void) {
   input_init();
   while (1) {
     input_tick(&controller);
-    controller.buttons += 1;
     uint16_t Size;
     create_report(report, &Size, controller);
     controller_index = 0;
-    if (!in_config_mode) {
-      if (bit_is_set(UCSR0A, RXC0) && UDR0 == 's') { in_config_mode = true; }
-      loop_until_bit_is_set(UCSR0A, UDRE0);
-      UDR0 = 'm';
-      while (controller_index < Size) {
-        loop_until_bit_is_set(UCSR0A, UDRE0);
-        UDR0 = report[controller_index++];
-      }
-    } else if (bit_is_set(UCSR0A, RXC0)) {
-      process_serial();
-    }
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = FRAME_START_1;
+    while (controller_index < Size) { write_usb(report[controller_index++]); }
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = FRAME_START_2;
+    process_serial();
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = FRAME_END;
   }
 }

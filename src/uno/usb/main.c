@@ -150,7 +150,6 @@ int main(void) {
                   while (*(c) != 0) {
                     RingBuffer_Insert(&USARTtoUSB_Buffer, *(c++));
                   }
-                  RingBuffer_Insert(&USARTtoUSB_Buffer, '\n');
                 }
                 lastCommand = 0;
               } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {

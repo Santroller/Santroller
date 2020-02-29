@@ -197,4 +197,20 @@ static inline RingBuff_Data_t RingBuffer_Remove(RingBuff_t *const Buffer) {
   return Data;
 }
 
+/** Removes an element from the ring buffer.
+ *
+ *  \note Only one execution thread (main program thread or an ISR) may remove
+ * from a single buffer otherwise data corruption may occur. Insertion and
+ * removal may occur from different execution threads.
+ *
+ *  \param[in,out] Buffer  Pointer to a ring buffer structure to retrieve from
+ *
+ *  \return Next data element stored in the buffer
+ */
+static inline RingBuff_Data_t RingBuffer_Peek(RingBuff_t *const Buffer) {
+  RingBuff_Data_t Data = *Buffer->Out;
+
+  return Data;
+}
+
 #endif

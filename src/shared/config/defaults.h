@@ -16,6 +16,7 @@
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
+#define CONFIG_VERSION 0
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.
@@ -57,7 +58,7 @@
      FRET_MODE,                                                                \
      MAP_JOY_TO_DPAD,                                                          \
      MAP_START_SELECT_TO_HOME,                                                 \
-     MAP_ACCEL_TO_R},                                                          \
+     MAP_ACCEL_TO_R, ARDWIINO_DEVICE_TYPE, CONFIG_VERSION},                                                          \
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \

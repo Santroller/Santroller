@@ -67,6 +67,8 @@ typedef struct {
   bool map_joy_to_dpad;
   bool map_start_select_to_home;
   bool map_accel_to_right;
+  uint32_t signature;
+  uint32_t version;
 } main_config_t;
 typedef struct {
   uint16_t threshold_trigger;

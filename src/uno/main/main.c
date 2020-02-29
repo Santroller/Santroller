@@ -29,6 +29,9 @@ uint8_t read_usb(void) {
   loop_until_bit_is_set(UCSR0A, RXC0);
   return UDR0;
 }
+bool can_read_usb(void) {
+  return bit_is_set(UCSR0A, RXC0);
+}
 
 void write_usb(uint8_t data) {
   loop_until_bit_is_set(UCSR0A, UDRE0);

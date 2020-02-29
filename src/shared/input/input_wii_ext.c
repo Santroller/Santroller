@@ -178,46 +178,46 @@ void wii_ext_tick(controller_t *controller) {
 void get_wii_device_name(char *str) {
   switch (id) {
   case NUNCHUK:
-    str = "Nunchuk";
+    strcpy(str, "Nunchuk");
     break;
   case CLASSIC:
-    str = "Classic Controller";
+    strcpy(str, "Classic Controller");
     break;
   case CLASSIC_PRO:
-    str = "Classic Controller Pro";
+    strcpy(str, "Classic Controller Pro");
     break;
   case UDRAW:
-    str = "THQ uDraw Tablet";
+    strcpy(str, "THQ uDraw Tablet");
     break;
   case DRAWSOME:
-    str = "Ubisoft Drawsome Tablet";
+    strcpy(str, "Ubisoft Drawsome Tablet");
     break;
   case GUITAR:
-    str = "Guitar Hero Guitar Controller";
+    strcpy(str, "Guitar Hero Guitar Controller");
     break;
   case DRUMS:
-    str = "Guitar Hero Drum Controller";
+    strcpy(str, "Guitar Hero Drum Controller");
     break;
   case TURNTABLE:
-    str = "DJ Hero Turntable";
+    strcpy(str, "DJ Hero Turntable");
     break;
   case TATACON:
-    str = "Taiko no Tatsujin controller";
+    strcpy(str, "Taiko no Tatsujin controller");
     break;
   case MOTION_PLUS:
-    str = "Motion Plus (No Passthrough)";
+    strcpy(str, "Motion Plus (No Passthrough)");
     break;
   case MOTION_PLUS_NUNCHUK:
-    str = "Motion Plus (Nunchuk Passthrough Mode)";
+    strcpy(str, "Motion Plus (Nunchuk Passthrough Mode)");
     break;
   case MOTION_PLUS_CLASSIC:
-    str = "Motion Plus (Classic Controller Passthrough Mode)";
+    strcpy(str, "Motion Plus (Classic Controller Passthrough Mode)");
     break;
   case NO_DEVICE:
-    str = "No Device";
+    strcpy(str, "No Device");
     break;
   default:
-    str = "Unknown Device";
+    strcpy(str, "Unknown Device");
     break;
   }
 }

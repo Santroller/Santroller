@@ -4,6 +4,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -88,6 +89,7 @@ extern const char *freq;
 extern const char *usb_mcu;
 extern const char *usb_freq;
 uint8_t read_usb(void);
+bool can_read_usb(void);
 void write_usb(uint8_t data);
 int digitalRead(uint8_t pin);
 int analogRead(uint8_t pin);

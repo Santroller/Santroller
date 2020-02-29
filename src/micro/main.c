@@ -61,13 +61,17 @@ int main(void) {
   while (true) {
     input_tick(&controller);
     process_serial();
-    CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     HID_Device_USBTask(&interface);
+    CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     USB_USBTask();
   }
 }
 uint8_t read_usb(void) {
-  return CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
+  return CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface) & 0xff;
+}
+
+bool can_read_usb(void) {
+  return CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface);
 }
 
 void write_usb(uint8_t data) {

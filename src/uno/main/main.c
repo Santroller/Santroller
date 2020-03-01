@@ -33,7 +33,6 @@ uint8_t read_usb(void) {
 bool can_read_usb(void) { return bit_is_set(UCSR0A, RXC0); }
 
 void write_usb(uint8_t data) {
-  // https://eli.thegreenplace.net/2009/08/12/framing-in-serial-communications/
   if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC || data == FRAME_END) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = ESC;

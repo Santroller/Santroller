@@ -16,9 +16,11 @@ void process_serial(void) {
   switch (cmd) {
   case COMMAND_START_CONFIG:
     new_config = config;
+    write_usb('\r');
     write_usb('\n');
     break;
   case COMMAND_ABORT_CONFIG:
+    write_usb('\r');
     write_usb('\n');
     break;
   case COMMAND_APPLY_CONFIG:
@@ -256,6 +258,7 @@ void process_serial(void) {
     } else {
       while (size--) { write_usb(*(buf++)); }
     }
+    write_usb('\r');
     write_usb('\n');
   }
 }

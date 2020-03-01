@@ -139,7 +139,10 @@ int main(void) {
             uint8_t b = Endpoint_Read_8();
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
             if (state == STATE_ARDWIINO) {
-              if (lastCommand == COMMAND_READ_INFO) {
+              if (lastCommand == COMMAND_START_CONFIG) {
+                config.device_type = device_type;
+                config.polling_rate = polling_rate;
+              } else if (lastCommand == COMMAND_READ_INFO) {
                 const char *c = NULL;
                 switch (b) {
                 case INFO_USB_MCU:
@@ -197,11 +200,12 @@ int main(void) {
         buffer
          * is nearly full */
         RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
-        if ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL)) {
-          TIFR0 |= (1 << TOV0);
+        if (frame == FRAME_START_1 ||
+            ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL))) {
           if (frame == FRAME_START_1) {
             Endpoint_SelectEndpoint(HID_EPADDR_IN);
           } else {
+            TIFR0 |= (1 << TOV0);
             if (USARTtoUSB_Buffer.Count) {
               LEDs_TurnOnLEDs(LEDMASK_TX);
               PulseMSRemaining.TxLEDPulse = TX_RX_LED_PULSE_MS;
@@ -325,10 +329,6 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
-      // Read the line coding data in from the host into the global struct (made
-      // inline)
-      // Endpoint_Read_Control_Stream_LE(&LineEncoding,
-      // sizeof(CDC_LineEncoding_t));
 
       uint8_t Length = sizeof(CDC_LineEncoding_t);
       uint8_t *DataStream = (uint8_t *)&LineEncoding;
@@ -364,8 +364,6 @@ void EVENT_USB_Device_ControlRequest(void) {
             break;
         } while (!(Endpoint_IsINReady()));
       }
-
-      // end of inline Endpoint_Read_Control_Stream_LE
 
       Endpoint_ClearIN();
     }

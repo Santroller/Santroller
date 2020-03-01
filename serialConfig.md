@@ -1,4 +1,3 @@
-Everything is expressed as ascii
 Shared
 ------
 | Command              | Char | Args           | Return   | Desc                                                                   |
@@ -21,3 +20,5 @@ Changes
 
 * the keys can read both negative and positive at the same time.
 * send axis inverting at the same time as the axis itself
+
+The UNO uses PPP like packet frames to encapsulate serial data. This allows for making it easy to receive both serial and controller data at the same time.

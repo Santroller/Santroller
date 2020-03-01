@@ -1,7 +1,6 @@
 #pragma once
 #define COMMAND_START_CONFIG 's'
 #define COMMAND_APPLY_CONFIG 'a'
-#define COMMAND_ABORT_CONFIG 'b'
 #define COMMAND_WRITE_CONFIG_VALUE 'w'
 #define COMMAND_READ_CONFIG_VALUE 'r'
 #define COMMAND_READ_INFO 'i'

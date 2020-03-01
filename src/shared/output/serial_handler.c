@@ -19,10 +19,6 @@ void process_serial(void) {
     write_usb('\r');
     write_usb('\n');
     break;
-  case COMMAND_ABORT_CONFIG:
-    write_usb('\r');
-    write_usb('\n');
-    break;
   case COMMAND_APPLY_CONFIG:
     config = new_config;
     write_config();

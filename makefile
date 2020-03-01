@@ -40,8 +40,5 @@ build-all:
 	$(MAKE) -C src/micro OBJDIR=obj/leo/8 ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
 	mkdir -p output
 	cp -rfv src/uno/usb/bin/*.hex output/
-	cp -rfv src/uno/usb/bin/*.eep output/
 	cp -rfv src/uno/main/bin/*.hex output/
-	cp -rfv src/uno/main/bin/*.eep output/
 	cp -rfv src/micro/bin/*.hex output/
-	cp -rfv src/micro/bin/*.eep output/

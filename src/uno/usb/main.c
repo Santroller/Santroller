@@ -65,7 +65,7 @@ volatile struct {
  * serial port. This must be retained as some operating systems will not open
  * the port unless the settings can be set successfully.
  */
-static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
+static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 115200,
                                           .CharFormat =
                                               CDC_LINEENCODING_OneStopBit,
                                           .ParityType = CDC_PARITY_None,
@@ -171,6 +171,7 @@ int main(void) {
                   reboot();
                 } else if (b == COMMAND_JUMP_BOOTLOADER) {
                   state = STATE_AVRDUDE;
+                  frame = FRAME_START_2;
                 } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
                   *jmpToBootloader = true;
                   reboot();
@@ -191,61 +192,54 @@ int main(void) {
         }
       }
       uint8_t b;
-      if (frame == FRAME_START_1) {
-        RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        bool ready = Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady();
-        while (BufferCount--) {
-          b = RingBuffer_Remove(&USARTtoUSB_Buffer);
-          if (b == FRAME_START_2) {
-            frame = b;
-            break;
-          };
-          if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
-          if (ready) Endpoint_Write_8(b);
-        }
-        if (ready) Endpoint_ClearIN();
-      } else if (state == STATE_AVRDUDE || frame == FRAME_START_2) {
+      if (frame != 0) {
         /* Check if the UART receive buffer flush timer has expired or the
         buffer
          * is nearly full */
         RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
         if ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL)) {
           TIFR0 |= (1 << TOV0);
-
-          if (USARTtoUSB_Buffer.Count) {
-            LEDs_TurnOnLEDs(LEDMASK_TX);
-            PulseMSRemaining.TxLEDPulse = TX_RX_LED_PULSE_MS;
-          }
-
-          Endpoint_SelectEndpoint(CDC_TX_EPADDR);
-          // CDC device is ready for receiving bytes
-          if (Endpoint_IsINReady()) {
-            /* Read bytes from the USART receive buffer into the USB IN
-            endpoint
-             */
-            while (BufferCount--) {
-              b = RingBuffer_Remove(&USARTtoUSB_Buffer);
-              if (state != STATE_AVRDUDE) {
-                if (b == FRAME_END) {
-                  frame = 0;
-                  break;
-                };
-                if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
-              }
-              Endpoint_Write_8(b);
+          if (frame == FRAME_START_1) {
+            Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          } else {
+            if (USARTtoUSB_Buffer.Count) {
+              LEDs_TurnOnLEDs(LEDMASK_TX);
+              PulseMSRemaining.TxLEDPulse = TX_RX_LED_PULSE_MS;
             }
-            Endpoint_ClearIN();
+            Endpoint_SelectEndpoint(CDC_TX_EPADDR);
           }
-          /* Turn off TX LED(s) once the TX pulse period has elapsed */
-          if (PulseMSRemaining.TxLEDPulse && !(--PulseMSRemaining.TxLEDPulse))
-            LEDs_TurnOffLEDs(LEDMASK_TX);
 
-          /* Turn off RX LED(s) once the RX pulse period has elapsed */
-          if (PulseMSRemaining.RxLEDPulse && !(--PulseMSRemaining.RxLEDPulse))
-            LEDs_TurnOffLEDs(LEDMASK_RX);
+          bool ready = Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady();
+          /* Read bytes from the USART receive buffer into the USB IN
+          endpoint
+           */
+          while (BufferCount--) {
+            b = RingBuffer_Remove(&USARTtoUSB_Buffer);
+            if (state != STATE_AVRDUDE) {
+              if (b == FRAME_END) {
+                frame = 0;
+                break;
+              };
+              if (b == FRAME_START_2) {
+                frame = b;
+                break;
+              };
+              if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
+            }
+            if (ready) Endpoint_Write_8(b);
+          }
+          if (ready) Endpoint_ClearIN();
+          if (frame == FRAME_START_2) {
+            /* Turn off TX LED(s) once the TX pulse period has elapsed */
+            if (PulseMSRemaining.TxLEDPulse && !(--PulseMSRemaining.TxLEDPulse))
+              LEDs_TurnOffLEDs(LEDMASK_TX);
+
+            /* Turn off RX LED(s) once the RX pulse period has elapsed */
+            if (PulseMSRemaining.RxLEDPulse && !(--PulseMSRemaining.RxLEDPulse))
+              LEDs_TurnOffLEDs(LEDMASK_RX);
+          }
         }
-      } else if (state != STATE_AVRDUDE && RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
+      } else if (RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
         RingBuffer_Remove(&USARTtoUSB_Buffer);
         frame = FRAME_START_1;
       } else {

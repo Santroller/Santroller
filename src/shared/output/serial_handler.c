@@ -5,6 +5,9 @@
 
 extern uint16_t id;
 config_t new_config;
+void init_serial(void) {
+  new_config = config;
+}
 void process_serial(void) {
   if (!can_read_usb()) return;
   uint8_t *buf = NULL;

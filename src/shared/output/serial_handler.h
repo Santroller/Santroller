@@ -6,3 +6,4 @@
 #include "bootloader/bootloader.h"
 extern controller_t controller;
 void process_serial(void);
+void init_serial(void);

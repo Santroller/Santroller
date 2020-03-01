@@ -46,6 +46,7 @@ void write_usb(uint8_t data) {
 }
 int main(void) {
   load_config();
+  init_serial();
   UCSR0B = 0;
   UCSR0A = 0;
   UCSR0C = 0;

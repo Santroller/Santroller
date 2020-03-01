@@ -27,11 +27,10 @@ void controller_control_request(void) {
            (CONTROL_REQTYPE_DIRECTION | CONTROL_REQTYPE_TYPE)) ==
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
           USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
-        Endpoint_ClearSETUP();
-        USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)0x200;
+        void *dev = (void *)0x200;
         memcpy_P(dev, &DevCompatIDs, DevCompatIDs.TotalLength);
-        Endpoint_Write_Control_Stream_LE(&dev,
-                                         DevCompatIDs.TotalLength);
+        Endpoint_ClearSETUP();
+        Endpoint_Write_Control_Stream_LE(dev, DevCompatIDs.TotalLength);
         Endpoint_ClearOUT();
         return;
       }

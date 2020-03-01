@@ -23,7 +23,7 @@ typedef struct {
   WCHAR Signature[7];
   uint8_t VendorCode;
   uint8_t Reserved;
-} USB_OSDescriptor_t;
+} ATTR_PACKED USB_OSDescriptor_t;
 
 typedef struct {
   uint8_t FirstInterfaceNumber;
@@ -31,7 +31,7 @@ typedef struct {
   uint8_t CompatibleID[8];
   uint8_t SubCompatibleID[8];
   uint8_t Reserved2[6];
-} USB_OSCompatibleSection_t;
+} ATTR_PACKED USB_OSCompatibleSection_t;
 
 typedef struct {
   uint32_t TotalLength;
@@ -40,4 +40,4 @@ typedef struct {
   uint8_t TotalSections;
   uint8_t Reserved[7];
   USB_OSCompatibleSection_t CompatID;
-} USB_OSCompatibleIDDescriptor_t;
+} ATTR_PACKED USB_OSCompatibleIDDescriptor_t;

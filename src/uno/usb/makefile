@@ -46,22 +46,16 @@ RAM_OFFSET            = 0x800290
 REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
 
 $(info $(shell mkdir -p $(BIN)))
-# dfu-programmer detects the 8u2 as a at90usb82 instead of a 8u2.
-ifeq ($(MCU),atmega8u2)
-MCU_DFU=at90usb82
-else
-MCU_DFU=$(MCU)
-endif
 # Default target
 all:
 dfu:
 	echo j > /dev/ttyACM0 || true
 	sleep 1
-	dfu-programmer $(MCU_DFU) erase || true
+	dfu-programmer $(MCU) erase || true
 	make || true
-	dfu-programmer $(MCU_DFU) flash bin/ardwiino-uno-usb-$(MCU)-16000000.hex || true
+	dfu-programmer $(MCU) flash bin/ardwiino-uno-usb-$(MCU)-16000000.hex || true
 	sleep 2
-	dfu-programmer $(MCU_DFU) launch || true
+	dfu-programmer $(MCU) launch || true
 	
 
 # Include LUFA build script makefiles

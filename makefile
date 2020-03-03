@@ -6,21 +6,10 @@ micro:
 	sleep 1
 	$(MAKE) -C src/micro avrdude
 
-micro-ee:
-	$(MAKE) -C src/micro
-	stty -F /dev/ttyACM0 1200
-	sleep 1
-	$(MAKE) -C src/micro avrdude-ee
-
 uno:
 	$(MAKE) -C src/uno
 	sleep 0.5
 	$(MAKE) -C src/uno upload
-
-uno-ee:
-	$(MAKE) -C src/uno
-	sleep 0.5
-	$(MAKE) -C src/uno upload-ee
 
 clean:
 	$(MAKE) -C src/micro clean

@@ -3,7 +3,7 @@
 #define INVALID_PIN 0xFF
 
 // Tilt detection
-enum tilt { MPU_6050 = 1, GRAVITY, ANALOGUE };
+enum tilt { NO_TILT, MPU_6050, GRAVITY, ANALOGUE };
 
 // Input types
 enum input { WII = 1, DIRECT };

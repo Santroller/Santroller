@@ -24,10 +24,10 @@ static const uint8_t PROGMEM hat_bindings[] = {
 static const uint8_t *currentAxisBindings;
 static uint8_t currentAxisBindingsLen = 0;
 void report_init(void) {
-  if (config.main.sub_type > SWITCH_GAMEPAD_SUBTYPE) {
+  if (config.main.sub_type > SWITCH_GAMEPAD) {
     currentAxisBindings = ps3AxisBindings;
     currentAxisBindingsLen = sizeof(ps3AxisBindings);
-    if (config.main.sub_type > PS3_GAMEPAD_SUBTYPE) {
+    if (config.main.sub_type > PS3_GAMEPAD) {
       currentAxisBindings = ghAxisBindings;
       currentAxisBindingsLen = sizeof(ghAxisBindings);
     }
@@ -45,7 +45,7 @@ void check_joy_key(int neg, int pos, int val, int thresh, uint8_t *used,
 void create_report(void *ReportData, uint16_t *const ReportSize,
                    controller_t controller) {
 
-  if (config.main.sub_type <= XINPUT_ARCADE_PAD_SUBTYPE) {
+  if (config.main.sub_type <= XINPUT_ARCADE_PAD) {
     *ReportSize = sizeof(USB_XInputReport_Data_t);
 
     USB_XInputReport_Data_t *JoystickReport =
@@ -55,7 +55,7 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
     // controller.
     memcpy(&JoystickReport->buttons, &controller,
            sizeof(controller_t) - sizeof(uint16_t));
-  } else if (config.main.sub_type == KEYBOARD_SUBTYPE) {
+  } else if (config.main.sub_type == KEYBOARD) {
     USB_KeyboardReport_Data_t *KeyboardReport =
         (USB_KeyboardReport_Data_t *)ReportData;
     uint8_t usedKeys = 0;
@@ -82,7 +82,7 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
       bool bit_set = bit_check(controller.buttons, button);
       bit_write(bit_set, JoystickReport->buttons, i);
     }
-    if (config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+    if (config.main.sub_type == SWITCH_GAMEPAD) {
       // Swap a and b on the switch
       COPY(A, B);
       COPY(B, A);
@@ -91,7 +91,7 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
       button = pgm_read_byte(currentAxisBindings + i);
       if (button == 0xff) continue;
       bool bit_set = bit_check(controller.buttons, button);
-      if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE &&
+      if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR &&
           i < sizeof(ghAxisBindings2)) {
         button = pgm_read_byte(ghAxisBindings2 + i);
         bit_set |= bit_check(controller.buttons, button);
@@ -106,12 +106,12 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
 
     // Tilt / whammy
     bool tilt = controller.r_y == 32767;
-    if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR) {
       JoystickReport->r_x = (controller.r_x >> 8) + 128;
       // GH PS3 guitars have a tilt axis
       JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
     }
-    if (config.main.sub_type == PS3_ROCK_BAND_GUITAR_SUBTYPE) {
+    if (config.main.sub_type == PS3_ROCK_BAND_GUITAR) {
       JoystickReport->r_x = 128 - (controller.r_x >> 8);
       // RB PS3 guitars use R for a tilt bit
       bit_write(tilt, JoystickReport->buttons, SWITCH_R);
@@ -119,21 +119,21 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
       COPY(X, Y);
       COPY(Y, X);
     }
-    if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE ||
-        config.main.sub_type == PS3_ROCK_BAND_GUITAR_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR ||
+        config.main.sub_type == PS3_ROCK_BAND_GUITAR) {
       // XINPUT guitars use LB for orange, PS3 uses L
       COPY(LB, L);
     }
-    if (config.main.sub_type == PS3_GUITAR_HERO_DRUMS_SUBTYPE ||
-        config.main.sub_type == PS3_ROCK_BAND_DRUMS_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_HERO_DRUMS ||
+        config.main.sub_type == PS3_ROCK_BAND_DRUMS) {
 
       // XINPUT guitars use LB for orange, PS3 uses R
       COPY(LB, R);
       // XINPUT guitars use RB for bass, PS3 uses L
       COPY(RB, L);
     }
-    if (config.main.sub_type == PS3_GAMEPAD_SUBTYPE ||
-        config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+    if (config.main.sub_type == PS3_GAMEPAD ||
+        config.main.sub_type == SWITCH_GAMEPAD) {
       bit_write(controller.lt > 50, JoystickReport->buttons, SWITCH_L);
       bit_write(controller.rt > 50, JoystickReport->buttons, SWITCH_R);
       JoystickReport->axis[4] = controller.lt;

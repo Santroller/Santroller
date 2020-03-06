@@ -44,7 +44,7 @@ void input_tick(controller_t *controller) {
     }
   }
   guitar_tick(controller);
-  if (config.main.sub_type == SWITCH_GAMEPAD_SUBTYPE) {
+  if (config.main.sub_type == SWITCH_GAMEPAD) {
     // Swap A and B for switch controllers
     bool B = bit_is_set(controller->buttons, XBOX_A);
     bool A = bit_is_set(controller->buttons, XBOX_B);

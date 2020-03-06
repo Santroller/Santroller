@@ -7,12 +7,12 @@
 #include "../util.h"
 volatile bool ready = false;
 bool isXboxGuitar(void) {
-  return config.main.sub_type == XINPUT_GUITAR_SUBTYPE ||
-         config.main.sub_type == XINPUT_GUITAR_BASS_SUBTYPE;
+  return config.main.sub_type == XINPUT_GUITAR ||
+         config.main.sub_type == XINPUT_GUITAR_BASS;
 }
 bool isPS3Guitar(void) {
-  return config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE ||
-         config.main.sub_type == PS3_ROCK_BAND_GUITAR_SUBTYPE;
+  return config.main.sub_type == PS3_GUITAR_HERO_GUITAR ||
+         config.main.sub_type == PS3_ROCK_BAND_GUITAR;
 }
 bool isGuitar(void) { return isXboxGuitar() || isPS3Guitar(); }
 void guitar_init(void) {

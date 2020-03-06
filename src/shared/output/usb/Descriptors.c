@@ -346,18 +346,18 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     Size = DeviceDescriptor.Header.Size;
     memcpy_P(buf, Address, Size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)buf;
-    if (device_type == SWITCH_GAMEPAD_SUBTYPE) {
+    if (device_type == SWITCH_GAMEPAD) {
       dev->VendorID = 0x0F0D;
       dev->ProductID = 0x0092;
     } else {
-      if (device_type > PS3_GAMEPAD_SUBTYPE) { dev->VendorID = 0x12ba; }
-      if (device_type == PS3_GUITAR_GH_SUBTYPE) {
+      if (device_type > PS3_GAMEPAD) { dev->VendorID = 0x12ba; }
+      if (device_type == PS3_GUITAR_HERO_GUITAR) {
         dev->ProductID = 0x0100;
-      } else if (device_type == PS3_GUITAR_RB_SUBTYPE) {
+      } else if (device_type == PS3_ROCK_BAND_GUITAR) {
         dev->ProductID = 0x0200;
-      } else if (device_type == PS3_DRUM_GH_SUBTYPE) {
+      } else if (device_type == PS3_GUITAR_HERO_DRUMS) {
         dev->ProductID = 0x0120;
-      } else if (device_type == PS3_DRUM_RB_SUBTYPE) {
+      } else if (device_type == PS3_ROCK_BAND_DRUMS) {
         dev->ProductID = 0x0210;
       }
     }
@@ -370,7 +370,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         (USB_Descriptor_Configuration_t *)buf;
     conf->Controller.XInput.Endpoints.DataInEndpoint0.PollingIntervalMS =
         polling_rate;
-    if (device_type >= KEYBOARD_SUBTYPE) {
+    if (device_type >= KEYBOARD) {
       // Switch from Xinput to HID descriptor layout
       memcpy_P(&conf->Controller.HID.Endpoints,
                &ConfigurationDescriptor.Controller.XInput.Endpoints,
@@ -382,7 +382,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 
       memcpy_P(&conf->Controller.HID.HIDDescriptor, &hid_descriptor,
                sizeof(hid_descriptor));
-      if (device_type == KEYBOARD_SUBTYPE) {
+      if (device_type == KEYBOARD) {
         conf->Controller.HID.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
       } else {
@@ -396,7 +396,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     }
     return Size;
   case HID_DTYPE_Report:
-    if (device_type == KEYBOARD_SUBTYPE) {
+    if (device_type == KEYBOARD) {
       Address = keyboard_report_descriptor;
       Size = sizeof(keyboard_report_descriptor);
     } else {

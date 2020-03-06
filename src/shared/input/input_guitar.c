@@ -20,7 +20,7 @@ void guitar_init(void) {
   if (config.main.tilt_type == MPU_6050) {
     mympu_open(15);
     enablePCI(config.pins.r_y.pin);
-  } else if (config.main.tilt_type == GRAVITY) {
+  } else if (config.main.tilt_type == DIGITAL) {
     pinMode(config.pins.r_y.pin, INPUT_PULLUP);
   } else if (config.main.tilt_type == ANALOGUE) {
     pinMode(config.pins.r_y.pin, INPUT);
@@ -41,7 +41,7 @@ void guitar_tick(controller_t *controller) {
       if (isnan(z)) { z = 0; }
     }
     controller->r_y = z;
-  } else if (config.main.tilt_type == GRAVITY) {
+  } else if (config.main.tilt_type == DIGITAL) {
     controller->r_y = (!digitalRead(config.pins.r_y.pin)) * 32767;
   } else if (config.main.tilt_type == ANALOGUE) {
     controller->r_y = analogRead(config.pins.r_y.pin) + config.axis.tilt_sensitivity;

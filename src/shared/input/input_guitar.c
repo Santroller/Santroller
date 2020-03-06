@@ -8,12 +8,11 @@
 volatile bool ready = false;
 bool isXboxGuitar(void) {
   return config.main.sub_type == XINPUT_GUITAR_SUBTYPE ||
-         config.main.sub_type == XINPUT_GUITAR_ALTERNATE_SUBTYPE ||
          config.main.sub_type == XINPUT_GUITAR_BASS_SUBTYPE;
 }
 bool isPS3Guitar(void) {
-  return config.main.sub_type == PS3_GUITAR_GH_SUBTYPE ||
-         config.main.sub_type == PS3_GUITAR_RB_SUBTYPE;
+  return config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE ||
+         config.main.sub_type == PS3_ROCK_BAND_GUITAR_SUBTYPE;
 }
 bool isGuitar(void) { return isXboxGuitar() || isPS3Guitar(); }
 void guitar_init(void) {

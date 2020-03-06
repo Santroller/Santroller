@@ -91,7 +91,7 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
       button = pgm_read_byte(currentAxisBindings + i);
       if (button == 0xff) continue;
       bool bit_set = bit_check(controller.buttons, button);
-      if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE &&
+      if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE &&
           i < sizeof(ghAxisBindings2)) {
         button = pgm_read_byte(ghAxisBindings2 + i);
         bit_set |= bit_check(controller.buttons, button);
@@ -106,12 +106,12 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
 
     // Tilt / whammy
     bool tilt = controller.r_y == 32767;
-    if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE) {
       JoystickReport->r_x = (controller.r_x >> 8) + 128;
       // GH PS3 guitars have a tilt axis
       JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
     }
-    if (config.main.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    if (config.main.sub_type == PS3_ROCK_BAND_GUITAR_SUBTYPE) {
       JoystickReport->r_x = 128 - (controller.r_x >> 8);
       // RB PS3 guitars use R for a tilt bit
       bit_write(tilt, JoystickReport->buttons, SWITCH_R);
@@ -119,13 +119,13 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
       COPY(X, Y);
       COPY(Y, X);
     }
-    if (config.main.sub_type == PS3_GUITAR_GH_SUBTYPE ||
-        config.main.sub_type == PS3_GUITAR_RB_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR_SUBTYPE ||
+        config.main.sub_type == PS3_ROCK_BAND_GUITAR_SUBTYPE) {
       // XINPUT guitars use LB for orange, PS3 uses L
       COPY(LB, L);
     }
-    if (config.main.sub_type == PS3_DRUM_GH_SUBTYPE ||
-        config.main.sub_type == PS3_DRUM_RB_SUBTYPE) {
+    if (config.main.sub_type == PS3_GUITAR_HERO_DRUMS_SUBTYPE ||
+        config.main.sub_type == PS3_ROCK_BAND_DRUMS_SUBTYPE) {
 
       // XINPUT guitars use LB for orange, PS3 uses R
       COPY(LB, R);

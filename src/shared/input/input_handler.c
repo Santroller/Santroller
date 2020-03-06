@@ -22,9 +22,7 @@ void input_init(void) {
   enableADC();
   sei();
   guitar_init();
-  if (config.main.fret_mode == FRET_MODE_WS2812) {
-    led_init();
-  }
+  led_init();
 }
 
 void input_tick(controller_t *controller) {
@@ -54,7 +52,5 @@ void input_tick(controller_t *controller) {
     controller->l_y = -controller->l_y;
     controller->r_y = -controller->r_y;
   }
-  if (config.main.fret_mode == FRET_MODE_WS2812) {
-    led_tick(controller);
-  }
+  led_tick(controller);
 }

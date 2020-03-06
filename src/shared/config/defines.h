@@ -47,9 +47,9 @@ enum firmware_type {
 
 // Fret Modes
 enum fret_mode {
-    FRET_MODE_NEGATIVE,
-    FRET_MODE_POSITIVE,
-    FRET_MODE_WS2812,
-    FRET_MODE_APA102
+    LEDS_DISABLED,
+    LEDS_INLINE,
+    WS2812,
+    APA102
 };
 

@@ -12,15 +12,15 @@ uint8_t pixels[2 * NUM_LEDS];
 Adafruit_NeoPixel leds =
     Adafruit_NeoPixel(NUM_LEDS, 10, NEO_GRB + NEO_KHZ800, pixels);
 void led_init(void) {
-  if (config.main.fret_mode == FRET_MODE_WS2812) {
+  if (config.main.fret_mode == WS2812) {
     pinMode(10, OUTPUT);
-  } else if (config.main.fret_mode == FRET_MODE_APA102) {
+  } else if (config.main.fret_mode == APA102) {
     clock_prescale_set(clock_div_1);
     apa102_init_spi();
   }
 }
 void led_tick(controller_t *controller) {
-  if (config.main.fret_mode == FRET_MODE_WS2812) {
+  if (config.main.fret_mode == WS2812) {
     leds.setPixelColor(0, bit_check(controller->buttons, XBOX_A)
                               ? Green
                               : Black);
@@ -37,7 +37,7 @@ void led_tick(controller_t *controller) {
                               ? Orange
                               : Black);
     leds.show();
-  } else if (config.main.fret_mode == FRET_MODE_APA102) {
+  } else if (config.main.fret_mode == APA102) {
     apa102_start();
     apa102_set_led(bit_check(controller->buttons, XBOX_A) ? rgb(Green)
                                                           : rgb(Black));

@@ -3,7 +3,7 @@
 #include "../util.h"
 #include "pins/pins.h"
 void direct_init(void) {
-  int fret_type = config.main.fret_mode == FRET_MODE_POSITIVE ? INPUT : INPUT_PULLUP;
+  int fret_type = config.main.fret_mode == LEDS_INLINE ? INPUT : INPUT_PULLUP;
   uint8_t *pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
@@ -23,7 +23,7 @@ void direct_tick(controller_t *controller) {
   uint8_t *pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
-      bool eq = (i < XBOX_A || i == XBOX_LB) ? false : config.main.fret_mode == FRET_MODE_POSITIVE;
+      bool eq = (i < XBOX_A || i == XBOX_LB) ? false : config.main.fret_mode == LEDS_INLINE;
       bit_write(digitalRead(pins[i]) == eq, controller->buttons, i);
     }
   }

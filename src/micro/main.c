@@ -36,6 +36,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
                 },
         },
 };
+output_report_size_t last_report;
 USB_ClassInfo_HID_Device_t interface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -45,7 +46,7 @@ USB_ClassInfo_HID_Device_t interface = {
       Type : EP_TYPE_CONTROL,
       Banks : 1,
     },
-    PrevReportINBuffer : NULL,
+    PrevReportINBuffer : &last_report,
     PrevReportINBufferSize : sizeof(output_report_size_t),
   },
 };
@@ -64,7 +65,6 @@ int main(void) {
     process_serial();
     HID_Device_USBTask(&interface);
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-    USB_USBTask();
   }
 }
 uint8_t read_usb(void) {

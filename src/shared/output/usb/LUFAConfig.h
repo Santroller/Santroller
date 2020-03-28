@@ -93,7 +93,7 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 		// #define DEVICE_STATE_AS_GPIOR            2 // GPIOR0 is used for the RX ISR with cbi()
 		#define FIXED_NUM_CONFIGURATIONS         1
 //		#define CONTROL_ONLY_DEVICE
-//		#define INTERRUPT_CONTROL_ENDPOINT
+		#define INTERRUPT_CONTROL_ENDPOINT
 		#define NO_DEVICE_REMOTE_WAKEUP
 		#define NO_DEVICE_SELF_POWER
 

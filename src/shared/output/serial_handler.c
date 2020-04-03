@@ -14,6 +14,14 @@ void process_serial(void) {
   uint8_t size = 0;
   uint8_t cmd = read_usb();
   switch (cmd) {
+  case COMMAND_SET_LEDS:
+    for (int i =0; i < 5; i++) {
+      controller.leds.leds[i] = read_usb()-'0';
+    }
+    write_usb('\r');
+    write_usb('\n');
+    break;
+
   case COMMAND_START_CONFIG:
     new_config = config;
     write_usb('\r');

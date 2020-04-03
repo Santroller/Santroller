@@ -51,10 +51,9 @@ void create_report(void *ReportData, uint16_t *const ReportSize,
     USB_XInputReport_Data_t *JoystickReport =
         (USB_XInputReport_Data_t *)ReportData;
     JoystickReport->rsize = sizeof(USB_XInputReport_Data_t);
-    // Don't copy the extra device information tagged on the end of the
-    // controller.
+    // Don't copy the led info tagged on the end
     memcpy(&JoystickReport->buttons, &controller,
-           sizeof(controller_t) - sizeof(uint16_t));
+           sizeof(controller_t) - sizeof(ledstate_t));
   } else if (config.main.sub_type == KEYBOARD) {
     USB_KeyboardReport_Data_t *KeyboardReport =
         (USB_KeyboardReport_Data_t *)ReportData;

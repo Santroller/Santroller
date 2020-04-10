@@ -52,15 +52,6 @@ RingBuff_t USBtoUSART_Buffer;
  * host. */
 RingBuff_t USARTtoUSB_Buffer;
 
-/** Pulse generation counters to keep track of the number of milliseconds
- * remaining for each pulse type */
-volatile struct {
-  uint8_t TxLEDPulse;       /**< Milliseconds remaining for data Tx LED pulse */
-  uint8_t RxLEDPulse;       /**< Milliseconds remaining for data Rx LED pulse */
-  uint8_t PingPongLEDPulse; /**< Milliseconds remaining for enumeration Tx/Rx
-                               ping-pong LED pulse */
-} PulseMSRemaining;
-
 /** Contains the current baud rate and other settings of the first virtual
  * serial port. This must be retained as some operating systems will not open
  * the port unless the settings can be set successfully.
@@ -85,7 +76,7 @@ int lastCommand = 0;
 int lastAddr = 0;
 uint8_t frame = 0;
 // 0x289 is the final address we have set aside for our own use
-bool *jmpToBootloader = (bool *)0x289;
+bool *jmpToBootloader = (bool *)0x290;
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
@@ -127,7 +118,6 @@ int main(void) {
           break;
       }
 
-#define TX_RX_LED_PULSE_MS 5
       /* Only try to read in bytes from the CDC interface if the transmit buffer
        * is not full */
       if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
@@ -207,10 +197,6 @@ int main(void) {
             Endpoint_SelectEndpoint(HID_EPADDR_IN);
           } else {
             TIFR0 |= (1 << TOV0);
-            if (USARTtoUSB_Buffer.Count) {
-              LEDs_TurnOnLEDs(LEDMASK_TX);
-              PulseMSRemaining.TxLEDPulse = TX_RX_LED_PULSE_MS;
-            }
             Endpoint_SelectEndpoint(CDC_TX_EPADDR);
           }
 
@@ -234,15 +220,6 @@ int main(void) {
             if (ready) Endpoint_Write_8(b);
           }
           if (ready) Endpoint_ClearIN();
-          if (frame == FRAME_START_2) {
-            /* Turn off TX LED(s) once the TX pulse period has elapsed */
-            if (PulseMSRemaining.TxLEDPulse && !(--PulseMSRemaining.TxLEDPulse))
-              LEDs_TurnOffLEDs(LEDMASK_TX);
-
-            /* Turn off RX LED(s) once the RX pulse period has elapsed */
-            if (PulseMSRemaining.RxLEDPulse && !(--PulseMSRemaining.RxLEDPulse))
-              LEDs_TurnOffLEDs(LEDMASK_RX);
-          }
         }
       } else if (RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
         RingBuffer_Remove(&USARTtoUSB_Buffer);
@@ -254,15 +231,8 @@ int main(void) {
       /* Load the next byte from the USART transmit buffer into the USART */
       if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
         Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
-
-        LEDs_TurnOnLEDs(LEDMASK_RX);
-        PulseMSRemaining.RxLEDPulse = TX_RX_LED_PULSE_MS;
       }
     }
-
-    // Dont forget LEDs on if suddenly unconfigured.
-    LEDs_TurnOffTXLED;
-    LEDs_TurnOffRXLED;
   }
 }
 
@@ -276,7 +246,6 @@ void SetupHardware(void) {
   /* Hardware Initialization */
   Serial_Init(115200, true);
   UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
-  LEDs_Init();
   USB_Init();
 
   /* Start the flush timer so that overflows occur rapidly to push received

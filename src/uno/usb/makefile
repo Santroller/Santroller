@@ -9,7 +9,7 @@
 #         LUFA Project Makefile.
 # --------------------------------------
 
-MCU          = atmega16u2
+MCU          = at90usb82
 ARCH         = AVR8
 BOARD        = USER
 OPTIMIZATION = s
@@ -23,7 +23,7 @@ SIGNATURE = ardwiino
 SRC          = main.c ../../shared/output/usb/Descriptors.c ../../shared/output/control_requests.c ../../shared/output/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DMCUC=${MCU} -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
 LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
@@ -37,7 +37,7 @@ AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
 # +1 byte offset for old MagicBootKey support (0x280)
 # +1 for better data aligning or in case a 2byte key is written
 # u2 and u4 Series (RAMSTART = 0x100):
-RAM_OFFSET            = 0x800290
+RAM_OFFSET            = 0x800291
 
 # Reserved registers for faster USB-Serial convertion
 # The lower, the better (except 0 and 1)

@@ -20,7 +20,7 @@ void led_init(void) {
     apa102_init_spi();
   }
 }
-long unsigned int colours[] = {Black, Green, White, DeepSkyBlue};
+long unsigned int colours[] = {Black, Green, White, DeepSkyBlue, 0xFF00FF};
 long unsigned int fretColours[] = {Green, Red, Yellow, Blue, OrangeRed};
 int frets[] = {XBOX_A, XBOX_B, XBOX_Y, XBOX_X, XBOX_LB};
 void led_tick(controller_t *controller) {

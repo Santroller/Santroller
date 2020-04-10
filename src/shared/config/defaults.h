@@ -42,7 +42,7 @@
   {                                                                            \
     21, 16, INVALID_PIN, INVALID_PIN, 15, 14, INVALID_PIN, INVALID_PIN, 9,     \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, 5, 6, 8, 7,                     \
-        {INVALID_PIN, false}, {INVALID_PIN, false}, {19, false}, {20, false},  \
+        {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false},  \
         {18, true}, {                                                          \
       MPU_6050_INTERRUPT_PIN, false                                            \
     }                                                                          \

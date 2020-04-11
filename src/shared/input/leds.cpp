@@ -9,7 +9,7 @@ extern "C" {
 #include "input_handler.h"
 #include <avr/power.h>
 uint8_t pixels[2 * NUM_LEDS];
-#define WS2812_PIN 14
+#define WS2812_PIN 10
 Adafruit_NeoPixel leds =
     Adafruit_NeoPixel(NUM_LEDS, WS2812_PIN, NEO_GRB + NEO_KHZ800, pixels);
 void led_init(void) {

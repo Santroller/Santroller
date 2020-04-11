@@ -75,16 +75,15 @@ int state = STATE_ARDWIINO;
 int lastCommand = 0;
 int lastAddr = 0;
 uint8_t frame = 0;
-// 0x289 is the final address we have set aside for our own use
-bool *jmpToBootloader = (bool *)0x290;
+#define JUMP 0xDEAD0000
+// set this to JUMP to jmp
+uint32_t jmpToBootloader __attribute__ ((section (".noinit")));
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
 int main(void) {
-  // jmpToBootloader is only valid after a watchdog reset.
-  if (!bit_is_set(MCUSR, WDRF)) { *jmpToBootloader = false; }
-  if (*jmpToBootloader) {
-    *jmpToBootloader = false;
+  if (jmpToBootloader == JUMP) {
+    jmpToBootloader = 0;
     // Bootloader is at address 0x1000
     asm volatile("jmp 0x1000");
   }
@@ -161,13 +160,13 @@ int main(void) {
                   Serial_SendByte(b);
                   eeprom_update_block(&config, &config_mem,
                                       sizeof(eeprom_config_t));
-                  *jmpToBootloader = false;
+                  jmpToBootloader = 0;
                   reboot();
                 } else if (b == COMMAND_JUMP_BOOTLOADER) {
                   state = STATE_AVRDUDE;
                   frame = FRAME_START_2;
                 } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
-                  *jmpToBootloader = true;
+                  jmpToBootloader = JUMP;
                   reboot();
                 }
                 if (b == COMMAND_WRITE_CONFIG_VALUE) { lastCommand = b; }

@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include <LUFA/Drivers/Misc/RingBuffer.h>
 #define FRAME_START_1 0x7c
 #define FRAME_START_2 0x7e
 #define FRAME_END 0x7f
@@ -26,6 +27,11 @@
 size_t controller_index = 0;
 controller_t controller;
 uint8_t report[sizeof(output_report_size_t)];
+/** Circular buffer to hold data from the serial port before it is sent to the
+ * host. */
+RingBuffer_t Buffer;
+uint8_t      BufferData[128];
+
 uint8_t read_usb(void) {
   loop_until_bit_is_set(UCSR0A, RXC0);
   return UDR0;
@@ -33,7 +39,8 @@ uint8_t read_usb(void) {
 bool can_read_usb(void) { return bit_is_set(UCSR0A, RXC0); }
 
 void write_usb(uint8_t data) {
-  if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC || data == FRAME_END) {
+  if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC ||
+      data == FRAME_END) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = ESC;
     loop_until_bit_is_set(UCSR0A, UDRE0);
@@ -54,7 +61,8 @@ int main(void) {
 
   UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
   UCSR0A = (1 << U2X0);
-  UCSR0B = ((1 << TXEN0) | (1 << RXEN0));
+  UCSR0B = ((1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0));
+  RingBuffer_InitBuffer(&Buffer, BufferData, sizeof(BufferData));
   input_init();
   while (1) {
     input_tick(&controller);
@@ -66,8 +74,18 @@ int main(void) {
     while (controller_index < Size) { write_usb(report[controller_index++]); }
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = FRAME_START_2;
-    process_serial();
+    for (int i =0; i < RingBuffer_GetCount(&Buffer); i++) {
+      process_serial(RingBuffer_Remove(&Buffer));
+    }
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = FRAME_END;
   }
+}
+
+/** ISR to manage the reception of data from the serial port, placing received
+ * bytes into a circular buffer for later transmission to the host.
+ */
+ISR(USART_RX_vect, ISR_BLOCK) {
+  uint8_t ReceivedByte = UDR0;
+    RingBuffer_Insert(&Buffer, ReceivedByte);
 }

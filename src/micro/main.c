@@ -62,7 +62,9 @@ int main(void) {
   sei();
   while (true) {
     input_tick(&controller);
-    process_serial();
+    while (can_read_usb()) {
+      process_serial(read_usb());
+    }
     HID_Device_USBTask(&interface);
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
   }

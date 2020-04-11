@@ -158,6 +158,7 @@ int main(void) {
               } else if (lastCommand == 0) {
                 if (b == COMMAND_APPLY_CONFIG) {
                   Serial_SendByte(b);
+                  _delay_ms(1000);
                   eeprom_update_block(&config, &config_mem,
                                       sizeof(eeprom_config_t));
                   jmpToBootloader = 0;

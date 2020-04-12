@@ -16,7 +16,7 @@ jobs:
       with: 
         submodules: "recursive" 
     - name: setup
-    - run: |
+      run: |
         sudo apt-get install -y make gcc-avr avr-libc binutils
     - name: configure
       run: ./configure
@@ -30,9 +30,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          ./windows/*.exe
-          ./mac/*.dmg
-          ./linux/*.AppImage
+        files: output/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

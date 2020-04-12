@@ -77,7 +77,7 @@ int lastAddr = 0;
 uint8_t frame = 0;
 #define JUMP 0xDEAD0000
 // set this to JUMP to jmp
-uint32_t jmpToBootloader __attribute__ ((section (".noinit")));
+uint32_t jmpToBootloader __attribute__((section(".noinit")));
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
@@ -244,8 +244,14 @@ void SetupHardware(void) {
   wdt_disable();
 
   /* Hardware Initialization */
-  Serial_Init(115200, true);
+  UBRR1 = SERIAL_2X_UBBRVAL(115200);
+
+  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
+  UCSR1A = (1 << U2X1);
   UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
+
+  DDRD |= (1 << 3);
+  PORTD |= (1 << 2);
   USB_Init();
 
   /* Start the flush timer so that overflows occur rapidly to push received

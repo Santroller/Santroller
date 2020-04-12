@@ -9,7 +9,7 @@
 #         LUFA Project Makefile.
 # --------------------------------------
 
-MCU          = atmega16u2
+MCU          = at90usb82
 ARCH         = AVR8
 BOARD        = USER
 OPTIMIZATION = s

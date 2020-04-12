@@ -351,6 +351,7 @@ void EVENT_USB_Device_ControlRequest(void) {
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
       if (entered_prog) {
         entered_prog = false;
+        frame = 0;
         state = STATE_ARDWIINO;
       }
     }

@@ -20,7 +20,7 @@ build:
 	$(MAKE) -C src/uno
 
 build-all:
-	$(MAKE) -C src/uno/usb OBJDIR=obj/16u2
+	$(MAKE) -C src/uno/usb OBJDIR=obj/16u2 MCU=atmega16u2
 	$(MAKE) -C src/uno/usb OBJDIR=obj/8u2 MCU=at90usb82
 	$(MAKE) -C src/uno/main
 	$(MAKE) -C src/micro OBJDIR=obj/micro/16 ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000

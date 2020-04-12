@@ -349,7 +349,6 @@ void EVENT_USB_Device_ControlRequest(void) {
       Endpoint_ClearSETUP();
       Endpoint_ClearStatusStage();
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
-      // The next dtr after programming will reset the device.
       if (entered_prog) {
         entered_prog = false;
         state = STATE_ARDWIINO;

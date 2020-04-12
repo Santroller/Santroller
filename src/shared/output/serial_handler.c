@@ -253,6 +253,12 @@ void process_serial(uint8_t data) {
       buf = controller.leds.leds;
       size = 5;
       break;
+    case COMMAND_WRITE_CONFIG_VALUE:
+    case COMMAND_READ_INFO:
+    case COMMAND_READ_CONFIG_VALUE:
+      break;
+    default:
+      cmd = 0;
     }
     return;
   } else if (size == 0) {

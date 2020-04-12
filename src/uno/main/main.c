@@ -57,7 +57,7 @@ int main(void) {
   UCSR0A = 0;
   UCSR0C = 0;
 
-  UBRR0 = SERIAL_2X_UBBRVAL(115200);
+  UBRR0 = SERIAL_2X_UBBRVAL(1000000);
 
   UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
   UCSR0A = (1 << U2X0);

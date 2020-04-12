@@ -61,6 +61,7 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 115200,
                                               CDC_LINEENCODING_OneStopBit,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
+#define BAUD 1000000
 #define STATE_ARDWIINO 0
 #define STATE_AVRDUDE 2
 #define FRAME_START_1 0x7c
@@ -81,6 +82,17 @@ uint32_t jmpToBootloader __attribute__((section(".noinit")));
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
+void set_baud(uint16_t b) {
+  UCSR1B = 0;
+  UCSR1A = 0;
+  UCSR1C = 0;
+  /* Hardware Initialization */
+  UBRR1 = b;
+
+  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
+  UCSR1A = (1 << U2X1);
+  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
+}
 int main(void) {
   if (jmpToBootloader == JUMP) {
     jmpToBootloader = 0;
@@ -127,58 +139,53 @@ int main(void) {
           if (Endpoint_BytesInEndpoint()) {
             uint8_t b = Endpoint_Read_8();
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
-            if (state == STATE_ARDWIINO) {
-              if (lastCommand == COMMAND_START_CONFIG) {
-                config.device_type = device_type;
-                config.polling_rate = polling_rate;
-              } else if (lastCommand == COMMAND_READ_INFO) {
-                const char *c = NULL;
-                switch (b) {
-                case INFO_USB_MCU:
-                  c = usb_mcu;
-                  break;
-                case INFO_USB_CPU_FREQ:
-                  c = usb_freq;
-                  break;
-                }
-                if (c != NULL) {
-                  while (*(c) != 0) {
-                    RingBuffer_Insert(&USARTtoUSB_Buffer, *(c++));
-                  }
-                }
-                lastCommand = 0;
-              } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-                lastCommand = b;
-              } else if (lastCommand == CONFIG_SUB_TYPE) {
-                config.device_type = b;
-                lastCommand = 0;
-              } else if (lastCommand == CONFIG_POLL_RATE) {
-                config.polling_rate = b;
-                lastCommand = 0;
-              } else if (lastCommand == 0) {
-                if (b == COMMAND_APPLY_CONFIG) {
-                  Serial_SendByte(b);
-                  _delay_ms(1000);
-                  eeprom_update_block(&config, &config_mem,
-                                      sizeof(eeprom_config_t));
-                  jmpToBootloader = 0;
-                  reboot();
-                } else if (b == COMMAND_JUMP_BOOTLOADER) {
-                  state = STATE_AVRDUDE;
-                  frame = FRAME_START_2;
-                } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
-                  jmpToBootloader = JUMP;
-                  reboot();
-                }
-                if (b == COMMAND_WRITE_CONFIG_VALUE) { lastCommand = b; }
-                if (b == COMMAND_READ_INFO) { lastCommand = b; }
-              } else {
-                lastCommand = 0;
+            if (state == STATE_AVRDUDE) {
+              entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
+            } else if (lastCommand == COMMAND_READ_INFO) {
+              const char *c = NULL;
+              switch (b) {
+              case INFO_USB_MCU:
+                c = usb_mcu;
+                break;
+              case INFO_USB_CPU_FREQ:
+                c = usb_freq;
+                break;
               }
-            } else {
-              if (b == COMMAND_STK_500_ENTER_PROG && !entered_prog) {
-                entered_prog = true;
+              if (c != NULL) {
+                while (*(c) != 0) {
+                  RingBuffer_Insert(&USARTtoUSB_Buffer, *(c++));
+                }
               }
+              lastCommand = 0;
+            } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
+              lastCommand = b;
+            } else if (lastCommand == CONFIG_SUB_TYPE) {
+              config.device_type = b;
+              lastCommand = 0;
+            } else if (lastCommand == CONFIG_POLL_RATE) {
+              config.polling_rate = b;
+              lastCommand = 0;
+            } else if (b == COMMAND_START_CONFIG) {
+              config.device_type = device_type;
+              config.polling_rate = polling_rate;
+            } else if (b == COMMAND_APPLY_CONFIG) {
+              Serial_SendByte(b);
+              _delay_ms(1000);
+              eeprom_update_block(&config, &config_mem,
+                                  sizeof(eeprom_config_t));
+              jmpToBootloader = 0;
+              reboot();
+            } else if (b == COMMAND_JUMP_BOOTLOADER) {
+              state = STATE_AVRDUDE;
+              frame = FRAME_START_2;
+
+              set_baud(SERIAL_2X_UBBRVAL(115200));
+            } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
+              jmpToBootloader = JUMP;
+              reboot();
+            } else if (b == COMMAND_WRITE_CONFIG_VALUE ||
+                       b == COMMAND_READ_INFO) {
+              lastCommand = b;
             }
           }
 
@@ -221,10 +228,10 @@ int main(void) {
           }
           if (ready) Endpoint_ClearIN();
         }
-      } else if (RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
-        RingBuffer_Remove(&USARTtoUSB_Buffer);
-        frame = FRAME_START_1;
       } else {
+        if (RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
+          frame = FRAME_START_1;
+        }
         RingBuffer_Remove(&USARTtoUSB_Buffer);
       }
 
@@ -242,14 +249,8 @@ void SetupHardware(void) {
   /* Disable watchdog if enabled by bootloader/fuses */
   MCUSR &= ~(1 << WDRF);
   wdt_disable();
-
   /* Hardware Initialization */
-  UBRR1 = SERIAL_2X_UBBRVAL(115200);
-
-  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
-  UCSR1A = (1 << U2X1);
-  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
-
+  set_baud(SERIAL_2X_UBBRVAL(BAUD));
   DDRD |= (1 << 3);
   PORTD |= (1 << 2);
   USB_Init();
@@ -353,6 +354,8 @@ void EVENT_USB_Device_ControlRequest(void) {
         entered_prog = false;
         frame = 0;
         state = STATE_ARDWIINO;
+
+        set_baud(SERIAL_2X_UBBRVAL(BAUD));
       }
     }
   }

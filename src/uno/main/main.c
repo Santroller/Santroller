@@ -77,8 +77,6 @@ int main(void) {
     for (int i =0; i < RingBuffer_GetCount(&Buffer); i++) {
       process_serial(RingBuffer_Remove(&Buffer));
     }
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = FRAME_END;
   }
 }
 

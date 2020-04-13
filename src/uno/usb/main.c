@@ -66,7 +66,6 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 115200,
 #define STATE_AVRDUDE 2
 #define FRAME_START_1 0x7c
 #define FRAME_START_2 0x7e
-#define FRAME_END 0x7f
 #define ESC 0x7b
 eeprom_config_t EEMEM config_mem;
 
@@ -75,7 +74,7 @@ bool entered_prog = false;
 int state = STATE_ARDWIINO;
 int lastCommand = 0;
 int lastAddr = 0;
-uint8_t frame = 0;
+uint8_t frame = FRAME_START_1;
 #define JUMP 0xDEAD0000
 // set this to JUMP to jmp
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
@@ -177,8 +176,6 @@ int main(void) {
               reboot();
             } else if (b == COMMAND_JUMP_BOOTLOADER) {
               state = STATE_AVRDUDE;
-              frame = FRAME_START_2;
-
               set_baud(SERIAL_2X_UBBRVAL(115200));
             } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
               jmpToBootloader = JUMP;
@@ -193,47 +190,30 @@ int main(void) {
         }
       }
       uint8_t b;
-      if (frame != 0) {
-        /* Check if the UART receive buffer flush timer has expired or the
-        buffer
-         * is nearly full */
-        RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
-        if (frame == FRAME_START_1 ||
-            ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL))) {
-          if (frame == FRAME_START_1) {
-            Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          } else {
-            TIFR0 |= (1 << TOV0);
-            Endpoint_SelectEndpoint(CDC_TX_EPADDR);
-          }
-
-          bool ready = Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady();
-          /* Read bytes from the USART receive buffer into the USB IN
-          endpoint
-           */
-          while (BufferCount--) {
-            b = RingBuffer_Remove(&USARTtoUSB_Buffer);
-            if (state != STATE_AVRDUDE) {
-              if (b == FRAME_END) {
-                frame = 0;
-                break;
-              };
-              if (b == FRAME_START_2) {
-                frame = b;
-                break;
-              };
-              if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
-            }
-            if (ready) Endpoint_Write_8(b);
-          }
-          if (ready) Endpoint_ClearIN();
-        }
+      RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
+      if (frame == FRAME_START_2 || state == STATE_AVRDUDE) {
+        Endpoint_SelectEndpoint(CDC_TX_EPADDR);
       } else {
-        if (RingBuffer_Peek(&USARTtoUSB_Buffer) == FRAME_START_1) {
-          frame = FRAME_START_1;
-        }
-        RingBuffer_Remove(&USARTtoUSB_Buffer);
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
       }
+      bool ready = Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady();
+      bool written = false;
+      while (BufferCount) {
+        b = RingBuffer_Remove(&USARTtoUSB_Buffer);
+        if (state != STATE_AVRDUDE) {
+          if (b == FRAME_START_1 || b == FRAME_START_2) {
+            frame = b;
+            break;
+          } else if (b == ESC) {
+            b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
+          }
+        } else {
+          BufferCount--;
+        }
+        if (ready) Endpoint_Write_8(b);
+        written = true;
+      }
+      if (ready && written) Endpoint_ClearIN();
 
       /* Load the next byte from the USART transmit buffer into the USART */
       if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
@@ -352,9 +332,8 @@ void EVENT_USB_Device_ControlRequest(void) {
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
       if (entered_prog) {
         entered_prog = false;
-        frame = 0;
+        frame = FRAME_START_1;
         state = STATE_ARDWIINO;
-
         set_baud(SERIAL_2X_UBBRVAL(BAUD));
       }
     }

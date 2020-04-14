@@ -60,21 +60,14 @@ int main(void) {
   report_init();
   USB_Init();
   sei();
+  uint16_t rec;
   while (true) {
     input_tick(&controller);
-    while (can_read_usb()) {
-      process_serial(read_usb());
-    }
+    rec = CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface);
+    while (rec--) { process_serial(CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface) & 0xff); }
     HID_Device_USBTask(&interface);
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
   }
-}
-uint8_t read_usb(void) {
-  return CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface) & 0xff;
-}
-
-bool can_read_usb(void) {
-  return CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface);
 }
 
 void write_usb(uint8_t data) {

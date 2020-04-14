@@ -47,12 +47,16 @@ void guitar_init(void) {
     tick = analogue_tick;
   }
 }
+int16_t r_x;
 void guitar_tick(controller_t *controller) {
+  r_x = controller->r_x;
+  // Whammy needs to be scaled so that it is picked up
+  if (r_x > 0) r_x = 0;
+  r_x = r_x << 1;
+  if (r_x > 0) r_x = -32767;
+  controller->r_x = r_x;
   if (tick == NULL) return;
   tick(controller);
-  // Whammy needs to be scaled so that it is picked up
-  int32_t whammy = controller->r_x * 2L;
-  controller->r_x = constrain(whammy, 0, 32767);
 }
 ISR(PCINT0_vect) { ready = true; }
 #if defined(PCINT1_vect)

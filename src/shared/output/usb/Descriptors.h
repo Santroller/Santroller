@@ -6,7 +6,7 @@
 #include <avr/pgmspace.h>
 
 #define HID_EPSIZE 32
-#define HID_REPORTSIZE 64
+#define HID_REPORTSIZE 32
 /** Endpoint address of the HID IN endpoint. */
 #define HID_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the CDC device-to-host notification IN endpoint. */

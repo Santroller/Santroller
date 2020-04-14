@@ -113,6 +113,7 @@ int main(void) {
   }
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
   RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x180);
+  controller_control_request_init();
   sei();
   for (;;) {
     for (;;) {

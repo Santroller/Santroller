@@ -16,6 +16,6 @@
   check_joy_key(0, config.keys.trigger, controller.trigger,                    \
                 (int)config.axis.threshold_trigger, &usedKeys, KeyboardReport)
 
-void create_report(void *ReportData, uint16_t *const ReportSize,
-                   controller_t controller);
+void (*create_report)(void *ReportData, uint16_t *const ReportSize,
+                      controller_t controller);
 void report_init(void);

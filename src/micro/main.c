@@ -51,6 +51,7 @@ USB_ClassInfo_HID_Device_t interface = {
   },
 };
 controller_t controller;
+output_report_size_t report;
 int main(void) {
   load_config();
   init_serial();
@@ -59,13 +60,27 @@ int main(void) {
   input_init();
   report_init();
   USB_Init();
+  controller_control_request_init();
   sei();
+  uint16_t size;
   uint16_t rec;
   while (true) {
     input_tick(&controller);
+    create_report(&report, &size, controller);
+    if (memcmp(&report, &last_report, size) != 0) {
+      memcpy(&last_report, &report, size);
+      Endpoint_SelectEndpoint(HID_EPADDR_IN);
+      if (Endpoint_IsReadWriteAllowed()) {
+        Endpoint_Write_Stream_LE(&report, size, NULL);
+        Endpoint_ClearIN();
+      }
+    }
+
     rec = CDC_Device_BytesReceived(&VirtualSerial_CDC_Interface);
-    while (rec--) { process_serial(CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface) & 0xff); }
-    HID_Device_USBTask(&interface);
+    while (rec--) {
+      process_serial(CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface) &
+                     0xff);
+    }
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
   }
 }
@@ -96,10 +111,14 @@ void EVENT_CDC_Device_ControLineStateChanged(
     bootloader();
   }
 }
+#include "../shared/input/pins/pins.h"
 bool CALLBACK_HID_Device_CreateHIDReport(
     USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
     const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-  create_report(ReportData, ReportSize, controller);
+  USB_XInputReport_Data_t *x = (USB_XInputReport_Data_t *)ReportData;
+  if (digitalRead(4)) { x->buttons |= _BV(XBOX_A); }
+  x->rsize = sizeof(USB_XInputReport_Data_t);
+  *ReportSize = sizeof(USB_XInputReport_Data_t);
   return false;
 }
 

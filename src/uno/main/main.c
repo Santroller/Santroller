@@ -40,8 +40,7 @@ uint8_t read_usb(void) {
 bool can_read_usb(void) { return bit_is_set(UCSR0A, RXC0); }
 
 void write_usb(uint8_t data) {
-  if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC ||
-      data == FRAME_END) {
+  if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC ) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = ESC;
     loop_until_bit_is_set(UCSR0A, UDRE0);
@@ -65,6 +64,7 @@ int main(void) {
   UCSR0B = ((1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0));
   RingBuffer_InitBuffer(&Buffer, BufferData, sizeof(BufferData));
   input_init();
+  report_init();
   while (1) {
     input_tick(&controller);
     uint16_t Size;

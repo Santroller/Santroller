@@ -229,11 +229,9 @@ void get_config_buf(uint8_t data) {
     buf = (uint8_t *)&new_config.pins.r_y.inverted;
     break;
   case CONFIG_THRESHOLD_JOY:
-    size = 2;
     buf = (uint8_t *)&new_config.axis.threshold_joy;
     break;
   case CONFIG_THRESHOLD_TRIGGER:
-    size = 2;
     buf = (uint8_t *)&new_config.axis.threshold_trigger;
     break;
   }

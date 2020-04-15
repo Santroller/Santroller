@@ -9,6 +9,7 @@
 #include "leds.h"
 // #include <stdlib.h>
 void (*tick_function)(controller_t *);
+int jth;
 void input_init(void) {
   switch (config.main.input_type) {
   case WII:
@@ -23,8 +24,8 @@ void input_init(void) {
   sei();
   guitar_init();
   led_init();
+  jth = config.axis.threshold_joy << 8;
 }
-
 void input_tick(controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);

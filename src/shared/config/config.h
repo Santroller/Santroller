@@ -71,8 +71,8 @@ typedef struct {
   uint32_t version;
 } main_config_t;
 typedef struct {
-  uint16_t threshold_trigger;
-  uint16_t threshold_joy;
+  uint8_t threshold_trigger;
+  uint8_t threshold_joy;
   uint8_t mpu_6050_orientation;
   int16_t tilt_sensitivity;
 } axis_config_t;

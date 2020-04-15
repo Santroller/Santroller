@@ -12,7 +12,7 @@
 MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
-OPTIMIZATION = 2
+OPTIMIZATION = s
 F_CPU 		 = 16000000
 F_USB		 = ${F_CPU}
 

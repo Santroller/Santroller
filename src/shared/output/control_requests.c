@@ -34,7 +34,7 @@ void controller_control_request(void) {
        (CONTROL_REQTYPE_DIRECTION | CONTROL_REQTYPE_TYPE)) ==
           (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
       USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
-    void *dev = (void *)0x1C0;
+    void *dev = (void *)0x200;
     memcpy_P(dev, &DevCompatIDs, DevCompatIDs.TotalLength);
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(dev, DevCompatIDs.TotalLength);

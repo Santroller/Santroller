@@ -23,7 +23,8 @@ static const uint8_t PROGMEM hat_bindings[] = {
     0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 static const uint8_t *currentAxisBindings;
 static uint8_t currentAxisBindingsLen = 0;
-
+int jth;
+int tth;
 void check_joy_key(int neg, int pos, int val, int thresh, uint8_t *used,
                    USB_KeyboardReport_Data_t *KeyboardReport) {
   if (*used < SIMULTANEOUS_KEYS) {
@@ -160,4 +161,6 @@ void report_init(void) {
   } else {
     create_report = create_ps3_report;
   }
+  jth = config.axis.threshold_joy << 8;
+  tth = config.axis.threshold_trigger << 8;
 }

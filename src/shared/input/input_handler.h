@@ -1,10 +1,10 @@
 #pragma once
 #include "../controller/controller.h"
 #define CHECK_JOY(joy, neg, pos)                                               \
-  if (controller->joy < -(int)config.axis.threshold_joy) {                           \
+  if (controller->joy < -jth) {                           \
     bit_set(controller->buttons, neg);                                          \
   }                                                                            \
-  if (controller->joy > (int)config.axis.threshold_joy) {                            \
+  if (controller->joy > jth) {                            \
     bit_set(controller->buttons, pos);                                          \
   }
 

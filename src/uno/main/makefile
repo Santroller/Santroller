@@ -12,7 +12,7 @@
 MCU          = atmega328p
 ARCH         = AVR8
 BOARD        = UNO
-OPTIMIZATION = 3
+OPTIMIZATION = s
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 

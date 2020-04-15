@@ -62,8 +62,6 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 115200,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
 #define BAUD 1000000
-// Have we nearly received an HID packet?
-#define ReceivedHIDPacket 20
 #define STATE_ARDWIINO 0
 #define STATE_AVRDUDE 2
 #define FRAME_START_1 0x7c
@@ -181,6 +179,7 @@ int main(void) {
             } else if (b == COMMAND_JUMP_BOOTLOADER) {
               state = STATE_AVRDUDE;
               frame = FRAME_START_2;
+
               set_baud(SERIAL_2X_UBBRVAL(115200));
             } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
               jmpToBootloader = JUMP;
@@ -199,7 +198,8 @@ int main(void) {
       buffer
        * is nearly full */
       RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
-      if (((TIFR0 & (1 << TOV0)) || (BufferCount > ReceivedHIDPacket))) {
+      if (frame == FRAME_START_1 ||
+          ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL))) {
         if (frame == FRAME_START_1) {
           Endpoint_SelectEndpoint(HID_EPADDR_IN);
         } else {
@@ -214,7 +214,11 @@ int main(void) {
         while (BufferCount--) {
           b = RingBuffer_Remove(&USARTtoUSB_Buffer);
           if (state != STATE_AVRDUDE) {
-            if (b == FRAME_START_1 || b == FRAME_START_2) {
+            if (b == FRAME_END) {
+              frame = 0;
+              break;
+            };
+            if (b == FRAME_START_2 || b == FRAME_START_1) {
               frame = b;
               break;
             };
@@ -344,6 +348,7 @@ void EVENT_USB_Device_ControlRequest(void) {
         entered_prog = false;
         frame = FRAME_START_1;
         state = STATE_ARDWIINO;
+
         set_baud(SERIAL_2X_UBBRVAL(BAUD));
       }
     }

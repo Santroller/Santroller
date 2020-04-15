@@ -42,7 +42,7 @@ enum gyro {
 
 // Firmware types
 enum firmware_type {
-    GUITAR_DEVICE_TYPE=0xfea123,
+    GUITAR_DEVICE_TYPE=0xfea124,
     ARDWIINO_DEVICE_TYPE=0xa2d414
 };
 

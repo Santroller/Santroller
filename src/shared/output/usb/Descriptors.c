@@ -337,7 +337,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   uint16_t Size = NO_DESCRIPTOR;
 
   const void *Address = NULL;
-  uint8_t *buf = (uint8_t *)0x1C0;
+  uint8_t *buf = (uint8_t *)0x200;
   *DescriptorAddress = buf;
   // We set aside 0x200 as an area to work with descriptors.
   switch (DescriptorType) {

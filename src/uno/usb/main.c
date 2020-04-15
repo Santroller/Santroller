@@ -50,17 +50,16 @@ RingBuff_t USBtoUSART_Buffer;
 
 /** Circular buffer to hold data from the serial port before it is sent to the
  * host. */
-RingBuff_t USARTtoUSB_Buffer;
+RingBuff_t USARTtoSER_Buffer;
+/** Circular buffer to hold data from the serial port before it is sent to the
+ * host. */
+RingBuff_t USARTtoHID_Buffer;
 
 /** Contains the current baud rate and other settings of the first virtual
  * serial port. This must be retained as some operating systems will not open
  * the port unless the settings can be set successfully.
  */
-static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 115200,
-                                          .CharFormat =
-                                              CDC_LINEENCODING_OneStopBit,
-                                          .ParityType = CDC_PARITY_None,
-                                          .DataBits = 8};
+static CDC_LineEncoding_t LineEncoding = {};
 #define BAUD 1000000
 #define STATE_ARDWIINO 0
 #define STATE_AVRDUDE 2
@@ -74,8 +73,6 @@ eeprom_config_t config;
 bool entered_prog = false;
 int state = STATE_ARDWIINO;
 int lastCommand = 0;
-int lastAddr = 0;
-uint8_t frame = FRAME_START_1;
 #define JUMP 0xDEAD0000
 // set this to JUMP to jmp
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
@@ -92,6 +89,29 @@ void set_baud(uint16_t b) {
   UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
   UCSR1A = (1 << U2X1);
   UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
+}
+void handle_out(RingBuff_t *buf, bool serial, uint8_t epaddr) {
+  uint8_t b;
+  RingBuff_Count_t BufferCount = RingBuffer_GetCount(buf);
+  if (BufferCount < 10) { return; }
+  if (serial) {
+    if (!((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL))) {
+      return;
+    }
+    TIFR0 |= (1 << TOV0);
+  }
+  Endpoint_SelectEndpoint(epaddr);
+  if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
+    while (BufferCount--) {
+      b = RingBuffer_Remove(buf);
+      if (state != STATE_AVRDUDE) {
+        if (b == FRAME_END) { break; }
+        if (b == ESC) b = RingBuffer_Remove(buf) ^ 0x20;
+      }
+      Endpoint_Write_8(b);
+    }
+    Endpoint_ClearIN();
+  }
 }
 int main(void) {
   if (jmpToBootloader == JUMP) {
@@ -110,8 +130,9 @@ int main(void) {
     config.device_type = device_type;
   }
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
-  RingBuffer_InitBuffer(&USARTtoUSB_Buffer, (RingBuff_Data_t *)0x180);
-  controller_control_request_init();
+  RingBuffer_InitBuffer(&USARTtoSER_Buffer, (RingBuff_Data_t *)0x140);
+  RingBuffer_InitBuffer(&USARTtoHID_Buffer, (RingBuff_Data_t *)0x180);
+  // controller_control_request_init();
   sei();
   for (;;) {
     for (;;) {
@@ -154,7 +175,7 @@ int main(void) {
               }
               if (c != NULL) {
                 while (*(c) != 0) {
-                  RingBuffer_Insert(&USARTtoUSB_Buffer, *(c++));
+                  RingBuffer_Insert(&USARTtoSER_Buffer, *(c++));
                 }
               }
               lastCommand = 0;
@@ -166,9 +187,9 @@ int main(void) {
             } else if (lastCommand == CONFIG_POLL_RATE) {
               config.polling_rate = b;
               lastCommand = 0;
-            } else if (b == COMMAND_START_CONFIG) {
-              config.device_type = device_type;
-              config.polling_rate = polling_rate;
+              // } else if (b == COMMAND_START_CONFIG) {
+              //   config.device_type = device_type;
+              //   config.polling_rate = polling_rate;
             } else if (b == COMMAND_APPLY_CONFIG) {
               Serial_SendByte(b);
               _delay_ms(1000);
@@ -178,8 +199,6 @@ int main(void) {
               reboot();
             } else if (b == COMMAND_JUMP_BOOTLOADER) {
               state = STATE_AVRDUDE;
-              frame = FRAME_START_2;
-
               set_baud(SERIAL_2X_UBBRVAL(115200));
             } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
               jmpToBootloader = JUMP;
@@ -193,42 +212,8 @@ int main(void) {
           if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
         }
       }
-      uint8_t b;
-      /* Check if the UART receive buffer flush timer has expired or the
-      buffer
-       * is nearly full */
-      RingBuff_Count_t BufferCount = RingBuffer_GetCount(&USARTtoUSB_Buffer);
-      if (frame == FRAME_START_1 ||
-          ((TIFR0 & (1 << TOV0)) || (BufferCount > BUFFER_NEARLY_FULL))) {
-        if (frame == FRAME_START_1) {
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        } else {
-          TIFR0 |= (1 << TOV0);
-          Endpoint_SelectEndpoint(CDC_TX_EPADDR);
-        }
-
-        bool ready = Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady();
-        /* Read bytes from the USART receive buffer into the USB IN
-        endpoint
-         */
-        while (BufferCount--) {
-          b = RingBuffer_Remove(&USARTtoUSB_Buffer);
-          if (state != STATE_AVRDUDE) {
-            if (b == FRAME_END) {
-              frame = 0;
-              break;
-            };
-            if (b == FRAME_START_2 || b == FRAME_START_1) {
-              frame = b;
-              break;
-            };
-            if (b == ESC) b = RingBuffer_Remove(&USARTtoUSB_Buffer) ^ 0x20;
-          }
-          if (ready) Endpoint_Write_8(b);
-        }
-        if (ready) Endpoint_ClearIN();
-      }
-
+      handle_out(&USARTtoSER_Buffer, true, CDC_TX_EPADDR);
+      handle_out(&USARTtoHID_Buffer, false, HID_EPADDR_IN);
       /* Load the next byte from the USART transmit buffer into the USART */
       if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
         Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
@@ -346,21 +331,28 @@ void EVENT_USB_Device_ControlRequest(void) {
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
       if (entered_prog) {
         entered_prog = false;
-        frame = FRAME_START_1;
         state = STATE_ARDWIINO;
-
         set_baud(SERIAL_2X_UBBRVAL(BAUD));
       }
     }
   }
 }
-
+volatile uint8_t frame = 0;
 /** ISR to manage the reception of data from the serial port, placing received
  * bytes into a circular buffer for later transmission to the host.
  */
 ISR(USART1_RX_vect, ISR_BLOCK) {
-  uint8_t ReceivedByte = UDR1;
-
-  if (USB_DeviceState == DEVICE_STATE_Configured)
-    RingBuffer_Insert(&USARTtoUSB_Buffer, ReceivedByte);
+  uint8_t b = UDR1;
+  if (state == STATE_AVRDUDE) {
+    frame = FRAME_START_2;
+  } else if (b == FRAME_START_1 || b == FRAME_START_2) {
+    frame = b;
+    return;
+  }
+  if (frame == FRAME_START_1) {
+    RingBuffer_Insert(&USARTtoHID_Buffer, b);
+  } else if (frame == FRAME_START_2) {
+    RingBuffer_Insert(&USARTtoSER_Buffer, b);
+  }
+  if (b == FRAME_END) { frame = 0; }
 }

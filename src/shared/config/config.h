@@ -62,7 +62,7 @@ typedef struct {
   uint8_t input_type;
   uint8_t sub_type;
   uint8_t tilt_type;
-  uint8_t poll_rate;
+  uint8_t unused;
   uint8_t fret_mode;
   bool map_joy_to_dpad;
   bool map_start_select_to_home;

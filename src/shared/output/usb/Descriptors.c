@@ -4,7 +4,6 @@
 #include "../../../shared/output/usb/wcid.h"
 #include <LUFA/Drivers/USB/USB.h>
 uint8_t device_type = OUTPUT_TYPE;
-uint8_t polling_rate = POLL_RATE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the
@@ -368,8 +367,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     memcpy_P(buf, Address, Size);
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)buf;
-    conf->Controller.XInput.Endpoints.DataInEndpoint0.PollingIntervalMS =
-        polling_rate;
     if (device_type >= KEYBOARD) {
       // Switch from Xinput to HID descriptor layout
       memcpy_P(&conf->Controller.HID.Endpoints,

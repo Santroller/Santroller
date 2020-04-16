@@ -73,7 +73,6 @@
 #define LEDMASK_BUSY (LEDS_LED1 | LEDS_LED2)
 typedef struct {
   uint32_t id;
-  uint8_t polling_rate;
   uint8_t device_type;
 } eeprom_config_t;
 

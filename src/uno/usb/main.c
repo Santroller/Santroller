@@ -59,11 +59,7 @@ RingBuff_t USARTtoHID_Buffer;
  * serial port. This must be retained as some operating systems will not open
  * the port unless the settings can be set successfully.
  */
-static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 115200,
-                                          .CharFormat =
-                                              CDC_LINEENCODING_OneStopBit,
-                                          .ParityType = CDC_PARITY_None,
-                                          .DataBits = 8};
+static CDC_LineEncoding_t LineEncoding = {0};
 #define BAUD 1000000
 #define STATE_ARDWIINO 0
 #define STATE_AVRDUDE 2
@@ -77,7 +73,6 @@ eeprom_config_t config;
 bool entered_prog = false;
 int state = STATE_ARDWIINO;
 int lastCommand = 0;
-int lastAddr = 0;
 #define JUMP 0xDEAD0000
 // set this to JUMP to jmp
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
@@ -105,11 +100,9 @@ int main(void) {
   SetupHardware();
   eeprom_read_block(&config, &config_mem, sizeof(eeprom_config_t));
   if (config.id == ARDWIINO_DEVICE_TYPE) {
-    polling_rate = config.polling_rate;
     device_type = config.device_type;
   } else {
     config.id = ARDWIINO_DEVICE_TYPE;
-    config.polling_rate = polling_rate;
     config.device_type = device_type;
   }
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
@@ -167,11 +160,9 @@ int main(void) {
               config.device_type = b;
               lastCommand = 0;
             } else if (lastCommand == CONFIG_POLL_RATE) {
-              config.polling_rate = b;
               lastCommand = 0;
             } else if (b == COMMAND_START_CONFIG) {
               config.device_type = device_type;
-              config.polling_rate = polling_rate;
             } else if (b == COMMAND_APPLY_CONFIG) {
               Serial_SendByte(b);
               _delay_ms(1000);
@@ -346,7 +337,7 @@ void EVENT_USB_Device_ControlRequest(void) {
   }
 }
 
-volatile uint8_t frame = FRAME_START_1;
+uint8_t frame = 0;
 /** ISR to manage the reception of data from the serial port, placing received
  * bytes into a circular buffer for later transmission to the host.
  */
@@ -362,8 +353,11 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
     }
     if (frame == FRAME_START_2 || state == STATE_AVRDUDE) {
       RingBuffer_Insert(&USARTtoSER_Buffer, b);
-    } else {
+    } else if (frame == FRAME_START_1) {
       RingBuffer_Insert(&USARTtoHID_Buffer, b);
+    }
+    if (b == FRAME_END) {
+      frame = 0;
     }
   }
 }

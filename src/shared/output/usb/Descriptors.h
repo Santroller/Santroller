@@ -81,7 +81,6 @@ typedef struct {
   } Controller;
 } USB_Descriptor_Configuration_t;
 extern uint8_t device_type;
-extern uint8_t polling_rate;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,

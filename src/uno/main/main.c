@@ -27,6 +27,7 @@
 size_t controller_index = 0;
 controller_t controller;
 uint8_t report[sizeof(output_report_size_t)];
+uint8_t prev_report[sizeof(output_report_size_t)];
 /** Circular buffer to hold data from the serial port before it is sent to the
  * host. */
 RingBuffer_t Buffer;
@@ -67,21 +68,27 @@ int main(void) {
   report_init();
   while (1) {
     input_tick(&controller);
-    uint16_t Size;
-    create_report(report, &Size, controller);
-    controller_index = 0;
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = FRAME_START_1;
-    while (controller_index < Size) { write_usb(report[controller_index++]); }
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = FRAME_END;
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = FRAME_START_2;
-    for (int i = 0; i < RingBuffer_GetCount(&Buffer); i++) {
-      process_serial(RingBuffer_Remove(&Buffer));
+    uint16_t size;
+    create_report(report, &size, controller);
+    if (memcmp(report, prev_report, size) != 0) {
+      controller_index = 0;
+      loop_until_bit_is_set(UCSR0A, UDRE0);
+      UDR0 = FRAME_START_1;
+      while (controller_index < size) { write_usb(report[controller_index++]); }
+      loop_until_bit_is_set(UCSR0A, UDRE0);
+      UDR0 = FRAME_END;
+      memcpy(prev_report, report, size);
     }
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = FRAME_END;
+    size = RingBuffer_GetCount(&Buffer);
+    if (size != 0) {
+      loop_until_bit_is_set(UCSR0A, UDRE0);
+      UDR0 = FRAME_START_2;
+      for (int i = 0; i < RingBuffer_GetCount(&Buffer); i++) {
+        process_serial(RingBuffer_Remove(&Buffer));
+      }
+      loop_until_bit_is_set(UCSR0A, UDRE0);
+      UDR0 = FRAME_END;
+    }
   }
 }
 

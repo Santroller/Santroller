@@ -59,9 +59,6 @@ void get_config_buf(uint8_t data) {
   case CONFIG_TILT_SENSITIVITY:
     buf = (uint8_t *)&new_config.axis.tilt_sensitivity;
     break;
-  case CONFIG_POLL_RATE:
-    buf = &new_config.main.poll_rate;
-    break;
   case CONFIG_LED_TYPE:
     buf = &new_config.main.fret_mode;
     break;

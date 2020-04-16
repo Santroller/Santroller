@@ -56,7 +56,6 @@ int main(void) {
   load_config();
   init_serial();
   device_type = config.main.sub_type;
-  polling_rate = config.main.poll_rate;
   input_init();
   report_init();
   USB_Init();

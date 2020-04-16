@@ -197,20 +197,24 @@ int main(void) {
 void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
 
   RingBuff_Count_t BufferCount = RingBuffer_GetCount(buf);
+  if (BufferCount == 0) return;
   if (serial) {
     if ((((TIFR0 & (1 << TOV0)) == 0) && (BufferCount < BUFFER_NEARLY_FULL))) {
       return;
     }
     TIFR0 |= (1 << TOV0);
   }
-  uint8_t b;
+  uint8_t b = RingBuffer_Remove(buf);
+  if (b != FRAME_START_1 && b != FRAME_START_2) {
+    return;
+  }
   Endpoint_SelectEndpoint(ep);
 
   if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
     /* Read bytes from the USART receive buffer into the USB IN
     endpoint
      */
-    while (BufferCount--) {
+    while (true) {
       b = RingBuffer_Remove(buf);
       if (state != STATE_AVRDUDE) {
         if (b == FRAME_END) { break; };
@@ -348,7 +352,6 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
     if (state != STATE_AVRDUDE) {
       if (b == FRAME_START_1 || b == FRAME_START_2) {
         frame = b;
-        return;
       } 
     }
     if (frame == FRAME_START_2 || state == STATE_AVRDUDE) {

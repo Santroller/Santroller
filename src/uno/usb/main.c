@@ -204,9 +204,10 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
     }
     TIFR0 |= (1 << TOV0);
   }
-  uint8_t b = RingBuffer_Remove(buf);
-  if (b != FRAME_START_1 && b != FRAME_START_2) {
-    return;
+  uint8_t b;
+  if (state == STATE_ARDWIINO) {
+    b = RingBuffer_Remove(buf);
+    if (b != FRAME_START_1 && b != FRAME_START_2) { return; }
   }
   Endpoint_SelectEndpoint(ep);
 
@@ -214,9 +215,10 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
     /* Read bytes from the USART receive buffer into the USB IN
     endpoint
      */
-    while (true) {
+    while (BufferCount--) {
       b = RingBuffer_Remove(buf);
-      if (state != STATE_AVRDUDE) {
+      if (state == STATE_ARDWIINO) {
+        BufferCount++;
         if (b == FRAME_END) { break; };
         if (b == ESC) b = RingBuffer_Remove(buf) ^ 0x20;
       }
@@ -350,17 +352,13 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
 
   if (USB_DeviceState == DEVICE_STATE_Configured) {
     if (state != STATE_AVRDUDE) {
-      if (b == FRAME_START_1 || b == FRAME_START_2) {
-        frame = b;
-      } 
+      if (b == FRAME_START_1 || b == FRAME_START_2) { frame = b; }
     }
     if (frame == FRAME_START_2 || state == STATE_AVRDUDE) {
       RingBuffer_Insert(&USARTtoSER_Buffer, b);
     } else if (frame == FRAME_START_1) {
       RingBuffer_Insert(&USARTtoHID_Buffer, b);
     }
-    if (b == FRAME_END) {
-      frame = 0;
-    }
+    if (b == FRAME_END) { frame = 0; }
   }
 }

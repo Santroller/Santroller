@@ -54,7 +54,7 @@ void guitar_tick(controller_t *controller) {
   if (r_x > 0) r_x = 0;
   r_x = r_x << 1;
   if (r_x > 0) r_x = -32767;
-  controller->r_x = r_x;
+  controller->r_x = -r_x;
   if (tick == NULL) return;
   tick(controller);
 }

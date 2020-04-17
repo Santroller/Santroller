@@ -92,7 +92,6 @@ uint8_t read_usb(void);
 bool can_read_usb(void);
 void write_usb(uint8_t data);
 int digitalRead(uint8_t pin);
-int analogRead(uint8_t pin);
 void pinMode(uint8_t pin, uint8_t mode);
 void enableADC(void);
 void enablePCI(uint8_t pin);

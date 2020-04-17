@@ -5,12 +5,12 @@
 #include "input_direct.h"
 #include "input_guitar.h"
 #include "input_wii_ext.h"
-#include "pins/pins.h"
 #include "leds.h"
+#include "pins/pins.h"
 // #include <stdlib.h>
 void (*tick_function)(controller_t *);
 int jth;
-void input_init(void) {
+void input_init() {
   switch (config.main.input_type) {
   case WII:
     tick_function = wii_ext_tick;
@@ -26,6 +26,8 @@ void input_init(void) {
   led_init();
   jth = config.axis.threshold_joy << 8;
 }
+int i = _BV(XBOX_A);
+int j = _BV(XBOX_B);
 void input_tick(controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);
@@ -43,15 +45,5 @@ void input_tick(controller_t *controller) {
     }
   }
   guitar_tick(controller);
-  if (config.main.sub_type == SWITCH_GAMEPAD) {
-    // Swap A and B for switch controllers
-    bool B = bit_is_set(controller->buttons, XBOX_A);
-    bool A = bit_is_set(controller->buttons, XBOX_B);
-    bit_write(A, controller->buttons, XBOX_A);
-    bit_write(B, controller->buttons, XBOX_B);
-    // Y axis is inverted on switch controllers
-    controller->l_y = -controller->l_y;
-    controller->r_y = -controller->r_y;
-  }
   led_tick(controller);
 }

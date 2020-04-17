@@ -8,6 +8,7 @@
 volatile bool ready = false;
 
 int32_t z;
+analog_info_t analog;
 void mpu_tick(controller_t *controller) {
   if (ready) {
     ready = false;
@@ -24,17 +25,17 @@ void mpu_tick(controller_t *controller) {
 void digital_tick(controller_t *controller) {
   controller->r_y = (!digitalRead(config.pins.r_y.pin)) * 32767;
 }
-void analogue_tick(controller_t *controller) {
-  controller->r_y =
-      analogRead(config.pins.r_y.pin) + config.axis.tilt_sensitivity;
-}
 void (*tick)(controller_t *controller) = NULL;
+bool is_not_guitar(void) {
+  return config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&
+      config.main.sub_type != PS3_ROCK_BAND_GUITAR &&
+      config.main.sub_type != XINPUT_GUITAR &&
+      config.main.sub_type != XINPUT_GUITAR_BASS &&
+      config.main.sub_type != XINPUT_LIVE_GUITAR;
+}
 void guitar_init(void) {
-  if (config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&
-             config.main.sub_type != PS3_ROCK_BAND_GUITAR &&
-             config.main.sub_type != XINPUT_GUITAR &&
-             config.main.sub_type != XINPUT_GUITAR_BASS &&
-             config.main.sub_type != XINPUT_LIVE_GUITAR) return;
+  if (is_not_guitar())
+    return;
   if (config.main.tilt_type == MPU_6050) {
     mympu_open(15);
     enablePCI(config.pins.r_y.pin);
@@ -42,10 +43,7 @@ void guitar_init(void) {
   } else if (config.main.tilt_type == DIGITAL) {
     pinMode(config.pins.r_y.pin, INPUT_PULLUP);
     tick = digital_tick;
-  } else if (config.main.tilt_type == ANALOGUE) {
-    pinMode(config.pins.r_y.pin, INPUT);
-    tick = analogue_tick;
-  }
+  } 
 }
 int16_t r_x;
 void guitar_tick(controller_t *controller) {

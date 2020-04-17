@@ -1,5 +1,8 @@
-#include "arduino_pins.h"
 #include "pins.h"
+#include "../../config/eeprom.h"
+#include "../input_guitar.h"
+#include "arduino_pins.h"
+#include "stddef.h"
 void enablePCI(uint8_t pin) {
   *digitalPinToPCMSK(pin) |= (1 << digitalPinToPCMSKbit(pin));
   *digitalPinToPCICR(pin) |= (1 << digitalPinToPCICRbit(pin));
@@ -14,9 +17,26 @@ int digitalRead(uint8_t pin) {
   if (*portInputRegister(port) & bit) return 1;
   return 0;
 }
-int analogRead(uint8_t pin) {
-  uint8_t low, high;
+typedef struct {
+  uint8_t buttons[16];
+  analogue_pin_t axis[6];
+} pins_a_t;
 
+analog_info_t joyData[6];
+int validAnalog = 0;
+int currentAnalog = 0;
+void setUpPin(uint8_t pin) {
+  analog_info_t ret = {0};
+  ret.offset = pin;
+  analogue_pin_t apin = ((pins_a_t *)&config.pins)->axis[ret.offset];
+  pin = apin.pin;
+  if (pin == INVALID_PIN) { return; }
+  if (ret.offset == 5 && !is_not_guitar() &&
+      config.main.tilt_type != ANALOGUE) {
+    return;
+  }
+  pinMode(pin, INPUT);
+  ret.inverted = apin.inverted;
 #if defined(analogPinToChannel)
 #  if defined(__AVR_ATmega32U4__)
   if (pin >= 18) pin -= 18; // allow for channel or pin numbers
@@ -37,48 +57,34 @@ int analogRead(uint8_t pin) {
 #if defined(ADCSRB) && defined(MUX5)
   // the MUX5 bit of ADCSRB selects whether we're reading from channels
   // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
-  ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
+  ret.srb = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
 #endif
 
   // set the analog reference (high two bits of ADMUX) and select the
   // channel (low 4 bits).  this also sets ADLAR (left-adjust result)
   // to 0 (the default).
-#if defined(ADMUX)
-#  if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) ||                \
-      defined(__AVR_ATtiny85__)
-  ADMUX = (1 << 4) | (pin & 0x07);
-#  else
-  ADMUX = (1 << 6) | (pin & 0x07);
-#  endif
-#endif
 
-  // without a delay, we seem to read from the wrong channel
-  // delay(1);
-
-#if defined(ADCSRA) && defined(ADCL)
-  // start the conversion
-  sbi(ADCSRA, ADSC);
-
-  // ADSC is cleared when the conversion finishes
-  while (bit_is_set(ADCSRA, ADSC))
-    ;
-
-  // we have to read ADCL first; doing so locks both ADCL
-  // and ADCH until ADCH is read.  reading ADCL second would
-  // cause the results of each conversion to be discarded,
-  // as ADCL and ADCH would be locked when it completed.
+  ret.mux = (1 << 6) | (pin & 0x07);
+  joyData[validAnalog++] = ret;
+}
+ISR(ADC_vect, ISR_BLOCK) {
+  uint8_t low, high;
   low = ADCL;
   high = ADCH;
-#else
-  // we dont have an ADC, return 0
-  low = 0;
-  high = 0;
+  analog_info_t info = joyData[currentAnalog];
+  if (currentAnalog > validAnalog) { currentAnalog = 0; }
+  uint16_t data = (high << 8) | low;
+  if (info.inverted) data *= -1;
+  data = (data - 512) * 64;
+  joyData[currentAnalog++].value = data;
+  info = joyData[currentAnalog];
+  ADCSRA |= (1 << ADIE);
+#if defined(ADCSRB) && defined(MUX5)
+  ADCSRB = info.srb;
 #endif
-
-  // combine the two bytes
-  return (high << 8) | low;
+  ADMUX = info.mux;
+  sbi(ADCSRA, ADSC);
 }
-
 void pinMode(uint8_t pin, uint8_t mode) {
   uint8_t bit = digitalPinToBitMask(pin);
   uint8_t port = digitalPinToPort(pin);
@@ -115,10 +121,11 @@ void pinMode(uint8_t pin, uint8_t mode) {
 // the overflow handler is called every 256 ticks.
 #define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
 
-volatile unsigned long FastLED_timer0_overflow_count=0;
+volatile unsigned long FastLED_timer0_overflow_count = 0;
 volatile unsigned long timer0_millis = 0;
 
-#if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+#if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) ||                  \
+    defined(__AVR_ATtiny84__)
 ISR(TIM0_OVF_vect)
 #else
 ISR(TIMER0_OVF_vect)
@@ -129,68 +136,61 @@ ISR(TIMER0_OVF_vect)
 }
 
 // there are 1024 microseconds per overflow counter tick.
-unsigned long millis()
-{
-        unsigned long m;
-        uint8_t oldSREG = SREG;
+unsigned long millis() {
+  unsigned long m;
+  uint8_t oldSREG = SREG;
 
-        // disable interrupts while we read FastLED_timer0_millis or we might get an
-        // inconsistent value (e.g. in the middle of a write to FastLED_timer0_millis)
-        cli();
-        m = FastLED_timer0_overflow_count;  //._long;
-        SREG = oldSREG;
+  // disable interrupts while we read FastLED_timer0_millis or we might get an
+  // inconsistent value (e.g. in the middle of a write to FastLED_timer0_millis)
+  cli();
+  m = FastLED_timer0_overflow_count; //._long;
+  SREG = oldSREG;
 
-        return (m*(MICROSECONDS_PER_TIMER0_OVERFLOW/8))/(1000/8);
+  return (m * (MICROSECONDS_PER_TIMER0_OVERFLOW / 8)) / (1000 / 8);
 }
 
 unsigned long micros() {
-        unsigned long m;
-        uint8_t oldSREG = SREG, t;
+  unsigned long m;
+  uint8_t oldSREG = SREG, t;
 
-        cli();
-        m = FastLED_timer0_overflow_count; // ._long;
+  cli();
+  m = FastLED_timer0_overflow_count; // ._long;
 #if defined(TCNT0)
-        t = TCNT0;
+  t = TCNT0;
 #elif defined(TCNT0L)
-        t = TCNT0L;
+  t = TCNT0L;
 #else
-        #error TIMER 0 not defined
+#  error TIMER 0 not defined
 #endif
-
 
 #ifdef TIFR0
-        if ((TIFR0 & _BV(TOV0)) && (t < 255))
-                m++;
+  if ((TIFR0 & _BV(TOV0)) && (t < 255)) m++;
 #else
-        if ((TIFR & _BV(TOV0)) && (t < 255))
-                m++;
+  if ((TIFR & _BV(TOV0)) && (t < 255)) m++;
 #endif
 
-        SREG = oldSREG;
+  SREG = oldSREG;
 
-        return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
+  return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 }
 
-void delay(unsigned long ms)
-{
-        uint16_t start = (uint16_t)micros();
+void delay(unsigned long ms) {
+  uint16_t start = (uint16_t)micros();
 
-        while (ms > 0) {
-                if (((uint16_t)micros() - start) >= 1000) {
-                        ms--;
-                        start += 1000;
-                }
-        }
+  while (ms > 0) {
+    if (((uint16_t)micros() - start) >= 1000) {
+      ms--;
+      start += 1000;
+    }
+  }
 }
 
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
-void enableADC(void)
-{
+void enableADC(void) {
   // this needs to be called before setup() or some functions won't
   // work there
   sei();
 
-  
 #if defined(ADCSRA)
 // set a2d prescaler so we are inside the desired 50-200 KHz range.
 #  if F_CPU >= 16000000 // 16 MHz / 128 = 125 KHz
@@ -248,7 +248,7 @@ void enableADC(void)
   sbi(TCCR0A, CS01);
   sbi(TCCR0A, CS00);
 #else
-  #error Timer 0 prescale factor 64 not set correctly
+#  error Timer 0 prescale factor 64 not set correctly
 #endif
 
   // enable timer 0 overflow interrupt
@@ -257,7 +257,7 @@ void enableADC(void)
 #elif defined(TIMSK0) && defined(TOIE0)
   sbi(TIMSK0, TOIE0);
 #else
-  #error	Timer 0 overflow interrupt not set correctly
+#  error Timer 0 overflow interrupt not set correctly
 #endif
 
   // timers 1 and 2 are used for phase-correct hardware pwm
@@ -270,20 +270,20 @@ void enableADC(void)
 
   // set timer 1 prescale factor to 64
   sbi(TCCR1B, CS11);
-#if F_CPU >= 8000000L
+#  if F_CPU >= 8000000L
   sbi(TCCR1B, CS10);
-#endif
+#  endif
 #elif defined(TCCR1) && defined(CS11) && defined(CS10)
   sbi(TCCR1, CS11);
-#if F_CPU >= 8000000L
+#  if F_CPU >= 8000000L
   sbi(TCCR1, CS10);
-#endif
+#  endif
 #endif
   // put timer 1 in 8-bit phase correct pwm mode
 #if defined(TCCR1A) && defined(WGM10)
   sbi(TCCR1A, WGM10);
 #elif defined(TCCR1)
-  #warning this needs to be finished
+#  warning this needs to be finished
 #endif
 
   // set timer 2 prescale factor to 64
@@ -305,30 +305,31 @@ void enableADC(void)
 #endif
 
 #if defined(TCCR3B) && defined(CS31) && defined(WGM30)
-  sbi(TCCR3B, CS31);		// set timer 3 prescale factor to 64
+  sbi(TCCR3B, CS31); // set timer 3 prescale factor to 64
   sbi(TCCR3B, CS30);
-  sbi(TCCR3A, WGM30);		// put timer 3 in 8-bit phase correct pwm mode
+  sbi(TCCR3A, WGM30); // put timer 3 in 8-bit phase correct pwm mode
 #endif
 
-#if defined(TCCR4A) && defined(TCCR4B) && defined(TCCR4D) /* beginning of timer4 block for 32U4 and similar */
-  sbi(TCCR4B, CS42);		// set timer4 prescale factor to 64
+#if defined(TCCR4A) && defined(TCCR4B) &&                                      \
+    defined(TCCR4D)  /* beginning of timer4 block for 32U4 and similar */
+  sbi(TCCR4B, CS42); // set timer4 prescale factor to 64
   sbi(TCCR4B, CS41);
   sbi(TCCR4B, CS40);
-  sbi(TCCR4D, WGM40);		// put timer 4 in phase- and frequency-correct PWM mode
-  sbi(TCCR4A, PWM4A);		// enable PWM mode for comparator OCR4A
-  sbi(TCCR4C, PWM4D);		// enable PWM mode for comparator OCR4D
+  sbi(TCCR4D, WGM40); // put timer 4 in phase- and frequency-correct PWM mode
+  sbi(TCCR4A, PWM4A); // enable PWM mode for comparator OCR4A
+  sbi(TCCR4C, PWM4D); // enable PWM mode for comparator OCR4D
 #else /* beginning of timer4 block for ATMEGA1280 and ATMEGA2560 */
-#if defined(TCCR4B) && defined(CS41) && defined(WGM40)
-  sbi(TCCR4B, CS41);		// set timer 4 prescale factor to 64
+#  if defined(TCCR4B) && defined(CS41) && defined(WGM40)
+  sbi(TCCR4B, CS41); // set timer 4 prescale factor to 64
   sbi(TCCR4B, CS40);
-  sbi(TCCR4A, WGM40);		// put timer 4 in 8-bit phase correct pwm mode
-#endif
+  sbi(TCCR4A, WGM40); // put timer 4 in 8-bit phase correct pwm mode
+#  endif
 #endif /* end timer4 block for ATMEGA1280/2560 and similar */
 
 #if defined(TCCR5B) && defined(CS51) && defined(WGM50)
-  sbi(TCCR5B, CS51);		// set timer 5 prescale factor to 64
+  sbi(TCCR5B, CS51); // set timer 5 prescale factor to 64
   sbi(TCCR5B, CS50);
-  sbi(TCCR5A, WGM50);		// put timer 5 in 8-bit phase correct pwm mode
+  sbi(TCCR5A, WGM50); // put timer 5 in 8-bit phase correct pwm mode
 #endif
 
 #if defined(ADCSRA)
@@ -343,4 +344,13 @@ void enableADC(void)
   // enable a2d conversions
   sbi(ADCSRA, ADEN);
 #endif
+  if (validAnalog > 0) {
+    analog_info_t info = joyData[currentAnalog];
+    ADCSRA |= (1 << ADIE);
+#if defined(ADCSRB) && defined(MUX5)
+    ADCSRB = info.srb;
+#endif
+    ADMUX = info.mux;
+    sbi(ADCSRA, ADSC);
+  }
 }

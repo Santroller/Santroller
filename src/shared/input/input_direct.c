@@ -10,7 +10,13 @@ typedef struct {
 } pin_t;
 pin_t pinData[16];
 int validPins = 0;
-void direct_init(void) {
+typedef struct {
+  uint16_t buttons;
+  uint8_t triggers[2];
+  int16_t sticks[4];
+  ledstate_t leds;
+} controller_a_t;
+void direct_init() {
   int fret_type = config.main.fret_mode == LEDS_INLINE ? INPUT : INPUT_PULLUP;
   uint8_t *pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
@@ -28,12 +34,7 @@ void direct_init(void) {
       pinData[validPins++] = pin;
     }
   }
-  DEFINE_JOY(l_x);
-  DEFINE_JOY(l_y);
-  DEFINE_JOY(r_x);
-  DEFINE_JOY(r_y);
-  DEFINE_JOY(lt);
-  DEFINE_JOY(rt);
+  for (int i = 0; i < 6; i++) { setUpPin(i); }
 }
 
 void direct_tick(controller_t *controller) {
@@ -42,10 +43,13 @@ void direct_tick(controller_t *controller) {
     pin = pinData[i];
     if ((*pin.port & pin.mask) == pin.eq) { controller->buttons |= pin.pmask; }
   }
-  READ_JOY(l_x);
-  READ_JOY(l_y);
-  READ_JOY(r_x);
-  READ_JOY(r_y);
-  READ_JOY(lt);
-  READ_JOY(rt);
+  analog_info_t info;
+  for (int8_t i = 0; i < validAnalog; i++) {
+    info = joyData[i];
+    if (info.offset >= 2) {
+      ((controller_a_t *)controller)->sticks[info.offset - 2] = info.value;
+    } else {
+      ((controller_a_t *)controller)->triggers[info.offset] = info.value;
+    }
+  }
 }

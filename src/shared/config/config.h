@@ -77,8 +77,12 @@ typedef struct {
   int16_t tilt_sensitivity;
 } axis_config_t;
 typedef struct {
+  uint8_t threshold_drums;
+} new_items_t;
+typedef struct {
   main_config_t main;
   pins_t pins;
   axis_config_t axis;
   keys_t keys;
+  new_items_t new_items;
 } config_t;

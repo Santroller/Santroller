@@ -9,6 +9,7 @@ typedef struct {
   uint8_t srb;
   uint8_t mux;
   uint8_t offset;
+  uint8_t pin;
   bool inverted;
   volatile uint16_t value;
 } analog_info_t;
@@ -22,3 +23,4 @@ void enablePCI(uint8_t pin);
 unsigned long millis(void);
 unsigned long micros(void);
 void delay(unsigned long ms);
+void resetADC(void);

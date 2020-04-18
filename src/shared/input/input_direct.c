@@ -36,7 +36,6 @@ void direct_init() {
   }
   for (int i = 0; i < 6; i++) { setUpPin(i); }
 }
-
 void direct_tick(controller_t *controller) {
   pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
@@ -52,4 +51,5 @@ void direct_tick(controller_t *controller) {
       ((controller_a_t *)controller)->triggers[info.offset] = info.value;
     }
   }
+  resetADC();
 }

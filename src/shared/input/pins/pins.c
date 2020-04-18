@@ -25,11 +25,11 @@ typedef struct {
 analog_info_t joyData[6];
 int validAnalog = 0;
 int currentAnalog = 0;
-void setUpPin(uint8_t pin) {
+void setUpPin(uint8_t offset) {
   analog_info_t ret = {0};
-  ret.offset = pin;
-  analogue_pin_t apin = ((pins_a_t *)&config.pins)->axis[ret.offset];
-  pin = apin.pin;
+  ret.offset = offset;
+  analogue_pin_t apin = ((pins_a_t *)&config.pins)->axis[offset];
+  uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
   if (ret.offset == 5 && !is_not_guitar() &&
       config.main.tilt_type != ANALOGUE) {
@@ -67,23 +67,30 @@ void setUpPin(uint8_t pin) {
   ret.mux = (1 << 6) | (pin & 0x07);
   joyData[validAnalog++] = ret;
 }
-ISR(ADC_vect, ISR_BLOCK) {
-  uint8_t low, high;
-  low = ADCL;
-  high = ADCH;
+void readADC(void) {
   analog_info_t info = joyData[currentAnalog];
-  if (currentAnalog > validAnalog) { currentAnalog = 0; }
-  uint16_t data = (high << 8) | low;
-  if (info.inverted) data *= -1;
-  data = (data - 512) * 64;
-  joyData[currentAnalog++].value = data;
-  info = joyData[currentAnalog];
-  ADCSRA |= (1 << ADIE);
 #if defined(ADCSRB) && defined(MUX5)
   ADCSRB = info.srb;
 #endif
   ADMUX = info.mux;
   sbi(ADCSRA, ADSC);
+}
+void resetADC(void) {
+  if (currentAnalog == validAnalog) {
+    currentAnalog = 0;
+    readADC();
+  }
+}
+ISR(ADC_vect, ISR_BLOCK) {
+  uint8_t low, high;
+  low = ADCL;
+  high = ADCH;
+  analog_info_t info = joyData[currentAnalog];
+  uint16_t data = (high << 8) | low;
+  if (info.inverted) data *= -1;
+  data = (data - 512) * 64;
+  joyData[currentAnalog++].value = data;
+  if (currentAnalog != validAnalog) { readADC(); }
 }
 void pinMode(uint8_t pin, uint8_t mode) {
   uint8_t bit = digitalPinToBitMask(pin);
@@ -345,12 +352,7 @@ void enableADC(void) {
   sbi(ADCSRA, ADEN);
 #endif
   if (validAnalog > 0) {
-    analog_info_t info = joyData[currentAnalog];
-    ADCSRA |= (1 << ADIE);
-#if defined(ADCSRB) && defined(MUX5)
-    ADCSRB = info.srb;
-#endif
-    ADMUX = info.mux;
-    sbi(ADCSRA, ADSC);
+    sbi(ADCSRA, ADIE);
+    readADC();
   }
 }

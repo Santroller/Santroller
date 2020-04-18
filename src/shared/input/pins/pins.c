@@ -339,18 +339,6 @@ void enableADC(void) {
   sbi(TCCR5A, WGM50); // put timer 5 in 8-bit phase correct pwm mode
 #endif
 
-#if defined(ADCSRA)
-  // set a2d prescale factor to 128
-  // 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
-  // XXX: this will not work properly for other clock speeds, and
-  // this code should use F_CPU to determine the prescale factor.
-  sbi(ADCSRA, ADPS2);
-  sbi(ADCSRA, ADPS1);
-  sbi(ADCSRA, ADPS0);
-
-  // enable a2d conversions
-  sbi(ADCSRA, ADEN);
-#endif
   if (validAnalog > 0) {
     sbi(ADCSRA, ADIE);
     readADC();

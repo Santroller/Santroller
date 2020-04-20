@@ -47,7 +47,7 @@ void guitar_cnt_tick(controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;
   controller->l_y = (data[2] - 0x80) << 8;
   int32_t whammy = (data[5] - 0x80) << 8;
-  controller->r_x = constrain(whammy, 0, 32767);
+  controller->r_x = -whammy;
   uint16_t buttons = ~(data[6] | (data[7] << 8));
   read_buttons(controller, buttons);
 }

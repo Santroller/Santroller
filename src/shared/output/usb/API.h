@@ -8,6 +8,7 @@
 #define COMMAND_JUMP_BOOTLOADER 'e'
 #define COMMAND_STK_500_ENTER_PROG '2'
 #define COMMAND_SET_LEDS 'l'
+#define COMMAND_SET_LED_GUI 'g'
 
 #define INFO_VERSION 0
 #define INFO_SIGNATURE 1

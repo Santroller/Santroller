@@ -35,6 +35,7 @@
 #define SWITCH_CAPTURE 13
 typedef struct {
   uint8_t leds[5];
+  uint32_t gui;
 } ledstate_t;
 typedef struct {
   uint16_t buttons;

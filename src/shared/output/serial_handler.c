@@ -256,6 +256,10 @@ void process_serial(uint8_t data) {
       buf = controller.leds.leds;
       size = 5;
       break;
+    case COMMAND_SET_LED_GUI:
+      buf = (uint8_t*)&controller.leds.gui;
+      size = 4;
+      break;
     case COMMAND_WRITE_CONFIG_VALUE:
     case COMMAND_READ_INFO:
     case COMMAND_READ_CONFIG_VALUE:

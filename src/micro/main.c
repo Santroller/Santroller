@@ -59,7 +59,6 @@ int main(void) {
   input_init();
   report_init();
   USB_Init();
-  controller_control_request_init();
   sei();
   uint16_t size;
   uint16_t rec;

@@ -31,6 +31,8 @@ const USB_Descriptor_String_t PROGMEM ProductString =
 const USB_Descriptor_String_t PROGMEM VersionString =
     USB_STRING_DESCRIPTOR(L"" VERSION);
 
+const USB_Descriptor_String_t *const PROGMEM Strings[] = {
+    &LanguageString, &ManufacturerString, &ProductString, &VersionString};
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
@@ -317,9 +319,9 @@ const USB_HID_Descriptor_HID_t PROGMEM hid_descriptor = {
   CountryCode : 0x00,
   TotalReportDescriptors : 1,
   HIDReportType : HID_DTYPE_Report,
-  HIDReportLength : 0
+  HIDReportLength : sizeof(ps3_report_descriptor)
 };
-
+uint8_t buf[sizeof(ps3_report_descriptor)];
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
  * code so that the address and size of a requested descriptor can be given to
@@ -336,7 +338,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   uint16_t Size = NO_DESCRIPTOR;
 
   const void *Address = NULL;
-  uint8_t *buf = (uint8_t *)0x200;
   *DescriptorAddress = buf;
   // We set aside 0x200 as an area to work with descriptors.
   switch (DescriptorType) {
@@ -348,17 +349,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     if (device_type == SWITCH_GAMEPAD) {
       dev->VendorID = 0x0F0D;
       dev->ProductID = 0x0092;
-    } else {
-      if (device_type > PS3_GAMEPAD) { dev->VendorID = 0x12ba; }
-      if (device_type == PS3_GUITAR_HERO_GUITAR) {
-        dev->ProductID = 0x0100;
-      } else if (device_type == PS3_ROCK_BAND_GUITAR) {
-        dev->ProductID = 0x0200;
-      } else if (device_type == PS3_GUITAR_HERO_DRUMS) {
-        dev->ProductID = 0x0120;
-      } else if (device_type == PS3_ROCK_BAND_DRUMS) {
-        dev->ProductID = 0x0210;
-      }
+    } else if (device_type > PS3_GAMEPAD) {
+      static uint16_t id[] = {0x0100, 0x0200, 0x0120, 0x0210, 0x0004, 0x0005};
+      dev->VendorID = 0x1bad;
+      dev->ProductID = id[device_type - PS3_GUITAR_HERO_GUITAR];
     }
     return Size;
   case DTYPE_Configuration:
@@ -382,9 +376,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       if (device_type == KEYBOARD) {
         conf->Controller.HID.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
-      } else {
-        conf->Controller.HID.HIDDescriptor.HIDReportLength =
-            sizeof(ps3_report_descriptor);
       }
       // Report that we have an HID device
       conf->Interface0.Class = HID_CSCP_HIDClass;
@@ -402,32 +393,17 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     }
     break;
   case DTYPE_String:
-    switch (DescriptorNumber) {
-    case 0x00:
-      Address = &LanguageString;
-      Size = LanguageString.Header.Size;
-      break;
-    case 0x01:
-      Address = &ManufacturerString;
-      Size = ManufacturerString.Header.Size;
-      break;
-    case 0x02:
-      Address = &ProductString;
-      Size = ProductString.Header.Size;
-      break;
-    case 0x03:
-      Address = &VersionString;
-      Size = VersionString.Header.Size;
-      break;
-    case 0xEE:
+    if (DescriptorNumber <= 3) {
+      Address = (void *)pgm_read_word(Strings + DescriptorNumber);
+    } else if (DescriptorNumber == 0xEE) {
       Address = &OSDescriptorString;
-      Size = OSDescriptorString.Header.Size;
+    } else {
       break;
     }
+    Size =
+        pgm_read_byte(Address + offsetof(USB_StdDescriptor_String_t, bLength));
     break;
   }
-  if (Size != NO_DESCRIPTOR) {
-    memcpy_P(buf, Address, Size);
-  } 
+  if (Size != NO_DESCRIPTOR) { memcpy_P(buf, Address, Size); }
   return Size;
 }

@@ -37,7 +37,7 @@ CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MC
 CC_FLAGS	 += -DMOSI=$(MOSI) -DMOSI_DDR=$(MOSI_DDR) -DMOSI_PORT=$(MOSI_PORT)
 CC_FLAGS += -DSS=$(SS) -DSS_DDR=$(SS_DDR) -DSS_PORT=$(SS_PORT)
 CC_FLAGS += -DSCK=$(SCK) -DSCK_DDR=$(SCK_DDR)
-LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin  -include ../shared/Arduino.h
+LD_FLAGS     = $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin  -include ../shared/Arduino.h
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-${MCU}-${F_CPU}
@@ -50,11 +50,6 @@ $(info $(shell mkdir -p $(BIN)))
 
 # Default target
 all:
-# Add an offset of 256 + 128 bytes to RAMSTART for the ringbuffers
-# +1 byte offset for old MagicBootKey support (0x280)
-# +1 for better data aligning or in case a 2byte key is written
-# u2 and u4 Series (RAMSTART = 0x100):
-RAM_OFFSET            = 0x800290
 
 # Reserved registers for faster USB-Serial convertion
 # The lower, the better (except 0 and 1)

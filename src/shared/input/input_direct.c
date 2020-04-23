@@ -17,20 +17,16 @@ typedef struct {
   ledstate_t leds;
 } controller_a_t;
 void direct_init() {
-  int fret_type = config.main.fret_mode == LEDS_INLINE ? INPUT : INPUT_PULLUP;
   uint8_t *pins = (uint8_t *)&config.pins;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
-      uint8_t fret_type_2 =
-          (i < XBOX_A || i == XBOX_LB) ? INPUT_PULLUP : fret_type;
-      pinMode(pins[i], fret_type_2);
+      bool is_fret = (i > XBOX_A || i == XBOX_LB);
       pin_t pin = {};
       pin.mask = digitalPinToBitMask(pins[i]);
       pin.port = portInputRegister(digitalPinToPort((pins[i])));
       pin.pmask = _BV(i);
-      pin.eq = (i < XBOX_A || i == XBOX_LB)
-                   ? false
-                   : config.main.fret_mode == LEDS_INLINE;
+      pin.eq = is_fret && config.main.fret_mode == LEDS_INLINE;
+      pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
       pinData[validPins++] = pin;
     }
   }

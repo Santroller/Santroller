@@ -25,19 +25,13 @@ LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
-LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
+LD_FLAGS     =  $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
 
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
-
-# Add an offset of 256 + 128 bytes to RAMSTART for the ringbuffers
-# +1 byte offset for old MagicBootKey support (0x280)
-# +1 for better data aligning or in case a 2byte key is written
-# u2 and u4 Series (RAMSTART = 0x100):
-RAM_OFFSET            = 0x800280
 
 # Reserved registers for faster USB-Serial convertion
 # The lower, the better (except 0 and 1)

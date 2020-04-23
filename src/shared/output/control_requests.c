@@ -3,7 +3,7 @@
 #include "controller_structs.h"
 #include "usb/Descriptors.h"
 #include "usb/wcid.h"
-const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
+const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
   Version : 0x0100,
   Index : EXTENDED_COMPAT_ID_DESCRIPTOR,
@@ -18,15 +18,16 @@ const USB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
   }
 };
 static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
-void controller_control_request_init(void) {
-  if (device_type == PS3_GUITAR_HERO_GUITAR ||
-      device_type == PS3_GUITAR_HERO_DRUMS) {
-    id[3] = 0x06;
-  } else if (device_type == PS3_ROCK_BAND_GUITAR ||
-             device_type == PS3_ROCK_BAND_DRUMS) {
-    id[3] = 0x00;
-  }
-}
+// The emulator didnt do this, is it actually necessary?
+// void controller_control_request_init (void) {
+//   if (device_type == PS3_GUITAR_HERO_GUITAR ||
+//       device_type == PS3_GUITAR_HERO_DRUMS) {
+//     id[3] = 0x06;
+//   } else if (device_type == PS3_ROCK_BAND_GUITAR ||
+//              device_type == PS3_ROCK_BAND_DRUMS) {
+//     id[3] = 0x00;
+//   }
+// }
 void controller_control_request(void) {
   if (device_type <= XINPUT_ARCADE_PAD &&
       USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
@@ -34,10 +35,8 @@ void controller_control_request(void) {
        (CONTROL_REQTYPE_DIRECTION | CONTROL_REQTYPE_TYPE)) ==
           (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
       USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
-    void *dev = (void *)0x200;
-    memcpy_P(dev, &DevCompatIDs, DevCompatIDs.TotalLength);
     Endpoint_ClearSETUP();
-    Endpoint_Write_Control_Stream_LE(dev, DevCompatIDs.TotalLength);
+    Endpoint_Write_Control_Stream_LE(&DevCompatIDs, DevCompatIDs.TotalLength);
     Endpoint_ClearOUT();
     return;
   }
@@ -46,7 +45,7 @@ void controller_control_request(void) {
       USB_ControlRequest.bmRequestType ==
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
       USB_ControlRequest.bRequest == HID_REQ_GetReport) {
-
+    // controller_control_request_init();
     // Send out init packets for the ps3
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(id, sizeof(id));

@@ -119,10 +119,14 @@ void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
     // GH PS3 guitars have a tilt axis
     JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
-  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR) {
+    // r_y is tap, so lets disable it.
+    JoystickReport->r_y = 0x7d;
+  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR || config.main.sub_type == WII_ROCK_BAND_GUITAR) {
     JoystickReport->r_x = 128 - (controller.r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
+    // r_y is the tone switch
+    JoystickReport->r_y = 128 - (controller.r_y >> 8);
   }
   if (config.main.sub_type == PS3_GAMEPAD ||
       config.main.sub_type == SWITCH_GAMEPAD) {
@@ -135,10 +139,9 @@ void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
     JoystickReport->r_x = (controller.r_x >> 8) + 128;
     JoystickReport->r_y = (controller.r_y >> 8) + 128;
   } else {
+    // l_x and l_y are unused on guitars and drums. Center them.
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
-    // r_y is tap, so lets disable it.
-    JoystickReport->r_y = 0x7d;
   }
 }
 void (*create_report)(void *ReportData, uint16_t *const ReportSize,

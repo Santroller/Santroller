@@ -44,6 +44,9 @@ const char *version = VERSION;
 const char *signature = SIGNATURE;
 const char *usb_mcu = MCU;
 const char *usb_freq = STR(F_CPU);
+RingBuff_Data_t USBtoUSART_Buf[BUFFER_SIZE];
+RingBuff_Data_t USARTtoSER_Buf[BUFFER_SIZE];
+RingBuff_Data_t USARTtoHID_Buf[BUFFER_SIZE];
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
 RingBuff_t USBtoUSART_Buffer;
@@ -77,6 +80,7 @@ int lastCommand = 0;
 // set this to JUMP to jmp
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 void handle_out(uint8_t ep, RingBuff_t *buf, bool serial);
+
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
@@ -105,9 +109,10 @@ int main(void) {
     config.id = ARDWIINO_DEVICE_TYPE;
     config.device_type = device_type;
   }
-  RingBuffer_InitBuffer(&USBtoUSART_Buffer, (RingBuff_Data_t *)0x100);
-  RingBuffer_InitBuffer(&USARTtoSER_Buffer, (RingBuff_Data_t *)0x140);
-  RingBuffer_InitBuffer(&USARTtoHID_Buffer, (RingBuff_Data_t *)0x180);
+  // TODO: would it be easier to define this arrays correctly? what do we really gain from doing this at this point? if we do this then we would get a real memory count and be able to optimise there too.
+  RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buf);
+  RingBuffer_InitBuffer(&USARTtoSER_Buffer, USARTtoSER_Buf);
+  RingBuffer_InitBuffer(&USARTtoHID_Buffer, USARTtoHID_Buf);
   sei();
   for (;;) {
     for (;;) {

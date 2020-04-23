@@ -26,8 +26,8 @@ int frets[] = {XBOX_A, XBOX_B, XBOX_Y, XBOX_X, XBOX_LB};
 void led_tick(controller_t *controller) {
   if (config.main.fret_mode == APA102) { apa102_start(); }
   for (int i = 0; i < 5; i++) {
-    long unsigned int col = Black;
-    if (controller->leds.gui != Black) {
+    uint32_t col = controller->leds.gui;
+    if (col == Black) {
       col = colours[controller->leds.leds[i]];
       if ((col == Black && bit_check(controller->buttons, frets[i])) ||
           col == Green) {

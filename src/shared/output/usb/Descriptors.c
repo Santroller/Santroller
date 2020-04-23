@@ -321,7 +321,7 @@ const USB_HID_Descriptor_HID_t PROGMEM hid_descriptor = {
   HIDReportType : HID_DTYPE_Report,
   HIDReportLength : sizeof(ps3_report_descriptor)
 };
-uint8_t buf[sizeof(ps3_report_descriptor)];
+static uint8_t buf[sizeof(ps3_report_descriptor)];
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
  * code so that the address and size of a requested descriptor can be given to
@@ -339,7 +339,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 
   const void *Address = NULL;
   *DescriptorAddress = buf;
-  // We set aside 0x200 as an area to work with descriptors.
   switch (DescriptorType) {
   case DTYPE_Device:
     Address = &DeviceDescriptor;
@@ -351,7 +350,11 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       dev->ProductID = 0x0092;
     } else if (device_type > PS3_GAMEPAD) {
       static uint16_t id[] = {0x0100, 0x0200, 0x0120, 0x0210, 0x0004, 0x0005};
-      dev->VendorID = 0x1bad;
+      if (device_type >= WII_ROCK_BAND_GUITAR) {
+        dev->VendorID = 0x1bad;
+      } else {
+        dev->VendorID = 0x12ba;
+      }
       dev->ProductID = id[device_type - PS3_GUITAR_HERO_GUITAR];
     }
     return Size;

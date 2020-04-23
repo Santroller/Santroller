@@ -35,7 +35,6 @@ void controller_control_request(void) {
       USB_ControlRequest.bmRequestType ==
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
       USB_ControlRequest.bRequest == HID_REQ_GetReport) {
-    // controller_control_request_init();
     // Send out init packets for the ps3
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(id, sizeof(id));

@@ -9,7 +9,7 @@ void init_serial(void) { new_config = config; }
 int buf_idx = 0;
 int cmd = 0;
 int size = 0;
-uint8_t *buf = NULL;
+static uint8_t *buf = NULL;
 uint8_t str[50];
 void get_info_buf(uint8_t data) {
   switch (data) {

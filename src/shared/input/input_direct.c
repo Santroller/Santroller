@@ -44,7 +44,7 @@ void direct_tick(controller_t *controller) {
     if (info.offset >= 2) {
       ((controller_a_t *)controller)->sticks[info.offset - 2] = info.value;
     } else {
-      ((controller_a_t *)controller)->triggers[info.offset] = info.value;
+      ((controller_a_t *)controller)->triggers[info.offset] = info.value >> 8;
     }
   }
   resetADC();

@@ -18,16 +18,6 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   }
 };
 static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
-// The emulator didnt do this, is it actually necessary?
-// void controller_control_request_init (void) {
-//   if (device_type == PS3_GUITAR_HERO_GUITAR ||
-//       device_type == PS3_GUITAR_HERO_DRUMS) {
-//     id[3] = 0x06;
-//   } else if (device_type == PS3_ROCK_BAND_GUITAR ||
-//              device_type == PS3_ROCK_BAND_DRUMS) {
-//     id[3] = 0x00;
-//   }
-// }
 void controller_control_request(void) {
   if (device_type <= XINPUT_ARCADE_PAD &&
       USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&

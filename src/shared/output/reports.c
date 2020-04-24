@@ -160,7 +160,7 @@ void report_init(void) {
              sizeof(ps3DrumButtonBindings));
   } else if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR) {
     memcpy_P(ps3ButtonBindings, psGHButtonBindings, sizeof(ps3ButtonBindings));
-  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR) {
+  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR || config.main.sub_type == WII_ROCK_BAND_GUITAR) {
     memcpy_P(ps3ButtonBindings, psRBButonBindings, sizeof(ps3ButtonBindings));
   }
 

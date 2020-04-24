@@ -33,18 +33,13 @@
 
 // Set this value to define the orientation of your mpu6050
 #define MPU_6050_ORIENTATION NEGATIVE_X
-#if defined(__AVR_ATmega328P__)
-#  define MPU_6050_INTERRUPT_PIN 2
-#else
-#  define MPU_6050_INTERRUPT_PIN 10
-#endif
 #define PINS                                                                   \
   {                                                                            \
-    21, 16, INVALID_PIN, INVALID_PIN, 15, 14, INVALID_PIN, INVALID_PIN, 9,     \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, 5, 6, 8, 7,                     \
+    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,     \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,                     \
         {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false},  \
-        {18, true}, {                                                          \
-      MPU_6050_INTERRUPT_PIN, false                                            \
+        {INVALID_PIN, false}, {                                                          \
+      INVALID_PIN, false                                            \
     }                                                                          \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE

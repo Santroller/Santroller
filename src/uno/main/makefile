@@ -30,7 +30,7 @@ SCK          = PB5
 SCK_DDR      = DDRB
 
 # Compile everything that isnt related to the output stage, as that comes under usb
-SRC =  ../../shared/output/reports.c ../../shared/defines.c ../../shared/output/serial_handler.c ../../shared/output/bootloader/bootloader.c $(shell find ../../shared/input -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') $(shell find . -type f -name '*.c*') $(shell find ../../../lib/Adafruit_NeoPixel_Static -type f -name '*.c*')
+SRC =  ../../shared/output/reports.c ../../shared/defines.c ../../shared/output/serial_handler.c ../../shared/output/bootloader/bootloader.c $(shell find ../../shared/input -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') $(shell find . -type f -name '*.c*')
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -Werror -flto -fuse-linker-plugin -I. -I ../../shared -include ../../shared/Arduino.h -DARDUINO=1000  
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'

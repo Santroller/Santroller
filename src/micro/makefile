@@ -29,7 +29,7 @@ SS_PORT      = PORTB
 SCK          = PB1
 SCK_DDR      = DDRB
 
-SRC = $(shell find ../shared -type f -name '*.c*') main.c  $(shell find ../../lib/Adafruit_NeoPixel_Static -type f -name '*.c*') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC = $(shell find ../shared -type f -name '*.c*') main.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb -I ../shared -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin  -include ../shared/Arduino.h
 CC_FLAGS     += -DUSB_MCU='"${MCU}"' -DF_CPU_USB='"${F_CPU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 

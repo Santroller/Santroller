@@ -288,11 +288,6 @@ void process_serial(uint8_t data) {
     *(buf++) = data;
     size--;
   }
-  if (cmd == COMMAND_SET_LEDS && size == 0) {
-    size = 0;
-    cmd = 0;
-    return;
-  }
   if (size == 0) {
     write_usb('\r');
     write_usb('\n');

@@ -321,9 +321,9 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
 };
 
 static uint8_t buf[sizeof(ps3_report_descriptor)];
-static uint16_t vid[] = {0x0F0D, ARDWIINO_VID, 0x12ba, 0x12ba,
+const uint16_t PROGMEM vid[] = {0x0F0D, ARDWIINO_VID, 0x12ba, 0x12ba,
                          0x12ba, 0x12ba,       0x1bad, 0x1bad};
-static uint16_t pid[] = {0x0092, ARDWIINO_PID, 0x0100, 0x0200,
+const uint16_t PROGMEM pid[] = {0x0092, ARDWIINO_PID, 0x0100, 0x0200,
                          0x0120, 0x0210,       0x0004, 0x074B};
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
@@ -349,8 +349,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     memcpy_P(buf, Address, Size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)buf;
     if (device_type >= SWITCH_GAMEPAD) {
-      dev->VendorID = vid[device_type - SWITCH_GAMEPAD];
-      dev->ProductID = pid[device_type - SWITCH_GAMEPAD];
+      uint8_t offs = device_type - SWITCH_GAMEPAD;
+      dev->VendorID = pgm_read_word(vid + offs);
+      dev->ProductID = pgm_read_word(pid + offs);
     }
     return Size;
   case DTYPE_Configuration:

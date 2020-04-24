@@ -52,7 +52,6 @@ enum firmware_type {
 enum fret_mode {
     LEDS_DISABLED,
     LEDS_INLINE,
-    WS2812,
     APA102
 };
 

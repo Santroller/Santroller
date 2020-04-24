@@ -44,11 +44,10 @@ void drum_tick(controller_t *controller, uint8_t *data) {
   read_buttons(controller, buttons);
 }
 void guitar_cnt_tick(controller_t *controller, uint8_t *data) {
-  controller->l_x = (data[0] - 0x80) << 8;
-  controller->l_y = (data[2] - 0x80) << 8;
-  int32_t whammy = (data[5] - 0x80) << 8;
-  controller->r_x = -whammy;
-  uint16_t buttons = ~(data[6] | (data[7] << 8));
+  controller->l_x = ((data[0] & 0x3f) - 32) << 10;
+  controller->l_y = ((data[1] & 0x3f) - 32) << 10;
+  controller->r_x = -(((data[3] & 0x1f) - 16) << 10);
+  uint16_t buttons = ~(data[4] | data[5] << 8);
   read_buttons(controller, buttons);
 }
 void classic_tick(controller_t *controller, uint8_t *data) {
@@ -115,7 +114,7 @@ void init_controller(void) {
   write_byte(0xFB, 0x00);
   _delay_us(10);
   id = read_ext_id();
-  if (id == GUITAR || id == CLASSIC || id == CLASSIC_PRO) {
+  if (id == CLASSIC || id == CLASSIC_PRO) {
     // Enable high-res mode
     write_byte(0xFE, 0x03);
     _delay_us(10);
@@ -172,6 +171,7 @@ void wii_ext_tick(controller_t *controller) {
     init_controller();
     return;
   }
+  if (readFunction == NULL) return;
   readFunction(controller, data);
 }
 

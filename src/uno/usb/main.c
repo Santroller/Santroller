@@ -76,8 +76,9 @@ eeprom_config_t config;
 bool entered_prog = false;
 int state = STATE_ARDWIINO;
 int lastCommand = 0;
-#define JUMP 0xDEAD0000
-// set this to JUMP to jmp
+#define JUMP 0xDEAD8001
+
+// by placing this in noinit, we can jump to the bootloader after a watchdog reset.
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 void handle_out(uint8_t ep, RingBuff_t *buf, bool serial);
 
@@ -101,15 +102,17 @@ int main(void) {
     // Bootloader is at address 0x1000
     asm volatile("jmp 0x1000");
   }
+
   SetupHardware();
   eeprom_read_block(&config, &config_mem, sizeof(eeprom_config_t));
+
   if (config.id == ARDWIINO_DEVICE_TYPE) {
     device_type = config.device_type;
   } else {
     config.id = ARDWIINO_DEVICE_TYPE;
     config.device_type = device_type;
   }
-  // TODO: would it be easier to define this arrays correctly? what do we really gain from doing this at this point? if we do this then we would get a real memory count and be able to optimise there too.
+
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buf);
   RingBuffer_InitBuffer(&USARTtoSER_Buffer, USARTtoSER_Buf);
   RingBuffer_InitBuffer(&USARTtoHID_Buffer, USARTtoHID_Buf);

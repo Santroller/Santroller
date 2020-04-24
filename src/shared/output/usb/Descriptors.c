@@ -299,6 +299,8 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     PollingIntervalMS : 1
   },
 };
+#define ARDWIINO_VID 0x1209
+#define ARDWIINO_PID 0x2882
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
 
@@ -307,8 +309,8 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   SubClass : USB_CSCP_NoDeviceSubclass,
   Protocol : USB_CSCP_NoDeviceProtocol,
   Endpoint0Size : FIXED_CONTROL_ENDPOINT_SIZE,
-  VendorID : 0x1209,
-  ProductID : 0x2882,
+  VendorID : ARDWIINO_VID,
+  ProductID : ARDWIINO_PID,
   ReleaseNumber : 0x3122,
 
   ManufacturerStrIndex : 0x01,
@@ -319,6 +321,10 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
 };
 
 static uint8_t buf[sizeof(ps3_report_descriptor)];
+static uint16_t vid[] = {0x0F0D, ARDWIINO_VID, 0x12ba, 0x12ba,
+                         0x12ba, 0x12ba,       0x1bad, 0x1bad};
+static uint16_t pid[] = {0x0092, ARDWIINO_PID, 0x0100, 0x0200,
+                         0x0120, 0x0210,       0x0004, 0x074B};
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
  * code so that the address and size of a requested descriptor can be given to
@@ -342,17 +348,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     Size = DeviceDescriptor.Header.Size;
     memcpy_P(buf, Address, Size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)buf;
-    if (device_type == SWITCH_GAMEPAD) {
-      dev->VendorID = 0x0F0D;
-      dev->ProductID = 0x0092;
-    } else if (device_type > PS3_GAMEPAD) {
-      static uint16_t id[] = {0x0100, 0x0200, 0x0120, 0x0210, 0x0004, 0x074B};
-      if (device_type >= WII_ROCK_BAND_GUITAR) {
-        dev->VendorID = 0x1bad;
-      } else {
-        dev->VendorID = 0x12ba;
-      }
-      dev->ProductID = id[device_type - PS3_GUITAR_HERO_GUITAR];
+    if (device_type >= SWITCH_GAMEPAD) {
+      dev->VendorID = vid[device_type - SWITCH_GAMEPAD];
+      dev->ProductID = pid[device_type - SWITCH_GAMEPAD];
     }
     return Size;
   case DTYPE_Configuration:
@@ -370,13 +368,15 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       conf->Interface0.Class = HID_CSCP_HIDClass;
       conf->Interface0.SubClass = HID_CSCP_NonBootSubclass;
       conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
-      // Switch from Xinput to HID descriptor layout (just swap hid and xinput reserved)
+      // Move the hid descriptor so that it is in the right place
       memcpy_P(&conf->Controller.HID.HIDDescriptor,
                &ConfigurationDescriptor.Controller.XInput.HIDDescriptor,
                sizeof(conf->Controller.XInput.HIDDescriptor));
-      memcpy_P(&conf->Controller.HID.XInputReserved,
-               &ConfigurationDescriptor.Controller.XInput.XInputReserved,
-               sizeof(conf->Controller.XInput.XInputReserved));
+      //  We have a corrupted old hid descriptor sitting here now. We don't
+      //  actually care about the data, as it isnt necessary for hid, but we
+      //  need to set its size correctly so that it is parsed.
+      conf->Controller.HID.XInputReserved.Header.Size =
+          sizeof(USB_HID_XBOX_Descriptor_HID_t);
     }
     return Size;
   case HID_DTYPE_Report:

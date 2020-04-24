@@ -270,28 +270,34 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         0,
         {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
       },
-      Endpoints : {
-        DataInEndpoint0 : {
-          Header :
-              {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+      HIDDescriptor : {
+        Header :
+            {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
 
-          EndpointAddress : 0x81,
-          Attributes : EP_TYPE_INTERRUPT,
-          EndpointSize : HID_EPSIZE,
-          PollingIntervalMS : 1
-        },
-        DataOutEndpoint0 : {
-          Header :
-              {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+        HIDSpec : VERSION_BCD(1, 1, 1),
+        CountryCode : 0x00,
+        TotalReportDescriptors : 1,
+        HIDReportType : HID_DTYPE_Report,
+        HIDReportLength : sizeof(ps3_report_descriptor)
+      },
+    },
+  },
+  DataInEndpoint0 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
 
-          EndpointAddress : 0x02,
-          Attributes : EP_TYPE_INTERRUPT,
-          EndpointSize : HID_EPSIZE,
-          PollingIntervalMS : 1
-        },
-      }
-    }
-  }
+    EndpointAddress : 0x81,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  DataOutEndpoint0 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+
+    EndpointAddress : 0x02,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
 };
 const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
@@ -312,15 +318,6 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
 
-const USB_HID_Descriptor_HID_t PROGMEM hid_descriptor = {
-  Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
-
-  HIDSpec : VERSION_BCD(1, 1, 1),
-  CountryCode : 0x00,
-  TotalReportDescriptors : 1,
-  HIDReportType : HID_DTYPE_Report,
-  HIDReportLength : sizeof(ps3_report_descriptor)
-};
 static uint8_t buf[sizeof(ps3_report_descriptor)];
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
@@ -349,7 +346,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       dev->VendorID = 0x0F0D;
       dev->ProductID = 0x0092;
     } else if (device_type > PS3_GAMEPAD) {
-      static uint16_t id[] = {0x0100, 0x0200, 0x0120, 0x0210, 0x0004, 0x0005};
+      static uint16_t id[] = {0x0100, 0x0200, 0x0120, 0x0210, 0x0004, 0x074B};
       if (device_type >= WII_ROCK_BAND_GUITAR) {
         dev->VendorID = 0x1bad;
       } else {
@@ -365,25 +362,21 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)buf;
     if (device_type >= KEYBOARD) {
-      // Switch from Xinput to HID descriptor layout
-      memcpy_P(&conf->Controller.HID.Endpoints,
-               &ConfigurationDescriptor.Controller.XInput.Endpoints,
-               sizeof(conf->Controller.XInput.Endpoints));
-      // And now adjust the total size as the HID layout is actually smaller
-      conf->Config.TotalConfigurationSize -=
-          sizeof(USB_HID_XBOX_Descriptor_HID_t) -
-          sizeof(USB_HID_Descriptor_HID_t);
-
-      memcpy_P(&conf->Controller.HID.HIDDescriptor, &hid_descriptor,
-               sizeof(hid_descriptor));
       if (device_type == KEYBOARD) {
-        conf->Controller.HID.HIDDescriptor.HIDReportLength =
+        conf->Controller.XInput.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
       }
       // Report that we have an HID device
       conf->Interface0.Class = HID_CSCP_HIDClass;
       conf->Interface0.SubClass = HID_CSCP_NonBootSubclass;
       conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
+      // Switch from Xinput to HID descriptor layout (just swap hid and xinput reserved)
+      memcpy_P(&conf->Controller.HID.HIDDescriptor,
+               &ConfigurationDescriptor.Controller.HID.HIDDescriptor,
+               sizeof(conf->Controller.HID.HIDDescriptor));
+      memcpy_P(&conf->Controller.HID.XInputReserved,
+               &ConfigurationDescriptor.Controller.HID.XInputReserved,
+               sizeof(conf->Controller.HID.XInputReserved));
     }
     return Size;
   case HID_DTYPE_Report:

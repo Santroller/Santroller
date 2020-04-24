@@ -24,9 +24,9 @@
 #define CDC_NOTIFICATION_EPSIZE 8
 
 /** Size in bytes of the CDC data IN and OUT endpoints. */
-		#define CDC_TX_EPSIZE                64
+#define CDC_TX_EPSIZE 64
 #define CDC_TX_BANK_SIZE 2
-		#define CDC_RX_EPSIZE                32
+#define CDC_RX_EPSIZE 32
 #define CDC_RX_BANK_SIZE 1
 /** Enum for the device string descriptor IDs within the device. Each string
  * descriptor should have a unique ID index associated with it, which can be
@@ -59,6 +59,19 @@ typedef struct {
 } ControllerEndpoints;
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
+  USB_Descriptor_Interface_t Interface0;
+  union {
+    struct {
+      USB_HID_XBOX_Descriptor_HID_t XInputReserved;
+      USB_HID_Descriptor_HID_t HIDDescriptor;
+    } XInput;
+    struct {
+      USB_HID_Descriptor_HID_t HIDDescriptor;
+      USB_HID_XBOX_Descriptor_HID_t XInputReserved;
+    } HID;
+  } Controller;
+  USB_Descriptor_Endpoint_t DataInEndpoint0;
+  USB_Descriptor_Endpoint_t DataOutEndpoint0;
   USB_Descriptor_Interface_Association_t CDC_IAD;
   USB_Descriptor_Interface_t CDC_CCI_Interface;
   USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
@@ -68,17 +81,6 @@ typedef struct {
   USB_Descriptor_Interface_t CDC_DCI_Interface;
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
-  USB_Descriptor_Interface_t Interface0;
-  union {
-    struct {
-      USB_HID_XBOX_Descriptor_HID_t XInputReserved;
-      ControllerEndpoints Endpoints;
-    } XInput;
-    struct {
-      USB_HID_Descriptor_HID_t HIDDescriptor;
-      ControllerEndpoints Endpoints;
-    } HID;
-  } Controller;
 } USB_Descriptor_Configuration_t;
 extern uint8_t device_type;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,

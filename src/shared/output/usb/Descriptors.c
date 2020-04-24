@@ -372,11 +372,11 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
       // Switch from Xinput to HID descriptor layout (just swap hid and xinput reserved)
       memcpy_P(&conf->Controller.HID.HIDDescriptor,
-               &ConfigurationDescriptor.Controller.HID.HIDDescriptor,
-               sizeof(conf->Controller.HID.HIDDescriptor));
+               &ConfigurationDescriptor.Controller.XInput.HIDDescriptor,
+               sizeof(conf->Controller.XInput.HIDDescriptor));
       memcpy_P(&conf->Controller.HID.XInputReserved,
-               &ConfigurationDescriptor.Controller.HID.XInputReserved,
-               sizeof(conf->Controller.HID.XInputReserved));
+               &ConfigurationDescriptor.Controller.XInput.XInputReserved,
+               sizeof(conf->Controller.XInput.XInputReserved));
     }
     return Size;
   case HID_DTYPE_Report:

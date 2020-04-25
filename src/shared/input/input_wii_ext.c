@@ -108,11 +108,14 @@ void tatacon_tick(controller_t *controller, uint8_t *data) {
   read_buttons(controller, buttons);
 }
 void init_controller(void) {
-  _delay_us(10);
-  write_byte(0xF0, 0x55);
-  _delay_us(10);
-  write_byte(0xFB, 0x00);
-  _delay_us(10);
+  id = read_ext_id();
+  if (id == NO_DEVICE) {
+    _delay_us(10);
+    write_byte(0xF0, 0x55);
+    _delay_us(10);
+    write_byte(0xFB, 0x00);
+    _delay_us(10);
+  }
   id = read_ext_id();
   if (id == CLASSIC || id == CLASSIC_PRO) {
     // Enable high-res mode
@@ -166,7 +169,8 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 }
 void wii_ext_tick(controller_t *controller) {
   uint8_t data[8];
-  if (twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
+  if (id == NO_DEVICE ||
+      twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
     init_controller();
     return;

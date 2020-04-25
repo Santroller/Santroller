@@ -14,6 +14,5 @@
 #define MOTION_PLUS_NUNCHUK 0x0505
 #define MOTION_PLUS_CLASSIC 0x0705
 #define NO_DEVICE           0xFFFF
-void wii_ext_init(void);
 void wii_ext_tick(controller_t* controller);
 void get_wii_device_name(char* buf);

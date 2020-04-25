@@ -36,6 +36,13 @@ void controller_control_request(void) {
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
       USB_ControlRequest.bRequest == HID_REQ_GetReport) {
     // Send out init packets for the ps3
+    if (device_type == PS3_GUITAR_HERO_GUITAR ||
+        device_type == PS3_GUITAR_HERO_DRUMS) {
+      id[3] = 0x06;
+    } else if (device_type == PS3_ROCK_BAND_GUITAR ||
+               device_type == PS3_ROCK_BAND_DRUMS) {
+      id[3] = 0x00;
+    }
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(id, sizeof(id));
     Endpoint_ClearOUT();

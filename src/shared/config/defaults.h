@@ -1,12 +1,13 @@
 #pragma once
 #include "./defines.h"
-#define PROTOCOL_VERSION 0
+#define PROTOCOL_VERSION 1
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 64
+#define DRUM_THRESHOLD 512
 #define JOY_THRESHOLD 64
 #define TILT_SENSITIVITY 3000
 
@@ -35,11 +36,12 @@
 #define MPU_6050_ORIENTATION NEGATIVE_X
 #define PINS                                                                   \
   {                                                                            \
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,     \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,                     \
-        {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false},  \
-        {INVALID_PIN, false}, {                                                          \
-      INVALID_PIN, false                                            \
+    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,           \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
+        INVALID_PIN, {INVALID_PIN, false}, {INVALID_PIN, false},               \
+        {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false}, {    \
+      INVALID_PIN, false                                                       \
     }                                                                          \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
@@ -53,9 +55,11 @@
      FRET_MODE,                                                                \
      MAP_JOY_TO_DPAD,                                                          \
      MAP_START_SELECT_TO_HOME,                                                 \
-     MAP_ACCEL_TO_R, ARDWIINO_DEVICE_TYPE, CONFIG_VERSION},                                                          \
+     MAP_ACCEL_TO_R,                                                           \
+     ARDWIINO_DEVICE_TYPE,                                                     \
+     CONFIG_VERSION},                                                          \
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \
-        KEYS,                                                                  \
+        KEYS, {DRUM_THRESHOLD},                                                \
   }

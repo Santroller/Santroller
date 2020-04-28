@@ -1,14 +1,9 @@
 #include "input_direct.h"
 #include "../config/eeprom.h"
 #include "../util.h"
+#include "input_guitar.h"
 #include "pins/pins.h"
 #include <stdlib.h>
-typedef struct {
-  uint8_t mask;
-  volatile uint8_t *port;
-  uint16_t pmask;
-  bool eq;
-} pin_t;
 pin_t pinData[16];
 int validPins = 0;
 typedef struct {
@@ -20,19 +15,25 @@ typedef struct {
 void direct_init() {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
+  setUpValidPins();
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
-      bool is_fret = (i > XBOX_A || i == XBOX_LB);
+      bool is_fret = (i >= XBOX_A || i == XBOX_LB);
       pin_t pin = {};
       pin.mask = digitalPinToBitMask(pins[i]);
       pin.port = portInputRegister(digitalPinToPort((pins[i])));
       pin.pmask = _BV(i);
       pin.eq = is_fret && config.main.fret_mode == LEDS_INLINE;
-      pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
-      pinData[validPins++] = pin;
+      if (is_drum() && is_fret) {
+        // We should probably keep a list of drum specific buttons, instead of using isfret
+        setUpAnalogDigitalPin(pin, pins[i], config.new_items.threshold_drums);
+      } else {
+        pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
+        pinData[validPins++] = pin;
+      }
     }
   }
-  setUpValidPins();
+  startADC();
 }
 uint8_t find_digital(void) {
   for (int i = 2; i < NUM_DIGITAL_PINS; i++) { pinMode(i, INPUT_PULLUP); }
@@ -50,8 +51,8 @@ uint8_t find_analog(void) {
   stopReading();
   int last[NUM_ANALOG_INPUTS];
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-      pinMode(A0+i, INPUT_PULLUP);
-      last[i] = analogRead(i);
+    pinMode(A0 + i, INPUT_PULLUP);
+    last[i] = analogRead(i);
   }
   while (true) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
@@ -71,7 +72,11 @@ void direct_tick(controller_t *controller) {
   analog_info_t info;
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
-    if (info.offset >= 2) {
+    if (info.hasDigital) {
+      if (info.value > info.threshold) {
+        controller->buttons |= info.digital.pmask;
+      }
+    } else if (info.offset >= 2) {
       ((controller_a_t *)controller)->sticks[info.offset - 2] = info.value;
     } else {
       ((controller_a_t *)controller)->triggers[info.offset] = info.value >> 8;

@@ -1,7 +1,4 @@
 #pragma once
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "input_handler.h"
 #include "../config/eeprom.h"
 #define NUM_LEDS 5
@@ -167,6 +164,3 @@ typedef enum {
   FairyLightNCC = 0xFF9D2A
 
 } Colors;
-#ifdef __cplusplus
-}
-#endif

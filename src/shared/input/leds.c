@@ -1,15 +1,12 @@
-#define ARDUINO 1000
-extern "C" {
 #include "leds.h"
-#define LED_COUNT NUM_LEDS
 #include "../../../lib/AVR-APA102-library/src/apa102.h"
 #include "../config/eeprom.h"
 #include "../util.h"
-#include "input_handler.h"
+// #include "input_handler.h"
 #include <avr/power.h>
-uint8_t pixels[2 * NUM_LEDS];
 void led_init(void) {
   if (config.main.fret_mode != APA102) return;
+  apa102_set_led_count(NUM_LEDS);
   clock_prescale_set(clock_div_1);
   apa102_init_spi();
 }
@@ -31,5 +28,4 @@ void led_tick(controller_t *controller) {
     apa102_set_led(rgb(col));
   }
   apa102_end();
-}
 }

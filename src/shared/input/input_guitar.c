@@ -26,6 +26,10 @@ void digital_tick(controller_t *controller) {
   controller->r_y = (!digitalRead(config.pins.r_y.pin)) * 32767;
 }
 void (*tick)(controller_t *controller) = NULL;
+
+bool is_drum(void) {
+  return config.main.input_type == PS3_GUITAR_HERO_DRUMS || PS3_ROCK_BAND_DRUMS || WII_ROCK_BAND_DRUMS || XINPUT_DRUMS;
+}
 bool is_not_guitar(void) {
   return config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&
       config.main.sub_type != PS3_ROCK_BAND_GUITAR &&

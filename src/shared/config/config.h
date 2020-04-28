@@ -77,7 +77,7 @@ typedef struct {
   int16_t tilt_sensitivity;
 } axis_config_t;
 typedef struct {
-  uint8_t threshold_drums;
+  uint16_t threshold_drums;
 } new_items_t;
 typedef struct {
   main_config_t main;

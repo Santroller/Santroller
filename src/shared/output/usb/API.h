@@ -9,6 +9,8 @@
 #define COMMAND_STK_500_ENTER_PROG '2'
 #define COMMAND_SET_LEDS 'l'
 #define COMMAND_SET_LED_GUI 'g'
+#define COMMAND_FIND_DIGITAL 'd'
+#define COMMAND_FIND_ANALOG 'n'
 
 #define INFO_VERSION 0
 #define INFO_SIGNATURE 1

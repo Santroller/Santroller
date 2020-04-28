@@ -2,6 +2,7 @@
 #include "../input/input_wii_ext.h"
 #include "usb/API.h"
 #include <stdlib.h>
+#include "../input/input_direct.h"
 
 extern uint16_t id;
 config_t new_config;
@@ -259,6 +260,12 @@ void process_serial(uint8_t data) {
     case COMMAND_SET_LED_GUI:
       buf = (uint8_t*)&controller.leds.gui;
       size = 4;
+      break;
+    case COMMAND_FIND_DIGITAL:
+      write_usb(find_digital());
+      break;
+    case COMMAND_FIND_ANALOG:
+      write_usb(find_analog());
       break;
     case COMMAND_WRITE_CONFIG_VALUE:
     case COMMAND_READ_INFO:

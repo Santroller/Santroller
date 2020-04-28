@@ -2,6 +2,7 @@
 #include "../config/eeprom.h"
 #include "../util.h"
 #include "pins/pins.h"
+#include <stdlib.h>
 typedef struct {
   uint8_t mask;
   volatile uint8_t *port;
@@ -18,6 +19,7 @@ typedef struct {
 } controller_a_t;
 void direct_init() {
   uint8_t *pins = (uint8_t *)&config.pins;
+  validPins = 0;
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (pins[i] != INVALID_PIN) {
       bool is_fret = (i > XBOX_A || i == XBOX_LB);
@@ -30,7 +32,35 @@ void direct_init() {
       pinData[validPins++] = pin;
     }
   }
-  for (int i = 0; i < 6; i++) { setUpPin(i); }
+  setUpValidPins();
+}
+uint8_t find_digital(void) {
+  for (int i = 2; i < NUM_DIGITAL_PINS; i++) { pinMode(i, INPUT_PULLUP); }
+  while (true) {
+    for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
+      if (!digitalRead(i)) {
+        for (int i = 2; i < NUM_DIGITAL_PINS; i++) { pinMode(i, INPUT); }
+        direct_init();
+        return i;
+      }
+    }
+  }
+}
+uint8_t find_analog(void) {
+  stopReading();
+  int last[NUM_ANALOG_INPUTS];
+  for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
+      pinMode(A0+i, INPUT_PULLUP);
+      last[i] = analogRead(i);
+  }
+  while (true) {
+    for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
+      if (abs(analogRead(i) - last[i]) > 10) {
+        direct_init();
+        return i;
+      }
+    }
+  }
 }
 void direct_tick(controller_t *controller) {
   pin_t pin;
@@ -47,5 +77,6 @@ void direct_tick(controller_t *controller) {
       ((controller_a_t *)controller)->triggers[info.offset] = info.value >> 8;
     }
   }
+
   resetADC();
 }

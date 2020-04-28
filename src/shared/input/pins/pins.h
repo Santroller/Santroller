@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../../controller/controller.h"
-
+#include "arduino_pins.h"
 typedef struct {
   uint8_t srb;
   uint8_t mux;
@@ -13,7 +13,7 @@ typedef struct {
   bool inverted;
   volatile uint16_t value;
 } analog_info_t;
-extern analog_info_t joyData[6];
+extern analog_info_t joyData[NUM_ANALOG_INPUTS];
 extern int validAnalog;
 void setUpPin(uint8_t pin);
 int digitalRead(uint8_t pin);
@@ -24,3 +24,6 @@ unsigned long millis(void);
 unsigned long micros(void);
 void delay(unsigned long ms);
 void resetADC(void);
+int analogRead(uint8_t pin);
+void stopReading(void);
+void setUpValidPins(void);

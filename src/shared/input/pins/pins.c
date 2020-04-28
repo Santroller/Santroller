@@ -1,7 +1,6 @@
 #include "pins.h"
 #include "../../config/eeprom.h"
 #include "../input_guitar.h"
-#include "arduino_pins.h"
 #include "stddef.h"
 void enablePCI(uint8_t pin) {
   *digitalPinToPCMSK(pin) |= (1 << digitalPinToPCMSKbit(pin));
@@ -22,9 +21,10 @@ typedef struct {
   analogue_pin_t axis[6];
 } pins_a_t;
 
-analog_info_t joyData[6];
 int validAnalog = 0;
-int currentAnalog = 0;
+volatile int currentAnalog = 0;
+volatile bool stopADC = false;
+analog_info_t joyData[NUM_ANALOG_INPUTS];
 void setUpPin(uint8_t offset) {
   analog_info_t ret = {0};
   ret.offset = offset;
@@ -35,7 +35,6 @@ void setUpPin(uint8_t offset) {
       config.main.tilt_type != ANALOGUE) {
     return;
   }
-  pinMode(pin, INPUT);
   ret.inverted = apin.inverted;
 #if defined(analogPinToChannel)
 #  if defined(__AVR_ATmega32U4__)
@@ -54,6 +53,7 @@ void setUpPin(uint8_t offset) {
   if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
 
+  pinMode(A0 + pin, INPUT);
 #if defined(ADCSRB) && defined(MUX5)
   // the MUX5 bit of ADCSRB selects whether we're reading from channels
   // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
@@ -75,19 +75,88 @@ void readADC(void) {
   ADMUX = info.mux;
   sbi(ADCSRA, ADSC);
 }
+int analogRead(uint8_t pin) {
+  uint8_t low, high;
+
+#if defined(analogPinToChannel)
+#  if defined(__AVR_ATmega32U4__)
+  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
+#  endif
+  pin = analogPinToChannel(pin);
+#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  if (pin >= 54) pin -= 54; // allow for channel or pin numbers
+#elif defined(__AVR_ATmega32U4__)
+  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
+#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) ||           \
+    defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) ||               \
+    defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
+  if (pin >= 24) pin -= 24; // allow for channel or pin numbers
+#else
+  if (pin >= 14) pin -= 14; // allow for channel or pin numbers
+#endif
+
+#if defined(ADCSRB) && defined(MUX5)
+  // the MUX5 bit of ADCSRB selects whether we're reading from channels
+  // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
+  ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
+#endif
+
+  // set the analog reference (high two bits of ADMUX) and select the
+  // channel (low 4 bits).  this also sets ADLAR (left-adjust result)
+  // to 0 (the default).
+#if defined(ADMUX)
+#  if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) ||                \
+      defined(__AVR_ATtiny85__)
+  ADMUX = (1 << 4) | (pin & 0x07);
+#  else
+  ADMUX = (1 << 6) | (pin & 0x07);
+#  endif
+#endif
+
+  // without a delay, we seem to read from the wrong channel
+  // delay(1);
+
+#if defined(ADCSRA) && defined(ADCL)
+  // start the conversion
+  sbi(ADCSRA, ADSC);
+
+  // ADSC is cleared when the conversion finishes
+  while (bit_is_set(ADCSRA, ADSC))
+    ;
+
+  // we have to read ADCL first; doing so locks both ADCL
+  // and ADCH until ADCH is read.  reading ADCL second would
+  // cause the results of each conversion to be discarded,
+  // as ADCL and ADCH would be locked when it completed.
+  low = ADCL;
+  high = ADCH;
+#else
+  // we dont have an ADC, return 0
+  low = 0;
+  high = 0;
+#endif
+
+  // combine the two bytes
+  return (high << 8) | low;
+}
 void resetADC(void) {
   if (currentAnalog == validAnalog) {
     currentAnalog = 0;
     readADC();
   }
 }
+void stopReading(void) {
+  stopADC = true;
+  while (bit_is_set(ADCSRA, ADSC))
+    ;
+}
 ISR(ADC_vect, ISR_BLOCK) {
+  if (stopADC) return;
   uint8_t low, high;
   low = ADCL;
   high = ADCH;
-  analog_info_t info = joyData[currentAnalog];
   uint16_t data = (high << 8) | low;
-  if (info.inverted) data *= -1;
+  if (joyData[currentAnalog].inverted) data *= -1;
   data = (data - 512) * 64;
   joyData[currentAnalog++].value = data;
   if (currentAnalog != validAnalog) { readADC(); }
@@ -338,9 +407,15 @@ void enableADC(void) {
   sbi(TCCR5B, CS50);
   sbi(TCCR5A, WGM50); // put timer 5 in 8-bit phase correct pwm mode
 #endif
+  // Enable adc interrupts
+  sbi(ADCSRA, ADIE);
+}
 
-  if (validAnalog > 0) {
-    sbi(ADCSRA, ADIE);
-    readADC();
-  }
+void setUpValidPins(void) {
+  stopReading();
+  validAnalog = 0;
+  currentAnalog = 0;
+  for (int i = 0; i < 6; i++) { setUpPin(i); }
+  stopADC = false;
+  readADC();
 }

@@ -175,8 +175,7 @@ void wii_ext_tick(controller_t *controller) {
     init_controller();
     return;
   }
-  if (readFunction == NULL) return;
-  readFunction(controller, data);
+  if (readFunction) readFunction(controller, data);
 }
 
 void get_wii_device_name(char *str) {

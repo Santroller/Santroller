@@ -379,15 +379,20 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       conf->Controller.HID.XInputReserved.Header.Size =
           sizeof(USB_HID_XBOX_Descriptor_HID_t);
     } else {
-      // Internally we seperate rockband and guitar hero drums as they have different mappings, however, we need to let windows know that it is a drum kit and not a made up ID.
-      if (config.main.sub_type == XINPUT_ROCK_BAND_DRUMS || config.main.sub_type == XINPUT_GUITAR_HERO_DRUMS) {
-        config.main.sub_type = REAL_DRUM_SUBTYPE;
+      // Map fake subtypes to their real counterparts
+      uint8_t st = config.main.sub_type;
+      switch (st) {
+        case XINPUT_ROCK_BAND_DRUMS:
+        case XINPUT_GUITAR_HERO_DRUMS:
+        st = REAL_DRUM_SUBTYPE;
+        break;
+        case XINPUT_LIVE_GUITAR:
+        case XINPUT_GUITAR_HERO_GUITAR:
+        case XINPUT_ROCK_BAND_GUITAR:
+        st = REAL_GUITAR_SUBTYPE;
+        break;
       }
-      // Internally we have a concept of a live guitar, but that doesn't exist on windows, so tell windows it is a normal guitar.
-      if (config.main.sub_type == XINPUT_LIVE_GUITAR || config.main.sub_type == XINPUT_GUITAR_HERO_GUITAR || config.main.sub_type == XINPUT_ROCK_BAND_GUITAR) {
-        config.main.sub_type = REAL_GUITAR_SUBTYPE;
-      }
-      conf->Controller.XInput.XInputReserved.subtype = config.main.sub_type;
+      conf->Controller.XInput.XInputReserved.subtype = st;
     }
     return Size;
   case HID_DTYPE_Report:

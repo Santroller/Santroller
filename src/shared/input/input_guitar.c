@@ -33,8 +33,8 @@ bool is_drum(void) {
 bool is_not_guitar(void) {
   return config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&
       config.main.sub_type != PS3_ROCK_BAND_GUITAR &&
-      config.main.sub_type != XINPUT_GUITAR &&
-      config.main.sub_type != XINPUT_GUITAR_BASS &&
+      config.main.sub_type != XINPUT_GUITAR_HERO_GUITAR &&
+      config.main.sub_type != XINPUT_GUITAR_HERO_DRUMS &&
       config.main.sub_type != XINPUT_LIVE_GUITAR;
 }
 void guitar_init(void) {

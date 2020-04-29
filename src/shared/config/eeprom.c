@@ -16,6 +16,14 @@ void load_config(void) {
         config.main.version = 1;
         write_config();
     }
+    if (config.main.sub_type == REAL_GUITAR_SUBTYPE) {
+        config.main.sub_type = XINPUT_GUITAR_HERO_GUITAR;
+        write_config();
+    }
+    if (config.main.sub_type == REAL_DRUM_SUBTYPE) {
+        config.main.sub_type = XINPUT_GUITAR_HERO_DRUMS;
+        write_config();
+    }
 }
 void write_config(void) {
     eeprom_write_block(&config, &config_pointer, sizeof(config_t));

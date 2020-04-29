@@ -45,6 +45,12 @@ void get_info_buf(uint8_t data) {
 void get_config_buf(uint8_t data) {
   size = 1;
   switch (data) {
+  case CONFIG_CURRENT_INPUT_TYPE:
+    buf = &config.main.input_type;
+    break;
+  case CONFIG_CURRENT_SUB_TYPE:
+    buf = &config.main.sub_type;
+    break;
   case CONFIG_INPUT_TYPE:
     buf = &new_config.main.input_type;
     break;

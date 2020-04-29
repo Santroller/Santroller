@@ -383,6 +383,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       if (config.main.sub_type == XINPUT_ROCK_BAND_DRUMS || config.main.sub_type == XINPUT_GUITAR_HERO_DRUMS) {
         config.main.sub_type = REAL_DRUM_SUBTYPE;
       }
+      // Internally we have a concept of a live guitar, but that doesn't exist on windows, so tell windows it is a normal guitar.
+      if (config.main.sub_type == XINPUT_LIVE_GUITAR) {
+        config.main.sub_type = XINPUT_GUITAR;
+      }
       conf->Controller.XInput.XInputReserved.subtype = config.main.sub_type;
     }
     return Size;

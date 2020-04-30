@@ -380,7 +380,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           sizeof(USB_HID_XBOX_Descriptor_HID_t);
     } else {
       // Map fake subtypes to their real counterparts
-      uint8_t st = config.main.sub_type;
+      uint8_t st = device_type;
       switch (st) {
         case XINPUT_ROCK_BAND_DRUMS:
         case XINPUT_GUITAR_HERO_DRUMS:

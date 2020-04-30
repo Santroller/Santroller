@@ -16,20 +16,23 @@ void direct_init() {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
   setUpValidPins();
-  for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
-    if (pins[i] != INVALID_PIN) {
-      bool is_fret = (i >= XBOX_A || i == XBOX_LB);
-      pin_t pin = {};
-      pin.mask = digitalPinToBitMask(pins[i]);
-      pin.port = portInputRegister(digitalPinToPort((pins[i])));
-      pin.pmask = _BV(i);
-      pin.eq = is_fret && config.main.fret_mode == LEDS_INLINE;
-      if (is_drum() && is_fret) {
-        // We should probably keep a list of drum specific buttons, instead of using isfret
-        setUpAnalogDigitalPin(pin, pins[i], config.new_items.threshold_drums);
-      } else {
-        pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
-        pinData[validPins++] = pin;
+  if (config.main.input_type == DIRECT) {
+    for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
+      if (pins[i] != INVALID_PIN) {
+        bool is_fret = (i >= XBOX_A || i == XBOX_LB);
+        pin_t pin = {};
+        pin.mask = digitalPinToBitMask(pins[i]);
+        pin.port = portInputRegister(digitalPinToPort((pins[i])));
+        pin.pmask = _BV(i);
+        pin.eq = is_fret && config.main.fret_mode == LEDS_INLINE;
+        if (is_drum() && is_fret) {
+          // We should probably keep a list of drum specific buttons, instead of
+          // using isfret
+          setUpAnalogDigitalPin(pin, pins[i], config.new_items.threshold_drums);
+        } else {
+          pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
+          pinData[validPins++] = pin;
+        }
       }
     }
   }

@@ -1,6 +1,7 @@
 #include "input_guitar.h"
 #include "../config/eeprom.h"
 #include "../util.h"
+#include "input_direct.h"
 #include "mpu6050/mpu.h"
 #include "pins/pins.h"
 #include <stdbool.h>
@@ -28,18 +29,19 @@ void digital_tick(controller_t *controller) {
 void (*tick)(controller_t *controller) = NULL;
 
 bool is_drum(void) {
-  return config.main.input_type == PS3_GUITAR_HERO_DRUMS || PS3_ROCK_BAND_DRUMS || WII_ROCK_BAND_DRUMS || XINPUT_GUITAR_HERO_DRUMS || XINPUT_ROCK_BAND_DRUMS;
+  return config.main.input_type == PS3_GUITAR_HERO_DRUMS ||
+         PS3_ROCK_BAND_DRUMS || WII_ROCK_BAND_DRUMS ||
+         XINPUT_GUITAR_HERO_DRUMS || XINPUT_ROCK_BAND_DRUMS;
 }
 bool is_not_guitar(void) {
   return config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&
-      config.main.sub_type != PS3_ROCK_BAND_GUITAR &&
-      config.main.sub_type != XINPUT_GUITAR_HERO_GUITAR &&
-      config.main.sub_type != XINPUT_GUITAR_HERO_DRUMS &&
-      config.main.sub_type != XINPUT_LIVE_GUITAR;
+         config.main.sub_type != PS3_ROCK_BAND_GUITAR &&
+         config.main.sub_type != XINPUT_GUITAR_HERO_GUITAR &&
+         config.main.sub_type != XINPUT_GUITAR_HERO_DRUMS &&
+         config.main.sub_type != XINPUT_LIVE_GUITAR;
 }
 void guitar_init(void) {
-  if (is_not_guitar())
-    return;
+  if (is_not_guitar()) return;
   if (config.main.tilt_type == MPU_6050) {
     mympu_open(15);
     enablePCI(config.pins.r_y.pin);
@@ -47,7 +49,11 @@ void guitar_init(void) {
   } else if (config.main.tilt_type == DIGITAL) {
     pinMode(config.pins.r_y.pin, INPUT_PULLUP);
     tick = digital_tick;
-  } 
+  } else if (config.main.tilt_type == ANALOGUE &&
+             config.main.input_type == WII) {
+    direct_init();
+    tick = direct_tick;
+  }
 }
 int16_t r_x;
 void guitar_tick(controller_t *controller) {

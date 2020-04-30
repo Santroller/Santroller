@@ -42,6 +42,9 @@ void drum_tick(controller_t *controller, uint8_t *data) {
   // Mask out unused bits
   uint16_t buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
   read_buttons(controller, buttons);
+  // Swap y and x!
+  bit_write(!bit_check(data[5], 3), controller->buttons, XBOX_X);
+  bit_write(!bit_check(data[5], 5), controller->buttons, XBOX_Y);
 }
 void guitar_cnt_tick(controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[0] & 0x3f) - 32) << 10;

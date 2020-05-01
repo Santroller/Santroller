@@ -61,7 +61,7 @@ uint8_t find_analog(void) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
       if (abs(analogRead(i) - last[i]) > 10) {
         direct_init();
-        return i;
+        return i+A0;
       }
     }
   }

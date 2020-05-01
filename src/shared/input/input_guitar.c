@@ -29,9 +29,11 @@ void digital_tick(controller_t *controller) {
 void (*tick)(controller_t *controller) = NULL;
 
 bool is_drum(void) {
-  return config.main.input_type == PS3_GUITAR_HERO_DRUMS ||
-         PS3_ROCK_BAND_DRUMS || WII_ROCK_BAND_DRUMS ||
-         XINPUT_GUITAR_HERO_DRUMS || XINPUT_ROCK_BAND_DRUMS;
+  return config.main.sub_type == PS3_GUITAR_HERO_DRUMS ||
+         config.main.sub_type == PS3_ROCK_BAND_DRUMS ||
+         config.main.sub_type == WII_ROCK_BAND_DRUMS ||
+         config.main.sub_type == XINPUT_GUITAR_HERO_DRUMS ||
+         config.main.sub_type == XINPUT_ROCK_BAND_DRUMS;
 }
 bool is_not_guitar(void) {
   return config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&

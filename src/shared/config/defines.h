@@ -7,7 +7,7 @@
 enum tilt { NO_TILT, MPU_6050, DIGITAL, ANALOGUE };
 
 // Input types
-enum input { WII = 1, DIRECT };
+enum input { WII = 1, DIRECT, PS2};
 
 enum subtype {
   XINPUT_GAMEPAD=1,

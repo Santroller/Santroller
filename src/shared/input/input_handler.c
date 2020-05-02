@@ -4,6 +4,7 @@
 #include "i2c/twi.h"
 #include "input_direct.h"
 #include "input_guitar.h"
+#include "input_ps2_cnt.h"
 #include "input_wii_ext.h"
 #include "leds.h"
 #include "pins/pins.h"
@@ -12,14 +13,19 @@ void (*tick_function)(controller_t *);
 int jth;
 void input_init() {
   enableADC();
-  switch (config.main.input_type) {
-  case WII:
-    tick_function = wii_ext_tick;
-    break;
-  case DIRECT:
-    direct_init();
-    tick_function = direct_tick;
-  }
+  // switch (config.main.input_type) {
+  // case WII:
+  //   tick_function = wii_ext_tick;
+  //   break;
+  // case DIRECT:
+  //   direct_init();
+  //   tick_function = direct_tick;
+  //   break;
+  // case PS2:
+  //   tick_function = ps2_cnt_tick;
+  //   break;
+  // }
+  tick_function = ps2_cnt_tick;
   twi_init();
   guitar_init();
   led_init();

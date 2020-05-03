@@ -38,14 +38,34 @@ void direct_init() {
   }
   startADC();
 }
+bool should_skip(uint8_t i) {
+  // Skip sda + scl when using peripherials utilising I2C
+  if ((config.main.tilt_type == MPU_6050 || config.main.input_type == WII) &&
+      (i == PIN_WIRE_SDA || i == PIN_WIRE_SCL)) {
+    return true;
+  }
+  // Skip SPI pins when using peripherials that utilise SPI
+  if ((config.main.fret_mode == APA102 || config.main.input_type == PS2) &&
+      (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
+       i == PIN_SPI_SS)) {
+    return true;
+  }
+  return false;
+}
 uint8_t find_digital(void) {
-  for (int i = 2; i < NUM_DIGITAL_PINS; i++) { pinMode(i, INPUT_PULLUP); }
+  for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+    if (!should_skip(i)) { pinMode(i, INPUT_PULLUP); }
+  }
   while (true) {
-    for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
-      if (!digitalRead(i)) {
-        for (int i = 2; i < NUM_DIGITAL_PINS; i++) { pinMode(i, INPUT); }
-        direct_init();
-        return i;
+    for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+      if (!should_skip(i)) {
+        if (!digitalRead(i)) {
+          for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+            if (!should_skip(i)) { pinMode(i, INPUT); }
+          }
+          direct_init();
+          return i;
+        }
       }
     }
   }
@@ -61,7 +81,7 @@ uint8_t find_analog(void) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
       if (abs(analogRead(i) - last[i]) > 10) {
         direct_init();
-        return i+A0;
+        return i + A0;
       }
     }
   }

@@ -87,6 +87,8 @@
 #undef OCR2_6
 #undef OCR2_7
 
+// For iterating over all digital pins, skip the duplicate versions of digital pins
+#define NUM_DIGITAL_PINS_NO_DUP 24
 #define NUM_DIGITAL_PINS  31
 #define NUM_ANALOG_INPUTS 12
 

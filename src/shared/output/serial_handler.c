@@ -271,9 +271,11 @@ void process_serial(uint8_t data) {
       break;
     case COMMAND_FIND_DIGITAL:
       write_usb(find_digital());
+      cmd = 0;
       break;
     case COMMAND_FIND_ANALOG:
       write_usb(find_analog());
+      cmd = 0;
       break;
     case COMMAND_WRITE_CONFIG_VALUE:
     case COMMAND_READ_INFO:

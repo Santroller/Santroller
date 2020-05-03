@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #define NUM_DIGITAL_PINS 20
+#define NUM_DIGITAL_PINS_NO_DUP NUM_DIGITAL_PINS
 #define NUM_ANALOG_INPUTS 6
 #define analogInputToDigitalPin(p) ((p < 6) ? (p) + 14 : -1)
 

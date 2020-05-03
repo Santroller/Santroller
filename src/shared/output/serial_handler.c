@@ -1,8 +1,9 @@
 #include "serial_handler.h"
+#include "../input/input_direct.h"
 #include "../input/input_wii_ext.h"
+#include "../input/input_ps2_cnt.h"
 #include "usb/API.h"
 #include <stdlib.h>
-#include "../input/input_direct.h"
 
 extern uint16_t id;
 config_t new_config;
@@ -36,7 +37,8 @@ void get_info_buf(uint8_t data) {
     buf = (uint8_t *)board;
     break;
   case INFO_WII_EXT:
-    get_wii_device_name((char *)str);
+    if (config.main.input_type == WII) { get_wii_device_name((char *)str); }
+    if (config.main.input_type == PS2) { ps2_cnt_get_name((char *)str); }
     buf = str;
     break;
   }
@@ -264,7 +266,7 @@ void process_serial(uint8_t data) {
       size = 5;
       break;
     case COMMAND_SET_LED_GUI:
-      buf = (uint8_t*)&controller.leds.gui;
+      buf = (uint8_t *)&controller.leds.gui;
       size = 4;
       break;
     case COMMAND_FIND_DIGITAL:

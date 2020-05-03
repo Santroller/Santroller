@@ -13,19 +13,19 @@ void (*tick_function)(controller_t *);
 int jth;
 void input_init() {
   enableADC();
-  // switch (config.main.input_type) {
-  // case WII:
-  //   tick_function = wii_ext_tick;
-  //   break;
-  // case DIRECT:
-  //   direct_init();
-  //   tick_function = direct_tick;
-  //   break;
-  // case PS2:
-  //   tick_function = ps2_cnt_tick;
-  //   break;
-  // }
-  tick_function = ps2_cnt_tick;
+  switch (config.main.input_type) {
+  case WII:
+    tick_function = wii_ext_tick;
+    break;
+  case DIRECT:
+    direct_init();
+    tick_function = direct_tick;
+    break;
+  case PS2:
+    ps2_cnt_init();
+    tick_function = ps2_cnt_tick;
+    break;
+  }
   twi_init();
   guitar_init();
   led_init();

@@ -1,395 +1,498 @@
 #include "input_ps2_cnt.h"
 #include "../util.h"
 #include "Arduino.h"
+#include "arduino_pins.h"
 #include <avr/io.h>
-#include <util/delay.h>
 #include <math.h>
 #include <stdio.h>
+#include <util/delay.h>
+//PIN: Uno      - SPI PIN - Micro
+//CMD: Pin 11   - MOSI    - 16
+//DATA: Pin 12  - MISO    - 14
+//CLK: Pin 13   - SCK     - 15
+//ATT: Pin 10   - ATT     - 10
 
-
-static uint8_t enter_config[] = {0x01, 0x43, 0x00, 0x01, 0x00};
-static uint8_t set_mode[] = {0x01, 0x44, 0x00, 0x01, 0x03,
-                             0x00, 0x00, 0x00, 0x00};
-static uint8_t set_uint8_ts_large[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
-                                       0x03, 0x00, 0x00, 0x00};
-static uint8_t exit_config[] = {0x01, 0x43, 0x00, 0x00, 0x5A,
+// Commands for communicating with a PSX controller
+static uint8_t cmd_enter_config[] = {0x01, 0x43, 0x00, 0x01, 0x5A,
+                                 0x5A, 0x5A, 0x5A, 0x5A};
+static uint8_t cmd_exit_config[] = {0x01, 0x43, 0x00, 0x00, 0x5A,
                                 0x5A, 0x5A, 0x5A, 0x5A};
-static uint8_t enable_rumble[] = {0x01, 0x4D, 0x00, 0x00, 0x01};
-static uint8_t type_read[] = {0x01, 0x45, 0x00, 0x5A, 0x5A,
+static uint8_t cmd_type_read[] = {0x01, 0x45, 0x00, 0x5A, 0x5A,
                               0x5A, 0x5A, 0x5A, 0x5A};
+static uint8_t cmd_set_mode[] = {
+    0x01, 0x44, 0x00, /* enabled */ 0x01, /* locked */ 0x00, 0x00,
+    0x00, 0x00, 0x00};
 
-void CLK_SET(void) {
-  register uint8_t old_sreg = SREG;
-  cli();
-  *_clk_oreg |= _clk_mask;
-  SREG = old_sreg;
+static uint8_t cmd_set_pressures[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
+                                  0x03, 0x00, 0x00, 0x00};
+
+static uint8_t poll[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
+
+bool isValidReply(const uint8_t *status) {
+  return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
 }
 
-void CLK_CLR(void) {
-  register uint8_t old_sreg = SREG;
-  cli();
-  *_clk_oreg &= ~_clk_mask;
-  SREG = old_sreg;
+inline bool isFlightstickReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0x50;
 }
 
-void CMD_SET(void) {
-  register uint8_t old_sreg = SREG;
-  cli();
-  *_cmd_oreg |= _cmd_mask; // SET(*_cmd_oreg,_cmd_mask);
-  SREG = old_sreg;
+inline bool isDualShockReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0x70;
 }
 
-void CMD_CLR(void) {
-  register uint8_t old_sreg = SREG;
-  cli();
-  *_cmd_oreg &= ~_cmd_mask; // SET(*_cmd_oreg,_cmd_mask);
-  SREG = old_sreg;
+inline bool isDualShock2Reply(const uint8_t *status) {
+  return status[1] == 0x79;
 }
 
-void ATT_SET(void) {
-  register uint8_t old_sreg = SREG;
-  cli();
-  *_att_oreg |= _att_mask;
-  SREG = old_sreg;
+inline bool isDigitalReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0x40;
 }
 
-void ATT_CLR(void) {
-  register uint8_t old_sreg = SREG;
-  cli();
-  *_att_oreg &= ~_att_mask;
-  SREG = old_sreg;
+inline bool isConfigReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0xF0;
 }
 
-bool DAT_CHK(void) { return (*_dat_ireg & _dat_mask) ? true : false; }
-// /****************************************************************************************/
-// bool NewButtonState() { return ((last_buttons ^ buttons) > 0); }
+/** \brief Size of internal communication buffer
+ *
+ * This can be sized after the longest command reply (which is 21 bytes for
+ * 01 42 when in DualShock 2 mode), but we're better safe than sorry.
+ */
+#define BUFFER_SIZE 32
 
-// /****************************************************************************************/
-// bool NewButtonState(unsigned int button) {
-//   return (((last_buttons ^ buttons) & button) > 0);
-// }
+/** \brief Size of buffer holding analog button data
+ */
+#define ANALOG_BTN_DATA_SIZE 12
 
-// /****************************************************************************************/
-// bool ButtonPressed(unsigned int button) {
-//   return (NewButtonState(button) & Button(button));
-// }
+/** \brief Internal communication buffer
+ *
+ * This is used to hold replies received from the controller.
+ */
+uint8_t inputBuffer[BUFFER_SIZE];
 
-// /****************************************************************************************/
-// bool ButtonReleased(unsigned int button) {
-//   return ((NewButtonState(button)) & ((~last_buttons & button) > 0));
-// }
+/** \brief Previous (Digital) Button status
+ *
+ * The individual bits can be identified through #PsxButton.
+ */
+PsxButtons previousButtonWord;
 
-// /****************************************************************************************/
-// bool Button(uint16_t button) { return ((~buttons & button) > 0); }
+/** \brief (Digital) Button status
+ *
+ * The individual bits can be identified through #PsxButton.
+ */
+PsxButtons buttonWord;
+//! @}
 
-// /****************************************************************************************/
-// unsigned int ButtonDatauint8_t() { return (~buttons); }
+/** \brief Analog Button Data
+ *
+ * \todo What's the meaning of every individual byte?
+ */
+uint8_t analogButtonData[ANALOG_BTN_DATA_SIZE];
 
-// /****************************************************************************************/
-// uint8_t Analog(uint8_t button) { return PS2data[button]; }
-
-/****************************************************************************************/
-unsigned char _gamepad_shiftinout(char uint8_t) {
-  unsigned char tmp = 0;
-  for (unsigned char i = 0; i < 8; i++) {
-    if (CHK(uint8_t, i))
-      CMD_SET();
-    else
-      CMD_CLR();
-
-    CLK_CLR();
-    _delay_us(CTRL_CLK);
-
-    // if(DAT_CHK()) SET(tmp,i);
-    if (DAT_CHK()) bit_set(tmp, i);
-
-    CLK_SET();
-#if CTRL_CLK_HIGH
-    _delay_us(CTRL_CLK_HIGH);
-#endif
+/** \brief Analog Button Data Validity
+ *
+ * True if the #analogButtonData were valid in last call to read()
+ */
+bool analogButtonDataValid;
+uint8_t att_bit;
+volatile uint8_t *att_out;
+uint8_t cmd_bit;
+volatile uint8_t *cmd_out;
+uint8_t clk_bit;
+volatile uint8_t *clk_out;
+uint8_t ss_bit;
+volatile uint8_t *ss_out;
+uint8_t spsr;
+uint8_t spcr;
+uint8_t spsr_ds1;
+uint8_t spcr_ds1;
+uint8_t spsr_ds2;
+uint8_t spcr_ds2;
+void ps2_cnt_init(void) {
+  att_bit = digitalPinToBitMask(10);
+  att_out = portOutputRegister(digitalPinToPort(10));
+  cmd_bit = digitalPinToBitMask(PIN_SPI_MOSI);
+  cmd_out = portOutputRegister(digitalPinToPort(PIN_SPI_MOSI));
+  clk_bit = digitalPinToBitMask(PIN_SPI_SCK);
+  clk_out = portOutputRegister(digitalPinToPort(PIN_SPI_SCK));
+  ss_bit = digitalPinToBitMask(PIN_SPI_SS);
+  ss_out = portOutputRegister(digitalPinToPort(PIN_SPI_SS));
+  pinMode(10, OUTPUT);
+  pinMode(PIN_SPI_MOSI, OUTPUT);
+  pinMode(PIN_SPI_MISO, INPUT_PULLUP);
+  pinMode(PIN_SPI_SCK, OUTPUT);
+  pinMode(PIN_SPI_SS, OUTPUT);
+  uint8_t oldSREG = SREG;
+  cli();
+  *cmd_out |= cmd_bit;
+  *clk_out |= clk_bit;
+  *att_out |= att_bit;
+  SPCR |= _BV(MSTR);
+  SPCR |= _BV(SPE);
+  SREG = oldSREG;
+  uint8_t clockDiv;
+  // TODO: Does this limit poll rate much? Supporting PS1 controllers is nice,
+  // but we can double this clock when using PS2 controllers.
+  // TODO: If this does make a difference, could we just reconfigure the clock
+  // rate depending on what controller we detect?
+  uint32_t clock = 100000;
+  if (clock >= F_CPU / 2) {
+    clockDiv = 0;
+  } else if (clock >= F_CPU / 4) {
+    clockDiv = 1;
+  } else if (clock >= F_CPU / 8) {
+    clockDiv = 2;
+  } else if (clock >= F_CPU / 16) {
+    clockDiv = 3;
+  } else if (clock >= F_CPU / 32) {
+    clockDiv = 4;
+  } else if (clock >= F_CPU / 64) {
+    clockDiv = 5;
+  } else {
+    clockDiv = 6;
   }
-  CMD_SET();
-  _delay_us(CTRL_uint8_t_DELAY);
-  return tmp;
+  // Compensate for the duplicate fosc/64
+  if (clockDiv == 6) clockDiv = 7;
+
+  // Invert the SPI2X bit
+  clockDiv ^= 0x1;
+
+  // Pack into the SPISettings class
+  spcr_ds1 =
+      _BV(SPE) | _BV(MSTR) | _BV(DORD) | (0x0C) | ((clockDiv >> 1) & 0x03);
+  spsr_ds1 = clockDiv & 0x01;
+  clock = 200000;
+  if (clock >= F_CPU / 2) {
+    clockDiv = 0;
+  } else if (clock >= F_CPU / 4) {
+    clockDiv = 1;
+  } else if (clock >= F_CPU / 8) {
+    clockDiv = 2;
+  } else if (clock >= F_CPU / 16) {
+    clockDiv = 3;
+  } else if (clock >= F_CPU / 32) {
+    clockDiv = 4;
+  } else if (clock >= F_CPU / 64) {
+    clockDiv = 5;
+  } else {
+    clockDiv = 6;
+  }
+  // Compensate for the duplicate fosc/64
+  if (clockDiv == 6) clockDiv = 7;
+
+  // Invert the SPI2X bit
+  clockDiv ^= 0x1;
+
+  // Pack into the SPISettings class
+  spcr_ds2 =
+      _BV(SPE) | _BV(MSTR) | _BV(DORD) | (0x0C) | ((clockDiv >> 1) & 0x03);
+  spsr_ds2 = clockDiv & 0x01;
 }
 
-/****************************************************************************************/
-bool read_gamepad(bool motor1, uint8_t motor2) {
-  double temp = millis() - last_read;
+bool enter_config_mode(void) {
+  bool ret = false;
 
-  if (temp > 1500) // waited to long
-    reconfig_gamepad();
+  unsigned long start = millis();
+  do {
+    attention();
+    uint8_t *in = autoShift(cmd_enter_config, 4);
+    no_attention();
 
-  if (temp < read_delay) // waited too short
-    delay(read_delay - temp);
+    ret = in != NULL && isConfigReply(in);
 
-  uint8_t dword[9] = {0x01, 0x42, 0, motor1, motor2, 0, 0, 0, 0};
-  uint8_t dword2[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    if (!ret) { delay(COMMAND_RETRY_INTERVAL); }
+  } while (!ret && millis() - start <= COMMAND_TIMEOUT);
 
-  // Try a few times to get valid data...
-  for (uint8_t RetryCnt = 0; RetryCnt < 5; RetryCnt++) {
-    CMD_SET();
-    CLK_SET();
-    ATT_CLR(); // low enable joystick
+  return ret;
+}
 
-    _delay_us(CTRL_uint8_t_DELAY);
-    // Send the command to send button and joystick data;
-    for (int i = 0; i < 9; i++) { PS2data[i] = _gamepad_shiftinout(dword[i]); }
+bool enable_analog_sticks(void) {
+  bool ret = false;
+  uint8_t out[sizeof(cmd_set_mode)];
 
-    if (PS2data[1] == 0x79) { // if controller is in full data return mode, get
-                              // the rest of data
-      for (int i = 0; i < 12; i++) {
-        PS2data[i + 9] = _gamepad_shiftinout(dword2[i]);
+  memcpy(out, cmd_set_mode, sizeof(cmd_set_mode));
+
+  unsigned long start = millis();
+  uint8_t cnt = 0;
+  do {
+    attention();
+    uint8_t *in = autoShift(out, 5);
+    no_attention();
+
+    /* We can't know if we have successfully enabled analog mode until
+     * we get out of config mode, so let's just be happy if we get a few
+     * consecutive valid replies
+     */
+    if (in != NULL) { ++cnt; }
+    ret = cnt >= 3;
+
+    if (!ret) { delay(COMMAND_RETRY_INTERVAL); }
+  } while (!ret && millis() - start <= COMMAND_TIMEOUT);
+
+  return ret;
+}
+bool enable_analog_buttons(void) {
+  bool ret = false;
+  uint8_t out[sizeof(cmd_set_mode)];
+
+  memcpy(out, cmd_set_pressures, sizeof(cmd_set_pressures));
+
+  unsigned long start = millis();
+  uint8_t cnt = 0;
+  do {
+    attention();
+    uint8_t *in = autoShift(out, sizeof(cmd_set_pressures));
+    no_attention();
+
+    /* We can't know if we have successfully enabled analog mode until
+     * we get out of config mode, so let's just be happy if we get a few
+     * consecutive valid replies
+     */
+    if (in != NULL) { ++cnt; }
+    ret = cnt >= 3;
+
+    if (!ret) { delay(COMMAND_RETRY_INTERVAL); }
+  } while (!ret && millis() - start <= COMMAND_TIMEOUT);
+
+  return ret;
+}
+
+uint8_t get_type(void) {
+  uint8_t ret = PSCTRL_UNKNOWN;
+
+  attention();
+  uint8_t *in = autoShift(cmd_type_read, 3);
+  no_attention();
+
+  if (in != NULL) {
+    const uint8_t controllerType = in[3];
+    if (controllerType == 0x03) {
+      ret = PSCTRL_DUALSHOCK_2;
+      //~ } else if (controllerType == 0x01 && in[1] == 0x42) {
+      //~ return 4;		// ???
+    } else if (controllerType == 0x01 && in[1] != 0x42) {
+      ret = PSCTRL_GUITHERO;
+    } else if (controllerType == 0x0C) {
+      ret = PSCTRL_DSWIRELESS;
+    }
+  }
+
+  return ret;
+}
+
+bool exit_config_mode(void) {
+  bool ret = false;
+
+  unsigned long start = millis();
+  do {
+    attention();
+    uint8_t *in = autoShift(cmd_exit_config, 4);
+    no_attention();
+
+    ret = in != NULL && !isConfigReply(in);
+
+    if (!ret) { delay(COMMAND_RETRY_INTERVAL); }
+  } while (!ret && millis() - start <= COMMAND_TIMEOUT);
+
+  return ret;
+}
+
+int8_t type = -1;
+#define INVALID 0xFF
+uint8_t dsButtons[] = {[PSB_SELECT] = XBOX_BACK,
+                       [PSB_L3] = XBOX_LEFT_STICK,
+                       [PSB_R3] = XBOX_RIGHT_STICK,
+                       [PSB_START] = XBOX_START,
+                       [PSB_PAD_UP] = XBOX_DPAD_UP,
+                       [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+                       [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+                       [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+                       [PSB_L2] = INVALID,
+                       [PSB_R2] = INVALID,
+                       [PSB_L1] = XBOX_LB,
+                       [PSB_R1] = XBOX_RB,
+                       [PSB_TRIANGLE] = XBOX_Y,
+                       [PSB_CIRCLE] = XBOX_B,
+                       [PSB_CROSS] = XBOX_A,
+                       [PSB_SQUARE] = XBOX_X};
+uint8_t ghButtons[] = {[PSB_SELECT] = XBOX_BACK,
+                       [PSB_L3] = INVALID,
+                       [PSB_R3] = INVALID,
+                       [PSB_START] = XBOX_START,
+                       [PSB_PAD_UP] = XBOX_DPAD_UP,
+                       [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+                       [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+                       [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+                       [GH_STAR_POWER] = INVALID,
+                       [GH_GREEN] = XBOX_A,
+                       [PSB_L1] = INVALID,
+                       [PSB_R1] = INVALID,
+                       [GH_YELLOW] = XBOX_Y,
+                       [GH_RED] = XBOX_B,
+                       [GH_BLUE] = XBOX_X,
+                       [GH_ORANGE] = XBOX_LB};
+
+bool read(controller_t *controller) {
+  bool ret = false;
+  attention();
+  uint8_t *in = autoShift(poll, 3);
+  no_attention();
+
+  if (in != NULL) {
+    if (isConfigReply(in)) {
+      // We're stuck in config mode, try to get out
+      exit_config_mode();
+    } else {
+      // We surely have buttons
+      previousButtonWord = buttonWord;
+      buttonWord = ~(((PsxButtons)in[4] << 8) | in[3]);
+      uint8_t *buttons = dsButtons;
+      if (type == PSCTRL_GUITHERO) { buttons = ghButtons; }
+      uint8_t btn;
+      for (int i = 0; i < XBOX_BTN_COUNT; i++) {
+        btn = buttons[i];
+        if (btn != INVALID) {
+          bit_write(bit_check(buttonWord, i), controller->buttons, btn);
+        }
+      }
+
+      if (isDualShockReply(in) || isFlightstickReply(in)) {
+        controller->l_x = (in[5] - 128) << 8;
+        controller->l_y = -(in[6] - 127) << 8;
+        controller->r_x = (in[7] - 128) << 8;
+        controller->r_y = -(in[8] - 127) << 8;
+
+        if (isDualShock2Reply(in)) {
+          controller->lt = in[PSAB_L2 + 9];
+          controller->rt = in[PSAB_R2 + 9];
+          if (type == PSCTRL_GUITHERO) {
+            controller->r_x = in[GH_WHAMMY + 9];
+            controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
+          }
+        }
+      }
+
+      ret = true;
+    }
+  }
+
+  return ret;
+}
+#define ATTN_DELAY 15
+void attention(void) {
+  uint8_t oldSREG = SREG;
+  cli();
+  *att_out &= ~att_bit;
+  SPCR = spcr;
+  SPSR = spsr;
+  SREG = oldSREG;
+  _delay_us(ATTN_DELAY);
+}
+void no_attention(void) {
+  uint8_t oldSREG = SREG;
+  cli();
+  *cmd_out |= cmd_bit;
+  *clk_out |= clk_bit;
+  *att_out |= att_bit;
+  SREG = oldSREG;
+  _delay_us(ATTN_DELAY);
+}
+inline static uint8_t transfer(uint8_t data) {
+  SPDR = data;
+  /*
+   * The following NOP introduces a small delay that can prevent the wait
+   * loop form iterating when running at the maximum speed. This gives
+   * about 10% more speed, even if it seems counter-intuitive. At lower
+   * speeds it is unnoticed.
+   */
+  asm volatile("nop");
+  while (!(SPSR & _BV(SPIF)))
+    ; // wait
+  return SPDR;
+}
+void shiftInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
+  for (uint8_t i = 0; i < len; ++i) {
+    uint8_t tmp = transfer(out != NULL ? out[i] : 0x5A);
+    if (in != NULL) { in[i] = tmp; }
+
+    _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
+  }
+}
+uint8_t *autoShift(const uint8_t *out, const uint8_t len) {
+  uint8_t *ret = NULL;
+
+  if (len >= 3 && len <= BUFFER_SIZE) {
+    // All commands have at least 3 bytes, so shift out those first
+    shiftInOut(out, inputBuffer, 3);
+    if (isValidReply(inputBuffer)) {
+      // Reply is good, get full length
+      
+      uint8_t replyLen = (inputBuffer[1] & 0x0F) * 2;
+
+      // Shift out rest of command
+      if (len > 3) { shiftInOut(out + 3, inputBuffer + 3, len - 3); }
+
+      uint8_t left = replyLen - len + 3;
+      if (left == 0) {
+        // The whole reply was gathered
+        ret = inputBuffer;
+      } else if (len + left <= BUFFER_SIZE) {
+        // Part of reply is still missing and we have space for it
+        shiftInOut(NULL, inputBuffer + len, left);
+        ret = inputBuffer;
+      } else {
+        // Reply incomplete but not enough space provided
       }
     }
-
-    ATT_SET(); // HI disable joystick
-    // Check to see if we received valid data or not.
-    // We should be in analog mode for our data to be valid (analog == 0x7_)
-    if ((PS2data[1] & 0xf0) == 0x70) break;
-
-    // If we got to here, we are not in analog mode, try to recover...
-    reconfig_gamepad(); // try to get back into Analog mode.
-    delay(read_delay);
   }
 
-  // If we get here and still not in analog mode (=0x7_), try increasing the
-  // read_delay...
-  if ((PS2data[1] & 0xf0) != 0x70) {
-    if (read_delay < 10) read_delay++; // see if this helps out...
+  return ret;
+}
+bool begin(controller_t *controller) {
+  spcr = spcr_ds1;
+  spsr = spsr_ds1;
+  // Some disposable readings to let the controller know we are here
+  for (uint8_t i = 0; i < 5; ++i) {
+    read(controller);
+    delay(1);
   }
-
-#ifdef PS2X_COM_DEBUG
-  Serial.print("OUT:IN ");
-  for (int i = 0; i < 9; i++) {
-    Serial.print(dword[i], HEX);
-    Serial.print(":");
-    Serial.print(PS2data[i], HEX);
-    Serial.print(" ");
-  }
-  for (int i = 0; i < 12; i++) {
-    Serial.print(dword2[i], HEX);
-    Serial.print(":");
-    Serial.print(PS2data[i + 9], HEX);
-    Serial.print(" ");
-  }
-  Serial.println("");
-#endif
-
-  last_buttons = buttons; // store the previous buttons states
-
-#if defined(__AVR__)
-  buttons =
-      *(uint16_t *)(PS2data + 3); // store as one value for multiple functions
-#else
-  buttons = (uint16_t)(PS2data[4] << 8) +
-            PS2data[3]; // store as one value for multiple functions
-#endif
-  last_read = millis();
-  return ((PS2data[1] & 0xf0) == 0x70); // 1 = OK = analog mode - 0 = NOK
+  return read(controller);
 }
-
-/****************************************************************************************/
-uint8_t config_gamepad(uint8_t clk, uint8_t cmd, uint8_t att, uint8_t dat,
-                       bool pressures, bool rumble) {
-
-  uint8_t temp[sizeof(type_read)];
-
-  _clk_mask = digitalPinToBitMask(clk);
-  _clk_oreg = portOutputRegister(digitalPinToPort(clk));
-  _cmd_mask = digitalPinToBitMask(cmd);
-  _cmd_oreg = portOutputRegister(digitalPinToPort(cmd));
-  _att_mask = digitalPinToBitMask(att);
-  _att_oreg = portOutputRegister(digitalPinToPort(att));
-  _dat_mask = digitalPinToBitMask(dat);
-  _dat_ireg = portInputRegister(digitalPinToPort(dat));
-
-  pinMode(clk, OUTPUT); // configure ports
-  pinMode(att, OUTPUT);
-  pinMode(cmd, OUTPUT);
-  pinMode(dat, INPUT_PULLUP);
-
-  CMD_SET(); // SET(*_cmd_oreg,_cmd_mask);
-  CLK_SET();
-
-  // new error checking. First, read gamepad a few times to see if it's talking
-  read_gamepad(false, 0x00);
-  read_gamepad(false, 0x00);
-
-  // see if it talked - see if mode came back.
-  // If still anything but 41, 73 or 79, then it's not talking
-  if (PS2data[1] != 0x41 && PS2data[1] != 0x42 && PS2data[1] != 0x73 &&
-      PS2data[1] != 0x79) {
-#ifdef PS2X_DEBUG
-    Serial.println("Controller mode not matched or no controller found");
-    Serial.print("Expected 0x41, 0x42, 0x73 or 0x79, but got ");
-    Serial.println(PS2data[1], HEX);
-#endif
-    return 1; // return error code 1
-  }
-
-  // try setting mode, increasing delays if need be.
-  read_delay = 1;
-
-  for (int y = 0; y <= 10; y++) {
-    sendCommandString(enter_config, sizeof(enter_config)); // start config run
-
-    // read type
-    _delay_us(CTRL_uint8_t_DELAY);
-
-    CMD_SET();
-    CLK_SET();
-    ATT_CLR(); // low enable joystick
-
-    _delay_us(CTRL_uint8_t_DELAY);
-
-    for (int i = 0; i < 9; i++) { temp[i] = _gamepad_shiftinout(type_read[i]); }
-
-    ATT_SET(); // HI disable joystick
-
-    controller_type = temp[3];
-
-    sendCommandString(set_mode, sizeof(set_mode));
-    if (rumble) {
-      sendCommandString(enable_rumble, sizeof(enable_rumble));
-      en_Rumble = true;
-    }
-    if (pressures) {
-      sendCommandString(set_uint8_ts_large, sizeof(set_uint8_ts_large));
-      en_Pressures = true;
-    }
-    sendCommandString(exit_config, sizeof(exit_config));
-
-    read_gamepad(false, 0x00);
-
-    if (pressures) {
-      if (PS2data[1] == 0x79) break;
-      if (PS2data[1] == 0x73) return 3;
-    }
-
-    if (PS2data[1] == 0x73) break;
-
-    if (y == 10) {
-#ifdef PS2X_DEBUG
-      Serial.println("Controller not accepting commands");
-      Serial.print("mode still set at");
-      Serial.println(PS2data[1], HEX);
-#endif
-      return 2; // exit function with error
-    }
-    read_delay += 1; // add 1ms to read_delay
-  }
-  return 0; // no error if here
-}
-
-/****************************************************************************************/
-void sendCommandString(uint8_t string[], uint8_t len) {
-#ifdef PS2X_COM_DEBUG
-  uint8_t temp[len];
-  ATT_CLR(); // low enable joystick
-  _delay_us(CTRL_uint8_t_DELAY);
-
-  for (int y = 0; y < len; y++) temp[y] = _gamepad_shiftinout(string[y]);
-
-  ATT_SET();         // high disable joystick
-  delay(read_delay); // wait a few
-
-  Serial.println("OUT:IN Configure");
-  for (int i = 0; i < len; i++) {
-    Serial.print(string[i], HEX);
-    Serial.print(":");
-    Serial.print(temp[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.println("");
-#else
-  ATT_CLR();            // low enable joystick
-  _delay_us(CTRL_uint8_t_DELAY);
-  for (int y = 0; y < len; y++) _gamepad_shiftinout(string[y]);
-  ATT_SET();         // high disable joystick
-  delay(read_delay); // wait a few
-#endif
-}
-
-/****************************************************************************************/
-uint8_t readType() {
-  if (controller_type == 0x03)
-    return 1;
-  else if (controller_type == 0x01 && PS2data[1] == 0x42)
-    return 4;
-  else if (controller_type == 0x01 && PS2data[1] != 0x42)
-    return 2;
-  else if (controller_type == 0x0C)
-    return 3; // 2.4G Wireless Dual Shock PS2 Game Controller
-
-  return 0;
-}
-
-/****************************************************************************************/
-void enableRumble() {
-  sendCommandString(enter_config, sizeof(enter_config));
-  sendCommandString(enable_rumble, sizeof(enable_rumble));
-  sendCommandString(exit_config, sizeof(exit_config));
-  en_Rumble = true;
-}
-
-/****************************************************************************************/
-bool enablePressures() {
-  sendCommandString(enter_config, sizeof(enter_config));
-  sendCommandString(set_uint8_ts_large, sizeof(set_uint8_ts_large));
-  sendCommandString(exit_config, sizeof(exit_config));
-
-  read_gamepad(false, 0x00);
-  read_gamepad(false, 0x00);
-
-  if (PS2data[1] != 0x79) return false;
-
-  en_Pressures = true;
-  return true;
-}
-
-/****************************************************************************************/
-void reconfig_gamepad() {
-  sendCommandString(enter_config, sizeof(enter_config));
-  sendCommandString(set_mode, sizeof(set_mode));
-  if (en_Rumble) sendCommandString(enable_rumble, sizeof(enable_rumble));
-  if (en_Pressures)
-    sendCommandString(set_uint8_ts_large, sizeof(set_uint8_ts_large));
-  sendCommandString(exit_config, sizeof(exit_config));
-}
-
-/****************************************************************************************/
-
-uint8_t type = -1;
-// Obvs these need to be made configurable!
-#define PS2_DAT 13 // 14
-#define PS2_CMD 11 // 15
-#define PS2_SEL 10 // 16
-#define PS2_CLK 12 // 17
 void ps2_cnt_tick(controller_t *controller) {
-  if (type == -1) {
-    if (!config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false)) {
-      return;
+  if (type < 0) {
+    if (!begin(controller)) { return; }
+    // Dualshock one controllers don't have config mode
+    if (enter_config_mode()) {
+      spcr = spcr_ds2;
+      spsr = spsr_ds2;
+      type = get_type();
+      enable_analog_sticks();
+      enable_analog_buttons();
+      exit_config_mode();
+    } else {
+      type = PSCTRL_DUALSHOCK_1;
     }
-    type = readType();
   }
-  if (read_gamepad(false, 0x00)) {
-    bit_write(bit_check(buttons, PSB_CROSS), controller->buttons, XBOX_A);
-  }
+  if (!read(controller)) { type = -1; }
 }
 void ps2_cnt_get_name(char *str) {
   switch (type) {
-  case GUITAR_HERO:
+  case PSCTRL_GUITHERO:
     strcpy(str, "Guitar Hero Controller");
     break;
-  case DUAL_SHOCK:
-    strcpy(str, "DualShock Controller");
+  case PSCTRL_DUALSHOCK_1:
+    strcpy(str, "DualShock 1 Controller");
     break;
-  case WIRELESS_DUAL_SHOCK:
+  case PSCTRL_DUALSHOCK_2:
+    strcpy(str, "DualShock 2 Controller");
+    break;
+  case PSCTRL_DSWIRELESS:
     strcpy(str, "Wireless Sony DualShock Controller");
     break;
+  case -1:
+    strcpy(str, "No Controller");
+    break;
   default:
-    strcpy(str, "Unknown Controler");
+    strcpy(str, "Unknown Controller");
     break;
   }
 }

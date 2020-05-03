@@ -9,13 +9,6 @@ enum PsxControllerType {
   PSCTRL_DSWIRELESS,
   PSCTRL_GUITHERO
 };
-
-/** \brief Type that is used to report button presses
- */
-typedef uint16_t PsxButtons;
-// Uncomment this to have all byte exchanges logged to serial
-//~ #define DUMP_COMMS
-
 /** \brief Command Inter-Byte Delay (us)
  *
  * Commands are several bytes long. This is the time to wait between two
@@ -42,18 +35,12 @@ typedef uint16_t PsxButtons;
  */
 #define COMMAND_RETRY_INTERVAL 10
 
-/** \brief Mode switch delay (ms)
+/** \brief Attention Delay
  *
- * After a command has been issued successfully to the controller, this amount
- * of time is waited to allow it to complete any internal procedures required to
- * execute the command.
- *
- * \todo This is probably unnecessary.
+ * Time between attention being issued to the controller and the first clock
+ * edge (us).
  */
-#define MODE_SWITCH_DELAY 0
-
-/** \brief Type that is used to represent a single button in most places
- */
+#define ATTN_DELAY 15
 enum PsxButton {
   PSB_SELECT,
   PSB_L3,
@@ -98,22 +85,6 @@ enum PsxAnalogButton {
 };
 enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
-void attention(void);
-void no_attention(void);
-void shiftInOut(const uint8_t *out, uint8_t *in, const uint8_t len);
-uint8_t *autoShift(const uint8_t *out, const uint8_t len);
-
-bool begin(controller_t *controller);
-
-bool enter_config_mode(void);
-
-bool enable_analog_sticks(void);
-
-uint8_t get_type(void);
-
-bool exit_config_mode(void);
-
-bool read(controller_t *controller);
 void ps2_cnt_init(void);
-void ps2_cnt_get_name(char *str);
+void get_ps2_cnt_name(char *str);
 void ps2_cnt_tick(controller_t *controller);

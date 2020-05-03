@@ -36,9 +36,9 @@ void get_info_buf(uint8_t data) {
   case INFO_BOARD:
     buf = (uint8_t *)board;
     break;
-  case INFO_WII_EXT:
+  case INFO_EXT:
     if (config.main.input_type == WII) { get_wii_device_name((char *)str); }
-    if (config.main.input_type == PS2) { ps2_cnt_get_name((char *)str); }
+    if (config.main.input_type == PS2) { get_ps2_cnt_name((char *)str); }
     buf = str;
     break;
   }

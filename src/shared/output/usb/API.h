@@ -19,7 +19,7 @@
 #define INFO_CPU_FREQ 4
 #define INFO_USB_CPU_FREQ 5
 #define INFO_BOARD 6
-#define INFO_WII_EXT 7
+#define INFO_EXT 7
 
 #define CONFIG_INPUT_TYPE 0
 #define CONFIG_SUB_TYPE 1

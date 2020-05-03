@@ -61,27 +61,27 @@ static const uint8_t ghButtons[] = {[PSB_SELECT] = XBOX_BACK,
 
 static int8_t type = -1;
 
-static inline bool isValidReply(const uint8_t *status) {
+static inline bool is_valid_reply(const uint8_t *status) {
   return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
 }
 
-static inline bool isFlightstickReply(const uint8_t *status) {
+static inline bool is_flight_stick_reply(const uint8_t *status) {
   return (status[1] & 0xF0) == 0x50;
 }
 
-static inline bool isDualShockReply(const uint8_t *status) {
+static inline bool is_dual_shock_reply(const uint8_t *status) {
   return (status[1] & 0xF0) == 0x70;
 }
 
-static inline bool isDualShock2Reply(const uint8_t *status) {
+static inline bool is_dual_shock_2_reply(const uint8_t *status) {
   return status[1] == 0x79;
 }
 
-static inline bool isDigitalReply(const uint8_t *status) {
+static inline bool is_digital_reply(const uint8_t *status) {
   return (status[1] & 0xF0) == 0x40;
 }
 
-static inline bool isConfigReply(const uint8_t *status) {
+static inline bool is_config_reply(const uint8_t *status) {
   return (status[1] & 0xF0) == 0xF0;
 }
 
@@ -91,12 +91,6 @@ static inline bool isConfigReply(const uint8_t *status) {
  * 01 42 when in DualShock 2 mode), but we're better safe than sorry.
  */
 #define BUFFER_SIZE 32
-
-/** \brief Internal communication buffer
- *
- * This is used to hold replies received from the controller.
- */
-static uint8_t inputBuffer[BUFFER_SIZE];
 
 static uint8_t att_bit;
 static volatile uint8_t *att_out;
@@ -144,7 +138,8 @@ void no_attention(void) {
   *att_out |= att_bit;
   SREG = oldSREG;
 }
-void shiftInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
+
+void shift_in_out(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
     SPDR = out != NULL ? out[i] : 0x5A;
     asm volatile("nop");
@@ -155,7 +150,8 @@ void shiftInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
     _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
   }
 }
-uint8_t *autoShift(const uint8_t *out, const uint8_t len) {
+uint8_t *auto_shift(const uint8_t *out, const uint8_t len) {
+  static uint8_t inputBuffer[BUFFER_SIZE];
   uint8_t oldSREG = SREG;
   cli();
   *att_out &= ~att_bit;
@@ -166,14 +162,14 @@ uint8_t *autoShift(const uint8_t *out, const uint8_t len) {
 
   if (len >= 3 && len <= BUFFER_SIZE) {
     // All commands have at least 3 bytes, so shift out those first
-    shiftInOut(out, inputBuffer, 3);
-    if (isValidReply(inputBuffer)) {
+    shift_in_out(out, inputBuffer, 3);
+    if (is_valid_reply(inputBuffer)) {
       // Reply is good, get full length
 
       uint8_t replyLen = (inputBuffer[1] & 0x0F) * 2;
 
       // Shift out rest of command
-      if (len > 3) { shiftInOut(out + 3, inputBuffer + 3, len - 3); }
+      if (len > 3) { shift_in_out(out + 3, inputBuffer + 3, len - 3); }
 
       uint8_t left = replyLen - len + 3;
       if (left == 0) {
@@ -181,7 +177,7 @@ uint8_t *autoShift(const uint8_t *out, const uint8_t len) {
         ret = inputBuffer;
       } else if (len + left <= BUFFER_SIZE) {
         // Part of reply is still missing and we have space for it
-        shiftInOut(NULL, inputBuffer + len, left);
+        shift_in_out(NULL, inputBuffer + len, left);
         ret = inputBuffer;
       } else {
         // Reply incomplete but not enough space provided
@@ -197,7 +193,7 @@ bool send_cmd(const uint8_t *buf, uint8_t len) {
   unsigned long start = millis();
   uint8_t cnt = 0;
   do {
-    uint8_t *in = autoShift(buf, len);
+    uint8_t *in = auto_shift(buf, len);
 
     /* We can't know if we have successfully enabled analog mode until
      * we get out of config mode, so let's just be happy if we get a few
@@ -206,9 +202,9 @@ bool send_cmd(const uint8_t *buf, uint8_t len) {
     if (in != NULL) {
       ++cnt;
       if (buf == cmd_enter_config) {
-        ret = isConfigReply(in);
+        ret = is_config_reply(in);
       } else if (buf == cmd_exit_config) {
-        ret = !isConfigReply(in);
+        ret = !is_config_reply(in);
       } else {
         ret = cnt >= 3;
       }
@@ -223,7 +219,7 @@ bool send_cmd(const uint8_t *buf, uint8_t len) {
 uint8_t get_type(void) {
   uint8_t ret = PSCTRL_UNKNOWN;
 
-  uint8_t *in = autoShift(cmd_type_read, sizeof(cmd_type_read));
+  uint8_t *in = auto_shift(cmd_type_read, sizeof(cmd_type_read));
 
   if (in != NULL) {
     const uint8_t controllerType = in[3];
@@ -243,10 +239,10 @@ uint8_t get_type(void) {
 
 bool read(controller_t *controller) {
   bool ret = false;
-  uint8_t *in = autoShift(poll, sizeof(poll));
+  uint8_t *in = auto_shift(poll, sizeof(poll));
 
   if (in != NULL) {
-    if (isConfigReply(in)) {
+    if (is_config_reply(in)) {
       // We're stuck in config mode, try to get out
       send_cmd(cmd_exit_config, sizeof(cmd_exit_config));
     } else {
@@ -262,12 +258,12 @@ bool read(controller_t *controller) {
         }
       }
 
-      if (isDualShockReply(in) || isFlightstickReply(in)) {
+      if (is_dual_shock_reply(in) || is_flight_stick_reply(in)) {
         controller->r_x = (in[5] - 128) << 8;
         controller->r_y = -(in[6] - 127) << 8;
         controller->l_x = (in[7] - 128) << 8;
         controller->l_y = -(in[8] - 127) << 8;
-        if (isDualShock2Reply(in)) {
+        if (is_dual_shock_2_reply(in)) {
           controller->lt = in[PSAB_L2 + 9];
           controller->rt = in[PSAB_R2 + 9];
           if (type == PSCTRL_GUITHERO) {

@@ -1,7 +1,6 @@
 
 #include "../../util.h"
 #include <stdint.h>
-#include <LUFA/Drivers/USB/USB.h>
 
 /** Interface & (dummy) Endpoint properties */
 #define WCID_IF_NUMBER 0

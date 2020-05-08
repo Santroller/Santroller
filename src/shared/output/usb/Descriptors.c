@@ -2,7 +2,6 @@
 #include "../../../shared/config/defines.h"
 #include "../../../shared/output/reports.h"
 #include "../../../shared/output/usb/wcid.h"
-#include <LUFA/Drivers/USB/USB.h>
 uint8_t device_type = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first

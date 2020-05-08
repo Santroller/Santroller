@@ -1,7 +1,22 @@
 #pragma once
 
-/* Includes: */
-#include <LUFA/Drivers/USB/USB.h>
+/* Includes: (don't import everything on the 328p)*/
+#ifdef __AVR_ATmega328P__
+// Pull in enough information from LUFA in order to be able to compile the descriptors.
+#  define __INCLUDE_FROM_USB_DRIVER
+#  define __INCLUDE_FROM_HID_DRIVER
+#  define __INCLUDE_FROM_CDC_DRIVER
+#  define __INCLUDE_FROM_MIDI_DRIVER
+#  define USB_CAN_BE_DEVICE
+#  include "LUFAConfig.h"
+#  include "USBController.h"
+#  include <LUFA/Drivers/USB/Class/Common/CDCClassCommon.h>
+#  include <LUFA/Drivers/USB/Class/Common/HIDClassCommon.h>
+#  include <LUFA/Drivers/USB/Class/Common/MIDIClassCommon.h>
+#  include <LUFA/Drivers/USB/Core/StdDescriptors.h>
+#else
+#  include <LUFA/Drivers/USB/USB.h>
+#endif
 
 #include <avr/pgmspace.h>
 

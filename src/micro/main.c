@@ -50,6 +50,24 @@ USB_ClassInfo_HID_Device_t interface = {
     PrevReportINBufferSize : sizeof(output_report_size_t),
   },
 };
+USB_ClassInfo_MIDI_Device_t Keyboard_MIDI_Interface = {
+    .Config =
+        {
+            .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
+            .DataINEndpoint =
+                {
+                    .Address = HID_EPADDR_IN,
+                    .Size = HID_EPSIZE,
+                    .Banks = 1,
+                },
+            .DataOUTEndpoint =
+                {
+                    .Address = HID_EPADDR_OUT,
+                    .Size = HID_EPSIZE,
+                    .Banks = 1,
+                },
+        },
+};
 controller_t controller;
 output_report_size_t report;
 int main(void) {
@@ -80,6 +98,7 @@ int main(void) {
                      0xff);
     }
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
+    MIDI_Device_USBTask(&Keyboard_MIDI_Interface);
   }
 }
 
@@ -87,13 +106,19 @@ void write_usb(uint8_t data) {
   CDC_Device_SendByte(&VirtualSerial_CDC_Interface, data);
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  HID_Device_ConfigureEndpoints(&interface);
+  if (device_type >= MIDI_GUITAR) {
+    MIDI_Device_ConfigureEndpoints(&Keyboard_MIDI_Interface);
+  } else {
+    HID_Device_ConfigureEndpoints(&interface);
+  }
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  HID_Device_ProcessControlRequest(&interface);
-  CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
+  if (device_type >= MIDI_GUITAR) {
+    MIDI_Device_ProcessControlRequest(&Keyboard_MIDI_Interface);
+  }
   controller_control_request();
+  CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {

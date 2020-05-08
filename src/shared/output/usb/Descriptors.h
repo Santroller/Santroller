@@ -43,9 +43,12 @@ enum StringDescriptors_t {
  * can be used to refer to the interface from other descriptors.
  */
 enum InterfaceDescriptors_t {
-  INTERFACE_ID_HID = 0,     /**< Controller interface descriptor ID */
-  INTERFACE_ID_CDC_CCI = 1, /**< CDC CCI interface descriptor ID */
-  INTERFACE_ID_CDC_DCI = 2, /**< CDC DCI interface descriptor ID */
+  INTERFACE_ID_HID =
+      0, /**< Controller/MIDI Control Stream interface descriptor ID */
+  INTERFACE_ID_CDC_CCI = 2, /**< CDC CCI interface descriptor ID */
+  INTERFACE_ID_CDC_DCI = 3, /**< CDC DCI interface descriptor ID */
+  INTERFACE_ID_AudioStream =
+      1, /**< MIDI Audio Stream interface descriptor ID */
 };
 typedef struct {
   USB_Descriptor_Header_t Header;
@@ -55,6 +58,15 @@ typedef struct {
 } USB_HID_XBOX_Descriptor_HID_t;
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
+  USB_Descriptor_Interface_Association_t CDC_IAD;
+  USB_Descriptor_Interface_t CDC_CCI_Interface;
+  USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
+  USB_CDC_Descriptor_FunctionalACM_t CDC_Functional_ACM;
+  USB_CDC_Descriptor_FunctionalUnion_t CDC_Functional_Union;
+  USB_Descriptor_Endpoint_t CDC_NotificationEndpoint;
+  USB_Descriptor_Interface_t CDC_DCI_Interface;
+  USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
+  USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
   USB_Descriptor_Interface_t Interface0;
   union {
     struct {
@@ -66,17 +78,18 @@ typedef struct {
       USB_HID_XBOX_Descriptor_HID_t XInputReserved;
     } HID;
   } Controller;
-  USB_Descriptor_Endpoint_t DataInEndpoint0;
-  USB_Descriptor_Endpoint_t DataOutEndpoint0;
-  USB_Descriptor_Interface_Association_t CDC_IAD;
-  USB_Descriptor_Interface_t CDC_CCI_Interface;
-  USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
-  USB_CDC_Descriptor_FunctionalACM_t CDC_Functional_ACM;
-  USB_CDC_Descriptor_FunctionalUnion_t CDC_Functional_Union;
-  USB_Descriptor_Endpoint_t CDC_NotificationEndpoint;
-  USB_Descriptor_Interface_t CDC_DCI_Interface;
-  USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
-  USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
+  USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+  USB_Descriptor_Interface_t Audio_StreamInterface;
+  USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
+  USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
+  USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
+  USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
+  USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
+  USB_Audio_Descriptor_StreamEndpoint_Std_t DataInEndpoint0;
+  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
+  USB_Audio_Descriptor_StreamEndpoint_Std_t DataOutEndpoint0;
+  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
+  USB_Descriptor_Interface_t DummyInterface;
 } USB_Descriptor_Configuration_t;
 extern uint8_t device_type;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,

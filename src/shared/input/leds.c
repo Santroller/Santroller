@@ -21,9 +21,9 @@ void led_tick(controller_t *controller) {
       uint8_t button = config.new_items.leds.pins[i] - 1;
       uint8_t ghBtn = gh[button];
       if (ghBtn) {
-        col = config.new_items.leds.ghColours[controller->leds.leds[ghBtn - 1]];
-        if (controller->leds.leds[ghBtn - 1] == 1)
-          col = config.new_items.leds.colours[i];
+        uint8_t ghIdx = controller->leds.leds[ghBtn - 1];
+        if (ghIdx == 1) col = config.new_items.leds.colours[i];
+        if (ghIdx >= 2) col = config.new_items.leds.ghColours[ghIdx - 2];
       }
 
       if ((col == Black && bit_check(controller->buttons, button))) {

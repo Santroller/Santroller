@@ -15,7 +15,7 @@
 #define FRET_MODE LEDS_DISABLED
 
 #define LED_GH_COLOURS                                                         \
-  { Black, Green, White, DeepSkyBlue, 0xFF00FF }
+  { White, DeepSkyBlue, 0xFF00FF }
 #define LED_COLOURS                                                            \
   { Green, Red, Yellow, Blue, OrangeRed }
 #define LED_PINS                                                               \

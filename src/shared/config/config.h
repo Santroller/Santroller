@@ -78,7 +78,7 @@ typedef struct {
   int16_t tilt_sensitivity;
 } axis_config_t;
 typedef struct {
-  long unsigned int pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  uint8_t pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   long unsigned int colours[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   long unsigned int ghColours[5];
 } leds_t;

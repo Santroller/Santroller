@@ -17,15 +17,18 @@ void led_tick(controller_t *controller) {
   apa102_start();
   for (int i = 0; config.new_items.leds.pins[i]; i++) {
     uint32_t col = controller->leds.gui;
-    uint8_t button = config.new_items.leds.pins[i] - 1;
-    uint8_t ghBtn = gh[button];
-    if (ghBtn) {
-      col = config.new_items.leds.ghColours[controller->leds.leds[ghBtn-1]];
-      if (controller->leds.leds[ghBtn-1] == 1) col = config.new_items.leds.colours[i];
-    }
+    if (col == Black) {
+      uint8_t button = config.new_items.leds.pins[i] - 1;
+      uint8_t ghBtn = gh[button];
+      if (ghBtn) {
+        col = config.new_items.leds.ghColours[controller->leds.leds[ghBtn - 1]];
+        if (controller->leds.leds[ghBtn - 1] == 1)
+          col = config.new_items.leds.colours[i];
+      }
 
-    if ((col == Black && bit_check(controller->buttons, button))) {
-      col = config.new_items.leds.colours[i];
+      if ((col == Black && bit_check(controller->buttons, button))) {
+        col = config.new_items.leds.colours[i];
+      }
     }
     apa102_set_led(rgb(col));
   }

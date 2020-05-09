@@ -1,39 +1,43 @@
 #pragma once
 #include <stdint.h>
+enum xbox_buttons_t {
+  XBOX_DPAD_UP,
+  XBOX_DPAD_DOWN,
+  XBOX_DPAD_LEFT,
+  XBOX_DPAD_RIGHT,
+  XBOX_START,
+  XBOX_BACK,
+  XBOX_LEFT_STICK,
+  XBOX_RIGHT_STICK,
 
-#define XBOX_DPAD_UP 0
-#define XBOX_DPAD_DOWN 1
-#define XBOX_DPAD_LEFT 2
-#define XBOX_DPAD_RIGHT 3
-#define XBOX_START 4
-#define XBOX_BACK 5
-#define XBOX_LEFT_STICK 6
-#define XBOX_RIGHT_STICK 7
-
-#define XBOX_LB 8
-#define XBOX_RB 9
-#define XBOX_HOME 10
-#define XBOX_UNUSED 11
-#define XBOX_A 12
-#define XBOX_B 13
-#define XBOX_X 14
-#define XBOX_Y 15
+  XBOX_LB,
+  XBOX_RB,
+  XBOX_HOME,
+  XBOX_UNUSED,
+  XBOX_A,
+  XBOX_B,
+  XBOX_X,
+  XBOX_Y,
+};
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6
-#define SWITCH_Y 0
-#define SWITCH_B 1
-#define SWITCH_A 2
-#define SWITCH_X 3
-#define SWITCH_L 4
-#define SWITCH_R 5
-#define SWITCH_ZL 6
-#define SWITCH_ZR 7
-#define SWITCH_SELECT 8
-#define SWITCH_START 9
-#define SWITCH_LEFT_STICK 10
-#define SWITCH_RIGHT_STICK 11
-#define SWITCH_HOME 12
-#define SWITCH_CAPTURE 13
+
+enum switch_buttons_t {
+  SWITCH_Y,
+  SWITCH_B,
+  SWITCH_A,
+  SWITCH_X,
+  SWITCH_L,
+  SWITCH_R,
+  SWITCH_ZL,
+  SWITCH_ZR,
+  SWITCH_SELECT,
+  SWITCH_START,
+  SWITCH_LEFT_STICK,
+  SWITCH_RIGHT_STICK,
+  SWITCH_HOME,
+  SWITCH_CAPTURE,
+};
 typedef struct {
   uint8_t leds[5];
   uint32_t gui;

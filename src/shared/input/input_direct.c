@@ -28,7 +28,8 @@ void direct_init() {
         if (is_drum() && is_fret) {
           // We should probably keep a list of drum specific buttons, instead of
           // using isfret
-          setUpAnalogDigitalPin(pin, pins[i], config.new_items.threshold_drums);
+          // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift it
+          setUpAnalogDigitalPin(pin, pins[i], config.new_items.threshold_drums << 3);
         } else {
           pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;

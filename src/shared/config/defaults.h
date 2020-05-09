@@ -1,5 +1,5 @@
 #pragma once
-#include "../input/leds.h"
+#include "../input/led_colours.h"
 #include "./defines.h"
 #define PROTOCOL_VERSION 2
 #define TILT_SENSOR NONE
@@ -8,7 +8,7 @@
 #define POLL_RATE 1
 // Thresholds
 #define TRIGGER_THRESHOLD 64
-#define DRUM_THRESHOLD 512
+#define DRUM_THRESHOLD 64
 #define JOY_THRESHOLD 64
 #define TILT_SENSITIVITY 3000
 

@@ -12,12 +12,9 @@ void load_config(void) {
         memcpy_P(&config, &default_config, sizeof(config_t));
         eeprom_write_block(&config, &config_pointer, sizeof(config_t));
     }
-    if (config.main.version == 0) {
+    // In version 1 drum thresholds were added, but incorect, version two fixes them and adds leds.
+    if (config.main.version < 2) {
         config.new_items.threshold_drums = DRUM_THRESHOLD;
-        config.main.version = 1;
-        write_config();
-    }
-    if (config.main.version == 1) {
         memcpy_P(&config.new_items.leds, &default_config.new_items.leds, sizeof(default_config.new_items.leds));
         config.main.version = 2;
         write_config();

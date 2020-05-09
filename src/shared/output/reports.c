@@ -151,10 +151,16 @@ void create_midi_report(void *ReportData, uint16_t *const ReportSize,
                         controller_t controller) {
   *ReportSize = sizeof(MIDI_EventPacket_t);
   MIDI_EventPacket_t *data = (MIDI_EventPacket_t *)ReportData;
-  data->Event = 0x80;
-  data->Data1 = 0x08;
-  data->Data2 = bit_check(controller.buttons, XBOX_A)?0x55:0x00;
-  data->Data3 = 0x00;
+  // Channel 10(percussion)
+  uint8_t channel = MIDI_CHANNEL(10);
+  uint8_t midipitch = 0x3C;
+  uint8_t midicommand = bit_check(controller.buttons, XBOX_A)
+                            ? MIDI_COMMAND_NOTE_ON
+                            : MIDI_COMMAND_NOTE_OFF;
+  data->Event = MIDI_EVENT(0, midicommand);
+  data->Data1 = midicommand | channel;
+  data->Data2 = midipitch;
+  data->Data3 = MIDI_STANDARD_VELOCITY;
 }
 void (*create_report)(void *ReportData, uint16_t *const ReportSize,
                       controller_t controller) = NULL;

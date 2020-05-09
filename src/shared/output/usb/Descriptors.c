@@ -501,6 +501,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)dbuf;
     if (device_type >= MIDI_GUITAR) {
+      // Configure interface0 as MIDI Streaming
       conf->Interface0.Class = AUDIO_CSCP_AudioClass;
       conf->Interface0.SubClass = AUDIO_CSCP_MIDIStreamingSubclass;
       conf->Interface0.Protocol = AUDIO_CSCP_StreamingProtocol;
@@ -510,17 +511,22 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA);
       conf->Interface_AudioControl.InterfaceNumber = INTERFACE_ID_ControlStream;
       conf->Interface0.InterfaceNumber = INTERFACE_ID_AudioStream;
-      // We need to skip over the HID Descriptor and the XInputReserved descriptor. Treating them as part of the interface desrcriptor does this nicely.
-      conf->Interface0.Header.Size = sizeof(USB_Descriptor_Interface_t) + sizeof(USB_HID_Descriptor_HID_t) + sizeof(USB_HID_XBOX_Descriptor_HID_t);
+      // We need to skip over the HID Descriptor and the XInputReserved
+      // descriptor. Treating them as part of the interface desrcriptor does
+      // this nicely.
+      conf->Interface0.Header.Size = sizeof(USB_Descriptor_Interface_t) +
+                                     sizeof(USB_HID_Descriptor_HID_t) +
+                                     sizeof(USB_HID_XBOX_Descriptor_HID_t);
     } else if (device_type >= KEYBOARD) {
       if (device_type == KEYBOARD) {
         conf->HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
       }
-      // Report that we have an HID device
+      // Configure interface0 as HID
       conf->Interface0.Class = HID_CSCP_HIDClass;
       conf->Interface0.SubClass = HID_CSCP_NonBootSubclass;
       conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
+      // The HID Descriptor stops XInput, however we need it now so we can enable it.
       conf->HIDDescriptor.Header.Type = HID_DTYPE_HID;
     } else {
       // Map fake subtypes to their real counterparts

@@ -249,7 +249,7 @@ void get_config_buf(uint8_t data) {
     break;
   case CONFIG_LED_GH_COLOURS:
     buf = (uint8_t *)&new_config.new_items.leds.ghColours;
-    size = sizeof(new_config.new_items.leds.colours);
+    size = sizeof(new_config.new_items.leds.ghColours);
     break;
   case CONFIG_LED_PINS:
     buf = (uint8_t *)&new_config.new_items.leds.pins;

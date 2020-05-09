@@ -1,6 +1,7 @@
 #pragma once
+#include "../input/leds.h"
 #include "./defines.h"
-#define PROTOCOL_VERSION 1
+#define PROTOCOL_VERSION 2
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -13,6 +14,13 @@
 
 #define FRET_MODE LEDS_DISABLED
 
+#define LED_GH_COLOURS                                                         \
+  { Black, Green, White, DeepSkyBlue, 0xFF00FF }
+#define LED_COLOURS                                                            \
+  { Green, Red, Yellow, Blue, OrangeRed }
+#define LED_PINS                                                               \
+  { XBOX_A+1, XBOX_B+1, XBOX_Y+1, XBOX_X+1, XBOX_LB+1, 0 }
+
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
@@ -21,10 +29,11 @@
 // If this is set to true, the FRET pins will not use pullups, and will require
 // a positive voltage to turn on. This allows for the ability to put LEDs in
 // series with your frets, and accept HIGH as an input instead of LOW.
-// For a list of keyboard bindings, visit
-// http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 #define EMPTY                                                                  \
   { INVALID_PIN, INVALID_PIN }
+// For a list of keyboard bindings, visit
+// http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
+
 #define KEYS                                                                   \
   {                                                                            \
     0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51,    \
@@ -61,5 +70,5 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \
-        KEYS, {DRUM_THRESHOLD},                                                \
+        KEYS, {DRUM_THRESHOLD, {LED_PINS, LED_COLOURS, LED_GH_COLOURS}},       \
   }

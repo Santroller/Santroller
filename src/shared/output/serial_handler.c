@@ -1,7 +1,7 @@
 #include "serial_handler.h"
 #include "../input/input_direct.h"
-#include "../input/input_wii_ext.h"
 #include "../input/input_ps2_cnt.h"
+#include "../input/input_wii_ext.h"
 #include "usb/API.h"
 #include <stdlib.h>
 
@@ -240,6 +240,21 @@ void get_config_buf(uint8_t data) {
   case CONFIG_THRESHOLD_TRIGGER:
     buf = (uint8_t *)&new_config.axis.threshold_trigger;
     break;
+  case CONFIG_THRESHOLD_DRUM:
+    buf = (uint8_t *)&new_config.new_items.threshold_drums;
+    break;
+  case CONFIG_LED_COLOURS:
+    buf = (uint8_t *)&new_config.new_items.leds.colours;
+    size = sizeof(new_config.new_items.leds.colours);
+    break;
+  case CONFIG_LED_GH_COLOURS:
+    buf = (uint8_t *)&new_config.new_items.leds.ghColours;
+    size = sizeof(new_config.new_items.leds.colours);
+    break;
+  case CONFIG_LED_PINS:
+    buf = (uint8_t *)&new_config.new_items.leds.pins;
+    size = sizeof(new_config.new_items.leds.pins);
+    break;
   }
 }
 void process_serial(uint8_t data) {
@@ -261,13 +276,13 @@ void process_serial(uint8_t data) {
     case COMMAND_JUMP_BOOTLOADER:
       bootloader();
       break;
-    case COMMAND_SET_LEDS:
+    case COMMAND_SET_GH_LEDS:
       buf = controller.leds.leds;
       size = 5;
       break;
-    case COMMAND_SET_LED_GUI:
+    case COMMAND_SET_LED_COLOUR:
       buf = (uint8_t *)&controller.leds.gui;
-      size = 4;
+      size = 3;
       break;
     case COMMAND_FIND_DIGITAL:
       write_usb(find_digital());

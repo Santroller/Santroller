@@ -10,21 +10,22 @@ void led_init(void) {
   clock_prescale_set(clock_div_1);
   apa102_init_spi();
 }
-long unsigned int colours[] = {Black, Green, White, DeepSkyBlue, 0xFF00FF};
-long unsigned int fretColours[] = {Green, Red, Yellow, Blue, OrangeRed};
-int frets[] = {XBOX_A, XBOX_B, XBOX_Y, XBOX_X, XBOX_LB};
+uint8_t gh[XBOX_BTN_COUNT + XBOX_AXIS_COUNT] = {
+    [XBOX_A] = 1, [XBOX_B] = 2, [XBOX_Y] = 3, [XBOX_X] = 4, [XBOX_LB] = 5};
 void led_tick(controller_t *controller) {
   if (config.main.fret_mode != APA102) return;
   apa102_start();
-  // for (int i = NUM_LEDS-1; i>=0; i--) {
-  for (int i = 0; i<NUM_LEDS; i++) {
+  for (int i = 0; config.new_items.leds.pins[i]; i++) {
     uint32_t col = controller->leds.gui;
-    if (col == Black) {
-      col = colours[controller->leds.leds[i]];
-      if ((col == Black && bit_check(controller->buttons, frets[i])) ||
-          col == Green) {
-        col = fretColours[i];
-      }
+    uint8_t button = config.new_items.leds.pins[i] - 1;
+    uint8_t ghBtn = gh[button];
+    if (ghBtn) {
+      col = config.new_items.leds.ghColours[controller->leds.leds[ghBtn-1]];
+      if (controller->leds.leds[ghBtn-1] == 1) col = config.new_items.leds.colours[i];
+    }
+
+    if ((col == Black && bit_check(controller->buttons, button))) {
+      col = config.new_items.leds.colours[i];
     }
     apa102_set_led(rgb(col));
   }

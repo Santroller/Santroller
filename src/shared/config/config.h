@@ -1,4 +1,5 @@
 #pragma once
+#include "../controller/controller.h"
 #include <stdbool.h>
 #include <stdint.h>
 typedef struct {
@@ -77,7 +78,13 @@ typedef struct {
   int16_t tilt_sensitivity;
 } axis_config_t;
 typedef struct {
-  uint16_t threshold_drums;
+  long unsigned int pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  long unsigned int colours[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  long unsigned int ghColours[5];
+} leds_t;
+typedef struct {
+  uint8_t threshold_drums;
+  leds_t leds;
 } new_items_t;
 typedef struct {
   main_config_t main;

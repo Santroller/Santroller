@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-enum xbox_buttons_t {
+enum xbox_buttons {
   XBOX_DPAD_UP,
   XBOX_DPAD_DOWN,
   XBOX_DPAD_LEFT,
@@ -22,7 +22,7 @@ enum xbox_buttons_t {
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6
 
-enum switch_buttons_t {
+enum switch_buttons {
   SWITCH_Y,
   SWITCH_B,
   SWITCH_A,

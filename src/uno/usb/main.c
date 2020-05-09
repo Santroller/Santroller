@@ -64,8 +64,6 @@ RingBuff_t USARTtoHID_Buffer;
  */
 static CDC_LineEncoding_t LineEncoding = {0};
 #define BAUD 1000000
-#define STATE_ARDWIINO 0
-#define STATE_AVRDUDE 2
 #define FRAME_START_1 0x7c
 #define FRAME_START_2 0x7e
 #define FRAME_END 0x7f
@@ -74,23 +72,25 @@ eeprom_config_t EEMEM config_mem;
 
 eeprom_config_t config;
 bool entered_prog = false;
-int state = STATE_ARDWIINO;
+bool is_ardwiino = true;
 int lastCommand = 0;
 #define JUMP 0xDEAD8001
 
-// by placing this in noinit, we can jump to the bootloader after a watchdog reset.
+// by placing this in noinit, we can jump to the bootloader after a watchdog
+// reset.
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 void handle_out(uint8_t ep, RingBuff_t *buf, bool serial);
 
 /** Main program entry point. This routine contains the overall program flow,
  * including initial setup of all components and the main program loop.
  */
-void set_baud(uint16_t b) {
+void set_baud(bool b) {
+  is_ardwiino = b;
   UCSR1B = 0;
   UCSR1A = 0;
   UCSR1C = 0;
   /* Hardware Initialization */
-  UBRR1 = b;
+  UBRR1 = is_ardwiino ? SERIAL_2X_UBBRVAL(BAUD) : SERIAL_2X_UBBRVAL(115200);
 
   UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
   UCSR1A = (1 << U2X1);
@@ -144,7 +144,7 @@ int main(void) {
           if (Endpoint_BytesInEndpoint()) {
             uint8_t b = Endpoint_Read_8();
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
-            if (state == STATE_AVRDUDE) {
+            if (!is_ardwiino) {
               entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
             } else if (lastCommand == COMMAND_READ_INFO) {
               const char *c = NULL;
@@ -167,10 +167,6 @@ int main(void) {
             } else if (lastCommand == CONFIG_SUB_TYPE) {
               config.device_type = b;
               lastCommand = 0;
-            } else if (lastCommand == CONFIG_POLL_RATE) {
-              lastCommand = 0;
-            } else if (b == COMMAND_START_CONFIG) {
-              config.device_type = device_type;
             } else if (b == COMMAND_APPLY_CONFIG) {
               Serial_SendByte(b);
               _delay_ms(2000);
@@ -179,8 +175,7 @@ int main(void) {
               jmpToBootloader = 0;
               reboot();
             } else if (b == COMMAND_JUMP_BOOTLOADER) {
-              state = STATE_AVRDUDE;
-              set_baud(SERIAL_2X_UBBRVAL(115200));
+              set_baud(false);
             } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
               jmpToBootloader = JUMP;
               reboot();
@@ -213,7 +208,7 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
     TIFR0 |= (1 << TOV0);
   }
   uint8_t b;
-  if (state == STATE_ARDWIINO) {
+  if (is_ardwiino) {
     b = RingBuffer_Remove(buf);
     if (b != FRAME_START_1 && b != FRAME_START_2) { return; }
   }
@@ -225,7 +220,7 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
      */
     while (BufferCount--) {
       b = RingBuffer_Remove(buf);
-      if (state == STATE_ARDWIINO) {
+      if (is_ardwiino) {
         BufferCount++;
         if (b == FRAME_END) { break; };
         if (b == ESC) b = RingBuffer_Remove(buf) ^ 0x20;
@@ -242,7 +237,7 @@ void SetupHardware(void) {
   MCUSR &= ~(1 << WDRF);
   wdt_disable();
   /* Hardware Initialization */
-  set_baud(SERIAL_2X_UBBRVAL(BAUD));
+  set_baud(true);
   DDRD |= (1 << 3);
   PORTD |= (1 << 2);
   USB_Init();
@@ -344,8 +339,7 @@ void EVENT_USB_Device_ControlRequest(void) {
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
       if (entered_prog) {
         entered_prog = false;
-        state = STATE_ARDWIINO;
-        set_baud(SERIAL_2X_UBBRVAL(BAUD));
+        set_baud(true);
       }
     }
   }
@@ -358,15 +352,11 @@ uint8_t frame = 0;
 ISR(USART1_RX_vect, ISR_BLOCK) {
   uint8_t b = UDR1;
 
-  if (USB_DeviceState == DEVICE_STATE_Configured) {
-    if (state != STATE_AVRDUDE) {
-      if (b == FRAME_START_1 || b == FRAME_START_2) { frame = b; }
-    }
-    if (frame == FRAME_START_2 || state == STATE_AVRDUDE) {
-      RingBuffer_Insert(&USARTtoSER_Buffer, b);
-    } else if (frame == FRAME_START_1) {
-      RingBuffer_Insert(&USARTtoHID_Buffer, b);
-    }
-    if (b == FRAME_END) { frame = 0; }
+  if (b == FRAME_START_1 || b == FRAME_START_2) { frame = b; }
+  if (frame == FRAME_START_2 || !is_ardwiino) {
+    RingBuffer_Insert(&USARTtoSER_Buffer, b);
+  } else if (frame == FRAME_START_1) {
+    RingBuffer_Insert(&USARTtoHID_Buffer, b);
   }
+  if (b == FRAME_END) { frame = 0; }
 }

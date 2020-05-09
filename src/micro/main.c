@@ -73,6 +73,7 @@ output_report_size_t report;
 int main(void) {
   load_config();
   init_serial();
+  config.main.sub_type = XINPUT_LIVE_GUITAR;
   device_type = config.main.sub_type;
   input_init();
   report_init();

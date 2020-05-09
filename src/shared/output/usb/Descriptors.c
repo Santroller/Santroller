@@ -250,7 +250,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
 
-    InterfaceNumber : 0,
+    InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0x00,
 
     TotalEndpoints : 2,
@@ -261,25 +261,20 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
 
     InterfaceStrIndex : NO_DESCRIPTOR
   },
-  Controller : {
-    XInput : {
-      XInputReserved : {
-        Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-        {0x10, 0x01},
-        0,
-        {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
-      },
-      HIDDescriptor : {
-        Header :
-            {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
+  XInputReserved : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+    {0x10, 0x01},
+    0,
+    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
+  },
+  HIDDescriptor : {
+    Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : DTYPE_Other},
 
-        HIDSpec : VERSION_BCD(1, 1, 1),
-        CountryCode : 0x00,
-        TotalReportDescriptors : 1,
-        HIDReportType : HID_DTYPE_Report,
-        HIDReportLength : sizeof(ps3_report_descriptor)
-      },
-    },
+    HIDSpec : VERSION_BCD(1, 1, 1),
+    CountryCode : 0x00,
+    TotalReportDescriptors : 1,
+    HIDReportType : HID_DTYPE_Report,
+    HIDReportLength : sizeof(ps3_report_descriptor)
   },
   Audio_ControlInterface_SPC : {
     Header : {
@@ -532,22 +527,14 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA);
     } else if (device_type >= KEYBOARD) {
       if (device_type == KEYBOARD) {
-        conf->Controller.XInput.HIDDescriptor.HIDReportLength =
+        conf->HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
       }
       // Report that we have an HID device
       conf->Interface0.Class = HID_CSCP_HIDClass;
       conf->Interface0.SubClass = HID_CSCP_NonBootSubclass;
       conf->Interface0.Protocol = HID_CSCP_NonBootProtocol;
-      // Move the hid descriptor so that it is in the right place
-      memcpy_P(&conf->Controller.HID.HIDDescriptor,
-               &ConfigurationDescriptor.Controller.XInput.HIDDescriptor,
-               sizeof(conf->Controller.XInput.HIDDescriptor));
-      //  We have a corrupted old hid descriptor sitting here now. We don't
-      //  actually care about the data, as it isnt necessary for hid, but we
-      //  need to set its size correctly so that it is parsed.
-      conf->Controller.HID.XInputReserved.Header.Size =
-          sizeof(USB_HID_XBOX_Descriptor_HID_t) + MIDI_SIZE;
+      conf->HIDDescriptor.Header.Type = HID_DTYPE_HID;
     } else {
       // Map fake subtypes to their real counterparts
       uint8_t st = device_type;
@@ -562,7 +549,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         st = REAL_GUITAR_SUBTYPE;
         break;
       }
-      conf->Controller.XInput.XInputReserved.subtype = st;
+      conf->XInputReserved.subtype = st;
     }
     return Size;
   case HID_DTYPE_Report:

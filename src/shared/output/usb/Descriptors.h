@@ -2,7 +2,8 @@
 
 /* Includes: (don't import everything on the 328p)*/
 #ifdef __AVR_ATmega328P__
-// Pull in enough information from LUFA in order to be able to compile the descriptors.
+// Pull in enough information from LUFA in order to be able to compile the
+// descriptors.
 #  define __INCLUDE_FROM_USB_DRIVER
 #  define __INCLUDE_FROM_HID_DRIVER
 #  define __INCLUDE_FROM_CDC_DRIVER
@@ -83,17 +84,9 @@ typedef struct {
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
   USB_Descriptor_Interface_t Interface0;
-  union {
-    struct {
-      USB_HID_XBOX_Descriptor_HID_t XInputReserved;
-      USB_HID_Descriptor_HID_t HIDDescriptor;
-    } XInput;
-    struct {
-      USB_HID_Descriptor_HID_t HIDDescriptor;
-      USB_HID_XBOX_Descriptor_HID_t XInputReserved;
-    } HID;
-  } Controller;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+  USB_HID_Descriptor_HID_t HIDDescriptor;
+  USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Interface_t Audio_StreamInterface;
   USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
   USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;

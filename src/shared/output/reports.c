@@ -121,11 +121,13 @@ void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
     JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
-  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR || config.main.sub_type == WII_ROCK_BAND_GUITAR) {
+  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR ||
+             config.main.sub_type == WII_ROCK_BAND_GUITAR) {
     JoystickReport->r_x = 128 - (controller.r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
-    // r_y is the tone switch. Since lt isnt used, but r_y gets used by tilt, we map fx to lt, and then fix it here
+    // r_y is the tone switch. Since lt isnt used, but r_y gets used by tilt, we
+    // map fx to lt, and then fix it here
     JoystickReport->r_y = 128 - controller.lt;
   }
   if (config.main.sub_type == PS3_GAMEPAD ||
@@ -144,6 +146,20 @@ void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
     JoystickReport->l_y = 0x80;
   }
 }
+void create_midi_report(void *ReportData, uint16_t *const ReportSize,
+                       controller_t controller) {
+  *ReportSize = 3;
+  uint8_t *data = (uint8_t *)ReportData;
+  if (bit_check(controller.buttons, XBOX_A)) {
+    data[0] = 0x90;
+    data[1] = 0x56;
+    data[2] = 0xff;
+  } else {
+    data[0] = 0x80;
+    data[1] = 0x56;
+    data[2] = 0xff;
+  }
+}
 void (*create_report)(void *ReportData, uint16_t *const ReportSize,
                       controller_t controller) = NULL;
 
@@ -160,11 +176,13 @@ void report_init(void) {
              sizeof(ps3DrumButtonBindings));
   } else if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR) {
     memcpy_P(ps3ButtonBindings, psGHButtonBindings, sizeof(ps3ButtonBindings));
-  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR || config.main.sub_type == WII_ROCK_BAND_GUITAR) {
+  } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR ||
+             config.main.sub_type == WII_ROCK_BAND_GUITAR) {
     memcpy_P(ps3ButtonBindings, psRBButonBindings, sizeof(ps3ButtonBindings));
   }
-
-  if (config.main.sub_type <= XINPUT_ARCADE_PAD) {
+  if (config.main.sub_type >= MIDI_GUITAR) {
+    create_report = create_midi_report;
+  } else if (config.main.sub_type <= XINPUT_ARCADE_PAD) {
     create_report = create_xinput_report;
   } else if (config.main.sub_type == KEYBOARD) {
     create_report = create_keyboard_report;

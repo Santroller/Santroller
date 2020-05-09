@@ -488,7 +488,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     Size = DeviceDescriptor.Header.Size;
     memcpy_P(dbuf, Address, Size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)dbuf;
-    if (device_type >= SWITCH_GAMEPAD) {
+    if (device_type >= SWITCH_GAMEPAD && device_type < MIDI_GUITAR) {
       uint8_t offs = device_type - SWITCH_GAMEPAD;
       dev->VendorID = pgm_read_word(vid + offs);
       dev->ProductID = pgm_read_word(pid + offs);

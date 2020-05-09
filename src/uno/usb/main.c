@@ -167,6 +167,8 @@ int main(void) {
             } else if (lastCommand == CONFIG_SUB_TYPE) {
               config.device_type = b;
               lastCommand = 0;
+            } else if (b == COMMAND_START_CONFIG) {
+              config.device_type = device_type;
             } else if (b == COMMAND_APPLY_CONFIG) {
               Serial_SendByte(b);
               _delay_ms(2000);

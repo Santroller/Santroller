@@ -246,35 +246,20 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : CDC_TX_EPSIZE,
     PollingIntervalMS : 0x05
   },
-  Interface0 : {
+  Interface_AudioControl : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
 
-    InterfaceNumber : INTERFACE_ID_HID,
+    InterfaceNumber : INTERFACE_ID_Unused,
     AlternateSetting : 0x00,
 
-    TotalEndpoints : 2,
+    TotalEndpoints : 0,
 
-    Class : 0xFF,
-    SubClass : 0x5D,
-    Protocol : 0x01,
+    Class : AUDIO_CSCP_AudioClass,
+    SubClass : AUDIO_CSCP_ControlSubclass,
+    Protocol : AUDIO_CSCP_ControlProtocol,
 
     InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  XInputReserved : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    {0x10, 0x01},
-    0,
-    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
-  },
-  HIDDescriptor : {
-    Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : DTYPE_Other},
-
-    HIDSpec : VERSION_BCD(1, 1, 1),
-    CountryCode : 0x00,
-    TotalReportDescriptors : 1,
-    HIDReportType : HID_DTYPE_Report,
-    HIDReportLength : sizeof(ps3_report_descriptor)
   },
   Audio_ControlInterface_SPC : {
     Header : {
@@ -289,17 +274,19 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     InCollection : 1,
     InterfaceNumber : INTERFACE_ID_AudioStream,
   },
-  Audio_StreamInterface : {
-    Header : {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Other},
 
-    InterfaceNumber : INTERFACE_ID_AudioStream,
+  Interface0 : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+
+    InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0,
 
     TotalEndpoints : 2,
 
-    Class : AUDIO_CSCP_AudioClass,
-    SubClass : AUDIO_CSCP_MIDIStreamingSubclass,
-    Protocol : AUDIO_CSCP_StreamingProtocol,
+    Class : 0xFF,
+    SubClass : 0x5D,
+    Protocol : 0x01,
 
     InterfaceStrIndex : NO_DESCRIPTOR
   },
@@ -315,6 +302,21 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     TotalLength :
         (sizeof(USB_Descriptor_Configuration_t) -
          offsetof(USB_Descriptor_Configuration_t, Audio_StreamInterface_SPC))
+  },
+  XInputReserved : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+    {0x10, 0x01},
+    0,
+    {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
+  },
+  HIDDescriptor : {
+    Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : DTYPE_Other},
+
+    HIDSpec : VERSION_BCD(1, 1, 1),
+    CountryCode : 0x00,
+    TotalReportDescriptors : 1,
+    HIDReportType : HID_DTYPE_Report,
+    HIDReportLength : sizeof(ps3_report_descriptor)
   },
 
   MIDI_In_Jack_Emb : {
@@ -383,7 +385,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         Type : DTYPE_Endpoint
       },
 
-      EndpointAddress : 0x81,
+      EndpointAddress : HID_EPADDR_IN,
       Attributes : EP_TYPE_INTERRUPT,
       EndpointSize : HID_EPSIZE,
       PollingIntervalMS : 1
@@ -409,7 +411,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         Type : DTYPE_Endpoint
       },
 
-      EndpointAddress : 0x02,
+      EndpointAddress : HID_EPADDR_OUT,
       Attributes : EP_TYPE_INTERRUPT,
       EndpointSize : HID_EPSIZE,
       PollingIntervalMS : 1,
@@ -427,22 +429,6 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
 
     TotalEmbeddedJacks : 0x01,
     AssociatedJackID : {0x03}
-  },
-
-  DummyInterface : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-
-    InterfaceNumber : INTERFACE_ID_AudioStream,
-    AlternateSetting : 0,
-
-    TotalEndpoints : 0,
-
-    Class : 0xFF,
-    SubClass : 0xFF,
-    Protocol : 0xFF,
-
-    InterfaceStrIndex : NO_DESCRIPTOR
   },
 };
 #define ARDWIINO_VID 0x1209
@@ -466,7 +452,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
 
-static uint8_t buf[sizeof(USB_Descriptor_Configuration_t)];
+uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 const uint16_t PROGMEM vid[] = {0x0F0D, ARDWIINO_VID, 0x12ba, 0x12ba,
                                 0x12ba, 0x12ba,       0x1bad, 0x1bad};
 const uint16_t PROGMEM pid[] = {0x0092, ARDWIINO_PID, 0x0100, 0x0200,
@@ -495,13 +481,13 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   uint16_t Size = NO_DESCRIPTOR;
 
   const void *Address = NULL;
-  *DescriptorAddress = buf;
+  *DescriptorAddress = dbuf;
   switch (DescriptorType) {
   case DTYPE_Device:
     Address = &DeviceDescriptor;
     Size = DeviceDescriptor.Header.Size;
-    memcpy_P(buf, Address, Size);
-    USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)buf;
+    memcpy_P(dbuf, Address, Size);
+    USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)dbuf;
     if (device_type >= SWITCH_GAMEPAD) {
       uint8_t offs = device_type - SWITCH_GAMEPAD;
       dev->VendorID = pgm_read_word(vid + offs);
@@ -511,20 +497,21 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   case DTYPE_Configuration:
     Address = &ConfigurationDescriptor;
     Size = ConfigurationDescriptor.Config.TotalConfigurationSize;
-    memcpy_P(buf, Address, Size);
+    memcpy_P(dbuf, Address, Size);
     USB_Descriptor_Configuration_t *conf =
-        (USB_Descriptor_Configuration_t *)buf;
+        (USB_Descriptor_Configuration_t *)dbuf;
     if (device_type >= MIDI_GUITAR) {
       conf->Interface0.Class = AUDIO_CSCP_AudioClass;
-      conf->Interface0.SubClass = AUDIO_CSCP_ControlSubclass;
-      conf->Interface0.Protocol = AUDIO_CSCP_ControlProtocol;
-      conf->Interface0.TotalEndpoints = 0;
-      conf->Audio_StreamInterface.Header.Type = DTYPE_Interface;
-      conf->DummyInterface.Header.Type = DTYPE_Other;
+      conf->Interface0.SubClass = AUDIO_CSCP_MIDIStreamingSubclass;
+      conf->Interface0.Protocol = AUDIO_CSCP_StreamingProtocol;
       conf->DataOutEndpoint0.Endpoint.Attributes =
           (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA);
       conf->DataInEndpoint0.Endpoint.Attributes =
           (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA);
+      conf->Interface_AudioControl.InterfaceNumber = INTERFACE_ID_ControlStream;
+      conf->Interface0.InterfaceNumber = INTERFACE_ID_AudioStream;
+      // We need to skip over the HID Descriptor and the XInputReserved descriptor. Treating them as part of the interface desrcriptor does this nicely.
+      conf->Interface0.Header.Size = sizeof(USB_Descriptor_Interface_t) + sizeof(USB_HID_Descriptor_HID_t) + sizeof(USB_HID_XBOX_Descriptor_HID_t);
     } else if (device_type >= KEYBOARD) {
       if (device_type == KEYBOARD) {
         conf->HIDDescriptor.HIDReportLength =
@@ -573,6 +560,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         pgm_read_byte(Address + offsetof(USB_StdDescriptor_String_t, bLength));
     break;
   }
-  if (Size != NO_DESCRIPTOR) { memcpy_P(buf, Address, Size); }
+  if (Size != NO_DESCRIPTOR) { memcpy_P(dbuf, Address, Size); }
   return Size;
 }

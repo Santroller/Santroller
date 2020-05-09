@@ -34,7 +34,7 @@
 /** Endpoint address of the CDC host-to-device data OUT endpoint. */
 #define CDC_RX_EPADDR (ENDPOINT_DIR_OUT | 4)
 /** Endpoint address of the HID OUT endpoint. */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
+#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 2)
 
 /** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE 8
@@ -60,9 +60,13 @@ enum StringDescriptors_t {
  */
 enum InterfaceDescriptors_t {
   INTERFACE_ID_HID =
-      0, /**< Controller/MIDI Control Stream interface descriptor ID */
+      0, /**< HID interface descriptor ID */
+  INTERFACE_ID_Unused =
+      1, /**< Unused HID interface descriptor ID */
   INTERFACE_ID_CDC_CCI = 2, /**< CDC CCI interface descriptor ID */
   INTERFACE_ID_CDC_DCI = 3, /**< CDC DCI interface descriptor ID */
+  INTERFACE_ID_ControlStream =
+      0, /**< MIDI Control Stream interface descriptor ID */
   INTERFACE_ID_AudioStream =
       1, /**< MIDI Audio Stream interface descriptor ID */
 };
@@ -83,21 +87,20 @@ typedef struct {
   USB_Descriptor_Interface_t CDC_DCI_Interface;
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
-  USB_Descriptor_Interface_t Interface0;
+  USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+  USB_Descriptor_Interface_t Interface0;
   USB_HID_Descriptor_HID_t HIDDescriptor;
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;
-  USB_Descriptor_Interface_t Audio_StreamInterface;
   USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
   USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
   USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
   USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
   USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
   USB_Audio_Descriptor_StreamEndpoint_Std_t DataInEndpoint0;
-  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
-  USB_Audio_Descriptor_StreamEndpoint_Std_t DataOutEndpoint0;
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
-  USB_Descriptor_Interface_t DummyInterface;
+  USB_Audio_Descriptor_StreamEndpoint_Std_t DataOutEndpoint0;
+  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
 } USB_Descriptor_Configuration_t;
 extern uint8_t device_type;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,

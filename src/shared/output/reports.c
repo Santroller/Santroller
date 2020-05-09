@@ -1,5 +1,6 @@
 #include "reports.h"
 #include "../util.h"
+#include "usb/Descriptors.h"
 
 // Bindings to go from controller to ps3
 static uint8_t ps3ButtonBindings[] = {
@@ -147,18 +148,13 @@ void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
   }
 }
 void create_midi_report(void *ReportData, uint16_t *const ReportSize,
-                       controller_t controller) {
-  *ReportSize = 3;
-  uint8_t *data = (uint8_t *)ReportData;
-  if (bit_check(controller.buttons, XBOX_A)) {
-    data[0] = 0x90;
-    data[1] = 0x56;
-    data[2] = 0xff;
-  } else {
-    data[0] = 0x80;
-    data[1] = 0x56;
-    data[2] = 0xff;
-  }
+                        controller_t controller) {
+  *ReportSize = sizeof(MIDI_EventPacket_t);
+  MIDI_EventPacket_t *data = (MIDI_EventPacket_t *)ReportData;
+  data->Event = 0x80;
+  data->Data1 = 0x08;
+  data->Data2 = bit_check(controller.buttons, XBOX_A)?0x55:0x00;
+  data->Data3 = 0x00;
 }
 void (*create_report)(void *ReportData, uint16_t *const ReportSize,
                       controller_t controller) = NULL;

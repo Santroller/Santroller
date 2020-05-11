@@ -259,6 +259,21 @@ void get_config_buf(uint8_t data) {
     subcmd = data;
     size = 0;
     break;
+  case CONFIG_MIDI_CHANNEL:
+    buf = (uint8_t *)&new_config.new_items.midi.channel;
+    subcmd = data;
+    size = 0;
+    break;
+  case CONFIG_MIDI_NOTE:
+    buf = (uint8_t *)&new_config.new_items.midi.note;
+    subcmd = data;
+    size = 0;
+    break;
+  case CONFIG_MIDI_TYPE:
+    buf = (uint8_t *)&new_config.new_items.midi.midi_type;
+    subcmd = data;
+    size = 0;
+    break;
   }
 }
 void process_serial(uint8_t data) {
@@ -317,6 +332,18 @@ void process_serial(uint8_t data) {
         size = 4;
         break;
       case CONFIG_LED_PINS:
+        buf += data;
+        size = 1;
+        break;
+      case CONFIG_MIDI_CHANNEL:
+        buf += data;
+        size = 1;
+        break;
+      case CONFIG_MIDI_NOTE:
+        buf += data;
+        size = 1;
+        break;
+      case CONFIG_MIDI_TYPE:
         buf += data;
         size = 1;
         break;

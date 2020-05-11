@@ -11,6 +11,7 @@ void init_serial(void) { new_config = config; }
 int buf_idx = 0;
 int cmd = 0;
 int size = 0;
+int subcmd = 0;
 static uint8_t *buf = NULL;
 uint8_t str[50];
 void get_info_buf(uint8_t data) {
@@ -245,15 +246,18 @@ void get_config_buf(uint8_t data) {
     break;
   case CONFIG_LED_COLOURS:
     buf = (uint8_t *)&new_config.new_items.leds.colours;
-    size = sizeof(new_config.new_items.leds.colours);
+    subcmd = data;
+    size = 0;
     break;
   case CONFIG_LED_GH_COLOURS:
     buf = (uint8_t *)&new_config.new_items.leds.ghColours;
-    size = sizeof(new_config.new_items.leds.ghColours);
+    subcmd = data;
+    size = 0;
     break;
   case CONFIG_LED_PINS:
     buf = (uint8_t *)&new_config.new_items.leds.pins;
-    size = sizeof(new_config.new_items.leds.pins);
+    subcmd = data;
+    size = 0;
     break;
   }
 }
@@ -261,6 +265,7 @@ void process_serial(uint8_t data) {
   if (cmd == 0) {
     cmd = data;
     size = 0;
+    subcmd = 0;
     switch (cmd) {
     case COMMAND_START_CONFIG:
       new_config = config;
@@ -301,16 +306,35 @@ void process_serial(uint8_t data) {
     }
     return;
   } else if (size == 0) {
-    switch (cmd) {
-    case COMMAND_WRITE_CONFIG_VALUE:
-      get_config_buf(data);
-      return;
-    case COMMAND_READ_INFO:
-      get_info_buf(data);
-      break;
-    case COMMAND_READ_CONFIG_VALUE:
-      get_config_buf(data);
-      break;
+    if (subcmd) {
+      switch (subcmd) {
+      case CONFIG_LED_COLOURS:
+        buf += data * 4;
+        size = 4;
+        break;
+      case CONFIG_LED_GH_COLOURS:
+        buf += data * 4;
+        size = 4;
+        break;
+      case CONFIG_LED_PINS:
+        buf += data;
+        size = 1;
+        break;
+      }
+      if (cmd == COMMAND_WRITE_CONFIG_VALUE) { return; }
+    } else {
+      switch (cmd) {
+      case COMMAND_WRITE_CONFIG_VALUE:
+        get_config_buf(data);
+        return;
+      case COMMAND_READ_INFO:
+        get_info_buf(data);
+        break;
+      case COMMAND_READ_CONFIG_VALUE:
+        get_config_buf(data);
+        break;
+      }
+      if (subcmd) { return; }
     }
     while (size) {
       write_usb(*(buf++));
@@ -321,6 +345,12 @@ void process_serial(uint8_t data) {
     size--;
   }
   if (size == 0) {
+    // LED_GH_COLOURS is special in the fact that its config writes immediately,
+    // as from a gui perspective that makes more sense
+    if (subcmd == CONFIG_LED_GH_COLOURS) {
+      memcpy(config.new_items.leds.ghColours, new_config.new_items.leds.ghColours, sizeof(config.new_items.leds.ghColours));
+      write_config();
+    }
     write_usb('\r');
     write_usb('\n');
     cmd = 0;

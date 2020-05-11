@@ -79,8 +79,8 @@ typedef struct {
 } axis_config_t;
 typedef struct {
   uint8_t pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
-  long unsigned int colours[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
-  long unsigned int ghColours[3];
+  uint32_t colours[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  uint32_t ghColours[3];
 } leds_t;
 typedef struct {
   uint8_t threshold_drums;

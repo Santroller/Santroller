@@ -1,3 +1,4 @@
+#pragma once
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6
 enum xbox_buttons {

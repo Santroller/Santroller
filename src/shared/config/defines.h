@@ -61,3 +61,8 @@ enum fret_mode {
     APA102
 };
 
+enum midi_type {
+  NO_MIDI,
+  NOTE,
+  PITCH
+};

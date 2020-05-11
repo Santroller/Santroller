@@ -3,6 +3,7 @@
 config_t EEMEM config_pointer = DEFAULT_CONFIG;
 const config_t PROGMEM default_config = DEFAULT_CONFIG;
 config_t config;
+bool isMidi;
 void load_config(void) {
     eeprom_read_block(&config, &config_pointer, sizeof(config_t));
     // Check versions, if they aren't the same, a breaking change has happened
@@ -16,6 +17,7 @@ void load_config(void) {
     if (config.main.version < 2) {
         config.new_items.threshold_drums = DRUM_THRESHOLD;
         memcpy_P(&config.new_items.leds, &default_config.new_items.leds, sizeof(default_config.new_items.leds));
+        memcpy_P(&config.new_items.midi, &default_config.new_items.midi, sizeof(default_config.new_items.midi));
         config.main.version = 2;
         write_config();
     }
@@ -27,6 +29,7 @@ void load_config(void) {
         config.main.sub_type = XINPUT_GUITAR_HERO_DRUMS;
         write_config();
     }
+    isMidi = config.main.sub_type >= MIDI_GUITAR;
 }
 void write_config(void) {
     eeprom_write_block(&config, &config_pointer, sizeof(config_t));

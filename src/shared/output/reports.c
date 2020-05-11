@@ -149,18 +149,38 @@ void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
 }
 void create_midi_report(void *ReportData, uint16_t *const ReportSize,
                         controller_t controller) {
-  *ReportSize = sizeof(MIDI_EventPacket_t);
-  MIDI_EventPacket_t *data = (MIDI_EventPacket_t *)ReportData;
-  // Channel 10(percussion)
-  uint8_t channel = MIDI_CHANNEL(10);
-  uint8_t midipitch = 0x3C;
-  uint8_t midicommand = bit_check(controller.buttons, XBOX_A)
-                            ? MIDI_COMMAND_NOTE_ON
-                            : MIDI_COMMAND_NOTE_OFF;
-  data->Event = MIDI_EVENT(0, midicommand);
-  data->Data1 = midicommand | channel;
-  data->Data2 = midipitch;
-  data->Data3 = MIDI_STANDARD_VELOCITY;
+  uint16_t size = 0;
+  MIDI_EventPacket_t **data = (MIDI_EventPacket_t **)ReportData;
+  MIDI_EventPacket_t *data2 = data[0];
+  for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
+    if (config.new_items.midi.midi_type[i] != NO_MIDI) {
+      // Channel 10(percussion)
+      uint8_t channel = MIDI_CHANNEL(config.new_items.midi.channel[i]);
+      uint8_t midipitch = config.new_items.midi.note[i];
+      uint8_t midicommand = MIDI_COMMAND_PITCH_WHEEL_CHANGE;
+      uint8_t vel = MIDI_STANDARD_VELOCITY;
+      if (vel < XBOX_BTN_COUNT) {
+        vel = bit_check(controller.buttons, i) * MIDI_STANDARD_VELOCITY;
+      } else if (i > XBOX_BTN_COUNT + 2) {
+        vel =
+            ((((controller_a_t *)&controller)->sticks[i - XBOX_BTN_COUNT - 2])>>8)+128;
+      } else {
+        vel = (((controller_a_t *)&controller)->triggers[i - XBOX_BTN_COUNT]);
+        
+      }
+      if (config.new_items.midi.midi_type[i] == NOTE) {
+        midicommand = vel > 0?MIDI_COMMAND_NOTE_ON:MIDI_COMMAND_NOTE_OFF;
+      }
+      data2->Event = MIDI_EVENT(0, midicommand);
+      data2->Data1 = midicommand | channel;
+      data2->Data2 = midipitch;
+      data2->Data3 = MIDI_STANDARD_VELOCITY;
+      size += sizeof(MIDI_EventPacket_t);
+      data2++;
+    }
+  }
+
+  *ReportSize = size;
 }
 void (*create_report)(void *ReportData, uint16_t *const ReportSize,
                       controller_t controller) = NULL;

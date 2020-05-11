@@ -15,6 +15,7 @@ typedef struct {
   int16_t r_x;
   int16_t r_y;
   ledstate_t leds;
+  uint16_t all_axis[XBOX_BTN_COUNT+XBOX_AXIS_COUNT];
 } controller_t;
 typedef struct {
   uint16_t buttons;

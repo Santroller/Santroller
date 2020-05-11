@@ -4,6 +4,7 @@
 #include "input_guitar.h"
 #include "pins/pins.h"
 #include <stdlib.h>
+#include "../output/usb/Descriptors.h"
 pin_t pinData[16];
 int validPins = 0;
 void direct_init() {
@@ -15,6 +16,7 @@ void direct_init() {
       if (pins[i] != INVALID_PIN) {
         bool is_fret = (i >= XBOX_A || i == XBOX_LB);
         pin_t pin = {};
+        pin.offset = i;
         pin.mask = digitalPinToBitMask(pins[i]);
         pin.port = portInputRegister(digitalPinToPort((pins[i])));
         pin.pmask = _BV(i);
@@ -22,8 +24,10 @@ void direct_init() {
         if (is_drum() && is_fret) {
           // We should probably keep a list of drum specific buttons, instead of
           // using isfret
-          // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift it
-          setUpAnalogDigitalPin(pin, pins[i], config.new_items.threshold_drums << 3);
+          // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift
+          // it
+          setUpAnalogDigitalPin(pin, pins[i],
+                                config.new_items.threshold_drums << 3);
         } else {
           pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;
@@ -85,11 +89,17 @@ void direct_tick(controller_t *controller) {
   pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
-    if ((*pin.port & pin.mask) == pin.eq) { controller->buttons |= pin.pmask; }
+    if ((*pin.port & pin.mask) == pin.eq) {
+      controller->buttons |= pin.pmask;
+      controller->all_axis[pin.offset] = MIDI_STANDARD_VELOCITY;
+    } else {
+      controller->all_axis[pin.offset] = 0;
+    }
   }
   analog_info_t info;
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
+    controller->all_axis[XBOX_BTN_COUNT+info.offset] = info.value;
     if (info.hasDigital) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;

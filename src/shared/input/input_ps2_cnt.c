@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include "../config/eeprom.h"
 // PIN: Uno      - SPI PIN - Micro
 // CMD: Pin 11   - MOSI    - 16
 // DATA: Pin 12  - MISO    - 14
@@ -58,6 +59,20 @@ static const uint8_t ghButtons[] = {[PSB_SELECT] = XBOX_BACK,
                                     [GH_RED] = XBOX_B,
                                     [GH_BLUE] = XBOX_X,
                                     [GH_ORANGE] = XBOX_LB};
+static const uint8_t dsAxis[] = {
+    [PSAB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+    [PSAB_PAD_LEFT] = XBOX_DPAD_LEFT,
+    [PSAB_PAD_UP] = XBOX_DPAD_UP,
+    [PSAB_PAD_DOWN] = XBOX_DPAD_DOWN,
+    [PSAB_TRIANGLE] = XBOX_Y,
+    [PSAB_CIRCLE] = XBOX_B,
+    [PSAB_CROSS] = XBOX_A,
+    [PSAB_SQUARE] = XBOX_X,
+    [PSAB_L1] = XBOX_LB,
+    [PSAB_R1] = XBOX_RB,
+    [PSAB_L2] = XBOX_BTN_COUNT,
+    [PSAB_R2] = XBOX_BTN_COUNT + 1,
+};
 
 static int8_t type = -1;
 
@@ -249,7 +264,14 @@ bool read(controller_t *controller) {
       // We surely have buttons
       uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
       const uint8_t *buttons = dsButtons;
-      if (type == PSCTRL_GUITHERO) { buttons = ghButtons; }
+      if (type == PSCTRL_GUITHERO) {
+        buttons = ghButtons;
+      } else if (isMidi) {
+        // Copy analog buttons to all_axis
+        for (int i = 0; i < sizeof(dsAxis); i++) {
+          controller->all_axis[i] = in[i+9];
+        }
+      }
       uint8_t btn;
       for (int i = 0; i < XBOX_BTN_COUNT; i++) {
         btn = buttons[i];
@@ -270,6 +292,14 @@ bool read(controller_t *controller) {
             controller->r_x = in[GH_WHAMMY + 9];
             controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
           }
+        }
+        if (isMidi) {
+          controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
+          controller->all_axis[XBOX_BTN_COUNT+1] = controller->rt;
+          controller->all_axis[XBOX_BTN_COUNT+2] = (controller->l_x>>8) + 128;
+          controller->all_axis[XBOX_BTN_COUNT+3] = (controller->l_y>>8) + 128;
+          controller->all_axis[XBOX_BTN_COUNT+4] = (controller->r_x>>8) + 128;
+          controller->all_axis[XBOX_BTN_COUNT+5] = (controller->r_y>>8) + 128;
         }
       }
 

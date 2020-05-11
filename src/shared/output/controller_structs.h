@@ -4,6 +4,8 @@
 #define USB_DEVICE_ONLY
 #define USB_CAN_BE_DEVICE
 #include <LUFA/Drivers/USB/Class/Common/HIDClassCommon.h>
+#include "usb/Descriptors.h"
+#include "../controller/controller_defines.h"
 #include <stdbool.h>
 /** Type define for the gamepad HID report structure, for creating and sending
  * HID reports to the host PC. This mirrors the layout described to the host in
@@ -41,4 +43,5 @@ typedef union {
   USB_KeyboardReport_Data_t keyboard;
   USB_PS3Report_Data_t ps3;
   USB_XInputReport_Data_t xinput;
+  MIDI_EventPacket_t midi[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
 } output_report_size_t;

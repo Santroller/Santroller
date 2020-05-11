@@ -83,8 +83,14 @@ typedef struct {
   uint32_t ghColours[3];
 } leds_t;
 typedef struct {
+  uint8_t midi_type[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  uint8_t note[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  uint8_t channel[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+} midi_t;
+typedef struct {
   uint8_t threshold_drums;
   leds_t leds;
+  midi_t midi;
 } new_items_t;
 typedef struct {
   main_config_t main;

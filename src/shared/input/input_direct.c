@@ -6,12 +6,6 @@
 #include <stdlib.h>
 pin_t pinData[16];
 int validPins = 0;
-typedef struct {
-  uint16_t buttons;
-  uint8_t triggers[2];
-  int16_t sticks[4];
-  ledstate_t leds;
-} controller_a_t;
 void direct_init() {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;

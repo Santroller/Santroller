@@ -16,3 +16,9 @@ typedef struct {
   int16_t r_y;
   ledstate_t leds;
 } controller_t;
+typedef struct {
+  uint16_t buttons;
+  uint8_t triggers[2];
+  int16_t sticks[4];
+  ledstate_t leds;
+} controller_a_t;

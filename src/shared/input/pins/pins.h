@@ -11,6 +11,7 @@ typedef struct {
   volatile uint8_t *port;
   uint16_t pmask;
   bool eq;
+  uint8_t offset;
 } pin_t;
 typedef struct {
   uint8_t srb;

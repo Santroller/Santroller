@@ -26,9 +26,15 @@ void led_tick(controller_t *controller) {
         if (ghIdx >= 2) col = config.new_items.leds.ghColours[ghIdx - 2];
       }
 
-      if ((col == Black && bit_check(controller->buttons, button))) {
-        col = config.new_items.leds.colours[i];
+      bool active;
+      if (button < XBOX_BTN_COUNT) {
+        active = bit_check(controller->buttons, button);
+      } else if (button > XBOX_BTN_COUNT+2) {
+        active = ((((controller_a_t *)controller)->sticks[button - XBOX_BTN_COUNT - 2])&0xffff) > config.axis.threshold_trigger;
+      } else {
+        active = (((controller_a_t *)controller)->triggers[button - XBOX_BTN_COUNT]) > config.axis.threshold_trigger;;
       }
+      if ((col == Black && active)) { col = config.new_items.leds.colours[i]; }
     }
     apa102_set_led(rgb(col));
   }

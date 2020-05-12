@@ -53,7 +53,6 @@ void write_usb(uint8_t data) {
 }
 int main(void) {
   load_config();
-  init_serial();
   UCSR0B = 0;
   UCSR0A = 0;
   UCSR0C = 0;
@@ -68,7 +67,7 @@ int main(void) {
   while (1) {
     input_tick(&controller);
     uint16_t size;
-    create_report(report, &size, controller);
+    create_report(report, &size, &controller);
     if (memcmp(report, prev_report, size) != 0) {
       controller_index = 0;
       loop_until_bit_is_set(UCSR0A, UDRE0);

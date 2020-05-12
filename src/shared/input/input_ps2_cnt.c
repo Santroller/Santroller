@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include "../config/eeprom.h"
 // PIN: Uno      - SPI PIN - Micro
 // CMD: Pin 11   - MOSI    - 16
 // DATA: Pin 12  - MISO    - 14
@@ -25,6 +26,20 @@ static const uint8_t cmd_set_pressures[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
 static const uint8_t poll[] = {0x01, 0x42, 0x00};
 
 #define INVALID 0xFF
+static const uint8_t dsAxis[] = {
+    [PSAB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+    [PSAB_PAD_LEFT] = XBOX_DPAD_LEFT,
+    [PSAB_PAD_UP] = XBOX_DPAD_UP,
+    [PSAB_PAD_DOWN] = XBOX_DPAD_DOWN,
+    [PSAB_TRIANGLE] = XBOX_Y,
+    [PSAB_CIRCLE] = XBOX_B,
+    [PSAB_CROSS] = XBOX_A,
+    [PSAB_SQUARE] = XBOX_X,
+    [PSAB_L1] = XBOX_LB,
+    [PSAB_R1] = XBOX_RB,
+    [PSAB_L2] = INVALID,
+    [PSAB_R2] = INVALID,
+};
 static const uint8_t dsButtons[] = {[PSB_SELECT] = XBOX_BACK,
                                     [PSB_L3] = XBOX_LEFT_STICK,
                                     [PSB_R3] = XBOX_RIGHT_STICK,
@@ -249,7 +264,14 @@ bool read(controller_t *controller) {
       // We surely have buttons
       uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
       const uint8_t *buttons = dsButtons;
-      if (type == PSCTRL_GUITHERO) { buttons = ghButtons; }
+     if (type == PSCTRL_GUITHERO) {
+        buttons = ghButtons;
+      } else if (config.main.sub_type >= MIDI_GUITAR) {
+        // Copy analog buttons to all_axis
+        for (int i = 0; i < sizeof(dsAxis); i++) {
+          controller->all_axis[i] = in[i+9];
+        }
+      }
       uint8_t btn;
       for (int i = 0; i < XBOX_BTN_COUNT; i++) {
         btn = buttons[i];
@@ -271,6 +293,12 @@ bool read(controller_t *controller) {
             controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
           }
         }
+        controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
+        controller->all_axis[XBOX_BTN_COUNT+1] = controller->rt;
+        controller->all_axis[XBOX_BTN_COUNT+2] = (controller->l_x>>8) + 128;
+        controller->all_axis[XBOX_BTN_COUNT+3] = (controller->l_y>>8) + 128;
+        controller->all_axis[XBOX_BTN_COUNT+4] = (controller->r_x>>8) + 128;
+        controller->all_axis[XBOX_BTN_COUNT+5] = (controller->r_y>>8) + 128;
       }
 
       ret = true;
@@ -318,7 +346,7 @@ void ps2_cnt_tick(controller_t *controller) {
     // Dualshock one controllers don't have config mode
     if (send_cmd(cmd_enter_config, sizeof(cmd_enter_config))) {
       spcr = spcr_ds2;
-      spsr = spsr_ds2;
+      // spsr = spsr_ds2;
       type = get_type();
       // Enable analog sticks
       send_cmd(cmd_set_mode, sizeof(cmd_set_mode));

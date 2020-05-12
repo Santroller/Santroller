@@ -16,6 +16,7 @@ void load_config(void) {
     if (config.main.version < 2) {
         config.new_items.threshold_drums = DRUM_THRESHOLD;
         memcpy_P(&config.new_items.leds, &default_config.new_items.leds, sizeof(default_config.new_items.leds));
+        memcpy_P(&config.new_items.midi, &default_config.new_items.midi, sizeof(default_config.new_items.midi));
         config.main.version = 2;
         write_config();
     }

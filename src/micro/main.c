@@ -72,7 +72,6 @@ controller_t controller;
 output_report_size_t report;
 int main(void) {
   load_config();
-  init_serial();
   device_type = config.main.sub_type;
   input_init();
   report_init();
@@ -82,7 +81,7 @@ int main(void) {
   uint16_t rec;
   while (true) {
     input_tick(&controller);
-    create_report(&report, &size, controller);
+    create_report(&report, &size, &controller);
     if (memcmp(&report, &last_report, size) != 0) {
       memcpy(&last_report, &report, size);
       Endpoint_SelectEndpoint(HID_EPADDR_IN);

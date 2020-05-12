@@ -59,6 +59,7 @@ void guitar_init(void) {
 }
 int16_t r_x;
 void guitar_tick(controller_t *controller) {
+  if (is_not_guitar()) return;
   r_x = controller->r_x;
   // Whammy needs to be scaled so that it is picked up
   if (r_x > 0) r_x = 0;

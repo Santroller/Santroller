@@ -3,8 +3,9 @@
 #define __INCLUDE_FROM_USB_DRIVER
 #define USB_DEVICE_ONLY
 #define USB_CAN_BE_DEVICE
-#include <LUFA/Drivers/USB/Class/Common/HIDClassCommon.h>
+#include "usb/Descriptors.h"
 #include <stdbool.h>
+#include "../controller/controller.h"
 /** Type define for the gamepad HID report structure, for creating and sending
  * HID reports to the host PC. This mirrors the layout described to the host in
  * the HID report descriptor, in Descriptors.c.
@@ -37,8 +38,12 @@ typedef struct {
   int16_t r_y;
   uint8_t reserved_1[6];
 } USB_XInputReport_Data_t;
+typedef struct {
+  MIDI_EventPacket_t midi[XBOX_AXIS_COUNT+XBOX_BTN_COUNT+10];
+} USB_MIDI_Data_t;
 typedef union {
   USB_KeyboardReport_Data_t keyboard;
   USB_PS3Report_Data_t ps3;
   USB_XInputReport_Data_t xinput;
+  USB_MIDI_Data_t midi;
 } output_report_size_t;

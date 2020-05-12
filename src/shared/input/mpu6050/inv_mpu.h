@@ -111,6 +111,5 @@ int8_t mpu_load_firmware(unsigned short length, const unsigned char *firmware, u
 
 int8_t mpu_reg_dump(void);
 int8_t mpu_read_reg(unsigned char reg, unsigned char *data);
-int8_t mpu_run_self_test(long *gyro, long *accel);
 int8_t mpu_run_6500_self_test(long *gyro, long *accel, unsigned char debug);
 int8_t mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));

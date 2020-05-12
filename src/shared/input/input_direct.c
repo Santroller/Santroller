@@ -4,14 +4,9 @@
 #include "input_guitar.h"
 #include "pins/pins.h"
 #include <stdlib.h>
+#include "../output/usb/Descriptors.h"
 pin_t pinData[16];
 int validPins = 0;
-typedef struct {
-  uint16_t buttons;
-  uint8_t triggers[2];
-  int16_t sticks[4];
-  ledstate_t leds;
-} controller_a_t;
 void direct_init() {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
@@ -21,6 +16,7 @@ void direct_init() {
       if (pins[i] != INVALID_PIN) {
         bool is_fret = (i >= XBOX_A || i == XBOX_LB);
         pin_t pin = {};
+        pin.offset = i;
         pin.mask = digitalPinToBitMask(pins[i]);
         pin.port = portInputRegister(digitalPinToPort((pins[i])));
         pin.pmask = _BV(i);
@@ -91,7 +87,12 @@ void direct_tick(controller_t *controller) {
   pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
-    if ((*pin.port & pin.mask) == pin.eq) { controller->buttons |= pin.pmask; }
+   if ((*pin.port & pin.mask) == pin.eq) {
+      controller->buttons |= pin.pmask;
+      controller->all_axis[pin.offset] = MIDI_STANDARD_VELOCITY;
+    } else {
+      controller->all_axis[pin.offset] = 0;
+    }
   }
   analog_info_t info;
   for (int8_t i = 0; i < validAnalog; i++) {
@@ -100,6 +101,7 @@ void direct_tick(controller_t *controller) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;
       }
+      controller->all_axis[XBOX_BTN_COUNT+info.offset] = info.value;
     } else if (info.offset >= 2) {
       ((controller_a_t *)controller)->sticks[info.offset - 2] = info.value;
     } else {

@@ -6,11 +6,10 @@
 #include <stdlib.h>
 
 extern uint16_t id;
-config_t new_config;
-void init_serial(void) { new_config = config; }
 int buf_idx = 0;
 int cmd = 0;
 int size = 0;
+int subcmd = 0;
 static uint8_t *buf = NULL;
 uint8_t str[50];
 void get_info_buf(uint8_t data) {
@@ -47,229 +46,237 @@ void get_info_buf(uint8_t data) {
 void get_config_buf(uint8_t data) {
   size = 1;
   switch (data) {
-  case CONFIG_CURRENT_INPUT_TYPE:
+  case CONFIG_INPUT_TYPE:
     buf = &config.main.input_type;
     break;
-  case CONFIG_CURRENT_SUB_TYPE:
+  case CONFIG_SUB_TYPE:
     buf = &config.main.sub_type;
     break;
-  case CONFIG_INPUT_TYPE:
-    buf = &new_config.main.input_type;
-    break;
-  case CONFIG_SUB_TYPE:
-    buf = &new_config.main.sub_type;
-    break;
   case CONFIG_TILT_TYPE:
-    buf = &new_config.main.tilt_type;
+    buf = &config.main.tilt_type;
     break;
   case CONFIG_MPU_6050_ORIENTATION:
-    buf = &new_config.axis.mpu_6050_orientation;
+    buf = &config.axis.mpu_6050_orientation;
     break;
   case CONFIG_TILT_SENSITIVITY:
-    buf = (uint8_t *)&new_config.axis.tilt_sensitivity;
+    buf = (uint8_t *)&config.axis.tilt_sensitivity;
     break;
   case CONFIG_LED_TYPE:
-    buf = &new_config.main.fret_mode;
+    buf = &config.main.fret_mode;
     break;
   case CONFIG_MAP_JOY_DPAD:
-    buf = (uint8_t *)&new_config.main.map_joy_to_dpad;
+    buf = (uint8_t *)&config.main.map_joy_to_dpad;
     break;
   case CONFIG_MAP_START_SEL_HOME:
-    buf = (uint8_t *)&new_config.main.map_start_select_to_home;
+    buf = (uint8_t *)&config.main.map_start_select_to_home;
     break;
   case CONFIG_MAP_ACCEL_RIGHT:
-    buf = (uint8_t *)&new_config.main.map_accel_to_right;
+    buf = (uint8_t *)&config.main.map_accel_to_right;
     break;
   case CONFIG_PIN_UP:
-    buf = &new_config.pins.up;
+    buf = &config.pins.up;
     break;
   case CONFIG_PIN_DOWN:
-    buf = &new_config.pins.down;
+    buf = &config.pins.down;
     break;
   case CONFIG_PIN_LEFT:
-    buf = &new_config.pins.left;
+    buf = &config.pins.left;
     break;
   case CONFIG_PIN_RIGHT:
-    buf = &new_config.pins.right;
+    buf = &config.pins.right;
     break;
   case CONFIG_PIN_START:
-    buf = &new_config.pins.start;
+    buf = &config.pins.start;
     break;
   case CONFIG_PIN_SELECT:
-    buf = &new_config.pins.back;
+    buf = &config.pins.back;
     break;
   case CONFIG_PIN_LEFT_STICK:
-    buf = &new_config.pins.left_stick;
+    buf = &config.pins.left_stick;
     break;
   case CONFIG_PIN_RIGHT_STICK:
-    buf = &new_config.pins.right_stick;
+    buf = &config.pins.right_stick;
     break;
   case CONFIG_PIN_LB:
-    buf = &new_config.pins.LB;
+    buf = &config.pins.LB;
     break;
   case CONFIG_PIN_RB:
-    buf = &new_config.pins.RB;
+    buf = &config.pins.RB;
     break;
   case CONFIG_PIN_HOME:
-    buf = &new_config.pins.home;
+    buf = &config.pins.home;
     break;
   case CONFIG_PIN_CAPTURE:
-    buf = &new_config.pins.capture;
+    buf = &config.pins.capture;
     break;
   case CONFIG_PIN_A:
-    buf = &new_config.pins.a;
+    buf = &config.pins.a;
     break;
   case CONFIG_PIN_B:
-    buf = &new_config.pins.b;
+    buf = &config.pins.b;
     break;
   case CONFIG_PIN_X:
-    buf = &new_config.pins.x;
+    buf = &config.pins.x;
     break;
   case CONFIG_PIN_Y:
-    buf = &new_config.pins.y;
+    buf = &config.pins.y;
     break;
   case CONFIG_PIN_LT:
-    buf = &new_config.pins.lt.pin;
+    buf = &config.pins.lt.pin;
     break;
   case CONFIG_PIN_RT:
-    buf = &new_config.pins.rt.pin;
+    buf = &config.pins.rt.pin;
     break;
   case CONFIG_PIN_L_X:
-    buf = &new_config.pins.l_x.pin;
+    buf = &config.pins.l_x.pin;
     break;
   case CONFIG_PIN_L_Y:
-    buf = &new_config.pins.l_y.pin;
+    buf = &config.pins.l_y.pin;
     break;
   case CONFIG_PIN_R_X:
-    buf = &new_config.pins.r_x.pin;
+    buf = &config.pins.r_x.pin;
     break;
   case CONFIG_PIN_R_Y:
-    buf = &new_config.pins.r_y.pin;
+    buf = &config.pins.r_y.pin;
     break;
   case CONFIG_KEY_UP:
-    buf = &new_config.keys.up;
+    buf = &config.keys.up;
     break;
   case CONFIG_KEY_DOWN:
-    buf = &new_config.keys.down;
+    buf = &config.keys.down;
     break;
   case CONFIG_KEY_LEFT:
-    buf = &new_config.keys.left;
+    buf = &config.keys.left;
     break;
   case CONFIG_KEY_RIGHT:
-    buf = &new_config.keys.right;
+    buf = &config.keys.right;
     break;
   case CONFIG_KEY_START:
-    buf = &new_config.keys.start;
+    buf = &config.keys.start;
     break;
   case CONFIG_KEY_SELECT:
-    buf = &new_config.keys.back;
+    buf = &config.keys.back;
     break;
   case CONFIG_KEY_LEFT_STICK:
-    buf = &new_config.keys.left_stick;
+    buf = &config.keys.left_stick;
     break;
   case CONFIG_KEY_RIGHT_STICK:
-    buf = &new_config.keys.right_stick;
+    buf = &config.keys.right_stick;
     break;
   case CONFIG_KEY_LB:
-    buf = &new_config.keys.LB;
+    buf = &config.keys.LB;
     break;
   case CONFIG_KEY_RB:
-    buf = &new_config.keys.RB;
+    buf = &config.keys.RB;
     break;
   case CONFIG_KEY_HOME:
-    buf = &new_config.keys.home;
+    buf = &config.keys.home;
     break;
   case CONFIG_KEY_CAPTURE:
-    buf = &new_config.keys.capture;
+    buf = &config.keys.capture;
     break;
   case CONFIG_KEY_A:
-    buf = &new_config.keys.a;
+    buf = &config.keys.a;
     break;
   case CONFIG_KEY_B:
-    buf = &new_config.keys.b;
+    buf = &config.keys.b;
     break;
   case CONFIG_KEY_X:
-    buf = &new_config.keys.x;
+    buf = &config.keys.x;
     break;
   case CONFIG_KEY_Y:
-    buf = &new_config.keys.y;
+    buf = &config.keys.y;
     break;
   case CONFIG_KEY_LT:
-    buf = &new_config.keys.lt;
+    buf = &config.keys.lt;
     break;
   case CONFIG_KEY_RT:
-    buf = &new_config.keys.rt;
+    buf = &config.keys.rt;
     break;
   case CONFIG_KEY_L_X:
     size = 2;
-    buf = &new_config.keys.l_x.neg;
+    buf = &config.keys.l_x.neg;
     break;
   case CONFIG_KEY_L_Y:
     size = 2;
-    buf = &new_config.keys.l_y.neg;
+    buf = &config.keys.l_y.neg;
     break;
   case CONFIG_KEY_R_X:
     size = 2;
-    buf = &new_config.keys.r_x.neg;
+    buf = &config.keys.r_x.neg;
     break;
   case CONFIG_KEY_R_Y:
     size = 2;
-    buf = &new_config.keys.r_y.neg;
+    buf = &config.keys.r_y.neg;
     break;
   case CONFIG_AXIS_INVERT_LT:
-    buf = (uint8_t *)&new_config.pins.lt.inverted;
+    buf = (uint8_t *)&config.pins.lt.inverted;
     break;
   case CONFIG_AXIS_INVERT_RT:
-    buf = (uint8_t *)&new_config.pins.rt.inverted;
+    buf = (uint8_t *)&config.pins.rt.inverted;
     break;
   case CONFIG_AXIS_INVERT_L_X:
-    buf = (uint8_t *)&new_config.pins.l_x.inverted;
+    buf = (uint8_t *)&config.pins.l_x.inverted;
     break;
   case CONFIG_AXIS_INVERT_L_Y:
-    buf = (uint8_t *)&new_config.pins.l_y.inverted;
+    buf = (uint8_t *)&config.pins.l_y.inverted;
     break;
   case CONFIG_AXIS_INVERT_R_X:
-    buf = (uint8_t *)&new_config.pins.r_x.inverted;
+    buf = (uint8_t *)&config.pins.r_x.inverted;
     break;
   case CONFIG_AXIS_INVERT_R_Y:
-    buf = (uint8_t *)&new_config.pins.r_y.inverted;
+    buf = (uint8_t *)&config.pins.r_y.inverted;
     break;
   case CONFIG_THRESHOLD_JOY:
-    buf = (uint8_t *)&new_config.axis.threshold_joy;
+    buf = (uint8_t *)&config.axis.threshold_joy;
     break;
   case CONFIG_THRESHOLD_TRIGGER:
-    buf = (uint8_t *)&new_config.axis.threshold_trigger;
+    buf = (uint8_t *)&config.axis.threshold_trigger;
     break;
   case CONFIG_THRESHOLD_DRUM:
-    buf = (uint8_t *)&new_config.new_items.threshold_drums;
+    buf = (uint8_t *)&config.new_items.threshold_drums;
     break;
   case CONFIG_LED_COLOURS:
-    buf = (uint8_t *)&new_config.new_items.leds.colours;
-    size = sizeof(new_config.new_items.leds.colours);
+    size = sizeof(config.new_items.leds.colours);
+    buf = (uint8_t *)&config.new_items.leds.colours;
+    subcmd = data;
+    size = 0;
     break;
   case CONFIG_LED_GH_COLOURS:
-    buf = (uint8_t *)&new_config.new_items.leds.ghColours;
-    size = sizeof(new_config.new_items.leds.ghColours);
+    size = sizeof(config.new_items.leds.ghColours);
+    buf = (uint8_t *)&config.new_items.leds.ghColours;
+    subcmd = data;
+    size = 0;
     break;
   case CONFIG_LED_PINS:
-    buf = (uint8_t *)&new_config.new_items.leds.pins;
-    size = sizeof(new_config.new_items.leds.pins);
+    size = sizeof(config.new_items.leds.pins);
+    buf = (uint8_t *)&config.new_items.leds.pins;
+    subcmd = data;
+    size = 0;
     break;
+    // case CONFIG_MIDI_CHANNEL:
+    //   buf = (uint8_t *)&config.new_items.midi.channel;
+    //   subcmd = data;
+    //   size = 0;
+    //   break;
+    // case CONFIG_MIDI_NOTE:
+    //   buf = (uint8_t *)&config.new_items.midi.note;
+    //   subcmd = data;
+    //   size = 0;
+    //   break;
+    // case CONFIG_MIDI_TYPE:
+    //   buf = (uint8_t *)&config.new_items.midi.midi_type;
+    //   subcmd = data;
+    //   size = 0;
   }
 }
 void process_serial(uint8_t data) {
   if (cmd == 0) {
     cmd = data;
     size = 0;
+    subcmd = 0;
     switch (cmd) {
-    case COMMAND_START_CONFIG:
-      new_config = config;
-      write_usb('\r');
-      write_usb('\n');
-      cmd = 0;
-      break;
     case COMMAND_APPLY_CONFIG:
-      config = new_config;
       write_config();
       reboot();
       break;
@@ -301,16 +308,47 @@ void process_serial(uint8_t data) {
     }
     return;
   } else if (size == 0) {
-    switch (cmd) {
-    case COMMAND_WRITE_CONFIG_VALUE:
-      get_config_buf(data);
-      return;
-    case COMMAND_READ_INFO:
-      get_info_buf(data);
-      break;
-    case COMMAND_READ_CONFIG_VALUE:
-      get_config_buf(data);
-      break;
+    if (subcmd) {
+      switch (subcmd) {
+      case CONFIG_LED_COLOURS:
+        buf += data * 4;
+        size = 4;
+        break;
+      case CONFIG_LED_GH_COLOURS:
+        buf += data * 4;
+        size = 4;
+        break;
+      case CONFIG_LED_PINS:
+        buf += data;
+        size = 1;
+        break;
+      case CONFIG_MIDI_CHANNEL:
+        buf += data;
+        size = 1;
+        break;
+      case CONFIG_MIDI_NOTE:
+        buf += data;
+        size = 1;
+        break;
+      case CONFIG_MIDI_TYPE:
+        buf += data;
+        size = 1;
+        break;
+      }
+      if (cmd == COMMAND_WRITE_CONFIG_VALUE) { return; }
+    } else {
+      switch (cmd) {
+      case COMMAND_WRITE_CONFIG_VALUE:
+        get_config_buf(data);
+        return;
+      case COMMAND_READ_INFO:
+        get_info_buf(data);
+        break;
+      case COMMAND_READ_CONFIG_VALUE:
+        get_config_buf(data);
+        if (subcmd) { return; }
+        break;
+      }
     }
     while (size) {
       write_usb(*(buf++));
@@ -321,6 +359,7 @@ void process_serial(uint8_t data) {
     size--;
   }
   if (size == 0) {
+    if (subcmd == CONFIG_LED_GH_COLOURS) { write_config(); }
     write_usb('\r');
     write_usb('\n');
     cmd = 0;

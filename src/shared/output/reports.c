@@ -59,18 +59,18 @@ void check_joy_key(int neg, int pos, int val, int thresh, uint8_t *used,
   }
 }
 void create_xinput_report(void *ReportData, uint16_t *const ReportSize,
-                          controller_t controller) {
+                          controller_t *controller) {
   *ReportSize = sizeof(USB_XInputReport_Data_t);
 
   USB_XInputReport_Data_t *JoystickReport =
       (USB_XInputReport_Data_t *)ReportData;
   JoystickReport->rsize = sizeof(USB_XInputReport_Data_t);
   // Don't copy the led info tagged on the end
-  memcpy(&JoystickReport->buttons, &controller,
+  memcpy(&JoystickReport->buttons, controller,
          sizeof(controller_t) - sizeof(ledstate_t));
 }
 void create_keyboard_report(void *ReportData, uint16_t *const ReportSize,
-                            controller_t controller) {
+                            controller_t *controller) {
   *ReportSize = sizeof(USB_KeyboardReport_Data_t);
   USB_KeyboardReport_Data_t *KeyboardReport =
       (USB_KeyboardReport_Data_t *)ReportData;
@@ -78,7 +78,7 @@ void create_keyboard_report(void *ReportData, uint16_t *const ReportSize,
   uint8_t *keys = (uint8_t *)&config.keys;
   for (int i = 0; i <= XBOX_Y && usedKeys < SIMULTANEOUS_KEYS; i++) {
     uint8_t binding = keys[i];
-    if (binding && bit_check(controller.buttons, i)) {
+    if (binding && bit_check(controller->buttons, i)) {
       KeyboardReport->KeyCode[usedKeys++] = binding;
     }
   }
@@ -90,80 +90,108 @@ void create_keyboard_report(void *ReportData, uint16_t *const ReportSize,
   CHECK_TRIGGER_KEY(rt);
 }
 void create_ps3_report(void *ReportData, uint16_t *const ReportSize,
-                       controller_t controller) {
+                       controller_t *controller) {
   *ReportSize = sizeof(USB_PS3Report_Data_t);
   USB_PS3Report_Data_t *JoystickReport = (USB_PS3Report_Data_t *)ReportData;
   uint8_t button;
   for (uint8_t i = 0; i < sizeof(ps3ButtonBindings); i++) {
     button = ps3ButtonBindings[i];
     if (button == 0xff) continue;
-    bool bit_set = bit_check(controller.buttons, button);
+    bool bit_set = bit_check(controller->buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
     if (i < currentAxisBindingsLen) {
       button = ps3AxisBindings[i];
       if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR &&
           i < sizeof(ghAxisBindings2)) {
         button = ghAxisBindings2[i];
-        bit_set |= bit_check(controller.buttons, button);
+        bit_set |= bit_check(controller->buttons, button);
       }
       JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
     }
   }
 
   // Hat Switch
-  button = controller.buttons & 0xF;
+  button = controller->buttons & 0xF;
   JoystickReport->hat = button > 0x0a ? 0x08 : hat_bindings[button];
 
   // Tilt / whammy
-  bool tilt = controller.r_y == 32767;
+  bool tilt = controller->r_y == 32767;
   if (config.main.sub_type == PS3_GUITAR_HERO_GUITAR) {
-    JoystickReport->r_x = (controller.r_x >> 8) + 128;
+    JoystickReport->r_x = (controller->r_x >> 8) + 128;
     // GH PS3 guitars have a tilt axis
     JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
   } else if (config.main.sub_type == PS3_ROCK_BAND_GUITAR ||
              config.main.sub_type == WII_ROCK_BAND_GUITAR) {
-    JoystickReport->r_x = 128 - (controller.r_x >> 8);
+    JoystickReport->r_x = 128 - (controller->r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
     // r_y is the tone switch. Since lt isnt used, but r_y gets used by tilt, we
     // map fx to lt, and then fix it here
-    JoystickReport->r_y = 128 - controller.lt;
+    JoystickReport->r_y = 128 - controller->lt;
   }
   if (config.main.sub_type == PS3_GAMEPAD ||
       config.main.sub_type == SWITCH_GAMEPAD) {
-    bit_write(controller.lt > 50, JoystickReport->buttons, SWITCH_L);
-    bit_write(controller.rt > 50, JoystickReport->buttons, SWITCH_R);
-    JoystickReport->axis[4] = controller.lt;
-    JoystickReport->axis[5] = controller.rt;
-    JoystickReport->l_x = (controller.l_x >> 8) + 128;
-    JoystickReport->l_y = (controller.l_y >> 8) + 128;
-    JoystickReport->r_x = (controller.r_x >> 8) + 128;
-    JoystickReport->r_y = (controller.r_y >> 8) + 128;
+    bit_write(controller->lt > 50, JoystickReport->buttons, SWITCH_L);
+    bit_write(controller->rt > 50, JoystickReport->buttons, SWITCH_R);
+    JoystickReport->axis[4] = controller->lt;
+    JoystickReport->axis[5] = controller->rt;
+    JoystickReport->l_x = (controller->l_x >> 8) + 128;
+    JoystickReport->l_y = (controller->l_y >> 8) + 128;
+    JoystickReport->r_x = (controller->r_x >> 8) + 128;
+    JoystickReport->r_y = (controller->r_y >> 8) + 128;
   } else {
     // l_x and l_y are unused on guitars and drums. Center them.
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
   }
 }
+uint8_t lastmidi[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
 void create_midi_report(void *ReportData, uint16_t *const ReportSize,
-                        controller_t controller) {
-  *ReportSize = sizeof(MIDI_EventPacket_t);
-  MIDI_EventPacket_t *data = (MIDI_EventPacket_t *)ReportData;
-  // Channel 10(percussion)
-  uint8_t channel = MIDI_CHANNEL(10);
-  uint8_t midipitch = 0x3C;
-  uint8_t midicommand = bit_check(controller.buttons, XBOX_A)
-                            ? MIDI_COMMAND_NOTE_ON
-                            : MIDI_COMMAND_NOTE_OFF;
-  data->Event = MIDI_EVENT(0, midicommand);
-  data->Data1 = midicommand | channel;
-  data->Data2 = midipitch;
-  data->Data3 = MIDI_STANDARD_VELOCITY;
+                        controller_t *controller) {
+  USB_MIDI_Data_t *data = ReportData;
+  uint8_t idx = 0;
+  uint8_t velCh[10];
+  for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
+    if (config.new_items.midi.midi_type[i] != NO_MIDI) {
+      // Channel 10(percussion)
+      uint8_t channel = config.new_items.midi.channel[i];
+      uint8_t midipitch = config.new_items.midi.note[i];
+      uint8_t midicommand = MIDI_COMMAND_CONTROL_CHANGE;
+      uint8_t vel = controller->all_axis[i] >> 1;
+      if (lastmidi[i] == vel) { continue; }
+      if (config.new_items.midi.midi_type[i] == NOTE) {
+        if (vel == 0) {
+          midicommand = MIDI_COMMAND_NOTE_OFF;
+        } else if (lastmidi[i] == 0) {
+          midicommand = MIDI_COMMAND_NOTE_ON;
+        } else {
+          if (vel > velCh[channel]) velCh[channel] = vel;
+          continue;
+        }
+      }
+      lastmidi[i] = vel;
+      data->midi[idx].Event = MIDI_EVENT(0, midicommand);
+      data->midi[idx].Data1 = midicommand | channel;
+      data->midi[idx].Data2 = midipitch;
+      data->midi[idx].Data3 = vel;
+      idx++;
+    }
+  }
+  for (uint8_t i = 0; i < 10; i++) {
+    if (velCh[i]==0) continue;
+    data->midi[idx].Event = MIDI_EVENT(0, MIDI_COMMAND_CHANNEL_PRESSURE);
+    data->midi[idx].Data1 = MIDI_COMMAND_CHANNEL_PRESSURE | i;
+    data->midi[idx].Data2 = velCh[i];
+    data->midi[idx].Data3 = 0;
+    idx++;
+  }
+
+  *ReportSize = idx * sizeof(MIDI_EventPacket_t);
 }
 void (*create_report)(void *ReportData, uint16_t *const ReportSize,
-                      controller_t controller) = NULL;
+                      controller_t *controller) = NULL;
 
 void report_init(void) {
   if (config.main.sub_type > SWITCH_GAMEPAD) {

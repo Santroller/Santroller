@@ -15,9 +15,7 @@
 #define INFO_VERSION 0
 #define INFO_SIGNATURE 1
 #define INFO_MAIN_MCU 2
-#define INFO_USB_MCU 3
 #define INFO_CPU_FREQ 4
-#define INFO_USB_CPU_FREQ 5
 #define INFO_BOARD 6
 #define INFO_EXT 7
 

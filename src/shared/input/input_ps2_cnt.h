@@ -7,7 +7,8 @@ enum PsxControllerType {
   PSCTRL_DUALSHOCK_1,
   PSCTRL_DUALSHOCK_2,
   PSCTRL_DSWIRELESS,
-  PSCTRL_GUITHERO
+  PSCTRL_GUITHERO,
+  PSCTRL_NODEVICE
 };
 /** \brief Command Inter-Byte Delay (us)
  *

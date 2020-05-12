@@ -43,18 +43,28 @@ void drum_tick(controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
   read_buttons(controller, buttons);
   if (config.main.sub_type >= MIDI_GUITAR && bit_check(data[3], 1)) {
-    for (int i =0; i < XBOX_BTN_COUNT; i++) {
-      controller->all_axis[i] = 0;
-    }
-    uint8_t vel = (7-(data[3] >> 5)) << 5;
+    for (int i = 0; i < XBOX_BTN_COUNT; i++) { controller->all_axis[i] = 0; }
+    uint8_t vel = (7 - (data[3] >> 5)) << 5;
     uint8_t which = (data[2] & 0b01111100) >> 1;
     switch (which) {
-      case 0x1B: controller->all_axis[XBOX_RB] = vel; break;
-      case 0x19: controller->all_axis[XBOX_B] = vel; break;
-      case 0x11: controller->all_axis[XBOX_X] = vel; break;
-      case 0x0F: controller->all_axis[XBOX_Y] = vel; break;
-      case 0x1E: controller->all_axis[XBOX_LB] = vel; break;
-      case 0x12: controller->all_axis[XBOX_A] = vel; break;
+    case 0x1B:
+      controller->all_axis[XBOX_RB] = vel;
+      break;
+    case 0x19:
+      controller->all_axis[XBOX_B] = vel;
+      break;
+    case 0x11:
+      controller->all_axis[XBOX_X] = vel;
+      break;
+    case 0x0F:
+      controller->all_axis[XBOX_Y] = vel;
+      break;
+    case 0x1E:
+      controller->all_axis[XBOX_LB] = vel;
+      break;
+    case 0x12:
+      controller->all_axis[XBOX_A] = vel;
+      break;
     }
   }
   // Swap y and x!
@@ -195,56 +205,56 @@ void wii_ext_tick(controller_t *controller) {
   }
   if (readFunction) readFunction(controller, data);
   controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
-  controller->all_axis[XBOX_BTN_COUNT+1] = controller->rt;
-  controller->all_axis[XBOX_BTN_COUNT+2] = (controller->l_x >> 8) + 128;
-  controller->all_axis[XBOX_BTN_COUNT+3] = (controller->l_y >> 8) + 128;
-  controller->all_axis[XBOX_BTN_COUNT+4] = (controller->r_x >> 8) + 128;
-  controller->all_axis[XBOX_BTN_COUNT+5] = (controller->r_y >> 8) + 128;
+  controller->all_axis[XBOX_BTN_COUNT + 1] = controller->rt;
+  controller->all_axis[XBOX_BTN_COUNT + 2] = (controller->l_x >> 8) + 128;
+  controller->all_axis[XBOX_BTN_COUNT + 3] = (controller->l_y >> 8) + 128;
+  controller->all_axis[XBOX_BTN_COUNT + 4] = (controller->r_x >> 8) + 128;
+  controller->all_axis[XBOX_BTN_COUNT + 5] = (controller->r_y >> 8) + 128;
 }
 
 void get_wii_device_name(char *str) {
   switch (id) {
   case NUNCHUK:
-    strcpy(str, "Nunchuk");
+    strcpy_P(str, PSTR("Nunchuk"));
     break;
   case CLASSIC:
-    strcpy(str, "Classic Controller");
+    strcpy_P(str, PSTR("Classic Controller"));
     break;
   case CLASSIC_PRO:
-    strcpy(str, "Classic Controller Pro");
+    strcpy_P(str, PSTR("Classic Controller Pro"));
     break;
   case UDRAW:
-    strcpy(str, "THQ uDraw Tablet");
+    strcpy_P(str, PSTR("THQ uDraw Tablet"));
     break;
   case DRAWSOME:
-    strcpy(str, "Ubisoft Drawsome Tablet");
+    strcpy_P(str, PSTR("Ubisoft Drawsome Tablet"));
     break;
   case GUITAR:
-    strcpy(str, "Guitar Hero Guitar Controller");
+    strcpy_P(str, PSTR("Guitar Hero Guitar Controller"));
     break;
   case DRUMS:
-    strcpy(str, "Guitar Hero Drum Controller");
+    strcpy_P(str, PSTR("Guitar Hero Drum Controller"));
     break;
   case TURNTABLE:
-    strcpy(str, "DJ Hero Turntable");
+    strcpy_P(str, PSTR("DJ Hero Turntable"));
     break;
   case TATACON:
-    strcpy(str, "Taiko no Tatsujin controller");
+    strcpy_P(str, PSTR("Taiko no Tatsujin controller"));
     break;
   case MOTION_PLUS:
-    strcpy(str, "Motion Plus (No Passthrough)");
+    strcpy_P(str, PSTR("Motion Plus (No Passthrough)"));
     break;
   case MOTION_PLUS_NUNCHUK:
-    strcpy(str, "Motion Plus (Nunchuk Passthrough Mode)");
+    strcpy_P(str, PSTR("Motion Plus (Nunchuk Passthrough Mode)"));
     break;
   case MOTION_PLUS_CLASSIC:
-    strcpy(str, "Motion Plus (Classic Controller Passthrough Mode)");
+    strcpy_P(str, PSTR("Motion Plus (Classic Controller Passthrough Mode)"));
     break;
   case NO_DEVICE:
-    strcpy(str, "No Device");
+    strcpy_P(str, PSTR("No Device"));
     break;
   default:
-    strcpy(str, "Unknown Device");
+    strcpy_P(str, PSTR("Unknown Device"));
     break;
   }
 }

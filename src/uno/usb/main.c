@@ -37,13 +37,6 @@
 #include "../../shared/output/usb/API.h"
 #include "../../shared/util.h"
 
-const char *mcu = "";
-const char *freq = "";
-const char *board = ARDWIINO_BOARD;
-const char *version = VERSION;
-const char *signature = SIGNATURE;
-const char *usb_mcu = MCU;
-const char *usb_freq = STR(F_CPU);
 RingBuff_Data_t USBtoUSART_Buf[BUFFER_SIZE];
 RingBuff_Data_t USARTtoSER_Buf[BUFFER_SIZE];
 RingBuff_Data_t USARTtoHID_Buf[BUFFER_SIZE];
@@ -146,22 +139,6 @@ int main(void) {
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
             if (!is_ardwiino) {
               entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
-            } else if (lastCommand == COMMAND_READ_INFO) {
-              const char *c = NULL;
-              switch (b) {
-              case INFO_USB_MCU:
-                c = usb_mcu;
-                break;
-              case INFO_USB_CPU_FREQ:
-                c = usb_freq;
-                break;
-              }
-              if (c != NULL) {
-                while (*(c) != 0) {
-                  RingBuffer_Insert(&USARTtoSER_Buffer, *(c++));
-                }
-              }
-              lastCommand = 0;
             } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
               lastCommand = b;
             } else if (lastCommand == CONFIG_SUB_TYPE) {
@@ -181,8 +158,7 @@ int main(void) {
             } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
               jmpToBootloader = JUMP;
               reboot();
-            } else if (b == COMMAND_WRITE_CONFIG_VALUE ||
-                       b == COMMAND_READ_INFO) {
+            } else if (b == COMMAND_WRITE_CONFIG_VALUE) {
               lastCommand = b;
             }
           }

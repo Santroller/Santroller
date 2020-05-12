@@ -2,6 +2,7 @@
 #include "../input/input_direct.h"
 #include "../input/input_ps2_cnt.h"
 #include "../input/input_wii_ext.h"
+#include "../util.h"
 #include "usb/API.h"
 #include <stdlib.h>
 
@@ -11,36 +12,30 @@ int cmd = 0;
 int size = 0;
 int subcmd = 0;
 static uint8_t *buf = NULL;
-uint8_t str[50];
+static uint8_t str[50];
 void get_info_buf(uint8_t data) {
   switch (data) {
   case INFO_VERSION:
-    buf = (uint8_t *)version;
+    strcpy_P((char *)str, PSTR(VERSION));
     break;
   case INFO_SIGNATURE:
-    buf = (uint8_t *)signature;
+    strcpy_P((char *)str, PSTR(SIGNATURE));
     break;
   case INFO_MAIN_MCU:
-    buf = (uint8_t *)mcu;
-    break;
-  case INFO_USB_MCU:
-    buf = (uint8_t *)usb_mcu;
+    strcpy_P((char *)str, PSTR(MCU));
     break;
   case INFO_CPU_FREQ:
-    buf = (uint8_t *)freq;
-    break;
-  case INFO_USB_CPU_FREQ:
-    buf = (uint8_t *)usb_freq;
+    strcpy_P((char *)str, PSTR(STR(F_CPU)));
     break;
   case INFO_BOARD:
-    buf = (uint8_t *)board;
+    strcpy_P((char *)str, PSTR(ARDWIINO_BOARD));
     break;
   case INFO_EXT:
     if (config.main.input_type == WII) { get_wii_device_name((char *)str); }
     if (config.main.input_type == PS2) { get_ps2_cnt_name((char *)str); }
-    buf = str;
     break;
   }
+  buf = str;
   size = strlen((char *)buf);
 }
 void get_config_buf(uint8_t data) {
@@ -254,20 +249,21 @@ void get_config_buf(uint8_t data) {
     subcmd = data;
     size = 0;
     break;
-    // case CONFIG_MIDI_CHANNEL:
-    //   buf = (uint8_t *)&config.new_items.midi.channel;
-    //   subcmd = data;
-    //   size = 0;
-    //   break;
-    // case CONFIG_MIDI_NOTE:
-    //   buf = (uint8_t *)&config.new_items.midi.note;
-    //   subcmd = data;
-    //   size = 0;
-    //   break;
-    // case CONFIG_MIDI_TYPE:
-    //   buf = (uint8_t *)&config.new_items.midi.midi_type;
-    //   subcmd = data;
-    //   size = 0;
+  case CONFIG_MIDI_CHANNEL:
+    buf = (uint8_t *)&config.new_items.midi.channel;
+    subcmd = data;
+    size = 0;
+    break;
+  case CONFIG_MIDI_NOTE:
+    buf = (uint8_t *)&config.new_items.midi.note;
+    subcmd = data;
+    size = 0;
+    break;
+  case CONFIG_MIDI_TYPE:
+    buf = (uint8_t *)&config.new_items.midi.midi_type;
+    subcmd = data;
+    size = 0;
+    break;
   }
 }
 void process_serial(uint8_t data) {

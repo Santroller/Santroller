@@ -74,7 +74,7 @@ static const uint8_t ghButtons[] = {[PSB_SELECT] = XBOX_BACK,
                                     [GH_BLUE] = XBOX_X,
                                     [GH_ORANGE] = XBOX_LB};
 
-static int8_t type = -1;
+static uint8_t type = PSCTRL_UNKNOWN;
 
 static inline bool is_valid_reply(const uint8_t *status) {
   return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
@@ -357,27 +357,27 @@ void ps2_cnt_tick(controller_t *controller) {
       type = PSCTRL_DUALSHOCK_1;
     }
   }
-  if (!read(controller)) { type = -1; }
+  if (!read(controller)) { type = PSCTRL_UNKNOWN; }
 }
 void get_ps2_cnt_name(char *str) {
   switch (type) {
   case PSCTRL_GUITHERO:
-    strcpy(str, "Guitar Hero Controller");
+    strcpy_P(str, PSTR("Guitar Hero Controller"));
     break;
   case PSCTRL_DUALSHOCK_1:
-    strcpy(str, "DualShock 1 Controller");
+    strcpy_P(str, PSTR("DualShock 1 Controller"));
     break;
   case PSCTRL_DUALSHOCK_2:
-    strcpy(str, "DualShock 2 Controller");
+    strcpy_P(str, PSTR("DualShock 2 Controller"));
     break;
   case PSCTRL_DSWIRELESS:
-    strcpy(str, "Wireless Sony DualShock Controller");
+    strcpy_P(str, PSTR("Wireless Sony DualShock Controller"));
     break;
-  case -1:
-    strcpy(str, "No Controller");
+  case PSCTRL_UNKNOWN:
+    strcpy_P(str, PSTR("No Controller"));
     break;
   default:
-    strcpy(str, "Unknown Controller");
+    strcpy_P(str, PSTR("Unknown Controller"));
     break;
   }
 }

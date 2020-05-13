@@ -1,15 +1,8 @@
 #pragma once
-#include "../controller/controller.h"
-#include <stdbool.h>
-#include <stdint.h>
-enum PsxControllerType {
-  PS2_UNKNOWN_CONTROLLER = 0,
-  PS2_DUALSHOCK_1_CONTROLLER,
-  PS2_DUALSHOCK_2_CONTROLLER,
-  PS2_WIRELESS_SONY_DUALSHOCK_CONTROLLER,
-  PS2_GUITAR_HERO_CONTROLLER,
-  PS2_NO_DEVICE
-};
+#ifdef __AVR__
+#  include "../controller/controller.h"
+#  include <stdbool.h>
+#  include <stdint.h>
 /** \brief Command Inter-Byte Delay (us)
  *
  * Commands are several bytes long. This is the time to wait between two
@@ -18,7 +11,7 @@ enum PsxControllerType {
  * This should actually be done by watching the \a Acknowledge line, but we are
  * ignoring it at the moment.
  */
-#define INTER_CMD_BYTE_DELAY 15
+#  define INTER_CMD_BYTE_DELAY 15
 
 /** \brief Command timeout (ms)
  *
@@ -27,21 +20,21 @@ enum PsxControllerType {
  *
  * \sa COMMAND_RETRY_INTERVAL
  */
-#define COMMAND_TIMEOUT 250
+#  define COMMAND_TIMEOUT 250
 
 /** \brief Command Retry Interval (ms)
  *
  * When sending a command to the controller, if it does not succeed, it is
  * retried after this amount of time.
  */
-#define COMMAND_RETRY_INTERVAL 10
+#  define COMMAND_RETRY_INTERVAL 10
 
 /** \brief Attention Delay
  *
  * Time between attention being issued to the controller and the first clock
  * edge (us).
  */
-#define ATTN_DELAY 15
+#  define ATTN_DELAY 15
 enum PsxButton {
   PSB_SELECT,
   PSB_L3,
@@ -88,6 +81,14 @@ enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
 void ps2_cnt_init(void);
 void ps2_cnt_tick(controller_t *controller);
-#ifdef __AVR__
 extern uint8_t ps2_type;
 #endif
+
+enum PsxControllerType {
+  PS2_UNKNOWN_CONTROLLER = 0,
+  PS2_DUALSHOCK_1_CONTROLLER,
+  PS2_DUALSHOCK_2_CONTROLLER,
+  PS2_WIRELESS_SONY_DUALSHOCK_CONTROLLER,
+  PS2_GUITAR_HERO_CONTROLLER,
+  PS2_NO_DEVICE
+};

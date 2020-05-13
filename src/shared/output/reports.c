@@ -153,7 +153,7 @@ void create_midi_report(void *ReportData, uint16_t *const ReportSize,
   USB_MIDI_Data_t *data = ReportData;
   uint8_t idx = 0;
   for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
-    if (config.new_items.midi.midi_type[i] != NO_MIDI) {
+    if (config.new_items.midi.midi_type[i] != DISABLED) {
       // Channel 10(percussion)
       uint8_t channel = config.new_items.midi.channel[i];
       uint8_t midipitch = config.new_items.midi.note[i];

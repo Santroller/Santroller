@@ -62,7 +62,7 @@ enum fret_mode {
 };
 
 enum midi_type {
-  NO_MIDI,
+  DISABLED,
   NOTE,
-  PITCH
+  CONTROL_COMMAND
 };

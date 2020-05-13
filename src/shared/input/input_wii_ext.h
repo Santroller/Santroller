@@ -2,7 +2,9 @@
 #include "../controller/controller.h"
 #define I2C_ADDR 0x52 
 void wii_ext_tick(controller_t *controller);
+#ifdef __AVR__
 extern uint16_t wii_ext;
+#endif
 enum ext_type_t {
   WII_NUNCHUK = 0x0000,
   WII_CLASSIC_CONTROLLER = 0x0101,

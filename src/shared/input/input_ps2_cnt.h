@@ -88,4 +88,6 @@ enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
 void ps2_cnt_init(void);
 void ps2_cnt_tick(controller_t *controller);
+#ifdef __AVR__
 extern uint8_t ps2_type;
+#endif

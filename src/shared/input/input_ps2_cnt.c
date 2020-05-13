@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include "../output/usb/Descriptors.h"
 // PIN: Uno      - SPI PIN - Micro
 // CMD: Pin 11   - MOSI    - 16
 // DATA: Pin 12  - MISO    - 14
@@ -26,20 +27,6 @@ static const uint8_t cmd_set_pressures[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
 static const uint8_t poll[] = {0x01, 0x42, 0x00};
 
 #define INVALID 0xFF
-static const uint8_t dsAxis[] = {
-    [PSAB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
-    [PSAB_PAD_LEFT] = XBOX_DPAD_LEFT,
-    [PSAB_PAD_UP] = XBOX_DPAD_UP,
-    [PSAB_PAD_DOWN] = XBOX_DPAD_DOWN,
-    [PSAB_TRIANGLE] = XBOX_Y,
-    [PSAB_CIRCLE] = XBOX_B,
-    [PSAB_CROSS] = XBOX_A,
-    [PSAB_SQUARE] = XBOX_X,
-    [PSAB_L1] = XBOX_LB,
-    [PSAB_R1] = XBOX_RB,
-    [PSAB_L2] = INVALID,
-    [PSAB_R2] = INVALID,
-};
 static const uint8_t dsButtons[] = {[PSB_SELECT] = XBOX_BACK,
                                     [PSB_L3] = XBOX_LEFT_STICK,
                                     [PSB_R3] = XBOX_RIGHT_STICK,
@@ -270,6 +257,9 @@ bool read(controller_t *controller) {
         btn = buttons[i];
         if (btn != INVALID) {
           bit_write(bit_check(buttonWord, i), controller->buttons, btn);
+          if (config.main.sub_type >= MIDI_GUITAR) {
+            controller->all_axis[btn] = bit_check(buttonWord, i) ? MIDI_STANDARD_VELOCITY:0; 
+          }
         }
       }
 
@@ -287,9 +277,14 @@ bool read(controller_t *controller) {
           }
         }
         if (config.main.sub_type >= MIDI_GUITAR) {
-          for (int i = 0; i < sizeof(dsAxis); i++) {
-            controller->all_axis[i] = in[i + 9];
-          }
+          // Pressure isnt actually what we want, we need to sample the pressure
+          // after its hit, and after n milliseconds, and then the velocity is
+          // after n milliseconds. Do we actually care though? for (int i = 0; i
+          // < sizeof(dsAxis); i++) {
+          //   controller->all_axis[i] = in[i + 9];
+          // }
+          controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
+          controller->all_axis[XBOX_BTN_COUNT + 1] = controller->rt;
           controller->all_axis[XBOX_BTN_COUNT + 2] =
               (controller->l_x >> 8) + 128;
           controller->all_axis[XBOX_BTN_COUNT + 3] =

@@ -152,25 +152,16 @@ void create_midi_report(void *ReportData, uint16_t *const ReportSize,
                         controller_t *controller) {
   USB_MIDI_Data_t *data = ReportData;
   uint8_t idx = 0;
-  uint8_t velCh[10];
   for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
     if (config.new_items.midi.midi_type[i] != NO_MIDI) {
       // Channel 10(percussion)
       uint8_t channel = config.new_items.midi.channel[i];
       uint8_t midipitch = config.new_items.midi.note[i];
-      uint8_t midicommand = MIDI_COMMAND_CONTROL_CHANGE;
+      uint8_t midicommand = config.new_items.midi.midi_type[i] == NOTE
+                                ? MIDI_COMMAND_NOTE_ON
+                                : MIDI_COMMAND_CONTROL_CHANGE;
       uint8_t vel = controller->all_axis[i] >> 1;
-      if (lastmidi[i] == vel) { continue; }
-      if (config.new_items.midi.midi_type[i] == NOTE) {
-        if (vel == 0) {
-          midicommand = MIDI_COMMAND_NOTE_OFF;
-        } else if (lastmidi[i] == 0) {
-          midicommand = MIDI_COMMAND_NOTE_ON;
-        } else {
-          if (vel > velCh[channel]) velCh[channel] = vel;
-          continue;
-        }
-      }
+      if (lastmidi[i] == vel) continue;
       lastmidi[i] = vel;
       data->midi[idx].Event = MIDI_EVENT(0, midicommand);
       data->midi[idx].Data1 = midicommand | channel;
@@ -178,14 +169,6 @@ void create_midi_report(void *ReportData, uint16_t *const ReportSize,
       data->midi[idx].Data3 = vel;
       idx++;
     }
-  }
-  for (uint8_t i = 0; i < 10; i++) {
-    if (velCh[i]==0) continue;
-    data->midi[idx].Event = MIDI_EVENT(0, MIDI_COMMAND_CHANNEL_PRESSURE);
-    data->midi[idx].Data1 = MIDI_COMMAND_CHANNEL_PRESSURE | i;
-    data->midi[idx].Data2 = velCh[i];
-    data->midi[idx].Data3 = 0;
-    idx++;
   }
 
   *ReportSize = idx * sizeof(MIDI_EventPacket_t);

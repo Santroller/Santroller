@@ -5,7 +5,7 @@ void wii_ext_tick(controller_t *controller);
 #ifdef __AVR__
 extern uint16_t wii_ext;
 #endif
-enum ext_type_t {
+enum wii_ext_type {
   WII_NUNCHUK = 0x0000,
   WII_CLASSIC_CONTROLLER = 0x0101,
   WII_CLASSIC_CONTROLLER_PRO = 0x1101,

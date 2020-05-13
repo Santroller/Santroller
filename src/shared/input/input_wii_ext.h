@@ -1,18 +1,20 @@
 #pragma once
 #include "../controller/controller.h"
-#define I2C_ADDR 0x52
-#define NUNCHUK             0x0000
-#define CLASSIC             0x0101
-#define CLASSIC_PRO         0x1101
-#define UDRAW               0xF012
-#define DRAWSOME            0xF013
-#define GUITAR              0x0103
-#define DRUMS               0x1103
-#define TURNTABLE           0x3103
-#define TATACON             0x0111
-#define MOTION_PLUS         0x0405 
-#define MOTION_PLUS_NUNCHUK 0x0505
-#define MOTION_PLUS_CLASSIC 0x0705
-#define NO_DEVICE           0xFFFF
-void wii_ext_tick(controller_t* controller);
-void get_wii_device_name(char* buf);
+#define I2C_ADDR 0x52 
+void wii_ext_tick(controller_t *controller);
+extern uint16_t wii_ext;
+enum ext_type_t {
+  WII_NUNCHUK = 0x0000,
+  WII_CLASSIC_CONTROLLER = 0x0101,
+  WII_CLASSIC_CONTROLLER_PRO = 0x1101,
+  WII_THQ_UDRAW_TABLET = 0xF012,
+  WII_UBISOFT_DRAWSOME_TABLET = 0xF013,
+  WII_GUITAR_HERO_GUITAR_CONTROLLER = 0x0103,
+  WII_GUITAR_HERO_DRUM_CONTROLLER = 0x1103,
+  WII_DJ_HERO_TURNTABLE = 0x3103,
+  WII_TAIKO_NO_TATSUJIN_CONTROLLER = 0x0111,
+  WII_MOTION_PLUS_NO_PASSTHROUGH = 0x0405,
+  WII_MOTION_PLUS_NUNCHUK_PASSTHROUGH_MODE = 0x0505,
+  WII_MOTION_PLUS_CLASSIC_CONTROLLER_PASSTHROUGH_MODE = 0x0705,
+  WII_NO_DEVICE = 0xFFFF,
+};

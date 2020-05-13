@@ -15,7 +15,7 @@ uint8_t classic_bindings[16] = {
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t counter;
-uint16_t id = NO_DEVICE;
+uint16_t wii_ext = WII_NO_DEVICE;
 void (*readFunction)(controller_t *, uint8_t *) = NULL;
 
 void read_buttons(controller_t *controller, uint16_t buttons) {
@@ -28,7 +28,7 @@ void read_buttons(controller_t *controller, uint16_t buttons) {
 
 uint16_t read_ext_id(void) {
   uint8_t data[6];
-  if (twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data)) { return NO_DEVICE; }
+  if (twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data)) { return WII_NO_DEVICE; }
   // 0100 a420 0101 -> #1#######101
   // 0100 a420 0103 -> #1#######101
   return (data[0] & 0xf) << 12 | (data[4] & 0xf) << 8 | data[5];
@@ -136,44 +136,44 @@ void tatacon_tick(controller_t *controller, uint8_t *data) {
   read_buttons(controller, buttons);
 }
 void init_controller(void) {
-  id = read_ext_id();
-  if (id == NO_DEVICE) {
+  wii_ext = read_ext_id();
+  if (wii_ext == WII_NO_DEVICE) {
     _delay_us(10);
     write_byte(0xF0, 0x55);
     _delay_us(10);
     write_byte(0xFB, 0x00);
     _delay_us(10);
   }
-  id = read_ext_id();
-  if (id == CLASSIC || id == CLASSIC_PRO) {
+  wii_ext = read_ext_id();
+  if (wii_ext == WII_CLASSIC_CONTROLLER || wii_ext == WII_CLASSIC_CONTROLLER_PRO) {
     // Enable high-res mode
     write_byte(0xFE, 0x03);
     _delay_us(10);
   }
-  switch (id) {
-  case GUITAR:
+  switch (wii_ext) {
+  case WII_GUITAR_HERO_GUITAR_CONTROLLER:
     readFunction = guitar_cnt_tick;
     break;
-  case CLASSIC:
-  case CLASSIC_PRO:
+  case WII_CLASSIC_CONTROLLER:
+  case WII_CLASSIC_CONTROLLER_PRO:
     readFunction = classic_tick;
     break;
-  case NUNCHUK:
+  case WII_NUNCHUK:
     readFunction = nunchuk_tick;
     break;
-  case DRUMS:
+  case WII_GUITAR_HERO_DRUM_CONTROLLER:
     readFunction = drum_tick;
     break;
-  case UDRAW:
+  case WII_THQ_UDRAW_TABLET:
     readFunction = udraw_tick;
     break;
-  case DRAWSOME:
+  case WII_UBISOFT_DRAWSOME_TABLET:
     readFunction = drawsome_tick;
     break;
-  case TURNTABLE:
+  case WII_DJ_HERO_TURNTABLE:
     readFunction = dj_tick;
     break;
-  case TATACON:
+  case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
     readFunction = tatacon_tick;
     break;
   default:
@@ -197,7 +197,7 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 }
 void wii_ext_tick(controller_t *controller) {
   uint8_t data[8];
-  if (id == NO_DEVICE ||
+  if (wii_ext == WII_NO_DEVICE ||
       twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
     init_controller();
@@ -210,51 +210,4 @@ void wii_ext_tick(controller_t *controller) {
   controller->all_axis[XBOX_BTN_COUNT + 3] = (controller->l_y >> 8) + 128;
   controller->all_axis[XBOX_BTN_COUNT + 4] = (controller->r_x >> 8) + 128;
   controller->all_axis[XBOX_BTN_COUNT + 5] = (controller->r_y >> 8) + 128;
-}
-
-void get_wii_device_name(char *str) {
-  switch (id) {
-  case NUNCHUK:
-    strcpy_P(str, PSTR("Nunchuk"));
-    break;
-  case CLASSIC:
-    strcpy_P(str, PSTR("Classic Controller"));
-    break;
-  case CLASSIC_PRO:
-    strcpy_P(str, PSTR("Classic Controller Pro"));
-    break;
-  case UDRAW:
-    strcpy_P(str, PSTR("THQ uDraw Tablet"));
-    break;
-  case DRAWSOME:
-    strcpy_P(str, PSTR("Ubisoft Drawsome Tablet"));
-    break;
-  case GUITAR:
-    strcpy_P(str, PSTR("Guitar Hero Guitar Controller"));
-    break;
-  case DRUMS:
-    strcpy_P(str, PSTR("Guitar Hero Drum Controller"));
-    break;
-  case TURNTABLE:
-    strcpy_P(str, PSTR("DJ Hero Turntable"));
-    break;
-  case TATACON:
-    strcpy_P(str, PSTR("Taiko no Tatsujin controller"));
-    break;
-  case MOTION_PLUS:
-    strcpy_P(str, PSTR("Motion Plus (No Passthrough)"));
-    break;
-  case MOTION_PLUS_NUNCHUK:
-    strcpy_P(str, PSTR("Motion Plus (Nunchuk Passthrough Mode)"));
-    break;
-  case MOTION_PLUS_CLASSIC:
-    strcpy_P(str, PSTR("Motion Plus (Classic Controller Passthrough Mode)"));
-    break;
-  case NO_DEVICE:
-    strcpy_P(str, PSTR("No Device"));
-    break;
-  default:
-    strcpy_P(str, PSTR("Unknown Device"));
-    break;
-  }
 }

@@ -1,4 +1,5 @@
 #include "input_ps2_cnt.h"
+#include "../config/eeprom.h"
 #include "../util.h"
 #include "Arduino.h"
 #include "arduino_pins.h"
@@ -6,7 +7,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
-#include "../config/eeprom.h"
 // PIN: Uno      - SPI PIN - Micro
 // CMD: Pin 11   - MOSI    - 16
 // DATA: Pin 12  - MISO    - 14
@@ -74,7 +74,7 @@ static const uint8_t ghButtons[] = {[PSB_SELECT] = XBOX_BACK,
                                     [GH_BLUE] = XBOX_X,
                                     [GH_ORANGE] = XBOX_LB};
 
-static uint8_t type = PSCTRL_UNKNOWN;
+uint8_t ps2_type = PS2_NO_DEVICE;
 
 static inline bool is_valid_reply(const uint8_t *status) {
   return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
@@ -232,20 +232,20 @@ bool send_cmd(const uint8_t *buf, uint8_t len) {
 }
 
 uint8_t get_type(void) {
-  uint8_t ret = PSCTRL_UNKNOWN;
+  uint8_t ret = PS2_UNKNOWN_CONTROLLER;
 
   uint8_t *in = auto_shift(cmd_type_read, sizeof(cmd_type_read));
 
   if (in != NULL) {
     const uint8_t controllerType = in[3];
     if (controllerType == 0x03) {
-      ret = PSCTRL_DUALSHOCK_2;
+      ret = PS2_DUALSHOCK_2_CONTROLLER;
       //~ } else if (controllerType == 0x01 && in[1] == 0x42) {
       //~ return 4;		// ???
     } else if (controllerType == 0x01 && in[1] != 0x42) {
-      ret = PSCTRL_GUITHERO;
+      ret = PS2_GUITAR_HERO_CONTROLLER;
     } else if (controllerType == 0x0C) {
-      ret = PSCTRL_DSWIRELESS;
+      ret = PS2_WIRELESS_SONY_DUALSHOCK_CONTROLLER;
     }
   }
 
@@ -264,14 +264,7 @@ bool read(controller_t *controller) {
       // We surely have buttons
       uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
       const uint8_t *buttons = dsButtons;
-     if (type == PSCTRL_GUITHERO) {
-        buttons = ghButtons;
-      } else if (config.main.sub_type >= MIDI_GUITAR) {
-        // Copy analog buttons to all_axis
-        for (int i = 0; i < sizeof(dsAxis); i++) {
-          controller->all_axis[i] = in[i+9];
-        }
-      }
+      if (ps2_type == PS2_GUITAR_HERO_CONTROLLER) { buttons = ghButtons; }
       uint8_t btn;
       for (int i = 0; i < XBOX_BTN_COUNT; i++) {
         btn = buttons[i];
@@ -288,17 +281,24 @@ bool read(controller_t *controller) {
         if (is_dual_shock_2_reply(in)) {
           controller->lt = in[PSAB_L2 + 9];
           controller->rt = in[PSAB_R2 + 9];
-          if (type == PSCTRL_GUITHERO) {
+          if (ps2_type == PS2_GUITAR_HERO_CONTROLLER) {
             controller->r_x = in[GH_WHAMMY + 9];
             controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
           }
         }
-        controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
-        controller->all_axis[XBOX_BTN_COUNT+1] = controller->rt;
-        controller->all_axis[XBOX_BTN_COUNT+2] = (controller->l_x>>8) + 128;
-        controller->all_axis[XBOX_BTN_COUNT+3] = (controller->l_y>>8) + 128;
-        controller->all_axis[XBOX_BTN_COUNT+4] = (controller->r_x>>8) + 128;
-        controller->all_axis[XBOX_BTN_COUNT+5] = (controller->r_y>>8) + 128;
+        if (config.main.sub_type >= MIDI_GUITAR) {
+          for (int i = 0; i < sizeof(dsAxis); i++) {
+            controller->all_axis[i] = in[i + 9];
+          }
+          controller->all_axis[XBOX_BTN_COUNT + 2] =
+              (controller->l_x >> 8) + 128;
+          controller->all_axis[XBOX_BTN_COUNT + 3] =
+              (controller->l_y >> 8) + 128;
+          controller->all_axis[XBOX_BTN_COUNT + 4] =
+              (controller->r_x >> 8) + 128;
+          controller->all_axis[XBOX_BTN_COUNT + 5] =
+              (controller->r_y >> 8) + 128;
+        }
       }
 
       ret = true;
@@ -341,43 +341,21 @@ void ps2_cnt_init(void) {
   spsr_ds2 = spsr;
 }
 void ps2_cnt_tick(controller_t *controller) {
-  if (type < 0) {
+  if (ps2_type == PS2_NO_DEVICE) {
     if (!begin(controller)) { return; }
     // Dualshock one controllers don't have config mode
     if (send_cmd(cmd_enter_config, sizeof(cmd_enter_config))) {
       spcr = spcr_ds2;
-      // spsr = spsr_ds2;
-      type = get_type();
+      spsr = spsr_ds2;
+      ps2_type = get_type();
       // Enable analog sticks
       send_cmd(cmd_set_mode, sizeof(cmd_set_mode));
       // Enable analog buttons
       send_cmd(cmd_set_pressures, sizeof(cmd_set_pressures));
       send_cmd(cmd_exit_config, sizeof(cmd_exit_config));
     } else {
-      type = PSCTRL_DUALSHOCK_1;
+      ps2_type = PS2_DUALSHOCK_1_CONTROLLER;
     }
   }
-  if (!read(controller)) { type = PSCTRL_UNKNOWN; }
-}
-void get_ps2_cnt_name(char *str) {
-  switch (type) {
-  case PSCTRL_GUITHERO:
-    strcpy_P(str, PSTR("Guitar Hero Controller"));
-    break;
-  case PSCTRL_DUALSHOCK_1:
-    strcpy_P(str, PSTR("DualShock 1 Controller"));
-    break;
-  case PSCTRL_DUALSHOCK_2:
-    strcpy_P(str, PSTR("DualShock 2 Controller"));
-    break;
-  case PSCTRL_DSWIRELESS:
-    strcpy_P(str, PSTR("Wireless Sony DualShock Controller"));
-    break;
-  case PSCTRL_UNKNOWN:
-    strcpy_P(str, PSTR("No Controller"));
-    break;
-  default:
-    strcpy_P(str, PSTR("Unknown Controller"));
-    break;
-  }
+  if (!read(controller)) { ps2_type = PS2_NO_DEVICE; }
 }

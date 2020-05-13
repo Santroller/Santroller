@@ -6,37 +6,41 @@
 #include "usb/API.h"
 #include <stdlib.h>
 
-extern uint16_t id;
 int buf_idx = 0;
 int cmd = 0;
 int size = 0;
 int subcmd = 0;
+static const uint8_t *pbuf = NULL;
 static uint8_t *buf = NULL;
-static uint8_t str[50];
 void get_info_buf(uint8_t data) {
   switch (data) {
   case INFO_VERSION:
-    strcpy_P((char *)str, PSTR(VERSION));
+    pbuf = (const uint8_t *)PSTR(VERSION);
     break;
   case INFO_SIGNATURE:
-    strcpy_P((char *)str, PSTR(SIGNATURE));
+    pbuf = (const uint8_t *)PSTR(SIGNATURE);
     break;
   case INFO_MAIN_MCU:
-    strcpy_P((char *)str, PSTR(MCU));
+    pbuf = (const uint8_t *)PSTR(MCU);
     break;
   case INFO_CPU_FREQ:
-    strcpy_P((char *)str, PSTR(STR(F_CPU)));
+    pbuf = (const uint8_t *)PSTR(STR(F_CPU));
     break;
   case INFO_BOARD:
-    strcpy_P((char *)str, PSTR(ARDWIINO_BOARD));
+    pbuf = (const uint8_t *)PSTR(ARDWIINO_BOARD);
     break;
   case INFO_EXT:
-    if (config.main.input_type == WII) { get_wii_device_name((char *)str); }
-    if (config.main.input_type == PS2) { get_ps2_cnt_name((char *)str); }
-    break;
+    cmd = COMMAND_READ_CONFIG_VALUE;
+    if (config.main.input_type == WII) {
+      buf = (uint8_t *)&wii_ext;
+      size = 2;
+    } else if (config.main.input_type == PS2) {
+      buf = (uint8_t *)&ps2_type;
+      size = 1;
+    }
+    return;
   }
-  buf = str;
-  size = strlen((char *)buf);
+  size = strlen_P((char *)pbuf);
 }
 void get_config_buf(uint8_t data) {
   size = 1;
@@ -347,7 +351,11 @@ void process_serial(uint8_t data) {
       }
     }
     while (size) {
-      write_usb(*(buf++));
+      if (cmd == COMMAND_READ_INFO) {
+        write_usb(pgm_read_byte(pbuf++));
+      } else {
+        write_usb(*(buf++));
+      }
       size--;
     }
   } else {

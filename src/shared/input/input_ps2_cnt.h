@@ -3,12 +3,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 enum PsxControllerType {
-  PSCTRL_UNKNOWN = 0,
-  PSCTRL_DUALSHOCK_1,
-  PSCTRL_DUALSHOCK_2,
-  PSCTRL_DSWIRELESS,
-  PSCTRL_GUITHERO,
-  PSCTRL_NODEVICE
+  PS2_UNKNOWN_CONTROLLER = 0,
+  PS2_DUALSHOCK_1_CONTROLLER,
+  PS2_DUALSHOCK_2_CONTROLLER,
+  PS2_WIRELESS_SONY_DUALSHOCK_CONTROLLER,
+  PS2_GUITAR_HERO_CONTROLLER,
+  PS2_NO_DEVICE
 };
 /** \brief Command Inter-Byte Delay (us)
  *
@@ -87,5 +87,5 @@ enum PsxAnalogButton {
 enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
 void ps2_cnt_init(void);
-void get_ps2_cnt_name(char *str);
 void ps2_cnt_tick(controller_t *controller);
+extern uint8_t ps2_type;

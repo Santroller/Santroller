@@ -3,5 +3,6 @@
 #include "pins/pins.h"
 void direct_init(void);
 void direct_tick(controller_t *controller);
-uint8_t find_analog(void);
-uint8_t find_digital(void);
+void find_analog(void);
+void find_digital(void);
+void stop_searching(void);

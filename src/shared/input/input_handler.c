@@ -11,6 +11,7 @@
 // #include <stdlib.h>
 void (*tick_function)(controller_t *);
 int jth;
+extern bool skip_tick;
 void input_init() {
   enableADC();
   switch (config.main.input_type) {

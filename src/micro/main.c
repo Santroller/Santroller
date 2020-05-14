@@ -36,6 +36,8 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
                 },
         },
 };
+uint8_t detected_pin;
+bool found_pin = false;
 output_report_size_t last_report;
 USB_ClassInfo_HID_Device_t interface = {
   Config : {
@@ -95,6 +97,13 @@ int main(void) {
     while (rec--) {
       process_serial(CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface) &
                      0xff);
+    }
+    if (found_pin) {
+      found_pin = false;
+      write_usb('d');
+      write_usb(detected_pin);
+      write_usb('\r');
+      write_usb('\n');
     }
     CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
     MIDI_Device_USBTask(&Keyboard_MIDI_Interface);

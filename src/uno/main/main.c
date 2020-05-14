@@ -32,25 +32,20 @@ uint8_t prev_report[sizeof(output_report_size_t)];
  * host. */
 RingBuffer_t Buffer;
 uint8_t BufferData[128];
-
-uint8_t read_usb(void) {
-  loop_until_bit_is_set(UCSR0A, RXC0);
-  return UDR0;
-}
-bool can_read_usb(void) { return bit_is_set(UCSR0A, RXC0); }
+RingBuffer_t BufferOut;
+uint8_t BufferOutData[128];
 
 void write_usb(uint8_t data) {
   if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC ||
       data == FRAME_END) {
+    RingBuffer_Insert(&BufferOut, ESC);
     loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = ESC;
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = data ^ 0x20;
-  } else {
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = data;
+    data = data ^ 0x20;
   }
+  RingBuffer_Insert(&BufferOut, data);
 }
+uint8_t detected_pin;
+bool found_pin = false;
 int main(void) {
   load_config();
   UCSR0B = 0;
@@ -62,6 +57,7 @@ int main(void) {
   UCSR0A = (1 << U2X0);
   UCSR0B = ((1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0));
   RingBuffer_InitBuffer(&Buffer, BufferData, sizeof(BufferData));
+  RingBuffer_InitBuffer(&BufferOut, BufferOutData, sizeof(BufferOutData));
   input_init();
   report_init();
   while (1) {
@@ -70,22 +66,36 @@ int main(void) {
     create_report(report, &size, &controller);
     if (memcmp(report, prev_report, size) != 0) {
       controller_index = 0;
-      loop_until_bit_is_set(UCSR0A, UDRE0);
-      UDR0 = FRAME_START_1;
-      while (controller_index < size) { write_usb(report[controller_index++]); }
-      loop_until_bit_is_set(UCSR0A, UDRE0);
-      UDR0 = FRAME_END;
+      RingBuffer_Insert(&BufferOut, FRAME_START_1);
+      while (controller_index < size) {
+        RingBuffer_Insert(&BufferOut, report[controller_index++]);
+      }
+      RingBuffer_Insert(&BufferOut, FRAME_END);
       memcpy(prev_report, report, size);
+    }
+
+    if (found_pin) {
+      found_pin = false;
+      RingBuffer_Insert(&BufferOut, FRAME_START_2);
+      write_usb('d');
+      write_usb(detected_pin);
+      write_usb('\r');
+      write_usb('\n');
+      RingBuffer_Insert(&BufferOut, FRAME_END);
+      RingBuffer_Insert(&BufferOut, FRAME_END);
     }
     size = RingBuffer_GetCount(&Buffer);
     if (size != 0) {
-      loop_until_bit_is_set(UCSR0A, UDRE0);
-      UDR0 = FRAME_START_2;
+      RingBuffer_Insert(&BufferOut, FRAME_START_2);
       for (int i = 0; i < RingBuffer_GetCount(&Buffer); i++) {
         process_serial(RingBuffer_Remove(&Buffer));
       }
+      RingBuffer_Insert(&BufferOut, FRAME_END);
+    }
+    size = RingBuffer_GetCount(&BufferOut);
+    while (size--) {
       loop_until_bit_is_set(UCSR0A, UDRE0);
-      UDR0 = FRAME_END;
+      UDR0 = RingBuffer_Remove(&BufferOut);
     }
   }
 }
@@ -96,4 +106,10 @@ int main(void) {
 ISR(USART_RX_vect, ISR_BLOCK) {
   uint8_t ReceivedByte = UDR0;
   RingBuffer_Insert(&Buffer, ReceivedByte);
+}
+/** ISR to manage the reception of data from the serial port, placing received
+ * bytes into a circular buffer for later transmission to the host.
+ */
+ISR(USART_UDRE_vect, ISR_BLOCK) {
+  if (!RingBuffer_IsEmpty(&BufferOut)) { UDR0 = RingBuffer_Remove(&BufferOut); }
 }

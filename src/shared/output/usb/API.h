@@ -1,5 +1,4 @@
 #pragma once
-#define COMMAND_START_CONFIG 's'
 #define COMMAND_APPLY_CONFIG 'a'
 #define COMMAND_WRITE_CONFIG_VALUE 'w'
 #define COMMAND_READ_CONFIG_VALUE 'r'
@@ -11,6 +10,7 @@
 #define COMMAND_SET_LED_COLOUR 'g'
 #define COMMAND_FIND_DIGITAL 'd'
 #define COMMAND_FIND_ANALOG 'n'
+#define COMMAND_FIND_STOP 's'
 
 #define INFO_VERSION 0
 #define INFO_SIGNATURE 1

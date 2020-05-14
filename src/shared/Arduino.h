@@ -81,8 +81,6 @@ extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 #define clockCyclesToMicroseconds(a) ((a) / clockCyclesPerMicrosecond())
 
 #define microsecondsToClockCycles(a) ((a)*clockCyclesPerMicrosecond())
-uint8_t read_usb(void);
-bool can_read_usb(void);
 void write_usb(uint8_t data);
 int digitalRead(uint8_t pin);
 void pinMode(uint8_t pin, uint8_t mode);

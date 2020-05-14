@@ -286,27 +286,30 @@ void process_serial(uint8_t data) {
     case COMMAND_SET_GH_LEDS:
       buf = controller.leds.leds;
       size = 5;
-      break;
+      return;
     case COMMAND_SET_LED_COLOUR:
       buf = (uint8_t *)&controller.leds.gui;
       size = 3;
-      break;
+      return;
     case COMMAND_FIND_DIGITAL:
-      write_usb(find_digital());
+      find_digital();
       cmd = 0;
       break;
     case COMMAND_FIND_ANALOG:
-      write_usb(find_analog());
+      find_analog();
+      cmd = 0;
+      break;
+    case COMMAND_FIND_STOP:
+      stop_searching();
       cmd = 0;
       break;
     case COMMAND_WRITE_CONFIG_VALUE:
     case COMMAND_READ_INFO:
     case COMMAND_READ_CONFIG_VALUE:
-      break;
+      return;
     default:
       cmd = 0;
     }
-    return;
   } else if (size == 0) {
     if (subcmd) {
       switch (subcmd) {

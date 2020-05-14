@@ -88,7 +88,7 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 //		#define NO_LIMITED_CONTROLLER_CONNECT
 		#define NO_SOF_EVENTS
 		#define USE_RAM_DESCRIPTORS
-		#define NO_INTERNAL_SERIAL
+		// #define NO_INTERNAL_SERIAL
 		#define FIXED_CONTROL_ENDPOINT_SIZE      8
 		#define DEVICE_STATE_AS_GPIOR            2 // GPIOR0 is used for the RX ISR with cbi()
 		#define FIXED_NUM_CONFIGURATIONS         1

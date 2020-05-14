@@ -27,11 +27,8 @@ const USB_Descriptor_String_t PROGMEM ManufacturerString =
 const USB_Descriptor_String_t PROGMEM ProductString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
 
-const USB_Descriptor_String_t PROGMEM VersionString =
-    USB_STRING_DESCRIPTOR(L"" VERSION);
-
 const USB_Descriptor_String_t *const PROGMEM Strings[] = {
-    &LanguageString, &ManufacturerString, &ProductString, &VersionString};
+    &LanguageString, &ManufacturerString, &ProductString};
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
@@ -447,7 +444,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor = {
 
   ManufacturerStrIndex : 0x01,
   ProductStrIndex : 0x02,
-  SerialNumStrIndex : 0x03,
+  SerialNumStrIndex : USE_INTERNAL_SERIAL,
 
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };

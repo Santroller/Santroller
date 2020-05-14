@@ -44,16 +44,6 @@
 #define CDC_TX_BANK_SIZE 2
 #define CDC_RX_EPSIZE 32
 #define CDC_RX_BANK_SIZE 1
-/** Enum for the device string descriptor IDs within the device. Each string
- * descriptor should have a unique ID index associated with it, which can be
- * used to refer to the string from other descriptors.
- */
-enum StringDescriptors_t {
-  STRING_ID_Language =
-      0, /**< Supported Languages string descriptor ID (must be zero) */
-  STRING_ID_Manufacturer = 1, /**< Manufacturer string ID */
-  STRING_ID_Product = 2,      /**< Product string ID */
-};
 /** Enum for the device interface descriptor IDs within the device. Each
  * interface descriptor should have a unique ID index associated with it, which
  * can be used to refer to the interface from other descriptors.

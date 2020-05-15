@@ -39,7 +39,6 @@ void write_usb(uint8_t data) {
   if (data == FRAME_START_1 || data == FRAME_START_2 || data == ESC ||
       data == FRAME_END) {
     RingBuffer_Insert(&BufferOut, ESC);
-    loop_until_bit_is_set(UCSR0A, UDRE0);
     data = data ^ 0x20;
   }
   RingBuffer_Insert(&BufferOut, data);
@@ -82,12 +81,11 @@ int main(void) {
       write_usb('\r');
       write_usb('\n');
       RingBuffer_Insert(&BufferOut, FRAME_END);
-      RingBuffer_Insert(&BufferOut, FRAME_END);
     }
     size = RingBuffer_GetCount(&Buffer);
     if (size != 0) {
       RingBuffer_Insert(&BufferOut, FRAME_START_2);
-      for (int i = 0; i < RingBuffer_GetCount(&Buffer); i++) {
+      for (int i = 0; i < size; i++) {
         process_serial(RingBuffer_Remove(&Buffer));
       }
       RingBuffer_Insert(&BufferOut, FRAME_END);
@@ -110,6 +108,6 @@ ISR(USART_RX_vect, ISR_BLOCK) {
 /** ISR to manage the reception of data from the serial port, placing received
  * bytes into a circular buffer for later transmission to the host.
  */
-ISR(USART_UDRE_vect, ISR_BLOCK) {
-  if (!RingBuffer_IsEmpty(&BufferOut)) { UDR0 = RingBuffer_Remove(&BufferOut); }
-}
+// ISR(USART_UDRE_vect, ISR_BLOCK) {
+//   if (!RingBuffer_IsEmpty(&BufferOut)) { UDR0 = RingBuffer_Remove(&BufferOut); }
+// }

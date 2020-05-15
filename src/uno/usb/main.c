@@ -63,7 +63,6 @@ static CDC_LineEncoding_t LineEncoding = {0};
 #define ESC 0x7b
 eeprom_config_t EEMEM config_mem;
 
-eeprom_config_t config;
 bool entered_prog = false;
 bool is_ardwiino = true;
 int lastCommand = 0;
@@ -97,13 +96,11 @@ int main(void) {
   }
 
   SetupHardware();
-  eeprom_read_block(&config, &config_mem, sizeof(eeprom_config_t));
-
-  if (config.id == ARDWIINO_DEVICE_TYPE) {
-    device_type = config.device_type;
+  if (eeprom_read_dword(&config_mem.id) != ARDWIINO_DEVICE_TYPE) {
+    eeprom_update_dword(&config_mem.id, ARDWIINO_DEVICE_TYPE);
+    eeprom_update_byte(&config_mem.device_type, device_type);
   } else {
-    config.id = ARDWIINO_DEVICE_TYPE;
-    config.device_type = device_type;
+    device_type = eeprom_read_byte(&config_mem.device_type);
   }
 
   RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buf);
@@ -139,24 +136,23 @@ int main(void) {
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
             if (!is_ardwiino) {
               entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
-            } else if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-              lastCommand = b;
             } else if (lastCommand == CONFIG_SUB_TYPE) {
-              config.device_type = b;
-              lastCommand = 0;
-            } else if (b == COMMAND_REBOOT) {
-              Serial_SendByte(b);
-              eeprom_update_block(&config, &config_mem,
-                                  sizeof(eeprom_config_t));
-              jmpToBootloader = 0;
-              reboot();
-            } else if (b == COMMAND_JUMP_BOOTLOADER) {
-              set_baud(false);
-            } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
-              jmpToBootloader = JUMP;
-              reboot();
-            } else if (b == COMMAND_WRITE_CONFIG_VALUE) {
-              lastCommand = b;
+              eeprom_update_byte(&config_mem.device_type, b);
+              lastCommand = 2;
+            } else if (lastCommand == 0) {
+              if (b == COMMAND_REBOOT) {
+                jmpToBootloader = 0;
+                reboot();
+              } else if (b == COMMAND_JUMP_BOOTLOADER) {
+                set_baud(false);
+              } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
+                jmpToBootloader = JUMP;
+                reboot();
+              } else if (b == '\n') {
+                lastCommand = 0;
+              } else {
+                lastCommand = b;
+              }
             }
           }
 
@@ -276,8 +272,7 @@ void EVENT_USB_Device_ControlRequest(void) {
       while (Length) {
         uint8_t USB_DeviceState_LCL = USB_DeviceState;
 
-        if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) ||
-            (USB_DeviceState_LCL == DEVICE_STATE_Suspended) ||
+        if ((USB_DeviceState_LCL == DEVICE_STATE_Suspended) ||
             (Endpoint_IsSETUPReceived())) {
           skip = true;
           break;
@@ -298,9 +293,7 @@ void EVENT_USB_Device_ControlRequest(void) {
         do {
           uint8_t USB_DeviceState_LCL = USB_DeviceState;
 
-          if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) ||
-              (USB_DeviceState_LCL == DEVICE_STATE_Suspended))
-            break;
+          if ((USB_DeviceState_LCL == DEVICE_STATE_Suspended)) break;
         } while (!(Endpoint_IsINReady()));
       }
 

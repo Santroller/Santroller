@@ -38,6 +38,9 @@ void direct_init() {
   startADC();
 }
 bool should_skip(uint8_t i) {
+  #ifdef __AVR_ATmega328P__ 
+    if (i == 13) return true;
+  #endif
   // Skip sda + scl when using peripherials utilising I2C
   if ((config.main.tilt_type == MPU_6050) &&
       (i == PIN_WIRE_SDA || i == PIN_WIRE_SCL)) {

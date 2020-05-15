@@ -1,5 +1,5 @@
 #pragma once
-#define COMMAND_APPLY_CONFIG 'a'
+#define COMMAND_REBOOT 'a'
 #define COMMAND_WRITE_CONFIG_VALUE 'w'
 #define COMMAND_READ_CONFIG_VALUE 'r'
 #define COMMAND_READ_INFO 'i'

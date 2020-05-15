@@ -144,9 +144,8 @@ int main(void) {
             } else if (lastCommand == CONFIG_SUB_TYPE) {
               config.device_type = b;
               lastCommand = 0;
-            } else if (b == COMMAND_APPLY_CONFIG) {
+            } else if (b == COMMAND_REBOOT) {
               Serial_SendByte(b);
-              _delay_ms(2000);
               eeprom_update_block(&config, &config_mem,
                                   sizeof(eeprom_config_t));
               jmpToBootloader = 0;

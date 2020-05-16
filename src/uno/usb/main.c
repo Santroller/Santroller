@@ -65,7 +65,8 @@ eeprom_config_t EEMEM config_mem;
 
 bool entered_prog = false;
 bool is_ardwiino = true;
-int lastCommand = 0;
+uint8_t lastCommand = 0;
+volatile bool command_state = false;
 #define JUMP 0xDEAD8001
 
 // by placing this in noinit, we can jump to the bootloader after a watchdog
@@ -88,6 +89,7 @@ void set_baud(bool b) {
   UCSR1A = (1 << U2X1);
   UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 }
+uint8_t skipn = 0;
 int main(void) {
   if (jmpToBootloader == JUMP) {
     jmpToBootloader = 0;
@@ -136,23 +138,30 @@ int main(void) {
             RingBuffer_Insert(&USBtoUSART_Buffer, b);
             if (!is_ardwiino) {
               entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
-            } else if (lastCommand == CONFIG_SUB_TYPE) {
-              eeprom_update_byte(&config_mem.device_type, b);
-              lastCommand = 2;
-            } else if (lastCommand == 0) {
-              if (b == COMMAND_REBOOT) {
-                jmpToBootloader = 0;
-                reboot();
-              } else if (b == COMMAND_JUMP_BOOTLOADER) {
-                set_baud(false);
-              } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
-                jmpToBootloader = JUMP;
-                reboot();
-              } else {
+            } else if (!command_state) {
+              if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
                 lastCommand = b;
+              } else if (lastCommand == CONFIG_SUB_TYPE) {
+                eeprom_update_byte(&config_mem.device_type, b);
+                lastCommand = 0;
+                command_state = true;
+              } else {
+                switch (b) {
+                case COMMAND_REBOOT:
+                case COMMAND_JUMP_BOOTLOADER_UNO:
+                  jmpToBootloader = b == COMMAND_REBOOT ? 0 : JUMP;
+                  reboot();
+                case COMMAND_JUMP_BOOTLOADER:
+                  set_baud(false);
+                  command_state = true;
+                  break;
+                case COMMAND_WRITE_CONFIG_VALUE:
+                  lastCommand = b;
+                  break;
+                default:
+                  command_state = true;
+                }
               }
-            } else if (b == '\n') {
-              lastCommand = 0;
             }
           }
 
@@ -323,6 +332,9 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
   if (b == FRAME_START_1 || b == FRAME_START_2) { frame = b; }
   if (frame == FRAME_START_2 || !is_ardwiino) {
     RingBuffer_Insert(&USARTtoSER_Buffer, b);
+    if (command_state && b == '\r') {
+      command_state = false;
+    }
   } else if (frame == FRAME_START_1) {
     RingBuffer_Insert(&USARTtoHID_Buffer, b);
   }

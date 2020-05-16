@@ -43,7 +43,7 @@ AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
 
 $(info $(shell mkdir -p $(BIN)))
-$(info $(shell echo -e "\ne" > /dev/ttyACM0))
+$(info $(shell echo e > /dev/ttyACM0))
 
 # Default target
 all: 

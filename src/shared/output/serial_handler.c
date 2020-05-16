@@ -345,8 +345,16 @@ void process_serial(uint8_t data) {
       size--;
     }
   } else {
-    eeprom_update_byte(buf++, data);
-    size--;
+    // SET_LED_COLOUR writes to ram and should stop after receiving all leds
+    if (COMMAND_SET_LED_COLOUR == CONFIG_LED_COLOURS) {
+      *(buf++) = data;
+      if (size%4==0 && data == 0) {
+        size = 0;
+      }
+    } else {
+      eeprom_update_byte(buf++, data);
+      size--;
+    }
   }
   if (size == 0) {
     write_usb('\r');

@@ -148,11 +148,11 @@ int main(void) {
               } else if (b == COMMAND_JUMP_BOOTLOADER_UNO) {
                 jmpToBootloader = JUMP;
                 reboot();
-              } else if (b == '\n') {
-                lastCommand = 0;
               } else {
                 lastCommand = b;
               }
+            } else if (b == '\n') {
+              lastCommand = 0;
             }
           }
 

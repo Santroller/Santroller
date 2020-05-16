@@ -80,7 +80,6 @@ typedef struct {
 typedef struct {
   uint8_t pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   uint32_t colours[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
-  uint32_t ghColours[3];
 } leds_t;
 typedef struct {
   uint8_t midi_type[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];

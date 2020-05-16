@@ -7,14 +7,18 @@
 #include <stdlib.h>
 pin_t pinData[16];
 int validPins = 0;
+bool finding_digital = false;
+bool finding_analog = false;
 void direct_init() {
+  finding_analog = false;
+  finding_digital = false;
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
   setUpValidPins();
   if (config.main.input_type == DIRECT) {
     for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
       if (pins[i] != INVALID_PIN) {
-        bool is_fret = (i >= XBOX_A || i == XBOX_LB);
+        bool is_fret = (i >= XBOX_A || i == XBOX_LB || i == XBOX_RB);
         pin_t pin = {};
         pin.offset = i;
         pin.mask = digitalPinToBitMask(pins[i]);
@@ -54,8 +58,6 @@ bool should_skip(uint8_t i) {
   }
   return false;
 }
-bool finding_digital = false;
-bool finding_analog = false;
 int last[NUM_ANALOG_INPUTS];
 extern uint8_t detected_pin;
 extern bool found_pin;
@@ -87,7 +89,6 @@ void direct_tick(controller_t *controller) {
   if (finding_analog) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
       if (abs(analogRead(i) - last[i]) > 10) {
-        finding_analog = false;
         direct_init();
         detected_pin = i + A0;
         found_pin = true;
@@ -114,10 +115,7 @@ void direct_tick(controller_t *controller) {
     pin = pinData[i];
     if ((*pin.port & pin.mask) == pin.eq) {
       controller->buttons |= pin.pmask;
-      controller->all_axis[pin.offset] = MIDI_STANDARD_VELOCITY;
-    } else {
-      controller->all_axis[pin.offset] = 0;
-    }
+    } 
   }
   analog_info_t info;
   for (int8_t i = 0; i < validAnalog; i++) {
@@ -126,7 +124,7 @@ void direct_tick(controller_t *controller) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;
       }
-      controller->all_axis[XBOX_BTN_COUNT + info.offset] = info.value;
+      controller->drum_axis[info.offset-8] = info.value;
     } else if (info.offset >= 2) {
       ((controller_a_t *)controller)->sticks[info.offset - 2] = info.value;
     } else {

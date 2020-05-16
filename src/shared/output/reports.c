@@ -1,6 +1,7 @@
 #include "reports.h"
 #include "../util.h"
 #include "usb/Descriptors.h"
+#include "../input/input_handler.h"
 
 // Bindings to go from controller to ps3
 static uint8_t ps3ButtonBindings[] = {
@@ -67,7 +68,7 @@ void create_xinput_report(void *ReportData, uint16_t *const ReportSize,
   JoystickReport->rsize = sizeof(USB_XInputReport_Data_t);
   // Don't copy the led info tagged on the end
   memcpy(&JoystickReport->buttons, controller,
-         sizeof(controller_t) - sizeof(ledstate_t));
+         sizeof(xinput_data_t));
 }
 void create_keyboard_report(void *ReportData, uint16_t *const ReportSize,
                             controller_t *controller) {
@@ -160,7 +161,7 @@ void create_midi_report(void *ReportData, uint16_t *const ReportSize,
       uint8_t midicommand = config.new_items.midi.midi_type[i] == NOTE
                                 ? MIDI_COMMAND_NOTE_ON
                                 : MIDI_COMMAND_CONTROL_CHANGE;
-      uint8_t vel = controller->all_axis[i] >> 1;
+      uint8_t vel = get_value(controller,i) >> 1;
       if (lastmidi[i] == vel) continue;
       lastmidi[i] = vel;
       data->midi[idx].Event = MIDI_EVENT(0, midicommand);

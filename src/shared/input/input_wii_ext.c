@@ -43,27 +43,26 @@ void drum_tick(controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
   read_buttons(controller, buttons);
   if (config.main.sub_type >= MIDI_GUITAR && bit_check(data[3], 1)) {
-    for (int i = 0; i < XBOX_BTN_COUNT; i++) { controller->all_axis[i] = 0; }
     uint8_t vel = (7 - (data[3] >> 5)) << 5;
     uint8_t which = (data[2] & 0b01111100) >> 1;
     switch (which) {
     case 0x1B:
-      controller->all_axis[XBOX_RB] = vel;
+      controller->drum_axis[XBOX_RB-8] = vel;
       break;
     case 0x19:
-      controller->all_axis[XBOX_B] = vel;
+      controller->drum_axis[XBOX_B-8] = vel;
       break;
     case 0x11:
-      controller->all_axis[XBOX_X] = vel;
+      controller->drum_axis[XBOX_X-8] = vel;
       break;
     case 0x0F:
-      controller->all_axis[XBOX_Y] = vel;
+      controller->drum_axis[XBOX_Y-8] = vel;
       break;
     case 0x1E:
-      controller->all_axis[XBOX_LB] = vel;
+      controller->drum_axis[XBOX_LB-8] = vel;
       break;
     case 0x12:
-      controller->all_axis[XBOX_A] = vel;
+      controller->drum_axis[XBOX_A-8] = vel;
       break;
     }
   }
@@ -204,10 +203,4 @@ void wii_ext_tick(controller_t *controller) {
     return;
   }
   if (readFunction) readFunction(controller, data);
-  controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
-  controller->all_axis[XBOX_BTN_COUNT + 1] = controller->rt;
-  controller->all_axis[XBOX_BTN_COUNT + 2] = (controller->l_x >> 8) + 128;
-  controller->all_axis[XBOX_BTN_COUNT + 3] = (controller->l_y >> 8) + 128;
-  controller->all_axis[XBOX_BTN_COUNT + 4] = (controller->r_x >> 8) + 128;
-  controller->all_axis[XBOX_BTN_COUNT + 5] = (controller->r_y >> 8) + 128;
 }

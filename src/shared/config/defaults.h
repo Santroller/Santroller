@@ -70,5 +70,5 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \
-        KEYS, {DRUM_THRESHOLD, {LED_PINS, LED_COLOURS, LED_GH_COLOURS}},       \
+        KEYS, {DRUM_THRESHOLD, {LED_PINS, LED_COLOURS}},       \
   }

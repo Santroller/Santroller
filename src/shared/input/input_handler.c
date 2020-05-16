@@ -1,5 +1,6 @@
 #include "input_handler.h"
 #include "../config/eeprom.h"
+#include "../output/usb/Descriptors.h"
 #include "../util.h"
 #include "i2c/twi.h"
 #include "input_direct.h"
@@ -32,8 +33,6 @@ void input_init() {
   led_init();
   jth = config.axis.threshold_joy << 8;
 }
-int i = _BV(XBOX_A);
-int j = _BV(XBOX_B);
 void input_tick(controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);
@@ -52,4 +51,19 @@ void input_tick(controller_t *controller) {
   }
   guitar_tick(controller);
   led_tick(controller);
+}
+uint8_t get_value(controller_t *controller, uint8_t offset) {
+  if (offset < XBOX_BTN_COUNT) {
+    if (is_drum() && offset > 8 && offset < 16) {
+      return controller->drum_axis[offset-8];
+    }
+    return bit_check(controller->buttons, offset) ? MIDI_STANDARD_VELOCITY : 0;
+  } else if (offset > XBOX_BTN_COUNT + 2) {
+    return ((((controller_a_t *)controller)
+                 ->sticks[offset - XBOX_BTN_COUNT - 2]) &
+            0xffff) > config.axis.threshold_trigger;
+  } else {
+    return (((controller_a_t *)controller)->triggers[offset - XBOX_BTN_COUNT]) >
+           config.axis.threshold_trigger;
+  }
 }

@@ -27,23 +27,30 @@ void digital_tick(controller_t *controller) {
   controller->r_y = (!digitalRead(config.pins.r_y.pin)) * 32767;
 }
 void (*tick)(controller_t *controller) = NULL;
-
+// Would it be worth only doing this check once for speed?
+#define DRUM 1
+#define GUITAR 2
+uint8_t types[MIDI_CONTROLLER] = {
+  [PS3_GUITAR_HERO_DRUMS]=DRUM,
+  [PS3_ROCK_BAND_DRUMS]=DRUM,
+  [WII_ROCK_BAND_DRUMS]=DRUM,
+  [XINPUT_ROCK_BAND_DRUMS]=DRUM,
+  [XINPUT_GUITAR_HERO_DRUMS]=DRUM,
+  [PS3_GUITAR_HERO_GUITAR]=GUITAR,
+  [PS3_ROCK_BAND_GUITAR]=GUITAR,
+  [WII_ROCK_BAND_GUITAR]=GUITAR,
+  [XINPUT_ROCK_BAND_GUITAR]=GUITAR,
+  [XINPUT_GUITAR_HERO_GUITAR]=GUITAR,
+  [XINPUT_LIVE_GUITAR]=GUITAR,
+};
 bool is_drum(void) {
-  return config.main.sub_type == PS3_GUITAR_HERO_DRUMS ||
-         config.main.sub_type == PS3_ROCK_BAND_DRUMS ||
-         config.main.sub_type == WII_ROCK_BAND_DRUMS ||
-         config.main.sub_type == XINPUT_GUITAR_HERO_DRUMS ||
-         config.main.sub_type == XINPUT_ROCK_BAND_DRUMS;
+  return types[config.main.sub_type] == DRUM;
 }
-bool is_not_guitar(void) {
-  return config.main.sub_type != PS3_GUITAR_HERO_GUITAR &&
-         config.main.sub_type != PS3_ROCK_BAND_GUITAR &&
-         config.main.sub_type != XINPUT_GUITAR_HERO_GUITAR &&
-         config.main.sub_type != XINPUT_GUITAR_HERO_DRUMS &&
-         config.main.sub_type != XINPUT_LIVE_GUITAR;
+bool is_guitar(void) {
+  return types[config.main.sub_type] == GUITAR;
 }
 void guitar_init(void) {
-  if (is_not_guitar()) return;
+  if (is_guitar()) return;
   if (config.main.tilt_type == MPU_6050) {
     mympu_open(15);
     enablePCI(config.pins.r_y.pin);
@@ -59,7 +66,7 @@ void guitar_init(void) {
 }
 int16_t r_x;
 void guitar_tick(controller_t *controller) {
-  if (is_not_guitar()) return;
+  if (!is_guitar()) return;
   r_x = controller->r_x;
   // Whammy needs to be scaled so that it is picked up
   if (r_x > 0) r_x = 0;

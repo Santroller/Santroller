@@ -34,9 +34,6 @@ SRC =  ../../shared/output/reports.c ../../shared/output/serial_handler.c ../../
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -Werror -flto -fuse-linker-plugin -I. -I ../../shared -include ../../shared/Arduino.h -DARDUINO=1000  
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
-CC_FLAGS	+= -DMOSI=$(MOSI) -DMOSI_DDR=$(MOSI_DDR) -DMOSI_PORT=$(MOSI_PORT)
-CC_FLAGS    += -DSS=$(SS) -DSS_DDR=$(SS_DDR) -DSS_PORT=$(SS_PORT)
-CC_FLAGS    += -DSCK=$(SCK) -DSCK_DDR=$(SCK_DDR)
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin

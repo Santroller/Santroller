@@ -45,201 +45,153 @@ void get_info_buf(uint8_t data) {
   size = strlen_P((char *)pbuf);
 }
 void get_config_buf(uint8_t data) {
+    size = 1;
   switch (data) {
   case CONFIG_INPUT_TYPE:
-    size = 1;
     buf = &config_pointer.main.input_type;
     break;
   case CONFIG_SUB_TYPE:
-    size = 1;
     buf = &config_pointer.main.sub_type;
     break;
   case CONFIG_TILT_TYPE:
-    size = 1;
     buf = &config_pointer.main.tilt_type;
     break;
   case CONFIG_MPU_6050_ORIENTATION:
-    size = 1;
     buf = &config_pointer.axis.mpu_6050_orientation;
     break;
   case CONFIG_TILT_SENSITIVITY:
-    size = 1;
     buf = (uint8_t *)&config_pointer.axis.tilt_sensitivity;
     break;
   case CONFIG_LED_TYPE:
-    size = 1;
     buf = &config_pointer.main.fret_mode;
     break;
   case CONFIG_MAP_JOY_DPAD:
-    size = 1;
     buf = (uint8_t *)&config_pointer.main.map_joy_to_dpad;
     break;
   case CONFIG_MAP_START_SEL_HOME:
-    size = 1;
     buf = (uint8_t *)&config_pointer.main.map_start_select_to_home;
     break;
   case CONFIG_MAP_ACCEL_RIGHT:
-    size = 1;
     buf = (uint8_t *)&config_pointer.main.map_accel_to_right;
     break;
   case CONFIG_PIN_UP:
-    size = 1;
     buf = &config_pointer.pins.up;
     break;
   case CONFIG_PIN_DOWN:
-    size = 1;
     buf = &config_pointer.pins.down;
     break;
   case CONFIG_PIN_LEFT:
-    size = 1;
     buf = &config_pointer.pins.left;
     break;
   case CONFIG_PIN_RIGHT:
-    size = 1;
     buf = &config_pointer.pins.right;
     break;
   case CONFIG_PIN_START:
-    size = 1;
     buf = &config_pointer.pins.start;
     break;
   case CONFIG_PIN_SELECT:
-    size = 1;
     buf = &config_pointer.pins.back;
     break;
   case CONFIG_PIN_LEFT_STICK:
-    size = 1;
     buf = &config_pointer.pins.left_stick;
     break;
   case CONFIG_PIN_RIGHT_STICK:
-    size = 1;
     buf = &config_pointer.pins.right_stick;
     break;
   case CONFIG_PIN_LB:
-    size = 1;
     buf = &config_pointer.pins.LB;
     break;
   case CONFIG_PIN_RB:
-    size = 1;
     buf = &config_pointer.pins.RB;
     break;
   case CONFIG_PIN_HOME:
-    size = 1;
     buf = &config_pointer.pins.home;
     break;
   case CONFIG_PIN_CAPTURE:
-    size = 1;
     buf = &config_pointer.pins.capture;
     break;
   case CONFIG_PIN_A:
-    size = 1;
     buf = &config_pointer.pins.a;
     break;
   case CONFIG_PIN_B:
-    size = 1;
     buf = &config_pointer.pins.b;
     break;
   case CONFIG_PIN_X:
-    size = 1;
     buf = &config_pointer.pins.x;
     break;
   case CONFIG_PIN_Y:
-    size = 1;
     buf = &config_pointer.pins.y;
     break;
   case CONFIG_PIN_LT:
-    size = 1;
     buf = &config_pointer.pins.lt.pin;
     break;
   case CONFIG_PIN_RT:
-    size = 1;
     buf = &config_pointer.pins.rt.pin;
     break;
   case CONFIG_PIN_L_X:
-    size = 1;
     buf = &config_pointer.pins.l_x.pin;
     break;
   case CONFIG_PIN_L_Y:
-    size = 1;
     buf = &config_pointer.pins.l_y.pin;
     break;
   case CONFIG_PIN_R_X:
-    size = 1;
     buf = &config_pointer.pins.r_x.pin;
     break;
   case CONFIG_PIN_R_Y:
-    size = 1;
     buf = &config_pointer.pins.r_y.pin;
     break;
   case CONFIG_KEY_UP:
-    size = 1;
     buf = &config_pointer.keys.up;
     break;
   case CONFIG_KEY_DOWN:
-    size = 1;
     buf = &config_pointer.keys.down;
     break;
   case CONFIG_KEY_LEFT:
-    size = 1;
     buf = &config_pointer.keys.left;
     break;
   case CONFIG_KEY_RIGHT:
-    size = 1;
     buf = &config_pointer.keys.right;
     break;
   case CONFIG_KEY_START:
-    size = 1;
     buf = &config_pointer.keys.start;
     break;
   case CONFIG_KEY_SELECT:
-    size = 1;
     buf = &config_pointer.keys.back;
     break;
   case CONFIG_KEY_LEFT_STICK:
-    size = 1;
     buf = &config_pointer.keys.left_stick;
     break;
   case CONFIG_KEY_RIGHT_STICK:
-    size = 1;
     buf = &config_pointer.keys.right_stick;
     break;
   case CONFIG_KEY_LB:
-    size = 1;
     buf = &config_pointer.keys.LB;
     break;
   case CONFIG_KEY_RB:
-    size = 1;
     buf = &config_pointer.keys.RB;
     break;
   case CONFIG_KEY_HOME:
-    size = 1;
     buf = &config_pointer.keys.home;
     break;
   case CONFIG_KEY_CAPTURE:
-    size = 1;
     buf = &config_pointer.keys.capture;
     break;
   case CONFIG_KEY_A:
-    size = 1;
     buf = &config_pointer.keys.a;
     break;
   case CONFIG_KEY_B:
-    size = 1;
     buf = &config_pointer.keys.b;
     break;
   case CONFIG_KEY_X:
-    size = 1;
     buf = &config_pointer.keys.x;
     break;
   case CONFIG_KEY_Y:
-    size = 1;
     buf = &config_pointer.keys.y;
     break;
   case CONFIG_KEY_LT:
-    size = 1;
     buf = &config_pointer.keys.lt;
     break;
   case CONFIG_KEY_RT:
-    size = 1;
     buf = &config_pointer.keys.rt;
     break;
   case CONFIG_KEY_L_X:
@@ -259,64 +211,56 @@ void get_config_buf(uint8_t data) {
     buf = &config_pointer.keys.r_y.neg;
     break;
   case CONFIG_AXIS_INVERT_LT:
-    size = 1;
     buf = (uint8_t *)&config_pointer.pins.lt.inverted;
     break;
   case CONFIG_AXIS_INVERT_RT:
-    size = 1;
     buf = (uint8_t *)&config_pointer.pins.rt.inverted;
     break;
   case CONFIG_AXIS_INVERT_L_X:
-    size = 1;
     buf = (uint8_t *)&config_pointer.pins.l_x.inverted;
     break;
   case CONFIG_AXIS_INVERT_L_Y:
-    size = 1;
     buf = (uint8_t *)&config_pointer.pins.l_y.inverted;
     break;
   case CONFIG_AXIS_INVERT_R_X:
-    size = 1;
     buf = (uint8_t *)&config_pointer.pins.r_x.inverted;
     break;
   case CONFIG_AXIS_INVERT_R_Y:
-    size = 1;
     buf = (uint8_t *)&config_pointer.pins.r_y.inverted;
     break;
   case CONFIG_THRESHOLD_JOY:
-    size = 1;
     buf = (uint8_t *)&config_pointer.axis.threshold_joy;
     break;
   case CONFIG_THRESHOLD_TRIGGER:
-    size = 1;
     buf = (uint8_t *)&config_pointer.axis.threshold_trigger;
     break;
   case CONFIG_THRESHOLD_DRUM:
-    size = 1;
     buf = (uint8_t *)&config_pointer.new_items.threshold_drums;
     break;
   case CONFIG_LED_COLOURS:
     buf = (uint8_t *)&config_pointer.new_items.leds.colours;
     subcmd = data;
-    break;
-  case CONFIG_LED_GH_COLOURS:
-    buf = (uint8_t *)&config_pointer.new_items.leds.ghColours;
-    subcmd = data;
+    size = 0;
     break;
   case CONFIG_LED_PINS:
     buf = (uint8_t *)&config_pointer.new_items.leds.pins;
     subcmd = data;
+    size = 0;
     break;
   case CONFIG_MIDI_CHANNEL:
     buf = (uint8_t *)&config_pointer.new_items.midi.channel;
     subcmd = data;
+    size = 0;
     break;
   case CONFIG_MIDI_NOTE:
     buf = (uint8_t *)&config_pointer.new_items.midi.note;
     subcmd = data;
+    size = 0;
     break;
   case CONFIG_MIDI_TYPE:
     buf = (uint8_t *)&config_pointer.new_items.midi.midi_type;
     subcmd = data;
+    size = 0;
     break;
   }
 }
@@ -333,13 +277,13 @@ void process_serial(uint8_t data) {
     case COMMAND_JUMP_BOOTLOADER:
       bootloader();
       break;
-    case COMMAND_SET_GH_LEDS:
-      buf = controller.leds.leds;
-      size = 5;
-      return;
     case COMMAND_SET_LED_COLOUR:
-      buf = (uint8_t *)&controller.leds.gui;
-      size = 3;
+      buf = (uint8_t *)&controller.leds;
+      int i = 0;
+      while (config.new_items.leds.pins[i]) {
+        i++;
+      }
+      size = i*4;
       return;
     case COMMAND_FIND_DIGITAL:
       find_digital();
@@ -367,22 +311,9 @@ void process_serial(uint8_t data) {
         buf += data * 4;
         size = 4;
         break;
-      case CONFIG_LED_GH_COLOURS:
-        buf += data * 4;
-        size = 4;
-        break;
       case CONFIG_LED_PINS:
-        buf += data;
-        size = 1;
-        break;
       case CONFIG_MIDI_CHANNEL:
-        buf += data;
-        size = 1;
-        break;
       case CONFIG_MIDI_NOTE:
-        buf += data;
-        size = 1;
-        break;
       case CONFIG_MIDI_TYPE:
         buf += data;
         size = 1;

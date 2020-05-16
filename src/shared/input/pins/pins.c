@@ -31,7 +31,7 @@ void setUpPin(uint8_t offset) {
   analogue_pin_t apin = ((pins_a_t *)&config.pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
-  if (ret.offset == 5 && !is_not_guitar() &&
+  if (ret.offset == 5 && is_guitar() &&
       config.main.tilt_type != ANALOGUE) {
     return;
   }

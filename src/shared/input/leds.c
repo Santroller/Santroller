@@ -1,42 +1,51 @@
 #include "leds.h"
-#include "../../../lib/AVR-APA102-library/src/apa102.h"
 #include "../config/eeprom.h"
 #include "../util.h"
+#include "Arduino.h"
+#include "arduino_pins.h"
 // #include "input_handler.h"
 #include <avr/power.h>
 void led_init(void) {
   if (config.main.fret_mode != APA102) return;
-  apa102_set_led_count(NUM_LEDS);
   clock_prescale_set(clock_div_1);
-  apa102_init_spi();
+  pinMode(PIN_SPI_MOSI, OUTPUT);
+  pinMode(PIN_SPI_MISO, INPUT_PULLUP);
+  pinMode(PIN_SPI_SCK, OUTPUT);
+  pinMode(PIN_SPI_SS, OUTPUT);
+  // enable spi
+  SPCR |= (1 << SPE);
+
+  // set as master
+  SPCR |= 1 << MSTR;
+
+  // set clock polarity/phase to mode 3
+  SPCR |= (1 << CPOL) | (1 << CPHA);
+
+  // set clock scale to 1/2
+  SPSR |= 1 << SPI2X;
+  SPCR |= (1 << SPR1) | (1 << SPR0);
 }
-uint8_t gh[XBOX_BTN_COUNT + XBOX_AXIS_COUNT] = {
-    [XBOX_A] = 1, [XBOX_B] = 2, [XBOX_Y] = 3, [XBOX_X] = 4, [XBOX_LB] = 5};
+/* Send out data via SPI & wait until transmission is complete */
+void apa102_transmit_byte(uint8_t data) {
+  SPDR = data;
+  while (!(SPSR & _BV(SPIF)))
+    ;
+}
 void led_tick(controller_t *controller) {
   if (config.main.fret_mode != APA102) return;
-  apa102_start();
-  for (int i = 0; config.new_items.leds.pins[i]; i++) {
-    uint32_t col = controller->leds.gui;
+  for (uint8_t i = 0; i < 4; i++) { apa102_transmit_byte(0x00); }
+  int led = 0;
+  for (; config.new_items.leds.pins[led]; led++) {
+    uint32_t col = controller->leds[led];
     if (col == Black) {
-      uint8_t button = config.new_items.leds.pins[i] - 1;
-      uint8_t ghBtn = gh[button];
-      if (ghBtn) {
-        uint8_t ghIdx = controller->leds.leds[ghBtn - 1];
-        if (ghIdx == 1) col = config.new_items.leds.colours[i];
-        if (ghIdx >= 2) col = config.new_items.leds.ghColours[ghIdx - 2];
-      }
-
-      bool active;
-      if (button < XBOX_BTN_COUNT) {
-        active = bit_check(controller->buttons, button);
-      } else if (button > XBOX_BTN_COUNT+2) {
-        active = ((((controller_a_t *)controller)->sticks[button - XBOX_BTN_COUNT - 2])&0xffff) > config.axis.threshold_trigger;
-      } else {
-        active = (((controller_a_t *)controller)->triggers[button - XBOX_BTN_COUNT]) > config.axis.threshold_trigger;;
-      }
-      if ((col == Black && active)) { col = config.new_items.leds.colours[i]; }
+      uint8_t button = config.new_items.leds.pins[led] - 1;
+      if (get_value(controller,button)) { col = config.new_items.leds.colours[led]; }
     }
-    apa102_set_led(rgb(col));
+    apa102_transmit_byte(0xff);
+    apa102_transmit_byte(col & 0x0000ff);
+    apa102_transmit_byte(((col & 0x00ff00) >> 8));
+    apa102_transmit_byte(col >> 16);
   }
-  apa102_end();
+  uint8_t stop_bytes = (led + 15) / 16;
+  for (uint8_t i = 0; i < stop_bytes; i++) { apa102_transmit_byte(0xff); }
 }

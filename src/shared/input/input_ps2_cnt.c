@@ -106,7 +106,7 @@ static uint8_t spsr_ds1;
 static uint8_t spcr_ds1;
 static uint8_t spsr_ds2;
 static uint8_t spcr_ds2;
-void calc_clock(uint32_t clock) {
+void calc_clock (uint32_t clock)  {
   uint8_t clockDiv;
   if (clock >= F_CPU / 2) {
     clockDiv = 0;
@@ -257,9 +257,6 @@ bool read(controller_t *controller) {
         btn = buttons[i];
         if (btn != INVALID) {
           bit_write(bit_check(buttonWord, i), controller->buttons, btn);
-          if (config.main.sub_type >= MIDI_GUITAR) {
-            controller->all_axis[btn] = bit_check(buttonWord, i) ? MIDI_STANDARD_VELOCITY:0; 
-          }
         }
       }
 
@@ -275,24 +272,6 @@ bool read(controller_t *controller) {
             controller->r_x = in[GH_WHAMMY + 9];
             controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
           }
-        }
-        if (config.main.sub_type >= MIDI_GUITAR) {
-          // Pressure isnt actually what we want, we need to sample the pressure
-          // after its hit, and after n milliseconds, and then the velocity is
-          // after n milliseconds. Do we actually care though? for (int i = 0; i
-          // < sizeof(dsAxis); i++) {
-          //   controller->all_axis[i] = in[i + 9];
-          // }
-          controller->all_axis[XBOX_BTN_COUNT] = controller->lt;
-          controller->all_axis[XBOX_BTN_COUNT + 1] = controller->rt;
-          controller->all_axis[XBOX_BTN_COUNT + 2] =
-              (controller->l_x >> 8) + 128;
-          controller->all_axis[XBOX_BTN_COUNT + 3] =
-              (controller->l_y >> 8) + 128;
-          controller->all_axis[XBOX_BTN_COUNT + 4] =
-              (controller->r_x >> 8) + 128;
-          controller->all_axis[XBOX_BTN_COUNT + 5] =
-              (controller->r_y >> 8) + 128;
         }
       }
 

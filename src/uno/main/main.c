@@ -1,12 +1,12 @@
 #include "config/eeprom.h"
-#include "input/inputs/direct.h"
-#include "input/input_handler.h"
-#include "output/reports.h"
-#include "output/serial_handler.h"
-#include "output/serial_commands.h"
-#include "util/util.h"
-#include "leds/leds.h"
 #include "device_comms.h"
+#include "input/input_handler.h"
+#include "input/inputs/direct.h"
+#include "leds/leds.h"
+#include "output/reports.h"
+#include "output/serial_commands.h"
+#include "output/serial_handler.h"
+#include "util/util.h"
 #include <LUFA/Drivers/Misc/RingBuffer.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -57,8 +57,7 @@ int main(void) {
       controllerIndex = 0;
       RingBuffer_Insert(&serialOutBuffer, FRAME_START_DEVICE);
       while (controllerIndex < size) {
-        RingBuffer_Insert(&serialOutBuffer,
-                          currentReport[controllerIndex++]);
+        RingBuffer_Insert(&serialOutBuffer, currentReport[controllerIndex++]);
       }
       RingBuffer_Insert(&serialOutBuffer, FRAME_END);
       memcpy(previousReport, currentReport, size);

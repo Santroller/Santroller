@@ -86,10 +86,10 @@ typedef struct {
   USB_Descriptor_Interface_t CDC_DCI_Interface;
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
-} CDC_t;
-typedef struct {
   USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+} CDC_t;
+typedef struct {
   USB_Descriptor_Interface_t Interface0;
   USB_HID_Descriptor_HID_t HIDDescriptor;
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;

@@ -1,8 +1,8 @@
 #include "keyboard.h"
 #include "output/descriptors.h"
 #include "config/eeprom.h"
-int joyThreshold;
-int triggerThreshold;
+int joyThresholdKb;
+int triggerThresholdKb;
 void checkJoyKey(int neg, int pos, int val, int thresh, uint8_t *used,
                    USB_KeyboardReport_Data_t *KeyboardReport) {
   if (*used < SIMULTANEOUS_KEYS) {
@@ -31,6 +31,6 @@ void fillKeyboardReport(void *ReportData, uint16_t *const ReportSize,
   CHECK_TRIGGER_KEY(rt);
 }
 void initKeyboard(void) {
-  joyThreshold = config.axis.joyThreshold << 8;
-  triggerThreshold = config.axis.triggerThreshold << 8;
+  joyThresholdKb = config.axis.joyThreshold << 8;
+  triggerThresholdKb = config.axis.triggerThreshold << 8;
 }

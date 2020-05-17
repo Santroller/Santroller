@@ -248,8 +248,6 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
       EndpointSize : CDC_TX_EPSIZE,
       PollingIntervalMS : 0x05
     },
-  },
-  other : {
     Interface_AudioControl : {
       Header :
           {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -278,7 +276,8 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
       InCollection : 1,
       InterfaceNumber : INTERFACE_ID_AudioStream,
     },
-
+  },
+  other : {
     Interface0 : {
       Header :
           {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -513,7 +512,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       conf2->other.Interface0.Class = AUDIO_CSCP_AudioClass;
       conf2->other.Interface0.SubClass = AUDIO_CSCP_MIDIStreamingSubclass;
       conf2->other.Interface0.Protocol = AUDIO_CSCP_StreamingProtocol;
-      conf2->other.Interface_AudioControl.InterfaceNumber =
+      conf2->cdc.Interface_AudioControl.InterfaceNumber =
           INTERFACE_ID_ControlStream;
       conf2->other.Interface0.InterfaceNumber = INTERFACE_ID_AudioStream;
       // We need to skip over the HID Descriptor and the XInputReserved

@@ -2,6 +2,7 @@
 #include "../input/input_direct.h"
 #include "../input/input_ps2_cnt.h"
 #include "../input/input_wii_ext.h"
+#include "../Arduino.h"
 #include "../util.h"
 #include "usb/API.h"
 #include <stdlib.h>

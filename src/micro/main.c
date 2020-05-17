@@ -6,6 +6,7 @@
 #include "../shared/output/serial_handler.h"
 #include "../shared/output/usb/Descriptors.h"
 #include "../shared/util.h"
+#include "../shared/Arduino.h"
 #include "stdbool.h"
 /** LUFA CDC Class driver interface configuration and state information. This
  * structure is passed to all CDC Class driver functions, so that multiple

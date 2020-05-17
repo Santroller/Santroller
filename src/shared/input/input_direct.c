@@ -71,7 +71,7 @@ void find_digital(void) {
 void find_analog(void) {
   stopReading();
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-    pinMode(A0 + i, INPUT_PULLUP);
+    pinMode(PIN_A0 + i, INPUT_PULLUP);
     last[i] = analogRead(i);
   }
   finding_analog = true;
@@ -90,7 +90,7 @@ void direct_tick(controller_t *controller) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
       if (abs(analogRead(i) - last[i]) > 10) {
         direct_init();
-        detected_pin = i + A0;
+        detected_pin = i + PIN_A0;
         found_pin = true;
         return;
       }

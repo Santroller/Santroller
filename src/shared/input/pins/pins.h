@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../../controller/controller.h"
-#include "arduino_pins.h"
+#include "../../Arduino.h"
 
 typedef struct {
   uint8_t mask;
@@ -20,8 +20,8 @@ typedef struct {
   uint8_t pin;
   bool inverted;
   volatile uint16_t value;
-  // Does this analog pin map to a digital pin (aka drums)
   uint16_t threshold;
+  // Does this analog pin map to a digital pin (aka drums)
   bool hasDigital;
   pin_t digital;
 } analog_info_t;

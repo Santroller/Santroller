@@ -5,6 +5,7 @@
 #include <avr/interrupt.h>
 #include <string.h>
 #include <stdbool.h>
+#include "arduino_pins.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,6 +64,7 @@ extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
 // extern const uint8_t PROGMEM digital_pin_to_bit_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
+extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 #define digitalPinToPort(P) (pgm_read_byte(digital_pin_to_port_PGM + (P)))
 #define digitalPinToBitMask(P)                                                 \
   (pgm_read_byte(digital_pin_to_bit_mask_PGM + (P)))

@@ -1,6 +1,7 @@
 #include "pins.h"
 #include "../../config/eeprom.h"
 #include "../input_guitar.h"
+#include "../../Arduino.h"
 #include "stddef.h"
 void enablePCI(uint8_t pin) {
   *digitalPinToPCMSK(pin) |= (1 << digitalPinToPCMSKbit(pin));
@@ -54,7 +55,7 @@ void setUpPin(uint8_t offset) {
   if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
 
-  pinMode(A0 + pin, INPUT);
+  pinMode(PIN_A0 + pin, INPUT);
 #if defined(ADCSRB) && defined(MUX5)
   // the MUX5 bit of ADCSRB selects whether we're reading from channels
   // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
@@ -91,7 +92,7 @@ void setUpAnalogDigitalPin(pin_t button, uint8_t pin, uint16_t threshold) {
   if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
 
-  pinMode(A0 + pin, INPUT);
+  pinMode(PIN_A0 + pin, INPUT);
 #if defined(ADCSRB) && defined(MUX5)
   // the MUX5 bit of ADCSRB selects whether we're reading from channels
   // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).

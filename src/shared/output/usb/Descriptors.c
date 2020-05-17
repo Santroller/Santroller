@@ -388,7 +388,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
           Type : DTYPE_Endpoint
         },
 
-        EndpointAddress : HID_EPADDR_IN,
+        EndpointAddress : DEVICE_EPADDR_IN,
         Attributes : EP_TYPE_INTERRUPT,
         EndpointSize : HID_EPSIZE,
         PollingIntervalMS : 1
@@ -414,7 +414,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
           Type : DTYPE_Endpoint
         },
 
-        EndpointAddress : HID_EPADDR_OUT,
+        EndpointAddress : DEVICE_EPADDR_OUT,
         Attributes : EP_TYPE_INTERRUPT,
         EndpointSize : HID_EPSIZE,
         PollingIntervalMS : 1,

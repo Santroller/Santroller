@@ -59,8 +59,8 @@ bool should_skip(uint8_t i) {
   return false;
 }
 int last[NUM_ANALOG_INPUTS];
-extern uint8_t detected_pin;
-extern bool found_pin;
+uint8_t detectedPin;
+bool pinDetected = false;
 void find_digital(void) {
   stopReading();
   for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
@@ -90,8 +90,8 @@ void direct_tick(controller_t *controller) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
       if (abs(analogRead(i) - last[i]) > 10) {
         direct_init();
-        detected_pin = i + PIN_A0;
-        found_pin = true;
+        detectedPin = i + PIN_A0;
+        pinDetected = true;
         return;
       }
     }
@@ -102,8 +102,8 @@ void direct_tick(controller_t *controller) {
       if (!should_skip(i)) {
         if (!digitalRead(i)) {
           stop_searching();
-          detected_pin = i;
-          found_pin = true;
+          detectedPin = i;
+          pinDetected = true;
           return;
         }
       }

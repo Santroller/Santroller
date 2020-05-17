@@ -25,6 +25,7 @@ typedef struct {
   bool hasDigital;
   pin_t digital;
 } analog_info_t;
+
 extern analog_info_t joyData[NUM_ANALOG_INPUTS];
 extern int validAnalog;
 void setUpPin(uint8_t pin);

@@ -13,7 +13,7 @@
 void (*tick_function)(controller_t *);
 int jth;
 extern bool skip_tick;
-void input_init() {
+void initInputs() {
   enableADC();
   switch (config.main.input_type) {
   case WII:
@@ -33,7 +33,7 @@ void input_init() {
   led_init();
   jth = config.axis.threshold_joy << 8;
 }
-void input_tick(controller_t *controller) {
+void tickInputs(controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);
   // controller->l_x=rand();

@@ -21,7 +21,7 @@ static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 uint8_t IdleCount;
 uint8_t UsingReportProtocol;
 extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
-void controller_control_request(void) {
+void deviceControlRequest(void) {
   if (device_type <= XINPUT_ARCADE_PAD &&
       USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
       (USB_ControlRequest.bmRequestType &

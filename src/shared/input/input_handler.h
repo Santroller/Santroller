@@ -8,6 +8,6 @@
     bit_set(controller->buttons, pos);                                          \
   }
 
-void input_init(void);
-void input_tick(controller_t* controller);
+void initInputs(void);
+void tickInputs(controller_t* controller);
 uint8_t get_value(controller_t* controller, uint8_t offset);

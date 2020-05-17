@@ -6,3 +6,5 @@ void direct_tick(controller_t *controller);
 void find_analog(void);
 void find_digital(void);
 void stop_searching(void);
+extern uint8_t detectedPin;
+extern bool pinDetected;

@@ -23,8 +23,8 @@
 
 #define HID_EPSIZE 32
 #define HID_REPORTSIZE 32
-/** Endpoint address of the HID IN endpoint. */
-#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 1)
+/** Endpoint address of the DEVICE IN endpoint. */
+#define DEVICE_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPADDR (ENDPOINT_DIR_IN | 2)
 
@@ -33,8 +33,8 @@
 
 /** Endpoint address of the CDC host-to-device data OUT endpoint. */
 #define CDC_RX_EPADDR (ENDPOINT_DIR_OUT | 4)
-/** Endpoint address of the HID OUT endpoint. */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 2)
+/** Endpoint address of the DEVICE OUT endpoint. */
+#define DEVICE_EPADDR_OUT (ENDPOINT_DIR_OUT | 2)
 
 /** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE 8

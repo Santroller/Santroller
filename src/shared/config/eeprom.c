@@ -3,7 +3,7 @@
 config_t EEMEM config_pointer = DEFAULT_CONFIG;
 const config_t PROGMEM default_config = DEFAULT_CONFIG;
 config_t config;
-void load_config(void) {
+void loadConfig(void) {
     eeprom_read_block(&config, &config_pointer, sizeof(config_t));
     // Check versions, if they aren't the same, a breaking change has happened
     // Check signatures, that way we know if the EEPROM has a valid config

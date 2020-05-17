@@ -1,154 +1,161 @@
-/*
-             LUFA Library
-     Copyright (C) Dean Camera, 2010.
-  dean [at] fourwalledcubicle [dot] com
-      www.fourwalledcubicle.com
-*/
-
-/*
-  Copyright 2010  Dean Camera (dean [at] fourwalledcubicle [dot] com)
-  Permission to use, copy, modify, distribute, and sell this
-  software and its documentation for any purpose is hereby granted
-  without fee, provided that the above copyright notice appear in
-  all copies and that both that the copyright notice and this
-  permission notice and warranty disclaimer appear in supporting
-  documentation, and that the name of the author not be used in
-  advertising or publicity pertaining to distribution of the
-  software without specific, written prior permission.
-  The author disclaim all warranties with regard to this
-  software, including all implied warranties of merchantability
-  and fitness.  In no event shall the author be liable for any
-  special, indirect or consequential damages or any damages
-  whatsoever resulting from loss of use, data or profits, whether
-  in an action of contract, negligence or other tortious action,
-  arising out of or in connection with the use or performance of
-  this software.
-*/
-
-/** \file
- *
- *  Main source file for the Arduino-usbserial project. This file contains the
- * main tasks of the project and is responsible for the initial application
- * hardware configuration.
- */
-
 #include "main.h"
 #include "../../shared/output/bootloader/bootloader.h"
 #include "../../shared/output/usb/API.h"
 #include "../../shared/util.h"
+#include "../shared/device_comms.h"
+#define JUMP 0xDEAD8001
 
-RingBuff_Data_t USBtoUSART_Buf[BUFFER_SIZE];
-RingBuff_Data_t USARTtoSER_Buf[BUFFER_SIZE];
-RingBuff_Data_t USARTtoHID_Buf[BUFFER_SIZE];
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
-RingBuff_t USBtoUSART_Buffer;
+RingBuff_t bufferIn;
 
 /** Circular buffer to hold data from the serial port before it is sent to the
- * host. */
-RingBuff_t USARTtoSER_Buffer;
+ * host as serial. */
+RingBuff_t bufferOutSerial;
 /** Circular buffer to hold data from the serial port before it is sent to the
- * host. */
-RingBuff_t USARTtoHID_Buffer;
+ * host as controller inputs*/
+RingBuff_t bufferOutDevice;
+
+RingBuff_Data_t bufferInData[BUFFER_SIZE];
+RingBuff_Data_t bufferOutSerialData[BUFFER_SIZE];
+RingBuff_Data_t bufferOutDeviceData[BUFFER_SIZE];
 
 /** Contains the current baud rate and other settings of the first virtual
  * serial port. This must be retained as some operating systems will not open
  * the port unless the settings can be set successfully.
  */
-static CDC_LineEncoding_t LineEncoding = {0};
-#define BAUD 1000000
-#define FRAME_START_1 0x7c
-#define FRAME_START_2 0x7e
-#define FRAME_END 0x7f
-#define ESC 0x7b
-eeprom_config_t EEMEM config_mem;
-
-bool entered_prog = false;
-bool is_ardwiino = true;
+CDC_LineEncoding_t lineEncoding = {0};
+bool avrdudeInUse = false;
+bool isArdwiino = true;
 uint8_t lastCommand = 0;
-bool command_state = false;
-#define JUMP 0xDEAD8001
+bool waitingForCommandCompletion = false;
+eeprom_config_t EEMEM config;
 
-// by placing this in noinit, we can jump to the bootloader after a watchdog
-// reset.
+// if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
+// mode after the next watchdog reset
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
-void handle_out(uint8_t ep, RingBuff_t *buf, bool serial);
 
-/** Main program entry point. This routine contains the overall program flow,
- * including initial setup of all components and the main program loop.
+/**
+ * Write data from a buffer to an endpoint, handling escape bytes
  */
-void set_baud(bool b) {
-  is_ardwiino = b;
+void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
+                     bool isSerialEndpoint);
+
+/**
+ * Set the device mode, true for ardwiino, false for avrdude
+ */
+void setDeviceMode(bool ardwiinoMode) {
+  isArdwiino = ardwiinoMode;
+  // Disable serial before configuring
   UCSR1B = 0;
   UCSR1A = 0;
   UCSR1C = 0;
-  /* Hardware Initialization */
-  UBRR1 = b ? SERIAL_2X_UBBRVAL(BAUD) : SERIAL_2X_UBBRVAL(115200);
+  // Set the baudrate. Ardwiino runs at a faster baudrate so that hid is more
+  // responsive, but avrdude requires 115200.
+  UBRR1 = ardwiinoMode ? SERIAL_2X_UBBRVAL(BAUD) : SERIAL_2X_UBBRVAL(115200);
 
+  // Enable serial again, making sure to enable receive interrupts
   UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
   UCSR1A = (1 << U2X1);
   UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 }
+
 int main(void) {
+  // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
+    // We don't want to jump again after the bootloader returns control flow to
+    // us
     jmpToBootloader = 0;
-    // Bootloader is at address 0x1000
     asm volatile("jmp 0x1000");
   }
 
-  SetupHardware();
-  if (eeprom_read_dword(&config_mem.id) != ARDWIINO_DEVICE_TYPE) {
-    eeprom_update_dword(&config_mem.id, ARDWIINO_DEVICE_TYPE);
-    eeprom_update_byte(&config_mem.device_type, device_type);
+  /* Disable watchdog if enabled by bootloader/fuses */
+  MCUSR &= ~(1 << WDRF);
+  wdt_disable();
+
+  // Configure serial for ardwiino mode
+  setDeviceMode(true);
+
+  /* Start the flush timer so that overflows occur rapidly to push received
+   * bytes to the serial interface */
+  TCCR0B = (1 << CS02);
+
+  USB_Init();
+
+  /* Start the 328p  */
+  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+  Board_Reset(false);
+
+  // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
+  // signature to make sure that the data in eeprom is valid
+  if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
+    eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
+    eeprom_update_byte(&config.device_type, device_type);
   } else {
-    device_type = eeprom_read_byte(&config_mem.device_type);
+    device_type = eeprom_read_byte(&config.device_type);
   }
 
-  RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buf);
-  RingBuffer_InitBuffer(&USARTtoSER_Buffer, USARTtoSER_Buf);
-  RingBuffer_InitBuffer(&USARTtoHID_Buffer, USARTtoHID_Buf);
+  RingBuffer_InitBuffer(&bufferIn, bufferInData);
+  RingBuffer_InitBuffer(&bufferOutSerial, bufferOutSerialData);
+  RingBuffer_InitBuffer(&bufferOutDevice, bufferOutDeviceData);
   sei();
-  for (;;) {
-    // USB Task
+  while (true) {
     Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
     if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
 
     if (USB_DeviceState != DEVICE_STATE_Configured) { continue; }
-
-    /* Only try to read in bytes from the CDC interface if the transmit buffer
-     * is not full */
-    if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
+    // We can only read bytes if the buffer isn't full
+    if (!(RingBuffer_IsFull(&bufferIn))) {
       Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-      /* Read bytes from the USB OUT endpoint into the USART transmit buffer
-       */
       if (Endpoint_IsOUTReceived()) {
         if (Endpoint_BytesInEndpoint()) {
-          uint8_t b = Endpoint_Read_8();
-          RingBuffer_Insert(&USBtoUSART_Buffer, b);
-          if (!is_ardwiino) {
-            entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
-          } else if (!command_state) {
+          uint8_t receivedByte = Endpoint_Read_8();
+          RingBuffer_Insert(&bufferIn, receivedByte);
+          // If we are in avrdude mode, then we just care if avrdude has
+          // finished or not
+          if (!isArdwiino) {
+            avrdudeInUse |= receivedByte == COMMAND_STK_500_ENTER_PROG;
+          } else if (!waitingForCommandCompletion) {
+            // Otherwise, we can parse the bytes as commands. However, we only
+            // want to parse full commands. To do this, we set
+            // waitingForCommandCompletion once the usb code has parsed a
+            // command it recognises.
+            // However, there are commands that only the main mcu recognises. It
+            // responses to every command however, so we can set
+            // waitingForCommandCompletion once we get a response.
             if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-              lastCommand = b;
+              // We previously received a COMMAND_WRITE_CONFIG_VALUE command,
+              // and so the current byte is the area that is being updated
+              lastCommand = receivedByte;
             } else if (lastCommand == CONFIG_SUB_TYPE) {
-              eeprom_update_byte(&config_mem.device_type, b);
+              // We previously received that the section being updated is the
+              // subtype, so the current byte is the subtype. Write the new
+              // subtype to eeprom.
+              eeprom_update_byte(&config.device_type, receivedByte);
               lastCommand = 0;
-              command_state = true;
+              waitingForCommandCompletion = true;
             } else {
-              switch (b) {
+              switch (receivedByte) {
+                // To save flash, the below commands are written like this.
+                // These commands handle either rebooting normally, or jumping
+                // to the bootloader.
               case COMMAND_REBOOT:
               case COMMAND_JUMP_BOOTLOADER_UNO:
-                jmpToBootloader = b == COMMAND_REBOOT ? 0 : JUMP;
+                jmpToBootloader = receivedByte == COMMAND_REBOOT ? 0 : JUMP;
                 reboot();
+                // jump_bootloader just sets us to avrdude mode.
               case COMMAND_JUMP_BOOTLOADER:
-                set_baud(false);
-                command_state = true;
+                setDeviceMode(false);
+                waitingForCommandCompletion = true;
                 break;
               case COMMAND_WRITE_CONFIG_VALUE:
-                lastCommand = b;
+                // We have received a command write config value command, so we
+                // save it so we can receive more data next.
+                lastCommand = receivedByte;
                 break;
               default:
-                command_state = true;
+                // We received an unknown command, so wait for the next command.
+                waitingForCommandCompletion = true;
               }
             }
           }
@@ -157,75 +164,63 @@ int main(void) {
         if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
       }
     }
-    handle_out(HID_EPADDR_IN, &USARTtoHID_Buffer, false);
-    handle_out(CDC_TX_EPADDR, &USARTtoSER_Buffer, true);
-    /* Load the next byte from the USART transmit buffer into the USART */
-    if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
-      Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
+    // Write data from the different output buffers to their respective
+    // endpoints
+    writeToEndpoint(DEVICE_EPADDR_IN, &bufferOutDevice, false);
+    writeToEndpoint(CDC_TX_EPADDR, &bufferOutSerial, true);
+    // Send the next byte from the input buffer to the  main mcu
+    if (!(RingBuffer_IsEmpty(&bufferIn))) {
+      Serial_SendByte(RingBuffer_Remove(&bufferIn));
     }
   }
 }
-void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
+void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
+                     bool isSerialEndpoint) {
 
-  RingBuff_Count_t BufferCount = RingBuffer_GetCount(buf);
-  if (BufferCount == 0) return;
-  if (serial) {
-    // We can assume that any response from the 328p means the command was
-    // parsed successfully and it is ready for another command.
-    command_state = false;
-    if ((((TIFR0 & (1 << TOV0)) == 0) && (BufferCount < BUFFER_NEARLY_FULL))) {
+  RingBuff_Count_t bytesToWrite = RingBuffer_GetCount(buffer);
+  uint8_t byteToWrite;
+  if (bytesToWrite == 0) return;
+  if (isSerialEndpoint) {
+    // If the uno is sending back data, then that means the command was parsed
+    // and it is ready for another command
+    waitingForCommandCompletion = false;
+    // Serial needs to be buffered a little, this is done by checking if we are
+    // about to overflow, or if the flush timer has overflowed.
+    if ((((TIFR0 & (1 << TOV0)) == 0) && (bytesToWrite < BUFFER_NEARLY_FULL))) {
       return;
     }
     TIFR0 |= (1 << TOV0);
   }
-  uint8_t b;
-  if (is_ardwiino) {
-    b = RingBuffer_Remove(buf);
-    if (b != FRAME_START_1 && b != FRAME_START_2) { return; }
-    // We can assume that all packets are going to be smaller than this.
-    BufferCount = 255;
+  if (isArdwiino) {
+    byteToWrite = RingBuffer_Remove(buffer);
+    if (byteToWrite != FRAME_START_DEVICE &&
+        byteToWrite != FRAME_START_SERIAL) {
+      return;
+    }
+    // A device packet should always be smaller than the largest packet. We also
+    // need to account for escape bytes however
+    bytesToWrite = sizeof(output_report_size_t) + 10;
   }
-  Endpoint_SelectEndpoint(ep);
+  Endpoint_SelectEndpoint(endpoint);
 
   if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
     /* Read bytes from the USART receive buffer into the USB IN
     endpoint
      */
-    while (BufferCount--) {
-      b = RingBuffer_Remove(buf);
-      if (is_ardwiino) {
-        if (b == FRAME_END) { break; };
-        if (b == ESC) b = RingBuffer_Remove(buf) ^ 0x20;
+    while (bytesToWrite--) {
+      byteToWrite = RingBuffer_Remove(buffer);
+      if (isArdwiino) {
+        if (byteToWrite == FRAME_END) { break; };
+        if (byteToWrite == ESC) byteToWrite = RingBuffer_Remove(buffer) ^ 0x20;
       }
-      Endpoint_Write_8(b);
+      Endpoint_Write_8(byteToWrite);
     }
     Endpoint_ClearIN();
   }
 }
-/** Configures the board hardware and chip peripherals for the demo's
- * functionality. */
-void SetupHardware(void) {
-  /* Disable watchdog if enabled by bootloader/fuses */
-  MCUSR &= ~(1 << WDRF);
-  wdt_disable();
-  /* Hardware Initialization */
-  set_baud(true);
-  DDRD |= (1 << 3);
-  PORTD |= (1 << 2);
-  USB_Init();
 
-  /* Start the flush timer so that overflows occur rapidly to push received
-   * bytes to the USB interface */
-  TCCR0B = (1 << CS02);
-
-  /* Pull target /RESET line high */
-  AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-}
-
-/** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  /* Setup CDC Notification, Rx and Tx Endpoints */
+  // Setup necessary endpoints
   Endpoint_ConfigureEndpoint(CDC_NOTIFICATION_EPADDR, EP_TYPE_INTERRUPT,
                              CDC_NOTIFICATION_EPSIZE, 1);
 
@@ -235,39 +230,36 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(CDC_RX_EPADDR, EP_TYPE_BULK, CDC_RX_EPSIZE,
                              CDC_RX_BANK_SIZE);
 
-  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+  Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
 }
-/** Event handler for the library USB Unhandled Control Request event. */
 void EVENT_USB_Device_ControlRequest(void) {
-  controller_control_request();
-  // if (USB_ControlRequest.wIndex != 0) return;
-  /* Process CDC specific control requests */
+  // Check for device specific requests, such as xinput and hid control
+  // requests.
+  deviceControlRequest();
+
   /* Process CDC specific control requests */
   uint8_t bRequest = USB_ControlRequest.bRequest;
   if (bRequest == CDC_REQ_GetLineEncoding) {
     if (USB_ControlRequest.bmRequestType ==
         (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
       Endpoint_ClearSETUP();
-
-      /* Write the line coding data to the control endpoint */
-      // this one is not inline because its already used somewhere in the usb
-      // core, so it will dupe code
-      Endpoint_Write_Control_Stream_LE(&LineEncoding,
+      Endpoint_Write_Control_Stream_LE(&lineEncoding,
                                        sizeof(CDC_LineEncoding_t));
       Endpoint_ClearStatusStage();
     }
   } else if (USB_ControlRequest.bmRequestType ==
              (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     if (bRequest == CDC_REQ_SetLineEncoding) {
-      Endpoint_Read_Control_Stream_LE(&LineEncoding,
+      Endpoint_Read_Control_Stream_LE(&lineEncoding,
                                       sizeof(CDC_LineEncoding_t));
       Endpoint_ClearStatusStage();
     } else if (bRequest == CDC_REQ_SetControlLineState) {
       Endpoint_ClearSETUP();
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
-      if (entered_prog) {
-        entered_prog = false;
-        set_baud(true);
+      if (avrdudeInUse) {
+        avrdudeInUse = false;
+        setDeviceMode(true);
       }
       Endpoint_ClearStatusStage();
     }
@@ -275,17 +267,20 @@ void EVENT_USB_Device_ControlRequest(void) {
 }
 
 uint8_t frame = 0;
-/** ISR to manage the reception of data from the serial port, placing received
- * bytes into a circular buffer for later transmission to the host.
+/** Receive data from the main mcu, and put it into the correct output buffer
+ * based on the last known frame
  */
 ISR(USART1_RX_vect, ISR_BLOCK) {
-  uint8_t b = UDR1;
+  uint8_t receivedByte = UDR1;
 
-  if (b == FRAME_START_1 || b == FRAME_START_2) { frame = b; }
-  if (frame == FRAME_START_2 || !is_ardwiino) {
-    RingBuffer_Insert(&USARTtoSER_Buffer, b);
-  } else if (frame == FRAME_START_1) {
-    RingBuffer_Insert(&USARTtoHID_Buffer, b);
+  if (receivedByte == FRAME_START_DEVICE ||
+      receivedByte == FRAME_START_SERIAL) {
+    frame = receivedByte;
   }
-  if (b == FRAME_END) { frame = 0; }
+  if (frame == FRAME_START_SERIAL || !isArdwiino) {
+    RingBuffer_Insert(&bufferOutSerial, receivedByte);
+  } else if (frame == FRAME_START_DEVICE) {
+    RingBuffer_Insert(&bufferOutDevice, receivedByte);
+  }
+  if (receivedByte == FRAME_END) { frame = 0; }
 }

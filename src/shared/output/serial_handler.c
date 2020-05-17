@@ -265,7 +265,7 @@ void get_config_buf(uint8_t data) {
     break;
   }
 }
-void process_serial(uint8_t data) {
+void processSerialData(uint8_t data) {
   if (cmd == 0) {
     cmd = data;
     size = 0;
@@ -336,11 +336,11 @@ void process_serial(uint8_t data) {
     }
     while (size) {
       if (cmd == COMMAND_READ_INFO) {
-        write_usb(pgm_read_byte(pbuf++));
+        writeToSerial(pgm_read_byte(pbuf++));
       } else if (ram) {
-        write_usb(*(buf++));
+        writeToSerial(*(buf++));
       } else {
-        write_usb(eeprom_read_byte(buf++));
+        writeToSerial(eeprom_read_byte(buf++));
       }
       size--;
     }
@@ -354,8 +354,8 @@ void process_serial(uint8_t data) {
     }
   }
   if (size == 0) {
-    write_usb('\r');
-    write_usb('\n');
+    writeToSerial('\r');
+    writeToSerial('\n');
     cmd = 0;
   }
 }

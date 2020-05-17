@@ -174,10 +174,10 @@ void create_midi_report(void *ReportData, uint16_t *const ReportSize,
 
   *ReportSize = idx * sizeof(MIDI_EventPacket_t);
 }
-void (*create_report)(void *ReportData, uint16_t *const ReportSize,
+void (*fillReport)(void *ReportData, uint16_t *const ReportSize,
                       controller_t *controller) = NULL;
 
-void report_init(void) {
+void initReports(void) {
   if (config.main.sub_type > SWITCH_GAMEPAD) {
     if (config.main.sub_type > PS3_GAMEPAD) {
       memcpy_P(ps3AxisBindings, ghAxisBindings, sizeof(ghAxisBindings));
@@ -195,13 +195,13 @@ void report_init(void) {
     memcpy_P(ps3ButtonBindings, psRBButonBindings, sizeof(ps3ButtonBindings));
   }
   if (config.main.sub_type >= MIDI_GUITAR) {
-    create_report = create_midi_report;
+    fillReport = create_midi_report;
   } else if (config.main.sub_type <= XINPUT_ARCADE_PAD) {
-    create_report = create_xinput_report;
+    fillReport = create_xinput_report;
   } else if (config.main.sub_type == KEYBOARD) {
-    create_report = create_keyboard_report;
+    fillReport = create_keyboard_report;
   } else {
-    create_report = create_ps3_report;
+    fillReport = create_ps3_report;
   }
   jth = config.axis.threshold_joy << 8;
   tth = config.axis.threshold_trigger << 8;

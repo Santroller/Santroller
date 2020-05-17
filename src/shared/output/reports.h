@@ -1,21 +1,13 @@
 #pragma once
-#include "../config/defines.h"
-#include "../config/eeprom.h"
-#include "../controller/controller.h"
+#include "config/defines.h"
+#include "config/eeprom.h"
+#include "controller/controller.h"
 #include "controller_structs.h"
 #include "stdint.h"
-#define COPY(first, second)                                                    \
-  bit_write(bit_check(controller->buttons, XBOX_##first),                       \
-            JoystickReport->buttons, SWITCH_##second);
 
-#define SIMULTANEOUS_KEYS 6
-#define CHECK_JOY_KEY(joy)                                                     \
-  check_joy_key(config.keys.joy.neg, config.keys.joy.pos, controller->joy,      \
-                jth, &usedKeys, KeyboardReport)
-#define CHECK_TRIGGER_KEY(trigger)                                             \
-  check_joy_key(0, config.keys.trigger, controller->trigger,                    \
-                tth, &usedKeys, KeyboardReport)
+
+
 
 void (*fillReport)(void *ReportData, uint16_t *const ReportSize,
-                      controller_t* controller);
+                      Controller_t* controller);
 void initReports(void);

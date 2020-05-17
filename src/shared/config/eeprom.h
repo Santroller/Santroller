@@ -3,7 +3,6 @@
 #include "defaults.h"
 #include <avr/eeprom.h>
 
-extern config_t config;
-extern config_t EEMEM config_pointer;
+extern Configuration_t config;
+extern Configuration_t EEMEM config_pointer;
 void loadConfig(void);
-void write_config(void);

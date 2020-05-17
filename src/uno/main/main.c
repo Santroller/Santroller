@@ -1,11 +1,12 @@
-#include "../../shared/config/eeprom.h"
-#include "../../shared/input/input_direct.h"
-#include "../../shared/input/input_handler.h"
-#include "../../shared/output/reports.h"
-#include "../../shared/output/serial_handler.h"
-#include "../../shared/output/usb/API.h"
-#include "../../shared/util.h"
-#include "../shared/device_comms.h"
+#include "config/eeprom.h"
+#include "input/inputs/direct.h"
+#include "input/input_handler.h"
+#include "output/reports.h"
+#include "output/serial_handler.h"
+#include "output/serial_commands.h"
+#include "util/util.h"
+#include "leds/leds.h"
+#include "device_comms.h"
 #include <LUFA/Drivers/Misc/RingBuffer.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -15,9 +16,9 @@
 #include <stdlib.h>
 #include <util/delay.h>
 size_t controllerIndex = 0;
-controller_t controller;
-uint8_t currentReport[sizeof(output_report_size_t)];
-uint8_t previousReport[sizeof(output_report_size_t)];
+Controller_t controller;
+uint8_t currentReport[sizeof(USB_Report_Data_t)];
+uint8_t previousReport[sizeof(USB_Report_Data_t)];
 /** Buffers to hold serial data */
 RingBuffer_t serialInBuffer;
 uint8_t serialInBufferData[128];
@@ -45,9 +46,11 @@ int main(void) {
   RingBuffer_InitBuffer(&serialOutBuffer, serialOutBufferData,
                         sizeof(serialOutBufferData));
   initInputs();
+  initLEDs();
   initReports();
   while (1) {
     tickInputs(&controller);
+    tickLEDs(&controller);
     uint16_t size;
     fillReport(currentReport, &size, &controller);
     if (memcmp(currentReport, previousReport, size) != 0) {
@@ -61,8 +64,8 @@ int main(void) {
       memcpy(previousReport, currentReport, size);
     }
 
-    if (pinDetected) {
-      pinDetected = false;
+    if (foundPin) {
+      foundPin = false;
       RingBuffer_Insert(&serialOutBuffer, FRAME_START_SERIAL);
       writeToSerial('d');
       writeToSerial(detectedPin);

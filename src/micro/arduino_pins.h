@@ -23,7 +23,7 @@
 #pragma once
 
 #include <avr/pgmspace.h>
-#include "Arduino.h"
+#include "util/util.h"
 
 // For iterating over all digital pins, skip the duplicate versions of digital pins
 #define NUM_DIGITAL_PINS_NO_DUP 24

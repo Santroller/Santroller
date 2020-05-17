@@ -1,8 +1,7 @@
 #include "control_requests.h"
 #include "../config/defines.h"
 #include "controller_structs.h"
-#include "usb/Descriptors.h"
-#include "usb/wcid.h"
+#include "descriptors.h"
 const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
   Version : 0x0100,
@@ -18,11 +17,9 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   }
 };
 static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
-uint8_t IdleCount;
-uint8_t UsingReportProtocol;
 extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 void deviceControlRequest(void) {
-  if (device_type <= XINPUT_ARCADE_PAD &&
+  if (deviceType <= XINPUT_ARCADE_PAD &&
       USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
       (USB_ControlRequest.bmRequestType &
        (CONTROL_REQTYPE_DIRECTION | CONTROL_REQTYPE_TYPE)) ==
@@ -33,7 +30,7 @@ void deviceControlRequest(void) {
     Endpoint_ClearStatusStage();
     return;
   }
-  if (device_type < PS3_GAMEPAD ||
+  if (deviceType < PS3_GAMEPAD ||
       USB_ControlRequest.wIndex != INTERFACE_ID_HID)
     return;
   // // PS3 Id packet
@@ -41,11 +38,11 @@ void deviceControlRequest(void) {
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
       USB_ControlRequest.bRequest == HID_REQ_GetReport) {
     // Send out init packets for the ps3
-    if (device_type == PS3_GUITAR_HERO_GUITAR ||
-        device_type == PS3_GUITAR_HERO_DRUMS) {
+    if (deviceType == PS3_GUITAR_HERO_GUITAR ||
+        deviceType == PS3_GUITAR_HERO_DRUMS) {
       id[3] = 0x06;
-    } else if (device_type == PS3_ROCK_BAND_GUITAR ||
-               device_type == PS3_ROCK_BAND_DRUMS) {
+    } else if (deviceType == PS3_ROCK_BAND_GUITAR ||
+               deviceType == PS3_ROCK_BAND_DRUMS) {
       id[3] = 0x00;
     }
     Endpoint_ClearSETUP();

@@ -29,9 +29,9 @@ SS_PORT      = PORTB
 SCK          = PB1
 SCK_DDR      = DDRB
 
-SRC = $(shell find ../shared -type f -name '*.c*') arduino_pins.c main.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC = $(shell find ../shared -type f -name '*.c*') arduino_pins.c main.c $(shell find ../../lib/i2c -type f -name '*.c*') $(shell find ../../lib/mpu6050 -type f -name '*.c*') $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../lib/lufa/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output/usb -I ../shared -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output -I ../shared -I../../lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin
 CC_FLAGS     += -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 
 CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"'
 LD_FLAGS     = $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin 

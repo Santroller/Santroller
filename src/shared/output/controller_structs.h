@@ -3,7 +3,7 @@
 #define __INCLUDE_FROM_USB_DRIVER
 #define USB_DEVICE_ONLY
 #define USB_CAN_BE_DEVICE
-#include "usb/Descriptors.h"
+#include "descriptors.h"
 #include <stdbool.h>
 #include "../controller/controller.h"
 /** Type define for the gamepad HID report structure, for creating and sending
@@ -26,6 +26,7 @@ typedef struct {
   uint16_t accel[4];
 
 } USB_PS3Report_Data_t;
+
 typedef struct {
   uint16_t buttons;
   uint8_t lt;
@@ -34,7 +35,8 @@ typedef struct {
   int16_t l_y;
   int16_t r_x;
   int16_t r_y;
-} xinput_data_t;
+} XInput_Data_t;
+
 typedef struct {
   uint8_t rid;
   uint8_t rsize;
@@ -47,12 +49,14 @@ typedef struct {
   int16_t r_y;
   uint8_t reserved_1[6];
 } USB_XInputReport_Data_t;
+
 typedef struct {
   MIDI_EventPacket_t midi[XBOX_AXIS_COUNT+XBOX_BTN_COUNT];
 } USB_MIDI_Data_t;
+
 typedef union {
   USB_KeyboardReport_Data_t keyboard;
   USB_PS3Report_Data_t ps3;
   USB_XInputReport_Data_t xinput;
   USB_MIDI_Data_t midi;
-} output_report_size_t;
+} USB_Report_Data_t;

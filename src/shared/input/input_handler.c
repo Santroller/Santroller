@@ -1,47 +1,46 @@
 #include "input_handler.h"
-#include "../config/eeprom.h"
-#include "../output/usb/Descriptors.h"
-#include "../util.h"
-#include "i2c/twi.h"
-#include "input_direct.h"
-#include "input_guitar.h"
-#include "input_ps2_cnt.h"
-#include "input_wii_ext.h"
-#include "leds.h"
+#include "config/eeprom.h"
+#include "leds/leds.h"
+#include "output/descriptors.h"
+#include "util/util.h"
+#include "i2c/i2c.h"
+#include "inputs/direct.h"
+#include "inputs/guitar.h"
+#include "inputs/ps2_cnt.h"
+#include "inputs/wii_ext.h"
 #include "pins/pins.h"
 // #include <stdlib.h>
-void (*tick_function)(controller_t *);
-int jth;
-extern bool skip_tick;
+void (*tick_function)(Controller_t *);
+int joyThreshold;
 void initInputs() {
-  enableADC();
-  switch (config.main.input_type) {
+  setupADC();
+  setupMicrosTimer();
+  switch (config.main.inputType) {
   case WII:
-    tick_function = wii_ext_tick;
+    tick_function = tickWiiExtInput;
     break;
   case DIRECT:
-    direct_init();
-    tick_function = direct_tick;
+    initDirectInput();
+    tick_function = tickDirectInput;
     break;
   case PS2:
-    ps2_cnt_init();
-    tick_function = ps2_cnt_tick;
+    initPS2CtrlInput();
+    tick_function = tickPS2CtrlInput;
     break;
   }
-  twi_init();
-  guitar_init();
-  led_init();
-  jth = config.axis.threshold_joy << 8;
+  initI2C();
+  initGuitar();
+  joyThreshold = config.axis.joyThreshold << 8;
 }
-void tickInputs(controller_t *controller) {
+void tickInputs(Controller_t *controller) {
   controller->buttons = 0;
   tick_function(controller);
   // controller->l_x=rand();
-  if (config.main.map_joy_to_dpad) {
+  if (config.main.mapLeftJoystickToDPad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
   }
-  if (config.main.map_start_select_to_home) {
+  if (config.main.mapStartSelectToHome) {
     if (bit_check(controller->buttons, XBOX_START) &&
         bit_check(controller->buttons, XBOX_BACK)) {
       bit_clear(controller->buttons, XBOX_START);
@@ -49,21 +48,21 @@ void tickInputs(controller_t *controller) {
       bit_set(controller->buttons, XBOX_HOME);
     }
   }
-  guitar_tick(controller);
-  led_tick(controller);
+  tickGuitar(controller);
 }
-uint8_t get_value(controller_t *controller, uint8_t offset) {
+uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {
-    if (is_drum() && offset > 8 && offset < 16) {
-      return controller->drum_axis[offset-8];
+    if (isDrum() && offset > 8 && offset < 16) {
+      return controller->drumVelocity[offset - 8];
     }
     return bit_check(controller->buttons, offset) ? MIDI_STANDARD_VELOCITY : 0;
   } else if (offset > XBOX_BTN_COUNT + 2) {
-    return ((((controller_a_t *)controller)
+    return ((((ControllerCombined_t *)controller)
                  ->sticks[offset - XBOX_BTN_COUNT - 2]) &
-            0xffff) > config.axis.threshold_trigger;
+            0xffff) > config.axis.triggerThreshold;
   } else {
-    return (((controller_a_t *)controller)->triggers[offset - XBOX_BTN_COUNT]) >
-           config.axis.threshold_trigger;
+    return (((ControllerCombined_t *)controller)
+                ->triggers[offset - XBOX_BTN_COUNT]) >
+           config.axis.triggerThreshold;
   }
 }

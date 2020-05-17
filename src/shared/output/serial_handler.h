@@ -4,5 +4,5 @@
 #include "../config/eeprom.h"
 #include "../controller/controller.h"
 #include "bootloader/bootloader.h"
-extern controller_t controller;
+extern Controller_t controller;
 void processSerialData(uint8_t data);

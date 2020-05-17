@@ -1,277 +1,275 @@
 #include "serial_handler.h"
-#include "../input/input_direct.h"
-#include "../input/input_ps2_cnt.h"
-#include "../input/input_wii_ext.h"
-#include "../Arduino.h"
-#include "../util.h"
-#include "usb/API.h"
+#include "input/inputs/direct.h"
+#include "input/inputs/ps2_cnt.h"
+#include "input/inputs/wii_ext.h"
+#include "serial_commands.h"
+#include "util/util.h"
 #include <stdlib.h>
 
-int buf_idx = 0;
-int cmd = 0;
-int size = 0;
-int subcmd = 0;
-static const uint8_t *pbuf = NULL;
-static uint8_t *buf = NULL;
-bool ram = false;
+int currentCommand = 0;
+int currentCommandSize = 0;
+int currentSubCommand = 0;
+static const uint8_t *constDataToRead = NULL;
+static uint8_t *dataToReadWrite = NULL;
+bool dataInRam = false;
 void get_info_buf(uint8_t data) {
   switch (data) {
   case INFO_VERSION:
-    pbuf = (const uint8_t *)PSTR(VERSION);
+    constDataToRead = (const uint8_t *)PSTR(VERSION);
     break;
   case INFO_SIGNATURE:
-    pbuf = (const uint8_t *)PSTR(SIGNATURE);
+    constDataToRead = (const uint8_t *)PSTR(SIGNATURE);
     break;
   case INFO_MAIN_MCU:
-    pbuf = (const uint8_t *)PSTR(MCU);
+    constDataToRead = (const uint8_t *)PSTR(MCU);
     break;
   case INFO_CPU_FREQ:
-    pbuf = (const uint8_t *)PSTR(STR(F_CPU));
+    constDataToRead = (const uint8_t *)PSTR(STR(F_CPU));
     break;
   case INFO_BOARD:
-    pbuf = (const uint8_t *)PSTR(ARDWIINO_BOARD);
+    constDataToRead = (const uint8_t *)PSTR(ARDWIINO_BOARD);
     break;
   case INFO_EXT:
-    cmd = COMMAND_READ_CONFIG_VALUE;
-    ram = true;
-    if (config_pointer.main.input_type == WII) {
-      buf = (uint8_t *)&wii_ext;
-      size = 2;
-    } else if (config_pointer.main.input_type == PS2) {
-      buf = (uint8_t *)&ps2_type;
-      size = 1;
+    currentCommand = COMMAND_READ_CONFIG_VALUE;
+    dataInRam = true;
+    if (config_pointer.main.inputType == WII) {
+      dataToReadWrite = (uint8_t *)&wii_ext;
+      currentCommandSize = 2;
+    } else if (config_pointer.main.inputType == PS2) {
+      dataToReadWrite = (uint8_t *)&ps2CtrlType;
+      currentCommandSize = 1;
     }
     return;
   }
-  size = strlen_P((char *)pbuf);
+  currentCommandSize = strlen_P((char *)constDataToRead);
 }
 void get_config_buf(uint8_t data) {
-  size = 1;
+  currentCommandSize = 1;
   switch (data) {
   case CONFIG_INPUT_TYPE:
-    buf = &config_pointer.main.input_type;
+    dataToReadWrite = &config_pointer.main.inputType;
     break;
   case CONFIG_SUB_TYPE:
-    buf = &config_pointer.main.sub_type;
+    dataToReadWrite = &config_pointer.main.subType;
     break;
   case CONFIG_TILT_TYPE:
-    buf = &config_pointer.main.tilt_type;
+    dataToReadWrite = &config_pointer.main.tiltType;
     break;
   case CONFIG_MPU_6050_ORIENTATION:
-    buf = &config_pointer.axis.mpu_6050_orientation;
+    dataToReadWrite = &config_pointer.axis.mpu6050Orientation;
     break;
   case CONFIG_TILT_SENSITIVITY:
-    buf = (uint8_t *)&config_pointer.axis.tilt_sensitivity;
+    dataToReadWrite = (uint8_t *)&config_pointer.axis.tiltSensitivity;
     break;
   case CONFIG_LED_TYPE:
-    buf = &config_pointer.main.fret_mode;
+    dataToReadWrite = &config_pointer.main.fretLEDMode;
     break;
   case CONFIG_MAP_JOY_DPAD:
-    buf = (uint8_t *)&config_pointer.main.map_joy_to_dpad;
+    dataToReadWrite = (uint8_t *)&config_pointer.main.mapLeftJoystickToDPad;
     break;
   case CONFIG_MAP_START_SEL_HOME:
-    buf = (uint8_t *)&config_pointer.main.map_start_select_to_home;
+    dataToReadWrite = (uint8_t *)&config_pointer.main.mapStartSelectToHome;
     break;
   case CONFIG_MAP_ACCEL_RIGHT:
-    buf = (uint8_t *)&config_pointer.main.map_accel_to_right;
+    dataToReadWrite = (uint8_t *)&config_pointer.main.mapNunchukAccelToRightJoy;
     break;
   case CONFIG_PIN_UP:
-    buf = &config_pointer.pins.up;
+    dataToReadWrite = &config_pointer.pins.up;
     break;
   case CONFIG_PIN_DOWN:
-    buf = &config_pointer.pins.down;
+    dataToReadWrite = &config_pointer.pins.down;
     break;
   case CONFIG_PIN_LEFT:
-    buf = &config_pointer.pins.left;
+    dataToReadWrite = &config_pointer.pins.left;
     break;
   case CONFIG_PIN_RIGHT:
-    buf = &config_pointer.pins.right;
+    dataToReadWrite = &config_pointer.pins.right;
     break;
   case CONFIG_PIN_START:
-    buf = &config_pointer.pins.start;
+    dataToReadWrite = &config_pointer.pins.start;
     break;
   case CONFIG_PIN_SELECT:
-    buf = &config_pointer.pins.back;
+    dataToReadWrite = &config_pointer.pins.back;
     break;
   case CONFIG_PIN_LEFT_STICK:
-    buf = &config_pointer.pins.left_stick;
+    dataToReadWrite = &config_pointer.pins.left_stick;
     break;
   case CONFIG_PIN_RIGHT_STICK:
-    buf = &config_pointer.pins.right_stick;
+    dataToReadWrite = &config_pointer.pins.right_stick;
     break;
   case CONFIG_PIN_LB:
-    buf = &config_pointer.pins.LB;
+    dataToReadWrite = &config_pointer.pins.LB;
     break;
   case CONFIG_PIN_RB:
-    buf = &config_pointer.pins.RB;
+    dataToReadWrite = &config_pointer.pins.RB;
     break;
   case CONFIG_PIN_HOME:
-    buf = &config_pointer.pins.home;
+    dataToReadWrite = &config_pointer.pins.home;
     break;
   case CONFIG_PIN_CAPTURE:
-    buf = &config_pointer.pins.capture;
+    dataToReadWrite = &config_pointer.pins.capture;
     break;
   case CONFIG_PIN_A:
-    buf = &config_pointer.pins.a;
+    dataToReadWrite = &config_pointer.pins.a;
     break;
   case CONFIG_PIN_B:
-    buf = &config_pointer.pins.b;
+    dataToReadWrite = &config_pointer.pins.b;
     break;
   case CONFIG_PIN_X:
-    buf = &config_pointer.pins.x;
+    dataToReadWrite = &config_pointer.pins.x;
     break;
   case CONFIG_PIN_Y:
-    buf = &config_pointer.pins.y;
+    dataToReadWrite = &config_pointer.pins.y;
     break;
   case CONFIG_PIN_LT:
-    buf = &config_pointer.pins.lt.pin;
+    dataToReadWrite = &config_pointer.pins.lt.pin;
     break;
   case CONFIG_PIN_RT:
-    buf = &config_pointer.pins.rt.pin;
+    dataToReadWrite = &config_pointer.pins.rt.pin;
     break;
   case CONFIG_PIN_L_X:
-    buf = &config_pointer.pins.l_x.pin;
+    dataToReadWrite = &config_pointer.pins.l_x.pin;
     break;
   case CONFIG_PIN_L_Y:
-    buf = &config_pointer.pins.l_y.pin;
+    dataToReadWrite = &config_pointer.pins.l_y.pin;
     break;
   case CONFIG_PIN_R_X:
-    buf = &config_pointer.pins.r_x.pin;
+    dataToReadWrite = &config_pointer.pins.r_x.pin;
     break;
   case CONFIG_PIN_R_Y:
-    buf = &config_pointer.pins.r_y.pin;
+    dataToReadWrite = &config_pointer.pins.r_y.pin;
     break;
   case CONFIG_KEY_UP:
-    buf = &config_pointer.keys.up;
+    dataToReadWrite = &config_pointer.keys.up;
     break;
   case CONFIG_KEY_DOWN:
-    buf = &config_pointer.keys.down;
+    dataToReadWrite = &config_pointer.keys.down;
     break;
   case CONFIG_KEY_LEFT:
-    buf = &config_pointer.keys.left;
+    dataToReadWrite = &config_pointer.keys.left;
     break;
   case CONFIG_KEY_RIGHT:
-    buf = &config_pointer.keys.right;
+    dataToReadWrite = &config_pointer.keys.right;
     break;
   case CONFIG_KEY_START:
-    buf = &config_pointer.keys.start;
+    dataToReadWrite = &config_pointer.keys.start;
     break;
   case CONFIG_KEY_SELECT:
-    buf = &config_pointer.keys.back;
+    dataToReadWrite = &config_pointer.keys.back;
     break;
   case CONFIG_KEY_LEFT_STICK:
-    buf = &config_pointer.keys.left_stick;
+    dataToReadWrite = &config_pointer.keys.left_stick;
     break;
   case CONFIG_KEY_RIGHT_STICK:
-    buf = &config_pointer.keys.right_stick;
+    dataToReadWrite = &config_pointer.keys.right_stick;
     break;
   case CONFIG_KEY_LB:
-    buf = &config_pointer.keys.LB;
+    dataToReadWrite = &config_pointer.keys.LB;
     break;
   case CONFIG_KEY_RB:
-    buf = &config_pointer.keys.RB;
+    dataToReadWrite = &config_pointer.keys.RB;
     break;
   case CONFIG_KEY_HOME:
-    buf = &config_pointer.keys.home;
+    dataToReadWrite = &config_pointer.keys.home;
     break;
   case CONFIG_KEY_CAPTURE:
-    buf = &config_pointer.keys.capture;
+    dataToReadWrite = &config_pointer.keys.capture;
     break;
   case CONFIG_KEY_A:
-    buf = &config_pointer.keys.a;
+    dataToReadWrite = &config_pointer.keys.a;
     break;
   case CONFIG_KEY_B:
-    buf = &config_pointer.keys.b;
+    dataToReadWrite = &config_pointer.keys.b;
     break;
   case CONFIG_KEY_X:
-    buf = &config_pointer.keys.x;
+    dataToReadWrite = &config_pointer.keys.x;
     break;
   case CONFIG_KEY_Y:
-    buf = &config_pointer.keys.y;
+    dataToReadWrite = &config_pointer.keys.y;
     break;
   case CONFIG_KEY_LT:
-    buf = &config_pointer.keys.lt;
+    dataToReadWrite = &config_pointer.keys.lt;
     break;
   case CONFIG_KEY_RT:
-    buf = &config_pointer.keys.rt;
+    dataToReadWrite = &config_pointer.keys.rt;
     break;
   case CONFIG_KEY_L_X:
-    size = 2;
-    buf = &config_pointer.keys.l_x.neg;
+    currentCommandSize = 2;
+    dataToReadWrite = &config_pointer.keys.l_x.neg;
     break;
   case CONFIG_KEY_L_Y:
-    size = 2;
-    buf = &config_pointer.keys.l_y.neg;
+    currentCommandSize = 2;
+    dataToReadWrite = &config_pointer.keys.l_y.neg;
     break;
   case CONFIG_KEY_R_X:
-    size = 2;
-    buf = &config_pointer.keys.r_x.neg;
+    currentCommandSize = 2;
+    dataToReadWrite = &config_pointer.keys.r_x.neg;
     break;
   case CONFIG_KEY_R_Y:
-    size = 2;
-    buf = &config_pointer.keys.r_y.neg;
+    currentCommandSize = 2;
+    dataToReadWrite = &config_pointer.keys.r_y.neg;
     break;
   case CONFIG_AXIS_INVERT_LT:
-    buf = (uint8_t *)&config_pointer.pins.lt.inverted;
+    dataToReadWrite = (uint8_t *)&config_pointer.pins.lt.inverted;
     break;
   case CONFIG_AXIS_INVERT_RT:
-    buf = (uint8_t *)&config_pointer.pins.rt.inverted;
+    dataToReadWrite = (uint8_t *)&config_pointer.pins.rt.inverted;
     break;
   case CONFIG_AXIS_INVERT_L_X:
-    buf = (uint8_t *)&config_pointer.pins.l_x.inverted;
+    dataToReadWrite = (uint8_t *)&config_pointer.pins.l_x.inverted;
     break;
   case CONFIG_AXIS_INVERT_L_Y:
-    buf = (uint8_t *)&config_pointer.pins.l_y.inverted;
+    dataToReadWrite = (uint8_t *)&config_pointer.pins.l_y.inverted;
     break;
   case CONFIG_AXIS_INVERT_R_X:
-    buf = (uint8_t *)&config_pointer.pins.r_x.inverted;
+    dataToReadWrite = (uint8_t *)&config_pointer.pins.r_x.inverted;
     break;
   case CONFIG_AXIS_INVERT_R_Y:
-    buf = (uint8_t *)&config_pointer.pins.r_y.inverted;
+    dataToReadWrite = (uint8_t *)&config_pointer.pins.r_y.inverted;
     break;
   case CONFIG_THRESHOLD_JOY:
-    buf = (uint8_t *)&config_pointer.axis.threshold_joy;
+    dataToReadWrite = (uint8_t *)&config_pointer.axis.joyThreshold;
     break;
   case CONFIG_THRESHOLD_TRIGGER:
-    buf = (uint8_t *)&config_pointer.axis.threshold_trigger;
+    dataToReadWrite = (uint8_t *)&config_pointer.axis.triggerThreshold;
     break;
   case CONFIG_THRESHOLD_DRUM:
-    buf = (uint8_t *)&config_pointer.new_items.threshold_drums;
+    dataToReadWrite = (uint8_t *)&config_pointer.drumThreshold;
     break;
   case CONFIG_LED_COLOURS:
-    buf = (uint8_t *)&config_pointer.new_items.leds.colours;
-    subcmd = data;
-    size = 0;
+    dataToReadWrite = (uint8_t *)&config_pointer.leds.colours;
+    currentSubCommand = data;
+    currentCommandSize = 0;
     break;
   case CONFIG_LED_PINS:
-    buf = (uint8_t *)&config_pointer.new_items.leds.pins;
-    subcmd = data;
-    size = 0;
+    dataToReadWrite = (uint8_t *)&config_pointer.leds.pins;
+    currentSubCommand = data;
+    currentCommandSize = 0;
     break;
   case CONFIG_MIDI_CHANNEL:
-    buf = (uint8_t *)&config_pointer.new_items.midi.channel;
-    subcmd = data;
-    size = 0;
+    dataToReadWrite = (uint8_t *)&config_pointer.midi.channel;
+    currentSubCommand = data;
+    currentCommandSize = 0;
     break;
   case CONFIG_MIDI_NOTE:
-    buf = (uint8_t *)&config_pointer.new_items.midi.note;
-    subcmd = data;
-    size = 0;
+    dataToReadWrite = (uint8_t *)&config_pointer.midi.note;
+    currentSubCommand = data;
+    currentCommandSize = 0;
     break;
   case CONFIG_MIDI_TYPE:
-    buf = (uint8_t *)&config_pointer.new_items.midi.midi_type;
-    subcmd = data;
-    size = 0;
+    dataToReadWrite = (uint8_t *)&config_pointer.midi.midiType;
+    currentSubCommand = data;
+    currentCommandSize = 0;
     break;
   }
 }
 void processSerialData(uint8_t data) {
-  if (cmd == 0) {
-    cmd = data;
-    size = 0;
-    subcmd = 0;
-    ram = false;
-    switch (cmd) {
+  if (currentCommand == 0) {
+    currentCommand = data;
+    currentCommandSize = 0;
+    currentSubCommand = 0;
+    dataInRam = false;
+    switch (currentCommand) {
     case COMMAND_REBOOT:
       reboot();
       break;
@@ -279,49 +277,49 @@ void processSerialData(uint8_t data) {
       bootloader();
       break;
     case COMMAND_SET_LED_COLOUR:
-      ram = true;
-      buf = (uint8_t *)&controller.leds;
+      dataInRam = true;
+      dataToReadWrite = (uint8_t *)&controller.leds;
       int i = 0;
-      while (config.new_items.leds.pins[i]) { i++; }
-      size = i * 4;
+      while (config.leds.pins[i]) { i++; }
+      currentCommandSize = i * 4;
       return;
     case COMMAND_FIND_DIGITAL:
-      find_digital();
-      cmd = 0;
+      findDigitalPin();
+      currentCommand = 0;
       break;
     case COMMAND_FIND_ANALOG:
-      find_analog();
-      cmd = 0;
+      findAnalogPin();
+      currentCommand = 0;
       break;
     case COMMAND_FIND_STOP:
-      stop_searching();
-      cmd = 0;
+      stopSearching();
+      currentCommand = 0;
       break;
     case COMMAND_WRITE_CONFIG_VALUE:
     case COMMAND_READ_INFO:
     case COMMAND_READ_CONFIG_VALUE:
       return;
     default:
-      cmd = 0;
+      currentCommand = 0;
     }
-  } else if (size == 0) {
-    if (subcmd) {
-      switch (subcmd) {
+  } else if (currentCommandSize == 0) {
+    if (currentSubCommand) {
+      switch (currentSubCommand) {
       case CONFIG_LED_COLOURS:
-        buf += data * 4;
-        size = 4;
+        dataToReadWrite += data * 4;
+        currentCommandSize = 4;
         break;
       case CONFIG_LED_PINS:
       case CONFIG_MIDI_CHANNEL:
       case CONFIG_MIDI_NOTE:
       case CONFIG_MIDI_TYPE:
-        buf += data;
-        size = 1;
+        dataToReadWrite += data;
+        currentCommandSize = 1;
         break;
       }
-      if (cmd == COMMAND_WRITE_CONFIG_VALUE) { return; }
+      if (currentCommand == COMMAND_WRITE_CONFIG_VALUE) { return; }
     } else {
-      switch (cmd) {
+      switch (currentCommand) {
       case COMMAND_WRITE_CONFIG_VALUE:
         get_config_buf(data);
         return;
@@ -330,32 +328,31 @@ void processSerialData(uint8_t data) {
         break;
       case COMMAND_READ_CONFIG_VALUE:
         get_config_buf(data);
-        if (subcmd) { return; }
+        if (currentSubCommand) { return; }
         break;
       }
     }
-    while (size) {
-      if (cmd == COMMAND_READ_INFO) {
-        writeToSerial(pgm_read_byte(pbuf++));
-      } else if (ram) {
-        writeToSerial(*(buf++));
+    while (currentCommandSize) {
+      if (currentCommand == COMMAND_READ_INFO) {
+        writeToSerial(pgm_read_byte(constDataToRead++));
+      } else if (dataInRam) {
+        writeToSerial(*(dataToReadWrite++));
       } else {
-        writeToSerial(eeprom_read_byte(buf++));
+        writeToSerial(eeprom_read_byte(dataToReadWrite++));
       }
-      size--;
+      currentCommandSize--;
     }
   } else {
-    if (ram) {
-      *(buf++) = data;
-      size--;
+    if (dataInRam) {
+      *(dataToReadWrite++) = data;
     } else {
-      eeprom_update_byte(buf++, data);
-      size--;
+      eeprom_update_byte(dataToReadWrite++, data);
     }
+    currentCommandSize--;
   }
-  if (size == 0) {
+  if (currentCommandSize == 0) {
     writeToSerial('\r');
     writeToSerial('\n');
-    cmd = 0;
+    currentCommand = 0;
   }
 }

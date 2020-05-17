@@ -1,9 +1,25 @@
-#include "main.h"
-#include "../../shared/output/bootloader/bootloader.h"
-#include "../../shared/output/usb/API.h"
-#include "../../shared/util.h"
-#include "../shared/device_comms.h"
+#include "LightweightRingBuff.h"
+#include "config/defaults.h"
+#include "config/defines.h"
+#include "device_comms.h"
+#include "bootloader/bootloader.h"
+#include "output/control_requests.h"
+#include "output/controller_structs.h"
+#include "output/serial_commands.h"
+#include "util/util.h"
+#include <LUFA/Drivers/Board/Board.h>
+#include <LUFA/Drivers/Board/LEDs.h>
+#include <LUFA/Drivers/Peripheral/Serial.h>
+#include <LUFA/Drivers/USB/Class/CDCClass.h>
+#include <LUFA/Drivers/USB/USB.h>
+#include <LUFA/Version.h>
+#include <avr/wdt.h>
 #define JUMP 0xDEAD8001
+
+typedef struct {
+  uint32_t id;
+  uint8_t deviceType;
+} EepromConfig_t;
 
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
@@ -29,7 +45,7 @@ bool avrdudeInUse = false;
 bool isArdwiino = true;
 uint8_t lastCommand = 0;
 bool waitingForCommandCompletion = false;
-eeprom_config_t EEMEM config;
+EepromConfig_t EEMEM config;
 
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
@@ -84,15 +100,15 @@ int main(void) {
 
   /* Start the 328p  */
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-  Board_Reset(false);
+  AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
 
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
   if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
     eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
-    eeprom_update_byte(&config.device_type, device_type);
+    eeprom_update_byte(&config.deviceType, deviceType);
   } else {
-    device_type = eeprom_read_byte(&config.device_type);
+    deviceType = eeprom_read_byte(&config.deviceType);
   }
 
   RingBuffer_InitBuffer(&bufferIn, bufferInData);
@@ -131,7 +147,7 @@ int main(void) {
               // We previously received that the section being updated is the
               // subtype, so the current byte is the subtype. Write the new
               // subtype to eeprom.
-              eeprom_update_byte(&config.device_type, receivedByte);
+              eeprom_update_byte(&config.deviceType, receivedByte);
               lastCommand = 0;
               waitingForCommandCompletion = true;
             } else {
@@ -199,7 +215,7 @@ void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
     }
     // A device packet should always be smaller than the largest packet. We also
     // need to account for escape bytes however
-    bytesToWrite = sizeof(output_report_size_t) + 10;
+    bytesToWrite = sizeof(USB_Report_Data_t) + 10;
   }
   Endpoint_SelectEndpoint(endpoint);
 
@@ -256,7 +272,10 @@ void EVENT_USB_Device_ControlRequest(void) {
       Endpoint_ClearStatusStage();
     } else if (bRequest == CDC_REQ_SetControlLineState) {
       Endpoint_ClearSETUP();
-      Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
+      if (USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR)
+        AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
+      else
+        AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
       if (avrdudeInUse) {
         avrdudeInUse = false;
         setDeviceMode(true);

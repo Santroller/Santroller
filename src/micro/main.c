@@ -1,17 +1,17 @@
-#include "../shared/Arduino.h"
-#include "../shared/config/eeprom.h"
-#include "../shared/input/input_handler.h"
-#include "../shared/output/bootloader/bootloader.h"
-#include "../shared/output/control_requests.h"
-#include "../shared/output/reports.h"
-#include "../shared/output/serial_handler.h"
-#include "../shared/output/usb/Descriptors.h"
-#include "../shared/util.h"
-#include "../shared/input/input_direct.h"
+#include "bootloader/bootloader.h"
+#include "config/eeprom.h"
+#include "input/input_handler.h"
+#include "input/inputs/direct.h"
+#include "leds/leds.h"
+#include "output/control_requests.h"
+#include "output/descriptors.h"
+#include "output/reports.h"
+#include "output/serial_handler.h"
 #include "stdbool.h"
-controller_t controller;
-output_report_size_t previousReport;
-output_report_size_t currentReport;
+#include "util/util.h"
+Controller_t controller;
+USB_Report_Data_t previousReport;
+USB_Report_Data_t currentReport;
 USB_ClassInfo_CDC_Device_t serialInterface = {
     .Config =
         {
@@ -46,7 +46,7 @@ USB_ClassInfo_HID_Device_t hidInterface = {
       Banks : 1,
     },
     PrevReportINBuffer : &previousReport,
-    PrevReportINBufferSize : sizeof(output_report_size_t),
+    PrevReportINBufferSize : sizeof(USB_Report_Data_t),
   },
 };
 USB_ClassInfo_MIDI_Device_t midiInterface = {
@@ -69,8 +69,9 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
 };
 int main(void) {
   loadConfig();
-  device_type = config.main.sub_type;
+  deviceType = config.main.subType;
   initInputs();
+  initLEDs();
   initReports();
   USB_Init();
   sei();
@@ -78,6 +79,7 @@ int main(void) {
   uint16_t bytesReceived;
   while (true) {
     tickInputs(&controller);
+    tickLEDs(&controller);
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
       memcpy(&previousReport, &currentReport, size);
@@ -90,11 +92,10 @@ int main(void) {
 
     bytesReceived = CDC_Device_BytesReceived(&serialInterface);
     while (bytesReceived--) {
-      processSerialData(CDC_Device_ReceiveByte(&serialInterface) &
-                     0xff);
+      processSerialData(CDC_Device_ReceiveByte(&serialInterface) & 0xff);
     }
-    if (pinDetected) {
-      pinDetected = false;
+    if (foundPin) {
+      foundPin = false;
       writeToSerial('d');
       writeToSerial(detectedPin);
       writeToSerial('\r');
@@ -110,7 +111,7 @@ void writeToSerial(uint8_t data) {
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  if (device_type >= MIDI_GUITAR) {
+  if (deviceType >= MIDI_GUITAR) {
     MIDI_Device_ConfigureEndpoints(&midiInterface);
   } else {
     HID_Device_ConfigureEndpoints(&hidInterface);

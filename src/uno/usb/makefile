@@ -11,7 +11,7 @@
 
 MCU          = at90usb82
 ARCH         = AVR8
-BOARD        = USER
+BOARD        = UNO
 OPTIMIZATION = s
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
@@ -20,10 +20,10 @@ ARDWIINO_BOARD = uno
 VERSION = $(shell git describe --abbrev=0 --tags)
 SIGNATURE = ardwiino
 
-SRC          = main.c ../../shared/output/usb/Descriptors.c ../../shared/output/control_requests.c ../../shared/output/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC          = main.c ../../shared/output/descriptors.c ../../shared/output/control_requests.c ../../shared/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output/usb -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I ../shared -I ../../../lib -I ../../shared -I../../shared/output -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
 LD_FLAGS     =  $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj

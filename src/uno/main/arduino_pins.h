@@ -21,7 +21,7 @@
 */
 
 #pragma once
-#include "Arduino.h"
+#include "util/util.h"
 #include <avr/pgmspace.h>
 #include <stdint.h>
 

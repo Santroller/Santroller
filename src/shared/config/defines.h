@@ -4,12 +4,12 @@
 #define REAL_GUITAR_SUBTYPE 7
 #define REAL_DRUM_SUBTYPE 8
 // Tilt detection
-enum tilt_type { NO_TILT, MPU_6050, DIGITAL, ANALOGUE };
+enum TiltType { NO_TILT, MPU_6050, DIGITAL, ANALOGUE };
 
 // Input types
-enum input_type { WII = 1, DIRECT, PS2};
+enum InputType { WII = 1, DIRECT, PS2};
 
-enum subtype {
+enum SubType {
   XINPUT_GAMEPAD=1,
   XINPUT_WHEEL,
   XINPUT_ARCADE_STICK,
@@ -38,7 +38,7 @@ enum subtype {
 
 
 // Orientations for gyros
-enum gyro_orientation {
+enum GyroOrientation {
     POSITIVE_Z,
     NEGATIVE_Z,
     POSITIVE_Y,
@@ -48,19 +48,19 @@ enum gyro_orientation {
 };
 
 // Firmware types
-enum firmware_type {
+enum FirmwareType {
     GUITAR_DEVICE_TYPE=0xfea124,
     ARDWIINO_DEVICE_TYPE=0xa2d415
 };
 
 // Fret Modes
-enum fret_led_mode {
+enum FretLedMode {
     LEDS_DISABLED,
     LEDS_INLINE,
     APA102
 };
 
-enum midi_type {
+enum MidiType {
   DISABLED,
   NOTE,
   CONTROL_COMMAND

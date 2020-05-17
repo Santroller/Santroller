@@ -66,7 +66,7 @@ eeprom_config_t EEMEM config_mem;
 bool entered_prog = false;
 bool is_ardwiino = true;
 uint8_t lastCommand = 0;
-volatile bool command_state = false;
+bool command_state = false;
 #define JUMP 0xDEAD8001
 
 // by placing this in noinit, we can jump to the bootloader after a watchdog
@@ -83,13 +83,12 @@ void set_baud(bool b) {
   UCSR1A = 0;
   UCSR1C = 0;
   /* Hardware Initialization */
-  UBRR1 = is_ardwiino ? SERIAL_2X_UBBRVAL(BAUD) : SERIAL_2X_UBBRVAL(115200);
+  UBRR1 = b ? SERIAL_2X_UBBRVAL(BAUD) : SERIAL_2X_UBBRVAL(115200);
 
   UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
   UCSR1A = (1 << U2X1);
   UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 }
-uint8_t skipn = 0;
 int main(void) {
   if (jmpToBootloader == JUMP) {
     jmpToBootloader = 0;
@@ -110,70 +109,59 @@ int main(void) {
   RingBuffer_InitBuffer(&USARTtoHID_Buffer, USARTtoHID_Buf);
   sei();
   for (;;) {
-    for (;;) {
-      // USB Task
-      uint8_t lastState = USB_DeviceState;
-      Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
-      if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
+    // USB Task
+    Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+    if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
 
-      // Compare last with new state
-      uint8_t newState = USB_DeviceState;
-      if (newState != DEVICE_STATE_Configured) {
-        // Try to reconnect if communication is still broken
-        if (lastState != DEVICE_STATE_Configured) continue;
-        // Break and disable USART on connection lost
-        else
-          break;
-      }
+    if (USB_DeviceState != DEVICE_STATE_Configured) { continue; }
 
-      /* Only try to read in bytes from the CDC interface if the transmit buffer
-       * is not full */
-      if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
-        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-        /* Read bytes from the USB OUT endpoint into the USART transmit buffer
-         */
-        if (Endpoint_IsOUTReceived()) {
-          if (Endpoint_BytesInEndpoint()) {
-            uint8_t b = Endpoint_Read_8();
-            RingBuffer_Insert(&USBtoUSART_Buffer, b);
-            if (!is_ardwiino) {
-              entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
-            } else if (!command_state) {
-              if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-                lastCommand = b;
-              } else if (lastCommand == CONFIG_SUB_TYPE) {
-                eeprom_update_byte(&config_mem.device_type, b);
-                lastCommand = 0;
+    /* Only try to read in bytes from the CDC interface if the transmit buffer
+     * is not full */
+    if (!(RingBuffer_IsFull(&USBtoUSART_Buffer))) {
+      Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+      /* Read bytes from the USB OUT endpoint into the USART transmit buffer
+       */
+      if (Endpoint_IsOUTReceived()) {
+        if (Endpoint_BytesInEndpoint()) {
+          uint8_t b = Endpoint_Read_8();
+          RingBuffer_Insert(&USBtoUSART_Buffer, b);
+          if (!is_ardwiino) {
+            entered_prog |= b == COMMAND_STK_500_ENTER_PROG;
+          } else if (!command_state) {
+            if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
+              lastCommand = b;
+            } else if (lastCommand == CONFIG_SUB_TYPE) {
+              eeprom_update_byte(&config_mem.device_type, b);
+              lastCommand = 0;
+              command_state = true;
+            } else {
+              switch (b) {
+              case COMMAND_REBOOT:
+              case COMMAND_JUMP_BOOTLOADER_UNO:
+                jmpToBootloader = b == COMMAND_REBOOT ? 0 : JUMP;
+                reboot();
+              case COMMAND_JUMP_BOOTLOADER:
+                set_baud(false);
                 command_state = true;
-              } else {
-                switch (b) {
-                case COMMAND_REBOOT:
-                case COMMAND_JUMP_BOOTLOADER_UNO:
-                  jmpToBootloader = b == COMMAND_REBOOT ? 0 : JUMP;
-                  reboot();
-                case COMMAND_JUMP_BOOTLOADER:
-                  set_baud(false);
-                  command_state = true;
-                  break;
-                case COMMAND_WRITE_CONFIG_VALUE:
-                  lastCommand = b;
-                  break;
-                default:
-                  command_state = true;
-                }
+                break;
+              case COMMAND_WRITE_CONFIG_VALUE:
+                lastCommand = b;
+                break;
+              default:
+                command_state = true;
               }
             }
           }
-
-          if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
         }
+
+        if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
       }
-      handle_out(HID_EPADDR_IN, &USARTtoHID_Buffer, false);
-      handle_out(CDC_TX_EPADDR, &USARTtoSER_Buffer, true);
-      /* Load the next byte from the USART transmit buffer into the USART */
-      if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
-        Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
-      }
+    }
+    handle_out(HID_EPADDR_IN, &USARTtoHID_Buffer, false);
+    handle_out(CDC_TX_EPADDR, &USARTtoSER_Buffer, true);
+    /* Load the next byte from the USART transmit buffer into the USART */
+    if (!(RingBuffer_IsEmpty(&USBtoUSART_Buffer))) {
+      Serial_SendByte(RingBuffer_Remove(&USBtoUSART_Buffer));
     }
   }
 }
@@ -182,6 +170,9 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
   RingBuff_Count_t BufferCount = RingBuffer_GetCount(buf);
   if (BufferCount == 0) return;
   if (serial) {
+    // We can assume that any response from the 328p means the command was
+    // parsed successfully and it is ready for another command.
+    command_state = false;
     if ((((TIFR0 & (1 << TOV0)) == 0) && (BufferCount < BUFFER_NEARLY_FULL))) {
       return;
     }
@@ -191,6 +182,8 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
   if (is_ardwiino) {
     b = RingBuffer_Remove(buf);
     if (b != FRAME_START_1 && b != FRAME_START_2) { return; }
+    // We can assume that all packets are going to be smaller than this.
+    BufferCount = 255;
   }
   Endpoint_SelectEndpoint(ep);
 
@@ -201,7 +194,6 @@ void handle_out(uint8_t ep, RingBuff_t *buf, bool serial) {
     while (BufferCount--) {
       b = RingBuffer_Remove(buf);
       if (is_ardwiino) {
-        BufferCount++;
         if (b == FRAME_END) { break; };
         if (b == ESC) b = RingBuffer_Remove(buf) ^ 0x20;
       }
@@ -233,7 +225,6 @@ void SetupHardware(void) {
 
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void) {
-
   /* Setup CDC Notification, Rx and Tx Endpoints */
   Endpoint_ConfigureEndpoint(CDC_NOTIFICATION_EPADDR, EP_TYPE_INTERRUPT,
                              CDC_NOTIFICATION_EPSIZE, 1);
@@ -243,18 +234,14 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 
   Endpoint_ConfigureEndpoint(CDC_RX_EPADDR, EP_TYPE_BULK, CDC_RX_EPSIZE,
                              CDC_RX_BANK_SIZE);
+
   Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 }
-
 /** Event handler for the library USB Unhandled Control Request event. */
 void EVENT_USB_Device_ControlRequest(void) {
   controller_control_request();
-  /* Ignore any requests that aren't directed to the CDC interface */
-  if ((USB_ControlRequest.bmRequestType &
-       (CONTROL_REQTYPE_TYPE | CONTROL_REQTYPE_RECIPIENT)) !=
-      (REQTYPE_CLASS | REQREC_INTERFACE)) {
-    return;
-  }
+  // if (USB_ControlRequest.wIndex != 0) return;
+  /* Process CDC specific control requests */
   /* Process CDC specific control requests */
   uint8_t bRequest = USB_ControlRequest.bRequest;
   if (bRequest == CDC_REQ_GetLineEncoding) {
@@ -267,57 +254,22 @@ void EVENT_USB_Device_ControlRequest(void) {
       // core, so it will dupe code
       Endpoint_Write_Control_Stream_LE(&LineEncoding,
                                        sizeof(CDC_LineEncoding_t));
-      Endpoint_ClearOUT();
-    }
-  } else if (bRequest == CDC_REQ_SetLineEncoding) {
-    if (USB_ControlRequest.bmRequestType ==
-        (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-      Endpoint_ClearSETUP();
-
-      uint8_t Length = sizeof(CDC_LineEncoding_t);
-      uint8_t *DataStream = (uint8_t *)&LineEncoding;
-
-      bool skip = false;
-      while (Length) {
-        uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-        if ((USB_DeviceState_LCL == DEVICE_STATE_Suspended) ||
-            (Endpoint_IsSETUPReceived())) {
-          skip = true;
-          break;
-        }
-
-        if (Endpoint_IsOUTReceived()) {
-          while (Length && Endpoint_BytesInEndpoint()) {
-            *DataStream = Endpoint_Read_8();
-            DataStream++;
-            Length--;
-          }
-
-          Endpoint_ClearOUT();
-        }
-      }
-
-      if (!skip) {
-        do {
-          uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-          if ((USB_DeviceState_LCL == DEVICE_STATE_Suspended)) break;
-        } while (!(Endpoint_IsINReady()));
-      }
-
-      Endpoint_ClearIN();
-    }
-  } else if (bRequest == CDC_REQ_SetControlLineState) {
-    if (USB_ControlRequest.bmRequestType ==
-        (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-      Endpoint_ClearSETUP();
       Endpoint_ClearStatusStage();
+    }
+  } else if (USB_ControlRequest.bmRequestType ==
+             (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    if (bRequest == CDC_REQ_SetLineEncoding) {
+      Endpoint_Read_Control_Stream_LE(&LineEncoding,
+                                      sizeof(CDC_LineEncoding_t));
+      Endpoint_ClearStatusStage();
+    } else if (bRequest == CDC_REQ_SetControlLineState) {
+      Endpoint_ClearSETUP();
       Board_Reset(USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR);
       if (entered_prog) {
         entered_prog = false;
         set_baud(true);
       }
+      Endpoint_ClearStatusStage();
     }
   }
 }
@@ -332,9 +284,6 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
   if (b == FRAME_START_1 || b == FRAME_START_2) { frame = b; }
   if (frame == FRAME_START_2 || !is_ardwiino) {
     RingBuffer_Insert(&USARTtoSER_Buffer, b);
-    if (command_state && b == '\r') {
-      command_state = false;
-    }
   } else if (frame == FRAME_START_1) {
     RingBuffer_Insert(&USARTtoHID_Buffer, b);
   }

@@ -12,7 +12,7 @@ int size = 0;
 int subcmd = 0;
 static const uint8_t *pbuf = NULL;
 static uint8_t *buf = NULL;
-bool ext = false;
+bool ram = false;
 void get_info_buf(uint8_t data) {
   switch (data) {
   case INFO_VERSION:
@@ -32,7 +32,7 @@ void get_info_buf(uint8_t data) {
     break;
   case INFO_EXT:
     cmd = COMMAND_READ_CONFIG_VALUE;
-    ext = true;
+    ram = true;
     if (config_pointer.main.input_type == WII) {
       buf = (uint8_t *)&wii_ext;
       size = 2;
@@ -45,7 +45,7 @@ void get_info_buf(uint8_t data) {
   size = strlen_P((char *)pbuf);
 }
 void get_config_buf(uint8_t data) {
-    size = 1;
+  size = 1;
   switch (data) {
   case CONFIG_INPUT_TYPE:
     buf = &config_pointer.main.input_type;
@@ -269,7 +269,7 @@ void process_serial(uint8_t data) {
     cmd = data;
     size = 0;
     subcmd = 0;
-    ext = false;
+    ram = false;
     switch (cmd) {
     case COMMAND_REBOOT:
       reboot();
@@ -278,12 +278,11 @@ void process_serial(uint8_t data) {
       bootloader();
       break;
     case COMMAND_SET_LED_COLOUR:
+      ram = true;
       buf = (uint8_t *)&controller.leds;
       int i = 0;
-      while (config.new_items.leds.pins[i]) {
-        i++;
-      }
-      size = i*4;
+      while (config.new_items.leds.pins[i]) { i++; }
+      size = i * 4;
       return;
     case COMMAND_FIND_DIGITAL:
       find_digital();
@@ -337,7 +336,7 @@ void process_serial(uint8_t data) {
     while (size) {
       if (cmd == COMMAND_READ_INFO) {
         write_usb(pgm_read_byte(pbuf++));
-      } else if (ext) {
+      } else if (ram) {
         write_usb(*(buf++));
       } else {
         write_usb(eeprom_read_byte(buf++));
@@ -345,12 +344,9 @@ void process_serial(uint8_t data) {
       size--;
     }
   } else {
-    // SET_LED_COLOUR writes to ram and should stop after receiving all leds
-    if (COMMAND_SET_LED_COLOUR == CONFIG_LED_COLOURS) {
+    if (ram) {
       *(buf++) = data;
-      if (size%4==0 && data == 0) {
-        size = 0;
-      }
+      size--;
     } else {
       eeprom_update_byte(buf++, data);
       size--;

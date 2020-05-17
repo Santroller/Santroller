@@ -49,10 +49,8 @@
  * can be used to refer to the interface from other descriptors.
  */
 enum InterfaceDescriptors_t {
-  INTERFACE_ID_HID =
-      0, /**< HID interface descriptor ID */
-  INTERFACE_ID_Unused =
-      1, /**< Unused HID interface descriptor ID */
+  INTERFACE_ID_HID = 0,     /**< HID interface descriptor ID */
+  INTERFACE_ID_Unused = 1,  /**< Unused HID interface descriptor ID */
   INTERFACE_ID_CDC_CCI = 2, /**< CDC CCI interface descriptor ID */
   INTERFACE_ID_CDC_DCI = 3, /**< CDC DCI interface descriptor ID */
   INTERFACE_ID_ControlStream =
@@ -67,7 +65,6 @@ typedef struct {
   uint8_t reserved2[15];
 } USB_HID_XBOX_Descriptor_HID_t;
 typedef struct {
-  USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_Association_t CDC_IAD;
   USB_Descriptor_Interface_t CDC_CCI_Interface;
   USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
@@ -77,6 +74,8 @@ typedef struct {
   USB_Descriptor_Interface_t CDC_DCI_Interface;
   USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
   USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
+} CDC_t;
+typedef struct {
   USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
   USB_Descriptor_Interface_t Interface0;
@@ -91,7 +90,17 @@ typedef struct {
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
   USB_Audio_Descriptor_StreamEndpoint_Std_t DataOutEndpoint0;
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
+} OTHER_t;
+typedef struct {
+  USB_Descriptor_Configuration_Header_t Config;
+  OTHER_t other;
+  CDC_t cdc;
 } USB_Descriptor_Configuration_t;
+typedef struct {
+  USB_Descriptor_Configuration_Header_t Config;
+  CDC_t cdc;
+  OTHER_t other;
+} USB_Descriptor_Configuration_midi_t;
 extern uint8_t device_type;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,

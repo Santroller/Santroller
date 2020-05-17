@@ -66,7 +66,8 @@
         "stddef.h": "c",
         "serial_handler.h": "c",
         "api.h": "c",
-        "apa102.h": "c"
+        "apa102.h": "c",
+        "endpointstream_avr8.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

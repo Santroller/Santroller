@@ -122,9 +122,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  if (device_type >= MIDI_GUITAR) {
-    MIDI_Device_ProcessControlRequest(&Keyboard_MIDI_Interface);
-  }
   controller_control_request();
   CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
 }
@@ -142,18 +139,3 @@ void EVENT_CDC_Device_ControLineStateChanged(
     bootloader();
   }
 }
-#include "../shared/input/pins/pins.h"
-bool CALLBACK_HID_Device_CreateHIDReport(
-    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, uint8_t *const ReportID,
-    const uint8_t ReportType, void *ReportData, uint16_t *const ReportSize) {
-  USB_XInputReport_Data_t *x = (USB_XInputReport_Data_t *)ReportData;
-  if (digitalRead(4)) { x->buttons |= _BV(XBOX_A); }
-  x->rsize = sizeof(USB_XInputReport_Data_t);
-  *ReportSize = sizeof(USB_XInputReport_Data_t);
-  return false;
-}
-
-void CALLBACK_HID_Device_ProcessHIDReport(
-    USB_ClassInfo_HID_Device_t *const HIDInterfaceInfo, const uint8_t ReportID,
-    const uint8_t ReportType, const void *ReportData,
-    const uint16_t ReportSize) {}

@@ -50,7 +50,7 @@ bool is_guitar(void) {
   return types[config.main.sub_type] == GUITAR;
 }
 void guitar_init(void) {
-  if (is_guitar()) return;
+  if (!is_guitar()) return;
   if (config.main.tilt_type == MPU_6050) {
     mympu_open(15);
     enablePCI(config.pins.r_y.pin);

@@ -2,12 +2,6 @@
 #include "../../util.h"
 #include <stdint.h>
 
-/** Interface & (dummy) Endpoint properties */
-#define WCID_IF_NUMBER 0
-#define WCID_IN_EPNUM 1
-#define WCID_OUT_EPNUM 2
-#define WCID_IO_EPSIZE 64
-
 #define REQ_GetOSFeatureDescriptor 0x20
 
 /** Descriptor index for a Microsoft Proprietary Extended Device Compatibility

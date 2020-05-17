@@ -10,7 +10,7 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   TotalSections : 1,
   Reserved : {0},
   CompatID : {
-    FirstInterfaceNumber : WCID_IF_NUMBER,
+    FirstInterfaceNumber : INTERFACE_ID_HID,
     Reserved : 0x04,
     CompatibleID : "XUSB10",
     SubCompatibleID : {0},
@@ -18,6 +18,9 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   }
 };
 static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
+uint8_t IdleCount;
+uint8_t UsingReportProtocol;
+extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 void controller_control_request(void) {
   if (device_type <= XINPUT_ARCADE_PAD &&
       USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
@@ -27,12 +30,14 @@ void controller_control_request(void) {
       USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(&DevCompatIDs, DevCompatIDs.TotalLength);
-    Endpoint_ClearOUT();
+    Endpoint_ClearStatusStage();
     return;
   }
-  if (device_type >= PS3_GAMEPAD &&
-      USB_ControlRequest.wIndex == INTERFACE_ID_HID &&
-      USB_ControlRequest.bmRequestType ==
+  if (device_type < PS3_GAMEPAD ||
+      USB_ControlRequest.wIndex != INTERFACE_ID_HID)
+    return;
+  // // PS3 Id packet
+  if (USB_ControlRequest.bmRequestType ==
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
       USB_ControlRequest.bRequest == HID_REQ_GetReport) {
     // Send out init packets for the ps3
@@ -45,7 +50,18 @@ void controller_control_request(void) {
     }
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(id, sizeof(id));
-    Endpoint_ClearOUT();
+    Endpoint_ClearStatusStage();
     return;
   }
+  // The following is necessary for wii rockband controllers. This implements
+  // enough of the hid spec to make wii rockband controllers work
+  if (USB_ControlRequest.bmRequestType !=
+      (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE))
+    return;
+
+  Endpoint_ClearSETUP();
+  if (USB_ControlRequest.bRequest == HID_REQ_SetReport) {
+    Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
+  }
+  Endpoint_ClearStatusStage();
 }

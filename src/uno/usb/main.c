@@ -140,9 +140,13 @@ int main(void) {
             // responses to every command however, so we can set
             // waitingForCommandCompletion once we get a response.
             if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-              // We previously received a COMMAND_WRITE_CONFIG_VALUE command,
-              // and so the current byte is the area that is being updated
-              lastCommand = receivedByte;
+              // We only understand Writing to CONFIG_SUB_TYPE, we need to ignore any other command.
+              if (receivedByte == CONFIG_SUB_TYPE) {
+                lastCommand = receivedByte;
+              } else {
+                lastCommand = 0;
+                waitingForCommandCompletion = true;
+              }
             } else if (lastCommand == CONFIG_SUB_TYPE) {
               // We previously received that the section being updated is the
               // subtype, so the current byte is the subtype. Write the new
@@ -197,6 +201,9 @@ void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
   uint8_t byteToWrite;
   if (bytesToWrite == 0) return;
   if (isSerialEndpoint) {
+    // If the uno is sending back data, then that means the command was parsed
+    // and it is ready for another command
+    waitingForCommandCompletion = false;
     // Serial needs to be buffered a little, this is done by checking if we are
     // about to overflow, or if the flush timer has overflowed.
     if ((((TIFR0 & (1 << TOV0)) == 0) && (bytesToWrite < BUFFER_NEARLY_FULL))) {
@@ -223,12 +230,7 @@ void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
     while (bytesToWrite--) {
       byteToWrite = RingBuffer_Remove(buffer);
       if (isArdwiino) {
-        if (byteToWrite == FRAME_END) {
-          if (isSerialEndpoint) {
-            waitingForCommandCompletion = false;
-          }
-          break;
-        };
+        if (byteToWrite == FRAME_END) { break; };
         if (byteToWrite == ESC) byteToWrite = RingBuffer_Remove(buffer) ^ 0x20;
       }
       Endpoint_Write_8(byteToWrite);
@@ -287,7 +289,7 @@ void EVENT_USB_Device_ControlRequest(void) {
   }
 }
 
-uint8_t currentFrame = 0;
+uint8_t frame = 0;
 /** Receive data from the main mcu, and put it into the correct output buffer
  * based on the last known frame
  */
@@ -296,12 +298,12 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
 
   if (receivedByte == FRAME_START_DEVICE ||
       receivedByte == FRAME_START_SERIAL) {
-    currentFrame = receivedByte;
+    frame = receivedByte;
   }
-  if (currentFrame == FRAME_START_SERIAL || !isArdwiino) {
+  if (frame == FRAME_START_SERIAL || !isArdwiino) {
     RingBuffer_Insert(&bufferOutSerial, receivedByte);
-  } else if (currentFrame == FRAME_START_DEVICE) {
+  } else if (frame == FRAME_START_DEVICE) {
     RingBuffer_Insert(&bufferOutDevice, receivedByte);
   }
-  if (receivedByte == FRAME_END) { currentFrame = 0; }
+  if (receivedByte == FRAME_END) { frame = 0; }
 }

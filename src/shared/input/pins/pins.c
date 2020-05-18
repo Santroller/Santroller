@@ -1,8 +1,8 @@
 #include "pins.h"
-#include "util/util.h"
 #include "config/eeprom.h"
 #include "input/inputs/guitar.h"
 #include "stddef.h"
+#include "util/util.h"
 
 int validAnalog = 0;
 volatile int currentAnalog = 0;
@@ -266,6 +266,7 @@ void setUpValidPins(void) {
   validAnalog = 0;
   currentAnalog = 0;
   for (int i = 0; i < 6; i++) { setUpAnalogPin(i); }
+  currentAnalog = validAnalog;
 }
 
 // ISR triggered when ADC is ready to read.

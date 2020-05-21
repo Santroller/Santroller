@@ -43,18 +43,18 @@ void initI2C(void);
 void disableI2C(void);
 void setI2CAddress(uint8_t);
 void setI2CFrequency(uint32_t);
-uint8_t readFromI2C(uint8_t, uint8_t *, uint8_t, uint8_t);
-uint8_t writeToI2C(uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);
+bool readFromI2C(uint8_t, uint8_t *, uint8_t, uint8_t);
+bool writeToI2C(uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);
 void sendI2CReply(uint8_t);
 bool sendI2CStop(void);
 void releaseI2CBus(void);
 uint8_t endI2CTransmission(uint8_t txAddress, uint8_t sendStop);
-uint8_t readFromI2CPointer(uint8_t address, uint8_t pointer, uint8_t length,
+bool readFromI2CPointer(uint8_t address, uint8_t pointer, uint8_t length,
                             uint8_t *data);
-uint8_t readFromI2CPointerSlow(uint8_t address, uint8_t pointer,
+bool readFromI2CPointerSlow(uint8_t address, uint8_t pointer,
                                 uint8_t length, uint8_t *data);
-uint8_t writeToI2CPointer(uint8_t address, uint8_t pointer, uint8_t length,
+bool writeToI2CPointer(uint8_t address, uint8_t pointer, uint8_t length,
                            uint8_t *data);
-uint8_t writeSingleToI2CPointer(uint8_t address, uint8_t pointer, uint8_t data);
+bool writeSingleToI2CPointer(uint8_t address, uint8_t pointer, uint8_t data);
 
 #endif

@@ -127,6 +127,7 @@ int main(void) {
         if (Endpoint_BytesInEndpoint()) {
           uint8_t receivedByte = Endpoint_Read_8();
           RingBuffer_Insert(&bufferIn, receivedByte);
+          if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
           // If we are in avrdude mode, then we just care if avrdude has
           // finished or not
           if (!isArdwiino) {
@@ -140,12 +141,13 @@ int main(void) {
             // responses to every command however, so we can set
             // waitingForCommandCompletion once we get a response.
             if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-              // We only understand Writing to CONFIG_SUB_TYPE, we need to ignore any other command.
-              if (receivedByte == CONFIG_SUB_TYPE) {
-                lastCommand = receivedByte;
-              } else {
-                lastCommand = 0;
+              // We only understand Writing to CONFIG_SUB_TYPE, we need to
+              // ignore any other command.
+              if (receivedByte != CONFIG_SUB_TYPE) {
                 waitingForCommandCompletion = true;
+                lastCommand = 0;
+              } else {
+                lastCommand = receivedByte;
               }
             } else if (lastCommand == CONFIG_SUB_TYPE) {
               // We previously received that the section being updated is the
@@ -166,7 +168,6 @@ int main(void) {
                 // jump_bootloader just sets us to avrdude mode.
               case COMMAND_JUMP_BOOTLOADER:
                 setDeviceMode(false);
-                waitingForCommandCompletion = true;
                 break;
               case COMMAND_WRITE_CONFIG_VALUE:
                 // We have received a command write config value command, so we
@@ -180,8 +181,6 @@ int main(void) {
             }
           }
         }
-
-        if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
       }
     }
     // Write data from the different output buffers to their respective

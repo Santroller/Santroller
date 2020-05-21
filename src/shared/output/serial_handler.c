@@ -8,10 +8,13 @@
 
 int currentCommand = 0;
 int currentCommandSize = 0;
-int currentSubCommand = 0;
+int currentWrite = 0;
 static const uint8_t *constDataToRead = NULL;
 static uint8_t *dataToReadWrite = NULL;
 bool dataInRam = false;
+bool reading = true;
+bool hasExtraData = false;
+bool started = false;
 void get_info_buf(uint8_t data) {
   switch (data) {
   case INFO_VERSION:
@@ -30,12 +33,11 @@ void get_info_buf(uint8_t data) {
     constDataToRead = (const uint8_t *)PSTR(ARDWIINO_BOARD);
     break;
   case INFO_EXT:
-    currentCommand = COMMAND_READ_CONFIG_VALUE;
     dataInRam = true;
-    if (config_pointer.main.inputType == WII) {
+    if (config.main.inputType == WII) {
       dataToReadWrite = (uint8_t *)&wii_ext;
       currentCommandSize = 2;
-    } else if (config_pointer.main.inputType == PS2) {
+    } else if (config.main.inputType == PS2) {
       dataToReadWrite = (uint8_t *)&ps2CtrlType;
       currentCommandSize = 1;
     }
@@ -238,121 +240,131 @@ void get_config_buf(uint8_t data) {
     break;
   case CONFIG_LED_COLOURS:
     dataToReadWrite = (uint8_t *)&config_pointer.leds.colours;
-    currentSubCommand = data;
-    currentCommandSize = 0;
+    hasExtraData = true;
+    currentCommandSize = 4;
     break;
   case CONFIG_LED_PINS:
     dataToReadWrite = (uint8_t *)&config_pointer.leds.pins;
-    currentSubCommand = data;
-    currentCommandSize = 0;
+    hasExtraData = true;
     break;
   case CONFIG_MIDI_CHANNEL:
     dataToReadWrite = (uint8_t *)&config_pointer.midi.channel;
-    currentSubCommand = data;
-    currentCommandSize = 0;
+    hasExtraData = true;
     break;
   case CONFIG_MIDI_NOTE:
     dataToReadWrite = (uint8_t *)&config_pointer.midi.note;
-    currentSubCommand = data;
-    currentCommandSize = 0;
+    hasExtraData = true;
     break;
   case CONFIG_MIDI_TYPE:
     dataToReadWrite = (uint8_t *)&config_pointer.midi.midiType;
-    currentSubCommand = data;
-    currentCommandSize = 0;
+    hasExtraData = true;
     break;
   }
 }
+bool processCommand(uint8_t cmd) {
+  currentCommandSize = 0;
+  hasExtraData = false;
+  dataInRam = false;
+  reading = true;
+  started = false;
+  switch (cmd) {
+  case COMMAND_REBOOT:
+    reboot();
+    break;
+  case COMMAND_JUMP_BOOTLOADER:
+    bootloader();
+    break;
+  case COMMAND_SET_LED_COLOUR:
+    dataInRam = true;
+    dataToReadWrite = (uint8_t *)&controller.leds;
+    int i = 0;
+    while (config.leds.pins[i]) { i++; }
+    currentCommandSize = i * 4;
+    return true;
+  case COMMAND_FIND_DIGITAL:
+    findDigitalPin();
+    currentCommand = 0;
+    reading = false;
+    break;
+  case COMMAND_FIND_ANALOG:
+    findAnalogPin();
+    currentCommand = 0;
+    reading = false;
+    break;
+  case COMMAND_FIND_STOP:
+    stopSearching();
+    currentCommand = 0;
+    reading = false;
+    break;
+  case COMMAND_WRITE_CONFIG_VALUE:
+    reading = false;
+  case COMMAND_READ_INFO:
+  case COMMAND_READ_CONFIG_VALUE:
+    currentCommand = cmd;
+    return true;
+  default:
+    currentCommand = 0;
+    break;
+  }
+  return false;
+}
+bool processCommandData(uint8_t data) {
+  switch (currentCommand) {
+  case COMMAND_WRITE_CONFIG_VALUE:
+    get_config_buf(data);
+    return true;
+  case COMMAND_READ_INFO:
+    get_info_buf(data);
+    return false;
+  case COMMAND_READ_CONFIG_VALUE:
+    get_config_buf(data);
+    return hasExtraData;
+  }
+  return false;
+}
+bool processMultiByteCommandData(uint8_t data) {
+  if (hasExtraData) {
+    switch (currentCommandSize) {
+    case CONFIG_LED_COLOURS:
+      dataToReadWrite += data * 4;
+      break;
+    case CONFIG_LED_PINS:
+    case CONFIG_MIDI_CHANNEL:
+    case CONFIG_MIDI_NOTE:
+    case CONFIG_MIDI_TYPE:
+      dataToReadWrite += data;
+      break;
+    }
+    hasExtraData = false;
+    return !reading;
+  }
+  return false;
+}
 void processSerialData(uint8_t data) {
-  if (currentCommand == 0) {
-    currentCommand = data;
-    currentCommandSize = 0;
-    currentSubCommand = 0;
-    dataInRam = false;
-    switch (currentCommand) {
-    case COMMAND_REBOOT:
-      reboot();
-      break;
-    case COMMAND_JUMP_BOOTLOADER:
-      bootloader();
-      break;
-    case COMMAND_SET_LED_COLOUR:
-      dataInRam = true;
-      dataToReadWrite = (uint8_t *)&controller.leds;
-      int i = 0;
-      while (config.leds.pins[i]) { i++; }
-      currentCommandSize = i * 4;
-      return;
-    case COMMAND_FIND_DIGITAL:
-      findDigitalPin();
-      currentCommand = 0;
-      break;
-    case COMMAND_FIND_ANALOG:
-      findAnalogPin();
-      currentCommand = 0;
-      break;
-    case COMMAND_FIND_STOP:
-      stopSearching();
-      currentCommand = 0;
-      break;
-    case COMMAND_WRITE_CONFIG_VALUE:
-    case COMMAND_READ_INFO:
-    case COMMAND_READ_CONFIG_VALUE:
-      return;
-    default:
-      currentCommand = 0;
-    }
-  } else if (currentCommandSize == 0) {
-    if (currentSubCommand) {
-      switch (currentSubCommand) {
-      case CONFIG_LED_COLOURS:
-        dataToReadWrite += data * 4;
-        currentCommandSize = 4;
-        break;
-      case CONFIG_LED_PINS:
-      case CONFIG_MIDI_CHANNEL:
-      case CONFIG_MIDI_NOTE:
-      case CONFIG_MIDI_TYPE:
-        dataToReadWrite += data;
-        currentCommandSize = 1;
-        break;
-      }
-      if (currentCommand == COMMAND_WRITE_CONFIG_VALUE) { return; }
-    } else {
-      switch (currentCommand) {
-      case COMMAND_WRITE_CONFIG_VALUE:
-        get_config_buf(data);
-        return;
-      case COMMAND_READ_INFO:
-        get_info_buf(data);
-        break;
-      case COMMAND_READ_CONFIG_VALUE:
-        get_config_buf(data);
-        if (currentSubCommand) { return; }
-        break;
-      }
-    }
-    while (currentCommandSize) {
-      if (currentCommand == COMMAND_READ_INFO) {
-        writeToSerial(pgm_read_byte(constDataToRead++));
-      } else if (dataInRam) {
+  if (currentCommand == 0 && processCommand(data)) { return; }
+  if (!started && currentCommandSize == 0 && processCommandData(data)) { return; }
+  if (!started && hasExtraData && processMultiByteCommandData(data)) { return; }
+  started = true;
+  if (reading) {
+    while (currentCommandSize--) {
+      if (dataInRam) {
         writeToSerial(*(dataToReadWrite++));
+      } else if (currentCommand == COMMAND_READ_INFO) {
+        writeToSerial(pgm_read_byte(constDataToRead++));
       } else {
         writeToSerial(eeprom_read_byte(dataToReadWrite++));
       }
-      currentCommandSize--;
     }
-  } else {
+  } else if (currentCommandSize--) {
     if (dataInRam) {
       *(dataToReadWrite++) = data;
     } else {
       eeprom_update_byte(dataToReadWrite++, data);
     }
-    currentCommandSize--;
+    if (currentCommandSize) return;
   }
-  if (currentCommandSize == 0) {
-    writeToSerial('\r');
-    writeToSerial('\n');
-    currentCommand = 0;
-  }
+  writeToSerial('\r');
+  writeToSerial('\n');
+  currentCommand = 0;
 }
+// THIS IS SUPER BUGGY

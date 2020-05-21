@@ -38,8 +38,8 @@ void initDirectInput() {
         }
       }
     }
+    scheduleAllAnalogReads();
   }
-  scheduleAllAnalogReads();
 }
 bool shouldSkipPin(uint8_t i) {
   // On the 328p, due to an inline LED, it isn't possible to check pin 13

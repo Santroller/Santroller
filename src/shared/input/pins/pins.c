@@ -222,10 +222,6 @@ void pinMode(uint8_t pin, uint8_t mode) {
 }
 
 void setupADC(void) {
-  // this needs to be called before setup() or some functions won't
-  // work there
-  sei();
-
 #if defined(ADCSRA)
 // set a2d prescaler so we are inside the desired 50-200 KHz range.
 #  if F_CPU >= 16000000 // 16 MHz / 128 = 125 KHz

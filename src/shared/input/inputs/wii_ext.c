@@ -28,7 +28,7 @@ void readWiiExtButtons(Controller_t *controller, uint16_t buttons) {
 
 uint16_t readWiiExtID(void) {
   uint8_t data[6];
-  if (readFromI2CPointerSlow(I2C_ADDR, 0xFA, 6, data)) {
+  if (!readFromI2CPointerSlow(I2C_ADDR, 0xFA, 6, data)) {
     return WII_NO_DEVICE;
   }
   // 0100 a420 0101 -> #1#######101
@@ -198,7 +198,7 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
   if (wii_ext == WII_NO_DEVICE ||
-      readFromI2CPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
+      !readFromI2CPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();
     return;

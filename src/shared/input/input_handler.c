@@ -21,7 +21,6 @@ void initInputs() {
     break;
   case DIRECT:
     initDirectInput();
-    tick_function = tickDirectInput;
     break;
   case PS2:
     initPS2CtrlInput();
@@ -34,8 +33,10 @@ void initInputs() {
 }
 void tickInputs(Controller_t *controller) {
   controller->buttons = 0;
-  tick_function(controller);
-  // controller->l_x=rand();
+  if (tick_function) {
+    tick_function(controller);
+  }
+  tickDirectInput(controller);
   if (config.main.mapLeftJoystickToDPad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);

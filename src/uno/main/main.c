@@ -45,6 +45,7 @@ int main(void) {
                         sizeof(serialInBufferData));
   RingBuffer_InitBuffer(&serialOutBuffer, serialOutBufferData,
                         sizeof(serialOutBufferData));
+  sei();
   initInputs();
   initLEDs();
   initReports();
@@ -57,7 +58,8 @@ int main(void) {
       controllerIndex = 0;
       RingBuffer_Insert(&serialOutBuffer, FRAME_START_DEVICE);
       while (controllerIndex < size) {
-        RingBuffer_Insert(&serialOutBuffer, currentReport[controllerIndex++]);
+        RingBuffer_Insert(&serialOutBuffer,
+        currentReport[controllerIndex++]);
       }
       RingBuffer_Insert(&serialOutBuffer, FRAME_END);
       memcpy(previousReport, currentReport, size);
@@ -80,6 +82,7 @@ int main(void) {
       }
       RingBuffer_Insert(&serialOutBuffer, FRAME_END);
     }
+    // RingBuffer_Insert(&serialOutBuffer, 'c');
     size = RingBuffer_GetCount(&serialOutBuffer);
     while (size--) {
       loop_until_bit_is_set(UCSR0A, UDRE0);

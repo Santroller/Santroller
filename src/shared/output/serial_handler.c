@@ -274,13 +274,16 @@ bool processCommand(uint8_t cmd) {
   case COMMAND_JUMP_BOOTLOADER:
     bootloader();
     break;
-  case COMMAND_SET_LED_COLOUR:
-    dataInRam = true;
-    dataToReadWrite = (uint8_t *)&controller.leds;
+  case COMMAND_SET_LED_COLOUR: {
+    currentCommand = COMMAND_SET_LED_COLOUR;
     int i = 0;
     while (config.leds.pins[i]) { i++; }
     currentCommandSize = i * 4;
+    dataInRam = true;
+    dataToReadWrite = (uint8_t *)&controller.leds;
+    reading = false;
     return true;
+  }
   case COMMAND_FIND_DIGITAL:
     findDigitalPin();
     currentCommand = 0;
@@ -324,17 +327,7 @@ bool processCommandData(uint8_t data) {
 }
 bool processMultiByteCommandData(uint8_t data) {
   if (hasExtraData) {
-    switch (currentCommandSize) {
-    case CONFIG_LED_COLOURS:
-      dataToReadWrite += data * 4;
-      break;
-    case CONFIG_LED_PINS:
-    case CONFIG_MIDI_CHANNEL:
-    case CONFIG_MIDI_NOTE:
-    case CONFIG_MIDI_TYPE:
-      dataToReadWrite += data;
-      break;
-    }
+    dataToReadWrite += data * currentCommandSize;
     hasExtraData = false;
     return !reading;
   }

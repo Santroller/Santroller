@@ -39,22 +39,24 @@
 #define TWI_SRX 3
 #define TWI_STX 4
 
-void initI2C(void);
-void disableI2C(void);
-void setI2CAddress(uint8_t);
-void setI2CFrequency(uint32_t);
-bool readFromI2C(uint8_t, uint8_t *, uint8_t, uint8_t);
-bool writeToI2C(uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);
-void sendI2CReply(uint8_t);
-bool sendI2CStop(void);
-void releaseI2CBus(void);
-uint8_t endI2CTransmission(uint8_t txAddress, uint8_t sendStop);
-bool readFromI2CPointer(uint8_t address, uint8_t pointer, uint8_t length,
+void twi_init(void);
+void twi_disable(void);
+void twi_setAddress(uint8_t);
+void twi_setFrequency(uint32_t);
+uint8_t twi_readFrom(uint8_t, uint8_t *, uint8_t, uint8_t);
+uint8_t twi_writeTo(uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);
+uint8_t twi_transmit(const uint8_t *, uint8_t);
+void twi_attachSlaveRxEvent(void (*)(uint8_t *, int));
+void twi_attachSlaveTxEvent(void (*)(void));
+void twi_reply(uint8_t);
+bool twi_stop(void);
+void twi_releaseBus(void);
+uint8_t twi_endTransmission(uint8_t txAddress, uint8_t sendStop);
+uint8_t twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,
                             uint8_t *data);
-bool readFromI2CPointerSlow(uint8_t address, uint8_t pointer,
-                                uint8_t length, uint8_t *data);
-bool writeToI2CPointer(uint8_t address, uint8_t pointer, uint8_t length,
+uint8_t twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
+                            uint8_t *data);
+uint8_t twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
                            uint8_t *data);
-bool writeSingleToI2CPointer(uint8_t address, uint8_t pointer, uint8_t data);
 
 #endif

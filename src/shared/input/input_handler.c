@@ -27,7 +27,7 @@ void initInputs() {
     tick_function = tickPS2CtrlInput;
     break;
   }
-  initI2C();
+  twi_init();
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }

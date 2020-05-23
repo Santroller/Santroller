@@ -30,9 +30,10 @@ void deviceControlRequest(void) {
     Endpoint_ClearStatusStage();
     return;
   }
-  // if (deviceType < PS3_GAMEPAD ||
-  //     USB_ControlRequest.wIndex != INTERFACE_ID_HID)
-  //   return;
+#ifndef __AVR_ATmega328P__
+  if (deviceType < PS3_GAMEPAD || USB_ControlRequest.wIndex != INTERFACE_ID_HID)
+    return;
+#endif
   // // PS3 Id packet
   if (USB_ControlRequest.bmRequestType ==
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&

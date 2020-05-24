@@ -28,12 +28,8 @@ void read_buttons(Controller_t *controller, uint16_t buttons) {
 
 uint16_t read_ext_id(void) {
   uint8_t data[6];
-  if (twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data)) {
-    return WII_NO_DEVICE;
-  }
-  // 0100 a420 0101 -> #1#######101
-  // 0100 a420 0103 -> #1#######101
-  return (data[0] & 0xf) << 12 | (data[4] & 0xf) << 8 | data[5];
+  twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
+  return data[0] << 8 | data[5];
 }
 void write_byte(uint8_t addr, uint8_t data) {
   twi_writeToPointer(I2C_ADDR, addr, 1, &data);
@@ -69,7 +65,8 @@ void drum_tick(Controller_t *controller, uint8_t *data) {
       break;
     }
   }
-  // Swap y and x!
+  // The standard extension bindings are almost correct, but x and y are
+  // swapped, so swap them
   bit_write(!bit_check(data[5], 3), controller->buttons, XBOX_X);
   bit_write(!bit_check(data[5], 5), controller->buttons, XBOX_Y);
 }
@@ -139,14 +136,15 @@ void tatacon_tick(Controller_t *controller, uint8_t *data) {
 }
 void init_controller(void) {
   wii_ext = read_ext_id();
-  if (wii_ext == WII_NO_DEVICE) {
-    _delay_us(10);
+  if (wii_ext == WII_NOT_INITIALISED) {
     write_byte(0xF0, 0x55);
     _delay_us(10);
     write_byte(0xFB, 0x00);
     _delay_us(10);
+    wii_ext = read_ext_id();
+    _delay_us(10);
   }
-  wii_ext = read_ext_id();
+
   if (wii_ext == WII_CLASSIC_CONTROLLER ||
       wii_ext == WII_CLASSIC_CONTROLLER_PRO) {
     // Enable high-res mode

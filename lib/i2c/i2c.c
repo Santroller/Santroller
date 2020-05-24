@@ -208,7 +208,7 @@ uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length, uint8_t sen
     twi_slarw = TW_READ;
     twi_slarw |= address << 1;
 
-    if (true == twi_inRepStart) {
+    if (twi_inRepStart) {
         // if we're in the repeated start state, then we've already sent the start,
         // (@@@ we hope), and the TWI statemachine is just waiting for the address byte.
         // We need to remove ourselves from the repeated start state before we enable interrupts,
@@ -337,7 +337,7 @@ uint8_t twi_writeTo(uint8_t address, uint8_t* data, uint8_t length, uint8_t wait
   
     // if we're in a repeated start, then we've already sent the START
     // in the ISR. Don't do it again.
-    if ( true == twi_inRepStart ) {
+    if (twi_inRepStart ) {
         // if we're in the repeated start state, then we've already sent the start,
         // (@@@ we hope), and the TWI statemachine is just waiting for the address byte.
         // We need to remove ourselves from the repeated start state before we enable interrupts,
@@ -524,7 +524,7 @@ uint8_t twi_readFromPointerSlow(uint8_t address, uint8_t pointer,
                                 uint8_t length, uint8_t *data) {
   uint8_t ret = twi_writeTo(address, &pointer, 1, true, true);
   if (ret != 0) return ret;
-  _delay_us(200);
+  _delay_us(500);
   return !twi_readFrom(address, data, length, true);
 }
 uint8_t twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,

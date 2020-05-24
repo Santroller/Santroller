@@ -34,9 +34,12 @@ void tickLEDs(Controller_t *controller) {
   if (config.main.fretLEDMode != APA102) return;
   for (uint8_t i = 0; i < 4; i++) { transmitSPIByte(0x00); }
   int led = 0;
-  for (; config.leds.pins[led]; led++) {
+  // Loop until either config.leds runs out, or controller->leds runs out. This is due to the fact that controller->leds
+  // can contain more leds if a config is in the process of being made.
+  for (; config.leds.pins[led] || controller->leds[led]; led++) {
     uint32_t col = controller->leds[led];
-    if (col == Black) {
+    // Only bind pins to buttons if we know what pin to map, and the computer has not sent a new pin
+    if (col == Black && config.leds.pins[led]) {
       uint8_t button = config.leds.pins[led] - 1;
       if (getVelocity(controller,button)) { col = config.leds.colours[led]; }
     }

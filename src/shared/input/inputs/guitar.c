@@ -1,13 +1,13 @@
 #include "guitar.h"
+#include "../pins/pins.h"
 #include "config/eeprom.h"
-#include "util/util.h"
 #include "direct.h"
 #include "mpu6050/inv_mpu.h"
 #include "mpu6050/inv_mpu_dmp_motion_driver.h"
-#include "../pins/pins.h"
+#include "mpu6050/mpu_math.h"
+#include "util/util.h"
 #include <stdbool.h>
 #include <util/delay.h>
-#include "mpu6050/mpu_math.h"
 // Constants used by the mpu 6050
 #define FSR 2000
 //#define GYRO_SENS       ( 131.0f * 250.f / (float)FSR )
@@ -50,13 +50,15 @@ void (*tick)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?
 #define DRUM 1
 #define GUITAR 2
-uint8_t types[MIDI_CONTROLLER] = {
+uint8_t types[MIDI_ROCK_BAND_DRUMS+1] = {
     [PS3_GUITAR_HERO_DRUMS] = DRUM,     [PS3_ROCK_BAND_DRUMS] = DRUM,
     [WII_ROCK_BAND_DRUMS] = DRUM,       [XINPUT_ROCK_BAND_DRUMS] = DRUM,
-    [XINPUT_GUITAR_HERO_DRUMS] = DRUM,  [PS3_GUITAR_HERO_GUITAR] = GUITAR,
+    [XINPUT_GUITAR_HERO_DRUMS] = DRUM,  [MIDI_ROCK_BAND_DRUMS] = DRUM,
+    [MIDI_GUITAR_HERO_DRUMS] = DRUM,    [PS3_GUITAR_HERO_GUITAR] = GUITAR,
     [PS3_ROCK_BAND_GUITAR] = GUITAR,    [WII_ROCK_BAND_GUITAR] = GUITAR,
     [XINPUT_ROCK_BAND_GUITAR] = GUITAR, [XINPUT_GUITAR_HERO_GUITAR] = GUITAR,
-    [XINPUT_LIVE_GUITAR] = GUITAR,
+    [XINPUT_LIVE_GUITAR] = GUITAR,      [MIDI_ROCK_BAND_GUITAR] = GUITAR,
+    [MIDI_GUITAR_HERO_GUITAR] = GUITAR,
 };
 bool isDrum(void) { return types[config.main.subType] == DRUM; }
 bool isGuitar(void) { return types[config.main.subType] == GUITAR; }

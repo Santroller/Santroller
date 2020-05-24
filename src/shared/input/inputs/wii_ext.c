@@ -36,7 +36,7 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
   // Mask out unused bits
   uint16_t buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
   readExtButtons(controller, buttons);
-  if (config.main.subType >= MIDI_GUITAR && bit_check(data[3], 1)) {
+  if (config.main.subType >= MIDI_CONTROLLER && bit_check(data[3], 1)) {
     uint8_t vel = (7 - (data[3] >> 5)) << 5;
     uint8_t which = (data[2] & 0b01111100) >> 1;
     switch (which) {

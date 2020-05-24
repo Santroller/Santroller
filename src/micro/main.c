@@ -111,7 +111,7 @@ void writeToSerial(uint8_t data) {
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  if (deviceType >= MIDI_GUITAR) {
+  if (deviceType >= MIDI_CONTROLLER) {
     MIDI_Device_ConfigureEndpoints(&midiInterface);
   } else {
     HID_Device_ConfigureEndpoints(&hidInterface);

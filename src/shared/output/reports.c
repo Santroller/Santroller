@@ -11,7 +11,7 @@ void (*fillReport)(void *ReportData, uint16_t *const ReportSize,
                    Controller_t *controller) = NULL;
 
 void initReports(void) {
-  if (config.main.subType >= MIDI_GUITAR) {
+  if (config.main.subType >= MIDI_CONTROLLER) {
     fillReport = fillMIDIReport;
   } else if (config.main.subType <= XINPUT_ARCADE_PAD) {
     fillReport = fillXInputReport;

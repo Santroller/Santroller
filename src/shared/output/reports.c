@@ -11,11 +11,11 @@ void (*fillReport)(void *ReportData, uint16_t *const ReportSize,
                    Controller_t *controller) = NULL;
 
 void initReports(void) {
-  if (config.main.subType >= MIDI_CONTROLLER) {
+  if (config.main.subType >= MIDI_GAMEPAD) {
     fillReport = fillMIDIReport;
   } else if (config.main.subType <= XINPUT_ARCADE_PAD) {
     fillReport = fillXInputReport;
-  } else if (config.main.subType == KEYBOARD) {
+  } else if (config.main.subType >= KEYBOARD_GAMEPAD && config.main.subType <= KEYBOARD_ROCK_BAND_DRUMS) {
     initKeyboard();
     fillReport = fillKeyboardReport;
   } else {

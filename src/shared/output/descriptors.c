@@ -484,7 +484,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     size = deviceDescriptor.Header.Size;
     memcpy_P(dbuf, address, size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)dbuf;
-    if (deviceType >= SWITCH_GAMEPAD && deviceType < MIDI_CONTROLLER) {
+    if (deviceType >= SWITCH_GAMEPAD && deviceType < MIDI_GAMEPAD) {
       uint8_t offs = deviceType - SWITCH_GAMEPAD;
       dev->VendorID = pgm_read_word(vid + offs);
       dev->ProductID = pgm_read_word(pid + offs);
@@ -498,7 +498,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         (USB_Descriptor_Configuration_t *)dbuf;
     USB_Descriptor_Configuration_midi_t *conf2 =
         (USB_Descriptor_Configuration_midi_t *)dbuf;
-    if (deviceType >= MIDI_CONTROLLER) {
+    if (deviceType >= MIDI_GAMEPAD) {
       // swap cdc and other
       memcpy_P(dbuf + offsetof(USB_Descriptor_Configuration_midi_t, cdc),
                ((uint8_t *)address) +
@@ -522,8 +522,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           sizeof(USB_Descriptor_Interface_t) +
           sizeof(USB_HID_Descriptor_HID_t) +
           sizeof(USB_HID_XBOX_Descriptor_HID_t);
-    } else if (deviceType >= KEYBOARD) {
-      if (deviceType == KEYBOARD) {
+    } else if (deviceType >= KEYBOARD_GAMEPAD) {
+      if (deviceType >= KEYBOARD_GAMEPAD && deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
         conf->other.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
       }
@@ -552,7 +552,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     }
     return size;
   case HID_DTYPE_Report:
-    if (deviceType == KEYBOARD) {
+    if (deviceType < SWITCH_GAMEPAD) {
       address = keyboard_report_descriptor;
       size = sizeof(keyboard_report_descriptor);
     } else {

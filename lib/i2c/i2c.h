@@ -23,8 +23,6 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-//#define ATMEGA8
-
 #ifndef TWI_FREQ
 #  define TWI_FREQ 300000L
 #endif
@@ -52,11 +50,12 @@ void twi_reply(uint8_t);
 bool twi_stop(void);
 void twi_releaseBus(void);
 uint8_t twi_endTransmission(uint8_t txAddress, uint8_t sendStop);
-uint8_t twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,
+bool twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,
                             uint8_t *data);
-uint8_t twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
+bool twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
                             uint8_t *data);
-uint8_t twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
+bool twi_writeSingleToPointer(uint8_t address, uint8_t pointer, uint8_t data);
+bool twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
                            uint8_t *data);
 
 #endif

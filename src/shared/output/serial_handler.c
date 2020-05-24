@@ -35,7 +35,7 @@ void get_info_buf(uint8_t data) {
   case INFO_EXT:
     dataInRam = true;
     if (config.main.inputType == WII) {
-      dataToReadWrite = (uint8_t *)&wii_ext;
+      dataToReadWrite = (uint8_t *)&wiiExtensionID;
       currentCommandSize = 2;
     } else if (config.main.inputType == PS2) {
       dataToReadWrite = (uint8_t *)&ps2CtrlType;

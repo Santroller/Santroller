@@ -9,37 +9,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
-uint8_t classic_bindings[16] = {
+uint8_t wiiButtonBindings[16] = {
     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
-uint16_t counter;
-uint16_t wii_ext = WII_NO_EXTENSION;
+uint16_t wiiExtensionID = WII_NO_EXTENSION;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
-void read_buttons(Controller_t *controller, uint16_t buttons) {
-  for (uint8_t i = 0; i < sizeof(classic_bindings); i++) {
-    uint8_t idx = classic_bindings[i];
+void readExtButtons(Controller_t *controller, uint16_t buttons) {
+  for (uint8_t i = 0; i < sizeof(wiiButtonBindings); i++) {
+    uint8_t idx = wiiButtonBindings[i];
     if (idx == INVALID_PIN) continue;
     bit_write(bit_check(buttons, i), controller->buttons, idx);
   }
 }
 
-uint16_t read_ext_id(void) {
+uint16_t readExtID(void) {
   uint8_t data[6];
   twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
   return data[0] << 8 | data[5];
 }
-void write_byte(uint8_t addr, uint8_t data) {
-  twi_writeToPointer(I2C_ADDR, addr, 1, &data);
-}
-void drum_tick(Controller_t *controller, uint8_t *data) {
+void readDrumExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x20) << 10;
   controller->l_y = (data[1] - 0x20) << 10;
   // Mask out unused bits
   uint16_t buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
-  read_buttons(controller, buttons);
+  readExtButtons(controller, buttons);
   if (config.main.subType >= MIDI_GUITAR && bit_check(data[3], 1)) {
     uint8_t vel = (7 - (data[3] >> 5)) << 5;
     uint8_t which = (data[2] & 0b01111100) >> 1;
@@ -69,14 +65,14 @@ void drum_tick(Controller_t *controller, uint8_t *data) {
   bit_write(!bit_check(data[5], 3), controller->buttons, XBOX_X);
   bit_write(!bit_check(data[5], 5), controller->buttons, XBOX_Y);
 }
-void guitar_cnt_tick(Controller_t *controller, uint8_t *data) {
+void readGuitarExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[0] & 0x3f) - 32) << 10;
   controller->l_y = ((data[1] & 0x3f) - 32) << 10;
   controller->r_x = -(((data[3] & 0x1f) - 16) << 10);
   uint16_t buttons = ~(data[4] | data[5] << 8);
-  read_buttons(controller, buttons);
+  readExtButtons(controller, buttons);
 }
-void classic_tick(Controller_t *controller, uint8_t *data) {
+void readClassicExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;
   controller->l_y = (data[2] - 0x80) << 8;
   controller->r_x = (data[1] - 0x80) << 8;
@@ -84,9 +80,9 @@ void classic_tick(Controller_t *controller, uint8_t *data) {
   controller->lt = data[4];
   controller->rt = data[5];
   uint16_t buttons = ~(data[6] | (data[7] << 8));
-  read_buttons(controller, buttons);
+  readExtButtons(controller, buttons);
 }
-void nunchuk_tick(Controller_t *controller, uint8_t *data) {
+void readNunchukExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;
   controller->l_y = (data[2] - 0x80) << 8;
   if (config.main.mapNunchukAccelToRightJoy) {
@@ -101,7 +97,7 @@ void nunchuk_tick(Controller_t *controller, uint8_t *data) {
   bit_write(!bit_check(data[5], 0), controller->buttons, XBOX_A);
   bit_write(!bit_check(data[5], 1), controller->buttons, XBOX_B);
 }
-void dj_tick(Controller_t *controller, uint8_t *data) {
+void readDJExt(Controller_t *controller, uint8_t *data) {
   uint8_t rtt =
       (data[2] & 0x80) >> 7 | (data[1] & 0xC0) >> 5 | (data[0] & 0xC0) >> 3;
 
@@ -113,9 +109,9 @@ void dj_tick(Controller_t *controller, uint8_t *data) {
   controller->lt = (data[3] & 0xE0) >> 5 | (data[2] & 0x60) >> 2;
   controller->rt = (data[2] & 0x1E) >> 1;
   uint16_t buttons = ~(data[4] << 8 | data[5]) & 0x63CD;
-  read_buttons(controller, buttons);
+  readExtButtons(controller, buttons);
 }
-void udraw_tick(Controller_t *controller, uint8_t *data) {
+void readUDrawExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[2] & 0x0f) << 8) | data[0];
   controller->l_y = ((data[2] & 0xf0) << 4) | data[1];
   controller->rt = data[3];
@@ -123,58 +119,58 @@ void udraw_tick(Controller_t *controller, uint8_t *data) {
   bit_write(bit_check(data[5], 1), controller->buttons, XBOX_B);
   bit_write(!bit_check(data[5], 2), controller->buttons, XBOX_X);
 }
-void drawsome_tick(Controller_t *controller, uint8_t *data) {
+void readDrawsomeExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = data[0] | data[1] << 8;
   controller->l_y = data[2] | data[3] << 8;
   controller->rt = data[4] | (data[5] & 0x0f) << 8;
   // controller->status = data[5]>>4;
 }
-void tatacon_tick(Controller_t *controller, uint8_t *data) {
+void readTataconExt(Controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] << 8 | data[5]);
-  read_buttons(controller, buttons);
+  readExtButtons(controller, buttons);
 }
-void init_controller(void) {
-  wii_ext = read_ext_id();
-  if (wii_ext == WII_NOT_INITIALISED) {
-    write_byte(0xF0, 0x55);
+void initWiiExt(void) {
+  wiiExtensionID = readExtID();
+  if (wiiExtensionID == WII_NOT_INITIALISED) {
+    twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
     _delay_us(10);
-    write_byte(0xFB, 0x00);
+    twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x00);
     _delay_us(10);
-    wii_ext = read_ext_id();
+    wiiExtensionID = readExtID();
     _delay_us(10);
   }
 
-  if (wii_ext == WII_CLASSIC_CONTROLLER ||
-      wii_ext == WII_CLASSIC_CONTROLLER_PRO) {
+  if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
+      wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
     // Enable high-res mode
-    write_byte(0xFE, 0x03);
+    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
     _delay_us(10);
   }
-  switch (wii_ext) {
+  switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:
-    readFunction = guitar_cnt_tick;
+    readFunction = readGuitarExt;
     break;
   case WII_CLASSIC_CONTROLLER:
   case WII_CLASSIC_CONTROLLER_PRO:
-    readFunction = classic_tick;
+    readFunction = readClassicExt;
     break;
   case WII_NUNCHUK:
-    readFunction = nunchuk_tick;
+    readFunction = readNunchukExt;
     break;
   case WII_GUITAR_HERO_DRUM_CONTROLLER:
-    readFunction = drum_tick;
+    readFunction = readDrumExt;
     break;
   case WII_THQ_UDRAW_TABLET:
-    readFunction = udraw_tick;
+    readFunction = readUDrawExt;
     break;
   case WII_UBISOFT_DRAWSOME_TABLET:
-    readFunction = drawsome_tick;
+    readFunction = readDrawsomeExt;
     break;
   case WII_DJ_HERO_TURNTABLE:
-    readFunction = dj_tick;
+    readFunction = readDJExt;
     break;
   case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
-    readFunction = tatacon_tick;
+    readFunction = readTataconExt;
     break;
   default:
     readFunction = NULL;
@@ -197,10 +193,10 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 }
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
-  if (wii_ext == WII_NO_EXTENSION ||
-      twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
+  if (wiiExtensionID == WII_NO_EXTENSION ||
+      !twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
-    init_controller();
+    initWiiExt();
     return;
   }
   if (readFunction) readFunction(controller, data);

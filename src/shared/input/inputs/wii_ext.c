@@ -41,7 +41,6 @@ void drum_tick(Controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
   read_buttons(controller, buttons);
   if (config.main.subType >= MIDI_GUITAR && bit_check(data[3], 1)) {
-    for (int i = 0; i < 8; i++) { controller->drumVelocity[i] = 0; }
     uint8_t vel = (7 - (data[3] >> 5)) << 5;
     uint8_t which = (data[2] & 0b01111100) >> 1;
     switch (which) {

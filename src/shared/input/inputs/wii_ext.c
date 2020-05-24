@@ -15,7 +15,7 @@ uint8_t classic_bindings[16] = {
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t counter;
-uint16_t wii_ext = WII_NO_DEVICE;
+uint16_t wii_ext = WII_NO_EXTENSION;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
 void read_buttons(Controller_t *controller, uint16_t buttons) {
@@ -198,7 +198,7 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 }
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
-  if (wii_ext == WII_NO_DEVICE ||
+  if (wii_ext == WII_NO_EXTENSION ||
       twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
     init_controller();

@@ -16,10 +16,10 @@
 #include <avr/wdt.h>
 #define JUMP 0xDEAD8001
 
-typedef struct {
-  uint32_t id;
-  uint8_t deviceType;
-} EepromConfig_t;
+// typedef struct {
+//   uint32_t id;
+//   uint8_t deviceType;
+// } EepromConfig_t;
 
 /** Circular buffer to hold data from the host before it is sent to the device
  * via the serial port. */
@@ -45,7 +45,8 @@ bool avrdudeInUse = false;
 bool isArdwiino = true;
 uint8_t lastCommand = 0;
 bool waitingForCommandCompletion = false;
-EepromConfig_t EEMEM config;
+// EepromConfig_t EEMEM config;
+uint8_t aid[] = {0xa2,0xd4,0x15,0x00,DEVICE_TYPE};
 
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
@@ -101,15 +102,26 @@ int main(void) {
   /* Start the 328p  */
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-
+  bool existed = true;
+  for (uint16_t i = 0; i < 5; i++) {
+    uint8_t read = eeprom_read_byte((uint8_t*)i);
+    bool last = i==4;
+    if ((existed || !last) && read != aid[i]) {
+      eeprom_write_byte((uint8_t*)i, aid[i]);
+      existed = false;
+    }
+    if (last && !existed) {
+      deviceType = read;
+    }
+  }
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
-  if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
-    eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
-    eeprom_update_byte(&config.deviceType, deviceType);
-  } else {
-    deviceType = eeprom_read_byte(&config.deviceType);
-  }
+  // if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
+  //   eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
+  //   eeprom_update_byte(&config.deviceType, deviceType);
+  // } else {
+  //   deviceType = eeprom_read_byte(&config.deviceType);
+  // }
 
   RingBuffer_InitBuffer(&bufferIn, bufferInData);
   RingBuffer_InitBuffer(&bufferOutSerial, bufferOutSerialData);
@@ -153,7 +165,7 @@ int main(void) {
               // We previously received that the section being updated is the
               // subtype, so the current byte is the subtype. Write the new
               // subtype to eeprom.
-              eeprom_update_byte(&config.deviceType, receivedByte);
+              eeprom_update_byte((uint8_t*)3, receivedByte);
               lastCommand = 0;
               waitingForCommandCompletion = true;
             } else {

@@ -529,6 +529,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
         conf->other.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
+      } else if (deviceType == MOUSE) {
+        conf->other.HIDDescriptor.HIDReportLength = sizeof(mouse_report_descriptor);
       }
       // Configure interface0 as HID
       conf->other.Interface0.Class = HID_CSCP_HIDClass;
@@ -558,7 +560,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     if (deviceType < SWITCH_GAMEPAD) {
       address = keyboard_report_descriptor;
       size = sizeof(keyboard_report_descriptor);
-    } else if (deviceType == 78) {
+    } else if (deviceType == MOUSE) {
       address = mouse_report_descriptor;
       size = sizeof(mouse_report_descriptor);
     } else {

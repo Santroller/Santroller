@@ -1,60 +1,88 @@
 #include "ps2_cnt.h"
-#include "config/eeprom.h"
-#include "util/util.h"
 #include "arduino_pins.h"
+#include "config/eeprom.h"
+#include "output/descriptors.h"
+#include "util/util.h"
 #include <avr/io.h>
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
-#include "output/descriptors.h"
 // Commands for communicating with a PSX controller
 static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01};
 static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00};
 static const uint8_t commandReadType[] = {0x01, 0x45, 0x00};
 static const uint8_t commandSetMode[] = {0x01, 0x44, 0x00, /* enabled */ 0x01,
-                                       /* locked */ 0x00};
+                                         /* locked */ 0x00};
 
 static const uint8_t commandSetPressures[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
-                                            0x03, 0x00, 0x00, 0x00};
+                                              0x03, 0x00, 0x00, 0x00};
 
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00};
 
 #define INVALID 0xFF
-static const uint8_t dualShockButtonBindings[] = {[PSB_SELECT] = XBOX_BACK,
-                                    [PSB_L3] = XBOX_LEFT_STICK,
-                                    [PSB_R3] = XBOX_RIGHT_STICK,
-                                    [PSB_START] = XBOX_START,
-                                    [PSB_PAD_UP] = XBOX_DPAD_UP,
-                                    [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
-                                    [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
-                                    [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
-                                    [PSB_L2] = INVALID,
-                                    [PSB_R2] = INVALID,
-                                    [PSB_L1] = XBOX_LB,
-                                    [PSB_R1] = XBOX_RB,
-                                    [PSB_TRIANGLE] = XBOX_Y,
-                                    [PSB_CIRCLE] = XBOX_B,
-                                    [PSB_CROSS] = XBOX_A,
-                                    [PSB_SQUARE] = XBOX_X};
+static const uint8_t dualShockButtonBindings[] = {
+    [PSB_SELECT] = XBOX_BACK,
+    [PSB_L3] = XBOX_LEFT_STICK,
+    [PSB_R3] = XBOX_RIGHT_STICK,
+    [PSB_START] = XBOX_START,
+    [PSB_PAD_UP] = XBOX_DPAD_UP,
+    [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+    [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+    [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+    [PSB_L2] = INVALID,
+    [PSB_R2] = INVALID,
+    [PSB_L1] = XBOX_LB,
+    [PSB_R1] = XBOX_RB,
+    [PSB_TRIANGLE] = XBOX_Y,
+    [PSB_CIRCLE] = XBOX_B,
+    [PSB_CROSS] = XBOX_A,
+    [PSB_SQUARE] = XBOX_X};
 
-static const uint8_t guitarHeroButtonBindings[] = {[PSB_SELECT] = XBOX_BACK,
-                                    [PSB_L3] = INVALID,
-                                    [PSB_R3] = INVALID,
-                                    [PSB_START] = XBOX_START,
-                                    [PSB_PAD_UP] = XBOX_DPAD_UP,
-                                    [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
-                                    [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
-                                    [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
-                                    [GH_STAR_POWER] = INVALID,
-                                    [GH_GREEN] = XBOX_A,
-                                    [PSB_L1] = INVALID,
-                                    [PSB_R1] = INVALID,
-                                    [GH_YELLOW] = XBOX_Y,
-                                    [GH_RED] = XBOX_B,
-                                    [GH_BLUE] = XBOX_X,
-                                    [GH_ORANGE] = XBOX_LB};
+static const uint8_t negConButtonBindings[] = {[NGB_START] = XBOX_START,
+                                               [NGB_PAD_UP] = XBOX_DPAD_UP,
+                                               [NGB_PAD_RIGHT] =
+                                                   XBOX_DPAD_RIGHT,
+                                               [NGB_PAD_DOWN] = XBOX_DPAD_DOWN,
+                                               [NGB_PAD_LEFT] = XBOX_DPAD_LEFT,
+                                               [NGB_R1] = XBOX_RB,
+                                               [NGB_A] = XBOX_A,
+                                               [NGB_B] = XBOX_B};
+static const uint8_t mouseButtonBindings[] = {[PMB_LEFT] = XBOX_A,
+                                              [PMB_RIGHT] = XBOX_B};
+static const uint8_t analogStickButtonBindings[] = {
+    [FSB_START] = XBOX_START,
+    [FSB_PAD_UP] = XBOX_DPAD_UP,
+    [FSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+    [FSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+    [FSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+    [FSB_L2] = INVALID,
+    [FSB_R2] = INVALID,
+    [FSB_L1] = XBOX_LB,
+    [FSB_R1] = XBOX_RB,
+    [FSB_TRIANGLE] = XBOX_Y,
+    [FSB_CIRCLE] = XBOX_B,
+    [FSB_CROSS] = XBOX_A,
+    [FSB_SQUARE] = XBOX_X};
 
-uint8_t ps2CtrlType = PS2_NO_DEVICE;
+static const uint8_t guitarHeroButtonBindings[] = {
+    [PSB_SELECT] = XBOX_BACK,
+    [PSB_L3] = INVALID,
+    [PSB_R3] = INVALID,
+    [PSB_START] = XBOX_START,
+    [PSB_PAD_UP] = XBOX_DPAD_UP,
+    [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+    [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+    [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+    [GH_STAR_POWER] = INVALID,
+    [GH_GREEN] = XBOX_A,
+    [PSB_L1] = INVALID,
+    [PSB_R1] = INVALID,
+    [GH_YELLOW] = XBOX_Y,
+    [GH_RED] = XBOX_B,
+    [GH_BLUE] = XBOX_X,
+    [GH_ORANGE] = XBOX_LB};
+
+uint8_t ps2CtrlType = PSX_NO_DEVICE;
 
 static inline bool isValidReply(const uint8_t *status) {
   return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
@@ -62,6 +90,14 @@ static inline bool isValidReply(const uint8_t *status) {
 
 static inline bool isFlightStickReply(const uint8_t *status) {
   return (status[1] & 0xF0) == 0x50;
+}
+
+static inline bool isNegconReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0x20;
+}
+
+static inline bool isMouseReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0x10;
 }
 
 static inline bool isDualShockReply(const uint8_t *status) {
@@ -99,7 +135,7 @@ static uint8_t dualShock1SPSR;
 static uint8_t dualShock1SPCR;
 static uint8_t dualShock2SPSR;
 static uint8_t dualShock2SPCR;
-void calculateClock (uint32_t clock)  {
+void calculateClock(uint32_t clock) {
   uint8_t clockDiv;
   if (clock >= F_CPU / 2) {
     clockDiv = 0;
@@ -121,7 +157,8 @@ void calculateClock (uint32_t clock)  {
   clockDiv ^= 0x1;
 
   // Pack into the SPISettings class
-  currentSPCR = _BV(SPE) | _BV(MSTR) | _BV(DORD) | (0x0C) | ((clockDiv >> 1) & 0x03);
+  currentSPCR =
+      _BV(SPE) | _BV(MSTR) | _BV(DORD) | (0x0C) | ((clockDiv >> 1) & 0x03);
   currentSPSR = clockDiv & 0x01;
 }
 
@@ -212,20 +249,20 @@ bool sendCommand(const uint8_t *buf, uint8_t len) {
 }
 
 uint8_t getControllerType(void) {
-  uint8_t ret = PS2_UNKNOWN_CONTROLLER;
+  uint8_t ret = PSX_UNKNOWN_CONTROLLER;
 
   uint8_t *in = autoShiftData(commandReadType, sizeof(commandReadType));
 
   if (in != NULL) {
     const uint8_t controllerType = in[3];
     if (controllerType == 0x03) {
-      ret = PS2_DUALSHOCK_2_CONTROLLER;
+      ret = PSX_DUALSHOCK_2_CONTROLLER;
       //~ } else if (controllerType == 0x01 && in[1] == 0x42) {
       //~ return 4;		// ???
     } else if (controllerType == 0x01 && in[1] != 0x42) {
-      ret = PS2_GUITAR_HERO_CONTROLLER;
+      ret = PSX_GUITAR_HERO_CONTROLLER;
     } else if (controllerType == 0x0C) {
-      ret = PS2_WIRELESS_SONY_DUALSHOCK_CONTROLLER;
+      ret = PSX_WIRELESS_SONY_DUALSHOCK_CONTROLLER;
     }
   }
 
@@ -244,7 +281,29 @@ bool read(Controller_t *controller) {
       // We surely have buttons
       uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
       const uint8_t *buttons = dualShockButtonBindings;
-      if (ps2CtrlType == PS2_GUITAR_HERO_CONTROLLER) { buttons = guitarHeroButtonBindings; }
+      if (ps2CtrlType == PSX_GUITAR_HERO_CONTROLLER) {
+        buttons = guitarHeroButtonBindings;
+      }
+
+      if (isFlightStickReply(in)) {
+        ps2CtrlType = PSX_ANALOG;
+        buttons = analogStickButtonBindings;
+      }
+      if (isNegconReply(in)) {
+        ps2CtrlType = PSX_NEGCON;
+        buttons = negConButtonBindings;
+        controller->r_x = (in[5] - 128) << 8;
+        // For whatever reason the negcon controller reports buttons in this section.
+        bit_write(in[6] == 0xFF,controller->buttons,XBOX_X);
+        bit_write(in[7] == 0xFF,controller->buttons,XBOX_Y);
+        bit_write(in[8] == 0xFF,controller->buttons,XBOX_LB);
+      }
+      if (isMouseReply(in)) {
+        ps2CtrlType = PSX_MOUSE;
+        buttons = mouseButtonBindings;
+        controller->r_x = (in[5] - 128) << 8;
+        controller->r_y = -(in[6] - 127) << 8;
+      }
       uint8_t btn;
       for (int i = 0; i < XBOX_BTN_COUNT; i++) {
         btn = buttons[i];
@@ -252,7 +311,6 @@ bool read(Controller_t *controller) {
           bit_write(bit_check(buttonWord, i), controller->buttons, btn);
         }
       }
-
       if (isDualShockReply(in) || isFlightStickReply(in)) {
         controller->r_x = (in[5] - 128) << 8;
         controller->r_y = -(in[6] - 127) << 8;
@@ -261,7 +319,7 @@ bool read(Controller_t *controller) {
         if (isDualShock2Reply(in)) {
           controller->lt = in[PSAB_L2 + 9];
           controller->rt = in[PSAB_R2 + 9];
-          if (ps2CtrlType == PS2_GUITAR_HERO_CONTROLLER) {
+          if (ps2CtrlType == PSX_GUITAR_HERO_CONTROLLER) {
             controller->r_x = in[GH_WHAMMY + 9];
             controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
           }
@@ -308,7 +366,7 @@ void initPS2CtrlInput(void) {
   dualShock2SPSR = currentSPSR;
 }
 void tickPS2CtrlInput(Controller_t *controller) {
-  if (ps2CtrlType == PS2_NO_DEVICE) {
+  if (ps2CtrlType == PSX_NO_DEVICE) {
     if (!begin(controller)) { return; }
     // Dualshock one controllers don't have config mode
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
@@ -321,8 +379,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
       sendCommand(commandSetPressures, sizeof(commandSetPressures));
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
     } else {
-      ps2CtrlType = PS2_DUALSHOCK_1_CONTROLLER;
+      ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
     }
   }
-  if (!read(controller)) { ps2CtrlType = PS2_NO_DEVICE; }
+  if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
 }

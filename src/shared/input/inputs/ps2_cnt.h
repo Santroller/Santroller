@@ -53,31 +53,6 @@ enum PsxButton {
   PSB_CROSS,
   PSB_SQUARE
 };
-enum FightStickButton {
-  FSB_START=3,
-  FSB_PAD_UP,
-  FSB_PAD_RIGHT,
-  FSB_PAD_DOWN,
-  FSB_PAD_LEFT,
-  FSB_L2,
-  FSB_L1,
-  FSB_SQUARE,
-  FSB_TRIANGLE,
-  FSB_R1,
-  FSB_CIRCLE,
-  FSB_CROSS,
-  FSB_R2,
-};
-enum NegconButton {
-  NGB_START=3,
-  NGB_PAD_UP,
-  NGB_PAD_RIGHT,
-  NGB_PAD_DOWN,
-  NGB_PAD_LEFT,
-  NGB_R1 = 11,
-  NGB_A,
-  NGB_B,
-};
 enum MouseButton {
   PMB_LEFT=9,
   PMB_RIGHT,

@@ -34,32 +34,26 @@ void deviceControlRequest(void) {
   if (deviceType < PS3_GAMEPAD || USB_ControlRequest.wIndex != INTERFACE_ID_HID)
     return;
 #endif
-  // // PS3 Id packet
-  if (USB_ControlRequest.bmRequestType ==
-          (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
-      USB_ControlRequest.bRequest == HID_REQ_GetReport) {
-    // Send out init packets for the ps3
-    if (deviceType == PS3_GUITAR_HERO_GUITAR ||
-        deviceType == PS3_GUITAR_HERO_DRUMS) {
-      id[3] = 0x06;
-    } else if (deviceType == PS3_ROCK_BAND_GUITAR ||
-               deviceType == PS3_ROCK_BAND_DRUMS) {
-      id[3] = 0x00;
-    }
-    Endpoint_ClearSETUP();
-    Endpoint_Write_Control_Stream_LE(id, sizeof(id));
-    Endpoint_ClearStatusStage();
-    return;
-  }
+
   // The following is necessary for wii rockband controllers. This implements
   // enough of the hid spec to make wii rockband controllers work
-  if (USB_ControlRequest.bmRequestType !=
-      (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE))
+  if (!(USB_ControlRequest.bmRequestType ==
+          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) ||
+       USB_ControlRequest.bRequest != HID_REQ_GetReport))
     return;
 
   Endpoint_ClearSETUP();
   if (USB_ControlRequest.bRequest == HID_REQ_SetReport) {
     Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
+  }
+  if (USB_ControlRequest.bRequest == HID_REQ_GetReport) {
+    if (deviceType <= PS3_ROCK_BAND_DRUMS) {
+      id[3] = 0x00;
+    } else if (deviceType <= PS3_GUITAR_HERO_DRUMS) {
+      id[3] = 0x00;
+    }
+    // Send out init packets for the ps3
+    Endpoint_Write_Control_Stream_LE(id, sizeof(id));
   }
   Endpoint_ClearStatusStage();
 }

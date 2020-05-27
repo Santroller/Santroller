@@ -29,7 +29,7 @@ const USB_Descriptor_String_t PROGMEM productString =
 
 const USB_Descriptor_String_t *const PROGMEM descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
-    
+
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
@@ -120,6 +120,8 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] = {
+    HID_DESCRIPTOR_MOUSE(-255, 255, -255, 255, 3, false)};
 
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
@@ -457,10 +459,10 @@ const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
 };
 
 uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
-const uint16_t PROGMEM vid[] = {0x0F0D, ARDWIINO_VID, 0x12ba, 0x12ba,
-                                0x12ba, 0x12ba,       0x1bad, 0x1bad};
-const uint16_t PROGMEM pid[] = {0x0092, ARDWIINO_PID, 0x0100, 0x0200,
-                                0x0120, 0x0210,       0x0004, 0x074B};
+const uint16_t PROGMEM vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
+                                0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
+const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
+                                0x0210, ARDWIINO_PID, 0x0004, 0x074B};
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
  * code so that the address and size of a requested descriptor can be given to
@@ -523,7 +525,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           sizeof(USB_HID_Descriptor_HID_t) +
           sizeof(USB_HID_XBOX_Descriptor_HID_t);
     } else if (deviceType >= KEYBOARD_GAMEPAD) {
-      if (deviceType >= KEYBOARD_GAMEPAD && deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
+      if (deviceType >= KEYBOARD_GAMEPAD &&
+          deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
         conf->other.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
       }
@@ -555,6 +558,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     if (deviceType < SWITCH_GAMEPAD) {
       address = keyboard_report_descriptor;
       size = sizeof(keyboard_report_descriptor);
+    } else if (deviceType == 78) {
+      address = mouse_report_descriptor;
+      size = sizeof(mouse_report_descriptor);
     } else {
       address = ps3_report_descriptor;
       size = sizeof(ps3_report_descriptor);

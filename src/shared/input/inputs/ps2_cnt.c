@@ -18,7 +18,30 @@ static const uint8_t commandSetPressures[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
                                               0x03, 0x00, 0x00, 0x00};
 
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00};
+/** \brief neGcon I/II-button press threshold
+ *
+ * The neGcon does not report digital button press data for its analog buttons,
+ * so we have to make it up. The Square, Cross digital buttons will be
+ * reported as pressed when the analog value of the II and I buttons
+ * (respectively), goes over this threshold.
+ *
+ * \sa NEGCON_L_BUTTON_THRESHOLD
+ */
+const uint8_t NEGCON_I_II_BUTTON_THRESHOLD = 128U;
 
+/** \brief neGcon L-button press threshold
+ *
+ * The neGcon does not report digital button press data for its analog buttons,
+ * so we have to make it up. The L1 digital button will be reported as pressed
+ * when the analog value of the L buttons goes over this threshold.
+ *
+ * This value has been tuned so that the L button gets digitally triggered at
+ * about the same point as the non-analog R button. This is done "empirically"
+ * and might need tuning on a different controller than the one I actually have.
+ * 
+ * \sa NEGCON_I_II_BUTTON_THRESHOLD
+ */
+const uint8_t NEGCON_L_BUTTON_THRESHOLD = 240U;
 #define INVALID 0xFF
 static const uint8_t dualShockButtonBindings[] = {
     [PSB_SELECT] = XBOX_BACK,
@@ -38,31 +61,8 @@ static const uint8_t dualShockButtonBindings[] = {
     [PSB_CROSS] = XBOX_A,
     [PSB_SQUARE] = XBOX_X};
 
-static const uint8_t negConButtonBindings[] = {[NGB_START] = XBOX_START,
-                                               [NGB_PAD_UP] = XBOX_DPAD_UP,
-                                               [NGB_PAD_RIGHT] =
-                                                   XBOX_DPAD_RIGHT,
-                                               [NGB_PAD_DOWN] = XBOX_DPAD_DOWN,
-                                               [NGB_PAD_LEFT] = XBOX_DPAD_LEFT,
-                                               [NGB_R1] = XBOX_RB,
-                                               [NGB_A] = XBOX_A,
-                                               [NGB_B] = XBOX_B};
 static const uint8_t mouseButtonBindings[] = {[PMB_LEFT] = XBOX_A,
                                               [PMB_RIGHT] = XBOX_B};
-static const uint8_t analogStickButtonBindings[] = {
-    [FSB_START] = XBOX_START,
-    [FSB_PAD_UP] = XBOX_DPAD_UP,
-    [FSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
-    [FSB_PAD_DOWN] = XBOX_DPAD_DOWN,
-    [FSB_PAD_LEFT] = XBOX_DPAD_LEFT,
-    [FSB_L2] = INVALID,
-    [FSB_R2] = INVALID,
-    [FSB_L1] = XBOX_LB,
-    [FSB_R1] = XBOX_RB,
-    [FSB_TRIANGLE] = XBOX_Y,
-    [FSB_CIRCLE] = XBOX_B,
-    [FSB_CROSS] = XBOX_A,
-    [FSB_SQUARE] = XBOX_X};
 
 static const uint8_t guitarHeroButtonBindings[] = {
     [PSB_SELECT] = XBOX_BACK,
@@ -93,11 +93,11 @@ static inline bool isFlightStickReply(const uint8_t *status) {
 }
 
 static inline bool isNegconReply(const uint8_t *status) {
-  return (status[1] & 0xF0) == 0x20;
+  return status[1] == 0x23;
 }
 
 static inline bool isMouseReply(const uint8_t *status) {
-  return (status[1] & 0xF0) == 0x10;
+  return status[1] == 0x12;
 }
 
 static inline bool isDualShockReply(const uint8_t *status) {
@@ -287,22 +287,22 @@ bool read(Controller_t *controller) {
 
       if (isFlightStickReply(in)) {
         ps2CtrlType = PSX_ANALOG;
-        buttons = analogStickButtonBindings;
+        // Does this actually have different button bindings? PsxNewLib seems to suggest it doesnt?
+        // buttons = analogStickButtonBindings;
       }
       if (isNegconReply(in)) {
         ps2CtrlType = PSX_NEGCON;
-        buttons = negConButtonBindings;
-        controller->r_x = (in[5] - 128) << 8;
-        // For whatever reason the negcon controller reports buttons in this section.
-        bit_write(in[6] == 0xFF,controller->buttons,XBOX_X);
-        bit_write(in[7] == 0xFF,controller->buttons,XBOX_Y);
-        bit_write(in[8] == 0xFF,controller->buttons,XBOX_LB);
+        controller->l_x = (in[5] - 128) << 8;
+        // These buttons are only analog, map them to digital
+        bit_write(in[6] > NEGCON_I_II_BUTTON_THRESHOLD,controller->buttons,XBOX_X);
+        bit_write(in[7] > NEGCON_I_II_BUTTON_THRESHOLD,controller->buttons,XBOX_Y);
+        bit_write(in[8] > NEGCON_L_BUTTON_THRESHOLD,controller->buttons,XBOX_LB);
       }
       if (isMouseReply(in)) {
         ps2CtrlType = PSX_MOUSE;
         buttons = mouseButtonBindings;
-        controller->r_x = (in[5] - 128) << 8;
-        controller->r_y = -(in[6] - 127) << 8;
+        controller->l_x = (in[5] - 128) << 8;
+        controller->l_y = -(in[6] - 127) << 8;
       }
       uint8_t btn;
       for (int i = 0; i < XBOX_BTN_COUNT; i++) {

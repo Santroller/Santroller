@@ -120,8 +120,6 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] = {
-    HID_DESCRIPTOR_MOUSE(-255, 255, -255, 255, 3, false)};
 
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
@@ -558,9 +556,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     if (deviceType < SWITCH_GAMEPAD) {
       address = keyboard_report_descriptor;
       size = sizeof(keyboard_report_descriptor);
-    } else if (deviceType == 78) {
-      address = mouse_report_descriptor;
-      size = sizeof(mouse_report_descriptor);
     } else {
       address = ps3_report_descriptor;
       size = sizeof(ps3_report_descriptor);

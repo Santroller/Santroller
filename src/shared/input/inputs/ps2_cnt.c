@@ -287,8 +287,6 @@ bool read(Controller_t *controller) {
 
       if (isFlightStickReply(in)) {
         ps2CtrlType = PSX_ANALOG;
-        // Does this actually have different button bindings? PsxNewLib seems to suggest it doesnt?
-        // buttons = analogStickButtonBindings;
       }
       if (isNegconReply(in)) {
         ps2CtrlType = PSX_NEGCON;
@@ -368,14 +366,14 @@ void initPS2CtrlInput(void) {
 void tickPS2CtrlInput(Controller_t *controller) {
   if (ps2CtrlType == PSX_NO_DEVICE) {
     if (!begin(controller)) { return; }
-    // Dualshock one controllers don't have config mode
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
+    // Dualshock one controllers don't have config mode
       currentSPCR = dualShock2SPCR;
       currentSPSR = dualShock2SPSR;
       ps2CtrlType = getControllerType();
       // Enable analog sticks
       sendCommand(commandSetMode, sizeof(commandSetMode));
-      // Enable analog buttons
+      // Enable analog buttons (required for guitar)
       sendCommand(commandSetPressures, sizeof(commandSetPressures));
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
     } else {

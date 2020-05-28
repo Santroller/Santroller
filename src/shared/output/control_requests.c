@@ -39,7 +39,8 @@ void deviceControlRequest(void) {
   // enough of the hid spec to make wii rockband controllers work
   if (!(USB_ControlRequest.bmRequestType ==
           (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) ||
-       USB_ControlRequest.bRequest != HID_REQ_GetReport))
+      ((USB_ControlRequest.bmRequestType ==
+          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) && USB_ControlRequest.bRequest != HID_REQ_GetReport))))
     return;
 
   Endpoint_ClearSETUP();

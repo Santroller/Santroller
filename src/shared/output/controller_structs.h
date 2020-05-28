@@ -58,5 +58,6 @@ typedef union {
   USB_KeyboardReport_Data_t keyboard;
   USB_PS3Report_Data_t ps3;
   USB_XInputReport_Data_t xinput;
+  USB_MouseReport_Data_t mouse;
   USB_MIDI_Data_t midi;
 } USB_Report_Data_t;

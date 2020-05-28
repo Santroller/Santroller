@@ -121,7 +121,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] = {
-    HID_DESCRIPTOR_MOUSE(-255, 255, -255, 255, 3, false)};
+    HID_DESCRIPTOR_MOUSE(-127, 127, -127, 127, 3, false)};
 
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
@@ -486,7 +486,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     size = deviceDescriptor.Header.Size;
     memcpy_P(dbuf, address, size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)dbuf;
-    if (deviceType >= SWITCH_GAMEPAD && deviceType < MIDI_GAMEPAD) {
+    if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
       uint8_t offs = deviceType - SWITCH_GAMEPAD;
       dev->VendorID = pgm_read_word(vid + offs);
       dev->ProductID = pgm_read_word(pid + offs);

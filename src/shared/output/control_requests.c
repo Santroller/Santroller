@@ -29,10 +29,11 @@ void deviceControlRequest(void) {
   // Half implement HID as the wii requires it. Also handle PS3 id packets and xbox 360 id packets here too.
   if (!(USB_ControlRequest.bmRequestType ==
             (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) ||
-        USB_ControlRequest.bRequest == HID_REQ_SetReport ||
+        (USB_ControlRequest.bmRequestType ==
+            (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) && USB_ControlRequest.bRequest == HID_REQ_SetReport) ||
         USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor))
     return;
-
+// Something here is responding when it shouldnt, so we should work out exactly what that is.
   Endpoint_ClearSETUP();
   if (USB_ControlRequest.bRequest == HID_REQ_GetReport) {
     // PS3 Id packet

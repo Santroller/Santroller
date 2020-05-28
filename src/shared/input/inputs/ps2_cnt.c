@@ -287,8 +287,6 @@ bool read(Controller_t *controller) {
 
       if (isFlightStickReply(in)) {
         ps2CtrlType = PSX_ANALOG;
-        // Does this actually have different button bindings? PsxNewLib seems to suggest it doesnt?
-        // buttons = analogStickButtonBindings;
       }
       if (isNegconReply(in)) {
         ps2CtrlType = PSX_NEGCON;

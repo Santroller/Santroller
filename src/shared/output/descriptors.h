@@ -23,6 +23,7 @@
 #include <avr/pgmspace.h>
 #include <stdint.h>
 
+// Device Request for WCID data. Note that this is the same as CDC_REQ_SetLineEncoding, and only the bmRequestType differs.
 #define REQ_GetOSFeatureDescriptor 0x20
 
 /** Descriptor index for a Microsoft Proprietary Extended Device Compatibility

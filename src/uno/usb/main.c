@@ -36,11 +36,6 @@ RingBuff_Data_t bufferInData[BUFFER_SIZE];
 RingBuff_Data_t bufferOutSerialData[BUFFER_SIZE];
 RingBuff_Data_t bufferOutDeviceData[BUFFER_SIZE];
 
-/** Contains the current baud rate and other settings of the first virtual
- * serial port. This must be retained as some operating systems will not open
- * the port unless the settings can be set successfully.
- */
-CDC_LineEncoding_t lineEncoding = {0};
 bool avrdudeInUse = false;
 bool isArdwiino = true;
 uint8_t lastCommand = 0;
@@ -253,39 +248,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
                              1);
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  // Check for device specific requests, such as xinput and hid control
-  // requests.
   deviceControlRequest();
-
-  /* Process CDC specific control requests */
-  uint8_t bRequest = USB_ControlRequest.bRequest;
-  if (bRequest == CDC_REQ_GetLineEncoding) {
-    if (USB_ControlRequest.bmRequestType ==
-        (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-      Endpoint_ClearSETUP();
-      Endpoint_Write_Control_Stream_LE(&lineEncoding,
-                                       sizeof(CDC_LineEncoding_t));
-      Endpoint_ClearStatusStage();
-    }
-  } else if (USB_ControlRequest.bmRequestType ==
-             (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    if (bRequest == CDC_REQ_SetLineEncoding) {
-      Endpoint_Read_Control_Stream_LE(&lineEncoding,
-                                      sizeof(CDC_LineEncoding_t));
-      Endpoint_ClearStatusStage();
-    } else if (bRequest == CDC_REQ_SetControlLineState) {
-      Endpoint_ClearSETUP();
-      if (USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR)
-        AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
-      else
-        AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-      if (avrdudeInUse) {
-        avrdudeInUse = false;
-        setDeviceMode(true);
-      }
-      Endpoint_ClearStatusStage();
-    }
-  }
 }
 
 uint8_t frame = 0;

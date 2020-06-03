@@ -119,9 +119,15 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   CDC_Device_ConfigureEndpoints(&serialInterface);
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  // Handle control requests for the device, such as xinput and hid requests
-  deviceControlRequest();
   CDC_Device_ProcessControlRequest(&serialInterface);
+  // Handle control requests for the device, such as xinput and hid requests
+  if (USB_ControlRequest.bmRequestType ==
+          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) &&
+      (deviceType < PS3_GAMEPAD ||
+       (USB_ControlRequest.wIndex != INTERFACE_ID_HID &&
+        USB_ControlRequest.wIndex != EXTENDED_COMPAT_ID_DESCRIPTOR)))
+    return;
+  deviceControlRequest();
 }
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {

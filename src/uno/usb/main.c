@@ -107,16 +107,16 @@ int main(void) {
   //   deviceType = eeprom_read_byte(&config.deviceType);
   // }
   // This is equivilant to the above code, but saves like 80 bytes
-  bool existed = true;
+  bool deviceIDIsCorrect = true;
   for (uint16_t i = 0; i < sizeof(EepromConfig_t); i++) {
     uint8_t read = eeprom_read_byte(((uint8_t *)&config) + i);
     uint8_t def = defaultConfig[i];
-    bool isDeviceType = i == offsetof(EepromConfig_t, deviceType);
-    if ((existed || !isDeviceType) && read != def) {
+    bool readingDeviceType = i == offsetof(EepromConfig_t, deviceType);
+    if ((deviceIDIsCorrect || !readingDeviceType) && read != def) {
       eeprom_write_byte((uint8_t *)i, def);
-      existed = false;
+      deviceIDIsCorrect = false;
     }
-    if (isDeviceType && !existed) { deviceType = read; }
+    if (readingDeviceType && !deviceIDIsCorrect) { deviceType = read; }
   }
 
   RingBuffer_InitBuffer(&bufferIn, bufferInData);

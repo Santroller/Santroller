@@ -56,6 +56,7 @@ void tickLEDs(Controller_t *controller) {
       uint8_t button = config.leds.pins[led] - 1;
       if (getVelocity(controller, button)) { col = config.leds.colours[led]; }
     }
+    // Write an leds colours
     ledData[idx++] = 0xff;
     ledData[idx++] = col & 0x0000ff;
     ledData[idx++] = ((col & 0x00ff00) >> 8);

@@ -23,7 +23,8 @@
 #include <avr/pgmspace.h>
 #include <stdint.h>
 
-// Device Request for WCID data. Note that this is the same as CDC_REQ_SetLineEncoding, and only the bmRequestType differs.
+// Device Request for WCID data. Note that this is the same as
+// CDC_REQ_SetLineEncoding, and only the bmRequestType differs.
 #define REQ_GetOSFeatureDescriptor 0x20
 
 /** Descriptor index for a Microsoft Proprietary Extended Device Compatibility
@@ -150,3 +151,29 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void **const DescriptorAddress)
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
+
+#define HID_DESCRIPTOR_MOUSE_SCROLL(MinAxisVal, MaxAxisVal, MinPhysicalVal,    \
+                                    MaxPhysicalVal, Buttons, AbsoluteCoords)   \
+  HID_RI_USAGE_PAGE(8, 0x01), HID_RI_USAGE(8, 0x02),                           \
+      HID_RI_COLLECTION(8, 0x01), HID_RI_USAGE(8, 0x01),                       \
+      HID_RI_COLLECTION(8, 0x00), HID_RI_USAGE_PAGE(8, 0x09),                  \
+      HID_RI_USAGE_MINIMUM(8, 0x01), HID_RI_USAGE_MAXIMUM(8, Buttons),         \
+      HID_RI_LOGICAL_MINIMUM(8, 0x00), HID_RI_LOGICAL_MAXIMUM(8, 0x01),        \
+      HID_RI_REPORT_COUNT(8, Buttons), HID_RI_REPORT_SIZE(8, 0x01),            \
+      HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),     \
+      HID_RI_REPORT_COUNT(8, 0x01),                                            \
+      HID_RI_REPORT_SIZE(8, (Buttons % 8) ? (8 - (Buttons % 8)) : 0),          \
+      HID_RI_INPUT(8, HID_IOF_CONSTANT), HID_RI_USAGE_PAGE(8, 0x01),           \
+      HID_RI_USAGE(8, 0x30), HID_RI_USAGE(8, 0x31),                            \
+      HID_RI_LOGICAL_MINIMUM(16, MinAxisVal),                                  \
+      HID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal),                                  \
+      HID_RI_PHYSICAL_MINIMUM(16, MinPhysicalVal),                             \
+      HID_RI_PHYSICAL_MAXIMUM(16, MaxPhysicalVal),                             \
+      HID_RI_REPORT_COUNT(8, 0x02),                                            \
+      HID_RI_REPORT_SIZE(                                                      \
+          8, (((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16)),        \
+      HID_RI_INPUT(                                                            \
+          8, HID_IOF_DATA | HID_IOF_VARIABLE |                                 \
+                 (AbsoluteCoords ? HID_IOF_ABSOLUTE : HID_IOF_RELATIVE)),      \
+      0x09, 0x38, 0x15, 0x81, 0x25, 0x7f, 0x35, 0x00, 0x45, 0x00, 0x75, 0x08,  \
+      0x81, 0x06, HID_RI_END_COLLECTION(0), HID_RI_END_COLLECTION(0)

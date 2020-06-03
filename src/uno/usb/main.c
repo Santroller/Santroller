@@ -41,6 +41,7 @@ bool isArdwiino = true;
 uint8_t lastCommand = 0;
 bool waitingForCommandCompletion = false;
 EepromConfig_t EEMEM config;
+uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
@@ -99,11 +100,23 @@ int main(void) {
 
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
-  if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
-    eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
-    eeprom_update_byte(&config.deviceType, deviceType);
-  } else {
-    deviceType = eeprom_read_byte(&config.deviceType);
+  //  if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
+  //   eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
+  //   eeprom_update_byte(&config.deviceType, deviceType);
+  // } else {
+  //   deviceType = eeprom_read_byte(&config.deviceType);
+  // }
+  // This is equivilant to the above code, but saves like 80 bytes
+  bool existed = true;
+  for (uint16_t i = 0; i < sizeof(EepromConfig_t); i++) {
+    uint8_t read = eeprom_read_byte(((uint8_t *)&config) + i);
+    uint8_t def = defaultConfig[i];
+    bool isDeviceType = i == offsetof(EepromConfig_t, deviceType);
+    if ((existed || !isDeviceType) && read != def) {
+      eeprom_write_byte((uint8_t *)i, def);
+      existed = false;
+    }
+    if (isDeviceType && !existed) { deviceType = read; }
   }
 
   RingBuffer_InitBuffer(&bufferIn, bufferInData);
@@ -247,9 +260,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
 }
-void EVENT_USB_Device_ControlRequest(void) {
-  deviceControlRequest();
-}
+void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 
 uint8_t frame = 0;
 /** Receive data from the main mcu, and put it into the correct output buffer

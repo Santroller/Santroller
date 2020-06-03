@@ -121,6 +121,8 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] = {
+    HID_DESCRIPTOR_MOUSE_SCROLL(-127, 127, -127, 127, 3, false)};
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
     Header : {
@@ -484,7 +486,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     size = deviceDescriptor.Header.Size;
     memcpy_P(dbuf, address, size);
     USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)dbuf;
-    if (deviceType >= SWITCH_GAMEPAD && deviceType < MIDI_GAMEPAD) {
+    if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
       uint8_t offs = deviceType - SWITCH_GAMEPAD;
       dev->VendorID = pgm_read_word(vid + offs);
       dev->ProductID = pgm_read_word(pid + offs);
@@ -527,6 +529,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
           deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
         conf->other.HIDDescriptor.HIDReportLength =
             sizeof(keyboard_report_descriptor);
+      } else if (deviceType == MOUSE) {
+        conf->other.HIDDescriptor.HIDReportLength =
+            sizeof(mouse_report_descriptor);
       }
       // Configure interface0 as HID
       conf->other.Interface0.Class = HID_CSCP_HIDClass;
@@ -553,7 +558,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     }
     return size;
   case HID_DTYPE_Report:
-    if (deviceType < SWITCH_GAMEPAD) {
+    if (deviceType == MOUSE) {
+      address = mouse_report_descriptor;
+      size = sizeof(mouse_report_descriptor);
+    } else if (deviceType < SWITCH_GAMEPAD) {
       address = keyboard_report_descriptor;
       size = sizeof(keyboard_report_descriptor);
     } else {

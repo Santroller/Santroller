@@ -24,17 +24,12 @@ void tickMPUTilt(Controller_t *controller) {
   if (ready) {
     ready = false;
     dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
-
-    q._f.w = (float)q._l[0] / (float)QUAT_SENS;
-    q._f.x = (float)q._l[1] / (float)QUAT_SENS;
-    q._f.y = (float)q._l[2] / (float)QUAT_SENS;
-    q._f.z = (float)q._l[3] / (float)QUAT_SENS;
+    for (uint8_t i = 0; i < 4; i++) {
+      q._f2[i] = (float)q._l[i] / (float)QUAT_SENS;
+    }
 
     quaternionToEuler(&q._f, &ypr[2], &ypr[1], &ypr[0]);
-    ypr[0] = wrap_pi(ypr[0]);
-    ypr[1] = wrap_pi(ypr[1]);
-    ypr[2] = wrap_pi(ypr[2]);
-    z = (ypr[config.axis.mpu6050Orientation / 2] * (65535 / M_PI));
+    z = (wrap_pi(ypr[config.axis.mpu6050Orientation / 2]) * (65535 / M_PI));
     if (config.axis.mpu6050Orientation & 1) { z = -z; }
     if (z > 32767) { z = 65535 - z; }
     z += config.axis.tiltSensitivity;

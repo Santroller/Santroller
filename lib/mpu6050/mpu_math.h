@@ -10,6 +10,7 @@ struct s_quat {
 union u_quat {
   struct s_quat _f;
   long _l[4];
+  float _f2[4];
 };
 
 float wrap_pi(float x);

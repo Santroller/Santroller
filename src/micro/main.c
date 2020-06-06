@@ -124,8 +124,7 @@ void EVENT_USB_Device_ControlRequest(void) {
   if (USB_ControlRequest.bmRequestType ==
           (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) &&
       (deviceType < PS3_GAMEPAD ||
-       (USB_ControlRequest.wIndex != INTERFACE_ID_HID &&
-        USB_ControlRequest.wIndex != EXTENDED_COMPAT_ID_DESCRIPTOR)))
+       USB_ControlRequest.wIndex != INTERFACE_ID_HID))
     return;
   deviceControlRequest();
 }

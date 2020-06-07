@@ -9,7 +9,7 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   TotalSections : 1,
   Reserved : {0},
   CompatID : {
-    FirstInterfaceNumber : INTERFACE_ID_HID,
+    FirstInterfaceNumber : INTERFACE_ID_XInput,
     Reserved : 0x04,
     CompatibleID : "XUSB10",
     SubCompatibleID : {0},

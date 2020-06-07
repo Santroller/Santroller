@@ -12,35 +12,11 @@
 Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
-USB_ClassInfo_CDC_Device_t serialInterface = {
-    .Config =
-        {
-            .ControlInterfaceNumber = INTERFACE_ID_CDC_CCI,
-            .DataINEndpoint =
-                {
-                    .Address = CDC_TX_EPADDR,
-                    .Size = CDC_TX_EPSIZE,
-                    .Banks = 1,
-                },
-            .DataOUTEndpoint =
-                {
-                    .Address = CDC_RX_EPADDR,
-                    .Size = CDC_RX_EPSIZE,
-                    .Banks = 1,
-                },
-            .NotificationEndpoint =
-                {
-                    .Address = CDC_NOTIFICATION_EPADDR,
-                    .Size = CDC_NOTIFICATION_EPSIZE,
-                    .Banks = 1,
-                },
-        },
-};
 USB_ClassInfo_HID_Device_t hidInterface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
     ReportINEndpoint : {
-      Address : DEVICE_EPADDR_IN,
+      Address : HID_EPADDR_IN,
       Size : HID_EPSIZE,
       Type : EP_TYPE_CONTROL,
       Banks : 1,
@@ -55,13 +31,13 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
             .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
             .DataINEndpoint =
                 {
-                    .Address = DEVICE_EPADDR_IN,
+                    .Address = MIDI_EPADDR_IN,
                     .Size = HID_EPSIZE,
                     .Banks = 1,
                 },
             .DataOUTEndpoint =
                 {
-                    .Address = DEVICE_EPADDR_OUT,
+                    .Address = MIDI_EPADDR_OUT,
                     .Size = HID_EPSIZE,
                     .Banks = 1,
                 },
@@ -76,56 +52,51 @@ int main(void) {
   USB_Init();
   sei();
   uint16_t size;
-  uint16_t bytesReceived;
+  // uint16_t bytesReceived;
   while (true) {
     tickInputs(&controller);
     tickLEDs(&controller);
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
       memcpy(&previousReport, &currentReport, size);
-      Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+      Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
       if (Endpoint_IsReadWriteAllowed()) {
         Endpoint_Write_Stream_LE(&currentReport, size, NULL);
         Endpoint_ClearIN();
       }
     }
 
-    bytesReceived = CDC_Device_BytesReceived(&serialInterface);
-    while (bytesReceived--) {
-      processSerialData(CDC_Device_ReceiveByte(&serialInterface) & 0xff);
-    }
-    if (foundPin) {
-      foundPin = false;
-      writeToSerial('d');
-      writeToSerial(detectedPin);
-      writeToSerial('\r');
-      writeToSerial('\n');
-    }
-    CDC_Device_USBTask(&serialInterface);
+    // bytesReceived = CDC_Device_BytesReceived(&serialInterface);
+    // while (bytesReceived--) {
+    //   processSerialData(CDC_Device_ReceiveByte(&serialInterface) & 0xff);
+    // }
+    // if (foundPin) {
+    //   foundPin = false;
+    //   writeToSerial('d');
+    //   writeToSerial(detectedPin);
+    //   writeToSerial('\r');
+    //   writeToSerial('\n');
+    // }
+    // CDC_Device_USBTask(&serialInterface);
     MIDI_Device_USBTask(&midiInterface);
   }
 }
 
 void writeToSerial(uint8_t data) {
-  CDC_Device_SendByte(&serialInterface, data);
+  // CDC_Device_SendByte(&serialInterface, data);
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  if (deviceType >= MIDI_GAMEPAD) {
-    MIDI_Device_ConfigureEndpoints(&midiInterface);
-  } else {
-    HID_Device_ConfigureEndpoints(&hidInterface);
-  }
-  CDC_Device_ConfigureEndpoints(&serialInterface);
+  MIDI_Device_ConfigureEndpoints(&midiInterface);
+  HID_Device_ConfigureEndpoints(&hidInterface);
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  CDC_Device_ProcessControlRequest(&serialInterface);
   // Handle control requests for the device, such as xinput and hid requests
-  if (USB_ControlRequest.bmRequestType ==
-          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) &&
-      (deviceType < PS3_GAMEPAD ||
-       USB_ControlRequest.wIndex != INTERFACE_ID_HID))
-    return;
+  // if (USB_ControlRequest.bmRequestType ==
+  //         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) &&
+  //     (deviceType < PS3_GAMEPAD ||
+  //      USB_ControlRequest.wIndex != INTERFACE_ID_HID))
+  //   return;
   deviceControlRequest();
 }
 void EVENT_CDC_Device_ControLineStateChanged(

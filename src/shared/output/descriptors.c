@@ -121,8 +121,8 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
     keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
 
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] =
-    {HID_DESCRIPTOR_MOUSE_SCROLL(-127, 127, -127, 127, 3, false)};
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] = {
+    HID_DESCRIPTOR_MOUSE_SCROLL(-127, 127, -127, 127, 3, false)};
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
     Header : {
@@ -310,9 +310,15 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     },
     XInputReserved : {
       Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-      {0x10, 0x01},
-      0,
-      {0x25, 0x81, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, 0x02, 0x08, 0x03, 0x03}
+      reserved: {0x00, 0x01},
+      subtype: 0x00,
+      reserved2: 0x25,
+      bEndpointAddressIn: DEVICE_EPADDR_IN,
+      bMaxDataSizeIn: HID_EPSIZE,
+      reserved3: {0x00, 0x00, 0x00, 0x00, 0x13},
+      bEndpointAddressOut: DEVICE_EPADDR_OUT,
+      bMaxDataSizeOut: HID_EPSIZE,
+      reserved4: {0x00, 0x00}
     },
     HIDDescriptor : {
       Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : DTYPE_Other},

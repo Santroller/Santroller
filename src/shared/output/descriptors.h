@@ -72,11 +72,24 @@ enum InterfaceDescriptors_t {
   INTERFACE_ID_AudioStream =
       1, /**< MIDI Audio Stream interface descriptor ID */
 };
+// typedef struct {
+//   USB_Descriptor_Header_t Header;
+//   uint8_t reserved[2];
+//   uint8_t subtype;
+//   uint8_t reserved2[15];
+// } USB_HID_XBOX_Descriptor_HID_t;
 typedef struct {
   USB_Descriptor_Header_t Header;
   uint8_t reserved[2];
   uint8_t subtype;
-  uint8_t reserved2[15];
+  uint8_t reserved2;
+  uint8_t bEndpointAddressIn;
+  uint8_t bMaxDataSizeIn;
+  uint8_t reserved3[5];
+  uint8_t bEndpointAddressOut;
+  uint8_t bMaxDataSizeOut;
+  uint8_t reserved4[2];
+
 } USB_HID_XBOX_Descriptor_HID_t;
 typedef struct {
   USB_Descriptor_Interface_Association_t CDC_IAD;
@@ -153,7 +166,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
 #define HID_DESCRIPTOR_MOUSE_SCROLL(MinAxisVal, MaxAxisVal, MinPhysicalVal, MaxPhysicalVal, Buttons, AbsoluteCoords) \
-  HID_RI_USAGE_PAGE(8,0x01), \
+  HID_RI_USAGE_PAGE(8,0x01),                  \
   HID_RI_USAGE(8,0x02), \
   HID_RI_COLLECTION(8,0x01),\
     HID_RI_USAGE(8,0x02),\

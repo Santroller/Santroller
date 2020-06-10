@@ -18,8 +18,11 @@ F_USB		 = ${F_CPU}
 
 ARDWIINO_BOARD = micro
 VERSION = $(shell git describe --abbrev=0 --tags)
+VERSION_LIST = $(subst ., ,$(subst version-,,$(VERSION)))
+VERSION_MAJOR = $(word 1,$(VERSION_LIST))
+VERSION_MINOR = $(word 2,$(VERSION_LIST))
+VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
-
 MOSI         = PB2
 MOSI_DDR     = DDRB
 MOSI_PORT    = PORTB
@@ -33,7 +36,7 @@ SRC = $(shell find ../shared -type f -name '*.c*') arduino_pins.c main.c $(shell
 LUFA_PATH    = ../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output -I ../shared -I../../lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin
 CC_FLAGS     += -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 
-CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"'
+CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"'
 LD_FLAGS     = $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin 
 OBJDIR		 = obj
 BIN		 	 = bin

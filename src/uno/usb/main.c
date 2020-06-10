@@ -36,10 +36,6 @@ RingBuff_Data_t bufferInData[BUFFER_SIZE];
 RingBuff_Data_t bufferOutSerialData[BUFFER_SIZE];
 RingBuff_Data_t bufferOutDeviceData[BUFFER_SIZE];
 
-bool avrdudeInUse = false;
-bool isArdwiino = true;
-uint8_t lastCommand = 0;
-bool waitingForCommandCompletion = false;
 EepromConfig_t EEMEM config;
 uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 
@@ -50,27 +46,7 @@ uint32_t jmpToBootloader __attribute__((section(".noinit")));
 /**
  * Write data from a buffer to an endpoint, handling escape bytes
  */
-void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
-                     bool isSerialEndpoint);
-
-/**
- * Set the device mode, true for ardwiino, false for avrdude
- */
-void setDeviceMode(bool ardwiinoMode) {
-  isArdwiino = ardwiinoMode;
-  // Disable serial before configuring
-  UCSR1B = 0;
-  UCSR1A = 0;
-  UCSR1C = 0;
-  // Set the baudrate. Ardwiino runs at a faster baudrate so that hid is more
-  // responsive, but avrdude requires 115200.
-  UBRR1 = ardwiinoMode ? SERIAL_2X_UBBRVAL(BAUD) : SERIAL_2X_UBBRVAL(115200);
-
-  // Enable serial again, making sure to enable receive interrupts
-  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
-  UCSR1A = (1 << U2X1);
-  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
-}
+void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer);
 
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
@@ -86,11 +62,15 @@ int main(void) {
   wdt_disable();
 
   // Configure serial for ardwiino mode
-  setDeviceMode(true);
 
-  /* Start the flush timer so that overflows occur rapidly to push received
-   * bytes to the serial interface */
-  TCCR0B = (1 << CS02);
+  // Set the baudrate. Ardwiino runs at a faster baudrate so that hid is more
+  // responsive, but avrdude requires 115200.
+  UBRR1 = SERIAL_2X_UBBRVAL(BAUD);
+
+  // Enable serial again, making sure to enable receive interrupts
+  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
+  UCSR1A = (1 << U2X1);
+  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 
   USB_Init();
 
@@ -128,106 +108,27 @@ int main(void) {
     if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
 
     if (USB_DeviceState != DEVICE_STATE_Configured) { continue; }
-    // We can only read bytes if the buffer isn't full
-    if (!(RingBuffer_IsFull(&bufferIn))) {
-      Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-      if (Endpoint_IsOUTReceived()) {
-        if (Endpoint_BytesInEndpoint()) {
-          uint8_t receivedByte = Endpoint_Read_8();
-          RingBuffer_Insert(&bufferIn, receivedByte);
-          if (!(Endpoint_BytesInEndpoint())) Endpoint_ClearOUT();
-          // If we are in avrdude mode, then we just care if avrdude has
-          // finished or not
-          if (!isArdwiino) {
-            avrdudeInUse |= receivedByte == COMMAND_STK_500_ENTER_PROG;
-          } else if (!waitingForCommandCompletion) {
-            // Otherwise, we can parse the bytes as commands. However, we only
-            // want to parse full commands. To do this, we set
-            // waitingForCommandCompletion once the usb code has parsed a
-            // command it recognises.
-            // However, there are commands that only the main mcu recognises. It
-            // responses to every command however, so we can set
-            // waitingForCommandCompletion once we get a response.
-            if (lastCommand == COMMAND_WRITE_CONFIG_VALUE) {
-              // We only understand Writing to CONFIG_SUB_TYPE, we need to
-              // ignore any other command.
-              if (receivedByte != CONFIG_SUB_TYPE) {
-                waitingForCommandCompletion = true;
-                lastCommand = 0;
-              } else {
-                lastCommand = receivedByte;
-              }
-            } else if (lastCommand == CONFIG_SUB_TYPE) {
-              // We previously received that the section being updated is the
-              // subtype, so the current byte is the subtype. Write the new
-              // subtype to eeprom.
-              eeprom_update_byte(&config.deviceType, receivedByte);
-              lastCommand = 0;
-              waitingForCommandCompletion = true;
-            } else {
-              switch (receivedByte) {
-                // To save flash, the below commands are written like this.
-                // These commands handle either rebooting normally, or jumping
-                // to the bootloader.
-              case COMMAND_REBOOT:
-              case COMMAND_JUMP_BOOTLOADER_UNO:
-                jmpToBootloader = receivedByte == COMMAND_REBOOT ? 0 : JUMP;
-                reboot();
-                // jump_bootloader just sets us to avrdude mode.
-              case COMMAND_JUMP_BOOTLOADER:
-                setDeviceMode(false);
-                break;
-              case COMMAND_WRITE_CONFIG_VALUE:
-                // We have received a command write config value command, so we
-                // save it so we can receive more data next.
-                lastCommand = receivedByte;
-                break;
-              default:
-                // We received an unknown command, so wait for the next command.
-                waitingForCommandCompletion = true;
-              }
-            }
-          }
-        }
-      }
-    }
     // Write data from the different output buffers to their respective
     // endpoints
-    writeToEndpoint(DEVICE_EPADDR_IN, &bufferOutDevice, false);
-    writeToEndpoint(CDC_TX_EPADDR, &bufferOutSerial, true);
+    writeToEndpoint(HID_EPADDR_IN, &bufferOutDevice);
     // Send the next byte from the input buffer to the  main mcu
     if (!(RingBuffer_IsEmpty(&bufferIn))) {
       Serial_SendByte(RingBuffer_Remove(&bufferIn));
     }
   }
 }
-void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
-                     bool isSerialEndpoint) {
+void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer) {
 
   RingBuff_Count_t bytesToWrite = RingBuffer_GetCount(buffer);
   uint8_t byteToWrite;
   if (bytesToWrite == 0) return;
-  if (isSerialEndpoint) {
-    // If the uno is sending back data, then that means the command was parsed
-    // and it is ready for another command
-    waitingForCommandCompletion = false;
-    // Serial needs to be buffered a little, this is done by checking if we are
-    // about to overflow, or if the flush timer has overflowed.
-    if ((((TIFR0 & (1 << TOV0)) == 0) && (bytesToWrite < BUFFER_NEARLY_FULL))) {
-      return;
-    }
-    TIFR0 |= (1 << TOV0);
+  byteToWrite = RingBuffer_Remove(buffer);
+  if (byteToWrite != FRAME_START_DEVICE && byteToWrite != FRAME_START_SERIAL) {
+    return;
   }
-  if (isArdwiino) {
-    byteToWrite = RingBuffer_Remove(buffer);
-    if (byteToWrite != FRAME_START_DEVICE &&
-        byteToWrite != FRAME_START_SERIAL) {
-      return;
-    }
-    // A device packet should always be smaller than the largest packet. We also
-    // need to account for escape bytes however
-    bytesToWrite = sizeof(USB_Report_Data_t) + 10;
-  }
+  // A device packet should always be smaller than the largest packet. We also
+  // need to account for escape bytes however
+  bytesToWrite = sizeof(USB_Report_Data_t) + 10;
   Endpoint_SelectEndpoint(endpoint);
 
   if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
@@ -236,10 +137,8 @@ void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
      */
     while (bytesToWrite--) {
       byteToWrite = RingBuffer_Remove(buffer);
-      if (isArdwiino) {
-        if (byteToWrite == FRAME_END) { break; };
-        if (byteToWrite == ESC) byteToWrite = RingBuffer_Remove(buffer) ^ 0x20;
-      }
+      if (byteToWrite == FRAME_END) { break; };
+      if (byteToWrite == ESC) byteToWrite = RingBuffer_Remove(buffer) ^ 0x20;
       Endpoint_Write_8(byteToWrite);
     }
     Endpoint_ClearIN();
@@ -248,19 +147,45 @@ void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer,
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
-  Endpoint_ConfigureEndpoint(CDC_NOTIFICATION_EPADDR, EP_TYPE_INTERRUPT,
-                             CDC_NOTIFICATION_EPSIZE, 1);
 
-  Endpoint_ConfigureEndpoint(CDC_TX_EPADDR, EP_TYPE_BULK, CDC_TX_EPSIZE,
-                             CDC_TX_BANK_SIZE);
-
-  Endpoint_ConfigureEndpoint(CDC_RX_EPADDR, EP_TYPE_BULK, CDC_RX_EPSIZE,
-                             CDC_RX_BANK_SIZE);
-
-  Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+  Endpoint_ConfigureEndpoint(XINPUT_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+  Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
+extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+void processHIDReadFeatureReport(uint8_t report) {
+  uint8_t len = 0;
+  Serial_SendByte(report);
+  Serial_SendByte(false);
+  while (true) {
+    if (RingBuffer_IsEmpty(&bufferOutSerial)) { continue; }
+    uint8_t data = RingBuffer_Remove(&bufferOutSerial);
+    if (data == FRAME_START_SERIAL) { continue; }
+    if (data == FRAME_END) { break; }
+    dbuf[len++] = data;
+  }
+  Endpoint_Write_Control_Stream_LE(dbuf, len);
+}
+void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
+                                  uint8_t *data) {
+  switch (report) {
+  case COMMAND_REBOOT:
+  case COMMAND_JUMP_BOOTLOADER_UNO:
+    jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
+    reboot();
+    break;
+  case DATA_SUB_TYPE:
+    eeprom_update_byte(&config.deviceType, data[0]);
+    break;
+  }
+  RingBuffer_Insert(&bufferIn, report);
+  RingBuffer_Insert(&bufferIn, true);
+  RingBuffer_Insert(&bufferIn, data_len);
+  while (data_len--) { RingBuffer_Insert(&bufferIn, *(data++)); }
+}
 
 uint8_t frame = 0;
 /** Receive data from the main mcu, and put it into the correct output buffer
@@ -273,7 +198,7 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
       receivedByte == FRAME_START_SERIAL) {
     frame = receivedByte;
   }
-  if (frame == FRAME_START_SERIAL || !isArdwiino) {
+  if (frame == FRAME_START_SERIAL) {
     RingBuffer_Insert(&bufferOutSerial, receivedByte);
   } else if (frame == FRAME_START_DEVICE) {
     RingBuffer_Insert(&bufferOutDevice, receivedByte);

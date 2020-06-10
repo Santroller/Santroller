@@ -24,6 +24,7 @@ RingBuffer_t serialInBuffer;
 uint8_t serialInBufferData[128];
 RingBuffer_t serialOutBuffer;
 uint8_t serialOutBufferData[128];
+uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 
 void writeToSerial(uint8_t data) {
   // If we are writing data that has a special purpose, then we write an escape
@@ -58,31 +59,25 @@ int main(void) {
       controllerIndex = 0;
       RingBuffer_Insert(&serialOutBuffer, FRAME_START_DEVICE);
       while (controllerIndex < size) {
-        RingBuffer_Insert(&serialOutBuffer,
-        currentReport[controllerIndex++]);
+        RingBuffer_Insert(&serialOutBuffer, currentReport[controllerIndex++]);
       }
       RingBuffer_Insert(&serialOutBuffer, FRAME_END);
       memcpy(previousReport, currentReport, size);
     }
-
-    if (foundPin) {
-      foundPin = false;
-      RingBuffer_Insert(&serialOutBuffer, FRAME_START_SERIAL);
-      writeToSerial('d');
-      writeToSerial(detectedPin);
-      writeToSerial('\r');
-      writeToSerial('\n');
-      RingBuffer_Insert(&serialOutBuffer, FRAME_END);
-    }
     size = RingBuffer_GetCount(&serialInBuffer);
     if (size != 0) {
-      RingBuffer_Insert(&serialOutBuffer, FRAME_START_SERIAL);
-      for (int i = 0; i < size; i++) {
-        processSerialData(RingBuffer_Remove(&serialInBuffer));
+      uint8_t report = RingBuffer_Remove(&serialInBuffer);
+      bool isWriting = RingBuffer_Remove(&serialInBuffer);
+      if (isWriting) {
+        uint8_t len = RingBuffer_Remove(&serialInBuffer);
+        for (uint8_t i = 0; i < len; i++) {
+          dbuf[i] = RingBuffer_Remove(&serialInBuffer);
+        }
+        processHIDWriteFeatureReport(report, len, dbuf);
+      } else {
+        processHIDReadFeatureReport(report);
       }
-      RingBuffer_Insert(&serialOutBuffer, FRAME_END);
     }
-    // RingBuffer_Insert(&serialOutBuffer, 'c');
     size = RingBuffer_GetCount(&serialOutBuffer);
     while (size--) {
       loop_until_bit_is_set(UCSR0A, UDRE0);
@@ -90,11 +85,24 @@ int main(void) {
     }
   }
 }
-
+void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
+                                      uint16_t Length) {
+  RingBuffer_Insert(&serialOutBuffer, FRAME_START_SERIAL);
+  uint8_t *buf = (uint8_t *)Buffer;
+  while (Length--) { writeToSerial(*(buf++)); }
+  RingBuffer_Insert(&serialOutBuffer, FRAME_END);
+}
 /** ISR to manage the reception of data from the serial port, placing received
  * bytes into a circular buffer for later transmission to the host.
  */
+#ifdef USART_RX_vect
 ISR(USART_RX_vect, ISR_BLOCK) {
   uint8_t ReceivedByte = UDR0;
   RingBuffer_Insert(&serialInBuffer, ReceivedByte);
 }
+#else
+ISR(USART0_RX_vect, ISR_BLOCK) {
+  uint8_t ReceivedByte = UDR0;
+  RingBuffer_Insert(&serialInBuffer, ReceivedByte);
+}
+#endif

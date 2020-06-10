@@ -45,6 +45,7 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
 };
 int main(void) {
   loadConfig();
+  // config.main.subType = KEYBOARD_GAMEPAD;
   deviceType = config.main.subType;
   initInputs();
   initLEDs();
@@ -59,17 +60,12 @@ int main(void) {
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
       memcpy(&previousReport, &currentReport, size);
-      Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+      Endpoint_SelectEndpoint(HID_EPADDR_IN);
       if (Endpoint_IsReadWriteAllowed()) {
         Endpoint_Write_Stream_LE(&currentReport, size, NULL);
         Endpoint_ClearIN();
       }
     }
-
-    // bytesReceived = CDC_Device_BytesReceived(&serialInterface);
-    // while (bytesReceived--) {
-    //   processSerialData(CDC_Device_ReceiveByte(&serialInterface) & 0xff);
-    // }
     // if (foundPin) {
     //   foundPin = false;
     //   writeToSerial('d');
@@ -77,7 +73,6 @@ int main(void) {
     //   writeToSerial('\r');
     //   writeToSerial('\n');
     // }
-    // CDC_Device_USBTask(&serialInterface);
     MIDI_Device_USBTask(&midiInterface);
   }
 }
@@ -87,16 +82,13 @@ void writeToSerial(uint8_t data) {
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
-  MIDI_Device_ConfigureEndpoints(&midiInterface);
-  HID_Device_ConfigureEndpoints(&hidInterface);
+  Endpoint_ConfigureEndpoint(XINPUT_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+  Endpoint_ConfigureEndpoint(HID_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+  Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_BULK, HID_EPSIZE, 1);
 }
 void EVENT_USB_Device_ControlRequest(void) {
-  // Handle control requests for the device, such as xinput and hid requests
-  // if (USB_ControlRequest.bmRequestType ==
-  //         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE) &&
-  //     (deviceType < PS3_GAMEPAD ||
-  //      USB_ControlRequest.wIndex != INTERFACE_ID_HID))
-  //   return;
   deviceControlRequest();
 }
 void EVENT_CDC_Device_ControLineStateChanged(

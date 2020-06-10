@@ -1,7 +1,7 @@
 #pragma once
 
 /* Includes: (don't import everything on the 328p)*/
-#ifdef __AVR_ATmega328P__
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) 
 // Pull in enough information from LUFA in order to be able to compile the
 // descriptors.
 #  define __INCLUDE_FROM_USB_DRIVER
@@ -15,8 +15,12 @@
 #  include <LUFA/Drivers/USB/Class/Common/HIDClassCommon.h>
 #  include <LUFA/Drivers/USB/Class/Common/MIDIClassCommon.h>
 #  include <LUFA/Drivers/USB/Core/StdDescriptors.h>
+
+void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
+                                      uint16_t Length);
 #else
 #  include <LUFA/Drivers/USB/USB.h>
+extern uint8_t deviceType;
 #endif
 
 #include "util/util.h"
@@ -40,15 +44,20 @@
 /** Endpoint address of the DEVICE IN endpoint. */
 #define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the DEVICE OUT endpoint. */
-#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
-/** Endpoint address of the DEVICE OUT endpoint. */
 #define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 /** Endpoint address of the DEVICE OUT endpoint. */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 6)
+#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 3)
 /** Endpoint address of the DEVICE IN endpoint. */
-#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
-/** Endpoint address of the DEVICE OUT endpoint. */
-#define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 4)
+#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 4)
+// We don't actually utilise the next two descriptors, and since the UNO limits
+// us to 4 endpoints, putting them last ensures that they are the unusable
+// endpoints.
+/** Endpoint address of the DEVICE OUT endpoint. (set to 5 so that it is one of
+ * the unusable endpoints on the uno)*/
+#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
+/** Endpoint address of the DEVICE OUT endpoint. (set to 6 so that it is one of
+ * the unusable endpoints on the uno) */
+#define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 6)
 
 /** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE 8
@@ -63,8 +72,8 @@
  * can be used to refer to the interface from other descriptors.
  */
 enum InterfaceDescriptors_t {
-  INTERFACE_ID_HID = 0,     /**< HID interface descriptor ID */
-  INTERFACE_ID_XInput = 1,  /**< Unused HID interface descriptor ID */
+  INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
+  INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
   INTERFACE_ID_ControlStream =
       2, /**< MIDI Control Stream interface descriptor ID */
   INTERFACE_ID_AudioStream =
@@ -131,7 +140,6 @@ typedef struct {
   uint8_t Reserved[7];
   USB_OSCompatibleSection_t CompatID;
 } ATTR_PACKED USB_OSCompatibleIDDescriptor_t;
-extern uint8_t deviceType;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,

@@ -5,4 +5,5 @@
 #include "../controller/controller.h"
 #include "bootloader/bootloader.h"
 extern Controller_t controller;
-void processSerialData(uint8_t data);
+void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len, uint8_t *data);
+void processHIDReadFeatureReport(uint8_t report);

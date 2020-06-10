@@ -192,8 +192,8 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     AlternateSetting : 0,
 
     TotalEndpoints : 2,
-
-    Class : 0xFF,
+// TODO: ENABLE  XINPUT LATER!
+    Class : 0xFF-1,
     SubClass : 0x5D,
     Protocol : 0x01,
 
@@ -405,7 +405,7 @@ const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
   Endpoint0Size : FIXED_CONTROL_ENDPOINT_SIZE,
   VendorID : ARDWIINO_VID,
   ProductID : ARDWIINO_PID,
-  ReleaseNumber : 0x3122,
+  ReleaseNumber : VERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
 
   ManufacturerStrIndex : 0x01,
   ProductStrIndex : 0x02,
@@ -454,12 +454,12 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     memcpy_P(dbuf, address, size);
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)dbuf;
-    // if (deviceType >= KEYBOARD_GAMEPAD &&
-    //     deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
-    //   conf->HIDDescriptor.HIDReportLength = sizeof(keyboard_report_descriptor);
-    // } else if (deviceType == MOUSE) {
-    //   conf->HIDDescriptor.HIDReportLength = sizeof(mouse_report_descriptor);
-    // }
+    if (deviceType >= KEYBOARD_GAMEPAD &&
+        deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
+      conf->HIDDescriptor.HIDReportLength = sizeof(keyboard_report_descriptor);
+    } else if (deviceType == MOUSE) {
+      conf->HIDDescriptor.HIDReportLength = sizeof(mouse_report_descriptor);
+    }
     // Map fake subtypes to their real counterparts
     uint8_t subtype = deviceType;
     switch (subtype) {
@@ -476,16 +476,16 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     conf->XInputReserved.subtype = subtype;
     return size;
   case HID_DTYPE_Report:
-    // if (deviceType == MOUSE) {
-    //   address = mouse_report_descriptor;
-    //   size = sizeof(mouse_report_descriptor);
-    // } else if (deviceType < SWITCH_GAMEPAD) {
-    //   address = keyboard_report_descriptor;
-    //   size = sizeof(keyboard_report_descriptor);
-    // } else {
+    if (deviceType == MOUSE) {
+      address = mouse_report_descriptor;
+      size = sizeof(mouse_report_descriptor);
+    } else if (deviceType < SWITCH_GAMEPAD && deviceType >=KEYBOARD_GAMEPAD) {
+      address = keyboard_report_descriptor;
+      size = sizeof(keyboard_report_descriptor);
+    } else {
       address = ps3_report_descriptor;
       size = sizeof(ps3_report_descriptor);
-    // }
+    }
     break;
   case DTYPE_String:
     if (descriptorNumber <= 3) {

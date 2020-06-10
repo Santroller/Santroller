@@ -18,17 +18,21 @@ F_USB        = $(F_CPU)
 
 ARDWIINO_BOARD = uno
 VERSION = $(shell git describe --abbrev=0 --tags)
+VERSION_LIST = $(subst ., ,$(subst version-,,$(VERSION)))
+VERSION_MAJOR = $(word 1,$(VERSION_LIST))
+VERSION_MINOR = $(word 2,$(VERSION_LIST))
+VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
 
 SRC          = main.c ../../shared/output/descriptors.c ../../shared/output/control_requests.c ../../shared/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I ../shared -I ../../../lib -I ../../shared -I../../shared/output -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
-CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
+CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
 LD_FLAGS     =  $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-uno-usb-${MCU}-${F_CPU}
+TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-usb-${MCU}-${F_CPU}
 
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset
@@ -47,7 +51,7 @@ dfu:
 	sleep 1
 	dfu-programmer $(MCU) erase || true
 	make || true
-	dfu-programmer $(MCU) flash bin/ardwiino-uno-usb-$(MCU)-16000000.hex || true
+	dfu-programmer $(MCU) flash bin/ardwiino-{ARDWIINO_BOARD}-usb-$(MCU)-16000000.hex || true
 	sleep 2
 	dfu-programmer $(MCU) launch || true
 	

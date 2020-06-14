@@ -192,8 +192,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     AlternateSetting : 0,
 
     TotalEndpoints : 2,
-// TODO: ENABLE  XINPUT LATER!
-    Class : 0xFF-1,
+    Class : 0xFF,
     SubClass : 0x5D,
     Protocol : 0x01,
 

@@ -21,15 +21,6 @@ void getData(uint8_t report) {
   case COMMAND_GET_CPU_FREQ:
     constDataToRead = (const uint8_t *)PSTR(STR(F_CPU));
     break;
-  case COMMAND_GET_PS3_ID:
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-      id[3] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      id[3] = 0x00;
-    }
-    dataInRam = true;
-    dataToReadWrite = id;
-    currentCommandSize = sizeof(id);
   case COMMAND_GET_BOARD:
     constDataToRead = (const uint8_t *)PSTR(ARDWIINO_BOARD);
     break;
@@ -115,9 +106,38 @@ void getData(uint8_t report) {
     currentCommandSize = strlen_P((char *)constDataToRead);
   }
 }
+extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
                                   uint8_t *data) {
+  uint8_t cmd = *data;
+  data++;
   switch (report) {
+  case REPORT_GET_PS3_ID:
+    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+      id[3] = 0x00;
+    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+      id[3] = 0x00;
+    }
+    dataInRam = true;
+    dataToReadWrite = id;
+    currentCommandSize = sizeof(id);
+  case REPORT_SET_CONFIG:
+    getData(cmd);
+    break;
+  case REPORT_GET_CONFIG:
+    getData(cmd);
+    if (dataInRam) {
+      memcpy(dbuf, dataToReadWrite, currentCommandSize);
+    } else if (constDataToRead) {
+      memcpy_P(dbuf, constDataToRead, currentCommandSize);
+    } else {
+      eeprom_read_block(dbuf, dataToReadWrite, currentCommandSize);
+    }
+    return;
+  default:
+    return;
+  }
+  switch (cmd) {
   case COMMAND_REBOOT:
     reboot();
     return;
@@ -134,24 +154,12 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     stopSearching();
     return;
   }
-  // If the packet has more data than just a report id, then we must be writing
-  // data as reading info only requires a report id
-  getData(report);
   if (dataInRam) {
     memcpy(dataToReadWrite, data, currentCommandSize);
   } else {
     eeprom_write_block(data, dataToReadWrite, currentCommandSize);
   }
 }
-extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 void processHIDReadFeatureReport(uint8_t report) {
-  getData(report);
-  if (dataInRam) {
-    memcpy(dbuf, dataToReadWrite, currentCommandSize);
-  } else if (constDataToRead) {
-    memcpy_P(dbuf, constDataToRead, currentCommandSize);
-  } else {
-    eeprom_read_block(dbuf, dataToReadWrite, currentCommandSize);
-  }
   Endpoint_Write_Control_Stream_LE(dbuf, currentCommandSize);
 }

@@ -44,6 +44,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
     0x09, 0x05,       // Usage (Game Pad)
     0xA1, 0x01,       // Collection (Application)
+    HID_RI_REPORT_ID(8, 0x01),
     0x15, 0x00,       //   Logical Minimum (0)
     0x25, 0x01,       //   Logical Maximum (1)
     0x35, 0x00,       //   Physical Minimum (0)
@@ -114,12 +115,22 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     0x95, 0x04,       //   Report Count (4)
     0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
                       //   Null Position)
+
+    
+    HID_RI_REPORT_ID(8,0x4),                    
+    HID_RI_REPORT_ID(8,0x5),                                      
+    HID_RI_USAGE(8,0x01), 
+    HID_RI_REPORT_SIZE(8,8), 
+    HID_RI_REPORT_COUNT(8,8), 
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),            
+    HID_RI_LOGICAL_MAXIMUM(8, 0xFF),           
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), 
     0xC0,             // End Collection
 
 };
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM
-    keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD(SIMULTANEOUS_KEYS)};
+    keyboard_report_descriptor[] = {HID_DESCRIPTOR_KEYBOARD_ID(SIMULTANEOUS_KEYS)};
 
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM mouse_report_descriptor[] = {
     HID_DESCRIPTOR_MOUSE_SCROLL(-127, 127, -127, 127, 3, false)};

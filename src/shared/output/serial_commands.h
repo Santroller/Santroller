@@ -1,13 +1,9 @@
 #pragma once
 // We need to look at commands sent by consoles so we can make sure that they dont conflict.
-enum SerialReports {
-    REPORT_GET_HID,
-    // PS3 controllers have a hid feature report that is required for identifying the controller.
-    REPORT_GET_PS3_ID = 3,
-    REPORT_GET_CONFIG,
-    REPORT_SET_CONFIG
-};
 enum SerialCommands {
+    COMMAND_GET_HID_REPORT,
+    // PS3 controllers have a hid feature report that is required for identifying the controller.
+    COMMAND_GET_PS3_ID = 3,
     COMMAND_REBOOT,
     COMMAND_GET_SIGNATURE,
     COMMAND_GET_CPU_FREQ,

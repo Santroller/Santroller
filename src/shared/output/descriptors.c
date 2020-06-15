@@ -117,14 +117,8 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
                       //   Null Position)
 
     
-    HID_RI_REPORT_ID(8,0x4),                    
-    HID_RI_REPORT_ID(8,0x5),                                      
-    HID_RI_USAGE(8,0x01), 
-    HID_RI_REPORT_SIZE(8,8), 
-    HID_RI_REPORT_COUNT(8,8), 
-    HID_RI_LOGICAL_MINIMUM(8, 0x00),            
-    HID_RI_LOGICAL_MAXIMUM(8, 0xFF),           
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), 
+    
+    HID_DESCRIPTOR_FEATURE_REPORTS(), 
     0xC0,             // End Collection
 
 };

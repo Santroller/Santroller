@@ -26,6 +26,7 @@ extern uint8_t deviceType;
 #include "util/util.h"
 #include <avr/pgmspace.h>
 #include <stdint.h>
+#include "serial_commands.h"
 
 // Device Request for WCID data. Note that this is the same as
 // CDC_REQ_SetLineEncoding, and only the bmRequestType differs.
@@ -151,6 +152,43 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void **const DescriptorAddress)
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
+#define HID_DESCRIPTOR_FEATURE_REPORTS() \
+       HID_RI_REPORT_ID(8,COMMAND_REBOOT), \
+      HID_RI_REPORT_ID(8,COMMAND_GET_SIGNATURE), \
+      HID_RI_REPORT_ID(8,COMMAND_GET_CPU_FREQ), \
+      HID_RI_REPORT_ID(8,COMMAND_GET_BOARD), \
+      HID_RI_REPORT_ID(8,COMMAND_JUMP_BOOTLOADER_UNO), \
+      HID_RI_REPORT_ID(8,COMMAND_JUMP_BOOTLOADER), \
+      HID_RI_REPORT_ID(8,COMMAND_FIND_DIGITAL), \
+      HID_RI_REPORT_ID(8,COMMAND_FIND_ANALOG), \
+      HID_RI_REPORT_ID(8,COMMAND_FIND_STOP), \
+      HID_RI_REPORT_ID(8,COMMAND_GET_EXTENSION), \
+      HID_RI_REPORT_ID(8,COMMAND_AVRDUDE), \
+      HID_RI_REPORT_ID(8,DATA_INPUT_TYPE), \
+      HID_RI_REPORT_ID(8,DATA_SUB_TYPE), \
+      HID_RI_REPORT_ID(8,DATA_TILT_TYPE), \
+      HID_RI_REPORT_ID(8,DATA_MPU_6050_ORIENTATION), \
+      HID_RI_REPORT_ID(8,DATA_TILT_SENSITIVITY), \
+      HID_RI_REPORT_ID(8,DATA_LED_TYPE), \
+      HID_RI_REPORT_ID(8,DATA_MAP_JOY_DPAD), \
+      HID_RI_REPORT_ID(8,DATA_MAP_START_SEL_HOME), \
+      HID_RI_REPORT_ID(8,DATA_MAP_ACCEL_RIGHT), \
+      HID_RI_REPORT_ID(8,DATA_PINS), \
+      HID_RI_REPORT_ID(8,DATA_KEYS), \
+      HID_RI_REPORT_ID(8,DATA_THRESHOLD_JOY), \
+      HID_RI_REPORT_ID(8,DATA_THRESHOLD_TRIGGER), \
+      HID_RI_REPORT_ID(8,DATA_THRESHOLD_DRUM), \
+      HID_RI_REPORT_ID(8,DATA_LED_PINS), \
+      HID_RI_REPORT_ID(8,DATA_LED_COLOURS), \
+      HID_RI_REPORT_ID(8,DATA_MIDI_TYPE), \
+      HID_RI_REPORT_ID(8,DATA_MIDI_NOTE), \
+      HID_RI_REPORT_ID(8,DATA_MIDI_CHANNEL), \
+      HID_RI_USAGE(8,0x01), \
+      HID_RI_REPORT_SIZE(8,8), \
+      HID_RI_REPORT_COUNT(8,8), \
+      HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
+      HID_RI_LOGICAL_MAXIMUM(8, 0xFF),           \
+      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE)
 #define HID_DESCRIPTOR_KEYBOARD_ID(MaxKeys)            \
 			HID_RI_USAGE_PAGE(8, 0x01),                     \
 			HID_RI_USAGE(8, 0x06),                          \
@@ -184,14 +222,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 				HID_RI_REPORT_COUNT(8, MaxKeys),            \
 				HID_RI_REPORT_SIZE(8, 0x08),                \
 				HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE), \
-        HID_RI_REPORT_ID(8,0x4),                    \
-        HID_RI_REPORT_ID(8,0x5),                    \
-        HID_RI_USAGE(8,0x01), \
-        HID_RI_REPORT_SIZE(8,8), \
-        HID_RI_REPORT_COUNT(8,8), \
-				HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
-				HID_RI_LOGICAL_MAXIMUM(8, 0xFF),           \
-				HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
+        HID_DESCRIPTOR_FEATURE_REPORTS(), \
 			HID_RI_END_COLLECTION(0)
 #define HID_DESCRIPTOR_MOUSE_SCROLL(MinAxisVal, MaxAxisVal, MinPhysicalVal,    \
                                     MaxPhysicalVal, Buttons, AbsoluteCoords)   \
@@ -240,12 +271,5 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),     \
         HID_RI_END_COLLECTION(0), HID_RI_END_COLLECTION(0),                      \
         HID_RI_END_COLLECTION(0), \
-        HID_RI_REPORT_ID(8,0x4),                    \
-        HID_RI_REPORT_ID(8,0x5),                    \
-        HID_RI_USAGE(8,0x01), \
-        HID_RI_REPORT_SIZE(8,8), \
-        HID_RI_REPORT_COUNT(8,8), \
-				HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
-				HID_RI_LOGICAL_MAXIMUM(8, 0xFF),           \
-				HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
+        HID_DESCRIPTOR_FEATURE_REPORTS(), \
         HID_RI_END_COLLECTION(0)

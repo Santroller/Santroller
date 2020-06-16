@@ -1,7 +1,6 @@
 #pragma once
 #include "controller/controller.h"
 #include <stdint.h>
-#define SIMULTANEOUS_KEYS 6
 #define CHECK_JOY_KEY(joy)                                                     \
   checkJoyKey(config.keys.joy.neg, config.keys.joy.pos, controller->joy,     \
                 joyThresholdKb, &usedKeys, KeyboardReport)

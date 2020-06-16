@@ -71,6 +71,7 @@ void fillPS3Report(void *ReportData, uint16_t *const ReportSize,
                        Controller_t *controller) {
   *ReportSize = sizeof(USB_PS3Report_Data_t);
   USB_PS3Report_Data_t *JoystickReport = (USB_PS3Report_Data_t *)ReportData;
+  JoystickReport->rid = REPORT_ID_GAMEPAD;
   uint8_t button;
   for (uint8_t i = 0; i < sizeof(ps3ButtonBindings); i++) {
     button = ps3ButtonBindings[i];

@@ -150,127 +150,50 @@ uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
 /* Function Prototypes: */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void **const DescriptorAddress)
+                                    const void **const DescriptorAddress,
+                                    uint8_t* const DescriptorMemorySpace)
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);   
 
-#define HID_DESCRIPTOR_FEATURE_REPORTS() \
-      HID_RI_REPORT_ID(8,COMMAND_REBOOT), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_GET_SIGNATURE), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_GET_CPU_FREQ), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_GET_BOARD), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_JUMP_BOOTLOADER_UNO), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_JUMP_BOOTLOADER), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_FIND_DIGITAL), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_FIND_ANALOG), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_FIND_STOP), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_GET_EXTENSION), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_AVRDUDE), \
-      HID_RI_USAGE(8,0x01), \
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-      HID_RI_REPORT_ID(8,COMMAND_CONFIG), \
-      HID_RI_USAGE(8,0x01) \
 
-#define HID_DESCRIPTOR_KEYBOARD_ID(MaxKeys)            \
-			HID_RI_USAGE_PAGE(8, 0x01),                     \
-			HID_RI_USAGE(8, 0x06),                          \
-			HID_RI_COLLECTION(8, 0x01),                     \
-        HID_RI_REPORT_ID(8,0x1),                    \
-				HID_RI_USAGE_PAGE(8, 0x07),                 \
-				HID_RI_USAGE_MINIMUM(8, 0xE0),              \
-				HID_RI_USAGE_MAXIMUM(8, 0xE7),              \
-				HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
-				HID_RI_LOGICAL_MAXIMUM(8, 0x01),            \
-				HID_RI_REPORT_SIZE(8, 0x01),                \
-				HID_RI_REPORT_COUNT(8, 0x08),               \
-				HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-				HID_RI_REPORT_COUNT(8, 0x01),               \
-				HID_RI_REPORT_SIZE(8, 0x08),                \
-				HID_RI_INPUT(8, HID_IOF_CONSTANT),          \
-				HID_RI_USAGE_PAGE(8, 0x08),                 \
-				HID_RI_USAGE_MINIMUM(8, 0x01),              \
-				HID_RI_USAGE_MAXIMUM(8, 0x05),              \
-				HID_RI_REPORT_COUNT(8, 0x05),               \
-				HID_RI_REPORT_SIZE(8, 0x01),                \
-				HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NON_VOLATILE), \
-				HID_RI_REPORT_COUNT(8, 0x01),               \
-				HID_RI_REPORT_SIZE(8, 0x03),                \
-				HID_RI_OUTPUT(8, HID_IOF_CONSTANT),         \
-				HID_RI_LOGICAL_MINIMUM(8, 0x00),            \
-				HID_RI_LOGICAL_MAXIMUM(16, 0xFF),           \
-				HID_RI_USAGE_PAGE(8, 0x07),                 \
-				HID_RI_USAGE_MINIMUM(8, 0x00),              \
-				HID_RI_USAGE_MAXIMUM(8, 0xFF),              \
-				HID_RI_REPORT_COUNT(8, MaxKeys),            \
-				HID_RI_REPORT_SIZE(8, 0x08),                \
-				HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE), \
-        HID_DESCRIPTOR_FEATURE_REPORTS(), \
-			HID_RI_END_COLLECTION(0)
-#define HID_DESCRIPTOR_MOUSE_SCROLL(MinAxisVal, MaxAxisVal, MinPhysicalVal,    \
-                                    MaxPhysicalVal, Buttons, AbsoluteCoords)   \
-  HID_RI_USAGE_PAGE(8, 0x01), HID_RI_USAGE(8, 0x02),                           \
-      HID_RI_COLLECTION(8, 0x01),  \
-        HID_RI_REPORT_ID(8,0x1),                    \
-        HID_RI_USAGE(8, 0x02),                       \
-        HID_RI_COLLECTION(8, 0x02), HID_RI_USAGE_PAGE(8, 0x01),                  \
-        HID_RI_COLLECTION(8, 0x00), HID_RI_USAGE_PAGE(8, 0x09),                  \
-        HID_RI_USAGE_MINIMUM(8, 0x01), HID_RI_USAGE_MAXIMUM(8, Buttons),         \
-        HID_RI_LOGICAL_MINIMUM(8, 0x00), HID_RI_LOGICAL_MAXIMUM(8, 0x01),        \
-        HID_RI_REPORT_SIZE(8, 0x01), HID_RI_REPORT_COUNT(8, Buttons),            \
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),     \
-        HID_RI_REPORT_SIZE(8, (8 - (Buttons % 8))),                              \
-        HID_RI_REPORT_COUNT(8, 0x01),                                            \
-        HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE), \
-        HID_RI_USAGE_PAGE(8, 0x01), HID_RI_USAGE(8, 0x30),                       \
-        HID_RI_USAGE(8, 0x31), HID_RI_LOGICAL_MINIMUM(16, MinAxisVal),           \
-        HID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal),                                  \
-        HID_RI_PHYSICAL_MINIMUM(16, MinPhysicalVal),                             \
-        HID_RI_PHYSICAL_MAXIMUM(16, MaxPhysicalVal),                             \
-        HID_RI_REPORT_COUNT(8, 0x02),                                            \
-        HID_RI_REPORT_SIZE(                                                      \
-            8, ((((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16))),      \
-        HID_RI_INPUT(                                                            \
-            8, HID_IOF_DATA | HID_IOF_VARIABLE |                                 \
-                  (AbsoluteCoords ? HID_IOF_ABSOLUTE : HID_IOF_RELATIVE)),      \
-        HID_RI_COLLECTION(8, 0x02), HID_RI_USAGE(8, 0x48),                       \
-        HID_RI_LOGICAL_MINIMUM(8, 0), HID_RI_LOGICAL_MAXIMUM(8, 1),              \
-        HID_RI_PHYSICAL_MINIMUM(8, 1), HID_RI_PHYSICAL_MAXIMUM(8, 4),            \
-        HID_RI_REPORT_SIZE(8, 2), HID_RI_REPORT_COUNT(8, 1), HID_RI_PUSH(0),     \
-        HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),   \
-        HID_RI_USAGE(8, 0x38), HID_RI_LOGICAL_MINIMUM(16, MinAxisVal),           \
-        HID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal), HID_RI_PHYSICAL_MINIMUM(8, 0),   \
-        HID_RI_PHYSICAL_MAXIMUM(8, 0),                                           \
-        HID_RI_REPORT_SIZE(                                                      \
-            8, ((((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16))),      \
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),     \
-        HID_RI_END_COLLECTION(0), HID_RI_COLLECTION(8, 0x02), HID_RI_POP(0),     \
-        HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),   \
-        HID_RI_USAGE_PAGE(8, 0x0c), HID_RI_USAGE(16, 0x0238),                    \
-        HID_RI_LOGICAL_MINIMUM(16, MinAxisVal),                                  \
-        HID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal),                                  \
-        HID_RI_REPORT_SIZE(                                                      \
-            8, ((((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16))),      \
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),     \
-        HID_RI_END_COLLECTION(0), HID_RI_END_COLLECTION(0),                      \
-        HID_RI_END_COLLECTION(0), \
-        HID_DESCRIPTOR_FEATURE_REPORTS(), \
-        HID_RI_END_COLLECTION(0)
+typedef enum {
+  HID_USAGE_MOUSE = 0x02,
+  HID_USAGE_GAMEPAD = 0x05,
+  HID_USAGE_KEYBOARD = 0x06,
+  HID_USAGE_HAT_SWITCH = 0x39,
+  HID_USAGE_X = 0x30,
+  HID_USAGE_Y,
+  HID_USAGE_Z,
+  HID_USAGE_Rx,
+  HID_USAGE_Ry,
+  HID_USAGE_Rz,
+  HID_USAGE_Slider,
+  HID_USAGE_Dial,
+  HID_USAGE_Wheel,
+  HID_USAGE_CONSUMER_AC_PAN = 0x0238
+} HID_Usage;
+
+typedef enum {
+  HID_USAGE_PAGE_GENERIC_DESKTOP = 0x01,
+  HID_USAGE_PAGE_KEYBOARD = 0x07,
+  HID_USAGE_PAGE_LED = 0x08,
+  HID_USAGE_PAGE_BUTTON = 0x09,
+  HID_USAGE_PAGE_CONSUMER = 0x0c,
+} HID_Usage_Page;
+
+typedef enum {
+  HID_COLLECTION_APPLICATION = 0x01,
+  HID_COLLECTION_PHYSICAL = 0x02,
+} HID_Collection;
+
+typedef enum {
+  REPORT_ID_XINPUT,
+  REPORT_ID_GAMEPAD,
+  REPORT_ID_MOUSE,
+  REPORT_ID_KBD
+} HID_Report;
+
+typedef enum {
+  HID_UNIT_NONE,
+  HID_UNIT_DEGREES = 0x14
+} HID_Unit;
+

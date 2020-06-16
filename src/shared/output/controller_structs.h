@@ -1,16 +1,15 @@
 #pragma once
-#define __INCLUDE_FROM_HID_DRIVER
-#define __INCLUDE_FROM_USB_DRIVER
-#define USB_DEVICE_ONLY
-#define USB_CAN_BE_DEVICE
+#include "../controller/controller.h"
 #include "descriptors.h"
 #include <stdbool.h>
-#include "../controller/controller.h"
+
+#define SIMULTANEOUS_KEYS 6
 /** Type define for the gamepad HID report structure, for creating and sending
  * HID reports to the host PC. This mirrors the layout described to the host in
  * the HID report descriptor, in Descriptors.c.
  */
 typedef struct {
+  uint8_t rid;
   uint16_t buttons;
   uint8_t hat;
 
@@ -22,7 +21,7 @@ typedef struct {
   uint8_t r_y;
 
   uint8_t axis[12];
-  //Accel values are 10 bits with padding.
+  // Accel values are 10 bits with padding.
   uint16_t accel[4];
 
 } USB_PS3Report_Data_t;
@@ -51,9 +50,27 @@ typedef struct {
 } USB_XInputReport_Data_t;
 
 typedef struct {
-  MIDI_EventPacket_t midi[XBOX_AXIS_COUNT+XBOX_BTN_COUNT];
+  MIDI_EventPacket_t midi[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
 } USB_MIDI_Data_t;
-
+typedef struct {
+  uint8_t rid;
+  uint8_t
+      Button; /**< Button mask for currently pressed buttons in the mouse. */
+  int8_t X;   /**< Current delta X movement of the mouse. */
+  int8_t Y;   /**< Current delta Y movement on the mouse. */
+  int8_t ScrollY; /** Current scroll Y delta movement on the mouse */
+  int8_t ScrollX; /** Current scroll X delta movement on the mouse */
+} ATTR_PACKED USB_ID_MouseReport_Data_t;
+typedef struct {
+  uint8_t rid;
+  uint8_t
+      Modifier;     /**< Keyboard modifier byte, indicating pressed modifier
+                     * keys (a combination of   \c HID_KEYBOARD_MODIFER_* masks).
+                     */
+  uint8_t Reserved; /**< Reserved for OEM use, always set to 0. */
+  uint8_t KeyCode[SIMULTANEOUS_KEYS]; /**< Key codes of the currently pressed
+                                         keys. */
+} ATTR_PACKED USB_ID_KeyboardReport_Data_t;
 typedef union {
   USB_KeyboardReport_Data_t keyboard;
   USB_PS3Report_Data_t ps3;

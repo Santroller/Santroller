@@ -45,7 +45,8 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
 };
 int main(void) {
   loadConfig();
-  // config.main.subType = KEYBOARD_GAMEPAD;
+  config.main.inputType = WII;
+  config.main.subType = PS3_GAMEPAD;
   deviceType = config.main.subType;
   initInputs();
   initLEDs();
@@ -53,32 +54,22 @@ int main(void) {
   USB_Init();
   sei();
   uint16_t size;
-  // uint16_t bytesReceived;
   while (true) {
     tickInputs(&controller);
     tickLEDs(&controller);
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
       memcpy(&previousReport, &currentReport, size);
-      Endpoint_SelectEndpoint(HID_EPADDR_IN);
+      uint8_t rid = *(uint8_t*)&currentReport;
+      Endpoint_SelectEndpoint(rid == REPORT_ID_XINPUT ? XINPUT_EPADDR_IN
+                                                        : HID_EPADDR_IN);
       if (Endpoint_IsReadWriteAllowed()) {
         Endpoint_Write_Stream_LE(&currentReport, size, NULL);
         Endpoint_ClearIN();
       }
     }
-    // if (foundPin) {
-    //   foundPin = false;
-    //   writeToSerial('d');
-    //   writeToSerial(detectedPin);
-    //   writeToSerial('\r');
-    //   writeToSerial('\n');
-    // }
     MIDI_Device_USBTask(&midiInterface);
   }
-}
-
-void writeToSerial(uint8_t data) {
-  // CDC_Device_SendByte(&serialInterface, data);
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {

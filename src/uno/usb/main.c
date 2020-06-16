@@ -1,12 +1,12 @@
 #include "LightweightRingBuff.h"
 #include "bootloader/bootloader.h"
+#include "config/config.h"
 #include "config/defaults.h"
 #include "config/defines.h"
 #include "device_comms.h"
 #include "output/control_requests.h"
 #include "output/controller_structs.h"
 #include "output/serial_commands.h"
-#include "config/config.h"
 #include "util/util.h"
 #include <LUFA/Drivers/Board/Board.h>
 #include <LUFA/Drivers/Board/LEDs.h>
@@ -109,40 +109,41 @@ int main(void) {
     if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
 
     if (USB_DeviceState != DEVICE_STATE_Configured) { continue; }
-    // Write data from the different output buffers to their respective
-    // endpoints
-    writeToEndpoint(HID_EPADDR_IN, &bufferOutDevice);
+
+    RingBuff_Count_t bytesToWrite = RingBuffer_GetCount(&bufferOutDevice);
+    uint8_t byteToWrite;
+    if (bytesToWrite != 0) {
+      byteToWrite = RingBuffer_Remove(&bufferOutDevice);
+      if (byteToWrite == FRAME_START_DEVICE ||
+          byteToWrite == FRAME_START_SERIAL) {
+        // All reports put the first id as the report id.
+        uint8_t rid = RingBuffer_Peek(&bufferOutDevice);
+        // A device packet should always be smaller than the largest packet. We
+        // also need to account for escape bytes however
+        bytesToWrite = sizeof(USB_Report_Data_t) + 10;
+        // If the report is for xinput, throw the data at the xinput endpoint, otherwise, throw it at the hid endpoint.
+        Endpoint_SelectEndpoint(rid == REPORT_ID_XINPUT ? XINPUT_EPADDR_IN
+                                                        : HID_EPADDR_IN);
+
+        if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
+          /* Read bytes from the USART receive buffer into the USB IN
+          endpoint
+           */
+          while (bytesToWrite--) {
+            byteToWrite = RingBuffer_Remove(&bufferOutDevice);
+            if (byteToWrite == FRAME_END) { break; };
+            if (byteToWrite == ESC)
+              byteToWrite = RingBuffer_Remove(&bufferOutDevice) ^ 0x20;
+            Endpoint_Write_8(byteToWrite);
+          }
+          Endpoint_ClearIN();
+        }
+      }
+    }
     // Send the next byte from the input buffer to the  main mcu
     if (!(RingBuffer_IsEmpty(&bufferIn))) {
       Serial_SendByte(RingBuffer_Remove(&bufferIn));
     }
-  }
-}
-void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer) {
-
-  RingBuff_Count_t bytesToWrite = RingBuffer_GetCount(buffer);
-  uint8_t byteToWrite;
-  if (bytesToWrite == 0) return;
-  byteToWrite = RingBuffer_Remove(buffer);
-  if (byteToWrite != FRAME_START_DEVICE && byteToWrite != FRAME_START_SERIAL) {
-    return;
-  }
-  // A device packet should always be smaller than the largest packet. We also
-  // need to account for escape bytes however
-  bytesToWrite = sizeof(USB_Report_Data_t) + 10;
-  Endpoint_SelectEndpoint(endpoint);
-
-  if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
-    /* Read bytes from the USART receive buffer into the USB IN
-    endpoint
-     */
-    while (bytesToWrite--) {
-      byteToWrite = RingBuffer_Remove(buffer);
-      if (byteToWrite == FRAME_END) { break; };
-      if (byteToWrite == ESC) byteToWrite = RingBuffer_Remove(buffer) ^ 0x20;
-      Endpoint_Write_8(byteToWrite);
-    }
-    Endpoint_ClearIN();
   }
 }
 
@@ -179,7 +180,8 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     reboot();
     break;
   case COMMAND_CONFIG:
-    eeprom_update_byte(&config.deviceType, data[offsetof(Configuration_t,main.subType)]);
+    eeprom_update_byte(&config.deviceType,
+                       data[offsetof(Configuration_t, main.subType)]);
     break;
   }
   RingBuffer_Insert(&bufferIn, report);

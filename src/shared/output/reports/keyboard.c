@@ -1,10 +1,11 @@
 #include "keyboard.h"
 #include "output/descriptors.h"
 #include "config/eeprom.h"
+#include "controller_structs.h"
 int joyThresholdKb;
 int triggerThresholdKb;
 void checkJoyKey(int neg, int pos, int val, int thresh, uint8_t *used,
-                   USB_KeyboardReport_Data_t *KeyboardReport) {
+                   USB_ID_KeyboardReport_Data_t *KeyboardReport) {
   if (*used < SIMULTANEOUS_KEYS) {
     if (neg && val < -thresh) { KeyboardReport->KeyCode[*used++] = neg; }
     if (pos && val > thresh) { KeyboardReport->KeyCode[*used++] = pos; }
@@ -12,9 +13,10 @@ void checkJoyKey(int neg, int pos, int val, int thresh, uint8_t *used,
 }
 void fillKeyboardReport(void *ReportData, uint16_t *const ReportSize,
                             Controller_t *controller) {
-  *ReportSize = sizeof(USB_KeyboardReport_Data_t);
-  USB_KeyboardReport_Data_t *KeyboardReport =
-      (USB_KeyboardReport_Data_t *)ReportData;
+  *ReportSize = sizeof(USB_ID_KeyboardReport_Data_t);
+  USB_ID_KeyboardReport_Data_t *KeyboardReport =
+      (USB_ID_KeyboardReport_Data_t *)ReportData;\
+  KeyboardReport->rid = REPORT_ID_KBD;
   uint8_t usedKeys = 0;
   uint8_t *keys = (uint8_t *)&config.keys;
   for (int i = 0; i <= XBOX_Y && usedKeys < SIMULTANEOUS_KEYS; i++) {

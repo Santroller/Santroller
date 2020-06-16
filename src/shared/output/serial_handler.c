@@ -82,7 +82,14 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
 }
 extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 void processHIDReadFeatureReport(uint8_t report) {
-  getData(report);
+  switch (report) {
+  case COMMAND_FIND_ANALOG:
+  case COMMAND_FIND_DIGITAL:
+    dataInRam = true;
+    dataToReadWrite = &detectedPin;
+  default:
+    getData(report);
+  }
   if (dataInRam) {
     memcpy(dbuf, dataToReadWrite, currentCommandSize);
   } else if (constDataToRead) {

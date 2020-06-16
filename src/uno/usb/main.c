@@ -6,6 +6,7 @@
 #include "output/control_requests.h"
 #include "output/controller_structs.h"
 #include "output/serial_commands.h"
+#include "config/config.h"
 #include "util/util.h"
 #include <LUFA/Drivers/Board/Board.h>
 #include <LUFA/Drivers/Board/LEDs.h>
@@ -177,8 +178,8 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
     break;
-  case DATA_SUB_TYPE:
-    eeprom_update_byte(&config.deviceType, data[0]);
+  case COMMAND_CONFIG:
+    eeprom_update_byte(&config.deviceType, data[offsetof(Configuration_t,main.subType)]);
     break;
   }
   RingBuffer_Insert(&bufferIn, report);

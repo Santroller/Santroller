@@ -44,70 +44,9 @@ void getData(uint8_t report) {
       currentCommandSize = 0;
     }
     break;
-  case DATA_INPUT_TYPE:
-    dataToReadWrite = &config_pointer.main.inputType;
-    break;
-  case DATA_SUB_TYPE:
-    dataToReadWrite = &config_pointer.main.subType;
-    break;
-  case DATA_TILT_TYPE:
-    dataToReadWrite = &config_pointer.main.tiltType;
-    break;
-  case DATA_MPU_6050_ORIENTATION:
-    dataToReadWrite = &config_pointer.axis.mpu6050Orientation;
-    break;
-  case DATA_TILT_SENSITIVITY:
-    dataToReadWrite = (uint8_t *)&config_pointer.axis.tiltSensitivity;
-    break;
-  case DATA_LED_TYPE:
-    dataToReadWrite = &config_pointer.main.fretLEDMode;
-    break;
-  case DATA_MAP_JOY_DPAD:
-    dataToReadWrite = (uint8_t *)&config_pointer.main.mapLeftJoystickToDPad;
-    break;
-  case DATA_MAP_START_SEL_HOME:
-    dataToReadWrite = (uint8_t *)&config_pointer.main.mapStartSelectToHome;
-    break;
-  case DATA_MAP_ACCEL_RIGHT:
-    dataToReadWrite = (uint8_t *)&config_pointer.main.mapNunchukAccelToRightJoy;
-    break;
-  case DATA_PINS:
-    dataToReadWrite = (uint8_t *)&config_pointer.pins;
-    currentCommandSize = sizeof(config.pins);
-    break;
-  case DATA_KEYS:
-    dataToReadWrite = (uint8_t *)&config_pointer.keys;
-    currentCommandSize = sizeof(config.keys);
-    break;
-  case DATA_THRESHOLD_JOY:
-    dataToReadWrite = (uint8_t *)&config_pointer.axis.joyThreshold;
-    break;
-  case DATA_THRESHOLD_TRIGGER:
-    dataToReadWrite = (uint8_t *)&config_pointer.axis.triggerThreshold;
-    break;
-  case DATA_THRESHOLD_DRUM:
-    dataToReadWrite = (uint8_t *)&config_pointer.drumThreshold;
-    break;
-
-  case DATA_LED_COLOURS:
-    dataToReadWrite = (uint8_t *)&config_pointer.leds.colours;
-    currentCommandSize = sizeof(config.leds.colours);
-    break;
-  case DATA_LED_PINS:
-    dataToReadWrite = (uint8_t *)&config_pointer.leds.pins;
-    currentCommandSize = sizeof(config.leds.pins);
-    break;
-  case DATA_MIDI_CHANNEL:
-    dataToReadWrite = (uint8_t *)&config_pointer.midi.channel;
-    currentCommandSize = sizeof(config.midi.channel);
-    break;
-  case DATA_MIDI_NOTE:
-    dataToReadWrite = (uint8_t *)&config_pointer.midi.note;
-    currentCommandSize = sizeof(config.midi.note);
-    break;
-  case DATA_MIDI_TYPE:
-    dataToReadWrite = (uint8_t *)&config_pointer.midi.midiType;
-    currentCommandSize = sizeof(config.midi.midiType);
+  case COMMAND_CONFIG:
+    dataToReadWrite = (uint8_t *)&config_pointer;
+    currentCommandSize = sizeof(config);
     break;
   }
 

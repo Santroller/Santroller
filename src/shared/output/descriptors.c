@@ -116,8 +116,6 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No
                       //   Null Position)
 
-    
-    
     HID_DESCRIPTOR_FEATURE_REPORTS(), 
     0xC0,             // End Collection
 

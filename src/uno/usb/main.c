@@ -121,9 +121,19 @@ int main(void) {
         // A device packet should always be smaller than the largest packet. We
         // also need to account for escape bytes however
         bytesToWrite = sizeof(USB_Report_Data_t) + 10;
-        // If the report is for xinput, throw the data at the xinput endpoint, otherwise, throw it at the hid endpoint.
-        Endpoint_SelectEndpoint(rid == REPORT_ID_XINPUT ? XINPUT_EPADDR_IN
-                                                        : HID_EPADDR_IN);
+        switch (rid) {
+        case REPORT_ID_XINPUT:
+          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+          break;
+        case REPORT_ID_MIDI:
+          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+          // The "reportid" is actually not a real thing on midi, so we need to strip it before we send data.
+          RingBuffer_Remove(&bufferOutDevice);
+          break;
+        default:
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          break;
+        }
 
         if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
           /* Read bytes from the USART receive buffer into the USB IN

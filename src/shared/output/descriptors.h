@@ -189,7 +189,8 @@ typedef enum {
   REPORT_ID_XINPUT,
   REPORT_ID_GAMEPAD,
   REPORT_ID_MOUSE,
-  REPORT_ID_KBD
+  REPORT_ID_KBD,
+  REPORT_ID_MIDI
 } HID_Report;
 
 typedef enum {

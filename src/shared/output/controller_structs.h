@@ -50,6 +50,7 @@ typedef struct {
 } USB_XInputReport_Data_t;
 
 typedef struct {
+  uint8_t rid;
   MIDI_EventPacket_t midi[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
 } USB_MIDI_Data_t;
 typedef struct {

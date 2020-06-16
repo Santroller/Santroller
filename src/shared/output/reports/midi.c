@@ -1,13 +1,14 @@
 #include "midi.h"
-#include "output/descriptors.h"
 #include "config/eeprom.h"
-#include "output/controller_structs.h"
 #include "input/input_handler.h"
+#include "output/controller_structs.h"
+#include "output/descriptors.h"
 
 uint8_t lastmidi[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
 void fillMIDIReport(void *ReportData, uint16_t *const ReportSize,
-                        Controller_t *controller) {
+                    Controller_t *controller) {
   USB_MIDI_Data_t *data = ReportData;
+  data->rid = REPORT_ID_MIDI;
   uint8_t idx = 0;
   for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
     if (config.midi.midiType[i] != DISABLED) {
@@ -28,5 +29,5 @@ void fillMIDIReport(void *ReportData, uint16_t *const ReportSize,
     }
   }
 
-  *ReportSize = idx * sizeof(MIDI_EventPacket_t);
+  *ReportSize = 1 + idx * sizeof(MIDI_EventPacket_t);
 }

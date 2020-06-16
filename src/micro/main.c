@@ -45,8 +45,11 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
 };
 int main(void) {
   loadConfig();
-  config.main.inputType = WII;
-  config.main.subType = PS3_GAMEPAD;
+  // config.main.inputType = WII;
+  // config.main.subType = MIDI_GAMEPAD;
+  // config.midi.channel[XBOX_A] = 1;
+  // config.midi.midiType[XBOX_A] = NOTE;
+  // config.midi.note[XBOX_A] = 0x5F;
   deviceType = config.main.subType;
   initInputs();
   initLEDs();
@@ -60,11 +63,24 @@ int main(void) {
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
       memcpy(&previousReport, &currentReport, size);
-      uint8_t rid = *(uint8_t*)&currentReport;
-      Endpoint_SelectEndpoint(rid == REPORT_ID_XINPUT ? XINPUT_EPADDR_IN
-                                                        : HID_EPADDR_IN);
+      uint8_t* data = (uint8_t*)&currentReport;
+      uint8_t rid = *data;
+      switch (rid) {
+        case REPORT_ID_XINPUT:
+          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+          break;
+        case REPORT_ID_MIDI:
+          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+          // The "reportid" is actually not a real thing on midi, so we need to strip it before we send data.
+          data++;
+          size--;
+          break;
+        default:
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          break;
+        }
       if (Endpoint_IsReadWriteAllowed()) {
-        Endpoint_Write_Stream_LE(&currentReport, size, NULL);
+        Endpoint_Write_Stream_LE(data, size, NULL);
         Endpoint_ClearIN();
       }
     }

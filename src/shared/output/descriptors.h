@@ -1,7 +1,7 @@
 #pragma once
 
 /* Includes: (don't import everything on the 328p)*/
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) 
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__)
 // Pull in enough information from LUFA in order to be able to compile the
 // descriptors.
 #  define __INCLUDE_FROM_USB_DRIVER
@@ -23,10 +23,11 @@ void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
 extern uint8_t deviceType;
 #endif
 
+#include "serial_commands.h"
 #include "util/util.h"
 #include <avr/pgmspace.h>
 #include <stdint.h>
-#include "serial_commands.h"
+#include "controller/controller.h"
 
 // Device Request for WCID data. Note that this is the same as
 // CDC_REQ_SetLineEncoding, and only the bmRequestType differs.
@@ -151,9 +152,8 @@ uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void **const DescriptorAddress,
-                                    uint8_t* const DescriptorMemorySpace)
-    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);   
-
+                                    uint8_t *const DescriptorMemorySpace)
+    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
 typedef enum {
   HID_USAGE_MOUSE = 0x02,
@@ -184,17 +184,14 @@ typedef enum {
   HID_COLLECTION_APPLICATION = 0x01,
   HID_COLLECTION_PHYSICAL = 0x02,
 } HID_Collection;
-
+// By setting report ids that involve ZL and ZR, we should be fine
+// When a guitar is being emulated, as guitars dont use those buttons.
 typedef enum {
   REPORT_ID_XINPUT,
-  REPORT_ID_GAMEPAD,
-  REPORT_ID_MOUSE,
-  REPORT_ID_KBD,
-  REPORT_ID_MIDI
+  REPORT_ID_GAMEPAD = _BV(SWITCH_ZL),
+  REPORT_ID_MOUSE = _BV(SWITCH_ZL) | 0x01,
+  REPORT_ID_KBD = _BV(SWITCH_ZL) | 0x02,
+  REPORT_ID_MIDI = _BV(SWITCH_ZL) | 0x03
 } HID_Report;
 
-typedef enum {
-  HID_UNIT_NONE,
-  HID_UNIT_DEGREES = 0x14
-} HID_Unit;
-
+typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;

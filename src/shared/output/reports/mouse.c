@@ -1,6 +1,6 @@
 #include "mouse.h"
 #include "config/eeprom.h"
-#include "controller_structs.h"
+#include "output/controller_structs.h"
 #include "output/descriptors.h"
 void fillMouseReport(void *ReportData, uint16_t *const ReportSize,
                      Controller_t *controller) {

@@ -132,6 +132,11 @@ int main(void) {
           break;
         default:
           Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          // Wii RB Guitars don't know what to do with report ids, so we skip it here.
+          // This does mean that the guitar wont work on a pc, but what else are we gonna do
+          if (deviceType == WII_ROCK_BAND_GUITAR) {
+            RingBuffer_Remove(&bufferOutDevice);
+          }
           break;
         }
 

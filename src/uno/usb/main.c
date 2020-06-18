@@ -190,7 +190,7 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
                                   uint8_t *data) {
   switch (report) {
   case COMMAND_REBOOT:
-  case COMMAND_JUMP_BOOTLOADER_UNO:
+  case COMMAND_JUMP_BOOTLOADER:
     jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
     break;

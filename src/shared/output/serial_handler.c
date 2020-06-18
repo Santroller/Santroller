@@ -70,7 +70,7 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
   case COMMAND_FIND_ANALOG:
     findAnalogPin();
     return;
-  case COMMAND_FIND_STOP:
+  case COMMAND_FIND_CANCEL:
     stopSearching();
     return;
   }

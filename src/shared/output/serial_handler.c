@@ -81,7 +81,6 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     eeprom_write_block(data, dataToReadWrite, currentCommandSize);
   }
 }
-extern uint8_t dbuf[sizeof(Configuration_t)];
 void processHIDReadFeatureReport(uint8_t report) {
   switch (report) {
   case COMMAND_FIND_ANALOG:

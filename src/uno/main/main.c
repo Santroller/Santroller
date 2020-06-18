@@ -24,7 +24,7 @@ RingBuffer_t serialInBuffer;
 uint8_t serialInBufferData[128];
 RingBuffer_t serialOutBuffer;
 uint8_t serialOutBufferData[128];
-uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+uint8_t dbuf[sizeof(Configuration_t)];
 
 void writeToSerial(uint8_t data) {
   // If we are writing data that has a special purpose, then we write an escape

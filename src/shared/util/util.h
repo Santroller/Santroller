@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include "config/config.h"
 #define WCHAR wchar_t
 #define bit_set(p, m) ((p) |= _BV(m))
 #define bit_clear(p, m) ((p) &= ~_BV(m))
@@ -99,3 +100,4 @@ void enablePCI(uint8_t pin);
 unsigned long millis(void);
 unsigned long micros(void);
 void delay(unsigned long ms);
+extern uint8_t dbuf[sizeof(Configuration_t)];

@@ -172,7 +172,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
-extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 void processHIDReadFeatureReport(uint8_t report) {
   uint8_t len = 0;
   Serial_SendByte(report);

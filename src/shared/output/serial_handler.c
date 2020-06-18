@@ -12,6 +12,7 @@ static const uint8_t *constDataToRead = NULL;
 static uint8_t *dataToReadWrite = NULL;
 bool dataInRam = false;
 void getData(uint8_t report) {
+  dataInRam = false;
   constDataToRead = NULL;
   currentCommandSize = 1;
   switch (report) {
@@ -46,7 +47,7 @@ void getData(uint8_t report) {
     break;
   case COMMAND_CONFIG:
     dataToReadWrite = (uint8_t *)&config_pointer;
-    currentCommandSize = sizeof(config);
+    currentCommandSize = sizeof(Configuration_t);
     break;
   }
 
@@ -80,7 +81,7 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     eeprom_write_block(data, dataToReadWrite, currentCommandSize);
   }
 }
-extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+extern uint8_t dbuf[sizeof(Configuration_t)];
 void processHIDReadFeatureReport(uint8_t report) {
   switch (report) {
   case COMMAND_FIND_ANALOG:

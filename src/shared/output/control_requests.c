@@ -17,7 +17,7 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
     Reserved2 : {0}
   }
 };
-extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+extern uint8_t dbuf[sizeof(Configuration_t)];
 
 void deviceControlRequest(void) {
   bool isWCID = USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&

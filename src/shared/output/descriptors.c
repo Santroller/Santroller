@@ -449,7 +449,7 @@ const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
   SerialNumStrIndex : USE_INTERNAL_SERIAL,
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
-uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+uint8_t dbuf[sizeof(Configuration_t)];
 const uint16_t PROGMEM vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
                                 0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
 const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,

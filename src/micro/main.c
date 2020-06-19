@@ -44,10 +44,11 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
                 },
         },
 };
+bool xinputEnabled = false;
 int main(void) {
   loadConfig();
   // config.main.inputType = WII;
-  // config.main.subType = WII_ROCK_BAND_GUITAR;
+  // config.main.subType = XINPUT_GUITAR_HERO_GUITAR;
   // config.midi.channel[XBOX_A] = 1;
   // config.midi.midiType[XBOX_A] = NOTE;
   // config.midi.note[XBOX_A] = 0x5F;
@@ -110,6 +111,9 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(HID_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_BULK, HID_EPSIZE, 1);
+  Endpoint_ConfigureEndpoint(XINPUT_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+  Endpoint_ConfigureEndpoint(MIDI_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void EVENT_CDC_Device_ControLineStateChanged(

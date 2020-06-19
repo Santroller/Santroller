@@ -42,171 +42,194 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
 #define MaxPhysicalVal 128
 #define AbsoluteCoords false
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
-    HID_RI_USAGE_PAGE(8,HID_USAGE_PAGE_GENERIC_DESKTOP), 
-    HID_RI_USAGE(8,HID_USAGE_GAMEPAD),
-    HID_RI_COLLECTION(8,HID_COLLECTION_APPLICATION),
-      HID_RI_REPORT_ID(8, REPORT_ID_GAMEPAD),
-      HID_RI_LOGICAL_MINIMUM(8,0),
-      HID_RI_LOGICAL_MAXIMUM(8,1),
-      HID_RI_PHYSICAL_MINIMUM(8,0),
-      HID_RI_PHYSICAL_MAXIMUM(8,1),
-      HID_RI_REPORT_SIZE(8,1),
-      HID_RI_REPORT_COUNT(8,13),
-      HID_RI_USAGE_PAGE(8,HID_USAGE_PAGE_BUTTON), 
-      HID_RI_USAGE_MINIMUM(8,0x01), 
-      HID_RI_USAGE_MAXIMUM(8,0x0D), 
-      HID_RI_INPUT(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE|HID_IOF_NO_NULL_POSITION),
-      HID_RI_REPORT_COUNT(8,0x03),
-      HID_RI_INPUT(8,HID_IOF_CONSTANT | HID_IOF_ARRAY | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION),
-      HID_RI_USAGE_PAGE(8,HID_USAGE_PAGE_GENERIC_DESKTOP), 
-      HID_RI_LOGICAL_MAXIMUM(8,7),
-      HID_RI_PHYSICAL_MAXIMUM(16,315),
-      HID_RI_REPORT_SIZE(8,4),
-      HID_RI_REPORT_COUNT(8,0x01),
-      HID_RI_UNIT(8,HID_UNIT_DEGREES),
-      HID_RI_USAGE(8,HID_USAGE_HAT_SWITCH),
-      HID_RI_INPUT(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NULLSTATE),
-      HID_RI_UNIT(8,HID_UNIT_NONE),
-      HID_RI_REPORT_COUNT(8,0x01),
-      HID_RI_INPUT(8,HID_IOF_CONSTANT | HID_IOF_ARRAY | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION),
-      HID_RI_LOGICAL_MAXIMUM(16,255),
-      HID_RI_PHYSICAL_MAXIMUM(16,255),
-      HID_RI_USAGE(8,HID_USAGE_X),
-      HID_RI_USAGE(8,HID_USAGE_Y),
-      HID_RI_USAGE(8,HID_USAGE_Z),
-      HID_RI_USAGE(8,HID_USAGE_Rz),
-      HID_RI_REPORT_SIZE(8,8),
-      HID_RI_REPORT_COUNT(8,4),
-      HID_RI_INPUT(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION),
-      HID_RI_USAGE_PAGE(16,0xFF00),
-      HID_RI_USAGE(8,0x20),
-      HID_RI_USAGE(8,0x21),
-      HID_RI_USAGE(8,0x22),
-      HID_RI_USAGE(8,0x23),
-      HID_RI_USAGE(8,0x24),
-      HID_RI_USAGE(8,0x25),
-      HID_RI_USAGE(8,0x26),
-      HID_RI_USAGE(8,0x27),
-      HID_RI_USAGE(8,0x28),
-      HID_RI_USAGE(8,0x29),
-      HID_RI_USAGE(8,0x2A),
-      HID_RI_USAGE(8,0x2B),
-      HID_RI_REPORT_COUNT(8,12),
-      HID_RI_INPUT(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION),
-      HID_RI_USAGE(16,0x2621),
-      HID_RI_REPORT_COUNT(8,8),
-      HID_RI_FEATURE(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION | HID_IOF_NON_VOLATILE),
-      HID_RI_USAGE(16,0x2621),
-      HID_RI_OUTPUT(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION | HID_IOF_NON_VOLATILE),
-      HID_RI_LOGICAL_MAXIMUM(16,1023),
-      HID_RI_PHYSICAL_MAXIMUM(16,1023),
-      HID_RI_USAGE(8,0x2C),
-      HID_RI_USAGE(8,0x2D),
-      HID_RI_USAGE(8,0x2E),
-      HID_RI_USAGE(8,0x2F),
-      HID_RI_REPORT_SIZE(8,16),
-      HID_RI_REPORT_COUNT(8,4),
-      HID_RI_INPUT(8,HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NO_WRAP | HID_IOF_LINEAR | HID_IOF_PREFERRED_STATE| HID_IOF_NO_NULL_POSITION | HID_IOF_NON_VOLATILE),
-      HID_RI_REPORT_ID(8,COMMAND_REBOOT),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_GET_SIGNATURE),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_GET_CPU_FREQ),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_GET_BOARD),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_JUMP_BOOTLOADER),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_FIND_DIGITAL),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_FIND_ANALOG),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_FIND_CANCEL),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_GET_EXTENSION),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_AVRDUDE),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_ID(8,COMMAND_CONFIG),
-      HID_RI_USAGE(8,0x01),
-      HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
+    HID_RI_USAGE(8, HID_USAGE_GAMEPAD),
+    HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
+    HID_RI_REPORT_ID(8, REPORT_ID_GAMEPAD),
+    HID_RI_LOGICAL_MINIMUM(8, 0),
+    HID_RI_LOGICAL_MAXIMUM(8, 1),
+    HID_RI_PHYSICAL_MINIMUM(8, 0),
+    HID_RI_PHYSICAL_MAXIMUM(8, 1),
+    HID_RI_REPORT_SIZE(8, 1),
+    HID_RI_REPORT_COUNT(8, 13),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_BUTTON),
+    HID_RI_USAGE_MINIMUM(8, 0x01),
+    HID_RI_USAGE_MAXIMUM(8, 0x0D),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION),
+    HID_RI_REPORT_COUNT(8, 0x03),
+    HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_ARRAY | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
+    HID_RI_LOGICAL_MAXIMUM(8, 7),
+    HID_RI_PHYSICAL_MAXIMUM(16, 315),
+    HID_RI_REPORT_SIZE(8, 4),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_UNIT(8, HID_UNIT_DEGREES),
+    HID_RI_USAGE(8, HID_USAGE_HAT_SWITCH),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NULLSTATE),
+    HID_RI_UNIT(8, HID_UNIT_NONE),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_ARRAY | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION),
+    HID_RI_LOGICAL_MAXIMUM(16, 255),
+    HID_RI_PHYSICAL_MAXIMUM(16, 255),
+    HID_RI_USAGE(8, HID_USAGE_X),
+    HID_RI_USAGE(8, HID_USAGE_Y),
+    HID_RI_USAGE(8, HID_USAGE_Z),
+    HID_RI_USAGE(8, HID_USAGE_Rz),
+    HID_RI_REPORT_SIZE(8, 8),
+    HID_RI_REPORT_COUNT(8, 4),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION),
+    HID_RI_USAGE_PAGE(16, 0xFF00),
+    HID_RI_USAGE(8, 0x20),
+    HID_RI_USAGE(8, 0x21),
+    HID_RI_USAGE(8, 0x22),
+    HID_RI_USAGE(8, 0x23),
+    HID_RI_USAGE(8, 0x24),
+    HID_RI_USAGE(8, 0x25),
+    HID_RI_USAGE(8, 0x26),
+    HID_RI_USAGE(8, 0x27),
+    HID_RI_USAGE(8, 0x28),
+    HID_RI_USAGE(8, 0x29),
+    HID_RI_USAGE(8, 0x2A),
+    HID_RI_USAGE(8, 0x2B),
+    HID_RI_REPORT_COUNT(8, 12),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION),
+    HID_RI_USAGE(16, 0x2621),
+    HID_RI_REPORT_COUNT(8, 8),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                          HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                          HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION |
+                          HID_IOF_NON_VOLATILE),
+    HID_RI_USAGE(16, 0x2621),
+    HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                         HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                         HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION |
+                         HID_IOF_NON_VOLATILE),
+    HID_RI_LOGICAL_MAXIMUM(16, 1023),
+    HID_RI_PHYSICAL_MAXIMUM(16, 1023),
+    HID_RI_USAGE(8, 0x2C),
+    HID_RI_USAGE(8, 0x2D),
+    HID_RI_USAGE(8, 0x2E),
+    HID_RI_USAGE(8, 0x2F),
+    HID_RI_REPORT_SIZE(8, 16),
+    HID_RI_REPORT_COUNT(8, 4),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                        HID_IOF_NO_WRAP | HID_IOF_LINEAR |
+                        HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION |
+                        HID_IOF_NON_VOLATILE),
+    HID_RI_REPORT_ID(8, COMMAND_REBOOT),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_GET_SIGNATURE),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_GET_CPU_FREQ),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_GET_BOARD),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_JUMP_BOOTLOADER),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_FIND_DIGITAL),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_FIND_ANALOG),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_FIND_CANCEL),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_GET_EXTENSION),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_AVRDUDE),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, COMMAND_CONFIG),
+    HID_RI_USAGE(8, 0x01),
+    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
     HID_RI_END_COLLECTION(0),
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_KEYBOARD),
     HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
-      HID_RI_REPORT_ID(8,REPORT_ID_KBD),
-      HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_KEYBOARD),
-      HID_RI_USAGE_MINIMUM(8, 0xE0),
-      HID_RI_USAGE_MAXIMUM(8, 0xE7),
-      HID_RI_LOGICAL_MINIMUM(8, 0x00),
-      HID_RI_LOGICAL_MAXIMUM(8, 0x01),
-      HID_RI_REPORT_SIZE(8, 0x01),
-      HID_RI_REPORT_COUNT(8, 0x08),
-      HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_COUNT(8, 0x01),
-      HID_RI_REPORT_SIZE(8, 0x08),
-      HID_RI_INPUT(8, HID_IOF_CONSTANT),
-      HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_LED),
-      HID_RI_USAGE_MINIMUM(8, 0x01),
-      HID_RI_USAGE_MAXIMUM(8, 0x05),
-      HID_RI_REPORT_COUNT(8, 0x05),
-      HID_RI_REPORT_SIZE(8, 0x01),
-      HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE | HID_IOF_NON_VOLATILE),
-      HID_RI_REPORT_COUNT(8, 0x01),
-      HID_RI_REPORT_SIZE(8, 0x03),
-      HID_RI_OUTPUT(8, HID_IOF_CONSTANT),
-      HID_RI_LOGICAL_MINIMUM(8, 0x00),
-      HID_RI_LOGICAL_MAXIMUM(16, 0xFF),
-      HID_RI_USAGE_PAGE(8, 0x07),
-      HID_RI_USAGE_MINIMUM(8, 0x00),
-      HID_RI_USAGE_MAXIMUM(8, 0xFF),
-      HID_RI_REPORT_COUNT(8, SIMULTANEOUS_KEYS),
-      HID_RI_REPORT_SIZE(8, 0x08),
-      HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, REPORT_ID_KBD),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_KEYBOARD),
+    HID_RI_USAGE_MINIMUM(8, 0xE0),
+    HID_RI_USAGE_MAXIMUM(8, 0xE7),
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),
+    HID_RI_LOGICAL_MAXIMUM(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 0x01),
+    HID_RI_REPORT_COUNT(8, 0x08),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 0x08),
+    HID_RI_INPUT(8, HID_IOF_CONSTANT),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_LED),
+    HID_RI_USAGE_MINIMUM(8, 0x01),
+    HID_RI_USAGE_MAXIMUM(8, 0x05),
+    HID_RI_REPORT_COUNT(8, 0x05),
+    HID_RI_REPORT_SIZE(8, 0x01),
+    HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                         HID_IOF_NON_VOLATILE),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 0x03),
+    HID_RI_OUTPUT(8, HID_IOF_CONSTANT),
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),
+    HID_RI_LOGICAL_MAXIMUM(16, 0xFF),
+    HID_RI_USAGE_PAGE(8, 0x07),
+    HID_RI_USAGE_MINIMUM(8, 0x00),
+    HID_RI_USAGE_MAXIMUM(8, 0xFF),
+    HID_RI_REPORT_COUNT(8, SIMULTANEOUS_KEYS),
+    HID_RI_REPORT_SIZE(8, 0x08),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
     HID_RI_END_COLLECTION(0),
-    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP), 
-    HID_RI_USAGE(8, HID_USAGE_MOUSE), 
-    HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION), 
-      HID_RI_REPORT_ID(8,REPORT_ID_MOUSE),
-      HID_RI_USAGE(8, HID_USAGE_MOUSE), 
-      HID_RI_COLLECTION(8, HID_COLLECTION_PHYSICAL),
-        HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_BUTTON),
-        HID_RI_USAGE_MINIMUM(8, 0x01), 
-        HID_RI_USAGE_MAXIMUM(8, Buttons),
-        HID_RI_LOGICAL_MINIMUM(8, 0x00), 
-        HID_RI_LOGICAL_MAXIMUM(8, 0x01),
-        HID_RI_REPORT_COUNT(8, Buttons),
-        HID_RI_REPORT_SIZE(8, 0x01), 
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-        HID_RI_REPORT_SIZE(8, (8 - (Buttons % 8))),
-        HID_RI_REPORT_COUNT(8, 0x01),
-        HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-        HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
-        HID_RI_USAGE(8, HID_USAGE_X),
-        HID_RI_USAGE(8, HID_USAGE_Y),
-        HID_RI_USAGE(8, HID_USAGE_Wheel),
-        HID_RI_LOGICAL_MINIMUM(8, -127),
-        HID_RI_LOGICAL_MAXIMUM(8, 127), 
-        HID_RI_REPORT_COUNT(8, 0x03),
-        HID_RI_REPORT_SIZE(8, 8),
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | (AbsoluteCoords ? HID_IOF_ABSOLUTE : HID_IOF_RELATIVE)),
-        HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_CONSUMER),
-        HID_RI_USAGE(16, HID_USAGE_CONSUMER_AC_PAN),
-        HID_RI_LOGICAL_MINIMUM(8, -127),
-        HID_RI_LOGICAL_MAXIMUM(8, 127),
-        HID_RI_REPORT_SIZE(8, 8),
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),
-      HID_RI_END_COLLECTION(0),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
+    HID_RI_USAGE(8, HID_USAGE_MOUSE),
+    HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
+    HID_RI_REPORT_ID(8, REPORT_ID_MOUSE),
+    HID_RI_USAGE(8, HID_USAGE_MOUSE),
+    HID_RI_COLLECTION(8, HID_COLLECTION_PHYSICAL),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_BUTTON),
+    HID_RI_USAGE_MINIMUM(8, 0x01),
+    HID_RI_USAGE_MAXIMUM(8, Buttons),
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),
+    HID_RI_LOGICAL_MAXIMUM(8, 0x01),
+    HID_RI_REPORT_COUNT(8, Buttons),
+    HID_RI_REPORT_SIZE(8, 0x01),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_SIZE(8, (8 - (Buttons % 8))),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
+    HID_RI_USAGE(8, HID_USAGE_X),
+    HID_RI_USAGE(8, HID_USAGE_Y),
+    HID_RI_USAGE(8, HID_USAGE_Wheel),
+    HID_RI_LOGICAL_MINIMUM(8, -127),
+    HID_RI_LOGICAL_MAXIMUM(8, 127),
+    HID_RI_REPORT_COUNT(8, 0x03),
+    HID_RI_REPORT_SIZE(8, 8),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE |
+                        (AbsoluteCoords ? HID_IOF_ABSOLUTE : HID_IOF_RELATIVE)),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_CONSUMER),
+    HID_RI_USAGE(16, HID_USAGE_CONSUMER_AC_PAN),
+    HID_RI_LOGICAL_MINIMUM(8, -127),
+    HID_RI_LOGICAL_MAXIMUM(8, 127),
+    HID_RI_REPORT_SIZE(8, 8),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),
+    HID_RI_END_COLLECTION(0),
     HID_RI_END_COLLECTION(0),
 };
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
@@ -216,45 +239,45 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
       Type : DTYPE_Configuration
     },
     TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
-    TotalInterfaces : 4,
+    TotalInterfaces : 5,
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
     ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
     MaxPowerConsumption : USB_CONFIG_POWER_MA(250)
   },
-  Interface_AudioControl : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-    InterfaceNumber : INTERFACE_ID_ControlStream,
-    AlternateSetting : 0x00,
-    TotalEndpoints : 0,
-    Class : AUDIO_CSCP_AudioClass,
-    SubClass : AUDIO_CSCP_ControlSubclass,
-    Protocol : AUDIO_CSCP_ControlProtocol,
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  Interface_AudioStream : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-    InterfaceNumber : INTERFACE_ID_AudioStream,
-    AlternateSetting : 0x00,
-    TotalEndpoints : 2,
-    Class : AUDIO_CSCP_AudioClass,
-    SubClass : AUDIO_CSCP_MIDIStreamingSubclass,
-    Protocol : AUDIO_CSCP_StreamingProtocol,
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  Audio_ControlInterface_SPC : {
-    Header : {
-      Size : sizeof(USB_Audio_Descriptor_Interface_AC_t),
-      Type : AUDIO_DTYPE_CSInterface
-    },
-    Subtype : AUDIO_DSUBTYPE_CSInterface_Header,
-    ACSpecification : VERSION_BCD(1, 0, 0),
-    TotalLength : sizeof(USB_Audio_Descriptor_Interface_AC_t),
-    InCollection : 1,
-    InterfaceNumber : INTERFACE_ID_AudioStream,
-  },
+  // Interface_AudioControl : {
+  //   Header :
+  //       {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+  //   InterfaceNumber : INTERFACE_ID_ControlStream,
+  //   AlternateSetting : 0x00,
+  //   TotalEndpoints : 0,
+  //   Class : AUDIO_CSCP_AudioClass,
+  //   SubClass : AUDIO_CSCP_ControlSubclass,
+  //   Protocol : AUDIO_CSCP_ControlProtocol,
+  //   InterfaceStrIndex : NO_DESCRIPTOR
+  // },
+  // Interface_AudioStream : {
+  //   Header :
+  //       {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+  //   InterfaceNumber : INTERFACE_ID_AudioStream,
+  //   AlternateSetting : 0x00,
+  //   TotalEndpoints : 2,
+  //   Class : AUDIO_CSCP_AudioClass,
+  //   SubClass : AUDIO_CSCP_MIDIStreamingSubclass,
+  //   Protocol : AUDIO_CSCP_StreamingProtocol,
+  //   InterfaceStrIndex : NO_DESCRIPTOR
+  // },
+  // Audio_ControlInterface_SPC : {
+  //   Header : {
+  //     Size : sizeof(USB_Audio_Descriptor_Interface_AC_t),
+  //     Type : AUDIO_DTYPE_CSInterface
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSInterface_Header,
+  //   ACSpecification : VERSION_BCD(1, 0, 0),
+  //   TotalLength : sizeof(USB_Audio_Descriptor_Interface_AC_t),
+  //   InCollection : 1,
+  //   InterfaceNumber : INTERFACE_ID_AudioStream,
+  // },
   InterfaceXInput : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -266,27 +289,17 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     Protocol : 0x01,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
-  InterfaceHID : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-    InterfaceNumber : INTERFACE_ID_HID,
-    AlternateSetting : 0,
-    TotalEndpoints : 2,
-    Class : HID_CSCP_HIDClass,
-    SubClass : HID_CSCP_NonBootSubclass,
-    Protocol : HID_CSCP_NonBootProtocol,
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  Audio_StreamInterface_SPC : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_AudioInterface_AS_t),
-      Type : AUDIO_DTYPE_CSInterface
-    },
-    Subtype : AUDIO_DSUBTYPE_CSInterface_General,
-    AudioSpecification : VERSION_BCD(1, 0, 0),
-    TotalLength :
-        (sizeof(USB_Descriptor_Configuration_t) -
-         offsetof(USB_Descriptor_Configuration_t, Audio_StreamInterface_SPC))
+  XInputReserved : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+    reserved : {0x00, 0x01},
+    subtype : 0x00,
+    reserved2 : 0x25,
+    bEndpointAddressIn : XINPUT_EPADDR_IN,
+    bMaxDataSizeIn : HID_EPSIZE,
+    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
+    bEndpointAddressOut : XINPUT_EPADDR_OUT,
+    bMaxDataSizeOut : HID_EPSIZE,
+    reserved4 : {0x00, 0x00}
   },
   EndpointInXInput : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
@@ -302,32 +315,153 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-  EndpointInHID : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : HID_EPADDR_IN,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
+  InterfaceXInput2 : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_XInput_2,
+    AlternateSetting : 0,
+    TotalEndpoints : 2,
+    Class : 0xFF,
+    SubClass : 0x5D,
+    Protocol : 0x01,
+    InterfaceStrIndex : NO_DESCRIPTOR
   },
-  EndpointOutHID : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : HID_EPADDR_OUT,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  XInputReserved : {
+  XInputReserved2 : {
     Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
     reserved : {0x00, 0x01},
     subtype : 0x00,
     reserved2 : 0x25,
-    bEndpointAddressIn : XINPUT_EPADDR_IN,
+    bEndpointAddressIn : XINPUT_2_EPADDR_IN,
     bMaxDataSizeIn : HID_EPSIZE,
     reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
-    bEndpointAddressOut : XINPUT_EPADDR_OUT,
+    bEndpointAddressOut : XINPUT_2_EPADDR_OUT,
     bMaxDataSizeOut : HID_EPSIZE,
     reserved4 : {0x00, 0x00}
   },
+  EndpointInXInput2 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : XINPUT_2_EPADDR_IN,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  EndpointOutXInput2 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : XINPUT_2_EPADDR_OUT,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  InterfaceXInput3 : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_XInput_3,
+    AlternateSetting : 0,
+    TotalEndpoints : 2,
+    Class : 0xFF,
+    SubClass : 0x5D,
+    Protocol : 0x01,
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+  XInputReserved3 : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+    reserved : {0x00, 0x01},
+    subtype : 0x00,
+    reserved2 : 0x25,
+    bEndpointAddressIn : XINPUT_3_EPADDR_IN,
+    bMaxDataSizeIn : HID_EPSIZE,
+    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
+    bEndpointAddressOut : XINPUT_3_EPADDR_OUT,
+    bMaxDataSizeOut : HID_EPSIZE,
+    reserved4 : {0x00, 0x00}
+  },
+  EndpointInXInput3 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : XINPUT_3_EPADDR_IN,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  EndpointOutXInput3 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : XINPUT_3_EPADDR_OUT,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  InterfaceXInput4 : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_XInput_4,
+    AlternateSetting : 0,
+    TotalEndpoints : 2,
+    Class : 0xFF,
+    SubClass : 0x5D,
+    Protocol : 0x01,
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+  XInputReserved4 : {
+    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
+    reserved : {0x00, 0x01},
+    subtype : 0x00,
+    reserved2 : 0x25,
+    bEndpointAddressIn : XINPUT_4_EPADDR_IN,
+    bMaxDataSizeIn : HID_EPSIZE,
+    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
+    bEndpointAddressOut : XINPUT_4_EPADDR_OUT,
+    bMaxDataSizeOut : HID_EPSIZE,
+    reserved4 : {0x00, 0x00}
+  },
+  EndpointInXInput4 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : XINPUT_4_EPADDR_IN,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  EndpointOutXInput4 : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : XINPUT_4_EPADDR_OUT,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  InterfaceHID : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_HID,
+    AlternateSetting : 0,
+    TotalEndpoints : 0,
+    Class : HID_CSCP_HIDClass,
+    SubClass : HID_CSCP_NonBootSubclass,
+    Protocol : HID_CSCP_NonBootProtocol,
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+  // Audio_StreamInterface_SPC : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_AudioInterface_AS_t),
+  //     Type : AUDIO_DTYPE_CSInterface
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSInterface_General,
+  //   AudioSpecification : VERSION_BCD(1, 0, 0),
+  //   TotalLength :
+  //       (sizeof(USB_Descriptor_Configuration_t) -
+  //        offsetof(USB_Descriptor_Configuration_t, Audio_StreamInterface_SPC))
+  // },
+  // EndpointInHID : {
+  //   Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+  //   EndpointAddress : HID_EPADDR_IN,
+  //   Attributes : EP_TYPE_INTERRUPT,
+  //   EndpointSize : HID_EPSIZE,
+  //   PollingIntervalMS : 1
+  // },
+  // EndpointOutHID : {
+  //   Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+  //   EndpointAddress : HID_EPADDR_OUT,
+  //   Attributes : EP_TYPE_INTERRUPT,
+  //   EndpointSize : HID_EPSIZE,
+  //   PollingIntervalMS : 1
+  // },
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
     HIDSpec : VERSION_BCD(1, 1, 1),
@@ -336,98 +470,98 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     HIDReportType : HID_DTYPE_Report,
     HIDReportLength : sizeof(ps3_report_descriptor)
   },
-  MIDI_In_Jack_Emb : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
-      Type : AUDIO_DTYPE_CSInterface
-    },
-    Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
-    JackType : MIDI_JACKTYPE_Embedded,
-    JackID : 0x01,
-    JackStrIndex : NO_DESCRIPTOR
-  },
-  MIDI_In_Jack_Ext : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
-      Type : AUDIO_DTYPE_CSInterface
-    },
-    Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
-    JackType : MIDI_JACKTYPE_External,
-    JackID : 0x02,
-    JackStrIndex : NO_DESCRIPTOR
-  },
-  MIDI_Out_Jack_Emb : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
-      Type : AUDIO_DTYPE_CSInterface
-    },
-    Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
-    JackType : MIDI_JACKTYPE_Embedded,
-    JackID : 0x03,
-    NumberOfPins : 1,
-    SourceJackID : {0x02},
-    SourcePinID : {0x01},
-    JackStrIndex : NO_DESCRIPTOR
-  },
-  MIDI_Out_Jack_Ext : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
-      Type : AUDIO_DTYPE_CSInterface
-    },
-    Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
-    JackType : MIDI_JACKTYPE_External,
-    JackID : 0x04,
-    NumberOfPins : 1,
-    SourceJackID : {0x01},
-    SourcePinID : {0x01},
-    JackStrIndex : NO_DESCRIPTOR
-  },
-  MIDI_Out_Jack_Endpoint : {
-    Endpoint : {
-      Header : {
-        Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
-        Type : DTYPE_Endpoint
-      },
-      EndpointAddress : MIDI_EPADDR_IN,
-      Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-      EndpointSize : HID_EPSIZE,
-      PollingIntervalMS : 1
-    },
-    Refresh : 0,
-    SyncEndpointNumber : 0
-  },
-  MIDI_In_Jack_Endpoint_SPC : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
-      Type : AUDIO_DTYPE_CSEndpoint
-    },
-    Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
-    TotalEmbeddedJacks : 0x01,
-    AssociatedJackID : {0x01}
-  },
-  MIDI_In_Jack_Endpoint: {
-    Endpoint : {
-      Header : {
-        Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
-        Type : DTYPE_Endpoint
-      },
-      EndpointAddress : MIDI_EPADDR_OUT,
-      Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-      EndpointSize : HID_EPSIZE,
-      PollingIntervalMS : 1,
-    },
-    Refresh : 0,
-    SyncEndpointNumber : 0
-  },
-  MIDI_Out_Jack_Endpoint_SPC : {
-    Header : {
-      Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
-      Type : AUDIO_DTYPE_CSEndpoint
-    },
-    Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
-    TotalEmbeddedJacks : 0x01,
-    AssociatedJackID : {0x03}
-  },
+  // MIDI_In_Jack_Emb : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
+  //     Type : AUDIO_DTYPE_CSInterface
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
+  //   JackType : MIDI_JACKTYPE_Embedded,
+  //   JackID : 0x01,
+  //   JackStrIndex : NO_DESCRIPTOR
+  // },
+  // MIDI_In_Jack_Ext : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
+  //     Type : AUDIO_DTYPE_CSInterface
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
+  //   JackType : MIDI_JACKTYPE_External,
+  //   JackID : 0x02,
+  //   JackStrIndex : NO_DESCRIPTOR
+  // },
+  // MIDI_Out_Jack_Emb : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
+  //     Type : AUDIO_DTYPE_CSInterface
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
+  //   JackType : MIDI_JACKTYPE_Embedded,
+  //   JackID : 0x03,
+  //   NumberOfPins : 1,
+  //   SourceJackID : {0x02},
+  //   SourcePinID : {0x01},
+  //   JackStrIndex : NO_DESCRIPTOR
+  // },
+  // MIDI_Out_Jack_Ext : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
+  //     Type : AUDIO_DTYPE_CSInterface
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
+  //   JackType : MIDI_JACKTYPE_External,
+  //   JackID : 0x04,
+  //   NumberOfPins : 1,
+  //   SourceJackID : {0x01},
+  //   SourcePinID : {0x01},
+  //   JackStrIndex : NO_DESCRIPTOR
+  // },
+  // MIDI_Out_Jack_Endpoint : {
+  //   Endpoint : {
+  //     Header : {
+  //       Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
+  //       Type : DTYPE_Endpoint
+  //     },
+  //     EndpointAddress : MIDI_EPADDR_IN,
+  //     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+  //     EndpointSize : HID_EPSIZE,
+  //     PollingIntervalMS : 1
+  //   },
+  //   Refresh : 0,
+  //   SyncEndpointNumber : 0
+  // },
+  // MIDI_In_Jack_Endpoint_SPC : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
+  //     Type : AUDIO_DTYPE_CSEndpoint
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
+  //   TotalEmbeddedJacks : 0x01,
+  //   AssociatedJackID : {0x01}
+  // },
+  // MIDI_In_Jack_Endpoint : {
+  //   Endpoint : {
+  //     Header : {
+  //       Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
+  //       Type : DTYPE_Endpoint
+  //     },
+  //     EndpointAddress : MIDI_EPADDR_OUT,
+  //     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+  //     EndpointSize : HID_EPSIZE,
+  //     PollingIntervalMS : 1,
+  //   },
+  //   Refresh : 0,
+  //   SyncEndpointNumber : 0
+  // },
+  // MIDI_Out_Jack_Endpoint_SPC : {
+  //   Header : {
+  //     Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
+  //     Type : AUDIO_DTYPE_CSEndpoint
+  //   },
+  //   Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
+  //   TotalEmbeddedJacks : 0x01,
+  //   AssociatedJackID : {0x03}
+  // },
 };
 #define ARDWIINO_VID 0x1209
 #define ARDWIINO_PID 0x2882
@@ -461,7 +595,7 @@ const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void **const descriptorAddress,
-                                    uint8_t* const DescriptorMemorySpace) {
+                                    uint8_t *const DescriptorMemorySpace) {
   const uint8_t descriptorType = (wValue >> 8);
   const uint8_t descriptorNumber = (wValue & 0xFF);
   uint16_t size = NO_DESCRIPTOR;
@@ -502,8 +636,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     conf->XInputReserved.subtype = subtype;
     return size;
   case HID_DTYPE_Report:
-      address = ps3_report_descriptor;
-      size = sizeof(ps3_report_descriptor);
+    address = ps3_report_descriptor;
+    size = sizeof(ps3_report_descriptor);
     break;
   case DTYPE_String:
     if (descriptorNumber <= 3) {

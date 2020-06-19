@@ -60,6 +60,13 @@ extern uint8_t deviceType;
 /** Endpoint address of the DEVICE OUT endpoint. (set to 6 so that it is one of
  * the unusable endpoints on the uno) */
 #define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 6)
+/** Endpoint address of the DEVICE IN endpoint. */
+#define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 7)
+#define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
+#define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 9)
+#define XINPUT_3_EPADDR_OUT (ENDPOINT_DIR_OUT | 10)
+#define XINPUT_4_EPADDR_IN (ENDPOINT_DIR_IN | 11)
+#define XINPUT_4_EPADDR_OUT (ENDPOINT_DIR_OUT | 12)
 
 /** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE 8
@@ -80,6 +87,9 @@ enum InterfaceDescriptors_t {
       2, /**< MIDI Control Stream interface descriptor ID */
   INTERFACE_ID_AudioStream =
       3, /**< MIDI Audio Stream interface descriptor ID */
+  INTERFACE_ID_XInput_2 = 2, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_3 = 3, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_4 = 4, /**< XInput interface descriptor ID */
 };
 typedef struct {
   USB_Descriptor_Header_t Header;
@@ -101,22 +111,34 @@ typedef struct {
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Endpoint_t EndpointInXInput;
   USB_Descriptor_Endpoint_t EndpointOutXInput;
+  USB_Descriptor_Interface_t InterfaceXInput2;
+  USB_HID_XBOX_Descriptor_HID_t XInputReserved2;
+  USB_Descriptor_Endpoint_t EndpointInXInput2;
+  USB_Descriptor_Endpoint_t EndpointOutXInput2;
+  USB_Descriptor_Interface_t InterfaceXInput3;
+  USB_HID_XBOX_Descriptor_HID_t XInputReserved3;
+  USB_Descriptor_Endpoint_t EndpointInXInput3;
+  USB_Descriptor_Endpoint_t EndpointOutXInput3;
+  USB_Descriptor_Interface_t InterfaceXInput4;
+  USB_HID_XBOX_Descriptor_HID_t XInputReserved4;
+  USB_Descriptor_Endpoint_t EndpointInXInput4;
+  USB_Descriptor_Endpoint_t EndpointOutXInput4;
   USB_Descriptor_Interface_t InterfaceHID;
   USB_HID_Descriptor_HID_t HIDDescriptor;
-  USB_Descriptor_Endpoint_t EndpointInHID;
-  USB_Descriptor_Endpoint_t EndpointOutHID;
-  USB_Descriptor_Interface_t Interface_AudioControl;
-  USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
-  USB_Descriptor_Interface_t Interface_AudioStream;
-  USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
-  USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
-  USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
-  USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
-  USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
-  USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_In_Jack_Endpoint;
-  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
-  USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
-  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
+  // USB_Descriptor_Endpoint_t EndpointInHID;
+  // USB_Descriptor_Endpoint_t EndpointOutHID;
+  // USB_Descriptor_Interface_t Interface_AudioControl;
+  // USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+  // USB_Descriptor_Interface_t Interface_AudioStream;
+  // USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
+  // USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
+  // USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
+  // USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
+  // USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
+  // USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_In_Jack_Endpoint;
+  // USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
+  // USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
+  // USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
 } USB_Descriptor_Configuration_t;
 
 typedef struct {
@@ -141,6 +163,9 @@ typedef struct {
   uint8_t TotalSections;
   uint8_t Reserved[7];
   USB_OSCompatibleSection_t CompatID;
+  USB_OSCompatibleSection_t CompatID2;
+  USB_OSCompatibleSection_t CompatID3;
+  USB_OSCompatibleSection_t CompatID4;
 } ATTR_PACKED USB_OSCompatibleIDDescriptor_t;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,

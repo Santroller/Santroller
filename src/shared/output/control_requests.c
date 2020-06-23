@@ -7,7 +7,11 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
   TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
   Version : 0x0100,
   Index : EXTENDED_COMPAT_ID_DESCRIPTOR,
+#ifdef MULTI_ADAPTOR
   TotalSections : 4,
+#else
+  TotalSections : 1,
+#endif
   Reserved : {0},
   CompatID : {
     FirstInterfaceNumber : INTERFACE_ID_XInput,
@@ -16,6 +20,7 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
     SubCompatibleID : {0},
     Reserved2 : {0}
   },
+#ifdef MULTI_ADAPTOR
   CompatID2 : {
     FirstInterfaceNumber : INTERFACE_ID_XInput_2,
     Reserved : 0x04,
@@ -37,6 +42,7 @@ const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
     SubCompatibleID : {0},
     Reserved2 : {0}
   }
+#endif
 };
 
 void deviceControlRequest(void) {

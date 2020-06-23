@@ -56,6 +56,10 @@ void initPS3(void) {
       currentAxisBindingsLen = sizeof(ghAxisBindings);
     }
   }
+  if (config.main.subType == SWITCH_GAMEPAD) {
+    ps3ButtonBindings[SWITCH_B] = XBOX_B;
+    ps3ButtonBindings[SWITCH_A] = XBOX_A;
+  }
   if (config.main.subType == PS3_GUITAR_HERO_DRUMS ||
       config.main.subType == PS3_ROCK_BAND_DRUMS) {
     memcpy_P(ps3ButtonBindings, ps3DrumButtonBindings,
@@ -124,5 +128,9 @@ void fillPS3Report(void *ReportData, uint16_t *const ReportSize,
     // l_x and l_y are unused on guitars and drums. Center them.
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
+  }
+  if (config.main.subType == SWITCH_GAMEPAD) {
+    JoystickReport->l_y = 255-JoystickReport->l_y;
+    JoystickReport->r_y = 255-JoystickReport->r_y;
   }
 }

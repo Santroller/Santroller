@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "config/config.h"
-#define WCHAR wchar_t
+#include "output/descriptors.h"
 #define bit_set(p, m) ((p) |= _BV(m))
 #define bit_clear(p, m) ((p) &= ~_BV(m))
 #define bit_write(c, p, m) (c ? bit_set(p, m) : bit_clear(p, m))
@@ -100,4 +100,3 @@ void enablePCI(uint8_t pin);
 unsigned long millis(void);
 unsigned long micros(void);
 void delay(unsigned long ms);
-extern uint8_t dbuf[sizeof(Configuration_t)];

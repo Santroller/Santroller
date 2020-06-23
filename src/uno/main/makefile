@@ -33,7 +33,7 @@ SCK_DDR      = DDRB
 SRC =   ../../shared/bootloader/bootloader.c ../../shared/output/reports.c ../../shared/util/util.c ../../shared/output/serial_handler.c $(shell find ../../shared/output/reports/ -type f -name '*.c*') $(shell find ../../../lib/i2c -type f -name '*.c*') $(shell find ../../../lib/mpu6050 -type f -name '*.c*') ../../shared/leds/leds.c $(shell find ../../shared/input -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') $(shell find . -type f -name '*.c*')
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -Werror -flto -fuse-linker-plugin -I. -I ../shared -I ../../shared -I../../../lib
-CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
+CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
 LD_FLAGS     =
 OBJDIR		 = obj
 BIN		 	 = bin

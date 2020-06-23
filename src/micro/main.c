@@ -26,6 +26,7 @@ USB_ClassInfo_HID_Device_t hidInterface = {
     PrevReportINBufferSize : sizeof(USB_Report_Data_t),
   },
 };
+#ifndef MULTI_ADAPTOR
 USB_ClassInfo_MIDI_Device_t midiInterface = {
     .Config =
         {
@@ -44,11 +45,12 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
                 },
         },
 };
+#endif
 bool xinputEnabled = false;
 int main(void) {
   loadConfig();
-  // config.main.inputType = WII;
-  // config.main.subType = XINPUT_GUITAR_HERO_GUITAR;
+  config.main.inputType = DIRECT;
+  config.main.subType = PS3_ROCK_BAND_GUITAR;
   // config.midi.channel[XBOX_A] = 1;
   // config.midi.midiType[XBOX_A] = NOTE;
   // config.midi.note[XBOX_A] = 0x5F;
@@ -83,7 +85,8 @@ int main(void) {
         // Wii RB Guitars don't know what to do with report ids, so we skip it
         // here. This does mean that the guitar wont work on a pc, but what else
         // are we gonna do
-        if (deviceType == WII_ROCK_BAND_GUITAR) {
+        if (deviceType == WII_ROCK_BAND_GUITAR ||
+            deviceType == SWITCH_GAMEPAD) {
           data++;
           size--;
         }
@@ -101,7 +104,9 @@ int main(void) {
       //   Endpoint_ClearIN();
       // }
     }
+#ifndef MULTI_ADAPTOR
     MIDI_Device_USBTask(&midiInterface);
+#endif
   }
 }
 
@@ -110,10 +115,19 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
                              1);
   Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(HID_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+#ifndef MULTI_ADAPTOR
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_BULK, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(XINPUT_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+#else
+  Endpoint_ConfigureEndpoint(XINPUT_2_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+  Endpoint_ConfigureEndpoint(XINPUT_3_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+  Endpoint_ConfigureEndpoint(XINPUT_4_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+#endif
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void EVENT_CDC_Device_ControLineStateChanged(

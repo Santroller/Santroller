@@ -232,6 +232,25 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     HID_RI_END_COLLECTION(0),
     HID_RI_END_COLLECTION(0),
 };
+
+#define ARDWIINO_VID 0x1209
+#define ARDWIINO_PID 0x2882
+const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
+  Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
+  USBSpecification : VERSION_BCD(2, 0, 0),
+  Class : USB_CSCP_NoDeviceClass,
+  SubClass : USB_CSCP_NoDeviceSubclass,
+  Protocol : USB_CSCP_NoDeviceProtocol,
+  Endpoint0Size : FIXED_CONTROL_ENDPOINT_SIZE,
+  VendorID : ARDWIINO_VID,
+  ProductID : ARDWIINO_PID,
+  ReleaseNumber : VERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
+  ManufacturerStrIndex : 0x01,
+  ProductStrIndex : 0x02,
+  SerialNumStrIndex : USE_INTERNAL_SERIAL,
+  NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
+};
+uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
     Header : {
@@ -239,45 +258,16 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
       Type : DTYPE_Configuration
     },
     TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
+#ifdef MULTI_ADAPTOR
     TotalInterfaces : 5,
+#else
+    TotalInterfaces : 4,
+#endif
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
     ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
     MaxPowerConsumption : USB_CONFIG_POWER_MA(250)
   },
-  // Interface_AudioControl : {
-  //   Header :
-  //       {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-  //   InterfaceNumber : INTERFACE_ID_ControlStream,
-  //   AlternateSetting : 0x00,
-  //   TotalEndpoints : 0,
-  //   Class : AUDIO_CSCP_AudioClass,
-  //   SubClass : AUDIO_CSCP_ControlSubclass,
-  //   Protocol : AUDIO_CSCP_ControlProtocol,
-  //   InterfaceStrIndex : NO_DESCRIPTOR
-  // },
-  // Interface_AudioStream : {
-  //   Header :
-  //       {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-  //   InterfaceNumber : INTERFACE_ID_AudioStream,
-  //   AlternateSetting : 0x00,
-  //   TotalEndpoints : 2,
-  //   Class : AUDIO_CSCP_AudioClass,
-  //   SubClass : AUDIO_CSCP_MIDIStreamingSubclass,
-  //   Protocol : AUDIO_CSCP_StreamingProtocol,
-  //   InterfaceStrIndex : NO_DESCRIPTOR
-  // },
-  // Audio_ControlInterface_SPC : {
-  //   Header : {
-  //     Size : sizeof(USB_Audio_Descriptor_Interface_AC_t),
-  //     Type : AUDIO_DTYPE_CSInterface
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSInterface_Header,
-  //   ACSpecification : VERSION_BCD(1, 0, 0),
-  //   TotalLength : sizeof(USB_Audio_Descriptor_Interface_AC_t),
-  //   InCollection : 1,
-  //   InterfaceNumber : INTERFACE_ID_AudioStream,
-  // },
   InterfaceXInput : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -315,6 +305,8 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
+
+#ifdef MULTI_ADAPTOR
   InterfaceXInput2 : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -426,42 +418,171 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
+#else
+
+  Interface_AudioControl : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_ControlStream,
+    AlternateSetting : 0x00,
+    TotalEndpoints : 0,
+    Class : AUDIO_CSCP_AudioClass,
+    SubClass : AUDIO_CSCP_ControlSubclass,
+    Protocol : AUDIO_CSCP_ControlProtocol,
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+  Interface_AudioStream : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_AudioStream,
+    AlternateSetting : 0x00,
+    TotalEndpoints : 2,
+    Class : AUDIO_CSCP_AudioClass,
+    SubClass : AUDIO_CSCP_MIDIStreamingSubclass,
+    Protocol : AUDIO_CSCP_StreamingProtocol,
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+  Audio_ControlInterface_SPC : {
+    Header : {
+      Size : sizeof(USB_Audio_Descriptor_Interface_AC_t),
+      Type : AUDIO_DTYPE_CSInterface
+    },
+    Subtype : AUDIO_DSUBTYPE_CSInterface_Header,
+    ACSpecification : VERSION_BCD(1, 0, 0),
+    TotalLength : sizeof(USB_Audio_Descriptor_Interface_AC_t),
+    InCollection : 1,
+    InterfaceNumber : INTERFACE_ID_AudioStream,
+  },
+  Audio_StreamInterface_SPC : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_AudioInterface_AS_t),
+      Type : AUDIO_DTYPE_CSInterface
+    },
+    Subtype : AUDIO_DSUBTYPE_CSInterface_General,
+    AudioSpecification : VERSION_BCD(1, 0, 0),
+    TotalLength :
+        (sizeof(USB_Descriptor_Configuration_t) -
+         offsetof(USB_Descriptor_Configuration_t, Audio_StreamInterface_SPC))
+  },
+
+  MIDI_In_Jack_Emb : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
+      Type : AUDIO_DTYPE_CSInterface
+    },
+    Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
+    JackType : MIDI_JACKTYPE_Embedded,
+    JackID : 0x01,
+    JackStrIndex : NO_DESCRIPTOR
+  },
+  MIDI_In_Jack_Ext : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
+      Type : AUDIO_DTYPE_CSInterface
+    },
+    Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
+    JackType : MIDI_JACKTYPE_External,
+    JackID : 0x02,
+    JackStrIndex : NO_DESCRIPTOR
+  },
+  MIDI_Out_Jack_Emb : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
+      Type : AUDIO_DTYPE_CSInterface
+    },
+    Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
+    JackType : MIDI_JACKTYPE_Embedded,
+    JackID : 0x03,
+    NumberOfPins : 1,
+    SourceJackID : {0x02},
+    SourcePinID : {0x01},
+    JackStrIndex : NO_DESCRIPTOR
+  },
+  MIDI_Out_Jack_Ext : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
+      Type : AUDIO_DTYPE_CSInterface
+    },
+    Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
+    JackType : MIDI_JACKTYPE_External,
+    JackID : 0x04,
+    NumberOfPins : 1,
+    SourceJackID : {0x01},
+    SourcePinID : {0x01},
+    JackStrIndex : NO_DESCRIPTOR
+  },
+  MIDI_Out_Jack_Endpoint : {
+    Endpoint : {
+      Header : {
+        Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
+        Type : DTYPE_Endpoint
+      },
+      EndpointAddress : MIDI_EPADDR_IN,
+      Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+      EndpointSize : HID_EPSIZE,
+      PollingIntervalMS : 1
+    },
+    Refresh : 0,
+    SyncEndpointNumber : 0
+  },
+  MIDI_In_Jack_Endpoint_SPC : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
+      Type : AUDIO_DTYPE_CSEndpoint
+    },
+    Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
+    TotalEmbeddedJacks : 0x01,
+    AssociatedJackID : {0x01}
+  },
+  MIDI_In_Jack_Endpoint : {
+    Endpoint : {
+      Header : {
+        Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
+        Type : DTYPE_Endpoint
+      },
+      EndpointAddress : MIDI_EPADDR_OUT,
+      Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+      EndpointSize : HID_EPSIZE,
+      PollingIntervalMS : 1,
+    },
+    Refresh : 0,
+    SyncEndpointNumber : 0
+  },
+  MIDI_Out_Jack_Endpoint_SPC : {
+    Header : {
+      Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
+      Type : AUDIO_DTYPE_CSEndpoint
+    },
+    Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
+    TotalEmbeddedJacks : 0x01,
+    AssociatedJackID : {0x03}
+  },
+#endif
   InterfaceHID : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
     InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0,
-    TotalEndpoints : 0,
+    TotalEndpoints : 2,
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
     Protocol : HID_CSCP_NonBootProtocol,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
-  // Audio_StreamInterface_SPC : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_AudioInterface_AS_t),
-  //     Type : AUDIO_DTYPE_CSInterface
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSInterface_General,
-  //   AudioSpecification : VERSION_BCD(1, 0, 0),
-  //   TotalLength :
-  //       (sizeof(USB_Descriptor_Configuration_t) -
-  //        offsetof(USB_Descriptor_Configuration_t, Audio_StreamInterface_SPC))
-  // },
-  // EndpointInHID : {
-  //   Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-  //   EndpointAddress : HID_EPADDR_IN,
-  //   Attributes : EP_TYPE_INTERRUPT,
-  //   EndpointSize : HID_EPSIZE,
-  //   PollingIntervalMS : 1
-  // },
-  // EndpointOutHID : {
-  //   Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-  //   EndpointAddress : HID_EPADDR_OUT,
-  //   Attributes : EP_TYPE_INTERRUPT,
-  //   EndpointSize : HID_EPSIZE,
-  //   PollingIntervalMS : 1
-  // },
+  EndpointInHID : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : HID_EPADDR_IN,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
+  EndpointOutHID : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : HID_EPADDR_OUT,
+    Attributes : EP_TYPE_INTERRUPT,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
     HIDSpec : VERSION_BCD(1, 1, 1),
@@ -470,117 +591,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     HIDReportType : HID_DTYPE_Report,
     HIDReportLength : sizeof(ps3_report_descriptor)
   },
-  // MIDI_In_Jack_Emb : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
-  //     Type : AUDIO_DTYPE_CSInterface
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
-  //   JackType : MIDI_JACKTYPE_Embedded,
-  //   JackID : 0x01,
-  //   JackStrIndex : NO_DESCRIPTOR
-  // },
-  // MIDI_In_Jack_Ext : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_InputJack_t),
-  //     Type : AUDIO_DTYPE_CSInterface
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
-  //   JackType : MIDI_JACKTYPE_External,
-  //   JackID : 0x02,
-  //   JackStrIndex : NO_DESCRIPTOR
-  // },
-  // MIDI_Out_Jack_Emb : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
-  //     Type : AUDIO_DTYPE_CSInterface
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
-  //   JackType : MIDI_JACKTYPE_Embedded,
-  //   JackID : 0x03,
-  //   NumberOfPins : 1,
-  //   SourceJackID : {0x02},
-  //   SourcePinID : {0x01},
-  //   JackStrIndex : NO_DESCRIPTOR
-  // },
-  // MIDI_Out_Jack_Ext : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_OutputJack_t),
-  //     Type : AUDIO_DTYPE_CSInterface
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
-  //   JackType : MIDI_JACKTYPE_External,
-  //   JackID : 0x04,
-  //   NumberOfPins : 1,
-  //   SourceJackID : {0x01},
-  //   SourcePinID : {0x01},
-  //   JackStrIndex : NO_DESCRIPTOR
-  // },
-  // MIDI_Out_Jack_Endpoint : {
-  //   Endpoint : {
-  //     Header : {
-  //       Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
-  //       Type : DTYPE_Endpoint
-  //     },
-  //     EndpointAddress : MIDI_EPADDR_IN,
-  //     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-  //     EndpointSize : HID_EPSIZE,
-  //     PollingIntervalMS : 1
-  //   },
-  //   Refresh : 0,
-  //   SyncEndpointNumber : 0
-  // },
-  // MIDI_In_Jack_Endpoint_SPC : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
-  //     Type : AUDIO_DTYPE_CSEndpoint
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
-  //   TotalEmbeddedJacks : 0x01,
-  //   AssociatedJackID : {0x01}
-  // },
-  // MIDI_In_Jack_Endpoint : {
-  //   Endpoint : {
-  //     Header : {
-  //       Size : sizeof(USB_Audio_Descriptor_StreamEndpoint_Std_t),
-  //       Type : DTYPE_Endpoint
-  //     },
-  //     EndpointAddress : MIDI_EPADDR_OUT,
-  //     Attributes : (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-  //     EndpointSize : HID_EPSIZE,
-  //     PollingIntervalMS : 1,
-  //   },
-  //   Refresh : 0,
-  //   SyncEndpointNumber : 0
-  // },
-  // MIDI_Out_Jack_Endpoint_SPC : {
-  //   Header : {
-  //     Size : sizeof(USB_MIDI_Descriptor_Jack_Endpoint_t),
-  //     Type : AUDIO_DTYPE_CSEndpoint
-  //   },
-  //   Subtype : AUDIO_DSUBTYPE_CSEndpoint_General,
-  //   TotalEmbeddedJacks : 0x01,
-  //   AssociatedJackID : {0x03}
-  // },
 };
-#define ARDWIINO_VID 0x1209
-#define ARDWIINO_PID 0x2882
-const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
-  Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
-  USBSpecification : VERSION_BCD(2, 0, 0),
-  Class : USB_CSCP_NoDeviceClass,
-  SubClass : USB_CSCP_NoDeviceSubclass,
-  Protocol : USB_CSCP_NoDeviceProtocol,
-  Endpoint0Size : FIXED_CONTROL_ENDPOINT_SIZE,
-  VendorID : ARDWIINO_VID,
-  ProductID : ARDWIINO_PID,
-  ReleaseNumber : VERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
-  ManufacturerStrIndex : 0x01,
-  ProductStrIndex : 0x02,
-  SerialNumStrIndex : USE_INTERNAL_SERIAL,
-  NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
-};
-uint8_t dbuf[sizeof(Configuration_t)];
 const uint16_t PROGMEM vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
                                 0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
 const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
@@ -620,20 +631,12 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     memcpy_P(dbuf, address, size);
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)dbuf;
-    // Map fake subtypes to their real counterparts
-    uint8_t subtype = deviceType;
-    switch (subtype) {
-    case XINPUT_ROCK_BAND_DRUMS:
-    case XINPUT_GUITAR_HERO_DRUMS:
-      subtype = REAL_DRUM_SUBTYPE;
-      break;
-    case XINPUT_LIVE_GUITAR:
-    case XINPUT_GUITAR_HERO_GUITAR:
-    case XINPUT_ROCK_BAND_GUITAR:
-      subtype = REAL_GUITAR_SUBTYPE;
-      break;
-    }
-    conf->XInputReserved.subtype = subtype;
+    conf->XInputReserved.subtype = deviceType;
+    #ifdef MULTI_ADAPTOR
+    conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
+    conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
+    conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
+    #endif
     return size;
   case HID_DTYPE_Report:
     address = ps3_report_descriptor;

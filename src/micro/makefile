@@ -13,7 +13,7 @@ MCU          = atmega32u4
 ARCH         = AVR8
 BOARD        = AVR_MICRO
 OPTIMIZATION = s
-F_CPU 		 = 16000000
+F_CPU 		 = 8000000
 F_USB		 = ${F_CPU}
 
 ARDWIINO_BOARD = micro
@@ -36,7 +36,7 @@ SRC = $(shell find ../shared -type f -name '*.c*') arduino_pins.c main.c $(shell
 LUFA_PATH    = ../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../shared/output -I ../shared -I../../lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin
 CC_FLAGS     += -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 
-CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"'
+CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"'
 LD_FLAGS     = $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin 
 OBJDIR		 = obj
 BIN		 	 = bin

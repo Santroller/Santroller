@@ -1,5 +1,6 @@
 #pragma once
 
+#define WCHAR wchar_t
 /* Includes: (don't import everything on the 328p)*/
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__)
 // Pull in enough information from LUFA in order to be able to compile the
@@ -23,11 +24,11 @@ void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
 extern uint8_t deviceType;
 #endif
 
+#include "controller/controller.h"
 #include "serial_commands.h"
 #include "util/util.h"
 #include <avr/pgmspace.h>
 #include <stdint.h>
-#include "controller/controller.h"
 
 // Device Request for WCID data. Note that this is the same as
 // CDC_REQ_SetLineEncoding, and only the bmRequestType differs.
@@ -46,27 +47,25 @@ extern uint8_t deviceType;
 /** Endpoint address of the DEVICE IN endpoint. */
 #define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the DEVICE OUT endpoint. */
-#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
-/** Endpoint address of the DEVICE OUT endpoint. */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 3)
+#define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 2)
+#define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 3)
+#define XINPUT_4_EPADDR_IN (ENDPOINT_DIR_IN | 4)
+#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 5)
 /** Endpoint address of the DEVICE IN endpoint. */
-#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 4)
-// We don't actually utilise the next two descriptors, and since the UNO limits
+#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 6)
+/** Endpoint address of the DEVICE IN endpoint. */
+// We don't actually utilise the next descriptors, and since the UNO limits
 // us to 4 endpoints, putting them last ensures that they are the unusable
 // endpoints.
-/** Endpoint address of the DEVICE OUT endpoint. (set to 5 so that it is one of
- * the unusable endpoints on the uno)*/
-#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
-/** Endpoint address of the DEVICE OUT endpoint. (set to 6 so that it is one of
- * the unusable endpoints on the uno) */
-#define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 6)
-/** Endpoint address of the DEVICE IN endpoint. */
-#define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 7)
-#define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
-#define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 9)
+/** Endpoint address of the DEVICE OUT endpoint.*/
+#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
+/** Endpoint address of the DEVICE OUT endpoint.  */
+#define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
+#define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 9)
 #define XINPUT_3_EPADDR_OUT (ENDPOINT_DIR_OUT | 10)
-#define XINPUT_4_EPADDR_IN (ENDPOINT_DIR_IN | 11)
-#define XINPUT_4_EPADDR_OUT (ENDPOINT_DIR_OUT | 12)
+#define XINPUT_4_EPADDR_OUT (ENDPOINT_DIR_OUT | 11)
+/** Endpoint address of the DEVICE OUT endpoint. */
+#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 12)
 
 /** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE 8
@@ -83,13 +82,16 @@ extern uint8_t deviceType;
 enum InterfaceDescriptors_t {
   INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
   INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
+#ifdef MULTI_ADAPTOR
+  INTERFACE_ID_XInput_2 = 2, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_3 = 3, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_4 = 4, /**< XInput interface descriptor ID */
+#else
   INTERFACE_ID_ControlStream =
       2, /**< MIDI Control Stream interface descriptor ID */
   INTERFACE_ID_AudioStream =
       3, /**< MIDI Audio Stream interface descriptor ID */
-  INTERFACE_ID_XInput_2 = 2, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_3 = 3, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_4 = 4, /**< XInput interface descriptor ID */
+#endif
 };
 typedef struct {
   USB_Descriptor_Header_t Header;
@@ -111,6 +113,7 @@ typedef struct {
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Endpoint_t EndpointInXInput;
   USB_Descriptor_Endpoint_t EndpointOutXInput;
+  #ifdef MULTI_ADAPTOR
   USB_Descriptor_Interface_t InterfaceXInput2;
   USB_HID_XBOX_Descriptor_HID_t XInputReserved2;
   USB_Descriptor_Endpoint_t EndpointInXInput2;
@@ -123,22 +126,25 @@ typedef struct {
   USB_HID_XBOX_Descriptor_HID_t XInputReserved4;
   USB_Descriptor_Endpoint_t EndpointInXInput4;
   USB_Descriptor_Endpoint_t EndpointOutXInput4;
+  #endif
   USB_Descriptor_Interface_t InterfaceHID;
   USB_HID_Descriptor_HID_t HIDDescriptor;
-  // USB_Descriptor_Endpoint_t EndpointInHID;
-  // USB_Descriptor_Endpoint_t EndpointOutHID;
-  // USB_Descriptor_Interface_t Interface_AudioControl;
-  // USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
-  // USB_Descriptor_Interface_t Interface_AudioStream;
-  // USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
-  // USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
-  // USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
-  // USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
-  // USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
-  // USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_In_Jack_Endpoint;
-  // USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
-  // USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
-  // USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
+  USB_Descriptor_Endpoint_t EndpointInHID;
+  USB_Descriptor_Endpoint_t EndpointOutHID;
+  #ifndef MULTI_ADAPTOR
+  USB_Descriptor_Interface_t Interface_AudioControl;
+  USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+  USB_Descriptor_Interface_t Interface_AudioStream;
+  USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
+  USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
+  USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
+  USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
+  USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
+  USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_In_Jack_Endpoint;
+  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
+  USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
+  USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
+  #endif
 } USB_Descriptor_Configuration_t;
 
 typedef struct {
@@ -211,8 +217,12 @@ typedef enum {
 } HID_Collection;
 // By setting report ids that involve ZL and ZR, we should be fine
 // When a guitar is being emulated, as guitars dont use those buttons.
+// TODO: Does xinput give a shit about the report id?
 typedef enum {
-  REPORT_ID_XINPUT,
+  REPORT_ID_XINPUT ,
+  REPORT_ID_XINPUT_2,
+  REPORT_ID_XINPUT_3,
+  REPORT_ID_XINPUT_4,
   REPORT_ID_GAMEPAD = _BV(SWITCH_ZL),
   REPORT_ID_MOUSE = _BV(SWITCH_ZL) | 0x01,
   REPORT_ID_KBD = _BV(SWITCH_ZL) | 0x02,
@@ -220,3 +230,5 @@ typedef enum {
 } HID_Report;
 
 typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;
+
+extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];

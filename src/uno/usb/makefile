@@ -28,7 +28,7 @@ SRC          = main.c ../../shared/output/descriptors.c ../../shared/output/cont
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I ../shared -I ../../../lib -I ../../shared -I../../shared/output -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin
-CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
+CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DUSB_MCU='""' -DF_CPU_USB='""'
 LD_FLAGS     =  $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin

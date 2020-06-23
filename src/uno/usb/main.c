@@ -125,15 +125,26 @@ int main(void) {
         case REPORT_ID_XINPUT:
           Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
           break;
+        case REPORT_ID_XINPUT_2:
+          Endpoint_SelectEndpoint(XINPUT_2_EPADDR_IN);
+          break;
+        case REPORT_ID_XINPUT_3:
+          Endpoint_SelectEndpoint(XINPUT_3_EPADDR_IN);
+          break;
+        case REPORT_ID_XINPUT_4:
+          Endpoint_SelectEndpoint(XINPUT_4_EPADDR_IN);
+          break;
         case REPORT_ID_MIDI:
           Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-          // The "reportid" is actually not a real thing on midi, so we need to strip it before we send data.
+          // The "reportid" is actually not a real thing on midi, so we need to
+          // strip it before we send data.
           RingBuffer_Remove(&bufferOutDevice);
           break;
         default:
           Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          // Wii RB Guitars don't know what to do with report ids, so we skip it here.
-          // This does mean that the guitar wont work on a pc, but what else are we gonna do
+          // Wii RB Guitars don't know what to do with report ids, so we skip it
+          // here. This does mean that the guitar wont work on a pc, but what
+          // else are we gonna do
           if (deviceType == WII_ROCK_BAND_GUITAR) {
             RingBuffer_Remove(&bufferOutDevice);
           }
@@ -164,12 +175,19 @@ int main(void) {
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
-
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(XINPUT_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
-  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
-  Endpoint_ConfigureEndpoint(HID_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+#ifdef MULTI_ADAPTOR
+  Endpoint_ConfigureEndpoint(XINPUT_2_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+  Endpoint_ConfigureEndpoint(XINPUT_3_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+  Endpoint_ConfigureEndpoint(XINPUT_4_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
+                             1);
+#else
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
+#endif
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void processHIDReadFeatureReport(uint8_t report) {

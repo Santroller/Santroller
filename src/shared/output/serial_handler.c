@@ -22,15 +22,6 @@ void getData(uint8_t report) {
   case COMMAND_GET_CPU_FREQ:
     constDataToRead = (const uint8_t *)PSTR(STR(F_CPU));
     break;
-  case COMMAND_GET_PS3_ID:
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-      id[3] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      id[3] = 0x00;
-    }
-    dataInRam = true;
-    dataToReadWrite = id;
-    currentCommandSize = sizeof(id);
   case COMMAND_GET_BOARD:
     constDataToRead = (const uint8_t *)PSTR(ARDWIINO_BOARD);
     break;
@@ -49,6 +40,15 @@ void getData(uint8_t report) {
     dataToReadWrite = (uint8_t *)&config_pointer;
     currentCommandSize = sizeof(Configuration_t);
     break;
+  case COMMAND_GET_PS3_ID:
+    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+      id[3] = 0x00;
+    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+      id[3] = 0x00;
+    }
+    dataInRam = true;
+    dataToReadWrite = id;
+    currentCommandSize = sizeof(id);
   }
 
   if (constDataToRead) {

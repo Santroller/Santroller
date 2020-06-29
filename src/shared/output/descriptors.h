@@ -50,9 +50,9 @@ extern uint8_t deviceType;
 #define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 #define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 3)
 #define XINPUT_4_EPADDR_IN (ENDPOINT_DIR_IN | 4)
-#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 5)
+#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 /** Endpoint address of the DEVICE IN endpoint. */
-#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 6)
+#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
 /** Endpoint address of the DEVICE IN endpoint. */
 // We don't actually utilise the next descriptors, and since the UNO limits
 // us to 4 endpoints, putting them last ensures that they are the unusable
@@ -230,5 +230,5 @@ typedef enum {
 } HID_Report;
 
 typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;
-
-extern uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+#define DBUF_SIZE sizeof(Configuration_t)
+extern uint8_t dbuf[DBUF_SIZE];

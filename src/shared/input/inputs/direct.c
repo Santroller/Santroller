@@ -61,6 +61,7 @@ bool shouldSkipPin(uint8_t i) {
 }
 
 void findDigitalPin(void) {
+  if (lookingForDigital) return;
   stopReading();
   for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
     if (!shouldSkipPin(i)) { pinMode(i, INPUT_PULLUP); }
@@ -69,6 +70,7 @@ void findDigitalPin(void) {
 }
 
 void findAnalogPin(void) {
+  if (lookingForAnalog) return;
   stopReading();
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
     pinMode(PIN_A0 + i, INPUT_PULLUP);

@@ -42,10 +42,10 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
 #define MaxPhysicalVal 128
 #define AbsoluteCoords false
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
+    // Controller
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_GAMEPAD),
     HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
-    HID_RI_REPORT_ID(8, REPORT_ID_GAMEPAD),
     HID_RI_LOGICAL_MINIMUM(8, 0),
     HID_RI_LOGICAL_MAXIMUM(8, 1),
     HID_RI_PHYSICAL_MINIMUM(8, 0),
@@ -128,40 +128,10 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
                         HID_IOF_NO_WRAP | HID_IOF_LINEAR |
                         HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION |
                         HID_IOF_NON_VOLATILE),
-    HID_RI_REPORT_ID(8, COMMAND_REBOOT),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_GET_SIGNATURE),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_GET_CPU_FREQ),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_GET_BOARD),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_JUMP_BOOTLOADER),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_FIND_DIGITAL),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_FIND_ANALOG),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_FIND_CANCEL),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_GET_EXTENSION),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_AVRDUDE),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-    HID_RI_REPORT_ID(8, COMMAND_CONFIG),
-    HID_RI_USAGE(8, 0x01),
-    HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
     HID_RI_END_COLLECTION(0),
+};
+
+const USB_Descriptor_HIDReport_Datatype_t PROGMEM kbd_report_descriptor[] = {
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_KEYBOARD),
     HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
@@ -250,7 +220,7 @@ const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
   SerialNumStrIndex : USE_INTERNAL_SERIAL,
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
-uint8_t dbuf[sizeof(USB_Descriptor_Configuration_t)];
+uint8_t dbuf[DBUF_SIZE];
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
     Header : {
@@ -563,12 +533,18 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
     InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0,
+#ifdef MULTI_ADAPTOR
+    TotalEndpoints : 0,
+#else
     TotalEndpoints : 2,
+#endif
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
     Protocol : HID_CSCP_NonBootProtocol,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
+
+#ifndef MULTI_ADAPTOR
   EndpointInHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_IN,
@@ -583,6 +559,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
+#endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
     HIDSpec : VERSION_BCD(1, 1, 1),
@@ -632,15 +609,27 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     USB_Descriptor_Configuration_t *conf =
         (USB_Descriptor_Configuration_t *)dbuf;
     conf->XInputReserved.subtype = deviceType;
-    #ifdef MULTI_ADAPTOR
+    if (deviceType >= KEYBOARD_GAMEPAD &&
+        deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
+      conf->HIDDescriptor.HIDReportLength = sizeof(kbd_report_descriptor);
+    }
+#ifdef MULTI_ADAPTOR
     conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
     conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
     conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
-    #endif
+#endif
     return size;
   case HID_DTYPE_Report:
-    address = ps3_report_descriptor;
-    size = sizeof(ps3_report_descriptor);
+    // TODO: for multi adaptors, could we use a different hid report that only
+    // contains the config api and no game controller?
+    if (deviceType >= KEYBOARD_GAMEPAD &&
+        deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
+      address = kbd_report_descriptor;
+      size = sizeof(kbd_report_descriptor);
+    } else {
+      address = ps3_report_descriptor;
+      size = sizeof(ps3_report_descriptor);
+    }
     break;
   case DTYPE_String:
     if (descriptorNumber <= 3) {

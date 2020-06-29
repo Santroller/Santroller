@@ -175,7 +175,6 @@ int main(void) {
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
-  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(XINPUT_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
 #ifdef MULTI_ADAPTOR
@@ -186,6 +185,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(XINPUT_4_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
 #else
+  Endpoint_ConfigureEndpoint(HID_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 #endif
 }
@@ -211,7 +211,7 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
     break;
-  case COMMAND_CONFIG:
+  case COMMAND_WRITE_CONFIG:
     eeprom_update_byte(&config.deviceType,
                        data[offsetof(Configuration_t, main.subType)]);
     break;

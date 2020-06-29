@@ -11,11 +11,17 @@ int currentCommandSize = 0;
 static const uint8_t *constDataToRead = NULL;
 static uint8_t *dataToReadWrite = NULL;
 bool dataInRam = false;
+bool reading = false;
 void getData(uint8_t report) {
+  reading = true;
   dataInRam = false;
   constDataToRead = NULL;
-  currentCommandSize = 1;
   switch (report) {
+  case COMMAND_FIND_ANALOG:
+  case COMMAND_FIND_DIGITAL:
+    reading = false;
+    dataInRam = true;
+    dataToReadWrite = &detectedPin;
   case COMMAND_GET_SIGNATURE:
     constDataToRead = (const uint8_t *)PSTR(SIGNATURE);
     break;
@@ -36,19 +42,12 @@ void getData(uint8_t report) {
       currentCommandSize = 0;
     }
     break;
-  case COMMAND_CONFIG:
+  case COMMAND_WRITE_CONFIG:
+    reading = false;
+  case COMMAND_READ_CONFIG:
     dataToReadWrite = (uint8_t *)&config_pointer;
     currentCommandSize = sizeof(Configuration_t);
     break;
-  case COMMAND_GET_PS3_ID:
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-      id[3] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      id[3] = 0x00;
-    }
-    dataInRam = true;
-    dataToReadWrite = id;
-    currentCommandSize = sizeof(id);
   }
 
   if (constDataToRead) {
@@ -57,6 +56,9 @@ void getData(uint8_t report) {
 }
 void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
                                   uint8_t *data) {
+  report = *data;
+  data++;
+  data_len--;
   switch (report) {
   case COMMAND_REBOOT:
     reboot();
@@ -66,29 +68,33 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
     return;
   case COMMAND_FIND_DIGITAL:
     findDigitalPin();
-    return;
+    break;
   case COMMAND_FIND_ANALOG:
     findAnalogPin();
-    return;
+    break;
   case COMMAND_FIND_CANCEL:
     stopSearching();
     return;
   }
   getData(report);
-  if (dataInRam) {
-    memcpy(dataToReadWrite, data, currentCommandSize);
-  } else {
-    eeprom_write_block(data, dataToReadWrite, currentCommandSize);
+  if (!reading) {
+    if (dataInRam) {
+      memcpy(dataToReadWrite, data, currentCommandSize);
+    } else {
+      eeprom_write_block(data, dataToReadWrite, currentCommandSize);
+    }
   }
 }
 void processHIDReadFeatureReport(uint8_t report) {
-  switch (report) {
-  case COMMAND_FIND_ANALOG:
-  case COMMAND_FIND_DIGITAL:
+  if (!currentCommandSize) {
+    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+      id[3] = 0x00;
+    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+      id[3] = 0x00;
+    }
     dataInRam = true;
-    dataToReadWrite = &detectedPin;
-  default:
-    getData(report);
+    dataToReadWrite = id;
+    currentCommandSize = sizeof(id);
   }
   if (dataInRam) {
     memcpy(dbuf, dataToReadWrite, currentCommandSize);

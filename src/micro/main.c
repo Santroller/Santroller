@@ -49,8 +49,8 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
 bool xinputEnabled = false;
 int main(void) {
   loadConfig();
-  config.main.inputType = DIRECT;
-  config.main.subType = PS3_ROCK_BAND_GUITAR;
+  config.main.inputType = PS2;
+  config.main.subType = KEYBOARD_GAMEPAD;
   // config.midi.channel[XBOX_A] = 1;
   // config.midi.midiType[XBOX_A] = NOTE;
   // config.midi.note[XBOX_A] = 0x5F;
@@ -80,29 +80,23 @@ int main(void) {
         data++;
         size--;
         break;
-      default:
+      case REPORT_ID_GAMEPAD:
+        // Consoles don't support multiple report ids, so we strip them here
+        // too. PS3's technically do support them, but at the cost of not being
+        // able to identify the controller.
         Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        // Wii RB Guitars don't know what to do with report ids, so we skip it
-        // here. This does mean that the guitar wont work on a pc, but what else
-        // are we gonna do
-        if (deviceType == WII_ROCK_BAND_GUITAR ||
-            deviceType == SWITCH_GAMEPAD) {
-          data++;
-          size--;
-        }
+        data++;
+        size--;
+        break;
+      case REPORT_ID_KBD:
+      case REPORT_ID_MOUSE:
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
         break;
       }
       if (Endpoint_IsReadWriteAllowed()) {
         Endpoint_Write_Stream_LE(data, size, NULL);
         Endpoint_ClearIN();
       }
-      // data = (uint8_t *)&currentReport;
-      // fillXInputReport(&currentReport, &size, &controller);
-      // Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
-      // if (Endpoint_IsReadWriteAllowed()) {
-      //   Endpoint_Write_Stream_LE(data, size, NULL);
-      //   Endpoint_ClearIN();
-      // }
     }
 #ifndef MULTI_ADAPTOR
     MIDI_Device_USBTask(&midiInterface);

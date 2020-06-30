@@ -50,7 +50,7 @@ bool xinputEnabled = false;
 int main(void) {
   loadConfig();
   config.main.inputType = PS2;
-  config.main.subType = KEYBOARD_GAMEPAD;
+  config.main.subType = XINPUT_GAMEPAD;
   // config.midi.channel[XBOX_A] = 1;
   // config.midi.midiType[XBOX_A] = NOTE;
   // config.midi.note[XBOX_A] = 0x5F;

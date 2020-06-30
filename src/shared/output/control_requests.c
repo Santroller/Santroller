@@ -3,8 +3,13 @@
 #include "controller_structs.h"
 #include "descriptors.h"
 #include "output/serial_handler.h"
-const USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
-  TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
+#ifdef MULTI_ADAPTOR
+#define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_4_t
+#else
+#define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_t
+#endif
+const CompatibleDescriptorType DevCompatIDs = {
+  TotalLength : sizeof(CompatibleDescriptorType),
   Version : 0x0100,
   Index : EXTENDED_COMPAT_ID_DESCRIPTOR,
 #ifdef MULTI_ADAPTOR
@@ -50,12 +55,13 @@ void deviceControlRequest(void) {
                 USB_ControlRequest.bmRequestType ==
                     (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
                 USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR;
+  bool isGetReport =
+      USB_ControlRequest.bmRequestType ==
+          (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
+      (USB_ControlRequest.bRequest == HID_REQ_GetReport);
   if (!((USB_ControlRequest.bmRequestType ==
          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) ||
-        ((USB_ControlRequest.bmRequestType ==
-              (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
-          (USB_ControlRequest.bRequest == HID_REQ_GetReport))) ||
-        isWCID))
+        isGetReport || isWCID))
     return;
 
   Endpoint_ClearSETUP();
@@ -63,7 +69,7 @@ void deviceControlRequest(void) {
   if (USB_ControlRequest.bRequest == HID_REQ_SetReport) {
     Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
     processHIDWriteFeatureReport(reportID, USB_ControlRequest.wLength, dbuf);
-  } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport) {
+  } else if (isGetReport) {
     processHIDReadFeatureReport(reportID);
   } else if (isWCID) {
     Endpoint_Write_Control_Stream_LE(&DevCompatIDs, DevCompatIDs.TotalLength);

@@ -172,6 +172,14 @@ typedef struct {
   USB_OSCompatibleSection_t CompatID2;
   USB_OSCompatibleSection_t CompatID3;
   USB_OSCompatibleSection_t CompatID4;
+} ATTR_PACKED USB_OSCompatibleIDDescriptor_4_t;
+typedef struct {
+  uint32_t TotalLength;
+  uint16_t Version;
+  uint16_t Index;
+  uint8_t TotalSections;
+  uint8_t Reserved[7];
+  USB_OSCompatibleSection_t CompatID;
 } ATTR_PACKED USB_OSCompatibleIDDescriptor_t;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
@@ -187,6 +195,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
 typedef enum {
+  HID_USAGE_POINTER = 0x01,
   HID_USAGE_MOUSE = 0x02,
   HID_USAGE_GAMEPAD = 0x05,
   HID_USAGE_KEYBOARD = 0x06,
@@ -200,6 +209,7 @@ typedef enum {
   HID_USAGE_Slider,
   HID_USAGE_Dial,
   HID_USAGE_Wheel,
+  HID_USAGE_COUNTED_BUFFER = 0x3A,
   HID_USAGE_CONSUMER_AC_PAN = 0x0238
 } HID_Usage;
 
@@ -212,8 +222,9 @@ typedef enum {
 } HID_Usage_Page;
 
 typedef enum {
+  HID_COLLECTION_PHYSICAL = 0x00,
   HID_COLLECTION_APPLICATION = 0x01,
-  HID_COLLECTION_PHYSICAL = 0x02,
+  HID_COLLECTION_LOGICAL = 0x02,
 } HID_Collection;
 // By setting report ids that involve ZL and ZR, we should be fine
 // When a guitar is being emulated, as guitars dont use those buttons.

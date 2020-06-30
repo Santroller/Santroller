@@ -622,6 +622,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   case HID_DTYPE_Report:
     // TODO: for multi adaptors, could we use a different hid report that only
     // contains the config api and no game controller?
+    // confirm on mac, but the standard mouse descriptor works on windows, as xinput is a game controller.
     if (deviceType >= KEYBOARD_GAMEPAD &&
         deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
       address = kbd_report_descriptor;

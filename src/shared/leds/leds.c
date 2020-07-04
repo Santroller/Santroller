@@ -45,22 +45,26 @@ void tickLEDs(Controller_t *controller) {
   int led = 0;
   // We need to transmit 4 zeros as start bytes, and they are already in ledData, so we just skip to byte 5.
   int idx = 4;
+  Led_t configLED;
+  Led_t contLED;
   // Loop until either config.leds runs out, or controller->leds runs out. This
   // is due to the fact that controller->leds can contain more leds if a config
   // is in the process of being made.
-  for (; config.leds.pins[led] || controller->leds[led]; led++) {
-    uint32_t col = controller->leds[led];
+  while(true) {
+    configLED = config.leds[led];
+    contLED = controller->leds[led];
+    if (!configLED.pin && !contLED.pin) break;
     // Only bind pins to buttons if we know what pin to map, and the computer
     // has not sent a new pin
-    if (col == Black && config.leds.pins[led]) {
-      uint8_t button = config.leds.pins[led] - 1;
-      if (getVelocity(controller, button)) { col = config.leds.colours[led]; }
+    if (!contLED.blue && !contLED.red && !contLED.green && configLED.pin) {
+      if (getVelocity(controller, configLED.pin-1)) { contLED = configLED; }
     }
     // Write an leds colours
     ledData[idx++] = 0xff;
-    ledData[idx++] = col & 0x0000ff;
-    ledData[idx++] = ((col & 0x00ff00) >> 8);
-    ledData[idx++] = col >> 16;
+    ledData[idx++] = contLED.blue;
+    ledData[idx++] = contLED.green;
+    ledData[idx++] = contLED.red;
+    led++;
   }
   // We need to send the correct amount of stop bytes
   uint8_t stop_bytes = (led + 15) / 16;

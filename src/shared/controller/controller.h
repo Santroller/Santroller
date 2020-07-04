@@ -4,6 +4,13 @@
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6
 
+
+typedef struct {
+  uint8_t pin;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+} Led_t;
 // Standard controller structure. axis' and triggers are seperated for easy modification
 typedef struct {
   uint16_t buttons;
@@ -13,7 +20,7 @@ typedef struct {
   int16_t l_y;
   int16_t r_x;
   int16_t r_y;
-  uint32_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
+  Led_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
   uint8_t drumVelocity[8];
 } Controller_t;
 

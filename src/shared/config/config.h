@@ -90,11 +90,6 @@ typedef struct {
 } AxisConfig_t;
 
 typedef struct {
-  uint8_t pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
-  uint32_t colours[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
-} LedConfig_t;
-
-typedef struct {
   uint8_t midiType[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   uint8_t note[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   uint8_t channel[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
@@ -106,6 +101,6 @@ typedef struct {
   AxisConfig_t axis;
   Keys_t keys;
   uint8_t drumThreshold;
-  LedConfig_t leds;
+  Led_t leds[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   MidiConfig_t midi;
 } Configuration_t;

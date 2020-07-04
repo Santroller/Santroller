@@ -1,7 +1,7 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 2
+#define CONFIG_VERSION 4
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -13,12 +13,15 @@
 #define TILT_SENSITIVITY 3000
 
 #define FRET_MODE LEDS_DISABLED
-
-#define LED_COLOURS                                                            \
-  { Green, Red, Yellow, Blue, OrangeRed }
+#define COLOUR(col) ((uint32_t)col>>16) & 0xff, ((uint32_t)col >> 8) & 0xff, ((uint32_t)col) & 0xff
 #define LED_PINS                                                               \
-  { XBOX_A + 1, XBOX_B + 1, XBOX_Y + 1, XBOX_X + 1, XBOX_LB + 1, 0 }
-
+  {                                                                            \
+    {XBOX_A + 1, COLOUR(Green)}, {XBOX_B + 1, COLOUR(Red)},                    \
+        {XBOX_Y + 1, COLOUR(Yellow)}, {XBOX_X + 1, COLOUR(Blue)},              \
+        {XBOX_LB + 1, COLOUR(OrangeRed)}, {                                    \
+      0                                                                        \
+    }                                                                          \
+  }
 #define MAP_JOY_TO_DPAD true
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
@@ -64,5 +67,5 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \
-        KEYS, DRUM_THRESHOLD, {LED_PINS, LED_COLOURS}, {{0}, {0}, {0}},          \
+        KEYS, DRUM_THRESHOLD, LED_PINS, {{0}, {0}, {0}},                       \
   }

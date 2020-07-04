@@ -16,7 +16,6 @@ void loadConfig(void) {
   // them and adds leds and midi.
   if (config.main.version < 2) {
     config.drumThreshold = DRUM_THRESHOLD;
-    memcpy_P(&config.leds, &default_config.leds, sizeof(default_config.leds));
     memcpy_P(&config.midi, &default_config.midi, sizeof(default_config.midi));
   }
   // Old configs had the subtype for guitars directly, new configs have
@@ -28,6 +27,9 @@ void loadConfig(void) {
   // subtypes that get mapped to the drum subtype
   if (config.main.subType == REAL_DRUM_SUBTYPE) {
     config.main.subType = XINPUT_GUITAR_HERO_DRUMS;
+  }
+  if (config.main.version < 4) {
+    memcpy_P(&config.leds, &default_config.leds, sizeof(default_config.leds));
   }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;

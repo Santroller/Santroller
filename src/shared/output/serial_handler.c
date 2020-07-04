@@ -19,7 +19,6 @@ void getData(uint8_t report) {
   switch (report) {
   case COMMAND_FIND_ANALOG:
   case COMMAND_FIND_DIGITAL:
-    reading = false;
     dataInRam = true;
     dataToReadWrite = &detectedPin;
   case COMMAND_GET_SIGNATURE:
@@ -42,8 +41,6 @@ void getData(uint8_t report) {
       currentCommandSize = 0;
     }
     break;
-  case COMMAND_WRITE_CONFIG:
-    reading = false;
   case COMMAND_READ_CONFIG:
     dataToReadWrite = (uint8_t *)&config_pointer;
     currentCommandSize = sizeof(Configuration_t);
@@ -75,15 +72,11 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
   case COMMAND_FIND_CANCEL:
     stopSearching();
     return;
+  case COMMAND_WRITE_CONFIG:
+    eeprom_write_block(data, &config_pointer, data_len);
+    return;
   }
   getData(report);
-  if (!reading) {
-    if (dataInRam) {
-      memcpy(dataToReadWrite, data, currentCommandSize);
-    } else {
-      eeprom_write_block(data, dataToReadWrite, currentCommandSize);
-    }
-  }
 }
 void processHIDReadFeatureReport(uint8_t report) {
   if (!currentCommandSize) {

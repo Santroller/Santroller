@@ -1,4 +1,5 @@
 #pragma once
+#pragma pack ( 1 )
 #include "../controller/controller.h"
 #include <stdbool.h>
 #include <stdint.h>

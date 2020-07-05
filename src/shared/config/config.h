@@ -1,5 +1,6 @@
 #pragma once
-#pragma pack ( 1 )
+#pragma pack(push)
+#pragma pack(1)
 #include "../controller/controller.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -104,3 +105,5 @@ typedef struct {
   Led_t leds[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   MidiConfig_t midi;
 } Configuration_t;
+
+#pragma pack(pop)

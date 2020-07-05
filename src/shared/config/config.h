@@ -90,7 +90,7 @@ typedef struct {
 } AxisConfig_t;
 
 typedef struct {
-  uint8_t midiType[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
+  uint8_t type[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   uint8_t note[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   uint8_t channel[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
 } MidiConfig_t;

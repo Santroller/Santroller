@@ -11,11 +11,11 @@ void fillMIDIReport(void *ReportData, uint16_t *const ReportSize,
   data->rid = REPORT_ID_MIDI;
   uint8_t idx = 0;
   for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
-    if (config.midi.midiType[i] != DISABLED) {
+    if (config.midi.type[i] != DISABLED) {
       // Channel 10(percussion)
       uint8_t channel = config.midi.channel[i];
       uint8_t midipitch = config.midi.note[i];
-      uint8_t midicommand = config.midi.midiType[i] == NOTE
+      uint8_t midicommand = config.midi.type[i] == NOTE
                                 ? MIDI_COMMAND_NOTE_ON
                                 : MIDI_COMMAND_CONTROL_CHANGE;
       uint8_t vel = getVelocity(controller, i) >> 1;

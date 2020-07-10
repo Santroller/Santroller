@@ -9,7 +9,7 @@
 #         LUFA Project Makefile.
 # --------------------------------------
 
-MCU          = at90usb82
+MCU          = atmega16u2
 ARCH         = AVR8
 BOARD        = UNO
 OPTIMIZATION = s
@@ -51,7 +51,7 @@ dfu:
 	sleep 1
 	dfu-programmer $(MCU) erase || true
 	make || true
-	dfu-programmer $(MCU) flash bin/ardwiino-{ARDWIINO_BOARD}-usb-$(MCU)-16000000.hex || true
+	dfu-programmer $(MCU) flash bin/ardwiino-${ARDWIINO_BOARD}-usb-$(MCU)-16000000.hex || true
 	sleep 2
 	dfu-programmer $(MCU) launch || true
 	

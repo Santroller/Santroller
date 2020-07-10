@@ -129,3 +129,6 @@ void EVENT_CDC_Device_ControLineStateChanged(
     bootloader();
   }
 }
+void writeToUSB(const void *const Buffer, uint16_t Length) {
+  Endpoint_Write_Control_Stream_LE(Buffer, Length);
+}

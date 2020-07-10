@@ -20,17 +20,16 @@ Controller_t controller;
 uint8_t currentReport[sizeof(USB_Report_Data_t)];
 uint8_t previousReport[sizeof(USB_Report_Data_t)];
 /** Buffers to hold serial data */
-RingBuffer_t serialInBuffer;
-uint8_t serialInBufferData[128];
+RingBuffer_t hidBuffer;
+uint8_t hidBufferData[128];
 RingBuffer_t serialOutBuffer;
 uint8_t serialOutBufferData[128];
 uint8_t dbuf[DBUF_SIZE];
-
 void writeToSerial(uint8_t data) {
   // If we are writing data that has a special purpose, then we write an escape
   // byte followed by the escaped data we escape data by xoring with 0x20
-  if (data == FRAME_START_DEVICE || data == FRAME_START_SERIAL || data == ESC ||
-      data == FRAME_END) {
+  if (data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
+      data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END) {
     RingBuffer_Insert(&serialOutBuffer, ESC);
     data = data ^ 0x20;
   }
@@ -42,8 +41,7 @@ int main(void) {
   UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
   UCSR0A = (1 << U2X0);
   UCSR0B = ((1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0));
-  RingBuffer_InitBuffer(&serialInBuffer, serialInBufferData,
-                        sizeof(serialInBufferData));
+  RingBuffer_InitBuffer(&hidBuffer, hidBufferData, sizeof(hidBufferData));
   RingBuffer_InitBuffer(&serialOutBuffer, serialOutBufferData,
                         sizeof(serialOutBufferData));
   sei();
@@ -64,18 +62,29 @@ int main(void) {
       RingBuffer_Insert(&serialOutBuffer, FRAME_END);
       memcpy(previousReport, currentReport, size);
     }
-    size = RingBuffer_GetCount(&serialInBuffer);
-    if (size != 0) {
-      uint8_t report = RingBuffer_Remove(&serialInBuffer);
-      bool isWriting = RingBuffer_Remove(&serialInBuffer);
-      if (isWriting) {
-        uint8_t len = RingBuffer_Remove(&serialInBuffer);
-        for (uint8_t i = 0; i < len; i++) {
-          dbuf[i] = RingBuffer_Remove(&serialInBuffer);
+    if (!RingBuffer_IsEmpty(&hidBuffer)) {
+      uint8_t packet = RingBuffer_Remove(&hidBuffer);
+      if (packet == FRAME_START_FEATURE_WRITE) {
+        uint8_t len = 0;
+        uint8_t data;
+        bool esc = false;
+        while (true) {
+          if (RingBuffer_IsEmpty(&hidBuffer)) { continue; }
+          data = RingBuffer_Remove(&hidBuffer);
+          if (data == FRAME_END) { break; }
+          if (data == ESC) {
+            esc = true;
+            continue;
+          }
+          if (esc) {
+            esc = false;
+            data = data ^ 0x20;
+          }
+          dbuf[len++] = data;
         }
-        processHIDWriteFeatureReport(report, len, dbuf);
-      } else {
-        processHIDReadFeatureReport(report);
+        processHIDWriteFeatureReport(len, dbuf);
+      } else if (packet == FRAME_START_FEATURE_READ) {
+        processHIDReadFeatureReport();
       }
     }
     size = RingBuffer_GetCount(&serialOutBuffer);
@@ -85,9 +94,9 @@ int main(void) {
     }
   }
 }
-void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
-                                      uint16_t Length) {
-  RingBuffer_Insert(&serialOutBuffer, FRAME_START_SERIAL);
+// Data being written back to USB after a read
+void writeToUSB(const void *const Buffer, uint16_t Length) {
+  RingBuffer_Insert(&serialOutBuffer, FRAME_START_FEATURE_READ);
   uint8_t *buf = (uint8_t *)Buffer;
   while (Length--) { writeToSerial(*(buf++)); }
   RingBuffer_Insert(&serialOutBuffer, FRAME_END);
@@ -97,12 +106,9 @@ void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
  */
 #ifdef USART_RX_vect
 ISR(USART_RX_vect, ISR_BLOCK) {
-  uint8_t ReceivedByte = UDR0;
-  RingBuffer_Insert(&serialInBuffer, ReceivedByte);
-}
 #else
 ISR(USART0_RX_vect, ISR_BLOCK) {
-  uint8_t ReceivedByte = UDR0;
-  RingBuffer_Insert(&serialInBuffer, ReceivedByte);
-}
 #endif
+  uint8_t receivedByte = UDR0;
+  RingBuffer_Insert(&hidBuffer, receivedByte);
+}

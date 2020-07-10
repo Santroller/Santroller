@@ -51,9 +51,8 @@ void getData(uint8_t report) {
     currentCommandSize = strlen_P((char *)constDataToRead);
   }
 }
-void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
-                                  uint8_t *data) {
-  report = *data;
+void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
+  uint8_t report = *data;
   data++;
   data_len--;
   switch (report) {
@@ -72,18 +71,22 @@ void processHIDWriteFeatureReport(uint8_t report, uint8_t data_len,
   case COMMAND_FIND_CANCEL:
     stopSearching();
     return;
-  case COMMAND_WRITE_CONFIG:
-    eeprom_write_block(data, &config_pointer, data_len);
+  case COMMAND_WRITE_CONFIG: {
+    uint8_t offset = *data;
+    data++;
+    data_len--;
+    eeprom_write_block(data, ((uint8_t *)&config_pointer) + offset, data_len);
     return;
+  }
   }
   getData(report);
 }
-void processHIDReadFeatureReport(uint8_t report) {
+void processHIDReadFeatureReport(void) {
   if (!currentCommandSize) {
     if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
       id[3] = 0x00;
     } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      id[3] = 0x00;
+      id[3] = 0x06;
     }
     dataInRam = true;
     dataToReadWrite = id;
@@ -96,5 +99,5 @@ void processHIDReadFeatureReport(uint8_t report) {
   } else {
     eeprom_read_block(dbuf, dataToReadWrite, currentCommandSize);
   }
-  Endpoint_Write_Control_Stream_LE(dbuf, currentCommandSize);
+  writeToUSB(dbuf, currentCommandSize);
 }

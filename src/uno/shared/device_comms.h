@@ -1,7 +1,8 @@
 #pragma once
 #define BAUD 1000000
 #define FRAME_START_DEVICE 0x7c
-#define FRAME_START_SERIAL 0x7e
+#define FRAME_START_FEATURE_READ 0x7d
+#define FRAME_START_FEATURE_WRITE 0x7e
 #define FRAME_END 0x7f
 #define ESC 0x7b
 

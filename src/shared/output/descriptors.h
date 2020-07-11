@@ -241,5 +241,5 @@ typedef enum {
 } HID_Report;
 
 typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;
-#define DBUF_SIZE sizeof(Configuration_t)
+#define DBUF_SIZE sizeof(Configuration_t) + 10
 extern uint8_t dbuf[DBUF_SIZE];

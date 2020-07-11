@@ -22,19 +22,10 @@ typedef struct {
   uint8_t deviceType;
 } EepromConfig_t;
 
-/** Circular buffer to hold data from the host before it is sent to the device
- * via the serial port. */
-RingBuff_t bufferIn;
-
-/** Circular buffer to hold data from the serial port before it is sent to the
- * host as serial. */
-RingBuff_t bufferOutSerial;
 /** Circular buffer to hold data from the serial port before it is sent to the
  * host as controller inputs*/
 RingBuff_t bufferOutDevice;
 
-RingBuff_Data_t bufferInData[BUFFER_SIZE];
-RingBuff_Data_t bufferOutSerialData[BUFFER_SIZE];
 RingBuff_Data_t bufferOutDeviceData[BUFFER_SIZE];
 
 EepromConfig_t EEMEM config;
@@ -99,17 +90,9 @@ int main(void) {
     }
     if (readingDeviceType && !deviceIDIsCorrect) { deviceType = read; }
   }
-
-  RingBuffer_InitBuffer(&bufferIn, bufferInData);
-  RingBuffer_InitBuffer(&bufferOutSerial, bufferOutSerialData);
   RingBuffer_InitBuffer(&bufferOutDevice, bufferOutDeviceData);
   sei();
   while (true) {
-    Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
-    if (Endpoint_IsSETUPReceived()) USB_Device_ProcessControlRequest();
-
-    if (USB_DeviceState != DEVICE_STATE_Configured) { continue; }
-
     RingBuff_Count_t bytesToWrite = RingBuffer_GetCount(&bufferOutDevice);
     uint8_t byteToWrite;
     if (bytesToWrite != 0) {
@@ -146,7 +129,6 @@ int main(void) {
           }
           break;
         }
-
         if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
           /* Read bytes from the USART receive buffer into the USB IN
           endpoint
@@ -166,10 +148,7 @@ int main(void) {
         }
       }
     }
-    // Send the next byte from the input buffer to the  main mcu
-    if (!(RingBuffer_IsEmpty(&bufferIn))) {
-      Serial_SendByte(RingBuffer_Remove(&bufferIn));
-    }
+    USB_USBTask();
   }
 }
 void sendData(uint8_t data) {
@@ -198,12 +177,10 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void processHIDReadFeatureReport(void) {
-  RingBuffer_Insert(&bufferIn, FRAME_START_FEATURE_READ);
-  uint8_t cnt = RingBuffer_GetCount(&bufferIn);
-  while (cnt--) { Serial_SendByte(RingBuffer_Remove(&bufferIn)); }
+  Serial_SendByte(FRAME_START_FEATURE_READ);
   while (true) {
-    if (RingBuffer_IsEmpty(&bufferOutSerial)) { continue; }
-    if (RingBuffer_Remove(&bufferOutSerial) == FRAME_START_FEATURE_READ) {
+    if (RingBuffer_IsEmpty(&bufferOutDevice)) { continue; }
+    if (RingBuffer_Remove(&bufferOutDevice) == FRAME_START_FEATURE_READ) {
       break;
     }
   }
@@ -211,8 +188,8 @@ void processHIDReadFeatureReport(void) {
   uint8_t data;
   bool esc = false;
   while (true) {
-    if (RingBuffer_IsEmpty(&bufferOutSerial)) { continue; }
-    data = RingBuffer_Remove(&bufferOutSerial);
+    if (RingBuffer_IsEmpty(&bufferOutDevice)) { continue; }
+    data = RingBuffer_Remove(&bufferOutDevice);
     if (data == FRAME_END) { break; }
     if (data == ESC) {
       esc = true;
@@ -224,49 +201,29 @@ void processHIDReadFeatureReport(void) {
     }
     dbuf[len++] = data;
   }
+
   Endpoint_Write_Control_Stream_LE(dbuf, len);
 }
 void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
-  uint8_t report = data[0];
+  uint8_t* data2 = data;
+  Serial_SendByte(FRAME_START_FEATURE_WRITE);
+  while (data_len--) { sendData(*(data++)); }
+  Serial_SendByte(FRAME_END);
+  uint8_t report = *(data2++);
   switch (report) {
   case COMMAND_REBOOT:
   case COMMAND_JUMP_BOOTLOADER:
     jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
     break;
-  case COMMAND_WRITE_CONFIG: {
-    uint8_t offset = offsetof(Configuration_t, main.subType);
-    if (offset > data[1]) {
-      offset -= data[1];
-      eeprom_update_byte(&config.deviceType, data[2 + offset]);
-    }
+  case COMMAND_WRITE_SUBTYPE: {
+    eeprom_update_byte(&config.deviceType, *data2);
     break;
   }
   }
-  uint8_t size = RingBuffer_GetCount(&bufferIn);
-  while (size--) {
-    Serial_SendByte(RingBuffer_Remove(&bufferIn));
-  }
-  Serial_SendByte(FRAME_START_FEATURE_WRITE);
-  while (data_len--) { sendData(*(data++)); }
-  Serial_SendByte(FRAME_END);
 }
 
-uint8_t frame = 0;
 /** Receive data from the main mcu, and put it into the correct output buffer
  * based on the last known frame
  */
-ISR(USART1_RX_vect, ISR_BLOCK) {
-  uint8_t receivedByte = UDR1;
-
-  if (receivedByte == FRAME_START_DEVICE ||
-      receivedByte == FRAME_START_FEATURE_READ) {
-    frame = receivedByte;
-  }
-  if (frame == FRAME_START_FEATURE_READ) {
-    RingBuffer_Insert(&bufferOutSerial, receivedByte);
-  } else if (frame == FRAME_START_DEVICE) {
-    RingBuffer_Insert(&bufferOutDevice, receivedByte);
-  }
-  if (receivedByte == FRAME_END) { frame = 0; }
-}
+ISR(USART1_RX_vect, ISR_BLOCK) { RingBuffer_Insert(&bufferOutDevice, UDR1); }

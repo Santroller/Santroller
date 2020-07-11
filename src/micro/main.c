@@ -96,6 +96,7 @@ int main(void) {
 #ifndef MULTI_ADAPTOR
     MIDI_Device_USBTask(&midiInterface);
 #endif
+    USB_USBTask();
   }
 }
 

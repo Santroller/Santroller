@@ -44,12 +44,12 @@
 
 /* Defines: */
 /** Size of each ring buffer, in data elements - must be between 1 and 255. */
-#define BUFFER_SIZE 32
+#define BUFFER_SIZE 128
 
 /** Maximum number of data elements to buffer before forcing a flush.
  *  Must be less than BUFFER_SIZE
  */
-#define BUFFER_NEARLY_FULL 24
+#define BUFFER_NEARLY_FULL 96
 
 /** Type of data to store into the buffer. */
 #define RingBuff_Data_t uint8_t

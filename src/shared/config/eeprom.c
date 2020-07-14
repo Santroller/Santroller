@@ -10,7 +10,7 @@ void loadConfig(void) {
   // If the signatures don't match, then the EEPROM has garbage data
   if (config.main.signature != ARDWIINO_DEVICE_TYPE) {
     memcpy_P(&config, &default_config, sizeof(Configuration_t));
-    config.main.version = 0;
+    config.main.version = CONFIG_VERSION;
   }
   // In version 1 drum thresholds were added, but incorect, version two fixes
   // them and adds leds and midi.

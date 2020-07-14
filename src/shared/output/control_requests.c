@@ -66,8 +66,8 @@ void deviceControlRequest(void) {
 
   Endpoint_ClearSETUP();
   if (USB_ControlRequest.bRequest == HID_REQ_SetReport) {
-    Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
-    processHIDWriteFeatureReport(USB_ControlRequest.wLength, dbuf);
+    Endpoint_Read_Control_Stream_LE(dbuf, sizeof(dbuf));
+    processHIDWriteFeatureReport(sizeof(dbuf), dbuf);
   } else if (isGetReport) {
     processHIDReadFeatureReport();
   } else if (isWCID) {

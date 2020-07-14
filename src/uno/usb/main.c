@@ -22,12 +22,8 @@ typedef struct {
   uint8_t deviceType;
 } EepromConfig_t;
 
-/** Circular buffer to hold data from the serial port before it is sent to the
- * host as controller inputs*/
-RingBuff_t bufferOutDevice;
-
-RingBuff_Data_t bufferOutDeviceData[BUFFER_SIZE];
-
+RingBuff_t Receive_Buffer;
+uint8_t Receive_BufferData[BUFFER_SIZE];
 EepromConfig_t EEMEM config;
 uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 
@@ -53,18 +49,10 @@ int main(void) {
   MCUSR &= ~(1 << WDRF);
   wdt_disable();
 
-  // Configure serial for ardwiino mode
-
-  // Set the baudrate. Ardwiino runs at a faster baudrate so that hid is more
-  // responsive, but avrdude requires 115200.
-  UBRR1 = SERIAL_2X_UBBRVAL(BAUD);
-
-  // Enable serial again, making sure to enable receive interrupts
-  UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
-  UCSR1A = (1 << U2X1);
-  UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
+  Serial_InitInterrupt(BAUD, true);
 
   USB_Init();
+  RingBuffer_InitBuffer(&Receive_Buffer, Receive_BufferData);
 
   /* Start the 328p  */
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
@@ -90,16 +78,17 @@ int main(void) {
     }
     if (readingDeviceType && !deviceIDIsCorrect) { deviceType = read; }
   }
-  RingBuffer_InitBuffer(&bufferOutDevice, bufferOutDeviceData);
   sei();
+  uint8_t byteToWrite;
+  uint8_t count = 0;
   while (true) {
-    RingBuff_Count_t bytesToWrite = RingBuffer_GetCount(&bufferOutDevice);
-    uint8_t byteToWrite;
-    if (bytesToWrite != 0) {
-      byteToWrite = RingBuffer_Remove(&bufferOutDevice);
+    count = RingBuffer_GetCount(&Receive_Buffer);
+    if (count >= 2) {
+      byteToWrite = RingBuffer_Remove(&Receive_Buffer);
       if (byteToWrite == FRAME_START_DEVICE) {
         // All reports put the first id as the report id.
-        uint8_t rid = RingBuffer_Peek(&bufferOutDevice);
+        uint8_t rid = RingBuffer_Remove(&Receive_Buffer);
+        bool writeID = true;
         switch (rid) {
         case REPORT_ID_XINPUT:
           Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
@@ -117,31 +106,36 @@ int main(void) {
           Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
           // The "reportid" is actually not a real thing on midi, so we need to
           // strip it before we send data.
-          RingBuffer_Remove(&bufferOutDevice);
+          writeID = false;
           break;
+        case REPORT_ID_GAMEPAD:
+          writeID = false;
         default:
           Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          // Wii RB Guitars don't know what to do with report ids, so we skip it
-          // here. This does mean that the guitar wont work on a pc, but what
-          // else are we gonna do
-          if (deviceType == WII_ROCK_BAND_GUITAR) {
-            RingBuffer_Remove(&bufferOutDevice);
-          }
           break;
         }
         if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
           /* Read bytes from the USART receive buffer into the USB IN
           endpoint
            */
+          if (writeID) { Endpoint_Write_8(rid); }
+          bool esc = false;
           while (true) {
-            if (bytesToWrite-- == 0) {
-              bytesToWrite = RingBuffer_GetCount(&bufferOutDevice);
+            if (count == 0) {
+              count = RingBuffer_GetCount(&Receive_Buffer);
               continue;
             }
-            byteToWrite = RingBuffer_Remove(&bufferOutDevice);
-            if (byteToWrite == FRAME_END) { break; };
-            if (byteToWrite == ESC)
-              byteToWrite = RingBuffer_Remove(&bufferOutDevice) ^ 0x20;
+            count--;
+            byteToWrite = RingBuffer_Remove(&Receive_Buffer);
+            if (byteToWrite == ESC) {
+              esc = true;
+              continue;
+            } else if (esc) {
+              byteToWrite ^= 0x20;
+              esc = false;
+            } else if (byteToWrite == FRAME_END) {
+              break;
+            }
             Endpoint_Write_8(byteToWrite);
           }
           Endpoint_ClearIN();
@@ -178,38 +172,16 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void processHIDReadFeatureReport(void) {
   Serial_SendByte(FRAME_START_FEATURE_READ);
-  while (true) {
-    if (RingBuffer_IsEmpty(&bufferOutDevice)) { continue; }
-    if (RingBuffer_Remove(&bufferOutDevice) == FRAME_START_FEATURE_READ) {
-      break;
-    }
-  }
-  uint8_t len = 0;
-  uint8_t data;
-  bool esc = false;
-  while (true) {
-    if (RingBuffer_IsEmpty(&bufferOutDevice)) { continue; }
-    data = RingBuffer_Remove(&bufferOutDevice);
-    if (data == FRAME_END) { break; }
-    if (data == ESC) {
-      esc = true;
-      continue;
-    }
-    if (esc) {
-      esc = false;
-      data = data ^ 0x20;
-    }
-    dbuf[len++] = data;
-  }
-
-  Endpoint_Write_Control_Stream_LE(dbuf, len);
+  while (RingBuffer_IsEmpty(&Receive_Buffer) || RingBuffer_Remove(&Receive_Buffer) != FRAME_START_FEATURE_READ) {}
+  Endpoint_Write_Control_Stream_LE(dbuf, readData());
 }
 void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
-  uint8_t* data2 = data;
+  uint8_t report = *data;
+  uint8_t subType;
+  if (report == COMMAND_WRITE_SUBTYPE) { subType = *(data + 1); }
   Serial_SendByte(FRAME_START_FEATURE_WRITE);
   while (data_len--) { sendData(*(data++)); }
   Serial_SendByte(FRAME_END);
-  uint8_t report = *(data2++);
   switch (report) {
   case COMMAND_REBOOT:
   case COMMAND_JUMP_BOOTLOADER:
@@ -217,13 +189,13 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     reboot();
     break;
   case COMMAND_WRITE_SUBTYPE: {
-    eeprom_update_byte(&config.deviceType, *data2);
+    eeprom_update_byte(&config.deviceType, subType);
     break;
   }
   }
 }
 
-/** Receive data from the main mcu, and put it into the correct output buffer
- * based on the last known frame
- */
-ISR(USART1_RX_vect, ISR_BLOCK) { RingBuffer_Insert(&bufferOutDevice, UDR1); }
+ISR(USART1_RX_vect, ISR_BLOCK) {
+  uint8_t ReceivedByte = UDR1;
+  RingBuffer_Insert(&Receive_Buffer, ReceivedByte);
+}

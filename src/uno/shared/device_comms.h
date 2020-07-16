@@ -18,7 +18,7 @@
 #include "util/util.h"
 #include <LUFA/Drivers/Peripheral/Serial.h>
 #include <LightweightRingBuff.h>
-#define BAUD 115200
+#define BAUD 1000000
 #define FRAME_START_DEVICE 0x7c
 #define FRAME_START_FEATURE_READ 0x7d
 #define FRAME_START_FEATURE_WRITE 0x7e

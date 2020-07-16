@@ -51,17 +51,17 @@ void getData(uint8_t report) {
     currentCommandSize = strlen_P((char *)constDataToRead);
   }
 }
-void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
+bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   uint8_t report = *data;
   data++;
   data_len--;
   switch (report) {
   case COMMAND_REBOOT:
     reboot();
-    return;
+    return false;
   case COMMAND_JUMP_BOOTLOADER:
     bootloader();
-    return;
+    return false;
   case COMMAND_FIND_DIGITAL:
     findDigitalPin();
     break;
@@ -70,16 +70,17 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     break;
   case COMMAND_FIND_CANCEL:
     stopSearching();
-    return;
+    return false;
   case COMMAND_WRITE_CONFIG: {
     uint8_t offset = *data;
     data++;
     data_len--;
     eeprom_write_block(data, ((uint8_t *)&config_pointer) + offset, data_len);
-    return;
+    return false;
   }
   }
   getData(report);
+  return true;
 }
 void processHIDReadFeatureReport(void) {
   if (!currentCommandSize) {

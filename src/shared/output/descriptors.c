@@ -106,8 +106,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
                         HID_IOF_NO_WRAP | HID_IOF_LINEAR |
                         HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION),
     HID_RI_USAGE(16, 0x2621),
-    // TODO: this is the max size that windows will allow us to write.
-    HID_RI_REPORT_COUNT(8, 200),
+    HID_RI_REPORT_COUNT(8, 32),
     HID_RI_FEATURE(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
                           HID_IOF_NO_WRAP | HID_IOF_LINEAR |
                           HID_IOF_PREFERRED_STATE | HID_IOF_NO_NULL_POSITION |

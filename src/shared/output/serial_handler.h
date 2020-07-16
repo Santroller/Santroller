@@ -5,6 +5,6 @@
 #include "controller_structs.h"
 #include <stdbool.h>
 extern Controller_t controller;
-void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data);
+bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data);
 void processHIDReadFeatureReport(void);
 void writeToUSB(const void *const Buffer, uint16_t Length);

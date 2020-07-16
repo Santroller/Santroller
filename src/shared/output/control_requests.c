@@ -4,9 +4,9 @@
 #include "descriptors.h"
 #include "output/serial_handler.h"
 #ifdef MULTI_ADAPTOR
-#define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_4_t
+#  define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_4_t
 #else
-#define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_t
+#  define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_t
 #endif
 const CompatibleDescriptorType DevCompatIDs = {
   TotalLength : sizeof(CompatibleDescriptorType),
@@ -51,27 +51,30 @@ const CompatibleDescriptorType DevCompatIDs = {
 };
 
 void deviceControlRequest(void) {
-  bool isWCID = USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
-                USB_ControlRequest.bmRequestType ==
-                    (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
-                USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR;
-  bool isGetReport =
+  if (!(Endpoint_IsSETUPReceived())) return;
+  if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
       USB_ControlRequest.bmRequestType ==
-          (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) &&
-      (USB_ControlRequest.bRequest == HID_REQ_GetReport);
-  if (!((USB_ControlRequest.bmRequestType ==
-         (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) ||
-        isGetReport || isWCID))
-    return;
-
-  Endpoint_ClearSETUP();
-  if (USB_ControlRequest.bRequest == HID_REQ_SetReport) {
-    Endpoint_Read_Control_Stream_LE(dbuf, sizeof(dbuf));
-    processHIDWriteFeatureReport(sizeof(dbuf), dbuf);
-  } else if (isGetReport) {
+          (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    Endpoint_ClearSETUP();
     processHIDReadFeatureReport();
-  } else if (isWCID) {
+    Endpoint_ClearStatusStage();
+  } else if (USB_ControlRequest.bRequest == HID_REQ_SetReport &&
+             USB_ControlRequest.bmRequestType ==
+                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    Endpoint_ClearSETUP();
+    Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
+    Endpoint_ClearStatusStage();
+    processHIDWriteFeatureReport(USB_ControlRequest.wLength, dbuf);
+  } else if (USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
+             USB_ControlRequest.bmRequestType ==
+                 (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
+             USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
+    Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(&DevCompatIDs, DevCompatIDs.TotalLength);
+    Endpoint_ClearStatusStage();
+  } else if (USB_ControlRequest.bmRequestType ==
+             (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    Endpoint_ClearSETUP();
+    Endpoint_ClearStatusStage();
   }
-  Endpoint_ClearStatusStage();
 }

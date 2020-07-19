@@ -41,7 +41,7 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
 static inline int readData(void) {
   uint8_t len = 0;
   uint8_t data;
-  bool esc = false;
+  bool escapeNext = false;
   uint8_t count = 0;
   while (true) {
     if (count == 0) {
@@ -52,11 +52,11 @@ static inline int readData(void) {
     data = RingBuffer_Remove(&Receive_Buffer);
     if (data == FRAME_END) {
       break;
-    } else if (esc) {
-      esc = false;
+    } else if (escapeNext) {
+      escapeNext = false;
       data = data ^ 0x20;
     } else if (data == ESC) {
-      esc = true;
+      escapeNext = true;
       continue;
     }
     dbuf[len++] = data;

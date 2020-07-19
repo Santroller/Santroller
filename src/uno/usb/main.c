@@ -24,19 +24,12 @@ typedef struct {
 
 volatile bool receivedReport = false;
 volatile uint8_t len = 0;
-RingBuff_t Receive_Buffer;
-uint8_t Receive_BufferData[BUFFER_SIZE];
 EepromConfig_t EEMEM config;
 uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
-
-/**
- * Write data from a buffer to an endpoint, handling escape bytes
- */
-void writeToEndpoint(uint8_t endpoint, RingBuff_t *buffer);
 
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
@@ -54,7 +47,6 @@ int main(void) {
   Serial_InitInterrupt(BAUD, true);
 
   USB_Init();
-  RingBuffer_InitBuffer(&Receive_Buffer, Receive_BufferData);
 
   /* Start the 328p  */
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
@@ -81,70 +73,7 @@ int main(void) {
     if (readingDeviceType && !deviceIDIsCorrect) { deviceType = read; }
   }
   sei();
-  uint8_t byteToWrite;
-  uint8_t count = 0;
   while (true) {
-    count = RingBuffer_GetCount(&Receive_Buffer);
-    if (count >= 2) {
-      byteToWrite = RingBuffer_Remove(&Receive_Buffer);
-      if (byteToWrite == FRAME_START_DEVICE) {
-        // All reports put the first id as the report id.
-        uint8_t rid = RingBuffer_Remove(&Receive_Buffer);
-        bool writeID = true;
-        switch (rid) {
-        case REPORT_ID_XINPUT:
-          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
-          break;
-        case REPORT_ID_XINPUT_2:
-          Endpoint_SelectEndpoint(XINPUT_2_EPADDR_IN);
-          break;
-        case REPORT_ID_XINPUT_3:
-          Endpoint_SelectEndpoint(XINPUT_3_EPADDR_IN);
-          break;
-        case REPORT_ID_XINPUT_4:
-          Endpoint_SelectEndpoint(XINPUT_4_EPADDR_IN);
-          break;
-        case REPORT_ID_MIDI:
-          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-          // The "reportid" is actually not a real thing on midi, so we need to
-          // strip it before we send data.
-          writeID = false;
-          break;
-        case REPORT_ID_GAMEPAD:
-          writeID = false;
-        default:
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          break;
-        }
-        if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
-          /* Read bytes from the USART receive buffer into the USB IN
-          endpoint
-           */
-          if (writeID) { Endpoint_Write_8(rid); }
-          bool esc = false;
-          while (true) {
-            if (count == 0) {
-              count = RingBuffer_GetCount(&Receive_Buffer);
-              continue;
-            }
-            count--;
-            byteToWrite = RingBuffer_Remove(&Receive_Buffer);
-            if (byteToWrite == ESC) {
-              esc = true;
-              continue;
-            } else if (esc) {
-              byteToWrite ^= 0x20;
-              esc = false;
-            } else if (byteToWrite == FRAME_END) {
-              break;
-            }
-            Endpoint_Write_8(byteToWrite);
-          }
-          Endpoint_ClearIN();
-        }
-      }
-    }
-    USB_USBTask();
   }
 }
 void sendData(uint8_t data) {
@@ -194,10 +123,6 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     eeprom_update_byte(&config.deviceType, subType);
   }
   if (report == COMMAND_REBOOT || report == COMMAND_JUMP_BOOTLOADER) {
-    // TODO: For some reason this doesnt always fire, yet the 328p does seem to
-    // reboot, indicating that the command is correct but it just isnt
-    // rebooting. Would that mean that somehow this if statement isnt being
-    // entered, even though the correct data is being written?
     jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
   }
@@ -209,30 +134,64 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
 
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 uint8_t frame;
-bool esc = false;
+bool escapeNext = false;
+bool reportIDNext = false;
 ISR(USART1_RX_vect, ISR_BLOCK) {
   uint8_t ReceivedByte = UDR1;
+  if (ReceivedByte == FRAME_START_DEVICE) { reportIDNext = true; }
   if (ReceivedByte == FRAME_START_DEVICE ||
       ReceivedByte == FRAME_START_FEATURE_READ) {
     frame = ReceivedByte;
+    return;
   }
-  
-  if (frame == FRAME_START_DEVICE) {
-    RingBuffer_Insert(&Receive_Buffer, ReceivedByte);
-    if (ReceivedByte == FRAME_END) { frame = 0; }
-  } else if (frame == FRAME_START_FEATURE_READ) {
-    if (ReceivedByte == FRAME_END) {
-      frame = 0;
+  if (ReceivedByte == FRAME_END) {
+    if (frame == FRAME_START_FEATURE_READ) {
       receivedReport = true;
-      return;
+    } else {
+      Endpoint_ClearIN();
     }
-    if (esc) {
-      esc = false;
-      ReceivedByte ^= 0x20;
-    } else if (ReceivedByte == ESC) {
-      esc = true;
-      return;
+    frame = 0;
+  }
+  if (escapeNext) {
+    escapeNext = false;
+    ReceivedByte ^= 0x20;
+  } else if (ReceivedByte == ESC) {
+    escapeNext = true;
+    return;
+  }
+  if (frame == FRAME_START_DEVICE) {
+    if (reportIDNext) {
+      reportIDNext = false;
+      switch (ReceivedByte) {
+      case REPORT_ID_XINPUT:
+        Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+        break;
+      case REPORT_ID_XINPUT_2:
+        Endpoint_SelectEndpoint(XINPUT_2_EPADDR_IN);
+        break;
+      case REPORT_ID_XINPUT_3:
+        Endpoint_SelectEndpoint(XINPUT_3_EPADDR_IN);
+        break;
+      case REPORT_ID_XINPUT_4:
+        Endpoint_SelectEndpoint(XINPUT_4_EPADDR_IN);
+        break;
+      case REPORT_ID_MIDI:
+        Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+        // The "reportid" is actually not a real thing on midi, so we need to
+        // strip it before we send data.
+        return;
+      case REPORT_ID_GAMEPAD:
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        return;
+      default:
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        break;
+      }
     }
+    if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
+      Endpoint_Write_8(ReceivedByte);
+    }
+  } else if (frame == FRAME_START_FEATURE_READ) {
     dbuf[len++] = ReceivedByte;
   }
 }

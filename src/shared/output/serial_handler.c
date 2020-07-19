@@ -11,11 +11,7 @@ int currentCommandSize = 0;
 static const uint8_t *constDataToRead = NULL;
 static uint8_t *dataToReadWrite = NULL;
 bool dataInRam = false;
-bool reading = false;
 void getData(uint8_t report) {
-  reading = true;
-  dataInRam = false;
-  constDataToRead = NULL;
   switch (report) {
   case COMMAND_FIND_ANALOG:
   case COMMAND_FIND_DIGITAL:
@@ -53,6 +49,9 @@ void getData(uint8_t report) {
 }
 bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   uint8_t report = *data;
+  dataInRam = false;
+  constDataToRead = NULL;
+  currentCommandSize = 0;
   data++;
   data_len--;
   switch (report) {

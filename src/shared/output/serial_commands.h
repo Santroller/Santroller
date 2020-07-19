@@ -1,8 +1,7 @@
 #pragma once
 // We need to look at commands sent by consoles so we can make sure that they dont conflict.
 enum SerialCommands {
-    COMMAND_GET_HID_REPORT,
-    COMMAND_REBOOT,
+    COMMAND_REBOOT=0x30,
     COMMAND_GET_SIGNATURE,
     COMMAND_GET_CPU_FREQ,
     COMMAND_GET_BOARD,

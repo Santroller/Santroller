@@ -52,9 +52,9 @@ int main(void) {
     if (!RingBuffer_IsEmpty(&Receive_Buffer)) {
       uint8_t data = RingBuffer_Remove(&Receive_Buffer);
       if (data == FRAME_START_FEATURE_WRITE) {
-        processHIDWriteFeatureReport(readData(), dbuf);
-      } else if (data == FRAME_START_FEATURE_READ) {
-        processHIDReadFeatureReport();
+        if (processHIDWriteFeatureReport(readData(), dbuf)) {
+          processHIDReadFeatureReport();
+        }
       }
     }
     uint16_t size;

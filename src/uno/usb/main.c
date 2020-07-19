@@ -22,7 +22,7 @@ typedef struct {
   uint8_t deviceType;
 } EepromConfig_t;
 
-volatile bool done = false;
+volatile bool receivedReport = false;
 volatile uint8_t len = 0;
 RingBuff_t Receive_Buffer;
 uint8_t Receive_BufferData[BUFFER_SIZE];
@@ -171,22 +171,35 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 #endif
 }
+const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(void) {
-  done = false;
-  len = 0;
-  Serial_SendByte(FRAME_START_FEATURE_READ);
-  while (!done) {}
+  // If we have not received a report, we can just send out the ps3 init packet
+  if (!receivedReport) {
+    len = sizeof(id);
+    memcpy_P(dbuf, id, len);
+    if (deviceType <= PS3_ROCK_BAND_DRUMS) {
+      dbuf[3] = 0x00;
+    } else if (deviceType <= PS3_GUITAR_HERO_DRUMS) {
+      dbuf[3] = 0x06;
+    }
+  }
   Endpoint_Write_Control_Stream_LE(dbuf, len);
 }
 bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
-  if (data[0] == COMMAND_REBOOT || data[0] == COMMAND_JUMP_BOOTLOADER) {
-    // TODO: For some reason this doesnt always fire, yet the 328p does seem to reboot, indicating that the command is correct but it just isnt rebooting.
-    // Would that mean that somehow this if statement isnt being entered, even though the correct data is being written?
-    jmpToBootloader = data[0] == COMMAND_REBOOT ? 0 : JUMP;
-    reboot();
+  receivedReport = false;
+  len = 0;
+  uint8_t report = data[0];
+  uint8_t subType = data[1];
+  if (report == COMMAND_WRITE_SUBTYPE) {
+    eeprom_update_byte(&config.deviceType, subType);
   }
-  if (data[0] == COMMAND_WRITE_SUBTYPE) {
-    eeprom_update_byte(&config.deviceType, data[1]);
+  if (report == COMMAND_REBOOT || report == COMMAND_JUMP_BOOTLOADER) {
+    // TODO: For some reason this doesnt always fire, yet the 328p does seem to
+    // reboot, indicating that the command is correct but it just isnt
+    // rebooting. Would that mean that somehow this if statement isnt being
+    // entered, even though the correct data is being written?
+    jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
+    reboot();
   }
   Serial_SendByte(FRAME_START_FEATURE_WRITE);
   while (data_len--) { sendData(*(data++)); }
@@ -203,22 +216,22 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
       ReceivedByte == FRAME_START_FEATURE_READ) {
     frame = ReceivedByte;
   }
+  
   if (frame == FRAME_START_DEVICE) {
     RingBuffer_Insert(&Receive_Buffer, ReceivedByte);
     if (ReceivedByte == FRAME_END) { frame = 0; }
   } else if (frame == FRAME_START_FEATURE_READ) {
     if (ReceivedByte == FRAME_END) {
       frame = 0;
-      done = true;
+      receivedReport = true;
       return;
     }
-    if (ReceivedByte == FRAME_START_FEATURE_READ) return;
-    if (ReceivedByte == ESC) {
-      esc = true;
-      return;
-    } else if (esc) {
+    if (esc) {
       esc = false;
       ReceivedByte ^= 0x20;
+    } else if (ReceivedByte == ESC) {
+      esc = true;
+      return;
     }
     dbuf[len++] = ReceivedByte;
   }

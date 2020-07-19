@@ -37,29 +37,3 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
   DDRD |= (1 << 3);
   PORTD |= (1 << 2);
 }
-
-static inline int readData(void) {
-  uint8_t len = 0;
-  uint8_t data;
-  bool escapeNext = false;
-  uint8_t count = 0;
-  while (true) {
-    if (count == 0) {
-      count = RingBuffer_GetCount(&Receive_Buffer);
-      continue;
-    }
-    count--;
-    data = RingBuffer_Remove(&Receive_Buffer);
-    if (data == FRAME_END) {
-      break;
-    } else if (escapeNext) {
-      escapeNext = false;
-      data = data ^ 0x20;
-    } else if (data == ESC) {
-      escapeNext = true;
-      continue;
-    }
-    dbuf[len++] = data;
-  }
-  return len;
-}

@@ -37,7 +37,31 @@ void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
   }
   Serial_SendByte(FRAME_END);
 }
-bool waitingForRead = false;
+static inline int readPacket(void) {
+  uint8_t len = 0;
+  uint8_t data;
+  bool escapeNext = false;
+  uint8_t count = 0;
+  while (true) {
+    if (count == 0) {
+      count = RingBuffer_GetCount(&Receive_Buffer);
+      continue;
+    }
+    count--;
+    data = RingBuffer_Remove(&Receive_Buffer);
+    if (data == FRAME_END) {
+      break;
+    } else if (escapeNext) {
+      escapeNext = false;
+      data = data ^ 0x20;
+    } else if (data == ESC) {
+      escapeNext = true;
+      continue;
+    }
+    dbuf[len++] = data;
+  }
+  return len;
+}
 int main(void) {
   loadConfig();
   RingBuffer_InitBuffer(&Receive_Buffer, Receive_BufferData);
@@ -52,7 +76,7 @@ int main(void) {
     if (!RingBuffer_IsEmpty(&Receive_Buffer)) {
       uint8_t data = RingBuffer_Remove(&Receive_Buffer);
       if (data == FRAME_START_FEATURE_WRITE) {
-        if (processHIDWriteFeatureReport(readData(), dbuf)) {
+        if (processHIDWriteFeatureReport(readPacket(), dbuf)) {
           processHIDReadFeatureReport();
         }
       }

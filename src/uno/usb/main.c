@@ -54,24 +54,13 @@ int main(void) {
 
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
-  //  if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
-  //   eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
-  //   eeprom_update_byte(&config.deviceType, deviceType);
-  // } else {
-  //   deviceType = eeprom_read_byte(&config.deviceType);
-  // }
-  // This is equivilant to the above code, but saves like 80 bytes
-  bool deviceIDIsCorrect = true;
-  for (uint16_t i = 0; i < sizeof(EepromConfig_t); i++) {
-    uint8_t read = eeprom_read_byte(((uint8_t *)&config) + i);
-    uint8_t def = defaultConfig[i];
-    bool readingDeviceType = i == offsetof(EepromConfig_t, deviceType);
-    if ((deviceIDIsCorrect || !readingDeviceType) && read != def) {
-      eeprom_write_byte((uint8_t *)i, def);
-      deviceIDIsCorrect = false;
-    }
-    if (readingDeviceType && !deviceIDIsCorrect) { deviceType = read; }
+   if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
+    eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
+    eeprom_update_byte(&config.deviceType, deviceType);
+  } else {
+    deviceType = eeprom_read_byte(&config.deviceType);
   }
+
   sei();
   while (true) {
   }
@@ -162,6 +151,7 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
   if (frame == FRAME_START_DEVICE) {
     if (reportIDNext) {
       reportIDNext = false;
+      // Some controllers need the report id, some don't. breaking will send it, returning wont.
       switch (ReceivedByte) {
       case REPORT_ID_XINPUT:
         Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
@@ -177,8 +167,6 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
         break;
       case REPORT_ID_MIDI:
         Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-        // The "reportid" is actually not a real thing on midi, so we need to
-        // strip it before we send data.
         return;
       case REPORT_ID_GAMEPAD:
         Endpoint_SelectEndpoint(HID_EPADDR_IN);

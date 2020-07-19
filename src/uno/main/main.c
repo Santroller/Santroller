@@ -70,8 +70,11 @@ void writeToUSB(const void *const Buffer, uint16_t Length) {
   uint8_t *buf = (uint8_t *)Buffer;
   writePacketToSerial(FRAME_START_FEATURE_READ, buf, Length);
 }
-
+#ifdef USART0_RX_vect
+ISR(USART0_RX_vect, ISR_BLOCK) {
+#else
 ISR(USART_RX_vect, ISR_BLOCK) {
+#endif
   uint8_t ReceivedByte = UDR0;
   RingBuffer_Insert(&Receive_Buffer, ReceivedByte);
 }

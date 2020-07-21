@@ -94,6 +94,7 @@ extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 
 #define microsecondsToClockCycles(a) ((a)*clockCyclesPerMicrosecond())
 int digitalRead(uint8_t pin);
+void digitalWrite(uint8_t pin, uint8_t val);
 void pinMode(uint8_t pin, uint8_t mode);
 void setupADC(void);
 void enablePCI(uint8_t pin);

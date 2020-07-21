@@ -16,6 +16,28 @@ void enablePCI(uint8_t pin) {
   pinMode(pin, INPUT_PULLUP);
 }
 
+void digitalWrite(uint8_t pin, uint8_t val)
+{
+	uint8_t bit = digitalPinToBitMask(pin);
+	uint8_t port = digitalPinToPort(pin);
+	volatile uint8_t *out;
+
+	if (port == NOT_A_PIN) return;
+
+	out = portOutputRegister(port);
+
+	uint8_t oldSREG = SREG;
+	cli();
+
+	if (val == 0) {
+		*out &= ~bit;
+	} else {
+		*out |= bit;
+	}
+
+	SREG = oldSREG;
+}
+
 int digitalRead(uint8_t pin) {
   uint8_t bit = digitalPinToBitMask(pin);
   uint8_t port = digitalPinToPort(pin);

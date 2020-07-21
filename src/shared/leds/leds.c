@@ -10,6 +10,7 @@ void initLEDs(void) {
   pinMode(PIN_SPI_MOSI, OUTPUT);
   pinMode(PIN_SPI_MISO, INPUT_PULLUP);
   pinMode(PIN_SPI_SCK, OUTPUT);
+  digitalWrite(PIN_SPI_SS, 1);
   pinMode(PIN_SPI_SS, OUTPUT);
   // enable spi
   SPCR |= (1 << SPE);

@@ -14,9 +14,17 @@ bool dataInRam = false;
 void getData(uint8_t report) {
   switch (report) {
   case COMMAND_FIND_ANALOG:
-  case COMMAND_FIND_DIGITAL:
+    findAnalogPin();
     dataInRam = true;
     dataToReadWrite = &detectedPin;
+    currentCommandSize = 1;
+    break;
+  case COMMAND_FIND_DIGITAL:
+    findDigitalPin();
+    dataInRam = true;
+    dataToReadWrite = &detectedPin;
+    currentCommandSize = 1;
+    break;
   case COMMAND_GET_SIGNATURE:
     constDataToRead = (const uint8_t *)PSTR(SIGNATURE);
     break;
@@ -61,12 +69,6 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   case COMMAND_JUMP_BOOTLOADER:
     bootloader();
     return false;
-  case COMMAND_FIND_DIGITAL:
-    findDigitalPin();
-    break;
-  case COMMAND_FIND_ANALOG:
-    findAnalogPin();
-    break;
   case COMMAND_FIND_CANCEL:
     stopSearching();
     return false;

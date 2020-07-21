@@ -10,7 +10,6 @@ int validPins = 0;
 uint8_t detectedPin;
 bool lookingForDigital = false;
 bool lookingForAnalog = false;
-bool foundPin = false;
 int lastAnalogValue[NUM_ANALOG_INPUTS];
 void initDirectInput() {
   uint8_t *pins = (uint8_t *)&config.pins;
@@ -62,6 +61,7 @@ bool shouldSkipPin(uint8_t i) {
 
 void findDigitalPin(void) {
   if (lookingForDigital) return;
+  detectedPin = 0xff;
   stopReading();
   for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
     if (!shouldSkipPin(i)) { pinMode(i, INPUT_PULLUP); }
@@ -71,6 +71,7 @@ void findDigitalPin(void) {
 
 void findAnalogPin(void) {
   if (lookingForAnalog) return;
+  detectedPin = 0xff;
   stopReading();
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
     pinMode(PIN_A0 + i, INPUT_PULLUP);
@@ -95,7 +96,7 @@ void tickDirectInput(Controller_t *controller) {
       if (abs(analogRead(i) - lastAnalogValue[i]) > 10) {
         initDirectInput();
         detectedPin = i + PIN_A0;
-        foundPin = true;
+        lookingForAnalog = false;
         return;
       }
     }
@@ -107,7 +108,7 @@ void tickDirectInput(Controller_t *controller) {
         if (!digitalRead(i)) {
           stopSearching();
           detectedPin = i;
-          foundPin = true;
+          lookingForDigital = false;
           return;
         }
       }

@@ -23,11 +23,12 @@ void initLEDs(void) {
 
   // set clock scale to 1/2
   SPSR |= 1 << SPI2X;
-  SPCR |= (1 << SPR1) | (1 << SPR0);
+  // SPCR |= (1 << SPR1) | (1 << SPR0);
 }
 /* Send out data via SPI & wait until transmission is complete */
 void transmitSPIByte(uint8_t data) {
   SPDR = data;
+  asm volatile("nop");
   while (!(SPSR & _BV(SPIF)))
     ;
 }
@@ -41,14 +42,14 @@ void tickLEDs(Controller_t *controller) {
   // Loop until either config.leds runs out, or controller->leds runs out. This
   // is due to the fact that controller->leds can contain more leds if a config
   // is in the process of being made.
-  while(true) {
+  while (true) {
     configLED = config.leds[led];
     contLED = controller->leds[led];
     if (!configLED.pin && !contLED.pin) break;
     // Only bind pins to buttons if we know what pin to map, and the computer
     // has not sent a new pin
     if (!contLED.blue && !contLED.red && !contLED.green && configLED.pin) {
-      if (getVelocity(controller, configLED.pin-1)) { contLED = configLED; }
+      if (getVelocity(controller, configLED.pin - 1)) { contLED = configLED; }
     }
     // Write an leds colours
     transmitSPIByte(0xff);

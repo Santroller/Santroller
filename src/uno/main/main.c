@@ -72,6 +72,7 @@ int main(void) {
   initReports();
   while (true) {
     tickInputs(&controller);
+    tickLEDs(&controller);
     if (!RingBuffer_IsEmpty(&Receive_Buffer)) {
       uint8_t data = RingBuffer_Remove(&Receive_Buffer);
       if (data == FRAME_START_FEATURE_WRITE) {
@@ -83,7 +84,6 @@ int main(void) {
     uint16_t size;
     fillReport(currentReport, &size, &controller);
     if (memcmp(currentReport, previousReport, size) != 0) {
-      tickLEDs(&controller);
       writePacketToSerial(FRAME_START_DEVICE, currentReport, size);
       memcpy(previousReport, currentReport, size);
     }

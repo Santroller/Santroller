@@ -41,6 +41,7 @@ void getData(uint8_t report) {
       currentCommandSize = 2;
     } else if (config.main.inputType == PS2) {
       dataToReadWrite = (uint8_t *)&ps2CtrlType;
+      currentCommandSize = 1;
     } else {
       currentCommandSize = 0;
     }

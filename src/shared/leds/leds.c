@@ -27,12 +27,6 @@ void initLEDs(void) {
   SPSR |= 1 << SPI2X;
   SPCR |= (1 << SPR1) | (1 << SPR0);
 }
-/* Send out data via SPI & wait until transmission is complete */
-void transmitSPIByte(uint8_t data) {
-  SPDR = data;
-  while (!(SPSR & _BV(SPIF)))
-    ;
-}
 volatile int currentIndex = -1;
 volatile int maxIndex = 0;
 uint8_t ledData[((XBOX_BTN_COUNT + XBOX_AXIS_COUNT) + 1) * 4] = {0};

@@ -83,7 +83,6 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   }
   case COMMAND_SET_LEDS:
     memcpy(controller.leds, data, sizeof(controller.leds));
-    tickLEDs(&controller);
     return false;
   }
   getData(report);

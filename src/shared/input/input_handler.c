@@ -29,7 +29,7 @@ void initInputs() {
     break;
   }
   if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
-    spi_init(0x00);
+    spi_init(F_CPU / 2, 0x00);
   } 
   twi_init();
   initGuitar();

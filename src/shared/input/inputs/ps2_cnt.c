@@ -303,7 +303,7 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(void) {
-  spi_init(_BV(DORD) | 0x0C);
+  spi_init(100000, _BV(DORD) | 0x0C);
   attentionBit = digitalPinToBitMask(10);
   attentionRegister = portOutputRegister(digitalPinToPort(10));
   commandBit = digitalPinToBitMask(PIN_SPI_MOSI);

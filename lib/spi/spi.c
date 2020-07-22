@@ -5,6 +5,7 @@
 #include <util/delay.h>
 #include <avr/power.h>
 #include "arduino_pins.h"
+#include "spi.h"
 
 void calculateClock(uint32_t clock, uint8_t config) {
   uint8_t clockDiv;
@@ -31,11 +32,11 @@ void calculateClock(uint32_t clock, uint8_t config) {
   SPSR = clockDiv & 0x01;
 }
 
-void spi_init(uint8_t config) {
+void spi_init(uint32_t clock, uint8_t config) {
   pinMode(PIN_SPI_MOSI, OUTPUT);
   pinMode(PIN_SPI_MISO, INPUT_PULLUP);
   pinMode(PIN_SPI_SCK, OUTPUT);
   digitalWrite(PIN_SPI_SS, 1);
   pinMode(PIN_SPI_SS, OUTPUT);
-  calculateClock(100000, config);
+  calculateClock(clock, config);
 }

@@ -1,2 +1,2 @@
 #pragma once
-void spi_init(uint8_t config);
+void spi_init(uint32_t clock, uint8_t config);

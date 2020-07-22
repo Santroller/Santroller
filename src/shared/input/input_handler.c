@@ -4,6 +4,7 @@
 #include "output/descriptors.h"
 #include "util/util.h"
 #include "i2c/i2c.h"
+#include "spi/spi.h"
 #include "inputs/direct.h"
 #include "inputs/guitar.h"
 #include "inputs/ps2_cnt.h"
@@ -28,6 +29,7 @@ void initInputs() {
     break;
   }
   twi_init();
+  spi_init();
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }

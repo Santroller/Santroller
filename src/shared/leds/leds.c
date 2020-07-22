@@ -4,27 +4,6 @@
 #include "util/util.h"
 // #include "input_handler.h"
 #include <avr/power.h>
-void initLEDs(void) {
-  if (config.main.fretLEDMode != APA102) return;
-  clock_prescale_set(clock_div_1);
-  pinMode(PIN_SPI_MOSI, OUTPUT);
-  pinMode(PIN_SPI_MISO, INPUT_PULLUP);
-  pinMode(PIN_SPI_SCK, OUTPUT);
-  digitalWrite(PIN_SPI_SS, 1);
-  pinMode(PIN_SPI_SS, OUTPUT);
-  // enable spi
-  SPCR |= (1 << SPE);
-
-  // set as master
-  SPCR |= 1 << MSTR;
-
-  // set clock polarity/phase to mode 3
-  SPCR |= (1 << CPOL) | (1 << CPHA);
-
-  // set clock scale to 1/2
-  SPSR |= 1 << SPI2X;
-  // SPCR |= (1 << SPR1) | (1 << SPR0);
-}
 /* Send out data via SPI & wait until transmission is complete */
 void transmitSPIByte(uint8_t data) {
   SPDR = data;

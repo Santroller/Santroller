@@ -129,46 +129,11 @@ static uint8_t commandBit;
 static volatile uint8_t *commandRegister;
 static uint8_t clockBit;
 static volatile uint8_t *clockRegister;
-static uint8_t currentSPSR;
-static uint8_t currentSPCR;
-static uint8_t dualShock1SPSR;
-static uint8_t dualShock1SPCR;
-static uint8_t dualShock2SPSR;
-static uint8_t dualShock2SPCR;
-void calculateClock(uint32_t clock) {
-  uint8_t clockDiv;
-  if (clock >= F_CPU / 2) {
-    clockDiv = 0;
-  } else if (clock >= F_CPU / 4) {
-    clockDiv = 1;
-  } else if (clock >= F_CPU / 8) {
-    clockDiv = 2;
-  } else if (clock >= F_CPU / 16) {
-    clockDiv = 3;
-  } else if (clock >= F_CPU / 32) {
-    clockDiv = 4;
-  } else if (clock >= F_CPU / 64) {
-    clockDiv = 5;
-  } else {
-    clockDiv = 7;
-  }
-
-  // Invert the SPI2X bit
-  clockDiv ^= 0x1;
-
-  // Pack into the SPISettings class
-  currentSPCR =
-      _BV(SPE) | _BV(MSTR) | _BV(DORD) | (0x0C) | ((clockDiv >> 1) & 0x03);
-  currentSPSR = clockDiv & 0x01;
-}
 
 void noAttention(void) {
-  uint8_t oldSREG = SREG;
-  cli();
   *commandRegister |= commandBit;
   *clockRegister |= clockBit;
   *attentionRegister |= attentionBit;
-  SREG = oldSREG;
 }
 
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
@@ -184,12 +149,8 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
 }
 uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
   static uint8_t inputBuffer[BUFFER_SIZE];
-  uint8_t oldSREG = SREG;
-  cli();
   *attentionRegister &= ~attentionBit;
-  SPCR = currentSPCR;
-  SPSR = currentSPSR;
-  SREG = oldSREG;
+  _delay_us(ATTN_DELAY);
   uint8_t *ret = NULL;
 
   if (len >= 3 && len <= BUFFER_SIZE) {
@@ -332,8 +293,6 @@ bool read(Controller_t *controller) {
 }
 
 bool begin(Controller_t *controller) {
-  currentSPCR = dualShock1SPCR;
-  currentSPSR = dualShock1SPSR;
   // Some disposable readings to let the controller know we are here
   for (uint8_t i = 0; i < 5; ++i) {
     read(controller);
@@ -350,26 +309,13 @@ void initPS2CtrlInput(void) {
   clockBit = digitalPinToBitMask(PIN_SPI_SCK);
   clockRegister = portOutputRegister(digitalPinToPort(PIN_SPI_SCK));
   pinMode(10, OUTPUT);
-  pinMode(PIN_SPI_MOSI, OUTPUT);
-  pinMode(PIN_SPI_MISO, INPUT_PULLUP);
-  pinMode(PIN_SPI_SCK, OUTPUT);
-  pinMode(PIN_SPI_SS, OUTPUT);
   noAttention();
-  // PS1 controllers don't work with 200000, but PS2 controllers do
-  calculateClock(100000);
-  dualShock1SPCR = currentSPCR;
-  dualShock1SPSR = currentSPSR;
-  calculateClock(200000);
-  dualShock2SPCR = currentSPCR;
-  dualShock2SPSR = currentSPSR;
 }
 void tickPS2CtrlInput(Controller_t *controller) {
   if (ps2CtrlType == PSX_NO_DEVICE) {
     if (!begin(controller)) { return; }
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
     // Dualshock one controllers don't have config mode
-      currentSPCR = dualShock2SPCR;
-      currentSPSR = dualShock2SPSR;
       ps2CtrlType = getControllerType();
       // Enable analog sticks
       sendCommand(commandSetMode, sizeof(commandSetMode));

@@ -68,7 +68,6 @@ int main(void) {
   Serial_InitInterrupt(BAUD, true);
   sei();
   initInputs();
-  initLEDs();
   initReports();
   while (true) {
     tickInputs(&controller);

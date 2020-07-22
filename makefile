@@ -2,7 +2,7 @@ all:
 
 micro:
 	$(MAKE) -C src/micro
-	stty -F /dev/ttyACM0 1200
+	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
 	sleep 1
 	$(MAKE) -C src/micro avrdude
 

@@ -51,7 +51,6 @@ int main(void) {
   loadConfig();
   deviceType = config.main.subType;
   initInputs();
-  initLEDs();
   initReports();
   USB_Init();
   sei();

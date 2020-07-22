@@ -33,6 +33,6 @@ void loadConfig(void) {
   }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
-    eeprom_write_block(&config, &config_pointer, sizeof(Configuration_t));
+    eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));
   }
 }

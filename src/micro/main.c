@@ -57,9 +57,9 @@ int main(void) {
   uint16_t size;
   while (true) {
     tickInputs(&controller);
-    tickLEDs(&controller);
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
+      tickLEDs(&controller);
       memcpy(&previousReport, &currentReport, size);
       uint8_t *data = (uint8_t *)&currentReport;
       uint8_t rid = *data;

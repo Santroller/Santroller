@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include "spi/spi.h"
 // Commands for communicating with a PSX controller
 static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01};
 static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00};
@@ -302,6 +303,7 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(void) {
+  spi_init(_BV(DORD) | 0x0C);
   attentionBit = digitalPinToBitMask(10);
   attentionRegister = portOutputRegister(digitalPinToPort(10));
   commandBit = digitalPinToBitMask(PIN_SPI_MOSI);

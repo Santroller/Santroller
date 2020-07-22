@@ -7,7 +7,6 @@
 /* Send out data via SPI & wait until transmission is complete */
 void transmitSPIByte(uint8_t data) {
   SPDR = data;
-  asm volatile("nop");
   while (!(SPSR & _BV(SPIF)))
     ;
 }
@@ -38,6 +37,8 @@ void tickLEDs(Controller_t *controller) {
     led++;
   }
   // We need to send the correct amount of stop bytes
-  uint8_t stop_bytes = (led + 15) / 16;
-  for (uint8_t i = 0; i < stop_bytes; i++) { transmitSPIByte(0xff); }
+  for (uint8_t i=0; i<led; i+=16)
+  {
+    transmitSPIByte(0xff);  // 8 more clock cycles
+  }
 }

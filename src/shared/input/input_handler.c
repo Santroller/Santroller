@@ -1,15 +1,15 @@
 #include "input_handler.h"
 #include "config/eeprom.h"
-#include "leds/leds.h"
-#include "output/descriptors.h"
-#include "util/util.h"
 #include "i2c/i2c.h"
-#include "spi/spi.h"
 #include "inputs/direct.h"
 #include "inputs/guitar.h"
 #include "inputs/ps2_cnt.h"
 #include "inputs/wii_ext.h"
+#include "leds/leds.h"
+#include "output/descriptors.h"
 #include "pins/pins.h"
+#include "spi/spi.h"
+#include "util/util.h"
 // #include <stdlib.h>
 void (*tick_function)(Controller_t *);
 int joyThreshold;
@@ -28,16 +28,16 @@ void initInputs() {
     tick_function = tickPS2CtrlInput;
     break;
   }
+  if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
+    spi_init(0x00);
+  } 
   twi_init();
-  spi_init();
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }
 void tickInputs(Controller_t *controller) {
   controller->buttons = 0;
-  if (tick_function) {
-    tick_function(controller);
-  }
+  if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   if (config.main.mapLeftJoystickToDPad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);

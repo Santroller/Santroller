@@ -6,7 +6,7 @@
 #include <avr/power.h>
 #include "arduino_pins.h"
 
-void calculateClock(uint32_t clock) {
+void calculateClock(uint32_t clock, uint8_t config) {
   uint8_t clockDiv;
   if (clock >= F_CPU / 2) {
     clockDiv = 0;
@@ -27,15 +27,15 @@ void calculateClock(uint32_t clock) {
   // Invert the SPI2X bit
   clockDiv ^= 0x1;
 
-  SPCR = _BV(SPE) | _BV(MSTR) | _BV(DORD) | (0x0C) | ((clockDiv >> 1) & 0x03);
+  SPCR = _BV(SPE) | _BV(MSTR) | config | ((clockDiv >> 1) & 0x03);
   SPSR = clockDiv & 0x01;
 }
 
-void spi_init(void) {
+void spi_init(uint8_t config) {
   pinMode(PIN_SPI_MOSI, OUTPUT);
   pinMode(PIN_SPI_MISO, INPUT_PULLUP);
   pinMode(PIN_SPI_SCK, OUTPUT);
   digitalWrite(PIN_SPI_SS, 1);
   pinMode(PIN_SPI_SS, OUTPUT);
-  calculateClock(100000);
+  calculateClock(100000, config);
 }

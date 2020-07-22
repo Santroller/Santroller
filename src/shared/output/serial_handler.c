@@ -4,6 +4,7 @@
 #include "input/inputs/wii_ext.h"
 #include "serial_commands.h"
 #include "util/util.h"
+#include "leds/leds.h"
 #include <stdlib.h>
 static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 int currentCommand = 0;
@@ -77,9 +78,13 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     uint8_t offset = *data;
     data++;
     data_len--;
-    eeprom_write_block(data, ((uint8_t *)&config_pointer) + offset, data_len);
+    eeprom_update_block(data, ((uint8_t *)&config_pointer) + offset, data_len);
     return false;
   }
+  case COMMAND_SET_LEDS:
+    memcpy(controller.leds, data, sizeof(controller.leds));
+    tickLEDs(&controller);
+    return false;
   }
   getData(report);
   return true;

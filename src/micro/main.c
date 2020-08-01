@@ -13,6 +13,7 @@
 Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
+uint16_t size;
 USB_ClassInfo_HID_Device_t hidInterface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -54,7 +55,6 @@ int main(void) {
   initReports();
   USB_Init();
   sei();
-  uint16_t size;
   while (true) {
     tickInputs(&controller);
     tickLEDs(&controller);
@@ -91,13 +91,13 @@ int main(void) {
         Endpoint_Write_Stream_LE(data, size, NULL);
         Endpoint_ClearIN();
       }
-    }
+
 #ifndef MULTI_ADAPTOR
-    MIDI_Device_USBTask(&midiInterface);
+      MIDI_Device_USBTask(&midiInterface);
 #endif
+    }
   }
 }
-
 void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(XINPUT_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);

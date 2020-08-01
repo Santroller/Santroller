@@ -15,6 +15,7 @@
 
 #define constrain(amt, low, high)                                              \
   ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+#define min(a,b) a<b?a:b
 #define STR1(x) #x
 #define STR(x) STR1(x)
 #define PASTE(x, y) x##y
@@ -101,3 +102,4 @@ void enablePCI(uint8_t pin);
 unsigned long millis(void);
 unsigned long micros(void);
 void delay(unsigned long ms);
+long map(long x, long in_min, long in_max, long out_min, long out_max);

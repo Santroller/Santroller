@@ -54,7 +54,7 @@ int main(void) {
 
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
-   if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
+  if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
     eeprom_update_dword(&config.id, ARDWIINO_DEVICE_TYPE);
     eeprom_update_byte(&config.deviceType, deviceType);
   } else {
@@ -62,16 +62,7 @@ int main(void) {
   }
 
   sei();
-  while (true) {
-  }
-}
-void sendData(uint8_t data) {
-  if (data == FRAME_START_FEATURE_READ || data == FRAME_START_FEATURE_WRITE ||
-      data == FRAME_END || data == ESC) {
-    Serial_SendByte(ESC);
-    data = data ^ 0x20;
-  }
-  Serial_SendByte(data);
+  while (true) {}
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
@@ -116,7 +107,15 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     reboot();
   }
   Serial_SendByte(FRAME_START_FEATURE_WRITE);
-  while (data_len--) { sendData(*(data++)); }
+  while (data_len--) {
+    uint8_t d = *(data++);
+    if (d == FRAME_START_FEATURE_READ || d == FRAME_START_FEATURE_WRITE ||
+        d == FRAME_END || d == ESC) {
+      Serial_SendByte(ESC);
+      d = d ^ 0x20;
+    }
+    Serial_SendByte(d);
+  }
   Serial_SendByte(FRAME_END);
   return false;
 }
@@ -125,6 +124,7 @@ void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 uint8_t frame;
 bool escapeNext = false;
 bool reportIDNext = false;
+uint8_t ep;
 ISR(USART1_RX_vect, ISR_BLOCK) {
   uint8_t ReceivedByte = UDR1;
   if (ReceivedByte == FRAME_START_DEVICE) { reportIDNext = true; }
@@ -151,34 +151,37 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
   if (frame == FRAME_START_DEVICE) {
     if (reportIDNext) {
       reportIDNext = false;
-      // Some controllers need the report id, some don't. breaking will send it, returning wont.
+      // Some controllers need the report id, some don't. breaking will send it,
+      // returning wont.
       switch (ReceivedByte) {
       case REPORT_ID_XINPUT:
-        Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+        ep = XINPUT_EPADDR_IN;
         break;
       case REPORT_ID_XINPUT_2:
-        Endpoint_SelectEndpoint(XINPUT_2_EPADDR_IN);
+        ep = XINPUT_2_EPADDR_IN;
         break;
       case REPORT_ID_XINPUT_3:
-        Endpoint_SelectEndpoint(XINPUT_3_EPADDR_IN);
+        ep = XINPUT_3_EPADDR_IN;
         break;
       case REPORT_ID_XINPUT_4:
-        Endpoint_SelectEndpoint(XINPUT_4_EPADDR_IN);
+        ep = XINPUT_4_EPADDR_IN;
         break;
       case REPORT_ID_MIDI:
-        Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+        ep = MIDI_EPADDR_IN;
         return;
       case REPORT_ID_GAMEPAD:
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        ep = HID_EPADDR_IN;
         return;
       default:
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        ep = HID_EPADDR_IN;
         break;
       }
     }
+    Endpoint_SelectEndpoint(ep);
     if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
       Endpoint_Write_8(ReceivedByte);
     }
+
   } else if (frame == FRAME_START_FEATURE_READ) {
     dbuf[len++] = ReceivedByte;
   }

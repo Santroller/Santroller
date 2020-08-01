@@ -8,3 +8,4 @@ extern Controller_t controller;
 bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data);
 void processHIDReadFeatureReport(void);
 void writeToUSB(const void *const Buffer, uint16_t Length);
+bool getData(uint8_t report);

@@ -24,7 +24,7 @@
 #include <stdbool.h>
 
 #ifndef TWI_FREQ
-#  define TWI_FREQ 300000L
+#  define TWI_FREQ 250000L
 #endif
 
 #ifndef TWI_BUFFER_LENGTH
@@ -51,11 +51,12 @@ bool twi_stop(void);
 void twi_releaseBus(void);
 uint8_t twi_endTransmission(uint8_t txAddress, uint8_t sendStop);
 bool twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,
-                            uint8_t *data);
+                         uint8_t *data);
+bool twi_readSingleFromPointer(uint8_t address, uint8_t pointer, uint8_t *data);
 bool twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
-                            uint8_t *data);
+                             uint8_t *data);
 bool twi_writeSingleToPointer(uint8_t address, uint8_t pointer, uint8_t data);
 bool twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
-                           uint8_t *data);
+                        uint8_t *data);
 
 #endif

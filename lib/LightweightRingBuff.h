@@ -44,7 +44,7 @@
 
 /* Defines: */
 /** Size of each ring buffer, in data elements - must be between 1 and 255. */
-#define BUFFER_SIZE 64
+#define BUFFER_SIZE 400
 
 /** Maximum number of data elements to buffer before forcing a flush.
  *  Must be less than BUFFER_SIZE

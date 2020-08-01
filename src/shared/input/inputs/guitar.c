@@ -8,6 +8,7 @@
 #include "util/util.h"
 #include <stdbool.h>
 #include <util/delay.h>
+#include <stdlib.h>
 // Constants used by the mpu 6050
 #define FSR 2000
 //#define GYRO_SENS       ( 131.0f * 250.f / (float)FSR )
@@ -61,6 +62,7 @@ uint8_t types[MIDI_ROCK_BAND_DRUMS+1] = {
 bool isDrum(void) { return types[config.main.subType] == DRUM; }
 bool isGuitar(void) { return types[config.main.subType] == GUITAR; }
 void initMPU6050(unsigned int rate) {
+  sei();
   mpu_init(NULL);
   mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
   mpu_set_gyro_fsr(FSR);

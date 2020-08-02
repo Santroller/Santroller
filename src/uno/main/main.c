@@ -67,6 +67,7 @@ static uint8_t frame = 0;
 bool escapeNext = false;
 uint8_t report = 0;
 uint8_t *data;
+bool isConfig = false;
 #ifdef USART0_RX_vect
 ISR(USART0_RX_vect, ISR_BLOCK) {
 #else
@@ -80,9 +81,10 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     data = NULL;
     frame = ReceivedByte;
     report = 0;
+    isConfig = false;
     return;
   } else if (ReceivedByte == FRAME_END) {
-    if (report == COMMAND_WRITE_CONFIG) {
+    if (isConfig) {
       eeprom_update_block(&config, &config_pointer, sizeof(config));
     }
     reportToHandle = report;
@@ -100,8 +102,8 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     } else if (report == COMMAND_SET_LEDS) {
       data = (uint8_t *)&controller.leds;
     }
-  } else if (report == COMMAND_WRITE_CONFIG) {
-    report++;
+  } else if (!isConfig && report == COMMAND_WRITE_CONFIG) {
+    isConfig = true;
     data += ReceivedByte;
   } else if (data) {
     *(data++) = ReceivedByte;

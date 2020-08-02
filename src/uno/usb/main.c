@@ -120,7 +120,14 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   return false;
 }
 
-void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
+void EVENT_USB_Device_ControlRequest(void) {
+  // The LUFA codebase will enable interrupts here, even though we are already in an interrupt by the time this is called.
+  // The issue with this, is that deviceControlRequest talks to usb, but other interrupts also expect to be able to do this, and that breaks USB.
+  // Disabling interrupts while servicing control requests, and then enabling them after fixes some issues when LEDs are enabled.
+  cli();
+  deviceControlRequest();
+  sei();
+}
 uint8_t frame;
 bool escapeNext = false;
 bool reportIDNext = false;

@@ -12,27 +12,25 @@ bool lookingForDigital = false;
 bool lookingForAnalog = false;
 int lastAnalogValue[NUM_ANALOG_INPUTS];
 void initDirectInput() {
-  uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
+  PinConfig_t *pins = ((PinsCombined_t *)&config.pins)->pins;
   setUpValidPins();
   if (config.main.inputType == DIRECT) {
     for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
-      if (pins[i] != INVALID_PIN) {
-        bool is_fret = (i >= XBOX_A || i == XBOX_LB || i == XBOX_RB);
+      PinConfig_t current = pins[i];
+      if (current.pin != INVALID_PIN) {
         Pin_t pin = {};
         pin.offset = i;
-        pin.mask = digitalPinToBitMask(pins[i]);
-        pin.port = portInputRegister(digitalPinToPort((pins[i])));
+        pin.mask = digitalPinToBitMask(current.pin);
+        pin.port = portInputRegister(digitalPinToPort(current.pin));
         pin.pmask = _BV(i);
-        pin.eq = is_fret && config.main.fretLEDMode == LEDS_INLINE;
-        if (isDrum() && is_fret) {
-          // We should probably keep a list of drum specific buttons, instead of
-          // using isfret
+        pin.eq = !current.pullup;
+        if (!current.digital) {
           // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift
           // it
-          setUpAnalogDigitalPin(pin, pins[i], config.drumThreshold << 3);
+          setUpAnalogDigitalPin(pin, current.pin, current.threshold << 3);
         } else {
-          pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
+          pinMode(current.pin, pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;
         }
       }

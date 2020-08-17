@@ -30,7 +30,10 @@ typedef struct {
 
 extern AnalogInfo_t joyData[NUM_ANALOG_INPUTS];
 extern int validAnalog;
-
+#define LOW 0
+#define CHANGE 1
+#define FALLING 2
+#define RISING 3
 void setUpAnalogPin(uint8_t pin);
 int digitalRead(uint8_t pin);
 void pinMode(uint8_t pin, uint8_t mode);

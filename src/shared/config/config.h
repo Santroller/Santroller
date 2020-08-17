@@ -6,38 +6,41 @@
 #include <stdint.h>
 typedef struct {
   uint8_t pin;
+  uint8_t threshold;
+  bool digital;
   bool inverted;
-} AnalogPin_t;
+  bool pullup;
+} PinConfig_t;
 
 typedef struct {
-  uint8_t up;
-  uint8_t down;
-  uint8_t left;
-  uint8_t right;
-  uint8_t start;
-  uint8_t back;
-  uint8_t left_stick;
-  uint8_t right_stick;
-  uint8_t LB;
-  uint8_t RB;
-  uint8_t home;
-  uint8_t capture;
-  uint8_t a;
-  uint8_t b;
-  uint8_t x;
-  uint8_t y;
-  AnalogPin_t lt;
-  AnalogPin_t rt;
-  AnalogPin_t l_x;
-  AnalogPin_t l_y;
-  AnalogPin_t r_x;
-  AnalogPin_t r_y;
+  PinConfig_t up;
+  PinConfig_t down;
+  PinConfig_t left;
+  PinConfig_t right;
+  PinConfig_t start;
+  PinConfig_t back;
+  PinConfig_t left_stick;
+  PinConfig_t right_stick;
+  PinConfig_t LB;
+  PinConfig_t RB;
+  PinConfig_t home;
+  PinConfig_t capture;
+  PinConfig_t a;
+  PinConfig_t b;
+  PinConfig_t x;
+  PinConfig_t y;
+  PinConfig_t lt;
+  PinConfig_t rt;
+  PinConfig_t l_x;
+  PinConfig_t l_y;
+  PinConfig_t r_x;
+  PinConfig_t r_y;
 } Pins_t;
 
-// A version of the above struct, but with everything combined into arrays instead of seperated.
+// A version of the above struct, but with everything combined into arrays
+// instead of seperated.
 typedef struct {
-  uint8_t buttons[16];
-  AnalogPin_t axis[6];
+  PinConfig_t pins[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
 } PinsCombined_t;
 
 typedef struct {
@@ -101,7 +104,6 @@ typedef struct {
   Pins_t pins;
   AxisConfig_t axis;
   Keys_t keys;
-  uint8_t drumThreshold;
   Led_t leds[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   MidiConfig_t midi;
 } Configuration_t;

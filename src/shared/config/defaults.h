@@ -13,7 +13,9 @@
 #define TILT_SENSITIVITY 3000
 
 #define FRET_MODE LEDS_DISABLED
-#define COLOUR(col) ((uint32_t)col>>16) & 0xff, ((uint32_t)col >> 8) & 0xff, ((uint32_t)col) & 0xff
+#define COLOUR(col)                                                            \
+  ((uint32_t)col >> 16) & 0xff, ((uint32_t)col >> 8) & 0xff,                   \
+      ((uint32_t)col) & 0xff
 #define LED_PINS                                                               \
   {                                                                            \
     {XBOX_A + 1, COLOUR(Green)}, {XBOX_B + 1, COLOUR(Red)},                    \
@@ -28,6 +30,9 @@
 #define MAP_ACCEL_TO_R true
 #define EMPTY                                                                  \
   { INVALID_PIN, INVALID_PIN }
+
+#define INVALID_AN_PIN                                                         \
+  { INVALID_PIN, false, false }
 // For a list of keyboard bindings, visit
 // http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 
@@ -42,13 +47,12 @@
 #define MPU_6050_ORIENTATION NEGATIVE_X
 #define PINS                                                                   \
   {                                                                            \
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,           \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
-        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
-        INVALID_PIN, {INVALID_PIN, false}, {INVALID_PIN, false},               \
-        {INVALID_PIN, false}, {INVALID_PIN, false}, {INVALID_PIN, false}, {    \
-      INVALID_PIN, false                                                       \
-    }                                                                          \
+    INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,            \
+        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
+        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
+        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
+        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
+        INVALID_AN_PIN, INVALID_AN_PIN                                         \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
@@ -67,5 +71,5 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
          TILT_SENSITIVITY},                                                    \
-        KEYS, DRUM_THRESHOLD, LED_PINS, {{0}, {0}, {0}},                       \
+        KEYS, LED_PINS, {{0}, {0}, {0}},                       \
   }

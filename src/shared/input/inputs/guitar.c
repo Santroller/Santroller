@@ -22,8 +22,8 @@ volatile bool ready = false;
 void tickMPUTilt(Controller_t *controller) {
   static short sensors;
   static unsigned char fifoCount;
-  if (ready) {
-    dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
+  dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
+  if (sensors == INV_WXYZ_QUAT) {
     q._f.w = (float)q._l[0] / (float)QUAT_SENS;
     q._f.x = (float)q._l[1] / (float)QUAT_SENS;
     q._f.y = (float)q._l[2] / (float)QUAT_SENS;
@@ -71,21 +71,11 @@ void initMPU6050(unsigned int rate) {
   dmp_set_fifo_rate(rate);
   mpu_set_dmp_state(1);
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
-  dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);
 }
 void initGuitar(void) {
   if (!isGuitar()) return;
   if (config.main.tiltType == MPU_6050) {
     initMPU6050(15);
-    pinMode(7, INPUT_PULLUP);
-    uint8_t mode = FALLING;
-#if defined(__AVR_ATmega32U4__)
-    EICRB = (EICRB & ~((1 << ISC60) | (1 << ISC61))) | (mode << ISC60);
-    EIMSK |= (1 << INT6);
-#else
-    EICRA = (EICRA & ~((1 << ISC00) | (1 << ISC01))) | (mode << ISC00);
-    EIMSK |= (1 << INT0);
-#endif
     tick = tickMPUTilt;
   } else if (config.main.tiltType == DIGITAL) {
     pinMode(config.pins.r_y.pin, INPUT_PULLUP);
@@ -107,9 +97,3 @@ void tickGuitar(Controller_t *controller) {
   if (tick == NULL) return;
   tick(controller);
 }
-// Micro pin 7, uno,mega pin 2 (while the micro does have interrupts on pin 2, they would intefere with i2c)
-#if defined(__AVR_ATmega32U4__)
-ISR(INT6_vect) { ready = true; }
-#else
-ISR(INT0_vect) { ready = true; }
-#endif

@@ -16,26 +16,25 @@ void enablePCI(uint8_t pin) {
   pinMode(pin, INPUT_PULLUP);
 }
 
-void digitalWrite(uint8_t pin, uint8_t val)
-{
-	uint8_t bit = digitalPinToBitMask(pin);
-	uint8_t port = digitalPinToPort(pin);
-	volatile uint8_t *out;
+void digitalWrite(uint8_t pin, uint8_t val) {
+  uint8_t bit = digitalPinToBitMask(pin);
+  uint8_t port = digitalPinToPort(pin);
+  volatile uint8_t *out;
 
-	if (port == NOT_A_PIN) return;
+  if (port == NOT_A_PIN) return;
 
-	out = portOutputRegister(port);
+  out = portOutputRegister(port);
 
-	uint8_t oldSREG = SREG;
-	cli();
+  uint8_t oldSREG = SREG;
+  cli();
 
-	if (val == 0) {
-		*out &= ~bit;
-	} else {
-		*out |= bit;
-	}
+  if (val == 0) {
+    *out &= ~bit;
+  } else {
+    *out |= bit;
+  }
 
-	SREG = oldSREG;
+  SREG = oldSREG;
 }
 
 int digitalRead(uint8_t pin) {
@@ -51,7 +50,8 @@ int digitalRead(uint8_t pin) {
 void setUpAnalogPin(uint8_t offset) {
   AnalogInfo_t ret = {0};
   ret.offset = offset;
-  AnalogPin_t apin = ((PinsCombined_t *)&config.pins)->axis[offset];
+  PinConfig_t apin =
+      ((PinsCombined_t *)&config.pins)->pins[XBOX_BTN_COUNT + offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
   if (ret.offset == 5 && isGuitar() && config.main.tiltType != ANALOGUE) {

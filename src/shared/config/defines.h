@@ -74,3 +74,9 @@ enum MidiType {
   NOTE,
   CONTROL_COMMAND
 };
+
+enum PinTypeFlags {
+  DIGITAL_PIN,
+  PINUP,
+  INVERTED,
+};

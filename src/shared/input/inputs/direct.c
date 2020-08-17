@@ -24,8 +24,8 @@ void initDirectInput() {
         pin.mask = digitalPinToBitMask(current.pin);
         pin.port = portInputRegister(digitalPinToPort(current.pin));
         pin.pmask = _BV(i);
-        pin.eq = !current.pullup;
-        if (!current.digital) {
+        pin.eq = !(_BV(current.type) & PINUP);
+        if (!(_BV(current.type) & DIGITAL_PIN)) {
           // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift
           // it
           setUpAnalogDigitalPin(pin, current.pin, current.threshold << 3);

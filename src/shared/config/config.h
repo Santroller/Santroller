@@ -7,9 +7,7 @@
 typedef struct {
   uint8_t pin;
   uint8_t threshold;
-  bool digital;
-  bool inverted;
-  bool pullup;
+  uint8_t type;
 } PinConfig_t;
 
 typedef struct {

@@ -28,7 +28,7 @@ void initDirectInput() {
         if (!(_BV(current.type) & DIGITAL_PIN)) {
           // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift
           // it
-          setUpAnalogDigitalPin(pin, current.pin, current.threshold << 3);
+          setUpAnalogDigitalPin(pin, current.pin, 128 << 3);
         } else {
           pinMode(current.pin, pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;

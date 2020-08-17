@@ -32,7 +32,7 @@
   { INVALID_PIN, INVALID_PIN }
 
 #define INVALID_AN_PIN                                                         \
-  { INVALID_PIN, false, false }
+  { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit
 // http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 

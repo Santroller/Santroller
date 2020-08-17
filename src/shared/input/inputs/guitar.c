@@ -7,8 +7,8 @@
 #include "mpu6050/mpu_math.h"
 #include "util/util.h"
 #include <stdbool.h>
-#include <util/delay.h>
 #include <stdlib.h>
+#include <util/delay.h>
 // Constants used by the mpu 6050
 #define FSR 2000
 //#define GYRO_SENS       ( 131.0f * 250.f / (float)FSR )
@@ -23,11 +23,11 @@ void tickMPUTilt(Controller_t *controller) {
   static short sensors;
   static unsigned char fifoCount;
   if (ready) {
-    ready = false;
     dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
-    for (uint8_t i = 0; i < 4; i++) {
-      q._f2[i] = (float)q._l[i] / (float)QUAT_SENS;
-    }
+    q._f.w = (float)q._l[0] / (float)QUAT_SENS;
+    q._f.x = (float)q._l[1] / (float)QUAT_SENS;
+    q._f.y = (float)q._l[2] / (float)QUAT_SENS;
+    q._f.z = (float)q._l[3] / (float)QUAT_SENS;
 
     quaternionToEuler(&q._f, &ypr[2], &ypr[1], &ypr[0]);
     z = (wrap_pi(ypr[config.axis.mpu6050Orientation / 2]) * (65535 / M_PI));
@@ -46,19 +46,18 @@ void (*tick)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?
 #define DRUM 1
 #define GUITAR 2
-uint8_t types[MIDI_ROCK_BAND_DRUMS+1] = {
-    [PS3_GUITAR_HERO_DRUMS] = DRUM,     [PS3_ROCK_BAND_DRUMS] = DRUM,
-    [WII_ROCK_BAND_DRUMS] = DRUM,       [XINPUT_ROCK_BAND_DRUMS] = DRUM,
-    [XINPUT_GUITAR_HERO_DRUMS] = DRUM,  [MIDI_ROCK_BAND_DRUMS] = DRUM,
-    [MIDI_GUITAR_HERO_DRUMS] = DRUM,    [PS3_GUITAR_HERO_GUITAR] = GUITAR,
-    [PS3_ROCK_BAND_GUITAR] = GUITAR,    [WII_ROCK_BAND_GUITAR] = GUITAR,
-    [XINPUT_ROCK_BAND_GUITAR] = GUITAR, [XINPUT_GUITAR_HERO_GUITAR] = GUITAR,
-    [XINPUT_LIVE_GUITAR] = GUITAR,      [MIDI_ROCK_BAND_GUITAR] = GUITAR,
-    [MIDI_GUITAR_HERO_GUITAR] = GUITAR, [MIDI_LIVE_GUITAR] = GUITAR,
+uint8_t types[MIDI_ROCK_BAND_DRUMS + 1] = {
+    [PS3_GUITAR_HERO_DRUMS] = DRUM,      [PS3_ROCK_BAND_DRUMS] = DRUM,
+    [WII_ROCK_BAND_DRUMS] = DRUM,        [XINPUT_ROCK_BAND_DRUMS] = DRUM,
+    [XINPUT_GUITAR_HERO_DRUMS] = DRUM,   [MIDI_ROCK_BAND_DRUMS] = DRUM,
+    [MIDI_GUITAR_HERO_DRUMS] = DRUM,     [PS3_GUITAR_HERO_GUITAR] = GUITAR,
+    [PS3_ROCK_BAND_GUITAR] = GUITAR,     [WII_ROCK_BAND_GUITAR] = GUITAR,
+    [XINPUT_ROCK_BAND_GUITAR] = GUITAR,  [XINPUT_GUITAR_HERO_GUITAR] = GUITAR,
+    [XINPUT_LIVE_GUITAR] = GUITAR,       [MIDI_ROCK_BAND_GUITAR] = GUITAR,
+    [MIDI_GUITAR_HERO_GUITAR] = GUITAR,  [MIDI_LIVE_GUITAR] = GUITAR,
     [KEYBOARD_GUITAR_HERO_DRUMS] = DRUM, [KEYBOARD_GUITAR_HERO_GUITAR] = GUITAR,
-    [KEYBOARD_ROCK_BAND_DRUMS] = DRUM, [KEYBOARD_ROCK_BAND_GUITAR] = GUITAR,
-    [KEYBOARD_LIVE_GUITAR] = GUITAR
-};
+    [KEYBOARD_ROCK_BAND_DRUMS] = DRUM,   [KEYBOARD_ROCK_BAND_GUITAR] = GUITAR,
+    [KEYBOARD_LIVE_GUITAR] = GUITAR};
 bool isDrum(void) { return types[config.main.subType] == DRUM; }
 bool isGuitar(void) { return types[config.main.subType] == GUITAR; }
 void initMPU6050(unsigned int rate) {
@@ -78,7 +77,15 @@ void initGuitar(void) {
   if (!isGuitar()) return;
   if (config.main.tiltType == MPU_6050) {
     initMPU6050(15);
-    enablePCI(config.pins.r_y.pin);
+    pinMode(7, INPUT_PULLUP);
+    uint8_t mode = FALLING;
+#if defined(__AVR_ATmega32U4__)
+    EICRB = (EICRB & ~((1 << ISC60) | (1 << ISC61))) | (mode << ISC60);
+    EIMSK |= (1 << INT6);
+#else
+    EICRA = (EICRA & ~((1 << ISC00) | (1 << ISC01))) | (mode << ISC00);
+    EIMSK |= (1 << INT0);
+#endif
     tick = tickMPUTilt;
   } else if (config.main.tiltType == DIGITAL) {
     pinMode(config.pins.r_y.pin, INPUT_PULLUP);
@@ -100,8 +107,9 @@ void tickGuitar(Controller_t *controller) {
   if (tick == NULL) return;
   tick(controller);
 }
-ISR(PCINT0_vect) { ready = true; }
-#if defined(PCINT1_vect)
-ISR(PCINT1_vect) { ready = true; }
-ISR(PCINT2_vect) { ready = true; }
+// Micro pin 7, uno,mega pin 2 (while the micro does have interrupts on pin 2, they would intefere with i2c)
+#if defined(__AVR_ATmega32U4__)
+ISR(INT6_vect) { ready = true; }
+#else
+ISR(INT0_vect) { ready = true; }
 #endif

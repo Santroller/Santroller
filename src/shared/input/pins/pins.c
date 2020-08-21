@@ -58,7 +58,7 @@ void setUpAnalogPin(uint8_t offset) {
     return;
   }
   ret.hasDigital = false;
-  ret.inverted = apin.type & _BV(INVERTED);
+  ret.inverted = apin.inverted;
 #if defined(analogPinToChannel)
 #  if defined(__AVR_ATmega32U4__)
   if (pin >= 18) pin -= 18; // allow for channel or pin numbers

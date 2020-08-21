@@ -77,6 +77,6 @@ enum MidiType {
 
 enum PinTypeFlags {
   DIGITAL_PIN,
-  PINUP,
+  ANALOGUE_PIN,
   INVERTED,
 };

@@ -16,7 +16,7 @@
  */
 #ifndef _INV_MPU_DMP_MOTION_DRIVER_H_
 #define _INV_MPU_DMP_MOTION_DRIVER_H_
-
+#define MPU_EXTRAS
 #include <stdint.h>
 #ifdef __cplusplus
 extern "C" {

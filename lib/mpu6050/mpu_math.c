@@ -1,28 +1,41 @@
 #include "mpu_math.h"
-static float test, sqy, sqz, sqw;
-void quaternionToEuler(const struct s_quat *q, float *x, float *y,
-                              float *z) {
+#include "fxpt_atan2.h"
+#include "config/defines.h"
+#define MUL 5
+#define MAX 32767/MUL
+static int16_t test, sqy, sqz, sqw;
+
+void quaternionToEuler(const struct s_quat *q, int16_t *out, uint8_t angle) {
 
   test = q->x * q->z - q->w * q->y;
-
-  if (test > 0.5f - EPSILON) {
-    *x = 2.f * atan2(q->y, q->w);
-    *y = PI_2;
-    *z = 0;
-  } else if (test < -0.5f + EPSILON) {
-    *x = -2.f * atan2(q->y, q->w);
-    *y = -PI_2;
-    *z = 0;
-  } else {
-    sqy = q->y * q->y;
-    sqz = q->z * q->z;
-    sqw = q->w * q->w;
-    *x = atan2(2.f * (q->x * q->w + q->y * q->z), 1.f - 2.f * (sqz + sqw));
-    *y = asin(2.f * test);
-    *z = atan2(2.f * (q->x * q->y - q->z * q->w), 1.f - 2.f * (sqy + sqz));
+  sqy = q->y * q->y;
+  sqz = q->z * q->z;
+  sqw = q->w * q->w;
+  switch (angle) {
+    case NEGATIVE_X:
+      *out = -fxpt_atan2(2 * (q->x * q->y - q->z * q->w), 32768 - 2 * (sqy + sqz));
+      break;
+    case POSITIVE_X:
+      *out = fxpt_atan2(2 * (q->x * q->y - q->z * q->w), 32768 - 2 * (sqy + sqz));
+      break;
+    case NEGATIVE_Y:
+      *out = -fxpt_asin(test);
+      break;
+    case POSITIVE_Y:
+      *out = fxpt_asin(test);
+      break;
+    case NEGATIVE_Z:
+      *out = -fxpt_atan2(2 * (q->x * q->w + q->y * q->z), 32768 - 2 * (sqz + sqw));
+      break;
+    case POSITIVE_Z:
+      *out = fxpt_atan2(2 * (q->x * q->w + q->y * q->z), 32768 - 2 * (sqz + sqw));
+      break;
   }
-}
-
-float wrap_pi(float x) {
-  return (x < -M_PI ? x + M_PI + M_PI : (x > M_PI ? x - M_PI : x));
+  if (*out > MAX) {
+    *out = MAX;
+  }
+  if (*out < -MAX) {
+    *out = -MAX;
+  }
+  *out *= MUL;
 }

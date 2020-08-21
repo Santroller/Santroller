@@ -14,9 +14,11 @@
 //#define GYRO_SENS       ( 131.0f * 250.f / (float)FSR )
 #define GYRO_SENS 16.375f
 #define QUAT_SENS 1073741824.f // 2^30
+// We want to scale values up by 128, as we are doing fixed point calculations.
+#define QUAT_SENS_FP 8388608.f // 2^23
 union u_quat q;
-int32_t z;
-static float ypr[3];
+int16_t z;
+// static float ypr[3];
 AnalogInfo_t analog;
 volatile bool ready = false;
 void tickMPUTilt(Controller_t *controller) {
@@ -24,17 +26,14 @@ void tickMPUTilt(Controller_t *controller) {
   static unsigned char fifoCount;
   dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
   if (sensors == INV_WXYZ_QUAT) {
-    q._f.w = (float)q._l[0] / (float)QUAT_SENS;
-    q._f.x = (float)q._l[1] / (float)QUAT_SENS;
-    q._f.y = (float)q._l[2] / (float)QUAT_SENS;
-    q._f.z = (float)q._l[3] / (float)QUAT_SENS;
+    config.axis.mpu6050Orientation = NEGATIVE_Y;
+    q._f.w = (float)q._l[0] / QUAT_SENS_FP;
+    q._f.x = (float)q._l[1] / QUAT_SENS_FP;
+    q._f.y = (float)q._l[2] / QUAT_SENS_FP;
+    q._f.z = (float)q._l[3] / QUAT_SENS_FP;
 
-    quaternionToEuler(&q._f, &ypr[2], &ypr[1], &ypr[0]);
-    z = (wrap_pi(ypr[config.axis.mpu6050Orientation / 2]) * (65535 / M_PI));
-    if (config.axis.mpu6050Orientation & 1) { z = -z; }
-    if (z > 32767) { z = 65535 - z; }
+    quaternionToEuler(&q._f, &z, config.axis.mpu6050Orientation);
     z += config.axis.tiltSensitivity;
-    z = constrain(z, 0, 32767);
     if (isnan(z)) { z = 0; }
   }
   controller->r_y = z;
@@ -73,21 +72,22 @@ void initMPU6050(unsigned int rate) {
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
 void initGuitar(void) {
-  if (!isGuitar()) return;
-  if (config.main.tiltType == MPU_6050) {
-    initMPU6050(15);
-    tick = tickMPUTilt;
-  } else if (config.main.tiltType == DIGITAL) {
-    pinMode(config.pins.r_y.pin, INPUT_PULLUP);
-    tick = tickDigitalTilt;
-  } else if (config.main.tiltType == ANALOGUE && config.main.inputType == WII) {
-    initDirectInput();
-    tick = tickDirectInput;
-  }
+  // if (!isGuitar()) return;
+  // if (config.main.tiltType == MPU_6050) {
+  initMPU6050(250);
+  tick = tickMPUTilt;
+  // } else if (config.main.tiltType == DIGITAL) {
+  //   pinMode(config.pins.r_y.pin, INPUT_PULLUP);
+  //   tick = tickDigitalTilt;
+  // } else if (config.main.tiltType == ANALOGUE && config.main.inputType ==
+  // WII) {
+  //   initDirectInput();
+  //   tick = tickDirectInput;
+  // }
 }
 int16_t r_x;
 void tickGuitar(Controller_t *controller) {
-  if (!isGuitar()) return;
+  // if (!isGuitar()) return;
   r_x = controller->r_x;
   // Whammy needs to be scaled so that it is picked up
   if (r_x > 0) r_x = 0;

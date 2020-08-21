@@ -6,7 +6,10 @@
 #include <stdint.h>
 typedef struct {
   uint8_t pin;
-  uint8_t type;
+  uint8_t threshold;
+  bool digital;
+  bool inverted;
+  bool pullup;
 } PinConfig_t;
 
 typedef struct {
@@ -33,6 +36,7 @@ typedef struct {
   PinConfig_t r_x;
   PinConfig_t r_y;
 } Pins_t;
+
 // A version of the above struct, but with everything combined into arrays
 // instead of seperated.
 typedef struct {

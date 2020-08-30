@@ -18,7 +18,6 @@
 #define QUAT_SENS_FP 8388608.f // 2^23
 union u_quat q;
 int16_t z;
-// static float ypr[3];
 AnalogInfo_t analog;
 volatile bool ready = false;
 void tickMPUTilt(Controller_t *controller) {
@@ -34,7 +33,6 @@ void tickMPUTilt(Controller_t *controller) {
 
     quaternionToEuler(&q._f, &z, config.axis.mpu6050Orientation);
     z += config.axis.tiltSensitivity;
-    if (isnan(z)) { z = 0; }
   }
   controller->r_y = z;
 }
@@ -72,22 +70,21 @@ void initMPU6050(unsigned int rate) {
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
 void initGuitar(void) {
-  // if (!isGuitar()) return;
-  // if (config.main.tiltType == MPU_6050) {
-  initMPU6050(250);
+  if (!isGuitar()) return;
+  if (config.main.tiltType == MPU_6050) {
+  initMPU6050(30);
   tick = tickMPUTilt;
-  // } else if (config.main.tiltType == DIGITAL) {
-  //   pinMode(config.pins.r_y.pin, INPUT_PULLUP);
-  //   tick = tickDigitalTilt;
-  // } else if (config.main.tiltType == ANALOGUE && config.main.inputType ==
-  // WII) {
-  //   initDirectInput();
-  //   tick = tickDirectInput;
-  // }
+  } else if (config.main.tiltType == DIGITAL) {
+    pinMode(config.pins.r_y.pin, INPUT_PULLUP);
+    tick = tickDigitalTilt;
+  } else if (config.main.tiltType == ANALOGUE && config.main.inputType == WII) {
+    initDirectInput();
+    tick = tickDirectInput;
+  }
 }
 int16_t r_x;
 void tickGuitar(Controller_t *controller) {
-  // if (!isGuitar()) return;
+  if (!isGuitar()) return;
   r_x = controller->r_x;
   // Whammy needs to be scaled so that it is picked up
   if (r_x > 0) r_x = 0;

@@ -28,14 +28,13 @@
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
-#define EMPTY                                                                  \
-  { INVALID_PIN, INVALID_PIN }
 
 #define INVALID_AN_PIN                                                         \
   { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit
 // http://fourwalledcubicle.com/files/LUFA/Doc/151115/html/group___group___u_s_b_class_h_i_d_common.html
 
+#define EMPTY INVALID_AN_PIN
 #define KEYS                                                                   \
   {                                                                            \
     0x04, 0x16, 0x0d, 0x0e, 0x0f, 0x33, 0x28, 0x0b, 0x50, 0x4f, 0x52, 0x51,    \
@@ -47,10 +46,9 @@
 #define MPU_6050_ORIENTATION NEGATIVE_X
 #define PINS                                                                   \
   {                                                                            \
-    INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,            \
-        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
-        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
-        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
+    9, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,        \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
         INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
         INVALID_AN_PIN, INVALID_AN_PIN                                         \
   }
@@ -69,7 +67,7 @@
      ARDWIINO_DEVICE_TYPE,                                                     \
      CONFIG_VERSION},                                                          \
         PINS,                                                                  \
-        {TRIGGER_THRESHOLD, JOY_THRESHOLD, MPU_6050_ORIENTATION,               \
-         TILT_SENSITIVITY},                                                    \
-        KEYS, LED_PINS, {{0}, {0}, {0}},                       \
+        {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
+         MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
+        KEYS, LED_PINS, {{0}, {0}, {0}},                                       \
   }

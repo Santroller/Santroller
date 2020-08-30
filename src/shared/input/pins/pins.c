@@ -50,8 +50,7 @@ int digitalRead(uint8_t pin) {
 void setUpAnalogPin(uint8_t offset) {
   AnalogInfo_t ret = {0};
   ret.offset = offset;
-  PinConfig_t apin =
-      ((PinsCombined_t *)&config.pins)->pins[XBOX_BTN_COUNT + offset];
+  AnalogPin_t apin = ((PinsCombined_t *)&config.pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
   if (ret.offset == 5 && isGuitar() && config.main.tiltType != ANALOGUE) {

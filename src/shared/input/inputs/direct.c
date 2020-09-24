@@ -37,7 +37,6 @@ void initDirectInput() {
         }
       }
     }
-    scheduleAllAnalogReads();
   }
 }
 bool shouldSkipPin(uint8_t i) {
@@ -115,6 +114,7 @@ void tickDirectInput(Controller_t *controller) {
     }
     return;
   }
+  tickAnalog();
   Pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
@@ -135,6 +135,4 @@ void tickDirectInput(Controller_t *controller) {
       combinedController->triggers[info.offset] = info.value >> 8;
     }
   }
-
-  scheduleAllAnalogReads();
 }

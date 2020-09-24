@@ -39,7 +39,7 @@ int digitalRead(uint8_t pin);
 void pinMode(uint8_t pin, uint8_t mode);
 void setupADC(void);
 void enablePCI(uint8_t pin);
-void scheduleAllAnalogReads(void);
+void tickAnalog(void);
 int analogRead(uint8_t pin);
 void stopReading(void);
 void setUpValidPins(void);

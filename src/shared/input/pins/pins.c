@@ -5,8 +5,8 @@
 #include "util/util.h"
 
 int validAnalog = 0;
-volatile int currentAnalog = 0;
-volatile bool stopADC = false;
+int currentAnalog = 0;
+bool first = true;
 AnalogInfo_t joyData[NUM_ANALOG_INPUTS];
 
 // Enable a pin change interrupt
@@ -126,7 +126,20 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   ret.mux = (1 << 6) | (pin & 0x07);
   joyData[validAnalog++] = ret;
 }
-void scheduleAnalogRead(void) {
+void tickAnalog(void) {
+  if (!first && bit_is_set(ADCSRA, ADSC)) {
+    uint8_t low, high;
+    low = ADCL;
+    high = ADCH;
+    uint16_t data = (high << 8) | low;
+    if (!joyData[currentAnalog].hasDigital) {
+      if (joyData[currentAnalog].inverted) data *= -1;
+      data = (data - 512) * 64;
+    }
+    joyData[currentAnalog++].value = data;
+  }
+  first = false;
+  if (currentAnalog == validAnalog) { currentAnalog = 0; }
   AnalogInfo_t info = joyData[currentAnalog];
 #if defined(ADCSRB) && defined(MUX5)
   ADCSRB = info.srb;
@@ -199,15 +212,7 @@ int analogRead(uint8_t pin) {
   // combine the two bytes
   return (high << 8) | low;
 }
-void scheduleAllAnalogReads(void) {
-  if (validAnalog != 0 && currentAnalog == validAnalog) {
-    stopADC = false;
-    currentAnalog = 0;
-    scheduleAnalogRead();
-  }
-}
 void stopReading(void) {
-  stopADC = true;
   while (bit_is_set(ADCSRA, ADSC))
     ;
 }
@@ -282,21 +287,6 @@ void setUpValidPins(void) {
   stopReading();
   validAnalog = 0;
   currentAnalog = 0;
+  first = true;
   for (int i = 0; i < 6; i++) { setUpAnalogPin(i); }
-  currentAnalog = validAnalog;
-}
-
-// ISR triggered when ADC is ready to read.
-ISR(ADC_vect, ISR_BLOCK) {
-  if (stopADC) return;
-  uint8_t low, high;
-  low = ADCL;
-  high = ADCH;
-  uint16_t data = (high << 8) | low;
-  if (!joyData[currentAnalog].hasDigital) {
-    if (joyData[currentAnalog].inverted) data *= -1;
-    data = (data - 512) * 64;
-  }
-  joyData[currentAnalog++].value = data;
-  if (currentAnalog != validAnalog) { scheduleAnalogRead(); }
 }

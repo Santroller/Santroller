@@ -96,6 +96,7 @@ int main(void) {
       MIDI_Device_USBTask(&midiInterface);
 #endif
     }
+    USB_USBTask();
   }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {

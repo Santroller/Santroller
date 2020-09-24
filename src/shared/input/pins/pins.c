@@ -127,18 +127,20 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {
-  if (!first && !bit_is_set(ADCSRA, ADSC)) { return; }
-  first = false;
-  uint8_t low, high;
-  low = ADCL;
-  high = ADCH;
-  uint16_t data = (high << 8) | low;
-  if (!joyData[currentAnalog].hasDigital) {
-    if (joyData[currentAnalog].inverted) data *= -1;
-    data = (data - 512) * 64;
+  if (!first) {
+    if (bit_is_set(ADCSRA, ADSC)) return;
+    uint8_t low, high;
+    low = ADCL;
+    high = ADCH;
+    uint16_t data = (high << 8) | low;
+    if (!joyData[currentAnalog].hasDigital) {
+      if (joyData[currentAnalog].inverted) data *= -1;
+      data = (data - 512) * 64;
+    }
+    joyData[currentAnalog++].value = data;
+    if (currentAnalog == validAnalog) { currentAnalog = 0; }
   }
-  joyData[currentAnalog++].value = data;
-  if (currentAnalog == validAnalog) { currentAnalog = 0; }
+  first = false;
   AnalogInfo_t info = joyData[currentAnalog];
 #if defined(ADCSRB) && defined(MUX5)
   ADCSRB = info.srb;
@@ -214,6 +216,7 @@ int analogRead(uint8_t pin) {
 void stopReading(void) {
   while (bit_is_set(ADCSRA, ADSC))
     ;
+  first = true;
 }
 void pinMode(uint8_t pin, uint8_t mode) {
   uint8_t bit = digitalPinToBitMask(pin);
@@ -279,13 +282,12 @@ void setupADC(void) {
   sbi(ADCSRA, ADEN);
 #endif
   // Enable adc interrupts
-  sbi(ADCSRA, ADIE);
+  // sbi(ADCSRA, ADIE);
 }
 
 void setUpValidPins(void) {
   stopReading();
   validAnalog = 0;
   currentAnalog = 0;
-  first = true;
   for (int i = 0; i < 6; i++) { setUpAnalogPin(i); }
 }

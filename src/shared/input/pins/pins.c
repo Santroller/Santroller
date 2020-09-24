@@ -127,18 +127,17 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {
-  if (!first && bit_is_set(ADCSRA, ADSC)) {
-    uint8_t low, high;
-    low = ADCL;
-    high = ADCH;
-    uint16_t data = (high << 8) | low;
-    if (!joyData[currentAnalog].hasDigital) {
-      if (joyData[currentAnalog].inverted) data *= -1;
-      data = (data - 512) * 64;
-    }
-    joyData[currentAnalog++].value = data;
-  }
+  if (!first && !bit_is_set(ADCSRA, ADSC)) { return; }
   first = false;
+  uint8_t low, high;
+  low = ADCL;
+  high = ADCH;
+  uint16_t data = (high << 8) | low;
+  if (!joyData[currentAnalog].hasDigital) {
+    if (joyData[currentAnalog].inverted) data *= -1;
+    data = (data - 512) * 64;
+  }
+  joyData[currentAnalog++].value = data;
   if (currentAnalog == validAnalog) { currentAnalog = 0; }
   AnalogInfo_t info = joyData[currentAnalog];
 #if defined(ADCSRB) && defined(MUX5)

@@ -1,4 +1,5 @@
 #pragma once
+#include "config/config.h"
 // We need to look at commands sent by consoles so we can make sure that they dont conflict.
 enum SerialCommands {
     COMMAND_REBOOT=0x30,
@@ -16,3 +17,12 @@ enum SerialCommands {
     COMMAND_WRITE_SUBTYPE,
     COMMAND_SET_LEDS
 };
+
+typedef struct {
+    uint8_t ps3id[8];
+    uint32_t cpu_freq;
+    uint8_t signature[10];
+    uint8_t board[10];
+    uint8_t detectedPin;
+    Configuration_t conf;
+} data_t;

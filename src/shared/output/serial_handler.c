@@ -6,14 +6,9 @@
 #include "serial_commands.h"
 #include "util/util.h"
 #include <stdlib.h>
-static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
-int currentCommand = 0;
-int currentCommandSize = 0;
-static const uint8_t *constDataToRead = NULL;
-static uint8_t *dataToReadWrite = NULL;
+static const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07,
+                                     0x00, 0x00, 0x00, 0x00};
 bool getData(uint8_t report) {
-  constDataToRead = NULL;
-  currentCommandSize = 0;
   switch (report) {
   case COMMAND_REBOOT:
     reboot();
@@ -26,51 +21,17 @@ bool getData(uint8_t report) {
     return false;
   case COMMAND_FIND_ANALOG:
     findAnalogPin();
-    dataToReadWrite = &detectedPin;
-    currentCommandSize = 1;
     break;
   case COMMAND_FIND_DIGITAL:
     findDigitalPin();
-    dataToReadWrite = &detectedPin;
-    currentCommandSize = 1;
-    break;
-  case COMMAND_GET_SIGNATURE:
-    constDataToRead = (const uint8_t *)PSTR(SIGNATURE);
-    break;
-  case COMMAND_GET_CPU_FREQ:
-    constDataToRead = (const uint8_t *)PSTR(STR(F_CPU));
-    break;
-  case COMMAND_GET_BOARD:
-    constDataToRead = (const uint8_t *)PSTR(ARDWIINO_BOARD);
-    break;
-  case COMMAND_GET_EXTENSION:
-    if (config.main.inputType == WII) {
-      dataToReadWrite = (uint8_t *)&wiiExtensionID;
-      currentCommandSize = 2;
-    } else if (config.main.inputType == PS2) {
-      dataToReadWrite = (uint8_t *)&ps2CtrlType;
-      currentCommandSize = 1;
-    } else {
-      currentCommandSize = 0;
-    }
     break;
   case COMMAND_WRITE_CONFIG:
     return false;
-  case COMMAND_READ_CONFIG:
-    dataToReadWrite = (uint8_t *)&config;
-    currentCommandSize = sizeof(Configuration_t);
-    break;
-  }
-
-  if (constDataToRead) {
-    currentCommandSize = strlen_P((char *)constDataToRead);
   }
   return true;
 }
 bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   uint8_t report = *data;
-  constDataToRead = NULL;
-  currentCommandSize = 0;
   data++;
   data_len--;
   switch (report) {
@@ -90,19 +51,19 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   return getData(report);
 }
 void processHIDReadFeatureReport(void) {
-  if (!currentCommandSize) {
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-      id[3] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      id[3] = 0x06;
-    }
-    dataToReadWrite = id;
-    currentCommandSize = sizeof(id);
+  const char *board = PSTR(ARDWIINO_BOARD);
+  const char *sig = PSTR(SIGNATURE);
+  data_t *data = (data_t *)dbuf;
+  memcpy_P(data->ps3id, id, sizeof(id));
+  if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+    data->ps3id[3] = 0x00;
+  } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+    data->ps3id[3] = 0x06;
   }
-  if (constDataToRead) {
-    memcpy_P(dbuf, constDataToRead, currentCommandSize);
-  } else {
-    memcpy(dbuf, dataToReadWrite, currentCommandSize);
-  }
-  writeToUSB(dbuf, currentCommandSize);
+  data->cpu_freq = F_CPU;
+  data->detectedPin = detectedPin;
+  memcpy(&data->conf, &config, sizeof(config));
+  memcpy_P(data->board, board, sizeof(board));
+  memcpy_P(data->signature, sig, sizeof(sig));
+  writeToUSB(dbuf, sizeof(data_t));
 }

@@ -62,7 +62,7 @@ int main(void) {
   }
 
   sei();
-  while (true) {}
+  while (true) { USB_USBTask(); }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
@@ -83,16 +83,22 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(void) {
   // If we have not received a report, we can just send out the ps3 init packet
-  if (!receivedReport) {
-    len = sizeof(id);
-    memcpy_P(dbuf, id, len);
-    if (deviceType <= PS3_ROCK_BAND_DRUMS) {
-      dbuf[3] = 0x00;
-    } else if (deviceType <= PS3_GUITAR_HERO_DRUMS) {
-      dbuf[3] = 0x06;
-    }
-  }
-  Endpoint_Write_Control_Stream_LE(dbuf, len);
+  // if (!receivedReport) {
+  //   len = sizeof(id);
+  //   memcpy_P(dbuf, id, len);
+  //   if (deviceType <= PS3_ROCK_BAND_DRUMS) {
+  //     dbuf[3] = 0x00;
+  //   } else if (deviceType <= PS3_GUITAR_HERO_DRUMS) {
+  //     dbuf[3] = 0x06;
+  //   }
+  //   Endpoint_Write_Control_Stream_LE(dbuf, len);
+  // }
+  // TODO: in theory, setting FIXED_CONTROL_ENDPOINT_SIZE to 64 means that
+  // An entire packet fits on the endpoint now. does this mean we can now reuse
+  // the isr for writing to the control endpoint as well, as it no longer needs
+  // to deal with chunking packets?
+  // TODO: this does mean we need to handle things differently, we would need to
+  // Send something to the main mcu to suggest that we are about to read.
 }
 bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   receivedReport = false;
@@ -121,31 +127,34 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
 }
 
 void EVENT_USB_Device_ControlRequest(void) {
-  // The LUFA codebase will enable interrupts here, even though we are already in an interrupt by the time this is called.
-  // The issue with this, is that deviceControlRequest talks to usb, but other interrupts also expect to be able to do this, and that breaks USB.
-  // Disabling interrupts while servicing control requests, and then enabling them after fixes some issues when LEDs are enabled.
-  cli();
+  // The LUFA codebase will enable interrupts here, even though we are already
+  // in an interrupt by the time this is called. The issue with this, is that
+  // deviceControlRequest talks to usb, but other interrupts also expect to be
+  // able to do this, and that breaks USB. Disabling interrupts while servicing
+  // control requests, and then enabling them after fixes some issues when LEDs
+  // are enabled.
+  // cli();
   deviceControlRequest();
-  sei();
+  // sei();
 }
 uint8_t frame;
 bool escapeNext = false;
 bool reportIDNext = false;
 uint8_t ep;
 ISR(USART1_RX_vect, ISR_BLOCK) {
+  // Are we at the point where it would be better to write this in asm?
   uint8_t ReceivedByte = UDR1;
   if (ReceivedByte == FRAME_START_DEVICE) { reportIDNext = true; }
   if (ReceivedByte == FRAME_START_DEVICE ||
       ReceivedByte == FRAME_START_FEATURE_READ) {
     frame = ReceivedByte;
     return;
+  } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
+    Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
   }
   if (ReceivedByte == FRAME_END) {
-    if (frame == FRAME_START_FEATURE_READ) {
-      receivedReport = true;
-    } else {
-      Endpoint_ClearIN();
-    }
+    if (frame == FRAME_START_FEATURE_READ) { receivedReport = true; }
+    Endpoint_ClearIN();
     frame = 0;
   }
   if (escapeNext) {
@@ -155,10 +164,8 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
     escapeNext = true;
     return;
   }
-  if (frame == FRAME_START_DEVICE) {
-    if (reportIDNext) {
-      reportIDNext = false;
-      // Some controllers need the report id, some don't. breaking will send it,
+  if (reportIDNext) {
+    // Some controllers need the report id, some don't. breaking will send it,
       // returning wont.
       switch (ReceivedByte) {
       case REPORT_ID_XINPUT:
@@ -183,13 +190,9 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
         ep = HID_EPADDR_IN;
         break;
       }
-    }
-    Endpoint_SelectEndpoint(ep);
-    if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
-      Endpoint_Write_8(ReceivedByte);
-    }
-
-  } else if (frame == FRAME_START_FEATURE_READ) {
-    dbuf[len++] = ReceivedByte;
+      Endpoint_SelectEndpoint(ep);
+  }
+  if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
+    Endpoint_Write_8(ReceivedByte);
   }
 }

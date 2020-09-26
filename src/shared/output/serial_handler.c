@@ -62,6 +62,11 @@ void processHIDReadFeatureReport(void) {
   }
   data->cpu_freq = F_CPU;
   data->detectedPin = detectedPin;
+  if (config.main.inputType == WII) {
+    data->extension = wiiExtensionID;
+  } else if (config.main.inputType == PS2) {
+    data->extension = ps2CtrlType;
+  }
   memcpy(&data->conf, &config, sizeof(config));
   memcpy_P(data->board, board, sizeof(board));
   memcpy_P(data->signature, sig, sizeof(sig));

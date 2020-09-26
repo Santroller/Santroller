@@ -24,5 +24,6 @@ typedef struct {
     uint8_t signature[10];
     uint8_t board[10];
     uint8_t detectedPin;
+    uint16_t extension;
     Configuration_t conf;
 } data_t;

@@ -51,8 +51,6 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   return getData(report);
 }
 void processHIDReadFeatureReport(void) {
-  const char *board = PSTR(ARDWIINO_BOARD);
-  const char *sig = PSTR(SIGNATURE);
   data_t *data = (data_t *)dbuf;
   memcpy_P(data->ps3id, id, sizeof(id));
   if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
@@ -68,7 +66,7 @@ void processHIDReadFeatureReport(void) {
     data->extension = ps2CtrlType;
   }
   memcpy(&data->conf, &config, sizeof(config));
-  memcpy_P(data->board, board, sizeof(board));
-  memcpy_P(data->signature, sig, sizeof(sig));
+  strcpy_P((char*)data->board, PSTR(ARDWIINO_BOARD));
+  // strcpy_P((char*)data->signature, PSTR(SIGNATURE));
   writeToUSB(dbuf, sizeof(data_t));
 }

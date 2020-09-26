@@ -1,5 +1,5 @@
 #pragma once
-#include "config/config.h"
+#include "../config/config.h"
 // We need to look at commands sent by consoles so we can make sure that they dont conflict.
 enum SerialCommands {
     COMMAND_REBOOT=0x30,

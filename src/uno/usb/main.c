@@ -86,16 +86,17 @@ void processHIDReadFeatureReport(void) {
   len = 0;
   Serial_SendByte(FRAME_START_FEATURE_READ);
   while (!receivedReport) {}
+  Endpoint_ClearSETUP();
   Endpoint_Write_Control_Stream_LE(dbuf, len);
 }
-bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
-  uint8_t report = data[0];
+void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
+  uint8_t cmd = data[0];
   uint8_t subType = data[1];
-  if (report == COMMAND_WRITE_SUBTYPE) {
+  if (cmd == COMMAND_WRITE_SUBTYPE) {
     eeprom_update_byte(&config.deviceType, subType);
   }
-  if (report == COMMAND_REBOOT || report == COMMAND_JUMP_BOOTLOADER) {
-    jmpToBootloader = report == COMMAND_REBOOT ? 0 : JUMP;
+  if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
+    jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
   }
   Serial_SendByte(FRAME_START_FEATURE_WRITE);
@@ -108,7 +109,6 @@ bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     Serial_SendByte(d);
   }
   Serial_SendByte(FRAME_END);
-  return false;
 }
 
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }

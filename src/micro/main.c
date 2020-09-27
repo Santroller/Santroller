@@ -130,6 +130,7 @@ void EVENT_CDC_Device_ControLineStateChanged(
   }
 }
 void writeToUSB(const void *const Buffer, uint16_t Length) {
+  Endpoint_ClearSETUP();
   Endpoint_Write_Control_Stream_LE(Buffer, Length);
   Endpoint_ClearStatusStage();
 }

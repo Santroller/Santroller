@@ -42,7 +42,7 @@ int main(void) {
   initReports();
   while (true) {
     if (reportToHandle) {
-      getData(reportToHandle);
+      handleCommand(reportToHandle);
       reportToHandle = 0;
     }
     if (processRead) {
@@ -66,9 +66,9 @@ void writeToUSB(const void *const Buffer, uint16_t Length) {
 }
 static uint8_t frame = 0;
 bool escapeNext = false;
-uint8_t report = 0;
+uint8_t cmd = 0;
 uint8_t *data;
-bool isConfig = false;
+bool waiting = false;
 #ifdef USART0_RX_vect
 ISR(USART0_RX_vect, ISR_BLOCK) {
 #else
@@ -82,16 +82,15 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     processRead = true;
     return;
   } else if (ReceivedByte == FRAME_START_FEATURE_WRITE) {
+    cmd = 0;
     data = NULL;
     frame = ReceivedByte;
-    report = 0;
-    isConfig = false;
     return;
   } else if (ReceivedByte == FRAME_END) {
-    if (isConfig) {
+    if (cmd == COMMAND_WRITE_CONFIG) {
       eeprom_update_block(&config, &config_pointer, sizeof(config));
     }
-    reportToHandle = report;
+    reportToHandle = cmd;
     frame = 0;
     return;
   } else if (ReceivedByte == ESC) {
@@ -99,15 +98,16 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     return;
   }
   if (frame == 0) { return; }
-  if (report == 0) {
-    report = ReceivedByte;
-    if (report == COMMAND_WRITE_CONFIG) {
+  if (cmd == 0) {
+    cmd = ReceivedByte;
+    if (cmd == COMMAND_WRITE_CONFIG) {
       data = (uint8_t *)&config;
-    } else if (report == COMMAND_SET_LEDS) {
+      waiting = true;
+    } else if (cmd == COMMAND_SET_LEDS) {
       data = (uint8_t *)&controller.leds;
     }
-  } else if (!isConfig && report == COMMAND_WRITE_CONFIG) {
-    isConfig = true;
+  } else if (waiting) {
+    waiting = false;
     data += ReceivedByte;
   } else if (data) {
     *(data++) = ReceivedByte;

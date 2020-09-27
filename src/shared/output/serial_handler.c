@@ -8,8 +8,8 @@
 #include <stdlib.h>
 static const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07,
                                      0x00, 0x00, 0x00, 0x00};
-bool getData(uint8_t report) {
-  switch (report) {
+bool handleCommand(uint8_t cmd) {
+  switch (cmd) {
   case COMMAND_REBOOT:
     reboot();
     return false;
@@ -30,25 +30,25 @@ bool getData(uint8_t report) {
   }
   return true;
 }
-bool processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
-  uint8_t report = *data;
+void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
+  uint8_t cmd = *data;
   data++;
   data_len--;
-  switch (report) {
+  switch (cmd) {
   case COMMAND_WRITE_CONFIG: {
     uint8_t offset = *data;
     data++;
     data_len--;
     eeprom_update_block(data, ((uint8_t *)&config_pointer) + offset, data_len);
-    return false;
+    return;
   }
   case COMMAND_SET_LEDS: {
     uint8_t *dest = (uint8_t *)controller.leds;
     while (data_len--) { *(dest++) = *(data++); }
-    return false;
+    return;
   }
   }
-  return getData(report);
+  handleCommand(cmd);
 }
 void processHIDReadFeatureReport(void) {
   data_t *data = (data_t *)dbuf;

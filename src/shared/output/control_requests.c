@@ -55,15 +55,16 @@ void deviceControlRequest(void) {
   if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
       USB_ControlRequest.bmRequestType ==
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    Endpoint_ClearSETUP();
     processHIDReadFeatureReport();
   } else if (USB_ControlRequest.bRequest == HID_REQ_SetReport &&
              USB_ControlRequest.bmRequestType ==
                  (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    cli();
     Endpoint_ClearSETUP();
     Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
     Endpoint_ClearStatusStage();
     processHIDWriteFeatureReport(USB_ControlRequest.wLength, dbuf);
+    sei();
   } else if (USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
              USB_ControlRequest.bmRequestType ==
                  (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&

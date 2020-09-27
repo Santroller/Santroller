@@ -37,3 +37,11 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
   DDRD |= (1 << 3);
   PORTD |= (1 << 2);
 }
+
+// If we are writing data that has a special purpose, then we write an
+// escape byte followed by the escaped data we escape data by xoring with
+// 0x20
+static inline bool shouldEscape(uint8_t data) {
+  return data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
+         data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END;
+}

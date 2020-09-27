@@ -226,18 +226,15 @@ typedef enum {
   HID_COLLECTION_APPLICATION = 0x01,
   HID_COLLECTION_LOGICAL = 0x02,
 } HID_Collection;
-// By setting report ids that involve ZL and ZR, we should be fine
-// When a guitar is being emulated, as guitars dont use those buttons.
-// TODO: Does xinput give a shit about the report id?
 typedef enum {
   REPORT_ID_XINPUT ,
   REPORT_ID_XINPUT_2,
   REPORT_ID_XINPUT_3,
   REPORT_ID_XINPUT_4,
-  REPORT_ID_GAMEPAD = _BV(SWITCH_ZL),
-  REPORT_ID_MOUSE = _BV(SWITCH_ZL) | 0x01,
-  REPORT_ID_KBD = _BV(SWITCH_ZL) | 0x02,
-  REPORT_ID_MIDI = _BV(SWITCH_ZL) | 0x03
+  REPORT_ID_GAMEPAD,
+  REPORT_ID_MOUSE,
+  REPORT_ID_KBD,
+  REPORT_ID_MIDI
 } HID_Report;
 
 typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;

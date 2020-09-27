@@ -20,16 +20,13 @@ uint8_t previousReport[sizeof(USB_Report_Data_t)];
 uint8_t dbuf[DBUF_SIZE];
 Configuration_t newConfig;
 volatile uint8_t reportToHandle = 0;
+volatile bool processRead = false;
 void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
   Serial_SendByte(frame);
   uint8_t data;
   while (len--) {
     data = *(buf++);
-    // If we are writing data that has a special purpose, then we write an
-    // escape byte followed by the escaped data we escape data by xoring with
-    // 0x20
-    if (data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
-        data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END) {
+    if (shouldEscape(data)) {
       Serial_SendByte(ESC);
       data = data ^ 0x20;
     }
@@ -45,8 +42,12 @@ int main(void) {
   initReports();
   while (true) {
     if (reportToHandle) {
-      if (getData(reportToHandle)) { processHIDReadFeatureReport(); }
+      getData(reportToHandle);
       reportToHandle = 0;
+    }
+    if (processRead) {
+      processHIDReadFeatureReport();
+      processRead = false;
     }
     tickInputs(&controller);
     tickLEDs(&controller);
@@ -77,6 +78,9 @@ ISR(USART_RX_vect, ISR_BLOCK) {
   if (escapeNext) {
     ReceivedByte ^= 0x20;
     escapeNext = false;
+  } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
+    processRead = true;
+    return;
   } else if (ReceivedByte == FRAME_START_FEATURE_WRITE) {
     data = NULL;
     frame = ReceivedByte;

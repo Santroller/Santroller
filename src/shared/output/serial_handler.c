@@ -67,6 +67,5 @@ void processHIDReadFeatureReport(void) {
   }
   memcpy(&data->conf, &config, sizeof(config));
   strcpy_P((char*)data->board, PSTR(ARDWIINO_BOARD));
-  // strcpy_P((char*)data->signature, PSTR(SIGNATURE));
   writeToUSB(dbuf, sizeof(data_t));
 }

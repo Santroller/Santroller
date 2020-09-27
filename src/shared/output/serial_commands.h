@@ -17,6 +17,7 @@ enum SerialCommands {
     COMMAND_WRITE_SUBTYPE,
     COMMAND_SET_LEDS
 };
+//TODO: the signature doesnt need to exist anymore. It existed for the flamewake boards, but we can just use a board for that.
 // TODO: rename leonardo to leo
 // TODO: -multi prefix should just be -m
 // TODO: if we are going to rename things, we could finally put the pro in front of pro micro

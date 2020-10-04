@@ -19,6 +19,8 @@
 #include <LUFA/Drivers/Peripheral/Serial.h>
 #include <LightweightRingBuff.h>
 #define BAUD 1000000
+#define FRAME_RESET 0x79
+#define FRAME_SPLIT 0x7a
 #define FRAME_START_DEVICE 0x7c
 #define FRAME_START_FEATURE_READ 0x7d
 #define FRAME_START_FEATURE_WRITE 0x7e
@@ -43,5 +45,5 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
 // 0x20
 static inline bool shouldEscape(uint8_t data) {
   return data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
-         data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END;
+         data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END || data == FRAME_SPLIT || data == FRAME_RESET;
 }

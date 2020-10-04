@@ -35,23 +35,24 @@ void initInputs() {
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }
+bool t = false;
 void tickInputs(Controller_t *controller) {
   controller->buttons = 0;
-  if (tick_function) { tick_function(controller); }
+  // if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
-  if (config.main.mapLeftJoystickToDPad) {
-    CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
-    CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
-  }
-  if (config.main.mapStartSelectToHome) {
-    if (bit_check(controller->buttons, XBOX_START) &&
-        bit_check(controller->buttons, XBOX_BACK)) {
-      bit_clear(controller->buttons, XBOX_START);
-      bit_clear(controller->buttons, XBOX_BACK);
-      bit_set(controller->buttons, XBOX_HOME);
-    }
-  }
-  tickGuitar(controller);
+  // if (config.main.mapLeftJoystickToDPad) {
+  //   CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
+  //   CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
+  // }
+  // if (config.main.mapStartSelectToHome) {
+  //   if (bit_check(controller->buttons, XBOX_START) &&
+  //       bit_check(controller->buttons, XBOX_BACK)) {
+  //     bit_clear(controller->buttons, XBOX_START);
+  //     bit_clear(controller->buttons, XBOX_BACK);
+  //     bit_set(controller->buttons, XBOX_HOME);
+  //   }
+  // }
+  // tickGuitar(controller);
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {

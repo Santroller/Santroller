@@ -41,22 +41,6 @@ void tickDigitalTilt(Controller_t *controller) {
 }
 void (*tick)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?
-#define DRUM 1
-#define GUITAR 2
-uint8_t types[MIDI_ROCK_BAND_DRUMS + 1] = {
-    [PS3_GUITAR_HERO_DRUMS] = DRUM,      [PS3_ROCK_BAND_DRUMS] = DRUM,
-    [WII_ROCK_BAND_DRUMS] = DRUM,        [XINPUT_ROCK_BAND_DRUMS] = DRUM,
-    [XINPUT_GUITAR_HERO_DRUMS] = DRUM,   [MIDI_ROCK_BAND_DRUMS] = DRUM,
-    [MIDI_GUITAR_HERO_DRUMS] = DRUM,     [PS3_GUITAR_HERO_GUITAR] = GUITAR,
-    [PS3_ROCK_BAND_GUITAR] = GUITAR,     [WII_ROCK_BAND_GUITAR] = GUITAR,
-    [XINPUT_ROCK_BAND_GUITAR] = GUITAR,  [XINPUT_GUITAR_HERO_GUITAR] = GUITAR,
-    [XINPUT_LIVE_GUITAR] = GUITAR,       [MIDI_ROCK_BAND_GUITAR] = GUITAR,
-    [MIDI_GUITAR_HERO_GUITAR] = GUITAR,  [MIDI_LIVE_GUITAR] = GUITAR,
-    [KEYBOARD_GUITAR_HERO_DRUMS] = DRUM, [KEYBOARD_GUITAR_HERO_GUITAR] = GUITAR,
-    [KEYBOARD_ROCK_BAND_DRUMS] = DRUM,   [KEYBOARD_ROCK_BAND_GUITAR] = GUITAR,
-    [KEYBOARD_LIVE_GUITAR] = GUITAR};
-bool isDrum(void) { return types[config.main.subType] == DRUM; }
-bool isGuitar(void) { return types[config.main.subType] == GUITAR; }
 void initMPU6050(unsigned int rate) {
   sei();
   mpu_init(NULL);

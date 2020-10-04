@@ -22,8 +22,6 @@ typedef struct {
   uint8_t deviceType;
 } EepromConfig_t;
 
-volatile bool receivedReport = false;
-volatile uint8_t len = 0;
 EepromConfig_t EEMEM config;
 uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 
@@ -80,14 +78,12 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 #endif
 }
+volatile bool skipCtl = false;
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(void) {
-  receivedReport = false;
-  len = 0;
+  skipCtl = true;
   Serial_SendByte(FRAME_START_FEATURE_READ);
-  while (!receivedReport) {}
   Endpoint_ClearSETUP();
-  Endpoint_Write_Control_Stream_LE(dbuf, len);
 }
 void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   uint8_t cmd = data[0];
@@ -125,40 +121,42 @@ const uint8_t endpoints[] = {[REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
                              [REPORT_ID_MIDI] = MIDI_EPADDR_IN};
 ISR(USART1_RX_vect, ISR_BLOCK) {
   uint8_t ReceivedByte = UDR1;
+  if (skipCtl) {
+    if (!escapeNext && ReceivedByte == FRAME_START_FEATURE_READ) {
+      skipCtl = false;
+    } else {
+      return;
+    }
+  }
   if (escapeNext) {
     escapeNext = false;
     ReceivedByte ^= 0x20;
   } else if (ReceivedByte == ESC) {
     escapeNext = true;
     return;
-  }
-  if (ReceivedByte == FRAME_START_DEVICE) { reportIDNext = true; }
-  if (ReceivedByte == FRAME_START_DEVICE ||
-      ReceivedByte == FRAME_START_FEATURE_READ) {
+  } else if (ReceivedByte == FRAME_START_DEVICE) {
+    reportIDNext = true;
     frame = ReceivedByte;
     return;
-  }
-  if (ReceivedByte == FRAME_END) {
-    if (frame == FRAME_START_FEATURE_READ) {
-      receivedReport = true;
-    } else {
-      Endpoint_ClearIN();
-    }
+  } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
+    frame = ReceivedByte;
+    return;
+  } else if (ReceivedByte == FRAME_RESET) {
     frame = 0;
-  }
-  if (frame == FRAME_START_DEVICE) {
-    if (reportIDNext) {
-      reportIDNext = false;
-      Endpoint_SelectEndpoint(endpoints[ReceivedByte]);
-      if (ReceivedByte == REPORT_ID_MIDI || ReceivedByte == REPORT_ID_GAMEPAD) {
-        return;
-      }
+    return;
+  } else if (ReceivedByte == FRAME_SPLIT) {
+    Endpoint_ClearIN();
+    return;
+  } else if (ReceivedByte == FRAME_END) {
+    Endpoint_ClearIN();
+    frame = 0;
+    return;
+  } else if (reportIDNext) {
+    reportIDNext = false;
+    Endpoint_SelectEndpoint(endpoints[ReceivedByte]);
+    if (ReceivedByte == REPORT_ID_MIDI || ReceivedByte == REPORT_ID_GAMEPAD) {
+      return;
     }
-    if (Endpoint_IsReadWriteAllowed() && Endpoint_IsINReady()) {
-      Endpoint_Write_8(ReceivedByte);
-    }
-
-  } else if (frame == FRAME_START_FEATURE_READ) {
-    dbuf[len++] = ReceivedByte;
   }
+  if (frame != 0) { Endpoint_Write_8(ReceivedByte); }
 }

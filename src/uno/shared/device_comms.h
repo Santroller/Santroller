@@ -17,7 +17,6 @@
 #endif
 #include "util/util.h"
 #include <LUFA/Drivers/Peripheral/Serial.h>
-#include <LightweightRingBuff.h>
 #define BAUD 1000000
 #define FRAME_RESET 0x79
 #define FRAME_SPLIT 0x7a
@@ -26,7 +25,6 @@
 #define FRAME_START_FEATURE_WRITE 0x7e
 #define FRAME_END 0x7f
 #define ESC 0x7b
-extern RingBuff_t Receive_Buffer;
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
   UBRR1 =

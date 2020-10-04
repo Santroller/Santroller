@@ -90,49 +90,49 @@ void stopSearching(void) {
 }
 
 void tickDirectInput(Controller_t *controller) {
-  // if (lookingForAnalog) {
-  //   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-  //     if (abs(analogRead(i) - lastAnalogValue[i]) > 10) {
-  //       initDirectInput();
-  //       detectedPin = i + PIN_A0;
-  //       lookingForAnalog = false;
-  //       return;
-  //     }
-  //   }
-  //   return;
-  // }
-  // if (lookingForDigital) {
-  //   for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
-  //     if (!shouldSkipPin(i)) {
-  //       if (!digitalRead(i)) {
-  //         stopSearching();
-  //         detectedPin = i;
-  //         lookingForDigital = false;
-  //         return;
-  //       }
-  //     }
-  //   }
-  //   return;
-  // }
-  // tickAnalog();
+  if (lookingForAnalog) {
+    for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
+      if (abs(analogRead(i) - lastAnalogValue[i]) > 10) {
+        initDirectInput();
+        detectedPin = i + PIN_A0;
+        lookingForAnalog = false;
+        return;
+      }
+    }
+    return;
+  }
+  if (lookingForDigital) {
+    for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+      if (!shouldSkipPin(i)) {
+        if (!digitalRead(i)) {
+          stopSearching();
+          detectedPin = i;
+          lookingForDigital = false;
+          return;
+        }
+      }
+    }
+    return;
+  }
+  tickAnalog();
   Pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
     if ((*pin.port & pin.mask) == pin.eq) { controller->buttons |= pin.pmask; }
   }
-  // AnalogInfo_t info;
-  // ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;
-  // for (int8_t i = 0; i < validAnalog; i++) {
-  //   info = joyData[i];
-  //   if (info.hasDigital) {
-  //     if (info.value > info.threshold) {
-  //       controller->buttons |= info.digital.pmask;
-  //     }
-  //     controller->drumVelocity[info.offset - 8] = info.value;
-  //   } else if (info.offset >= 2) {
-  //     combinedController->sticks[info.offset - 2] = info.value;
-  //   } else {
-  //     combinedController->triggers[info.offset] = info.value >> 8;
-  //   }
-  // }
+  AnalogInfo_t info;
+  ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;
+  for (int8_t i = 0; i < validAnalog; i++) {
+    info = joyData[i];
+    if (info.hasDigital) {
+      if (info.value > info.threshold) {
+        controller->buttons |= info.digital.pmask;
+      }
+      controller->drumVelocity[info.offset - 8] = info.value;
+    } else if (info.offset >= 2) {
+      combinedController->sticks[info.offset - 2] = info.value;
+    } else {
+      combinedController->triggers[info.offset] = info.value >> 8;
+    }
+  }
 }

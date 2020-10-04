@@ -23,7 +23,6 @@ volatile uint8_t reportToHandle = 0;
 void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
   Serial_SendByte(frame);
   uint8_t data;
-  uint8_t i = 0;
   while (len--) {
     data = *(buf++);
     if (shouldEscape(data)) {
@@ -31,13 +30,6 @@ void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
       data = data ^ 0x20;
     }
     Serial_SendByte(data);
-    // When sending data, packets are 64 bytes, so we need to chunk them so that
-    // usb doesnt skip data. We also need to send these packets, which is done
-    // via FRAME_SPLIT
-    if ((++i) % 64 == 0) {
-      Serial_SendByte(FRAME_SPLIT);
-      _delay_us(100);
-    }
   }
   Serial_SendByte(FRAME_END);
 }
@@ -64,7 +56,6 @@ int main(void) {
 }
 // Data being written back to USB after a read
 void writeToUSB(const void *const Buffer, uint16_t Length) {
-  Serial_SendByte(FRAME_RESET);
   Serial_SendByte(FRAME_RESET);
   uint8_t *buf = (uint8_t *)Buffer;
   writePacketToSerial(FRAME_START_FEATURE_READ, buf, Length);

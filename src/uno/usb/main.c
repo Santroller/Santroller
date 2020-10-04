@@ -17,6 +17,14 @@
 #include <avr/wdt.h>
 #define JUMP 0xDEAD8001
 
+const uint8_t endpoints[] = {[REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
+                             [REPORT_ID_XINPUT_2] = XINPUT_2_EPADDR_IN,
+                             [REPORT_ID_XINPUT_3] = XINPUT_3_EPADDR_IN,
+                             [REPORT_ID_XINPUT_4] = XINPUT_2_EPADDR_IN,
+                             [REPORT_ID_GAMEPAD] = HID_EPADDR_IN,
+                             [REPORT_ID_KBD] = HID_EPADDR_IN,
+                             [REPORT_ID_MOUSE] = HID_EPADDR_IN,
+                             [REPORT_ID_MIDI] = MIDI_EPADDR_IN};
 typedef struct {
   uint32_t id;
   uint8_t deviceType;
@@ -28,7 +36,12 @@ uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
+RingBuff_t buffer;
+// RingBuff_Data_t bufferData[BUFFER_SIZE];
 
+uint8_t frame;
+bool escapeNext = false;
+bool reportIDNext = false;
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
@@ -58,9 +71,63 @@ int main(void) {
   } else {
     deviceType = eeprom_read_byte(&config.deviceType);
   }
+  RingBuffer_InitBuffer(&buffer, dbuf);
 
   sei();
-  while (true) { USB_USBTask(); }
+  uint8_t len;
+  while (true) {
+    USB_USBTask();
+    uint8_t ReceivedByte = RingBuffer_Peek(&buffer);
+    if (ReceivedByte == ESC) {
+      escapeNext = true;
+    } else if (ReceivedByte == FRAME_START_DEVICE) {
+      reportIDNext = true;
+      frame = ReceivedByte;
+    } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
+      Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+      len = Endpoint_BytesInEndpoint();
+      frame = ReceivedByte;
+    } else if (ReceivedByte == FRAME_RESET) {
+      frame = 0;
+    } else if (ReceivedByte == FRAME_SPLIT) {
+      Endpoint_ClearIN();
+    } else if (ReceivedByte == FRAME_END) {
+      Endpoint_ClearIN();
+      frame = 0;
+    } else if (frame != 0) {
+      if (escapeNext) {
+        escapeNext = false;
+        ReceivedByte ^= 0x20;
+      } else if (reportIDNext) {
+        reportIDNext = false;
+        Endpoint_SelectEndpoint(endpoints[ReceivedByte]);
+        if (ReceivedByte == REPORT_ID_MIDI ||
+            ReceivedByte == REPORT_ID_GAMEPAD) {
+          RingBuffer_Remove(&buffer);
+          continue;
+        }
+      }
+      if (frame == FRAME_START_FEATURE_READ) {
+        if (Endpoint_IsINReady()) {
+          Endpoint_Write_8(ReceivedByte);
+          len++;
+          if (len == USB_Device_ControlEndpointSize) {
+            Endpoint_ClearIN();
+            len = 0;
+          }
+        } else {
+          continue;
+        }
+      } else if (frame == FRAME_START_DEVICE) {
+        if (Endpoint_IsReadWriteAllowed()) {
+          Endpoint_Write_8(ReceivedByte);
+        } else {
+          continue;
+        }
+      }
+    }
+    RingBuffer_Remove(&buffer);
+  }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
@@ -82,6 +149,7 @@ volatile bool skipCtl = false;
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(void) {
   skipCtl = true;
+  RingBuffer_Clear(&buffer);
   Serial_SendByte(FRAME_START_FEATURE_READ);
   Endpoint_ClearSETUP();
 }
@@ -108,55 +176,4 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
 }
 
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
-uint8_t frame;
-bool escapeNext = false;
-bool reportIDNext = false;
-const uint8_t endpoints[] = {[REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
-                             [REPORT_ID_XINPUT_2] = XINPUT_2_EPADDR_IN,
-                             [REPORT_ID_XINPUT_3] = XINPUT_3_EPADDR_IN,
-                             [REPORT_ID_XINPUT_4] = XINPUT_2_EPADDR_IN,
-                             [REPORT_ID_GAMEPAD] = HID_EPADDR_IN,
-                             [REPORT_ID_KBD] = HID_EPADDR_IN,
-                             [REPORT_ID_MOUSE] = HID_EPADDR_IN,
-                             [REPORT_ID_MIDI] = MIDI_EPADDR_IN};
-ISR(USART1_RX_vect, ISR_BLOCK) {
-  uint8_t ReceivedByte = UDR1;
-  if (skipCtl) {
-    if (!escapeNext && ReceivedByte == FRAME_START_FEATURE_READ) {
-      skipCtl = false;
-    } else {
-      return;
-    }
-  }
-  if (escapeNext) {
-    escapeNext = false;
-    ReceivedByte ^= 0x20;
-  } else if (ReceivedByte == ESC) {
-    escapeNext = true;
-    return;
-  } else if (ReceivedByte == FRAME_START_DEVICE) {
-    reportIDNext = true;
-    frame = ReceivedByte;
-    return;
-  } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
-    frame = ReceivedByte;
-    return;
-  } else if (ReceivedByte == FRAME_RESET) {
-    frame = 0;
-    return;
-  } else if (ReceivedByte == FRAME_SPLIT) {
-    Endpoint_ClearIN();
-    return;
-  } else if (ReceivedByte == FRAME_END) {
-    Endpoint_ClearIN();
-    frame = 0;
-    return;
-  } else if (reportIDNext) {
-    reportIDNext = false;
-    Endpoint_SelectEndpoint(endpoints[ReceivedByte]);
-    if (ReceivedByte == REPORT_ID_MIDI || ReceivedByte == REPORT_ID_GAMEPAD) {
-      return;
-    }
-  }
-  if (frame != 0) { Endpoint_Write_8(ReceivedByte); }
-}
+ISR(USART1_RX_vect, ISR_BLOCK) { RingBuffer_Insert(&buffer, UDR1); }

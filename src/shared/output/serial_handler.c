@@ -50,6 +50,7 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   }
   handleCommand(cmd);
 }
+uint8_t offset = 0;
 void processHIDReadFeatureReport(void) {
   data_t *data = (data_t *)dbuf;
   memcpy_P(data->ps3id, id, sizeof(id));
@@ -65,7 +66,14 @@ void processHIDReadFeatureReport(void) {
   } else if (config.main.inputType == PS2) {
     data->extension = ps2CtrlType;
   }
-  memcpy(&data->conf, &config, sizeof(config));
+  data->offset = offset;
   strcpy_P((char*)data->board, PSTR(ARDWIINO_BOARD));
+  // could we just read this blob three  times, but with different sections of the config, padded to  64 bytes? as long as the ps3 header exists every time we wont break the ps3.
+  // Probably worth putting a uint8_t that dictates what part is currently being sent, so we can then offset things correctly on the gui side
+  memcpy(data->data, &config+offset, sizeof(data->data));
+  offset += sizeof(data->data);
   writeToUSB(dbuf, sizeof(data_t));
+  if (offset >= sizeof(config)) {
+    offset = 0;
+  }
 }

@@ -229,9 +229,9 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     },
     TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
 #ifdef MULTI_ADAPTOR
-    TotalInterfaces : 5,
+    TotalInterfaces : 6,
 #else
-    TotalInterfaces : 4,
+    TotalInterfaces : 5,
 #endif
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
@@ -528,6 +528,25 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     AssociatedJackID : {0x03}
   },
 #endif
+  InterfaceConfig : {
+    Header :
+        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+    InterfaceNumber : INTERFACE_ID_Config,
+    AlternateSetting : 0,
+    TotalEndpoints : 1,
+    Class : 0xff,
+    SubClass : 0xff,
+    Protocol : 0xff,
+    InterfaceStrIndex : NO_DESCRIPTOR
+  },
+
+  EndpointInConfig : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : CONFIG_EPADDR_IN,
+    Attributes : EP_TYPE_BULK,
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
   InterfaceHID : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -620,10 +639,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 #endif
     return size;
   case HID_DTYPE_Report:
-    // TODO: for multi adaptors, could we use a different hid report that only
-    // contains the config api and no game controller?
-    // confirm on mac, but the standard mouse descriptor works on windows, as xinput is a game controller.
-    if (deviceType >= KEYBOARD_GAMEPAD &&
+    if (
+    // By using the keyboard descriptor for xinput, we wont have a second controler. if (deviceType >= KEYBOARD_GAMEPAD &&
         deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
       address = kbd_report_descriptor;
       size = sizeof(kbd_report_descriptor);

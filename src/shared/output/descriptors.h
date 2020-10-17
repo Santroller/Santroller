@@ -53,6 +53,7 @@ extern uint8_t deviceType;
 #define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 /** Endpoint address of the DEVICE IN endpoint. */
 #define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
+#define CONFIG_EPADDR_IN (ENDPOINT_DIR_IN | 4)
 /** Endpoint address of the DEVICE IN endpoint. */
 // We don't actually utilise the next descriptors, and since the UNO limits
 // us to 4 endpoints, putting them last ensures that they are the unusable
@@ -82,15 +83,16 @@ extern uint8_t deviceType;
 enum InterfaceDescriptors_t {
   INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
   INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
+  INTERFACE_ID_Config = 2, /**< XInput interface descriptor ID */
 #ifdef MULTI_ADAPTOR
-  INTERFACE_ID_XInput_2 = 2, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_3 = 3, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_4 = 4, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_2 = 3, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_3 = 4, /**< XInput interface descriptor ID */
+  INTERFACE_ID_XInput_4 = 5, /**< XInput interface descriptor ID */
 #else
   INTERFACE_ID_ControlStream =
-      2, /**< MIDI Control Stream interface descriptor ID */
+      3, /**< MIDI Control Stream interface descriptor ID */
   INTERFACE_ID_AudioStream =
-      3, /**< MIDI Audio Stream interface descriptor ID */
+      4, /**< MIDI Audio Stream interface descriptor ID */
 #endif
 };
 typedef struct {
@@ -106,6 +108,7 @@ typedef struct {
   uint8_t reserved4[2];
 
 } USB_HID_XBOX_Descriptor_HID_t;
+
 
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
@@ -131,6 +134,8 @@ typedef struct {
   USB_HID_Descriptor_HID_t HIDDescriptor;
   USB_Descriptor_Endpoint_t EndpointInHID;
   USB_Descriptor_Endpoint_t EndpointOutHID;
+  USB_Descriptor_Interface_t InterfaceConfig;
+  USB_Descriptor_Endpoint_t EndpointInConfig;
   #ifndef MULTI_ADAPTOR
   USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
@@ -180,7 +185,23 @@ typedef struct {
   uint8_t TotalSections;
   uint8_t Reserved[7];
   USB_OSCompatibleSection_t CompatID;
+  USB_OSCompatibleSection_t CompatID2;
 } ATTR_PACKED USB_OSCompatibleIDDescriptor_t;
+typedef struct {
+  uint32_t PropertyDataType;
+  uint16_t PropertyNameLength;
+  WCHAR PropertyName[20];
+  uint32_t PropertyDataLength;
+  WCHAR PropertyData[39];
+} ATTR_PACKED USB_OSExtendedSection_t;
+typedef struct {
+  uint32_t TotalLength;
+  uint16_t Version;
+  uint16_t Index;
+  uint16_t TotalSections;
+  uint32_t SectionSize;
+  USB_OSExtendedSection_t ExtendedID;
+} ATTR_PACKED USB_OSExtendedCompatibleIDDescriptor_t;
 uint16_t USB_GetOSFeatureDescriptor(const uint8_t InterfaceNumber,
                                     const uint8_t wIndex,
                                     const uint8_t Recipient,

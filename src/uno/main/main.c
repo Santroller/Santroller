@@ -20,10 +20,11 @@ uint8_t previousReport[sizeof(USB_Report_Data_t)];
 uint8_t dbuf[DBUF_SIZE];
 Configuration_t newConfig;
 volatile uint8_t reportToHandle = 0;
+volatile bool readyToRead = false;
 void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
   Serial_SendByte(frame);
   uint8_t data;
-  while (len--) {
+  while (len-- && !readyToRead) {
     data = *(buf++);
     if (shouldEscape(data)) {
       Serial_SendByte(ESC);
@@ -44,18 +45,23 @@ int main(void) {
       handleCommand(reportToHandle);
       reportToHandle = 0;
     }
+    if (readyToRead) {
+      readyToRead = false;
+      processHIDReadFeatureReport();
+    }
     tickInputs(&controller);
     tickLEDs(&controller);
-    uint16_t size;
-    fillReport(currentReport, &size, &controller);
-    if (memcmp(currentReport, previousReport, size) != 0) {
-      writePacketToSerial(FRAME_START_DEVICE, currentReport, size);
-      memcpy(previousReport, currentReport, size);
-    }
+    // uint16_t size;
+    // fillReport(currentReport, &size, &controller);
+    // if (memcmp(currentReport, previousReport, size) != 0) {
+    //   writePacketToSerial(FRAME_START_DEVICE, currentReport, size);
+    //   memcpy(previousReport, currentReport, size);
+    // }
   }
 }
 // Data being written back to USB after a read
 void writeToUSB(const void *const Buffer, uint16_t Length) {
+  Serial_SendByte(FRAME_RESET);
   Serial_SendByte(FRAME_RESET);
   uint8_t *buf = (uint8_t *)Buffer;
   writePacketToSerial(FRAME_START_FEATURE_READ, buf, Length);
@@ -75,7 +81,7 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     ReceivedByte ^= 0x20;
     escapeNext = false;
   } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
-    processHIDReadFeatureReport();
+    readyToRead = true;
     return;
   } else if (ReceivedByte == FRAME_START_FEATURE_WRITE) {
     cmd = 0;

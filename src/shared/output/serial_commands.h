@@ -21,8 +21,9 @@ enum SerialCommands {
 typedef struct {
     uint8_t ps3id[8];
     uint32_t cpu_freq;
-    uint8_t board[7];
+    uint8_t board[15];
     uint8_t detectedPin;
     uint16_t extension;
-    Configuration_t conf;
+    uint8_t offset;
+    uint8_t data[32];
 } data_t;

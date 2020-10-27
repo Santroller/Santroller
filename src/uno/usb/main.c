@@ -17,7 +17,8 @@
 #include <avr/wdt.h>
 #define JUMP 0xDEAD8001
 
-const uint8_t endpoints[] = {[REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
+const uint8_t endpoints[] = {[REPORT_ID_CONTROL] = ENDPOINT_CONTROLEP,
+                             [REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
                              [REPORT_ID_XINPUT_2] = XINPUT_2_EPADDR_IN,
                              [REPORT_ID_XINPUT_3] = XINPUT_3_EPADDR_IN,
                              [REPORT_ID_XINPUT_4] = XINPUT_2_EPADDR_IN,
@@ -40,6 +41,7 @@ uint32_t jmpToBootloader __attribute__((section(".noinit")));
 uint8_t frame;
 bool escapeNext = false;
 bool reportIDNext = false;
+volatile bool currentlyTransferring = false;
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
@@ -71,8 +73,12 @@ int main(void) {
   }
 
   sei();
-  // uint8_t len;
-  while (true) { USB_USBTask(); }
+  while (true) {
+    if (!currentlyTransferring) {
+      if (Endpoint_IsINReady()) { Serial_SendByte(FRAME_DONE); };
+      USB_USBTask();
+    }
+  }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
   // Setup necessary endpoints
@@ -91,9 +97,10 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 #endif
 }
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
-void processHIDReadFeatureReport(void) {
-  Serial_SendByte(FRAME_START_FEATURE_READ);
+void processHIDReadFeatureReport(uint8_t cmd) {
   Endpoint_ClearSETUP();
+  Serial_SendByte(FRAME_START_FEATURE_READ);
+  Serial_SendByte(cmd);
 }
 void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   uint8_t cmd = data[0];
@@ -126,20 +133,15 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
   } else if (ReceivedByte == ESC) {
     escapeNext = true;
     return;
-  } else if (ReceivedByte == FRAME_START_DEVICE) {
+  } else if (ReceivedByte == FRAME_START_READ) {
     reportIDNext = true;
+    currentlyTransferring = true;
     frame = ReceivedByte;
-    return;
-  } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
-    Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
-    frame = ReceivedByte;
-    return;
-  } else if (ReceivedByte == FRAME_RESET) {
-    frame = 0;
     return;
   } else if (ReceivedByte == FRAME_END) {
     Endpoint_ClearIN();
     frame = 0;
+    currentlyTransferring = false;
     return;
   }
   if (frame != 0) {

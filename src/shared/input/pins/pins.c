@@ -127,6 +127,7 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {
+  if (validAnalog == 0) return; 
   if (!first) {
     if (bit_is_set(ADCSRA, ADSC)) return;
     uint8_t low, high;

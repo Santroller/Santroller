@@ -8,10 +8,10 @@ void loadConfig(void) {
   // Check versions, if they aren't the same, a breaking change has happened
   // Check signatures, that way we know if the EEPROM has a valid config
   // If the signatures don't match, then the EEPROM has garbage data
-  if (config.main.signature != ARDWIINO_DEVICE_TYPE) {
+  // if (config.main.signature != ARDWIINO_DEVICE_TYPE) {
     memcpy_P(&config, &default_config, sizeof(Configuration_t));
     config.main.version = 0;
-  }
+  // }
   // version 2 adds leds and midi.
   if (config.main.version < 2) {
     memcpy_P(&config.midi, &default_config.midi, sizeof(default_config.midi));
@@ -33,7 +33,4 @@ void loadConfig(void) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));
   }
-  // TODO: should we just give up and make it so that configs have to be reset for this version? we are changing pins completly.
-  // Technically we can just loop through the pins as a uint8 array, and then copy them to the new data structure
-  // We should do it in reverse however, as that is the easiest way to make sure we don't overlap data when reading / writing
 }

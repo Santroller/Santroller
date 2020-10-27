@@ -60,7 +60,6 @@ int main(void) {
     tickLEDs(&controller);
     fillReport(&currentReport, &size, &controller);
     if (memcmp(&currentReport, &previousReport, size) != 0) {
-      memcpy(&previousReport, &currentReport, size);
       uint8_t *data = (uint8_t *)&currentReport;
       uint8_t rid = *data;
       switch (rid) {
@@ -88,6 +87,8 @@ int main(void) {
         break;
       }
       if (Endpoint_IsReadWriteAllowed()) {
+        // In theory, putting the memcpy here will mean that we resend this report until it can be sent.
+        memcpy(&previousReport, &currentReport, size);
         Endpoint_Write_Stream_LE(data, size, NULL);
         Endpoint_ClearIN();
       }

@@ -20,8 +20,12 @@ uint8_t previousReport[sizeof(USB_Report_Data_t)];
 uint8_t dbuf[DBUF_SIZE];
 Configuration_t newConfig;
 volatile uint8_t reportToHandle = 0;
+volatile bool readyForPacket = true;
 volatile bool readyToRead = false;
+volatile uint8_t recId = 0;
 void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
+  while (!readyForPacket) {}
+  readyForPacket = false;
   Serial_SendByte(frame);
   uint8_t data;
   while (len-- && !readyToRead) {
@@ -47,24 +51,22 @@ int main(void) {
     }
     if (readyToRead) {
       readyToRead = false;
-      processHIDReadFeatureReport();
+      processHIDReadFeatureReport(recId);
     }
     tickInputs(&controller);
     tickLEDs(&controller);
-    // uint16_t size;
-    // fillReport(currentReport, &size, &controller);
-    // if (memcmp(currentReport, previousReport, size) != 0) {
-    //   writePacketToSerial(FRAME_START_DEVICE, currentReport, size);
-    //   memcpy(previousReport, currentReport, size);
-    // }
+    uint16_t size;
+    fillReport(currentReport, &size, &controller);
+    if (memcmp(currentReport, previousReport, size) != 0) {
+      writePacketToSerial(FRAME_START_READ, currentReport, size);
+      memcpy(previousReport, currentReport, size);
+    }
   }
 }
 // Data being written back to USB after a read
 void writeToUSB(const void *const Buffer, uint16_t Length) {
-  Serial_SendByte(FRAME_RESET);
-  Serial_SendByte(FRAME_RESET);
   uint8_t *buf = (uint8_t *)Buffer;
-  writePacketToSerial(FRAME_START_FEATURE_READ, buf, Length);
+  writePacketToSerial(FRAME_START_READ, buf, Length);
 }
 static uint8_t frame = 0;
 bool escapeNext = false;
@@ -80,13 +82,14 @@ ISR(USART_RX_vect, ISR_BLOCK) {
   if (escapeNext) {
     ReceivedByte ^= 0x20;
     escapeNext = false;
-  } else if (ReceivedByte == FRAME_START_FEATURE_READ) {
-    readyToRead = true;
-    return;
-  } else if (ReceivedByte == FRAME_START_FEATURE_WRITE) {
+  } else if (ReceivedByte == FRAME_START_FEATURE_WRITE ||
+             ReceivedByte == FRAME_START_FEATURE_READ) {
     cmd = 0;
     data = NULL;
     frame = ReceivedByte;
+    return;
+  } else if (ReceivedByte == FRAME_DONE) {
+    readyForPacket = true;
     return;
   } else if (ReceivedByte == FRAME_END) {
     if (cmd == COMMAND_WRITE_CONFIG) {
@@ -100,7 +103,11 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     return;
   }
   if (frame == 0) { return; }
-  if (cmd == 0) {
+  if (frame == FRAME_START_FEATURE_READ) {
+    recId = ReceivedByte;
+    readyToRead = true;
+    frame = 0;
+  } else if (cmd == 0) {
     cmd = ReceivedByte;
     if (cmd == COMMAND_WRITE_CONFIG) {
       data = (uint8_t *)&config;

@@ -50,30 +50,28 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
   }
   handleCommand(cmd);
 }
-uint8_t offset = 0;
-void processHIDReadFeatureReport(void) {
-  data_t *data = (data_t *)dbuf;
-  memcpy_P(data->ps3id, id, sizeof(id));
-  if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-    data->ps3id[3] = 0x00;
-  } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-    data->ps3id[3] = 0x06;
+void processHIDReadFeatureReport(uint8_t cmd) {
+  uint16_t size;
+  dbuf[0] = REPORT_ID_CONTROL;
+  if (cmd == COMMAND_GET_BOARD) {
+     size = strlen_P(PSTR(ARDWIINO_BOARD))+1;
+     strcpy_P((char*)dbuf+1, PSTR(ARDWIINO_BOARD));
+  } else {
+    size = sizeof(id);
+    memcpy_P(dbuf, id, sizeof(id));
+    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+      dbuf[3] = 0x00;
+    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+      dbuf[3] = 0x06;
+    }
   }
-  data->cpu_freq = F_CPU;
-  data->detectedPin = detectedPin;
-  if (config.main.inputType == WII) {
-    data->extension = wiiExtensionID;
-  } else if (config.main.inputType == PS2) {
-    data->extension = ps2CtrlType;
-  }
-  data->offset = offset;
-  strcpy_P((char*)data->board, PSTR(ARDWIINO_BOARD));
-  // could we just read this blob three  times, but with different sections of the config, padded to  64 bytes? as long as the ps3 header exists every time we wont break the ps3.
-  // Probably worth putting a uint8_t that dictates what part is currently being sent, so we can then offset things correctly on the gui side
-  memcpy(data->data, &config+offset, sizeof(data->data));
-  offset += sizeof(data->data);
-  writeToUSB(dbuf, sizeof(data_t));
-  if (offset >= sizeof(config)) {
-    offset = 0;
-  }
+  // data->cpu_freq = F_CPU;
+  // data->detectedPin = detectedPin;
+  // if (config.main.inputType == WII) {
+  //   data->extension = wiiExtensionID;
+  // } else if (config.main.inputType == PS2) {
+  //   data->extension = ps2CtrlType;
+  // }
+  // strcpy_P((char*)data->board, PSTR(ARDWIINO_BOARD));
+  writeToUSB(dbuf, size);
 }

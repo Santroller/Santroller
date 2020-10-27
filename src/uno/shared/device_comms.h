@@ -23,8 +23,10 @@
 #define FRAME_START_DEVICE 0x7c
 #define FRAME_START_FEATURE_READ 0x7d
 #define FRAME_START_FEATURE_WRITE 0x7e
+#define FRAME_START_READ 0x78
 #define FRAME_END 0x7f
 #define ESC 0x7b
+#define FRAME_DONE 0x77
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
   UBRR1 =
@@ -43,5 +45,5 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
 // 0x20
 static inline bool shouldEscape(uint8_t data) {
   return data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
-         data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END || data == FRAME_SPLIT || data == FRAME_RESET;
+         data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END || data == FRAME_SPLIT || data == FRAME_RESET || data == FRAME_DONE || data == FRAME_START_READ;
 }

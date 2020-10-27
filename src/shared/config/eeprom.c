@@ -8,10 +8,10 @@ void loadConfig(void) {
   // Check versions, if they aren't the same, a breaking change has happened
   // Check signatures, that way we know if the EEPROM has a valid config
   // If the signatures don't match, then the EEPROM has garbage data
-  // if (config.main.signature != ARDWIINO_DEVICE_TYPE) {
+  if (config.main.signature != ARDWIINO_DEVICE_TYPE) {
     memcpy_P(&config, &default_config, sizeof(Configuration_t));
     config.main.version = 0;
-  // }
+  }
   // version 2 adds leds and midi.
   if (config.main.version < 2) {
     memcpy_P(&config.midi, &default_config.midi, sizeof(default_config.midi));

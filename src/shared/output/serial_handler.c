@@ -68,7 +68,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     info->multi = false;
 #endif
   } else if (cmd == COMMAND_GET_EXTENSION) {
-    size = 2;
+    size = 3;
     if (config.main.inputType == WII) {
       dbuf[1] = wiiExtensionID & 0xff;
       dbuf[2] = wiiExtensionID << 8;
@@ -76,7 +76,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
       dbuf[1] = ps2CtrlType;
     }
   } else if (cmd == COMMAND_GET_FOUND) {
-    size = 1;
+    size = 2;
     dbuf[1] = detectedPin;
   } else {
     size = sizeof(id);

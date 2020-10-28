@@ -39,8 +39,8 @@ build-all:
 	$(MAKE) -C src/uno/usb OBJDIR=obj/16u2 MCU=atmega16u2 ARDWIINO_BOARD=uno
 	$(MAKE) -C src/uno/usb OBJDIR=obj/8u2 MCU=at90usb82 ARDWIINO_BOARD=uno
 # usb processor - multi adaptor
-	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/16u2 MCU=atmega16u2 ARDWIINO_BOARD=uno-multi MULTI_ADAPTOR=-DMULTI_ADAPTOR
-	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/8u2 MCU=at90usb82 ARDWIINO_BOARD=uno-multi MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/16u2 MCU=atmega16u2 ARDWIINO_BOARD=uno MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/8u2 MCU=at90usb82 ARDWIINO_BOARD=uno MULTI_ADAPTOR=-DMULTI_ADAPTOR
 # usb processor - usbserial firmware
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/16u2 MCU=atmega16u2 ARDUINO_MODEL_PID=${UNO_PID} A_BOARD=uno
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/8u2 MCU=at90usb82 ARDUINO_MODEL_PID=${UNO_PID} A_BOARD=uno

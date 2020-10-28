@@ -53,9 +53,17 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
 void processHIDReadFeatureReport(uint8_t cmd) {
   uint16_t size;
   dbuf[0] = REPORT_ID_CONTROL;
-  if (cmd == COMMAND_GET_BOARD) {
-     size = strlen_P(PSTR(ARDWIINO_BOARD))+1;
-     strcpy_P((char*)dbuf+1, PSTR(ARDWIINO_BOARD));
+  if (cmd == COMMAND_GET_CPU_INFO) {
+     size = sizeof(cpu_info_t)+1;
+     cpu_info_t* info = (cpu_info_t*)(dbuf+1);
+     strcpy_P(info->board, PSTR(ARDWIINO_BOARD));
+     strcpy_P(info->mcu, PSTR(MCU));
+     info->cpu_freq = F_CPU;
+     #ifdef MULTI_ADAPTOR
+      info->multi = true;
+     #else
+      info->multi = false;
+     #endif
   } else {
     size = sizeof(id);
     memcpy_P(dbuf, id, sizeof(id));

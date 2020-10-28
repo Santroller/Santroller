@@ -75,8 +75,8 @@ int main(void) {
   sei();
   while (true) {
     if (!currentlyTransferring) {
-      if (Endpoint_IsINReady()) { Serial_SendByte(FRAME_DONE); };
       USB_USBTask();
+      if (Endpoint_IsINReady()) { Serial_SendByte(FRAME_DONE); };
     }
   }
 }

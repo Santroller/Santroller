@@ -16,9 +16,6 @@ bool handleCommand(uint8_t cmd) {
   case COMMAND_JUMP_BOOTLOADER:
     bootloader();
     return false;
-  case COMMAND_FIND_CANCEL:
-    stopSearching();
-    return false;
   case COMMAND_FIND_ANALOG:
     findAnalogPin();
     break;
@@ -78,6 +75,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
   } else if (cmd == COMMAND_GET_FOUND) {
     size = 2;
     dbuf[1] = detectedPin;
+    stopSearching();
   } else {
     size = sizeof(id);
     memcpy_P(dbuf, id, sizeof(id));

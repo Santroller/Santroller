@@ -53,33 +53,46 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
 void processHIDReadFeatureReport(uint8_t cmd) {
   uint16_t size;
   dbuf[0] = REPORT_ID_CONTROL;
-  if (cmd == COMMAND_GET_CPU_INFO) {
-     size = sizeof(cpu_info_t)+1;
-     cpu_info_t* info = (cpu_info_t*)(dbuf+1);
-     strcpy_P(info->board, PSTR(ARDWIINO_BOARD));
-     strcpy_P(info->mcu, PSTR(MCU));
-     info->cpu_freq = F_CPU;
-     #ifdef MULTI_ADAPTOR
-      info->multi = true;
-     #else
-      info->multi = false;
-     #endif
+  if (cmd >= COMMAND_READ_CONFIG) {
+    size = 64;
+    uint16_t index = size*(cmd-COMMAND_READ_CONFIG);
+    int16_t size2 = index - sizeof(Configuration_t);
+    if (size2 > 0) {
+      size = size2;
+    }
+    memcpy(dbuf+1, ((uint8_t*)&config) + index, size);
   } else {
-    size = sizeof(id);
-    memcpy_P(dbuf, id, sizeof(id));
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-      dbuf[3] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      dbuf[3] = 0x06;
+    switch (cmd) {
+    case COMMAND_GET_CPU_INFO:
+      size = sizeof(cpu_info_t) + 1;
+      cpu_info_t *info = (cpu_info_t *)(dbuf + 1);
+      strcpy_P(info->board, PSTR(ARDWIINO_BOARD));
+      info->cpu_freq = F_CPU;
+#ifdef MULTI_ADAPTOR
+      info->multi = true;
+#else
+      info->multi = false;
+#endif
+    case COMMAND_GET_EXTENSION:
+      size = 2;
+      if (config.main.inputType == WII) {
+        dbuf[1] = wiiExtensionID & 0xff;
+        dbuf[2] = wiiExtensionID << 8;
+      } else if (config.main.inputType == PS2) {
+        dbuf[1] = ps2CtrlType;
+      }
+    case COMMAND_GET_FOUND:
+      size = 1;
+      dbuf[1] = detectedPin;
+    default:
+      size = sizeof(id);
+      memcpy_P(dbuf, id, sizeof(id));
+      if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+        dbuf[3] = 0x00;
+      } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+        dbuf[3] = 0x06;
+      }
     }
   }
-  // data->cpu_freq = F_CPU;
-  // data->detectedPin = detectedPin;
-  // if (config.main.inputType == WII) {
-  //   data->extension = wiiExtensionID;
-  // } else if (config.main.inputType == PS2) {
-  //   data->extension = ps2CtrlType;
-  // }
-  // strcpy_P((char*)data->board, PSTR(ARDWIINO_BOARD));
   writeToUSB(dbuf, size);
 }

@@ -53,8 +53,8 @@ build-all:
 	$(MAKE) -C src/uno/usb OBJDIR=obj/16u22560 MCU=atmega16u2 ARDWIINO_BOARD=mega2560
 	$(MAKE) -C src/uno/usb OBJDIR=obj/8u22560 MCU=at90usb82 ARDWIINO_BOARD=mega2560
 # usb processor - multi adaptor
-	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/16u22560 MCU=atmega16u2 ARDWIINO_BOARD=mega2560-multi MULTI_ADAPTOR=-DMULTI_ADAPTOR
-	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/8u22560 MCU=at90usb82 ARDWIINO_BOARD=mega2560-multi MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/16u22560 MCU=atmega16u2 ARDWIINO_BOARD=mega2560 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/8u22560 MCU=at90usb82 ARDWIINO_BOARD=mega2560 MULTI_ADAPTOR=-DMULTI_ADAPTOR
 # usb processor - usbserial firmware
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/16u22560 MCU=atmega16u2 ARDUINO_MODEL_PID=${MEGA2560_PID} A_BOARD=mega2560
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/8u22560 MCU=at90usb82 ARDUINO_MODEL_PID=${MEGA2560_PID} A_BOARD=mega2560
@@ -66,8 +66,8 @@ build-all:
 	$(MAKE) -C src/uno/usb OBJDIR=obj/16u2adk MCU=atmega16u2 ARDWIINO_BOARD=megaadk
 	$(MAKE) -C src/uno/usb OBJDIR=obj/8u2adk MCU=at90usb82 ARDWIINO_BOARD=megaadk
 # usb processor - multi adaptor
-	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/16u2adk MCU=atmega16u2 ARDWIINO_BOARD=megaadk-multi MULTI_ADAPTOR=-DMULTI_ADAPTOR
-	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/8u2adk MCU=at90usb82 ARDWIINO_BOARD=megaadk-multi MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/16u2adk MCU=atmega16u2 ARDWIINO_BOARD=megaadk MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/uno/usb OBJDIR=obj/multi/8u2adk MCU=at90usb82 ARDWIINO_BOARD=megaadk MULTI_ADAPTOR=-DMULTI_ADAPTOR
 # usb processor - usbserial firmware
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/16u2adk MCU=atmega16u2 ARDUINO_MODEL_PID=${MEGAADK_PID} A_BOARD=megaadk
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/8u2adk MCU=at90usb82 ARDUINO_MODEL_PID=${MEGAADK_PID} A_BOARD=megaadk
@@ -79,22 +79,22 @@ build-all:
 	$(MAKE) -C src/micro OBJDIR=obj/leo/16 ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
 	$(MAKE) -C src/micro OBJDIR=obj/leo/8 ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
 # multi adaptor
-	$(MAKE) -C src/micro OBJDIR=obj/leo/multi/16 ARDWIINO_BOARD=leonardo-multi F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
-	$(MAKE) -C src/micro OBJDIR=obj/leo/multi/8 ARDWIINO_BOARD=leonardo-multi F_CPU=8000000 F_USB=8000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/micro OBJDIR=obj/leo/multi/16 ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/micro OBJDIR=obj/leo/multi/8 ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
 
 
 # Arduino Micro
 	$(MAKE) -C src/micro OBJDIR=obj/a-micro/16 ARDWIINO_BOARD=a-micro F_CPU=16000000 F_USB=16000000
 # multi adaptor
-	$(MAKE) -C src/micro OBJDIR=obj/a-micro/multi/16 ARDWIINO_BOARD=a-micro-multi F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/micro OBJDIR=obj/a-micro/multi/16 ARDWIINO_BOARD=a-micro F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
 
 
 # Arduino Pro Micro
 	$(MAKE) -C src/micro OBJDIR=obj/micro/16 ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
 	$(MAKE) -C src/micro OBJDIR=obj/micro/8 ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000
 # multi adaptor
-	$(MAKE) -C src/micro OBJDIR=obj/micro/multi/16 ARDWIINO_BOARD=micro-multi F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
-	$(MAKE) -C src/micro OBJDIR=obj/micro/multi/8 ARDWIINO_BOARD=micro-multi F_CPU=8000000 F_USB=8000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/micro OBJDIR=obj/micro/multi/16 ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+	$(MAKE) -C src/micro OBJDIR=obj/micro/multi/8 ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
 
 	mkdir -p output
 	cp -rfv src/uno/usb/bin/*.hex output/

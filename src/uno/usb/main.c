@@ -102,9 +102,8 @@ void processHIDReadFeatureReport(uint8_t cmd) {
   Serial_SendByte(FRAME_START_FEATURE_READ);
   Serial_SendByte(cmd);
 }
-void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
-  uint8_t cmd = data[0];
-  uint8_t subType = data[1];
+void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) {
+  uint8_t subType = data[0];
   if (cmd == COMMAND_WRITE_SUBTYPE) {
     eeprom_update_byte(&config.deviceType, subType);
   }
@@ -113,6 +112,10 @@ void processHIDWriteFeatureReport(uint8_t data_len, uint8_t *data) {
     reboot();
   }
   Serial_SendByte(FRAME_START_FEATURE_WRITE);
+  if (shouldEscape(cmd)) {
+    Serial_SendByte(ESC);
+  }
+  Serial_SendByte(cmd);
   while (data_len--) {
     uint8_t d = *(data++);
     if (shouldEscape(d)) {

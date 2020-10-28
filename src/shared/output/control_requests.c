@@ -83,7 +83,7 @@ void deviceControlRequest(void) {
     Endpoint_ClearSETUP();
     Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
     Endpoint_ClearStatusStage();
-    processHIDWriteFeatureReport(USB_ControlRequest.wLength, dbuf);
+    processHIDWriteFeatureReport(USB_ControlRequest.wValue, USB_ControlRequest.wLength, dbuf);
   } else if (USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
              (USB_ControlRequest.bmRequestType == 0xC1) &&
              USB_ControlRequest.wIndex == EXTENDED_PROPERTIES_DESCRIPTOR &&

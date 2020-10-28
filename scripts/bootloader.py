@@ -13,4 +13,4 @@ try:
     dev.detach_kernel_driver(0)
 except:
     print("Probably already detached")
-dev.ctrl_transfer(0x21, 0x09, 0x0300,0x00,[49])
+dev.ctrl_transfer(0x21, 0x09, 49,0x00,[])

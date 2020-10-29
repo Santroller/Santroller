@@ -23,6 +23,7 @@ volatile uint8_t reportToHandle = 0;
 volatile bool readyForPacket = true;
 volatile bool readyToRead = false;
 volatile uint8_t recId = 0;
+long lastPoll = 0;
 void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
   while (!readyForPacket) {}
   readyForPacket = false;
@@ -55,11 +56,14 @@ int main(void) {
     }
     tickInputs(&controller);
     tickLEDs(&controller);
-    uint16_t size;
-    fillReport(currentReport, &size, &controller);
-    if (memcmp(currentReport, previousReport, size) != 0) {
-      writePacketToSerial(FRAME_START_READ, currentReport, size);
-      memcpy(previousReport, currentReport, size);
+    if (millis() - lastPoll > config.main.pollRate) {
+      lastPoll = millis();
+      uint16_t size;
+      fillReport(currentReport, &size, &controller);
+      if (memcmp(currentReport, previousReport, size) != 0) {
+        writePacketToSerial(FRAME_START_READ, currentReport, size);
+        memcpy(previousReport, currentReport, size);
+      }
     }
   }
 }

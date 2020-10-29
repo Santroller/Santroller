@@ -75,7 +75,7 @@ typedef struct {
   uint8_t inputType;
   uint8_t subType;
   uint8_t tiltType;
-  uint8_t unused;
+  uint8_t pollRate;
   uint8_t fretLEDMode;
   bool mapLeftJoystickToDPad;
   bool mapStartSelectToHome;

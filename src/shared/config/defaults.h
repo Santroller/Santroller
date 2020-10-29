@@ -1,11 +1,11 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 4
+#define CONFIG_VERSION 5
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
-#define POLL_RATE 1
+#define POLL_RATE 0
 // Thresholds
 #define TRIGGER_THRESHOLD 64
 #define DRUM_THRESHOLD 64

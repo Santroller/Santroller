@@ -5,6 +5,7 @@
 #include "mpu6050/inv_mpu.h"
 #include "mpu6050/inv_mpu_dmp_motion_driver.h"
 #include "mpu6050/mpu_math.h"
+#include "i2c/i2c.h"
 #include "util/util.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -77,4 +78,16 @@ void tickGuitar(Controller_t *controller) {
   controller->r_x = -r_x;
   if (tick == NULL) return;
   tick(controller);
+}
+
+// TODO: this is all we need for grabbing data from a gh5 neck. We should test this, do we actually need to run it at 100khz, or does our i2c implementation work better somehow
+void tickGH5Neck(Controller_t *controller) {
+  uint8_t ok;
+  twi_readFromPointer(GH5NECK_ADDR, GH5NECK_OK_PTR, 1, &ok);
+  if (ok) {
+    uint8_t buttons;
+    twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 1, &buttons);
+    uint8_t slider;
+    twi_readFromPointer(GH5NECK_ADDR, GH5NECK_SLIDER_NEW_PTR, 1, &slider);
+  }
 }

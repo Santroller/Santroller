@@ -9,6 +9,7 @@
 #include "output/reports/xinput.h"
 #include "output/serial_handler.h"
 #include "stdbool.h"
+#include <stdlib.h>
 #include "util/util.h"
 Controller_t controller;
 USB_Report_Data_t previousReport;
@@ -48,6 +49,7 @@ USB_ClassInfo_MIDI_Device_t midiInterface = {
 };
 #endif
 bool xinputEnabled = false;
+long lastPoll = 0;
 int main(void) {
   loadConfig();
   deviceType = config.main.subType;
@@ -55,47 +57,52 @@ int main(void) {
   initReports();
   USB_Init();
   sei();
+  config.main.pollRate = 0;
   while (true) {
     tickInputs(&controller);
     tickLEDs(&controller);
-    fillReport(&currentReport, &size, &controller);
-    if (memcmp(&currentReport, &previousReport, size) != 0) {
-      uint8_t *data = (uint8_t *)&currentReport;
-      uint8_t rid = *data;
-      switch (rid) {
-      case REPORT_ID_XINPUT:
-        Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
-        break;
-      case REPORT_ID_MIDI:
-        Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-        // The "reportid" is actually not a real thing on midi, so we need to
-        // strip it before we send data.
-        data++;
-        size--;
-        break;
-      case REPORT_ID_GAMEPAD:
-        // Consoles don't support multiple report ids, so we strip them here
-        // too. PS3's technically do support them, but at the cost of not being
-        // able to identify the controller.
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        data++;
-        size--;
-        break;
-      case REPORT_ID_KBD:
-      case REPORT_ID_MOUSE:
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        break;
-      }
-      if (Endpoint_IsReadWriteAllowed()) {
-        // In theory, putting the memcpy here will mean that we resend this report until it can be sent.
-        memcpy(&previousReport, &currentReport, size);
-        Endpoint_Write_Stream_LE(data, size, NULL);
-        Endpoint_ClearIN();
-      }
+    if (millis() - lastPoll > config.main.pollRate) {
+      lastPoll = millis();
+      fillReport(&currentReport, &size, &controller);
+      if (memcmp(&currentReport, &previousReport, size) != 0) {
+        uint8_t *data = (uint8_t *)&currentReport;
+        uint8_t rid = *data;
+        switch (rid) {
+        case REPORT_ID_XINPUT:
+          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+          break;
+        case REPORT_ID_MIDI:
+          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+          // The "reportid" is actually not a real thing on midi, so we need to
+          // strip it before we send data.
+          data++;
+          size--;
+          break;
+        case REPORT_ID_GAMEPAD:
+          // Consoles don't support multiple report ids, so we strip them here
+          // too. PS3's technically do support them, but at the cost of not
+          // being able to identify the controller.
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          data++;
+          size--;
+          break;
+        case REPORT_ID_KBD:
+        case REPORT_ID_MOUSE:
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          break;
+        }
+        if (Endpoint_IsReadWriteAllowed()) {
+          // In theory, putting the memcpy here will mean that we resend this
+          // report until it can be sent.
+          memcpy(&previousReport, &currentReport, size);
+          Endpoint_Write_Stream_LE(data, size, NULL);
+          Endpoint_ClearIN();
+        }
 
 #ifndef MULTI_ADAPTOR
-      MIDI_Device_USBTask(&midiInterface);
+        MIDI_Device_USBTask(&midiInterface);
 #endif
+      }
     }
     USB_USBTask();
   }

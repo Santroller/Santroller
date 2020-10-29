@@ -32,7 +32,7 @@ CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADA
 LD_FLAGS     =  $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-usb-${MCU}-${F_CPU}
+TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-usb-${MCU}-${F_CPU}$(if ${MULTI_ADAPTOR},-multi,)
 
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P /dev/ttyACM0 reset

@@ -24,6 +24,9 @@ bool handleCommand(uint8_t cmd) {
     break;
   case COMMAND_WRITE_CONFIG:
     return false;
+  case COMMAND_RESET:
+    resetConfig();
+    return false;
   }
   return true;
 }

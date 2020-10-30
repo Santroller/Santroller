@@ -6,3 +6,4 @@
 extern Configuration_t config;
 extern Configuration_t EEMEM config_pointer;
 void loadConfig(void);
+void resetConfig(void);

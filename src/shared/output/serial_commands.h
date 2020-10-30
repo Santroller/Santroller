@@ -14,6 +14,7 @@ enum SerialCommands {
     COMMAND_SET_LEDS,
     COMMAND_WRITE_CONFIG,
     COMMAND_READ_CONFIG,
+    COMMAND_RESET,
 };
 typedef struct {
     uint32_t cpu_freq;

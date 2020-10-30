@@ -57,7 +57,6 @@ int main(void) {
   initReports();
   USB_Init();
   sei();
-  config.main.pollRate = 0;
   while (true) {
     tickInputs(&controller);
     tickLEDs(&controller);

@@ -8,14 +8,14 @@
 #include <stdlib.h>
 static const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07,
                                      0x00, 0x00, 0x00, 0x00};
-bool handleCommand(uint8_t cmd) {
+void handleCommand(uint8_t cmd) {
   switch (cmd) {
   case COMMAND_REBOOT:
     reboot();
-    return false;
+    break;
   case COMMAND_JUMP_BOOTLOADER:
     bootloader();
-    return false;
+    break;
   case COMMAND_FIND_ANALOG:
     findAnalogPin();
     break;
@@ -23,12 +23,12 @@ bool handleCommand(uint8_t cmd) {
     findDigitalPin();
     break;
   case COMMAND_WRITE_CONFIG:
-    return false;
+    break;
   case COMMAND_RESET:
     resetConfig();
-    return false;
+    break;
   }
-  return true;
+  return;
 }
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) {
   switch (cmd) {

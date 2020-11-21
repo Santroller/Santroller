@@ -42,6 +42,8 @@ uint8_t frame;
 bool escapeNext = false;
 bool reportIDNext = false;
 volatile bool currentlyTransferring = false;
+volatile bool sendDone = false;
+bool readyForNext = false;
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
@@ -74,9 +76,13 @@ int main(void) {
 
   sei();
   while (true) {
-    if (!currentlyTransferring) {
+    if (!currentlyTransferring) { USB_USBTask(); }
+    if (sendDone && Endpoint_IsINReady()) {
+      sendDone = false;
+      currentlyTransferring = false;
+      Serial_SendByte(FRAME_DONE);
+    } else if (sendDone) {
       USB_USBTask();
-      if (Endpoint_IsINReady()) { Serial_SendByte(FRAME_DONE); };
     }
   }
 }
@@ -98,11 +104,14 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(uint8_t cmd) {
+  while (currentlyTransferring) {}
   Endpoint_ClearSETUP();
   Serial_SendByte(FRAME_START_FEATURE_READ);
   Serial_SendByte(cmd);
 }
-void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) {
+void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
+                                  uint8_t *data) {
+  while (currentlyTransferring) {}
   uint8_t subType = data[0];
   if (cmd == COMMAND_WRITE_SUBTYPE) {
     eeprom_update_byte(&config.deviceType, subType);
@@ -112,17 +121,10 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) 
     reboot();
   }
   Serial_SendByte(FRAME_START_FEATURE_WRITE);
-  if (shouldEscape(cmd)) {
-    Serial_SendByte(ESC);
-  }
-  Serial_SendByte(cmd);
+  Serial_SendByte_Escaped(cmd);
   while (data_len--) {
     uint8_t d = *(data++);
-    if (shouldEscape(d)) {
-      Serial_SendByte(ESC);
-      d ^= 0x20;
-    }
-    Serial_SendByte(d);
+    Serial_SendByte_Escaped(d);
   }
   Serial_SendByte(FRAME_END);
 }
@@ -144,7 +146,7 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
   } else if (ReceivedByte == FRAME_END) {
     Endpoint_ClearIN();
     frame = 0;
-    currentlyTransferring = false;
+    sendDone = true;
     return;
   }
   if (frame != 0) {

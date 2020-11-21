@@ -45,5 +45,15 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
 // 0x20
 static inline bool shouldEscape(uint8_t data) {
   return data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
-         data == FRAME_START_FEATURE_WRITE || data == ESC || data == FRAME_END || data == FRAME_SPLIT || data == FRAME_RESET || data == FRAME_DONE || data == FRAME_START_READ;
+         data == FRAME_START_FEATURE_WRITE || data == ESC ||
+         data == FRAME_END || data == FRAME_SPLIT || data == FRAME_RESET ||
+         data == FRAME_DONE || data == FRAME_START_READ;
+}
+
+static inline void Serial_SendByte_Escaped(uint8_t data) {
+  if (shouldEscape(data)) {
+    Serial_SendByte(ESC);
+    data ^= 0x20;
+  }
+  Serial_SendByte(data);
 }

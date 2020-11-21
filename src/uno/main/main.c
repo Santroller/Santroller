@@ -25,7 +25,6 @@ volatile bool readyToRead = false;
 volatile uint8_t recId = 0;
 long lastPoll = 0;
 void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
-  readyForPacket = false;
   Serial_SendByte(frame);
   while (len--) { Serial_SendByte_Escaped(*(buf++)); }
   Serial_SendByte(FRAME_END);
@@ -52,6 +51,7 @@ int main(void) {
     if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
       lastPoll = millis();
       if (memcmp(currentReport, previousReport, size) != 0) {
+        readyForPacket = false;
         writePacketToSerial(FRAME_START_READ, currentReport, size);
         memcpy(previousReport, currentReport, size);
       }

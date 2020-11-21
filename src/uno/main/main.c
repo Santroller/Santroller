@@ -20,7 +20,7 @@ uint8_t previousReport[sizeof(USB_Report_Data_t)];
 uint8_t dbuf[DBUF_SIZE];
 Configuration_t newConfig;
 volatile uint8_t reportToHandle = 0;
-volatile bool readyForPacket = true;
+volatile bool readyForReport = true;
 volatile bool readyToRead = false;
 volatile uint8_t recId = 0;
 long lastPoll = 0;
@@ -37,6 +37,9 @@ int main(void) {
   initReports();
   while (true) {
     if (reportToHandle) {
+      if (reportToHandle == COMMAND_WRITE_CONFIG) {
+        eeprom_update_block(&config, &config_pointer, sizeof(config));
+      }
       handleCommand(reportToHandle);
       reportToHandle = 0;
     }
@@ -48,10 +51,10 @@ int main(void) {
     tickLEDs(&controller);
     uint16_t size;
     fillReport(currentReport, &size, &controller);
-    if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
+    if (millis() - lastPoll > config.main.pollRate && readyForReport) {
       lastPoll = millis();
       if (memcmp(currentReport, previousReport, size) != 0) {
-        readyForPacket = false;
+        readyForReport = false;
         writePacketToSerial(FRAME_START_READ, currentReport, size);
         memcpy(previousReport, currentReport, size);
       }
@@ -84,12 +87,9 @@ ISR(USART_RX_vect, ISR_BLOCK) {
     frame = ReceivedByte;
     return;
   } else if (ReceivedByte == FRAME_DONE) {
-    readyForPacket = true;
+    readyForReport = true;
     return;
   } else if (ReceivedByte == FRAME_END) {
-    if (cmd == COMMAND_WRITE_CONFIG) {
-      eeprom_update_block(&config, &config_pointer, sizeof(config));
-    }
     reportToHandle = cmd;
     frame = 0;
     return;

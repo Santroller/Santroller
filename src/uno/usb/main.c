@@ -39,11 +39,10 @@ uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 
 uint8_t frame;
-bool escapeNext = false;
-bool reportIDNext = false;
-volatile bool currentlyTransferring = false;
-volatile bool sendDone = false;
-bool readyForNext = false;
+RingBuff_Data_t inBufData[BUFFER_SIZE];
+RingBuff_Data_t outBufData[BUFFER_SIZE];
+RingBuff_t inBuf;
+RingBuff_t outBuf;
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
@@ -60,6 +59,8 @@ int main(void) {
   Serial_InitInterrupt(BAUD, true);
 
   USB_Init();
+  RingBuffer_InitBuffer(&inBuf, inBufData);
+  RingBuffer_InitBuffer(&outBuf, outBufData);
 
   /* Start the 328p  */
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
@@ -75,15 +76,43 @@ int main(void) {
   }
 
   sei();
+  bool waiting = false;
+  bool escapeNext = false;
+  bool readEndpoint = false;
+  bool reading = false;
   while (true) {
-    if (!currentlyTransferring) { USB_USBTask(); }
-    if (sendDone && Endpoint_IsINReady()) {
-      sendDone = false;
-      currentlyTransferring = false;
-      Serial_SendByte(FRAME_DONE);
-    } else if (sendDone) {
-      USB_USBTask();
+    int count = RingBuffer_GetCount(&outBuf);
+    while (count--) {
+      uint8_t received = RingBuffer_Remove(&outBuf);
+      if (received == ESC) {
+        escapeNext = true;
+      } else if (escapeNext) {
+        received ^= 0x20;
+        escapeNext = false;
+      } else if (received == FRAME_START_READ) {
+        readEndpoint = true;
+      } else if (received == FRAME_END) {
+        Endpoint_ClearIN();
+        reading = false;
+        waiting = true;
+      } else if (readEndpoint) {
+        reading = true;
+        readEndpoint = false;
+        Endpoint_SelectEndpoint(endpoints[received]);
+        if (received == REPORT_ID_MIDI || received == REPORT_ID_GAMEPAD) {
+          continue;
+        }
+      }
+      if (reading) { Endpoint_Write_8(received); }
     }
+    count = RingBuffer_GetCount(&inBuf);
+    while (count--) { Serial_SendByte(RingBuffer_Remove(&inBuf)); }
+    // If the controller isn't being read from, then it will never actually be ready. However it will still interrupt.
+    if (waiting && (Endpoint_IsINReady() || Endpoint_HasEndpointInterrupted(Endpoint_GetCurrentEndpoint()))) {
+      RingBuffer_Insert(&inBuf, FRAME_DONE);
+      waiting = false;
+    }
+    USB_USBTask();
   }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
@@ -104,14 +133,19 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(uint8_t cmd) {
-  while (currentlyTransferring) {}
   Endpoint_ClearSETUP();
-  Serial_SendByte(FRAME_START_FEATURE_READ);
-  Serial_SendByte(cmd);
+  RingBuffer_Insert(&inBuf, FRAME_START_FEATURE_READ);
+  RingBuffer_Insert(&inBuf, cmd);
+}
+static inline void RingBuffer_Insert_Escaped(RingBuff_t *buf, uint8_t data) {
+  if (shouldEscape(data)) {
+    RingBuffer_Insert(buf, ESC);
+    data ^= 0x20;
+  }
+  RingBuffer_Insert(buf, data);
 }
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
                                   uint8_t *data) {
-  while (currentlyTransferring) {}
   uint8_t subType = data[0];
   if (cmd == COMMAND_WRITE_SUBTYPE) {
     eeprom_update_byte(&config.deviceType, subType);
@@ -120,43 +154,11 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
     jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
   }
-  Serial_SendByte(FRAME_START_FEATURE_WRITE);
-  Serial_SendByte_Escaped(cmd);
-  while (data_len--) {
-    uint8_t d = *(data++);
-    Serial_SendByte_Escaped(d);
-  }
-  Serial_SendByte(FRAME_END);
+  RingBuffer_Insert(&inBuf, FRAME_START_FEATURE_WRITE);
+  RingBuffer_Insert_Escaped(&inBuf, cmd);
+  while (data_len--) { RingBuffer_Insert_Escaped(&inBuf, *(data++)); }
+  RingBuffer_Insert(&inBuf, FRAME_END);
 }
 
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
-ISR(USART1_RX_vect, ISR_BLOCK) {
-  uint8_t ReceivedByte = UDR1;
-  if (escapeNext) {
-    escapeNext = false;
-    ReceivedByte ^= 0x20;
-  } else if (ReceivedByte == ESC) {
-    escapeNext = true;
-    return;
-  } else if (ReceivedByte == FRAME_START_READ) {
-    reportIDNext = true;
-    currentlyTransferring = true;
-    frame = ReceivedByte;
-    return;
-  } else if (ReceivedByte == FRAME_END) {
-    Endpoint_ClearIN();
-    frame = 0;
-    sendDone = true;
-    return;
-  }
-  if (frame != 0) {
-    if (reportIDNext) {
-      reportIDNext = false;
-      Endpoint_SelectEndpoint(endpoints[ReceivedByte]);
-      if (ReceivedByte == REPORT_ID_MIDI || ReceivedByte == REPORT_ID_GAMEPAD) {
-        return;
-      }
-    }
-    Endpoint_Write_8(ReceivedByte);
-  }
-}
+ISR(USART1_RX_vect, ISR_BLOCK) { RingBuffer_Insert(&outBuf, UDR1); }

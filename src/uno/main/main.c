@@ -37,7 +37,6 @@ int main(void) {
   initInputs();
   initReports();
   while (true) {
-    while (!readyForPacket) {}
     if (reportToHandle) {
       handleCommand(reportToHandle);
       reportToHandle = 0;
@@ -48,10 +47,9 @@ int main(void) {
     }
     tickInputs(&controller);
     tickLEDs(&controller);
-    controller.l_x = rand();
     uint16_t size;
     fillReport(currentReport, &size, &controller);
-    if (millis() - lastPoll > config.main.pollRate) {
+    if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
       lastPoll = millis();
       if (memcmp(currentReport, previousReport, size) != 0) {
         writePacketToSerial(FRAME_START_READ, currentReport, size);

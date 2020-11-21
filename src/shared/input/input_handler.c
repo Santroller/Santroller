@@ -31,7 +31,9 @@ void initInputs() {
   if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
     spi_init(F_CPU / 2, 0x00);
   } 
-  twi_init();
+  if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
+    twi_init();
+  }
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }

@@ -26,7 +26,7 @@
 #define FRAME_START_READ 0x78
 #define FRAME_END 0x7f
 #define ESC 0x7b
-#define FRAME_DONE 0x77
+#define FRAME_READY_FOR_REPORT 0x77
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
   UBRR1 =
@@ -47,7 +47,16 @@ static inline bool shouldEscape(uint8_t data) {
   return data == FRAME_START_DEVICE || data == FRAME_START_FEATURE_READ ||
          data == FRAME_START_FEATURE_WRITE || data == ESC ||
          data == FRAME_END || data == FRAME_SPLIT || data == FRAME_RESET ||
-         data == FRAME_DONE || data == FRAME_START_READ;
+         data == FRAME_READY_FOR_REPORT || data == FRAME_START_READ;
+}
+
+
+static inline void RingBuffer_Insert_Escaped(RingBuff_t *buf, uint8_t data) {
+  if (shouldEscape(data)) {
+    RingBuffer_Insert(buf, ESC);
+    data ^= 0x20;
+  }
+  RingBuffer_Insert(buf, data);
 }
 
 static inline void Serial_SendByte_Escaped(uint8_t data) {

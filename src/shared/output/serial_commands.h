@@ -12,9 +12,9 @@ enum SerialCommands {
     COMMAND_AVRDUDE,
     COMMAND_WRITE_SUBTYPE,
     COMMAND_SET_LEDS,
+    COMMAND_RESET,
     COMMAND_WRITE_CONFIG,
     COMMAND_READ_CONFIG,
-    COMMAND_RESET,
     MAX
 };
 typedef struct {

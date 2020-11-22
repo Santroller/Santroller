@@ -76,16 +76,19 @@ int main(void) {
   }
 
   sei();
-  bool waiting = false;
+  bool waitingForReportWritten = false;
   bool escapeNext = false;
   bool readEndpoint = false;
   bool reading = false;
+  int count;
+  uint8_t received;
   while (true) {
-    int count = RingBuffer_GetCount(&outBuf);
+    count = RingBuffer_GetCount(&outBuf);
     while (count--) {
-      uint8_t received = RingBuffer_Remove(&outBuf);
+      received = RingBuffer_Remove(&outBuf);
       if (received == ESC) {
         escapeNext = true;
+        continue;
       } else if (escapeNext) {
         received ^= 0x20;
         escapeNext = false;
@@ -94,7 +97,9 @@ int main(void) {
       } else if (received == FRAME_END) {
         Endpoint_ClearIN();
         reading = false;
-        waiting = true;
+        if (Endpoint_GetCurrentEndpoint() != ENDPOINT_CONTROLEP) {
+          waitingForReportWritten = true;
+        }
       } else if (readEndpoint) {
         reading = true;
         readEndpoint = false;
@@ -107,10 +112,9 @@ int main(void) {
     }
     count = RingBuffer_GetCount(&inBuf);
     while (count--) { Serial_SendByte(RingBuffer_Remove(&inBuf)); }
-    // If the controller isn't being read from, then it will never actually be ready. However it will still interrupt.
-    if (waiting && (Endpoint_IsINReady() || Endpoint_HasEndpointInterrupted(Endpoint_GetCurrentEndpoint()))) {
-      RingBuffer_Insert(&inBuf, FRAME_DONE);
-      waiting = false;
+    if (waitingForReportWritten && Endpoint_IsINReady()) {
+      RingBuffer_Insert(&inBuf, FRAME_READY_FOR_REPORT);
+      waitingForReportWritten = false;
     }
     USB_USBTask();
   }
@@ -136,13 +140,6 @@ void processHIDReadFeatureReport(uint8_t cmd) {
   Endpoint_ClearSETUP();
   RingBuffer_Insert(&inBuf, FRAME_START_FEATURE_READ);
   RingBuffer_Insert(&inBuf, cmd);
-}
-static inline void RingBuffer_Insert_Escaped(RingBuff_t *buf, uint8_t data) {
-  if (shouldEscape(data)) {
-    RingBuffer_Insert(buf, ESC);
-    data ^= 0x20;
-  }
-  RingBuffer_Insert(buf, data);
 }
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
                                   uint8_t *data) {

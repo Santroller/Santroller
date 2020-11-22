@@ -86,21 +86,24 @@ int main(void) {
     count = RingBuffer_GetCount(&outBuf);
     while (count--) {
       received = RingBuffer_Remove(&outBuf);
-      if (received == ESC) {
-        escapeNext = true;
-        continue;
-      } else if (escapeNext) {
+      if (escapeNext) {
         received ^= 0x20;
         escapeNext = false;
-      } else if (received == FRAME_START_READ) {
-        readEndpoint = true;
+      } else if (received == FRAME_ESC) {
+        escapeNext = true;
+        continue;
       } else if (received == FRAME_END) {
         Endpoint_ClearIN();
         reading = false;
         if (Endpoint_GetCurrentEndpoint() != ENDPOINT_CONTROLEP) {
           waitingForReportWritten = true;
         }
-      } else if (readEndpoint) {
+        continue;
+      } else if (received == FRAME_START_WRITE) {
+        readEndpoint = true;
+        continue;
+      }
+      if (readEndpoint) {
         reading = true;
         readEndpoint = false;
         Endpoint_SelectEndpoint(endpoints[received]);
@@ -110,12 +113,14 @@ int main(void) {
       }
       if (reading) { Endpoint_Write_8(received); }
     }
-    count = RingBuffer_GetCount(&inBuf);
-    while (count--) { Serial_SendByte(RingBuffer_Remove(&inBuf)); }
+    // TODO: if we ever decide to support the multi controllers, this will need
+    // to wait for specific endpoints.
     if (waitingForReportWritten && Endpoint_IsINReady()) {
       RingBuffer_Insert(&inBuf, FRAME_READY_FOR_REPORT);
       waitingForReportWritten = false;
     }
+    count = RingBuffer_GetCount(&inBuf);
+    while (count--) { Serial_SendByte(RingBuffer_Remove(&inBuf)); }
     USB_USBTask();
   }
 }
@@ -139,7 +144,7 @@ const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDReadFeatureReport(uint8_t cmd) {
   Endpoint_ClearSETUP();
   RingBuffer_Insert(&inBuf, FRAME_START_FEATURE_READ);
-  RingBuffer_Insert(&inBuf, cmd);
+  RingBuffer_Insert_Escaped(&inBuf, cmd);
 }
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
                                   uint8_t *data) {

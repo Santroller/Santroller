@@ -24,9 +24,9 @@ RingBuff_Data_t outBufData[BUFFER_SIZE];
 RingBuff_t inBuf;
 RingBuff_t outBuf;
 Configuration_t newConfig;
-volatile bool readyForReport = true;
+bool readyForReport = true;
 long lastPoll = 0;
-void writePacketToSerial(uint8_t frame, uint8_t *buf, uint8_t len) {
+void writePacketToSerialBuffer(uint8_t frame, uint8_t *buf, uint8_t len) {
   RingBuffer_Insert(&outBuf, frame);
   while (len--) { RingBuffer_Insert_Escaped(&outBuf, *(buf++)); }
   RingBuffer_Insert(&outBuf, FRAME_END);
@@ -44,20 +44,21 @@ int main(void) {
   uint8_t received;
   uint8_t frame = 0;
   uint8_t cmd = 0;
-  uint8_t *data;
+  uint8_t *data = NULL;
   bool waitingForConfigOffset = false;
   while (true) {
     count = RingBuffer_GetCount(&inBuf);
     while (count--) {
       received = RingBuffer_Remove(&inBuf);
-      if (received == ESC) {
-        escapeNext = true;
-        continue;
-      } else if (escapeNext) {
+      if (escapeNext) {
         received ^= 0x20;
         escapeNext = false;
+      } else if (received == FRAME_ESC) {
+        escapeNext = true;
+        continue;
       } else if (received == FRAME_READY_FOR_REPORT) {
         readyForReport = true;
+        continue;
       } else if (received == FRAME_START_FEATURE_WRITE ||
                  received == FRAME_START_FEATURE_READ) {
         frame = received;
@@ -71,22 +72,24 @@ int main(void) {
         cmd = 0;
         data = NULL;
       }
-      if (frame == FRAME_START_FEATURE_READ) {
-        processHIDReadFeatureReport(received);
-        frame = 0;
-      } else if (cmd == 0 && frame == FRAME_START_FEATURE_WRITE) {
-        cmd = received;
-        if (cmd == COMMAND_WRITE_CONFIG) {
-          data = (uint8_t *)&config;
-          waitingForConfigOffset = true;
-        } else if (cmd == COMMAND_SET_LEDS) {
-          data = (uint8_t *)&controller.leds;
+      if (frame != 0) {
+        if (frame == FRAME_START_FEATURE_READ) {
+          processHIDReadFeatureReport(received);
+          frame = 0;
+        } else if (cmd == 0) {
+          cmd = received;
+          if (cmd == COMMAND_WRITE_CONFIG) {
+            data = (uint8_t *)&config;
+            waitingForConfigOffset = true;
+          } else if (cmd == COMMAND_SET_LEDS) {
+            data = (uint8_t *)&controller.leds;
+          }
+        } else if (waitingForConfigOffset) {
+          waitingForConfigOffset = false;
+          data += received;
+        } else if (data) {
+          *(data++) = received;
         }
-      } else if (waitingForConfigOffset) {
-        waitingForConfigOffset = false;
-        data += received;
-      } else if (data) {
-        *(data++) = received;
       }
     }
     count = RingBuffer_GetCount(&outBuf);
@@ -99,7 +102,7 @@ int main(void) {
       lastPoll = millis();
       if (memcmp(currentReport, previousReport, size) != 0) {
         readyForReport = false;
-        writePacketToSerial(FRAME_START_READ, currentReport, size);
+        writePacketToSerialBuffer(FRAME_START_WRITE, currentReport, size);
         memcpy(previousReport, currentReport, size);
       }
     }
@@ -108,12 +111,12 @@ int main(void) {
 // Data being written back to USB after a read
 void writeToUSB(const void *const Buffer, uint16_t Length) {
   uint8_t *buf = (uint8_t *)Buffer;
-  writePacketToSerial(FRAME_START_READ, buf, Length);
+  writePacketToSerialBuffer(FRAME_START_WRITE, buf, Length);
 }
 #ifdef USART0_RX_vect
 ISR(USART0_RX_vect, ISR_BLOCK) {
 #else
 ISR(USART_RX_vect, ISR_BLOCK) {
 #endif
-  RingBuffer_Insert(&inBuf, UDR0);
+  RingBuffer_Insert(&inBuf, UDR1);
 }

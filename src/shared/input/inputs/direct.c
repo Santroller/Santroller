@@ -118,7 +118,7 @@ void tickDirectInput(Controller_t *controller) {
   Pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
-    if ((*pin.port & pin.mask) == pin.eq) { controller->buttons |= pin.pmask; }
+    if (((*pin.port & pin.mask) != 0) == pin.eq) { controller->buttons |= pin.pmask; }
   }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;

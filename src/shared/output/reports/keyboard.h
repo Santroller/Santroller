@@ -8,6 +8,6 @@
   checkJoyKey(0, config.keys.trigger, controller->trigger, triggerThresholdKb, \
                 &usedKeys, KeyboardReport)
 
-void fillKeyboardReport(void *ReportData, uint16_t *const ReportSize,
+void fillKeyboardReport(void *ReportData, uint8_t *const ReportSize,
                             Controller_t *controller);
 void initKeyboard(void);

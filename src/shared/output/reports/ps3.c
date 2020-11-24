@@ -71,7 +71,7 @@ void initPS3(void) {
     memcpy_P(ps3ButtonBindings, psRBButonBindings, sizeof(ps3ButtonBindings));
   }
 }
-void fillPS3Report(void *ReportData, uint16_t *const ReportSize,
+void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
                        Controller_t *controller) {
   *ReportSize = sizeof(USB_PS3Report_Data_t);
   USB_PS3Report_Data_t *JoystickReport = (USB_PS3Report_Data_t *)ReportData;

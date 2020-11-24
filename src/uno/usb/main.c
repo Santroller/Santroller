@@ -17,15 +17,15 @@
 #include <avr/wdt.h>
 #define JUMP 0xDEAD8001
 
-const uint8_t endpoints[] = {[REPORT_ID_CONTROL] = ENDPOINT_CONTROLEP,
-                             [REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
-                             [REPORT_ID_XINPUT_2] = XINPUT_2_EPADDR_IN,
-                             [REPORT_ID_XINPUT_3] = XINPUT_3_EPADDR_IN,
-                             [REPORT_ID_XINPUT_4] = XINPUT_2_EPADDR_IN,
-                             [REPORT_ID_GAMEPAD] = HID_EPADDR_IN,
-                             [REPORT_ID_KBD] = HID_EPADDR_IN,
-                             [REPORT_ID_MOUSE] = HID_EPADDR_IN,
-                             [REPORT_ID_MIDI] = MIDI_EPADDR_IN};
+const uint8_t endpoints[] PROGMEM = {[REPORT_ID_CONTROL] = ENDPOINT_CONTROLEP,
+                                     [REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
+                                     [REPORT_ID_XINPUT_2] = XINPUT_2_EPADDR_IN,
+                                     [REPORT_ID_XINPUT_3] = XINPUT_3_EPADDR_IN,
+                                     [REPORT_ID_XINPUT_4] = XINPUT_2_EPADDR_IN,
+                                     [REPORT_ID_GAMEPAD] = HID_EPADDR_IN,
+                                     [REPORT_ID_KBD] = HID_EPADDR_IN,
+                                     [REPORT_ID_MOUSE] = HID_EPADDR_IN,
+                                     [REPORT_ID_MIDI] = MIDI_EPADDR_IN};
 typedef struct {
   uint32_t id;
   uint8_t deviceType;
@@ -38,10 +38,6 @@ uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 // mode after the next watchdog reset
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 
-uint8_t frame;
-bool escapeNext = false;
-bool reportIDNext = false;
-volatile bool currentlyTransferring = false;
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
@@ -59,9 +55,6 @@ int main(void) {
 
   USB_Init();
 
-  /* Start the 328p  */
-  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-  AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
 
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
@@ -73,10 +66,88 @@ int main(void) {
   }
 
   sei();
+  uint8_t endpointToCheck = 0;
+  uint8_t packetCount = 0;
+  uint8_t state = 0;
+  uint8_t currentEndpoint = 0;
+  AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+  AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+  // bool waitingForCheck = false;
   while (true) {
-    if (!currentlyTransferring) {
-      USB_USBTask();
-      if (Endpoint_IsINReady()) { Serial_SendByte(FRAME_DONE); };
+    if (state == 0 && endpointToCheck) {
+      uint8_t prev = Endpoint_GetCurrentEndpoint();
+      Endpoint_SelectEndpoint(endpointToCheck);
+      if (Endpoint_IsINReady()) {
+        uint8_t done = FRAME_DONE;
+        endpointToCheck = 0;
+        writeData(&done, 1);
+      }
+      Endpoint_SelectEndpoint(prev);
+    }
+    USB_USBTask();
+
+    //================================================================================
+    // USARTtoUSB
+    //================================================================================
+
+    // This requires the USART RX buffer to be 256 bytes.
+    uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
+
+    // Check if we have something worth to send
+    if (count) {
+
+      // Prepare temporary pointer
+      uint16_t tmp; // = 0x100 | USARTtoUSBReadPtr
+      asm(
+          // Do not initialize high byte, it will be done in first loop
+          // below.
+          "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
+                                        // lower byte
+          // Outputs
+          : [tmp] "=&e"(tmp) // Pointer register, output only
+          // Inputs
+          : [readPtr] "m"(USARTtoUSB_ReadPtr) // Memory location
+      );
+
+      // Write all bytes from USART to the USB endpoint
+      do {
+        register uint8_t data;
+        asm("ldi %B[tmp] , 0x01\n\t"     // (1) Force high byte to 0x01
+            "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte, wraps
+                                         // around 255
+            // Outputs
+            : [data] "=&r"(data), // Output only
+              [tmp] "=e"(tmp)     // Input and output
+            // Inputs
+            : "1"(tmp));
+
+        if (state == 0 && data == FRAME_START_WRITE) {
+          state = 1;
+        } else if (state == 1) {
+          packetCount = data;
+          state = 2;
+        } else if (state == 2) {
+          state = 3;
+          packetCount--;
+          currentEndpoint = pgm_read_byte(endpoints + data);
+          Endpoint_SelectEndpoint(currentEndpoint);
+          if (data == REPORT_ID_MIDI || data == REPORT_ID_GAMEPAD ||
+              data == REPORT_ID_CONTROL) {
+            continue;
+          }
+          Endpoint_Write_8(data);
+        } else if (state == 3) {
+          packetCount--;
+          Endpoint_Write_8(data);
+          if (packetCount == 0) {
+            Endpoint_ClearIN();
+            state = 0;
+            if (currentEndpoint) { endpointToCheck = currentEndpoint; }
+          }
+        }
+      } while (--count);
+      // Save new pointer position
+      USARTtoUSB_ReadPtr = tmp & 0xFF;
     }
   }
 }
@@ -97,12 +168,40 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 #endif
 }
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
+void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
+  if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
+    jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
+    reboot();
+  }
+  Endpoint_ClearSETUP();
+  uint8_t done = FRAME_START_FEATURE_WRITE;
+  writeData(&done, 1);
+  writeData(&len, 1);
+  writeData(&cmd, 1);
+  while (len) {
+    if (Endpoint_IsOUTReceived()) {
+      while (len && Endpoint_BytesInEndpoint()) {
+        uint8_t d = Endpoint_Read_8();
+        writeData(&d, 1);
+        len--;
+      }
+      Endpoint_ClearOUT();
+    }
+    // Endpoint_ClearSETUP();
+    // Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
+    // Endpoint_ClearStatusStage();
+  }
+  Endpoint_ClearStatusStage();
+}
 void processHIDReadFeatureReport(uint8_t cmd) {
   Endpoint_ClearSETUP();
-  Serial_SendByte(FRAME_START_FEATURE_READ);
-  Serial_SendByte(cmd);
+  uint8_t done = FRAME_START_FEATURE_READ;
+  writeData(&done, 1);
+  writeData(&cmd, 1);
 }
-void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) {
+
+void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
+                                  uint8_t *data) {
   uint8_t subType = data[0];
   if (cmd == COMMAND_WRITE_SUBTYPE) {
     eeprom_update_byte(&config.deviceType, subType);
@@ -111,50 +210,75 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) 
     jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
     reboot();
   }
-  Serial_SendByte(FRAME_START_FEATURE_WRITE);
-  if (shouldEscape(cmd)) {
-    Serial_SendByte(ESC);
-  }
-  Serial_SendByte(cmd);
-  while (data_len--) {
-    uint8_t d = *(data++);
-    if (shouldEscape(d)) {
-      Serial_SendByte(ESC);
-      d ^= 0x20;
-    }
-    Serial_SendByte(d);
-  }
-  Serial_SendByte(FRAME_END);
+  uint8_t done = FRAME_START_FEATURE_WRITE;
+  writeData(&done, 1);
+  writeData(&data_len, 1);
+  writeData(&cmd, 1);
+  writeData(data, data_len);
 }
 
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
-ISR(USART1_RX_vect, ISR_BLOCK) {
-  uint8_t ReceivedByte = UDR1;
-  if (escapeNext) {
-    escapeNext = false;
-    ReceivedByte ^= 0x20;
-  } else if (ReceivedByte == ESC) {
-    escapeNext = true;
-    return;
-  } else if (ReceivedByte == FRAME_START_READ) {
-    reportIDNext = true;
-    currentlyTransferring = true;
-    frame = ReceivedByte;
-    return;
-  } else if (ReceivedByte == FRAME_END) {
-    Endpoint_ClearIN();
-    frame = 0;
-    currentlyTransferring = false;
-    return;
-  }
-  if (frame != 0) {
-    if (reportIDNext) {
-      reportIDNext = false;
-      Endpoint_SelectEndpoint(endpoints[ReceivedByte]);
-      if (ReceivedByte == REPORT_ID_MIDI || ReceivedByte == REPORT_ID_GAMEPAD) {
-        return;
-      }
-    }
-    Endpoint_Write_8(ReceivedByte);
-  }
+
+/** ISR to manage the reception of data from the serial port, placing received
+ * bytes into a circular buffer for later transmission to the host.
+ */
+ISR(USART1_RX_vect, ISR_NAKED) {
+  // This ISR doesnt change SREG. Whoa.
+  asm volatile(
+      "lds r3, %[UDR1_Reg]\n\t" // (1) Load new Serial byte (UDR1) into r3
+      "movw r4, r30\n\t"        // (1) Backup Z pointer (r30 -> r4, r31 -> r5)
+      "in r30, %[writePointer]\n\t" // (1) Load USARTtoUSB write buffer 8 bit
+                                    // pointer to lower Z pointer
+      "ldi r31, 0x01\n\t"           // (1) Set higher Z pointer to 0x01
+      "st Z+, r3\n\t" // (2) Save UDR1 in Z pointer (USARTtoUSB write buffer)
+                      // and increment
+      "out %[writePointer], r30\n\t" // (1) Save back new USARTtoUSB buffer
+                                     // pointer location
+      "movw r30, r4\n\t"             // (1) Restore backuped Z pointer
+      "reti\n\t"                     // (4) Exit ISR
+
+      // Inputs:
+      ::[UDR1_Reg] "m"(UDR1), // Memory location of UDR1
+      [writePointer] "I"(_SFR_IO_ADDR(
+          USARTtoUSB_WritePtr)) // 8 bit pointer to USARTtoUSB write buffer
+  );
+}
+
+ISR(USART1_UDRE_vect, ISR_NAKED) {
+  // Another SREG-less ISR.
+  asm volatile(
+      "movw r4, r30\n\t" // (1) Backup Z pointer (r30 -> r4, r31 -> r5)
+      "in r30, %[readPointer]\n\t" // (1) Load USBtoUSART read buffer 8 bit
+                                   // pointer to lower Z pointer
+      "ldi r31, 0x02\n\t"          // (1) Set higher Z pointer to 0x02
+      "ld r3, Z+\n\t" // (2) Load next byte from USBtoUSART buffer into r3
+      "sts %[UDR1_Reg], r3\n\t"     // (2) Save r3 (next byte) in UDR1
+      "out %[readPointer], r30\n\t" // (1) Save back new USBtoUSART read
+                                    // buffer pointer location
+      "cbi %[readPointer], 7\n\t"   // (2) Wrap around for 128 bytes
+      //     smart after-the-fact andi 0x7F without using SREG
+      "movw r30, r4\n\t"            // (1) Restore backuped Z pointer
+      "in r2, %[readPointer]\n\t"   // (1) Load USBtoUSART read buffer 8 bit
+                                    // pointer to r2
+      "lds r3, %[writePointer]\n\t" // (1) Load USBtoUSART write buffer to r3
+      "cpse r2, r3\n\t"   // (1/2) Check if USBtoUSART read buffer == USBtoUSART
+                          // write buffer
+      "reti\n\t"          // (4) They are not equal, more bytes coming soon!
+      "ldi r30, 0x98\n\t" // (1) Set r30 temporary to new UCSR1B setting
+                          // ((1<<RXCIE1) | (1 << RXEN1) | (1 << TXEN1))
+      //     ldi needs an upper register, restore Z once more afterwards
+      "sts %[UCSR1B_Reg], r30\n\t" // (2) Turn off this interrupt (UDRIE1),
+                                   // all bytes sent
+      "movw r30, r4\n\t"           // (1) Restore backuped Z pointer again (was
+                                   // overwritten again above)
+      "reti\n\t"                   // (4) Exit ISR
+
+      // Inputs:
+      ::[UDR1_Reg] "m"(UDR1), // Memory location of UDR1
+      [readPointer] "I"(_SFR_IO_ADDR(
+          USBtoUSART_ReadPtr)), // 7 bit pointer to USBtoUSART read buffer
+      [writePointer] "m"(
+          USBtoUSART_WritePtr), // 7 bit pointer to USBtoUSART write buffer
+      [UCSR1B_Reg] "m"(UCSR1B)  // Memory location of UCSR1B
+  );
 }

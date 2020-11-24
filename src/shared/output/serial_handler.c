@@ -47,6 +47,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) 
   }
   handleCommand(cmd);
 }
+uint8_t dbuf[32];
 void processHIDReadFeatureReport(uint8_t cmd) {
   uint16_t size;
   dbuf[0] = REPORT_ID_CONTROL;

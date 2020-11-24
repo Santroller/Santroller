@@ -135,72 +135,72 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM kbd_report_descriptor[] = {
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_KEYBOARD),
     HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
-      HID_RI_REPORT_ID(8, REPORT_ID_KBD),
-      HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_KEYBOARD),
-      HID_RI_USAGE_MINIMUM(8, 0xE0),
-      HID_RI_USAGE_MAXIMUM(8, 0xE7),
-      HID_RI_LOGICAL_MINIMUM(8, 0x00),
-      HID_RI_LOGICAL_MAXIMUM(8, 0x01),
-      HID_RI_REPORT_SIZE(8, 0x01),
-      HID_RI_REPORT_COUNT(8, 0x08),
-      HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-      HID_RI_REPORT_COUNT(8, 0x01),
-      HID_RI_REPORT_SIZE(8, 0x08),
-      HID_RI_INPUT(8, HID_IOF_CONSTANT),
-      HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_LED),
-      HID_RI_USAGE_MINIMUM(8, 0x01),
-      HID_RI_USAGE_MAXIMUM(8, 0x05),
-      HID_RI_REPORT_COUNT(8, 0x05),
-      HID_RI_REPORT_SIZE(8, 0x01),
-      HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
-                          HID_IOF_NON_VOLATILE),
-      HID_RI_REPORT_COUNT(8, 0x01),
-      HID_RI_REPORT_SIZE(8, 0x03),
-      HID_RI_OUTPUT(8, HID_IOF_CONSTANT),
-      HID_RI_LOGICAL_MINIMUM(8, 0x00),
-      HID_RI_LOGICAL_MAXIMUM(16, 0xFF),
-      HID_RI_USAGE_PAGE(8, 0x07),
-      HID_RI_USAGE_MINIMUM(8, 0x00),
-      HID_RI_USAGE_MAXIMUM(8, 0xFF),
-      HID_RI_REPORT_COUNT(8, SIMULTANEOUS_KEYS),
-      HID_RI_REPORT_SIZE(8, 0x08),
-      HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_ID(8, REPORT_ID_KBD),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_KEYBOARD),
+    HID_RI_USAGE_MINIMUM(8, 0xE0),
+    HID_RI_USAGE_MAXIMUM(8, 0xE7),
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),
+    HID_RI_LOGICAL_MAXIMUM(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 0x01),
+    HID_RI_REPORT_COUNT(8, 0x08),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 0x08),
+    HID_RI_INPUT(8, HID_IOF_CONSTANT),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_LED),
+    HID_RI_USAGE_MINIMUM(8, 0x01),
+    HID_RI_USAGE_MAXIMUM(8, 0x05),
+    HID_RI_REPORT_COUNT(8, 0x05),
+    HID_RI_REPORT_SIZE(8, 0x01),
+    HID_RI_OUTPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE |
+                         HID_IOF_NON_VOLATILE),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 0x03),
+    HID_RI_OUTPUT(8, HID_IOF_CONSTANT),
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),
+    HID_RI_LOGICAL_MAXIMUM(16, 0xFF),
+    HID_RI_USAGE_PAGE(8, 0x07),
+    HID_RI_USAGE_MINIMUM(8, 0x00),
+    HID_RI_USAGE_MAXIMUM(8, 0xFF),
+    HID_RI_REPORT_COUNT(8, SIMULTANEOUS_KEYS),
+    HID_RI_REPORT_SIZE(8, 0x08),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
     HID_RI_END_COLLECTION(0),
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_MOUSE),
     HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
-      HID_RI_REPORT_ID(8, REPORT_ID_MOUSE),
-      HID_RI_USAGE(8, HID_USAGE_POINTER),
-      HID_RI_COLLECTION(8, HID_COLLECTION_PHYSICAL),
-        HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_BUTTON),
-        HID_RI_USAGE_MINIMUM(8, 0x01),
-        HID_RI_USAGE_MAXIMUM(8, Buttons),
-        HID_RI_LOGICAL_MINIMUM(8, 0x00),
-        HID_RI_LOGICAL_MAXIMUM(8, 0x01),
-        HID_RI_REPORT_COUNT(8, Buttons),
-        HID_RI_REPORT_SIZE(8, 0x01),
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-        HID_RI_REPORT_SIZE(8, (8 - (Buttons % 8))),
-        HID_RI_REPORT_COUNT(8, 0x01),
-        HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-        HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
-        HID_RI_USAGE(8, HID_USAGE_X),
-        HID_RI_USAGE(8, HID_USAGE_Y),
-        HID_RI_USAGE(8, HID_USAGE_Wheel),
-        HID_RI_LOGICAL_MINIMUM(8, -127),
-        HID_RI_LOGICAL_MAXIMUM(8, 127),
-        HID_RI_REPORT_COUNT(8, 0x03),
-        HID_RI_REPORT_SIZE(8, 8),
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE |
-                            (AbsoluteCoords ? HID_IOF_ABSOLUTE : HID_IOF_RELATIVE)),
-        HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_CONSUMER),
-        HID_RI_USAGE(16, HID_USAGE_CONSUMER_AC_PAN),
-        HID_RI_LOGICAL_MINIMUM(16, -127),
-        HID_RI_LOGICAL_MAXIMUM(16, 127),
-        HID_RI_REPORT_COUNT(8, 0x01),
-        HID_RI_REPORT_SIZE(8, 8),
-        HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),
-      HID_RI_END_COLLECTION(0),
+    HID_RI_REPORT_ID(8, REPORT_ID_MOUSE),
+    HID_RI_USAGE(8, HID_USAGE_POINTER),
+    HID_RI_COLLECTION(8, HID_COLLECTION_PHYSICAL),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_BUTTON),
+    HID_RI_USAGE_MINIMUM(8, 0x01),
+    HID_RI_USAGE_MAXIMUM(8, Buttons),
+    HID_RI_LOGICAL_MINIMUM(8, 0x00),
+    HID_RI_LOGICAL_MAXIMUM(8, 0x01),
+    HID_RI_REPORT_COUNT(8, Buttons),
+    HID_RI_REPORT_SIZE(8, 0x01),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_REPORT_SIZE(8, (8 - (Buttons % 8))),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_INPUT(8, HID_IOF_CONSTANT | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
+    HID_RI_USAGE(8, HID_USAGE_X),
+    HID_RI_USAGE(8, HID_USAGE_Y),
+    HID_RI_USAGE(8, HID_USAGE_Wheel),
+    HID_RI_LOGICAL_MINIMUM(8, -127),
+    HID_RI_LOGICAL_MAXIMUM(8, 127),
+    HID_RI_REPORT_COUNT(8, 0x03),
+    HID_RI_REPORT_SIZE(8, 8),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE |
+                        (AbsoluteCoords ? HID_IOF_ABSOLUTE : HID_IOF_RELATIVE)),
+    HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_CONSUMER),
+    HID_RI_USAGE(16, HID_USAGE_CONSUMER_AC_PAN),
+    HID_RI_LOGICAL_MINIMUM(16, -127),
+    HID_RI_LOGICAL_MAXIMUM(16, 127),
+    HID_RI_REPORT_COUNT(8, 0x01),
+    HID_RI_REPORT_SIZE(8, 8),
+    HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),
+    HID_RI_END_COLLECTION(0),
     HID_RI_END_COLLECTION(0),
 };
 
@@ -221,7 +221,7 @@ const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
   SerialNumStrIndex : USE_INTERNAL_SERIAL,
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
-uint8_t dbuf[DBUF_SIZE];
+// uint8_t dbuf[DBUF_SIZE];
 const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
   Config : {
     Header : {
@@ -593,6 +593,71 @@ const uint16_t PROGMEM vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
                                 0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
 const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
                                 0x0210, ARDWIINO_PID, 0x0004, 0x074B};
+
+uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
+                            uint8_t *mods, uint8_t modCount) {
+  Endpoint_ClearSETUP();
+  uint8_t *DataStream = (uint8_t *)Buffer;
+  bool LastPacketFull = false;
+  uint8_t current = 0;
+
+  if (Length > USB_ControlRequest.wLength)
+    Length = USB_ControlRequest.wLength;
+  else if (!(Length))
+    Endpoint_ClearIN();
+
+  while (Length || LastPacketFull) {
+    uint8_t USB_DeviceState_LCL = USB_DeviceState;
+
+    if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
+      return ENDPOINT_RWCSTREAM_DeviceDisconnected;
+    else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
+      return ENDPOINT_RWCSTREAM_BusSuspended;
+    else if (Endpoint_IsSETUPReceived())
+      return ENDPOINT_RWCSTREAM_HostAborted;
+    else if (Endpoint_IsOUTReceived())
+      break;
+
+    if (Endpoint_IsINReady()) {
+      uint16_t BytesInEndpoint = Endpoint_BytesInEndpoint();
+
+      while (Length && (BytesInEndpoint < USB_Device_ControlEndpointSize)) {
+        bool found = false;
+        for (uint8_t i = 0; i < modCount; i += 3) {
+          if (current == mods[i]) {
+            found = true;
+            Endpoint_Write_8(mods[i + 1]);
+          }
+          if (current - 1 == mods[i]) {
+            found = true;
+            Endpoint_Write_8(mods[i + 2]);
+          }
+        }
+        if (!found) { Endpoint_Write_8(pgm_read_byte(DataStream)); }
+        DataStream += 1;
+        Length--;
+        BytesInEndpoint++;
+        current++;
+      }
+
+      LastPacketFull = (BytesInEndpoint == USB_Device_ControlEndpointSize);
+      Endpoint_ClearIN();
+    }
+  }
+
+  while (!(Endpoint_IsOUTReceived())) {
+    uint8_t USB_DeviceState_LCL = USB_DeviceState;
+
+    if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
+      return ENDPOINT_RWCSTREAM_DeviceDisconnected;
+    else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
+      return ENDPOINT_RWCSTREAM_BusSuspended;
+    else if (Endpoint_IsSETUPReceived())
+      return ENDPOINT_RWCSTREAM_HostAborted;
+  }
+  Endpoint_ClearOUT();
+  return ENDPOINT_RWCSTREAM_NoError;
+}
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
  * code so that the address and size of a requested descriptor can be given to
@@ -602,42 +667,51 @@ const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
  */
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void **const descriptorAddress,
-                                    uint8_t *const DescriptorMemorySpace) {
+                                    const void **const descriptorAddress) {
   const uint8_t descriptorType = (wValue >> 8);
   const uint8_t descriptorNumber = (wValue & 0xFF);
   uint16_t size = NO_DESCRIPTOR;
   const void *address = NULL;
-  *descriptorAddress = dbuf;
-  *DescriptorMemorySpace = MEMSPACE_RAM;
+  uint8_t mods[6] = {};
   switch (descriptorType) {
   case DTYPE_Device:
     address = &deviceDescriptor;
     size = deviceDescriptor.Header.Size;
-    memcpy_P(dbuf, address, size);
-    USB_Descriptor_Device_t *dev = (USB_Descriptor_Device_t *)dbuf;
     if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
       uint8_t offs = deviceType - SWITCH_GAMEPAD;
-      dev->VendorID = pgm_read_word(vid + offs);
-      dev->ProductID = pgm_read_word(pid + offs);
+      mods[0] = offsetof(USB_Descriptor_Device_t, VendorID);
+      mods[1] = pgm_read_byte(vid + offs);
+      mods[2] = pgm_read_byte(vid + offs + 1);
+      mods[3] = offsetof(USB_Descriptor_Device_t, ProductID);
+      mods[4] = pgm_read_byte(pid + offs);
+      mods[5] = pgm_read_byte(pid + offs + 1);
+      write_endpoint_mods(address, size, mods, sizeof(mods));
+    } else {
+      write_endpoint_mods(address, size, mods, 0);
     }
-    return size;
+    return NO_DESCRIPTOR;
   case DTYPE_Configuration:
     address = &ConfigurationDescriptor;
     size = ConfigurationDescriptor.Config.TotalConfigurationSize;
-    memcpy_P(dbuf, address, size);
-    USB_Descriptor_Configuration_t *conf =
-        (USB_Descriptor_Configuration_t *)dbuf;
-    conf->XInputReserved.subtype = deviceType;
+    mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
+    mods[1] = deviceType;
+    mods[2] = 0x25;
+    mods[3] =
+        offsetof(USB_Descriptor_Configuration_t, HIDDescriptor.HIDReportLength);
+    mods[4] = sizeof(ps3_report_descriptor);
+    mods[5] = 0;
     if (deviceType > KEYBOARD_ROCK_BAND_GUITAR) {
-      conf->HIDDescriptor.HIDReportLength = sizeof(ps3_report_descriptor);
+      write_endpoint_mods(address, size, mods, sizeof(mods));
+    } else {
+      write_endpoint_mods(address, size, mods, 3);
     }
 #ifdef MULTI_ADAPTOR
     conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
     conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
     conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
 #endif
-    return size;
+    return NO_DESCRIPTOR;
+    break;
   case HID_DTYPE_Report:
     if (deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
       address = kbd_report_descriptor;
@@ -660,6 +734,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     break;
   }
   *descriptorAddress = address;
-  *DescriptorMemorySpace = MEMSPACE_FLASH;
+
   return size;
 }

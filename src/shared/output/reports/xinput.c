@@ -2,7 +2,7 @@
 #include "xinput.h"
 #include "output/controller_structs.h"
 #include <string.h>
-void fillXInputReport(void *ReportData, uint16_t *const ReportSize,
+void fillXInputReport(void *ReportData, uint8_t *const ReportSize,
                       Controller_t *controller) {
   *ReportSize = sizeof(USB_XInputReport_Data_t);
 

@@ -2,7 +2,7 @@
 #include "config/eeprom.h"
 #include "output/controller_structs.h"
 #include "output/descriptors.h"
-void fillMouseReport(void *ReportData, uint16_t *const ReportSize,
+void fillMouseReport(void *ReportData, uint8_t *const ReportSize,
                      Controller_t *controller) {
   *ReportSize = sizeof(USB_ID_MouseReport_Data_t);
   USB_ID_MouseReport_Data_t *MouseReport =

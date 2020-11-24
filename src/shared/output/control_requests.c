@@ -80,10 +80,7 @@ void deviceControlRequest(void) {
   } else if (USB_ControlRequest.bRequest == HID_REQ_SetReport &&
              USB_ControlRequest.bmRequestType ==
                  (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    Endpoint_ClearSETUP();
-    Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
-    Endpoint_ClearStatusStage();
-    processHIDWriteFeatureReport(USB_ControlRequest.wValue, USB_ControlRequest.wLength, dbuf);
+    processHIDWriteFeatureReportControl(USB_ControlRequest.wValue, USB_ControlRequest.wLength);
   } else if (USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
              (USB_ControlRequest.bmRequestType == 0xC1) &&
              USB_ControlRequest.wIndex == EXTENDED_PROPERTIES_DESCRIPTOR &&

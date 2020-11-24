@@ -8,7 +8,7 @@
 #include "reports/xinput.h"
 #include "util/util.h"
 
-void (*fillReport)(void *ReportData, uint16_t *const ReportSize,
+void (*fillReport)(void *ReportData, uint8_t *const ReportSize,
                    Controller_t *controller) = NULL;
 
 void initReports(void) {

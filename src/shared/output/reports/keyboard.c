@@ -11,7 +11,7 @@ void checkJoyKey(int neg, int pos, int val, int thresh, uint8_t *used,
     if (pos && val > thresh) { KeyboardReport->KeyCode[*used++] = pos; }
   }
 }
-void fillKeyboardReport(void *ReportData, uint16_t *const ReportSize,
+void fillKeyboardReport(void *ReportData, uint8_t *const ReportSize,
                         Controller_t *controller) {
   *ReportSize = sizeof(USB_ID_KeyboardReport_Data_t);
   USB_ID_KeyboardReport_Data_t *KeyboardReport =

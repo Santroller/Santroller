@@ -5,7 +5,7 @@
 #include "output/descriptors.h"
 
 uint8_t lastmidi[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
-void fillMIDIReport(void *ReportData, uint16_t *const ReportSize,
+void fillMIDIReport(void *ReportData, uint8_t *const ReportSize,
                     Controller_t *controller) {
   USB_MIDI_Data_t *data = ReportData;
   data->rid = REPORT_ID_MIDI;

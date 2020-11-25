@@ -14,13 +14,7 @@ try:
 except:
     print("Probably already detached")
 print(dev.ctrl_transfer(0xa1, 0x01, 60,0x00,64))
-time.sleep(1)
 print(dev.ctrl_transfer(0xa1, 0x01, 61,0x00,64))
-time.sleep(1)
 print(dev.ctrl_transfer(0xa1, 0x01, 62,0x00,64))
-time.sleep(1)
 print(dev.ctrl_transfer(0xa1, 0x01, 63,0x00,64))
-time.sleep(1)
 print(dev.ctrl_transfer(0xa1, 0x01, 64,0x00,64))
-time.sleep(1)
-print(dev.ctrl_transfer(0xa1, 0x01, 65,0x00,64))

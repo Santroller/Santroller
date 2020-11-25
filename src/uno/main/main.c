@@ -30,25 +30,7 @@ int main(void) {
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t *buf;
-  uint8_t commandToRead = 0;
   while (true) {
-    if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
-      lastPoll = millis();
-      tickInputs(&controller);
-      tickLEDs(&controller);
-      uint8_t size;
-      // TODO: this needs to go!
-      // controller.l_x = rand();
-      fillReport(currentReport, &size, &controller);
-      if (memcmp(currentReport, previousReport, size) != 0) {
-        readyForPacket = false;
-        uint8_t done = FRAME_START_WRITE;
-        writeData(&done, 1);
-        writeData(&size, 1);
-        writeData(currentReport, size);
-        memcpy(previousReport, currentReport, size);
-      }
-    }
     //================================================================================
     // USARTtoUSB
     //================================================================================
@@ -95,7 +77,8 @@ int main(void) {
           packetCount = data;
           state = 3;
         } else if (state == 2) {
-          commandToRead = data;
+          USARTtoUSB_ReadPtr = tmp & 0xFF;
+          processHIDReadFeatureReport(data);
           state = 0;
           break;
         } else if (state == 3) {
@@ -125,9 +108,21 @@ int main(void) {
       } while (--count);
       // Save new pointer position
       USARTtoUSB_ReadPtr = tmp & 0xFF;
-      if (commandToRead) {
-        processHIDReadFeatureReport(commandToRead);
-        commandToRead = 0;
+    } else if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
+      lastPoll = millis();
+      tickInputs(&controller);
+      tickLEDs(&controller);
+      uint8_t size;
+      // TODO: this needs to go!
+      controller.l_x = rand();
+      fillReport(currentReport, &size, &controller);
+      if (memcmp(currentReport, previousReport, size) != 0) {
+        readyForPacket = false;
+        uint8_t done = FRAME_START_WRITE;
+        writeData(&done, 1);
+        writeData(&size, 1);
+        writeData(currentReport, size);
+        memcpy(previousReport, currentReport, size);
       }
     }
   }

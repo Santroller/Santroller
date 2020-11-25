@@ -65,25 +65,14 @@ int main(void) {
   }
 
   sei();
-  uint8_t endpointToCheck = 0;
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t currentEndpoint = 0;
+  bool checkEndpoint = false;
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
   // bool waitingForCheck = false;
   while (true) {
-    if (state == 0 && endpointToCheck) {
-      uint8_t prev = Endpoint_GetCurrentEndpoint();
-      Endpoint_SelectEndpoint(endpointToCheck);
-      if (Endpoint_IsINReady()) {
-        uint8_t done = FRAME_DONE;
-        endpointToCheck = 0;
-        writeData(&done, 1);
-      }
-      Endpoint_SelectEndpoint(prev);
-    }
-    USB_USBTask();
 
     //================================================================================
     // USARTtoUSB
@@ -119,12 +108,8 @@ int main(void) {
               [tmp] "=e"(tmp)     // Input and output
             // Inputs
             : "1"(tmp));
-        Endpoint_SelectEndpoint(0);
-        Endpoint_Write_8(data);
-        packetCount++;
-        if (packetCount == 35) {
-          Endpoint_ClearIN();
-        }
+            // When there is a lot of traffic down the controller, its possible
+            // For the config line to get a duplicate header?
         if (state == 0 && data == FRAME_START_WRITE) {
           state = 1;
         } else if (state == 1) {
@@ -146,13 +131,25 @@ int main(void) {
           if (packetCount == 0) {
             Endpoint_ClearIN();
             state = 0;
-            if (currentEndpoint) { endpointToCheck = currentEndpoint; }
+            checkEndpoint = true;
             break;
           }
         }
       } while (--count);
       // Save new pointer position
       USARTtoUSB_ReadPtr = tmp & 0xFF;
+    } else {
+      USB_USBTask();
+      if (checkEndpoint) {
+        uint8_t prev = Endpoint_GetCurrentEndpoint();
+        Endpoint_SelectEndpoint(currentEndpoint);
+        if (Endpoint_IsINReady()) {
+          uint8_t done = FRAME_DONE;
+          checkEndpoint = false;
+          writeData(&done, 1);
+        }
+        Endpoint_SelectEndpoint(prev);
+      }
     }
   }
 }

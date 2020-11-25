@@ -55,7 +55,6 @@ int main(void) {
 
   USB_Init();
 
-
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
   if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {
@@ -120,7 +119,12 @@ int main(void) {
               [tmp] "=e"(tmp)     // Input and output
             // Inputs
             : "1"(tmp));
-
+        Endpoint_SelectEndpoint(0);
+        Endpoint_Write_8(data);
+        packetCount++;
+        if (packetCount == 35) {
+          Endpoint_ClearIN();
+        }
         if (state == 0 && data == FRAME_START_WRITE) {
           state = 1;
         } else if (state == 1) {
@@ -143,6 +147,7 @@ int main(void) {
             Endpoint_ClearIN();
             state = 0;
             if (currentEndpoint) { endpointToCheck = currentEndpoint; }
+            break;
           }
         }
       } while (--count);

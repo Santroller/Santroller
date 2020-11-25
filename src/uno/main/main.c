@@ -30,6 +30,7 @@ int main(void) {
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t *buf;
+  uint8_t commandToRead = 0;
   while (true) {
     if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
       lastPoll = millis();
@@ -70,7 +71,6 @@ int main(void) {
           // Inputs
           : [readPtr] "m"(USARTtoUSB_ReadPtr) // Memory location
       );
-
       // Write all bytes from USART to the USB endpoint
       do {
         register uint8_t data;
@@ -95,8 +95,9 @@ int main(void) {
           packetCount = data;
           state = 3;
         } else if (state == 2) {
-          processHIDReadFeatureReport(data);
+          commandToRead = data;
           state = 0;
+          break;
         } else if (state == 3) {
           if (data == COMMAND_WRITE_CONFIG) {
             buf = (uint8_t *)&config;
@@ -107,22 +108,27 @@ int main(void) {
           } else {
             handleCommand(data);
             state = 0;
+            break;
           }
           packetCount--;
         } else if (state == 4) {
           buf += data;
           state = 5;
         } else if (state == 5) {
+          packetCount--;
+          *(buf++) = data;
           if (packetCount == 0) {
             state = 0;
-          } else {
-            packetCount--;
-            *(buf++) = data;
+            break;
           }
         }
       } while (--count);
       // Save new pointer position
       USARTtoUSB_ReadPtr = tmp & 0xFF;
+      if (commandToRead) {
+        processHIDReadFeatureReport(commandToRead);
+        commandToRead = 0;
+      }
     }
   }
 }

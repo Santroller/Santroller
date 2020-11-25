@@ -67,6 +67,10 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
 
   DDRD |= (1 << 3);
   PORTD |= (1 << 2);
+  USBtoUSART_ReadPtr = 0;
+	USBtoUSART_WritePtr = 0;
+	USARTtoUSB_ReadPtr = 0;
+	USARTtoUSB_WritePtr = 0;
 }
 
 void writeData(uint8_t *buf, uint8_t len) {
@@ -112,8 +116,5 @@ void writeData(uint8_t *buf, uint8_t len) {
 
     // Enable USART again to flush the buffer
     UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
-
-    // Force Leds to turn on
-    USBtoUSART_free = 0;
   }
 }

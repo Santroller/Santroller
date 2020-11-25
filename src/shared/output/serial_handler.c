@@ -47,12 +47,12 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) 
   }
   handleCommand(cmd);
 }
-uint8_t dbuf[32];
+uint8_t dbuf[64];
 void processHIDReadFeatureReport(uint8_t cmd) {
   uint16_t size;
   dbuf[0] = REPORT_ID_CONTROL;
   if (cmd >= COMMAND_READ_CONFIG) {
-    size = 63;
+    size = 64;
     uint16_t index = size * (cmd - COMMAND_READ_CONFIG);
     int16_t size2 = sizeof(Configuration_t) - index;
     if (size2 < size) { size = size2; }

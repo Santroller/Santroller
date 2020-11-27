@@ -706,9 +706,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       write_endpoint_mods(address, size, mods, 3);
     }
 #ifdef MULTI_ADAPTOR
-    conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
-    conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
-    conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
+//TODO: if we ever implement this stuff, this needs to be implemented again.
+    // conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
+    // conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
+    // conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
 #endif
     return NO_DESCRIPTOR;
     break;

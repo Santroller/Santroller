@@ -120,7 +120,7 @@ int main(void) {
       tickLEDs(&controller);
       uint8_t size;
       // TODO: this needs to go!
-      controller.l_x = rand();
+      // controller.l_x = rand();
       fillReport(currentReport, &size, &controller);
       if (memcmp(currentReport, previousReport, size) != 0) {
         readyForPacket = false;

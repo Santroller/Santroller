@@ -14,7 +14,7 @@
 Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
-uint16_t size;
+uint8_t size;
 USB_ClassInfo_HID_Device_t hidInterface = {
   Config : {
     InterfaceNumber : INTERFACE_ID_HID,
@@ -125,6 +125,13 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
                              1);
 #endif
 }
+void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
+  uint8_t buf[64];
+  Endpoint_ClearSETUP();
+  Endpoint_Read_Control_Stream_LE(buf, data_len);
+  processHIDWriteFeatureReport(cmd, data_len, buf);
+  Endpoint_ClearStatusStage();
+}
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void EVENT_CDC_Device_ControLineStateChanged(
     USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
@@ -136,8 +143,8 @@ void EVENT_CDC_Device_ControLineStateChanged(
     bootloader();
   }
 }
-void writeToUSB(const void *const Buffer, uint16_t Length) {
+void writeToUSB(const void *const Buffer, uint8_t Length) {
   Endpoint_ClearSETUP();
-  Endpoint_Write_Control_Stream_LE(Buffer, Length);
+  Endpoint_Write_Control_Stream_LE(Buffer+1, Length-1);
   Endpoint_ClearStatusStage();
 }

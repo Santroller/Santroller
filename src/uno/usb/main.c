@@ -68,7 +68,7 @@ int main(void) {
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t currentEndpoint = 0;
-  bool checkEndpoint = false;
+  bool checkEndpoint = true;
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
   // bool waitingForCheck = false;
@@ -108,8 +108,8 @@ int main(void) {
               [tmp] "=e"(tmp)     // Input and output
             // Inputs
             : "1"(tmp));
-            // When there is a lot of traffic down the controller, its possible
-            // For the config line to get a duplicate header?
+        // When there is a lot of traffic down the controller, its possible
+        // For the config line to get a duplicate header?
         if (state == 0 && data == FRAME_START_WRITE) {
           state = 1;
         } else if (state == 1) {
@@ -131,7 +131,7 @@ int main(void) {
           if (packetCount == 0) {
             Endpoint_ClearIN();
             state = 0;
-            checkEndpoint = true;
+            if (currentEndpoint) { checkEndpoint = true; }
             break;
           }
         }
@@ -171,15 +171,9 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
-  if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
-    jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
-    reboot();
-  }
   Endpoint_ClearSETUP();
-  uint8_t done = FRAME_START_FEATURE_WRITE;
-  writeData(&done, 1);
-  writeData(&len, 1);
-  writeData(&cmd, 1);
+  uint8_t done[] = {FRAME_START_FEATURE_WRITE, len, cmd};
+  writeData(done, sizeof(done));
   while (len) {
     if (Endpoint_IsOUTReceived()) {
       while (len && Endpoint_BytesInEndpoint()) {
@@ -192,6 +186,10 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
     // Endpoint_ClearSETUP();
     // Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
     // Endpoint_ClearStatusStage();
+  }
+  if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
+    jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
+    reboot();
   }
   Endpoint_ClearStatusStage();
 }

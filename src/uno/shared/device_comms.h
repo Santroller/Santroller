@@ -68,9 +68,9 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
   DDRD |= (1 << 3);
   PORTD |= (1 << 2);
   USBtoUSART_ReadPtr = 0;
-	USBtoUSART_WritePtr = 0;
-	USARTtoUSB_ReadPtr = 0;
-	USARTtoUSB_WritePtr = 0;
+  USBtoUSART_WritePtr = 0;
+  USARTtoUSB_ReadPtr = 0;
+  USARTtoUSB_WritePtr = 0;
 }
 
 void writeData(uint8_t *buf, uint8_t len) {
@@ -85,36 +85,35 @@ void writeData(uint8_t *buf, uint8_t len) {
       ((USBtoUSART_WritePtr - USBtoUSART_ReadPtr) & (USB2USART_BUFLEN - 1));
 
   // Read new data from the USB host if we still have space in the buffer
-  if (len <= USBtoUSART_free) {
-    // Prepare temporary pointer
-    uint16_t tmp;                      // = 0x200 | USBtoUSART_WritePtr;
-    asm("ldi %B[tmp], 0x02\n\t"        // (1) Force high byte to 0x200
-        "lds %A[tmp], %[writePtr]\n\t" // (1) Load USBtoUSART_WritePtr into
-                                       // low byte
+  while (len > USBtoUSART_free) {}
+  // Prepare temporary pointer
+  uint16_t tmp;                      // = 0x200 | USBtoUSART_WritePtr;
+  asm("ldi %B[tmp], 0x02\n\t"        // (1) Force high byte to 0x200
+      "lds %A[tmp], %[writePtr]\n\t" // (1) Load USBtoUSART_WritePtr into
+                                     // low byte
+      // Outputs
+      : [tmp] "=&e"(tmp) // Pointer register, output only
+      // Inputs
+      : [writePtr] "m"(USBtoUSART_WritePtr) // Memory location
+  );
+
+  // Save USB bank into our USBtoUSART ringbuffer
+  do {
+    register uint8_t data;
+    data = *(buf++);
+    asm("st %a[tmp]+, %[data]\n\t" // (2) Save byte in buffer and
+                                   // increment
+        "andi %A[tmp], 0x7F\n\t"   // (1) Wrap around pointer, 128 bytes
         // Outputs
-        : [tmp] "=&e"(tmp) // Pointer register, output only
+        : [tmp] "=e"(tmp) // Input and output
         // Inputs
-        : [writePtr] "m"(USBtoUSART_WritePtr) // Memory location
-    );
+        : "0"(tmp), [data] "r"(data));
+  } while (--len);
 
-    // Save USB bank into our USBtoUSART ringbuffer
-    do {
-      register uint8_t data;
-      data = *(buf++);
-      asm("st %a[tmp]+, %[data]\n\t" // (2) Save byte in buffer and
-                                     // increment
-          "andi %A[tmp], 0x7F\n\t"   // (1) Wrap around pointer, 128 bytes
-          // Outputs
-          : [tmp] "=e"(tmp) // Input and output
-          // Inputs
-          : "0"(tmp), [data] "r"(data));
-    } while (--len);
+  // Save back new pointer position
+  // Just save the lower byte of the pointer
+  USBtoUSART_WritePtr = tmp & 0xFF;
 
-    // Save back new pointer position
-    // Just save the lower byte of the pointer
-    USBtoUSART_WritePtr = tmp & 0xFF;
-
-    // Enable USART again to flush the buffer
-    UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
-  }
+  // Enable USART again to flush the buffer
+  UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
 }

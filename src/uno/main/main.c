@@ -30,6 +30,7 @@ int main(void) {
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t *buf;
+  bool isConfig = false;
   while (true) {
     //================================================================================
     // USARTtoUSB
@@ -85,6 +86,7 @@ int main(void) {
           if (data == COMMAND_WRITE_CONFIG) {
             buf = (uint8_t *)&config;
             state = 4;
+            isConfig = true;
           } else if (data == COMMAND_SET_LEDS) {
             buf = (uint8_t *)&controller.leds;
             state = 5;
@@ -102,6 +104,10 @@ int main(void) {
           *(buf++) = data;
           if (packetCount == 0) {
             state = 0;
+            if (isConfig) {
+              isConfig = false;
+              eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));
+            }
             break;
           }
         }

@@ -37,7 +37,6 @@ void initInputs() {
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }
-bool t = false;
 void tickInputs(Controller_t *controller) {
   controller->buttons = 0;
   if (tick_function) { tick_function(controller); }

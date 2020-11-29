@@ -106,7 +106,8 @@ int main(void) {
             state = 0;
             if (isConfig) {
               isConfig = false;
-              eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));
+              eeprom_update_block(&config, &config_pointer,
+                                  sizeof(Configuration_t));
             }
             break;
           }
@@ -114,15 +115,15 @@ int main(void) {
       } while (--count);
       // Save new pointer position
       USARTtoUSB_ReadPtr = tmp & 0xFF;
-    } else if (millis() - lastPoll > config.main.pollRate && readyForPacket) {
-      lastPoll = millis();
+    } else if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
       tickLEDs(&controller);
       uint8_t size;
       // TODO: this needs to go!
       // controller.l_x = rand();
       fillReport(currentReport, &size, &controller);
-      if (memcmp(currentReport, previousReport, size) != 0) {
+      if (memcmp(currentReport, previousReport, size) != 0 && readyForPacket) {
+        lastPoll = millis();
         readyForPacket = false;
         uint8_t done = FRAME_START_WRITE;
         writeData(&done, 1);

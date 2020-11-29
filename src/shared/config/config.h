@@ -105,6 +105,7 @@ typedef struct {
   Keys_t keys;
   Led_t leds[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
   MidiConfig_t midi;
+  uint32_t rfAddresses[4];
 } Configuration_t;
 
 #pragma pack(pop)

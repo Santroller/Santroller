@@ -9,8 +9,8 @@
 #include "output/reports/xinput.h"
 #include "output/serial_handler.h"
 #include "stdbool.h"
-#include <stdlib.h>
 #include "util/util.h"
+#include <stdlib.h>
 Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
@@ -61,9 +61,10 @@ int main(void) {
     tickInputs(&controller);
     tickLEDs(&controller);
     if (millis() - lastPoll > config.main.pollRate) {
-      lastPoll = millis();
       fillReport(&currentReport, &size, &controller);
-      if (memcmp(&currentReport, &previousReport, size) != 0) {
+      if (memcmp(&currentReport, &previousReport, size) != 0 &&
+          Endpoint_IsINReady()) {
+        lastPoll = millis();
         uint8_t *data = (uint8_t *)&currentReport;
         uint8_t rid = *data;
         switch (rid) {
@@ -90,13 +91,9 @@ int main(void) {
           Endpoint_SelectEndpoint(HID_EPADDR_IN);
           break;
         }
-        if (Endpoint_IsReadWriteAllowed()) {
-          // In theory, putting the memcpy here will mean that we resend this
-          // report until it can be sent.
-          memcpy(&previousReport, &currentReport, size);
-          Endpoint_Write_Stream_LE(data, size, NULL);
-          Endpoint_ClearIN();
-        }
+        memcpy(&previousReport, &currentReport, size);
+        Endpoint_Write_Stream_LE(data, size, NULL);
+        Endpoint_ClearIN();
 
 #ifndef MULTI_ADAPTOR
         MIDI_Device_USBTask(&midiInterface);
@@ -145,6 +142,6 @@ void EVENT_CDC_Device_ControLineStateChanged(
 }
 void writeToUSB(const void *const Buffer, uint8_t Length) {
   Endpoint_ClearSETUP();
-  Endpoint_Write_Control_Stream_LE(Buffer+1, Length-1);
+  Endpoint_Write_Control_Stream_LE(Buffer + 1, Length - 1);
   Endpoint_ClearStatusStage();
 }

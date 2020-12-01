@@ -1,4 +1,4 @@
-#Guitar Hero Controller:
+# Guitar Hero Controller:
 Most things about the controller are similar to the standard controller, except the buttons and axis have different meanings
 
 ## Hid Report
@@ -27,6 +27,8 @@ The HID Report layout is below:
 ### Tilt
 Note that tilt requires both bits, and goes between 0x0184 and 0x01f7. However, the original guitar just jumps between these values,
 so it is sufficient to use 0x0184 as a neutral position, and 0x01f7 as a tilted position.
+If you compare side-by-side to a regular ps3 controller, you will notice that the accelerometer is just mapped to the accelerometer_x axis on a regular controller.
+
 
 ### Buttons
 The buttons also change slightly from a normal controller.Note that blue and yellow are switch when compared to a Rockband controller!

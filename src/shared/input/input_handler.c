@@ -4,6 +4,7 @@
 #include "inputs/direct.h"
 #include "inputs/guitar.h"
 #include "inputs/ps2_cnt.h"
+#include "inputs/rf.h"
 #include "inputs/wii_ext.h"
 #include "leds/leds.h"
 #include "output/descriptors.h"
@@ -16,44 +17,55 @@ int joyThreshold;
 void initInputs() {
   setupADC();
   setupMicrosTimer();
-  switch (config.main.inputType) {
-  case WII:
-    tick_function = tickWiiExtInput;
-    break;
-  case DIRECT:
-    initDirectInput();
-    break;
-  case PS2:
-    initPS2CtrlInput();
-    tick_function = tickPS2CtrlInput;
-    break;
+  config.rf.rfEnabled = true;
+  if (config.rf.rfEnabled) {
+    initRFInput();
+    tick_function = tickRFInput;
+  } else {
+    switch (config.main.inputType) {
+    case WII:
+      tick_function = tickWiiExtInput;
+      break;
+    case DIRECT:
+      initDirectInput();
+      break;
+    case PS2:
+      initPS2CtrlInput();
+      tick_function = tickPS2CtrlInput;
+      break;
+    }
+    if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
+      spi_init(F_CPU / 2, 0x00);
+    }
+    if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
+      twi_init();
+    }
+    initGuitar();
+    joyThreshold = config.axis.joyThreshold << 8;
   }
-  if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
-    spi_init(F_CPU / 2, 0x00);
-  }
-  if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
-    twi_init();
-  }
-  initGuitar();
-  joyThreshold = config.axis.joyThreshold << 8;
 }
 void tickInputs(Controller_t *controller) {
-  controller->buttons = 0;
+  if (!config.rf.rfEnabled) {
+    controller->buttons = 0;
+  }
   if (tick_function) { tick_function(controller); }
-  tickDirectInput(controller);
-  if (config.main.mapLeftJoystickToDPad) {
-    CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
-    CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
-  }
-  if (config.main.mapStartSelectToHome) {
-    if (bit_check(controller->buttons, XBOX_START) &&
-        bit_check(controller->buttons, XBOX_BACK)) {
-      bit_clear(controller->buttons, XBOX_START);
-      bit_clear(controller->buttons, XBOX_BACK);
-      bit_set(controller->buttons, XBOX_HOME);
+
+  if (!config.rf.rfEnabled) {
+    tickDirectInput(controller);
+    if (config.main.mapLeftJoystickToDPad) {
+      CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
+      CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
     }
+    if (config.main.mapStartSelectToHome) {
+      if (bit_check(controller->buttons, XBOX_START) &&
+          bit_check(controller->buttons, XBOX_BACK)) {
+        bit_clear(controller->buttons, XBOX_START);
+        bit_clear(controller->buttons, XBOX_BACK);
+        bit_set(controller->buttons, XBOX_HOME);
+      }
+    }
+    tickGuitar(controller);
   }
-  tickGuitar(controller);
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {

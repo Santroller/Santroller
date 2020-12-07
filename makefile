@@ -25,6 +25,10 @@ uno:
 	sleep 1
 	$(MAKE) -C src/uno/usb dfu MCU=$(UNOMCU)
 
+uno-rf:
+	$(MAKE) -C src/uno/rf_tx
+	$(MAKE) -C src/uno/rf_tx avrdude
+
 clean:
 	$(MAKE) -C src/micro clean
 	$(MAKE) -C src/uno clean

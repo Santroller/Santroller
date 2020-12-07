@@ -44,13 +44,21 @@
 
 // Set this value to define the orientation of your mpu6050
 #define MPU_6050_ORIENTATION NEGATIVE_X
-#define PINS                                                                   \
+#define TEST_PINS                                                              \
   {                                                                            \
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,        \
+    19, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
         INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
         INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,        \
         INVALID_AN_PIN, INVALID_AN_PIN                                         \
+  }
+#define PINS                                                                   \
+  {                                                                            \
+    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,           \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
+        INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \
+        INVALID_PIN, INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN,           \
+        INVALID_AN_PIN, INVALID_AN_PIN, INVALID_AN_PIN                         \
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
@@ -66,8 +74,27 @@
      MAP_ACCEL_TO_R,                                                           \
      ARDWIINO_DEVICE_TYPE,                                                     \
      CONFIG_VERSION},                                                          \
+        TEST_PINS,                                                             \
+        {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
+         MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {true, {0, 0, 0, 0}},                 \
+  }
+
+#define REAL_DEFAULT_CONFIG                                                    \
+  {                                                                            \
+    {DEVICE_TYPE,                                                              \
+     OUTPUT_TYPE,                                                              \
+     TILT_SENSOR,                                                              \
+     POLL_RATE,                                                                \
+     FRET_MODE,                                                                \
+     MAP_JOY_TO_DPAD,                                                          \
+     MAP_START_SELECT_TO_HOME,                                                 \
+     MAP_ACCEL_TO_R,                                                           \
+     ARDWIINO_DEVICE_TYPE,                                                     \
+     CONFIG_VERSION},                                                          \
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}},                                       \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {false, {0, 0, 0, 0}},                \
   }
+  

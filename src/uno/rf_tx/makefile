@@ -40,7 +40,7 @@ BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-main-${MCU}-${F_CPU}$(if ${MULTI_ADAPTOR},-multi,)
 RAM_OFFSET            = 0x800282
 AVRDUDE_PROGRAMMER = arduino
-AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
+AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM1
 
 $(info $(shell mkdir -p $(BIN)))
 

@@ -19,25 +19,24 @@ Controller_t controller;
 Controller_t previousController;
 Configuration_t newConfig;
 long lastPoll = 0;
-volatile bool send_message = false;
+
 int main(void) {
-  loadConfig();
-  config.rf.rfInEnabled = false;
+  // loadConfig();
+
   sei();
-  initInputs();
-  initReports();
-  // Serial_Init(115200, true);
+  // initInputs();
+  // initReports();
+  Serial_Init(115200, true);
   // rf_interrupt = true;
-  initRF(true);
+  initRF(false);
   while (true) {
-    if (millis() - lastPoll > config.main.pollRate) {
-      tickInputs(&controller);
-      tickLEDs(&controller);
-      if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
-        lastPoll = millis();
-        tickRFTX(&controller);
-        memcpy(&previousController, &controller, sizeof(Controller_t));
-      }
+    // Controller_t controller;
+    // Serial_SendByte('0' + rf_err);
+    // Serial_SendByte('0' + rf_interrupt);
+    tickRFInput(&controller);
+    if (rf_interrupt) {
+      Serial_SendByte(controller.lt);
+      rf_interrupt = false;
     }
   }
 }

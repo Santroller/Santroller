@@ -11,15 +11,14 @@
 #include "pins/pins.h"
 #include "spi/spi.h"
 #include "util/util.h"
-// #include <stdlib.h>
+#include <stdlib.h>
 void (*tick_function)(Controller_t *);
 int joyThreshold;
 void initInputs() {
   setupADC();
   setupMicrosTimer();
-  config.rf.rfEnabled = true;
-  if (config.rf.rfEnabled) {
-    initRFInput();
+  if (config.rf.rfInEnabled) {
+    initRF(false);
     tick_function = tickRFInput;
   } else {
     switch (config.main.inputType) {
@@ -45,12 +44,11 @@ void initInputs() {
   }
 }
 void tickInputs(Controller_t *controller) {
-  if (!config.rf.rfEnabled) {
+  if (!config.rf.rfInEnabled) {
     controller->buttons = 0;
   }
   if (tick_function) { tick_function(controller); }
-
-  if (!config.rf.rfEnabled) {
+  if (!config.rf.rfInEnabled) {
     tickDirectInput(controller);
     if (config.main.mapLeftJoystickToDPad) {
       CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);

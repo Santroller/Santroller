@@ -62,7 +62,7 @@
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
-#define DEFAULT_CONFIG                                                         \
+#define TEST_CONFIG                                                            \
   {                                                                            \
     {DEVICE_TYPE,                                                              \
      OUTPUT_TYPE,                                                              \
@@ -80,7 +80,7 @@
         KEYS, LED_PINS, {{0}, {0}, {0}}, {true, {0, 0, 0, 0}},                 \
   }
 
-#define REAL_DEFAULT_CONFIG                                                    \
+#define DEFAULT_CONFIG                                                         \
   {                                                                            \
     {DEVICE_TYPE,                                                              \
      OUTPUT_TYPE,                                                              \
@@ -97,4 +97,3 @@
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
         KEYS, LED_PINS, {{0}, {0}, {0}}, {false, {0, 0, 0, 0}},                \
   }
-  

@@ -25,10 +25,29 @@ uno:
 	sleep 1
 	$(MAKE) -C src/uno/usb dfu MCU=$(UNOMCU)
 
-uno-rf:
+uno-rftx:
 	$(MAKE) -C src/uno/rf_tx
 	$(MAKE) -C src/uno/rf_tx avrdude
+	$(MAKE) -C src/uno/rf_rx
+	$(MAKE) -C src/uno/rf_rx avrdude
 
+uno-rf:
+	$(MAKE) -C src/uno
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	dfu-programmer $(UNOMCU) flash output/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU) launch
+	sleep 1
+	$(MAKE) -C src/uno/main avrdude
+	sleep 1
+	stty -F /dev/ttyACM0 1200
+	sleep 1
+	$(MAKE) -C src/uno/usb dfu MCU=$(UNOMCU)
+	$(MAKE) -C src/uno/rf_tx
+	$(MAKE) -C src/uno/rf_tx avrdude
+	
 clean:
 	$(MAKE) -C src/micro clean
 	$(MAKE) -C src/uno clean

@@ -99,7 +99,7 @@ typedef struct {
 } MidiConfig_t;
 
 typedef struct {
-  bool rfEnabled;
+  bool rfInEnabled;
   uint32_t rfAddresses[4];
 } RFConfig_t;
 

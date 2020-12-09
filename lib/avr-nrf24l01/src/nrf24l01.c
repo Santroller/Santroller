@@ -12,17 +12,17 @@
  * -----------------------------------------------------------------------------
  */
 #include "nrf24l01.h"
+#include "arduino_pins.h"
 #include "nrf24l01-mnemonics.h"
 #include "spi/spi.h"
 #include <avr/io.h>
-#include "arduino_pins.h"
 
 int8_t payload_len;
 
 /* init the hardware pins */
 void nrf24_init(void) {
   pinMode(8, OUTPUT);
-  spi_init(2000000, 0);
+  spi_init(F_CPU, 0);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
 }
@@ -249,6 +249,7 @@ void nrf24_powerDown(void) {
 
 uint8_t spi_transfer(uint8_t data) {
   SPDR = data;
+  asm volatile("nop");
   while (!(SPSR & _BV(SPIF)))
     ;
   return SPDR;

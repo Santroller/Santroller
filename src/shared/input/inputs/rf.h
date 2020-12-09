@@ -7,3 +7,4 @@ void tickRFInput(Controller_t *controller);
 void tickRFTX(Controller_t *controller);
 uint32_t generate_crc32(void);
 void tickRFTXIRQ(void);
+extern bool rf_interrupt;

@@ -26,11 +26,9 @@ int main(void) {
   sei();
   initInputs();
   initReports();
-  // Serial_Init(115200, true);
-  // rf_interrupt = true;
   initRF(true);
   while (true) {
-    if (millis() - lastPoll > config.main.pollRate) {
+    if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
       tickInputs(&controller);
       tickLEDs(&controller);
       if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {

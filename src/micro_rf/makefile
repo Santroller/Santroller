@@ -37,7 +37,7 @@ CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADA
 LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-main-${MCU}-${F_CPU}$(if ${MULTI_ADAPTOR},-multi,)
+TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-main-${MCU}-${F_CPU}-rf
 RAM_OFFSET            = 0x800282
 AVRDUDE_PROGRAMMER = avr109
 AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0

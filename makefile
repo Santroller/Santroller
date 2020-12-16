@@ -10,7 +10,7 @@ micro:
 	sleep 1
 	$(MAKE) -C src/micro avrdude
 
-micro-rf:
+micro_rf:
 	$(MAKE) -C src/micro_rf
 	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
 	sleep 1
@@ -75,6 +75,8 @@ build-all:
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/8u2 MCU=at90usb82 ARDUINO_MODEL_PID=${UNO_PID} A_BOARD=uno
 # main processor
 	$(MAKE) -C src/uno/main OBJDIR=obj/uno MCU=atmega328p ARDWIINO_BOARD=uno
+# main processor - rf transmitter
+	$(MAKE) -C src/uno/rf_tx OBJDIR=obj/uno MCU=atmega2560 ARDWIINO_BOARD=uno
 
 
 # Mega 2560 
@@ -89,6 +91,8 @@ build-all:
 	$(MAKE) -C submodules/arduino-usbserial-bootloader OBJDIR=obj/8u22560 MCU=at90usb82 ARDUINO_MODEL_PID=${MEGA2560_PID} A_BOARD=mega2560
 # main processor
 	$(MAKE) -C src/uno/main OBJDIR=obj/2560 MCU=atmega2560 ARDWIINO_BOARD=mega2560
+# main processor - rf transmitter
+	$(MAKE) -C src/uno/rf_tx OBJDIR=obj/2560 MCU=atmega2560 ARDWIINO_BOARD=mega2560
 
 # Mega ADK
 # usb processor
@@ -103,6 +107,9 @@ build-all:
 # main processor
 	$(MAKE) -C src/uno/main OBJDIR=obj/adk MCU=atmega2560 ARDWIINO_BOARD=mega2560
 
+# main processor - rf transmitter
+	$(MAKE) -C src/uno/rf_tx OBJDIR=obj/adk MCU=atmega2560 ARDWIINO_BOARD=mega2560
+
 
 # Arduino leonardo
 	$(MAKE) -C src/micro OBJDIR=obj/leo/16 ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
@@ -110,13 +117,17 @@ build-all:
 # multi adaptor
 	$(MAKE) -C src/micro OBJDIR=obj/leo/multi/16 ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
 	$(MAKE) -C src/micro OBJDIR=obj/leo/multi/8 ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
+# rf transmitter
+	$(MAKE) -C src/micro_rf OBJDIR=obj/leo/multi/16 ARDWIINO_BOARD=leonardo F_CPU=16000000 F_USB=16000000
+	$(MAKE) -C src/micro_rf OBJDIR=obj/leo/multi/8 ARDWIINO_BOARD=leonardo F_CPU=8000000 F_USB=8000000
 
 
 # Arduino Micro
 	$(MAKE) -C src/micro OBJDIR=obj/a-micro/16 ARDWIINO_BOARD=a-micro F_CPU=16000000 F_USB=16000000
 # multi adaptor
 	$(MAKE) -C src/micro OBJDIR=obj/a-micro/multi/16 ARDWIINO_BOARD=a-micro F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
-
+# rf transmitter
+	$(MAKE) -C src/micro_rf OBJDIR=obj/a-micro/rf/16 ARDWIINO_BOARD=a-micro F_CPU=16000000 F_USB=16000000
 
 # Arduino Pro Micro
 	$(MAKE) -C src/micro OBJDIR=obj/micro/16 ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
@@ -124,9 +135,14 @@ build-all:
 # multi adaptor
 	$(MAKE) -C src/micro OBJDIR=obj/micro/multi/16 ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
 	$(MAKE) -C src/micro OBJDIR=obj/micro/multi/8 ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000 MULTI_ADAPTOR=-DMULTI_ADAPTOR
-
+# rf transmitter
+	$(MAKE) -C src/micro_rf OBJDIR=obj/micro/rf/16 ARDWIINO_BOARD=micro F_CPU=16000000 F_USB=16000000
+	$(MAKE) -C src/micro_rf OBJDIR=obj/micro/rf/8 ARDWIINO_BOARD=micro F_CPU=8000000 F_USB=8000000
+	
 	mkdir -p output
 	cp -rfv src/uno/usb/bin/*.hex output/
 	cp -rfv src/uno/main/bin/*.hex output/
+	cp -rfv src/uno/rf_tx/bin/*.hex output/
 	cp -rfv src/micro/bin/*.hex output/
+	cp -rfv src/micro_rf/bin/*.hex output/
 	cp -rfv submodules/arduino-usbserial-bootloader/out/*.hex output/

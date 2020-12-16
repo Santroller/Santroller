@@ -1,6 +1,5 @@
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
-#include "device_comms.h"
 #include "input/input_handler.h"
 #include "input/inputs/direct.h"
 #include "input/inputs/rf.h"
@@ -24,6 +23,7 @@ int main(void) {
   loadConfig();
   config.rf.rfInEnabled = false;
   sei();
+  // Serial_Init(115200, true);
   initInputs();
   initReports();
   initRF(true);
@@ -33,7 +33,11 @@ int main(void) {
       tickLEDs(&controller);
       if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
         lastPoll = millis();
-        tickRFTX(&controller);
+
+        uint8_t data[12];
+        if (tickRFTX(&controller, data)) {
+          // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]); }
+        }
         memcpy(&previousController, &controller, sizeof(Controller_t));
       }
     }

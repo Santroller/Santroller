@@ -2,6 +2,7 @@
 #include "device_comms.h"
 #include "input/input_handler.h"
 #include "input/inputs/direct.h"
+#include "input/inputs/rf.h"
 #include "leds/leds.h"
 #include "output/reports.h"
 #include "output/serial_commands.h"
@@ -109,18 +110,20 @@ int main(void) {
               eeprom_update_block(&config, &config_pointer,
                                   sizeof(Configuration_t));
             }
+            writeRFConfig((uint8_t *)&config);
             break;
           }
         }
       } while (--count);
       // Save new pointer position
       USARTtoUSB_ReadPtr = tmp & 0xFF;
-    } else if (millis() - lastPoll > config.main.pollRate) {
+      // With RF, this stuff gets handled on the transmitter side, not the
+      // receiver.
+    } else if (millis() - lastPoll > config.main.pollRate ||
+               config.rf.rfInEnabled) {
       tickInputs(&controller);
       tickLEDs(&controller);
       uint8_t size;
-      // TODO: this needs to go!
-      // controller.l_x = rand();
       fillReport(currentReport, &size, &controller);
       if (memcmp(currentReport, previousReport, size) != 0 && readyForPacket) {
         lastPoll = millis();

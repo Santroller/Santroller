@@ -28,7 +28,7 @@ void nrf24_init(void) {
 }
 
 /* configure the module */
-void nrf24_config(uint8_t channel, uint8_t pay_length) {
+void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
   /* Use static payload length ... */
   payload_len = pay_length;
 
@@ -48,6 +48,19 @@ void nrf24_config(uint8_t channel, uint8_t pay_length) {
 
   // CRC enable, 1 byte CRC length
   nrf24_configRegister(CONFIG, nrf24_CONFIG);
+  if (tx) {
+    // Ack payloads
+    uint8_t feature;
+    nrf24_readRegister(FEATURE, &feature, 1);
+
+    nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DYN_ACK));
+  } else {
+    // Ack payloads
+    uint8_t feature;
+    nrf24_readRegister(FEATURE, &feature, 1);
+
+    nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY));
+  }
 
   // Auto Acknowledgment
   nrf24_configRegister(EN_AA, (1 << ENAA_P0) | (1 << ENAA_P1) | (0 << ENAA_P2) |
@@ -120,7 +133,6 @@ uint8_t nrf24_payloadLength(void) {
   nrf24_csn_digitalWrite(HIGH);
   return status;
 }
-
 /* Reads payload bytes into data array */
 void nrf24_getData(uint8_t *data) {
   /* Pull down chip select */
@@ -147,26 +159,21 @@ uint8_t nrf24_retransmissionCount(void) {
   return rv;
 }
 
+void nrf24_send_init(void) {
+  /* Set to transmitter mode , Power up if needed */
+  nrf24_ce_digitalWrite(LOW);
+  nrf24_powerUpTx();
+  // _delay_us(240);
+  nrf24_ce_digitalWrite(HIGH);
+}
 // Sends a data package to the default address. Be sure to send the correct
 // amount of bytes as configured as payload on the receiver.
 void nrf24_send(uint8_t *value) {
-  /* Go to Standby-I first */
-  nrf24_ce_digitalWrite(LOW);
+  // // /* Go to Standby-I first */
+  // nrf24_ce_digitalWrite(LOW);
 
-  /* Set to transmitter mode , Power up if needed */
+  // // /* Set to transmitter mode , Power up if needed */
   nrf24_powerUpTx();
-
-/* Do we really need to flush TX fifo each time ? */
-#if 0
-  /* Pull down chip select */
-  nrf24_csn_digitalWrite(LOW);
-
-  /* Write cmd to flush transmit FIFO */
-  spi_transfer(FLUSH_TX);
-
-  /* Pull up chip select */
-  nrf24_csn_digitalWrite(HIGH);
-#endif
 
   /* Pull down chip select */
   nrf24_csn_digitalWrite(LOW);
@@ -238,7 +245,6 @@ void nrf24_powerUpRx(void) {
 
 void nrf24_powerUpTx(void) {
   nrf24_configRegister(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
-
   nrf24_configRegister(CONFIG, nrf24_CONFIG | ((1 << PWR_UP) | (0 << PRIM_RX)));
 }
 
@@ -290,5 +296,13 @@ void nrf24_writeRegister(uint8_t reg, uint8_t *value, uint8_t len) {
   nrf24_csn_digitalWrite(LOW);
   spi_transfer(W_REGISTER | (REGISTER_MASK & reg));
   nrf24_transmitSync(value, len);
+  nrf24_csn_digitalWrite(HIGH);
+}
+
+void nrf24_writeAckPayload(uint8_t *buf) {
+  nrf24_csn_digitalWrite(LOW);
+  spi_transfer(W_ACK_PAYLOAD | 1);
+  /* Write payload */
+  nrf24_transmitSync(buf, payload_len);
   nrf24_csn_digitalWrite(HIGH);
 }

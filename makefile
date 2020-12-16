@@ -10,6 +10,12 @@ micro:
 	sleep 1
 	$(MAKE) -C src/micro avrdude
 
+micro-rf:
+	$(MAKE) -C src/micro_rf
+	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	sleep 1
+	$(MAKE) -C src/micro_rf avrdude
+
 uno:
 	$(MAKE) -C src/uno
 	sleep 0.5

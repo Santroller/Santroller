@@ -27,42 +27,58 @@ uint32_t generate_crc32(void) {
   }
   return crc;
 }
-void nrf24_ce_digitalWrite(uint8_t state) { digitalWrite(8, state); }
-void nrf24_csn_digitalWrite(uint8_t state) { digitalWrite(PIN_SPI_SS, state); }
+#ifdef __AVR_ATmega32U4__
+#  define CE PIN_A0
+#  define CSN 10
+#else
+#  define CE PIN_SPI_SS
+#  define CSN 8
+#endif
+void nrf24_ce_digitalWrite(uint8_t state) { digitalWrite(CE, state); }
+void nrf24_csn_digitalWrite(uint8_t state) { digitalWrite(CSN, state); }
 uint8_t tx_address[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
 uint8_t rx_address[5] = {0xD7, 0xD7, 0xD7, 0xD7, 0xD7};
 void initRF(bool tx) {
   rf_interrupt = tx;
+
   /* init hardware pins */
   nrf24_init();
+  pinMode(CE, OUTPUT);
+  pinMode(CSN, OUTPUT);
 
   /* Channel #2 , payload length: 4 */
-  nrf24_config(2, sizeof(XInput_Data_t));
+  nrf24_config(2, sizeof(XInput_Data_t), tx);
   nrf24_tx_address(tx ? tx_address : rx_address);
   nrf24_rx_address(tx ? rx_address : tx_address);
-// on the pro micro, the real ss pin is not accessible, so we should bind it
-// to something else. What if we just use 10 on both?
-// // Micro = int2 = pin 0
-// // Uno = int0 = pin 2
-// // interrupt on falling edge of INT
-#ifdef __AVR_ATmega32U4__
-  EICRA |= _BV(ISC21);
-  EIMSK |= _BV(INT2);
-#else
+  // on the pro micro, the real ss pin is not accessible, so we should bind it
+  // to something else. What if we just use 10 on both?
+  // // Micro = int2 = pin 0
+  // // Uno = int0 = pin 2
+  // // interrupt on falling edge of INT
+  // #ifdef __AVR_ATmega32U4__
+  //   EICRA |= _BV(ISC21);
+  //   EIMSK |= _BV(INT2);
+  // #else
   EICRA |= _BV(ISC01);
   EIMSK |= _BV(INT0);
-#endif
+  // #endif
+  if (tx) { nrf24_send_init(); }
 }
 
 // nRF24L01Message msg;
-void tickRFTX(Controller_t *controller) {
+bool tickRFTX(Controller_t *controller, uint8_t *data) {
+  bool ret = false;
   if (rf_interrupt) {
     rf_interrupt = false;
-    nrf24_powerUpRx();
+    if (((nrf24_getStatus() & 0B1110) >> 1) == 0) {
+      nrf24_getData((uint8_t *)data);
+      ret = true;
+    }
     nrf24_send((uint8_t *)controller);
   }
+  return ret;
 }
-
+uint8_t id = 0;
 void tickRFInput(Controller_t *controller) {
   if (rf_interrupt) {
     rf_interrupt = false;
@@ -70,10 +86,15 @@ void tickRFInput(Controller_t *controller) {
   }
 }
 
-#ifdef __AVR_ATmega32U4__
-ISR(INT2_vect) {
-#else
+void writeRFConfig(uint8_t *d) {
+  uint8_t data[sizeof(XInput_Data_t)] = {0, 1, 2, id++};
+  nrf24_writeAckPayload(data);
+}
+
+// #ifdef __AVR_ATmega32U4__
+// ISR(INT2_vect) {
+// #else
 ISR(INT0_vect) {
-#endif
+// #endif
   rf_interrupt = true;
 }

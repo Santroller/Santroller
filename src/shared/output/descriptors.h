@@ -2,7 +2,7 @@
 
 #define WCHAR wchar_t
 /* Includes: (don't import everything on the 328p)*/
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__)
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) 
 // Pull in enough information from LUFA in order to be able to compile the
 // descriptors.
 #  define __INCLUDE_FROM_USB_DRIVER

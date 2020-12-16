@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <string.h>
 #include "config/config.h"
-#include "output/descriptors.h"
 #define bit_set(p, m) ((p) |= _BV(m))
 #define bit_clear(p, m) ((p) &= ~_BV(m))
 #define bit_write(c, p, m) (c ? bit_set(p, m) : bit_clear(p, m))

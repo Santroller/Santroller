@@ -35,7 +35,7 @@ SRC =   ../../../lib/avr-nrf24l01/src/nrf24l01.c ../../shared/bootloader/bootloa
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -Werror -flto -fuse-linker-plugin -I. -I ../shared -I ../../shared -I../../../lib -I../../variants/${VARIANT}
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
-LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
+LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin -Wl,--section-start=.rfrecv=0x7B00
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-main-${MCU}-${F_CPU}-rf

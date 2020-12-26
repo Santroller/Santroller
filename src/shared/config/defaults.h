@@ -77,7 +77,7 @@
         TEST_PINS,                                                             \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {true, {0, 0, 0, 0}},                 \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {true},                 \
   }
 
 #define DEFAULT_CONFIG                                                         \
@@ -95,5 +95,5 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {false, {0, 0, 0, 0}},                \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {false},                \
   }

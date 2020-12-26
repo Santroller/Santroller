@@ -2,6 +2,7 @@
 #include "input/inputs/direct.h"
 #include "input/inputs/ps2_cnt.h"
 #include "input/inputs/wii_ext.h"
+#include "input/inputs/rf.h"
 #include "leds/leds.h"
 #include "serial_commands.h"
 #include "util/util.h"
@@ -63,6 +64,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     cpu_info_t *info = (cpu_info_t *)(dbuf + 1);
     strcpy_P(info->board, PSTR(ARDWIINO_BOARD));
     info->cpu_freq = F_CPU;
+    info->rfID = generate_crc32();
 #ifdef MULTI_ADAPTOR
     info->multi = true;
 #else

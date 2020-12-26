@@ -18,7 +18,7 @@ void initInputs() {
   setupADC();
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
-    initRF(false);
+    initRF(false, 0);
     tick_function = tickRFInput;
   } else {
     switch (config.main.inputType) {

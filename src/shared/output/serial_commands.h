@@ -21,4 +21,5 @@ typedef struct {
     uint32_t cpu_freq;
     bool multi;
     char board[15];
+    uint32_t rfID;
 } cpu_info_t;

@@ -100,7 +100,6 @@ typedef struct {
 
 typedef struct {
   bool rfInEnabled;
-  uint32_t rfAddresses[4];
 } RFConfig_t;
 
 typedef struct {

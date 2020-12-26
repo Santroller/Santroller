@@ -54,7 +54,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
                 },
         },
 };
-
+__attribute__((section(".rfrecv"))) uint32_t rfID = 0xDEADBEEF;
 Controller_t controller;
 Controller_t previousController;
 Configuration_t newConfig;
@@ -68,7 +68,7 @@ int main(void) {
   USB_Init();
   initInputs();
   initReports();
-  initRF(true);
+  initRF(true, pgm_read_dword(&rfID));
   while (true) {
     if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
       tickInputs(&controller);

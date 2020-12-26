@@ -22,6 +22,7 @@ Controller_t previousController;
 Configuration_t newConfig;
 long lastPoll = 0;
 volatile bool send_message = false;
+__attribute__((section(".rfrecv"))) uint32_t rfID = 0xDEADBEEF;
 int main(void) {
   loadConfig();
   config.rf.rfInEnabled = false;
@@ -29,7 +30,7 @@ int main(void) {
   // Serial_Init(115200, true);
   initInputs();
   initReports();
-  initRF(true);
+  initRF(true, pgm_read_dword(&rfID));
   while (true) {
     if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
       tickInputs(&controller);

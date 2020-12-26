@@ -12,9 +12,9 @@
  * -----------------------------------------------------------------------------
  */
 #include "nrf24l01.h"
-#include "arduino_pins.h"
 #include "nrf24l01-mnemonics.h"
 #include "spi/spi.h"
+#include "util/util.h"
 #include <avr/io.h>
 
 int8_t payload_len;

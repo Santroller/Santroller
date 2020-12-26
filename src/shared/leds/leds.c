@@ -1,6 +1,5 @@
 #include "leds.h"
 #include "../config/eeprom.h"
-#include "arduino_pins.h"
 #include "util/util.h"
 // #include "input_handler.h"
 #include <avr/power.h>

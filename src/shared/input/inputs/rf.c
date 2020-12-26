@@ -4,8 +4,8 @@
 #include "config/eeprom.h"
 #include <string.h>
 
-#include "arduino_pins.h"
 #include "output/controller_structs.h"
+#include "pins_arduino.h"
 #include "util/util.h"
 #include <avr/boot.h>
 #include <avr/interrupt.h>
@@ -95,6 +95,6 @@ void writeRFConfig(uint8_t *d) {
 // ISR(INT2_vect) {
 // #else
 ISR(INT0_vect) {
-// #endif
+  // #endif
   rf_interrupt = true;
 }

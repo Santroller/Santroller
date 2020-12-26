@@ -1,13 +1,13 @@
 #include "ps2_cnt.h"
-#include "arduino_pins.h"
 #include "config/eeprom.h"
 #include "output/descriptors.h"
+#include "pins_arduino.h"
+#include "spi/spi.h"
 #include "util/util.h"
 #include <avr/io.h>
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
-#include "spi/spi.h"
 // Commands for communicating with a PSX controller
 static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01};
 static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00};
@@ -39,7 +39,7 @@ const uint8_t NEGCON_I_II_BUTTON_THRESHOLD = 128U;
  * This value has been tuned so that the L button gets digitally triggered at
  * about the same point as the non-analog R button. This is done "empirically"
  * and might need tuning on a different controller than the one I actually have.
- * 
+ *
  * \sa NEGCON_I_II_BUTTON_THRESHOLD
  */
 const uint8_t NEGCON_L_BUTTON_THRESHOLD = 240U;
@@ -62,8 +62,8 @@ static const uint8_t dualShockButtonBindings[] = {
     [PSB_CROSS] = XBOX_A,
     [PSB_SQUARE] = XBOX_X};
 
-static const uint8_t mouseButtonBindings[] = {[PMB_LEFT] = XBOX_A,
-                                              [PMB_RIGHT] = XBOX_B};
+static const uint8_t mouseButtonBindings[] = {
+    [PMB_LEFT] = XBOX_A, [PMB_RIGHT] = XBOX_B};
 
 static const uint8_t guitarHeroButtonBindings[] = {
     [PSB_SELECT] = XBOX_BACK,
@@ -247,16 +247,17 @@ bool read(Controller_t *controller) {
         buttons = guitarHeroButtonBindings;
       }
 
-      if (isFlightStickReply(in)) {
-        ps2CtrlType = PSX_ANALOG;
-      }
+      if (isFlightStickReply(in)) { ps2CtrlType = PSX_ANALOG; }
       if (isNegconReply(in)) {
         ps2CtrlType = PSX_NEGCON;
         controller->l_x = (in[5] - 128) << 8;
         // These buttons are only analog, map them to digital
-        bit_write(in[6] > NEGCON_I_II_BUTTON_THRESHOLD,controller->buttons,XBOX_X);
-        bit_write(in[7] > NEGCON_I_II_BUTTON_THRESHOLD,controller->buttons,XBOX_Y);
-        bit_write(in[8] > NEGCON_L_BUTTON_THRESHOLD,controller->buttons,XBOX_LB);
+        bit_write(in[6] > NEGCON_I_II_BUTTON_THRESHOLD, controller->buttons,
+                  XBOX_X);
+        bit_write(in[7] > NEGCON_I_II_BUTTON_THRESHOLD, controller->buttons,
+                  XBOX_Y);
+        bit_write(in[8] > NEGCON_L_BUTTON_THRESHOLD, controller->buttons,
+                  XBOX_LB);
       }
       if (isMouseReply(in)) {
         ps2CtrlType = PSX_MOUSE;
@@ -317,7 +318,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
   if (ps2CtrlType == PSX_NO_DEVICE) {
     if (!begin(controller)) { return; }
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
-    // Dualshock one controllers don't have config mode
+      // Dualshock one controllers don't have config mode
       ps2CtrlType = getControllerType();
       // Enable analog sticks
       sendCommand(commandSetMode, sizeof(commandSetMode));

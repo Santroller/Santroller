@@ -1,11 +1,12 @@
 
 #include "spi.h"
-#include "arduino_pins.h"
 #include <avr/io.h>
 #include <avr/power.h>
 #include <math.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include "util/util.h"
+#include "pins_arduino.h"
 
 void calculateClock(uint32_t clock, uint8_t config) {
   uint8_t clockDiv;

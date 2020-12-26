@@ -62,7 +62,7 @@ void findDigitalPin(void) {
   if (lookingForDigital) return;
   detectedPin = 0xff;
   stopReading();
-  for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+  for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
     if (!shouldSkipPin(i)) { pinMode(i, INPUT_PULLUP); }
   }
   lookingForDigital = true;
@@ -81,7 +81,7 @@ void findAnalogPin(void) {
 
 void stopSearching(void) {
   if (lookingForDigital) {
-    for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+    for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) { pinMode(i, INPUT); }
     }
   }
@@ -102,7 +102,7 @@ void tickDirectInput(Controller_t *controller) {
     return;
   }
   if (lookingForDigital) {
-    for (int i = 2; i < NUM_DIGITAL_PINS_NO_DUP; i++) {
+    for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) {
         if (!digitalRead(i)) {
           stopSearching();

@@ -1,3 +1,4 @@
+#define ARDUINO_MAIN
 #include "bootloader/bootloader.h"
 #include "config/eeprom.h"
 #include "input/input_handler.h"
@@ -8,6 +9,7 @@
 #include "output/reports.h"
 #include "output/reports/xinput.h"
 #include "output/serial_handler.h"
+#include "pins_arduino.h"
 #include "stdbool.h"
 #include "util/util.h"
 #include <stdlib.h>

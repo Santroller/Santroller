@@ -1,3 +1,4 @@
+#define ARDUINO_MAIN
 #include "config/eeprom.h"
 #include "device_comms.h"
 #include "input/input_handler.h"

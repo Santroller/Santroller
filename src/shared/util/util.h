@@ -21,7 +21,6 @@
 #define MAKEWIDE(x) PASTE(L, x)
 
 void setupMicrosTimer(void);
-#define ARDUINO_MAIN
 #define NOT_A_PIN 0
 #define NOT_A_PORT 0
 #define OUTPUT 0

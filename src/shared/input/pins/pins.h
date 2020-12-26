@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include "controller/controller.h"
 #include "util/util.h"
-#include "arduino_pins.h"
+#include "pins_arduino.h"
 
 typedef struct {
   uint8_t mask;

@@ -35,7 +35,7 @@ const PROGMEM CompatibleDescriptorType DevCompatIDs = {
   CompatID : {
     FirstInterfaceNumber : INTERFACE_ID_XInput,
     Reserved : 0x04,
-    CompatibleID : "XUSB20",
+    CompatibleID : "XUSB10",
     SubCompatibleID : {0},
     Reserved2 : {0}
   },
@@ -50,21 +50,21 @@ const PROGMEM CompatibleDescriptorType DevCompatIDs = {
   CompatID2 : {
     FirstInterfaceNumber : INTERFACE_ID_XInput_2,
     Reserved : 0x04,
-    CompatibleID : "XUSB20",
+    CompatibleID : "XUSB10",
     SubCompatibleID : {0},
     Reserved2 : {0}
   },
   CompatID3 : {
     FirstInterfaceNumber : INTERFACE_ID_XInput_3,
     Reserved : 0x04,
-    CompatibleID : "XUSB20",
+    CompatibleID : "XUSB10",
     SubCompatibleID : {0},
     Reserved2 : {0}
   },
   CompatID4 : {
     FirstInterfaceNumber : INTERFACE_ID_XInput_4,
     Reserved : 0x04,
-    CompatibleID : "XUSB20",
+    CompatibleID : "XUSB10",
     SubCompatibleID : {0},
     Reserved2 : {0}
   }

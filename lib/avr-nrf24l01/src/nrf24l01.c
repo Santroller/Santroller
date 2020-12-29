@@ -43,24 +43,19 @@ void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
   nrf24_configRegister(RX_PW_P4, 0x00);        // Pipe not used
   nrf24_configRegister(RX_PW_P5, 0x00);        // Pipe not used
 
-  // 1 Mbps, TX gain: 0dbm
-  nrf24_configRegister(RF_SETUP, (1 << RF_DR) | ((0x01) << RF_PWR));
+  // 2 Mbps, TX gain: 0dbm
+  nrf24_configRegister(RF_SETUP, 0b00001110);
 
   // CRC enable, 1 byte CRC length
   nrf24_configRegister(CONFIG, nrf24_CONFIG);
-  if (tx) {
-    // Ack payloads
-    uint8_t feature;
-    nrf24_readRegister(FEATURE, &feature, 1);
-
+  // Ack payloads
+  uint8_t feature;
+  nrf24_readRegister(FEATURE, &feature, 1);
+  // if (tx) {
     nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DYN_ACK));
-  } else {
-    // Ack payloads
-    uint8_t feature;
-    nrf24_readRegister(FEATURE, &feature, 1);
-
-    nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY));
-  }
+  // } else {
+  //   nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY));
+  // }
 
   // Auto Acknowledgment
   nrf24_configRegister(EN_AA, (1 << ENAA_P0) | (1 << ENAA_P1) | (0 << ENAA_P2) |

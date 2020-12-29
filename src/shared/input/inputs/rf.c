@@ -36,8 +36,8 @@ uint32_t generate_crc32(void) {
 #endif
 void nrf24_ce_digitalWrite(uint8_t state) { digitalWrite(CE, state); }
 void nrf24_csn_digitalWrite(uint8_t state) { digitalWrite(CSN, state); }
-uint8_t tx_address[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
-uint8_t rx_address[5] = {0xD7, 0xD7, 0xD7, 0xD7, 0xD7};
+uint8_t tx_address[5] = {1,2,3,4, 0xE7};
+uint8_t rx_address[5] = {1,2,3,4, 0xD7};
 void initRF(bool tx, uint32_t id) {
   rf_interrupt = tx;
 
@@ -47,12 +47,14 @@ void initRF(bool tx, uint32_t id) {
   pinMode(CSN, OUTPUT);
 
   /* Channel #2 , payload length: 4 */
-  nrf24_config(2, sizeof(XInput_Data_t), tx);
-  if (tx) { memcpy(tx_address, &id, sizeof(id)); }
-  id = generate_crc32();
-  memcpy(rx_address, &id, sizeof(id));
-  nrf24_tx_address(tx_address);
-  nrf24_rx_address(rx_address);
+  nrf24_config(100, sizeof(XInput_Data_t), tx);
+  // if (tx) { memcpy(tx_address, &id, sizeof(id)); }
+  // id = generate_crc32();
+  // memcpy(rx_address, &id, sizeof(id));
+  // nrf24_tx_address(tx_address);
+  // nrf24_rx_address(rx_address);
+  nrf24_tx_address(tx ? tx_address : rx_address);
+  nrf24_rx_address(tx ? rx_address : tx_address);
   // on the pro micro, the real ss pin is not accessible, so we should bind it
   // to something else. What if we just use 10 on both?
   // // Micro = int2 = pin 0
@@ -68,7 +70,6 @@ void initRF(bool tx, uint32_t id) {
   if (tx) { nrf24_send_init(); }
 }
 
-// nRF24L01Message msg;
 bool tickRFTX(Controller_t *controller, uint8_t *data) {
   bool ret = false;
   if (rf_interrupt) {

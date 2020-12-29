@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # import hid
 # h = hid.device()
 # h.open(0x1209, 0x2882)

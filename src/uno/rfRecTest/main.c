@@ -31,24 +31,11 @@ int main(void) {
   Serial_Init(115200, true);
   initInputs();
   initReports();
-  initRF(true, pgm_read_dword(&rfID));
-  Serial_SendByte('1');
+  initRF(false, pgm_read_dword(&rfID));
   while (true) {
-    if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
+    if (rf_interrupt) {
       Serial_SendByte('1');
-      // tickInputs(&controller);
-      // tickLEDs(&controller);
-      // controller.l_x = rand();
-      // if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
-      //   lastPoll = millis();
-
-      //   uint8_t data[12];
-      //   if (tickRFTX(&controller, data)) {
-      //     // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]);
-      //     // }
-      //   }
-      //   memcpy(&previousController, &controller, sizeof(Controller_t));
-      // }
+      tickRFInput(&controller);
     }
   }
 }

@@ -40,12 +40,13 @@ uno-rftx:
 uno-rf:
 	$(MAKE) -C src/uno
 	sleep 0.5
-	scripts/bootloader.py || true
+	-scripts/bootloader.py
+	-stty -F /dev/ttyACM0 1200
 	sleep 1
 	dfu-programmer $(UNOMCU) erase || true
 	dfu-programmer $(UNOMCU) flash output/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
 	dfu-programmer $(UNOMCU) launch
-	sleep 1
+	sleep 2
 	$(MAKE) -C src/uno/main avrdude
 	sleep 1
 	stty -F /dev/ttyACM0 1200
@@ -54,6 +55,12 @@ uno-rf:
 	$(MAKE) -C src/uno/rf
 	$(MAKE) -C src/uno/rf avrdude
 	
+uno-rf2:
+	$(MAKE) -C src/uno/rfRecTest
+	$(MAKE) -C src/uno/rfRecTest avrdude
+	$(MAKE) -C src/uno/rf
+	$(MAKE) -C src/uno/rf avrdude
+
 clean:
 	$(MAKE) -C src/micro/main clean
 	$(MAKE) -C src/uno clean

@@ -4,6 +4,3 @@
 [submodule "submodules/arduino-usbserial-bootloader"]
 	path = submodules/arduino-usbserial-bootloader
 	url = https://github.com/sanjay900/arduino-usbserial-bootloader
-[submodule "lib/avr-nrf24l01"]
-	path = lib/avr-nrf24l01
-	url = https://github.com/antoineleclair/avr-nrf24l01

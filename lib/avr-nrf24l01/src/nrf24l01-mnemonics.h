@@ -135,3 +135,20 @@
 #define ACTIVATE      0x50 
 #define R_RX_PL_WID   0x60
 #define NOP           0xFF
+
+#define RF_DR_LOW   5
+#define RF_DR_HIGH  3
+#define RF_PWR_LOW  1
+#define RF_PWR_HIGH 2
+
+typedef enum {
+    RF_1MBPS,
+    RF_2MBPS,
+    RF_250KBPS
+} dataRate_t;
+
+typedef enum {
+    RF_CRC_DISABLED,
+    RF_CRC_8,
+    RF_CRC_16
+} crclen_t;

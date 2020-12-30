@@ -8,4 +8,4 @@ bool tickRFTX(Controller_t *controller, uint8_t* data);
 uint32_t generate_crc32(void);
 void tickRFTXIRQ(void);
 void writeRFConfig(uint8_t* data);
-extern bool rf_interrupt;
+extern volatile bool rf_interrupt;

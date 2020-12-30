@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 bool write_config;
-bool rf_interrupt = false;
+volatile bool rf_interrupt = false;
 uint32_t generate_crc32(void) {
   uint32_t crc = 0x01234567;
   int i, j;
@@ -42,12 +42,12 @@ void initRF(bool tx, uint32_t id) {
   rf_interrupt = tx;
 
   /* init hardware pins */
-  nrf24_init();
   pinMode(CE, OUTPUT);
   pinMode(CSN, OUTPUT);
+  nrf24_init();
 
   /* Channel #2 , payload length: 4 */
-  nrf24_config(100, sizeof(XInput_Data_t), tx);
+  nrf24_config(76, sizeof(XInput_Data_t), tx);
   // if (tx) { memcpy(tx_address, &id, sizeof(id)); }
   // id = generate_crc32();
   // memcpy(rx_address, &id, sizeof(id));
@@ -64,6 +64,7 @@ void initRF(bool tx, uint32_t id) {
   //   EICRA |= _BV(ISC21);
   //   EIMSK |= _BV(INT2);
   // #else
+  pinMode(2, INPUT_PULLUP);
   EICRA |= _BV(ISC01);
   EIMSK |= _BV(INT0);
   // #endif

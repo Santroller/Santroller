@@ -88,7 +88,8 @@
 #undef OCR2_6
 #undef OCR2_7
 
-#define NUM_DIGITAL_PINS  31
+// Changed from 31, as all of the analogue pins are duplicated.
+#define NUM_DIGITAL_PINS  24
 #define NUM_ANALOG_INPUTS 12
 
 #define TX_RX_LED_INIT	DDRD |= (1<<5), DDRB |= (1<<0)

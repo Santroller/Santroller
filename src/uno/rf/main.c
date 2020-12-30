@@ -32,7 +32,7 @@ int main(void) {
   initInputs();
   initReports();
   initRF(true, pgm_read_dword(&rfID));
-  Serial_SendByte('1');
+  Serial_SendByte('T');
   while (true) {
     if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
       Serial_SendByte('1');
@@ -42,11 +42,11 @@ int main(void) {
       // if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
       //   lastPoll = millis();
 
-      //   uint8_t data[12];
-      //   if (tickRFTX(&controller, data)) {
-      //     // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]);
-      //     // }
-      //   }
+        uint8_t data[32];
+        if (tickRFTX(&controller, data)) {
+          // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]);
+          // }
+        }
       //   memcpy(&previousController, &controller, sizeof(Controller_t));
       // }
     }

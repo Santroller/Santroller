@@ -32,6 +32,7 @@ int main(void) {
   initInputs();
   initReports();
   initRF(false, pgm_read_dword(&rfID));
+  Serial_SendByte('R');
   while (true) {
     if (rf_interrupt) {
       Serial_SendByte('1');

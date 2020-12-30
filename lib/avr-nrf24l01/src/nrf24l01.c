@@ -16,74 +16,146 @@
 #include "spi/spi.h"
 #include "util/util.h"
 #include <avr/io.h>
+#include <util/delay.h>
 
 int8_t payload_len;
 
 /* init the hardware pins */
 void nrf24_init(void) {
-  pinMode(8, OUTPUT);
   spi_init(F_CPU, 0);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
+  _delay_ms(5);
+}
+void nrf24_flush_tx(void) {
+  nrf24_csn_digitalWrite(LOW);
+  spi_transfer(FLUSH_TX);
+  nrf24_csn_digitalWrite(HIGH);
+}
+void nrf24_flush_rx(void) {
+  nrf24_csn_digitalWrite(LOW);
+  spi_transfer(FLUSH_RX);
+  nrf24_csn_digitalWrite(HIGH);
+}
+bool p_type = false;
+bool wide_band = false;
+bool nrf24_setDataRate(dataRate_t rate) {
+  uint8_t val;
+  nrf24_readRegister(RF_SETUP, &val, 1);
+  val &= ~(_BV(RF_DR_LOW) | _BV(RF_DR_HIGH));
+  if (rate == RF_250KBPS) {
+    val |= RF_DR_LOW;
+  } else if (rate == RF_2MBPS) {
+    val |= RF_DR_HIGH;
+    wide_band = true;
+  } else {
+    wide_band = false;
+  }
+  nrf24_configRegister(RF_SETUP, val);
+  uint8_t val2;
+  nrf24_readRegister(RF_SETUP, &val2, 1);
+  if (val2 == val) { return true; }
+  wide_band = false;
+  return false;
+}
+void nrf24_setCRCLen(crclen_t length) {
+  uint8_t config;
+
+  nrf24_readRegister(CONFIG, &config, 1);
+  config &= ~( _BV(CRCO) | _BV(EN_CRC));
+
+  if ( length == RF_CRC_DISABLED )
+  {
+    // Do nothing, we turned it off above. 
+  }
+  else if ( length == RF_CRC_8 )
+  {
+    config |= _BV(EN_CRC);
+  }
+  else
+  {
+    config |= _BV(EN_CRC);
+    config |= _BV(CRCO);
+  }
+  nrf24_configRegister( CONFIG, config ) ;
+}
+void nrf24_toggle_features(void) {
+  nrf24_csn_digitalWrite(LOW);
+  spi_transfer(ACTIVATE);
+  spi_transfer(0x73);
+  nrf24_csn_digitalWrite(HIGH);
 }
 
+void nrf24_enable_ack_payload(void) {
+  // Ack payloads
+  uint8_t feature;
+  nrf24_readRegister(FEATURE, &feature, 1);
+  nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DPL));
+  nrf24_readRegister(FEATURE, &feature, 1);
+  // If it didn't work, the features are not enabled
+  if (!feature) {
+    // So enable them and try again
+    nrf24_toggle_features();
+    nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DPL));
+  }
+
+  // Dynamic length configurations: Dynamic length on pipes 0 and 1
+  nrf24_configRegister(DYNPD, (1 << DPL_P0) | (1 << DPL_P1));
+}
 /* configure the module */
 void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
   /* Use static payload length ... */
   payload_len = pay_length;
 
-  // Set RF channel
-  nrf24_configRegister(RF_CH, channel);
-
-  // Set length of incoming payload
-  nrf24_configRegister(RX_PW_P0, 0x00);        // Auto-ACK pipe ...
-  nrf24_configRegister(RX_PW_P1, payload_len); // Data payload pipe
-  nrf24_configRegister(RX_PW_P2, 0x00);        // Pipe not used
-  nrf24_configRegister(RX_PW_P3, 0x00);        // Pipe not used
-  nrf24_configRegister(RX_PW_P4, 0x00);        // Pipe not used
-  nrf24_configRegister(RX_PW_P5, 0x00);        // Pipe not used
-
-  // 2 Mbps, TX gain: 0dbm
-  nrf24_configRegister(RF_SETUP, 0b00001110);
-
-  // CRC enable, 1 byte CRC length
-  nrf24_configRegister(CONFIG, nrf24_CONFIG);
-  // Ack payloads
-  uint8_t feature;
-  nrf24_readRegister(FEATURE, &feature, 1);
-  // if (tx) {
-    nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DYN_ACK));
-  // } else {
-  //   nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY));
-  // }
-
-  // Auto Acknowledgment
-  nrf24_configRegister(EN_AA, (1 << ENAA_P0) | (1 << ENAA_P1) | (0 << ENAA_P2) |
-                                  (0 << ENAA_P3) | (0 << ENAA_P4) |
-                                  (0 << ENAA_P5));
-
-  // Enable RX addresses
-  nrf24_configRegister(EN_RXADDR, (1 << ERX_P0) | (1 << ERX_P1) |
-                                      (0 << ERX_P2) | (0 << ERX_P3) |
-                                      (0 << ERX_P4) | (0 << ERX_P5));
-
   // Auto retransmit delay: 1000 us and Up to 15 retransmit trials
   nrf24_configRegister(SETUP_RETR, (0x04 << ARD) | (0x0F << ARC));
 
-  // Dynamic length configurations: No dynamic length
-  nrf24_configRegister(DYNPD, (0 << DPL_P0) | (0 << DPL_P1) | (0 << DPL_P2) |
-                                  (0 << DPL_P3) | (0 << DPL_P4) |
-                                  (0 << DPL_P5));
+  uint8_t val;
+  nrf24_readRegister(RF_SETUP, &val, 1);
+  // Set power level to low
+  nrf24_configRegister(RF_SETUP, val | _BV(RF_PWR_LOW));
 
+  // Only p_type modules support this
+  if (nrf24_setDataRate(RF_250KBPS)) {
+    // successful, we have a ptype module
+    p_type = true;
+  }
+
+  // Then set the data rate to the slowest (and most reliable) speed supported
+  // by all hardware.
+  nrf24_setDataRate(RF_1MBPS);
+
+  // Initialize CRC and request 2-byte (16bit) CRC
+  nrf24_setCRCLen(RF_CRC_16);
+
+  // Disable dynamic payloads, to match dynamic_payloads_enabled setting
+  nrf24_configRegister(DYNPD, 0);
+  // Set RF channel
+  nrf24_configRegister(RF_CH, channel);
+  nrf24_enable_ack_payload();
+
+  // Auto Acknowledgment
+  nrf24_configRegister(EN_AA, (1 << ENAA_P0) | (1 << ENAA_P1) | (1 << ENAA_P2) |
+                                  (1 << ENAA_P3) | (1 << ENAA_P4) |
+                                  (1 << ENAA_P5));
+
+  // Reset current status
+  nrf24_configRegister(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
+  // Flush
+  nrf24_flush_rx();
+  nrf24_flush_tx();
   // Start listening
   nrf24_powerUpRx();
 }
-
 /* Set the RX address */
 void nrf24_rx_address(uint8_t *adr) {
   nrf24_ce_digitalWrite(LOW);
   nrf24_writeRegister(RX_ADDR_P1, adr, nrf24_ADDR_LEN);
   nrf24_ce_digitalWrite(HIGH);
+  // Enable RX addresses
+  nrf24_configRegister(EN_RXADDR, (1 << ERX_P0) | (1 << ERX_P1) |
+                                      (0 << ERX_P2) | (0 << ERX_P3) |
+                                      (0 << ERX_P4) | (0 << ERX_P5));
 }
 
 /* Returns the payload length */
@@ -94,6 +166,10 @@ void nrf24_tx_address(uint8_t *adr) {
   /* RX_ADDR_P0 must be set to the sending addr for auto ack to work. */
   nrf24_writeRegister(RX_ADDR_P0, adr, nrf24_ADDR_LEN);
   nrf24_writeRegister(TX_ADDR, adr, nrf24_ADDR_LEN);
+  // Enable RX addresses
+  nrf24_configRegister(EN_RXADDR, (1 << ERX_P0) | (1 << ERX_P1) |
+                                      (0 << ERX_P2) | (0 << ERX_P3) |
+                                      (0 << ERX_P4) | (0 << ERX_P5));
 }
 
 /* Checks if data is available for reading */
@@ -236,11 +312,13 @@ void nrf24_powerUpRx(void) {
   nrf24_ce_digitalWrite(LOW);
   nrf24_configRegister(CONFIG, nrf24_CONFIG | ((1 << PWR_UP) | (1 << PRIM_RX)));
   nrf24_ce_digitalWrite(HIGH);
+  _delay_ms(5);
 }
 
 void nrf24_powerUpTx(void) {
   nrf24_configRegister(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
   nrf24_configRegister(CONFIG, nrf24_CONFIG | ((1 << PWR_UP) | (0 << PRIM_RX)));
+  _delay_ms(5);
 }
 
 void nrf24_powerDown(void) {

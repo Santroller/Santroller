@@ -9,3 +9,6 @@ uint32_t generate_crc32(void);
 void tickRFTXIRQ(void);
 void writeRFConfig(uint8_t* data);
 extern volatile bool rf_interrupt;
+
+extern bool p_type;
+extern bool wide_band;

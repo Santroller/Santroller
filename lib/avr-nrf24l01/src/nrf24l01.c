@@ -17,12 +17,13 @@
 #include "util/util.h"
 #include <avr/io.h>
 #include <util/delay.h>
+extern void Serial_SendByte2(const char DataByte);
 
 int8_t payload_len;
 
 /* init the hardware pins */
 void nrf24_init(void) {
-  spi_init(F_CPU, 0);
+  spi_init(F_CPU/2, 0);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
   _delay_ms(5);
@@ -37,6 +38,19 @@ void nrf24_flush_rx(void) {
   spi_transfer(FLUSH_RX);
   nrf24_csn_digitalWrite(HIGH);
 }
+void nrf24_set_pa(pa_t pa) {
+  uint8_t val;
+  nrf24_readRegister(RF_SETUP, &val, 1);
+  val &= ~(_BV(RF_PWR_LOW) | _BV(RF_PWR_HIGH));
+  if (pa == RF_PA_MAX) {
+    val |= (_BV(RF_PWR_LOW) | _BV(RF_PWR_HIGH));
+  } else if (pa == RF_PA_HIGH) {
+    val |= _BV(RF_PWR_HIGH);
+  } else if (pa == RF_PA_LOW) {
+    val |= _BV(RF_PWR_HIGH);
+  } 
+  nrf24_configRegister(RF_SETUP, val);
+}
 bool p_type = false;
 bool wide_band = false;
 bool nrf24_setDataRate(dataRate_t rate) {
@@ -45,6 +59,7 @@ bool nrf24_setDataRate(dataRate_t rate) {
   val &= ~(_BV(RF_DR_LOW) | _BV(RF_DR_HIGH));
   if (rate == RF_250KBPS) {
     val |= RF_DR_LOW;
+    wide_band = false;
   } else if (rate == RF_2MBPS) {
     val |= RF_DR_HIGH;
     wide_band = true;
@@ -62,22 +77,17 @@ void nrf24_setCRCLen(crclen_t length) {
   uint8_t config;
 
   nrf24_readRegister(CONFIG, &config, 1);
-  config &= ~( _BV(CRCO) | _BV(EN_CRC));
+  config &= ~(_BV(CRCO) | _BV(EN_CRC));
 
-  if ( length == RF_CRC_DISABLED )
-  {
-    // Do nothing, we turned it off above. 
-  }
-  else if ( length == RF_CRC_8 )
-  {
+  if (length == RF_CRC_DISABLED) {
+    // Do nothing, we turned it off above.
+  } else if (length == RF_CRC_8) {
     config |= _BV(EN_CRC);
-  }
-  else
-  {
+  } else {
     config |= _BV(EN_CRC);
     config |= _BV(CRCO);
   }
-  nrf24_configRegister( CONFIG, config ) ;
+  nrf24_configRegister(CONFIG, config);
 }
 void nrf24_toggle_features(void) {
   nrf24_csn_digitalWrite(LOW);
@@ -110,10 +120,7 @@ void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
   // Auto retransmit delay: 1000 us and Up to 15 retransmit trials
   nrf24_configRegister(SETUP_RETR, (0x04 << ARD) | (0x0F << ARC));
 
-  uint8_t val;
-  nrf24_readRegister(RF_SETUP, &val, 1);
-  // Set power level to low
-  nrf24_configRegister(RF_SETUP, val | _BV(RF_PWR_LOW));
+  nrf24_set_pa(RF_PA_MIN);
 
   // Only p_type modules support this
   if (nrf24_setDataRate(RF_250KBPS)) {
@@ -123,7 +130,7 @@ void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
 
   // Then set the data rate to the slowest (and most reliable) speed supported
   // by all hardware.
-  nrf24_setDataRate(RF_1MBPS);
+  nrf24_setDataRate(RF_2MBPS);
 
   // Initialize CRC and request 2-byte (16bit) CRC
   nrf24_setCRCLen(RF_CRC_16);
@@ -141,6 +148,7 @@ void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
 
   // Reset current status
   nrf24_configRegister(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
+
   // Flush
   nrf24_flush_rx();
   nrf24_flush_tx();
@@ -362,6 +370,12 @@ void nrf24_readRegister(uint8_t reg, uint8_t *value, uint8_t len) {
   spi_transfer(R_REGISTER | (REGISTER_MASK & reg));
   nrf24_transferSync(value, value, len);
   nrf24_csn_digitalWrite(HIGH);
+}
+
+uint8_t nrf24_readRegister1(uint8_t reg) {
+  uint8_t value;
+  nrf24_readRegister(reg, &value, 1);
+  return value;
 }
 
 /* Write to a single register of nrf24 */

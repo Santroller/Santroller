@@ -42,7 +42,9 @@ void initRF(bool tx, uint32_t id) {
   rf_interrupt = tx;
 
   /* init hardware pins */
-  pinMode(CE, OUTPUT);
+  if (CE != PIN_SPI_SS) {
+    pinMode(CE, OUTPUT);
+  }
   pinMode(CSN, OUTPUT);
   nrf24_init();
 

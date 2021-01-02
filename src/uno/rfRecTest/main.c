@@ -33,10 +33,21 @@ int main(void) {
   initReports();
   initRF(false, pgm_read_dword(&rfID));
   Serial_SendByte('R');
+  Serial_SendByte('0'+wide_band);
+  Serial_SendByte('0'+p_type);
+  uint8_t val2;
+  nrf24_readRegister(0x06, &val2, 1);
+  Serial_SendByte(val2);
+  Serial_SendByte('\n');
   while (true) {
+    Serial_SendByte(nrf24_getStatus());
     if (rf_interrupt) {
       Serial_SendByte('1');
       tickRFInput(&controller);
     }
   }
+}
+
+void Serial_SendByte2(const char DataByte) {
+  Serial_SendByte(DataByte);
 }

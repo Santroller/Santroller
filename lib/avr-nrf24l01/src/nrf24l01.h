@@ -66,6 +66,7 @@ void nrf24_transmitSync(uint8_t *dataout, uint8_t len);
 void nrf24_transferSync(uint8_t *dataout, uint8_t *datain, uint8_t len);
 void nrf24_configRegister(uint8_t reg, uint8_t value);
 void nrf24_readRegister(uint8_t reg, uint8_t *value, uint8_t len);
+uint8_t nrf24_readRegister1(uint8_t reg);
 void nrf24_writeRegister(uint8_t reg, uint8_t *value, uint8_t len);
 
 /* -------------------------------------------------------------------------- */

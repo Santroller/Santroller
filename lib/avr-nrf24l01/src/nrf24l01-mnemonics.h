@@ -152,3 +152,11 @@ typedef enum {
     RF_CRC_8,
     RF_CRC_16
 } crclen_t;
+
+typedef enum {
+    RF_PA_MAX,
+    RF_PA_HIGH,
+    RF_PA_LOW,
+    RF_PA_MIN,
+    RF_PA_ERROR
+} pa_t;

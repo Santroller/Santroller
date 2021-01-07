@@ -40,6 +40,11 @@ OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-main-${MCU}-${F_CPU}$(if ${MULTI_ADAPTOR},-multi,)
 RAM_OFFSET            = 0x800282
+# Reserved registers for faster USB-Serial convertion
+# The lower, the better (except 0 and 1)
+# r2-5 used for faster USART ISRs
+# r6 used for 32u4 optimization
+REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
 

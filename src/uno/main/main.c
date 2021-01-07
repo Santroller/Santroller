@@ -27,7 +27,6 @@ int main(void) {
   loadConfig();
   Serial_InitInterrupt(BAUD, true);
   sei();
-  config.main.inputType = WII;
   initInputs();
   initReports();
   uint8_t packetCount = 0;

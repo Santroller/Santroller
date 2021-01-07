@@ -75,20 +75,20 @@ bool nrf24_setDataRate(dataRate_t rate) {
   return false;
 }
 void nrf24_setCRCLen(crclen_t length) {
-  uint8_t config;
+  uint8_t config_reg;
 
-  nrf24_readRegister(CONFIG, &config, 1);
-  config &= ~(_BV(CRCO) | _BV(EN_CRC));
+  nrf24_readRegister(CONFIG, &config_reg, 1);
+  config_reg &= ~(_BV(CRCO) | _BV(EN_CRC));
 
   if (length == RF_CRC_DISABLED) {
     // Do nothing, we turned it off above.
   } else if (length == RF_CRC_8) {
-    config |= _BV(EN_CRC);
+    config_reg |= _BV(EN_CRC);
   } else {
-    config |= _BV(EN_CRC);
-    config |= _BV(CRCO);
+    config_reg |= _BV(EN_CRC);
+    config_reg |= _BV(CRCO);
   }
-  nrf24_configRegister(CONFIG, config);
+  nrf24_configRegister(CONFIG, config_reg);
 }
 void nrf24_toggle_features(void) {
   nrf24_csn_digitalWrite(LOW);
@@ -311,11 +311,11 @@ uint8_t nrf24_lastMessageStatus(void) {
 void nrf24_powerUpRx(void) {
   nrf24_configRegister(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
   nrf24_ce_digitalWrite(LOW);
-  uint8_t config = 0;
-  nrf24_readRegister(CONFIG, &config, 1);
-  config &= ~(_BV(PRIM_RX) | _BV(PWR_UP) | _BV(MASK_RX_DR) | _BV(MASK_TX_DS) |
+  uint8_t config_reg = 0;
+  nrf24_readRegister(CONFIG, &config_reg, 1);
+  config_reg &= ~(_BV(PRIM_RX) | _BV(PWR_UP) | _BV(MASK_RX_DR) | _BV(MASK_TX_DS) |
               _BV(MASK_MAX_RT));
-  nrf24_configRegister(CONFIG, config | ((1 << PWR_UP) | (1 << PRIM_RX)));
+  nrf24_configRegister(CONFIG, config_reg | ((1 << PWR_UP) | (1 << PRIM_RX)));
   _delay_ms(5);
   nrf24_ce_digitalWrite(HIGH);
   _delay_ms(5);
@@ -324,11 +324,11 @@ void nrf24_powerUpRx(void) {
 void nrf24_powerUpTx(void) {
   nrf24_configRegister(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
   nrf24_ce_digitalWrite(LOW);
-  uint8_t config = 0;
-  nrf24_readRegister(CONFIG, &config, 1);
-  config &= ~(_BV(PRIM_RX) | _BV(PWR_UP) | _BV(MASK_RX_DR) | _BV(MASK_TX_DS) |
+  uint8_t config_reg = 0;
+  nrf24_readRegister(CONFIG, &config_reg, 1);
+  config_reg &= ~(_BV(PRIM_RX) | _BV(PWR_UP) | _BV(MASK_RX_DR) | _BV(MASK_TX_DS) |
               _BV(MASK_MAX_RT));
-  nrf24_configRegister(CONFIG, config | ((1 << PWR_UP) | (0 << PRIM_RX)));
+  nrf24_configRegister(CONFIG, config_reg | ((1 << PWR_UP) | (0 << PRIM_RX)));
   _delay_ms(5);
   nrf24_ce_digitalWrite(HIGH);
   _delay_ms(5);
@@ -336,9 +336,9 @@ void nrf24_powerUpTx(void) {
 
 void nrf24_powerDown(void) {
   nrf24_ce_digitalWrite(LOW);
-  uint8_t config = 0;
-  nrf24_readRegister(CONFIG, &config, 1);
-  bit_clear(config, PWR_UP);
+  uint8_t config_reg = 0;
+  nrf24_readRegister(CONFIG, &config_reg, 1);
+  bit_clear(config_reg, PWR_UP);
   nrf24_configRegister(CONFIG, nrf24_CONFIG);
 }
 

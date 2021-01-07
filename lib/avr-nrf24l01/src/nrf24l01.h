@@ -58,7 +58,7 @@ void nrf24_powerUpTx(void);
 void nrf24_powerDown(void);
 
 void nrf24_send_init(void);
-void nrf24_writeAckPayload(uint8_t* value);
+void nrf24_writeAckPayload(uint8_t* value, uint8_t size);
 
 /* low level interface ... */
 uint8_t spi_transfer(uint8_t tx);

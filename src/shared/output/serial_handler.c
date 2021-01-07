@@ -53,7 +53,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
   uint16_t size;
   dbuf[0] = REPORT_ID_CONTROL;
   if (cmd >= COMMAND_READ_CONFIG) {
-    size = 64;
+    size = 50;
     uint16_t index = size * (cmd - COMMAND_READ_CONFIG);
     int16_t size2 = sizeof(Configuration_t) - index;
     if (size2 < size) { size = size2; }

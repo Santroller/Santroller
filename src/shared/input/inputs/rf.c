@@ -28,24 +28,22 @@ uint32_t generate_crc32(void) {
   return crc;
 }
 #ifdef __AVR_ATmega32U4__
-#  define CE PIN_A0
-#  define CSN 10
+#  define CE 10
+#  define CSN PIN_A0
 #else
-#  define CE PIN_SPI_SS
-#  define CSN 8
+#  define CE 10
+#  define CSN PIN_SPI_SS
 #endif
 void nrf24_ce_digitalWrite(uint8_t state) { digitalWrite(CE, state); }
 void nrf24_csn_digitalWrite(uint8_t state) { digitalWrite(CSN, state); }
-uint8_t tx_address[5] = {1,2,3,4, 0xE7};
-uint8_t rx_address[5] = {1,2,3,4, 0xD7};
+uint8_t tx_address[5] = {1, 2, 3, 4, 0xE7};
+uint8_t rx_address[5] = {1, 2, 3, 4, 0xD7};
 void initRF(bool tx, uint32_t id) {
   rf_interrupt = tx;
 
   /* init hardware pins */
-  if (CE != PIN_SPI_SS) {
-    pinMode(CE, OUTPUT);
-  }
-  pinMode(CSN, OUTPUT);
+  if (CSN != PIN_SPI_SS) { pinMode(CSN, OUTPUT); }
+  pinMode(CE, OUTPUT);
   nrf24_init();
 
   /* Channel #2 , payload length: 4 */
@@ -69,19 +67,19 @@ void initRF(bool tx, uint32_t id) {
   pinMode(2, INPUT_PULLUP);
   EICRA |= _BV(ISC01);
   EIMSK |= _BV(INT0);
-  // #endif
-  if (tx) { nrf24_send_init(); }
 }
 
 bool tickRFTX(Controller_t *controller, uint8_t *data) {
   bool ret = false;
   if (rf_interrupt) {
     rf_interrupt = false;
-    if (((nrf24_getStatus() & 0B1110) >> 1) == 0) {
+    uint8_t status = nrf24_getStatus();
+    if (((status & 0B1110) >> 1) == 0) {
       nrf24_getData((uint8_t *)data);
       ret = true;
     }
-    nrf24_send((uint8_t *)controller);
+    nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+    nrf24_send((uint8_t *)controller); 
   }
   return ret;
 }
@@ -93,9 +91,8 @@ void tickRFInput(Controller_t *controller) {
   }
 }
 
-void writeRFConfig(uint8_t *d) {
-  uint8_t data[sizeof(XInput_Data_t)] = {0, 1, 2, id++};
-  nrf24_writeAckPayload(data);
+void writeRFConfig(uint8_t *d, uint8_t size) {
+  nrf24_writeAckPayload(d, size);
 }
 
 // #ifdef __AVR_ATmega32U4__

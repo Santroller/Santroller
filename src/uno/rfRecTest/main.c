@@ -1,5 +1,7 @@
 
 #define ARDUINO_MAIN
+#include "../shared/device_comms.h"
+#include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
 #include "input/input_handler.h"
@@ -17,13 +19,26 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
-#include "../shared/device_comms.h"
 Controller_t controller;
 Controller_t previousController;
 Configuration_t newConfig;
 long lastPoll = 0;
 volatile bool send_message = false;
 __attribute__((section(".rfrecv"))) uint32_t rfID = 0xc2292dde;
+void print_reg(char *name, uint8_t reg, uint8_t size) {
+  int32_t val2;
+  nrf24_readRegister(reg, (uint8_t *)&val2, size);
+  // Bytes to bits
+  uint8_t len = strlen(name);
+  for (int i = 0; i < len; i++) { Serial_SendByte(name[i]); }
+  Serial_SendByte(':');
+  Serial_SendByte(' ');
+  for (int i = 0; i < size * 8; i++) {
+    Serial_SendByte('0' + (val2 & 1));
+    val2 >>= 1;
+  }
+  Serial_SendByte('\n');
+}
 int main(void) {
   loadConfig();
   config.rf.rfInEnabled = false;
@@ -32,22 +47,19 @@ int main(void) {
   initInputs();
   initReports();
   initRF(false, pgm_read_dword(&rfID));
-  Serial_SendByte('R');
-  Serial_SendByte('0'+wide_band);
-  Serial_SendByte('0'+p_type);
-  uint8_t val2;
-  nrf24_readRegister(0x06, &val2, 1);
-  Serial_SendByte(val2);
-  Serial_SendByte('\n');
+  writeRFConfig((uint8_t *)&config, 32);
+  writeRFConfig(((uint8_t *)&config) + 32, 32);
+  writeRFConfig(((uint8_t *)&config) + 64, 32);
+  // for (int i = 0; i < 32*3; i++) { Serial_SendByte(((uint8_t *)&config)[i]);
+  // }
   while (true) {
-    Serial_SendByte(nrf24_getStatus());
     if (rf_interrupt) {
-      Serial_SendByte('1');
+      Serial_SendByte('r');
       tickRFInput(&controller);
+      Serial_SendByte(controller.lt);
     }
   }
 }
 
-void Serial_SendByte2(const char DataByte) {
-  Serial_SendByte(DataByte);
-}
+void Serial_SendByte2(const char DataByte) { Serial_SendByte(DataByte); }
++

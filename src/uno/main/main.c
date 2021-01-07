@@ -27,6 +27,7 @@ int main(void) {
   loadConfig();
   Serial_InitInterrupt(BAUD, true);
   sei();
+  config.main.inputType = WII;
   initInputs();
   initReports();
   uint8_t packetCount = 0;
@@ -111,7 +112,7 @@ int main(void) {
               eeprom_update_block(&config, &config_pointer,
                                   sizeof(Configuration_t));
             }
-            writeRFConfig((uint8_t *)&config);
+            // writeRFConfig((uint8_t *)&config, sizeof(config));
             break;
           }
         }

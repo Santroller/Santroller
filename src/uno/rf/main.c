@@ -1,5 +1,7 @@
 
 #define ARDUINO_MAIN
+#include "../shared/device_comms.h"
+#include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
 #include "input/input_handler.h"
@@ -17,12 +19,25 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
-#include "../shared/device_comms.h"
 Controller_t controller;
 Controller_t previousController;
 Configuration_t newConfig;
 long lastPoll = 0;
 volatile bool send_message = false;
+void print_reg(char *name, uint8_t reg, uint8_t size) {
+  int32_t val2;
+  nrf24_readRegister(reg, (uint8_t *)&val2, size);
+  // Bytes to bits
+  uint8_t len = strlen(name);
+  for (int i = 0; i < len; i++) { Serial_SendByte(name[i]); }
+  Serial_SendByte(':');
+  Serial_SendByte(' ');
+  for (int i = 0; i < size * 8; i++) {
+    Serial_SendByte('0' + (val2 & 1));
+    val2 >>= 1;
+  }
+  Serial_SendByte('\n');
+}
 __attribute__((section(".rfrecv"))) uint32_t rfID = 0xc2292dde;
 int main(void) {
   loadConfig();
@@ -32,34 +47,25 @@ int main(void) {
   initInputs();
   initReports();
   initRF(true, pgm_read_dword(&rfID));
-  Serial_SendByte('T');
-  Serial_SendByte('0'+wide_band);
-  Serial_SendByte('0'+p_type);
-  uint8_t val2;
-  nrf24_readRegister(0x06, &val2, 1);
-  Serial_SendByte(val2);
-  Serial_SendByte('\n');
   while (true) {
-    Serial_SendByte(nrf24_lastMessageStatus());
     if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
-      Serial_SendByte('1');
+      // Serial_SendByte('t');
+      // print_reg("STATUS",STATUS, 1);
       // tickInputs(&controller);
       // tickLEDs(&controller);
-      // controller.l_x = rand();
-      // if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
-      //   lastPoll = millis();
+      controller.lt = rand();
+      // if (memcmp(&controller, &previousController, sizeof(Controller_t)) !=
+      // 0) {
+      lastPoll = millis();
 
-        uint8_t data[32];
-        if (tickRFTX(&controller, data)) {
-          // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]);
-          // }
-        }
+      uint8_t data[32];
+      if (tickRFTX(&controller, data)) {
+        for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]); }
+      }
       //   memcpy(&previousController, &controller, sizeof(Controller_t));
       // }
     }
   }
 }
 
-void Serial_SendByte2(const char DataByte) {
-  Serial_SendByte(DataByte);
-}
+void Serial_SendByte2(const char DataByte) { Serial_SendByte(DataByte); }

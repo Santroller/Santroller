@@ -20,10 +20,11 @@
 extern void Serial_SendByte2(const char DataByte);
 
 int8_t payload_len;
+bool is_tx;
 
 /* init the hardware pins */
 void nrf24_init(void) {
-  spi_init(F_CPU/2, 0);
+  spi_init(F_CPU, 0);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
   _delay_ms(5);
@@ -47,8 +48,8 @@ void nrf24_set_pa(pa_t pa) {
   } else if (pa == RF_PA_HIGH) {
     val |= _BV(RF_PWR_HIGH);
   } else if (pa == RF_PA_LOW) {
-    val |= _BV(RF_PWR_HIGH);
-  } 
+    val |= _BV(RF_PWR_LOW);
+  }
   nrf24_configRegister(RF_SETUP, val);
 }
 bool p_type = false;
@@ -97,46 +98,44 @@ void nrf24_toggle_features(void) {
 }
 
 void nrf24_enable_ack_payload(void) {
-  // Ack payloads
-  uint8_t feature;
-  nrf24_readRegister(FEATURE, &feature, 1);
-  nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DPL));
-  nrf24_readRegister(FEATURE, &feature, 1);
-  // If it didn't work, the features are not enabled
-  if (!feature) {
-    // So enable them and try again
-    nrf24_toggle_features();
-    nrf24_configRegister(FEATURE, feature | _BV(EN_ACK_PAY) | _BV(EN_DPL));
-  }
-
-  // Dynamic length configurations: Dynamic length on pipes 0 and 1
-  nrf24_configRegister(DYNPD, (1 << DPL_P0) | (1 << DPL_P1));
+  nrf24_configRegister(FEATURE, nrf24_readRegister1(FEATURE) | _BV(EN_DPL));
+  nrf24_configRegister(DYNPD, nrf24_readRegister1(DYNPD) | _BV(DPL_P5) |
+                                  _BV(DPL_P4) | _BV(DPL_P3) | _BV(DPL_P2) |
+                                  _BV(DPL_P1) | _BV(DPL_P0));
+  // Ack payloads and dynamic payload length (required for ack payloads)
+  nrf24_configRegister(FEATURE, nrf24_readRegister1(FEATURE) | _BV(EN_ACK_PAY) |
+                                    _BV(EN_DPL));
+  nrf24_configRegister(DYNPD, nrf24_readRegister1(DYNPD) | _BV(DPL_P0));
 }
 /* configure the module */
 void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
+  is_tx = tx;
   /* Use static payload length ... */
   payload_len = pay_length;
 
   // Auto retransmit delay: 1000 us and Up to 15 retransmit trials
-  nrf24_configRegister(SETUP_RETR, (0x04 << ARD) | (0x0F << ARC));
+  nrf24_configRegister(SETUP_RETR, (0x06 << ARD) | (0x00 << ARC));
 
-  nrf24_set_pa(RF_PA_MIN);
+  nrf24_set_pa(RF_PA_LOW);
 
   // Only p_type modules support this
-  if (nrf24_setDataRate(RF_250KBPS)) {
-    // successful, we have a ptype module
-    p_type = true;
+  uint8_t before_toggle = nrf24_readRegister1(FEATURE);
+  nrf24_toggle_features();
+  uint8_t after_toggle = nrf24_readRegister1(FEATURE);
+  p_type = before_toggle == after_toggle;
+  if (after_toggle) {
+    if (p_type) {
+      // module did not experience power-on-reset (#401)
+      nrf24_toggle_features();
+    }
+    // allow use of multicast parameter and dynamic payloads by default
+    nrf24_configRegister(FEATURE, 0);
   }
 
-  // Then set the data rate to the slowest (and most reliable) speed supported
-  // by all hardware.
   nrf24_setDataRate(RF_2MBPS);
 
   // Initialize CRC and request 2-byte (16bit) CRC
   nrf24_setCRCLen(RF_CRC_16);
-
-  // Disable dynamic payloads, to match dynamic_payloads_enabled setting
-  nrf24_configRegister(DYNPD, 0);
   // Set RF channel
   nrf24_configRegister(RF_CH, channel);
   nrf24_enable_ack_payload();
@@ -145,15 +144,19 @@ void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
   nrf24_configRegister(EN_AA, (1 << ENAA_P0) | (1 << ENAA_P1) | (1 << ENAA_P2) |
                                   (1 << ENAA_P3) | (1 << ENAA_P4) |
                                   (1 << ENAA_P5));
-
   // Reset current status
   nrf24_configRegister(STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
 
   // Flush
   nrf24_flush_rx();
   nrf24_flush_tx();
-  // Start listening
-  nrf24_powerUpRx();
+  if (tx) {
+    // // /* Set to transmitter mode , Power up if needed */
+    nrf24_powerUpTx();
+  } else {
+    // Start listening
+    nrf24_powerUpRx();
+  }
 }
 /* Set the RX address */
 void nrf24_rx_address(uint8_t *adr) {
@@ -214,14 +217,19 @@ uint8_t nrf24_payloadLength(void) {
 }
 /* Reads payload bytes into data array */
 void nrf24_getData(uint8_t *data) {
+  uint8_t len;
+  if (is_tx) {
+    len = 32;
+  } else {
+    len = payload_len;
+  }
   /* Pull down chip select */
   nrf24_csn_digitalWrite(LOW);
-
   /* Send cmd to read rx payload */
   spi_transfer(R_RX_PAYLOAD);
-
+  
   /* Read payload */
-  nrf24_transferSync(data, data, payload_len);
+  nrf24_transferSync(data, data, len);
 
   /* Pull up chip select */
   nrf24_csn_digitalWrite(HIGH);
@@ -238,21 +246,11 @@ uint8_t nrf24_retransmissionCount(void) {
   return rv;
 }
 
-void nrf24_send_init(void) {
-  /* Set to transmitter mode , Power up if needed */
-  nrf24_ce_digitalWrite(LOW);
-  nrf24_powerUpTx();
-  // _delay_us(240);
-  nrf24_ce_digitalWrite(HIGH);
-}
 // Sends a data package to the default address. Be sure to send the correct
 // amount of bytes as configured as payload on the receiver.
 void nrf24_send(uint8_t *value) {
   // // /* Go to Standby-I first */
   // nrf24_ce_digitalWrite(LOW);
-
-  // // /* Set to transmitter mode , Power up if needed */
-  nrf24_powerUpTx();
 
   /* Pull down chip select */
   nrf24_csn_digitalWrite(LOW);
@@ -311,26 +309,36 @@ uint8_t nrf24_lastMessageStatus(void) {
 }
 
 void nrf24_powerUpRx(void) {
-  // nrf24_csn_digitalWrite(LOW);
-  // spi_transfer(FLUSH_RX);
-  // nrf24_csn_digitalWrite(HIGH);
-
   nrf24_configRegister(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
-
   nrf24_ce_digitalWrite(LOW);
-  nrf24_configRegister(CONFIG, nrf24_CONFIG | ((1 << PWR_UP) | (1 << PRIM_RX)));
+  uint8_t config = 0;
+  nrf24_readRegister(CONFIG, &config, 1);
+  config &= ~(_BV(PRIM_RX) | _BV(PWR_UP) | _BV(MASK_RX_DR) | _BV(MASK_TX_DS) |
+              _BV(MASK_MAX_RT));
+  nrf24_configRegister(CONFIG, config | ((1 << PWR_UP) | (1 << PRIM_RX)));
+  _delay_ms(5);
   nrf24_ce_digitalWrite(HIGH);
   _delay_ms(5);
 }
 
 void nrf24_powerUpTx(void) {
   nrf24_configRegister(STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
-  nrf24_configRegister(CONFIG, nrf24_CONFIG | ((1 << PWR_UP) | (0 << PRIM_RX)));
+  nrf24_ce_digitalWrite(LOW);
+  uint8_t config = 0;
+  nrf24_readRegister(CONFIG, &config, 1);
+  config &= ~(_BV(PRIM_RX) | _BV(PWR_UP) | _BV(MASK_RX_DR) | _BV(MASK_TX_DS) |
+              _BV(MASK_MAX_RT));
+  nrf24_configRegister(CONFIG, config | ((1 << PWR_UP) | (0 << PRIM_RX)));
+  _delay_ms(5);
+  nrf24_ce_digitalWrite(HIGH);
   _delay_ms(5);
 }
 
 void nrf24_powerDown(void) {
   nrf24_ce_digitalWrite(LOW);
+  uint8_t config = 0;
+  nrf24_readRegister(CONFIG, &config, 1);
+  bit_clear(config, PWR_UP);
   nrf24_configRegister(CONFIG, nrf24_CONFIG);
 }
 
@@ -386,10 +394,10 @@ void nrf24_writeRegister(uint8_t reg, uint8_t *value, uint8_t len) {
   nrf24_csn_digitalWrite(HIGH);
 }
 
-void nrf24_writeAckPayload(uint8_t *buf) {
+void nrf24_writeAckPayload(uint8_t *buf, uint8_t size) {
   nrf24_csn_digitalWrite(LOW);
   spi_transfer(W_ACK_PAYLOAD | 1);
   /* Write payload */
-  nrf24_transmitSync(buf, payload_len);
+  nrf24_transmitSync(buf, size);
   nrf24_csn_digitalWrite(HIGH);
 }

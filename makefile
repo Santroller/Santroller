@@ -1,4 +1,5 @@
 UNOMCU          = atmega16u2
+UNOMCU8          = at90usb82
 UNO_PID			=0x0001
 MEGA2560_PID	=0x0010
 MEGAADK_PID		=0x003f
@@ -15,6 +16,21 @@ micro_rf:
 	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
 	sleep 1
 	$(MAKE) -C src/micro/rf avrdude
+
+uno-8:
+	$(MAKE) -C src/uno
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU8) erase || true
+	dfu-programmer $(UNOMCU8) flash output/ardwiino-uno-usb-$(UNOMCU8)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU8) launch
+	sleep 1
+	$(MAKE) -C src/uno/main avrdude
+	sleep 1
+	stty -F /dev/ttyACM0 1200
+	sleep 1
+	$(MAKE) -C src/uno/usb dfu MCU=$(UNOMCU8)
 
 uno:
 	$(MAKE) -C src/uno

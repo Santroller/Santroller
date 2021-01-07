@@ -17,6 +17,21 @@ uint8_t wiiButtonBindings[16] = {
 uint16_t wiiExtensionID = WII_NO_EXTENSION;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
+bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
+  uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
+  uint8_t andCheck = 0xFF; // Check if data is maxed (bad init)
+
+  for (int i = 0; i < dataSize; i++) {
+    orCheck |= dataIn[i];
+    andCheck &= dataIn[i];
+  }
+
+  if (orCheck == 0x00 || andCheck == 0xFF) {
+    return false; // No data or bad data
+  }
+
+  return true;
+}
 void readExtButtons(Controller_t *controller, uint16_t buttons) {
   for (uint8_t i = 0; i < sizeof(wiiButtonBindings); i++) {
     uint8_t idx = wiiButtonBindings[i];
@@ -28,6 +43,9 @@ void readExtButtons(Controller_t *controller, uint16_t buttons) {
 uint16_t readExtID(void) {
   uint8_t data[6];
   twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
+  if (!verifyData(data, sizeof(data))) {
+    return WII_NOT_INITIALISED;
+  }
   return data[0] << 8 | data[5];
 }
 void readDrumExt(Controller_t *controller, uint8_t *data) {
@@ -176,24 +194,9 @@ void initWiiExt(void) {
     readFunction = NULL;
   }
 }
-bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
-  uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
-  uint8_t andCheck = 0xFF; // Check if data is maxed (bad init)
-
-  for (int i = 0; i < dataSize; i++) {
-    orCheck |= dataIn[i];
-    andCheck &= dataIn[i];
-  }
-
-  if (orCheck == 0x00 || andCheck == 0xFF) {
-    return false; // No data or bad data
-  }
-
-  return true;
-}
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
-  if (wiiExtensionID == WII_NO_EXTENSION ||
+  if (wiiExtensionID == WII_NOT_INITIALISED || wiiExtensionID == WII_NO_EXTENSION ||
       !twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();

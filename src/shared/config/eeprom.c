@@ -30,6 +30,7 @@ void loadConfig(void) {
     memcpy_P(&config.leds, &default_config.leds, sizeof(default_config.leds));
   }
   if (config.main.version < 6) { config.main.pollRate = POLL_RATE; }
+  if (config.main.version < 7) { config.rf.rfInEnabled = false; }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

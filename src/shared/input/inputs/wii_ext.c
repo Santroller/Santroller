@@ -43,9 +43,7 @@ void readExtButtons(Controller_t *controller, uint16_t buttons) {
 uint16_t readExtID(void) {
   uint8_t data[6];
   twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
-  if (!verifyData(data, sizeof(data))) {
-    return WII_NOT_INITIALISED;
-  }
+  if (!verifyData(data, sizeof(data))) { return WII_NOT_INITIALISED; }
   return data[0] << 8 | data[5];
 }
 void readDrumExt(Controller_t *controller, uint8_t *data) {
@@ -157,7 +155,6 @@ void initWiiExt(void) {
     wiiExtensionID = readExtID();
     _delay_us(10);
   }
-
   if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
       wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
     // Enable high-res mode
@@ -196,7 +193,8 @@ void initWiiExt(void) {
 }
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
-  if (wiiExtensionID == WII_NOT_INITIALISED || wiiExtensionID == WII_NO_EXTENSION ||
+  if (wiiExtensionID == WII_NOT_INITIALISED ||
+      wiiExtensionID == WII_NO_EXTENSION ||
       !twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();

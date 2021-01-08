@@ -6,6 +6,10 @@ const Configuration_t PROGMEM default_config = DEFAULT_CONFIG;
 Configuration_t config;
 void loadConfig(void) {
   eeprom_read_block(&config, &config_pointer, sizeof(Configuration_t));
+  // Do this first, as previous controllers will have their config stored in a different location, and then the following changes will be to an invalid config otherwise.
+  if (config.main.version < 8) {
+    eeprom_read_block(&config, &test, sizeof(Configuration_t));
+  }
   // Check versions, if they aren't the same, a breaking change has happened
   // Check signatures, that way we know if the EEPROM has a valid config
   // If the signatures don't match, then the EEPROM has garbage data
@@ -32,9 +36,6 @@ void loadConfig(void) {
   }
   if (config.main.version < 6) { config.main.pollRate = POLL_RATE; }
   if (config.main.version < 7) { config.rf.rfInEnabled = false; }
-  if (config.main.version < 8) {
-    eeprom_read_block(&config, &test, sizeof(Configuration_t));
-  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

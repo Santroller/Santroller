@@ -8,13 +8,13 @@ all:
 micro:
 	$(MAKE) -C src/micro/main
 	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
-	sleep 1
+	sleep 2
 	$(MAKE) -C src/micro/main avrdude
 
 micro_rf:
 	$(MAKE) -C src/micro/rf
 	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
-	sleep 1
+	sleep 2
 	$(MAKE) -C src/micro/rf avrdude
 
 uno-8:

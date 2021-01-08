@@ -1,5 +1,6 @@
 #include "eeprom.h"
 #include <avr/pgmspace.h>
+static uint8_t EEMEM test = 0;
 Configuration_t EEMEM config_pointer = DEFAULT_CONFIG;
 const Configuration_t PROGMEM default_config = DEFAULT_CONFIG;
 Configuration_t config;
@@ -31,6 +32,9 @@ void loadConfig(void) {
   }
   if (config.main.version < 6) { config.main.pollRate = POLL_RATE; }
   if (config.main.version < 7) { config.rf.rfInEnabled = false; }
+  if (config.main.version < 8) {
+    eeprom_read_block(&config, &test, sizeof(Configuration_t));
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

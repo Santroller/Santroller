@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
-uint8_t wiiButtonBindings[16] = {
+const uint8_t PROGMEM wiiButtonBindings[16] = {
     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,

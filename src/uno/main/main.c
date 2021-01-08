@@ -22,7 +22,6 @@ uint8_t previousReport[sizeof(USB_Report_Data_t)];
 Configuration_t newConfig;
 bool readyForPacket = true;
 long lastPoll = 0;
-
 int main(void) {
   loadConfig();
   Serial_InitInterrupt(BAUD, true);
@@ -52,9 +51,9 @@ int main(void) {
           "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
                                         // lower byte
           // Outputs
-          : [tmp] "=&e"(tmp) // Pointer register, output only
+          : [ tmp ] "=&e"(tmp) // Pointer register, output only
           // Inputs
-          : [readPtr] "m"(USARTtoUSB_ReadPtr) // Memory location
+          : [ readPtr ] "m"(USARTtoUSB_ReadPtr) // Memory location
       );
       // Write all bytes from USART to the USB endpoint
       do {
@@ -63,8 +62,8 @@ int main(void) {
             "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte, wraps
                                          // around 255
             // Outputs
-            : [data] "=&r"(data), // Output only
-              [tmp] "=e"(tmp)     // Input and output
+            : [ data ] "=&r"(data), // Output only
+              [ tmp ] "=e"(tmp)     // Input and output
             // Inputs
             : "1"(tmp));
 
@@ -166,7 +165,7 @@ ISR(USART1_RX_vect, ISR_NAKED) {
 
       // Inputs:
       ::[UDR1_Reg] "m"(UDR1), // Memory location of UDR1
-      [writePointer] "I"(_SFR_IO_ADDR(
+      [ writePointer ] "I"(_SFR_IO_ADDR(
           USARTtoUSB_WritePtr)) // 8 bit pointer to USARTtoUSB write buffer
   );
 }
@@ -202,10 +201,10 @@ ISR(USART1_UDRE_vect, ISR_NAKED) {
 
       // Inputs:
       ::[UDR1_Reg] "m"(UDR1),
-      [readPointer] "I"(_SFR_IO_ADDR(
+      [ readPointer ] "I"(_SFR_IO_ADDR(
           USBtoUSART_ReadPtr)), // 7 bit pointer to USBtoUSART read buffer
-      [writePointer] "m"(
-          USBtoUSART_WritePtr), // 7 bit pointer to USBtoUSART write buffer
-      [UCSR1B_Reg] "m"(UCSR1B)  // Memory location of UDR1
+      [ writePointer ] "m"(
+          USBtoUSART_WritePtr),  // 7 bit pointer to USBtoUSART write buffer
+      [ UCSR1B_Reg ] "m"(UCSR1B) // Memory location of UDR1
   );
 }

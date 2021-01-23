@@ -49,6 +49,11 @@ bool shouldSkipPin(uint8_t i) {
       (i == PIN_WIRE_SDA || i == PIN_WIRE_SCL)) {
     return true;
   }
+#ifdef RF_TX
+  if (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
+      i == PIN_SPI_SS || i == 8 || i == 2)
+    return true;
+#endif
   // Skip SPI pins when using peripherials that utilise SPI
   if ((config.main.fretLEDMode == APA102) &&
       (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||

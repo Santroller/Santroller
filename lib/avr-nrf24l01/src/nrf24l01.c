@@ -18,7 +18,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-int8_t payload_len;
 bool is_tx;
 
 /* init the hardware pins */
@@ -108,10 +107,8 @@ void nrf24_enable_ack_payload(void) {
                        nrf24_readRegister1(DYNPD) | _BV(DPL_P0) | _BV(DPL_P1));
 }
 /* configure the module */
-void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx) {
+void nrf24_config(uint8_t channel, bool tx) {
   is_tx = tx;
-  /* Use static payload length ... */
-  payload_len = pay_length;
 
   // Auto retransmit delay: 1000 us and no retransmits
   nrf24_configRegister(SETUP_RETR, (0x0F << ARD) | (0x00 << ARC));
@@ -170,9 +167,6 @@ void nrf24_rx_address(uint8_t *adr) {
   nrf24_ce_digitalWrite(HIGH);
 }
 
-/* Returns the payload length */
-uint8_t nrf24_payload_length(void) { return payload_len; }
-
 /* Set the TX address */
 void nrf24_tx_address(uint8_t *adr) {
   /* RX_ADDR_P0 must be set to the sending addr for auto ack to work. */
@@ -228,15 +222,12 @@ uint8_t nrf24_payloadLength(void) {
   return status;
 }
 /* Reads payload bytes into data array */
-void nrf24_getData(uint8_t *data) {
+int nrf24_getData(uint8_t *data, uint8_t len) {
   /* Reset status register */
   nrf24_configRegister(STATUS, (1 << RX_DR));
 
-  uint8_t len;
-  if (is_tx) {
+  if (!len) {
     len = nrf24_payloadLength();
-  } else {
-    len = payload_len;
   }
   /* Pull down chip select */
   nrf24_csn_digitalWrite(LOW);
@@ -248,6 +239,7 @@ void nrf24_getData(uint8_t *data) {
 
   /* Pull up chip select */
   nrf24_csn_digitalWrite(HIGH);
+  return len;
 }
 
 /* Returns the number of retransmissions occured for the last message */
@@ -260,7 +252,7 @@ uint8_t nrf24_retransmissionCount(void) {
 
 // Sends a data package to the default address. Be sure to send the correct
 // amount of bytes as configured as payload on the receiver.
-void nrf24_send(uint8_t *value) {
+void nrf24_send(uint8_t *value, uint8_t payload_len) {
 
   // // /* Go to Standby-I first */
   // nrf24_ce_digitalWrite(LOW);

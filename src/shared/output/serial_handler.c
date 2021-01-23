@@ -1,4 +1,6 @@
 #include "serial_handler.h"
+#include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
+#include "avr-nrf24l01/src/nrf24l01.h"
 #include "input/inputs/direct.h"
 #include "input/inputs/ps2_cnt.h"
 #include "input/inputs/rf.h"
@@ -18,10 +20,10 @@ bool handleCommand(uint8_t cmd) {
     bootloader();
     return false;
   case COMMAND_FIND_ANALOG:
-    findAnalogPin();
+    if (!config.rf.rfInEnabled) { findAnalogPin(); }
     break;
   case COMMAND_FIND_DIGITAL:
-    findDigitalPin();
+    if (!config.rf.rfInEnabled) { findDigitalPin(); }
     break;
   case COMMAND_WRITE_CONFIG:
     return false;
@@ -51,6 +53,25 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
 }
 uint8_t dbuf[64];
 void processHIDReadFeatureReport(uint8_t cmd) {
+  if (config.rf.rfInEnabled && cmd < COMMAND_READ_CONFIG &&
+      cmd != COMMAND_GET_CPU_INFO) {
+    uint8_t dbuf2[3];
+    dbuf2[0] = cmd;
+    dbuf2[1] = 0;
+    dbuf2[2] = true;
+    uint8_t len;
+    nrf24_flush_rx();
+    nrf24_flush_tx();
+    while (true) {
+      if (!nrf24_txFifoFull()) { nrf24_writeAckPayload(dbuf2, 3); }
+      rf_interrupt = true;
+      len = tickRFInput(dbuf, 0);
+      if (len && len != sizeof(XInput_Data_t)) break;
+      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+    }
+    writeToUSB(dbuf, len);
+    return;
+  }
   uint16_t size;
   dbuf[0] = REPORT_ID_CONTROL;
   if (cmd >= COMMAND_READ_CONFIG) {

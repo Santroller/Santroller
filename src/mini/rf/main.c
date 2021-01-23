@@ -3,13 +3,13 @@
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
-#include "device_comms.h"
 #include "input/input_handler.h"
 #include "input/inputs/direct.h"
 #include "input/inputs/rf.h"
 #include "leds/leds.h"
 #include "output/reports.h"
 #include "output/serial_commands.h"
+#include "output/serial_handler.h"
 #include "pins_arduino.h"
 #include "util/util.h"
 #include <avr/interrupt.h>
@@ -19,7 +19,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
-#include "output/serial_handler.h"
 Controller_t controller;
 Controller_t previousController;
 Configuration_t newConfig;
@@ -34,11 +33,7 @@ int main(void) {
   loadConfig();
   sei();
   setupMicrosTimer();
-  Serial_Init(115200, true);
-  config.main.inputType = DIRECT;
-  config.main.fretLEDMode = APA102;
-  config.main.tiltType = NO_TILT;
-  config.pins.a = 19;
+  config.rf.rfInEnabled = false;
   initInputs();
   initReports();
   // id = generate_crc32();
@@ -51,20 +46,30 @@ int main(void) {
       if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
         lastPoll = millis();
         uint8_t data[32];
-        if (tickRFTX(&controller, data)) {
+        if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
           uint8_t cmd = data[0];
           uint8_t offset = 32 * data[1];
+          bool isRead = data[2];
           // The first byte of COMMAND_WRITE_CONFIG is an offset.
-          // Since rf has its own offset, we can just combine both to get a result offset
-          if (cmd == COMMAND_WRITE_CONFIG) {
-            data[3] += offset;
+          // Since rf has its own offset, we can just combine both to get a
+          // result offset
+          if (cmd == COMMAND_WRITE_CONFIG) { data[3] += offset; }
+          if (isRead) {
+            processHIDReadFeatureReport(cmd);
+          } else {
+            // 3 bytes for rf header
+            processHIDWriteFeatureReport(cmd, 29, data + 3);
+            handleCommand(cmd);
           }
-          handleCommand(cmd);
-          // 2 bytes for rf header
-          processHIDWriteFeatureReport(cmd, 30, data+2);
         }
         memcpy(&previousController, &controller, sizeof(Controller_t));
       }
     }
   }
+}
+
+void writeToUSB(const void *const Buffer, uint8_t Length) {
+  uint8_t data[32];
+  tickRFTX((uint8_t *)Buffer, data, Length);
+  nrf24_flush_rx();
 }

@@ -72,7 +72,7 @@ int main(void) {
   sei();
   while (true) {
     if (config.rf.rfInEnabled) {
-      tickRFInput(&controller);
+      tickRFInput((uint8_t*)&controller, sizeof(XInput_Data_t));
     } else {
       tickInputs(&controller);
     }
@@ -145,21 +145,24 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   Endpoint_Read_Control_Stream_LE(buf, data_len);
   processHIDWriteFeatureReport(cmd, data_len, buf);
   Endpoint_ClearStatusStage();
-  uint8_t buf2[32];
-  uint8_t packet = 0;
-  for (int i = 0; i < data_len; i += 30) {
-    memset(buf2, 0, sizeof(buf2));
-    buf2[0] = cmd;
-    buf2[1] = packet++;
-    uint8_t count = data_len - i;
-    memcpy(buf2 + 2, buf + i, count > 30 ? 30 : count);
-    while (nrf24_txFifoFull()) {
+  if (config.rf.rfInEnabled) {
+    uint8_t buf2[32];
+    uint8_t packet = 0;
+    for (int i = 0; i < data_len; i += 29) {
+      memset(buf2, 0, sizeof(buf2));
+      buf2[0] = cmd;
+      buf2[1] = packet++;
+      buf2[2] = false;
+      uint8_t count = data_len - i;
+      memcpy(buf2 + 3, buf + i, count > 29 ? 29 : count);
+      while (nrf24_txFifoFull()) {
+        rf_interrupt = true;
+        tickRFInput((uint8_t*)&controller, sizeof(XInput_Data_t));
+        nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+      }
+      nrf24_writeAckPayload(buf2, 32);
       rf_interrupt = true;
-      tickRFInput(&controller);
-      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
     }
-    nrf24_writeAckPayload(buf2, 32);
-    rf_interrupt = true;
   }
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }

@@ -44,7 +44,7 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   pinMode(CSN, OUTPUT);
   nrf24_init();
 
-  nrf24_config(76, sizeof(XInput_Data_t), tx);
+  nrf24_config(76, tx);
   nrf24_tx_address((uint8_t *)&txid);
   nrf24_rx_address((uint8_t *)&rxid);
   // on the pro micro, the real ss pin is not accessible, so we should bind it
@@ -65,27 +65,26 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   }
 }
 
-bool tickRFTX(Controller_t *controller, uint8_t *arr) {
+bool tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {
   bool ret = false;
   // rf_interrupt = false;
   uint8_t status = nrf24_getStatus();
   if (((status & 0B1110) >> 1) == 0) {
     ret = true;
-    nrf24_getData(arr);
+    nrf24_getData(arr, 0);
     nrf24_configRegister(STATUS, (1 << RX_DR));
   }
   nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-  nrf24_send((uint8_t *)controller);
+  nrf24_send(data, len);
   return ret;
 }
 uint8_t id = 0;
-bool tickRFInput(Controller_t *controller) {
+uint8_t tickRFInput(uint8_t *data, uint8_t len) {
   if (rf_interrupt) {
     rf_interrupt = false;
     uint8_t status = nrf24_getStatus();
     if (((status & 0B1110) >> 1) != 0x7) {
-      nrf24_getData((uint8_t *)controller);
-      return true;
+      return nrf24_getData(data, len);
     }
   }
   return false;

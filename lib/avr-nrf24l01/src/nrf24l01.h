@@ -30,7 +30,7 @@
 void nrf24_init(void);
 void nrf24_rx_address(uint8_t *adr);
 void nrf24_tx_address(uint8_t *adr);
-void nrf24_config(uint8_t channel, uint8_t pay_length, bool tx);
+void nrf24_config(uint8_t channel, bool tx);
 
 /* state check functions */
 uint8_t nrf24_dataReady(void);
@@ -41,8 +41,8 @@ uint8_t nrf24_txFifoEmpty(void);
 uint8_t nrf24_txFifoFull(void);
 
 /* core TX / RX functions */
-void nrf24_send(uint8_t *value);
-void nrf24_getData(uint8_t *data);
+void nrf24_send(uint8_t *value, uint8_t payload_len);
+int nrf24_getData(uint8_t *data, uint8_t payload_len);
 
 /* use in dynamic length mode */
 uint8_t nrf24_payloadLength(void);
@@ -50,9 +50,6 @@ uint8_t nrf24_payloadLength(void);
 /* post transmission analysis */
 uint8_t nrf24_lastMessageStatus(void);
 uint8_t nrf24_retransmissionCount(void);
-
-/* Returns the payload length */
-uint8_t nrf24_payload_length(void);
 
 /* power management */
 void nrf24_powerUpRx(void);

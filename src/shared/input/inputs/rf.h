@@ -1,13 +1,10 @@
 #include <stdint.h>
 #include "controller/controller.h"
 #include <stdbool.h>
-void initRFInput(void);
-void initRF(bool tx, uint32_t id);
-void tickRFInput(Controller_t *controller);
+void initRF(bool tx, uint32_t txid, uint32_t rxid);
+bool tickRFInput(Controller_t *controller);
 bool tickRFTX(Controller_t *controller, uint8_t* data);
 uint32_t generate_crc32(void);
-void tickRFTXIRQ(void);
-void writeRFConfig(uint8_t* data, uint8_t size);
 extern volatile bool rf_interrupt;
 
 extern bool p_type;

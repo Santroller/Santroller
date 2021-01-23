@@ -20,7 +20,7 @@
 #define LOW 0
 #define HIGH 1
 
-#define nrf24_ADDR_LEN 5
+#define nrf24_ADDR_LEN 4
 #define nrf24_CONFIG ((1 << EN_CRC) | (0 << CRCO))
 
 #define NRF24_TRANSMISSON_OK 0
@@ -37,6 +37,8 @@ uint8_t nrf24_dataReady(void);
 uint8_t nrf24_isSending(void);
 uint8_t nrf24_getStatus(void);
 uint8_t nrf24_rxFifoEmpty(void);
+uint8_t nrf24_txFifoEmpty(void);
+uint8_t nrf24_txFifoFull(void);
 
 /* core TX / RX functions */
 void nrf24_send(uint8_t *value);
@@ -56,6 +58,9 @@ uint8_t nrf24_payload_length(void);
 void nrf24_powerUpRx(void);
 void nrf24_powerUpTx(void);
 void nrf24_powerDown(void);
+
+void nrf24_flush_rx(void);
+void nrf24_flush_tx(void);
 
 void nrf24_send_init(void);
 void nrf24_writeAckPayload(uint8_t* value, uint8_t size);

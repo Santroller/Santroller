@@ -1,4 +1,6 @@
 #define ARDUINO_MAIN
+#include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
+#include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
 #include "device_comms.h"
 #include "input/input_handler.h"
@@ -26,12 +28,20 @@ int main(void) {
   loadConfig();
   Serial_InitInterrupt(BAUD, true);
   sei();
-  initInputs();
+  setupMicrosTimer();
+  config.rf.rfInEnabled = true;
+  if (config.rf.rfInEnabled) {
+    config.rf.id = 0xc2292dde;
+    initRF(false, config.rf.id, generate_crc32());
+  } else {
+    initInputs();
+  }
   initReports();
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t *buf;
   bool isConfig = false;
+  bool rfWriting = false;
   while (true) {
     //================================================================================
     // USARTtoUSB
@@ -51,9 +61,9 @@ int main(void) {
           "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
                                         // lower byte
           // Outputs
-          : [ tmp ] "=&e"(tmp) // Pointer register, output only
+          : [tmp] "=&e"(tmp) // Pointer register, output only
           // Inputs
-          : [ readPtr ] "m"(USARTtoUSB_ReadPtr) // Memory location
+          : [readPtr] "m"(USARTtoUSB_ReadPtr) // Memory location
       );
       // Write all bytes from USART to the USB endpoint
       do {
@@ -62,8 +72,8 @@ int main(void) {
             "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte, wraps
                                          // around 255
             // Outputs
-            : [ data ] "=&r"(data), // Output only
-              [ tmp ] "=e"(tmp)     // Input and output
+            : [data] "=&r"(data), // Output only
+              [tmp] "=e"(tmp)     // Input and output
             // Inputs
             : "1"(tmp));
 
@@ -92,6 +102,33 @@ int main(void) {
             buf = (uint8_t *)&controller.leds;
             state = 5;
           } else {
+            if (data == COMMAND_WRITE_SUBTYPE) {
+              if (config.rf.rfInEnabled) {
+                nrf24_csn_digitalWrite(LOW);
+                spi_transfer(W_ACK_PAYLOAD | 1);
+                spi_transfer(0);
+                nrf24_csn_digitalWrite(HIGH);
+                Serial_SendByte('A');
+                // Wait for the ACK to send
+                _delay_ms(10);
+                // Swap to TX mode
+                initRF(true, config.rf.id, generate_crc32());
+                _delay_us(500);
+                Serial_SendByte('B');
+                rf_interrupt = true;
+                rfWriting = true;
+                uint8_t *t = (uint8_t *)&config;
+                uint8_t p = 0;
+                nrf24_configRegister(STATUS, _BV(MAX_RT));
+                for (int i = 0; i < sizeof(Configuration_t);
+                     i += sizeof(XInput_Data_t)) {
+                  nrf24_send(t);
+                  t += sizeof(XInput_Data_t);
+                  while ((!(nrf24_getStatus() & _BV(TX_DS)))) {}
+                  Serial_SendByte('C' + (p++));
+                }
+              }
+            }
             handleCommand(data);
             state = 0;
             break;
@@ -110,7 +147,6 @@ int main(void) {
               eeprom_update_block(&config, &config_pointer,
                                   sizeof(Configuration_t));
             }
-            // writeRFConfig((uint8_t *)&config, sizeof(config));
             break;
           }
         }
@@ -119,10 +155,14 @@ int main(void) {
       USARTtoUSB_ReadPtr = tmp & 0xFF;
       // With RF, this stuff gets handled on the transmitter side, not the
       // receiver.
-    } else if (millis() - lastPoll > config.main.pollRate ||
-               config.rf.rfInEnabled) {
-      tickInputs(&controller);
-      tickLEDs(&controller);
+    } else if (!rfWriting && (millis() - lastPoll > config.main.pollRate ||
+                              config.rf.rfInEnabled)) {
+      if (config.rf.rfInEnabled) {
+        tickRFInput(&controller);
+      } else {
+        tickInputs(&controller);
+        tickLEDs(&controller);
+      }
       uint8_t size;
       fillReport(currentReport, &size, &controller);
       if (memcmp(currentReport, previousReport, size) != 0 && readyForPacket) {
@@ -165,7 +205,7 @@ ISR(USART1_RX_vect, ISR_NAKED) {
 
       // Inputs:
       ::[UDR1_Reg] "m"(UDR1), // Memory location of UDR1
-      [ writePointer ] "I"(_SFR_IO_ADDR(
+      [writePointer] "I"(_SFR_IO_ADDR(
           USARTtoUSB_WritePtr)) // 8 bit pointer to USARTtoUSB write buffer
   );
 }
@@ -201,10 +241,10 @@ ISR(USART1_UDRE_vect, ISR_NAKED) {
 
       // Inputs:
       ::[UDR1_Reg] "m"(UDR1),
-      [ readPointer ] "I"(_SFR_IO_ADDR(
+      [readPointer] "I"(_SFR_IO_ADDR(
           USBtoUSART_ReadPtr)), // 7 bit pointer to USBtoUSART read buffer
-      [ writePointer ] "m"(
-          USBtoUSART_WritePtr),  // 7 bit pointer to USBtoUSART write buffer
-      [ UCSR1B_Reg ] "m"(UCSR1B) // Memory location of UDR1
+      [writePointer] "m"(
+          USBtoUSART_WritePtr), // 7 bit pointer to USBtoUSART write buffer
+      [UCSR1B_Reg] "m"(UCSR1B)  // Memory location of UDR1
   );
 }

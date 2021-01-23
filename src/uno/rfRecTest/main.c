@@ -47,19 +47,26 @@ int main(void) {
   initInputs();
   initReports();
   initRF(false, pgm_read_dword(&rfID));
-  writeRFConfig((uint8_t *)&config, 32);
-  writeRFConfig(((uint8_t *)&config) + 32, 32);
-  writeRFConfig(((uint8_t *)&config) + 64, 32);
+  uint8_t data[96];
+  uint8_t* ptr = data;
+  memcpy(ptr, &config.main, sizeof(config.main));
+  ptr += sizeof(config.main);
+  memcpy(ptr, &config.pins, sizeof(config.pins));
+  ptr += sizeof(config.pins);
+  memcpy(ptr, &config.axis, sizeof(config.axis));
+  ptr += sizeof(config.axis);
+  memcpy(ptr, &config.leds, sizeof(config.leds));
+  // pins, main, axis, leds 
+  writeRFConfig(data, 32);
+  writeRFConfig(data + 32, 32);
+  writeRFConfig(data + 64, 32);
   // for (int i = 0; i < 32*3; i++) { Serial_SendByte(((uint8_t *)&config)[i]);
   // }
   while (true) {
     if (rf_interrupt) {
-      Serial_SendByte('r');
       tickRFInput(&controller);
-      Serial_SendByte(controller.lt);
     }
   }
 }
 
 void Serial_SendByte2(const char DataByte) { Serial_SendByte(DataByte); }
-+

@@ -1,8 +1,8 @@
 #include "serial_handler.h"
 #include "input/inputs/direct.h"
 #include "input/inputs/ps2_cnt.h"
-#include "input/inputs/wii_ext.h"
 #include "input/inputs/rf.h"
+#include "input/inputs/wii_ext.h"
 #include "leds/leds.h"
 #include "serial_commands.h"
 #include "util/util.h"
@@ -31,7 +31,8 @@ bool handleCommand(uint8_t cmd) {
   }
   return true;
 }
-void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, uint8_t *data) {
+void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
+                                  uint8_t *data) {
   switch (cmd) {
   case COMMAND_WRITE_CONFIG: {
     uint8_t offset = *data;

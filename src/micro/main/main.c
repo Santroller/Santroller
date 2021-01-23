@@ -1,8 +1,11 @@
 #define ARDUINO_MAIN
+#include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
+#include "avr-nrf24l01/src/nrf24l01.h"
 #include "bootloader/bootloader.h"
 #include "config/eeprom.h"
 #include "input/input_handler.h"
 #include "input/inputs/direct.h"
+#include "input/inputs/rf.h"
 #include "leds/leds.h"
 #include "output/control_requests.h"
 #include "output/descriptors.h"
@@ -55,14 +58,26 @@ long lastPoll = 0;
 int main(void) {
   loadConfig();
   deviceType = config.main.subType;
-  initInputs();
+  config.rf.rfInEnabled = true;
+  setupMicrosTimer();
+  if (config.rf.rfInEnabled) {
+    config.rf.id = 0xc2292dde;
+    // initRF(false, config.rf.id, generate_crc32());
+    initRF(false, 0xc2292dde, 0x8581f888);
+  } else {
+    initInputs();
+  }
   initReports();
   USB_Init();
   sei();
   while (true) {
-    tickInputs(&controller);
+    if (config.rf.rfInEnabled) {
+      tickRFInput(&controller);
+    } else {
+      tickInputs(&controller);
+    }
     tickLEDs(&controller);
-    if (millis() - lastPoll > config.main.pollRate) {
+    if (millis() - lastPoll > config.main.pollRate || config.rf.rfInEnabled) {
       fillReport(&currentReport, &size, &controller);
       if (memcmp(&currentReport, &previousReport, size) != 0 &&
           Endpoint_IsINReady()) {
@@ -130,6 +145,22 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   Endpoint_Read_Control_Stream_LE(buf, data_len);
   processHIDWriteFeatureReport(cmd, data_len, buf);
   Endpoint_ClearStatusStage();
+  uint8_t buf2[32];
+  uint8_t packet = 0;
+  for (int i = 0; i < data_len; i += 30) {
+    memset(buf2, 0, sizeof(buf2));
+    buf2[0] = cmd;
+    buf2[1] = packet++;
+    uint8_t count = data_len - i;
+    memcpy(buf2 + 2, buf + i, count > 30 ? 30 : count);
+    while (nrf24_txFifoFull()) {
+      rf_interrupt = true;
+      tickRFInput(&controller);
+      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+    }
+    nrf24_writeAckPayload(buf2, 32);
+    rf_interrupt = true;
+  }
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
 void EVENT_CDC_Device_ControLineStateChanged(

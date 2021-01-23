@@ -16,6 +16,7 @@ OPTIMIZATION = s
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 VARIANT		 = uno
+PORT 		 = /dev/ttyACM0
 
 ARDWIINO_BOARD = uno
 VERSION = $(shell git describe --abbrev=0 --tags)
@@ -46,7 +47,7 @@ RAM_OFFSET            = 0x800282
 # r6 used for 32u4 optimization
 REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
 AVRDUDE_PROGRAMMER = arduino
-AVRDUDE_FLAGS = -b 115200 -P /dev/ttyACM0
+AVRDUDE_FLAGS = -b 115200 -P ${PORT}
 
 $(info $(shell mkdir -p $(BIN)))
 

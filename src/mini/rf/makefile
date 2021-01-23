@@ -13,7 +13,7 @@ MCU          = atmega328p
 ARCH         = AVR8
 BOARD        = UNO
 OPTIMIZATION = s
-F_CPU        = 16000000
+F_CPU        = 8000000
 F_USB        = $(F_CPU)
 VARIANT		 = uno
 PORT 		 = /dev/ttyACM0
@@ -36,13 +36,13 @@ SRC =   ../../../lib/avr-nrf24l01/src/nrf24l01.c ../../shared/bootloader/bootloa
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -Werror -flto -fuse-linker-plugin -I. -I ../shared -I ../../shared -I../../../lib -I../../variants/${VARIANT}
 CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"'
-LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin -Wl,--section-start=.rfrecv=0x7B00
+LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin -Wl,--section-start=.rfrecv=0x7000
 OBJDIR		 = obj
 BIN		 	 = bin
 TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}-main-${MCU}-${F_CPU}-rf
 RAM_OFFSET            = 0x800282
 AVRDUDE_PROGRAMMER = arduino
-AVRDUDE_FLAGS = -b 115200 -P ${PORT}
+AVRDUDE_FLAGS = -b 57600 -P ${PORT}
 
 $(info $(shell mkdir -p $(BIN)))
 

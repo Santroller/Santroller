@@ -42,13 +42,14 @@ void initDirectInput() {
 bool shouldSkipPin(uint8_t i) {
   // On the 328p, due to an inline LED, it isn't possible to check pin 13
 #ifdef __AVR_ATmega328P__
-  if (i == 13) return true;
+  if (i == 13 || i == 0 || i == 1) return true;
 #endif
   // Skip sda + scl when using peripherials utilising I2C
   if ((config.main.tiltType == MPU_6050) &&
       (i == PIN_WIRE_SDA || i == PIN_WIRE_SCL)) {
     return true;
   }
+  //Skip RF related pins (such as spi) when using an RF transmitter
 #ifdef RF_TX
   if (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
       i == PIN_SPI_SS || i == 8 || i == 2)
@@ -67,7 +68,7 @@ void findDigitalPin(void) {
   if (lookingForDigital) return;
   detectedPin = 0xff;
   stopReading();
-  for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
+  for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
     if (!shouldSkipPin(i)) { pinMode(i, INPUT_PULLUP); }
   }
   lookingForDigital = true;
@@ -86,7 +87,7 @@ void findAnalogPin(void) {
 
 void stopSearching(void) {
   if (lookingForDigital) {
-    for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
+    for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) { pinMode(i, INPUT); }
     }
   }

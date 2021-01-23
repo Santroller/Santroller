@@ -111,7 +111,7 @@ void nrf24_config(uint8_t channel, bool tx) {
   is_tx = tx;
 
   // Auto retransmit delay: 1000 us and no retransmits
-  nrf24_configRegister(SETUP_RETR, (0x0F << ARD) | (0x00 << ARC));
+  nrf24_configRegister(SETUP_RETR, (0x0F << ARD) | (0x01 << ARC));
   // Four id bytes (uint32_t)
   nrf24_configRegister(SETUP_AW, 0b10);
   nrf24_set_pa(RF_PA_LOW);
@@ -257,7 +257,7 @@ void nrf24_send(uint8_t *value, uint8_t payload_len) {
   // // /* Go to Standby-I first */
   // nrf24_ce_digitalWrite(LOW);
 
-  nrf24_configRegister(STATUS, _BV(TX_DS));
+  nrf24_configRegister(STATUS, _BV(TX_DS) | _BV(MAX_RT));
   // // Max retries exceeded
   // if (nrf24_getStatus() & _BV(MAX_RT)) {
   //   nrf24_flush_tx(); // Only going to be 1 packet int the FIFO at a time using

@@ -52,7 +52,7 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   // // Micro = int3 = pin tx1
   // // Uno = int0 = pin 2
   // // interrupt on falling edge of INT
-  if (!tx) {
+  // if (!tx) {
 #ifdef __AVR_ATmega32U4__
     // pinMode(1, INPUT_PULLUP);
     EICRA |= _BV(ISC31);
@@ -62,19 +62,18 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
     EICRA |= _BV(ISC01);
     EIMSK |= _BV(INT0);
 #endif
-  }
+  // }
 }
 
-bool tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {
-  bool ret = false;
-  // rf_interrupt = false;
+int tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {
+  bool ret = 2;
+  rf_interrupt = false;
   uint8_t status = nrf24_getStatus();
   if (((status & 0B1110) >> 1) == 0) {
-    ret = true;
+    ret = 1;
     nrf24_getData(arr, 0);
     nrf24_configRegister(STATUS, (1 << RX_DR));
   }
-  nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
   nrf24_send(data, len);
   return ret;
 }

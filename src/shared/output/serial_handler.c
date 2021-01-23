@@ -59,7 +59,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     dbuf2[1] = 0;
     dbuf2[2] = true;
     uint8_t len;
-    // nrf24_flush_tx();
+    nrf24_flush_tx();
     nrf24_flush_rx();
     while (true) {
       if (!nrf24_txFifoFull()) { nrf24_writeAckPayload(dbuf2, 3); }

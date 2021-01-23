@@ -35,21 +35,25 @@ int main(void) {
   sei();
   setupMicrosTimer();
   config.rf.rfInEnabled = false;
+  config.main.pollRate = 0;
   initInputs();
   initReports();
+  // Serial_Init(115200, true);
   // id = generate_crc32();
   // initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
   initRF(true, 0x8581f888, 0xc2292dde);
   while (true) {
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
-      controller.l_x = rand();
-      if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
-        lastPoll = millis();
+      if ((memcmp(&controller, &previousController, sizeof(Controller_t)) !=
+               0 ||
+           millis() - lastPoll > 100)) {
         uint8_t data[32];
-        if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
+        uint8_t ret =
+            tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t));
+        if (ret == 1) {
           uint8_t cmd = data[0];
-          uint8_t offset = 32 * data[1];
+          uint8_t offset = 29 * data[1];
           bool isRead = data[2];
           // The first byte of COMMAND_WRITE_CONFIG is an offset.
           // Since rf has its own offset, we can just combine both to get a
@@ -58,15 +62,19 @@ int main(void) {
             processHIDReadFeatureReport(cmd);
           } else {
             if (cmd == COMMAND_WRITE_CONFIG) {
-              data[4] += offset;
+              data[3] += offset;
               // 3 bytes for rf header
               processHIDWriteFeatureReport(cmd, 29, data + 3);
             } else {
               handleCommand(cmd);
             }
+            // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
           }
         }
-        memcpy(&previousController, &controller, sizeof(Controller_t));
+        if (ret) {
+          memcpy(&previousController, &controller, sizeof(Controller_t));
+          lastPoll = millis();
+        }
       }
     }
   }

@@ -150,7 +150,6 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
     uint8_t packet = 0;
     if (data_len == 0) data_len = 1;
     for (uint8_t i = 0; i < data_len; i += 29) {
-      memset(buf2, 0, sizeof(buf2));
       buf2[0] = cmd;
       buf2[1] = packet++;
       buf2[2] = false;

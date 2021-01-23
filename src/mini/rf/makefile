@@ -16,7 +16,7 @@ OPTIMIZATION = s
 F_CPU        = 8000000
 F_USB        = $(F_CPU)
 VARIANT		 = uno
-PORT 		 = /dev/ttyACM0
+PORT 		 = /dev/ttyUSB0
 
 ARDWIINO_BOARD = mini
 VERSION = $(shell git describe --abbrev=0 --tags)

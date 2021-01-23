@@ -53,7 +53,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
 }
 uint8_t dbuf[64];
 void processHIDReadFeatureReport(uint8_t cmd) {
-  if (config.rf.rfInEnabled && cmd < COMMAND_READ_CONFIG && cmd != COMMAND_GET_RF_RECV_CPU_INFO) {
+  if (config.rf.rfInEnabled && cmd < COMMAND_READ_CONFIG && cmd != COMMAND_GET_CPU_INFO) {
     uint8_t dbuf2[3];
     dbuf2[0] = cmd;
     dbuf2[1] = 0;
@@ -80,7 +80,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     if (size2 < size) { size = size2; }
     memcpy(dbuf + 1, ((uint8_t *)&config) + index, size);
     size = size + 1;
-  } else if (cmd == COMMAND_GET_CPU_INFO || cmd == COMMAND_GET_RF_RECV_CPU_INFO) {
+  } else if (cmd == COMMAND_GET_CPU_INFO || cmd == COMMAND_GET_RF_CPU_INFO) {
     size = sizeof(cpu_info_t) + 1;
     cpu_info_t *info = (cpu_info_t *)(dbuf + 1);
     strcpy_P(info->board, PSTR(ARDWIINO_BOARD));

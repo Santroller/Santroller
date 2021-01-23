@@ -7,7 +7,7 @@
 #include <stdlib.h>
 Pin_t pinData[16];
 int validPins = 0;
-uint8_t detectedPin;
+uint8_t detectedPin = 0xff;
 bool lookingForDigital = false;
 bool lookingForAnalog = false;
 int lastAnalogValue[NUM_ANALOG_INPUTS];

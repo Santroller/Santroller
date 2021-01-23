@@ -72,7 +72,7 @@ int main(void) {
   sei();
   while (true) {
     if (config.rf.rfInEnabled) {
-      tickRFInput((uint8_t*)&controller, sizeof(XInput_Data_t));
+      tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
     } else {
       tickInputs(&controller);
     }
@@ -148,18 +148,21 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   if (config.rf.rfInEnabled) {
     uint8_t buf2[32];
     uint8_t packet = 0;
-    for (int i = 0; i < data_len; i += 29) {
+    if (data_len == 0) data_len = 1;
+    for (uint8_t i = 0; i < data_len; i += 29) {
       memset(buf2, 0, sizeof(buf2));
       buf2[0] = cmd;
       buf2[1] = packet++;
       buf2[2] = false;
       uint8_t count = data_len - i;
-      memcpy(buf2 + 3, buf + i, count > 29 ? 29 : count);
+      if (count > 29) count = 29;
+      memcpy(buf2 + 3, buf + i, count);
       while (nrf24_txFifoFull()) {
         rf_interrupt = true;
-        tickRFInput((uint8_t*)&controller, sizeof(XInput_Data_t));
+        tickRFInput(buf, 0);
         nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
       }
+      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
       nrf24_writeAckPayload(buf2, 32);
       rf_interrupt = true;
     }

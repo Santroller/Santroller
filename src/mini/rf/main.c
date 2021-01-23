@@ -3,6 +3,7 @@
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
+#include "device_comms.h"
 #include "input/input_handler.h"
 #include "input/inputs/direct.h"
 #include "input/inputs/rf.h"
@@ -53,13 +54,16 @@ int main(void) {
           // The first byte of COMMAND_WRITE_CONFIG is an offset.
           // Since rf has its own offset, we can just combine both to get a
           // result offset
-          if (cmd == COMMAND_WRITE_CONFIG) { data[3] += offset; }
           if (isRead) {
             processHIDReadFeatureReport(cmd);
           } else {
-            // 3 bytes for rf header
-            processHIDWriteFeatureReport(cmd, 29, data + 3);
-            handleCommand(cmd);
+            if (cmd == COMMAND_WRITE_CONFIG) {
+              data[4] += offset;
+              // 3 bytes for rf header
+              processHIDWriteFeatureReport(cmd, 29, data + 3);
+            } else {
+              handleCommand(cmd);
+            }
           }
         }
         memcpy(&previousController, &controller, sizeof(Controller_t));
@@ -71,5 +75,4 @@ int main(void) {
 void writeToUSB(const void *const Buffer, uint8_t Length) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
-  nrf24_flush_rx();
 }

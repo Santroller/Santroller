@@ -45,6 +45,7 @@ int main(void) {
   while (true) {
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
+      // Since we receive data via acks, we need to make sure data is always being sent, so we send data every 100ms regardless.
       if ((memcmp(&controller, &previousController, sizeof(Controller_t)) !=
                0 ||
            millis() - lastPoll > 100)) {
@@ -55,13 +56,13 @@ int main(void) {
           uint8_t cmd = data[0];
           uint8_t offset = 29 * data[1];
           bool isRead = data[2];
-          // The first byte of COMMAND_WRITE_CONFIG is an offset.
-          // Since rf has its own offset, we can just combine both to get a
-          // result offset
           if (isRead) {
             processHIDReadFeatureReport(cmd);
           } else {
             if (cmd == COMMAND_WRITE_CONFIG) {
+              // The first byte of COMMAND_WRITE_CONFIG is an offset.
+              // Since rf has its own offset, we can just combine both to get a
+              // result offset
               data[3] += offset;
               // 3 bytes for rf header
               processHIDWriteFeatureReport(cmd, 29, data + 3);

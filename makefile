@@ -60,7 +60,26 @@ mini-rf:
 	$(MAKE) -C src/micro/main avrdude
 	$(MAKE) -C src/mini/rf
 	$(MAKE) -C src/mini/rf avrdude PORT=/dev/ttyUSB0
-
+unomini-rf:
+	$(MAKE) -C src/uno
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	dfu-programmer $(UNOMCU) flash output/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU) launch
+	sleep 1
+	$(MAKE) -C src/uno/main avrdude
+	sleep 1
+	stty -F /dev/ttyACM0 1200
+	sleep 1
+	$(MAKE) -C src/uno/usb dfu MCU=$(UNOMCU)
+	# sleep 1
+	# stty -F /dev/ttyACM1 1200
+	# sleep 1
+	# $(MAKE) -C src/uno/usb dfu MCU=$(UNOMCU)
+	$(MAKE) -C src/mini/rf
+	$(MAKE) -C src/mini/rf avrdude PORT=/dev/ttyUSB0
 uno-rf:
 	$(MAKE) -C src/uno
 	sleep 0.5

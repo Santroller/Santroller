@@ -44,7 +44,10 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
     return;
   }
   case COMMAND_SET_LEDS: {
-    uint8_t *dest = (uint8_t *)controller.leds;
+    uint8_t offset = *data;
+    data++;
+    data_len--;
+    uint8_t *dest = ((uint8_t *)controller.leds) + offset;
     while (data_len--) { *(dest++) = *(data++); }
     return;
   }
@@ -54,15 +57,14 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
 uint8_t dbuf[64];
 void processHIDReadFeatureReport(uint8_t cmd) {
   if (config.rf.rfInEnabled && cmd < COMMAND_READ_CONFIG && cmd != COMMAND_GET_CPU_INFO) {
-    uint8_t dbuf2[3];
+    uint8_t dbuf2[2];
     dbuf2[0] = cmd;
-    dbuf2[1] = 0;
-    dbuf2[2] = true;
+    dbuf2[1] = true;
     uint8_t len;
     nrf24_flush_tx();
     nrf24_flush_rx();
     while (true) {
-      if (!nrf24_txFifoFull()) { nrf24_writeAckPayload(dbuf2, 3); }
+      if (!nrf24_txFifoFull()) { nrf24_writeAckPayload(dbuf2, 2); }
       rf_interrupt = true;
       len = tickRFInput(dbuf, 0);
       if (len && len != sizeof(XInput_Data_t)) break;

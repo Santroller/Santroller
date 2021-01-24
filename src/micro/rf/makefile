@@ -36,7 +36,7 @@ PID=$(if $(filter-out $(F_CPU),8000000),0x9206,0x9204)
 SRC =   ../../../lib/avr-nrf24l01/src/nrf24l01.c ../../shared/bootloader/bootloader.c ../../shared/controller/guitar_includes.c ../../shared/output/reports.c ../../shared/util/util.c ../../shared/output/serial_handler.c $(shell find ../../shared/output/reports/ -type f -name '*.c*') $(shell find ../../../lib/spi -type f -name '*.c*') $(shell find ../../../lib/i2c -type f -name '*.c*') $(shell find ../../../lib/mpu6050 -type f -name '*.c*') ../../shared/leds/leds.c $(shell find ../../shared/input -type f -name '*.c*') $(shell find ../../shared/config -type f -name '*.c*') $(shell find . -type f -name '*.c*')  $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I../../shared/output -I ../../shared -I../../variants/${VARIANT} -Werror -flto -fuse-linker-plugin -I. -I ../../shared -I ../../shared -I../../../lib
-CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DPID=${PID}
+CC_FLAGS    += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DMCU='"${MCU}"' -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' -DPID=${PID} -DRF_TX=true
 LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -Wl,--section-start=.rfrecv=0x7B00
 OBJDIR		 = obj
 BIN		 	 = bin

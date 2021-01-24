@@ -44,30 +44,25 @@ int main(void) {
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
       // Since we receive data via acks, we need to make sure data is always
-      // being sent, so we send data every 100ms regardless.
+      // being sent, so we send data every 4ms regardless.
       if ((memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0 ||
-           millis() - lastPoll > 100)) {
+           millis() - lastPoll > 4)) {
         lastPoll = millis();
         uint8_t data[32];
         if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
           uint8_t cmd = data[0];
-          uint8_t offset = 29 * data[1];
-          bool isRead = data[2];
+          bool isRead = data[1];
           if (isRead) {
             processHIDReadFeatureReport(cmd);
           } else {
             if (cmd == COMMAND_WRITE_CONFIG) {
-              // The first byte of COMMAND_WRITE_CONFIG is an offset.
-              // Since rf has its own offset, we can just combine both to get a
-              // result offset
-              data[3] += offset;
-              // 3 bytes for rf header
-              processHIDWriteFeatureReport(cmd, 29, data + 3);
+              // 2 bytes for rf header
+              processHIDWriteFeatureReport(cmd, 30, data + 2);
             } else {
               handleCommand(cmd);
             }
-            // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
           }
+          // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));
       }

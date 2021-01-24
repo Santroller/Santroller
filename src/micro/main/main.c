@@ -139,25 +139,22 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 #endif
 }
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
-  uint8_t buf[64];
+  uint8_t buf[66];
   Endpoint_ClearSETUP();
-  Endpoint_Read_Control_Stream_LE(buf, data_len);
-  processHIDWriteFeatureReport(cmd, data_len, buf);
+  Endpoint_Read_Control_Stream_LE(buf+2, data_len);
+  processHIDWriteFeatureReport(cmd, data_len, buf+2);
   Endpoint_ClearStatusStage();
   if (config.rf.rfInEnabled) {
     uint8_t buf2[32];
-    uint8_t packet = 0;
-    buf2[0] = cmd;
-    buf2[1] = packet++;
-    buf2[2] = false;
-    memcpy(buf2 + 3, buf, data_len);
+    buf[0] = cmd;
+    buf[1] = false;
     while (nrf24_txFifoFull()) {
       rf_interrupt = true;
-      tickRFInput(buf, 0);
+      tickRFInput(buf2, 0);
       nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
     }
     nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-    nrf24_writeAckPayload(buf2, 32);
+    nrf24_writeAckPayload(buf, 32);
     rf_interrupt = true;
   }
 }

@@ -49,12 +49,17 @@ bool shouldSkipPin(uint8_t i) {
       (i == PIN_WIRE_SDA || i == PIN_WIRE_SCL)) {
     return true;
   }
-  //Skip RF related pins (such as spi) when using an RF transmitter
+  // Skip RF related pins (such as spi) when using an RF transmitter
 #ifdef RF_TX
-  // 0 and 1 on 32u4, 8 and 2 on 328p
+#  ifdef __AVR_ATmega328P__
   if (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
       i == PIN_SPI_SS || i == 8 || i == 2)
     return true;
+#  else
+  if (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
+      i == PIN_SPI_SS || i == 0 || i == 1)
+    return true;
+#  endif
 #endif
   // Skip SPI pins when using peripherials that utilise SPI
   if ((config.main.fretLEDMode == APA102) &&

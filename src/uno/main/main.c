@@ -39,11 +39,10 @@ int main(void) {
   }
   initReports();
   uint8_t packetCount = 0;
-  uint8_t packetCount2 = 0;
   uint8_t state = 0;
   uint8_t *buf;
+  uint8_t cmd;
   bool isConfig = false;
-  bool rfWriting = false;
   uint8_t offset;
   while (true) {
     //================================================================================
@@ -97,19 +96,18 @@ int main(void) {
           state = 0;
           break;
         } else if (state == 3) {
+          cmd = data;
           if (data == COMMAND_WRITE_CONFIG) {
             buf = (uint8_t *)&config;
             isConfig = true;
           } else if (data == COMMAND_SET_LEDS) {
             buf = (uint8_t *)&controller.leds;
           } else {
-            handleCommand(data);
             state = 7;
             break;
           }
           state = 4;
           packetCount--;
-          packetCount2 = data;
         } else if (state == 4) {
           offset = data;
           buf += offset;
@@ -126,9 +124,11 @@ int main(void) {
             break;
           }
         }
-        if (state == 7) {
-          state = 0;
-          while (nrf24_txFifoFull()) {
+      } while (--count);
+      if (state == 7) {
+        state = 0;
+        if (config.rf.rfInEnabled) {
+          while (!nrf24_txFifoEmpty()) {
             rf_interrupt = true;
             tickRFInput(buf, 0);
             nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
@@ -136,24 +136,36 @@ int main(void) {
           nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
           nrf24_csn_digitalWrite(LOW);
           spi_transfer(W_ACK_PAYLOAD | 1);
-          uint8_t tmp = isConfig ? COMMAND_WRITE_CONFIG : COMMAND_SET_LEDS;
-          nrf24_transmitSync(&tmp, 1);
-          tmp = 0;
-          nrf24_transmitSync(&tmp, 1);
-          nrf24_transmitSync(&tmp, 1);
-          nrf24_transmitSync(&offset, 1);
-          nrf24_transmitSync((isConfig ? (uint8_t*)&config : (uint8_t*)&controller.leds)+offset,
-                             packetCount2);
+          spi_transfer(cmd);
+          // reading (0 for false, as we are writing)
+          spi_transfer(false);
+          if (cmd == COMMAND_SET_LEDS || cmd == COMMAND_WRITE_CONFIG) {
+            spi_transfer(offset);
+            nrf24_transmitSync(
+                (isConfig ? (uint8_t *)&config : (uint8_t *)&controller.leds) +
+                    offset,
+                29);
+          }
           nrf24_csn_digitalWrite(HIGH);
           isConfig = false;
+          rf_interrupt = true;
+          while (!nrf24_txFifoEmpty()) {
+            rf_interrupt = true;
+            tickRFInput(buf, 0);
+            nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+          }
         }
-      } while (--count);
+        if (cmd == COMMAND_REBOOT) {
+        _delay_ms(100);
+        }
+        handleCommand(cmd);
+      }
       // Save new pointer position
       USARTtoUSB_ReadPtr = tmp & 0xFF;
       // With RF, this stuff gets handled on the transmitter side, not the
       // receiver.
-    } else if (!rfWriting && (millis() - lastPoll > config.main.pollRate ||
-                              config.rf.rfInEnabled)) {
+    } else if (millis() - lastPoll > config.main.pollRate ||
+               config.rf.rfInEnabled) {
       if (config.rf.rfInEnabled) {
         tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
       } else {

@@ -68,18 +68,32 @@ int main(void) {
   USB_Init();
   initInputs();
   initReports();
-  initRF(true, pgm_read_dword(&rfID));
+  // initRF(true, pgm_read_dword(&rfID));
+  initRF(true, 0x8581f888, 0xc2292dde);
   while (true) {
-    if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
+    if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
       tickLEDs(&controller);
-      if (memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0) {
+      // Since we receive data via acks, we need to make sure data is always
+      // being sent, so we send data every 4ms regardless.
+      if (memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0 ||
+          millis() - lastPoll > 4) {
         lastPoll = millis();
 
         uint8_t data[12];
-        if (tickRFTX(&controller, data)) {
-          // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]);
-          // }
+        if (tickRFTX(&controller, data, sizeof(XInput_Data_t))) {
+          uint8_t cmd = data[0];
+          bool isRead = data[1];
+          if (isRead) {
+            processHIDReadFeatureReport(cmd);
+          } else {
+            if (cmd == COMMAND_WRITE_CONFIG) {
+              // 2 bytes for rf header
+              processHIDWriteFeatureReport(cmd, 30, data + 2);
+            } else {
+              handleCommand(cmd);
+            }
+          }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));
       }

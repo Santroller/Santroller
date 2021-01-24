@@ -71,53 +71,52 @@ int main(void) {
   USB_Init();
   sei();
   while (true) {
+    USB_USBTask();
     if (config.rf.rfInEnabled) {
       tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
     } else {
       tickInputs(&controller);
+      tickLEDs(&controller);
+      if (millis() - lastPoll < config.main.pollRate) { continue; }
     }
-    tickLEDs(&controller);
-    if (millis() - lastPoll > config.main.pollRate || config.rf.rfInEnabled) {
-      fillReport(&currentReport, &size, &controller);
-      if (memcmp(&currentReport, &previousReport, size) != 0 &&
-          Endpoint_IsINReady()) {
-        lastPoll = millis();
-        uint8_t *data = (uint8_t *)&currentReport;
-        uint8_t rid = *data;
-        switch (rid) {
-        case REPORT_ID_XINPUT:
-          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
-          break;
-        case REPORT_ID_MIDI:
-          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-          // The "reportid" is actually not a real thing on midi, so we need to
-          // strip it before we send data.
-          data++;
-          size--;
-          break;
-        case REPORT_ID_GAMEPAD:
-          // Consoles don't support multiple report ids, so we strip them here
-          // too. PS3's technically do support them, but at the cost of not
-          // being able to identify the controller.
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          data++;
-          size--;
-          break;
-        case REPORT_ID_KBD:
-        case REPORT_ID_MOUSE:
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          break;
-        }
-        memcpy(&previousReport, &currentReport, size);
-        Endpoint_Write_Stream_LE(data, size, NULL);
-        Endpoint_ClearIN();
+    fillReport(&currentReport, &size, &controller);
+    if (memcmp(&currentReport, &previousReport, size) != 0 &&
+        Endpoint_IsINReady()) {
+      lastPoll = millis();
+      uint8_t *data = (uint8_t *)&currentReport;
+      uint8_t rid = *data;
+      switch (rid) {
+      case REPORT_ID_XINPUT:
+        Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+        break;
+      case REPORT_ID_MIDI:
+        Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+        // The "reportid" is actually not a real thing on midi, so we need to
+        // strip it before we send data.
+        data++;
+        size--;
+        break;
+      case REPORT_ID_GAMEPAD:
+        // Consoles don't support multiple report ids, so we strip them here
+        // too. PS3's technically do support them, but at the cost of not
+        // being able to identify the controller.
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        data++;
+        size--;
+        break;
+      case REPORT_ID_KBD:
+      case REPORT_ID_MOUSE:
+        Endpoint_SelectEndpoint(HID_EPADDR_IN);
+        break;
+      }
+      memcpy(&previousReport, &currentReport, size);
+      Endpoint_Write_Stream_LE(data, size, NULL);
+      Endpoint_ClearIN();
 
 #ifndef MULTI_ADAPTOR
-        MIDI_Device_USBTask(&midiInterface);
+      MIDI_Device_USBTask(&midiInterface);
 #endif
-      }
     }
-    USB_USBTask();
   }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
@@ -148,23 +147,18 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   if (config.rf.rfInEnabled) {
     uint8_t buf2[32];
     uint8_t packet = 0;
-    if (data_len == 0) data_len = 1;
-    for (uint8_t i = 0; i < data_len; i += 29) {
-      buf2[0] = cmd;
-      buf2[1] = packet++;
-      buf2[2] = false;
-      uint8_t count = data_len - i;
-      if (count > 29) count = 29;
-      memcpy(buf2 + 3, buf + i, count);
-      while (nrf24_txFifoFull()) {
-        rf_interrupt = true;
-        tickRFInput(buf, 0);
-        nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      }
-      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      nrf24_writeAckPayload(buf2, 32);
+    buf2[0] = cmd;
+    buf2[1] = packet++;
+    buf2[2] = false;
+    memcpy(buf2 + 3, buf, data_len);
+    while (nrf24_txFifoFull()) {
       rf_interrupt = true;
+      tickRFInput(buf, 0);
+      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
     }
+    nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+    nrf24_writeAckPayload(buf2, 32);
+    rf_interrupt = true;
   }
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }

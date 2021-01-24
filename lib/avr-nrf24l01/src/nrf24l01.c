@@ -114,7 +114,7 @@ void nrf24_config(uint8_t channel, bool tx) {
   nrf24_configRegister(SETUP_RETR, (0x0F << ARD) | (0x01 << ARC));
   // Four id bytes (uint32_t)
   nrf24_configRegister(SETUP_AW, 0b10);
-  nrf24_set_pa(RF_PA_LOW);
+  nrf24_set_pa(RF_PA_MIN);
 
   // Only p_type modules support this
   uint8_t before_toggle = nrf24_readRegister1(FEATURE);

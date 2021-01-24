@@ -28,11 +28,11 @@ uint32_t generate_crc32(void) {
   return crc;
 }
 #ifdef __AVR_ATmega32U4__
-#  define CE PIN_A0
+#  define CE 0
 #  define CSN 10
 #else
-#  define CE PIN_SPI_SS
-#  define CSN 8
+#  define CE 8
+#  define CSN PIN_SPI_SS
 #endif
 void nrf24_ce_digitalWrite(uint8_t state) { digitalWrite(CE, state); }
 void nrf24_csn_digitalWrite(uint8_t state) { digitalWrite(CSN, state); }
@@ -66,7 +66,7 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
 }
 
 int tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {
-  bool ret = 2;
+  bool ret = 0;
   rf_interrupt = false;
   uint8_t status = nrf24_getStatus();
   if (((status & 0B1110) >> 1) == 0) {

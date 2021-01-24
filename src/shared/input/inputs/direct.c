@@ -51,6 +51,7 @@ bool shouldSkipPin(uint8_t i) {
   }
   //Skip RF related pins (such as spi) when using an RF transmitter
 #ifdef RF_TX
+  // 0 and 1 on 32u4, 8 and 2 on 328p
   if (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
       i == PIN_SPI_SS || i == 8 || i == 2)
     return true;

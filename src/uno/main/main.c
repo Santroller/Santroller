@@ -32,16 +32,19 @@ int main(void) {
   config.rf.rfInEnabled = true;
   if (config.rf.rfInEnabled) {
     config.rf.id = 0xc2292dde;
-    initRF(false, config.rf.id, generate_crc32());
+    // initRF(false, config.rf.id, generate_crc32());
+    initRF(false, 0xc2292dde, 0x8581f888);
   } else {
     initInputs();
   }
   initReports();
   uint8_t packetCount = 0;
+  uint8_t packetCount2 = 0;
   uint8_t state = 0;
   uint8_t *buf;
   bool isConfig = false;
   bool rfWriting = false;
+  uint8_t offset;
   while (true) {
     //================================================================================
     // USARTtoUSB
@@ -96,59 +99,53 @@ int main(void) {
         } else if (state == 3) {
           if (data == COMMAND_WRITE_CONFIG) {
             buf = (uint8_t *)&config;
-            state = 4;
             isConfig = true;
           } else if (data == COMMAND_SET_LEDS) {
             buf = (uint8_t *)&controller.leds;
-            state = 5;
           } else {
-            if (data == COMMAND_WRITE_SUBTYPE) {
-              if (config.rf.rfInEnabled) {
-                nrf24_csn_digitalWrite(LOW);
-                spi_transfer(W_ACK_PAYLOAD | 1);
-                spi_transfer(0);
-                nrf24_csn_digitalWrite(HIGH);
-                Serial_SendByte('A');
-                // Wait for the ACK to send
-                _delay_ms(10);
-                // Swap to TX mode
-                initRF(true, config.rf.id, generate_crc32());
-                _delay_us(500);
-                Serial_SendByte('B');
-                rf_interrupt = true;
-                rfWriting = true;
-                uint8_t *t = (uint8_t *)&config;
-                uint8_t p = 0;
-                nrf24_configRegister(STATUS, _BV(MAX_RT));
-                for (int i = 0; i < sizeof(Configuration_t);
-                     i += sizeof(XInput_Data_t)) {
-                  nrf24_send(t);
-                  t += sizeof(XInput_Data_t);
-                  while ((!(nrf24_getStatus() & _BV(TX_DS)))) {}
-                  Serial_SendByte('C' + (p++));
-                }
-              }
-            }
             handleCommand(data);
-            state = 0;
+            state = 7;
             break;
           }
+          state = 4;
           packetCount--;
+          packetCount2 = data;
         } else if (state == 4) {
-          buf += data;
+          offset = data;
+          buf += offset;
           state = 5;
         } else if (state == 5) {
           packetCount--;
           *(buf++) = data;
           if (packetCount == 0) {
-            state = 0;
+            state = 7;
             if (isConfig) {
-              isConfig = false;
               eeprom_update_block(&config, &config_pointer,
                                   sizeof(Configuration_t));
             }
             break;
           }
+        }
+        if (state == 7) {
+          state = 0;
+          while (nrf24_txFifoFull()) {
+            rf_interrupt = true;
+            tickRFInput(buf, 0);
+            nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+          }
+          nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+          nrf24_csn_digitalWrite(LOW);
+          spi_transfer(W_ACK_PAYLOAD | 1);
+          uint8_t tmp = isConfig ? COMMAND_WRITE_CONFIG : COMMAND_SET_LEDS;
+          nrf24_transmitSync(&tmp, 1);
+          tmp = 0;
+          nrf24_transmitSync(&tmp, 1);
+          nrf24_transmitSync(&tmp, 1);
+          nrf24_transmitSync(&offset, 1);
+          nrf24_transmitSync((isConfig ? (uint8_t*)&config : (uint8_t*)&controller.leds)+offset,
+                             packetCount2);
+          nrf24_csn_digitalWrite(HIGH);
+          isConfig = false;
         }
       } while (--count);
       // Save new pointer position
@@ -158,7 +155,7 @@ int main(void) {
     } else if (!rfWriting && (millis() - lastPoll > config.main.pollRate ||
                               config.rf.rfInEnabled)) {
       if (config.rf.rfInEnabled) {
-        tickRFInput(&controller);
+        tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
       } else {
         tickInputs(&controller);
         tickLEDs(&controller);

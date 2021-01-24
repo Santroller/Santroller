@@ -21,11 +21,10 @@
 #include <stdlib.h>
 #include <util/delay.h>
 Controller_t controller;
-Controller_t previousController;
+Controller_t prevCtrl;
 Configuration_t newConfig;
 long lastPoll = 0;
 volatile bool send_message = false;
-// eefdc362
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0x8581f888;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xc2292dde;
 // TODO: we can use millis here to work out if a controller has been out of use
@@ -35,7 +34,6 @@ int main(void) {
   sei();
   setupMicrosTimer();
   config.rf.rfInEnabled = false;
-  config.main.pollRate = 0;
   initInputs();
   initReports();
   // Serial_Init(115200, true);
@@ -45,14 +43,13 @@ int main(void) {
   while (true) {
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
-      // Since we receive data via acks, we need to make sure data is always being sent, so we send data every 100ms regardless.
-      if ((memcmp(&controller, &previousController, sizeof(Controller_t)) !=
-               0 ||
+      // Since we receive data via acks, we need to make sure data is always
+      // being sent, so we send data every 100ms regardless.
+      if ((memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0 ||
            millis() - lastPoll > 100)) {
+        lastPoll = millis();
         uint8_t data[32];
-        uint8_t ret =
-            tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t));
-        if (ret == 1) {
+        if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
           uint8_t cmd = data[0];
           uint8_t offset = 29 * data[1];
           bool isRead = data[2];
@@ -72,10 +69,7 @@ int main(void) {
             // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
           }
         }
-        if (ret) {
-          memcpy(&previousController, &controller, sizeof(Controller_t));
-          lastPoll = millis();
-        }
+        memcpy(&prevCtrl, &controller, sizeof(Controller_t));
       }
     }
   }

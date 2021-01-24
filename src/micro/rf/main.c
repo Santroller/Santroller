@@ -56,7 +56,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
 };
 __attribute__((section(".rfrecv"))) uint32_t rfID = 0xDEADBEEF;
 Controller_t controller;
-Controller_t previousController;
+Controller_t prevCtrl;
 Configuration_t newConfig;
 long lastPoll = 0;
 volatile bool send_message = false;
@@ -73,7 +73,7 @@ int main(void) {
     if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
       tickInputs(&controller);
       tickLEDs(&controller);
-      if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
+      if (memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0) {
         lastPoll = millis();
 
         uint8_t data[12];
@@ -81,7 +81,7 @@ int main(void) {
           // for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]);
           // }
         }
-        memcpy(&previousController, &controller, sizeof(Controller_t));
+        memcpy(&prevCtrl, &controller, sizeof(Controller_t));
       }
     }
     USB_USBTask();

@@ -1,6 +1,5 @@
 
 #define ARDUINO_MAIN
-#include "../shared/device_comms.h"
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "config/eeprom.h"
@@ -10,6 +9,7 @@
 #include "leds/leds.h"
 #include "output/reports.h"
 #include "output/serial_commands.h"
+#include "output/serial_handler.h"
 #include "pins_arduino.h"
 #include "util/util.h"
 #include <avr/interrupt.h>
@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <util/delay.h>
 Controller_t controller;
-Controller_t previousController;
+Controller_t prevCtrl;
 Configuration_t newConfig;
 long lastPoll = 0;
 volatile bool send_message = false;
@@ -32,41 +32,49 @@ int main(void) {
   loadConfig();
   sei();
   setupMicrosTimer();
-  Serial_Init(115200, true);
-  config.main.inputType = DIRECT;
-  config.pins.a = 19;
+  config.rf.rfInEnabled = false;
   initInputs();
   initReports();
+  // Serial_Init(115200, true);
   // id = generate_crc32();
-  initRF(0, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  // initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  initRF(true, 0x8581f888, 0xc2292dde);
   while (true) {
-    if (millis() - lastPoll > config.main.pollRate && rf_interrupt) {
+    if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
-      tickLEDs(&controller);
-      controller.l_x = rand();
-      if (memcmp(&controller, &previousController, sizeof(Controller_t)) != 0) {
+      // Since we receive data via acks, we need to make sure data is always
+      // being sent, so we send data every 100ms regardless.
+      if ((memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0 ||
+           millis() - lastPoll > 100)) {
         lastPoll = millis();
-        // We got an ack of some sort, send one last packet and then jump to
-        // config mode
-        if (tickRFTX(&controller)) {
-          nrf24_flush_rx();
-          initRF(false, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
-          _delay_us(500);
-          break;
+        uint8_t data[32];
+        if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
+          uint8_t cmd = data[0];
+          uint8_t offset = 29 * data[1];
+          bool isRead = data[2];
+          if (isRead) {
+            processHIDReadFeatureReport(cmd);
+          } else {
+            if (cmd == COMMAND_WRITE_CONFIG) {
+              // The first byte of COMMAND_WRITE_CONFIG is an offset.
+              // Since rf has its own offset, we can just combine both to get a
+              // result offset
+              data[3] += offset;
+              // 3 bytes for rf header
+              processHIDWriteFeatureReport(cmd, 29, data + 3);
+            } else {
+              handleCommand(cmd);
+            }
+            // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
+          }
         }
-        memcpy(&previousController, &controller, sizeof(Controller_t));
+        memcpy(&prevCtrl, &controller, sizeof(Controller_t));
       }
     }
   }
-  Serial_SendByte('A');
-  Serial_SendByte(nrf24_getStatus());
-  uint8_t data[sizeof(XInput_Data_t)] = {};
-  while (true) {
-    if (rf_interrupt) {
-      Serial_SendByte(nrf24_getStatus());
-      if (tickRFInput((Controller_t *)data)) {
-        for (int i = 0; i < sizeof(data); i++) { Serial_SendByte(data[i]); }
-      }
-    }
-  }
+}
+
+void writeToUSB(const void *const Buffer, uint8_t Length) {
+  uint8_t data[32];
+  tickRFTX((uint8_t *)Buffer, data, Length);
 }

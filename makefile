@@ -140,8 +140,8 @@ build-all:
 
 # Arduino pro mini
 # main processor - rf transmitter
-	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega2560 ARDWIINO_BOARD=mini VARIANT=uno F_CPU=8000000
-	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega2560 ARDWIINO_BOARD=mini VARIANT=uno F_CPU=16000000
+	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega328p ARDWIINO_BOARD=mini VARIANT=uno F_CPU=8000000
+	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega328p ARDWIINO_BOARD=mini VARIANT=uno F_CPU=16000000
 
 # Mega 2560 
 # usb processor
@@ -207,6 +207,7 @@ build-all:
 	cp -rfv src/uno/usb/bin/*.hex output/
 	cp -rfv src/uno/main/bin/*.hex output/
 	cp -rfv src/uno/rf/bin/*.hex output/
+	cp -rfv src/mini/rf/bin/*.hex output/
 	cp -rfv src/micro/main/bin/*.hex output/
 	cp -rfv src/micro/rf/bin/*.hex output/
 	cp -rfv submodules/arduino-usbserial-bootloader/out/*.hex output/

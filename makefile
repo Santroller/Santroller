@@ -136,12 +136,12 @@ build-all:
 # main processor
 	$(MAKE) -C src/uno/main OBJDIR=obj/uno MCU=atmega328p ARDWIINO_BOARD=uno VARIANT=uno
 # main processor - rf transmitter
-	$(MAKE) -C src/uno/rf OBJDIR=obj/uno MCU=atmega328p ARDWIINO_BOARD=mini VARIANT=uno
+	$(MAKE) -C src/uno/rf OBJDIR=obj/uno MCU=atmega328p ARDWIINO_BOARD=uno VARIANT=uno
 
 # Arduino pro mini
 # main processor - rf transmitter
-	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega2560 ARDWIINO_BOARD=uno VARIANT=uno F_CPU=8000000
-	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega2560 ARDWIINO_BOARD=uno VARIANT=uno F_CPU=16000000
+	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega2560 ARDWIINO_BOARD=mini VARIANT=uno F_CPU=8000000
+	$(MAKE) -C src/mini/rf OBJDIR=obj/mini MCU=atmega2560 ARDWIINO_BOARD=mini VARIANT=uno F_CPU=16000000
 
 # Mega 2560 
 # usb processor

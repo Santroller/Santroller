@@ -47,22 +47,17 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   nrf24_config(76, tx);
   nrf24_tx_address((uint8_t *)&txid);
   nrf24_rx_address((uint8_t *)&rxid);
-  // on the pro micro, the real ss pin is not accessible, so we should bind it
-  // to something else. What if we just use 10 on both?
-  // // Micro = int3 = pin tx1
-  // // Uno = int0 = pin 2
-  // // interrupt on falling edge of INT
-  // if (!tx) {
-#ifdef __AVR_ATmega32U4__
-    // pinMode(1, INPUT_PULLUP);
+  // interrupt on falling edge of INT
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) 
+    EICRA |= _BV(ISC41);
+    EIMSK |= _BV(INT4);
+#elif defined(__AVR_ATmega32U4__)
     EICRA |= _BV(ISC31);
     EIMSK |= _BV(INT3);
 #else
-    // pinMode(2, INPUT_PULLUP);
     EICRA |= _BV(ISC01);
     EIMSK |= _BV(INT0);
 #endif
-  // }
 }
 
 int tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {
@@ -88,8 +83,9 @@ uint8_t tickRFInput(uint8_t *data, uint8_t len) {
   }
   return false;
 }
-
-#ifdef __AVR_ATmega32U4__
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) 
+ISR(INT4_vect) {
+#elif defined(__AVR_ATmega32U4__)
 ISR(INT3_vect) {
 #else
 ISR(INT0_vect) {

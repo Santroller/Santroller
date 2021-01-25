@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
+#include "output/serial_handler.h"
 
 #include "Descriptors.h"
 #include <LUFA/Drivers/USB/USB.h>
@@ -81,7 +82,7 @@ int main(void) {
         lastPoll = millis();
 
         uint8_t data[12];
-        if (tickRFTX(&controller, data, sizeof(XInput_Data_t))) {
+        if (tickRFTX((uint8_t*)&controller, data, sizeof(XInput_Data_t))) {
           uint8_t cmd = data[0];
           bool isRead = data[1];
           if (isRead) {
@@ -122,4 +123,9 @@ void EVENT_CDC_Device_LineEncodingChanged(
   if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 1200) {
     bootloader();
   }
+}
+
+void writeToUSB(const void *const Buffer, uint8_t Length) {
+  uint8_t data[32];
+  tickRFTX((uint8_t *)Buffer, data, Length);
 }

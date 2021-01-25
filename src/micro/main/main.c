@@ -58,7 +58,7 @@ long lastPoll = 0;
 int main(void) {
   loadConfig();
   deviceType = config.main.subType;
-  config.rf.rfInEnabled = true;
+  // config.rf.rfInEnabled = true;
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     config.rf.id = 0xc2292dde;

@@ -29,7 +29,7 @@ int main(void) {
   Serial_InitInterrupt(BAUD, true);
   sei();
   setupMicrosTimer();
-  config.rf.rfInEnabled = true;
+  // config.rf.rfInEnabled = true;
   if (config.rf.rfInEnabled) {
     config.rf.id = 0xc2292dde;
     // initRF(false, config.rf.id, generate_crc32());

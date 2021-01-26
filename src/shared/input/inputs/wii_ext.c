@@ -15,6 +15,7 @@ uint8_t wiiButtonBindings[16] = {
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t wiiExtensionID = WII_NO_EXTENSION;
+bool highRes = false;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
 bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
@@ -89,13 +90,24 @@ void readGuitarExt(Controller_t *controller, uint8_t *data) {
   readExtButtons(controller, buttons);
 }
 void readClassicExt(Controller_t *controller, uint8_t *data) {
-  controller->l_x = (data[0] - 0x80) << 8;
-  controller->l_y = (data[2] - 0x80) << 8;
-  controller->r_x = (data[1] - 0x80) << 8;
-  controller->r_y = (data[3] - 0x80) << 8;
-  controller->lt = data[4];
-  controller->rt = data[5];
-  uint16_t buttons = ~(data[6] | (data[7] << 8));
+  uint16_t buttons;
+  if (highRes) {
+    controller->l_x = (data[0] - 0x80) << 8;
+    controller->l_y = (data[2] - 0x80) << 8;
+    controller->r_x = (data[1] - 0x80) << 8;
+    controller->r_y = (data[3] - 0x80) << 8;
+    controller->lt = data[4];
+    controller->rt = data[5];
+    buttons = ~(data[6] | (data[7] << 8));
+  } else {
+    controller->l_x = (data[0] & 0x3f) - 32;
+		controller->l_y = (data[1] & 0x3f) - 32;
+		controller->r_x = (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2]>>7)) - 16;
+		controller->r_y = (data[2] & 0x1f) - 16;
+		controller->lt = ((data[3]>>5) | ((data[2] & 0x60) >> 2) );
+		controller->rt = data[3]&0x1f;
+    buttons = ~(data[4] | data[5] << 8);
+  }
   readExtButtons(controller, buttons);
 }
 void readNunchukExt(Controller_t *controller, uint8_t *data) {
@@ -160,6 +172,23 @@ void initWiiExt(void) {
     // Enable high-res mode
     twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
     _delay_us(10);
+    // Some controllers support high res mode, some dont. Some require it, some
+    // dont. To mitigate this issue, we can check if the high res specific bytes
+    // are zeroed But if a byte is corrupted during transit than it may be
+    // triggered. Reading twice will allow us to confirm that nothing was
+    // corrupted,
+    uint8_t check[8];
+    uint8_t validate[8];
+    while (true) {
+      twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(check), check);
+      _delay_us(200);
+      twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
+      if (memcmp(check, validate, sizeof(validate))) {
+        highRes = !(check[0x06] || check[0x07]);
+        break;
+      }
+      _delay_us(200);
+    }
   }
   switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:

@@ -183,13 +183,16 @@ void initWiiExt(void) {
       twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(check), check);
       _delay_us(200);
       twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
-      if (memcmp(check, validate, sizeof(validate))) {
-        highRes = !(check[0x06] || check[0x07]);
+      if (memcmp(check, validate, sizeof(validate)) == 0) {
+        highRes = (check[0x06] || check[0x07]);
         break;
       }
       _delay_us(200);
     }
   }
+  // Start reading so we have data for the next read
+  uint8_t pointer = 0x00;
+  twi_writeTo(I2C_ADDR, &pointer, 1, true, true);
   switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:
     readFunction = readGuitarExt;
@@ -221,6 +224,9 @@ void initWiiExt(void) {
   }
 }
 void tickWiiExtInput(Controller_t *controller) {
+  // It might seem odd to be reading first and then writing the pointer to read from.
+  // Wii controllers require a delay before you can read the data. By doing this,
+  // we can be sneaky and use that time to handle other tasks and then read on the next go
   uint8_t data[8];
   uint8_t pointer = 0x00;
   if (wiiExtensionID == WII_NOT_INITIALISED ||

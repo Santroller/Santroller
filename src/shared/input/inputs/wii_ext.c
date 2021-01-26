@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
-const uint8_t PROGMEM wiiButtonBindings[16] = {
+uint8_t wiiButtonBindings[16] = {
     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
@@ -193,9 +193,11 @@ void initWiiExt(void) {
 }
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
+  uint8_t pointer = 0x00;
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      !twi_readFromPointerSlow(I2C_ADDR, 0x00, sizeof(data), data) ||
+      !twi_readFrom(I2C_ADDR, data, sizeof(data), true) ||
+      twi_writeTo(I2C_ADDR, &pointer, 1, true, true) ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();
     return;

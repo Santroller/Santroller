@@ -489,7 +489,7 @@ bool twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
                              uint8_t *data) {
   uint8_t ret = !twi_writeTo(address, &pointer, 1, true, true);
   if (!ret) return ret;
-  _delay_us(500);
+  _delay_us(175);
   return twi_readFrom(address, data, length, true);
 }
 bool twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,

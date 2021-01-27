@@ -24,7 +24,7 @@ VERSION_MINOR = $(word 2,$(VERSION_LIST))
 VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
 
-SRC          = main.c ../../shared/output/descriptors.c ../../shared/output/control_requests.c ../../shared/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC          = main.c ../../shared/controller/guitar_includes.c ../../shared/output/descriptors.c ../../shared/output/control_requests.c ../../shared/bootloader/bootloader.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
 LUFA_PATH    = ../../../lib/lufa/LUFA
 CPP_FLAGS	 = -std=c++11
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -I ../shared -I ../../../lib -I ../../shared -I../../shared/output -Werror -DMCU='"${MCU}"' $(REGS) -flto -fuse-linker-plugin

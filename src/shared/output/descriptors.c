@@ -695,10 +695,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     address = &ConfigurationDescriptor;
     size = ConfigurationDescriptor.Config.TotalConfigurationSize;
     uint8_t devt = deviceType;
-    if (isGuitar()) {
+    if (isGuitar(devt)) {
       devt = REAL_GUITAR_SUBTYPE;
     }
-    if (isDrum()) {
+    if (isDrum(devt)) {
       devt = REAL_DRUM_SUBTYPE;
     }
     mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);

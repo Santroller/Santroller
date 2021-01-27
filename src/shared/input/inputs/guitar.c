@@ -55,7 +55,7 @@ void initMPU6050(unsigned int rate) {
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
 void initGuitar(void) {
-  if (!isGuitar()) return;
+  if (!isGuitar(config.main.subType)) return;
   if (config.main.tiltType == MPU_6050) {
   initMPU6050(30);
   tick = tickMPUTilt;
@@ -69,7 +69,7 @@ void initGuitar(void) {
 }
 int16_t r_x;
 void tickGuitar(Controller_t *controller) {
-  if (!isGuitar()) return;
+  if (!isGuitar(config.main.subType)) return;
   r_x = controller->r_x;
   // Whammy needs to be scaled so that it is picked up
   if (r_x > 0) r_x = 0;

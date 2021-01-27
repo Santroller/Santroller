@@ -1,6 +1,6 @@
-#include "config/config.h"
 #include "config/defines.h"
-#include "config/eeprom.h"
+#include <stdint.h>
+#include <stdbool.h>
 #define DRUM 1
 #define GUITAR 2
 uint8_t types[MIDI_ROCK_BAND_DRUMS + 1] = {
@@ -15,5 +15,5 @@ uint8_t types[MIDI_ROCK_BAND_DRUMS + 1] = {
     [KEYBOARD_GUITAR_HERO_DRUMS] = DRUM, [KEYBOARD_GUITAR_HERO_GUITAR] = GUITAR,
     [KEYBOARD_ROCK_BAND_DRUMS] = DRUM,   [KEYBOARD_ROCK_BAND_GUITAR] = GUITAR,
     [KEYBOARD_LIVE_GUITAR] = GUITAR};
-bool isDrum(void) { return types[config.main.subType] == DRUM; }
-bool isGuitar(void) { return types[config.main.subType] == GUITAR; }
+bool isDrum(uint8_t subtype) { return types[subtype] == DRUM; }
+bool isGuitar(uint8_t subtype) { return types[subtype] == GUITAR; }

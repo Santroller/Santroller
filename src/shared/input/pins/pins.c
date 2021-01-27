@@ -53,7 +53,7 @@ void setUpAnalogPin(uint8_t offset) {
   AnalogPin_t apin = ((PinsCombined_t *)&config.pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
-  if (ret.offset == 5 && isGuitar() && config.main.tiltType != ANALOGUE) {
+  if (ret.offset == 5 && isGuitar(config.main.subType) && config.main.tiltType != ANALOGUE) {
     return;
   }
   ret.hasDigital = false;

@@ -10,5 +10,5 @@
 #define GH5NECK_SLIDER_OLD_PTR 0x16
 void initGuitar(void);
 void tickGuitar(Controller_t* controller);
-bool isGuitar(void);
-bool isDrum(void);
+bool isGuitar(uint8_t subtype);
+bool isDrum(uint8_t subtype);

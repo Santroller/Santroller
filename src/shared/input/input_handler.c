@@ -57,7 +57,7 @@ void tickInputs(Controller_t *controller) {
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {
-    if (isDrum() && offset > 8 && offset < 16) {
+    if (isDrum(config.main.subType) && offset > 8 && offset < 16) {
       return controller->drumVelocity[offset - 8];
     }
     return bit_check(controller->buttons, offset) ? MIDI_STANDARD_VELOCITY : 0;

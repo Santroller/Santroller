@@ -25,7 +25,7 @@ void initDirectInput() {
         pin.port = portInputRegister(digitalPinToPort((pins[i])));
         pin.pmask = _BV(i);
         pin.eq = is_fret && config.main.fretLEDMode == LEDS_INLINE;
-        if (isDrum() && is_fret) {
+        if (isDrum(config.main.subType) && is_fret) {
           // We should probably keep a list of drum specific buttons, instead of
           // using isfret
           // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift

@@ -101,11 +101,13 @@ void readClassicExt(Controller_t *controller, uint8_t *data) {
     buttons = ~(data[6] | (data[7] << 8));
   } else {
     controller->l_x = (data[0] & 0x3f) - 32;
-		controller->l_y = (data[1] & 0x3f) - 32;
-		controller->r_x = (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2]>>7)) - 16;
-		controller->r_y = (data[2] & 0x1f) - 16;
-		controller->lt = ((data[3]>>5) | ((data[2] & 0x60) >> 2) );
-		controller->rt = data[3]&0x1f;
+    controller->l_y = (data[1] & 0x3f) - 32;
+    controller->r_x =
+        (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) -
+        16;
+    controller->r_y = (data[2] & 0x1f) - 16;
+    controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
+    controller->rt = data[3] & 0x1f;
     buttons = ~(data[4] | data[5] << 8);
   }
   readExtButtons(controller, buttons);
@@ -160,6 +162,7 @@ void readTataconExt(Controller_t *controller, uint8_t *data) {
 void initWiiExt(void) {
   wiiExtensionID = readExtID();
   if (wiiExtensionID == WII_NOT_INITIALISED) {
+    // Send packets needed to initialise a controller
     twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
     _delay_us(10);
     twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x00);
@@ -174,9 +177,9 @@ void initWiiExt(void) {
     _delay_us(10);
     // Some controllers support high res mode, some dont. Some require it, some
     // dont. To mitigate this issue, we can check if the high res specific bytes
-    // are zeroed But if a byte is corrupted during transit than it may be
-    // triggered. Reading twice will allow us to confirm that nothing was
-    // corrupted,
+    // are zeroed. However this isnt enough. If a byte is corrupted during
+    // transit than it may be triggered. Reading twice will allow us to confirm
+    // that nothing was corrupted,
     uint8_t check[8];
     uint8_t validate[8];
     while (true) {
@@ -224,9 +227,10 @@ void initWiiExt(void) {
   }
 }
 void tickWiiExtInput(Controller_t *controller) {
-  // It might seem odd to be reading first and then writing the pointer to read from.
-  // Wii controllers require a delay before you can read the data. By doing this,
-  // we can be sneaky and use that time to handle other tasks and then read on the next go
+  // It might seem odd to be reading first and then writing the pointer to read
+  // from. Wii controllers require a delay before you can read the data. By
+  // doing this, we can be sneaky and use that time to handle other tasks and
+  // then read on the next go
   uint8_t data[8];
   uint8_t pointer = 0x00;
   if (wiiExtensionID == WII_NOT_INITIALISED ||

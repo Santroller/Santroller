@@ -2,6 +2,7 @@
 #include "config/defines.h"
 #include "output/reports.h"
 #include "output/reports/keyboard.h"
+#include "input/inputs/guitar.h"
 uint8_t deviceType = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
@@ -693,8 +694,15 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   case DTYPE_Configuration:
     address = &ConfigurationDescriptor;
     size = ConfigurationDescriptor.Config.TotalConfigurationSize;
+    uint8_t devt = deviceType;
+    if (isGuitar()) {
+      devt = REAL_GUITAR_SUBTYPE;
+    }
+    if (isDrum()) {
+      devt = REAL_DRUM_SUBTYPE;
+    }
     mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
-    mods[1] = deviceType;
+    mods[1] = devt;
     mods[2] = 0x25;
     mods[3] =
         offsetof(USB_Descriptor_Configuration_t, HIDDescriptor.HIDReportLength);

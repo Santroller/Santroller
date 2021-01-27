@@ -66,7 +66,7 @@ extern uint8_t deviceType;
 #define XINPUT_3_EPADDR_OUT (ENDPOINT_DIR_OUT | 10)
 #define XINPUT_4_EPADDR_OUT (ENDPOINT_DIR_OUT | 11)
 /** Endpoint address of the DEVICE OUT endpoint. */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 12)
+#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
 
 /** Size in bytes of the CDC device-to-host notification IN endpoint. */
 #define CDC_NOTIFICATION_EPSIZE 8

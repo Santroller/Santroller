@@ -251,17 +251,21 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     Protocol : 0x01,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
+  // TODO: there is something that a stock guitar does that this doesn't,
+  // and for some reason that is what causes xinput to kill itself.
+  // what makes this even more confusing is that it does not happen with a standard gamepad
+  // So we could also just have a fallback option that doesnt set the subtype.
   XInputReserved : {
     Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    reserved : {0x00, 0x01},
-    subtype : 0x00,
+    reserved : {0x10, 0x01},
+    subtype : 0x07,
     reserved2 : 0x25,
     bEndpointAddressIn : XINPUT_EPADDR_IN,
-    bMaxDataSizeIn : HID_EPSIZE,
-    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
-    bEndpointAddressOut : XINPUT_EPADDR_OUT,
-    bMaxDataSizeOut : HID_EPSIZE,
-    reserved4 : {0x00, 0x00}
+    bMaxDataSizeIn : 0x14,
+    reserved3 : {0x03, 0x03, 0x03, 0x04, 0x13},
+    bEndpointAddressOut : 0x02,
+    bMaxDataSizeOut : 0x08,
+    reserved4 : {0x03, 0x03}
   },
   EndpointInXInput : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
@@ -701,6 +705,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     if (isDrum(devt)) {
       devt = REAL_DRUM_SUBTYPE;
     }
+    // devt = 1;
     mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
     mods[1] = devt;
     mods[2] = 0x25;

@@ -4,3 +4,6 @@
 [submodule "submodules/arduino-usbserial-bootloader"]
 	path = submodules/arduino-usbserial-bootloader
 	url = https://github.com/sanjay900/arduino-usbserial-bootloader
+[submodule "lib/cI2C"]
+	path = lib/cI2C
+	url = https://github.com/SMFSW/cI2C

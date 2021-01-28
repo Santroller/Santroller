@@ -1,9 +1,11 @@
 #pragma once
 #ifdef __AVR__
 #  include "controller/controller.h"
-#  define I2C_ADDR 0x52
+#  define I2C_ADDR 0xa4
+#  define I2C_ADDR2 0x52
 void tickWiiExtInput(Controller_t *controller);
 extern uint16_t wiiExtensionID;
+void initWiiInput(void);
 #endif
 enum WiiExtType {
   WII_NUNCHUK = 0x0000,

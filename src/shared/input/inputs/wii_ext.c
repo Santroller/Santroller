@@ -1,7 +1,6 @@
 #include "wii_ext.h"
 #include "config/defines.h"
 #include "config/eeprom.h"
-#include "i2c/i2c.h"
 #include "util/util.h"
 #include <avr/io.h>
 #include <stdbool.h>
@@ -9,12 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
+#include "cI2C/src/ci2c.h"
 uint8_t wiiButtonBindings[16] = {
     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t wiiExtensionID = WII_NO_EXTENSION;
+I2C_SLAVE FRAM;
 bool highRes = false;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
@@ -43,7 +44,7 @@ void readExtButtons(Controller_t *controller, uint16_t buttons) {
 
 uint16_t readExtID(void) {
   uint8_t data[6];
-  twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
+  I2C_read(&FRAM, 0xFA, data, 6);
   if (!verifyData(data, sizeof(data))) { return WII_NOT_INITIALISED; }
   return data[0] << 8 | data[5];
 }
@@ -159,13 +160,16 @@ void readTataconExt(Controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] << 8 | data[5]);
   readExtButtons(controller, buttons);
 }
+void write(uint8_t addr, uint8_t pointer, uint8_t data) {
+    I2C_write(&FRAM, pointer, &data, 1);
+}
 void initWiiExt(void) {
   wiiExtensionID = readExtID();
   if (wiiExtensionID == WII_NOT_INITIALISED) {
     // Send packets needed to initialise a controller
-    twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
+    write(I2C_ADDR, 0xF0, 0x55);
     _delay_us(10);
-    twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x00);
+    write(I2C_ADDR, 0xFB, 0x00);
     _delay_us(10);
     wiiExtensionID = readExtID();
     _delay_us(10);
@@ -173,7 +177,7 @@ void initWiiExt(void) {
   if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
       wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
     // Enable high-res mode
-    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
+    write(I2C_ADDR, 0xFE, 0x03);
     _delay_us(10);
     // Some controllers support high res mode, some dont. Some require it, some
     // dont. To mitigate this issue, we can check if the high res specific bytes
@@ -183,9 +187,9 @@ void initWiiExt(void) {
     uint8_t check[8];
     uint8_t validate[8];
     while (true) {
-      twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(check), check);
+      I2C_read(&FRAM, 0, check, sizeof(check));
       _delay_us(200);
-      twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
+      I2C_read(&FRAM, 0, validate, sizeof(validate));
       if (memcmp(check, validate, sizeof(validate)) == 0) {
         highRes = (check[0x06] || check[0x07]);
         break;
@@ -194,8 +198,8 @@ void initWiiExt(void) {
     }
   }
   // Start reading so we have data for the next read
-  uint8_t pointer = 0x00;
-  twi_writeTo(I2C_ADDR, &pointer, 1, true, true);
+  // uint8_t pointer = 0x00;
+  // twi_writeTo(I2C_ADDR, &pointer, 1, true, true);
   switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:
     readFunction = readGuitarExt;
@@ -226,17 +230,20 @@ void initWiiExt(void) {
     readFunction = NULL;
   }
 }
+void initWiiInput(void) {
+  I2C_init(I2C_WII);
+  I2C_slave_init(&FRAM, I2C_ADDR, I2C_8B_REG);
+}
 void tickWiiExtInput(Controller_t *controller) {
   // It might seem odd to be reading first and then writing the pointer to read
   // from. Wii controllers require a delay before you can read the data. By
   // doing this, we can be sneaky and use that time to handle other tasks and
   // then read on the next go
   uint8_t data[8];
-  uint8_t pointer = 0x00;
+  // uint8_t pointer = 0x00;
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      !twi_readFrom(I2C_ADDR, data, sizeof(data), true) ||
-      twi_writeTo(I2C_ADDR, &pointer, 1, true, true) ||
+      I2C_read(&FRAM, 0, data, sizeof(data)) != I2C_OK ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();
     return;

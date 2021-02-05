@@ -68,7 +68,13 @@
         "api.h": "c",
         "apa102.h": "c",
         "endpointstream_avr8.h": "c",
-        "io.h": "c"
+        "io.h": "c",
+        "i2c.h": "c",
+        "direct.h": "c",
+        "mpu_math.h": "c",
+        "inv_mpu_dmp_motion_driver.h": "c",
+        "inttypes.h": "c",
+        "wii_ext.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

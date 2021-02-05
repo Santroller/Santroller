@@ -27,26 +27,24 @@
 #  define TWI_FREQ 250000L
 #endif
 
-#ifndef TWI_BUFFER_LENGTH
-#  define TWI_BUFFER_LENGTH 32
-#endif
-
 #define TWI_READY 0
 #define TWI_MRX 1
 #define TWI_MTX 2
 #define TWI_SRX 3
 #define TWI_STX 4
+#define TWI_CORRUPT 5
 
 void twi_init(void);
 void twi_disable(void);
 void twi_setAddress(uint8_t);
 void twi_setFrequency(uint32_t);
-uint8_t twi_readFrom(uint8_t, uint8_t *, uint8_t, uint8_t);
+uint8_t twi_readFrom(uint8_t, uint8_t *, uint8_t, uint8_t, bool wait);
 uint8_t twi_writeTo(uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);
 uint8_t twi_transmit(const uint8_t *, uint8_t);
 void twi_attachSlaveRxEvent(void (*)(uint8_t *, int));
 void twi_attachSlaveTxEvent(void (*)(void));
 void twi_reply(uint8_t);
+void twi_start(void);
 bool twi_stop(void);
 void twi_releaseBus(void);
 uint8_t twi_endTransmission(uint8_t txAddress, uint8_t sendStop);
@@ -58,5 +56,5 @@ bool twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
 bool twi_writeSingleToPointer(uint8_t address, uint8_t pointer, uint8_t data);
 bool twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
                         uint8_t *data);
-
+void twi_tick(void);
 #endif

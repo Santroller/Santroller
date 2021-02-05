@@ -1,11 +1,14 @@
 #pragma once
 #ifdef __AVR__
 #  include "controller/controller.h"
-#  define I2C_ADDR 0xa4
-#  define I2C_ADDR2 0x52
+#  define I2C_ADDR 0x52
+#  define QUAT_SENS_FP 8388608.f // 2^23
+#  define I2C_ADDR_MPU 0x68
+#  define MPU_REG_FIFO 0x74
+#  define MPU_REG_FIFO_LEN (16 - 1)
 void tickWiiExtInput(Controller_t *controller);
-extern uint16_t wiiExtensionID;
-void initWiiInput(void);
+void initWiiExtInput(void);
+volatile extern uint16_t wiiExtensionID;
 #endif
 enum WiiExtType {
   WII_NUNCHUK = 0x0000,
@@ -20,4 +23,18 @@ enum WiiExtType {
   WII_MOTION_PLUS = 0x0005,
   WII_NO_EXTENSION = 0x180b,
   WII_NOT_INITIALISED = 0xFFFF
+};
+enum PacketIds {
+  INIT_1_ID,
+  INIT_1_DATA,
+  INIT_2_ID,
+  INIT_2_DATA,
+  READ_ID,
+  DRAWSOME_INIT_1_ID,
+  DRAWSOME_INIT_1_DATA,
+  DRAWSOME_INIT_2_ID,
+  DRAWSOME_INIT_2_DATA,
+  HIGH_RES_ID,
+  HIGH_RES_DATA,
+  READ_DATA
 };

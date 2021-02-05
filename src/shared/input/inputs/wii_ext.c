@@ -1,39 +1,26 @@
 #include "wii_ext.h"
 #include "config/defines.h"
 #include "config/eeprom.h"
+#include "i2c/i2c.h"
+#include "mpu6050/inv_mpu.h"
+#include "mpu6050/inv_mpu_dmp_motion_driver.h"
+#include "mpu6050/mpu_math.h"
 #include "util/util.h"
+#include <avr/interrupt.h>
 #include <avr/io.h>
+#include <compat/twi.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
-#include "cI2C/src/ci2c.h"
-uint8_t wiiButtonBindings[16] = {
+static const uint8_t wiiButtonBindings[16] = {
     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
-uint16_t wiiExtensionID = WII_NO_EXTENSION;
-I2C_SLAVE FRAM;
-bool highRes = false;
-void (*readFunction)(Controller_t *, uint8_t *) = NULL;
+volatile uint16_t wiiExtensionID = WII_NO_EXTENSION;
 
-bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
-  uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
-  uint8_t andCheck = 0xFF; // Check if data is maxed (bad init)
-
-  for (int i = 0; i < dataSize; i++) {
-    orCheck |= dataIn[i];
-    andCheck &= dataIn[i];
-  }
-
-  if (orCheck == 0x00 || andCheck == 0xFF) {
-    return false; // No data or bad data
-  }
-
-  return true;
-}
 void readExtButtons(Controller_t *controller, uint16_t buttons) {
   for (uint8_t i = 0; i < sizeof(wiiButtonBindings); i++) {
     uint8_t idx = wiiButtonBindings[i];
@@ -42,12 +29,6 @@ void readExtButtons(Controller_t *controller, uint16_t buttons) {
   }
 }
 
-uint16_t readExtID(void) {
-  uint8_t data[6];
-  I2C_read(&FRAM, 0xFA, data, 6);
-  if (!verifyData(data, sizeof(data))) { return WII_NOT_INITIALISED; }
-  return data[0] << 8 | data[5];
-}
 void readDrumExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x20) << 10;
   controller->l_y = (data[1] - 0x20) << 10;
@@ -90,27 +71,28 @@ void readGuitarExt(Controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] | data[5] << 8);
   readExtButtons(controller, buttons);
 }
-void readClassicExt(Controller_t *controller, uint8_t *data) {
+
+void readClassicExtLowRes(Controller_t *controller, uint8_t *data) {
   uint16_t buttons;
-  if (highRes) {
-    controller->l_x = (data[0] - 0x80) << 8;
-    controller->l_y = (data[2] - 0x80) << 8;
-    controller->r_x = (data[1] - 0x80) << 8;
-    controller->r_y = (data[3] - 0x80) << 8;
-    controller->lt = data[4];
-    controller->rt = data[5];
-    buttons = ~(data[6] | (data[7] << 8));
-  } else {
-    controller->l_x = (data[0] & 0x3f) - 32;
-    controller->l_y = (data[1] & 0x3f) - 32;
-    controller->r_x =
-        (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) -
-        16;
-    controller->r_y = (data[2] & 0x1f) - 16;
-    controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
-    controller->rt = data[3] & 0x1f;
-    buttons = ~(data[4] | data[5] << 8);
-  }
+  controller->l_x = (data[0] & 0x3f) - 32;
+  controller->l_y = (data[1] & 0x3f) - 32;
+  controller->r_x =
+      (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) - 16;
+  controller->r_y = (data[2] & 0x1f) - 16;
+  controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
+  controller->rt = data[3] & 0x1f;
+  buttons = ~(data[4] | data[5] << 8);
+  readExtButtons(controller, buttons);
+}
+void readClassicExtHiRes(Controller_t *controller, uint8_t *data) {
+  uint16_t buttons;
+  controller->l_x = (data[0] - 0x80) << 8;
+  controller->l_y = (data[2] - 0x80) << 8;
+  controller->r_x = (data[1] - 0x80) << 8;
+  controller->r_y = (data[3] - 0x80) << 8;
+  controller->lt = data[4];
+  controller->rt = data[5];
+  buttons = ~(data[6] | (data[7] << 8));
   readExtButtons(controller, buttons);
 }
 void readNunchukExt(Controller_t *controller, uint8_t *data) {
@@ -160,93 +142,244 @@ void readTataconExt(Controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] << 8 | data[5]);
   readExtButtons(controller, buttons);
 }
-void write(uint8_t addr, uint8_t pointer, uint8_t data) {
-    I2C_write(&FRAM, pointer, &data, 1);
+static volatile uint8_t twi_slarw;
+static long lastTick = 0;
+static volatile bool newData = false;
+
+static volatile bool defaultTWI = false;
+static volatile uint8_t sendIndex = READ_ID;
+static volatile uint8_t dataSize = 6;
+volatile bool readingMPU = false;
+void initWiiExtInput(void) {
+  dataSize = 6;
+  sendIndex = READ_ID;
+  twi_slarw = (I2C_ADDR << 1) | TW_WRITE;
+  wiiExtensionID = WII_NOT_INITIALISED;
+  readingMPU = false;
+  defaultTWI = false;
+  twi_start();
 }
-void initWiiExt(void) {
-  wiiExtensionID = readExtID();
-  if (wiiExtensionID == WII_NOT_INITIALISED) {
-    // Send packets needed to initialise a controller
-    write(I2C_ADDR, 0xF0, 0x55);
-    _delay_us(10);
-    write(I2C_ADDR, 0xFB, 0x00);
-    _delay_us(10);
-    wiiExtensionID = readExtID();
-    _delay_us(10);
-  }
-  if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
-      wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
-    // Enable high-res mode
-    write(I2C_ADDR, 0xFE, 0x03);
-    _delay_us(10);
-    // Some controllers support high res mode, some dont. Some require it, some
-    // dont. To mitigate this issue, we can check if the high res specific bytes
-    // are zeroed. However this isnt enough. If a byte is corrupted during
-    // transit than it may be triggered. Reading twice will allow us to confirm
-    // that nothing was corrupted,
-    uint8_t check[8];
-    uint8_t validate[8];
-    while (true) {
-      I2C_read(&FRAM, 0, check, sizeof(check));
-      _delay_us(200);
-      I2C_read(&FRAM, 0, validate, sizeof(validate));
-      if (memcmp(check, validate, sizeof(validate)) == 0) {
-        highRes = (check[0x06] || check[0x07]);
-        break;
-      }
-      _delay_us(200);
-    }
-  }
-  // Start reading so we have data for the next read
-  // uint8_t pointer = 0x00;
-  // twi_writeTo(I2C_ADDR, &pointer, 1, true, true);
-  switch (wiiExtensionID) {
-  case WII_GUITAR_HERO_GUITAR_CONTROLLER:
-    readFunction = readGuitarExt;
-    break;
-  case WII_CLASSIC_CONTROLLER:
-  case WII_CLASSIC_CONTROLLER_PRO:
-    readFunction = readClassicExt;
-    break;
-  case WII_NUNCHUK:
-    readFunction = readNunchukExt;
-    break;
-  case WII_GUITAR_HERO_DRUM_CONTROLLER:
-    readFunction = readDrumExt;
-    break;
-  case WII_THQ_UDRAW_TABLET:
-    readFunction = readUDrawExt;
-    break;
-  case WII_UBISOFT_DRAWSOME_TABLET:
-    readFunction = readDrawsomeExt;
-    break;
-  case WII_DJ_HERO_TURNTABLE:
-    readFunction = readDJExt;
-    break;
-  case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
-    readFunction = readTataconExt;
-    break;
-  default:
-    readFunction = NULL;
-  }
-}
-void initWiiInput(void) {
-  I2C_init(I2C_WII);
-  I2C_slave_init(&FRAM, I2C_ADDR, I2C_8B_REG);
-}
+
+static uint8_t received[16];
+void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 void tickWiiExtInput(Controller_t *controller) {
-  // It might seem odd to be reading first and then writing the pointer to read
-  // from. Wii controllers require a delay before you can read the data. By
-  // doing this, we can be sneaky and use that time to handle other tasks and
-  // then read on the next go
-  uint8_t data[8];
-  // uint8_t pointer = 0x00;
-  if (wiiExtensionID == WII_NOT_INITIALISED ||
-      wiiExtensionID == WII_NO_EXTENSION ||
-      I2C_read(&FRAM, 0, data, sizeof(data)) != I2C_OK ||
-      !verifyData(data, sizeof(data))) {
-    initWiiExt();
-    return;
+  if (newData) {
+    newData = false;
+    if (readFunction) { readFunction(controller, received); }
+    lastTick = millis();
   }
-  if (readFunction) readFunction(controller, data);
+  // if (millis() - lastTick > 1000) {}
+}
+void twi_reply(uint8_t ack) {
+  // transmit master read ready signal, with or without ack
+  if (ack) {
+    TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT) | _BV(TWEA);
+  } else {
+    TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT);
+  }
+}
+void twi_start(void) {
+  // send start condition
+  TWCR = _BV(TWINT) | _BV(TWEA) | _BV(TWEN) | _BV(TWIE) |
+         _BV(TWSTA); // enable INTs
+}
+bool twi_stop(void) {
+  // send stop condition
+  TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA) | _BV(TWINT) | _BV(TWSTO);
+
+  uint16_t timeoutCounter = 32767;
+  while (TWCR & _BV(TWSTO)) {
+    //_delay_ms( TIMEOUT_TICK );
+    timeoutCounter--;
+    if (timeoutCounter == 0) return false;
+  }
+  return true;
+}
+static volatile uint8_t highResCheckState = 0;
+// static long lastMPU = 0;
+static uint8_t receivedIndex = 0;
+static uint8_t highResCheck[8];
+static uint8_t orCheck = 0x00;
+static uint8_t andCheck = 0xff;
+// static int16_t z;
+const static uint8_t packetsToSend[] = {0xf0, 0x55, 0xfb, 0x00, 0xfa, 0xfb,
+                                        0x01, 0xf0, 0x55, 0xfe, 0x03, 0x00};
+// #define idCnt ((readingMPU ? MPU_REG_FIFO_LEN : dataSize) - 1)
+#define idCnt (dataSize - 1)
+bool next = false;
+ISR(TWI_vect) {
+  // if (defaultTWI) {
+  //   twi_tick();
+  //   return;
+  // }
+  switch (TW_STATUS) {
+  case TW_START:
+  case TW_REP_START:
+    dataSize = 6;
+    receivedIndex = 0;
+    orCheck = 0x00;
+    andCheck = 0xff;
+    TWDR = twi_slarw;
+    twi_reply(true);
+    break;
+
+  case TW_MR_DATA_ACK: {
+    uint8_t data = TWDR;
+    orCheck |= data;
+    andCheck &= data;
+    received[receivedIndex++] = data;
+  }
+  case TW_MR_SLA_ACK:
+    if (receivedIndex < idCnt) {
+      twi_reply(true);
+    } else {
+      twi_reply(false);
+    }
+    break;
+  case TW_MR_DATA_NACK: {
+    uint8_t data = TWDR;
+    orCheck |= data;
+    andCheck &= data;
+    received[receivedIndex++] = data;
+
+    // if (readingMPU) {
+    //   readingMPU = false;
+    //   // for (int i = 0; i < MPU_REG_FIFO_LEN; i++) {
+    //   //     Serial.print(id[i]);
+    //   // }
+    //   lastMPU = millis();
+    //   struct s_quat q;
+    //   q.w = (((long)id[0] << 24) | ((long)id[1] << 16) | ((long)id[2] << 8) |
+    //          id[3]) /
+    //         QUAT_SENS_FP;
+    //   q.x = (((long)id[4] << 24) | ((long)id[5] << 16) | ((long)id[6] << 8) |
+    //          id[7]) /
+    //         QUAT_SENS_FP;
+    //   q.y = (((long)id[8] << 24) | ((long)id[9] << 16) | ((long)id[10] << 8)
+    //   |
+    //          id[11]) /
+    //         QUAT_SENS_FP;
+    //   q.z = (((long)id[12] << 24) | ((long)id[13] << 16) | ((long)id[14] <<
+    //   8) |
+    //          id[15]) /
+    //         QUAT_SENS_FP;
+    //   quaternionToEuler(&q, &z, 1);
+    //   // Serial.println("mpu");
+    //   // Serial.println(z);
+    // } else if (orCheck == 0x00 || andCheck == 0xFF) {
+
+    if (orCheck == 0x00 || andCheck == 0xFF) {
+      sendIndex = INIT_1_ID;
+    } else if (sendIndex == READ_ID) {
+      // asm volatile("break");
+      wiiExtensionID = received[0] << 8 | received[5];
+      // wiiExtensionID = receivedIndex;
+      highResCheckState = 0;
+      sendIndex = READ_DATA;
+      switch (wiiExtensionID) {
+      case WII_CLASSIC_CONTROLLER:
+      case WII_CLASSIC_CONTROLLER_PRO:
+        highResCheckState = 1;
+        sendIndex = HIGH_RES_ID;
+        break;
+      case WII_GUITAR_HERO_GUITAR_CONTROLLER:
+        readFunction = readGuitarExt;
+        break;
+      case WII_NUNCHUK:
+        readFunction = readNunchukExt;
+        break;
+      case WII_GUITAR_HERO_DRUM_CONTROLLER:
+        readFunction = readDrumExt;
+        break;
+      case WII_THQ_UDRAW_TABLET:
+        readFunction = readUDrawExt;
+        break;
+      case WII_UBISOFT_DRAWSOME_TABLET:
+        readFunction = readDrawsomeExt;
+        sendIndex = DRAWSOME_INIT_1_ID;
+        break;
+      case WII_DJ_HERO_TURNTABLE:
+        readFunction = readDJExt;
+        break;
+      case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
+        readFunction = readTataconExt;
+        break;
+      default:
+        sendIndex = INIT_1_ID;
+        readFunction = NULL;
+      }
+    } else if (sendIndex == READ_DATA) {
+      if (highResCheckState) {
+        if (highResCheckState == 1) {
+          highResCheckState = 2;
+          memcpy(highResCheck, received, sizeof(highResCheck));
+        } else if (memcmp(highResCheck, received, sizeof(highResCheck)) == 0) {
+          if (received[0x06] || received[0x07]) {
+            dataSize = 8;
+            readFunction = readClassicExtHiRes;
+          } else {
+            dataSize = 6;
+            readFunction = readClassicExtLowRes;
+          }
+          highResCheckState = 0;
+        } else {
+          highResCheckState = 1;
+        }
+      } else {
+        newData = true;
+      }
+      // if (millis() - lastMPU > 30) {
+      //   lastMPU = millis();
+      //   readingMPU = true;
+      // }
+      // Serial.println(id[0]);
+    }
+    // twi_slarw = ((readingMPU ? I2C_ADDR_MPU : I2C_ADDR) << 1) | TW_WRITE;
+    twi_slarw = ((I2C_ADDR) << 1) | TW_WRITE;
+    twi_stop();
+    sei();
+    _delay_us(20);
+    cli();
+    twi_start();
+    break;
+  }
+
+  case TW_MT_SLA_ACK:
+    // if (readingMPU) {
+    //   TWDR = MPU_REG_FIFO;
+    //   twi_reply(true);
+    //   break;
+
+    TWDR = packetsToSend[sendIndex];
+    if (sendIndex != READ_ID && sendIndex != READ_DATA) {
+      sendIndex++;
+    } 
+    twi_reply(true);
+    break;
+  case TW_MT_DATA_ACK:
+    // if (!readingMPU) {
+    if (!next) {
+      if (sendIndex != READ_ID && sendIndex != READ_DATA) {
+        TWDR = packetsToSend[sendIndex++];
+        twi_reply(true);
+        // if we were on DRAWSOME_INIT_2_DATA, then we want to skip HIGH_RES_ID
+        if (sendIndex == (DRAWSOME_INIT_2_DATA + 1)) { sendIndex = READ_DATA; }
+        next = true;
+        return;
+      } else {
+        twi_slarw = ((I2C_ADDR) << 1) | TW_READ;
+      }
+    }
+    next = false;
+    // }
+    // } else {
+    //   twi_slarw = (I2C_ADDR_MPU << 1) | TW_READ;
+    // }
+    twi_stop();
+    sei();
+    _delay_us(175);
+    cli();
+    twi_start();
+    break;
+  }
 }

@@ -26,13 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cI2C/src/ci2c.h"
 #define MPU6050
 #define delay_ms _delay_ms
-// #define min(a, b) ((a < b) ? a : b)
-// TODO: define a proper i2c slave for this!
-#define i2c_write(a,b,c,d) I2C_write(NULL, b, d, c)
-#define i2c_read(a,b,c,d) I2C_read(NULL, b, d, c)
+#define min(a, b) ((a < b) ? a : b)
+#define i2c_write !twi_writeToPointer
+#define i2c_read !twi_readFromPointer
 static inline int reg_int_cb(struct int_param_s *int_param) { return 1; }
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #  error Which gyro are you using? Define MPUxxxx in your compiler options.

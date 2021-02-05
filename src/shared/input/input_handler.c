@@ -12,14 +12,13 @@
 #include "spi/spi.h"
 #include "util/util.h"
 #include <stdlib.h>
-#include "cI2C/src/ci2c.h"
 void (*tick_function)(Controller_t *);
 int joyThreshold;
 void initInputs() {
   setupADC();
   switch (config.main.inputType) {
   case WII:
-    initWiiInput();
+    initWiiExtInput();
     tick_function = tickWiiExtInput;
     break;
   case DIRECT:
@@ -33,15 +32,20 @@ void initInputs() {
   if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
     spi_init(F_CPU / 2, 0x00);
   }
-  // if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
-  //   twi_init();
-  // }
+  if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
+    twi_init();
+  }
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }
 void tickInputs(Controller_t *controller) {
-  controller->buttons = 0;
-  if (tick_function) { tick_function(controller); }
+  if (tick_function) {
+    tick_function(controller);
+  } else {
+    // For direct, we need to reset buttons every time. For others, we don't
+    // want to do this.
+    controller->buttons = 0;
+  }
   tickDirectInput(controller);
   if (config.main.mapLeftJoystickToDPad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);

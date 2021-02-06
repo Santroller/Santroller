@@ -7,15 +7,18 @@ all:
 
 micro:
 	$(MAKE) -C src/micro/main
-	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	-stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
 	sleep 2
 	$(MAKE) -C src/micro/main avrdude
 
 micro_rf:
 	$(MAKE) -C src/micro/rf
-	stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	-stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
 	sleep 2
 	$(MAKE) -C src/micro/rf avrdude
+
+gdb:
+	-avarice -j /dev/ttyUSB0 -P atmega32 :4242 -r -R & avr-gdb ./src/micro/main/bin/ardwiino-micro-atmega32u4-8000000.elf
 
 uno-8:
 	$(MAKE) -C src/uno

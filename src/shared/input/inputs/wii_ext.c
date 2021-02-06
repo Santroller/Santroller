@@ -170,6 +170,12 @@ void initWiiExt(void) {
     wiiExtensionID = readExtID();
     _delay_us(10);
   }
+  if (wiiExtensionID == WII_UBISOFT_DRAWSOME_TABLET) {
+    twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x01);
+    _delay_us(10);
+    twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
+    _delay_us(10);
+  }
   if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
       wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
     // Enable high-res mode
@@ -227,16 +233,10 @@ void initWiiExt(void) {
   }
 }
 void tickWiiExtInput(Controller_t *controller) {
-  // It might seem odd to be reading first and then writing the pointer to read
-  // from. Wii controllers require a delay before you can read the data. By
-  // doing this, we can be sneaky and use that time to handle other tasks and
-  // then read on the next go
   uint8_t data[8];
-  uint8_t pointer = 0x00;
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      !twi_readFrom(I2C_ADDR, data, sizeof(data), true) ||
-      twi_writeTo(I2C_ADDR, &pointer, 1, true, true) ||
+      !twi_readFromPointerSlow(I2C_ADDR, 0x00, 6, data) ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();
     return;

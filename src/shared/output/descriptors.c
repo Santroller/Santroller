@@ -1,8 +1,8 @@
 #include "descriptors.h"
 #include "config/defines.h"
+#include "input/inputs/guitar.h"
 #include "output/reports.h"
 #include "output/reports/keyboard.h"
-#include "input/inputs/guitar.h"
 uint8_t deviceType = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
@@ -598,7 +598,6 @@ const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
 uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
                             uint8_t *mods, uint8_t modCount) {
   Endpoint_ClearSETUP();
-  uint8_t *DataStream = (uint8_t *)Buffer;
   bool LastPacketFull = false;
   uint8_t current = 0;
 
@@ -623,22 +622,19 @@ uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
       uint16_t BytesInEndpoint = Endpoint_BytesInEndpoint();
 
       while (Length && (BytesInEndpoint < USB_Device_ControlEndpointSize)) {
-        bool found = false;
+        uint8_t bytes = 1;
         for (uint8_t i = 0; i < modCount; i += 3) {
           if (current == mods[i]) {
-            found = true;
+            bytes = 2;
             Endpoint_Write_8(mods[i + 1]);
-          }
-          if (current - 1 == mods[i]) {
-            found = true;
             Endpoint_Write_8(mods[i + 2]);
           }
         }
-        if (!found) { Endpoint_Write_8(pgm_read_byte(DataStream)); }
-        DataStream += 1;
-        Length--;
-        BytesInEndpoint++;
-        current++;
+        if (bytes == 1) { Endpoint_Write_8(pgm_read_byte(Buffer + current)); }
+        // We need to skip over 2 bytes if we find a block to modify, as each mod block overwrites two bytes
+        Length -= bytes;
+        BytesInEndpoint += bytes;
+        current += bytes;
       }
 
       LastPacketFull = (BytesInEndpoint == USB_Device_ControlEndpointSize);
@@ -695,12 +691,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     address = &ConfigurationDescriptor;
     size = ConfigurationDescriptor.Config.TotalConfigurationSize;
     uint8_t devt = deviceType;
-    if (isGuitar(devt)) {
-      devt = REAL_GUITAR_SUBTYPE;
-    }
-    if (isDrum(devt)) {
-      devt = REAL_DRUM_SUBTYPE;
-    }
+    if (isGuitar(devt)) { devt = REAL_GUITAR_SUBTYPE; }
+    if (isDrum(devt)) { devt = REAL_DRUM_SUBTYPE; }
     mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
     mods[1] = devt;
     mods[2] = 0x25;
@@ -714,10 +706,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       write_endpoint_mods(address, size, mods, 3);
     }
 #ifdef MULTI_ADAPTOR
-//TODO: if we ever implement this stuff, this needs to be implemented again.
-    // conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
-    // conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
-    // conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
+// TODO: if we ever implement this stuff, this needs to be implemented again.
+// conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
+// conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
+// conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
 #endif
     return NO_DESCRIPTOR;
     break;

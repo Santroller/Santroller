@@ -12,15 +12,12 @@
 // const PROGMEM uint8_t c0w0000b1[] = {0x00, 0x82, 0xf8, 0x23};
 const PROGMEM uint8_t c1w0000b1[] = {0x00, 0x08, 0x00, 0x00,
                                      0x00, 0x00, 0x00, 0x00};
-// const PROGMEM uint8_t c1w0100b1[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
-//                                      0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
-//                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// const PROGMEM uint8_t c1w0100b1[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff,
+// 0x00,
+//                                      0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0,
+//                                      0xff, 0x00, 0x00, 0x00, 0x00, 0x00,
+//                                      0x00};
 
-typedef struct {
-  uint8_t bReportId;
-  uint8_t bLength;
-  uint8_t data[6];
-} XIDGamepadCapabilities;
 const PROGMEM USB_OSExtendedCompatibleIDDescriptor_t ExtendedIDs = {
   TotalLength : sizeof(USB_OSExtendedCompatibleIDDescriptor_t),
   Version : 0x0100,
@@ -118,7 +115,10 @@ void deviceControlRequest(void) {
              (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     buffer = &DevCompatIDs;
   }
-  // else if (USB_ControlRequest.bRequest == 0x1 &&
+  // Here are a couple of other control requests that are implemented, however
+  // as we are running out of space and these were not required they are
+  // disabled. 
+  // } else if (USB_ControlRequest.bRequest == 0x1 &&
   //            (USB_ControlRequest.bmRequestType == 0xC0) &&
   //            USB_ControlRequest.wIndex == 0x00 &&
   //            USB_ControlRequest.wValue == 0x0000) {

@@ -9,10 +9,10 @@
 #  define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_t
 #endif
 // Dumps from a real guitar
-// const PROGMEM uint8_t c0w0000b1[] = {0x00, 0x82, 0xf8, 0x23};
-const PROGMEM uint8_t c1w0000b1[] = {0x00, 0x08, 0x00, 0x00,
-                                     0x00, 0x00, 0x00, 0x00};
-// const PROGMEM uint8_t c1w0100b1[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff,
+// const PROGMEM uint8_t ID[] = {0x00, 0x82, 0xf8, 0x23};
+const PROGMEM uint8_t capabilities1[] = {0x00, 0x08, 0x00, 0x00,
+                                         0x00, 0x00, 0x00, 0x00};
+// const PROGMEM uint8_t capabilities2[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff,
 // 0x00,
 //                                      0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0,
 //                                      0xff, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -93,21 +93,22 @@ void deviceControlRequest(void) {
                  (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     processHIDWriteFeatureReportControl(USB_ControlRequest.wValue,
                                         USB_ControlRequest.wLength);
-  } else if (USB_ControlRequest.bRequest == 0x1 &&
+  } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
              (USB_ControlRequest.bmRequestType == 0xC1) &&
              USB_ControlRequest.wIndex == INTERFACE_ID_XInput &&
              USB_ControlRequest.wValue == 0x0000) {
-    len = sizeof(c1w0000b1);
-    buffer = &c1w0000b1;
+    len = sizeof(capabilities1);
+    buffer = &capabilities1;
   } else if (USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
-             (USB_ControlRequest.bmRequestType == 0xC1) &&
+             (USB_ControlRequest.bmRequestType ==
+              (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
              USB_ControlRequest.wIndex == EXTENDED_PROPERTIES_DESCRIPTOR &&
              USB_ControlRequest.wValue == INTERFACE_ID_Config) {
     len = ExtendedIDs.TotalLength;
     buffer = &ExtendedIDs;
   } else if (USB_ControlRequest.bRequest == REQ_GetOSFeatureDescriptor &&
              USB_ControlRequest.bmRequestType ==
-                 (REQDIR_DEVICETOHOST | REQTYPE_VENDOR) &&
+                 (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE) &&
              USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
     len = DevCompatIDs.TotalLength;
     buffer = &DevCompatIDs;
@@ -117,19 +118,21 @@ void deviceControlRequest(void) {
   }
   // Here are a couple of other control requests that are implemented, however
   // as we are running out of space and these were not required they are
-  // disabled. 
-  // } else if (USB_ControlRequest.bRequest == 0x1 &&
-  //            (USB_ControlRequest.bmRequestType == 0xC0) &&
+  // disabled.
+  // } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
+  //            (USB_ControlRequest.bmRequestType ==
+  //                (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
   //            USB_ControlRequest.wIndex == 0x00 &&
   //            USB_ControlRequest.wValue == 0x0000) {
-  //   len = sizeof(c1w0000b1);
-  //   buffer = &c0w0000b1;
-  // } else if (USB_ControlRequest.bRequest == 0x1 &&
-  //            (USB_ControlRequest.bmRequestType == 0xC1) &&
+  //   len = sizeof(capabilities1);
+  //   buffer = &ID;
+  // } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
+  //            (USB_ControlRequest.bmRequestType ==
+  //                (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
   //            USB_ControlRequest.wIndex == INTERFACE_ID_XInput &&
   //            USB_ControlRequest.wValue == 0x0100) {
-  //   len = sizeof(c1w0100b1);
-  //   buffer = &c1w0100b1;
+  //   len = sizeof(capabilities2);
+  //   buffer = &capabilities2;
   // }
   if (buffer) {
     Endpoint_ClearSETUP();

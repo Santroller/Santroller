@@ -23,9 +23,8 @@ Controller_t controller;
 Controller_t prevCtrl;
 Configuration_t newConfig;
 long lastPoll = 0;
-volatile bool send_message = false;
-__attribute__((section(".rfrecv"))) uint32_t rftxID = 0x8581f888;
-__attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xc2292dde;
+__attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
+__attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 // TODO: we can use millis here to work out if a controller has been out of use
 // for several minutes, and to then go into a sleep mode
 int main(void) {
@@ -37,8 +36,8 @@ int main(void) {
   initReports();
   // Serial_Init(115200, true);
   // id = generate_crc32();
-  // initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
-  initRF(true, 0x8581f888, 0xc2292dde);
+  initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  // initRF(true, 0x8581f888, 0xc2292dde);
   while (true) {
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);

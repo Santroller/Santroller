@@ -31,9 +31,9 @@ int main(void) {
   setupMicrosTimer();
   // config.rf.rfInEnabled = true;
   if (config.rf.rfInEnabled) {
-    config.rf.id = 0xc2292dde;
-    // initRF(false, config.rf.id, generate_crc32());
-    initRF(false, 0xc2292dde, 0x8581f888);
+    // config.rf.id = 0xc2292dde;
+    initRF(false, config.rf.id, generate_crc32());
+    // initRF(false, 0xc2292dde, 0x8581f888);
   } else {
     initInputs();
   }

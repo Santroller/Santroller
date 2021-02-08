@@ -55,22 +55,20 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
                 },
         },
 };
-__attribute__((section(".rfrecv"))) uint32_t rfID = 0xDEADBEEF;
+__attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
+__attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 Controller_t controller;
 Controller_t prevCtrl;
 Configuration_t newConfig;
 long lastPoll = 0;
-volatile bool send_message = false;
 int main(void) {
   loadConfig();
   config.rf.rfInEnabled = false;
   sei();
-  // Serial_Init(115200, true);
   USB_Init();
   initInputs();
   initReports();
-  // initRF(true, pgm_read_dword(&rfID));
-  initRF(true, 0x8581f888, 0xc2292dde);
+  initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
   while (true) {
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);

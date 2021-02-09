@@ -8,6 +8,7 @@
 #include "leds/leds.h"
 #include "output/reports.h"
 #include "output/serial_commands.h"
+#include "output/serial_handler.h"
 #include "util/util.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -19,7 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
-#include "output/serial_handler.h"
+#include <avr/power.h>
+#include <avr/sleep.h>
 
 #include "Descriptors.h"
 #include <LUFA/Drivers/USB/USB.h>
@@ -55,6 +57,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface = {
                 },
         },
 };
+// Sleep pin: 7
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 Controller_t controller;
@@ -69,7 +72,28 @@ int main(void) {
   initInputs();
   initReports();
   initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  long lastChange = millis();
+  long lastButtons = 0;
   while (true) {
+    if (millis() - lastChange > 600000) {
+      lastChange = millis();
+      //
+      // disable ADC
+      ADCSRA = 0;
+      // Turn off RF
+      nrf24_powerDown();
+      // turn off various modules
+      power_all_disable();
+
+      set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+      cli(); // timed sequence follows
+      EICRA |= _BV(ISC61);
+      EIMSK |= _BV(INT6);
+      EIFR = _BV(INTF6);
+      sleep_enable();
+      sei();       // guarantees next instruction executed
+      sleep_cpu(); // sleep within 3 clock cycles of above
+    }
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
       tickLEDs(&controller);
@@ -80,7 +104,7 @@ int main(void) {
         lastPoll = millis();
 
         uint8_t data[12];
-        if (tickRFTX((uint8_t*)&controller, data, sizeof(XInput_Data_t))) {
+        if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
           uint8_t cmd = data[0];
           bool isRead = data[1];
           if (isRead) {
@@ -95,6 +119,10 @@ int main(void) {
           }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));
+        if (lastButtons != controller.buttons) {
+          lastButtons = controller.buttons;
+          lastChange = millis();
+        }
       }
     }
     USB_USBTask();
@@ -126,4 +154,12 @@ void EVENT_CDC_Device_LineEncodingChanged(
 void writeToUSB(const void *const Buffer, uint8_t Length) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
+}
+ISR(INT6_vect) {
+  sleep_disable();
+  power_all_enable();
+  setupADC();
+  initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  EICRA &= ~(_BV(ISC61));
+  EIMSK &= ~(_BV(INT6));
 }

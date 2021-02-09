@@ -18,6 +18,8 @@
 #include <avr/wdt.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <avr/power.h>
+#include <avr/sleep.h>
 #include <util/delay.h>
 Controller_t controller;
 Controller_t prevCtrl;
@@ -25,8 +27,7 @@ Configuration_t newConfig;
 long lastPoll = 0;
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
-// TODO: we can use millis here to work out if a controller has been out of use
-// for several minutes, and to then go into a sleep mode
+// Sleep pin: 3
 int main(void) {
   loadConfig();
   sei();
@@ -34,12 +35,30 @@ int main(void) {
   config.rf.rfInEnabled = false;
   initInputs();
   initReports();
-  // Serial_Init(115200, true);
-  // id = generate_crc32();
   initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
-  // initRF(true, 0x8581f888, 0xc2292dde);
+  long lastChange = millis();
+  long lastButtons = 0;
   while (true) {
+    if (millis() - lastChange > 600000) {
+      lastChange = millis();
+      // disable ADC
+      ADCSRA = 0;
+      // Turn off RF
+      nrf24_powerDown();
+      // turn off various modules
+      power_all_disable();
+
+      set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+      cli(); // timed sequence follows
+      EIFR = _BV(INTF1);
+      EICRA |= _BV(ISC11);
+      EIMSK |= _BV(INT1);
+      sleep_enable();
+      sei();       // guarantees next instruction executed
+      sleep_cpu(); // sleep within 3 clock cycles of above
+    }
     if (millis() - lastPoll > config.main.pollRate) {
+      lastChange = millis();
       tickInputs(&controller);
       // Since we receive data via acks, we need to make sure data is always
       // being sent, so we send data every 100ms regardless.
@@ -68,6 +87,10 @@ int main(void) {
           }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));
+        if (lastButtons != controller.buttons) {
+          lastButtons = controller.buttons;
+          lastChange = millis();
+        }
       }
     }
   }
@@ -76,4 +99,12 @@ int main(void) {
 void writeToUSB(const void *const Buffer, uint8_t Length) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
+}
+ISR(INT1_vect) {
+  sleep_disable();
+  power_all_enable();
+  setupADC();
+  initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  EICRA &= ~(_BV(ISC11));
+  EIMSK &= ~(_BV(INT1));
 }

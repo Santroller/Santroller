@@ -16,10 +16,14 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
+#include <avr/sleep.h>
 #include <avr/wdt.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
+
+#include <avr/power.h>
+// Sleep pin: 3
 Controller_t controller;
 Controller_t prevCtrl;
 Configuration_t newConfig;
@@ -39,7 +43,22 @@ int main(void) {
   long lastButtons = 0;
   while (true) {
     if (millis() - lastChange > 600000) {
+      lastChange = millis();
+      // disable ADC
+      ADCSRA = 0;
+      // Turn off RF
+      nrf24_powerDown();
+      // turn off various modules
+      power_all_disable();
 
+      set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+      cli(); // timed sequence follows
+      EIFR = _BV(INTF1);
+      EICRA |= _BV(ISC11);
+      EIMSK |= _BV(INT1);
+      sleep_enable();
+      sei();       // guarantees next instruction executed
+      sleep_cpu(); // sleep within 3 clock cycles of above
     }
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
@@ -62,7 +81,6 @@ int main(void) {
               handleCommand(cmd);
             }
           }
-          // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));
         if (lastButtons != controller.buttons) {
@@ -77,4 +95,12 @@ int main(void) {
 void writeToUSB(const void *const Buffer, uint8_t Length) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
+}
+ISR(INT1_vect) {
+  sleep_disable();
+  power_all_enable();
+  setupADC();
+  initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  EICRA &= ~(_BV(ISC11));
+  EIMSK &= ~(_BV(INT1));
 }

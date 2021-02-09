@@ -72,7 +72,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
       len = tickRFInput(dbuf, 0);
       if (len && len != sizeof(XInput_Data_t)) break;
       nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      if (millis() - ms > 100) {
+      if (millis() - ms > 500) {
         dbuf[0] = REPORT_ID_CONTROL;
         len = sizeof(err) + 1;
         memcpy_P(dbuf + 1, err, sizeof(err));

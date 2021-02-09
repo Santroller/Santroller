@@ -11,6 +11,7 @@ uint8_t detectedPin = 0xff;
 bool lookingForDigital = false;
 bool lookingForAnalog = false;
 int lastAnalogValue[NUM_ANALOG_INPUTS];
+bool lastDigitalValue[NUM_DIGITAL_PINS];
 void initDirectInput() {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
@@ -41,7 +42,7 @@ void initDirectInput() {
 }
 bool shouldSkipPin(uint8_t i) {
   // On the 328p, due to an inline LED, it isn't possible to check pin 13
-#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega328P__)
   if (i == 13 || i == 0 || i == 1) return true;
 #endif
   // Skip sda + scl when using peripherials utilising I2C
@@ -51,7 +52,7 @@ bool shouldSkipPin(uint8_t i) {
   }
   // Skip RF related pins (such as spi) when using an RF transmitter
 #ifdef RF_TX
-#  if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#  if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega328P__)
   if (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
       i == PIN_SPI_SS || i == 8 || i == 2)
     return true;
@@ -95,6 +96,7 @@ void stopSearching(void) {
   if (lookingForDigital) {
     for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) { pinMode(i, INPUT); }
+      lastDigitalValue[i] = digitalRead(i);
     }
   }
   lookingForDigital = lookingForAnalog = false;
@@ -114,9 +116,10 @@ void tickDirectInput(Controller_t *controller) {
     return;
   }
   if (lookingForDigital) {
+    // Change this to keep track of changes.
     for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) {
-        if (!digitalRead(i)) {
+        if (digitalRead(i) != lastDigitalValue[i]) {
           stopSearching();
           detectedPin = i;
           lookingForDigital = false;
@@ -130,7 +133,7 @@ void tickDirectInput(Controller_t *controller) {
   Pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
-    if ((*pin.port & pin.mask) == pin.eq) { controller->buttons |= pin.pmask; }
+    if (((*pin.port & pin.mask) != 0) == pin.eq) { controller->buttons |= pin.pmask; }
   }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;

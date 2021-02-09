@@ -27,8 +27,6 @@ long lastPoll = 0;
 volatile bool send_message = false;
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
-// TODO: we can use millis here to work out if a controller has been out of use
-// for several minutes, and to then go into a sleep mode
 int main(void) {
   loadConfig();
   sei();
@@ -37,7 +35,12 @@ int main(void) {
   initInputs();
   initReports();
   initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
+  long lastChange = millis();
+  long lastButtons = 0;
   while (true) {
+    if (millis() - lastChange > 600000) {
+
+    }
     if (millis() - lastPoll > config.main.pollRate) {
       tickInputs(&controller);
       // Since we receive data via acks, we need to make sure data is always
@@ -62,6 +65,10 @@ int main(void) {
           // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));
+        if (lastButtons != controller.buttons) {
+          lastButtons = controller.buttons;
+          lastChange = millis();
+        }
       }
     }
   }

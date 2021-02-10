@@ -83,9 +83,7 @@ uint8_t tickRFInput(uint8_t *data, uint8_t len) {
   }
   return false;
 }
-#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) 
-ISR(INT4_vect) {
-#elif defined(__AVR_ATmega32U4__)
+#if defined(__AVR_ATmega32U4__)
 ISR(INT3_vect) {
 #else
 ISR(INT0_vect) {

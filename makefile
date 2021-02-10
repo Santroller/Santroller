@@ -214,3 +214,10 @@ build-all:
 	cp -rfv src/micro/main/bin/*.hex output/
 	cp -rfv src/micro/rf/bin/*.hex output/
 	cp -rfv submodules/arduino-usbserial-bootloader/out/*.hex output/
+
+	rm -rfv src/uno/usb/{bin,obj}
+	rm -rfv src/uno/main/{bin,obj}
+	rm -rfv src/uno/rf/{bin,obj}
+	rm -rfv src/mini/rf/{bin,obj}
+	rm -rfv src/micro/main/{bin,obj}
+	rm -rfv src/micro/rf/{bin,obj}

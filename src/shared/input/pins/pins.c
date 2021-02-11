@@ -9,13 +9,6 @@ int currentAnalog = 0;
 bool first = true;
 AnalogInfo_t joyData[NUM_ANALOG_INPUTS];
 
-// Enable a pin change interrupt
-void enablePCI(uint8_t pin) {
-  *digitalPinToPCMSK(pin) |= (1 << digitalPinToPCMSKbit(pin));
-  *digitalPinToPCICR(pin) |= (1 << digitalPinToPCICRbit(pin));
-  pinMode(pin, INPUT_PULLUP);
-}
-
 void digitalWrite(uint8_t pin, uint8_t val) {
   uint8_t bit = digitalPinToBitMask(pin);
   uint8_t port = digitalPinToPort(pin);

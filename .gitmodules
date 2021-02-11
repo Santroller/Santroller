@@ -2,5 +2,5 @@
 	path = lib/lufa
 	url = https://github.com/abcminiuser/lufa.git
 [submodule "submodules/arduino-usbserial-bootloader"]
-	path = submodules/arduino-usbserial-bootloader
+	path = src/avr/arduino-usbserial-bootloader
 	url = https://github.com/sanjay900/arduino-usbserial-bootloader

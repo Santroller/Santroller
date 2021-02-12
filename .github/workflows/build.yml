@@ -14,9 +14,13 @@ jobs:
         fetch-depth: 0
     - name: setup
       run: |
-        sudo apt-get install -y make gcc-avr avr-libc binutils
+        sudo apt-get install -y make gcc-avr avr-libc binutils cmake
     - name: make
-      run: make build-all
+      run: |
+        mkdir build 
+        cd build
+        cmake ..
+        make -j2
     - uses: actions/upload-artifact@v1
       with:
         name: firmware

@@ -19,7 +19,7 @@ VERSION_MAJOR = $(word 1,$(VERSION_LIST))
 VERSION_MINOR = $(word 2,$(VERSION_LIST))
 VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
-
+MULTI_ADAPTOR=$(if ${MULTI},-DDMULTI_ADAPTOR,)
 SRC += ${PROJECT_ROOT}/src/shared/controller/guitar_includes.c ${PROJECT_ROOT}/src/shared/bootloader/bootloader.c
 LUFA_PATH    = ${PROJECT_ROOT}/lib/lufa/LUFA
 CC_FLAGS     += -DUSE_LUFA_CONFIG_HEADER -I${PROJECT_ROOT}/src/shared/output -I${PROJECT_ROOT}/src/avr/variants/${VARIANT} -I ${PROJECT_ROOT}/src/shared -I${PROJECT_ROOT}/lib -I${PROJECT_ROOT}/src/avr/lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin -ffast-math
@@ -28,7 +28,7 @@ CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAP
 LD_FLAGS     += $(REGS) -DARDUINO=1000 -DMCU='"${MCU}"' -flto -fuse-linker-plugin 
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}$(if ${MCU_TYPE},-${MCU_TYPE},)-${MCU}-${F_CPU}$(if ${MULTI_ADAPTOR},-multi,)$(if ${RF},-rf,)
+TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}$(if ${MCU_TYPE},-${MCU_TYPE},)-${MCU}-${F_CPU}${MULTI}$(if ${RF},-rf,)
 # ----- No changes should be necessary below this line -----
 $(info $(SRC))
 $(info $(shell mkdir -p $(BIN)))

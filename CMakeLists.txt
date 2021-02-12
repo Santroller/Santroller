@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(foo)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 # TODO there is defo a cleaner way to implement this
 list (APPEND VARIANTS micro)
 list (APPEND VARIANTS a-micro)

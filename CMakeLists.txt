@@ -33,11 +33,11 @@ foreach (MUL ${MULTI})
                 add_custom_target(${DIR}-${VARIANT}-${F_CPU}${MUL}${DIR2} ALL)
                 unset(OUTPUTS)
                 foreach(OUTPUT ${OUTPUT_EXT}) 
-                    list(APPEND OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-${VARIANT}-atmega32u4-${F_CPU}${DIR2}.${OUTPUT})
+                    list(APPEND OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-${VARIANT}-main-atmega32u4-${F_CPU}${DIR2}.${OUTPUT})
                 endforeach()
                 add_custom_command(
                     TARGET   ${DIR}-${VARIANT}-${F_CPU}${MUL}${DIR2}
-                    COMMAND  make OBJDIR=obj/${DIR}-${VARIANT}-${F_CPU}${MUL} F_USB=${F_CPU} F_CPU=${F_CPU} ARDWIINO_BOARD=${VARIANT} MULTI=${MUL} TARGET=${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-${VARIANT}-atmega32u4-${F_CPU}${DIR2}
+                    COMMAND  make OBJDIR=obj/${DIR}-${VARIANT}-${F_CPU}${MUL} F_USB=${F_CPU} F_CPU=${F_CPU} ARDWIINO_BOARD=${VARIANT} MULTI=${MUL} TARGET=${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-${VARIANT}-main-atmega32u4-${F_CPU}${DIR2}
                     WORKING_DIRECTORY ../src/avr/micro/${DIR}
                     BYPRODUCTS ../src/avr/micro/${DIR}/obj/${DIR}-${VARIANT}-${F_CPU}${MUL} ${OUTPUTS}
                 )

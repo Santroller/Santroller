@@ -121,13 +121,13 @@ foreach (F_CPU ${MICRO_F_CPU})
 
     unset(OUTPUTS)
     foreach(OUTPUT ${OUTPUT_EXT}) 
-        list(APPEND OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-mini-atmega328p-${F_CPU}-rf.${OUTPUT})
+        list(APPEND OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-mini-main-atmega328p-${F_CPU}-rf.${OUTPUT})
     endforeach()
     add_custom_target(mini-${F_CPU} ALL)
 
     add_custom_command(
         TARGET   mini-${F_CPU}
-        COMMAND  make OBJDIR=obj/mini-${F_CPU} F_USB=${F_CPU} F_CPU=${F_CPU} MCU=atmega328p ARDWIINO_BOARD=mini VARIANT=uno TARGET=${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-mini-atmega328p-${F_CPU}-rf
+        COMMAND  make OBJDIR=obj/mini-${F_CPU} F_USB=${F_CPU} F_CPU=${F_CPU} MCU=atmega328p ARDWIINO_BOARD=mini VARIANT=uno TARGET=${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-mini-main-atmega328p-${F_CPU}-rf
         WORKING_DIRECTORY ../src/avr/mini/rf/${DIR}
         BYPRODUCTS ../src/avr/mini/rf/obj/mini-${F_CPU} ${OUTPUTS}
     )

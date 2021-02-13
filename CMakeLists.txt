@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 3.6)
-project(foo)
+cmake_minimum_required(VERSION 3.13)
+include(submodules/pico-sdk/pico_sdk_init.cmake)
+project(ardwiino C CXX ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+pico_sdk_init()
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 # For AVR, we have projects for arduinos that are similar enough to run the same
 # code after that there are variants that specify small differences, such as the
@@ -7,10 +11,12 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 set(PROJECTS "micro;uno")
 set(OUTPUT_EXT "bin;eep;elf;hex;lss;map;sym")
 
+# for usbserial firmwares we need the original arduino pids
 set(uno_PID 0x0001)
 set(mega2560_PID 0x0010)
 set(megaadk_PID 0x003f)
 
+# List all processors used by different variants
 set(uno_main_MCUS atmega328p)
 set(mega2560_main_MCUS atmega2560)
 set(megaadk_main_MCUS atmega2560)
@@ -24,14 +30,19 @@ set(micro_main_MCUS atmega32u4)
 set(a-micro_main_MCUS atmega32u4)
 set(leonardo_main_MCUS atmega32u4)
 
+# map the variants to their respective header files in src/avr/variants
 set(micro_VARIANT micro)
 set(a-micro_VARIANT micro)
 set(leonardo_VARIANT micro)
 
 set(mini_VARIANT uno)
 set(uno_VARIANT uno)
+
 set(mega2560_VARIANT mega)
 set(megaadk_VARIANT mega)
+
+# for micro based builds, the multi firmare is based on the main firmware, but
+# it is based on the usb firmware for unos.
 set(uno_multi_BUILD_TYPE usb)
 set(micro_multi_BUILD_TYPE main)
 
@@ -70,8 +81,8 @@ foreach(PROJECT ${PROJECTS})
       if(NOT (${TYPE} MATCHES "(usb|main)$"))
         set(EXTRA -${TYPE})
       endif()
-      # usbserial and rf builds have their own directories,
-      # They aren't just flags like multi
+      # usbserial and rf builds have their own directories, They aren't just
+      # flags like multi
       if(NOT ${TYPE} MATCHES "usbserial|rf")
         set(TYPE ${BUILD_TYPE})
       endif()
@@ -106,4 +117,33 @@ foreach(PROJECT ${PROJECTS})
       endforeach()
     endforeach()
   endforeach()
+endforeach()
+# https://github.com/raspberrypi/pico-examples/blob/master/cmake/build_variants/CMakeLists.txt
+# The above shows how to deal with variants
+
+set(TYPES "rf;multi;main")
+foreach(TYPE ${TYPES})
+  unset(EXTRA)
+  if(NOT (${TYPE} MATCHES "main"))
+    set(EXTRA -${TYPE})
+  else()
+    unset(TYPE)
+  endif()
+  set(TARGET ardwiino-pico-rp2040${EXTRA})
+  set(SRC src/pico/${TYPE})
+  message(STATUS ${TARGET})
+  add_executable(${TARGET} src/pico/rf/main.c)
+
+  # Add pico_stdlib library which aggregates commonly used features
+  target_link_libraries(${TARGET} pico_stdlib)
+
+  # create map/bin/hex/uf2 file in addition to ELF.
+  pico_add_extra_outputs(${TARGET})
+  add_custom_command(
+    TARGET ${TARGET}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.*
+      ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 endforeach()

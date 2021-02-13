@@ -1,6 +1,9 @@
 [submodule "src/shared/io/lufa/lufa"]
 	path = lib/lufa
 	url = https://github.com/abcminiuser/lufa.git
-[submodule "submodules/arduino-usbserial-bootloader"]
+[submodule "src/avr/uno/usbserial"]
 	path = src/avr/arduino-usbserial-bootloader
 	url = https://github.com/sanjay900/arduino-usbserial-bootloader
+[submodule "submodules/pico-sdk"]
+	path = submodules/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk

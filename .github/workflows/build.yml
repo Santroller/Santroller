@@ -14,7 +14,7 @@ jobs:
         fetch-depth: 0
     - name: setup
       run: |
-        sudo apt-get install -y make gcc-avr avr-libc binutils cmake
+        sudo apt-get install -y make gcc-avr avr-libc binutils cmake gcc-arm-none-eabi libnewlib-arm-none-eabi
     - name: make
       run: |
         mkdir build 

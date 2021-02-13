@@ -15,8 +15,6 @@ CC_FLAGS = -I../shared
 MCU_TYPE = main
 
 PROJECT_ROOT = ../../../../
-$(info $(SRC))
-$(info $(shell mkdir -p $(BIN)))
 
 # Default target
 all:

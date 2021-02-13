@@ -98,9 +98,9 @@ int main(void) {
       tickInputs(&controller);
       tickLEDs(&controller);
       // Since we receive data via acks, we need to make sure data is always
-      // being sent, so we send data every 4ms regardless.
+      // being sent, so we send data every 100ms regardless.
       if (memcmp(&controller, &prevCtrl, sizeof(Controller_t)) != 0 ||
-          millis() - lastPoll > 4) {
+          millis() - lastPoll > 100) {
         lastPoll = millis();
 
         uint8_t data[12];

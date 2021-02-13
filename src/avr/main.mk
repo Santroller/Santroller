@@ -19,7 +19,7 @@ VERSION_MAJOR = $(word 1,$(VERSION_LIST))
 VERSION_MINOR = $(word 2,$(VERSION_LIST))
 VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
-MULTI_ADAPTOR=$(if ${MULTI},-DDMULTI_ADAPTOR,)
+MULTI_ADAPTOR=$(if $(findstring -multi,$(EXTRA)),-DDMULTI_ADAPTOR,)
 SRC += ${PROJECT_ROOT}/src/shared/controller/guitar_includes.c ${PROJECT_ROOT}/src/shared/bootloader/bootloader.c
 LUFA_PATH    = ${PROJECT_ROOT}/lib/lufa/LUFA
 CC_FLAGS     += -DUSE_LUFA_CONFIG_HEADER -I${PROJECT_ROOT}/src/shared/output -I${PROJECT_ROOT}/src/avr/variants/${VARIANT} -I ${PROJECT_ROOT}/src/shared -I${PROJECT_ROOT}/lib -I${PROJECT_ROOT}/src/avr/lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin -ffast-math

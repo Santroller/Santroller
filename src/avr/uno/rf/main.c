@@ -14,20 +14,20 @@
 #include "util/util.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/power.h>
 #include <avr/sfr_defs.h>
+#include <avr/sleep.h>
 #include <avr/wdt.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <avr/power.h>
-#include <avr/sleep.h>
 #include <util/delay.h>
+// Sleep pin: 3
 Controller_t controller;
 Controller_t prevCtrl;
 Configuration_t newConfig;
 long lastPoll = 0;
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
-// Sleep pin: 3
 int main(void) {
   loadConfig();
   sei();
@@ -58,7 +58,6 @@ int main(void) {
       sleep_cpu(); // sleep within 3 clock cycles of above
     }
     if (millis() - lastPoll > config.main.pollRate) {
-      lastChange = millis();
       tickInputs(&controller);
       // Since we receive data via acks, we need to make sure data is always
       // being sent, so we send data every 100ms regardless.
@@ -68,22 +67,16 @@ int main(void) {
         uint8_t data[32];
         if (tickRFTX((uint8_t *)&controller, data, sizeof(XInput_Data_t))) {
           uint8_t cmd = data[0];
-          uint8_t offset = 29 * data[1];
-          bool isRead = data[2];
+          bool isRead = data[1];
           if (isRead) {
             processHIDReadFeatureReport(cmd);
           } else {
             if (cmd == COMMAND_WRITE_CONFIG) {
-              // The first byte of COMMAND_WRITE_CONFIG is an offset.
-              // Since rf has its own offset, we can just combine both to get a
-              // result offset
-              data[3] += offset;
-              // 3 bytes for rf header
-              processHIDWriteFeatureReport(cmd, 29, data + 3);
+              // 2 bytes for rf header
+              processHIDWriteFeatureReport(cmd, 30, data + 2);
             } else {
               handleCommand(cmd);
             }
-            // for (int i = 0; i < 32; i++) { Serial_SendByte(data[i]); }
           }
         }
         memcpy(&prevCtrl, &controller, sizeof(Controller_t));

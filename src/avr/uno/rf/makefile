@@ -8,16 +8,16 @@ ARDWIINO_BOARD = uno
 SIGNATURE = ardwiino
 
 SRC = main.c
-
+# FLASH_END of the mini is 0x7000, while the other variants have it at 0x7B00
+# TODO: this is probably wrong for the mega?
+RF_LOC = $(if $(findstring mini,$(VARIANT)),0x7000,0x7B00)
 CC_FLAGS=-DPID=${PID} -DRF_TX=true
-LD_FLAGS= -Wl,--section-start=.rfrecv=0x7B00
+LD_FLAGS= -Wl,--section-start=.rfrecv=${RF_LOC}
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P ${PORT}
 RF = true
 
 PROJECT_ROOT = ../../../../
-$(info $(SRC))
-$(info $(shell mkdir -p $(BIN)))
 
 # Default target
 all:

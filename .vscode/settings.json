@@ -68,7 +68,8 @@
         "api.h": "c",
         "apa102.h": "c",
         "endpointstream_avr8.h": "c",
-        "io.h": "c"
+        "io.h": "c",
+        "nrf24l01.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true

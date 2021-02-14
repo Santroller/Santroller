@@ -1,16 +1,6 @@
-#include "util.h"
+#include "util/util.h"
+#include <avr/interrupt.h>
 #include <stdint.h>
-
-void delay(unsigned long ms) {
-  uint16_t start = (uint16_t)micros();
-
-  while (ms > 0) {
-    if (((uint16_t)micros() - start) >= 1000) {
-      ms--;
-      start += 1000;
-    }
-  }
-}
 
 // the prescaler is set so that timer0 ticks every 64 clock cycles, and the
 // the overflow handler is called every 256 ticks.
@@ -29,7 +19,7 @@ ISR(TIMER0_OVF_vect)
 }
 
 // there are 1024 microseconds per overflow counter tick.
-unsigned long millis() {
+unsigned long millis(void) {
   unsigned long m;
   uint8_t oldSREG = SREG;
 
@@ -42,7 +32,7 @@ unsigned long millis() {
   return (m * (MICROSECONDS_PER_TIMER0_OVERFLOW / 8)) / (1000 / 8);
 }
 
-unsigned long micros() {
+unsigned long micros(void) {
   unsigned long m;
   uint8_t oldSREG = SREG, t;
 
@@ -98,3 +88,4 @@ void setupMicrosTimer(void) {
 #  error Timer 0 overflow interrupt not set correctly
 #endif
 }
+

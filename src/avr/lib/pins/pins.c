@@ -1,14 +1,57 @@
-#include "pins.h"
-#include "config/eeprom.h"
-#include "input/inputs/guitar.h"
+#include "pins/pins.h"
+#include "eeprom/eeprom.h"
+#include "controller/guitar_includes.h"
 #include "stddef.h"
 #include "util/util.h"
+#include <avr/interrupt.h>
 
+// On the ATmega1280, the addresses of some of the port registers are
+// greater than 255, so we can't store them in uint8_t's.
+extern const uint16_t PROGMEM port_to_mode_PGM[];
+extern const uint16_t PROGMEM port_to_input_PGM[];
+extern const uint16_t PROGMEM port_to_output_PGM[];
+
+extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
+// extern const uint8_t PROGMEM digital_pin_to_bit_PGM[];
+extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
+extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
+extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
+#define digitalPinToPort(P) (pgm_read_byte(digital_pin_to_port_PGM + (P)))
+#define digitalPinToBitMask(P)                                                 \
+  (pgm_read_byte(digital_pin_to_bit_mask_PGM + (P)))
+#define digitalPinToTimer(P) (pgm_read_byte(digital_pin_to_timer_PGM + (P)))
+#define analogInPinToBit(P) (P)
+#define portOutputRegister(P)                                                  \
+  ((volatile uint8_t *)(pgm_read_word(port_to_output_PGM + (P))))
+#define portInputRegister(P)                                                   \
+  ((volatile uint8_t *)(pgm_read_word(port_to_input_PGM + (P))))
+#define portModeRegister(P)                                                    \
+  ((volatile uint8_t *)(pgm_read_word(port_to_mode_PGM + (P))))
 int validAnalog = 0;
 int currentAnalog = 0;
 bool first = true;
-AnalogInfo_t joyData[NUM_ANALOG_INPUTS];
+Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
+  Pin_t pin = {};
+  uint8_t port = digitalPinToPort(pinNum);
+  pin.offset = offset;
+  pin.mask = digitalPinToBitMask(pinNum);
+  pin.port = portInputRegister(port);
+  pin.outPort = portOutputRegister(port);
+  pin.pmask = _BV(offset);
+  pin.eq = inverted;
+  return pin;
+}
+bool digitalReadPin(Pin_t pin) {
+  return ((*pin.port & pin.mask) != 0) == pin.eq;
+}
 
+void digitalWritePin(Pin_t pin, bool value) {
+  if (value == 0) {
+    *pin.outPort &= ~pin.mask;
+  } else {
+    *pin.outPort |= pin.mask;
+  }
+}
 void digitalWrite(uint8_t pin, uint8_t val) {
   uint8_t bit = digitalPinToBitMask(pin);
   uint8_t port = digitalPinToPort(pin);
@@ -46,7 +89,8 @@ void setUpAnalogPin(uint8_t offset) {
   AnalogPin_t apin = ((PinsCombined_t *)&config.pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
-  if (ret.offset == 5 && isGuitar(config.main.subType) && config.main.tiltType != ANALOGUE) {
+  if (ret.offset == 5 && isGuitar(config.main.subType) &&
+      config.main.tiltType != ANALOGUE) {
     return;
   }
   ret.hasDigital = false;
@@ -120,7 +164,7 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {
-  if (validAnalog == 0) return; 
+  if (validAnalog == 0) return;
   if (!first) {
     if (bit_is_set(ADCSRA, ADSC)) return;
     uint8_t low, high;

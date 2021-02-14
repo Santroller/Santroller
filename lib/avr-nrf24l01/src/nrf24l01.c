@@ -15,14 +15,15 @@
 #include "nrf24l01-mnemonics.h"
 #include "spi/spi.h"
 #include "util/util.h"
-#include <avr/io.h>
-#include <util/delay.h>
+// #include <avr/io.h>
+// #include <util/delay.h>
+#include "timer/timer.h"
 
 bool is_tx;
 
 /* init the hardware pins */
 void nrf24_init(void) {
-  spi_init(F_CPU, 0);
+  spi_begin(F_CPU, 0);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
   _delay_ms(5);
@@ -347,14 +348,6 @@ void nrf24_powerDown(void) {
   nrf24_readRegister(CONFIG, &config_reg, 1);
   bit_clear(config_reg, PWR_UP);
   nrf24_configRegister(CONFIG, config_reg);
-}
-
-uint8_t spi_transfer(uint8_t data) {
-  SPDR = data;
-  asm volatile("nop");
-  while (!(SPSR & _BV(SPIF)))
-    ;
-  return SPDR;
 }
 
 /* send and receive multiple bytes over SPI */

@@ -19,16 +19,18 @@
  */
 #include "inv_mpu.h"
 #include "i2c/i2c.h"
-#include "util/delay.h"
-#include <avr/pgmspace.h>
+#include "timer/timer.h"
+#ifdef __AVR__
+#  include <avr/pgmspace.h>
+#endif
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "util/util.h"
 #define MPU6050
 #define delay_ms _delay_ms
-#define min(a, b) ((a < b) ? a : b)
 #define i2c_write !twi_writeToPointer
 #define i2c_read !twi_readFromPointer
 static inline int reg_int_cb(struct int_param_s *int_param) { return 1; }

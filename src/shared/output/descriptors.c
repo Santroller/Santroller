@@ -1,8 +1,9 @@
-#include "descriptors.h"
-#include "config/defines.h"
-#include "input/inputs/guitar.h"
-#include "output/reports.h"
-#include "output/reports/keyboard.h"
+// TODO: this
+#ifdef __AVR__
+#  include "descriptors.h"
+#  include "config/defines.h"
+#  include "controller/guitar_includes.h"
+#  include "output/reports.h"
 uint8_t deviceType = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
@@ -36,12 +37,12 @@ const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
   VendorCode : REQ_GetOSFeatureDescriptor,
   Reserved : 0
 };
-#define Buttons 4
-#define MinAxisVal -127
-#define MaxAxisVal 127
-#define MinPhysicalVal -127
-#define MaxPhysicalVal 128
-#define AbsoluteCoords false
+#  define Buttons 4
+#  define MinAxisVal -127
+#  define MaxAxisVal 127
+#  define MinPhysicalVal -127
+#  define MaxPhysicalVal 128
+#  define AbsoluteCoords false
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     // Controller
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
@@ -205,8 +206,8 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM kbd_report_descriptor[] = {
     HID_RI_END_COLLECTION(0),
 };
 
-#define ARDWIINO_VID 0x1209
-#define ARDWIINO_PID 0x2882
+#  define ARDWIINO_VID 0x1209
+#  define ARDWIINO_PID 0x2882
 const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
   USBSpecification : VERSION_BCD(2, 0, 0),
@@ -230,11 +231,11 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
       Type : DTYPE_Configuration
     },
     TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
-#ifdef MULTI_ADAPTOR
+#  ifdef MULTI_ADAPTOR
     TotalInterfaces : 6,
-#else
+#  else
     TotalInterfaces : 5,
-#endif
+#  endif
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
     ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
@@ -278,7 +279,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     PollingIntervalMS : 1
   },
 
-#ifdef MULTI_ADAPTOR
+#  ifdef MULTI_ADAPTOR
   InterfaceXInput2 : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -390,7 +391,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-#else
+#  else
 
   Interface_AudioControl : {
     Header :
@@ -529,7 +530,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     TotalEmbeddedJacks : 0x01,
     AssociatedJackID : {0x03}
   },
-#endif
+#  endif
   InterfaceConfig : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -554,18 +555,18 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
     InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0,
-#ifdef MULTI_ADAPTOR
+#  ifdef MULTI_ADAPTOR
     TotalEndpoints : 0,
-#else
+#  else
     TotalEndpoints : 2,
-#endif
+#  endif
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
     Protocol : HID_CSCP_NonBootProtocol,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
 
-#ifndef MULTI_ADAPTOR
+#  ifndef MULTI_ADAPTOR
   EndpointInHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_IN,
@@ -580,7 +581,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-#endif
+#  endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
     HIDSpec : VERSION_BCD(1, 1, 1),
@@ -631,7 +632,8 @@ uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
           }
         }
         if (bytes == 1) { Endpoint_Write_8(pgm_read_byte(Buffer + current)); }
-        // We need to skip over 2 bytes if we find a block to modify, as each mod block overwrites two bytes
+        // We need to skip over 2 bytes if we find a block to modify, as each
+        // mod block overwrites two bytes
         Length -= bytes;
         BytesInEndpoint += bytes;
         current += bytes;
@@ -705,12 +707,12 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     } else {
       write_endpoint_mods(address, size, mods, 3);
     }
-#ifdef MULTI_ADAPTOR
+#  ifdef MULTI_ADAPTOR
 // TODO: if we ever implement this stuff, this needs to be implemented again.
 // conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
 // conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
 // conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
-#endif
+#  endif
     return NO_DESCRIPTOR;
     break;
   case HID_DTYPE_Report:
@@ -738,3 +740,4 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 
   return size;
 }
+#endif

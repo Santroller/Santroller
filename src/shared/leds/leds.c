@@ -1,19 +1,14 @@
 #include "leds.h"
-#include "../config/eeprom.h"
+#include "eeprom/eeprom.h"
 #include "util/util.h"
 // #include "input_handler.h"
-#include <avr/power.h>
-/* Send out data via SPI & wait until transmission is complete */
-void transmitSPIByte(uint8_t data) {
-  SPDR = data;
-  while (!(SPSR & _BV(SPIF)))
-    ;
-}
+// #include <avr/power.h>
+#include "spi/spi.h"
 void tickLEDs(Controller_t *controller) {
   // Don't do anything if the leds are disabled.
   if (config.main.fretLEDMode != APA102) return;
   int led = 0;
-  for (uint8_t i = 0; i < 4; i++) { transmitSPIByte(0); }
+  for (uint8_t i = 0; i < 4; i++) { spi_transfer(0); }
   Led_t configLED;
   Led_t contLED;
   // Loop until either config.leds runs out, or controller->leds runs out. This
@@ -29,15 +24,15 @@ void tickLEDs(Controller_t *controller) {
       if (getVelocity(controller, configLED.pin - 1)) { contLED = configLED; }
     }
     // Write an leds colours
-    transmitSPIByte(0xff);
-    transmitSPIByte(contLED.blue);
-    transmitSPIByte(contLED.green);
-    transmitSPIByte(contLED.red);
+    spi_transfer(0xff);
+    spi_transfer(contLED.blue);
+    spi_transfer(contLED.green);
+    spi_transfer(contLED.red);
     led++;
   }
   // We need to send the correct amount of stop bytes
   for (uint8_t i=0; i<led; i+=16)
   {
-    transmitSPIByte(0xff);  // 8 more clock cycles
+    spi_transfer(0xff);  // 8 more clock cycles
   }
 }

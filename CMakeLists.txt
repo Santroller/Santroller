@@ -118,32 +118,58 @@ foreach(PROJECT ${PROJECTS})
     endforeach()
   endforeach()
 endforeach()
-# https://github.com/raspberrypi/pico-examples/blob/master/cmake/build_variants/CMakeLists.txt
-# The above shows how to deal with variants
 
 set(TYPES "rf;multi;main")
 foreach(TYPE ${TYPES})
   unset(EXTRA)
   if(NOT (${TYPE} MATCHES "main"))
     set(EXTRA -${TYPE})
-  else()
-    unset(TYPE)
   endif()
   set(TARGET ardwiino-pico-rp2040${EXTRA})
+  if(${TYPE} MATCHES "multi")
+    set(TYPE main)
+  endif()
   set(SRC src/pico/${TYPE})
   message(STATUS ${TARGET})
-  add_executable(${TARGET} src/pico/rf/main.c)
+  add_executable(
+    ${TARGET}
+    ${SRC}/main.c
+    src/shared/controller/guitar_includes.c
+    src/pico/lib/bootloader/bootloader.c
+    src/shared/output/control_requests.c
+    src/shared/output/descriptors.c
+    src/shared/output/serial_handler.c
+    src/shared/output/reports.c
+    src/shared/leds/leds.c
+    src/shared/rf/rf.c
+    src/shared/input/input_handler.c
+    src/pico/lib/eeprom/eeprom.c
+    lib/avr-nrf24l01/src/nrf24l01.c
+    lib/mpu6050/inv_mpu_dmp_motion_driver.c
+    lib/mpu6050/inv_mpu.c
+    lib/mpu6050/mpu_math.c
+    src/pico/lib/timer/timer.c
+    src/pico/lib/spi/spi.c
+    src/pico/lib/i2c/i2c.c
+    src/pico/lib/pins/pins.c)
+  include_directories(src/shared/output src/shared src/shared/lib lib src/pico
+                      src/pico/lib lib/lufa)
+  if(${EXTRA} MATCHES "-multi")
+    target_compile_definitions(${TARGET} PUBLIC MULTI_ADAPTOR)
+  endif()
+
+  # TODO: instead of defines, we should probably make a shim layer of some sor
+  target_compile_definitions(${TARGET} PUBLIC ARCH=23 uint_reg_t=uint8_t PROGMEM= memcpy_P=memcpy strcpy_P=strcpy F_CPU=133000000 PSTR= ARDWIINO_BOARD="pico")
 
   # Add pico_stdlib library which aggregates commonly used features
-  target_link_libraries(${TARGET} pico_stdlib)
+  target_link_libraries(${TARGET} pico_stdlib hardware_i2c hardware_spi hardware_adc hardware_gpio hardware_timer)
 
   # create map/bin/hex/uf2 file in addition to ELF.
   pico_add_extra_outputs(${TARGET})
+  # Copy built binaries to firmware
   add_custom_command(
     TARGET ${TARGET}
     POST_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.*
-      ${CMAKE_CURRENT_BINARY_DIR}/firmware)
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.*
+            ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 endforeach()

@@ -19,7 +19,9 @@
 #include "dmpKey.h"
 #include "dmpmap.h"
 #include "inv_mpu.h"
-#include <avr/pgmspace.h>
+#ifdef __AVR__
+#  include <avr/pgmspace.h>
+#endif
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -552,10 +554,8 @@ int8_t dmp_set_orientation(unsigned short orient) {
   accel_regs[2] = accel_axes[(orient >> 6) & 3];
 
   /* Chip-to-body, axes only. */
-  if (mpu_write_mem(FCFG_1, 3, gyro_regs))
-    return -1;
-  if (mpu_write_mem(FCFG_2, 3, accel_regs))
-    return -1;
+  if (mpu_write_mem(FCFG_1, 3, gyro_regs)) return -1;
+  if (mpu_write_mem(FCFG_2, 3, accel_regs)) return -1;
 
   memcpy(gyro_regs, gyro_sign, 3);
   memcpy(accel_regs, accel_sign, 3);
@@ -573,10 +573,8 @@ int8_t dmp_set_orientation(unsigned short orient) {
   }
 
   /* Chip-to-body, sign only. */
-  if (mpu_write_mem(FCFG_3, 3, gyro_regs))
-    return -1;
-  if (mpu_write_mem(FCFG_7, 3, accel_regs))
-    return -1;
+  if (mpu_write_mem(FCFG_3, 3, gyro_regs)) return -1;
+  if (mpu_write_mem(FCFG_7, 3, accel_regs)) return -1;
   dmp.orient = orient;
   return 0;
 }
@@ -596,14 +594,11 @@ int8_t dmp_set_gyro_bias(long *bias) {
   unsigned char regs[4];
 
   gyro_bias_body[0] = bias[dmp.orient & 3];
-  if (dmp.orient & 4)
-    gyro_bias_body[0] *= -1;
+  if (dmp.orient & 4) gyro_bias_body[0] *= -1;
   gyro_bias_body[1] = bias[(dmp.orient >> 3) & 3];
-  if (dmp.orient & 0x20)
-    gyro_bias_body[1] *= -1;
+  if (dmp.orient & 0x20) gyro_bias_body[1] *= -1;
   gyro_bias_body[2] = bias[(dmp.orient >> 6) & 3];
-  if (dmp.orient & 0x100)
-    gyro_bias_body[2] *= -1;
+  if (dmp.orient & 0x100) gyro_bias_body[2] *= -1;
 
 #ifdef EMPL_NO_64BIT
   gyro_bias_body[0] =
@@ -622,15 +617,13 @@ int8_t dmp_set_gyro_bias(long *bias) {
   regs[1] = (unsigned char)((gyro_bias_body[0] >> 16) & 0xFF);
   regs[2] = (unsigned char)((gyro_bias_body[0] >> 8) & 0xFF);
   regs[3] = (unsigned char)(gyro_bias_body[0] & 0xFF);
-  if (mpu_write_mem(D_EXT_GYRO_BIAS_X, 4, regs))
-    return -1;
+  if (mpu_write_mem(D_EXT_GYRO_BIAS_X, 4, regs)) return -1;
 
   regs[0] = (unsigned char)((gyro_bias_body[1] >> 24) & 0xFF);
   regs[1] = (unsigned char)((gyro_bias_body[1] >> 16) & 0xFF);
   regs[2] = (unsigned char)((gyro_bias_body[1] >> 8) & 0xFF);
   regs[3] = (unsigned char)(gyro_bias_body[1] & 0xFF);
-  if (mpu_write_mem(D_EXT_GYRO_BIAS_Y, 4, regs))
-    return -1;
+  if (mpu_write_mem(D_EXT_GYRO_BIAS_Y, 4, regs)) return -1;
 
   regs[0] = (unsigned char)((gyro_bias_body[2] >> 24) & 0xFF);
   regs[1] = (unsigned char)((gyro_bias_body[2] >> 16) & 0xFF);
@@ -656,14 +649,11 @@ int8_t dmp_set_accel_bias(long *bias) {
   __asm__("nop\n\t"); //__no_operation();
 
   accel_bias_body[0] = bias[dmp.orient & 3];
-  if (dmp.orient & 4)
-    accel_bias_body[0] *= -1;
+  if (dmp.orient & 4) accel_bias_body[0] *= -1;
   accel_bias_body[1] = bias[(dmp.orient >> 3) & 3];
-  if (dmp.orient & 0x20)
-    accel_bias_body[1] *= -1;
+  if (dmp.orient & 0x20) accel_bias_body[1] *= -1;
   accel_bias_body[2] = bias[(dmp.orient >> 6) & 3];
-  if (dmp.orient & 0x100)
-    accel_bias_body[2] *= -1;
+  if (dmp.orient & 0x100) accel_bias_body[2] *= -1;
 
 #ifdef EMPL_NO_64BIT
   accel_bias_body[0] =
@@ -706,15 +696,12 @@ int8_t dmp_set_fifo_rate(unsigned short rate) {
   unsigned short div;
   unsigned char tmp[8];
 
-  if (rate > DMP_SAMPLE_RATE)
-    return -1;
+  if (rate > DMP_SAMPLE_RATE) return -1;
   div = DMP_SAMPLE_RATE / rate - 1;
   tmp[0] = (unsigned char)((div >> 8) & 0xFF);
   tmp[1] = (unsigned char)(div & 0xFF);
-  if (mpu_write_mem(D_0_22, 2, tmp))
-    return -1;
-  if (mpu_write_mem(CFG_6, 12, (unsigned char *)regs_end))
-    return -1;
+  if (mpu_write_mem(D_0_22, 2, tmp)) return -1;
+  if (mpu_write_mem(CFG_6, 12, (unsigned char *)regs_end)) return -1;
 
   dmp.fifo_rate = rate;
   return 0;
@@ -741,8 +728,7 @@ int8_t dmp_set_tap_thresh(unsigned char axis, unsigned short thresh) {
   unsigned char tmp[4], accel_fsr;
   float scaled_thresh;
   unsigned short dmp_thresh, dmp_thresh_2;
-  if (!(axis & TAP_XYZ) || thresh > 1600)
-    return -1;
+  if (!(axis & TAP_XYZ) || thresh > 1600) return -1;
 
   scaled_thresh = (float)thresh / DMP_SAMPLE_RATE;
 
@@ -777,22 +763,16 @@ int8_t dmp_set_tap_thresh(unsigned char axis, unsigned short thresh) {
   tmp[3] = (unsigned char)(dmp_thresh_2 & 0xFF);
 
   if (axis & TAP_X) {
-    if (mpu_write_mem(DMP_TAP_THX, 2, tmp))
-      return -1;
-    if (mpu_write_mem(D_1_36, 2, tmp + 2))
-      return -1;
+    if (mpu_write_mem(DMP_TAP_THX, 2, tmp)) return -1;
+    if (mpu_write_mem(D_1_36, 2, tmp + 2)) return -1;
   }
   if (axis & TAP_Y) {
-    if (mpu_write_mem(DMP_TAP_THY, 2, tmp))
-      return -1;
-    if (mpu_write_mem(D_1_40, 2, tmp + 2))
-      return -1;
+    if (mpu_write_mem(DMP_TAP_THY, 2, tmp)) return -1;
+    if (mpu_write_mem(D_1_40, 2, tmp + 2)) return -1;
   }
   if (axis & TAP_Z) {
-    if (mpu_write_mem(DMP_TAP_THZ, 2, tmp))
-      return -1;
-    if (mpu_write_mem(D_1_44, 2, tmp + 2))
-      return -1;
+    if (mpu_write_mem(DMP_TAP_THZ, 2, tmp)) return -1;
+    if (mpu_write_mem(D_1_44, 2, tmp + 2)) return -1;
   }
   return 0;
 }
@@ -805,12 +785,9 @@ int8_t dmp_set_tap_thresh(unsigned char axis, unsigned short thresh) {
 int8_t dmp_set_tap_axes(unsigned char axis) {
   unsigned char tmp = 0;
 
-  if (axis & TAP_X)
-    tmp |= 0x30;
-  if (axis & TAP_Y)
-    tmp |= 0x0C;
-  if (axis & TAP_Z)
-    tmp |= 0x03;
+  if (axis & TAP_X) tmp |= 0x30;
+  if (axis & TAP_Y) tmp |= 0x0C;
+  if (axis & TAP_Z) tmp |= 0x03;
   return mpu_write_mem(D_1_72, 1, &tmp);
 }
 
@@ -919,11 +896,9 @@ int8_t dmp_set_shake_reject_timeout(unsigned short time) {
  */
 int8_t dmp_get_pedometer_step_count(unsigned long *count) {
   unsigned char tmp[4];
-  if (!count)
-    return -1;
+  if (!count) return -1;
 
-  if (mpu_read_mem(D_PEDSTD_STEPCTR, 4, tmp))
-    return -1;
+  if (mpu_read_mem(D_PEDSTD_STEPCTR, 4, tmp)) return -1;
 
   count[0] = ((unsigned long)tmp[0] << 24) | ((unsigned long)tmp[1] << 16) |
              ((unsigned long)tmp[2] << 8) | tmp[3];
@@ -954,11 +929,9 @@ int8_t dmp_set_pedometer_step_count(unsigned long count) {
  */
 int8_t dmp_get_pedometer_walk_time(unsigned long *time) {
   unsigned char tmp[4];
-  if (!time)
-    return -1;
+  if (!time) return -1;
 
-  if (mpu_read_mem(D_PEDSTD_TIMECTR, 4, tmp))
-    return -1;
+  if (mpu_read_mem(D_PEDSTD_TIMECTR, 4, tmp)) return -1;
 
   time[0] = (((unsigned long)tmp[0] << 24) | ((unsigned long)tmp[1] << 16) |
              ((unsigned long)tmp[2] << 8) | tmp[3]) *
@@ -1108,10 +1081,8 @@ int8_t dmp_enable_feature(unsigned short mask) {
   mpu_reset_fifo();
 
   dmp.packet_length = 0;
-  if (mask & DMP_FEATURE_SEND_RAW_ACCEL)
-    dmp.packet_length += 6;
-  if (mask & DMP_FEATURE_SEND_ANY_GYRO)
-    dmp.packet_length += 6;
+  if (mask & DMP_FEATURE_SEND_RAW_ACCEL) dmp.packet_length += 6;
+  if (mask & DMP_FEATURE_SEND_ANY_GYRO) dmp.packet_length += 6;
   if (mask & (DMP_FEATURE_LP_QUAT | DMP_FEATURE_6X_LP_QUAT))
     dmp.packet_length += 16;
   if (mask & (DMP_FEATURE_TAP | DMP_FEATURE_ANDROID_ORIENT))
@@ -1211,13 +1182,11 @@ static int8_t decode_gesture(unsigned char *gesture) {
     unsigned char direction, count;
     direction = tap >> 3;
     count = (tap % 8) + 1;
-    if (dmp.tap_cb)
-      dmp.tap_cb(direction, count);
+    if (dmp.tap_cb) dmp.tap_cb(direction, count);
   }
 
   if (gesture[1] & INT_SRC_ANDROID_ORIENT) {
-    if (dmp.android_orient_cb)
-      dmp.android_orient_cb(android_orient >> 6);
+    if (dmp.android_orient_cb) dmp.android_orient_cb(android_orient >> 6);
   }
 
   return 0;
@@ -1283,8 +1252,7 @@ int8_t dmp_read_fifo(short *gyro, short *accel, long *quat,
 
   /* Get a packet. */
   int8_t output = mpu_read_fifo_stream(dmp.packet_length, fifo_data, more);
-  if (output)
-    return output * 10;
+  if (output) return output * 10;
 
   /* Parse DMP packet. */
   if (dmp.feature_mask & (DMP_FEATURE_LP_QUAT | DMP_FEATURE_6X_LP_QUAT)) {

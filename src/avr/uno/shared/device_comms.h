@@ -1,4 +1,5 @@
 #pragma once
+#include <avr/io.h> 
 #ifndef UDR1
 #  define UBRR1 UBRR0
 #  define UDR1 UDR0

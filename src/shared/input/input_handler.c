@@ -1,10 +1,9 @@
 #include "input_handler.h"
-#include "config/eeprom.h"
+#include "eeprom/eeprom.h"
 #include "i2c/i2c.h"
 #include "inputs/direct.h"
 #include "inputs/guitar.h"
 #include "inputs/ps2_cnt.h"
-#include "inputs/rf.h"
 #include "inputs/wii_ext.h"
 #include "leds/leds.h"
 #include "output/descriptors.h"
@@ -29,10 +28,13 @@ void initInputs() {
     break;
   }
   if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
-    spi_init(F_CPU / 2, 0x00);
+    spi_begin(F_CPU / 2, 0x00);
   }
   if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
     twi_init();
+  }
+  if (config.main.tiltType == ANALOGUE && config.main.inputType == WII) {
+    initDirectInput();
   }
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;

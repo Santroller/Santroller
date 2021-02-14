@@ -1,15 +1,17 @@
 #define ARDUINO_MAIN
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
-#include "config/eeprom.h"
 #include "device_comms.h"
+#include "eeprom/eeprom.h"
 #include "input/input_handler.h"
-#include "input/inputs/direct.h"
-#include "input/inputs/rf.h"
 #include "leds/leds.h"
 #include "output/reports.h"
 #include "output/serial_commands.h"
 #include "output/serial_handler.h"
+#include "pins/pins.h"
+#include "pins_arduino.h"
+#include "rf/rf.h"
+#include "timer/timer.h"
 #include "util/util.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -115,8 +117,7 @@ int main(void) {
           if (packetCount == 0) {
             state = 7;
             if (isConfig) {
-              eeprom_update_block(&config, &config_pointer,
-                                  sizeof(Configuration_t));
+              writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));
             }
             break;
           }
@@ -152,9 +153,7 @@ int main(void) {
             nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
           }
         }
-        if (cmd == COMMAND_REBOOT) {
-        _delay_ms(100);
-        }
+        if (cmd == COMMAND_REBOOT) { _delay_ms(100); }
         handleCommand(cmd);
       }
       // Save new pointer position

@@ -1,5 +1,5 @@
 
-#include "spi.h"
+#include "spi/spi.h"
 #include <avr/io.h>
 #include <avr/power.h>
 #include <math.h>
@@ -7,6 +7,7 @@
 #include <util/delay.h>
 #include "util/util.h"
 #include "pins_arduino.h"
+#include "pins/pins.h"
 
 void calculateClock(uint32_t clock, uint8_t config) {
   uint8_t clockDiv;
@@ -33,11 +34,18 @@ void calculateClock(uint32_t clock, uint8_t config) {
   SPSR = clockDiv & 0x01;
 }
 
-void spi_init(uint32_t clock, uint8_t config) {
+void spi_begin(uint32_t clock, uint8_t config) {
   pinMode(PIN_SPI_MOSI, OUTPUT);
   pinMode(PIN_SPI_MISO, INPUT_PULLUP);
   pinMode(PIN_SPI_SCK, OUTPUT);
   digitalWrite(PIN_SPI_SS, 1);
   pinMode(PIN_SPI_SS, OUTPUT);
   calculateClock(clock, config);
+}
+uint8_t spi_transfer(uint8_t data) {
+  SPDR = data;
+  asm volatile("nop");
+  while (!(SPSR & _BV(SPIF)))
+    ;
+  return SPDR;
 }

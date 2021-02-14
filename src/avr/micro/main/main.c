@@ -2,18 +2,18 @@
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "bootloader/bootloader.h"
-#include "config/eeprom.h"
+#include "eeprom/eeprom.h"
 #include "input/input_handler.h"
-#include "input/inputs/direct.h"
-#include "input/inputs/rf.h"
 #include "leds/leds.h"
 #include "output/control_requests.h"
 #include "output/descriptors.h"
 #include "output/reports.h"
-#include "output/reports/xinput.h"
 #include "output/serial_handler.h"
+#include "pins/pins.h"
 #include "pins_arduino.h"
+#include "rf/rf.h"
 #include "stdbool.h"
+#include "timer/timer.h"
 #include "util/util.h"
 #include <stdlib.h>
 Controller_t controller;
@@ -138,8 +138,8 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   uint8_t buf[66];
   Endpoint_ClearSETUP();
-  Endpoint_Read_Control_Stream_LE(buf+2, data_len);
-  processHIDWriteFeatureReport(cmd, data_len, buf+2);
+  Endpoint_Read_Control_Stream_LE(buf + 2, data_len);
+  processHIDWriteFeatureReport(cmd, data_len, buf + 2);
   Endpoint_ClearStatusStage();
   if (config.rf.rfInEnabled) {
     uint8_t buf2[32];

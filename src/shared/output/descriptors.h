@@ -2,7 +2,7 @@
 
 #define WCHAR wchar_t
 /* Includes: (don't import everything on the 328p)*/
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) 
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) || !defined(__AVR__)
 // Pull in enough information from LUFA in order to be able to compile the
 // descriptors.
 #  define __INCLUDE_FROM_USB_DRIVER
@@ -27,7 +27,7 @@ extern uint8_t deviceType;
 #include "controller/controller.h"
 #include "serial_commands.h"
 #include "util/util.h"
-#include <avr/pgmspace.h>
+// #include <avr/pgmspace.h>
 #include <stdint.h>
 
 // Device Request for WCID data. Note that this is the same as

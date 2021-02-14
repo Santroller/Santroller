@@ -11,8 +11,6 @@ AVRDUDE_FLAGS = -P /dev/ttyACM0 reset
 PROJECT_ROOT = ../../../../
 
 SRC = main.c
-$(info $(SRC))
-$(info $(shell mkdir -p $(BIN)))
 
 # Default target
 all:

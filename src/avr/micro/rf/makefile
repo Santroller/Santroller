@@ -19,9 +19,6 @@ PID=$(if $(filter-out $(F_CPU),8000000),0x9206,0x9204)
 CC_FLAGS=-DPID=${PID} -DRF_TX=true
 LD_FLAGS= -Wl,--section-start=.rfrecv=0x7B00
 
-$(info $(SRC))
-$(info $(shell mkdir -p $(BIN)))
-
 # Default target
 all:
 

@@ -1,5 +1,6 @@
-#include "eeprom.h"
+#include "eeprom/eeprom.h"
 #include <avr/pgmspace.h>
+#include <avr/eeprom.h>
 static uint8_t EEMEM test = 0;
 Configuration_t EEMEM config_pointer = DEFAULT_CONFIG;
 const Configuration_t PROGMEM default_config = DEFAULT_CONFIG;
@@ -40,6 +41,9 @@ void loadConfig(void) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));
   }
+}
+void writeConfigBlock(uint8_t offset, uint8_t* data, uint8_t len) {
+  eeprom_update_block(data, ((uint8_t *)&config_pointer) + offset, len);
 }
 
 void resetConfig(void) {

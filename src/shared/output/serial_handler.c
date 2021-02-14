@@ -1,13 +1,12 @@
 #include "serial_handler.h"
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
-#include "input/inputs/direct.h"
-#include "input/inputs/ps2_cnt.h"
-#include "input/inputs/rf.h"
-#include "input/inputs/wii_ext.h"
+#include "rf/rf.h"
+#include "controller/controller.h"
 #include "leds/leds.h"
 #include "serial_commands.h"
 #include "util/util.h"
+#include "timer/timer.h"
 #include <stdlib.h>
 static const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07,
                                      0x00, 0x00, 0x00, 0x00};
@@ -40,7 +39,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
     uint8_t offset = *data;
     data++;
     data_len--;
-    eeprom_update_block(data, ((uint8_t *)&config_pointer) + offset, data_len);
+    writeConfigBlock(offset, data, data_len);
     return;
   }
   case COMMAND_SET_LEDS: {

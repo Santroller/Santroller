@@ -1,13 +1,15 @@
-#include "control_requests.h"
-#include "../config/defines.h"
-#include "controller_structs.h"
-#include "descriptors.h"
-#include "output/serial_handler.h"
-#ifdef MULTI_ADAPTOR
-#  define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_4_t
-#else
-#  define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_t
-#endif
+// TODO: this
+#ifdef __AVR__
+#  include "control_requests.h"
+#  include "../config/defines.h"
+#  include "controller_structs.h"
+#  include "descriptors.h"
+#  include "output/serial_handler.h"
+#  ifdef MULTI_ADAPTOR
+#    define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_4_t
+#  else
+#    define CompatibleDescriptorType USB_OSCompatibleIDDescriptor_t
+#  endif
 // Dumps from a real guitar
 // const PROGMEM uint8_t ID[] = {0x00, 0x82, 0xf8, 0x23};
 const PROGMEM uint8_t capabilities1[] = {0x00, 0x08, 0x00, 0x00,
@@ -36,11 +38,11 @@ const PROGMEM CompatibleDescriptorType DevCompatIDs = {
   TotalLength : sizeof(CompatibleDescriptorType),
   Version : 0x0100,
   Index : EXTENDED_COMPAT_ID_DESCRIPTOR,
-#ifdef MULTI_ADAPTOR
+#  ifdef MULTI_ADAPTOR
   TotalSections : 4,
-#else
+#  else
   TotalSections : 2,
-#endif
+#  endif
   Reserved : {0},
   CompatID : {
     FirstInterfaceNumber : INTERFACE_ID_XInput,
@@ -56,7 +58,7 @@ const PROGMEM CompatibleDescriptorType DevCompatIDs = {
     SubCompatibleID : {0},
     Reserved2 : {0}
   },
-#ifdef MULTI_ADAPTOR
+#  ifdef MULTI_ADAPTOR
   CompatID2 : {
     FirstInterfaceNumber : INTERFACE_ID_XInput_2,
     Reserved : 0x04,
@@ -78,7 +80,7 @@ const PROGMEM CompatibleDescriptorType DevCompatIDs = {
     SubCompatibleID : {0},
     Reserved2 : {0}
   }
-#endif
+#  endif
 };
 void deviceControlRequest(void) {
   if (!(Endpoint_IsSETUPReceived())) return;
@@ -128,7 +130,8 @@ void deviceControlRequest(void) {
   //   buffer = &ID;
   // } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
   //            (USB_ControlRequest.bmRequestType ==
-  //                (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
+  //                (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE))
+  //                &&
   //            USB_ControlRequest.wIndex == INTERFACE_ID_XInput &&
   //            USB_ControlRequest.wValue == 0x0100) {
   //   len = sizeof(capabilities2);
@@ -140,3 +143,4 @@ void deviceControlRequest(void) {
     Endpoint_ClearStatusStage();
   }
 }
+#endif

@@ -1,5 +1,4 @@
 #pragma once
-#include "../config/eeprom.h"
 #include "../controller/controller.h"
 #include "bootloader/bootloader.h"
 #include "controller_structs.h"

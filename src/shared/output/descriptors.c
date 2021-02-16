@@ -1,9 +1,14 @@
-// TODO: this
+#include "descriptors.h"
+#include "config/defines.h"
+#include "controller/guitar_includes.h"
+#include "output/reports.h"
+#include "util/util.h"
 #ifdef __AVR__
-#  include "descriptors.h"
-#  include "config/defines.h"
-#  include "controller/guitar_includes.h"
-#  include "output/reports.h"
+#  define AVR_CONST const PROGMEM
+#else
+#  include <tusb.h>
+#  define AVR_CONST
+#endif
 uint8_t deviceType = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
@@ -11,39 +16,39 @@ uint8_t deviceType = OUTPUT_TYPE;
  * language ID table available at USB.org what languages the device supports for
  * its string descriptors.
  */
-const USB_Descriptor_String_t PROGMEM languageString =
+AVR_CONST USB_Descriptor_String_t languageString =
     USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 /** Manufacturer descriptor string. This is a Unicode string containing the
  * manufacturer's details in human readable form, and is read out upon request
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM manufacturerString =
+AVR_CONST USB_Descriptor_String_t manufacturerString =
     USB_STRING_DESCRIPTOR(L"sanjay900");
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM productString =
+AVR_CONST USB_Descriptor_String_t productString =
     USB_STRING_DESCRIPTOR(L"Ardwiino");
-const USB_Descriptor_String_t *const PROGMEM descriptorStrings[] = {
+const USB_Descriptor_String_t *AVR_CONST descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
-const USB_OSDescriptor_t PROGMEM OSDescriptorString = {
+AVR_CONST USB_OSDescriptor_t OSDescriptorString = {
   Header : {Size : sizeof(USB_OSDescriptor_t), Type : DTYPE_String},
   Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
   VendorCode : REQ_GetOSFeatureDescriptor,
   Reserved : 0
 };
-#  define Buttons 4
-#  define MinAxisVal -127
-#  define MaxAxisVal 127
-#  define MinPhysicalVal -127
-#  define MaxPhysicalVal 128
-#  define AbsoluteCoords false
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
+#define Buttons 4
+#define MinAxisVal -127
+#define MaxAxisVal 127
+#define MinPhysicalVal -127
+#define MaxPhysicalVal 128
+#define AbsoluteCoords false
+AVR_CONST USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
     // Controller
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_GAMEPAD),
@@ -133,7 +138,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM ps3_report_descriptor[] = {
     HID_RI_END_COLLECTION(0),
 };
 
-const USB_Descriptor_HIDReport_Datatype_t PROGMEM kbd_report_descriptor[] = {
+AVR_CONST USB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[] = {
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_KEYBOARD),
     HID_RI_COLLECTION(8, HID_COLLECTION_APPLICATION),
@@ -206,9 +211,9 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM kbd_report_descriptor[] = {
     HID_RI_END_COLLECTION(0),
 };
 
-#  define ARDWIINO_VID 0x1209
-#  define ARDWIINO_PID 0x2882
-const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
+#define ARDWIINO_VID 0x1209
+#define ARDWIINO_PID 0x2882
+AVR_CONST USB_Descriptor_Device_t deviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
   USBSpecification : VERSION_BCD(2, 0, 0),
   Class : USB_CSCP_NoDeviceClass,
@@ -224,18 +229,18 @@ const USB_Descriptor_Device_t PROGMEM deviceDescriptor = {
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
 // uint8_t dbuf[DBUF_SIZE];
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
+AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
   Config : {
     Header : {
       Size : sizeof(USB_Descriptor_Configuration_Header_t),
       Type : DTYPE_Configuration
     },
     TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
-#  ifdef MULTI_ADAPTOR
+#ifdef MULTI_ADAPTOR
     TotalInterfaces : 6,
-#  else
+#else
     TotalInterfaces : 5,
-#  endif
+#endif
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
     ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
@@ -279,7 +284,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     PollingIntervalMS : 1
   },
 
-#  ifdef MULTI_ADAPTOR
+#ifdef MULTI_ADAPTOR
   InterfaceXInput2 : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -391,7 +396,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-#  else
+#else
 
   Interface_AudioControl : {
     Header :
@@ -530,7 +535,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     TotalEmbeddedJacks : 0x01,
     AssociatedJackID : {0x03}
   },
-#  endif
+#endif
   InterfaceConfig : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -555,18 +560,18 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
     InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0,
-#  ifdef MULTI_ADAPTOR
+#ifdef MULTI_ADAPTOR
     TotalEndpoints : 0,
-#  else
+#else
     TotalEndpoints : 2,
-#  endif
+#endif
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
     Protocol : HID_CSCP_NonBootProtocol,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
 
-#  ifndef MULTI_ADAPTOR
+#ifndef MULTI_ADAPTOR
   EndpointInHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_IN,
@@ -581,7 +586,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-#  endif
+#endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
     HIDSpec : VERSION_BCD(1, 1, 1),
@@ -591,153 +596,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor = {
     HIDReportLength : sizeof(ps3_report_descriptor)
   },
 };
-const uint16_t PROGMEM vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
+AVR_CONST uint16_t PROGMEM vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
                                 0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
-const uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
+AVR_CONST uint16_t PROGMEM pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
                                 0x0210, ARDWIINO_PID, 0x0004, 0x074B};
-
-uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
-                            uint8_t *mods, uint8_t modCount) {
-  Endpoint_ClearSETUP();
-  bool LastPacketFull = false;
-  uint8_t current = 0;
-
-  if (Length > USB_ControlRequest.wLength)
-    Length = USB_ControlRequest.wLength;
-  else if (!(Length))
-    Endpoint_ClearIN();
-
-  while (Length || LastPacketFull) {
-    uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-    if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
-      return ENDPOINT_RWCSTREAM_DeviceDisconnected;
-    else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
-      return ENDPOINT_RWCSTREAM_BusSuspended;
-    else if (Endpoint_IsSETUPReceived())
-      return ENDPOINT_RWCSTREAM_HostAborted;
-    else if (Endpoint_IsOUTReceived())
-      break;
-
-    if (Endpoint_IsINReady()) {
-      uint16_t BytesInEndpoint = Endpoint_BytesInEndpoint();
-
-      while (Length && (BytesInEndpoint < USB_Device_ControlEndpointSize)) {
-        uint8_t bytes = 1;
-        for (uint8_t i = 0; i < modCount; i += 3) {
-          if (current == mods[i]) {
-            bytes = 2;
-            Endpoint_Write_8(mods[i + 1]);
-            Endpoint_Write_8(mods[i + 2]);
-          }
-        }
-        if (bytes == 1) { Endpoint_Write_8(pgm_read_byte(Buffer + current)); }
-        // We need to skip over 2 bytes if we find a block to modify, as each
-        // mod block overwrites two bytes
-        Length -= bytes;
-        BytesInEndpoint += bytes;
-        current += bytes;
-      }
-
-      LastPacketFull = (BytesInEndpoint == USB_Device_ControlEndpointSize);
-      Endpoint_ClearIN();
-    }
-  }
-
-  while (!(Endpoint_IsOUTReceived())) {
-    uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-    if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
-      return ENDPOINT_RWCSTREAM_DeviceDisconnected;
-    else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
-      return ENDPOINT_RWCSTREAM_BusSuspended;
-    else if (Endpoint_IsSETUPReceived())
-      return ENDPOINT_RWCSTREAM_HostAborted;
-  }
-  Endpoint_ClearOUT();
-  return ENDPOINT_RWCSTREAM_NoError;
-}
-/** This function is called by the library when in device mode, and must be
- * overridden (see library "USB Descriptors" documentation) by the application
- * code so that the address and size of a requested descriptor can be given to
- * the USB library. When the device receives a Get Descriptor request on the
- * control endpoint, this function is called so that the descriptor details can
- * be passed back and the appropriate descriptor sent back to the USB host.
- */
-uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
-                                    const uint16_t wIndex,
-                                    const void **const descriptorAddress) {
-  const uint8_t descriptorType = (wValue >> 8);
-  const uint8_t descriptorNumber = (wValue & 0xFF);
-  uint16_t size = NO_DESCRIPTOR;
-  const void *address = NULL;
-  uint8_t mods[6] = {};
-  switch (descriptorType) {
-  case DTYPE_Device:
-    address = &deviceDescriptor;
-    size = deviceDescriptor.Header.Size;
-    if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
-      uint8_t offs = deviceType - SWITCH_GAMEPAD;
-      mods[0] = offsetof(USB_Descriptor_Device_t, VendorID);
-      mods[1] = pgm_read_byte(vid + offs);
-      mods[2] = pgm_read_byte(vid + offs + 1);
-      mods[3] = offsetof(USB_Descriptor_Device_t, ProductID);
-      mods[4] = pgm_read_byte(pid + offs);
-      mods[5] = pgm_read_byte(pid + offs + 1);
-      write_endpoint_mods(address, size, mods, sizeof(mods));
-    } else {
-      write_endpoint_mods(address, size, mods, 0);
-    }
-    return NO_DESCRIPTOR;
-  case DTYPE_Configuration:
-    address = &ConfigurationDescriptor;
-    size = ConfigurationDescriptor.Config.TotalConfigurationSize;
-    uint8_t devt = deviceType;
-    if (isGuitar(devt)) { devt = REAL_GUITAR_SUBTYPE; }
-    if (isDrum(devt)) { devt = REAL_DRUM_SUBTYPE; }
-    mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
-    mods[1] = devt;
-    mods[2] = 0x25;
-    mods[3] =
-        offsetof(USB_Descriptor_Configuration_t, HIDDescriptor.HIDReportLength);
-    mods[4] = sizeof(ps3_report_descriptor);
-    mods[5] = 0;
-    if (deviceType > KEYBOARD_ROCK_BAND_GUITAR) {
-      write_endpoint_mods(address, size, mods, sizeof(mods));
-    } else {
-      write_endpoint_mods(address, size, mods, 3);
-    }
-#  ifdef MULTI_ADAPTOR
-// TODO: if we ever implement this stuff, this needs to be implemented again.
-// conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
-// conf->XInputReserved3.subtype = XINPUT_DANCE_PAD;
-// conf->XInputReserved4.subtype = REAL_DRUM_SUBTYPE;
-#  endif
-    return NO_DESCRIPTOR;
-    break;
-  case HID_DTYPE_Report:
-    if (deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
-      address = kbd_report_descriptor;
-      size = sizeof(kbd_report_descriptor);
-    } else {
-      address = ps3_report_descriptor;
-      size = sizeof(ps3_report_descriptor);
-    }
-    break;
-  case DTYPE_String:
-    if (descriptorNumber <= 3) {
-      address = (void *)pgm_read_word(descriptorStrings + descriptorNumber);
-    } else if (descriptorNumber == 0xEE) {
-      address = &OSDescriptorString;
-    } else {
-      break;
-    }
-    size =
-        pgm_read_byte(address + offsetof(USB_StdDescriptor_String_t, bLength));
-    break;
-  }
-  *descriptorAddress = address;
-
-  return size;
-}
-#endif

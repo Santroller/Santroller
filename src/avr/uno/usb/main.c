@@ -7,6 +7,7 @@
 #include "output/control_requests.h"
 #include "output/controller_structs.h"
 #include "output/serial_commands.h"
+#include "usb/usb.h"
 #include "util/util.h"
 #include <LUFA/Drivers/Board/Board.h>
 #include <LUFA/Drivers/Board/LEDs.h>

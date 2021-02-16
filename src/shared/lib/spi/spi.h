@@ -1,4 +1,5 @@
 #pragma once
 #include <stdint.h>
-void spi_begin(uint32_t clock, uint8_t config);
+#include <stdbool.h>
+void spi_begin(uint32_t clock, bool cpol, bool cpha);
 uint8_t spi_transfer(uint8_t data);

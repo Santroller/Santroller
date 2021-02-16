@@ -23,7 +23,7 @@ bool is_tx;
 
 /* init the hardware pins */
 void nrf24_init(void) {
-  spi_begin(F_CPU, 0);
+  spi_begin(F_CPU, false, false);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
   _delay_ms(5);

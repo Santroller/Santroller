@@ -83,7 +83,16 @@
         "gpio.h": "c",
         "uart.h": "c",
         "stdio.h": "c",
-        "wii_ext.h": "c"
+        "wii_ext.h": "c",
+        "spi.h": "c",
+        "control_requests.h": "c",
+        "control_request_handler.h": "c",
+        "cdcclasscommon.h": "c",
+        "stddescriptors.h": "c",
+        "tusb.h": "c",
+        "unique_id.h": "c",
+        "midiclasscommon.h": "c",
+        "stdrequesttype.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

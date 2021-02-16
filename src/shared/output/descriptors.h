@@ -1,8 +1,13 @@
 #pragma once
-
+#ifdef __AVR__
+#  define AVR_CONST const PROGMEM
+#else
+#  define AVR_CONST
+#endif
 #define WCHAR wchar_t
 /* Includes: (don't import everything on the 328p)*/
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) || !defined(__AVR__)
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) ||              \
+    !defined(__AVR__)
 // Pull in enough information from LUFA in order to be able to compile the
 // descriptors.
 #  define __INCLUDE_FROM_USB_DRIVER
@@ -109,14 +114,13 @@ typedef struct {
 
 } USB_HID_XBOX_Descriptor_HID_t;
 
-
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
   USB_Descriptor_Interface_t InterfaceXInput;
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Endpoint_t EndpointInXInput;
   USB_Descriptor_Endpoint_t EndpointOutXInput;
-  #ifdef MULTI_ADAPTOR
+#ifdef MULTI_ADAPTOR
   USB_Descriptor_Interface_t InterfaceXInput2;
   USB_HID_XBOX_Descriptor_HID_t XInputReserved2;
   USB_Descriptor_Endpoint_t EndpointInXInput2;
@@ -129,14 +133,14 @@ typedef struct {
   USB_HID_XBOX_Descriptor_HID_t XInputReserved4;
   USB_Descriptor_Endpoint_t EndpointInXInput4;
   USB_Descriptor_Endpoint_t EndpointOutXInput4;
-  #endif
+#endif
   USB_Descriptor_Interface_t InterfaceHID;
   USB_HID_Descriptor_HID_t HIDDescriptor;
   USB_Descriptor_Endpoint_t EndpointInHID;
   USB_Descriptor_Endpoint_t EndpointOutHID;
   USB_Descriptor_Interface_t InterfaceConfig;
   USB_Descriptor_Endpoint_t EndpointInConfig;
-  #ifndef MULTI_ADAPTOR
+#ifndef MULTI_ADAPTOR
   USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
   USB_Descriptor_Interface_t Interface_AudioStream;
@@ -149,7 +153,7 @@ typedef struct {
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
   USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
-  #endif
+#endif
 } USB_Descriptor_Configuration_t;
 
 typedef struct {
@@ -213,7 +217,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void **const DescriptorAddress)
     ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
-
 typedef enum {
   HID_USAGE_POINTER = 0x01,
   HID_USAGE_MOUSE = 0x02,
@@ -230,24 +233,30 @@ typedef enum {
   HID_USAGE_Dial,
   HID_USAGE_Wheel,
   HID_USAGE_COUNTED_BUFFER = 0x3A,
-  HID_USAGE_CONSUMER_AC_PAN = 0x0238
 } HID_Usage;
-
 typedef enum {
   HID_USAGE_PAGE_GENERIC_DESKTOP = 0x01,
-  HID_USAGE_PAGE_KEYBOARD = 0x07,
-  HID_USAGE_PAGE_LED = 0x08,
-  HID_USAGE_PAGE_BUTTON = 0x09,
-  HID_USAGE_PAGE_CONSUMER = 0x0c,
 } HID_Usage_Page;
+
+typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;
+#ifdef __AVR__
 
 typedef enum {
   HID_COLLECTION_PHYSICAL = 0x00,
   HID_COLLECTION_APPLICATION = 0x01,
   HID_COLLECTION_LOGICAL = 0x02,
 } HID_Collection;
+typedef enum { HID_USAGE_CONSUMER_AC_PAN = 0x0238 } HID_Usage2;
 typedef enum {
-  REPORT_ID_XINPUT ,
+  HID_USAGE_PAGE_KEYBOARD = 0x07,
+  HID_USAGE_PAGE_LED = 0x08,
+  HID_USAGE_PAGE_BUTTON = 0x09,
+  HID_USAGE_PAGE_CONSUMER = 0x0c,
+} HID_Usage_Page2;
+
+#endif
+typedef enum {
+  REPORT_ID_XINPUT,
   REPORT_ID_XINPUT_2,
   REPORT_ID_XINPUT_3,
   REPORT_ID_XINPUT_4,
@@ -258,8 +267,21 @@ typedef enum {
   REPORT_ID_CONTROL = 0x21
 } HID_Report;
 
-typedef enum { HID_UNIT_NONE, HID_UNIT_DEGREES = 0x14 } HID_Unit;
 typedef union {
   USB_Descriptor_Configuration_t t;
   USB_Descriptor_Device_t d;
 } Descriptor;
+
+extern AVR_CONST USB_Descriptor_String_t AVR_CONST languageString;
+extern AVR_CONST USB_Descriptor_String_t AVR_CONST manufacturerString;
+extern AVR_CONST USB_Descriptor_String_t AVR_CONST productString;
+extern const USB_Descriptor_String_t *AVR_CONST descriptorStrings[];
+extern AVR_CONST USB_OSDescriptor_t OSDescriptorString;
+extern AVR_CONST USB_Descriptor_HIDReport_Datatype_t
+    ps3_report_descriptor[137];
+extern AVR_CONST USB_Descriptor_HIDReport_Datatype_t
+    kbd_report_descriptor[137];
+extern AVR_CONST USB_Descriptor_Device_t deviceDescriptor;
+extern AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor;
+extern AVR_CONST uint16_t vid[];
+extern AVR_CONST uint16_t pid[];

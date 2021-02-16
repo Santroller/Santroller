@@ -46,7 +46,7 @@ bool digitalReadPin(Pin_t pin) {
 }
 
 void digitalWritePin(Pin_t pin, bool value) {
-  if (value == 0) {
+  if (value == 1) {
     *pin.outPort &= ~pin.mask;
   } else {
     *pin.outPort |= pin.mask;

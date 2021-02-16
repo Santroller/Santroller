@@ -220,11 +220,23 @@ void noAttention(void) {
   digitalWritePin(clock, false);
   digitalWritePin(attention, false);
 }
-
+// Since the PI doesn't support flipping SPI bits in hardware, we will have to do it in software
+uint8_t revbits2(uint8_t arg) {
+  uint8_t result=0;
+  if (arg & (1<<0)) result |= (0x80>>0);
+  if (arg & (1<<1)) result |= (0x80>>1);
+  if (arg & (1<<2)) result |= (0x80>>2);
+  if (arg & (1<<3)) result |= (0x80>>3);
+  if (arg & (1<<4)) result |= (0x80>>4);
+  if (arg & (1<<5)) result |= (0x80>>5);
+  if (arg & (1<<6)) result |= (0x80>>6);
+  if (arg & (1<<7)) result |= (0x80>>7);
+  return result;
+}
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
-    uint8_t resp = spi_transfer(out != NULL ? out[i] : 0x5A);
-    if (in != NULL) { in[i] = resp; }
+    uint8_t resp = spi_transfer(out != NULL ? revbits2(out[i]) : revbits2(0x5A));
+    if (in != NULL) { in[i] = revbits2(resp); }
     _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
   }
 }
@@ -384,8 +396,7 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(void) {
-  // TODO: handle things like DORD
-  // spi_begin(100000, _BV(DORD) | 0x0C);
+  spi_begin(100000, true, true);
   attention = setUpDigital(10, 0, false);
   command = setUpDigital(PIN_SPI_MOSI, 0, false);
   clock = setUpDigital(PIN_SPI_SCK, 0, false);

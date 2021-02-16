@@ -14,6 +14,7 @@
 #include "rf/rf.h"
 #include "stdbool.h"
 #include "timer/timer.h"
+#include "usb/usb.h"
 #include "util/util.h"
 #include <stdlib.h>
 Controller_t controller;

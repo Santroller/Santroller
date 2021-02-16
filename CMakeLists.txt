@@ -4,6 +4,10 @@ project(ardwiino C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
+find_package(Git)
+if(GIT_FOUND)
+  message("git found: ${GIT_EXECUTABLE} in version ${GIT_VERSION_STRING}")
+endif(GIT_FOUND)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 # For AVR, we have projects for arduinos that are similar enough to run the same
 # code after that there are variants that specify small differences, such as the
@@ -118,7 +122,6 @@ foreach(PROJECT ${PROJECTS})
     endforeach()
   endforeach()
 endforeach()
-
 set(TYPES "rf;multi;main")
 foreach(TYPE ${TYPES})
   unset(EXTRA)
@@ -152,17 +155,62 @@ foreach(TYPE ${TYPES})
     src/pico/lib/spi/spi.c
     src/pico/lib/i2c/i2c.c
     src/pico/lib/pins/pins.c)
-  include_directories(src/shared/output src/shared src/shared/lib lib src/pico
-                      src/pico/lib lib/lufa)
+  include_directories(
+    src/shared/output
+    src/shared
+    src/shared/lib
+    lib
+    src/pico
+    src/pico/lib
+    lib/lufa)
   if(${EXTRA} MATCHES "-multi")
     target_compile_definitions(${TARGET} PUBLIC MULTI_ADAPTOR)
   endif()
 
-  # TODO: instead of defines, we should probably make a shim layer of some sor
-  target_compile_definitions(${TARGET} PUBLIC ARCH=23 uint_reg_t=uint8_t PROGMEM= memcpy_P=memcpy strcpy_P=strcpy F_CPU=133000000 PSTR= ARDWIINO_BOARD="pico")
+  if(${TYPE} MATCHES "main")
+    include_directories(src/pico/main)
+  endif()
+
+  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git
+                          describe --abbrev=0 --tags OUTPUT_VARIABLE OUTPUT)
+  string(REPLACE version- "" OUTPUT ${OUTPUT})
+  string(REPLACE "." ";" OUTPUT ${OUTPUT})
+  list(GET OUTPUT 0 VERSION_MAJOR)
+  list(GET OUTPUT 1 VERSION_MINOR)
+  list(GET OUTPUT 2 VERSION_REVISION)
+  string(STRIP ${VERSION_REVISION} VERSION_REVISION)
+  # TODO: instead of defines, we should probably make a shim layer of some sort
+  # Currently though, disabling PSTR has worked well
+
+  target_compile_definitions(
+    ${TARGET}
+    PUBLIC ARCH=3
+           uint_reg_t=uint8_t
+           PROGMEM=
+           memcpy_P=memcpy
+           strcpy_P=strcpy
+           F_CPU=133000000
+           PSTR=
+           ARDWIINO_BOARD="pico"
+           VERSION_MAJOR=${VERSION_MAJOR}
+           VERSION_MINOR=${VERSION_MINOR}
+           VERSION_REVISION=${VERSION_REVISION}
+           FIXED_CONTROL_ENDPOINT_SIZE=0
+           FIXED_NUM_CONFIGURATIONS=1
+           USE_INTERNAL_SERIAL=3)
 
   # Add pico_stdlib library which aggregates commonly used features
-  target_link_libraries(${TARGET} pico_stdlib hardware_i2c hardware_spi hardware_adc hardware_gpio hardware_timer)
+  target_link_libraries(
+    ${TARGET}
+    pico_stdlib
+    hardware_i2c
+    hardware_spi
+    hardware_adc
+    hardware_gpio
+    hardware_timer
+    pico_unique_id
+    tinyusb_device
+    tinyusb_board)
 
   # create map/bin/hex/uf2 file in addition to ELF.
   pico_add_extra_outputs(${TARGET})

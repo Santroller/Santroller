@@ -34,12 +34,19 @@ void calculateClock(uint32_t clock, uint8_t config) {
   SPSR = clockDiv & 0x01;
 }
 
-void spi_begin(uint32_t clock, uint8_t config) {
+void spi_begin(uint32_t clock, bool cpol, bool cpha) {
   pinMode(PIN_SPI_MOSI, OUTPUT);
   pinMode(PIN_SPI_MISO, INPUT_PULLUP);
   pinMode(PIN_SPI_SCK, OUTPUT);
   digitalWrite(PIN_SPI_SS, 1);
   pinMode(PIN_SPI_SS, OUTPUT);
+  uint8_t config;
+  if (cpol) {
+    config |= _BV(CPOL);
+  }
+  if (cpha) {
+    config |= _BV(CPHA);
+  }
   calculateClock(clock, config);
 }
 uint8_t spi_transfer(uint8_t data) {

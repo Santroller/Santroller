@@ -112,7 +112,7 @@ foreach(PROJECT ${PROJECTS})
           add_custom_command(
             TARGET ${TARGET}
             COMMAND
-              $(make) OBJDIR=obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
+              make OBJDIR=obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
               ARDUINO_MODEL_PID=${PID} ARDWIINO_BOARD=${VARIANT} EXTRA=${EXTRA}
               TARGET=${OUT} MCU=${MCU} VARIANT=${${VARIANT}_VARIANT}
             WORKING_DIRECTORY ${IN}

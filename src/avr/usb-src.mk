@@ -1,1 +1,1 @@
-SRC += ${PROJECT_ROOT}/src/shared/output/descriptors.c ${PROJECT_ROOT}/src/shared/output/control_requests.c ${PROJECT_ROOT}/src/avr/shared/usb/usb.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)
+SRC += ${PROJECT_ROOT}/src/shared/output/descriptors.c ${PROJECT_ROOT}/src/shared/output/control_requests.c $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB)

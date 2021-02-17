@@ -16,6 +16,7 @@
 #include "timer/timer.h"
 #include "usb/usb.h"
 #include "util/util.h"
+#include "controller/guitar_includes.h"
 #include <stdlib.h>
 Controller_t controller;
 USB_Report_Data_t previousReport;
@@ -59,6 +60,8 @@ long lastPoll = 0;
 int main(void) {
   loadConfig();
   deviceType = config.main.subType;
+  if (isGuitar(deviceType)) { deviceType = REAL_GUITAR_SUBTYPE; }
+  if (isDrum(deviceType)) { deviceType = REAL_DRUM_SUBTYPE; }
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());

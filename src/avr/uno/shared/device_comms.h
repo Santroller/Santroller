@@ -74,7 +74,7 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
   USARTtoUSB_WritePtr = 0;
 }
 
-void writeData(uint8_t *buf, uint8_t len) {
+void writeData(const uint8_t *buf, uint8_t len) {
 
   //================================================================================
   // USBtoUSART

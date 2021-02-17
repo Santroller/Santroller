@@ -33,7 +33,7 @@ bool handleCommand(uint8_t cmd) {
   return true;
 }
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
-                                  uint8_t *data) {
+                                  const uint8_t *data) {
   switch (cmd) {
   case COMMAND_WRITE_CONFIG: {
     uint8_t offset = *data;

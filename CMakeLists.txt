@@ -179,8 +179,6 @@ foreach(TYPE ${TYPES})
   list(GET OUTPUT 1 VERSION_MINOR)
   list(GET OUTPUT 2 VERSION_REVISION)
   string(STRIP ${VERSION_REVISION} VERSION_REVISION)
-  # TODO: instead of defines, we should probably make a shim layer of some sort
-  # Currently though, disabling PSTR has worked well
 
   target_compile_definitions(
     ${TARGET}
@@ -207,8 +205,10 @@ foreach(TYPE ${TYPES})
     hardware_spi
     hardware_adc
     hardware_gpio
+    hardware_flash
     hardware_timer
     pico_unique_id
+    pico_mem_ops
     tinyusb_device
     tinyusb_board)
 

@@ -1,15 +1,16 @@
 #pragma once
-// TODO: make this correct also, once we have these pins we need to configure
-// i2c and spi to use them.
 #define NUM_DIGITAL_PINS 26
 #define NUM_ANALOG_INPUTS 3
-#define PIN_WIRE_SDA 1
+#define PIN_WIRE_SDA 0
 #define PIN_WIRE_SCL 1
-#define PIN_SPI_MOSI 1
-#define PIN_SPI_MISO 1
-#define PIN_SPI_SCK 1
-#define PIN_SPI_SS 1
-#define PIN_A0 1
-#define PIN_RF_IRQ 1
+#define PIN_SPI_MOSI 3
+#define PIN_SPI_MISO 4
+#define PIN_SPI_SS 5
+#define PIN_SPI_SCK 6
+#define PIN_RF_IRQ 7
+#define PIN_A0 26
+#define PIN_A1 27
+#define PIN_A2 28
+// RF pins
 #define CE 8
 #define CSN PIN_SPI_SS

@@ -42,8 +42,6 @@ uint32_t generate_crc32(void) {
   }
   return crc;
 }
-// TODO: figure out INT CE and CSN pins for pico
-// Tbh, it would probably be a good idea to have these either go into arduino_pins.h or have a file dedicated to these sorts of definitions
 
 #ifdef __AVR_ATmega32U4__
 #  define CE 0

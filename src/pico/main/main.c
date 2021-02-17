@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <tusb.h>
 
-// TODO: put the config somewhere! is eeprom a thing on the pico?
 #define __INCLUDE_FROM_USB_DRIVER
 #include <LUFA/Drivers/USB/Core/StdRequestType.h>
 int validAnalog = 0;

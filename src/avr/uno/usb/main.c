@@ -202,7 +202,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
 }
 
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
-                                  uint8_t *data) {
+                                  const uint8_t *data) {
   uint8_t subType = data[0];
   if (cmd == COMMAND_WRITE_SUBTYPE) {
     eeprom_update_byte(&config.deviceType, subType);

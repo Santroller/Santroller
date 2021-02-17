@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 include(submodules/pico-sdk/pico_sdk_init.cmake)
+include(submodules/pico-extras/external/pico_extras_import.cmake)
 project(ardwiino C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -166,6 +167,16 @@ foreach(TYPE ${TYPES})
   if(${EXTRA} MATCHES "-multi")
     target_compile_definitions(${TARGET} PUBLIC MULTI_ADAPTOR)
   endif()
+  if(${EXTRA} MATCHES "-rf")
+    target_compile_definitions(${TARGET} PUBLIC RF_TX=true)
+  endif()
+  set(XIP_BASE 0x10000000)
+  math(EXPR CONF_REGION "${XIP_BASE} + (256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+  math(EXPR RF_REGION "${XIP_BASE} + (512 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+  # Define a memory section 256 kb away from the start of flash for the config
+  target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
+  # Define a memory section 512 kb away from the start of flash for the rf config
+  target_link_options(${TARGET} PUBLIC -Wl,--section-start=.rfrecv=${RF_REGION})
 
   if(${TYPE} MATCHES "main")
     include_directories(src/pico/main)
@@ -207,6 +218,7 @@ foreach(TYPE ${TYPES})
     hardware_gpio
     hardware_flash
     hardware_timer
+    hardware_sleep
     pico_unique_id
     pico_mem_ops
     tinyusb_device

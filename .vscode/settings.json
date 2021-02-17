@@ -92,7 +92,9 @@
         "tusb.h": "c",
         "unique_id.h": "c",
         "midiclasscommon.h": "c",
-        "stdrequesttype.h": "c"
+        "stdrequesttype.h": "c",
+        "nrf24l01-mnemonics.h": "c",
+        "sleep.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

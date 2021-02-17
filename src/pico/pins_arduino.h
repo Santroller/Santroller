@@ -11,6 +11,7 @@
 #define PIN_A0 26
 #define PIN_A1 27
 #define PIN_A2 28
+#define PIN_WAKEUP 8
 // RF pins
 #define CE 8
 #define CSN PIN_SPI_SS

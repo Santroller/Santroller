@@ -44,11 +44,11 @@ uint32_t generate_crc32(void) {
 }
 // TODO: figure out INT CE and CSN pins for pico
 // Tbh, it would probably be a good idea to have these either go into arduino_pins.h or have a file dedicated to these sorts of definitions
-#define IRQ_PICO 1
+
 #ifdef __AVR_ATmega32U4__
 #  define CE 0
 #  define CSN 10
-#else
+#elif defined(__AVR__)
 #  define CE 8
 #  define CSN PIN_SPI_SS
 #endif
@@ -80,7 +80,7 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   EIMSK |= _BV(INT0);
 #  endif
 #else
-  gpio_set_irq_enabled_with_callback(IRQ_PICO, GPIO_IRQ_EDGE_FALL, true, &triggerInterrupt);
+  gpio_set_irq_enabled_with_callback(PIN_RF_IRQ, GPIO_IRQ_EDGE_FALL, true, &triggerInterrupt);
 #endif
 }
 int tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {

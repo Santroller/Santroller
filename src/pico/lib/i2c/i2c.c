@@ -31,6 +31,7 @@
 #include "i2c/i2c.h"
 #include "util/util.h"
 #include "timer/timer.h"
+#include "pins_arduino.h"
 
 // === MODIFIED ===
 static uint16_t TIMEOUT = 100;
@@ -41,7 +42,11 @@ static uint16_t TIMEOUT = 100;
  * Input    none
  * Output   none
  */
-void twi_init(void) { i2c_init(i2c0, TWI_FREQ); }
+void twi_init(void) { 
+  gpio_set_function(PIN_WIRE_SCL, GPIO_FUNC_I2C);
+  gpio_set_function(PIN_WIRE_SDA, GPIO_FUNC_I2C);
+  i2c_init(i2c0, TWI_FREQ); 
+  }
 
 /*
  * Function twi_disable

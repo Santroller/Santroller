@@ -161,8 +161,8 @@ void hid_task(void) {
     size--;
     switch (rid) {
     case REPORT_ID_XINPUT:
-      if (tud_xinput_n_write_available(INTERFACE_ID_XInput)) {
-        tud_xinput_n_write(INTERFACE_ID_XInput, data, size);
+      if (tud_xinput_n_write_available(0)) {
+        tud_xinput_n_write(0, data, size);
       }
       break;
 #ifndef MULTI_ADAPTOR
@@ -170,13 +170,13 @@ void hid_task(void) {
       rid = 0;
     case REPORT_ID_KBD:
     case REPORT_ID_MOUSE:
-      if (tud_hid_n_ready(INTERFACE_ID_HID)) {
-        tud_hid_n_report(INTERFACE_ID_HID, rid, data, size);
+      if (tud_hid_n_ready(0)) {
+        tud_hid_n_report(0, rid, data, size);
       }
       break;
     case REPORT_ID_MIDI:
-      if (tud_hid_n_ready(INTERFACE_ID_ControlStream)) {
-        tud_midi_n_send(INTERFACE_ID_ControlStream, data);
+      if (tud_hid_n_ready(0)) {
+        tud_midi_n_send(0, data);
       }
 #endif
     }

@@ -158,7 +158,7 @@ typedef struct {
 
 typedef struct {
   USB_Descriptor_Header_t Header;
-  WCHAR Signature[7];
+  uint16_t Signature[7];
   uint8_t VendorCode;
   uint8_t Reserved;
 } ATTR_PACKED USB_OSDescriptor_t;

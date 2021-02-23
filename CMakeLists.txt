@@ -156,6 +156,7 @@ foreach(TYPE ${TYPES})
     src/pico/lib/timer/timer.c
     src/pico/lib/spi/spi.c
     src/pico/lib/i2c/i2c.c
+    src/pico/lib/usb/xinput_device.c
     src/pico/lib/pins/pins.c)
   include_directories(
     src/shared/output
@@ -205,8 +206,6 @@ foreach(TYPE ${TYPES})
            VERSION_MAJOR=${VERSION_MAJOR}
            VERSION_MINOR=${VERSION_MINOR}
            VERSION_REVISION=${VERSION_REVISION}
-           FIXED_CONTROL_ENDPOINT_SIZE=0
-           FIXED_NUM_CONFIGURATIONS=1
            USE_INTERNAL_SERIAL=3)
 
   # Add pico_stdlib library which aggregates commonly used features

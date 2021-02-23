@@ -94,7 +94,11 @@
         "midiclasscommon.h": "c",
         "stdrequesttype.h": "c",
         "nrf24l01-mnemonics.h": "c",
-        "sleep.h": "c"
+        "sleep.h": "c",
+        "lufaconfig.h": "c",
+        "usbd_pvt.h": "c",
+        "tusb_fifo.h": "c",
+        "vendor_device.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

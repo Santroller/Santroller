@@ -8,6 +8,7 @@
 #include "eeprom/eeprom.h"
 #include "input/input_handler.h"
 #include "leds/leds.h"
+#include "lib/usb/xinput_device.h"
 #include "output/control_requests.h"
 #include "output/descriptors.h"
 #include "output/reports.h"
@@ -19,6 +20,7 @@
 #include "stdbool.h"
 #include "timer/timer.h"
 #include "util/util.h"
+#include <device/usbd_pvt.h>
 #include <pico/unique_id.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +30,8 @@
 #include <LUFA/Drivers/USB/Core/StdRequestType.h>
 int validAnalog = 0;
 TU_ATTR_WEAK bool
-tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
-                           tusb_control_request_t const *request) {
+tud_xinput_control_request_cb(uint8_t rhport,
+                              tusb_control_request_t const *request) {
   if (request->bRequest == HID_REQ_GetReport &&
       (request->bmRequestType ==
        (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
@@ -59,17 +61,15 @@ tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
     tud_control_xfer(rhport, request, capabilities1, sizeof(capabilities2));
   }
 }
-uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id,
-                               hid_report_type_t report_type, uint8_t *buffer,
-                               uint16_t reqlen) {
+uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
+                               uint8_t *buffer, uint16_t reqlen) {
   int cmd = tu_u16(report_type, report_id);
   processHIDReadFeatureReport(cmd);
 }
-void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id,
-                           hid_report_type_t report_type, uint8_t const *buffer,
-                           uint16_t bufsize) {
+void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type,
+                           uint8_t const *buffer, uint16_t bufsize) {
   int cmd = tu_u16(report_type, report_id);
-  processHIDWriteFeatureReport(cmd, bufsize-1, buffer+1);
+  processHIDWriteFeatureReport(cmd, bufsize - 1, buffer + 1);
   if (config.rf.rfInEnabled) {
     uint8_t buf[66];
     uint8_t buf2[32];
@@ -90,11 +90,10 @@ uint8_t const *tud_descriptor_device_cb(void) {
     uint8_t offs = config.main.subType - SWITCH_GAMEPAD;
     deviceDescriptor.VendorID = vid[offs];
     deviceDescriptor.ProductID = pid[offs];
-    return (uint8_t const *)&deviceDescriptor;
   }
   return (uint8_t const *)&deviceDescriptor;
 }
-uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) {
+uint8_t const *tud_hid_descriptor_report_cb() {
   if (config.main.subType <= KEYBOARD_ROCK_BAND_GUITAR) {
     return kbd_report_descriptor;
   } else {
@@ -120,20 +119,19 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 }
 static uint16_t serialNumber[9];
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
+  serialNumber[0] = 18 | DTYPE_String << 8;
   if (index == 3) {
     pico_unique_board_id_t board_id;
     pico_get_unique_board_id(&board_id);
-    serialNumber[0] = 8;
     const char chars[] = "0123456789ABCDEF";
-    uint8_t len = 8;
-    while (--len >= 0) {
-      serialNumber[len + 1] =
-          chars[(board_id.id[len >> 1] >> ((1 - (len & 1)) << 2)) & 0xF];
+    for (int i = 0; i < 8; i++) {
+      serialNumber[i + 1] =
+          chars[(board_id.id[i >> 1] >> ((1 - (i & 1)) << 2)) & 0xF];
     }
     return serialNumber;
   }
-  if (index <= 3) {
-    return (uint16_t *)descriptorStrings[index];
+  if (index < 3) {
+    return (const uint16_t*)descriptorStrings[index];
   } else if (index == 0xEE) {
     return (uint16_t *)&OSDescriptorString;
   }
@@ -163,8 +161,8 @@ void hid_task(void) {
     size--;
     switch (rid) {
     case REPORT_ID_XINPUT:
-      if (tud_hid_n_ready(INTERFACE_ID_XInput)) {
-        tud_hid_n_report(INTERFACE_ID_XInput, 0, data, size);
+      if (tud_xinput_n_write_available(INTERFACE_ID_XInput)) {
+        tud_xinput_n_write(INTERFACE_ID_XInput, data, size);
       }
       break;
 #ifndef MULTI_ADAPTOR
@@ -172,10 +170,14 @@ void hid_task(void) {
       rid = 0;
     case REPORT_ID_KBD:
     case REPORT_ID_MOUSE:
-      tud_hid_n_report(INTERFACE_ID_HID, rid, data, size);
+      if (tud_hid_n_ready(INTERFACE_ID_HID)) {
+        tud_hid_n_report(INTERFACE_ID_HID, rid, data, size);
+      }
       break;
     case REPORT_ID_MIDI:
-      tud_midi_n_send(INTERFACE_ID_ControlStream, data);
+      if (tud_hid_n_ready(INTERFACE_ID_ControlStream)) {
+        tud_midi_n_send(INTERFACE_ID_ControlStream, data);
+      }
 #endif
     }
 
@@ -191,12 +193,30 @@ void hid_task(void) {
 int main() {
   board_init();
   tusb_init();
+  // loadConfig();
   while (1) {
     tud_task(); // tinyusb device task
-    hid_task();
+    // hid_task();
   }
 }
 void writeToUSB(const void *const Buffer, uint8_t Length) {
   tud_hid_report(0, Buffer + 1, Length - 1);
 }
 void stopReading(void) {}
+bool tud_xinput_control_complete_cb(uint8_t rhport,
+                                    tusb_control_request_t const *request) {
+  (void)rhport;
+  return true;
+}
+usbd_class_driver_t driver[] = {{.init = xinputd_init,
+                              .reset = xinputd_reset,
+                              .open = xinputd_open,
+                              .control_request = tud_xinput_control_request_cb,
+                              .control_complete =
+                                  tud_xinput_control_complete_cb,
+                              .xfer_cb = xinputd_xfer_cb,
+                              .sof = NULL}};
+usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
+  *driver_count = 1;
+  return driver;
+}

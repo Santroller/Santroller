@@ -58,19 +58,16 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
  *  For information on what each token does, refer to the LUFA
  *  manual section "Summary of Compile Tokens".
  */
-
 #ifndef _LUFA_CONFIG_H_
 #define _LUFA_CONFIG_H_
-
-	#if (ARCH == ARCH_AVR8)
 
 // Pull in RAMEND definitions
 // #include <avr/io.h>
 
-		/* Non-USB Related Configuration Tokens: */
+/* Non-USB Related Configuration Tokens: */
 //		#define DISABLE_TERMINAL_CODES
 
-		/* USB Class Driver Related Tokens: */
+/* USB Class Driver Related Tokens: */
 //		#define HID_HOST_BOOT_PROTOCOL_ONLY
 //		#define HID_STATETABLE_STACK_DEPTH       {Insert Value Here}
 //		#define HID_USAGE_STACK_DEPTH            {Insert Value Here}
@@ -79,34 +76,30 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 //		#define HID_MAX_REPORT_IDS               {Insert Value Here}
 //		#define NO_CLASS_DRIVER_AUTOFLUSH
 
-		/* General USB Driver Related Tokens: */
-		#define ORDERED_EP_CONFIG
-		#define USE_STATIC_OPTIONS               (USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
-		#define USB_DEVICE_ONLY
+/* General USB Driver Related Tokens: */
+#define ORDERED_EP_CONFIG
+#define USE_STATIC_OPTIONS                                                     \
+  (USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
+#define USB_DEVICE_ONLY
 //		#define USB_HOST_ONLY
 //		#define USB_STREAM_TIMEOUT_MS            {Insert Value Here}
 //		#define NO_LIMITED_CONTROLLER_CONNECT
-		// #define NO_SOF_EVENTS
-		#define USE_FLASH_DESCRIPTORS
-		// #define NO_INTERNAL_SERIAL
-		#define FIXED_CONTROL_ENDPOINT_SIZE      64
-		#define DEVICE_STATE_AS_GPIOR            2 // GPIOR0 is used for the RX ISR with cbi()
-		#define FIXED_NUM_CONFIGURATIONS         1
+// #define NO_SOF_EVENTS
+#define USE_FLASH_DESCRIPTORS
+// #define NO_INTERNAL_SERIAL
+#define FIXED_CONTROL_ENDPOINT_SIZE 64
+#define DEVICE_STATE_AS_GPIOR 2 // GPIOR0 is used for the RX ISR with cbi()
+#define FIXED_NUM_CONFIGURATIONS 1
 //		#define CONTROL_ONLY_DEVICE
-		// #define INTERRUPT_CONTROL_ENDPOINT
-		#define NO_DEVICE_REMOTE_WAKEUP
-		#define NO_DEVICE_SELF_POWER
+// #define INTERRUPT_CONTROL_ENDPOINT
+#define NO_DEVICE_REMOTE_WAKEUP
+#define NO_DEVICE_SELF_POWER
 
-		/* USB Host Mode Driver Related Tokens: */
+/* USB Host Mode Driver Related Tokens: */
 //		#define HOST_STATE_AS_GPIOR              {Insert Value Here}
 //		#define USB_HOST_TIMEOUT_MS              {Insert Value Here}
 //		#define HOST_DEVICE_SETTLE_DELAY_MS	     {Insert Value Here}
 //		#define NO_AUTO_VBUS_MANAGEMENT
 //		#define INVERTED_VBUS_ENABLE_LINE
 
-	#else
-
-		// #error Unsupported architecture for this LUFA configuration file.
-
-	#endif
 #endif

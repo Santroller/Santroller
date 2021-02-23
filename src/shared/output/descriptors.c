@@ -6,6 +6,7 @@
 #ifdef __AVR__
 #  define AVR_CONST const PROGMEM
 #else
+#  include "LUFAConfig.h"
 #  include <tusb.h>
 #  define AVR_CONST
 #endif
@@ -23,14 +24,18 @@ AVR_CONST USB_Descriptor_String_t languageString =
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-AVR_CONST USB_Descriptor_String_t manufacturerString =
-    USB_STRING_DESCRIPTOR(L"sanjay900");
+AVR_CONST USB_Descriptor_String_t manufacturerString = {
+    .Header = {.Size = sizeof(USB_Descriptor_Header_t) + (18),
+               .Type = DTYPE_String},
+    .UnicodeString = {'s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0'}};
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-AVR_CONST USB_Descriptor_String_t productString =
-    USB_STRING_DESCRIPTOR(L"Ardwiino");
+AVR_CONST USB_Descriptor_String_t productString = {
+    .Header = {.Size = sizeof(USB_Descriptor_Header_t) + (16),
+               .Type = DTYPE_String},
+    .UnicodeString = {'A', 'r', 'd', 'w', 'i', 'i', 'n', 'o'}};
 const USB_Descriptor_String_t *AVR_CONST descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
 /* A Microsoft-proprietary extension. String address 0xEE is used by
@@ -244,7 +249,7 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
     ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
-    MaxPowerConsumption : USB_CONFIG_POWER_MA(250)
+    MaxPowerConsumption : USB_CONFIG_POWER_MA(100)
   },
   InterfaceXInput : {
     Header :

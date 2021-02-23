@@ -57,12 +57,12 @@ uno-rftx:
 	$(MAKE) -C src/avr/uno/rf_rx avrdude
 
 mini-rf:
-	$(MAKE) -C src/avr/micro/main
-	-stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
-	sleep 1
-	$(MAKE) -C src/avr/micro/main avrdude
-	$(MAKE) -C src/avr/mini/rf
-	$(MAKE) -C src/avr/mini/rf avrdude PORT=/dev/ttyUSB0
+	# $(MAKE) -C src/avr/micro/main
+	# -stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	# sleep 1
+	# $(MAKE) -C src/avr/micro/main avrdude
+	$(MAKE) -C src/avr/uno/rf
+	$(MAKE) -C src/avr/uno/rf avrdude PORT=/dev/ttyUSB0
 unomini-rf:
 	$(MAKE) -C src/avr/uno
 	sleep 0.5

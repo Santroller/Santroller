@@ -193,10 +193,10 @@ void hid_task(void) {
 int main() {
   board_init();
   tusb_init();
-  // loadConfig();
+  loadConfig();
   while (1) {
     tud_task(); // tinyusb device task
-    // hid_task();
+    hid_task();
   }
 }
 void writeToUSB(const void *const Buffer, uint8_t Length) {

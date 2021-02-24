@@ -38,82 +38,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+// Check if the interface is ready to use
+bool tud_xinput_n_ready(uint8_t itf);
 
-//--------------------------------------------------------------------+
-// Application API (Multiple Interfaces)
-//--------------------------------------------------------------------+
-bool tud_xinput_n_mounted(uint8_t itf);
+// Check if current mode is Boot (true) or Report (false)
+bool tud_xinput_n_boot_mode(uint8_t itf);
 
-uint32_t tud_xinput_n_available(uint8_t itf);
-uint32_t tud_xinput_n_read(uint8_t itf, void *buffer, uint32_t bufsize);
-bool tud_xinput_n_peek(uint8_t itf, int pos, uint8_t *u8);
-
-uint32_t tud_xinput_n_write(uint8_t itf, void const *buffer, uint32_t bufsize);
-uint32_t tud_xinput_n_write_available(uint8_t itf);
-
-static inline uint32_t tud_xinput_n_write_str(uint8_t itf, char const *str);
-
-//--------------------------------------------------------------------+
-// Application API (Single Port)
-//--------------------------------------------------------------------+
-static inline bool tud_xinput_mounted(void);
-static inline uint32_t tud_xinput_available(void);
-static inline uint32_t tud_xinput_read(void *buffer, uint32_t bufsize);
-static inline bool tud_xinput_peek(int pos, uint8_t *u8);
-static inline uint32_t tud_xinput_write(void const *buffer, uint32_t bufsize);
-static inline uint32_t tud_xinput_write_str(char const *str);
-static inline uint32_t tud_xinput_write_available(void);
-
-//--------------------------------------------------------------------+
-// Application Callback API (weak is optional)
-//--------------------------------------------------------------------+
-
-// Invoked when received new data
-TU_ATTR_WEAK void tud_xinput_rx_cb(uint8_t itf);
-
-//--------------------------------------------------------------------+
-// Inline Functions
-//--------------------------------------------------------------------+
-
-static inline uint32_t tud_xinput_n_write_str(uint8_t itf, char const *str) {
-  return tud_xinput_n_write(itf, str, strlen(str));
-}
-
-static inline bool tud_xinput_mounted(void) { return tud_xinput_n_mounted(0); }
-
-static inline uint32_t tud_xinput_available(void) {
-  return tud_xinput_n_available(0);
-}
-
-static inline uint32_t tud_xinput_read(void *buffer, uint32_t bufsize) {
-  return tud_xinput_n_read(0, buffer, bufsize);
-}
-
-static inline bool tud_xinput_peek(int pos, uint8_t *u8) {
-  return tud_xinput_n_peek(0, pos, u8);
-}
-
-static inline uint32_t tud_xinput_write(void const *buffer, uint32_t bufsize) {
-  return tud_xinput_n_write(0, buffer, bufsize);
-}
-
-static inline uint32_t tud_xinput_write_str(char const *str) {
-  return tud_xinput_n_write_str(0, str);
-}
-
-static inline uint32_t tud_xinput_write_available(void) {
-  return tud_xinput_n_write_available(0);
-}
-
-//--------------------------------------------------------------------+
-// Internal Class Driver API
-//--------------------------------------------------------------------+
+// Send report to host
+bool tud_xinput_n_report(uint8_t itf, uint8_t report_id, void const *report,
+                         uint8_t len);
 void xinputd_init(void);
 void xinputd_reset(uint8_t rhport);
 uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
-                      uint16_t max_len);
+                   uint16_t max_len);
+bool xinputd_control_request(uint8_t rhport,
+                          tusb_control_request_t const *request);
+bool xinputd_control_complete(uint8_t rhport,
+                           tusb_control_request_t const *request);
 bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event,
-                     uint32_t xferred_bytes);
+                  uint32_t xferred_bytes);
 
 #ifdef __cplusplus
 }

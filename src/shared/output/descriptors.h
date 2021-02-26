@@ -194,9 +194,9 @@ typedef struct {
 typedef struct {
   uint32_t PropertyDataType;
   uint16_t PropertyNameLength;
-  WCHAR PropertyName[20];
+  uint16_t PropertyName[20];
   uint32_t PropertyDataLength;
-  WCHAR PropertyData[39];
+  uint16_t PropertyData[39];
 } ATTR_PACKED USB_OSExtendedSection_t;
 typedef struct {
   uint32_t TotalLength;

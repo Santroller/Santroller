@@ -21,7 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * This file is part of the TinyUSB stack.
+ * This file is essentially hid_device, but with a custom open that supports
+ * xinput descriptors
  */
 
 #include "tusb_option.h"
@@ -51,11 +52,11 @@ typedef struct {
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_HID_EP_BUFSIZE];
 } xinputd_interface_t;
 
-CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_HID];
+CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_XINPUT];
 
 /*------------- Helpers -------------*/
 static inline uint8_t get_index_by_itfnum(uint8_t itf_num) {
-  for (uint8_t i = 0; i < CFG_TUD_HID; i++) {
+  for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++) {
     if (itf_num == _xinputd_itf[i].itf_num) return i;
   }
 
@@ -114,12 +115,6 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                      (itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
 
   TU_VERIFY(max_len >= drv_len, 0);
-  if (itf_desc->bInterfaceSubClass != 0x5D ||
-      itf_desc->bInterfaceProtocol != 0x01) {
-    // We don't actually want to configure the config endpoint, so just skip
-    // over it
-    return drv_len;
-  }
 
   // Find available interface
   xinputd_interface_t *p_xinput = NULL;
@@ -131,28 +126,32 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
   }
   TU_VERIFY(p_xinput, 0);
   uint8_t const *p_desc = (uint8_t const *)itf_desc;
-
-  // Xinput reserved endpoint
-  //-------------- Xinput Descriptor --------------//
-  p_desc = tu_desc_next(p_desc);
-  USB_HID_XBOX_Descriptor_HID_t *x_desc =
-      (USB_HID_XBOX_Descriptor_HID_t *)p_desc;
-  TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
-  drv_len += sizeof(USB_HID_XBOX_Descriptor_HID_t);
-
+  int type = TUSB_XFER_BULK;
+  if (itf_desc->bInterfaceSubClass == 0x5D &&
+      itf_desc->bInterfaceProtocol == 0x01) {
+    type = TUSB_XFER_INTERRUPT;
+    // Xinput reserved endpoint
+    //-------------- Xinput Descriptor --------------//
+    p_desc = tu_desc_next(p_desc);
+    USB_HID_XBOX_Descriptor_HID_t *x_desc =
+        (USB_HID_XBOX_Descriptor_HID_t *)p_desc;
+    TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
+    drv_len += sizeof(USB_HID_XBOX_Descriptor_HID_t);
+  }
   //------------- Endpoint Descriptor -------------//
   p_desc = tu_desc_next(p_desc);
-  TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, 2, TUSB_XFER_INTERRUPT,
+  TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, type,
                                 &p_xinput->ep_out, &p_xinput->ep_in),
             0);
 
   p_xinput->itf_num = itf_desc->bInterfaceNumber;
-
-  // Prepare for incoming data
-  if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
-                      sizeof(p_xinput->epout_buf))) {
-    TU_LOG1_FAILED();
-    TU_BREAKPOINT();
+  if (type == TUSB_XFER_INTERRUPT) {
+    // Prepare for incoming data
+    if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
+                        sizeof(p_xinput->epout_buf))) {
+      TU_LOG1_FAILED();
+      TU_BREAKPOINT();
+    }
   }
   // Config endpoint
 

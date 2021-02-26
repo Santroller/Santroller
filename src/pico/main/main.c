@@ -21,6 +21,7 @@
 #include "timer/timer.h"
 #include "util/util.h"
 #include <device/usbd_pvt.h>
+#include <hardware/sync.h>
 #include <pico/unique_id.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,7 +73,7 @@ tud_vendor_control_request_cb(uint8_t rhport,
                  (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     int cmd = request->wValue;
     uint8_t buf[66];
-    tud_control_xfer(rhport, request, buf+2, request->wLength);
+    tud_control_xfer(rhport, request, buf + 2, request->wLength);
     processHIDWriteFeatureReport(cmd, request->wLength, buf + 2);
     if (config.rf.rfInEnabled) {
       uint8_t buf2[32];
@@ -145,7 +146,6 @@ Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
-bool xinputEnabled = false;
 void hid_task(void) {
   const uint32_t interval_ms = config.main.pollRate;
   static uint32_t start_ms = 0;
@@ -160,8 +160,6 @@ void hid_task(void) {
   if (memcmp(&currentReport, &previousReport, size) != 0) {
     uint8_t *data = (uint8_t *)&currentReport;
     uint8_t rid = *data;
-    data++;
-    size--;
     switch (rid) {
     case REPORT_ID_XINPUT:
       if (tud_xinput_n_ready(0)) {
@@ -174,12 +172,16 @@ void hid_task(void) {
       rid = 0;
     case REPORT_ID_KBD:
     case REPORT_ID_MOUSE:
+      data++;
+      size--;
       if (tud_hid_n_ready(0)) {
         tud_hid_n_report(0, rid, data, size);
         start_ms = millis();
       }
       break;
     case REPORT_ID_MIDI:
+      data++;
+      size--;
       tud_midi_n_send(0, data);
       start_ms = millis();
 #endif
@@ -210,7 +212,8 @@ int main() {
   }
 }
 void writeToUSB(const void *const Buffer, uint8_t Length) {
-  tud_control_xfer(rhportToWrite, requestToWrite, (uint8_t*)Buffer + 1, Length - 1);
+  tud_control_xfer(rhportToWrite, requestToWrite, (uint8_t *)Buffer + 1,
+                   Length - 1);
 }
 void stopReading(void) {}
 bool tud_vendor_control_complete_cb(uint8_t rhport,
@@ -232,9 +235,6 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
-                               uint8_t *buffer, uint16_t reqlen) {
-}
+                               uint8_t *buffer, uint16_t reqlen) {}
 void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type,
-                           uint8_t const *buffer, uint16_t bufsize) {
-  
-}
+                           uint8_t const *buffer, uint16_t bufsize) {}

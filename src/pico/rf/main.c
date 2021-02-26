@@ -28,7 +28,6 @@ __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 Controller_t controller;
 Controller_t prevCtrl;
-Configuration_t newConfig;
 long lastPoll = 0;
 int validAnalog = 0;
 void stopReading(void) {}

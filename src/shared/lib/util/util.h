@@ -72,7 +72,8 @@
 #if __AVR__
 #  include <avr/interrupt.h>
 #else
-inline void sei() {}
-inline void cli() {}
+#  include "hardware/sync.h"
+extern void sei();
+extern void cli();
 inline uint8_t pgm_read_byte(const uint8_t *ptr) { return *ptr; }
 #endif

@@ -21,9 +21,9 @@ AVR_CONST USB_OSExtendedCompatibleIDDescriptor_t ExtendedIDs = {
   ExtendedID : {
     PropertyDataType : 1,
     PropertyNameLength : 40,
-    PropertyName : L"DeviceInterfaceGUID",
+    PropertyName : {'D','e','v','i','c','e','I','n','t','e','r','f','a','c','e','G','U','I','D'},
     PropertyDataLength : 78,
-    PropertyData : L"{DF59037D-7C92-4155-AC12-7D700A313D78}\0"
+    PropertyData : {'{','D','F','5','9','0','3','7','D','-','7','C','9','2','-','4','1','5','5','-','A','C','1','2','-','7','D','7','0','0','A','3','1','3','D','7','8','}','\0'}
   }
 };
 AVR_CONST CompatibleDescriptorType DevCompatIDs = {

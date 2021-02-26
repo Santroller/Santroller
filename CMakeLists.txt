@@ -153,6 +153,7 @@ foreach(TYPE ${TYPES})
     lib/mpu6050/inv_mpu_dmp_motion_driver.c
     lib/mpu6050/inv_mpu.c
     lib/mpu6050/mpu_math.c
+    src/pico/lib/util/util.c
     src/pico/lib/timer/timer.c
     src/pico/lib/spi/spi.c
     src/pico/lib/i2c/i2c.c
@@ -206,7 +207,8 @@ foreach(TYPE ${TYPES})
            VERSION_MAJOR=${VERSION_MAJOR}
            VERSION_MINOR=${VERSION_MINOR}
            VERSION_REVISION=${VERSION_REVISION}
-           USE_INTERNAL_SERIAL=3)
+           USE_INTERNAL_SERIAL=3
+           CONF_REGION=${CONF_REGION})
 
   # Add pico_stdlib library which aggregates commonly used features
   target_link_libraries(

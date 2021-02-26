@@ -1,10 +1,12 @@
 #include "eeprom/eeprom.h"
 #include "hardware/flash.h"
 #include "pico/stdlib.h"
+#include "util/util.h"
 #include <string.h>
 Configuration_t config;
 const Configuration_t default_config = DEFAULT_CONFIG;
 const __attribute__((section(".ardCfg"))) Configuration_t flash_target_contents;
+Configuration_t newConfig;
 #define FLASH_TARGET_OFFSET ((int)&flash_target_contents - XIP_BASE)
 void loadConfig(void) {
   config = flash_target_contents;
@@ -16,13 +18,17 @@ void loadConfig(void) {
     config.main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));
   }
+  newConfig = config;
 }
 void writeConfigBlock(uint8_t offset, const uint8_t *data, uint8_t len) {
-  uint8_t output[256] = {0};
-  memcpy(output, &flash_target_contents, sizeof(Configuration_t));
-  memcpy(output + offset, data, len);
-  flash_range_erase(FLASH_TARGET_OFFSET, FLASH_PAGE_SIZE);
-  flash_range_program(FLASH_TARGET_OFFSET, output, FLASH_PAGE_SIZE);
+  uint8_t *c = (uint8_t *)&newConfig;
+  memcpy(c + offset, data, len);
+  if (offset + len >= sizeof(Configuration_t)) {
+    cli();
+    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+    flash_range_program(FLASH_TARGET_OFFSET, c, FLASH_PAGE_SIZE);
+    sei();
+  }
 }
 
 void resetConfig(void) {

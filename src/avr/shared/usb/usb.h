@@ -52,7 +52,7 @@ void deviceControlRequest(void) {
              USB_ControlRequest.wValue == 0x0100) {
     len = sizeof(capabilities2);
     buffer = &capabilities2;
-  }
+  } 
   if (buffer) {
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_PStream_LE(buffer, len);
@@ -141,13 +141,13 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     address = &deviceDescriptor;
     size = deviceDescriptor.Header.Size;
     if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
-      uint8_t offs = deviceType - SWITCH_GAMEPAD;
+      uint8_t offs = (deviceType - SWITCH_GAMEPAD) * 2;
       mods[0] = offsetof(USB_Descriptor_Device_t, VendorID);
-      mods[1] = pgm_read_byte(vid + offs);
-      mods[2] = pgm_read_byte(vid + offs + 1);
+      mods[1] = pgm_read_byte(((uint8_t *)vid) + offs);
+      mods[2] = pgm_read_byte(((uint8_t *)vid) + offs + 1);
       mods[3] = offsetof(USB_Descriptor_Device_t, ProductID);
-      mods[4] = pgm_read_byte(pid + offs);
-      mods[5] = pgm_read_byte(pid + offs + 1);
+      mods[4] = pgm_read_byte(((uint8_t *)pid) + offs);
+      mods[5] = pgm_read_byte(((uint8_t *)pid) + offs + 1);
       write_endpoint_mods(address, size, mods, sizeof(mods));
     } else {
       write_endpoint_mods(address, size, mods, 0);
@@ -159,15 +159,17 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
     mods[1] = deviceType;
     mods[2] = 0x25;
-    mods[3] =
-        offsetof(USB_Descriptor_Configuration_t, HIDDescriptor.HIDReportLength);
-    mods[4] = sizeof(ps3_report_descriptor);
-    mods[5] = 0;
-    if (deviceType > KEYBOARD_ROCK_BAND_GUITAR) {
-      write_endpoint_mods(address, size, mods, sizeof(mods));
-    } else {
-      write_endpoint_mods(address, size, mods, 3);
-    }
+    // Interestinlgy, we don't have do do this currently as we somehow have made
+    // it so that both descriptors are the same length. mods[3] =
+    //     offsetof(USB_Descriptor_Configuration_t,
+    //     HIDDescriptor.HIDReportLength);
+    // mods[4] = 0;
+    // mods[5] = sizeof(ps3_report_descriptor);
+    // if (deviceType >= SWITCH_GAMEPAD) {
+    write_endpoint_mods(address, size, mods, 3);
+    // } else {
+    //   write_endpoint_mods(address, size, mods, 3);
+    // }
 #ifdef MULTI_ADAPTOR
 // TODO: if we ever implement this stuff, this needs to be implemented again.
 // conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
@@ -177,14 +179,14 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     return NO_DESCRIPTOR;
     break;
   case HID_DTYPE_Report:
-    if (deviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
+    if (deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
       address = kbd_report_descriptor;
-      size = sizeof(kbd_report_descriptor);
     } else {
       address = ps3_report_descriptor;
-      size = sizeof(ps3_report_descriptor);
     }
-    break;
+    size = sizeof(kbd_report_descriptor);
+    write_endpoint_mods(address, size, NULL, 0);
+    return 0;
   case DTYPE_String:
     if (descriptorNumber <= 3) {
       address = (void *)pgm_read_word(descriptorStrings + descriptorNumber);

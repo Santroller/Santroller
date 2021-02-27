@@ -170,7 +170,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(MIDI_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE, 1);
 #endif
 }
-const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
   Endpoint_ClearSETUP();
   uint8_t done[] = {FRAME_START_FEATURE_WRITE, len, cmd};

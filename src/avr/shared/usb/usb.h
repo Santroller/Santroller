@@ -1,8 +1,7 @@
-#include "output/descriptors.h"
-#include "output/control_requests.h"
-#include "output/serial_handler.h"
 #include "config/defines.h"
+#include "output/control_requests.h"
 #include "output/descriptors.h"
+#include "output/serial_handler.h"
 void deviceControlRequest(void) {
   if (!(Endpoint_IsSETUPReceived())) return;
   const void *buffer = NULL;
@@ -17,7 +16,8 @@ void deviceControlRequest(void) {
     processHIDWriteFeatureReportControl(USB_ControlRequest.wValue,
                                         USB_ControlRequest.wLength);
   } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
-             (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
+             (USB_ControlRequest.bmRequestType ==
+              (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
              USB_ControlRequest.wIndex == INTERFACE_ID_XInput &&
              USB_ControlRequest.wValue == 0x0000) {
     len = sizeof(capabilities1);
@@ -38,26 +38,21 @@ void deviceControlRequest(void) {
   } else if (USB_ControlRequest.bmRequestType ==
              (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     buffer = &DevCompatIDs;
+  } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
+             (USB_ControlRequest.bmRequestType ==
+              (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
+             USB_ControlRequest.wIndex == 0x00 &&
+             USB_ControlRequest.wValue == 0x0000) {
+    len = sizeof(ID);
+    buffer = &ID;
+  } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
+             (USB_ControlRequest.bmRequestType ==
+              (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
+             USB_ControlRequest.wIndex == INTERFACE_ID_XInput &&
+             USB_ControlRequest.wValue == 0x0100) {
+    len = sizeof(capabilities2);
+    buffer = &capabilities2;
   }
-  // Here are a couple of other control requests that are implemented, however
-  // as we are running out of space and these were not required they are
-  // disabled.
-  // } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
-  //            (USB_ControlRequest.bmRequestType ==
-  //                (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
-  //            USB_ControlRequest.wIndex == 0x00 &&
-  //            USB_ControlRequest.wValue == 0x0000) {
-  //   len = sizeof(ID);
-  //   buffer = &ID;
-  // } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
-  //            (USB_ControlRequest.bmRequestType ==
-  //                (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE))
-  //                &&
-  //            USB_ControlRequest.wIndex == INTERFACE_ID_XInput &&
-  //            USB_ControlRequest.wValue == 0x0100) {
-  //   len = sizeof(capabilities2);
-  //   buffer = &capabilities2;
-  // }
   if (buffer) {
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_PStream_LE(buffer, len);
@@ -75,7 +70,7 @@ uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
   else if (!(Length))
     Endpoint_ClearIN();
 
-  while (Length || LastPacketFull) {
+  while (true) {
     uint8_t USB_DeviceState_LCL = USB_DeviceState;
 
     if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
@@ -86,42 +81,43 @@ uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
       return ENDPOINT_RWCSTREAM_HostAborted;
     else if (Endpoint_IsOUTReceived())
       break;
+    if (Length || LastPacketFull) {
+      if (Endpoint_IsINReady()) {
+        uint16_t BytesInEndpoint = Endpoint_BytesInEndpoint();
 
-    if (Endpoint_IsINReady()) {
-      uint16_t BytesInEndpoint = Endpoint_BytesInEndpoint();
-
-      while (Length && (BytesInEndpoint < USB_Device_ControlEndpointSize)) {
-        uint8_t bytes = 1;
-        for (uint8_t i = 0; i < modCount; i += 3) {
-          if (current == mods[i]) {
-            bytes = 2;
-            Endpoint_Write_8(mods[i + 1]);
-            Endpoint_Write_8(mods[i + 2]);
+        while (Length && (BytesInEndpoint < USB_Device_ControlEndpointSize)) {
+          uint8_t bytes = 1;
+          for (uint8_t i = 0; i < modCount; i += 3) {
+            if (current == mods[i]) {
+              bytes = 2;
+              Endpoint_Write_8(mods[i + 1]);
+              Endpoint_Write_8(mods[i + 2]);
+            }
           }
+          if (bytes == 1) { Endpoint_Write_8(pgm_read_byte(Buffer + current)); }
+          // We need to skip over 2 bytes if we find a block to modify, as each
+          // mod block overwrites two bytes
+          Length -= bytes;
+          BytesInEndpoint += bytes;
+          current += bytes;
         }
-        if (bytes == 1) { Endpoint_Write_8(pgm_read_byte(Buffer + current)); }
-        // We need to skip over 2 bytes if we find a block to modify, as each
-        // mod block overwrites two bytes
-        Length -= bytes;
-        BytesInEndpoint += bytes;
-        current += bytes;
-      }
 
-      LastPacketFull = (BytesInEndpoint == USB_Device_ControlEndpointSize);
-      Endpoint_ClearIN();
+        LastPacketFull = (BytesInEndpoint == USB_Device_ControlEndpointSize);
+        Endpoint_ClearIN();
+      }
     }
   }
 
-  while (!(Endpoint_IsOUTReceived())) {
-    uint8_t USB_DeviceState_LCL = USB_DeviceState;
+  // while (!(Endpoint_IsOUTReceived())) {
+  //   uint8_t USB_DeviceState_LCL = USB_DeviceState;
 
-    if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
-      return ENDPOINT_RWCSTREAM_DeviceDisconnected;
-    else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
-      return ENDPOINT_RWCSTREAM_BusSuspended;
-    else if (Endpoint_IsSETUPReceived())
-      return ENDPOINT_RWCSTREAM_HostAborted;
-  }
+  //   if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
+  //     return ENDPOINT_RWCSTREAM_DeviceDisconnected;
+  //   else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
+  //     return ENDPOINT_RWCSTREAM_BusSuspended;
+  //   else if (Endpoint_IsSETUPReceived())
+  //     return ENDPOINT_RWCSTREAM_HostAborted;
+  // }
   Endpoint_ClearOUT();
   return ENDPOINT_RWCSTREAM_NoError;
 }

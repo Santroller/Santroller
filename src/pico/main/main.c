@@ -32,6 +32,7 @@
 int validAnalog = 0;
 uint8_t rhportToWrite;
 tusb_control_request_t const *requestToWrite;
+CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[64];
 TU_ATTR_WEAK bool
 tud_vendor_control_request_cb(uint8_t rhport,
                               tusb_control_request_t const *request) {
@@ -62,33 +63,18 @@ tud_vendor_control_request_cb(uint8_t rhport,
              request->wIndex == INTERFACE_ID_XInput &&
              request->wValue == 0x0100) {
     tud_control_xfer(rhport, request, capabilities1, sizeof(capabilities2));
+  } else if (request->bRequest == HID_REQ_SetReport &&
+             request->bmRequestType ==
+                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    tud_control_xfer(rhport, request, buf, request->wLength);
   } else if (request->bRequest == HID_REQ_GetReport &&
              request->bmRequestType ==
                  (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
     rhportToWrite = rhport;
     requestToWrite = request;
     processHIDReadFeatureReport(request->wValue);
-  } else if (request->bRequest == HID_REQ_SetReport &&
-             request->bmRequestType ==
-                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    int cmd = request->wValue;
-    uint8_t buf[66];
-    tud_control_xfer(rhport, request, buf + 2, request->wLength);
-    processHIDWriteFeatureReport(cmd, request->wLength, buf + 2);
-    if (config.rf.rfInEnabled) {
-      uint8_t buf2[32];
-      buf[0] = cmd;
-      buf[1] = false;
-      while (nrf24_txFifoFull()) {
-        rf_interrupt = true;
-        tickRFInput(buf2, 0);
-        nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      }
-      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      nrf24_writeAckPayload(buf, 32);
-      rf_interrupt = true;
-    }
   }
+  return true;
 }
 uint8_t const *tud_descriptor_device_cb(void) {
   if (config.main.subType >= SWITCH_GAMEPAD && config.main.subType < MOUSE) {
@@ -138,7 +124,8 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
   if (index < 3) {
     return (const uint16_t *)descriptorStrings[index];
   } else if (index == 0xEE) {
-    return (uint16_t *)&OSDescriptorString;
+    void* osDesc = &OSDescriptorString;
+    return (uint16_t *)osDesc;
   }
   return NULL;
 }
@@ -219,6 +206,27 @@ void stopReading(void) {}
 bool tud_vendor_control_complete_cb(uint8_t rhport,
                                     tusb_control_request_t const *request) {
   (void)rhport;
+  if (request->bRequest == HID_REQ_SetReport &&
+      request->bmRequestType ==
+          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    int cmd = request->wValue;
+    processHIDWriteFeatureReport(cmd, request->wLength, buf);
+    uint8_t buf3[32];
+    memcpy(buf3 + 2, buf, 30);
+    if (config.rf.rfInEnabled) {
+      uint8_t buf2[32];
+      buf3[0] = cmd;
+      buf3[1] = false;
+      while (nrf24_txFifoFull()) {
+        rf_interrupt = true;
+        tickRFInput(buf2, 0);
+        nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+      }
+      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+      nrf24_writeAckPayload(buf3, sizeof(buf3));
+      rf_interrupt = true;
+    }
+  }
   return true;
 }
 usbd_class_driver_t driver[] = {

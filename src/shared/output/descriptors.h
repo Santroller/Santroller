@@ -264,7 +264,7 @@ typedef enum {
   REPORT_ID_MOUSE,
   REPORT_ID_KBD,
   REPORT_ID_MIDI,
-  REPORT_ID_CONTROL = 0x21
+  REPORT_ID_CONTROL
 } HID_Report;
 
 typedef union {

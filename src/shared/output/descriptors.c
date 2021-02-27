@@ -3,12 +3,9 @@
 #include "controller/guitar_includes.h"
 #include "output/reports.h"
 #include "util/util.h"
-#ifdef __AVR__
-#  define AVR_CONST const PROGMEM
-#else
+#ifndef __AVR__
 #  include "LUFAConfig.h"
 #  include <tusb.h>
-#  define AVR_CONST
 #endif
 uint8_t deviceType = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is

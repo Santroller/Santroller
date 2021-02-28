@@ -16,7 +16,7 @@ except:
 try:
     dev.ctrl_transfer(0x21, 0x09, 49,0x00,[])
 except:
-    print("Probably already detached")
+    print("failed 1209")
 dev = usb.core.find(idVendor=0x12ba, idProduct=0x0100)
 try:
     dev.detach_kernel_driver(0)

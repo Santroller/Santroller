@@ -114,12 +114,12 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     dbuf[1] = detectedPin;
     stopSearching();
   } else {
-    size = sizeof(id);
-    memcpy_P(dbuf, id, sizeof(id));
+    size = sizeof(id)+1;
+    memcpy_P(dbuf+1, id, sizeof(id));
     if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
-      dbuf[3] = 0x00;
+      dbuf[4] = 0x00;
     } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
-      dbuf[3] = 0x06;
+      dbuf[4] = 0x06;
     }
   }
   writeToUSB(dbuf, size);

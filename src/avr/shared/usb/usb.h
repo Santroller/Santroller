@@ -2,6 +2,8 @@
 #include "output/control_requests.h"
 #include "output/descriptors.h"
 #include "output/serial_handler.h"
+bool usingReportProtocol;
+uint16_t idle;
 void deviceControlRequest(void) {
   if (!(Endpoint_IsSETUPReceived())) return;
   const void *buffer = NULL;
@@ -35,9 +37,6 @@ void deviceControlRequest(void) {
              USB_ControlRequest.wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
     len = DevCompatIDs.TotalLength;
     buffer = &DevCompatIDs;
-  } else if (USB_ControlRequest.bmRequestType ==
-             (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    buffer = &DevCompatIDs;
   } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
              (USB_ControlRequest.bmRequestType ==
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
@@ -52,6 +51,23 @@ void deviceControlRequest(void) {
              USB_ControlRequest.wValue == 0x0100) {
     len = sizeof(capabilities2);
     buffer = &capabilities2;
+  } else if (USB_ControlRequest.bmRequestType ==
+                 (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    buffer = &len;
+  } else if (USB_ControlRequest.bRequest == HID_REQ_SetProtocol &&
+             USB_ControlRequest.bmRequestType ==
+                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    Endpoint_ClearSETUP();
+    // usingReportProtocol = (USB_ControlRequest.wValue & 0xFF) != 0x00;
+
+    Endpoint_ClearStatusStage();
+  } else if (USB_ControlRequest.bRequest == HID_REQ_SetIdle &&
+             USB_ControlRequest.bmRequestType ==
+                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+    Endpoint_ClearSETUP();
+    // idle = (USB_ControlRequest.wValue & 0xFF00) >> 6;
+
+    Endpoint_ClearStatusStage();
   } 
   if (buffer) {
     Endpoint_ClearSETUP();
@@ -59,8 +75,8 @@ void deviceControlRequest(void) {
     Endpoint_ClearStatusStage();
   }
 }
-uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
-                            uint8_t *mods, uint8_t modCount) {
+void write_endpoint_mods(const void *const Buffer, uint16_t Length,
+                         uint8_t *mods, uint8_t modCount) {
   Endpoint_ClearSETUP();
   bool LastPacketFull = false;
   uint8_t current = 0;
@@ -74,11 +90,11 @@ uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
     uint8_t USB_DeviceState_LCL = USB_DeviceState;
 
     if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
-      return ENDPOINT_RWCSTREAM_DeviceDisconnected;
+      return;
     else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
-      return ENDPOINT_RWCSTREAM_BusSuspended;
+      return;
     else if (Endpoint_IsSETUPReceived())
-      return ENDPOINT_RWCSTREAM_HostAborted;
+      return;
     else if (Endpoint_IsOUTReceived())
       break;
     if (Length || LastPacketFull) {
@@ -107,19 +123,7 @@ uint8_t write_endpoint_mods(const void *const Buffer, uint16_t Length,
       }
     }
   }
-
-  // while (!(Endpoint_IsOUTReceived())) {
-  //   uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-  //   if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
-  //     return ENDPOINT_RWCSTREAM_DeviceDisconnected;
-  //   else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
-  //     return ENDPOINT_RWCSTREAM_BusSuspended;
-  //   else if (Endpoint_IsSETUPReceived())
-  //     return ENDPOINT_RWCSTREAM_HostAborted;
-  // }
   Endpoint_ClearOUT();
-  return ENDPOINT_RWCSTREAM_NoError;
 }
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application
@@ -140,6 +144,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
   case DTYPE_Device:
     address = &deviceDescriptor;
     size = deviceDescriptor.Header.Size;
+    uint8_t modCount = 0;
     if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
       uint8_t offs = (deviceType - SWITCH_GAMEPAD) * 2;
       mods[0] = offsetof(USB_Descriptor_Device_t, VendorID);
@@ -148,10 +153,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       mods[3] = offsetof(USB_Descriptor_Device_t, ProductID);
       mods[4] = pgm_read_byte(((uint8_t *)pid) + offs);
       mods[5] = pgm_read_byte(((uint8_t *)pid) + offs + 1);
-      write_endpoint_mods(address, size, mods, sizeof(mods));
-    } else {
-      write_endpoint_mods(address, size, mods, 0);
+      modCount = sizeof(mods);
     }
+    write_endpoint_mods(address, size, mods, modCount);
     return NO_DESCRIPTOR;
   case DTYPE_Configuration:
     address = &ConfigurationDescriptor;
@@ -159,17 +163,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     mods[0] = offsetof(USB_Descriptor_Configuration_t, XInputReserved.subtype);
     mods[1] = deviceType;
     mods[2] = 0x25;
-    // Interestinlgy, we don't have do do this currently as we somehow have made
-    // it so that both descriptors are the same length. mods[3] =
-    //     offsetof(USB_Descriptor_Configuration_t,
-    //     HIDDescriptor.HIDReportLength);
-    // mods[4] = 0;
-    // mods[5] = sizeof(ps3_report_descriptor);
-    // if (deviceType >= SWITCH_GAMEPAD) {
     write_endpoint_mods(address, size, mods, 3);
-    // } else {
-    //   write_endpoint_mods(address, size, mods, 3);
-    // }
 #ifdef MULTI_ADAPTOR
 // TODO: if we ever implement this stuff, this needs to be implemented again.
 // conf->XInputReserved2.subtype = XINPUT_ARCADE_PAD;
@@ -185,8 +179,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
       address = ps3_report_descriptor;
     }
     size = sizeof(kbd_report_descriptor);
-    write_endpoint_mods(address, size, NULL, 0);
-    return 0;
+    break;
   case DTYPE_String:
     if (descriptorNumber <= 3) {
       address = (void *)pgm_read_word(descriptorStrings + descriptorNumber);

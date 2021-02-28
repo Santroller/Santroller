@@ -109,8 +109,6 @@ int main(void) {
               [tmp] "=e"(tmp)     // Input and output
             // Inputs
             : "1"(tmp));
-        // When there is a lot of traffic down the controller, its possible
-        // For the config line to get a duplicate header?
         if (state == 0 && data == FRAME_START_WRITE) {
           state = 1;
         } else if (state == 1) {
@@ -183,9 +181,6 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
       }
       Endpoint_ClearOUT();
     }
-    // Endpoint_ClearSETUP();
-    // Endpoint_Read_Control_Stream_LE(dbuf, USB_ControlRequest.wLength);
-    // Endpoint_ClearStatusStage();
   }
   if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
     jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;

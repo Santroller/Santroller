@@ -47,8 +47,7 @@ extern uint8_t deviceType;
  * Feature Descriptor. */
 #define EXTENDED_PROPERTIES_DESCRIPTOR 0x0005
 
-#define HID_EPSIZE 32
-#define HID_REPORTSIZE 32
+#define HID_EPSIZE 64
 /** Endpoint address of the DEVICE IN endpoint. */
 #define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the DEVICE OUT endpoint. */
@@ -72,15 +71,6 @@ extern uint8_t deviceType;
 #define XINPUT_4_EPADDR_OUT (ENDPOINT_DIR_OUT | 11)
 /** Endpoint address of the DEVICE OUT endpoint. */
 #define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
-
-/** Size in bytes of the CDC device-to-host notification IN endpoint. */
-#define CDC_NOTIFICATION_EPSIZE 8
-
-/** Size in bytes of the CDC data IN and OUT endpoints. */
-#define CDC_TX_EPSIZE 64
-#define CDC_TX_BANK_SIZE 2
-#define CDC_RX_EPSIZE 32
-#define CDC_RX_BANK_SIZE 1
 /** Enum for the device interface descriptor IDs within the device. Each
  * interface descriptor should have a unique ID index associated with it, which
  * can be used to refer to the interface from other descriptors.
@@ -137,7 +127,7 @@ typedef struct {
   USB_Descriptor_Interface_t InterfaceHID;
   USB_HID_Descriptor_HID_t HIDDescriptor;
   USB_Descriptor_Endpoint_t EndpointInHID;
-  USB_Descriptor_Endpoint_t EndpointOutHID;
+  // USB_Descriptor_Endpoint_t EndpointOutHID;
   USB_Descriptor_Interface_t InterfaceConfig;
   USB_Descriptor_Endpoint_t EndpointInConfig;
 #ifndef MULTI_ADAPTOR

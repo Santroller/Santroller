@@ -44,12 +44,6 @@ AVR_CONST USB_OSDescriptor_t OSDescriptorString = {
   VendorCode : REQ_GetOSFeatureDescriptor,
   Reserved : 0
 };
-#define Buttons 4
-#define MinAxisVal -127
-#define MaxAxisVal 127
-#define MinPhysicalVal -127
-#define MaxPhysicalVal 128
-#define AbsoluteCoords false
 AVR_CONST USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
     // Controller
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
@@ -140,6 +134,12 @@ AVR_CONST USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
     HID_RI_END_COLLECTION(0),
 };
 
+#define Buttons 4
+#define MinAxisVal -127
+#define MaxAxisVal 127
+#define MinPhysicalVal -127
+#define MaxPhysicalVal 128
+#define AbsoluteCoords false
 AVR_CONST USB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[] = {
     HID_RI_USAGE_PAGE(8, HID_USAGE_PAGE_GENERIC_DESKTOP),
     HID_RI_USAGE(8, HID_USAGE_KEYBOARD),
@@ -565,7 +565,7 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 #ifdef MULTI_ADAPTOR
     TotalEndpoints : 0,
 #else
-    TotalEndpoints : 2,
+    TotalEndpoints : 1,
 #endif
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
@@ -577,17 +577,17 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
   EndpointInHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_IN,
-    Attributes : EP_TYPE_INTERRUPT,
+    Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-  EndpointOutHID : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : HID_EPADDR_OUT,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
+  // EndpointOutHID : {
+  //   Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+  //   EndpointAddress : HID_EPADDR_OUT,
+  //   Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+  //   EndpointSize : HID_EPSIZE,
+  //   PollingIntervalMS : 1
+  // },
 #endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},

@@ -4,13 +4,13 @@ F_CPU        = 16000000
 VARIANT		 = uno
 PORT 		 = /dev/ttyUSB0
 
-ARDWIINO_BOARD = mini
+ARDWIINO_BOARD = uno
 SIGNATURE = ardwiino
 
 SRC = main.c
 
 AVRDUDE_PROGRAMMER = arduino
-AVRDUDE_FLAGS = -b 57600 -P ${PORT}
+AVRDUDE_FLAGS = -b 115200 -P ${PORT}
 CC_FLAGS = -I../shared
 MCU_TYPE = main
 

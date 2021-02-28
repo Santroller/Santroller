@@ -26,7 +26,7 @@ uno-8:
 	scripts/bootloader.py || true
 	sleep 1
 	dfu-programmer $(UNOMCU8) erase || true
-	dfu-programmer $(UNOMCU8) flash output/ardwiino-uno-usb-$(UNOMCU8)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU8) flash build/firmware/ardwiino-uno-usb-$(UNOMCU8)-16000000-usbserial.hex
 	dfu-programmer $(UNOMCU8) launch
 	sleep 1
 	$(MAKE) -C src/avr/uno/main avrdude
@@ -36,18 +36,19 @@ uno-8:
 	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU8)
 
 uno:
-	$(MAKE) -C src/avr/uno
+	# $(MAKE) -C src/avr/uno/
 	sleep 0.5
 	scripts/bootloader.py || true
 	sleep 1
 	dfu-programmer $(UNOMCU) erase || true
-	dfu-programmer $(UNOMCU) flash output/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU) flash build/firmware/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
 	dfu-programmer $(UNOMCU) launch
-	sleep 1
-	$(MAKE) -C src/avr/uno/main avrdude
-	sleep 1
+	sleep 2
+	$(MAKE) -C src/avr/uno/main avrdude PORT=/dev/ttyACM0
+	sleep 2
 	stty -F /dev/ttyACM0 1200
 	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
 	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
 
 uno-rftx:

@@ -51,24 +51,12 @@ void deviceControlRequest(void) {
              USB_ControlRequest.wValue == 0x0100) {
     len = sizeof(capabilities2);
     buffer = &capabilities2;
-  } else if (USB_ControlRequest.bmRequestType ==
-                 (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    buffer = &len;
-  } else if (USB_ControlRequest.bRequest == HID_REQ_SetProtocol &&
-             USB_ControlRequest.bmRequestType ==
-                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+  } else if ((USB_ControlRequest.bmRequestType &
+              (CONTROL_REQTYPE_RECIPIENT | CONTROL_REQTYPE_TYPE)) ==
+                 (REQTYPE_CLASS | REQREC_INTERFACE)) {
     Endpoint_ClearSETUP();
-    // usingReportProtocol = (USB_ControlRequest.wValue & 0xFF) != 0x00;
-
     Endpoint_ClearStatusStage();
-  } else if (USB_ControlRequest.bRequest == HID_REQ_SetIdle &&
-             USB_ControlRequest.bmRequestType ==
-                 (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    Endpoint_ClearSETUP();
-    // idle = (USB_ControlRequest.wValue & 0xFF00) >> 6;
-
-    Endpoint_ClearStatusStage();
-  } 
+  }
   if (buffer) {
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_PStream_LE(buffer, len);

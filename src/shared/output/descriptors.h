@@ -57,7 +57,6 @@ extern uint8_t deviceType;
 #define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 /** Endpoint address of the DEVICE IN endpoint. */
 #define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
-#define CONFIG_EPADDR_IN (ENDPOINT_DIR_IN | 4)
 /** Endpoint address of the DEVICE IN endpoint. */
 // We don't actually utilise the next descriptors, and since the UNO limits
 // us to 4 endpoints, putting them last ensures that they are the unusable
@@ -69,8 +68,6 @@ extern uint8_t deviceType;
 #define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 9)
 #define XINPUT_3_EPADDR_OUT (ENDPOINT_DIR_OUT | 10)
 #define XINPUT_4_EPADDR_OUT (ENDPOINT_DIR_OUT | 11)
-/** Endpoint address of the DEVICE OUT endpoint. */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
 /** Enum for the device interface descriptor IDs within the device. Each
  * interface descriptor should have a unique ID index associated with it, which
  * can be used to refer to the interface from other descriptors.
@@ -127,9 +124,7 @@ typedef struct {
   USB_Descriptor_Interface_t InterfaceHID;
   USB_HID_Descriptor_HID_t HIDDescriptor;
   USB_Descriptor_Endpoint_t EndpointInHID;
-  // USB_Descriptor_Endpoint_t EndpointOutHID;
   USB_Descriptor_Interface_t InterfaceConfig;
-  USB_Descriptor_Endpoint_t EndpointInConfig;
 #ifndef MULTI_ADAPTOR
   USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;

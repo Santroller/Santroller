@@ -543,19 +543,11 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
     InterfaceNumber : INTERFACE_ID_Config,
     AlternateSetting : 0,
-    TotalEndpoints : 1,
+    TotalEndpoints : 0,
     Class : 0xff,
     SubClass : 0xff,
     Protocol : 0xff,
     InterfaceStrIndex : NO_DESCRIPTOR
-  },
-
-  EndpointInConfig : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : CONFIG_EPADDR_IN,
-    Attributes : EP_TYPE_BULK,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
   },
   InterfaceHID : {
     Header :
@@ -581,13 +573,6 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-  // EndpointOutHID : {
-  //   Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-  //   EndpointAddress : HID_EPADDR_OUT,
-  //   Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-  //   EndpointSize : HID_EPSIZE,
-  //   PollingIntervalMS : 1
-  // },
 #endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},

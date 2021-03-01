@@ -3,25 +3,6 @@
 #define INVALID_PIN 0xFF
 #define REAL_GUITAR_SUBTYPE 7
 #define REAL_DRUM_SUBTYPE 8
-/** Enum for the device interface descriptor IDs within the device. Each
- * interface descriptor should have a unique ID index associated with it, which
- * can be used to refer to the interface from other descriptors.
- */
-enum USBInterfaceID {
-  INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
-  INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
-  INTERFACE_ID_Config = 2, /**< XInput interface descriptor ID */
-#ifdef MULTI_ADAPTOR
-  INTERFACE_ID_XInput_2 = 3, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_3 = 4, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_4 = 5, /**< XInput interface descriptor ID */
-#else
-  INTERFACE_ID_ControlStream =
-      3, /**< MIDI Control Stream interface descriptor ID */
-  INTERFACE_ID_AudioStream =
-      4, /**< MIDI Audio Stream interface descriptor ID */
-#endif
-};
 // Tilt detection
 enum TiltType { NO_TILT, MPU_6050, DIGITAL, ANALOGUE };
 

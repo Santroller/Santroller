@@ -68,6 +68,7 @@ int main(void) {
   sei();
   uint8_t packetCount = 0;
   uint8_t state = 0;
+  // Once the endpoint is ready, let the 328p know so it can send data
   uint8_t currentEndpoint = XINPUT_EPADDR_IN;
   if (deviceType >= MIDI_GAMEPAD) {
     currentEndpoint = MIDI_EPADDR_IN;

@@ -22,19 +22,6 @@ Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
-USB_ClassInfo_HID_Device_t hidInterface = {
-  Config : {
-    InterfaceNumber : INTERFACE_ID_HID,
-    ReportINEndpoint : {
-      Address : HID_EPADDR_IN,
-      Size : HID_EPSIZE,
-      Type : EP_TYPE_CONTROL,
-      Banks : 1,
-    },
-    PrevReportINBuffer : &previousReport,
-    PrevReportINBufferSize : sizeof(USB_Report_Data_t),
-  },
-};
 #ifndef MULTI_ADAPTOR
 USB_ClassInfo_MIDI_Device_t midiInterface = {
     .Config =

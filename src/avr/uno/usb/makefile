@@ -12,6 +12,8 @@ SRC = main.c
 AVRDUDE_PROGRAMMER = arduino
 AVRDUDE_FLAGS = -b 57600 -P ${PORT}
 CC_FLAGS = -I../shared
+RAM_OFFSET   = 0x800282
+LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET)
 MCU_TYPE = usb
 
 PROJECT_ROOT = ../../../../

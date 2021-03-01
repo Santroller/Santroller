@@ -34,7 +34,13 @@ uno-8:
 	stty -F /dev/ttyACM0 1200
 	sleep 1
 	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU8)
-
+unob:
+	# $(MAKE) -C src/avr/uno/
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
 uno:
 	# $(MAKE) -C src/avr/uno/
 	sleep 0.5

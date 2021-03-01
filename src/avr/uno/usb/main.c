@@ -64,6 +64,7 @@ int main(void) {
   } else {
     deviceType = eeprom_read_byte(&config.deviceType);
   }
+  deviceType = PS3_GAMEPAD;
 
   sei();
   uint8_t packetCount = 0;
@@ -197,9 +198,8 @@ void processHIDReadFeatureReport(uint8_t cmd) {
 
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
                                   const uint8_t *data) {
-  uint8_t subType = data[0];
   if (cmd == COMMAND_WRITE_SUBTYPE) {
-    eeprom_update_byte(&config.deviceType, subType);
+    eeprom_update_byte(&config.deviceType, data[0]);
   }
   if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
     jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;

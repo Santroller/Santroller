@@ -47,7 +47,7 @@ extern uint8_t deviceType;
  * Feature Descriptor. */
 #define EXTENDED_PROPERTIES_DESCRIPTOR 0x0005
 
-#define HID_EPSIZE 64
+#define HID_EPSIZE 32
 /** Endpoint address of the DEVICE IN endpoint. */
 #define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the DEVICE OUT endpoint. */

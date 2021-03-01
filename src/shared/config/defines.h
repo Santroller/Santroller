@@ -7,7 +7,7 @@
  * interface descriptor should have a unique ID index associated with it, which
  * can be used to refer to the interface from other descriptors.
  */
-enum InterfaceDescriptors_t {
+enum USBInterfaceID {
   INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
   INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
   INTERFACE_ID_Config = 2, /**< XInput interface descriptor ID */

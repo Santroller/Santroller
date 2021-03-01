@@ -68,7 +68,12 @@ int main(void) {
   sei();
   uint8_t packetCount = 0;
   uint8_t state = 0;
-  uint8_t currentEndpoint = 0;
+  uint8_t currentEndpoint = XINPUT_EPADDR_IN;
+  if (deviceType >= MIDI_GAMEPAD) {
+    currentEndpoint = MIDI_EPADDR_IN;
+  } else if (deviceType >= KEYBOARD_GAMEPAD) {
+    currentEndpoint = HID_EPADDR_IN;
+  }
   bool checkEndpoint = true;
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
@@ -144,8 +149,8 @@ int main(void) {
         Endpoint_SelectEndpoint(currentEndpoint);
         if (Endpoint_IsINReady()) {
           uint8_t done = FRAME_DONE;
-          checkEndpoint = false;
           writeData(&done, 1);
+          checkEndpoint = false;
         }
         Endpoint_SelectEndpoint(prev);
       }

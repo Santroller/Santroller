@@ -64,7 +64,6 @@ int main(void) {
   } else {
     deviceType = eeprom_read_byte(&config.deviceType);
   }
-  deviceType = PS3_GAMEPAD;
 
   sei();
   uint8_t packetCount = 0;
@@ -173,15 +172,20 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
   Endpoint_ClearSETUP();
   uint8_t done[] = {FRAME_START_FEATURE_WRITE, len, cmd};
   writeData(done, sizeof(done));
+  uint8_t d;
   while (len) {
     if (Endpoint_IsOUTReceived()) {
       while (len && Endpoint_BytesInEndpoint()) {
-        uint8_t d = Endpoint_Read_8();
+        d = Endpoint_Read_8();
         writeData(&d, 1);
         len--;
       }
       Endpoint_ClearOUT();
     }
+  }
+
+  if (cmd == COMMAND_WRITE_SUBTYPE) {
+    eeprom_update_byte(&config.deviceType, d);
   }
   if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
     jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
@@ -194,22 +198,6 @@ void processHIDReadFeatureReport(uint8_t cmd) {
   uint8_t done = FRAME_START_FEATURE_READ;
   writeData(&done, 1);
   writeData(&cmd, 1);
-}
-
-void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
-                                  const uint8_t *data) {
-  if (cmd == COMMAND_WRITE_SUBTYPE) {
-    eeprom_update_byte(&config.deviceType, data[0]);
-  }
-  if (cmd == COMMAND_REBOOT || cmd == COMMAND_JUMP_BOOTLOADER) {
-    jmpToBootloader = cmd == COMMAND_REBOOT ? 0 : JUMP;
-    reboot();
-  }
-  uint8_t done = FRAME_START_FEATURE_WRITE;
-  writeData(&done, 1);
-  writeData(&data_len, 1);
-  writeData(&cmd, 1);
-  writeData(data, data_len);
 }
 
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }

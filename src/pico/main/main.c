@@ -124,7 +124,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
   if (index < 3) {
     return (const uint16_t *)descriptorStrings[index];
   } else if (index == 0xEE) {
-    void* osDesc = &OSDescriptorString;
+    void *osDesc = &OSDescriptorString;
     return (uint16_t *)osDesc;
   }
   return NULL;
@@ -211,10 +211,10 @@ bool tud_vendor_control_complete_cb(uint8_t rhport,
           (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     int cmd = request->wValue;
     processHIDWriteFeatureReport(cmd, request->wLength, buf);
-    uint8_t buf3[32];
-    memcpy(buf3 + 2, buf, 30);
     if (config.rf.rfInEnabled) {
       uint8_t buf2[32];
+      uint8_t buf3[32];
+      memcpy(buf3 + 2, buf, 30);
       buf3[0] = cmd;
       buf3[1] = false;
       while (nrf24_txFifoFull()) {

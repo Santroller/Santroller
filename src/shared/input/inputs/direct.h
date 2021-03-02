@@ -116,7 +116,7 @@ void tickDirectInput(Controller_t *controller) {
   }
   if (lookingForDigital) {
     // Change this to keep track of changes.
-    for (int i = 2; i < NUM_DIGITAL_PINS; i++) {
+    for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) {
         if (digitalRead(i) != lastDigitalValue[i]) {
           stopSearching();

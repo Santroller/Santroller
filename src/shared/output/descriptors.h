@@ -50,19 +50,23 @@ extern uint8_t deviceType;
 #define HID_EPSIZE 32
 /** Endpoint address of the DEVICE IN endpoint. */
 #define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 1)
+#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
+/** Endpoint address of the DEVICE IN endpoint. */
+#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
+#ifdef MULTI_ADAPTOR
+#  define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
+#else
+#  define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 4)
+#endif
 /** Endpoint address of the DEVICE OUT endpoint. */
 #define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 #define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 3)
 #define XINPUT_4_EPADDR_IN (ENDPOINT_DIR_IN | 4)
-#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
-/** Endpoint address of the DEVICE IN endpoint. */
-#define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
 /** Endpoint address of the DEVICE IN endpoint. */
 // We don't actually utilise the next descriptors, and since the UNO limits
 // us to 4 endpoints, putting them last ensures that they are the unusable
 // endpoints.
 /** Endpoint address of the DEVICE OUT endpoint.*/
-#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
 /** Endpoint address of the DEVICE OUT endpoint.  */
 #define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
 #define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 9)
@@ -262,10 +266,8 @@ extern AVR_CONST USB_Descriptor_String_t AVR_CONST manufacturerString;
 extern AVR_CONST USB_Descriptor_String_t AVR_CONST productString;
 extern const USB_Descriptor_String_t *AVR_CONST descriptorStrings[];
 extern AVR_CONST USB_OSDescriptor_t OSDescriptorString;
-extern AVR_CONST USB_Descriptor_HIDReport_Datatype_t
-    ps3_report_descriptor[137];
-extern AVR_CONST USB_Descriptor_HIDReport_Datatype_t
-    kbd_report_descriptor[137];
+extern AVR_CONST USB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[137];
+extern AVR_CONST USB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[137];
 extern AVR_CONST USB_Descriptor_Device_t deviceDescriptor;
 extern AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor;
 extern AVR_CONST uint16_t vid[];

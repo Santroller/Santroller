@@ -85,9 +85,7 @@ int main(void) {
         size--;
         break;
       case REPORT_ID_GAMEPAD:
-        // Consoles don't support multiple report ids, so we strip them here
-        // too. PS3's technically do support them, but at the cost of not
-        // being able to identify the controller.
+        // The wii does not support multiple report ids. So we also strip it here
         Endpoint_SelectEndpoint(HID_EPADDR_IN);
         data++;
         size--;

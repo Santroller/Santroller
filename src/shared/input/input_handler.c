@@ -28,7 +28,7 @@ void initInputs() {
     break;
   }
   if (config.main.inputType != PS2 && config.main.fretLEDMode == APA102) {
-    spi_begin(F_CPU / 2, false, false);
+    spi_begin(F_CPU / 2, true, true);
   }
   if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
     twi_init();

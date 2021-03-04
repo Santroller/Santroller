@@ -53,11 +53,6 @@ extern uint8_t deviceType;
 #define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 /** Endpoint address of the DEVICE IN endpoint. */
 #define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
-#ifdef MULTI_ADAPTOR
-#  define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
-#else
-#  define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 4)
-#endif
 /** Endpoint address of the DEVICE OUT endpoint. */
 #define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 2)
 #define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 3)
@@ -68,6 +63,7 @@ extern uint8_t deviceType;
 // endpoints.
 /** Endpoint address of the DEVICE OUT endpoint.*/
 /** Endpoint address of the DEVICE OUT endpoint.  */
+#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
 #define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
 #define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 9)
 #define XINPUT_3_EPADDR_OUT (ENDPOINT_DIR_OUT | 10)
@@ -79,7 +75,7 @@ extern uint8_t deviceType;
 enum InterfaceDescriptors_t {
   INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
   INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
-  INTERFACE_ID_Config = 2, /**< XInput interface descriptor ID */
+  INTERFACE_ID_Config = 2, /**< Config interface descriptor ID */
 #ifdef MULTI_ADAPTOR
   INTERFACE_ID_XInput_2 = 3, /**< XInput interface descriptor ID */
   INTERFACE_ID_XInput_3 = 4, /**< XInput interface descriptor ID */

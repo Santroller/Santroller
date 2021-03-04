@@ -1,18 +1,18 @@
 #pragma once
-#include "pins/pins.h"
-#include "eeprom/eeprom.h"
 #include "controller/controller.h"
 #include "controller/guitar_includes.h"
 #include "direct.h"
+#include "eeprom/eeprom.h"
 #include "guitar.h"
 #include "i2c/i2c.h"
 #include "mpu6050/inv_mpu.h"
 #include "mpu6050/inv_mpu_dmp_motion_driver.h"
 #include "mpu6050/mpu_math.h"
+#include "pins/pins.h"
+#include "timer/timer.h"
 #include "util/util.h"
 #include <stdbool.h>
 #include <stdlib.h>
-#include "timer/timer.h"
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_OK_PTR 0x11
 #define GH5NECK_BUTTONS_PTR 0x12
@@ -72,17 +72,18 @@ void initGuitar(void) {
   } else if (config.main.tiltType == DIGITAL) {
     pinMode(config.pins.r_y.pin, INPUT_PULLUP);
     tick = tickDigitalTilt;
-  } 
+  }
 }
 int16_t r_x;
 void tickGuitar(Controller_t *controller) {
   if (!isGuitar(config.main.subType)) return;
-  r_x = controller->r_x;
-  // Whammy needs to be scaled so that it is picked up
-  if (r_x > 0) r_x = 0;
-  r_x = r_x << 1;
-  if (r_x > 0) r_x = -32767;
-  controller->r_x = -r_x;
+  if (controller->r_x < 0x7FF) {
+    controller->r_x = 0;
+  } else if (controller->r_x > 0x3FFF) {
+    controller->r_x = 0x7FFF;
+  } else {
+    controller->r_x = (controller->r_x << 1);
+  }
   if (tick == NULL) return;
   tick(controller);
 }

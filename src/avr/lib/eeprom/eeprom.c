@@ -1,6 +1,7 @@
 #include "eeprom/eeprom.h"
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+#include "controller/guitar_includes.h"
 static uint8_t EEMEM test = 0;
 Configuration_t EEMEM config_pointer = DEFAULT_CONFIG;
 const Configuration_t PROGMEM default_config = DEFAULT_CONFIG;
@@ -37,6 +38,10 @@ void loadConfig(void) {
   }
   if (config.main.version < 6) { config.main.pollRate = POLL_RATE; }
   if (config.main.version < 7) { config.rf.rfInEnabled = false; }
+  // We made a change to simplify the guitar config, but as a result whammy is now flipped
+  if (config.main.version < 9 && isGuitar(config.main.subType)) {
+    config.pins.r_x.inverted = !config.pins.r_x.inverted;
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

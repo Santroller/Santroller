@@ -49,8 +49,8 @@ extern uint8_t deviceType;
 
 #define HID_EPSIZE 32
 /** Endpoint address of the DEVICE IN endpoint. */
-#define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 1)
-#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 2)
+#define XINPUT_EPADDR_IN (ENDPOINT_DIR_IN | 2)
+#define HID_EPADDR_IN (ENDPOINT_DIR_IN | 1)
 /** Endpoint address of the DEVICE IN endpoint. */
 #define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
 /** Endpoint address of the DEVICE OUT endpoint. */
@@ -63,6 +63,7 @@ extern uint8_t deviceType;
 // endpoints.
 /** Endpoint address of the DEVICE OUT endpoint.*/
 /** Endpoint address of the DEVICE OUT endpoint.  */
+#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 6)
 #define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
 #define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
 #define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 9)
@@ -103,6 +104,10 @@ typedef struct {
 
 typedef struct {
   USB_Descriptor_Configuration_Header_t Config;
+  USB_Descriptor_Interface_t InterfaceHID;
+  USB_HID_Descriptor_HID_t HIDDescriptor;
+  USB_Descriptor_Endpoint_t EndpointInHID;
+  USB_Descriptor_Endpoint_t EndpointOutHID;
   USB_Descriptor_Interface_t InterfaceXInput;
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Endpoint_t EndpointInXInput;
@@ -121,9 +126,6 @@ typedef struct {
   USB_Descriptor_Endpoint_t EndpointInXInput4;
   USB_Descriptor_Endpoint_t EndpointOutXInput4;
 #endif
-  USB_Descriptor_Interface_t InterfaceHID;
-  USB_HID_Descriptor_HID_t HIDDescriptor;
-  USB_Descriptor_Endpoint_t EndpointInHID;
   USB_Descriptor_Interface_t InterfaceConfig;
 #ifndef MULTI_ADAPTOR
   USB_Descriptor_Interface_t Interface_AudioControl;

@@ -7,7 +7,6 @@ Configuration_t config;
 const Configuration_t default_config = DEFAULT_CONFIG;
 const __attribute__((section(".ardCfg"))) Configuration_t flash_target_contents;
 Configuration_t newConfig;
-#define FLASH_TARGET_OFFSET ((int)&flash_target_contents - XIP_BASE)
 void loadConfig(void) {
   config = flash_target_contents;
   if (config.main.signature != ARDWIINO_DEVICE_TYPE) {

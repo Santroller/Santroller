@@ -174,8 +174,10 @@ foreach(TYPE ${TYPES})
     target_compile_definitions(${TARGET} PUBLIC RF_TX=true)
   endif()
   set(XIP_BASE 0x10000000)
-  math(EXPR CONF_REGION "${XIP_BASE} + (256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
-  math(EXPR RF_REGION "${XIP_BASE} + (512 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+  math(EXPR RF_TARGET_OFFSET "(256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+  math(EXPR FLASH_TARGET_OFFSET "(512 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+  math(EXPR CONF_REGION "${XIP_BASE} + ${RF_TARGET_OFFSET}" OUTPUT_FORMAT HEXADECIMAL)
+  math(EXPR RF_REGION "${XIP_BASE} + ${FLASH_TARGET_OFFSET}" OUTPUT_FORMAT HEXADECIMAL)
   # Define a memory section 256 kb away from the start of flash for the config
   target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
   # Define a memory section 512 kb away from the start of flash for the rf config
@@ -208,7 +210,8 @@ foreach(TYPE ${TYPES})
            VERSION_MINOR=${VERSION_MINOR}
            VERSION_REVISION=${VERSION_REVISION}
            USE_INTERNAL_SERIAL=3
-           CONF_REGION=${CONF_REGION})
+           FLASH_TARGET_OFFSET=${FLASH_TARGET_OFFSET}
+           RF_TARGET_OFFSET=${RF_TARGET_OFFSET})
 
   # Add pico_stdlib library which aggregates commonly used features
   target_link_libraries(

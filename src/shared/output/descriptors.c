@@ -245,8 +245,8 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 #endif
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
-    ConfigAttributes : USB_CONFIG_ATTR_REMOTEWAKEUP,
-    MaxPowerConsumption : USB_CONFIG_POWER_MA(500)
+    ConfigAttributes : USB_CONFIG_ATTR_RESERVED,
+    MaxPowerConsumption : USB_CONFIG_POWER_MA(100)
   },
   InterfaceXInput : {
     Header :
@@ -557,7 +557,7 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
 #ifdef MULTI_ADAPTOR
     TotalEndpoints : 0,
 #else
-    TotalEndpoints : 1,
+    TotalEndpoints : 2,
 #endif
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
@@ -573,10 +573,17 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
+  EndpointOutHID : {
+    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
+    EndpointAddress : HID_EPADDR_OUT,
+    Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    EndpointSize : HID_EPSIZE,
+    PollingIntervalMS : 1
+  },
 #endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
-    HIDSpec : VERSION_BCD(1, 1, 1),
+    HIDSpec : VERSION_BCD(1, 0, 1),
     CountryCode : 0x00,
     TotalReportDescriptors : 1,
     HIDReportType : HID_DTYPE_Report,

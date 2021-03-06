@@ -51,7 +51,7 @@ void deviceControlRequest(void) {
     buffer = &capabilities2;
   } else if ((USB_ControlRequest.bmRequestType &
               (CONTROL_REQTYPE_RECIPIENT | CONTROL_REQTYPE_TYPE)) ==
-                 (REQTYPE_CLASS | REQREC_INTERFACE)) {
+                 (REQTYPE_CLASS | REQREC_INTERFACE) && USB_ControlRequest.bRequest != HID_REQ_SetIdle) {
     Endpoint_ClearSETUP();
     Endpoint_ClearStatusStage();
   }

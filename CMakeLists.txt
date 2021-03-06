@@ -238,3 +238,19 @@ foreach(TYPE ${TYPES})
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.*
             ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 endforeach()
+
+add_custom_target(pico)
+add_dependencies(pico ardwiino-pico-rp2040)
+add_custom_command(
+  TARGET pico
+  POST_BUILD
+  COMMAND ${CMAKE_SOURCE_DIR}/scripts/bootloader.py)
+add_custom_command(
+    TARGET pico
+    POST_BUILD
+    COMMAND sleep 10)
+add_custom_command(
+  TARGET pico
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-pico-rp2040.uf2
+    /run/media/$ENV{USERNAME}/RPI-RP2/)

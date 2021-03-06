@@ -15,7 +15,7 @@ except:
     print("Probably already detached")
 try:
     dev.ctrl_transfer(0x21, 0x09, 49,0x00,[])
-    dev.ctrl_transfer(0x21, 0x09, 49,0x02,[])
+    dev.ctrl_transfer(0x21, 0x09, 49,0x02,[0x00])
 except:
     print("failed 1209")
 dev = usb.core.find(idVendor=0x12ba, idProduct=0x0100)

@@ -17,6 +17,7 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.pin = pinNum;
   pin.pmask = _BV(offset);
   pin.eq = inverted;
+  gpio_init(pinNum);
 }
 bool digitalReadPin(Pin_t pin) {
   return gpio_get(pin.pin) == pin.eq;

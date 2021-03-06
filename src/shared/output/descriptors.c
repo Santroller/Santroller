@@ -230,7 +230,6 @@ AVR_CONST USB_Descriptor_Device_t deviceDescriptor = {
   SerialNumStrIndex : USE_INTERNAL_SERIAL,
   NumberOfConfigurations : FIXED_NUM_CONFIGURATIONS
 };
-// uint8_t dbuf[DBUF_SIZE];
 AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
   Config : {
     Header : {

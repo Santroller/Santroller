@@ -18,7 +18,7 @@ uint8_t wiiButtonBindings[16] = {
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
 uint16_t wiiExtensionID = WII_NO_EXTENSION;
-bool highRes = false;
+uint8_t bytes = 6;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
 bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
@@ -92,27 +92,27 @@ void readGuitarExt(Controller_t *controller, uint8_t *data) {
   uint16_t buttons = ~(data[4] | data[5] << 8);
   readExtButtons(controller, buttons);
 }
+void readClassicExtHighRes(Controller_t *controller, uint8_t *data) {
+  uint16_t buttons;
+  controller->l_x = (data[0] - 0x80) << 8;
+  controller->l_y = (data[2] - 0x80) << 8;
+  controller->r_x = (data[1] - 0x80) << 8;
+  controller->r_y = (data[3] - 0x80) << 8;
+  controller->lt = data[4];
+  controller->rt = data[5];
+  buttons = ~(data[6] | (data[7] << 8));
+  readExtButtons(controller, buttons);
+}
 void readClassicExt(Controller_t *controller, uint8_t *data) {
   uint16_t buttons;
-  if (highRes) {
-    controller->l_x = (data[0] - 0x80) << 8;
-    controller->l_y = (data[2] - 0x80) << 8;
-    controller->r_x = (data[1] - 0x80) << 8;
-    controller->r_y = (data[3] - 0x80) << 8;
-    controller->lt = data[4];
-    controller->rt = data[5];
-    buttons = ~(data[6] | (data[7] << 8));
-  } else {
-    controller->l_x = (data[0] & 0x3f) - 32;
-    controller->l_y = (data[1] & 0x3f) - 32;
-    controller->r_x =
-        (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) -
-        16;
-    controller->r_y = (data[2] & 0x1f) - 16;
-    controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
-    controller->rt = data[3] & 0x1f;
-    buttons = ~(data[4] | data[5] << 8);
-  }
+  controller->l_x = (data[0] & 0x3f) - 32;
+  controller->l_y = (data[1] & 0x3f) - 32;
+  controller->r_x =
+      (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) - 16;
+  controller->r_y = (data[2] & 0x1f) - 16;
+  controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
+  controller->rt = data[3] & 0x1f;
+  buttons = ~(data[4] | data[5] << 8);
   readExtButtons(controller, buttons);
 }
 void readNunchukExt(Controller_t *controller, uint8_t *data) {
@@ -196,7 +196,14 @@ void initWiiExt(void) {
       _delay_us(200);
       twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
       if (memcmp(check, validate, sizeof(validate)) == 0) {
-        highRes = (check[0x06] || check[0x07]);
+        bool highRes = (check[0x06] || check[0x07]);
+        if (highRes) {
+          readFunction = readClassicExtHighRes;
+          bytes = 8;
+        } else {
+          readFunction = readClassicExt;
+          bytes = 6;
+        }
         break;
       }
       _delay_us(200);
@@ -211,7 +218,6 @@ void initWiiExt(void) {
     break;
   case WII_CLASSIC_CONTROLLER:
   case WII_CLASSIC_CONTROLLER_PRO:
-    readFunction = readClassicExt;
     break;
   case WII_NUNCHUK:
     readFunction = readNunchukExt;
@@ -239,7 +245,7 @@ void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      !twi_readFromPointerSlow(I2C_ADDR, 0x00, 6, data) ||
+      !twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) ||
       !verifyData(data, sizeof(data))) {
     initWiiExt();
     return;

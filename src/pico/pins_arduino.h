@@ -1,5 +1,5 @@
 #pragma once
-#define NUM_DIGITAL_PINS 26
+#define NUM_DIGITAL_PINS 29
 #define NUM_ANALOG_INPUTS 3
 #define PIN_WIRE_SDA 0
 #define PIN_WIRE_SCL 1

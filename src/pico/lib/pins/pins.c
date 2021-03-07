@@ -1,14 +1,12 @@
 #include "pins/pins.h"
+#include "controller/guitar_includes.h"
 #include "eeprom/eeprom.h"
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
-#include "controller/guitar_includes.h"
 #include "stddef.h"
 #include "util/util.h"
 
-void digitalWrite(uint8_t pin, uint8_t val) {
-  gpio_put(pin, val);
-}
+void digitalWrite(uint8_t pin, uint8_t val) { gpio_put(pin, val); }
 
 int digitalRead(uint8_t pin) { return gpio_get(pin); }
 Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
@@ -17,14 +15,10 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.pin = pinNum;
   pin.pmask = _BV(offset);
   pin.eq = inverted;
-  gpio_init(pinNum);
+  return pin;
 }
-bool digitalReadPin(Pin_t pin) {
-  return gpio_get(pin.pin) == pin.eq;
-}
-void digitalWritePin(Pin_t pin, bool value) {
-  return gpio_put(pin.pin, value);
-}
+bool digitalReadPin(Pin_t pin) { return (gpio_get(pin.pin) != 0) == pin.eq; }
+void digitalWritePin(Pin_t pin, bool value) { return gpio_put(pin.pin, value); }
 void setUpAnalogPin(uint8_t offset) {
   AnalogInfo_t ret = {0};
   ret.offset = offset;
@@ -68,9 +62,13 @@ int analogRead(uint8_t pin) {
   return adc_read();
 }
 void pinMode(uint8_t pin, uint8_t mode) {
-  gpio_set_dir(pin, mode == INPUT || mode == INPUT_PULLUP);
-  gpio_set_pulls(pin, mode == INPUT_PULLUP, false);
-  if (mode == INPUT) { adc_gpio_init(pin); }
+  if (mode == INPUT) {
+    adc_gpio_init(pin);
+  } else {
+    gpio_set_dir(pin, mode == OUTPUT);
+    gpio_set_pulls(pin, mode == INPUT_PULLUP, false);
+    gpio_init(pin);
+  }
 }
 
 void setupADC(void) { adc_init(); }

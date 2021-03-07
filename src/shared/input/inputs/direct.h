@@ -1,12 +1,12 @@
 #pragma once
-#include "pins/pins.h"
-#include "eeprom/eeprom.h"
 #include "controller/controller.h"
+#include "eeprom/eeprom.h"
 #include "guitar.h"
 #include "output/descriptors.h"
+#include "pins/pins.h"
 #include "util/util.h"
 #include <stdlib.h>
-Pin_t pinData[16];
+Pin_t pinData[16] = {};
 int validPins = 0;
 uint8_t detectedPin = 0xff;
 bool lookingForDigital = false;
@@ -22,7 +22,8 @@ void initDirectInput(void) {
     for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
       if (pins[i] != INVALID_PIN) {
         bool is_fret = (i >= XBOX_A || i == XBOX_LB || i == XBOX_RB);
-        Pin_t pin = setUpDigital(pins[i], i, is_fret && config.main.fretLEDMode == LEDS_INLINE);
+        Pin_t pin = setUpDigital(
+            pins[i], i, is_fret && config.main.fretLEDMode == LEDS_INLINE);
         if (isDrum(config.main.subType) && is_fret) {
           // We should probably keep a list of drum specific buttons, instead of
           // using isfret
@@ -44,7 +45,7 @@ bool shouldSkipPin(uint8_t i) {
   if (i == 13 || i == 0 || i == 1) return true;
 #endif
   // Skip sda + scl when using peripherials utilising I2C
-  if ((config.main.tiltType == MPU_6050) &&
+  if ((config.main.tiltType == MPU_6050 || config.main.inputType == WII) &&
       (i == PIN_WIRE_SDA || i == PIN_WIRE_SCL)) {
     return true;
   }
@@ -75,7 +76,10 @@ void findDigitalPin(void) {
   detectedPin = 0xff;
   stopReading();
   for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
-    if (!shouldSkipPin(i)) { pinMode(i, INPUT_PULLUP); }
+    if (!shouldSkipPin(i)) {
+      pinMode(i, INPUT_PULLUP);
+      lastDigitalValue[i] = digitalRead(i);
+    }
   }
   lookingForDigital = true;
 }
@@ -132,9 +136,7 @@ void tickDirectInput(Controller_t *controller) {
   Pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
-    if (digitalReadPin(pin)) {
-      controller->buttons |= pin.pmask;
-    }
+    if (digitalReadPin(pin)) { controller->buttons |= pin.pmask; }
   }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;

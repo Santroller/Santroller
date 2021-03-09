@@ -149,6 +149,7 @@ foreach(TYPE ${TYPES})
     src/shared/rf/rf.c
     src/shared/input/input_handler.c
     src/pico/lib/eeprom/eeprom.c
+    src/shared/lib/i2c/i2c_shared.c
     lib/avr-nrf24l01/src/nrf24l01.c
     lib/mpu6050/inv_mpu_dmp_motion_driver.c
     lib/mpu6050/inv_mpu.c

@@ -209,9 +209,6 @@ void initWiiExt(void) {
       _delay_us(200);
     }
   }
-  // Start reading so we have data for the next read
-  uint8_t pointer = 0x00;
-  twi_writeTo(I2C_ADDR, &pointer, 1, true, true);
   switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:
     readFunction = readGuitarExt;
@@ -245,8 +242,8 @@ void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      !twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) ||
-      !verifyData(data, sizeof(data))) {
+      (twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) &&
+       !verifyData(data, sizeof(data)))) {
     initWiiExt();
     return;
   }

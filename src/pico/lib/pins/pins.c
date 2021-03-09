@@ -62,7 +62,7 @@ int analogRead(uint8_t pin) {
   return adc_read();
 }
 void pinMode(uint8_t pin, uint8_t mode) {
-  if (mode == INPUT) {
+  if (mode == INPUT && pin >= 26) {
     adc_gpio_init(pin);
   } else {
     gpio_set_dir(pin, mode == OUTPUT);

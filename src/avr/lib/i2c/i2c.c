@@ -34,6 +34,10 @@
 #include "util/util.h"
 #include <util/delay.h>
 
+void twi_reply(uint8_t);
+bool twi_stop(void);
+void twi_releaseBus(void);
+uint8_t twi_endTransmission(uint8_t txAddress, uint8_t sendStop);
 static volatile uint8_t twi_state;
 static volatile uint8_t twi_slarw;
 static volatile uint8_t twi_sendStop; // should the transaction end with a stop
@@ -118,7 +122,7 @@ void twi_disable(void) {
  * Output   number of bytes read
  */
 // === MODIFIED ===
-uint8_t twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
+bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
                      uint8_t sendStop) {
 
   // ensure data will fit into buffer
@@ -182,7 +186,7 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
       while (TWCR & _BV(TWWC)) {
         //_delay_ms( TIMEOUT_TICK );
         timeoutCounter--;
-        if (timeoutCounter == 0) return 0;
+        if (timeoutCounter == 0) return false;
         TWDR = twi_slarw;
       }
     }
@@ -207,7 +211,7 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
     while (TWI_MRX == twi_state) {
       //_delay_ms( TIMEOUT_TICK );
       timeoutCounter--;
-      if (timeoutCounter == 0) return 0;
+      if (timeoutCounter == 0) return false;
     }
   }
   /*
@@ -237,11 +241,11 @@ uint8_t twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
  * NACK received 3 .. data send, NACK received 4 .. other twi error (lost bus
  * arbitration, bus error, ..)
  */
-uint8_t twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
+bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
                     uint8_t wait, uint8_t sendStop) {
 
   // ensure data will fit into buffer
-  if (TWI_BUFFER_LENGTH < length) return 1;
+  if (TWI_BUFFER_LENGTH < length) return false;
 
   // === MODIFIED ===
   uint16_t timeoutCounter;
@@ -253,7 +257,7 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
     while (TWI_READY != twi_state) {
       //_delay_ms( TIMEOUT_TICK );
       timeoutCounter--;
-      if (timeoutCounter == 0) return 4;
+      if (timeoutCounter == 0) return false;
     }
   }
   /*
@@ -299,7 +303,7 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
       while (TWCR & _BV(TWWC)) {
         //_delay_ms( TIMEOUT_TICK );
         timeoutCounter--;
-        if (timeoutCounter == 0) return 4;
+        if (timeoutCounter == 0) return false;
         TWDR = twi_slarw;
       }
     }
@@ -326,7 +330,7 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
     while (wait && (TWI_MTX == twi_state)) {
       //_delay_ms( TIMEOUT_TICK );
       timeoutCounter--;
-      if (timeoutCounter == 0) return 4;
+      if (timeoutCounter == 0) return false;
     }
   }
   /*
@@ -335,14 +339,7 @@ uint8_t twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
     continue;
   }*/
 
-  if (twi_error == 0xFF)
-    return 0; // success
-  else if (twi_error == TW_MT_SLA_NACK)
-    return 2; // error: address send, nack received
-  else if (twi_error == TW_MT_DATA_NACK)
-    return 3; // error: data send, nack received
-  else
-    return 4; // other twi error
+  return twi_error == 0xFF;
 }
 
 /*
@@ -408,29 +405,7 @@ void twi_releaseBus(void) {
   // update twi state
   twi_state = TWI_READY;
 }
-bool twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
-                             uint8_t *data) {
-  uint8_t ret = !twi_writeTo(address, &pointer, 1, true, true);
-  if (!ret) return ret;
-  _delay_us(175);
-  return twi_readFrom(address, data, length, true);
-}
-bool twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,
-                         uint8_t *data) {
-  return !twi_writeTo(address, &pointer, 1, true, true) &&
-         twi_readFrom(address, data, length, true);
-}
-bool twi_writeSingleToPointer(uint8_t address, uint8_t pointer, uint8_t data) {
-  return twi_writeToPointer(address, pointer, 1, &data);
-}
-bool twi_writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
-                        uint8_t *data) {
-  uint8_t data2[length + 1];
-  data2[0] = pointer;
-  memcpy(data2 + 1, data, length);
 
-  return !twi_writeTo(address, data2, length + 1, true, true);
-}
 ISR(TWI_vect) {
   switch (TW_STATUS) {
   // All Master
@@ -515,6 +490,3 @@ ISR(TWI_vect) {
     break;
   }
 }
-
-// === ADDED/MODIFIED ===
-void twi_setTimeout(uint16_t timeout) { TIMEOUT = timeout; }

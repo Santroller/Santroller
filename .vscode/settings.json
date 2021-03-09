@@ -100,7 +100,8 @@
         "tusb_fifo.h": "c",
         "vendor_device.h": "c",
         "sync.h": "c",
-        "hidclassdevice.h": "c"
+        "hidclassdevice.h": "c",
+        "xinput_device.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

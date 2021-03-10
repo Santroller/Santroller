@@ -107,8 +107,8 @@ void stopSearching(void) {
 }
 
 void setSP(bool sp) {
-  if (config.pinSP != INVALID_PIN) {
-    digitalWrite(config.pinSP, sp);
+  if (config.pinsSP != INVALID_PIN) {
+    digitalWrite(config.pinsSP, sp);
   }
 }
 

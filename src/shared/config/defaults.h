@@ -1,7 +1,7 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 9
+#define CONFIG_VERSION 10
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -77,7 +77,7 @@
         TEST_PINS,                                                             \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {true},                 \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {true}, INVALID_PIN                   \
   }
 
 #define DEFAULT_CONFIG                                                         \
@@ -95,5 +95,5 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {false},                \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {false}, INVALID_PIN                  \
   }

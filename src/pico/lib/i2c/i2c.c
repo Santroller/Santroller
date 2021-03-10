@@ -73,71 +73,7 @@ void twi_disable(void) { i2c_deinit(i2c0); }
 // === MODIFIED ===
 bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
-  return i2c_read_blocking(i2c0, address, data, length, !sendStop) > 0;
-}
-// The RPI Pico is stupid. We have to bitbang I2C when writing packets that are <2 in length (which is like most of what we write...)
-#define DELAY (500000 / TWI_FREQ) + 1
-void low(uint8_t pin) { gpio_set_dir(pin, GPIO_OUT); }
-void release(uint8_t pin) { gpio_set_dir(pin, GPIO_IN); }
-static inline void delayTWI() {
-  busy_wait_us_32(DELAY);
-}
-// TODO: any reason why this is needed? waiting 7us is a long time in the grand scheme of things (especially since this is done twice per bit, and there are 16 bits to write. thats 112 us just on bits)
-static inline void delayTWI2() {
-  busy_wait_us_32(DELAY + 5);
-}
-void sclRelease() {
-  uint32_t count = 255;
-  release(PIN_WIRE_SCL);
-  delayTWI2();
-  // For clock stretching, wait for the SCL pin to be released, with timeout.
-  for (; gpio_get(PIN_WIRE_SCL) == 0 && count; --count) {
-    busy_wait_us_32(1);
-  }
-}
-void sclLow() { low(PIN_WIRE_SCL); }
-void sdaLow() {
-  low(PIN_WIRE_SDA);
-}
-void sdaRelease() {
-  release(PIN_WIRE_SDA);
-}
-void stop() {
-  delayTWI();
-  sdaLow();
-  delayTWI();
-  sclRelease();
-  sdaRelease();
-  delayTWI();
-}
-void start() {
-  sdaRelease();
-  delayTWI();
-  sclRelease();
-  sdaLow();
-  delayTWI();
-}
-bool writeByte(uint8_t val) {
-  delayTWI2();
-  sclLow();
-  for (int i = 7; i >= 0; i--) {
-    if ((val >> i) & 1) {
-      sdaRelease();
-    } else {
-      sdaLow();
-    }
-    delayTWI2();
-    sclRelease();
-    sdaRelease();
-    sclLow();
-  }
-  sdaRelease();
-  delayTWI();
-  sclRelease();
-  bool ack = gpio_get(PIN_WIRE_SDA);
-  delayTWI();
-  sclLow();
-  return ack;
+  return i2c_read_timeout_us(i2c0, address, data, length, !sendStop, TIMEOUT) > 0;
 }
 /*
  * Function twi_writeTo
@@ -154,31 +90,5 @@ bool writeByte(uint8_t val) {
  */
 bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
-  // Hardware twi cant handle writes that are small
-  if (length <= 2) {
-    // Set gpio so we can bitbang
-    gpio_set_function(PIN_WIRE_SCL, GPIO_FUNC_SIO);
-    release(PIN_WIRE_SCL);
-    gpio_put(PIN_WIRE_SCL, 0);
-    gpio_set_function(PIN_WIRE_SDA, GPIO_FUNC_SIO);
-    release(PIN_WIRE_SDA);
-    gpio_put(PIN_WIRE_SDA, 0);
-    delayTWI();
-    // Send start
-    start();
-    writeByte(address << 1);
-    while (length) {
-      writeByte(*data);
-      data++;
-      length--;
-    }
-    // Send stop
-    stop();
-
-    // And now enable hardware twi again
-    gpio_set_function(PIN_WIRE_SDA, GPIO_FUNC_I2C);
-    gpio_set_function(PIN_WIRE_SCL, GPIO_FUNC_I2C);
-    return true;
-  }
-  return i2c_write_blocking(i2c0, address, data, length, !sendStop) > 0;
+  return i2c_write_timeout_us(i2c0, address, data, length, !sendStop, TIMEOUT) > 0;
 }

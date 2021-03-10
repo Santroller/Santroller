@@ -235,6 +235,7 @@ void initWiiExt(void) {
     readFunction = readTataconExt;
     break;
   default:
+    wiiExtensionID = WII_NO_EXTENSION;
     readFunction = NULL;
   }
 }
@@ -243,7 +244,7 @@ void tickWiiExtInput(Controller_t *controller) {
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
       (twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) &&
-       !verifyData(data, sizeof(data)))) {
+       !verifyData(data, bytes))) {
     initWiiExt();
     return;
   }

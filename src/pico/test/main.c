@@ -33,23 +33,13 @@ int main() {
   loadConfig();
   config.main.inputType = WII;
   initInputs();
+  Controller_t c;
   while (1) {
     uint32_t m = micros();
-    uint8_t data[8];
-    twi_readFromPointerSlow(0x52, 0x00, 8, data);
-    for (int i = 0; i < 8; i++) { printf("%02x", data[i]); }
-    printf("\n");
-    // twi_readFromPointerSlow(0x52, 0x00, 8, data);
-    // for (int i = 0; i < 8; i++) { printf("%x", data[i]); }
-    // printf("\n");
-    if (data[0] == 0xff) {
-      twi_writeSingleToPointer(0x52, 0xF0, 0x55);
-      _delay_us(10);
-      twi_writeSingleToPointer(0x52, 0xFB, 0x00);
-      _delay_us(10);
-    }
+    tickInputs(&c);
     m = micros() - m;
-    printf("%d\n", m);
+    printf("%04x %04x %d\n", c.l_x, wiiExtensionID, m);
+    
   }
 }
 void stopReading(void) {}

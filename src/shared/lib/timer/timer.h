@@ -13,5 +13,5 @@ static __inline__ void _delay_us(double __us)
 static __inline__ void _delay_ms(double __ms)
     __attribute__((__always_inline__));
 void _delay_ms(double __ms) { sleep_ms(__ms); }
-void _delay_us(double __us) { sleep_us(__us); }
+void _delay_us(double __us) { busy_wait_us_32(__us); }
 #endif

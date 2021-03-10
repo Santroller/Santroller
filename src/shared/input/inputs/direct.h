@@ -106,6 +106,12 @@ void stopSearching(void) {
   initDirectInput();
 }
 
+void setSP(bool sp) {
+  if (config.pinSP != INVALID_PIN) {
+    digitalWrite(config.pinSP, sp);
+  }
+}
+
 void tickDirectInput(Controller_t *controller) {
   if (lookingForAnalog) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
@@ -119,7 +125,6 @@ void tickDirectInput(Controller_t *controller) {
     return;
   }
   if (lookingForDigital) {
-    // Change this to keep track of changes.
     for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
       if (!shouldSkipPin(i)) {
         if (digitalRead(i) != lastDigitalValue[i]) {

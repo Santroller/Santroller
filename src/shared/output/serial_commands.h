@@ -15,6 +15,7 @@ enum SerialCommands {
     COMMAND_RESET,
     COMMAND_WRITE_CONFIG,
     COMMAND_READ_CONFIG,
+    COMMAND_SET_SP,
     MAX
 };
 typedef struct {

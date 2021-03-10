@@ -1,12 +1,12 @@
 #include "serial_handler.h"
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
-#include "rf/rf.h"
 #include "controller/controller.h"
 #include "leds/leds.h"
+#include "rf/rf.h"
 #include "serial_commands.h"
-#include "util/util.h"
 #include "timer/timer.h"
+#include "util/util.h"
 #include <stdlib.h>
 static const uint8_t PROGMEM id[] = {0x21, 0x26, 0x01, 0x07,
                                      0x00, 0x00, 0x00, 0x00};
@@ -49,6 +49,9 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
     uint8_t *dest = ((uint8_t *)controller.leds) + offset;
     while (data_len--) { *(dest++) = *(data++); }
     return;
+  }
+  case COMMAND_SET_SP: {
+    setSP(data[0]);
   }
   }
   handleCommand(cmd);
@@ -114,8 +117,8 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     dbuf[1] = detectedPin;
     stopSearching();
   } else {
-    size = sizeof(id)+1;
-    memcpy_P(dbuf+1, id, sizeof(id));
+    size = sizeof(id) + 1;
+    memcpy_P(dbuf + 1, id, sizeof(id));
     if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
       dbuf[4] = 0x00;
     } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {

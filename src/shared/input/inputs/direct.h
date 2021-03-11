@@ -141,10 +141,10 @@ void tickDirectInput(Controller_t *controller) {
     pin = pinData[i];
     bool val = digitalReadPin(pin);
     if (millis() - pin.lastMillis > 5) {
-      bit_write(val, controller->buttons, pin.pmask);
-      if (val != bit_check(controller->buttons, pin.pmask)) {
+      if (val != (controller->buttons & pin.pmask)) {
         pin.lastMillis = millis();
       }
+      controller->buttons ^= (-val ^ controller->buttons) & pin.pmask;
     }
   }
   AnalogInfo_t info;

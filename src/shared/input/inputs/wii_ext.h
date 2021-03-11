@@ -88,7 +88,7 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
 void readGuitarExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[0] & 0x3f) - 32) << 10;
   controller->l_y = ((data[1] & 0x3f) - 32) << 10;
-  controller->r_x = -(((data[3] & 0x1f) - 16) << 10);
+  controller->r_x = (((data[3] & 0x1f) - 16) << 10);
   uint16_t buttons = ~(data[4] | data[5] << 8);
   readExtButtons(controller, buttons);
 }

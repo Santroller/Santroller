@@ -1,6 +1,6 @@
 MCU          = atmega32u4
 BOARD        = AVR_MICRO
-F_CPU 		 = 16000000
+F_CPU 		 = 8000000
 
 ARDWIINO_BOARD = micro
 VARIANT = micro

@@ -40,7 +40,6 @@ void initInputs() {
   joyThreshold = config.axis.joyThreshold << 8;
 }
 void tickInputs(Controller_t *controller) {
-  controller->buttons = 0;
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   if (config.main.mapLeftJoystickToDPad) {

@@ -16,6 +16,7 @@ typedef struct {
   bool eq;
   uint8_t offset;
   uint8_t pin;
+  uint32_t lastMillis;
 } Pin_t;
 
 typedef struct {

@@ -107,9 +107,7 @@ void stopSearching(void) {
 }
 
 void setSP(bool sp) {
-  if (config.pinsSP != INVALID_PIN) {
-    digitalWrite(config.pinsSP, sp);
-  }
+  if (config.pinsSP != INVALID_PIN) { digitalWrite(config.pinsSP, sp); }
 }
 
 void tickDirectInput(Controller_t *controller) {
@@ -141,7 +139,13 @@ void tickDirectInput(Controller_t *controller) {
   Pin_t pin;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
-    if (digitalReadPin(pin)) { controller->buttons |= pin.pmask; }
+    bool val = digitalReadPin(pin);
+    if (millis() - pin.lastMillis > 5) {
+      bit_write(val, controller->buttons, pin.pmask);
+      if (val != bit_check(controller->buttons, pin.pmask)) {
+        pin.lastMillis = millis();
+      }
+    }
   }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;

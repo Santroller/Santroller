@@ -97,7 +97,6 @@ int main(void) {
         } else if (state == 3) {
           cmd = data;
           if (data == COMMAND_WRITE_CONFIG) {
-            buf = (uint8_t *)&config;
             isConfig = true;
           } else if (data == COMMAND_SET_LEDS) {
             buf = (uint8_t *)&controller.leds;
@@ -113,12 +112,13 @@ int main(void) {
           state = 5;
         } else if (state == 5) {
           packetCount--;
-          *(buf++) = data;
+          if (isConfig) {
+            writeConfigByte(offset++, data);
+          } else {
+            *(buf++) = data;
+          }
           if (packetCount == 0) {
             state = 7;
-            if (isConfig) {
-              writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));
-            }
             break;
           }
         }

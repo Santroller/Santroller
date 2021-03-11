@@ -7,3 +7,4 @@ extern Configuration_t config;
 void loadConfig(void);
 void resetConfig(void);
 void writeConfigBlock(uint8_t offset, const uint8_t* data, uint8_t len);
+void writeConfigByte(uint8_t offset, uint8_t byte);

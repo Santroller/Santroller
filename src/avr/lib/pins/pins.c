@@ -39,6 +39,7 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.outPort = portOutputRegister(port);
   pin.pmask = _BV(offset);
   pin.eq = inverted;
+  pin.sioFunc = true;
   return pin;
 }
 bool digitalReadPin(Pin_t pin) {
@@ -46,7 +47,7 @@ bool digitalReadPin(Pin_t pin) {
 }
 
 void digitalWritePin(Pin_t pin, bool value) {
-  if (value == 1) {
+  if (value == 0) {
     *pin.outPort &= ~pin.mask;
   } else {
     *pin.outPort |= pin.mask;

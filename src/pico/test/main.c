@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 int validAnalog = 0;
-Controller_t controller;
+Controller_t controller = {0};
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
@@ -31,15 +31,23 @@ uint8_t size;
 int main() {
   stdio_init_all();
   loadConfig();
-  config.main.inputType = WII;
+  config.main.inputType = PS2;
   initInputs();
   Controller_t c;
+  #define I2C_ADDR 0x52
   while (1) {
     uint32_t m = micros();
     tickInputs(&c);
     m = micros() - m;
-    printf("%04x %04x %d\n", c.l_x, wiiExtensionID, m);
-    
+    printf("%d\n", m);
+    _delay_ms(1000);
+    // uint8_t data[6] = {0};
+    // twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
+    // m = micros() - m;
+    // for (int i = 0; i < 6; i++) {
+    //   printf("%d ", data[i]);
+    // }
+    // printf("%d\n", m);
   }
 }
 void stopReading(void) {}

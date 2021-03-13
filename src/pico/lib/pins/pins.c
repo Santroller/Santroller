@@ -15,10 +15,20 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.pin = pinNum;
   pin.pmask = _BV(offset);
   pin.eq = inverted;
+  pin.sioFunc = true;
   return pin;
 }
 bool digitalReadPin(Pin_t pin) { return (gpio_get(pin.pin) != 0) == pin.eq; }
-void digitalWritePin(Pin_t pin, bool value) { return gpio_put(pin.pin, value); }
+void digitalWritePin(Pin_t pin, bool value) {
+  // If SIO is disabled for a pin (aka its using a different function like i2c or spi), then digitalWrite needs to override it.
+  if (!pin.sioFunc) {
+    // Enable output
+    gpio_set_oeover(pin.pin, 3);
+    gpio_set_outover(pin.pin, value ? GPIO_OVERRIDE_HIGH : GPIO_OVERRIDE_LOW);
+    return;
+  }
+  gpio_put(pin.pin, value);
+}
 void setUpAnalogPin(uint8_t offset) {
   AnalogInfo_t ret = {0};
   ret.offset = offset;
@@ -65,9 +75,9 @@ void pinMode(uint8_t pin, uint8_t mode) {
   if (mode == INPUT) {
     adc_gpio_init(pin);
   } else {
+    gpio_init(pin);
     gpio_set_dir(pin, mode == OUTPUT);
     gpio_set_pulls(pin, mode == INPUT_PULLUP, false);
-    gpio_init(pin);
   }
 }
 

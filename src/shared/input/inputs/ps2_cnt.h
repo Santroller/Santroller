@@ -216,34 +216,45 @@ Pin_t command;
 Pin_t clock;
 
 void noAttention(void) {
-  digitalWritePin(command, false);
-  digitalWritePin(clock, false);
-  digitalWritePin(attention, false);
+  digitalWritePin(command, true);
+  digitalWritePin(clock, true);
+  digitalWritePin(attention, true);
+  _delay_us(ATTN_DELAY);
 }
-// Since the PI doesn't support flipping SPI bits in hardware, we will have to do it in software
+void signalAttention(void) {
+  digitalWritePin(attention, false);
+  digitalWritePin(clock, false);
+  digitalWritePin(command, false);
+  _delay_us(ATTN_DELAY);
+}
+// Since the PI doesn't support flipping SPI bits in hardware, we will have to
+// do it in software Can we do this to all the data at compile time instead of
+// at run time?
 uint8_t revbits2(uint8_t arg) {
-  uint8_t result=0;
-  if (arg & (1<<0)) result |= (0x80>>0);
-  if (arg & (1<<1)) result |= (0x80>>1);
-  if (arg & (1<<2)) result |= (0x80>>2);
-  if (arg & (1<<3)) result |= (0x80>>3);
-  if (arg & (1<<4)) result |= (0x80>>4);
-  if (arg & (1<<5)) result |= (0x80>>5);
-  if (arg & (1<<6)) result |= (0x80>>6);
-  if (arg & (1<<7)) result |= (0x80>>7);
+  uint8_t result = 0;
+  if (arg & (1 << 0)) result |= (0x80 >> 0);
+  if (arg & (1 << 1)) result |= (0x80 >> 1);
+  if (arg & (1 << 2)) result |= (0x80 >> 2);
+  if (arg & (1 << 3)) result |= (0x80 >> 3);
+  if (arg & (1 << 4)) result |= (0x80 >> 4);
+  if (arg & (1 << 5)) result |= (0x80 >> 5);
+  if (arg & (1 << 6)) result |= (0x80 >> 6);
+  if (arg & (1 << 7)) result |= (0x80 >> 7);
   return result;
 }
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
-    uint8_t resp = spi_transfer(out != NULL ? revbits2(out[i]) : revbits2(0x5A));
+    uint8_t resp =
+        spi_transfer(out != NULL ? revbits2(out[i]) : revbits2(0x5A));
+    // printf("%02x ", resp);
     if (in != NULL) { in[i] = revbits2(resp); }
     _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
   }
+  // printf("\n");
 }
 uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
   static uint8_t inputBuffer[BUFFER_SIZE];
-  digitalWritePin(attention, true);
-  _delay_us(ATTN_DELAY);
+  signalAttention();
   uint8_t *ret = NULL;
 
   if (len >= 3 && len <= BUFFER_SIZE) {
@@ -400,6 +411,9 @@ void initPS2CtrlInput(void) {
   attention = setUpDigital(10, 0, false);
   command = setUpDigital(PIN_SPI_MOSI, 0, false);
   clock = setUpDigital(PIN_SPI_SCK, 0, false);
+  // not using sio, but spi
+  command.sioFunc = false;
+  clock.sioFunc = false;
   pinMode(10, OUTPUT);
   noAttention();
 }

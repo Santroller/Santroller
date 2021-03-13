@@ -74,16 +74,19 @@ void initGuitar(void) {
     tick = tickDigitalTilt;
   }
 }
-int16_t r_x;
 void tickGuitar(Controller_t *controller) {
   if (!isGuitar(config.main.subType)) return;
-  if (controller->r_x < 0x7FF) {
-    controller->r_x = 0;
-  } else if (controller->r_x > 0x3FFF) {
-    controller->r_x = 0x7FFF;
+  int16_t r_x;
+  r_x = controller->r_x;
+  if (r_x < 0) { r_x = -r_x; }
+  if (r_x < 0x7FF) {
+    r_x = 0;
+  } else if (r_x > 0x3FFF) {
+    r_x = 0x7FFF;
   } else {
-    controller->r_x = (controller->r_x << 1);
+    r_x = (r_x << 1);
   }
+  controller->r_x = r_x;
   if (tick == NULL) return;
   tick(controller);
 }

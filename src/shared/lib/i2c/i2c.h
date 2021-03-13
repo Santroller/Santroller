@@ -24,7 +24,7 @@
 #include <stdbool.h>
 
 #ifndef TWI_FREQ
-#  define TWI_FREQ 300000L
+#  define TWI_FREQ 250000L
 #endif
 
 #ifndef TWI_BUFFER_LENGTH

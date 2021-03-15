@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+// TODO: this seems like a much nicer implementation to copy
+// https://github.com/RandomInsano/pscontroller-rs/blob/master/src/lib.rs
 /** \brief Command Inter-Byte Delay (us)
  *
  * Commands are several bytes long. This is the time to wait between two
@@ -183,7 +185,13 @@ static inline bool isFlightStickReply(const uint8_t *status) {
 static inline bool isNegconReply(const uint8_t *status) {
   return status[1] == 0x23;
 }
+static inline bool isJogconReply(const uint8_t *status) {
+  return (status[1] & 0xF0) == 0xE0;
+}
 
+static inline bool isGunconReply(const uint8_t *status) {
+  return status[1] == 0x63;
+}
 static inline bool isMouseReply(const uint8_t *status) {
   return status[1] == 0x12;
 }
@@ -227,30 +235,22 @@ void signalAttention(void) {
   digitalWritePin(command, false);
   _delay_us(ATTN_DELAY);
 }
-// Since the PI doesn't support flipping SPI bits in hardware, we will have to
-// do it in software Can we do this to all the data at compile time instead of
-// at run time?
-uint8_t revbits2(uint8_t arg) {
-  uint8_t result = 0;
-  if (arg & (1 << 0)) result |= (0x80 >> 0);
-  if (arg & (1 << 1)) result |= (0x80 >> 1);
-  if (arg & (1 << 2)) result |= (0x80 >> 2);
-  if (arg & (1 << 3)) result |= (0x80 >> 3);
-  if (arg & (1 << 4)) result |= (0x80 >> 4);
-  if (arg & (1 << 5)) result |= (0x80 >> 5);
-  if (arg & (1 << 6)) result |= (0x80 >> 6);
-  if (arg & (1 << 7)) result |= (0x80 >> 7);
-  return result;
+uint8_t revbits2(uint8_t x) {
+  x = (((x & 0xaaU) >> 1) | ((x & 0x55U) << 1));
+  x = (((x & 0xccU) >> 2) | ((x & 0x33U) << 2));
+  x = (((x & 0xf0U) >> 4) | ((x & 0x0fU) << 4));
+  return x;
 }
+// Shifting data in works perfectly fine, we just aren't getting data back.
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
     uint8_t resp =
         spi_transfer(out != NULL ? revbits2(out[i]) : revbits2(0x5A));
-    // printf("%02x ", resp);
+    printf("%02x ", resp);
     if (in != NULL) { in[i] = revbits2(resp); }
     _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
   }
-  // printf("\n");
+  printf("\n");
 }
 uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
   static uint8_t inputBuffer[BUFFER_SIZE];
@@ -362,6 +362,33 @@ bool read(Controller_t *controller) {
         bit_write(in[8] > NEGCON_L_BUTTON_THRESHOLD, controller->buttons,
                   XBOX_LB);
       }
+      if (isJogconReply(in)) {
+        ps2CtrlType = PSX_JOGCON;
+        /* Map the wheel X axis of left analog, half a rotation
+         * per direction: byte 5 has the wheel position, it is
+         * 0 at startup, then we have 0xFF down to 0x80 for
+         * left/CCW, and 0x01 up to 0x80 for right/CW
+         *
+         * byte 6 is the number of full CW rotations
+         * byte 7 is 0 if wheel is still, 1 if it is rotating CW
+         *        and 2 if rotation CCW
+         * byte 8 seems to stay at 0
+         *
+         * We'll want to cap the movement halfway in each
+         * direction, for ease of use/implementation.
+         */
+        controller->l_x = in[5];
+        if (in[6] < 0x80) {
+          // CW up to half
+          controller->l_x = in[5] < 0x80 ? in[5] : (0x80 - 1);
+        } else {
+          // CCW down to half
+          controller->l_x = in[5] > 0x80 ? in[5] : (0x80 + 1);
+        }
+
+        // Bring to the usual 0-255 range
+        controller->l_x += 0x80;
+      }
       if (isMouseReply(in)) {
         ps2CtrlType = PSX_MOUSE;
         buttons = mouseButtonBindings;
@@ -407,7 +434,7 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(void) {
-  spi_begin(100000, true, true);
+  spi_begin(100000, 1, true);
   attention = setUpDigital(10, 0, false);
   command = setUpDigital(PIN_SPI_MOSI, 0, false);
   clock = setUpDigital(PIN_SPI_SCK, 0, false);

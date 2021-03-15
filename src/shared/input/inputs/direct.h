@@ -33,6 +33,9 @@ void initDirectInput(void) {
         } else {
           pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;
+          if (isGuitar(config.main.subType) && (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
+            pin.milliDeBounce = 20;
+          }
         }
       }
     }
@@ -140,7 +143,7 @@ void tickDirectInput(Controller_t *controller) {
   for (uint8_t i = 0; i < validPins; i++) {
     pin = pinData[i];
     bool val = digitalReadPin(pin);
-    if (millis() - pin.lastMillis > 5) {
+    if (millis() - pin.lastMillis > pin.milliDeBounce) {
       if (val != (controller->buttons & pin.pmask)) {
         pin.lastMillis = millis();
       }

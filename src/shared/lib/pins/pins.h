@@ -17,6 +17,7 @@ typedef struct {
   uint8_t offset;
   uint8_t pin;
   uint32_t lastMillis;
+  uint8_t milliDeBounce;
   bool sioFunc;
 } Pin_t;
 

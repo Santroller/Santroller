@@ -39,6 +39,7 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.outPort = portOutputRegister(port);
   pin.pmask = _BV(offset);
   pin.eq = inverted;
+  pin.milliDeBounce = 5;
   pin.sioFunc = true;
   return pin;
 }

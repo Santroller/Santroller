@@ -36,11 +36,10 @@ int main() {
   Controller_t c;
   #define I2C_ADDR 0x52
   while (1) {
-    uint32_t m = micros();
+    // uint32_t m = micros();
     tickInputs(&c);
-    m = micros() - m;
-    printf("%d\n", m);
-    _delay_ms(1000);
+    // m = micros() - m;
+    // printf("%d %d %d\n", m, ps2CtrlType, c.buttons);
     // uint8_t data[6] = {0};
     // twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
     // m = micros() - m;

@@ -76,9 +76,8 @@ void initGuitar(void) {
 }
 void tickGuitar(Controller_t *controller) {
   if (!isGuitar(config.main.subType)) return;
-  int16_t r_x;
-  r_x = controller->r_x;
-  if (r_x < 0) { r_x = -r_x; }
+  int16_t r_x = controller->r_x;
+  // if (r_x < 0) { r_x = -r_x; }
   if (r_x < 0x7FF) {
     r_x = 0;
   } else if (r_x > 0x3FFF) {

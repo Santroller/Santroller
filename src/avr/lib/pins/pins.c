@@ -189,7 +189,7 @@ void tickAnalog(void) {
   sbi(ADCSRA, ADSC);
 }
 
-int analogRead(uint8_t pin) {
+uint16_t analogRead(uint8_t pin) {
   uint8_t low, high;
 
 #if defined(analogPinToChannel)

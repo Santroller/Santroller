@@ -73,9 +73,10 @@ void tickAnalog(void) {
   }
 }
 
-int analogRead(uint8_t pin) {
+uint16_t analogRead(uint8_t pin) {
   adc_select_input(pin);
-  return adc_read();
+  // We have everything coded assuming 10 bits (as that is what the arduino uses) so shift accordingly (12 -> 10)
+  return adc_read() >> 2;
 }
 void pinMode(uint8_t pin, uint8_t mode) {
   if (mode == INPUT) {

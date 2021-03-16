@@ -104,6 +104,11 @@ typedef struct {
 } RFConfig_t;
 
 typedef struct {
+  uint8_t multiplier;
+  uint16_t offset;
+} AxisWhammyConfig_t;
+
+typedef struct {
   MainConfig_t main;
   Pins_t pins;
   AxisConfig_t axis;
@@ -112,6 +117,7 @@ typedef struct {
   MidiConfig_t midi;
   RFConfig_t rf;
   uint8_t pinsSP;
+  AxisWhammyConfig_t axisWhammy;
 } Configuration_t;
 
 #pragma pack(pop)

@@ -1,6 +1,5 @@
 #pragma once
 #include "../config/config.h"
-// We need to look at commands sent by consoles so we can make sure that they dont conflict.
 enum SerialCommands {
     COMMAND_REBOOT=0x30,
     COMMAND_JUMP_BOOTLOADER,
@@ -13,9 +12,10 @@ enum SerialCommands {
     COMMAND_WRITE_SUBTYPE,
     COMMAND_SET_LEDS,
     COMMAND_RESET,
+    COMMAND_SET_SP,
+    COMMAND_GET_VALUES,
     COMMAND_WRITE_CONFIG,
     COMMAND_READ_CONFIG,
-    COMMAND_SET_SP,
     MAX
 };
 typedef struct {

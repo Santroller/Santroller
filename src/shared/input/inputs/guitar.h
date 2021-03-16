@@ -76,16 +76,15 @@ void initGuitar(void) {
 }
 void tickGuitar(Controller_t *controller) {
   if (!isGuitar(config.main.subType)) return;
-  int16_t r_x = controller->r_x;
-  // if (r_x < 0) { r_x = -r_x; }
-  if (r_x < 0x7FF) {
-    r_x = 0;
-  } else if (r_x > 0x3FFF) {
-    r_x = 0x7FFF;
-  } else {
-    r_x = (r_x << 1);
+  Guitar_t* g = (Guitar_t*)controller;
+  int32_t whammy = g->whammy * config.axisWhammy.multiplier + config.axisWhammy.offset;
+  if (whammy > 0xFFFF) {
+    whammy = 0xFFFF;
   }
-  controller->r_x = r_x;
+  if (whammy < 0) {
+    whammy = 0;
+  }
+  g->whammy = whammy;
   if (tick == NULL) return;
   tick(controller);
 }

@@ -24,6 +24,17 @@ typedef struct {
   volatile Led_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
   uint8_t drumVelocity[8];
 } Controller_t;
+typedef struct {
+  uint16_t buttons;
+  uint8_t lt;
+  uint8_t rt;
+  int16_t l_x;
+  int16_t l_y;
+  uint16_t whammy;
+  int16_t r_y;
+  volatile Led_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
+  uint8_t drumVelocity[8];
+} Guitar_t;
 
 // Combined controller structure. Axis' and triggers are combined into arrays to allow for easy modification by direct
 typedef struct {

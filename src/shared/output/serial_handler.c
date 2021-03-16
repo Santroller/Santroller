@@ -104,7 +104,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
 #else
     info->multi = false;
 #endif
-  } else if (cmd == COMMAND_GET_AXIS) {
+  } else if (cmd == COMMAND_GET_VALUES) {
     memcpy(dbuf, &controller, sizeof(XInput_Data_t));
     size = sizeof(XInput_Data_t);
   } else if (cmd == COMMAND_GET_EXTENSION) {

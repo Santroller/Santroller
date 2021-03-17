@@ -1,10 +1,9 @@
 #include "pins/pins.h"
-#include "eeprom/eeprom.h"
 #include "controller/guitar_includes.h"
+#include "eeprom/eeprom.h"
 #include "stddef.h"
 #include "util/util.h"
 #include <avr/interrupt.h>
-
 // On the ATmega1280, the addresses of some of the port registers are
 // greater than 255, so we can't store them in uint8_t's.
 extern const uint16_t PROGMEM port_to_mode_PGM[];
@@ -173,11 +172,13 @@ void tickAnalog(void) {
     low = ADCL;
     high = ADCH;
     uint16_t data = (high << 8) | low;
-    if (!joyData[currentAnalog].hasDigital) {
-      if (joyData[currentAnalog].inverted) data *= -1;
+    AnalogInfo_t *info = &joyData[currentAnalog];
+    if (!info->hasDigital) {
+      if (info->inverted) data *= -1;
       data = (data - 512) * 64;
     }
-    joyData[currentAnalog++].value = data;
+    info->value = data;
+    currentAnalog++;
     if (currentAnalog == validAnalog) { currentAnalog = 0; }
   }
   first = false;

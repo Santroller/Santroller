@@ -14,6 +14,7 @@ bool lookingForAnalog = false;
 int lastAnalogValue[NUM_ANALOG_INPUTS];
 bool lastDigitalValue[NUM_DIGITAL_PINS];
 AnalogInfo_t joyData[NUM_ANALOG_INPUTS];
+int16_t analogueData[XBOX_AXIS_COUNT];
 void initDirectInput(void) {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
@@ -152,8 +153,12 @@ void tickDirectInput(Controller_t *controller) {
   }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;
+  AxisScale_t* scales = &config.axisScale.lt;
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
+    analogueData[info.offset] = info.value;
+    info.value += scales[info.offset].offset;
+    info.value *= scales[info.offset].multiplier;
     if (info.hasDigital) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;

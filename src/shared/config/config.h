@@ -102,11 +102,18 @@ typedef struct {
   bool rfInEnabled;
   uint32_t id;
 } RFConfig_t;
-
 typedef struct {
   uint8_t multiplier;
   uint16_t offset;
-} AxisWhammyConfig_t;
+} AxisScale_t;
+typedef struct {
+  AxisScale_t lt;
+  AxisScale_t rt;
+  AxisScale_t l_x;
+  AxisScale_t l_y;
+  AxisScale_t r_x;
+  AxisScale_t r_y;
+} AxisScaleConfig_t;
 
 typedef struct {
   MainConfig_t main;
@@ -117,7 +124,7 @@ typedef struct {
   MidiConfig_t midi;
   RFConfig_t rf;
   uint8_t pinsSP;
-  AxisWhammyConfig_t axisWhammy;
+  AxisScaleConfig_t axisScale;
 } Configuration_t;
 
 #pragma pack(pop)

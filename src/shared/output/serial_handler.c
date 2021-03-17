@@ -105,8 +105,8 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     info->multi = false;
 #endif
   } else if (cmd == COMMAND_GET_VALUES) {
-    memcpy(dbuf, &controller, sizeof(XInput_Data_t));
-    size = sizeof(XInput_Data_t);
+    memcpy(dbuf + 1, &analogueData, sizeof(analogueData));
+    size = sizeof(analogueData) + 1;
   } else if (cmd == COMMAND_GET_EXTENSION) {
     size = 3;
     if (config.main.inputType == WII) {

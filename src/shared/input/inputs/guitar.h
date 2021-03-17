@@ -77,7 +77,7 @@ void initGuitar(void) {
 void tickGuitar(Controller_t *controller) {
   if (!isGuitar(config.main.subType)) return;
   Guitar_t* g = (Guitar_t*)controller;
-  int32_t whammy = g->whammy * config.axisWhammy.multiplier + config.axisWhammy.offset;
+  int32_t whammy = g->whammy;
   if (whammy > 0xFFFF) {
     whammy = 0xFFFF;
   }

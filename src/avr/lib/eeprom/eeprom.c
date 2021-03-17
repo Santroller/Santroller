@@ -42,6 +42,9 @@ void loadConfig(void) {
   if (config.main.version < 9 && isGuitar(config.main.subType)) {
     config.pins.r_x.inverted = !config.pins.r_x.inverted;
   }
+  if (config.main.version < 12) {
+    memcpy_P(&config.axisScale, &default_config.axisScale, sizeof(default_config.axisScale));
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

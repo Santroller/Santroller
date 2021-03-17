@@ -1,7 +1,7 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 11
+#define CONFIG_VERSION 12
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -28,7 +28,8 @@
 #define MAP_START_SELECT_TO_HOME true
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
-
+#define DEFAULT_AXIS_SCALE                                                     \
+  { 1, 0 }
 #define INVALID_AN_PIN                                                         \
   { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit
@@ -95,5 +96,8 @@
         PINS,                                                                  \
         {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
          MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {false}, INVALID_PIN                  \
+        KEYS, LED_PINS, {{0}, {0}, {0}}, {false}, INVALID_PIN, {               \
+      DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE,              \
+          DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE           \
+    }                                                                          \
   }

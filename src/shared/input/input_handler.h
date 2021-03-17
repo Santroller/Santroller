@@ -16,3 +16,4 @@ void tickInputs(Controller_t* controller);
 void setSP(bool sp);
 uint8_t getVelocity(Controller_t* controller, uint8_t offset);
 extern uint8_t detectedPin;
+extern int16_t analogueData[XBOX_AXIS_COUNT];

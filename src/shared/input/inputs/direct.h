@@ -157,17 +157,23 @@ void tickDirectInput(Controller_t *controller) {
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
     analogueData[info.offset] = info.value;
-    info.value += scales[info.offset].offset;
-    info.value *= scales[info.offset].multiplier;
+    int16_t val = info.value;
+    // Subtract the offset. if the subtraction overflows, then clamp to min
+    if (__builtin_ssub_overflow(val, scales[info.offset].offset, &val)) {
+      val = INT16_MIN;
+    // Multiply the multiplier. if the subtraction overflows, then clamp to max
+    } else if (__builtin_smul_overflow(val, scales[info.offset].multiplier, &val)) {
+      val = INT16_MAX;
+    }
     if (info.hasDigital) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;
       }
-      controller->drumVelocity[info.offset - 8] = info.value;
+      controller->drumVelocity[info.offset - 8] = val;
     } else if (info.offset >= 2) {
-      combinedController->sticks[info.offset - 2] = info.value;
+      combinedController->sticks[info.offset - 2] = val;
     } else {
-      combinedController->triggers[info.offset] = info.value >> 8;
+      combinedController->triggers[info.offset] = val >> 8;
     }
   }
 }

@@ -14,6 +14,15 @@ void loadConfig(void) {
     config = default_config;
     config.main.version = 0;
   }
+  // We made a change to simplify the guitar config, but as a result whammy is
+  // now flipped
+  if (config.main.version < 9 && isGuitar(config.main.subType)) {
+    config.pins.r_x.inverted = !config.pins.r_x.inverted;
+  }
+  if (config.main.version < 12) {
+    memcpy_P(&config.axisScale, &default_config.axisScale,
+             sizeof(default_config.axisScale));
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));

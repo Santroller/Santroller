@@ -23,24 +23,24 @@ USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
 #ifndef MULTI_ADAPTOR
-USB_ClassInfo_MIDI_Device_t midiInterface = {
-    .Config =
-        {
-            .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
-            .DataINEndpoint =
-                {
-                    .Address = MIDI_EPADDR_IN,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-            .DataOUTEndpoint =
-                {
-                    .Address = MIDI_EPADDR_OUT,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-        },
-};
+// USB_ClassInfo_MIDI_Device_t midiInterface = {
+//     .Config =
+//         {
+//             .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
+//             .DataINEndpoint =
+//                 {
+//                     .Address = MIDI_EPADDR_IN,
+//                     .Size = HID_EPSIZE,
+//                     .Banks = 1,
+//                 },
+//             .DataOUTEndpoint =
+//                 {
+//                     .Address = MIDI_EPADDR_OUT,
+//                     .Size = HID_EPSIZE,
+//                     .Banks = 1,
+//                 },
+//         },
+// };
 #endif
 bool xinputEnabled = false;
 long lastPoll = 0;
@@ -99,9 +99,9 @@ int main(void) {
       Endpoint_Write_Stream_LE(data, size, NULL);
       Endpoint_ClearIN();
 
-#ifndef MULTI_ADAPTOR
-      MIDI_Device_USBTask(&midiInterface);
-#endif
+// #ifndef MULTI_ADAPTOR
+//       MIDI_Device_USBTask(&midiInterface);
+// #endif
     }
   }
 }

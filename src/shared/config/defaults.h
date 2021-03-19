@@ -29,7 +29,7 @@
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
 #define DEFAULT_AXIS_SCALE                                                     \
-  { 1, 0 }
+  { 1, UINT16_MAX }
 #define INVALID_AN_PIN                                                         \
   { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit

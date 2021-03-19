@@ -44,7 +44,14 @@ typedef struct {
   volatile uint32_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
   uint8_t drumVelocity[8];
 } ControllerCombined_t;
-
+enum ControllerAxis {
+  XBOX_LT,
+  XBOX_RT,
+  XBOX_L_X,
+  XBOX_L_Y,
+  XBOX_R_X,
+  XBOX_R_Y
+};
 // Buttons used by all controllers
 enum ControllerButtons {
   XBOX_DPAD_UP,

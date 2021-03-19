@@ -27,7 +27,7 @@ typedef struct {
   uint8_t offset;
   uint8_t pin;
   bool inverted;
-  volatile uint16_t value;
+  volatile int16_t value;
   uint16_t threshold;
   // Does this analog pin map to a digital pin (aka drums)
   bool hasDigital;

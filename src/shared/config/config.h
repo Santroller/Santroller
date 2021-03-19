@@ -103,7 +103,7 @@ typedef struct {
   uint32_t id;
 } RFConfig_t;
 typedef struct {
-  float multiplier;
+  uint16_t multiplier;
   uint16_t offset;
 } AxisScale_t;
 typedef struct {

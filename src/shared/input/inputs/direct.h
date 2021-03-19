@@ -157,14 +157,13 @@ void tickDirectInput(Controller_t *controller) {
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
     analogueData[info.offset] = info.value;
-    int16_t val = info.value;
-    // Subtract the offset. if the subtraction overflows, then clamp to min
-    if (__builtin_ssub_overflow(val, scales[info.offset].offset, &val)) {
-      val = INT16_MIN;
-    // Multiply the multiplier. if the subtraction overflows, then clamp to max
-    } else if (__builtin_smul_overflow(val, scales[info.offset].multiplier, &val)) {
-      val = INT16_MAX;
+    float val = info.value;
+    val -= scales[info.offset].offset;
+    val *= (scales[info.offset].multiplier * 1000);
+    if (!isGuitar(config.main.subType) || info.offset != XBOX_R_X) {
+      val += INT16_MIN;
     }
+    // if (val > INT16_MAX) val = INT16_MAX;
     if (info.hasDigital) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;
@@ -173,7 +172,7 @@ void tickDirectInput(Controller_t *controller) {
     } else if (info.offset >= 2) {
       combinedController->sticks[info.offset - 2] = val;
     } else {
-      combinedController->triggers[info.offset] = val >> 8;
+      combinedController->triggers[info.offset] = ((uint16_t)val) >> 8;
     }
   }
 }

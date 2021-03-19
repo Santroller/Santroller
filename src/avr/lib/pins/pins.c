@@ -174,8 +174,9 @@ void tickAnalog(void) {
     int16_t data = (high << 8) | low;
     AnalogInfo_t *info = &joyData[currentAnalog];
     if (!info->hasDigital) {
+      data = data - 512;
       if (info->inverted) data = -data;
-      data = (data - 512) * 32;
+      data = data * 64;
     }
     info->value = data;
     currentAnalog++;

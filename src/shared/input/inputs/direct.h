@@ -159,11 +159,12 @@ void tickDirectInput(Controller_t *controller) {
     analogueData[info.offset] = info.value;
     float val = info.value;
     val -= scales[info.offset].offset;
-    val *= (scales[info.offset].multiplier * 1000);
+    val *= (scales[info.offset].multiplier / 1000.0);
     if (!isGuitar(config.main.subType) || info.offset != XBOX_R_X) {
       val += INT16_MIN;
     }
-    // if (val > INT16_MAX) val = INT16_MAX;
+    if (val > INT16_MAX) val = INT16_MAX;
+    if (val < INT16_MIN) val = INT16_MIN;
     if (info.hasDigital) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;

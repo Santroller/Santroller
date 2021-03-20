@@ -157,9 +157,10 @@ void tickDirectInput(Controller_t *controller) {
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
     analogueData[info.offset] = info.value;
-    float val = info.value;
+    int32_t val = info.value;
     val -= scales[info.offset].offset;
-    val *= (scales[info.offset].multiplier / 1000.0);
+    val *= scales[info.offset].multiplier;
+    val /= 1024;
     if (!isGuitar(config.main.subType) || info.offset != XBOX_R_X) {
       val += INT16_MIN;
     }

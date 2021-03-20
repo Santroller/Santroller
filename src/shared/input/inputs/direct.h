@@ -34,7 +34,8 @@ void initDirectInput(void) {
         } else {
           pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;
-          if (isGuitar(config.main.subType) && (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
+          if (isGuitar(config.main.subType) &&
+              (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
             pin.milliDeBounce = 20;
           }
         }
@@ -153,7 +154,7 @@ void tickDirectInput(Controller_t *controller) {
   }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;
-  AxisScale_t* scales = &config.axisScale.lt;
+  AxisScale_t *scales = &config.axisScale.lt;
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
     analogueData[info.offset] = info.value;
@@ -161,9 +162,7 @@ void tickDirectInput(Controller_t *controller) {
     val -= scales[info.offset].offset;
     val *= scales[info.offset].multiplier;
     val /= 1024;
-    if (!isGuitar(config.main.subType) || info.offset != XBOX_R_X) {
-      val += INT16_MIN;
-    }
+    val += INT16_MIN;
     if (val > INT16_MAX) val = INT16_MAX;
     if (val < INT16_MIN) val = INT16_MIN;
     if (info.hasDigital) {

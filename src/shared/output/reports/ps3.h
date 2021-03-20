@@ -102,7 +102,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
   // Tilt / whammy
   bool tilt = controller->r_y == 32767;
   if (config.main.subType == PS3_GUITAR_HERO_GUITAR) {
-    JoystickReport->r_x = (controller->r_x >> 8) + 128;
+    JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
     // GH PS3 guitars have a tilt axis
     JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
     // r_y is tap, so lets disable it.

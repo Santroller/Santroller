@@ -1,7 +1,7 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 12
+#define CONFIG_VERSION 13
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -11,6 +11,8 @@
 #define DRUM_THRESHOLD 64
 #define JOY_THRESHOLD 64
 #define TILT_SENSITIVITY 3000
+#define STRUM_DEBOUNCE 20
+#define FRET_DEBOUNCE 5
 
 #define FRET_MODE LEDS_DISABLED
 #define COLOUR(col)                                                            \
@@ -29,7 +31,7 @@
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
 #define DEFAULT_AXIS_SCALE                                                     \
-  { 1, UINT16_MAX }
+  { 1, UINT16_MIN, 0 }
 #define INVALID_AN_PIN                                                         \
   { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit
@@ -63,41 +65,31 @@
   }
 #define FIRMWARE ARDWIINO_DEVICE_TYPE
 
-#define TEST_CONFIG                                                            \
+#define DEFAULT_CONFIG_MAIN                                                    \
   {                                                                            \
-    {DEVICE_TYPE,                                                              \
-     OUTPUT_TYPE,                                                              \
-     TILT_SENSOR,                                                              \
-     POLL_RATE,                                                                \
-     FRET_MODE,                                                                \
-     MAP_JOY_TO_DPAD,                                                          \
-     MAP_START_SELECT_TO_HOME,                                                 \
-     MAP_ACCEL_TO_R,                                                           \
-     ARDWIINO_DEVICE_TYPE,                                                     \
-     CONFIG_VERSION},                                                          \
-        TEST_PINS,                                                             \
-        {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
-         MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {true}, INVALID_PIN                   \
+    DEVICE_TYPE, OUTPUT_TYPE, TILT_SENSOR, POLL_RATE, FRET_MODE,               \
+        MAP_JOY_TO_DPAD, MAP_START_SELECT_TO_HOME, MAP_ACCEL_TO_R,             \
+        ARDWIINO_DEVICE_TYPE, CONFIG_VERSION                                   \
   }
-
+#define DEFAULT_THRESHOLDS                                                     \
+  {                                                                            \
+    TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD, MPU_6050_ORIENTATION,    \
+        TILT_SENSITIVITY                                                       \
+  }
+#define DEFAULT_MIDI                                                           \
+  {                                                                            \
+    {0}, {0}, { 0 }                                                            \
+  }
+#define DEFAULT_AXIS_SCALES                                                    \
+  {                                                                            \
+    DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE,                \
+        DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE             \
+  }
+#define DEFAULT_DEBOUNCE                                                       \
+  { BUTTON_DEBOUNCE, STRUM_DEBOUNCE }
 #define DEFAULT_CONFIG                                                         \
   {                                                                            \
-    {DEVICE_TYPE,                                                              \
-     OUTPUT_TYPE,                                                              \
-     TILT_SENSOR,                                                              \
-     POLL_RATE,                                                                \
-     FRET_MODE,                                                                \
-     MAP_JOY_TO_DPAD,                                                          \
-     MAP_START_SELECT_TO_HOME,                                                 \
-     MAP_ACCEL_TO_R,                                                           \
-     ARDWIINO_DEVICE_TYPE,                                                     \
-     CONFIG_VERSION},                                                          \
-        PINS,                                                                  \
-        {TRIGGER_THRESHOLD, JOY_THRESHOLD, DRUM_THRESHOLD,                     \
-         MPU_6050_ORIENTATION, TILT_SENSITIVITY},                              \
-        KEYS, LED_PINS, {{0}, {0}, {0}}, {false}, INVALID_PIN, {               \
-      DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE,              \
-          DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE           \
-    }                                                                          \
+    DEFAULT_CONFIG_MAIN, PINS, DEFAULT_THRESHOLDS, KEYS, LED_PINS,             \
+        DEFAULT_MIDI, {false}, INVALID_PIN, DEFAULT_AXIS_SCALES,               \
+        DEFAULT_DEBOUNCE                                                       \
   }

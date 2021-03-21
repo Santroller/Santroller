@@ -36,7 +36,7 @@ void initDirectInput(void) {
           pinData[validPins++] = pin;
           if (isGuitar(config.main.subType) &&
               (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
-            pin.milliDeBounce = 20;
+            pin.milliDeBounce = config.debounce.strum;
           }
         }
       }

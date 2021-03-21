@@ -23,6 +23,9 @@ void loadConfig(void) {
     memcpy_P(&config.axisScale, &default_config.axisScale,
              sizeof(default_config.axisScale));
   }
+  if (config.main.version < 13) {
+    memcpy_P(&config.debounce, &default_config.debounce, sizeof(default_config.debounce));
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));

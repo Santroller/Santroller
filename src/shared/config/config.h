@@ -105,6 +105,7 @@ typedef struct {
 typedef struct {
   int16_t multiplier;
   int16_t offset;
+  int16_t deadzone;
 } AxisScale_t;
 typedef struct {
   AxisScale_t lt;
@@ -116,6 +117,11 @@ typedef struct {
 } AxisScaleConfig_t;
 
 typedef struct {
+  uint8_t buttons;
+  uint8_t strum;
+} DebounceConfig_t;
+
+typedef struct {
   MainConfig_t main;
   Pins_t pins;
   AxisConfig_t axis;
@@ -125,6 +131,7 @@ typedef struct {
   RFConfig_t rf;
   uint8_t pinsSP;
   AxisScaleConfig_t axisScale;
+  DebounceConfig_t debounce;
 } Configuration_t;
 
 #pragma pack(pop)

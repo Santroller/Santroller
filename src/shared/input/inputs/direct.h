@@ -155,16 +155,26 @@ void tickDirectInput(Controller_t *controller) {
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;
   AxisScale_t *scales = &config.axisScale.lt;
+  AxisScale_t scale;
   for (int8_t i = 0; i < validAnalog; i++) {
     info = joyData[i];
     analogueData[info.offset] = info.value;
+    scale = scales[info.offset];
     int32_t val = info.value;
-    val -= scales[info.offset].offset;
-    val *= scales[info.offset].multiplier;
+    // Triggers center at -32767, sticks center at 0. Whammy works similar to a trigger, so we also count it here.
+    bool isTrigger = info.offset < 2 || (isGuitar(config.main.subType) && info.offset == XBOX_R_X);
+    if (isTrigger) {
+      val += scale.deadzone;
+    } 
+    val -= scale.offset;
+    val *= scale.multiplier;
     val /= 1024;
     val += INT16_MIN;
     if (val > INT16_MAX) val = INT16_MAX;
     if (val < INT16_MIN) val = INT16_MIN;
+    if (!isTrigger && val < scale.deadzone && val > -scale.deadzone) {
+      val = 0;
+    } 
     if (info.hasDigital) {
       if (info.value > info.threshold) {
         controller->buttons |= info.digital.pmask;

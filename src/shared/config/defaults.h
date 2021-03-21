@@ -12,7 +12,7 @@
 #define JOY_THRESHOLD 64
 #define TILT_SENSITIVITY 3000
 #define STRUM_DEBOUNCE 20
-#define FRET_DEBOUNCE 5
+#define BUTTON_DEBOUNCE 5
 
 #define FRET_MODE LEDS_DISABLED
 #define COLOUR(col)                                                            \
@@ -31,7 +31,7 @@
 // When using a nunchunk, map acceleration to r_stick
 #define MAP_ACCEL_TO_R true
 #define DEFAULT_AXIS_SCALE                                                     \
-  { 1, UINT16_MIN, 0 }
+  { 1, INT16_MIN, 0 }
 #define INVALID_AN_PIN                                                         \
   { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit

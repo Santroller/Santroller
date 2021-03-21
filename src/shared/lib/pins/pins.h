@@ -41,7 +41,7 @@ extern int validAnalog;
 #define FALLING 2
 #define RISING 3
 void setUpAnalogPin(uint8_t pin);
-int digitalRead(uint8_t pin);
+bool digitalRead(uint8_t pin);
 bool digitalReadPin(Pin_t pin);
 void pinMode(uint8_t pin, uint8_t mode);
 void setupADC(void);

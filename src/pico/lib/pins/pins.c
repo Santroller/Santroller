@@ -8,7 +8,7 @@
 
 void digitalWrite(uint8_t pin, uint8_t val) { gpio_put(pin, val); }
 
-int digitalRead(uint8_t pin) { return gpio_get(pin); }
+bool digitalRead(uint8_t pin) { return gpio_get(pin) != 0; }
 Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   Pin_t pin = {};
   pin.offset = offset;
@@ -64,7 +64,7 @@ void tickAnalog(void) {
   if (validAnalog == 0) return;
   for (int i = 0; i < validAnalog; i++) {
     AnalogInfo_t *info = &joyData[i];
-    uint16_t data = analogRead(info->pin);
+    uint16_t data = analogRead(info->pin - PIN_A0);
     if (!joyData[i].hasDigital) {
       if (info->inverted) data *= -1;
       data = (data - 512) * 64;
@@ -74,13 +74,13 @@ void tickAnalog(void) {
 }
 
 uint16_t analogRead(uint8_t pin) {
-  adc_select_input(pin);
+  adc_select_input(pin + PIN_A0);
   // We have everything coded assuming 10 bits (as that is what the arduino
   // uses) so shift accordingly (12 -> 10)
   return adc_read() >> 2;
 }
 void pinMode(uint8_t pin, uint8_t mode) {
-  if (mode == INPUT) {
+  if (mode == INPUT && pin >= PIN_A0) {
     adc_gpio_init(pin);
   } else {
     gpio_init(pin);

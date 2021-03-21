@@ -242,13 +242,18 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
   return driver;
 }
 
-static const uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
+static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
                                uint8_t *buffer, uint16_t reqlen) {
   if (report_type == HID_REPORT_TYPE_FEATURE) {
     //  When requested, return the ps3 report ids so that we have console
     //  compatibility
-    buffer = &id;
+    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+      id[3] = 0x00;
+    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+      id[3] = 0x06;
+    }
+    buffer = id;
     return sizeof(id);
   }
   return 0;

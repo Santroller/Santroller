@@ -54,7 +54,7 @@ void loadConfig(void) {
 void writeConfigByte(uint8_t offset, uint8_t byte) {
   eeprom_update_byte(((uint8_t *)&config_pointer) + offset, byte);
 }
-void writeConfigBlock(uint8_t offset, const uint8_t* data, uint8_t len) {
+void writeConfigBlock(uint8_t offset, const uint8_t* data, uint16_t len) {
   eeprom_update_block(data, ((uint8_t *)&config_pointer) + offset, len);
 }
 

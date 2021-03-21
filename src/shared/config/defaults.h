@@ -32,6 +32,8 @@
 #define MAP_ACCEL_TO_R true
 #define DEFAULT_AXIS_SCALE                                                     \
   { 1, INT16_MIN, 0 }
+#define DEFAULT_AXIS_SCALE_TRIGGER                                             \
+  { 1, INT16_MIN, INT16_MIN }
 #define INVALID_AN_PIN                                                         \
   { INVALID_PIN, 0 }
 // For a list of keyboard bindings, visit
@@ -82,8 +84,9 @@
   }
 #define DEFAULT_AXIS_SCALES                                                    \
   {                                                                            \
-    DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE,                \
-        DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE             \
+    DEFAULT_AXIS_SCALE_TRIGGER, DEFAULT_AXIS_SCALE_TRIGGER,                    \
+        DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE,            \
+        DEFAULT_AXIS_SCALE                                                     \
   }
 #define DEFAULT_DEBOUNCE                                                       \
   { BUTTON_DEBOUNCE, STRUM_DEBOUNCE }

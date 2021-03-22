@@ -436,9 +436,12 @@ void initPS2CtrlInput(void) {
   attention = setUpDigital(10, 0, false);
   command = setUpDigital(PIN_SPI_MOSI, 0, false);
   clock = setUpDigital(PIN_SPI_SCK, 0, false);
+  // On the rpi we have to flag these pins as not using SIO
+#ifndef __AVR__
   // not using sio, but spi
   command.sioFunc = false;
   clock.sioFunc = false;
+#endif
   pinMode(10, OUTPUT);
   noAttention();
 }

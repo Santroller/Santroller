@@ -6,6 +6,7 @@
 // #include <avr/pgmspace.h>
 #include <stdbool.h>
 #include <stdint.h>
+// The pico and avr devices are fundamentally different. We use direct memory access on avr, but just need a pin number for the pico
 #ifdef __AVR__
 typedef struct {
   uint8_t mask;
@@ -16,7 +17,6 @@ typedef struct {
   uint8_t offset;
   uint8_t lastMillis;
   uint8_t milliDeBounce;
-  bool sioFunc;
 } Pin_t;
 #else
 typedef struct {

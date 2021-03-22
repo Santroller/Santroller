@@ -43,6 +43,7 @@ int main(void) {
   uint8_t cmd;
   bool isConfig = false;
   uint16_t offset;
+  uint8_t origOffset;
   while (true) {
     //================================================================================
     // USARTtoUSB
@@ -107,7 +108,8 @@ int main(void) {
           state = 4;
           packetCount--;
         } else if (state == 4) {
-          offset = data * PACKET_SIZE;
+          origOffset = data;
+          offset = origOffset * PACKET_SIZE;
           buf += offset;
           state = 5;
         } else if (state == 5) {
@@ -138,11 +140,11 @@ int main(void) {
           // reading (0 for false, as we are writing)
           spi_transfer(false);
           if (cmd == COMMAND_SET_LEDS || cmd == COMMAND_WRITE_CONFIG) {
-            spi_transfer(offset / PACKET_SIZE);
+            spi_transfer(origOffset);
             nrf24_transmitSync(
                 (isConfig ? (uint8_t *)&config : (uint8_t *)&controller.leds) +
                     offset,
-                29);
+                PACKET_SIZE);
           }
           nrf24_csn_digitalWrite(HIGH);
           isConfig = false;

@@ -25,4 +25,4 @@ typedef struct {
     uint32_t rfID;
 } cpu_info_t;
 
-#define PACKET_SIZE 30
+#define PACKET_SIZE 28

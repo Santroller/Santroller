@@ -13,7 +13,6 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   Pin_t pin = {};
   pin.offset = offset;
   pin.pin = pinNum;
-  pin.pmask = _BV(offset);
   pin.eq = inverted;
   pin.sioFunc = true;
   return pin;
@@ -54,7 +53,7 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digitalPmask = button.pmask;
+  ret.digitalPmask = _BV(button.offset);
   ret.threshold = threshold;
   ret.pin = pin;
   pinMode(PIN_A0 + pin, INPUT);

@@ -23,7 +23,6 @@
 Controller_t controller;
 uint8_t currentReport[sizeof(USB_Report_Data_t)];
 uint8_t previousReport[sizeof(USB_Report_Data_t)];
-Configuration_t newConfig;
 bool readyForPacket = true;
 long lastPoll = 0;
 int main(void) {
@@ -102,8 +101,10 @@ int main(void) {
           } else if (data == COMMAND_SET_LEDS) {
             buf = (uint8_t *)&controller.leds;
           } else {
-            state = 7;
-            break;
+            // Make sure to read the entire packet even if we aren't doing anything with it
+            buf = NULL;
+            state = 5;
+            continue;
           }
           state = 4;
           packetCount--;
@@ -116,8 +117,10 @@ int main(void) {
           packetCount--;
           if (isConfig) {
             writeConfigByte(offset++, data);
-          } else {
+          } else if (buf) {
             *(buf++) = data;
+          } else if (cmd == COMMAND_SET_SP) {
+            setSP(data);
           }
           if (packetCount == 0) {
             state = 7;

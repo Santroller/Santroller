@@ -36,7 +36,6 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.mask = digitalPinToBitMask(pinNum);
   pin.port = portInputRegister(port);
   pin.outPort = portOutputRegister(port);
-  pin.pmask = _BV(offset);
   pin.eq = inverted;
   pin.milliDeBounce = config.debounce.buttons;
   pin.sioFunc = true;
@@ -131,7 +130,7 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digitalPmask = button.pmask;
+  ret.digitalPmask = _BV(button.offset);
   ret.threshold = threshold;
 #if defined(analogPinToChannel)
 #  if defined(__AVR_ATmega32U4__)

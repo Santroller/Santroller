@@ -6,21 +6,31 @@
 // #include <avr/pgmspace.h>
 #include <stdbool.h>
 #include <stdint.h>
-
+#ifdef __AVR__
 typedef struct {
   uint8_t mask;
   volatile uint8_t *port;
   volatile uint8_t *outPort;
+  uint16_t outmask;
+  bool eq;
+  uint8_t offset;
+  uint8_t lastMillis;
+  uint8_t milliDeBounce;
+  bool sioFunc;
+} Pin_t;
+#else
+typedef struct {
+  uint8_t mask;
   uint16_t pmask;
   uint16_t outmask;
   bool eq;
   uint8_t offset;
   uint8_t pin;
-  uint32_t lastMillis;
+  uint8_t lastMillis;
   uint8_t milliDeBounce;
   bool sioFunc;
 } Pin_t;
-
+#endif
 typedef struct {
   uint8_t srb;
   uint8_t mux;

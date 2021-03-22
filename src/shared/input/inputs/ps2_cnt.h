@@ -246,11 +246,9 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
     uint8_t resp =
         spi_transfer(out != NULL ? revbits2(out[i]) : revbits2(0x5A));
-    printf("%02x ", resp);
     if (in != NULL) { in[i] = revbits2(resp); }
     _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
   }
-  printf("\n");
 }
 uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
   static uint8_t inputBuffer[BUFFER_SIZE];

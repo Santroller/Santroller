@@ -24,3 +24,5 @@ typedef struct {
     char board[15];
     uint32_t rfID;
 } cpu_info_t;
+
+#define PACKET_SIZE 30

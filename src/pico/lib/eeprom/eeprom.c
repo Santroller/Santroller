@@ -35,7 +35,7 @@ void loadConfig(void) {
   }
   memcpy(newConfig, &config, sizeof(Configuration_t));
 }
-void writeConfigBlock(uint8_t offset, const uint8_t *data, uint16_t len) {
+void writeConfigBlock(uint16_t offset, const uint8_t *data, uint16_t len) {
   memcpy(newConfig + offset, data, len);
   uint32_t saved_irq;
   if (offset + len >= sizeof(Configuration_t)) {

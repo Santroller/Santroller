@@ -36,14 +36,14 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
                                   const uint8_t *data) {
   switch (cmd) {
   case COMMAND_WRITE_CONFIG: {
-    uint8_t offset = *data;
+    uint16_t offset = (*data) * PACKET_SIZE;
     data++;
     data_len--;
     writeConfigBlock(offset, data, data_len);
     return;
   }
   case COMMAND_SET_LEDS: {
-    uint8_t offset = *data;
+    uint16_t offset = (*data) * PACKET_SIZE;
     data++;
     data_len--;
     uint8_t *dest = ((uint8_t *)controller.leds) + offset;

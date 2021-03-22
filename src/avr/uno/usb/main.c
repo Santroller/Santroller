@@ -176,8 +176,10 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
   Endpoint_ClearSETUP();
-  uint8_t done[] = {FRAME_START_FEATURE_WRITE, len, cmd};
-  writeData(done, sizeof(done));
+  uint8_t header[] = {FRAME_START_FEATURE_WRITE, len, cmd};
+  writeData(&header[0], 1);
+  writeData(&header[1], 1);
+  writeData(&header[2], 1);
   uint8_t d;
   while (len) {
     if (Endpoint_IsOUTReceived()) {
@@ -201,8 +203,8 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
 }
 void processHIDReadFeatureReport(uint8_t cmd) {
   Endpoint_ClearSETUP();
-  uint8_t done = FRAME_START_FEATURE_READ;
-  writeData(&done, 1);
+  uint8_t header = FRAME_START_FEATURE_READ;
+  writeData(&header, 1);
   writeData(&cmd, 1);
 }
 

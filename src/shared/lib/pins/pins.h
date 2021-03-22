@@ -31,7 +31,7 @@ typedef struct {
   uint16_t threshold;
   // Does this analog pin map to a digital pin (aka drums)
   bool hasDigital;
-  Pin_t digital;
+  uint16_t digitalPmask;
 } AnalogInfo_t;
 
 extern AnalogInfo_t joyData[NUM_ANALOG_INPUTS];

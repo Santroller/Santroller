@@ -6,7 +6,7 @@
 #include "pins/pins.h"
 #include "util/util.h"
 #include <stdlib.h>
-Pin_t pinData[16] = {};
+Pin_t pinData[XBOX_BTN_COUNT] = {};
 int validPins = 0;
 uint8_t detectedPin = 0xff;
 bool lookingForDigital = false;
@@ -150,6 +150,7 @@ void tickDirectInput(Controller_t *controller) {
         pin.lastMillis = millis();
       }
       controller->buttons ^= (-val ^ controller->buttons) & pin.pmask;
+      bit_write(val, controller->buttons, pin.pmask);
     }
   }
   AnalogInfo_t info;
@@ -177,7 +178,7 @@ void tickDirectInput(Controller_t *controller) {
     }
     if (info.hasDigital) {
       if (info.value > info.threshold) {
-        controller->buttons |= info.digital.pmask;
+        controller->buttons |= info.digitalPmask;
       }
       controller->drumVelocity[info.offset - 8] = val;
     } else if (info.offset >= 2) {

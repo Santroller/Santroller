@@ -131,7 +131,7 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digital = button;
+  ret.digitalPmask = button.pmask;
   ret.threshold = threshold;
 #if defined(analogPinToChannel)
 #  if defined(__AVR_ATmega32U4__)

@@ -84,7 +84,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     writeToUSB(dbuf, len);
     return;
   }
-  uint16_t size;
+  uint8_t size;
   dbuf[0] = REPORT_ID_CONTROL;
   if (cmd >= COMMAND_READ_CONFIG) {
     size = 50;

@@ -109,7 +109,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     JoystickReport->r_y = 0x7d;
   } else if (config.main.subType == PS3_ROCK_BAND_GUITAR ||
              config.main.subType == WII_ROCK_BAND_GUITAR) {
-    JoystickReport->r_x = 128 - (controller->r_x >> 8);
+    JoystickReport->r_x = 128 + (controller->r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
     // r_y is the tone switch. Since lt isnt used, but r_y gets used by tilt, we

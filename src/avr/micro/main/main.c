@@ -1,7 +1,8 @@
-#define ARDUINO_MAIN
+
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
 #include "bootloader/bootloader.h"
+#include "controller/guitar_includes.h"
 #include "eeprom/eeprom.h"
 #include "input/input_handler.h"
 #include "leds/leds.h"
@@ -10,45 +11,49 @@
 #include "output/reports.h"
 #include "output/serial_handler.h"
 #include "pins/pins.h"
-#include "pins_arduino.h"
 #include "rf/rf.h"
 #include "stdbool.h"
 #include "timer/timer.h"
 #include "usb/usb.h"
 #include "util/util.h"
-#include "controller/guitar_includes.h"
 #include <stdlib.h>
+#define ARDUINO_MAIN
+#include "pins_arduino.h"
 Controller_t controller;
 USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
 #ifndef MULTI_ADAPTOR
-// USB_ClassInfo_MIDI_Device_t midiInterface = {
-//     .Config =
-//         {
-//             .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
-//             .DataINEndpoint =
-//                 {
-//                     .Address = MIDI_EPADDR_IN,
-//                     .Size = HID_EPSIZE,
-//                     .Banks = 1,
-//                 },
-//             .DataOUTEndpoint =
-//                 {
-//                     .Address = MIDI_EPADDR_OUT,
-//                     .Size = HID_EPSIZE,
-//                     .Banks = 1,
-//                 },
-//         },
-// };
+USB_ClassInfo_MIDI_Device_t midiInterface = {
+    .Config =
+        {
+            .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
+            .DataINEndpoint =
+                {
+                    .Address = MIDI_EPADDR_IN,
+                    .Size = HID_EPSIZE,
+                    .Banks = 1,
+                },
+            .DataOUTEndpoint =
+                {
+                    .Address = MIDI_EPADDR_OUT,
+                    .Size = HID_EPSIZE,
+                    .Banks = 1,
+                },
+        },
+};
 #endif
 bool xinputEnabled = false;
 long lastPoll = 0;
 int main(void) {
   loadConfig();
   deviceType = config.main.subType;
-  if (isGuitar(deviceType) && deviceType <= XINPUT_ARCADE_PAD) { deviceType = REAL_GUITAR_SUBTYPE; }
-  if (isDrum(deviceType) && deviceType <= XINPUT_ARCADE_PAD) { deviceType = REAL_DRUM_SUBTYPE; }
+  if (isGuitar(deviceType) && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_GUITAR_SUBTYPE;
+  }
+  if (isDrum(deviceType) && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_DRUM_SUBTYPE;
+  }
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());
@@ -85,7 +90,8 @@ int main(void) {
         size--;
         break;
       case REPORT_ID_GAMEPAD:
-        // The wii does not support multiple report ids. So we also strip it here
+        // The wii does not support multiple report ids. So we also strip it
+        // here
         Endpoint_SelectEndpoint(HID_EPADDR_IN);
         data++;
         size--;
@@ -99,9 +105,9 @@ int main(void) {
       Endpoint_Write_Stream_LE(data, size, NULL);
       Endpoint_ClearIN();
 
-// #ifndef MULTI_ADAPTOR
-//       MIDI_Device_USBTask(&midiInterface);
-// #endif
+#ifndef MULTI_ADAPTOR
+      MIDI_Device_USBTask(&midiInterface);
+#endif
     }
   }
 }

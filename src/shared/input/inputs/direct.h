@@ -6,7 +6,6 @@
 #include "pins/pins.h"
 #include "util/util.h"
 #include <stdlib.h>
-Pin_t pinData[XBOX_BTN_COUNT] = {};
 int validPins = 0;
 uint8_t detectedPin = 0xff;
 bool lookingForDigital = false;
@@ -19,8 +18,8 @@ void initDirectInput(void) {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
   setUpValidPins();
-  if (config.main.inputType == DIRECT) {
-    for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
+  for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
+    if (config.main.inputType == DIRECT) {
       if (pins[i] != INVALID_PIN) {
         bool is_fret = (i >= XBOX_A || i == XBOX_LB || i == XBOX_RB);
         Pin_t pin = setUpDigital(
@@ -40,6 +39,14 @@ void initDirectInput(void) {
           }
         }
       }
+    } else {
+      // Fill data for debounce in wii and ps2_cnt
+      Pin_t pin = setUpDigital(0, i, false);
+      if (isGuitar(config.main.subType) &&
+          (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
+        pin.milliDeBounce = config.debounce.strum;
+      }
+      pinData[validPins++] = pin;
     }
   }
 }
@@ -141,17 +148,6 @@ void tickDirectInput(Controller_t *controller) {
     return;
   }
   tickAnalog();
-  Pin_t pin;
-  for (uint8_t i = 0; i < validPins; i++) {
-    pin = pinData[i];
-    bool val = digitalReadPin(pin);
-    if (millis() - pin.lastMillis > pin.milliDeBounce) {
-      if (val != (controller->buttons & _BV(pin.offset))) {
-        pin.lastMillis = millis();
-      }
-      controller->buttons ^= (-val ^ controller->buttons) & _BV(pin.offset);
-    }
-  }
   AnalogInfo_t info;
   ControllerCombined_t *combinedController = (ControllerCombined_t *)controller;
   AxisScale_t *scales = &config.axisScale.lt;

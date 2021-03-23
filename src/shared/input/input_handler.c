@@ -12,15 +12,19 @@
 #include "util/util.h"
 #include <stdlib.h>
 void (*tick_function)(Controller_t *);
+bool (*read_button_function)(Pin_t pin);
 int joyThreshold;
+Pin_t pinData[XBOX_BTN_COUNT] = {};
 void initInputs() {
   setupADC();
   switch (config.main.inputType) {
   case WII:
     tick_function = tickWiiExtInput;
+    read_button_function = readWiiButton;
     break;
   case DIRECT:
     initDirectInput();
+    read_button_function = digitalReadPin;
     break;
   case PS2:
     initPS2CtrlInput();
@@ -33,15 +37,26 @@ void initInputs() {
   if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
     twi_init();
   }
-  if (config.main.tiltType == ANALOGUE && config.main.inputType == WII) {
-    initDirectInput();
-  }
+  // if (config.main.tiltType == ANALOGUE && config.main.inputType == WII) {
+  initDirectInput();
+  // }
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }
 void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
+  Pin_t pin;
+  for (uint8_t i = 0; i < validPins; i++) {
+    pin = pinData[i];
+    bool val = read_button_function(pin);
+    if (millis() - pin.lastMillis > pin.milliDeBounce) {
+      if (val != (bit_check(controller->buttons, pin.offset))) {
+        pin.lastMillis = millis();
+      }
+      bit_write(val, controller->buttons, pin.offset);
+    }
+  }
   if (config.main.mapLeftJoystickToDPad) {
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);

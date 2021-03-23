@@ -133,45 +133,91 @@ const uint8_t NEGCON_I_II_BUTTON_THRESHOLD = 128U;
  */
 const uint8_t NEGCON_L_BUTTON_THRESHOLD = 240U;
 #define INVALID 0xFF
+// static const uint8_t dualShockButtonBindings[] = {
+//     [PSB_SELECT] = XBOX_BACK,
+//     [PSB_L3] = XBOX_LEFT_STICK,
+//     [PSB_R3] = XBOX_RIGHT_STICK,
+//     [PSB_START] = XBOX_START,
+//     [PSB_PAD_UP] = XBOX_DPAD_UP,
+//     [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+//     [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+//     [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+//     [PSB_L2] = INVALID,
+//     [PSB_R2] = INVALID,
+//     [PSB_L1] = XBOX_LB,
+//     [PSB_R1] = XBOX_RB,
+//     [PSB_TRIANGLE] = XBOX_Y,
+//     [PSB_CIRCLE] = XBOX_B,
+//     [PSB_CROSS] = XBOX_A,
+//     [PSB_SQUARE] = XBOX_X};
+
+// static const uint8_t mouseButtonBindings[] = {
+//     [PMB_LEFT] = XBOX_A, [PMB_RIGHT] = XBOX_B};
+
+// static const uint8_t guitarHeroButtonBindings[] = {
+//     [PSB_SELECT] = XBOX_BACK,
+//     [PSB_L3] = INVALID,
+//     [PSB_R3] = INVALID,
+//     [PSB_START] = XBOX_START,
+//     [PSB_PAD_UP] = XBOX_DPAD_UP,
+//     [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
+//     [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
+//     [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
+//     [GH_STAR_POWER] = INVALID,
+//     [GH_GREEN] = XBOX_A,
+//     [PSB_L1] = INVALID,
+//     [PSB_R1] = INVALID,
+//     [GH_YELLOW] = XBOX_Y,
+//     [GH_RED] = XBOX_B,
+//     [GH_BLUE] = XBOX_X,
+//     [GH_ORANGE] = XBOX_LB};
+// Inverse of above
 static const uint8_t dualShockButtonBindings[] = {
-    [PSB_SELECT] = XBOX_BACK,
-    [PSB_L3] = XBOX_LEFT_STICK,
-    [PSB_R3] = XBOX_RIGHT_STICK,
-    [PSB_START] = XBOX_START,
-    [PSB_PAD_UP] = XBOX_DPAD_UP,
-    [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
-    [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
-    [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
-    [PSB_L2] = INVALID,
-    [PSB_R2] = INVALID,
-    [PSB_L1] = XBOX_LB,
-    [PSB_R1] = XBOX_RB,
-    [PSB_TRIANGLE] = XBOX_Y,
-    [PSB_CIRCLE] = XBOX_B,
-    [PSB_CROSS] = XBOX_A,
-    [PSB_SQUARE] = XBOX_X};
+    [XBOX_DPAD_UP] = PSB_PAD_UP,
+    [XBOX_DPAD_DOWN] = PSB_PAD_DOWN,
+    [XBOX_DPAD_LEFT] = PSB_PAD_LEFT,
+    [XBOX_DPAD_RIGHT] = PSB_PAD_RIGHT,
+    [XBOX_START] = PSB_START,
+    [XBOX_BACK] = PSB_SELECT,
+    [XBOX_LEFT_STICK] = PSB_L3,
+    [XBOX_RIGHT_STICK] = PSB_R3,
+    [XBOX_LB] = PSB_L1,
+    [XBOX_RB] = PSB_R1,
+    [XBOX_HOME] = INVALID,
+    [XBOX_UNUSED] = INVALID,
+    [XBOX_A] = PSB_CROSS,
+    [XBOX_B] = PSB_CIRCLE,
+    [XBOX_X] = PSB_SQUARE,
+    [XBOX_Y] = PSB_TRIANGLE};
 
 static const uint8_t mouseButtonBindings[] = {
-    [PMB_LEFT] = XBOX_A, [PMB_RIGHT] = XBOX_B};
+    [XBOX_DPAD_UP] = INVALID,    [XBOX_DPAD_DOWN] = INVALID,
+    [XBOX_DPAD_LEFT] = INVALID,  [XBOX_DPAD_RIGHT] = INVALID,
+    [XBOX_START] = INVALID,      [XBOX_BACK] = INVALID,
+    [XBOX_LEFT_STICK] = INVALID, [XBOX_RIGHT_STICK] = INVALID,
+    [XBOX_LB] = INVALID,         [XBOX_RB] = INVALID,
+    [XBOX_HOME] = INVALID,       [XBOX_UNUSED] = INVALID,
+    [XBOX_A] = PMB_LEFT,         [XBOX_B] = PMB_RIGHT,
+    [XBOX_X] = INVALID,          [XBOX_Y] = INVALID};
 
 static const uint8_t guitarHeroButtonBindings[] = {
-    [PSB_SELECT] = XBOX_BACK,
-    [PSB_L3] = INVALID,
-    [PSB_R3] = INVALID,
-    [PSB_START] = XBOX_START,
-    [PSB_PAD_UP] = XBOX_DPAD_UP,
-    [PSB_PAD_RIGHT] = XBOX_DPAD_RIGHT,
-    [PSB_PAD_DOWN] = XBOX_DPAD_DOWN,
-    [PSB_PAD_LEFT] = XBOX_DPAD_LEFT,
-    [GH_STAR_POWER] = INVALID,
-    [GH_GREEN] = XBOX_A,
-    [PSB_L1] = INVALID,
-    [PSB_R1] = INVALID,
-    [GH_YELLOW] = XBOX_Y,
-    [GH_RED] = XBOX_B,
-    [GH_BLUE] = XBOX_X,
-    [GH_ORANGE] = XBOX_LB};
-
+    [XBOX_DPAD_UP] = PSB_PAD_UP,
+    [XBOX_DPAD_DOWN] = PSB_PAD_DOWN,
+    [XBOX_DPAD_LEFT] = PSB_PAD_LEFT,
+    [XBOX_DPAD_RIGHT] = PSB_PAD_RIGHT,
+    [XBOX_START] = PSB_START,
+    [XBOX_BACK] = PSB_SELECT,
+    [XBOX_LEFT_STICK] = INVALID,
+    [XBOX_RIGHT_STICK] = INVALID,
+    [XBOX_LB] = GH_ORANGE,
+    [XBOX_RB] = INVALID,
+    [XBOX_HOME] = INVALID,
+    [XBOX_UNUSED] = INVALID,
+    [XBOX_A] = GH_GREEN,
+    [XBOX_B] = GH_RED,
+    [XBOX_X] = GH_BLUE,
+    [XBOX_Y] = GH_YELLOW};
+uint16_t lastButtons;
 uint8_t ps2CtrlType = PSX_NO_DEVICE;
 
 static inline bool isValidReply(const uint8_t *status) {
@@ -331,7 +377,7 @@ uint8_t getControllerType(void) {
 
   return ret;
 }
-
+uint16_t buttonWord;
 bool read(Controller_t *controller) {
   bool ret = false;
   uint8_t *in = autoShiftData(commandPollInput, sizeof(commandPollInput));
@@ -343,10 +389,6 @@ bool read(Controller_t *controller) {
     } else {
       // We surely have buttons
       uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
-      const uint8_t *buttons = dualShockButtonBindings;
-      if (ps2CtrlType == PSX_GUITAR_HERO_CONTROLLER) {
-        buttons = guitarHeroButtonBindings;
-      }
 
       if (isFlightStickReply(in)) { ps2CtrlType = PSX_ANALOG; }
       if (isNegconReply(in)) {
@@ -389,16 +431,8 @@ bool read(Controller_t *controller) {
       }
       if (isMouseReply(in)) {
         ps2CtrlType = PSX_MOUSE;
-        buttons = mouseButtonBindings;
         controller->l_x = (in[5] - 128) << 8;
         controller->l_y = -(in[6] - 127) << 8;
-      }
-      uint8_t btn;
-      for (int i = 0; i < XBOX_BTN_COUNT; i++) {
-        btn = buttons[i];
-        if (btn != INVALID) {
-          bit_write(bit_check(buttonWord, i), controller->buttons, btn);
-        }
       }
       if (isDualShockReply(in) || isFlightStickReply(in)) {
         controller->r_x = (in[5] - 128) << 8;
@@ -461,4 +495,16 @@ void tickPS2CtrlInput(Controller_t *controller) {
     }
   }
   if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
+}
+
+bool readPS2Button(Pin_t pin) {
+  const uint8_t *buttons = dualShockButtonBindings;
+  if (ps2CtrlType == PSX_GUITAR_HERO_CONTROLLER) {
+    buttons = guitarHeroButtonBindings;
+  } else if (ps2CtrlType == PSX_MOUSE) {
+    buttons = mouseButtonBindings;
+  }
+  uint8_t btn = buttons[pin.offset];
+  if (btn == INVALID) { return false; }
+  return !!bit_check(buttonWord, btn);
 }

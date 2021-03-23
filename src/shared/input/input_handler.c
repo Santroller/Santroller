@@ -28,6 +28,7 @@ void initInputs() {
     break;
   case PS2:
     initPS2CtrlInput();
+    read_button_function = readPS2Button;
     tick_function = tickPS2CtrlInput;
     break;
   }

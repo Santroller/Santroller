@@ -86,7 +86,18 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
 void readGuitarExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[0] & 0x3f) - 32) << 10;
   controller->l_y = ((data[1] & 0x3f) - 32) << 10;
-  controller->r_x = (((data[3] & 0x1f) - 16) << 10);
+  // Whammy is weird, it ranges from 0 - 12. multiply by 2.5 to get from 0 - 36, clamp, and then shift to 0 - 65535
+  controller->r_x = ((data[3] & 0x1f) - 14);
+  if (controller->r_x < 0) {
+     controller->r_x = 0; 
+  }
+  controller->r_x = (controller->r_x << 1) + controller->r_x;
+  if (controller->r_x > 31) {
+    controller->r_x = 31;
+  }
+  controller->r_x -= 16;
+  controller->r_x <<= 11;
+
   buttons = ~(data[4] | data[5] << 8);
 }
 void readClassicExtHighRes(Controller_t *controller, uint8_t *data) {

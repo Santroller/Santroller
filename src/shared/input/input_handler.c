@@ -38,9 +38,7 @@ void initInputs() {
   if (config.main.inputType == WII || config.main.tiltType == MPU_6050) {
     twi_init();
   }
-  // if (config.main.tiltType == ANALOGUE && config.main.inputType == WII) {
   initDirectInput();
-  // }
   initGuitar();
   joyThreshold = config.axis.joyThreshold << 8;
 }

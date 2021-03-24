@@ -43,7 +43,7 @@ void tickMPUTilt(Controller_t *controller) {
 
     quaternionToEuler(&q._f, &mpuTilt, config.axis.mpu6050Orientation);
   }
-  mpuTilt = config.pins.r_y.inverted ? -mpuTilt: mpuTilt;
+  mpuTilt = config.pins.r_y.inverted ? -mpuTilt : mpuTilt;
   analogueData[XBOX_TILT] = mpuTilt;
   AxisScale_t scale = config.axisScale.r_y;
   int32_t val = mpuTilt;
@@ -51,6 +51,8 @@ void tickMPUTilt(Controller_t *controller) {
   val *= scale.multiplier;
   val /= 1024;
   val += INT16_MIN;
+  if (val > INT16_MAX) val = INT16_MAX;
+  if (val < INT16_MIN) val = INT16_MIN;
   // if (val < scale.deadzone) { val = INT16_MIN; }
   controller->r_y = val;
 }
@@ -83,18 +85,13 @@ void initGuitar(void) {
 }
 void tickGuitar(Controller_t *controller) {
   if (!isGuitar(config.main.subType)) return;
-  Guitar_t* g = (Guitar_t*)controller;
+  Guitar_t *g = (Guitar_t *)controller;
   int32_t whammy = g->whammy;
-  if (whammy > 0xFFFF) {
-    whammy = 0xFFFF;
-  }
-  if (whammy < 0) {
-    whammy = 0;
-  }
+  if (whammy > 0xFFFF) { whammy = 0xFFFF; }
+  if (whammy < 0) { whammy = 0; }
   g->whammy = whammy;
   if (tick == NULL) return;
   tick(controller);
-
 }
 
 // TODO: this is all we need for grabbing data from a gh5 neck. We should test

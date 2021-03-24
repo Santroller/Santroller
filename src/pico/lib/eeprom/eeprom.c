@@ -29,6 +29,22 @@ void loadConfig(void) {
     memcpy(&config.debounce, &default_config.debounce,
            sizeof(default_config.debounce));
   }
+  if (config.main.version < 14) {
+    switch (config.axis.mpu6050Orientation) {
+      case NEGATIVE_X:
+      case POSITIVE_X:
+        config.axis.mpu6050Orientation = X;
+        break;
+      case NEGATIVE_Y:
+      case POSITIVE_Y:
+        config.axis.mpu6050Orientation = Y;
+        break;
+      case NEGATIVE_Z:
+      case POSITIVE_Z:
+        config.axis.mpu6050Orientation = Z;
+        break;
+    }
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));

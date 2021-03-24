@@ -1,7 +1,7 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 13
+#define CONFIG_VERSION 14
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -48,7 +48,7 @@
   }
 
 // Set this value to define the orientation of your mpu6050
-#define MPU_6050_ORIENTATION NEGATIVE_X
+#define MPU_6050_ORIENTATION X
 #define TEST_PINS                                                              \
   {                                                                            \
     19, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,       \

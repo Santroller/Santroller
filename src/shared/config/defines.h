@@ -46,6 +46,10 @@ enum SubType {
 
 // Orientations for gyros
 enum GyroOrientation {
+  X, Y, Z
+};
+
+enum GyroOrientationOld {
   POSITIVE_Z,
   NEGATIVE_Z,
   POSITIVE_Y,

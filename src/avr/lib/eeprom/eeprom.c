@@ -46,6 +46,22 @@ void loadConfig(void) {
     memcpy_P(&config.debounce, &default_config.debounce, sizeof(default_config.debounce));
     memcpy_P(&config.axisScale, &default_config.axisScale, sizeof(default_config.axisScale));
   }
+  if (config.main.version < 14) {
+    switch (config.axis.mpu6050Orientation) {
+      case NEGATIVE_X:
+      case POSITIVE_X:
+        config.axis.mpu6050Orientation = X;
+        break;
+      case NEGATIVE_Y:
+      case POSITIVE_Y:
+        config.axis.mpu6050Orientation = Y;
+        break;
+      case NEGATIVE_Z:
+      case POSITIVE_Z:
+        config.axis.mpu6050Orientation = Z;
+        break;
+    }
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

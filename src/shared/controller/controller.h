@@ -52,6 +52,9 @@ enum ControllerAxis {
   XBOX_R_X,
   XBOX_R_Y
 };
+
+#define XBOX_WHAMMY XBOX_R_X
+#define XBOX_TILT XBOX_R_Y
 // Buttons used by all controllers
 enum ControllerButtons {
   XBOX_DPAD_UP,

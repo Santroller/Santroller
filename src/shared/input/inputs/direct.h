@@ -166,7 +166,7 @@ void tickDirectInput(Controller_t *controller) {
     // Triggers center at -32767, sticks center at 0. Whammy works similar to a
     // trigger, so we also count it here.
     if (info.offset < 2 ||
-        (isGuitar(config.main.subType) && info.offset == XBOX_R_X)) {
+        (isGuitar(config.main.subType) && info.offset == XBOX_WHAMMY)) {
       if (val < scale.deadzone) { val = INT16_MIN; }
     } else if (val < scale.deadzone && val > -scale.deadzone) {
       val = 0;

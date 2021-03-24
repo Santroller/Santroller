@@ -28,7 +28,7 @@
 // We want to scale values up by 128, as we are doing fixed point calculations.
 #define QUAT_SENS_FP 8388608.f // 2^23
 union u_quat q;
-int16_t z;
+int16_t mpuTilt;
 AnalogInfo_t analog;
 volatile bool ready = false;
 void tickMPUTilt(Controller_t *controller) {
@@ -36,16 +36,23 @@ void tickMPUTilt(Controller_t *controller) {
   static unsigned char fifoCount;
   dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
   if (sensors == INV_WXYZ_QUAT) {
-    config.axis.mpu6050Orientation = NEGATIVE_Y;
     q._f.w = (float)q._l[0] / QUAT_SENS_FP;
     q._f.x = (float)q._l[1] / QUAT_SENS_FP;
     q._f.y = (float)q._l[2] / QUAT_SENS_FP;
     q._f.z = (float)q._l[3] / QUAT_SENS_FP;
 
-    quaternionToEuler(&q._f, &z, config.axis.mpu6050Orientation);
-    z += config.axis.tiltSensitivity;
+    quaternionToEuler(&q._f, &mpuTilt, config.axis.mpu6050Orientation);
   }
-  controller->r_y = z;
+  mpuTilt = config.pins.r_y.inverted ? -mpuTilt: mpuTilt;
+  analogueData[XBOX_TILT] = mpuTilt;
+  AxisScale_t scale = config.axisScale.r_y;
+  int32_t val = mpuTilt;
+  val -= scale.offset;
+  val *= scale.multiplier;
+  val /= 1024;
+  val += INT16_MIN;
+  // if (val < scale.deadzone) { val = INT16_MIN; }
+  controller->r_y = val;
 }
 void tickDigitalTilt(Controller_t *controller) {
   controller->r_y = (!digitalRead(config.pins.r_y.pin)) * 32767;
@@ -87,6 +94,7 @@ void tickGuitar(Controller_t *controller) {
   g->whammy = whammy;
   if (tick == NULL) return;
   tick(controller);
+
 }
 
 // TODO: this is all we need for grabbing data from a gh5 neck. We should test

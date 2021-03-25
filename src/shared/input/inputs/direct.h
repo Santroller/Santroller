@@ -18,6 +18,9 @@ void initDirectInput(void) {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
   setUpValidPins();
+  if (config.pinsSP != INVALID_PIN) {
+    pinMode(config.pinsSP, OUTPUT);
+  }
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (config.main.inputType == DIRECT) {
       if (pins[i] != INVALID_PIN) {

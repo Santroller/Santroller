@@ -51,7 +51,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
     return;
   }
   case COMMAND_SET_SP: {
-    setSP(data[0]);
+    setSP(data[1]);
   }
   }
   handleCommand(cmd);

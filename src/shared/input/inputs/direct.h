@@ -156,6 +156,9 @@ void tickDirectInput(Controller_t *controller) {
   AxisScale_t *scales = &config.axisScale.lt;
   AxisScale_t scale;
   for (int8_t i = 0; i < validAnalog; i++) {
+    if (i  == XBOX_TILT && isGuitar(config.main.subType) && config.main.tiltType == DIGITAL) {
+      continue;
+    }
     info = joyData[i];
     analogueData[info.offset] = info.value;
     scale = scales[info.offset];

@@ -38,10 +38,15 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.outPort = portOutputRegister(port);
   pin.eq = inverted;
   pin.milliDeBounce = config.debounce.buttons;
+  pin.analogOffset = INVALID_PIN;
   return pin;
 }
 bool digitalReadPin(Pin_t pin) {
-  return ((*pin.port & pin.mask) != 0) == pin.eq;
+  if (pin.analogOffset == INVALID_PIN) {
+    return ((*pin.port & pin.mask) != 0) == pin.eq;
+  }
+  AnalogInfo_t info = joyData[pin.analogOffset];
+  return info.value > info.threshold;
 }
 
 void digitalWritePin(Pin_t pin, bool value) {
@@ -125,11 +130,11 @@ void setUpAnalogPin(uint8_t offset) {
   ret.mux = (1 << 6) | (pin & 0x07);
   joyData[validAnalog++] = ret;
 }
-void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
+void setUpAnalogDigitalPin(Pin_t* button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digitalPmask = _BV(button.offset);
+  ret.digitalPmask = _BV(button->offset);
   ret.threshold = threshold;
 #if defined(analogPinToChannel)
 #  if defined(__AVR_ATmega32U4__)
@@ -160,6 +165,7 @@ void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
   // to 0 (the default).
 
   ret.mux = (1 << 6) | (pin & 0x07);
+  button->analogOffset = validAnalog;
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {

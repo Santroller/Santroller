@@ -17,6 +17,7 @@ typedef struct {
   uint8_t offset;
   uint8_t lastMillis;
   uint8_t milliDeBounce;
+  uint8_t analogOffset;
 } Pin_t;
 #else
 typedef struct {
@@ -29,6 +30,7 @@ typedef struct {
   uint8_t lastMillis;
   uint8_t milliDeBounce;
   bool sioFunc;
+  uint8_t analogOffset;
 } Pin_t;
 #endif
 typedef struct {
@@ -59,7 +61,7 @@ void tickAnalog(void);
 uint16_t analogRead(uint8_t pin);
 void stopReading(void);
 void setUpValidPins(void);
-void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold);
+void setUpAnalogDigitalPin(Pin_t* button, uint8_t pin, uint16_t threshold);
 Pin_t setUpDigital(uint8_t pin, uint8_t offset, bool inverted);
 void digitalWritePin(Pin_t pin, bool value);
 void digitalWrite(uint8_t pin, uint8_t value);

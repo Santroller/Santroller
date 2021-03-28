@@ -15,9 +15,16 @@ Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
   pin.pin = pinNum;
   pin.eq = inverted;
   pin.sioFunc = true;
+  pin.analogOffset = INVALID_PIN;
   return pin;
 }
-bool digitalReadPin(Pin_t pin) { return (gpio_get(pin.pin) != 0) == pin.eq; }
+bool digitalReadPin(Pin_t pin) {
+  if (pin.analogOffset == INVALID_PIN) {
+    return (gpio_get(pin.pin) != 0) == pin.eq;
+  }
+  AnalogInfo_t info = joyData[pin.analogOffset];
+  return info.value > info.threshold;
+}
 void digitalWritePin(Pin_t pin, bool value) {
   // If SIO is disabled for a pin (aka its using a different function like i2c
   // or spi), then digitalWrite needs to override it.
@@ -49,14 +56,15 @@ void setUpAnalogPin(uint8_t offset) {
   pinMode(PIN_A0 + pin, INPUT);
   joyData[validAnalog++] = ret;
 }
-void setUpAnalogDigitalPin(Pin_t button, uint8_t pin, uint16_t threshold) {
+void setUpAnalogDigitalPin(Pin_t *button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digitalPmask = _BV(button.offset);
+  ret.digitalPmask = _BV(button->offset);
   ret.threshold = threshold;
   ret.pin = pin;
   pinMode(PIN_A0 + pin, INPUT);
+  button->analogOffset = validAnalog;
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {

@@ -18,21 +18,20 @@ void initDirectInput(void) {
   uint8_t *pins = (uint8_t *)&config.pins;
   validPins = 0;
   setUpValidPins();
-  if (config.pinsSP != INVALID_PIN) {
-    pinMode(config.pinsSP, OUTPUT);
-  }
+  if (config.pinsSP != INVALID_PIN) { pinMode(config.pinsSP, OUTPUT); }
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
     if (config.main.inputType == DIRECT) {
       if (pins[i] != INVALID_PIN) {
         bool is_fret = (i >= XBOX_A || i == XBOX_LB || i == XBOX_RB);
         Pin_t pin = setUpDigital(
             pins[i], i, is_fret && config.main.fretLEDMode == LEDS_INLINE);
-        if (isDrum(config.main.subType) && is_fret) {
+        if (isDrum(config.main.subType) && is_fret && pins[i] >= PIN_A0) {
           // We should probably keep a list of drum specific buttons, instead of
           // using isfret
           // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift
           // it
-          setUpAnalogDigitalPin(pin, pins[i], config.axis.drumThreshold << 3);
+          setUpAnalogDigitalPin(&pin, pins[i], config.axis.drumThreshold << 3);
+          pinData[validPins++] = pin;
         } else {
           pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
           pinData[validPins++] = pin;
@@ -156,7 +155,8 @@ void tickDirectInput(Controller_t *controller) {
   AxisScale_t *scales = &config.axisScale.lt;
   AxisScale_t scale;
   for (int8_t i = 0; i < validAnalog; i++) {
-    if (i  == XBOX_TILT && isGuitar(config.main.subType) && config.main.tiltType == DIGITAL) {
+    if (i == XBOX_TILT && isGuitar(config.main.subType) &&
+        config.main.tiltType == DIGITAL) {
       continue;
     }
     info = joyData[i];
@@ -178,9 +178,6 @@ void tickDirectInput(Controller_t *controller) {
       val = 0;
     }
     if (info.hasDigital) {
-      if (info.value > info.threshold) {
-        controller->buttons |= info.digitalPmask;
-      }
       controller->drumVelocity[info.offset - 8] = val;
     } else if (info.offset >= 2) {
       combinedController->sticks[info.offset - 2] = val;

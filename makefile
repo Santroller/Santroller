@@ -1,4 +1,5 @@
 UNOMCU          = atmega16u2
+MEGAMCU          = atmega2560
 UNOMCU8          = at90usb82
 UNO_PID			=0x0001
 MEGA2560_PID	=0x0010
@@ -41,6 +42,8 @@ unob:
 	sleep 1
 	dfu-programmer $(UNOMCU) erase || true
 	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+mega:
+	$(MAKE) -C src/avr/uno/main MCU=$(MEGAMCU) ARDWIINO_BOARD=mega
 uno:
 	# $(MAKE) -C src/avr/uno/
 	sleep 0.5

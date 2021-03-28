@@ -1,21 +1,39 @@
 #pragma once
-#include <avr/io.h> 
-#ifndef UDR1
+#include <avr/io.h>
+// The mega needs to redefine everything so that we are using UDR0
+#if !defined(UDR1) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#  undef UBRR1
 #  define UBRR1 UBRR0
+#  undef UDR1
 #  define UDR1 UDR0
+#  undef UCSR1A
 #  define UCSR1A UCSR0A
+#  undef UCSR1B
 #  define UCSR1B UCSR0B
+#  undef UCSR1C
 #  define UCSR1C UCSR0C
+#  undef UCSZ10
 #  define UCSZ10 UCSZ00
+#  undef UCSZ11
 #  define UCSZ11 UCSZ01
+#  undef UDRE1
 #  define UDRE1 UDRE0
+#  undef UDRIE1
 #  define UDRIE1 UDRIE0
+#  undef TXC1
 #  define TXC1 TXC0
+#  undef RXC1
 #  define RXC1 RXC0
+#  undef TXEN1
 #  define TXEN1 TXEN0
+#  undef RXEN1
 #  define RXEN1 RXEN0
+#  undef RXCIE1
 #  define RXCIE1 RXCIE0
+#  undef U2X1
 #  define U2X1 U2X0
+#  undef USART1_RX_vect
+#  undef USART1_UDRE_vect
 #  ifdef USART_RX_vect
 #    define USART1_RX_vect USART_RX_vect
 #  else

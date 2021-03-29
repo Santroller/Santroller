@@ -1,11 +1,11 @@
 #define ARDUINO_MAIN
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
-#include "device_comms.h"
 #include "eeprom/eeprom.h"
 #include "input/input_handler.h"
 #include "leds/leds.h"
 #include "output/reports.h"
+#include "device_consts.h"
 #include "output/serial_commands.h"
 #include "output/serial_handler.h"
 #include "pins/pins.h"
@@ -20,14 +20,38 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include <LUFA/Drivers/Misc/RingBuffer.h>
 Controller_t controller;
 uint8_t currentReport[sizeof(USB_Report_Data_t)];
 uint8_t previousReport[sizeof(USB_Report_Data_t)];
+RingBuffer_t USB2USART;
+RingBuffer_t USART2USB;
+uint8_t USB2USART_BUF[USB2USART_BUFLEN];
+uint8_t USART2USB_BUF[USART2USB_BUFLEN];
 bool readyForPacket = true;
 long lastPoll = 0;
+static inline void Serial_InitInterrupt(const uint32_t BaudRate,
+                                        const bool DoubleSpeed) {
+  UBRR0 = (DoubleSpeed ? SERIAL_2X_UBBRVAL(BaudRate) : SERIAL_UBBRVAL(BaudRate));
+
+  UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
+  UCSR0A = (DoubleSpeed ? (1 << U2X0) : 0);
+  UCSR0B = ((1 << TXEN0) | (1 << RXCIE0) | (1 << RXEN0));
+
+  DDRD |= (1 << 3);
+  PORTD |= (1 << 2);
+}
+void writeData(const uint8_t *buf, uint8_t len) {
+  for (int i = 0; i < len ; i++) {
+    RingBuffer_Insert(&USB2USART, *(buf++));
+  }
+  UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0));
+}
 int main(void) {
   loadConfig();
   Serial_InitInterrupt(BAUD, true);
+  RingBuffer_InitBuffer(&USB2USART, USB2USART_BUF, USB2USART_BUFLEN);
+  RingBuffer_InitBuffer(&USART2USB, USART2USB_BUF, USART2USB_BUFLEN);
   sei();
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
@@ -49,35 +73,13 @@ int main(void) {
     //================================================================================
 
     // This requires the USART RX buffer to be 256 bytes.
-    uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
+    uint8_t count = RingBuffer_GetCount(&USART2USB);
 
     // Check if we have something worth to send
     if (count) {
-
-      // Prepare temporary pointer
-      uint16_t tmp; // = 0x100 | USARTtoUSBReadPtr
-      asm(
-          // Do not initialize high byte, it will be done in first loop
-          // below.
-          "lds %A[tmp], %[readPtr]\n\t" // (1) Copy read pointer into
-                                        // lower byte
-          // Outputs
-          : [tmp] "=&e"(tmp) // Pointer register, output only
-          // Inputs
-          : [readPtr] "m"(USARTtoUSB_ReadPtr) // Memory location
-      );
       // Write all bytes from USART to the USB endpoint
       do {
-        register uint8_t data;
-        asm("ldi %B[tmp] , 0x01\n\t"     // (1) Force high byte to 0x01
-            "ld %[data] , %a[tmp] +\n\t" // (2) Load next data byte, wraps
-                                         // around 255
-            // Outputs
-            : [data] "=&r"(data), // Output only
-              [tmp] "=e"(tmp)     // Input and output
-            // Inputs
-            : "1"(tmp));
-
+        uint8_t data = RingBuffer_Remove(&USART2USB);
         if (state == 0) {
           if (data == FRAME_START_FEATURE_WRITE) {
             state = 1;
@@ -90,7 +92,6 @@ int main(void) {
           packetCount = data;
           state = 3;
         } else if (state == 2) {
-          USARTtoUSB_ReadPtr = tmp & 0xFF;
           processHIDReadFeatureReport(data);
           state = 0;
           break;
@@ -161,8 +162,6 @@ int main(void) {
         if (cmd == COMMAND_REBOOT) { _delay_ms(100); }
         handleCommand(cmd);
       }
-      // Save new pointer position
-      USARTtoUSB_ReadPtr = tmp & 0xFF;
       // With RF, this stuff gets handled on the transmitter side, not the
       // receiver.
     } else if (millis() - lastPoll > config.main.pollRate ||
@@ -193,4 +192,22 @@ void writeToUSB(const void *const Buffer, uint8_t Length) {
   writeData(&done, 1);
   writeData(&Length, 1);
   writeData((uint8_t *)Buffer, Length);
+}
+#  if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#    define USART_RX_vect USART0_RX_vect
+#    define USART_UDRE_vect USART0_UDRE_vect
+#  endif
+/** ISR to manage the reception of data from the serial port, placing received
+ * bytes into a circular buffer for later transmission to the host.
+ */
+ISR(USART_RX_vect) {
+  RingBuffer_Insert(&USART2USB, UDR0);
+}
+
+ISR(USART_UDRE_vect) {
+  if (RingBuffer_GetCount(&USB2USART)) {
+    UDR0 = RingBuffer_Remove(&USB2USART);
+  } else {
+    UCSR0B = ((1<<RXCIE0) | (1 << RXEN0) | (1 << TXEN0));
+  }
 }

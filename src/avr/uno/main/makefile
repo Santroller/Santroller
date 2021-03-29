@@ -16,8 +16,6 @@ MCU_TYPE = main
 
 PROJECT_ROOT = ../../../../
 
-RAM_OFFSET   = 0x800282
-LD_FLAGS     = -Wl,--section-start=.data=$(RAM_OFFSET)
 # Default target
 all:
 

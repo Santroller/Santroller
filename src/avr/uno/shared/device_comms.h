@@ -1,8 +1,10 @@
 #pragma once
 #include <avr/io.h>
-// To make things compatible with all uno/mega processors, we redefine all the serial definitions to a standard that doesnt define specific ports.
-// The USB processors use port 1, while the main processors use serial port 0
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+// To make things compatible with all uno/mega processors, we redefine all the
+// serial definitions to a standard that doesnt define specific ports. The USB
+// processors use port 1, while the main processors use serial port 0
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega2560__) ||              \
+    defined(__AVR_ATmega1280__)
 #  define UBRR UBRR0
 #  define UDR UDR0
 #  define UCSRA UCSR0A
@@ -18,10 +20,8 @@
 #  define RXEN RXEN0
 #  define RXCIE RXCIE0
 #  define U2X U2X0
-#  ifdef USART0_RX_vect
+#  if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 #    define USART_RX_vect USART0_RX_vect
-#  endif
-#  ifdef USART0_UDRE_vect
 #    define USART_UDRE_vect USART0_UDRE_vect
 #  endif
 #elif defined(__AVR_AT90USB82__) || defined(__AVR_ATmega16U2__)
@@ -40,12 +40,8 @@
 #  define RXEN RXEN1
 #  define RXCIE RXCIE1
 #  define U2X U2X1
-#  ifdef USART1_RX_vect
-#    define USART_RX_vect USART1_RX_vect
-#  endif
-#  ifdef USART1_UDRE_vect
-#    define USART_UDRE_vect USART1_UDRE_vect
-#  endif
+#  define USART_RX_vect USART1_RX_vect
+#  define USART_UDRE_vect USART1_UDRE_vect
 #endif
 #include "util/util.h"
 #define BAUD 1000000
@@ -96,8 +92,7 @@ static volatile uint8_t USBtoUSART_WritePtr = 0;
 static volatile uint8_t USARTtoUSB_ReadPtr = 0;
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
-  UBRR =
-      (DoubleSpeed ? SERIAL_2X_UBBRVAL(BaudRate) : SERIAL_UBBRVAL(BaudRate));
+  UBRR = (DoubleSpeed ? SERIAL_2X_UBBRVAL(BaudRate) : SERIAL_UBBRVAL(BaudRate));
 
   UCSRC = ((1 << UCSZ1) | (1 << UCSZ0));
   UCSRA = (DoubleSpeed ? (1 << U2X) : 0);
@@ -216,6 +211,6 @@ ISR(USART_UDRE_vect, ISR_NAKED) {
           USBtoUSART_ReadPtr)), // 7 bit pointer to USBtoUSART read buffer
       [writePointer] "m"(
           USBtoUSART_WritePtr), // 7 bit pointer to USBtoUSART write buffer
-      [UCSR1B_Reg] "m"(UCSRB)  // Memory location of UCSR1B
+      [UCSR1B_Reg] "m"(UCSRB)   // Memory location of UCSR1B
   );
 }

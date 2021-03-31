@@ -24,10 +24,10 @@
 Controller_t controller;
 uint8_t currentReport[sizeof(USB_Report_Data_t)];
 uint8_t previousReport[sizeof(USB_Report_Data_t)];
-RingBuffer_t USB2USART;
-RingBuffer_t USART2USB;
-uint8_t USB2USART_BUF[USB2USART_BUFLEN];
-uint8_t USART2USB_BUF[USART2USB_BUFLEN];
+RingBuffer_t in;
+RingBuffer_t out;
+uint8_t bufIn[USB2USART_BUFLEN];
+uint8_t bufOut[USART2USB_BUFLEN];
 bool readyForPacket = true;
 long lastPoll = 0;
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
@@ -43,15 +43,16 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
 }
 void writeData(const uint8_t *buf, uint8_t len) {
   for (int i = 0; i < len ; i++) {
-    RingBuffer_Insert(&USB2USART, *(buf++));
+    RingBuffer_Insert(&out, *(buf++));
   }
+  // Enable tx interrupt to push data
   UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0));
 }
 int main(void) {
   loadConfig();
   Serial_InitInterrupt(BAUD, true);
-  RingBuffer_InitBuffer(&USB2USART, USB2USART_BUF, USB2USART_BUFLEN);
-  RingBuffer_InitBuffer(&USART2USB, USART2USB_BUF, USART2USB_BUFLEN);
+  RingBuffer_InitBuffer(&in, bufIn, USB2USART_BUFLEN);
+  RingBuffer_InitBuffer(&out, bufOut, USART2USB_BUFLEN);
   sei();
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
@@ -73,13 +74,13 @@ int main(void) {
     //================================================================================
 
     // This requires the USART RX buffer to be 256 bytes.
-    uint8_t count = RingBuffer_GetCount(&USART2USB);
+    uint8_t count = RingBuffer_GetCount(&in);
 
     // Check if we have something worth to send
     if (count) {
       // Write all bytes from USART to the USB endpoint
       do {
-        uint8_t data = RingBuffer_Remove(&USART2USB);
+        uint8_t data = RingBuffer_Remove(&in);
         if (state == 0) {
           if (data == FRAME_START_FEATURE_WRITE) {
             state = 1;
@@ -193,6 +194,8 @@ void writeToUSB(const void *const Buffer, uint8_t Length) {
   writeData(&Length, 1);
   writeData((uint8_t *)Buffer, Length);
 }
+
+// Since the mega has multiple UARTs, alias the usb UART so that we can use the same interrupts below
 #  if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 #    define USART_RX_vect USART0_RX_vect
 #    define USART_UDRE_vect USART0_UDRE_vect
@@ -201,12 +204,12 @@ void writeToUSB(const void *const Buffer, uint8_t Length) {
  * bytes into a circular buffer for later transmission to the host.
  */
 ISR(USART_RX_vect) {
-  RingBuffer_Insert(&USART2USB, UDR0);
+  RingBuffer_Insert(&in, UDR0);
 }
 
 ISR(USART_UDRE_vect) {
-  if (RingBuffer_GetCount(&USB2USART)) {
-    UDR0 = RingBuffer_Remove(&USB2USART);
+  if (RingBuffer_GetCount(&out)) {
+    UDR0 = RingBuffer_Remove(&out);
   } else {
     UCSR0B = ((1<<RXCIE0) | (1 << RXEN0) | (1 << TXEN0));
   }

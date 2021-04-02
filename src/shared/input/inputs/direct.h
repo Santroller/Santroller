@@ -155,34 +155,34 @@ void tickDirectInput(Controller_t *controller) {
   AxisScale_t *scales = &config.axisScale.lt;
   AxisScale_t scale;
   for (int8_t i = 0; i < validAnalog; i++) {
-    if (i == XBOX_TILT && isGuitar(config.main.subType) &&
-        config.main.tiltType == DIGITAL) {
-      continue;
-    }
     info = joyData[i];
-    analogueData[info.offset] = info.value;
-    scale = scales[info.offset];
-    int32_t val = info.value;
-    val -= scale.offset;
-    val *= scale.multiplier;
-    val /= 1024;
-    val += INT16_MIN;
-    if (val > INT16_MAX) val = INT16_MAX;
-    if (val < INT16_MIN) val = INT16_MIN;
-    // Triggers center at -32767, sticks center at 0. Whammy works similar to a
-    // trigger, so we also count it here.
-    if (info.offset < 2 ||
-        (isGuitar(config.main.subType) && info.offset == XBOX_WHAMMY)) {
-      if (val < scale.deadzone) { val = INT16_MIN; }
-    } else if (val < scale.deadzone && val > -scale.deadzone) {
-      val = 0;
-    }
     if (info.hasDigital) {
-      controller->drumVelocity[info.offset - 8] = val;
-    } else if (info.offset >= 2) {
-      combinedController->sticks[info.offset - 2] = val;
+      controller->drumVelocity[info.offset - 8] = info.value;
     } else {
-      combinedController->triggers[info.offset] = ((uint16_t)val) >> 8;
+      if (i == XBOX_TILT && isGuitar(config.main.subType) &&
+          config.main.tiltType == DIGITAL) {
+        continue;
+      }
+      analogueData[info.offset] = info.value;
+      scale = scales[info.offset];
+      int32_t val = info.value;
+      val -= scale.offset;
+      val *= scale.multiplier;
+      val /= 1024;
+      val += INT16_MIN;
+      if (val > INT16_MAX) val = INT16_MAX;
+      if (val < INT16_MIN) val = INT16_MIN;
+      // Triggers center at -32767, sticks center at 0. Whammy works similar to
+      // a trigger, so we also count it here.
+      if (info.offset < 2 ||
+          (isGuitar(config.main.subType) && info.offset == XBOX_WHAMMY)) {
+        if (val < scale.deadzone) { val = INT16_MIN; }
+      } else if (val < scale.deadzone && val > -scale.deadzone) {
+        val = 0;
+      } else if (info.offset >= 2) {
+        combinedController->sticks[info.offset - 2] = val;
+      } else {
+        combinedController->triggers[info.offset] = ((uint16_t)val) >> 8;
+      }
     }
   }
-}

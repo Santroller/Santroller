@@ -8,17 +8,18 @@
 #include <stdint.h>
 
 uint8_t lastmidi[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
+MidiConfig_t midiConfig;
 void fillMIDIReport(void *ReportData, uint8_t *const ReportSize,
                     Controller_t *controller) {
   USB_MIDI_Data_t *data = ReportData;
   data->rid = REPORT_ID_MIDI;
   uint8_t idx = 0;
   for (int i = 0; i < XBOX_BTN_COUNT + XBOX_AXIS_COUNT; i++) {
-    if (config.midi.type[i] != DISABLED) {
+    if (midiConfig.type[i] != DISABLED) {
       // Channel 10(percussion)
-      uint8_t channel = config.midi.channel[i];
-      uint8_t midipitch = config.midi.note[i];
-      uint8_t midicommand = config.midi.type[i] == NOTE
+      uint8_t channel = midiConfig.channel[i];
+      uint8_t midipitch = midiConfig.note[i];
+      uint8_t midicommand = midiConfig.type[i] == NOTE
                                 ? MIDI_COMMAND_NOTE_ON
                                 : MIDI_COMMAND_CONTROL_CHANGE;
       uint8_t vel = getVelocity(controller, i) >> 1;
@@ -33,4 +34,7 @@ void fillMIDIReport(void *ReportData, uint8_t *const ReportSize,
   }
 
   *ReportSize = 1 + idx * sizeof(MIDI_EventPacket_t);
+}
+void initMIDI(Configuration_t* config) {
+  midiConfig = config->midi;
 }

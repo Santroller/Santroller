@@ -8,6 +8,7 @@
 #  include <tusb.h>
 #endif
 uint8_t deviceType = OUTPUT_TYPE;
+uint8_t fullDeviceType = OUTPUT_TYPE;
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the

@@ -1,5 +1,4 @@
 #include "pins/pins.h"
-#include "controller/guitar_includes.h"
 #include "eeprom/eeprom.h"
 #include "hardware/adc.h"
 #include "hardware/gpio.h"
@@ -9,13 +8,14 @@
 void digitalWrite(uint8_t pin, uint8_t val) { gpio_put(pin, val); }
 
 bool digitalRead(uint8_t pin) { return gpio_get(pin) != 0; }
-Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
+Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset, bool inverted, bool output) {
   Pin_t pin = {};
   pin.offset = offset;
   pin.pin = pinNum;
   pin.eq = inverted;
   pin.sioFunc = true;
   pin.analogOffset = INVALID_PIN;
+  pin.milliDeBounce = config->debounce.buttons;
   return pin;
 }
 bool digitalReadPin(Pin_t pin) {
@@ -41,16 +41,17 @@ void digitalWritePin(Pin_t pin, bool value) {
   }
   gpio_put(pin.pin, value);
 }
-void setUpAnalogPin(uint8_t offset) {
+void setUpAnalogPin(Configuration_t *config, uint8_t offset) {
   AnalogInfo_t ret = {0};
   ret.offset = offset;
-  AnalogPin_t apin = ((PinsCombined_t *)&config.pins)->axis[offset];
+  AnalogPin_t apin = ((PinsCombined_t *)&config->pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
-  if (ret.offset == 5 && isGuitar(config.main.subType) &&
-      config.main.tiltType != ANALOGUE) {
+  if (ret.offset == 5 && typeIsGuitar &&
+      config->main.tiltType != ANALOGUE) {
     return;
   }
+  ret.pin = pin;
   ret.hasDigital = false;
   ret.inverted = apin.inverted;
   pinMode(PIN_A0 + pin, INPUT);
@@ -60,7 +61,6 @@ void setUpAnalogDigitalPin(Pin_t *button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digitalPmask = _BV(button->offset);
   ret.threshold = threshold;
   ret.pin = pin;
   pinMode(PIN_A0 + pin, INPUT);
@@ -98,6 +98,6 @@ void pinMode(uint8_t pin, uint8_t mode) {
 
 void setupADC(void) { adc_init(); }
 
-void setUpValidPins(void) {
-  for (int i = 0; i < 6; i++) { setUpAnalogPin(i); }
+void setUpValidPins(Configuration_t *config) {
+  for (int i = 0; i < 6; i++) { setUpAnalogPin(config, i); }
 }

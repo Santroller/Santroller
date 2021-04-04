@@ -11,16 +11,17 @@
 void (*fillReport)(void *ReportData, uint8_t *const ReportSize,
                    Controller_t *controller) = NULL;
 
-void initReports(void) {
-  if (config.main.subType == MOUSE) {
+void initReports(Configuration_t* config) {
+  if (fullDeviceType == MOUSE) {
     fillReport = fillMouseReport;
-  } else if (config.main.subType >= MIDI_GAMEPAD) {
+  } else if (fullDeviceType >= MIDI_GAMEPAD) {
+    initMIDI(config);
     fillReport = fillMIDIReport;
-  } else if (config.main.subType <= XINPUT_ARCADE_PAD) {
+  } else if (fullDeviceType <= XINPUT_ARCADE_PAD) {
     fillReport = fillXInputReport;
-  } else if (config.main.subType >= KEYBOARD_GAMEPAD &&
-             config.main.subType <= KEYBOARD_ROCK_BAND_DRUMS) {
-    initKeyboard();
+  } else if (fullDeviceType >= KEYBOARD_GAMEPAD &&
+             fullDeviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
+    initKeyboard(config);
     fillReport = fillKeyboardReport;
   } else {
     initPS3();

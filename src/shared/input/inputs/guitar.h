@@ -1,6 +1,5 @@
 #pragma once
 #include "controller/controller.h"
-#include "controller/guitar_includes.h"
 #include "direct.h"
 #include "eeprom/eeprom.h"
 #include "guitar.h"
@@ -31,6 +30,10 @@ union u_quat q;
 int16_t mpuTilt;
 AnalogInfo_t analog;
 volatile bool ready = false;
+uint8_t mpuOrientation;
+uint8_t tiltPin;
+bool tiltInverted;
+AxisScale_t scale;
 void tickMPUTilt(Controller_t *controller) {
   static short sensors;
   static unsigned char fifoCount;
@@ -41,11 +44,10 @@ void tickMPUTilt(Controller_t *controller) {
     q._f.y = (float)q._l[2] / QUAT_SENS_FP;
     q._f.z = (float)q._l[3] / QUAT_SENS_FP;
 
-    quaternionToEuler(&q._f, &mpuTilt, config.axis.mpu6050Orientation);
+    quaternionToEuler(&q._f, &mpuTilt, mpuOrientation);
   }
-  mpuTilt = config.pins.r_y.inverted ? -mpuTilt : mpuTilt;
+  mpuTilt = tiltInverted ? -mpuTilt : mpuTilt;
   analogueData[XBOX_TILT] = mpuTilt;
-  AxisScale_t scale = config.axisScale.r_y;
   int32_t val = mpuTilt;
   val -= scale.offset;
   val *= scale.multiplier;
@@ -57,7 +59,7 @@ void tickMPUTilt(Controller_t *controller) {
   controller->r_y = val;
 }
 void tickDigitalTilt(Controller_t *controller) {
-  controller->r_y = (!digitalRead(config.pins.r_y.pin)) * 32767;
+  controller->r_y = (!digitalRead(tiltPin)) * 32767;
 }
 void (*tick)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?
@@ -73,18 +75,22 @@ void initMPU6050(unsigned int rate) {
   mpu_set_dmp_state(1);
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
-void initGuitar(void) {
-  if (!isGuitar(config.main.subType)) return;
-  if (config.main.tiltType == MPU_6050) {
+void initGuitar(Configuration_t* config) {
+  if (!typeIsGuitar) return;
+  if (config->main.tiltType == MPU_6050) {
+    mpuOrientation = config->axis.mpu6050Orientation;
     initMPU6050(30);
     tick = tickMPUTilt;
-  } else if (config.main.tiltType == DIGITAL) {
-    pinMode(config.pins.r_y.pin, INPUT_PULLUP);
+  } else if (config->main.tiltType == DIGITAL) {
+    tiltPin = config->pins.r_y.pin;
+    pinMode(tiltPin, INPUT_PULLUP);
     tick = tickDigitalTilt;
   }
+  scale = config->axisScale.r_y;
+  tiltInverted = config->pins.r_y.inverted;
 }
 void tickGuitar(Controller_t *controller) {
-  if (!isGuitar(config.main.subType)) return;
+  if (!typeIsGuitar) return;
   Guitar_t *g = (Guitar_t *)controller;
   int32_t whammy = g->whammy;
   if (whammy > 0xFFFF) { whammy = 0xFFFF; }

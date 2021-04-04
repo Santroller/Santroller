@@ -12,7 +12,7 @@
 void findAnalogPin(void);
 void findDigitalPin(void);
 void stopSearching(void);
-void initInputs(void);
+void initInputs(Configuration_t* config);
 void tickInputs(Controller_t* controller);
 void setSP(bool sp);
 uint8_t getVelocity(Controller_t* controller, uint8_t offset);

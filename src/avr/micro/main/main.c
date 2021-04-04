@@ -19,95 +19,89 @@
 #include <stdlib.h>
 #define ARDUINO_MAIN
 #include "pins_arduino.h"
+Controller_t prevController;
 Controller_t controller;
-USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
-#ifndef MULTI_ADAPTOR
-USB_ClassInfo_MIDI_Device_t midiInterface = {
-    .Config =
-        {
-            .StreamingInterfaceNumber = INTERFACE_ID_AudioStream,
-            .DataINEndpoint =
-                {
-                    .Address = MIDI_EPADDR_IN,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-            .DataOUTEndpoint =
-                {
-                    .Address = MIDI_EPADDR_OUT,
-                    .Size = HID_EPSIZE,
-                    .Banks = 1,
-                },
-        },
-};
-#endif
 bool xinputEnabled = false;
+bool isRF = false;
+bool typeIsGuitar;
+bool typeIsDrum;
 long lastPoll = 0;
-int main(void) {
-  loadConfig();
-  deviceType = config.main.subType;
-  if (isGuitar(deviceType) && deviceType <= XINPUT_ARCADE_PAD) {
+uint8_t inputType;
+uint8_t pollRate;
+void initialise(void) {
+  Configuration_t config = loadConfig();
+  fullDeviceType = config.main.subType;
+  deviceType = fullDeviceType;
+  pollRate = config.main.pollRate;
+  inputType = config.main.inputType;
+  typeIsDrum = isDrum(fullDeviceType);
+  typeIsGuitar = isGuitar(fullDeviceType);
+  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
     deviceType = REAL_GUITAR_SUBTYPE;
   }
-  if (isDrum(deviceType) && deviceType <= XINPUT_ARCADE_PAD) {
+  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
     deviceType = REAL_DRUM_SUBTYPE;
   }
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());
+    isRF = true;
   } else {
-    initInputs();
+    initInputs(&config);
   }
-  initReports();
+  initReports(&config);
+  initLEDs(&config);
   USB_Init();
   sei();
+}
+int main(void) {
+  initialise();
+  uint8_t cSize = sizeof(XInput_Data_t);
   while (true) {
     USB_USBTask();
-    if (config.rf.rfInEnabled) {
-      tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
+    if (isRF) {
+      tickRFInput((uint8_t *)&controller, cSize);
     } else {
       tickInputs(&controller);
       tickLEDs(&controller);
-      if (millis() - lastPoll < config.main.pollRate) { continue; }
+      if (millis() - lastPoll < pollRate) { continue; }
     }
-    fillReport(&currentReport, &size, &controller);
-    if (memcmp(&currentReport, &previousReport, size) != 0 &&
+    if (memcmp(&controller, &prevController, cSize) != 0 &&
         Endpoint_IsINReady()) {
-      lastPoll = millis();
-      uint8_t *data = (uint8_t *)&currentReport;
-      uint8_t rid = *data;
-      switch (rid) {
-      case REPORT_ID_XINPUT:
-        Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
-        break;
-      case REPORT_ID_MIDI:
-        Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-        // The "reportid" is actually not a real thing on midi, so we need to
-        // strip it before we send data.
-        data++;
-        size--;
-        break;
-      case REPORT_ID_GAMEPAD:
-        // The wii does not support multiple report ids. So we also strip it
-        // here
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        data++;
-        size--;
-        break;
-      case REPORT_ID_KBD:
-      case REPORT_ID_MOUSE:
-        Endpoint_SelectEndpoint(HID_EPADDR_IN);
-        break;
+      fillReport(&currentReport, &size, &controller);
+      if (size) {
+        lastPoll = millis();
+        uint8_t *data = (uint8_t *)&currentReport;
+        uint8_t rid = *data;
+        switch (rid) {
+        case REPORT_ID_XINPUT:
+          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
+          break;
+        case REPORT_ID_MIDI:
+          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
+          // The "reportid" is actually not a real thing on midi, so we need to
+          // strip it before we send data.
+          data++;
+          size--;
+          break;
+        case REPORT_ID_GAMEPAD:
+          // The wii does not support multiple report ids. So we also strip it
+          // here
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          data++;
+          size--;
+          break;
+        case REPORT_ID_KBD:
+        case REPORT_ID_MOUSE:
+          Endpoint_SelectEndpoint(HID_EPADDR_IN);
+          break;
+        }
+        memcpy(&prevController, &controller, cSize);
+        Endpoint_Write_Stream_LE(data, size, NULL);
+        Endpoint_ClearIN();
       }
-      memcpy(&previousReport, &currentReport, size);
-      Endpoint_Write_Stream_LE(data, size, NULL);
-      Endpoint_ClearIN();
-
-#ifndef MULTI_ADAPTOR
-      MIDI_Device_USBTask(&midiInterface);
-#endif
     }
   }
 }
@@ -131,14 +125,14 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   uint8_t buf[66];
+  buf[0] = cmd;
+  buf[1] = false;
   Endpoint_ClearSETUP();
   Endpoint_Read_Control_Stream_LE(buf + 2, data_len);
   processHIDWriteFeatureReport(cmd, data_len, buf + 2);
   Endpoint_ClearStatusStage();
-  if (config.rf.rfInEnabled) {
+  if (isRF) {
     uint8_t buf2[32];
-    buf[0] = cmd;
-    buf[1] = false;
     while (nrf24_txFifoFull()) {
       rf_interrupt = true;
       tickRFInput(buf2, 0);

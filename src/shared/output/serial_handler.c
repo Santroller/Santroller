@@ -19,10 +19,10 @@ bool handleCommand(uint8_t cmd) {
     bootloader();
     return false;
   case COMMAND_FIND_ANALOG:
-    if (!config.rf.rfInEnabled) { findAnalogPin(); }
+    if (!isRF) { findAnalogPin(); }
     break;
   case COMMAND_FIND_DIGITAL:
-    if (!config.rf.rfInEnabled) { findDigitalPin(); }
+    if (!isRF) { findDigitalPin(); }
     break;
   case COMMAND_WRITE_CONFIG:
     return false;
@@ -46,7 +46,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
     uint16_t offset = (*data) * PACKET_SIZE;
     data++;
     data_len--;
-    uint8_t *dest = ((uint8_t *)controller.leds) + offset;
+    uint8_t *dest = ((uint8_t *)leds) + offset;
     while (data_len--) { *(dest++) = *(data++); }
     return;
   }
@@ -59,7 +59,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
 const uint8_t PROGMEM err[] = "ERROR";
 uint8_t dbuf[64];
 void processHIDReadFeatureReport(uint8_t cmd) {
-  if (config.rf.rfInEnabled && cmd < COMMAND_READ_CONFIG &&
+  if (isRF && cmd < COMMAND_READ_CONFIG &&
       cmd != COMMAND_GET_CPU_INFO) {
     uint8_t dbuf2[2];
     dbuf2[0] = cmd;
@@ -91,7 +91,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     uint16_t index = size * (cmd - COMMAND_READ_CONFIG);
     int16_t size2 = sizeof(Configuration_t) - index;
     if (size2 < size) { size = size2; }
-    memcpy(dbuf + 1, ((uint8_t *)&config) + index, size);
+    readConfigBlock(index, dbuf+1, size);
     size = size + 1;
   } else if (cmd == COMMAND_GET_CPU_INFO || cmd == COMMAND_GET_RF_CPU_INFO) {
     size = sizeof(cpu_info_t) + 1;
@@ -109,10 +109,10 @@ void processHIDReadFeatureReport(uint8_t cmd) {
     size = sizeof(analogueData) + 1;
   } else if (cmd == COMMAND_GET_EXTENSION) {
     size = 3;
-    if (config.main.inputType == WII) {
+    if (inputType == WII) {
       dbuf[1] = wiiExtensionID & 0xff;
       dbuf[2] = wiiExtensionID << 8;
-    } else if (config.main.inputType == PS2) {
+    } else if (inputType == PS2) {
       dbuf[1] = ps2CtrlType;
     }
   } else if (cmd == COMMAND_GET_FOUND) {
@@ -122,9 +122,9 @@ void processHIDReadFeatureReport(uint8_t cmd) {
   } else {
     size = sizeof(id) + 1;
     memcpy_P(dbuf + 1, id, sizeof(id));
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+    if (fullDeviceType <= PS3_ROCK_BAND_DRUMS) {
       dbuf[4] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+    } else if (fullDeviceType <= PS3_GUITAR_HERO_DRUMS) {
       dbuf[4] = 0x06;
     }
   }

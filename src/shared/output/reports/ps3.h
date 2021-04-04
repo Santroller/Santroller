@@ -52,24 +52,24 @@ static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07,
                                        0x05, 0x08, 0x02, 0x01, 0x03};
 uint8_t currentAxisBindingsLen = 0;
 void initPS3(void) {
-  if (config.main.subType > SWITCH_GAMEPAD) {
-    if (config.main.subType > PS3_GAMEPAD) {
+  if (fullDeviceType > SWITCH_GAMEPAD) {
+    if (fullDeviceType > PS3_GAMEPAD) {
       memcpy_P(ps3AxisBindings, ghAxisBindings, sizeof(ghAxisBindings));
       currentAxisBindingsLen = sizeof(ghAxisBindings);
     }
   }
-  if (config.main.subType == SWITCH_GAMEPAD) {
+  if (fullDeviceType == SWITCH_GAMEPAD) {
     ps3ButtonBindings[SWITCH_B] = XBOX_B;
     ps3ButtonBindings[SWITCH_A] = XBOX_A;
   }
-  if (config.main.subType == PS3_GUITAR_HERO_DRUMS ||
-      config.main.subType == PS3_ROCK_BAND_DRUMS) {
+  if (fullDeviceType == PS3_GUITAR_HERO_DRUMS ||
+      fullDeviceType == PS3_ROCK_BAND_DRUMS) {
     memcpy_P(ps3ButtonBindings, ps3DrumButtonBindings,
              sizeof(ps3DrumButtonBindings));
-  } else if (config.main.subType == PS3_GUITAR_HERO_GUITAR) {
+  } else if (fullDeviceType == PS3_GUITAR_HERO_GUITAR) {
     memcpy_P(ps3ButtonBindings, psGHButtonBindings, sizeof(ps3ButtonBindings));
-  } else if (config.main.subType == PS3_ROCK_BAND_GUITAR ||
-             config.main.subType == WII_ROCK_BAND_GUITAR) {
+  } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||
+             fullDeviceType == WII_ROCK_BAND_GUITAR) {
     memcpy_P(ps3ButtonBindings, psRBButonBindings, sizeof(ps3ButtonBindings));
   }
 }
@@ -86,7 +86,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     bit_write(bit_set, JoystickReport->buttons, i);
     if (i < currentAxisBindingsLen) {
       button = ps3AxisBindings[i];
-      if (config.main.subType == PS3_GUITAR_HERO_GUITAR &&
+      if (fullDeviceType == PS3_GUITAR_HERO_GUITAR &&
           i < sizeof(ghAxisBindings2)) {
         button = ghAxisBindings2[i];
         bit_set |= bit_check(controller->buttons, button);
@@ -101,14 +101,14 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
 
   // Tilt / whammy
   bool tilt = controller->r_y == 32767;
-  if (config.main.subType == PS3_GUITAR_HERO_GUITAR) {
+  if (fullDeviceType == PS3_GUITAR_HERO_GUITAR) {
     JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
     // GH PS3 guitars have a tilt axis
     JoystickReport->accel[0] = tilt ? 0x0184 : 0x01f7;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
-  } else if (config.main.subType == PS3_ROCK_BAND_GUITAR ||
-             config.main.subType == WII_ROCK_BAND_GUITAR) {
+  } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||
+             fullDeviceType == WII_ROCK_BAND_GUITAR) {
     JoystickReport->r_x = 128 + (controller->r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
@@ -116,8 +116,8 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     // map fx to lt, and then fix it here
     JoystickReport->r_y = 128 - controller->lt;
   }
-  if (config.main.subType == PS3_GAMEPAD ||
-      config.main.subType == SWITCH_GAMEPAD) {
+  if (fullDeviceType == PS3_GAMEPAD ||
+      fullDeviceType == SWITCH_GAMEPAD) {
     bit_write(controller->lt > 50, JoystickReport->buttons, SWITCH_L);
     bit_write(controller->rt > 50, JoystickReport->buttons, SWITCH_R);
     JoystickReport->axis[4] = controller->lt;
@@ -131,7 +131,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
   }
-  if (config.main.subType == SWITCH_GAMEPAD) {
+  if (fullDeviceType == SWITCH_GAMEPAD) {
     JoystickReport->l_y = 255-JoystickReport->l_y;
     JoystickReport->r_y = 255-JoystickReport->r_y;
   }

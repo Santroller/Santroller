@@ -25,6 +25,7 @@ uint8_t wiiButtonBindings[XBOX_BTN_COUNT] = {
 uint16_t wiiExtensionID = WII_NO_EXTENSION;
 uint16_t buttons;
 uint8_t bytes = 6;
+bool mapNunchukAccelToRightJoy;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
 bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
@@ -54,27 +55,27 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
   controller->l_y = (data[1] - 0x20) << 10;
   // Mask out unused bits
   buttons = ~(data[4] | (data[5] << 8)) & 0xfeff;
-  if (config.main.subType >= MIDI_GAMEPAD && bit_check(data[3], 1)) {
+  if (fullDeviceType >= MIDI_GAMEPAD && bit_check(data[3], 1)) {
     uint8_t vel = (7 - (data[3] >> 5)) << 5;
     uint8_t which = (data[2] & 0b01111100) >> 1;
     switch (which) {
     case 0x1B:
-      controller->drumVelocity[XBOX_RB - 8] = vel;
+      drumVelocity[XBOX_RB - 8] = vel;
       break;
     case 0x19:
-      controller->drumVelocity[XBOX_B - 8] = vel;
+      drumVelocity[XBOX_B - 8] = vel;
       break;
     case 0x11:
-      controller->drumVelocity[XBOX_X - 8] = vel;
+      drumVelocity[XBOX_X - 8] = vel;
       break;
     case 0x0F:
-      controller->drumVelocity[XBOX_Y - 8] = vel;
+      drumVelocity[XBOX_Y - 8] = vel;
       break;
     case 0x1E:
-      controller->drumVelocity[XBOX_LB - 8] = vel;
+      drumVelocity[XBOX_LB - 8] = vel;
       break;
     case 0x12:
-      controller->drumVelocity[XBOX_A - 8] = vel;
+      drumVelocity[XBOX_A - 8] = vel;
       break;
     }
   }
@@ -122,7 +123,7 @@ void readClassicExt(Controller_t *controller, uint8_t *data) {
 void readNunchukExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;
   controller->l_y = (data[2] - 0x80) << 8;
-  if (config.main.mapNunchukAccelToRightJoy) {
+  if (mapNunchukAccelToRightJoy) {
     uint16_t accX = (data[2] << 2) | ((data[5] & 0xC0) >> 6);
     uint16_t accY = (data[3] << 2) | ((data[5] & 0x30) >> 4);
     uint16_t accZ = (data[4] << 2) | ((data[5] & 0xC) >> 2);
@@ -258,4 +259,7 @@ bool readWiiButton(Pin_t pin) {
   uint8_t idx = wiiButtonBindings[pin.offset];
   if (idx == INVALID_PIN) return false;
   return !!bit_check(buttons, idx);
+}
+void initWiiExtensions(Configuration_t* config) {
+  mapNunchukAccelToRightJoy = config->main.mapNunchukAccelToRightJoy;
 }

@@ -1,5 +1,4 @@
 #include "pins/pins.h"
-#include "controller/guitar_includes.h"
 #include "eeprom/eeprom.h"
 #include "stddef.h"
 #include "util/util.h"
@@ -29,15 +28,20 @@ extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];
 int validAnalog = 0;
 int currentAnalog = 0;
 bool first = true;
-Pin_t setUpDigital(uint8_t pinNum, uint8_t offset, bool inverted) {
+Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset,
+                   bool inverted, bool output) {
   Pin_t pin = {};
   uint8_t port = digitalPinToPort(pinNum);
   pin.offset = offset;
+  pin.pin = pinNum;
   pin.mask = digitalPinToBitMask(pinNum);
-  pin.port = portInputRegister(port);
-  pin.outPort = portOutputRegister(port);
+  if (output) {
+    pin.port = portOutputRegister(port);
+  } else {
+    pin.port = portInputRegister(port);
+  }
   pin.eq = inverted;
-  pin.milliDeBounce = config.debounce.buttons;
+  pin.milliDeBounce = config->debounce.buttons;
   pin.analogOffset = INVALID_PIN;
   return pin;
 }
@@ -51,9 +55,9 @@ bool digitalReadPin(Pin_t pin) {
 
 void digitalWritePin(Pin_t pin, bool value) {
   if (value == 0) {
-    *pin.outPort &= ~pin.mask;
+    *pin.port &= ~pin.mask;
   } else {
-    *pin.outPort |= pin.mask;
+    *pin.port |= pin.mask;
   }
 }
 void digitalWrite(uint8_t pin, uint8_t val) {
@@ -87,85 +91,39 @@ bool digitalRead(uint8_t pin) {
   return 0;
 }
 
-void setUpAnalogPin(uint8_t offset) {
+void setUpAnalogPin(Configuration_t *config, uint8_t offset) {
   AnalogInfo_t ret = {0};
   ret.offset = offset;
-  AnalogPin_t apin = ((PinsCombined_t *)&config.pins)->axis[offset];
+  AnalogPin_t apin = ((PinsCombined_t *)&config->pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
-  if (ret.offset == 5 && isGuitar(config.main.subType) &&
-      config.main.tiltType != ANALOGUE) {
+  if (offset == 5 && typeIsGuitar && config->main.tiltType != ANALOGUE) {
     return;
   }
+
+  pinMode(pin, INPUT);
   ret.hasDigital = false;
   ret.inverted = apin.inverted;
+  pin -= PIN_A0;
 #if defined(analogPinToChannel)
-#  if defined(__AVR_ATmega32U4__)
-  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
-#  endif
   pin = analogPinToChannel(pin);
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  if (pin >= 54) pin -= 54; // allow for channel or pin numbers
-#elif defined(__AVR_ATmega32U4__)
-  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) ||           \
-    defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) ||               \
-    defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
-  if (pin >= 24) pin -= 24; // allow for channel or pin numbers
-#else
-  if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
-
-  pinMode(PIN_A0 + pin, INPUT);
-#if defined(ADCSRB) && defined(MUX5)
-  // the MUX5 bit of ADCSRB selects whether we're reading from channels
-  // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
-  ret.srb = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
-#endif
-
-  // set the analog reference (high two bits of ADMUX) and select the
-  // channel (low 4 bits).  this also sets ADLAR (left-adjust result)
-  // to 0 (the default).
-
-  ret.mux = (1 << 6) | (pin & 0x07);
+  ret.pin = pin;
   joyData[validAnalog++] = ret;
 }
-void setUpAnalogDigitalPin(Pin_t* button, uint8_t pin, uint16_t threshold) {
+void setUpAnalogDigitalPin(Pin_t *button, uint8_t pin, uint16_t threshold) {
   AnalogInfo_t ret = {0};
   ret.offset = pin;
   ret.hasDigital = true;
-  ret.digitalPmask = _BV(button->offset);
   ret.threshold = threshold;
+  pinMode(pin, INPUT);
+  pin -= PIN_A0;
 #if defined(analogPinToChannel)
-#  if defined(__AVR_ATmega32U4__)
-  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
-#  endif
   pin = analogPinToChannel(pin);
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  if (pin >= 54) pin -= 54; // allow for channel or pin numbers
-#elif defined(__AVR_ATmega32U4__)
-  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) ||           \
-    defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) ||               \
-    defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
-  if (pin >= 24) pin -= 24; // allow for channel or pin numbers
-#else
-  if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
 
-  pinMode(PIN_A0 + pin, INPUT);
-#if defined(ADCSRB) && defined(MUX5)
-  // the MUX5 bit of ADCSRB selects whether we're reading from channels
-  // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
-  ret.srb = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
-#endif
-
-  // set the analog reference (high two bits of ADMUX) and select the
-  // channel (low 4 bits).  this also sets ADLAR (left-adjust result)
-  // to 0 (the default).
-
-  ret.mux = (1 << 6) | (pin & 0x07);
   button->analogOffset = validAnalog;
+  ret.pin = pin;
   joyData[validAnalog++] = ret;
 }
 void tickAnalog(void) {
@@ -188,10 +146,19 @@ void tickAnalog(void) {
   }
   first = false;
   AnalogInfo_t info = joyData[currentAnalog];
+
 #if defined(ADCSRB) && defined(MUX5)
-  ADCSRB = info.srb;
+  // the MUX5 bit of ADCSRB selects whether we're reading from channels
+  // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
+  ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((info.pin >> 3) & 0x01) << MUX5);
 #endif
-  ADMUX = info.mux;
+
+  // set the analog reference (high two bits of ADMUX) and select the
+  // channel (low 4 bits).  this also sets ADLAR (left-adjust result)
+  // to 0 (the default).
+
+  ADMUX = (1 << 6) | (info.pin & 0x07);
+
   sbi(ADCSRA, ADSC);
 }
 
@@ -331,9 +298,9 @@ void setupADC(void) {
   // sbi(ADCSRA, ADIE);
 }
 
-void setUpValidPins(void) {
+void setUpValidPins(Configuration_t *config) {
   stopReading();
   validAnalog = 0;
   currentAnalog = 0;
-  for (int i = 0; i < 6; i++) { setUpAnalogPin(i); }
+  for (int i = 0; i < 6; i++) { setUpAnalogPin(config, i); }
 }

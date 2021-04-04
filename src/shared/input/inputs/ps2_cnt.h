@@ -95,7 +95,6 @@ enum PsxAnalogButton {
 };
 enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
-void initPS2CtrlInput(void);
 void tickPS2CtrlInput(Controller_t *controller);
 // Commands for communicating with a PSX controller
 static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01};
@@ -465,11 +464,11 @@ bool begin(Controller_t *controller) {
   return read(controller);
 }
 
-void initPS2CtrlInput(void) {
+void initPS2CtrlInput(Configuration_t* config) {
   spi_begin(100000, 1, true);
-  attention = setUpDigital(10, 0, false);
-  command = setUpDigital(PIN_SPI_MOSI, 0, false);
-  clock = setUpDigital(PIN_SPI_SCK, 0, false);
+  attention = setUpDigital(config, 10, 0, false, true);
+  command = setUpDigital(config, PIN_SPI_MOSI, 0, false, true);
+  clock = setUpDigital(config, PIN_SPI_SCK, 0, false, true);
   // On the rpi we have to flag these pins as not using SIO
 #ifndef __AVR__
   // not using sio, but spi

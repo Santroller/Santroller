@@ -102,7 +102,9 @@
         "sync.h": "c",
         "hidclassdevice.h": "c",
         "xinput_device.h": "c",
-        "i2c.h": "c"
+        "i2c.h": "c",
+        "defaults.h": "c",
+        "ringbuffer.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

@@ -22,19 +22,43 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include "controller/guitar_includes.h"
 // Sleep pin: 3
 Controller_t controller;
 Controller_t prevCtrl;
 long lastPoll = 0;
+bool isRF = false;
+bool typeIsGuitar;
+bool typeIsDrum;
+uint8_t deviceType;
+uint8_t fullDeviceType;
+uint8_t inputType;
+uint8_t pollRate;
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
-int main(void) {
-  loadConfig();
-  sei();
-  setupMicrosTimer();
+void initialise(void) {
+  Configuration_t config = loadConfig();
   config.rf.rfInEnabled = false;
-  initInputs();
-  initReports();
+  fullDeviceType = config.main.subType;
+  deviceType = fullDeviceType;
+  pollRate = config.main.pollRate;
+  inputType = config.main.inputType;
+  typeIsDrum = isDrum(fullDeviceType);
+  typeIsGuitar = isGuitar(fullDeviceType);
+  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_GUITAR_SUBTYPE;
+  }
+  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_DRUM_SUBTYPE;
+  }
+  setupMicrosTimer();
+  initInputs(&config);
+  initReports(&config);
+  initLEDs(&config);
+  sei();
+}
+int main(void) {
+  initialise();
   initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
   long lastChange = millis();
   long lastButtons = 0;
@@ -57,7 +81,7 @@ int main(void) {
       sei();       // guarantees next instruction executed
       sleep_cpu(); // sleep within 3 clock cycles of above
     }
-    if (millis() - lastPoll > config.main.pollRate) {
+    if (millis() - lastPoll > pollRate) {
       tickInputs(&controller);
       // Since we receive data via acks, we need to make sure data is always
       // being sent, so we send data every 100ms regardless.

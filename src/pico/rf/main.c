@@ -30,14 +30,29 @@ Controller_t controller;
 Controller_t prevCtrl;
 long lastPoll = 0;
 int validAnalog = 0;
+uint8_t pollRate;
+uint8_t inputType;
+bool typeIsGuitar;
+bool typeIsDrum;
+bool isRF = false;
 void stopReading(void) {}
-int main(void) {
-  loadConfig();
+
+void initialise(void) {
+  board_init();
+  Configuration_t config = loadConfig();
   config.rf.rfInEnabled = false;
-  sei();
-  initInputs();
-  initReports();
+  fullDeviceType = fullDeviceType;
+  deviceType = fullDeviceType;
+  pollRate = config.main.pollRate;
+  inputType = config.main.inputType;
+  typeIsDrum = isDrum(fullDeviceType);
+  typeIsGuitar = isGuitar(fullDeviceType);
+  initInputs(&config);
+  initLEDs(&config);
+}
+int main(void) {
   initRF(true, rftxID, rfrxID);
+  initialise();
   long lastChange = millis();
   long lastButtons = 0;
   while (true) {
@@ -46,7 +61,7 @@ int main(void) {
       sleep_run_from_xosc();
       sleep_goto_dormant_until_edge_high(PIN_WAKEUP);
     }
-    if (millis() - lastPoll > config.main.pollRate) {
+    if (millis() - lastPoll > pollRate) {
       tickInputs(&controller);
       tickLEDs(&controller);
       // Since we receive data via acks, we need to make sure data is always

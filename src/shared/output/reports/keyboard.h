@@ -5,14 +5,16 @@
 #include "output/descriptors.h"
 #include <stdint.h>
 #define CHECK_JOY_KEY(joy)                                                     \
-  checkJoyKey(config.keys.joy.neg, config.keys.joy.pos, controller->joy,       \
+  checkJoyKey(keysConfig.joy.neg, keysConfig.joy.pos, controller->joy,       \
               joyThresholdKb, &usedKeys, KeyboardReport)
 #define CHECK_TRIGGER_KEY(trigger)                                             \
-  checkJoyKey(0, config.keys.trigger, controller->trigger, triggerThresholdKb, \
+  checkJoyKey(0, keysConfig.trigger, controller->trigger, triggerThresholdKb, \
               &usedKeys, KeyboardReport)
 
 int joyThresholdKb;
 int triggerThresholdKb;
+//TODO: Maybe we should overlay this with midi
+Keys_t keysConfig;
 void checkJoyKey(int neg, int pos, int val, int thresh, uint8_t *used,
                  USB_ID_KeyboardReport_Data_t *KeyboardReport) {
   if (*used < SIMULTANEOUS_KEYS) {
@@ -27,7 +29,7 @@ void fillKeyboardReport(void *ReportData, uint8_t *const ReportSize,
       (USB_ID_KeyboardReport_Data_t *)ReportData;
   KeyboardReport->rid = REPORT_ID_KBD;
   uint8_t usedKeys = 0;
-  uint8_t *keys = (uint8_t *)&config.keys;
+  uint8_t *keys = (uint8_t *)&keysConfig;
   for (int i = 0; i <= XBOX_Y && usedKeys < SIMULTANEOUS_KEYS; i++) {
     uint8_t binding = keys[i];
     if (binding && bit_check(controller->buttons, i)) {
@@ -41,7 +43,8 @@ void fillKeyboardReport(void *ReportData, uint8_t *const ReportSize,
   CHECK_TRIGGER_KEY(lt);
   CHECK_TRIGGER_KEY(rt);
 }
-void initKeyboard(void) {
-  joyThresholdKb = config.axis.joyThreshold << 8;
-  triggerThresholdKb = config.axis.triggerThreshold << 8;
+void initKeyboard(Configuration_t* config) {
+  keysConfig = config->keys;
+  joyThresholdKb = config->axis.joyThreshold << 8;
+  triggerThresholdKb = config->axis.triggerThreshold << 8;
 }

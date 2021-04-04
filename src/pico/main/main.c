@@ -30,6 +30,12 @@
 #define __INCLUDE_FROM_USB_DRIVER
 #include <LUFA/Drivers/USB/Core/StdRequestType.h>
 int validAnalog = 0;
+
+bool isRF = false;
+bool typeIsGuitar;
+bool typeIsDrum;
+uint8_t inputType;
+uint8_t pollRate;
 uint8_t rhportToWrite;
 tusb_control_request_t const *requestToWrite;
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[64];
@@ -77,15 +83,15 @@ tud_vendor_control_request_cb(uint8_t rhport,
   return true;
 }
 uint8_t const *tud_descriptor_device_cb(void) {
-  if (config.main.subType >= SWITCH_GAMEPAD && config.main.subType < MOUSE) {
-    uint8_t offs = config.main.subType - SWITCH_GAMEPAD;
+  if (fullDeviceType >= SWITCH_GAMEPAD && fullDeviceType < MOUSE) {
+    uint8_t offs = fullDeviceType - SWITCH_GAMEPAD;
     deviceDescriptor.VendorID = vid[offs];
     deviceDescriptor.ProductID = pid[offs];
   }
   return (uint8_t const *)&deviceDescriptor;
 }
 uint8_t const *tud_hid_descriptor_report_cb() {
-  if (config.main.subType <= KEYBOARD_ROCK_BAND_GUITAR) {
+  if (fullDeviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
     return kbd_report_descriptor;
   } else {
     return ps3_report_descriptor;
@@ -93,7 +99,7 @@ uint8_t const *tud_hid_descriptor_report_cb() {
 }
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
   (void)index; // for multiple configurations
-  uint8_t devt = config.main.subType;
+  uint8_t devt = fullDeviceType;
   if (isGuitar(devt)) { devt = REAL_GUITAR_SUBTYPE; }
   if (isDrum(devt)) { devt = REAL_DRUM_SUBTYPE; }
   ConfigurationDescriptor.XInputReserved.subtype = devt;
@@ -134,14 +140,13 @@ USB_Report_Data_t previousReport;
 USB_Report_Data_t currentReport;
 uint8_t size;
 void hid_task(void) {
-  const uint32_t interval_ms = config.main.pollRate;
   static uint32_t start_ms = 0;
-  if (config.rf.rfInEnabled) {
+  if (isRF) {
     tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
   } else {
     tickInputs(&controller);
     tickLEDs(&controller);
-    if (millis() - start_ms < interval_ms) return;
+    if (millis() - start_ms < pollRate) return;
   }
   fillReport(&currentReport, &size, &controller);
   if (memcmp(&currentReport, &previousReport, size) != 0) {
@@ -182,17 +187,34 @@ void hid_task(void) {
     }
   }
 }
-
-int main() {
+void initialise(void) {
   board_init();
   tusb_init();
-  loadConfig();
+  Configuration_t config = loadConfig();
+  fullDeviceType = fullDeviceType;
+  deviceType = fullDeviceType;
+  pollRate = config.main.pollRate;
+  inputType = config.main.inputType;
+  typeIsDrum = isDrum(fullDeviceType);
+  typeIsGuitar = isGuitar(fullDeviceType);
+  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_GUITAR_SUBTYPE;
+  }
+  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_DRUM_SUBTYPE;
+  }
+  setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());
+    isRF = true;
   } else {
-    initInputs();
+    initInputs(&config);
   }
-  initReports();
+  initReports(&config);
+  initLEDs(&config);
+}
+int main() {
+  initialise();
   while (1) {
     tud_task(); // tinyusb device task
     hid_task();
@@ -211,7 +233,7 @@ bool tud_vendor_control_complete_cb(uint8_t rhport,
           (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
     int cmd = request->wValue;
     processHIDWriteFeatureReport(cmd, request->wLength, buf);
-    if (config.rf.rfInEnabled) {
+    if (isRF) {
       uint8_t buf2[32];
       uint8_t buf3[32];
       memcpy(buf3 + 2, buf, 30);
@@ -248,9 +270,9 @@ uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
   if (report_type == HID_REPORT_TYPE_FEATURE) {
     //  When requested, return the ps3 report ids so that we have console
     //  compatibility
-    if (config.main.subType <= PS3_ROCK_BAND_DRUMS) {
+    if (fullDeviceType <= PS3_ROCK_BAND_DRUMS) {
       id[3] = 0x00;
-    } else if (config.main.subType <= PS3_GUITAR_HERO_DRUMS) {
+    } else if (fullDeviceType <= PS3_GUITAR_HERO_DRUMS) {
       id[3] = 0x06;
     }
     buffer = id;

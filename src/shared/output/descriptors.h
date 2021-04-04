@@ -26,7 +26,6 @@ void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
                                       uint16_t Length);
 #else
 #  include <LUFA/Drivers/USB/USB.h>
-extern uint8_t deviceType;
 #endif
 
 #include "controller/controller.h"

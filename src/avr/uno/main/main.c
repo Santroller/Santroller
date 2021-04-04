@@ -1,11 +1,12 @@
 #define ARDUINO_MAIN
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
+#include "controller/guitar_includes.h"
+#include "device_consts.h"
 #include "eeprom/eeprom.h"
 #include "input/input_handler.h"
 #include "leds/leds.h"
 #include "output/reports.h"
-#include "device_consts.h"
 #include "output/serial_commands.h"
 #include "output/serial_handler.h"
 #include "pins/pins.h"
@@ -13,6 +14,7 @@
 #include "rf/rf.h"
 #include "timer/timer.h"
 #include "util/util.h"
+#include <LUFA/Drivers/Misc/RingBuffer.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
@@ -20,19 +22,26 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
-#include <LUFA/Drivers/Misc/RingBuffer.h>
 Controller_t controller;
+Controller_t prevController;
 uint8_t currentReport[sizeof(USB_Report_Data_t)];
-uint8_t previousReport[sizeof(USB_Report_Data_t)];
 RingBuffer_t in;
 RingBuffer_t out;
 uint8_t bufIn[USB2USART_BUFLEN];
 uint8_t bufOut[USART2USB_BUFLEN];
 bool readyForPacket = true;
 long lastPoll = 0;
+bool isRF = false;
+uint8_t deviceType;
+uint8_t fullDeviceType;
+bool typeIsGuitar;
+bool typeIsDrum;
+uint8_t inputType;
+uint8_t pollRate;
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
-  UBRR0 = (DoubleSpeed ? SERIAL_2X_UBBRVAL(BaudRate) : SERIAL_UBBRVAL(BaudRate));
+  UBRR0 =
+      (DoubleSpeed ? SERIAL_2X_UBBRVAL(BaudRate) : SERIAL_UBBRVAL(BaudRate));
 
   UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
   UCSR0A = (DoubleSpeed ? (1 << U2X0) : 0);
@@ -42,25 +51,40 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
   PORTD |= (1 << 2);
 }
 void writeData(const uint8_t *buf, uint8_t len) {
-  for (int i = 0; i < len ; i++) {
-    RingBuffer_Insert(&out, *(buf++));
-  }
+  for (int i = 0; i < len; i++) { RingBuffer_Insert(&out, *(buf++)); }
   // Enable tx interrupt to push data
   UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0));
 }
-int main(void) {
-  loadConfig();
-  Serial_InitInterrupt(BAUD, true);
-  RingBuffer_InitBuffer(&in, bufIn, USB2USART_BUFLEN);
-  RingBuffer_InitBuffer(&out, bufOut, USART2USB_BUFLEN);
-  sei();
+void initialise(void) {
+  Configuration_t config = loadConfig();
+  fullDeviceType = config.main.subType;
+  deviceType = fullDeviceType;
+  pollRate = config.main.pollRate;
+  inputType = config.main.inputType;
+  typeIsDrum = isDrum(fullDeviceType);
+  typeIsGuitar = isGuitar(fullDeviceType);
+  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_GUITAR_SUBTYPE;
+  }
+  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_DRUM_SUBTYPE;
+  }
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());
+    isRF = true;
   } else {
-    initInputs();
+    initInputs(&config);
   }
-  initReports();
+  initReports(&config);
+  initLEDs(&config);
+  sei();
+}
+int main(void) {
+  Serial_InitInterrupt(BAUD, true);
+  RingBuffer_InitBuffer(&in, bufIn, USB2USART_BUFLEN);
+  RingBuffer_InitBuffer(&out, bufOut, USART2USB_BUFLEN);
+  initialise();
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t *buf;
@@ -101,9 +125,10 @@ int main(void) {
           if (data == COMMAND_WRITE_CONFIG) {
             isConfig = true;
           } else if (data == COMMAND_SET_LEDS) {
-            buf = (uint8_t *)&controller.leds;
+            buf = (uint8_t *)&leds;
           } else {
-            // Make sure to read the entire packet even if we aren't doing anything with it
+            // Make sure to read the entire packet even if we aren't doing
+            // anything with it
             buf = NULL;
             state = 5;
             continue;
@@ -132,7 +157,7 @@ int main(void) {
       } while (--count);
       if (state == 7) {
         state = 0;
-        if (config.rf.rfInEnabled) {
+        if (isRF) {
           while (!nrf24_txFifoEmpty()) {
             rf_interrupt = true;
             tickRFInput(buf, 0);
@@ -146,10 +171,12 @@ int main(void) {
           spi_transfer(false);
           if (cmd == COMMAND_SET_LEDS || cmd == COMMAND_WRITE_CONFIG) {
             spi_transfer(origOffset);
-            nrf24_transmitSync(
-                (isConfig ? (uint8_t *)&config : (uint8_t *)&controller.leds) +
-                    offset,
-                PACKET_SIZE);
+            if (isConfig) {
+              uint8_t configBuf[PACKET_SIZE];
+              readConfigBlock(offset, configBuf, PACKET_SIZE);
+            } else {
+              nrf24_transmitSync(((uint8_t *)&leds) + offset, PACKET_SIZE);
+            }
           }
           nrf24_csn_digitalWrite(HIGH);
           isConfig = false;
@@ -165,24 +192,23 @@ int main(void) {
       }
       // With RF, this stuff gets handled on the transmitter side, not the
       // receiver.
-    } else if (millis() - lastPoll > config.main.pollRate ||
-               config.rf.rfInEnabled) {
-      if (config.rf.rfInEnabled) {
+    } else if (millis() - lastPoll > pollRate || isRF) {
+      if (isRF) {
         tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
       } else {
         tickInputs(&controller);
         tickLEDs(&controller);
       }
       uint8_t size;
-      fillReport(currentReport, &size, &controller);
-      if (memcmp(currentReport, previousReport, size) != 0 && readyForPacket) {
+      if (memcmp(&prevController, &controller, sizeof(XInput_Data_t)) != 0 && readyForPacket) {
+        fillReport(currentReport, &size, &controller);
         lastPoll = millis();
         readyForPacket = false;
         uint8_t done = FRAME_START_WRITE;
         writeData(&done, 1);
         writeData(&size, 1);
         writeData(currentReport, size);
-        memcpy(previousReport, currentReport, size);
+        memcpy(&prevController, &controller, sizeof(XInput_Data_t));
       }
     }
   }
@@ -195,22 +221,21 @@ void writeToUSB(const void *const Buffer, uint8_t Length) {
   writeData((uint8_t *)Buffer, Length);
 }
 
-// Since the mega has multiple UARTs, alias the usb UART so that we can use the same interrupts below
-#  if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#    define USART_RX_vect USART0_RX_vect
-#    define USART_UDRE_vect USART0_UDRE_vect
-#  endif
+// Since the mega has multiple UARTs, alias the usb UART so that we can use the
+// same interrupts below
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#  define USART_RX_vect USART0_RX_vect
+#  define USART_UDRE_vect USART0_UDRE_vect
+#endif
 /** ISR to manage the reception of data from the serial port, placing received
  * bytes into a circular buffer for later transmission to the host.
  */
-ISR(USART_RX_vect) {
-  RingBuffer_Insert(&in, UDR0);
-}
+ISR(USART_RX_vect) { RingBuffer_Insert(&in, UDR0); }
 
 ISR(USART_UDRE_vect) {
   if (RingBuffer_GetCount(&out)) {
     UDR0 = RingBuffer_Remove(&out);
   } else {
-    UCSR0B = ((1<<RXCIE0) | (1 << RXEN0) | (1 << TXEN0));
+    UCSR0B = ((1 << RXCIE0) | (1 << RXEN0) | (1 << TXEN0));
   }
 }

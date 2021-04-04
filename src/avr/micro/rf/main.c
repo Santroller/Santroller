@@ -24,6 +24,7 @@
 #include <util/delay.h>
 
 #include "Descriptors.h"
+#include "controller/guitar_includes.h"
 #include <LUFA/Drivers/USB/USB.h>
 #include <LUFA/Platform/Platform.h>
 #define ARDUINO_MAIN
@@ -62,14 +63,43 @@ __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 Controller_t controller;
 Controller_t prevCtrl;
+bool isRF = false;
+bool typeIsGuitar;
+bool typeIsDrum;
 long lastPoll = 0;
-int main(void) {
-  loadConfig();
+uint8_t inputType;
+uint8_t deviceType;
+uint8_t fullDeviceType;
+uint8_t pollRate;
+void initialise(void) {
+  Configuration_t config = loadConfig();
   config.rf.rfInEnabled = false;
-  sei();
+  fullDeviceType = config.main.subType;
+  deviceType = fullDeviceType;
+  pollRate = config.main.pollRate;
+  inputType = config.main.inputType;
+  typeIsDrum = isDrum(fullDeviceType);
+  typeIsGuitar = isGuitar(fullDeviceType);
+  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_GUITAR_SUBTYPE;
+  }
+  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
+    deviceType = REAL_DRUM_SUBTYPE;
+  }
+  setupMicrosTimer();
+  if (config.rf.rfInEnabled) {
+    initRF(false, config.rf.id, generate_crc32());
+    isRF = true;
+  } else {
+    initInputs(&config);
+  }
+  initReports(&config);
+  initLEDs(&config);
   USB_Init();
-  initInputs();
-  initReports();
+  sei();
+}
+int main(void) {
+  initialise();
   initRF(true, pgm_read_dword(&rftxID), pgm_read_dword(&rfrxID));
   long lastChange = millis();
   long lastButtons = 0;
@@ -93,7 +123,7 @@ int main(void) {
       sei();       // guarantees next instruction executed
       sleep_cpu(); // sleep within 3 clock cycles of above
     }
-    if (millis() - lastPoll > config.main.pollRate) {
+    if (millis() - lastPoll > pollRate) {
       tickInputs(&controller);
       tickLEDs(&controller);
       // Since we receive data via acks, we need to make sure data is always

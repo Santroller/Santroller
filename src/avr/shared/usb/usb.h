@@ -2,6 +2,7 @@
 #include "output/control_requests.h"
 #include "output/descriptors.h"
 #include "output/serial_handler.h"
+#include "eeprom/eeprom.h"
 void deviceControlRequest(void) {
   if (!(Endpoint_IsSETUPReceived())) return;
   const void *buffer = NULL;

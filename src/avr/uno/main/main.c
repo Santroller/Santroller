@@ -63,12 +63,6 @@ void initialise(void) {
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
-  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
-    deviceType = REAL_GUITAR_SUBTYPE;
-  }
-  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
-    deviceType = REAL_DRUM_SUBTYPE;
-  }
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());
@@ -78,13 +72,13 @@ void initialise(void) {
   }
   initReports(&config);
   initLEDs(&config);
-  sei();
 }
 int main(void) {
+  initialise();
   Serial_InitInterrupt(BAUD, true);
   RingBuffer_InitBuffer(&in, bufIn, USB2USART_BUFLEN);
   RingBuffer_InitBuffer(&out, bufOut, USART2USB_BUFLEN);
-  initialise();
+  sei();
   uint8_t packetCount = 0;
   uint8_t state = 0;
   uint8_t *buf;
@@ -174,6 +168,7 @@ int main(void) {
             if (isConfig) {
               uint8_t configBuf[PACKET_SIZE];
               readConfigBlock(offset, configBuf, PACKET_SIZE);
+              nrf24_transmitSync(configBuf, PACKET_SIZE);
             } else {
               nrf24_transmitSync(((uint8_t *)&leds) + offset, PACKET_SIZE);
             }

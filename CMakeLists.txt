@@ -154,6 +154,7 @@ foreach(TYPE ${TYPES})
     lib/mpu6050/inv_mpu_dmp_motion_driver.c
     lib/mpu6050/inv_mpu.c
     lib/mpu6050/mpu_math.c
+    lib/fxpt_math/fxpt_math.c
     src/pico/lib/util/util.c
     src/pico/lib/timer/timer.c
     src/pico/lib/spi/spi.c

@@ -14,7 +14,6 @@
  *      @details    All functions are preceded by the dmp_ prefix to
  *                  differentiate among MPL and general driver function calls.
  */
-#define MPU_EXTRAS
 #include "inv_mpu_dmp_motion_driver.h"
 #include "dmpKey.h"
 #include "dmpmap.h"

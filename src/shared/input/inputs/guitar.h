@@ -39,10 +39,10 @@ void tickMPUTilt(Controller_t *controller) {
   static unsigned char fifoCount;
   dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
   if (sensors == INV_WXYZ_QUAT) {
-    q._f.w = q._l[0] / QUAT_SENS_FP;
-    q._f.x = q._l[1] / QUAT_SENS_FP;
-    q._f.y = q._l[2] / QUAT_SENS_FP;
-    q._f.z = q._l[3] / QUAT_SENS_FP;
+    q._f.w = q._l[0] >> 23;
+    q._f.x = q._l[1] >> 23;
+    q._f.y = q._l[2] >> 23;
+    q._f.z = q._l[3] >> 23;
 
     quaternionToEuler(&q._f, &mpuTilt, mpuOrientation);
     mpuTilt = tiltInverted ? -mpuTilt : mpuTilt;

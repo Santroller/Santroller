@@ -1,5 +1,5 @@
 #include "mpu_math.h"
-#include "fxpt_atan2.h"
+#include "fxpt_math/fxpt_math.h"
 #include "config/defines.h"
 #define MUL 5
 #define MAX 32767/MUL

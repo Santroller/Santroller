@@ -104,7 +104,8 @@
         "xinput_device.h": "c",
         "i2c.h": "c",
         "defaults.h": "c",
-        "ringbuffer.h": "c"
+        "ringbuffer.h": "c",
+        "fxpt_atan2.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

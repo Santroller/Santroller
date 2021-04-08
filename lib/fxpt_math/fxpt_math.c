@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <stdint.h>
+#include "fxpt_math.h"
 
 /**
  * Convert floating point to Q15 (1.0.15 fixed point) format.

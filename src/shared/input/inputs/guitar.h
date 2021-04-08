@@ -25,7 +25,7 @@
 #define GYRO_SENS 16.375f
 #define QUAT_SENS 1073741824.f // 2^30
 // We want to scale values up by 128, as we are doing fixed point calculations.
-#define QUAT_SENS_FP 8388608.f // 2^23
+#define QUAT_SENS_FP 8388608L // 2^23
 union u_quat q;
 int16_t mpuTilt;
 AnalogInfo_t analog;
@@ -39,14 +39,14 @@ void tickMPUTilt(Controller_t *controller) {
   static unsigned char fifoCount;
   dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
   if (sensors == INV_WXYZ_QUAT) {
-    q._f.w = (float)q._l[0] / QUAT_SENS_FP;
-    q._f.x = (float)q._l[1] / QUAT_SENS_FP;
-    q._f.y = (float)q._l[2] / QUAT_SENS_FP;
-    q._f.z = (float)q._l[3] / QUAT_SENS_FP;
+    q._f.w = q._l[0] / QUAT_SENS_FP;
+    q._f.x = q._l[1] / QUAT_SENS_FP;
+    q._f.y = q._l[2] / QUAT_SENS_FP;
+    q._f.z = q._l[3] / QUAT_SENS_FP;
 
     quaternionToEuler(&q._f, &mpuTilt, mpuOrientation);
+    mpuTilt = tiltInverted ? -mpuTilt : mpuTilt;
   }
-  mpuTilt = tiltInverted ? -mpuTilt : mpuTilt;
   analogueData[XBOX_TILT] = mpuTilt;
   int32_t val = mpuTilt;
   val -= scale.offset;
@@ -75,7 +75,7 @@ void initMPU6050(unsigned int rate) {
   mpu_set_dmp_state(1);
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
-void initGuitar(Configuration_t* config) {
+void initGuitar(Configuration_t *config) {
   if (!typeIsGuitar) return;
   if (config->main.tiltType == MPU_6050) {
     mpuOrientation = config->axis.mpu6050Orientation;

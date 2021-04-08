@@ -107,6 +107,7 @@ void findDigitalPin(void) {
   for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
     if (!shouldSkipPin(i)) {
       pinMode(i, INPUT_PULLUP);
+      _delay_us(100);
       lastDigitalValue[i] = digitalRead(i);
     }
   }
@@ -119,6 +120,7 @@ void findAnalogPin(void) {
   stopReading();
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
     pinMode(PIN_A0 + i, INPUT_PULLUP);
+    _delay_us(100);
     lastAnalogValue[i] = analogRead(i);
   }
   lookingForAnalog = true;

@@ -28,11 +28,16 @@
 
 // === MODIFIED ===
 #include "hardware/i2c.h"
+#include "hardware/gpio.h"
 #include "i2c/i2c.h"
 #include "pins/pins.h"
 #include "pins_arduino.h"
 #include "timer/timer.h"
 #include "util/util.h"
+
+#ifndef NDEBUG
+#  include <stdio.h>
+#endif
 
 // === MODIFIED ===
 static uint16_t TIMEOUT = 1000;
@@ -44,8 +49,8 @@ static uint16_t TIMEOUT = 1000;
  * Output   none
  */
 void twi_init(void) {
-  i2c_init(i2c0, TWI_FREQ);
-  i2c_set_baudrate(i2c0, TWI_FREQ);
+  i2c_init(i2c1, TWI_FREQ);
+  i2c_set_baudrate(i2c1, TWI_FREQ);
   gpio_set_function(PIN_WIRE_SDA, GPIO_FUNC_I2C);
   gpio_set_function(PIN_WIRE_SCL, GPIO_FUNC_I2C);
   gpio_pull_up(PIN_WIRE_SDA);
@@ -73,7 +78,8 @@ void twi_disable(void) { i2c_deinit(i2c0); }
 // === MODIFIED ===
 bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
-  return i2c_read_timeout_us(i2c0, address, data, length, !sendStop, TIMEOUT) > 0;
+  int ret = i2c_read_blocking(i2c1, address, data, length, !sendStop);
+  return ret > 0;
 }
 /*
  * Function twi_writeTo
@@ -90,5 +96,8 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
  */
 bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
-  return i2c_write_timeout_us(i2c0, address, data, length, !sendStop, TIMEOUT) > 0;
+  uint8_t ret = i2c_write_blocking(i2c1, address, data, length, !sendStop);
+  // i2c_write_blocking finishes when the write is sent but not when it is complete. Delaying 60us is enough to actually wait for the write.
+  _delay_us(60);
+  return ret > 0;
 }

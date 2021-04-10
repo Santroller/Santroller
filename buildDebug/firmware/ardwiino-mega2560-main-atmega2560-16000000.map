@@ -1,0 +1,1633 @@
+Archive member included to satisfy reference by file (symbol)
+
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+                              obj/ardwiino-mega2560-main-atmega2560-16000000/fxpt_math.o (symbol from plugin) (lrint)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o) (__fp_splitA)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o) (__fp_zero)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o (exit)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy_P.o)
+                              obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin) (memcpy_P)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(strcpy_P.o)
+                              obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin) (strcpy_P)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+                              obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin) (eeprom_read_block)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+                              obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin) (eeprom_update_block)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+                              obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin) (eeprom_update_byte)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__mulsf3)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o) (__mulsf3x)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_inf.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o) (__fp_inf)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_nan.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o) (__fp_nan)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscA.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o) (__fp_pscA)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscB.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o) (__fp_pscB)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_round.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o) (__fp_round)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__mulsi3)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__udivmodhi4)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__divmodhi4)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__udivmodsi4)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__divmodsi4)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+                              /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o) (__negsi2)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__do_copy_data)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__do_clear_bss)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__bswapsi2)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__mulhisi3)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+                              /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o) (__umulhisi3)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+                              /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o) (__usmulhisi3_tail)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+                              /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o) (__muluhisi3)
+/usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (__mulshisi3)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcmp.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (memcmp)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (memcpy)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memset.o)
+                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o (memset)
+
+Discarded input sections
+
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+ .debug_info    0x0000000000000000      0xdc1 /tmp/ccIkzp0V.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x24e /tmp/ccIkzp0V.debug.temp.o
+ .debug_line    0x0000000000000000      0x24c /tmp/ccIkzp0V.debug.temp.o
+ .debug_str     0x0000000000000000      0x8af /tmp/ccIkzp0V.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccIkzp0V.debug.temp.o
+ .debug_info    0x0000000000000000       0xf7 /tmp/cca5uvi8.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x91 /tmp/cca5uvi8.debug.temp.o
+ .debug_line    0x0000000000000000       0x64 /tmp/cca5uvi8.debug.temp.o
+ .debug_str     0x0000000000000000      0x276 /tmp/cca5uvi8.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cca5uvi8.debug.temp.o
+ .debug_info    0x0000000000000000      0x53f /tmp/ccyW3iA4.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x16c /tmp/ccyW3iA4.debug.temp.o
+ .debug_line    0x0000000000000000      0x189 /tmp/ccyW3iA4.debug.temp.o
+ .debug_str     0x0000000000000000      0x7d4 /tmp/ccyW3iA4.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccyW3iA4.debug.temp.o
+ .debug_info    0x0000000000000000     0x10c3 /tmp/cc43hfsh.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1b5 /tmp/cc43hfsh.debug.temp.o
+ .debug_line    0x0000000000000000      0x20f /tmp/cc43hfsh.debug.temp.o
+ .debug_str     0x0000000000000000      0xc6b /tmp/cc43hfsh.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc43hfsh.debug.temp.o
+ .debug_info    0x0000000000000000      0x589 /tmp/ccEFxueQ.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x115 /tmp/ccEFxueQ.debug.temp.o
+ .debug_line    0x0000000000000000       0x72 /tmp/ccEFxueQ.debug.temp.o
+ .debug_str     0x0000000000000000      0x4c1 /tmp/ccEFxueQ.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccEFxueQ.debug.temp.o
+ .debug_info    0x0000000000000000      0xf73 /tmp/ccoO7xUy.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x195 /tmp/ccoO7xUy.debug.temp.o
+ .debug_line    0x0000000000000000       0x8e /tmp/ccoO7xUy.debug.temp.o
+ .debug_str     0x0000000000000000      0xafb /tmp/ccoO7xUy.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccoO7xUy.debug.temp.o
+ .debug_info    0x0000000000000000      0x141 /tmp/ccMQnR5Q.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xd4 /tmp/ccMQnR5Q.debug.temp.o
+ .debug_line    0x0000000000000000       0x9b /tmp/ccMQnR5Q.debug.temp.o
+ .debug_str     0x0000000000000000      0x257 /tmp/ccMQnR5Q.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccMQnR5Q.debug.temp.o
+ .debug_info    0x0000000000000000      0x109 /tmp/ccei3IXL.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x8c /tmp/ccei3IXL.debug.temp.o
+ .debug_line    0x0000000000000000       0x60 /tmp/ccei3IXL.debug.temp.o
+ .debug_str     0x0000000000000000      0x279 /tmp/ccei3IXL.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccei3IXL.debug.temp.o
+ .debug_info    0x0000000000000000      0x217 /tmp/ccSo78ZD.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xf7 /tmp/ccSo78ZD.debug.temp.o
+ .debug_line    0x0000000000000000       0x60 /tmp/ccSo78ZD.debug.temp.o
+ .debug_str     0x0000000000000000      0x33b /tmp/ccSo78ZD.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccSo78ZD.debug.temp.o
+ .debug_info    0x0000000000000000      0xe42 /tmp/ccR1LG0V.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1d7 /tmp/ccR1LG0V.debug.temp.o
+ .debug_line    0x0000000000000000      0x148 /tmp/ccR1LG0V.debug.temp.o
+ .debug_str     0x0000000000000000      0x6b3 /tmp/ccR1LG0V.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccR1LG0V.debug.temp.o
+ .debug_info    0x0000000000000000      0x87a /tmp/ccsCRsij.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x12b /tmp/ccsCRsij.debug.temp.o
+ .debug_line    0x0000000000000000      0x12d /tmp/ccsCRsij.debug.temp.o
+ .debug_str     0x0000000000000000      0x506 /tmp/ccsCRsij.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccsCRsij.debug.temp.o
+ .debug_info    0x0000000000000000      0x220 /tmp/ccaHuA7t.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x114 /tmp/ccaHuA7t.debug.temp.o
+ .debug_line    0x0000000000000000       0x65 /tmp/ccaHuA7t.debug.temp.o
+ .debug_str     0x0000000000000000      0x2f3 /tmp/ccaHuA7t.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccaHuA7t.debug.temp.o
+ .debug_info    0x0000000000000000     0x1c7e /tmp/ccBwlSbK.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x2be /tmp/ccBwlSbK.debug.temp.o
+ .debug_line    0x0000000000000000      0x238 /tmp/ccBwlSbK.debug.temp.o
+ .debug_str     0x0000000000000000     0x13d2 /tmp/ccBwlSbK.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccBwlSbK.debug.temp.o
+ .debug_info    0x0000000000000000      0xf5f /tmp/ccicpxEF.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x150 /tmp/ccicpxEF.debug.temp.o
+ .debug_line    0x0000000000000000      0x134 /tmp/ccicpxEF.debug.temp.o
+ .debug_str     0x0000000000000000      0xef0 /tmp/ccicpxEF.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccicpxEF.debug.temp.o
+ .debug_info    0x0000000000000000      0x5c5 /tmp/cclpQfdT.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x182 /tmp/cclpQfdT.debug.temp.o
+ .debug_line    0x0000000000000000       0xa3 /tmp/cclpQfdT.debug.temp.o
+ .debug_str     0x0000000000000000      0x5cc /tmp/cclpQfdT.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cclpQfdT.debug.temp.o
+ .debug_info    0x0000000000000000      0x1dd /tmp/ccZZJTAk.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xc8 /tmp/ccZZJTAk.debug.temp.o
+ .debug_line    0x0000000000000000       0x9e /tmp/ccZZJTAk.debug.temp.o
+ .debug_str     0x0000000000000000      0x4f7 /tmp/ccZZJTAk.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccZZJTAk.debug.temp.o
+ .debug_info    0x0000000000000000      0x1ef /tmp/ccxz7FM9.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xc6 /tmp/ccxz7FM9.debug.temp.o
+ .debug_line    0x0000000000000000       0x8b /tmp/ccxz7FM9.debug.temp.o
+ .debug_str     0x0000000000000000      0x2ef /tmp/ccxz7FM9.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccxz7FM9.debug.temp.o
+ .debug_info    0x0000000000000000      0x254 /tmp/cctgId9x.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xac /tmp/cctgId9x.debug.temp.o
+ .debug_line    0x0000000000000000       0x64 /tmp/cctgId9x.debug.temp.o
+ .debug_str     0x0000000000000000      0x2ca /tmp/cctgId9x.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cctgId9x.debug.temp.o
+ .debug_info    0x0000000000000000       0xd0 /tmp/ccsxXmij.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x8c /tmp/ccsxXmij.debug.temp.o
+ .debug_line    0x0000000000000000       0x8c /tmp/ccsxXmij.debug.temp.o
+ .debug_str     0x0000000000000000      0x270 /tmp/ccsxXmij.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccsxXmij.debug.temp.o
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_inf.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_inf.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_inf.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_nan.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_nan.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_nan.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscA.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscA.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscA.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscB.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscB.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscB.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_round.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_round.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_round.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy_P.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy_P.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy_P.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(strcpy_P.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(strcpy_P.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(strcpy_P.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcmp.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcmp.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcmp.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memset.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memset.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memset.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+text             0x0000000000000000 0x0000000000100000 xr
+data             0x0000000000800200 0x000000000000fe00 rw !x
+eeprom           0x0000000000810000 0x0000000000010000 rw !x
+fuse             0x0000000000820000 0x0000000000000400 rw !x
+lock             0x0000000000830000 0x0000000000000400 rw !x
+signature        0x0000000000840000 0x0000000000000400 rw !x
+user_signatures  0x0000000000850000 0x0000000000000400 rw !x
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+Address of section .data set to 0x800200
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/main.o
+LOAD /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+LOAD /tmp/ccIkzp0V.debug.temp.o
+LOAD /tmp/cca5uvi8.debug.temp.o
+LOAD /tmp/ccyW3iA4.debug.temp.o
+LOAD /tmp/cc43hfsh.debug.temp.o
+LOAD /tmp/ccEFxueQ.debug.temp.o
+LOAD /tmp/ccoO7xUy.debug.temp.o
+LOAD /tmp/ccMQnR5Q.debug.temp.o
+LOAD /tmp/ccei3IXL.debug.temp.o
+LOAD /tmp/ccSo78ZD.debug.temp.o
+LOAD /tmp/ccR1LG0V.debug.temp.o
+LOAD /tmp/ccsCRsij.debug.temp.o
+LOAD /tmp/ccaHuA7t.debug.temp.o
+LOAD /tmp/ccBwlSbK.debug.temp.o
+LOAD /tmp/ccicpxEF.debug.temp.o
+LOAD /tmp/cclpQfdT.debug.temp.o
+LOAD /tmp/ccZZJTAk.debug.temp.o
+LOAD /tmp/ccxz7FM9.debug.temp.o
+LOAD /tmp/cctgId9x.debug.temp.o
+LOAD /tmp/ccsxXmij.debug.temp.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/timer.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/mpu_math.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/spi.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/guitar_includes.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/fxpt_math.o
+LOAD obj/ardwiino-mega2560-main-atmega2560-16000000/bootloader.o
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a
+START GROUP
+LOAD /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a
+END GROUP
+                0x0000000000100000                __TEXT_REGION_LENGTH__ = DEFINED (__TEXT_REGION_LENGTH__)?__TEXT_REGION_LENGTH__:0x100000
+                0x000000000000fe00                __DATA_REGION_LENGTH__ = DEFINED (__DATA_REGION_LENGTH__)?__DATA_REGION_LENGTH__:0xfe00
+                0x0000000000010000                __EEPROM_REGION_LENGTH__ = DEFINED (__EEPROM_REGION_LENGTH__)?__EEPROM_REGION_LENGTH__:0x10000
+                0x0000000000000400                __FUSE_REGION_LENGTH__ = DEFINED (__FUSE_REGION_LENGTH__)?__FUSE_REGION_LENGTH__:0x400
+                0x0000000000000400                __LOCK_REGION_LENGTH__ = DEFINED (__LOCK_REGION_LENGTH__)?__LOCK_REGION_LENGTH__:0x400
+                0x0000000000000400                __SIGNATURE_REGION_LENGTH__ = DEFINED (__SIGNATURE_REGION_LENGTH__)?__SIGNATURE_REGION_LENGTH__:0x400
+                0x0000000000000400                __USER_SIGNATURE_REGION_LENGTH__ = DEFINED (__USER_SIGNATURE_REGION_LENGTH__)?__USER_SIGNATURE_REGION_LENGTH__:0x400
+
+.hash
+ *(.hash)
+
+.dynsym
+ *(.dynsym)
+
+.dynstr
+ *(.dynstr)
+
+.gnu.version
+ *(.gnu.version)
+
+.gnu.version_d
+ *(.gnu.version_d)
+
+.gnu.version_r
+ *(.gnu.version_r)
+
+.rel.init
+ *(.rel.init)
+
+.rela.init
+ *(.rela.init)
+
+.rel.text
+ *(.rel.text)
+ *(.rel.text.*)
+ *(.rel.gnu.linkonce.t*)
+
+.rela.text
+ *(.rela.text)
+ *(.rela.text.*)
+ *(.rela.gnu.linkonce.t*)
+
+.rel.fini
+ *(.rel.fini)
+
+.rela.fini
+ *(.rela.fini)
+
+.rel.rodata
+ *(.rel.rodata)
+ *(.rel.rodata.*)
+ *(.rel.gnu.linkonce.r*)
+
+.rela.rodata
+ *(.rela.rodata)
+ *(.rela.rodata.*)
+ *(.rela.gnu.linkonce.r*)
+
+.rel.data
+ *(.rel.data)
+ *(.rel.data.*)
+ *(.rel.gnu.linkonce.d*)
+
+.rela.data
+ *(.rela.data)
+ *(.rela.data.*)
+ *(.rela.gnu.linkonce.d*)
+
+.rel.ctors
+ *(.rel.ctors)
+
+.rela.ctors
+ *(.rela.ctors)
+
+.rel.dtors
+ *(.rel.dtors)
+
+.rela.dtors
+ *(.rela.dtors)
+
+.rel.got
+ *(.rel.got)
+
+.rela.got
+ *(.rela.got)
+
+.rel.bss
+ *(.rel.bss)
+
+.rela.bss
+ *(.rela.bss)
+
+.rel.plt
+ *(.rel.plt)
+
+.rela.plt
+ *(.rela.plt)
+
+.text           0x0000000000000000     0x5e38
+ *(.vectors)
+ .vectors       0x0000000000000000       0xe4 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+                0x0000000000000000                __vectors
+                0x0000000000000000                __vector_default
+ *(.vectors)
+ *(.progmem.gcc*)
+                0x00000000000000e4                . = ALIGN (0x2)
+                0x00000000000000e4                __trampolines_start = .
+ *(.trampolines)
+ .trampolines   0x00000000000000e4        0x0 linker stubs
+ *(.trampolines*)
+                0x00000000000000e4                __trampolines_end = .
+ *libprintf_flt.a:*(.progmem.data)
+ *libc.a:*(.progmem.data)
+ *(.progmem.*)
+ .progmem.data  0x00000000000000e4      0xe50 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                0x0000000000000f34                . = ALIGN (0x2)
+ *(.lowtext)
+ *(.lowtext*)
+                0x0000000000000f34                __ctors_start = .
+ *(.ctors)
+                0x0000000000000f34                __ctors_end = .
+                0x0000000000000f34                __dtors_start = .
+ *(.dtors)
+                0x0000000000000f34                __dtors_end = .
+ SORT_BY_NAME(*)(.ctors)
+ SORT_BY_NAME(*)(.dtors)
+ *(.init0)
+ .init0         0x0000000000000f34        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+                0x0000000000000f34                __init
+ *(.init0)
+ *(.init1)
+ *(.init1)
+ *(.init2)
+ .init2         0x0000000000000f34       0x10 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+ *(.init2)
+ *(.init3)
+ *(.init3)
+ *(.init4)
+ .init4         0x0000000000000f44       0x1a /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+                0x0000000000000f44                __do_copy_data
+ .init4         0x0000000000000f5e       0x10 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+                0x0000000000000f5e                __do_clear_bss
+ *(.init4)
+ *(.init5)
+ *(.init5)
+ *(.init6)
+ *(.init6)
+ *(.init7)
+ *(.init7)
+ *(.init8)
+ *(.init8)
+ *(.init9)
+ .init9         0x0000000000000f6e        0x8 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+ *(.init9)
+ *(.text)
+ .text          0x0000000000000f76        0x2 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+                0x0000000000000f76                __vector_38
+                0x0000000000000f76                __vector_22
+                0x0000000000000f76                __vector_28
+                0x0000000000000f76                __vector_32
+                0x0000000000000f76                __vector_34
+                0x0000000000000f76                __vector_24
+                0x0000000000000f76                __vector_12
+                0x0000000000000f76                __vector_55
+                0x0000000000000f76                __vector_46
+                0x0000000000000f76                __bad_interrupt
+                0x0000000000000f76                __vector_6
+                0x0000000000000f76                __vector_31
+                0x0000000000000f76                __vector_35
+                0x0000000000000f76                __vector_3
+                0x0000000000000f76                __vector_30
+                0x0000000000000f76                __vector_45
+                0x0000000000000f76                __vector_11
+                0x0000000000000f76                __vector_54
+                0x0000000000000f76                __vector_13
+                0x0000000000000f76                __vector_17
+                0x0000000000000f76                __vector_19
+                0x0000000000000f76                __vector_56
+                0x0000000000000f76                __vector_7
+                0x0000000000000f76                __vector_49
+                0x0000000000000f76                __vector_41
+                0x0000000000000f76                __vector_43
+                0x0000000000000f76                __vector_27
+                0x0000000000000f76                __vector_5
+                0x0000000000000f76                __vector_33
+                0x0000000000000f76                __vector_47
+                0x0000000000000f76                __vector_52
+                0x0000000000000f76                __vector_37
+                0x0000000000000f76                __vector_4
+                0x0000000000000f76                __vector_44
+                0x0000000000000f76                __vector_51
+                0x0000000000000f76                __vector_9
+                0x0000000000000f76                __vector_2
+                0x0000000000000f76                __vector_21
+                0x0000000000000f76                __vector_15
+                0x0000000000000f76                __vector_36
+                0x0000000000000f76                __vector_29
+                0x0000000000000f76                __vector_40
+                0x0000000000000f76                __vector_8
+                0x0000000000000f76                __vector_48
+                0x0000000000000f76                __vector_14
+                0x0000000000000f76                __vector_53
+                0x0000000000000f76                __vector_10
+                0x0000000000000f76                __vector_50
+                0x0000000000000f76                __vector_16
+                0x0000000000000f76                __vector_18
+                0x0000000000000f76                __vector_20
+                0x0000000000000f76                __vector_42
+ .text          0x0000000000000f78     0x3f8c /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                0x0000000000004cb2                __vector_25
+                0x0000000000004d0a                __vector_26
+                0x0000000000004d7c                __vector_23
+                0x0000000000004dc2                __vector_39
+                0x0000000000004ef8                __vector_1
+                0x0000000000004f04                . = ALIGN (0x2)
+ *(.text.*)
+ .text.startup  0x0000000000004f04      0xb4c /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                0x0000000000004f04                main
+ .text.avr-libc.fplib
+                0x0000000000005a50       0x74 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+                0x0000000000005a50                lrint
+ .text.avr-libc.fplib
+                0x0000000000005ac4       0x44 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+                0x0000000000005ac4                __fp_split3
+                0x0000000000005ad4                __fp_splitA
+ .text.avr-libc.fplib
+                0x0000000000005b08        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+                0x0000000000005b08                __fp_zero
+                0x0000000000005b0a                __fp_szero
+ .text.avr-libc.fplib
+                0x0000000000005b16        0x4 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+                0x0000000000005b16                __mulsf3
+ .text.avr-libc.fplib
+                0x0000000000005b1a       0xc2 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+                0x0000000000005b2e                __mulsf3x
+                0x0000000000005b32                __mulsf3_pse
+ .text.avr-libc.fplib
+                0x0000000000005bdc        0xc /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_inf.o)
+                0x0000000000005bdc                __fp_inf
+ .text.avr-libc.fplib
+                0x0000000000005be8        0x6 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_nan.o)
+                0x0000000000005be8                __fp_nan
+ .text.avr-libc.fplib
+                0x0000000000005bee        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscA.o)
+                0x0000000000005bee                __fp_pscA
+ .text.avr-libc.fplib
+                0x0000000000005bfc        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscB.o)
+                0x0000000000005bfc                __fp_pscB
+ .text.avr-libc.fplib
+                0x0000000000005c0a       0x22 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_round.o)
+                0x0000000000005c0a                __fp_round
+ .text.libgcc.mul
+                0x0000000000005c2c       0x1e /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+                0x0000000000005c2c                __mulsi3
+ .text.libgcc.div
+                0x0000000000005c4a       0x28 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+                0x0000000000005c4a                __udivmodhi4
+ .text.libgcc.div
+                0x0000000000005c72       0x26 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+                0x0000000000005c72                __divmodhi4
+                0x0000000000005c72                _div
+ .text.libgcc.div
+                0x0000000000005c98       0x44 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+                0x0000000000005c98                __udivmodsi4
+ .text.libgcc.div
+                0x0000000000005cdc       0x28 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+                0x0000000000005cdc                __divmodsi4
+ .text.libgcc.div
+                0x0000000000005d04       0x10 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+                0x0000000000005d04                __negsi2
+ .text.libgcc.builtins
+                0x0000000000005d14        0xe /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+                0x0000000000005d14                __bswapsi2
+ .text.libgcc.mul
+                0x0000000000005d22        0xc /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+                0x0000000000005d22                __mulhisi3
+ .text.libgcc.mul
+                0x0000000000005d2e       0x1e /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+                0x0000000000005d2e                __umulhisi3
+ .text.libgcc.mul
+                0x0000000000005d4c        0xc /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+                0x0000000000005d4c                __usmulhisi3
+                0x0000000000005d4e                __usmulhisi3_tail
+ .text.libgcc.mul
+                0x0000000000005d58       0x14 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+                0x0000000000005d58                __muluhisi3
+ .text.libgcc.mul
+                0x0000000000005d6c        0xc /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+                0x0000000000005d6c                __mulshisi3
+                0x0000000000005d70                __mulohisi3
+ .text.avr-libc
+                0x0000000000005d78       0x12 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy_P.o)
+                0x0000000000005d78                memcpy_P
+ .text.avr-libc
+                0x0000000000005d8a        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(strcpy_P.o)
+                0x0000000000005d8a                strcpy_P
+ .text.avr-libc
+                0x0000000000005d98       0x1a /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcmp.o)
+                0x0000000000005d98                memcmp
+ .text.avr-libc
+                0x0000000000005db2       0x12 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy.o)
+                0x0000000000005db2                memcpy
+ .text.avr-libc
+                0x0000000000005dc4        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memset.o)
+                0x0000000000005dc4                memset
+ .text.avr-libc
+                0x0000000000005dd2       0x20 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+                0x0000000000005dd2                eeprom_read_block
+                0x0000000000005dd6                eeprom_read_blraw
+ .text.avr-libc
+                0x0000000000005df2       0x1e /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+                0x0000000000005df2                eeprom_update_block
+ .text.avr-libc
+                0x0000000000005e10       0x24 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+                0x0000000000005e10                eeprom_update_byte
+                0x0000000000005e12                eeprom_update_r18
+                0x0000000000005e34                . = ALIGN (0x2)
+ *(.fini9)
+ .fini9         0x0000000000005e34        0x0 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+                0x0000000000005e34                exit
+                0x0000000000005e34                _exit
+ *(.fini9)
+ *(.fini8)
+ *(.fini8)
+ *(.fini7)
+ *(.fini7)
+ *(.fini6)
+ *(.fini6)
+ *(.fini5)
+ *(.fini5)
+ *(.fini4)
+ *(.fini4)
+ *(.fini3)
+ *(.fini3)
+ *(.fini2)
+ *(.fini2)
+ *(.fini1)
+ *(.fini1)
+ *(.fini0)
+ .fini0         0x0000000000005e34        0x4 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+ *(.fini0)
+ *(.hightext)
+ *(.hightext*)
+ *(.progmemx.*)
+                0x0000000000005e38                . = ALIGN (0x2)
+ *(.jumptables)
+ *(.jumptables*)
+                0x0000000000005e38                _etext = .
+
+.data           0x0000000000800200       0xc0 load address 0x0000000000005e38
+                0x0000000000800200                PROVIDE (__data_start = .)
+ *(.data)
+ .data          0x0000000000800200       0x44 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+ *(.data*)
+ *(.gnu.linkonce.d*)
+ *(.rodata)
+ .rodata        0x0000000000800244       0x65 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+ *(.rodata*)
+ .rodata.str1.1
+                0x00000000008002a9       0x17 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+ *(.gnu.linkonce.r*)
+                0x00000000008002c0                . = ALIGN (0x2)
+                0x00000000008002c0                _edata = .
+                0x00000000008002c0                PROVIDE (__data_end = .)
+
+.bss            0x00000000008002c0      0x5d9
+                0x00000000008002c0                PROVIDE (__bss_start = .)
+ *(.bss)
+ .bss           0x00000000008002c0      0x5d9 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+ *(.bss*)
+ *(COMMON)
+                0x0000000000800899                PROVIDE (__bss_end = .)
+                0x0000000000005e38                __data_load_start = LOADADDR (.data)
+                0x0000000000005ef8                __data_load_end = (__data_load_start + SIZEOF (.data))
+
+.noinit         0x0000000000800899        0x0
+                [!provide]                        PROVIDE (__noinit_start = .)
+ *(.noinit .noinit.* .gnu.linkonce.n.*)
+                [!provide]                        PROVIDE (__noinit_end = .)
+                0x0000000000800899                _end = .
+                [!provide]                        PROVIDE (__heap_start = .)
+
+.eeprom         0x0000000000810000      0x113
+ *(.eeprom*)
+ .eeprom        0x0000000000810000      0x113 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                0x0000000000810113                __eeprom_end = .
+
+.fuse
+ *(.fuse)
+ *(.lfuse)
+ *(.hfuse)
+ *(.efuse)
+
+.lock
+ *(.lock*)
+
+.signature
+ *(.signature*)
+
+.stab           0x0000000000000000     0xa50c
+ *(.stab)
+ .stab          0x0000000000000000     0xa50c /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+
+.stabstr        0x0000000000000000     0x26c2
+ *(.stabstr)
+ .stabstr       0x0000000000000000     0x26c2 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x0000000000000000       0x12
+ *(.comment)
+ .comment       0x0000000000000000       0x12 /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                         0x13 (size before relaxing)
+
+.note.gnu.avr.deviceinfo
+                0x0000000000000000       0x40
+ .note.gnu.avr.deviceinfo
+                0x0000000000000000       0x40 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+
+.note.gnu.build-id
+ *(.note.gnu.build-id)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges
+ *(.debug_aranges)
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info     0x0000000000000000      0xbbc
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x0000000000000000      0xbbc /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+
+.debug_abbrev   0x0000000000000000      0xb1a
+ *(.debug_abbrev)
+ .debug_abbrev  0x0000000000000000      0xb1a /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+
+.debug_line     0x0000000000000000       0x1d
+ *(.debug_line .debug_line.* .debug_line_end)
+ .debug_line    0x0000000000000000       0x1d /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+
+.debug_frame
+ *(.debug_frame)
+
+.debug_str      0x0000000000000000      0x3e6
+ *(.debug_str)
+ .debug_str     0x0000000000000000      0x3e6 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+
+.debug_loc
+ *(.debug_loc)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges
+ *(.debug_ranges)
+
+.debug_addr
+ *(.debug_addr)
+
+.debug_line_str
+ *(.debug_line_str)
+
+.debug_loclists
+ *(.debug_loclists)
+
+.debug_macro
+ *(.debug_macro)
+
+.debug_names
+ *(.debug_names)
+
+.debug_rnglists
+ *(.debug_rnglists)
+
+.debug_str_offsets
+ *(.debug_str_offsets)
+
+.debug_sup
+ *(.debug_sup)
+OUTPUT(/home/sanjay/Code/Ardwiino/buildDebug/firmware/ardwiino-mega2560-main-atmega2560-16000000.elf elf32-avr)
+LOAD linker stubs
+
+Cross Reference Table
+
+Symbol                                            File
+NEGCON_I_II_BUTTON_THRESHOLD                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+NEGCON_L_BUTTON_THRESHOLD                         obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+__bad_interrupt                                   /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__bss_end                                         /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+__bss_start                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+__bswapsi2                                        /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_bswapsi2.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__data_end                                        /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+__data_load_start                                 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+__data_start                                      /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+__divmodhi4                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__divmodsi4                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__do_clear_bss                                    /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_clear_bss.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__do_copy_data                                    /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_copy_data.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__fp_inf                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_inf.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+__fp_nan                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_nan.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+__fp_pscA                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscA.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+__fp_pscB                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_pscB.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+__fp_round                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_round.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+__fp_split3                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+__fp_splitA                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_split3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+__fp_szero                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+__fp_zero                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(fp_zero.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+__heap_end                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__init                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__mulhisi3                                        /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__mulohisi3                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+__mulsf3                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__mulsf3_pse                                      /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+__mulsf3x                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3x.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(mulsf3.o)
+__mulshisi3                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__mulsi3                                          /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__muluhisi3                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulshisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulsi3.o)
+__negsi2                                          /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_negsi2.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+__stack                                           /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__udivmodhi4                                      /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodhi4.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__udivmodsi4                                      /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_udivmodsi4.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodsi4.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+__umulhisi3                                       /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_umulhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_muluhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+__usmulhisi3                                      /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+__usmulhisi3_tail                                 /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_usmulhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_mulhisi3.o)
+__vector_1                                        /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_10                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_11                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_12                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_13                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_14                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_15                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_16                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_17                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_18                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_19                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_2                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_20                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_21                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_22                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_23                                       /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/timer.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_24                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_25                                       /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_26                                       /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_27                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_28                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_29                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_3                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_30                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_31                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_32                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_33                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_34                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_35                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_36                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_37                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_38                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_39                                       /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_4                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_40                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_41                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_42                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_43                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_44                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_45                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_46                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_47                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_48                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_49                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_5                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_50                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_51                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_52                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_53                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_54                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_55                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_56                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_6                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_7                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_8                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_9                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vector_default                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+__vectors                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+_div                                              /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_divmodhi4.o)
+_exit                                             /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+analog                                            obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+analogRead                                        obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+analogueData                                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+attention                                         obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+autoShiftData                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+begin                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+bootKeyPtr                                        obj/ardwiino-mega2560-main-atmega2560-16000000/bootloader.o (symbol from plugin)
+bootKeyVal                                        obj/ardwiino-mega2560-main-atmega2560-16000000/bootloader.o (symbol from plugin)
+bootloader                                        obj/ardwiino-mega2560-main-atmega2560-16000000/bootloader.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+bootloader.c.4eec755d                             /tmp/ccsxXmij.debug.temp.o
+bufIn                                             obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+bufOut                                            obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+buttonWord                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+buttons                                           obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+bytes                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+calculateClock                                    obj/ardwiino-mega2560-main-atmega2560-16000000/spi.o (symbol from plugin)
+checkJoyKey                                       obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+clock                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+command                                           obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+controller                                        obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+currentAnalog                                     obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+currentAxisBindingsLen                            obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+currentReport                                     obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+dbuf                                              obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+default_config                                    obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+detectedPin                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+deviceType                                        obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+digitalRead                                       obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+digitalReadPin                                    obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+digitalWrite                                      obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/spi.o (symbol from plugin)
+digitalWritePin                                   obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+digital_pin_to_bit_mask_PGM                       obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+digital_pin_to_port_PGM                           obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+digital_pin_to_timer_PGM                          obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+dmp_enable_6x_lp_quat                             obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_enable_feature                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+dmp_enable_gyro_cal                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_enable_lp_quat                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_get_enabled_features                          obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_get_fifo_rate                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_load_motion_driver_firmware                   obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+dmp_memory                                        obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_read_fifo                                     obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+dmp_set_accel_bias                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_set_fifo_rate                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+dmp_set_gyro_bias                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_set_interrupt_mode                            obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_set_orientation                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+drumVelocity                                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+eeprom.c.250edbb1                                 /tmp/ccicpxEF.debug.temp.o
+eeprom_read_block                                 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+eeprom_read_blraw                                 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eerd_block.o)
+eeprom_update_block                               /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+eeprom_update_byte                                /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+eeprom_update_r18                                 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_byte.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libatmega2560.a(eeupd_block.o)
+err                                               obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+exit                                              /usr/lib/gcc/avr/10.2.0/avr6/libgcc.a(_exit.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+fillKeyboardReport                                obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+fillMIDIReport                                    obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+fillMouseReport                                   obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+fillPS3Report                                     obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+fillReport                                        obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+fillXInputReport                                  obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+findAnalogPin                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+findDigitalPin                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+first                                             obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+fullDeviceType                                    obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+fxpt_asin                                         obj/ardwiino-mega2560-main-atmega2560-16000000/fxpt_math.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/mpu_math.o (symbol from plugin)
+fxpt_atan2                                        obj/ardwiino-mega2560-main-atmega2560-16000000/fxpt_math.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/mpu_math.o (symbol from plugin)
+fxpt_math.c.aed39475                              /tmp/cctgId9x.debug.temp.o
+generate_crc32                                    obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+getControllerType                                 obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+getVelocity                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+guitar_includes.c.0974511e                        /tmp/ccZZJTAk.debug.temp.o
+handleCommand                                     obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+hw                                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+i2c.c.d7db3bed                                    /tmp/ccSo78ZD.debug.temp.o
+i2c_shared.c.f54ed074                             /tmp/ccxz7FM9.debug.temp.o
+id                                                obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+in                                                obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+initDirectInput                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+initGuitar                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+initInputs                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+initKeyboard                                      obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+initLEDs                                          obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+initMIDI                                          obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+initMPU6050                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+initPS2CtrlInput                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+initPS3                                           obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+initRF                                            obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+initReports                                       obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+initWiiExt                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+initWiiExtensions                                 obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+initialise                                        obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+inputType                                         obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+input_handler.c.01ecba52                          /tmp/ccBwlSbK.debug.temp.o
+inv_mpu.c.a6e5c2f3                                /tmp/ccoO7xUy.debug.temp.o
+inv_mpu_dmp_motion_driver.c.db7bef1e              /tmp/ccEFxueQ.debug.temp.o
+isDrum                                            obj/ardwiino-mega2560-main-atmega2560-16000000/guitar_includes.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+isGuitar                                          obj/ardwiino-mega2560-main-atmega2560-16000000/guitar_includes.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+isRF                                              obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+is_tx                                             obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+joyData                                           obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+joyThreshold                                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+joyThresholdKb                                    obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+keysConfig                                        obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+lastAnalogValue                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+lastButtons                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+lastDigitalValue                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+lastPoll                                          obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+lastmidi                                          obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+ledConfig                                         obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+leds                                              obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+leds.c.65811436                                   /tmp/ccsCRsij.debug.temp.o
+ledsEnabled                                       obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+loadConfig                                        obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+lookingForAnalog                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+lookingForDigital                                 obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+lrint                                             /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libm.a(lrint.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/fxpt_math.o (symbol from plugin)
+main                                              /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/crtatmega2560.o
+main.c.61354ce1                                   /tmp/ccIkzp0V.debug.temp.o
+mapJoyLeftDpad                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mapNunchukAccelToRightJoy                         obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mapStartSelectHome                                obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+memcmp                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcmp.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+memcpy                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+memcpy_P                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memcpy_P.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+memset                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(memset.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+micros                                            obj/ardwiino-mega2560-main-atmega2560-16000000/timer.o (symbol from plugin)
+midiConfig                                        obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+millis                                            obj/ardwiino-mega2560-main-atmega2560-16000000/timer.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+mpuOrientation                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpuTilt                                           obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_configure_fifo                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_get_accel_fsr                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_accel_reg                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_accel_sens                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_get_compass_sample_rate                       obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_dmp_state                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_fifo_config                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_gyro_fsr                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_gyro_reg                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_gyro_sens                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_int_status                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_lpf                                       obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_power_state                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_sample_rate                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_get_temperature                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_init                                          obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_load_firmware                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_lp_accel_mode                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_math.c.f7a82229                               /tmp/ccMQnR5Q.debug.temp.o
+mpu_read_6050_accel_bias                          obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_read_6500_accel_bias                          obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_read_fifo                                     obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_read_fifo_stream                              obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_read_gyro_bias                                obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_read_mem                                      obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_read_reg                                      obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_reg_dump                                      obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_reset_fifo                                    obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_set_accel_bias_6050_reg                       obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_accel_bias_6500_reg                       obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_accel_fsr                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_set_bypass                                    obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_compass_sample_rate                       obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_dmp_state                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_set_gyro_bias_reg                             obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_gyro_fsr                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_set_int_latched                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_int_level                                 obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_lpf                                       obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_sample_rate                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+mpu_set_sensors                                   obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+mpu_write_mem                                     obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+noAttention                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+nrf24_ce_digitalWrite                             obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_config                                      obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_configRegister                              obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+nrf24_csn_digitalWrite                            obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+nrf24_dataReady                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_enable_ack_payload                          obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_flush_rx                                    obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+nrf24_flush_tx                                    obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+nrf24_getData                                     obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_getStatus                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_init                                        obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_isSending                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_lastMessageStatus                           obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_payloadLength                               obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_powerDown                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_powerUpRx                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_powerUpTx                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_readRegister                                obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_readRegister1                               obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_retransmissionCount                         obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_rxFifoEmpty                                 obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_rx_address                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_send                                        obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_setCRCLen                                   obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_setDataRate                                 obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_set_pa                                      obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_toggle_features                             obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_transferSync                                obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24_transmitSync                                obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+nrf24_txFifoEmpty                                 obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+nrf24_txFifoFull                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+nrf24_tx_address                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+nrf24_writeAckPayload                             obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+nrf24_writeRegister                               obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+nrf24l01.c.568631c5                               /tmp/cclpQfdT.debug.temp.o
+out                                               obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+p_type                                            obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+pinData                                           obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+pinMode                                           obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/spi.o (symbol from plugin)
+pins.c.862eef5b                                   /tmp/ccR1LG0V.debug.temp.o
+pollRate                                          obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+port_to_input_PGM                                 obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+port_to_mode_PGM                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+port_to_output_PGM                                obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+prevController                                    obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+processHIDReadFeatureReport                       obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+processHIDWriteFeatureReport                      obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+ps2CtrlType                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+q                                                 obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+quaternionToEuler                                 obj/ardwiino-mega2560-main-atmega2560-16000000/mpu_math.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+read                                              obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readClassicExt                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readClassicExtHighRes                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readConfigBlock                                   obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+readDJExt                                         obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readDrawsomeExt                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readDrumExt                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readExtID                                         obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readFunction                                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readGuitarExt                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readNunchukExt                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readPS2Button                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readTataconExt                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readUDrawExt                                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readWiiButton                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+read_button_function                              obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+ready                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+readyForPacket                                    obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+reboot                                            obj/ardwiino-mega2560-main-atmega2560-16000000/bootloader.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+reg                                               obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+reinitDirectInput                                 obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+reports.c.65f4e486                                /tmp/cc43hfsh.debug.temp.o
+resetConfig                                       obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+revbits2                                          obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+rf.c.88e5a49e                                     /tmp/ccaHuA7t.debug.temp.o
+rf_interrupt                                      obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+scale                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+scales                                            obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+sendCommand                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+serial_handler.c.12b600e7                         /tmp/ccyW3iA4.debug.temp.o
+setSP                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+setUpAnalogDigitalPin                             obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+setUpAnalogPin                                    obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+setUpDigital                                      obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+setUpValidPins                                    obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+setupADC                                          obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+setupMicrosTimer                                  obj/ardwiino-mega2560-main-atmega2560-16000000/timer.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+shiftDataInOut                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+shouldSkipPin                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+signalAttention                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+spPin                                             obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+spi.c.928c6f05                                    /tmp/ccei3IXL.debug.temp.o
+spi_begin                                         obj/ardwiino-mega2560-main-atmega2560-16000000/spi.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+spi_transfer                                      obj/ardwiino-mega2560-main-atmega2560-16000000/spi.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+stopReading                                       obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+stopSearching                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+strcpy_P                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr6/libc.a(strcpy_P.o)
+                                                  /tmp/ardwiino-mega2560-main-atmega2560-16000000.elf.EyrkPX.ltrans0.ltrans.o
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+tick                                              obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickAnalog                                        obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickDigitalTilt                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickDirectInput                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickGH5Neck                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickGuitar                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickInputs                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+tickLEDs                                          obj/ardwiino-mega2560-main-atmega2560-16000000/leds.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+tickMPUTilt                                       obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickPS2CtrlInput                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tickRFInput                                       obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+tickRFTX                                          obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+tickWiiExtInput                                   obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tick_function                                     obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tiltInverted                                      obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tiltPin                                           obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+tiltType                                          obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+timer.c.5f4ecc84                                  /tmp/cca5uvi8.debug.temp.o
+timer0_overflow_count                             obj/ardwiino-mega2560-main-atmega2560-16000000/timer.o (symbol from plugin)
+triggerInterrupt                                  obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)
+triggerThreshold                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+triggerThresholdKb                                obj/ardwiino-mega2560-main-atmega2560-16000000/reports.o (symbol from plugin)
+twi_disable                                       obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+twi_init                                          obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+twi_readFrom                                      obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o (symbol from plugin)
+twi_readFromPointer                               obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+twi_readFromPointerSlow                           obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+twi_releaseBus                                    obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+twi_reply                                         obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+twi_stop                                          obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+twi_writeSingleToPointer                          obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+twi_writeTo                                       obj/ardwiino-mega2560-main-atmega2560-16000000/i2c.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o (symbol from plugin)
+twi_writeToPointer                                obj/ardwiino-mega2560-main-atmega2560-16000000/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/inv_mpu.o (symbol from plugin)
+typeIsDrum                                        obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+typeIsGuitar                                      obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+types                                             obj/ardwiino-mega2560-main-atmega2560-16000000/guitar_includes.o (symbol from plugin)
+usingI2C                                          obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+usingSPI                                          obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+validAnalog                                       obj/ardwiino-mega2560-main-atmega2560-16000000/pins.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+validPins                                         obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+verifyData                                        obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+wide_band                                         obj/ardwiino-mega2560-main-atmega2560-16000000/nrf24l01.o (symbol from plugin)
+wiiButtonBindings                                 obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+wiiExtensionID                                    obj/ardwiino-mega2560-main-atmega2560-16000000/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+writeConfigBlock                                  obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+writeConfigByte                                   obj/ardwiino-mega2560-main-atmega2560-16000000/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+writeData                                         obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+writeToUSB                                        obj/ardwiino-mega2560-main-atmega2560-16000000/main.o (symbol from plugin)
+                                                  obj/ardwiino-mega2560-main-atmega2560-16000000/serial_handler.o (symbol from plugin)
+write_config                                      obj/ardwiino-mega2560-main-atmega2560-16000000/rf.o (symbol from plugin)

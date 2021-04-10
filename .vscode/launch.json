@@ -5,23 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
+            "name": "GDB",
+            "type": "gdb",
             "request": "launch",
-            "program": "enter program name, for example ${workspaceFolder}/a.out",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
+            "cwd": "${workspaceRoot}",
+            "target": "${workspaceFolder}/buildDebug/ardwiino-pico-rp2040.elf",
+            "gdbpath": "/usr/bin/arm-none-eabi-gdb",
+            "autorun": [
+                "target extended-remote | openocd -f interface/picoprobe.cfg -f target/rp2040.cfg  -c \"gdb_port pipe\"",
+                "load",
+                "monitor reset init"
+            ],
+            "preLaunchTask": "build"
         }
     ]
 }

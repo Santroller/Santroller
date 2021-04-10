@@ -4,8 +4,8 @@
 #define PIN_A1 27
 #define PIN_A2 28
 #define NUM_ANALOG_INPUTS 3
-#define PIN_WIRE_SDA 0
-#define PIN_WIRE_SCL 1
+#define PIN_WIRE_SDA 26
+#define PIN_WIRE_SCL 27
 #define PIN_SPI_MOSI 3
 #define PIN_SPI_MISO 4
 #define PIN_SPI_SS 5

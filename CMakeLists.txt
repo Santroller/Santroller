@@ -215,6 +215,13 @@ foreach(TYPE ${TYPES})
            FLASH_TARGET_OFFSET=${FLASH_TARGET_OFFSET}
            RF_TARGET_OFFSET=${RF_TARGET_OFFSET})
 
+  if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+    pico_enable_stdio_uart(${TARGET} 0)
+    pico_enable_stdio_usb(${TARGET} 0)
+  else()
+    pico_enable_stdio_uart(${TARGET} 1)
+    pico_enable_stdio_usb(${TARGET} 0)
+  endif()
   # Add pico_stdlib library which aggregates commonly used features
   target_link_libraries(
     ${TARGET}

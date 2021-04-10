@@ -31,6 +31,7 @@ add_executable(pico_test_flash main.c
 ../../../src/pico/lib/eeprom/eeprom.c
 ../../../src/shared/lib/i2c/i2c_shared.c
 ../../../lib/avr-nrf24l01/src/nrf24l01.c
+../../../lib/fxpt_math/fxpt_math.c
 ../../../lib/mpu6050/inv_mpu_dmp_motion_driver.c
 ../../../lib/mpu6050/inv_mpu.c
 ../../../lib/mpu6050/mpu_math.c
@@ -77,7 +78,7 @@ target_link_libraries(
   pico_mem_ops)
 # enable usb output, disable uart output
 pico_enable_stdio_usb(pico_test_flash 1)
-pico_enable_stdio_uart(pico_test_flash 0)
+pico_enable_stdio_uart(pico_test_flash 1)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(pico_test_flash)

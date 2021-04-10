@@ -6,6 +6,7 @@
 #include "util/util.h"
 #include <math.h>
 #include <stdio.h>
+#include "hardware/gpio.h"
 
 void spi_begin(uint32_t clock, bool cpol, bool cpha) {
   spi_init(spi0, clock);

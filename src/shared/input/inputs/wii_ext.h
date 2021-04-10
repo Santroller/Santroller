@@ -120,7 +120,7 @@ void readClassicExt(Controller_t *controller, uint8_t *data) {
 }
 void readNunchukExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;
-  controller->l_y = (data[2] - 0x80) << 8;
+  controller->l_y = (data[1] - 0x80) << 8;
   if (mapNunchukAccelToRightJoy) {
     uint16_t accX = ((data[2] << 2) | ((data[5] & 0xC0) >> 6)) - 511;
     uint16_t accY = ((data[3] << 2) | ((data[5] & 0x30) >> 4)) - 511;

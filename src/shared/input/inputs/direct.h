@@ -72,9 +72,9 @@ void initDirectInput(Configuration_t *config) {
   }
 }
 bool shouldSkipPin(uint8_t i) {
-  // On the 328p, due to an inline LED, it isn't possible to check pin 13
+  // On the 328p, due to an inline LED, it isn't possible to check pin 13, also if debug is turned on then also dont allow uart pins.
 #if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) ||              \
-    defined(__AVR_ATmega328P__)
+    defined(__AVR_ATmega328P__) || !defined(NDEBUG)
   if (i == 13 || i == 0 || i == 1) return true;
 #endif
   // Skip sda + scl when using peripherials utilising I2C

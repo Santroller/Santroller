@@ -1,0 +1,2083 @@
+Archive member included to satisfy reference by file (symbol)
+
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/fxpt_math.o (symbol from plugin) (lrint)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o) (__fp_splitA)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o) (__fp_zero)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o (exit)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy_P.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin) (memcpy_P)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strcpy_P.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin) (strcpy_P)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strlen_P.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin) (__strlen_P)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin) (eeprom_read_block)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_byte.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin) (eeprom_read_byte)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin) (eeprom_update_block)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+                              obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin) (eeprom_update_byte)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__mulsf3)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o) (__mulsf3x)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_inf.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o) (__fp_inf)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_nan.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o) (__fp_nan)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscA.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o) (__fp_pscA)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscB.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o) (__fp_pscB)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_round.o)
+                              /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o) (__fp_round)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__mulsi3)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__udivmodhi4)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__divmodhi4)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__udivmodsi4)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__divmodsi4)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+                              /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o) (__negsi2)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__do_copy_data)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__do_clear_bss)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__bswapsi2)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__mulhisi3)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+                              /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o) (__umulhisi3)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+                              /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o) (__usmulhisi3_tail)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+                              /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o) (__muluhisi3)
+/usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (__mulshisi3)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcmp.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (memcmp)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (memcpy)
+/usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memset.o)
+                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o (memset)
+
+Discarded input sections
+
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+ .debug_info    0x0000000000000000      0xde7 /tmp/cczIlbka.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1c5 /tmp/cczIlbka.debug.temp.o
+ .debug_line    0x0000000000000000      0x2ac /tmp/cczIlbka.debug.temp.o
+ .debug_str     0x0000000000000000      0xbc6 /tmp/cczIlbka.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cczIlbka.debug.temp.o
+ .debug_info    0x0000000000000000      0x78f /tmp/ccqpzC5Y.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x117 /tmp/ccqpzC5Y.debug.temp.o
+ .debug_line    0x0000000000000000      0x132 /tmp/ccqpzC5Y.debug.temp.o
+ .debug_str     0x0000000000000000      0xbec /tmp/ccqpzC5Y.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccqpzC5Y.debug.temp.o
+ .debug_info    0x0000000000000000      0x4a3 /tmp/ccPTLaMK.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x138 /tmp/ccPTLaMK.debug.temp.o
+ .debug_line    0x0000000000000000      0x215 /tmp/ccPTLaMK.debug.temp.o
+ .debug_str     0x0000000000000000      0x65a /tmp/ccPTLaMK.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccPTLaMK.debug.temp.o
+ .debug_info    0x0000000000000000      0x82b /tmp/cc9Ze1XV.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1f0 /tmp/cc9Ze1XV.debug.temp.o
+ .debug_line    0x0000000000000000      0x1ff /tmp/cc9Ze1XV.debug.temp.o
+ .debug_str     0x0000000000000000      0x94e /tmp/cc9Ze1XV.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc9Ze1XV.debug.temp.o
+ .debug_info    0x0000000000000000      0x8dd /tmp/ccFb3ZNA.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x24c /tmp/ccFb3ZNA.debug.temp.o
+ .debug_line    0x0000000000000000      0x289 /tmp/ccFb3ZNA.debug.temp.o
+ .debug_str     0x0000000000000000      0xa69 /tmp/ccFb3ZNA.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccFb3ZNA.debug.temp.o
+ .debug_info    0x0000000000000000      0x48d /tmp/ccW4eu9Z.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x17a /tmp/ccW4eu9Z.debug.temp.o
+ .debug_line    0x0000000000000000      0x219 /tmp/ccW4eu9Z.debug.temp.o
+ .debug_str     0x0000000000000000      0x689 /tmp/ccW4eu9Z.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccW4eu9Z.debug.temp.o
+ .debug_info    0x0000000000000000      0x528 /tmp/ccXqwFWC.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1ad /tmp/ccXqwFWC.debug.temp.o
+ .debug_line    0x0000000000000000      0x234 /tmp/ccXqwFWC.debug.temp.o
+ .debug_str     0x0000000000000000      0x7ea /tmp/ccXqwFWC.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccXqwFWC.debug.temp.o
+ .debug_info    0x0000000000000000      0x3a2 /tmp/ccUl67DJ.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x149 /tmp/ccUl67DJ.debug.temp.o
+ .debug_line    0x0000000000000000      0x1bf /tmp/ccUl67DJ.debug.temp.o
+ .debug_str     0x0000000000000000      0x688 /tmp/ccUl67DJ.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccUl67DJ.debug.temp.o
+ .debug_info    0x0000000000000000      0x731 /tmp/ccQjpReS.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1ee /tmp/ccQjpReS.debug.temp.o
+ .debug_line    0x0000000000000000      0x233 /tmp/ccQjpReS.debug.temp.o
+ .debug_str     0x0000000000000000      0x927 /tmp/ccQjpReS.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccQjpReS.debug.temp.o
+ .debug_info    0x0000000000000000      0xc7b /tmp/ccoXFmHt.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1d4 /tmp/ccoXFmHt.debug.temp.o
+ .debug_line    0x0000000000000000      0x222 /tmp/ccoXFmHt.debug.temp.o
+ .debug_str     0x0000000000000000      0xd31 /tmp/ccoXFmHt.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccoXFmHt.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccmtfnM8.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccmtfnM8.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccmtfnM8.debug.temp.o
+ .debug_str     0x0000000000000000      0x23d /tmp/ccmtfnM8.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccmtfnM8.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccC3Abxf.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccC3Abxf.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccC3Abxf.debug.temp.o
+ .debug_str     0x0000000000000000      0x232 /tmp/ccC3Abxf.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccC3Abxf.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccjCJr5u.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccjCJr5u.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccjCJr5u.debug.temp.o
+ .debug_str     0x0000000000000000      0x230 /tmp/ccjCJr5u.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccjCJr5u.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccGAG6TJ.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccGAG6TJ.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccGAG6TJ.debug.temp.o
+ .debug_str     0x0000000000000000      0x230 /tmp/ccGAG6TJ.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccGAG6TJ.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccYuygYr.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccYuygYr.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccYuygYr.debug.temp.o
+ .debug_str     0x0000000000000000      0x238 /tmp/ccYuygYr.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccYuygYr.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccx9lxex.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccx9lxex.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccx9lxex.debug.temp.o
+ .debug_str     0x0000000000000000      0x231 /tmp/ccx9lxex.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccx9lxex.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/cckT3fBa.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/cckT3fBa.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/cckT3fBa.debug.temp.o
+ .debug_str     0x0000000000000000      0x234 /tmp/cckT3fBa.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cckT3fBa.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/cc7tNoq2.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/cc7tNoq2.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/cc7tNoq2.debug.temp.o
+ .debug_str     0x0000000000000000      0x232 /tmp/cc7tNoq2.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc7tNoq2.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccAWYgT7.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccAWYgT7.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccAWYgT7.debug.temp.o
+ .debug_str     0x0000000000000000      0x237 /tmp/ccAWYgT7.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccAWYgT7.debug.temp.o
+ .debug_info    0x0000000000000000      0x66f /tmp/ccqSospU.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1a3 /tmp/ccqSospU.debug.temp.o
+ .debug_line    0x0000000000000000       0xa0 /tmp/ccqSospU.debug.temp.o
+ .debug_str     0x0000000000000000      0x721 /tmp/ccqSospU.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccqSospU.debug.temp.o
+ .debug_info    0x0000000000000000       0x95 /tmp/cccUmtTO.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x66 /tmp/cccUmtTO.debug.temp.o
+ .debug_line    0x0000000000000000       0xd5 /tmp/cccUmtTO.debug.temp.o
+ .debug_str     0x0000000000000000      0x284 /tmp/cccUmtTO.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cccUmtTO.debug.temp.o
+ .debug_info    0x0000000000000000      0xac3 /tmp/ccPRzEjV.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x141 /tmp/ccPRzEjV.debug.temp.o
+ .debug_line    0x0000000000000000      0x21f /tmp/ccPRzEjV.debug.temp.o
+ .debug_str     0x0000000000000000      0x89a /tmp/ccPRzEjV.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccPRzEjV.debug.temp.o
+ .debug_info    0x0000000000000000      0x3ac /tmp/ccc13A7A.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x165 /tmp/ccc13A7A.debug.temp.o
+ .debug_line    0x0000000000000000      0x213 /tmp/ccc13A7A.debug.temp.o
+ .debug_str     0x0000000000000000      0x673 /tmp/ccc13A7A.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccc13A7A.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccgENOG2.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccgENOG2.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccgENOG2.debug.temp.o
+ .debug_str     0x0000000000000000      0x22c /tmp/ccgENOG2.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccgENOG2.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccT81ufB.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccT81ufB.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccT81ufB.debug.temp.o
+ .debug_str     0x0000000000000000      0x232 /tmp/ccT81ufB.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccT81ufB.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/cclzXTYI.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/cclzXTYI.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/cclzXTYI.debug.temp.o
+ .debug_str     0x0000000000000000      0x22c /tmp/cclzXTYI.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cclzXTYI.debug.temp.o
+ .debug_info    0x0000000000000000      0x27f /tmp/ccseneA5.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xf4 /tmp/ccseneA5.debug.temp.o
+ .debug_line    0x0000000000000000      0x203 /tmp/ccseneA5.debug.temp.o
+ .debug_str     0x0000000000000000      0x53f /tmp/ccseneA5.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccseneA5.debug.temp.o
+ .debug_info    0x0000000000000000      0x277 /tmp/ccybucgA.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x122 /tmp/ccybucgA.debug.temp.o
+ .debug_line    0x0000000000000000      0x1ff /tmp/ccybucgA.debug.temp.o
+ .debug_str     0x0000000000000000      0x4f0 /tmp/ccybucgA.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccybucgA.debug.temp.o
+ .debug_info    0x0000000000000000      0x28d /tmp/cc1G0P55.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x123 /tmp/cc1G0P55.debug.temp.o
+ .debug_line    0x0000000000000000       0xdc /tmp/cc1G0P55.debug.temp.o
+ .debug_str     0x0000000000000000      0x472 /tmp/cc1G0P55.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc1G0P55.debug.temp.o
+ .debug_info    0x0000000000000000      0x54a /tmp/cctJRKfm.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1a6 /tmp/cctJRKfm.debug.temp.o
+ .debug_line    0x0000000000000000      0x1ae /tmp/cctJRKfm.debug.temp.o
+ .debug_str     0x0000000000000000      0x928 /tmp/cctJRKfm.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cctJRKfm.debug.temp.o
+ .debug_info    0x0000000000000000       0xb0 /tmp/ccJhWqpm.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x6f /tmp/ccJhWqpm.debug.temp.o
+ .debug_line    0x0000000000000000       0x72 /tmp/ccJhWqpm.debug.temp.o
+ .debug_str     0x0000000000000000      0x25d /tmp/ccJhWqpm.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccJhWqpm.debug.temp.o
+ .debug_info    0x0000000000000000       0x56 /tmp/ccoeOFeh.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x26 /tmp/ccoeOFeh.debug.temp.o
+ .debug_line    0x0000000000000000       0x1d /tmp/ccoeOFeh.debug.temp.o
+ .debug_str     0x0000000000000000      0x22d /tmp/ccoeOFeh.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccoeOFeh.debug.temp.o
+ .debug_info    0x0000000000000000      0x1ab /tmp/ccWKTlwY.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x114 /tmp/ccWKTlwY.debug.temp.o
+ .debug_line    0x0000000000000000      0x120 /tmp/ccWKTlwY.debug.temp.o
+ .debug_str     0x0000000000000000      0x3da /tmp/ccWKTlwY.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccWKTlwY.debug.temp.o
+ .debug_info    0x0000000000000000       0xf7 /tmp/cc1zBR2O.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x91 /tmp/cc1zBR2O.debug.temp.o
+ .debug_line    0x0000000000000000       0x64 /tmp/cc1zBR2O.debug.temp.o
+ .debug_str     0x0000000000000000      0x276 /tmp/cc1zBR2O.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc1zBR2O.debug.temp.o
+ .debug_info    0x0000000000000000      0x53f /tmp/cczg2qWV.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x16c /tmp/cczg2qWV.debug.temp.o
+ .debug_line    0x0000000000000000      0x189 /tmp/cczg2qWV.debug.temp.o
+ .debug_str     0x0000000000000000      0x7d4 /tmp/cczg2qWV.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cczg2qWV.debug.temp.o
+ .debug_info    0x0000000000000000     0x10c3 /tmp/cc0Fx2Jo.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1b5 /tmp/cc0Fx2Jo.debug.temp.o
+ .debug_line    0x0000000000000000      0x219 /tmp/cc0Fx2Jo.debug.temp.o
+ .debug_str     0x0000000000000000      0xc6b /tmp/cc0Fx2Jo.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc0Fx2Jo.debug.temp.o
+ .debug_info    0x0000000000000000      0x589 /tmp/cctUs0Gz.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x115 /tmp/cctUs0Gz.debug.temp.o
+ .debug_line    0x0000000000000000       0x72 /tmp/cctUs0Gz.debug.temp.o
+ .debug_str     0x0000000000000000      0x4c1 /tmp/cctUs0Gz.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cctUs0Gz.debug.temp.o
+ .debug_info    0x0000000000000000      0xf73 /tmp/ccleJoeK.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x195 /tmp/ccleJoeK.debug.temp.o
+ .debug_line    0x0000000000000000       0x8e /tmp/ccleJoeK.debug.temp.o
+ .debug_str     0x0000000000000000      0xafb /tmp/ccleJoeK.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccleJoeK.debug.temp.o
+ .debug_info    0x0000000000000000      0x141 /tmp/ccnTQN5f.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xd4 /tmp/ccnTQN5f.debug.temp.o
+ .debug_line    0x0000000000000000       0x9b /tmp/ccnTQN5f.debug.temp.o
+ .debug_str     0x0000000000000000      0x257 /tmp/ccnTQN5f.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccnTQN5f.debug.temp.o
+ .debug_info    0x0000000000000000      0x109 /tmp/ccGQXqh7.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x8c /tmp/ccGQXqh7.debug.temp.o
+ .debug_line    0x0000000000000000       0x60 /tmp/ccGQXqh7.debug.temp.o
+ .debug_str     0x0000000000000000      0x279 /tmp/ccGQXqh7.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccGQXqh7.debug.temp.o
+ .debug_info    0x0000000000000000      0x217 /tmp/ccieofrz.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xf7 /tmp/ccieofrz.debug.temp.o
+ .debug_line    0x0000000000000000       0x60 /tmp/ccieofrz.debug.temp.o
+ .debug_str     0x0000000000000000      0x33b /tmp/ccieofrz.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccieofrz.debug.temp.o
+ .debug_info    0x0000000000000000      0xe9e /tmp/ccpf7xMr.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x1d7 /tmp/ccpf7xMr.debug.temp.o
+ .debug_line    0x0000000000000000      0x17e /tmp/ccpf7xMr.debug.temp.o
+ .debug_str     0x0000000000000000      0x6cd /tmp/ccpf7xMr.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccpf7xMr.debug.temp.o
+ .debug_info    0x0000000000000000      0x87a /tmp/ccepNhbH.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x12b /tmp/ccepNhbH.debug.temp.o
+ .debug_line    0x0000000000000000      0x12d /tmp/ccepNhbH.debug.temp.o
+ .debug_str     0x0000000000000000      0x506 /tmp/ccepNhbH.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccepNhbH.debug.temp.o
+ .debug_info    0x0000000000000000      0x220 /tmp/ccwt3n8O.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x114 /tmp/ccwt3n8O.debug.temp.o
+ .debug_line    0x0000000000000000       0x65 /tmp/ccwt3n8O.debug.temp.o
+ .debug_str     0x0000000000000000      0x2f3 /tmp/ccwt3n8O.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccwt3n8O.debug.temp.o
+ .debug_info    0x0000000000000000     0x1c7e /tmp/cc1k4UwT.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x2be /tmp/cc1k4UwT.debug.temp.o
+ .debug_line    0x0000000000000000      0x238 /tmp/cc1k4UwT.debug.temp.o
+ .debug_str     0x0000000000000000     0x13d2 /tmp/cc1k4UwT.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cc1k4UwT.debug.temp.o
+ .debug_info    0x0000000000000000      0xf5f /tmp/ccLq6gnL.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x150 /tmp/ccLq6gnL.debug.temp.o
+ .debug_line    0x0000000000000000      0x134 /tmp/ccLq6gnL.debug.temp.o
+ .debug_str     0x0000000000000000      0xef0 /tmp/ccLq6gnL.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccLq6gnL.debug.temp.o
+ .debug_info    0x0000000000000000      0x5c5 /tmp/ccAjVOFg.debug.temp.o
+ .debug_abbrev  0x0000000000000000      0x182 /tmp/ccAjVOFg.debug.temp.o
+ .debug_line    0x0000000000000000       0xa3 /tmp/ccAjVOFg.debug.temp.o
+ .debug_str     0x0000000000000000      0x5cc /tmp/ccAjVOFg.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccAjVOFg.debug.temp.o
+ .debug_info    0x0000000000000000      0x1dd /tmp/ccuGsvgf.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xc8 /tmp/ccuGsvgf.debug.temp.o
+ .debug_line    0x0000000000000000       0x9e /tmp/ccuGsvgf.debug.temp.o
+ .debug_str     0x0000000000000000      0x4f7 /tmp/ccuGsvgf.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccuGsvgf.debug.temp.o
+ .debug_info    0x0000000000000000      0x1ef /tmp/ccSPQV3V.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xc6 /tmp/ccSPQV3V.debug.temp.o
+ .debug_line    0x0000000000000000       0x8b /tmp/ccSPQV3V.debug.temp.o
+ .debug_str     0x0000000000000000      0x2ef /tmp/ccSPQV3V.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccSPQV3V.debug.temp.o
+ .debug_info    0x0000000000000000      0x254 /tmp/cchDMB41.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0xac /tmp/cchDMB41.debug.temp.o
+ .debug_line    0x0000000000000000       0x64 /tmp/cchDMB41.debug.temp.o
+ .debug_str     0x0000000000000000      0x2ca /tmp/cchDMB41.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/cchDMB41.debug.temp.o
+ .debug_info    0x0000000000000000       0xd0 /tmp/ccY5RWKn.debug.temp.o
+ .debug_abbrev  0x0000000000000000       0x8c /tmp/ccY5RWKn.debug.temp.o
+ .debug_line    0x0000000000000000       0x8c /tmp/ccY5RWKn.debug.temp.o
+ .debug_str     0x0000000000000000      0x270 /tmp/ccY5RWKn.debug.temp.o
+ .comment       0x0000000000000000       0x13 /tmp/ccY5RWKn.debug.temp.o
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_inf.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_inf.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_inf.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_nan.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_nan.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_nan.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscA.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscA.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscA.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscB.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscB.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscB.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_round.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_round.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_round.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text.libgcc.mul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text.libgcc.div
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text.libgcc   0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text.libgcc.prologue
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text.libgcc.builtins
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text.libgcc.fmul
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text.libgcc.fixed
+                0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy_P.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy_P.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy_P.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strcpy_P.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strcpy_P.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strcpy_P.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strlen_P.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strlen_P.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strlen_P.o)
+ .text.avr-libc
+                0x0000000000000000       0x12 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strlen_P.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcmp.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcmp.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcmp.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memset.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memset.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memset.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_byte.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_byte.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_byte.o)
+ .text.avr-libc
+                0x0000000000000000       0x10 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_byte.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+ .text          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+ .data          0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+ .bss           0x0000000000000000        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+text             0x0000000000000000 0x0000000000020000 xr
+data             0x0000000000800060 0x000000000000ffa0 rw !x
+eeprom           0x0000000000810000 0x0000000000010000 rw !x
+fuse             0x0000000000820000 0x0000000000000400 rw !x
+lock             0x0000000000830000 0x0000000000000400 rw !x
+signature        0x0000000000840000 0x0000000000000400 rw !x
+user_signatures  0x0000000000850000 0x0000000000000400 rw !x
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+Address of section .data set to 0x800100
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/main.o
+LOAD /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+LOAD /tmp/cczIlbka.debug.temp.o
+LOAD /tmp/ccqpzC5Y.debug.temp.o
+LOAD /tmp/ccPTLaMK.debug.temp.o
+LOAD /tmp/cc9Ze1XV.debug.temp.o
+LOAD /tmp/ccFb3ZNA.debug.temp.o
+LOAD /tmp/ccW4eu9Z.debug.temp.o
+LOAD /tmp/ccXqwFWC.debug.temp.o
+LOAD /tmp/ccUl67DJ.debug.temp.o
+LOAD /tmp/ccQjpReS.debug.temp.o
+LOAD /tmp/ccoXFmHt.debug.temp.o
+LOAD /tmp/ccmtfnM8.debug.temp.o
+LOAD /tmp/ccC3Abxf.debug.temp.o
+LOAD /tmp/ccjCJr5u.debug.temp.o
+LOAD /tmp/ccGAG6TJ.debug.temp.o
+LOAD /tmp/ccYuygYr.debug.temp.o
+LOAD /tmp/ccx9lxex.debug.temp.o
+LOAD /tmp/cckT3fBa.debug.temp.o
+LOAD /tmp/cc7tNoq2.debug.temp.o
+LOAD /tmp/ccAWYgT7.debug.temp.o
+LOAD /tmp/ccqSospU.debug.temp.o
+LOAD /tmp/cccUmtTO.debug.temp.o
+LOAD /tmp/ccPRzEjV.debug.temp.o
+LOAD /tmp/ccc13A7A.debug.temp.o
+LOAD /tmp/ccgENOG2.debug.temp.o
+LOAD /tmp/ccT81ufB.debug.temp.o
+LOAD /tmp/cclzXTYI.debug.temp.o
+LOAD /tmp/ccseneA5.debug.temp.o
+LOAD /tmp/ccybucgA.debug.temp.o
+LOAD /tmp/cc1G0P55.debug.temp.o
+LOAD /tmp/cctJRKfm.debug.temp.o
+LOAD /tmp/ccJhWqpm.debug.temp.o
+LOAD /tmp/ccoeOFeh.debug.temp.o
+LOAD /tmp/ccWKTlwY.debug.temp.o
+LOAD /tmp/cc1zBR2O.debug.temp.o
+LOAD /tmp/cczg2qWV.debug.temp.o
+LOAD /tmp/cc0Fx2Jo.debug.temp.o
+LOAD /tmp/cctUs0Gz.debug.temp.o
+LOAD /tmp/ccleJoeK.debug.temp.o
+LOAD /tmp/ccnTQN5f.debug.temp.o
+LOAD /tmp/ccGQXqh7.debug.temp.o
+LOAD /tmp/ccieofrz.debug.temp.o
+LOAD /tmp/ccpf7xMr.debug.temp.o
+LOAD /tmp/ccepNhbH.debug.temp.o
+LOAD /tmp/ccwt3n8O.debug.temp.o
+LOAD /tmp/cc1k4UwT.debug.temp.o
+LOAD /tmp/ccLq6gnL.debug.temp.o
+LOAD /tmp/ccAjVOFg.debug.temp.o
+LOAD /tmp/ccuGsvgf.debug.temp.o
+LOAD /tmp/ccSPQV3V.debug.temp.o
+LOAD /tmp/cchDMB41.debug.temp.o
+LOAD /tmp/ccY5RWKn.debug.temp.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/AndroidAccessoryClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/StillImageClassHost.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/HIDParser.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/Device_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/Host_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/PipeStream_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/Pipe_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/ConfigDescriptors.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/HostStandardReq.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/USBTask.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/timer.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/mpu_math.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/spi.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/guitar_includes.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/fxpt_math.o
+LOAD obj/ardwiino-micro-atmega32u4-16000000-rf/bootloader.o
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a
+Address of section .rfrecv set to 0x7b00
+START GROUP
+LOAD /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a
+LOAD /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a
+END GROUP
+                0x0000000000020000                __TEXT_REGION_LENGTH__ = DEFINED (__TEXT_REGION_LENGTH__)?__TEXT_REGION_LENGTH__:0x20000
+                0x000000000000ffa0                __DATA_REGION_LENGTH__ = DEFINED (__DATA_REGION_LENGTH__)?__DATA_REGION_LENGTH__:0xffa0
+                0x0000000000010000                __EEPROM_REGION_LENGTH__ = DEFINED (__EEPROM_REGION_LENGTH__)?__EEPROM_REGION_LENGTH__:0x10000
+                0x0000000000000400                __FUSE_REGION_LENGTH__ = DEFINED (__FUSE_REGION_LENGTH__)?__FUSE_REGION_LENGTH__:0x400
+                0x0000000000000400                __LOCK_REGION_LENGTH__ = DEFINED (__LOCK_REGION_LENGTH__)?__LOCK_REGION_LENGTH__:0x400
+                0x0000000000000400                __SIGNATURE_REGION_LENGTH__ = DEFINED (__SIGNATURE_REGION_LENGTH__)?__SIGNATURE_REGION_LENGTH__:0x400
+                0x0000000000000400                __USER_SIGNATURE_REGION_LENGTH__ = DEFINED (__USER_SIGNATURE_REGION_LENGTH__)?__USER_SIGNATURE_REGION_LENGTH__:0x400
+
+.hash
+ *(.hash)
+
+.dynsym
+ *(.dynsym)
+
+.dynstr
+ *(.dynstr)
+
+.gnu.version
+ *(.gnu.version)
+
+.gnu.version_d
+ *(.gnu.version_d)
+
+.gnu.version_r
+ *(.gnu.version_r)
+
+.rel.init
+ *(.rel.init)
+
+.rela.init
+ *(.rela.init)
+
+.rel.text
+ *(.rel.text)
+ *(.rel.text.*)
+ *(.rel.gnu.linkonce.t*)
+
+.rela.text
+ *(.rela.text)
+ *(.rela.text.*)
+ *(.rela.gnu.linkonce.t*)
+
+.rel.fini
+ *(.rel.fini)
+
+.rela.fini
+ *(.rela.fini)
+
+.rel.rodata
+ *(.rel.rodata)
+ *(.rel.rodata.*)
+ *(.rel.gnu.linkonce.r*)
+
+.rela.rodata
+ *(.rela.rodata)
+ *(.rela.rodata.*)
+ *(.rela.gnu.linkonce.r*)
+
+.rel.data
+ *(.rel.data)
+ *(.rel.data.*)
+ *(.rel.gnu.linkonce.d*)
+
+.rela.data
+ *(.rela.data)
+ *(.rela.data.*)
+ *(.rela.gnu.linkonce.d*)
+
+.rel.ctors
+ *(.rel.ctors)
+
+.rela.ctors
+ *(.rela.ctors)
+
+.rel.dtors
+ *(.rel.dtors)
+
+.rela.dtors
+ *(.rela.dtors)
+
+.rel.got
+ *(.rel.got)
+
+.rela.got
+ *(.rela.got)
+
+.rel.bss
+ *(.rel.bss)
+
+.rela.bss
+ *(.rela.bss)
+
+.rel.plt
+ *(.rel.plt)
+
+.rela.plt
+ *(.rela.plt)
+
+.text           0x0000000000000000     0x6386
+ *(.vectors)
+ .vectors       0x0000000000000000       0xac /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+                0x0000000000000000                __vectors
+                0x0000000000000000                __vector_default
+ *(.vectors)
+ *(.progmem.gcc*)
+                0x00000000000000ac                . = ALIGN (0x2)
+                0x00000000000000ac                __trampolines_start = .
+ *(.trampolines)
+ .trampolines   0x00000000000000ac        0x0 linker stubs
+ *(.trampolines*)
+                0x00000000000000ac                __trampolines_end = .
+ *libprintf_flt.a:*(.progmem.data)
+ *libc.a:*(.progmem.data)
+ *(.progmem.*)
+ .progmem.data  0x00000000000000ac      0xe8d /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                0x0000000000000f3a                . = ALIGN (0x2)
+ *fill*         0x0000000000000f39        0x1 
+ *(.lowtext)
+ *(.lowtext*)
+                0x0000000000000f3a                __ctors_start = .
+ *(.ctors)
+                0x0000000000000f3a                __ctors_end = .
+                0x0000000000000f3a                __dtors_start = .
+ *(.dtors)
+                0x0000000000000f3a                __dtors_end = .
+ SORT_BY_NAME(*)(.ctors)
+ SORT_BY_NAME(*)(.dtors)
+ *(.init0)
+ .init0         0x0000000000000f3a        0x0 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+                0x0000000000000f3a                __init
+ *(.init0)
+ *(.init1)
+ *(.init1)
+ *(.init2)
+ .init2         0x0000000000000f3a        0xc /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+ *(.init2)
+ *(.init3)
+ *(.init3)
+ *(.init4)
+ .init4         0x0000000000000f46       0x16 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+                0x0000000000000f46                __do_copy_data
+ .init4         0x0000000000000f5c       0x10 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+                0x0000000000000f5c                __do_clear_bss
+ *(.init4)
+ *(.init5)
+ *(.init5)
+ *(.init6)
+ *(.init6)
+ *(.init7)
+ *(.init7)
+ *(.init8)
+ *(.init8)
+ *(.init9)
+ .init9         0x0000000000000f6c        0x8 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+ *(.init9)
+ *(.text)
+ .text          0x0000000000000f74        0x2 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+                0x0000000000000f74                __vector_38
+                0x0000000000000f74                __vector_22
+                0x0000000000000f74                __vector_28
+                0x0000000000000f74                __vector_1
+                0x0000000000000f74                __vector_32
+                0x0000000000000f74                __vector_34
+                0x0000000000000f74                __vector_24
+                0x0000000000000f74                __vector_12
+                0x0000000000000f74                __bad_interrupt
+                0x0000000000000f74                __vector_6
+                0x0000000000000f74                __vector_31
+                0x0000000000000f74                __vector_35
+                0x0000000000000f74                __vector_39
+                0x0000000000000f74                __vector_3
+                0x0000000000000f74                __vector_30
+                0x0000000000000f74                __vector_25
+                0x0000000000000f74                __vector_11
+                0x0000000000000f74                __vector_13
+                0x0000000000000f74                __vector_17
+                0x0000000000000f74                __vector_19
+                0x0000000000000f74                __vector_41
+                0x0000000000000f74                __vector_27
+                0x0000000000000f74                __vector_5
+                0x0000000000000f74                __vector_33
+                0x0000000000000f74                __vector_37
+                0x0000000000000f74                __vector_9
+                0x0000000000000f74                __vector_2
+                0x0000000000000f74                __vector_21
+                0x0000000000000f74                __vector_15
+                0x0000000000000f74                __vector_29
+                0x0000000000000f74                __vector_40
+                0x0000000000000f74                __vector_8
+                0x0000000000000f74                __vector_26
+                0x0000000000000f74                __vector_14
+                0x0000000000000f74                __vector_16
+                0x0000000000000f74                __vector_18
+                0x0000000000000f74                __vector_20
+                0x0000000000000f74                __vector_42
+ .text          0x0000000000000f76     0x4074 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                0x0000000000004c74                __vector_7
+                0x0000000000004d08                __vector_10
+                0x0000000000004e6a                __vector_23
+                0x0000000000004eb0                __vector_36
+                0x0000000000004fde                __vector_4
+                0x0000000000004fea                . = ALIGN (0x2)
+ *(.text.*)
+ .text.startup  0x0000000000004fea      0xfb4 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                0x0000000000004fea                main
+ .text.avr-libc.fplib
+                0x0000000000005f9e       0x74 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+                0x0000000000005f9e                lrint
+ .text.avr-libc.fplib
+                0x0000000000006012       0x44 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+                0x0000000000006012                __fp_split3
+                0x0000000000006022                __fp_splitA
+ .text.avr-libc.fplib
+                0x0000000000006056        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+                0x0000000000006056                __fp_zero
+                0x0000000000006058                __fp_szero
+ .text.avr-libc.fplib
+                0x0000000000006064        0x4 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+                0x0000000000006064                __mulsf3
+ .text.avr-libc.fplib
+                0x0000000000006068       0xc2 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+                0x000000000000607c                __mulsf3x
+                0x0000000000006080                __mulsf3_pse
+ .text.avr-libc.fplib
+                0x000000000000612a        0xc /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_inf.o)
+                0x000000000000612a                __fp_inf
+ .text.avr-libc.fplib
+                0x0000000000006136        0x6 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_nan.o)
+                0x0000000000006136                __fp_nan
+ .text.avr-libc.fplib
+                0x000000000000613c        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscA.o)
+                0x000000000000613c                __fp_pscA
+ .text.avr-libc.fplib
+                0x000000000000614a        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscB.o)
+                0x000000000000614a                __fp_pscB
+ .text.avr-libc.fplib
+                0x0000000000006158       0x22 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_round.o)
+                0x0000000000006158                __fp_round
+ .text.libgcc.mul
+                0x000000000000617a       0x1e /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+                0x000000000000617a                __mulsi3
+ .text.libgcc.div
+                0x0000000000006198       0x28 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+                0x0000000000006198                __udivmodhi4
+ .text.libgcc.div
+                0x00000000000061c0       0x26 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+                0x00000000000061c0                __divmodhi4
+                0x00000000000061c0                _div
+ .text.libgcc.div
+                0x00000000000061e6       0x44 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+                0x00000000000061e6                __udivmodsi4
+ .text.libgcc.div
+                0x000000000000622a       0x28 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+                0x000000000000622a                __divmodsi4
+ .text.libgcc.div
+                0x0000000000006252       0x10 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+                0x0000000000006252                __negsi2
+ .text.libgcc.builtins
+                0x0000000000006262        0xe /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+                0x0000000000006262                __bswapsi2
+ .text.libgcc.mul
+                0x0000000000006270        0xc /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+                0x0000000000006270                __mulhisi3
+ .text.libgcc.mul
+                0x000000000000627c       0x1e /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+                0x000000000000627c                __umulhisi3
+ .text.libgcc.mul
+                0x000000000000629a        0xc /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+                0x000000000000629a                __usmulhisi3
+                0x000000000000629c                __usmulhisi3_tail
+ .text.libgcc.mul
+                0x00000000000062a6       0x14 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+                0x00000000000062a6                __muluhisi3
+ .text.libgcc.mul
+                0x00000000000062ba        0xc /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+                0x00000000000062ba                __mulshisi3
+                0x00000000000062be                __mulohisi3
+ .text.avr-libc
+                0x00000000000062c6       0x12 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy_P.o)
+                0x00000000000062c6                memcpy_P
+ .text.avr-libc
+                0x00000000000062d8        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strcpy_P.o)
+                0x00000000000062d8                strcpy_P
+ .text.avr-libc
+                0x00000000000062e6       0x1a /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcmp.o)
+                0x00000000000062e6                memcmp
+ .text.avr-libc
+                0x0000000000006300       0x12 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy.o)
+                0x0000000000006300                memcpy
+ .text.avr-libc
+                0x0000000000006312        0xe /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memset.o)
+                0x0000000000006312                memset
+ .text.avr-libc
+                0x0000000000006320       0x20 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+                0x0000000000006320                eeprom_read_block
+                0x0000000000006324                eeprom_read_blraw
+ .text.avr-libc
+                0x0000000000006340       0x1e /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+                0x0000000000006340                eeprom_update_block
+ .text.avr-libc
+                0x000000000000635e       0x24 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+                0x000000000000635e                eeprom_update_byte
+                0x0000000000006360                eeprom_update_r18
+                0x0000000000006382                . = ALIGN (0x2)
+ *(.fini9)
+ .fini9         0x0000000000006382        0x0 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+                0x0000000000006382                exit
+                0x0000000000006382                _exit
+ *(.fini9)
+ *(.fini8)
+ *(.fini8)
+ *(.fini7)
+ *(.fini7)
+ *(.fini6)
+ *(.fini6)
+ *(.fini5)
+ *(.fini5)
+ *(.fini4)
+ *(.fini4)
+ *(.fini3)
+ *(.fini3)
+ *(.fini2)
+ *(.fini2)
+ *(.fini1)
+ *(.fini1)
+ *(.fini0)
+ .fini0         0x0000000000006382        0x4 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+ *(.fini0)
+ *(.hightext)
+ *(.hightext*)
+ *(.progmemx.*)
+                0x0000000000006386                . = ALIGN (0x2)
+ *(.jumptables)
+ *(.jumptables*)
+                0x0000000000006386                _etext = .
+
+.data           0x0000000000800100       0xda load address 0x0000000000006386
+                0x0000000000800100                PROVIDE (__data_start = .)
+ *(.data)
+ .data          0x0000000000800100       0x5e /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+ *(.data*)
+ *(.gnu.linkonce.d*)
+ *(.rodata)
+ .rodata        0x000000000080015e       0x65 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+ *(.rodata*)
+ .rodata.str1.1
+                0x00000000008001c3       0x17 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+ *(.gnu.linkonce.r*)
+                0x00000000008001da                . = ALIGN (0x2)
+                0x00000000008001da                _edata = .
+                0x00000000008001da                PROVIDE (__data_end = .)
+
+.bss            0x00000000008001da      0x399
+                0x00000000008001da                PROVIDE (__bss_start = .)
+ *(.bss)
+ .bss           0x00000000008001da      0x399 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+ *(.bss*)
+ *(COMMON)
+                0x0000000000800573                PROVIDE (__bss_end = .)
+                0x0000000000006386                __data_load_start = LOADADDR (.data)
+                0x0000000000006460                __data_load_end = (__data_load_start + SIZEOF (.data))
+
+.noinit         0x0000000000800573        0x0
+                [!provide]                        PROVIDE (__noinit_start = .)
+ *(.noinit .noinit.* .gnu.linkonce.n.*)
+                [!provide]                        PROVIDE (__noinit_end = .)
+                0x0000000000800573                _end = .
+                [!provide]                        PROVIDE (__heap_start = .)
+
+.eeprom         0x0000000000810000      0x113
+ *(.eeprom*)
+ .eeprom        0x0000000000810000      0x113 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                0x0000000000810113                __eeprom_end = .
+
+.fuse
+ *(.fuse)
+ *(.lfuse)
+ *(.hfuse)
+ *(.efuse)
+
+.lock
+ *(.lock*)
+
+.signature
+ *(.signature*)
+
+.stab           0x0000000000000000     0xb91c
+ *(.stab)
+ .stab          0x0000000000000000     0xb91c /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+
+.stabstr        0x0000000000000000     0x2da6
+ *(.stabstr)
+ .stabstr       0x0000000000000000     0x2da6 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x0000000000000000       0x12
+ *(.comment)
+ .comment       0x0000000000000000       0x12 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                         0x13 (size before relaxing)
+
+.note.gnu.avr.deviceinfo
+                0x0000000000000000       0x40
+ .note.gnu.avr.deviceinfo
+                0x0000000000000000       0x40 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+
+.note.gnu.build-id
+ *(.note.gnu.build-id)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges
+ *(.debug_aranges)
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_info     0x0000000000000000      0x9f4
+ *(.debug_info .gnu.linkonce.wi.*)
+ .debug_info    0x0000000000000000      0x9f4 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+
+.debug_abbrev   0x0000000000000000      0x96a
+ *(.debug_abbrev)
+ .debug_abbrev  0x0000000000000000      0x96a /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+
+.debug_line     0x0000000000000000       0x1d
+ *(.debug_line .debug_line.* .debug_line_end)
+ .debug_line    0x0000000000000000       0x1d /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+
+.debug_frame
+ *(.debug_frame)
+
+.debug_str      0x0000000000000000      0x371
+ *(.debug_str)
+ .debug_str     0x0000000000000000      0x371 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+
+.debug_loc
+ *(.debug_loc)
+
+.debug_macinfo
+ *(.debug_macinfo)
+
+.debug_weaknames
+ *(.debug_weaknames)
+
+.debug_funcnames
+ *(.debug_funcnames)
+
+.debug_typenames
+ *(.debug_typenames)
+
+.debug_varnames
+ *(.debug_varnames)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges
+ *(.debug_ranges)
+
+.debug_addr
+ *(.debug_addr)
+
+.debug_line_str
+ *(.debug_line_str)
+
+.debug_loclists
+ *(.debug_loclists)
+
+.debug_macro
+ *(.debug_macro)
+
+.debug_names
+ *(.debug_names)
+
+.debug_rnglists
+ *(.debug_rnglists)
+
+.debug_str_offsets
+ *(.debug_str_offsets)
+
+.debug_sup
+ *(.debug_sup)
+OUTPUT(/home/sanjay/Code/Ardwiino/buildDebug/firmware/ardwiino-micro-atmega32u4-16000000-rf.elf elf32-avr)
+LOAD linker stubs
+
+.rfrecv         0x0000000000007b00        0x8
+ .rfrecv        0x0000000000007b00        0x8 /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+
+Cross Reference Table
+
+Symbol                                            File
+AndroidAccessoryClassHost.c.4c8974e4              /tmp/ccmtfnM8.debug.temp.o
+AudioClassDevice.c.987bfce6                       /tmp/ccPTLaMK.debug.temp.o
+AudioClassHost.c.f8748604                         /tmp/ccC3Abxf.debug.temp.o
+Audio_Device_ConfigureEndpoints                   obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+Audio_Device_Event_Stub                           obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+Audio_Device_ProcessControlRequest                obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+CALLBACK_Audio_Device_GetSetEndpointProperty      obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+CALLBACK_Audio_Device_GetSetInterfaceProperty     obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+CALLBACK_CCID_Abort                               obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_CCID_GetParameters_T0                    obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_CCID_GetSlotStatus                       obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_CCID_IccPowerOff                         obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_CCID_IccPowerOn                          obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_CCID_SetParameters_T0                    obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_CCID_XfrBlock                            obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CALLBACK_HIDParser_FilterHIDReportItem            obj/ardwiino-micro-atmega32u4-16000000-rf/HIDParser.o (symbol from plugin)
+CALLBACK_HID_Device_CreateHIDReport               obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+CALLBACK_HID_Device_ProcessHIDReport              obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+CALLBACK_MS_Device_SCSICommandReceived            obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+CALLBACK_USB_GetDescriptor                        obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+CCIDClassDevice.c.b80b9544                        /tmp/cc9Ze1XV.debug.temp.o
+CCID_CheckStatusNoError                           obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CCID_Device_ConfigureEndpoints                    obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CCID_Device_ProcessControlRequest                 obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CCID_Device_USBTask                               obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+CDCClassDevice.c.be85a449                         /tmp/ccFb3ZNA.debug.temp.o
+CDCClassHost.c.6ac48531                           /tmp/ccjCJr5u.debug.temp.o
+CDC_Device_BytesReceived                          obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_ConfigureEndpoints                     obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_CreateBlockingStream                   obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_CreateStream                           obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_Event_Stub                             obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_Event_Stub_2                           obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_Flush                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_ProcessControlRequest                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+CDC_Device_ReceiveByte                            obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_SendByte                               obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_SendControlLineStateChange             obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_SendData                               obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_SendData_P                             obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_SendString                             obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_SendString_P                           obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+CDC_Device_USBTask                                obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+ConfigDescriptors.c.e5aa4e1a                      /tmp/cc1G0P55.debug.temp.o
+ConfigurationDescriptor                           obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o (symbol from plugin)
+Descriptors.c.441f7695                            /tmp/ccqpzC5Y.debug.temp.o
+DeviceDescriptor                                  obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o (symbol from plugin)
+DeviceStandardReq.c.687de4c8                      /tmp/cctJRKfm.debug.temp.o
+Device_AVR8.c.dff2f626                            /tmp/cccUmtTO.debug.temp.o
+EVENT_Audio_Device_StreamStartStop                obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+EVENT_CDC_Device_BreakSent                        obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+EVENT_CDC_Device_ControLineStateChanged           obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+EVENT_CDC_Device_LineEncodingChanged              obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+EVENT_PRNT_Device_SoftReset                       obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+EVENT_USB_Device_ConfigurationChanged             obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+EVENT_USB_Device_Connect                          obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+EVENT_USB_Device_ControlRequest                   obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+EVENT_USB_Device_Disconnect                       obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+EVENT_USB_Device_Reset                            obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+EVENT_USB_Device_StartOfFrame                     obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+EVENT_USB_Device_Suspend                          obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+EVENT_USB_Device_WakeUp                           obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+EndpointStream_AVR8.c.82bf5ca0                    /tmp/ccPRzEjV.debug.temp.o
+Endpoint_AVR8.c.c4cea02d                          /tmp/ccc13A7A.debug.temp.o
+Endpoint_ClearEndpoints                           obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o (symbol from plugin)
+Endpoint_ClearStatusStage                         obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+Endpoint_ConfigureEndpointTable                   obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+Endpoint_ConfigureEndpoint_Prv                    obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+Endpoint_Discard_Stream                           obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Null_Stream                              obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_Control_EStream_BE                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_Control_EStream_LE                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_Control_Stream_BE                   obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_Control_Stream_LE                   obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+Endpoint_Read_EStream_BE                          obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_EStream_LE                          obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_Stream_BE                           obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Read_Stream_LE                           obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+Endpoint_WaitUntilReady                           obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+Endpoint_Write_Control_EStream_BE                 obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_Control_EStream_LE                 obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_Control_PStream_BE                 obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_Control_PStream_LE                 obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+Endpoint_Write_Control_Stream_BE                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_Control_Stream_LE                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+Endpoint_Write_EStream_BE                         obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_EStream_LE                         obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_PStream_BE                         obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_PStream_LE                         obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+Endpoint_Write_Stream_BE                          obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+Endpoint_Write_Stream_LE                          obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+Events.c.2968346f                                 /tmp/ccJhWqpm.debug.temp.o
+HIDClassDevice.c.5d8554eb                         /tmp/ccW4eu9Z.debug.temp.o
+HIDClassHost.c.5cb3fcfd                           /tmp/ccGAG6TJ.debug.temp.o
+HIDParser.c.cb2e7e19                              /tmp/ccqSospU.debug.temp.o
+HID_Device_ConfigureEndpoints                     obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+HID_Device_ProcessControlRequest                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+HID_Device_USBTask                                obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+HostStandardReq.c.dbcee5af                        /tmp/ccoeOFeh.debug.temp.o
+Host_AVR8.c.c17eff8a                              /tmp/ccgENOG2.debug.temp.o
+LanguageString                                    obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o (symbol from plugin)
+MIDIClassDevice.c.ef872a5f                        /tmp/ccUl67DJ.debug.temp.o
+MIDIClassHost.c.38dd75dc                          /tmp/ccx9lxex.debug.temp.o
+MIDI_Device_ConfigureEndpoints                    obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+MIDI_Device_Flush                                 obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+MIDI_Device_ReceiveEventPacket                    obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+MIDI_Device_SendEventPacket                       obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+MIDI_Device_USBTask                               obj/ardwiino-micro-atmega32u4-16000000-rf/MIDIClassDevice.o (symbol from plugin)
+MS_Device_ConfigureEndpoints                      obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+MS_Device_ProcessControlRequest                   obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+MS_Device_USBTask                                 obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+ManufacturerString                                obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o (symbol from plugin)
+MassStorageClassDevice.c.a513fbca                 /tmp/ccXqwFWC.debug.temp.o
+MassStorageClassHost.c.dc5aa81c                   /tmp/ccYuygYr.debug.temp.o
+NEGCON_I_II_BUTTON_THRESHOLD                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+NEGCON_L_BUTTON_THRESHOLD                         obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+PRNT_Device_BytesReceived                         obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_ConfigureEndpoints                    obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_CreateBlockingStream                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_CreateStream                          obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_Event_Stub                            obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_Flush                                 obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_ProcessControlRequest                 obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_ReceiveByte                           obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_SendByte                              obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_SendData                              obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_SendString                            obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PRNT_Device_USBTask                               obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+PipeStream_AVR8.c.1101cc9a                        /tmp/ccT81ufB.debug.temp.o
+Pipe_AVR8.c.3c8cd3c1                              /tmp/cclzXTYI.debug.temp.o
+PrinterClassDevice.c.e545ee56                     /tmp/ccQjpReS.debug.temp.o
+PrinterClassHost.c.cd146485                       /tmp/cckT3fBa.debug.temp.o
+ProductString                                     obj/ardwiino-micro-atmega32u4-16000000-rf/Descriptors.o (symbol from plugin)
+RNDISClassDevice.c.92d79794                       /tmp/ccoXFmHt.debug.temp.o
+RNDISClassHost.c.9a4a7309                         /tmp/cc7tNoq2.debug.temp.o
+RNDIS_Device_ConfigureEndpoints                   obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+RNDIS_Device_IsPacketReceived                     obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+RNDIS_Device_ProcessControlRequest                obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+RNDIS_Device_ReadPacket                           obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+RNDIS_Device_SendPacket                           obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+RNDIS_Device_USBTask                              obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+StillImageClassHost.c.85ddf06d                    /tmp/ccAWYgT7.debug.temp.o
+USBController_AVR8.c.1411c1db                     /tmp/ccseneA5.debug.temp.o
+USBInterrupt_AVR8.c.10d48c0a                      /tmp/ccybucgA.debug.temp.o
+USBTask.c.8874eede                                /tmp/ccWKTlwY.debug.temp.o
+USB_ControlRequest                                obj/ardwiino-micro-atmega32u4-16000000-rf/USBTask.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/Endpoint_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/HIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CCIDClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/AudioClassDevice.o (symbol from plugin)
+USB_Device_ConfigurationNumber                    obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+USB_Device_ProcessControlRequest                  obj/ardwiino-micro-atmega32u4-16000000-rf/DeviceStandardReq.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBTask.o (symbol from plugin)
+USB_Device_SendRemoteWakeup                       obj/ardwiino-micro-atmega32u4-16000000-rf/Device_AVR8.o (symbol from plugin)
+USB_Disable                                       obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+USB_Event_Stub                                    obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+USB_Event_Stub_2                                  obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+USB_Event_Stub_3                                  obj/ardwiino-micro-atmega32u4-16000000-rf/Events.o (symbol from plugin)
+USB_GetHIDReportItemInfo                          obj/ardwiino-micro-atmega32u4-16000000-rf/HIDParser.o (symbol from plugin)
+USB_GetHIDReportSize                              obj/ardwiino-micro-atmega32u4-16000000-rf/HIDParser.o (symbol from plugin)
+USB_GetNextDescriptorComp                         obj/ardwiino-micro-atmega32u4-16000000-rf/ConfigDescriptors.o (symbol from plugin)
+USB_GetNextDescriptorOfType                       obj/ardwiino-micro-atmega32u4-16000000-rf/ConfigDescriptors.o (symbol from plugin)
+USB_GetNextDescriptorOfTypeAfter                  obj/ardwiino-micro-atmega32u4-16000000-rf/ConfigDescriptors.o (symbol from plugin)
+USB_GetNextDescriptorOfTypeBefore                 obj/ardwiino-micro-atmega32u4-16000000-rf/ConfigDescriptors.o (symbol from plugin)
+USB_INT_ClearAllInterrupts                        obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+USB_INT_DisableAllInterrupts                      obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+USB_Init                                          obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+USB_IsInitialized                                 obj/ardwiino-micro-atmega32u4-16000000-rf/USBTask.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+USB_ProcessHIDReport                              obj/ardwiino-micro-atmega32u4-16000000-rf/HIDParser.o (symbol from plugin)
+USB_ResetInterface                                obj/ardwiino-micro-atmega32u4-16000000-rf/USBController_AVR8.o (symbol from plugin)
+USB_SetHIDReportItemInfo                          obj/ardwiino-micro-atmega32u4-16000000-rf/HIDParser.o (symbol from plugin)
+USB_USBTask                                       obj/ardwiino-micro-atmega32u4-16000000-rf/USBTask.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/PrinterClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/MassStorageClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+VirtualSerial_CDC_Interface                       obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+__bad_interrupt                                   /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__bss_end                                         /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+__bss_start                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+__bswapsi2                                        /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_bswapsi2.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__data_end                                        /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+__data_load_start                                 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+__data_start                                      /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+__divmodhi4                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__divmodsi4                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__do_clear_bss                                    /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_clear_bss.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__do_copy_data                                    /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_copy_data.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__fp_inf                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_inf.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+__fp_nan                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_nan.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+__fp_pscA                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscA.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+__fp_pscB                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_pscB.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+__fp_round                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_round.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+__fp_split3                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+__fp_splitA                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_split3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+__fp_szero                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+__fp_zero                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(fp_zero.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+__heap_end                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__init                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__mulhisi3                                        /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__mulohisi3                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+__mulsf3                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__mulsf3_pse                                      /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+__mulsf3x                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3x.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(mulsf3.o)
+__mulshisi3                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__mulsi3                                          /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__muluhisi3                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulshisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulsi3.o)
+__negsi2                                          /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_negsi2.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+__stack                                           /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__strlen_P                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strlen_P.o)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/CDCClassDevice.o (symbol from plugin)
+__udivmodhi4                                      /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodhi4.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__udivmodsi4                                      /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_udivmodsi4.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodsi4.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+__umulhisi3                                       /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_umulhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_muluhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+__usmulhisi3                                      /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+__usmulhisi3_tail                                 /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_usmulhisi3.o)
+                                                  /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_mulhisi3.o)
+__vector_1                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_10                                       /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/USBInterrupt_AVR8.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_11                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_12                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_13                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_14                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_15                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_16                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_17                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_18                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_19                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_2                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_20                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_21                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_22                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_23                                       /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/timer.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_24                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_25                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_26                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_27                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_28                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_29                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_3                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_30                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_31                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_32                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_33                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_34                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_35                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_36                                       /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_37                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_38                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_39                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_4                                        /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_40                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_41                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_42                                       /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_5                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_6                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_7                                        /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_8                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_9                                        /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vector_default                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+__vectors                                         /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+_div                                              /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_divmodhi4.o)
+_exit                                             /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+analog                                            obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+analogRead                                        obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+analog_pin_to_channel_PGM                         obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+analogueData                                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+attention                                         obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+autoShiftData                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+begin                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+bootKeyPtr                                        obj/ardwiino-micro-atmega32u4-16000000-rf/bootloader.o (symbol from plugin)
+bootKeyVal                                        obj/ardwiino-micro-atmega32u4-16000000-rf/bootloader.o (symbol from plugin)
+bootloader                                        obj/ardwiino-micro-atmega32u4-16000000-rf/bootloader.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+bootloader.c.db2c86f4                             /tmp/ccY5RWKn.debug.temp.o
+buttonWord                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+buttons                                           obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+bytes                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+calculateClock                                    obj/ardwiino-micro-atmega32u4-16000000-rf/spi.o (symbol from plugin)
+checkJoyKey                                       obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+clock                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+command                                           obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+controller                                        obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+currentAnalog                                     obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+currentAxisBindingsLen                            obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+dbuf                                              obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+default_config                                    obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+detectedPin                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+deviceType                                        obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+digitalRead                                       obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+digitalReadPin                                    obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+digitalWrite                                      obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/spi.o (symbol from plugin)
+digitalWritePin                                   obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+digital_pin_to_bit_mask_PGM                       obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+digital_pin_to_port_PGM                           obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+digital_pin_to_timer_PGM                          obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+dmp_enable_6x_lp_quat                             obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_enable_feature                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+dmp_enable_gyro_cal                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_enable_lp_quat                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_get_enabled_features                          obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_get_fifo_rate                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_load_motion_driver_firmware                   obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+dmp_memory                                        obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_read_fifo                                     obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+dmp_set_accel_bias                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_set_fifo_rate                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+dmp_set_gyro_bias                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_set_interrupt_mode                            obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+dmp_set_orientation                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+drumVelocity                                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+eeprom.c.8ecf02a4                                 /tmp/ccLq6gnL.debug.temp.o
+eeprom_read_block                                 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+eeprom_read_blraw                                 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_block.o)
+eeprom_read_byte                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eerd_byte.o)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+eeprom_update_block                               /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+eeprom_update_byte                                /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/EndpointStream_AVR8.o (symbol from plugin)
+eeprom_update_r18                                 /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_byte.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libatmega32u4.a(eeupd_block.o)
+err                                               obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+exit                                              /usr/lib/gcc/avr/10.2.0/avr5/libgcc.a(_exit.o)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+fillKeyboardReport                                obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+fillMIDIReport                                    obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+fillMouseReport                                   obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+fillPS3Report                                     obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+fillReport                                        obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+fillXInputReport                                  obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+findAnalogPin                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+findDigitalPin                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+first                                             obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+fullDeviceType                                    obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+fxpt_asin                                         obj/ardwiino-micro-atmega32u4-16000000-rf/fxpt_math.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/mpu_math.o (symbol from plugin)
+fxpt_atan2                                        obj/ardwiino-micro-atmega32u4-16000000-rf/fxpt_math.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/mpu_math.o (symbol from plugin)
+fxpt_math.c.a058bccc                              /tmp/cchDMB41.debug.temp.o
+generate_crc32                                    obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+getControllerType                                 obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+getVelocity                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+guitar_includes.c.5b7d8dc8                        /tmp/ccuGsvgf.debug.temp.o
+handleCommand                                     obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+hw                                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+i2c.c.a3047c01                                    /tmp/ccieofrz.debug.temp.o
+i2c_shared.c.e321ef8e                             /tmp/ccSPQV3V.debug.temp.o
+id                                                obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+initDirectInput                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+initGuitar                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+initInputs                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+initKeyboard                                      obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+initLEDs                                          obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+initMIDI                                          obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+initMPU6050                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+initPS2CtrlInput                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+initPS3                                           obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+initRF                                            obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+initReports                                       obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+initWiiExt                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+initWiiExtensions                                 obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+initialise                                        obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+inputType                                         obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+input_handler.c.6b5f20e7                          /tmp/cc1k4UwT.debug.temp.o
+inv_mpu.c.24990a89                                /tmp/ccleJoeK.debug.temp.o
+inv_mpu_dmp_motion_driver.c.322d1756              /tmp/cctUs0Gz.debug.temp.o
+isDrum                                            obj/ardwiino-micro-atmega32u4-16000000-rf/guitar_includes.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+isGuitar                                          obj/ardwiino-micro-atmega32u4-16000000-rf/guitar_includes.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+isRF                                              obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+is_tx                                             obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+joyData                                           obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+joyThreshold                                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+joyThresholdKb                                    obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+keysConfig                                        obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+lastAnalogValue                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+lastButtons                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+lastDigitalValue                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+lastPoll                                          obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+lastmidi                                          obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+ledConfig                                         obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+leds                                              obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+leds.c.26e4622a                                   /tmp/ccepNhbH.debug.temp.o
+ledsEnabled                                       obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+loadConfig                                        obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+lookingForAnalog                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+lookingForDigital                                 obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+lrint                                             /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libm.a(lrint.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/fxpt_math.o (symbol from plugin)
+main                                              /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/crtatmega32u4.o
+main.c.94d74d23                                   /tmp/cczIlbka.debug.temp.o
+mapJoyLeftDpad                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mapNunchukAccelToRightJoy                         obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mapStartSelectHome                                obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+memcmp                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcmp.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+memcpy                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+memcpy_P                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memcpy_P.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/RNDISClassDevice.o (symbol from plugin)
+memset                                            /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(memset.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+micros                                            obj/ardwiino-micro-atmega32u4-16000000-rf/timer.o (symbol from plugin)
+midiConfig                                        obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+millis                                            obj/ardwiino-micro-atmega32u4-16000000-rf/timer.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+mpuOrientation                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpuTilt                                           obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_configure_fifo                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_get_accel_fsr                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_accel_reg                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_accel_sens                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_get_compass_sample_rate                       obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_dmp_state                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_fifo_config                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_gyro_fsr                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_gyro_reg                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_gyro_sens                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_int_status                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_lpf                                       obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_power_state                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_sample_rate                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_get_temperature                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_init                                          obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_load_firmware                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_lp_accel_mode                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_math.c.4892f2d7                               /tmp/ccnTQN5f.debug.temp.o
+mpu_read_6050_accel_bias                          obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_read_6500_accel_bias                          obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_read_fifo                                     obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_read_fifo_stream                              obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_read_gyro_bias                                obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_read_mem                                      obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_read_reg                                      obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_reg_dump                                      obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_reset_fifo                                    obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+mpu_set_accel_bias_6050_reg                       obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_accel_bias_6500_reg                       obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_accel_fsr                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_set_bypass                                    obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_compass_sample_rate                       obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_dmp_state                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_set_gyro_bias_reg                             obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_gyro_fsr                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_set_int_latched                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_int_level                                 obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_lpf                                       obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_sample_rate                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+mpu_set_sensors                                   obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+mpu_write_mem                                     obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu_dmp_motion_driver.o (symbol from plugin)
+noAttention                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+nrf24_ce_digitalWrite                             obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_config                                      obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_configRegister                              obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+nrf24_csn_digitalWrite                            obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_dataReady                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_enable_ack_payload                          obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_flush_rx                                    obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+nrf24_flush_tx                                    obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+nrf24_getData                                     obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_getStatus                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_init                                        obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_isSending                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_lastMessageStatus                           obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_payloadLength                               obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_powerDown                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+nrf24_powerUpRx                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_powerUpTx                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_readRegister                                obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_readRegister1                               obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_retransmissionCount                         obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_rxFifoEmpty                                 obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_rx_address                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_send                                        obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_setCRCLen                                   obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_setDataRate                                 obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_set_pa                                      obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_toggle_features                             obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_transferSync                                obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_transmitSync                                obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_txFifoEmpty                                 obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24_txFifoFull                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+nrf24_tx_address                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+nrf24_writeAckPayload                             obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+nrf24_writeRegister                               obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+nrf24l01.c.f010494a                               /tmp/ccAjVOFg.debug.temp.o
+p_type                                            obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+pinData                                           obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+pinMode                                           obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/spi.o (symbol from plugin)
+pins.c.fbc38eeb                                   /tmp/ccpf7xMr.debug.temp.o
+pollRate                                          obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+port_to_input_PGM                                 obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+port_to_mode_PGM                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+port_to_output_PGM                                obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+prevCtrl                                          obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+processHIDReadFeatureReport                       obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+processHIDWriteFeatureReport                      obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+ps2CtrlType                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+q                                                 obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+quaternionToEuler                                 obj/ardwiino-micro-atmega32u4-16000000-rf/mpu_math.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+read                                              obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readClassicExt                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readClassicExtHighRes                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readConfigBlock                                   obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+readDJExt                                         obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readDrawsomeExt                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readDrumExt                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readExtID                                         obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readFunction                                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readGuitarExt                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readNunchukExt                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readPS2Button                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readTataconExt                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readUDrawExt                                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+readWiiButton                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+read_button_function                              obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+ready                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+reboot                                            obj/ardwiino-micro-atmega32u4-16000000-rf/bootloader.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+reg                                               obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+reinitDirectInput                                 obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+reports.c.e3b72399                                /tmp/cc0Fx2Jo.debug.temp.o
+resetConfig                                       obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+revbits2                                          obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+rf.c.d5f15134                                     /tmp/ccwt3n8O.debug.temp.o
+rf_interrupt                                      obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+rfrxID                                            obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+rftxID                                            obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+scale                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+scales                                            obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+sendCommand                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+serial_handler.c.8b4e4587                         /tmp/cczg2qWV.debug.temp.o
+setSP                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+setUpAnalogDigitalPin                             obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+setUpAnalogPin                                    obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+setUpDigital                                      obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+setUpValidPins                                    obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+setupADC                                          obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+setupMicrosTimer                                  obj/ardwiino-micro-atmega32u4-16000000-rf/timer.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+shiftDataInOut                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+shouldSkipPin                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+signalAttention                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+spPin                                             obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+spi.c.37c1a893                                    /tmp/ccGQXqh7.debug.temp.o
+spi_begin                                         obj/ardwiino-micro-atmega32u4-16000000-rf/spi.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+spi_transfer                                      obj/ardwiino-micro-atmega32u4-16000000-rf/spi.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+stopReading                                       obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+stopSearching                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+strcpy_P                                          /usr/lib/gcc/avr/10.2.0/../../../../avr/lib/avr5/libc.a(strcpy_P.o)
+                                                  /tmp/ardwiino-micro-atmega32u4-16000000-rf.elf.MgA0xd.ltrans0.ltrans.o
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+tick                                              obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickAnalog                                        obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickDigitalTilt                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickDirectInput                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickGH5Neck                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickGuitar                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickInputs                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+tickLEDs                                          obj/ardwiino-micro-atmega32u4-16000000-rf/leds.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+tickMPUTilt                                       obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickPS2CtrlInput                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tickRFInput                                       obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+tickRFTX                                          obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+tickWiiExtInput                                   obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tick_function                                     obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tiltInverted                                      obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tiltPin                                           obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+tiltType                                          obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+timer.c.6d051c1d                                  /tmp/cc1zBR2O.debug.temp.o
+timer0_overflow_count                             obj/ardwiino-micro-atmega32u4-16000000-rf/timer.o (symbol from plugin)
+triggerInterrupt                                  obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)
+triggerThreshold                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+triggerThresholdKb                                obj/ardwiino-micro-atmega32u4-16000000-rf/reports.o (symbol from plugin)
+twi_disable                                       obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+twi_init                                          obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+twi_readFrom                                      obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o (symbol from plugin)
+twi_readFromPointer                               obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+twi_readFromPointerSlow                           obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+twi_releaseBus                                    obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+twi_reply                                         obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+twi_stop                                          obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+twi_writeSingleToPointer                          obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+twi_writeTo                                       obj/ardwiino-micro-atmega32u4-16000000-rf/i2c.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o (symbol from plugin)
+twi_writeToPointer                                obj/ardwiino-micro-atmega32u4-16000000-rf/i2c_shared.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/inv_mpu.o (symbol from plugin)
+typeIsDrum                                        obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+typeIsGuitar                                      obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+types                                             obj/ardwiino-micro-atmega32u4-16000000-rf/guitar_includes.o (symbol from plugin)
+usingI2C                                          obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+usingSPI                                          obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+validAnalog                                       obj/ardwiino-micro-atmega32u4-16000000-rf/pins.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+validPins                                         obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+verifyData                                        obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+wide_band                                         obj/ardwiino-micro-atmega32u4-16000000-rf/nrf24l01.o (symbol from plugin)
+wiiButtonBindings                                 obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+wiiExtensionID                                    obj/ardwiino-micro-atmega32u4-16000000-rf/input_handler.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+writeConfigBlock                                  obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+writeConfigByte                                   obj/ardwiino-micro-atmega32u4-16000000-rf/eeprom.o (symbol from plugin)
+writeToUSB                                        obj/ardwiino-micro-atmega32u4-16000000-rf/main.o (symbol from plugin)
+                                                  obj/ardwiino-micro-atmega32u4-16000000-rf/serial_handler.o (symbol from plugin)
+write_config                                      obj/ardwiino-micro-atmega32u4-16000000-rf/rf.o (symbol from plugin)

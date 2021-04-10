@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/CMakeFiles/PioasmBuild"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/CMakeFiles/PioasmBuild.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/CMakeFiles/PioasmBuild-complete.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-build.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-configure.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-download.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-install.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-mkdir.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-patch.rule"
+		},
+		{
+			"file" : "/home/sanjay/Code/Ardwiino/buildDebug/pico_extras/src/common/pico_scanvideo/pioasm/src/PioasmBuild-stamp/PioasmBuild-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"PioasmBuild"
+		],
+		"name" : "PioasmBuild"
+	}
+}

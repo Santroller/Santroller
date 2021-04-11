@@ -286,7 +286,6 @@ uint8_t revbits2(uint8_t x) {
   x = (((x & 0xf0U) >> 4) | ((x & 0x0fU) << 4));
   return x;
 }
-// Shifting data in works perfectly fine, we just aren't getting data back.
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
     uint8_t resp =
@@ -465,7 +464,7 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(Configuration_t* config) {
-  spi_begin(100000, 1, true);
+  spi_begin(100000, true, true);
   attention = setUpDigital(config, 10, 0, false, true);
   command = setUpDigital(config, PIN_SPI_MOSI, 0, false, true);
   clock = setUpDigital(config, PIN_SPI_SCK, 0, false, true);
@@ -479,21 +478,23 @@ void initPS2CtrlInput(Configuration_t* config) {
   noAttention();
 }
 void tickPS2CtrlInput(Controller_t *controller) {
-  if (ps2CtrlType == PSX_NO_DEVICE) {
-    if (!begin(controller)) { return; }
-    if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
-      // Dualshock one controllers don't have config mode
-      ps2CtrlType = getControllerType();
-      // Enable analog sticks
-      sendCommand(commandSetMode, sizeof(commandSetMode));
-      // Enable analog buttons (required for guitar)
-      sendCommand(commandSetPressures, sizeof(commandSetPressures));
-      sendCommand(commandExitConfig, sizeof(commandExitConfig));
-    } else {
-      ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
-    }
-  }
-  if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
+  signalAttention();
+  noAttention();
+  // if (ps2CtrlType == PSX_NO_DEVICE) {
+  //   if (!begin(controller)) { return; }
+  //   if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
+  //     // Dualshock one controllers don't have config mode
+  //     ps2CtrlType = getControllerType();
+  //     // Enable analog sticks
+  //     sendCommand(commandSetMode, sizeof(commandSetMode));
+  //     // Enable analog buttons (required for guitar)
+  //     sendCommand(commandSetPressures, sizeof(commandSetPressures));
+  //     sendCommand(commandExitConfig, sizeof(commandExitConfig));
+  //   } else {
+  //     ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
+  //   }
+  // }
+  // if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
 }
 
 bool readPS2Button(Pin_t pin) {

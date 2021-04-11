@@ -1,3 +1,0 @@
-/home/sanjay/Code/Ardwiino/buildDebug/pioasm/CMakeFiles/rebuild_cache.dir
-/home/sanjay/Code/Ardwiino/buildDebug/pioasm/CMakeFiles/edit_cache.dir
-/home/sanjay/Code/Ardwiino/buildDebug/pioasm/CMakeFiles/pioasm.dir

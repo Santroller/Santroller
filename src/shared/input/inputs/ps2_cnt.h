@@ -13,6 +13,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#ifndef __AVR__
+#  include "hardware/clocks.h"
+#  include "pico/stdlib.h"
+#  include "spi/pio_spi.h"
+#endif
 // TODO: this seems like a much nicer implementation to copy
 // https://github.com/RandomInsano/pscontroller-rs/blob/master/src/lib.rs
 /** \brief Command Inter-Byte Delay (us)
@@ -268,6 +273,9 @@ Pin_t attention;
 Pin_t command;
 Pin_t clock;
 
+#ifndef __AVR__
+pio_spi_inst_t spi = {.pio = pio0, .sm = 0};
+#endif
 void noAttention(void) {
   digitalWritePin(command, true);
   digitalWritePin(clock, true);
@@ -280,24 +288,19 @@ void signalAttention(void) {
   digitalWritePin(command, false);
   _delay_us(ATTN_DELAY);
 }
-uint8_t revbits2(uint8_t x) {
-  x = (((x & 0xaaU) >> 1) | ((x & 0x55U) << 1));
-  x = (((x & 0xccU) >> 2) | ((x & 0x33U) << 2));
-  x = (((x & 0xf0U) >> 4) | ((x & 0x0fU) << 4));
-  return x;
-}
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
   for (uint8_t i = 0; i < len; ++i) {
-    uint8_t resp =
-        spi_transfer(out != NULL ? revbits2(out[i]) : revbits2(0x5A));
-    if (in != NULL) { in[i] = revbits2(resp); }
+    uint8_t resp = spi_transfer(out != NULL ? out[i] : 0x5A);
+    if (in != NULL) { in[i] = resp; }
     _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
   }
 }
 uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
+
   static uint8_t inputBuffer[BUFFER_SIZE];
-  signalAttention();
   uint8_t *ret = NULL;
+#ifdef __AVR__
+  signalAttention();
 
   if (len >= 3 && len <= BUFFER_SIZE) {
     // All commands have at least 3 bytes, so shift out those first
@@ -324,6 +327,11 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
     }
   }
   noAttention();
+#else
+  // We can parse commands in PIO, and then automagically read the entire packet
+  pio_spi_write8_read8_blocking(&spi, out, inputBuffer, len);
+  ret = inputBuffer;
+#endif
   return ret;
 }
 bool sendCommand(const uint8_t *buf, uint8_t len) {
@@ -463,38 +471,41 @@ bool begin(Controller_t *controller) {
   return read(controller);
 }
 
-void initPS2CtrlInput(Configuration_t* config) {
-  spi_begin(100000, true, true);
-  attention = setUpDigital(config, 10, 0, false, true);
+void initPS2CtrlInput(Configuration_t *config) {
+#ifdef __AVR__
+  spi_begin(100000, true, true, true);
+  attention = setUpDigital(config, PIN_PS2_ATT, 0, false, true);
   command = setUpDigital(config, PIN_SPI_MOSI, 0, false, true);
   clock = setUpDigital(config, PIN_SPI_SCK, 0, false, true);
-  // On the rpi we have to flag these pins as not using SIO
-#ifndef __AVR__
-  // not using sio, but spi
-  command.sioFunc = false;
-  clock.sioFunc = false;
-#endif
-  pinMode(10, OUTPUT);
+  pinMode(PIN_PS2_ATT, OUTPUT);
   noAttention();
+#else
+  pinMode(PIN_PS2_ATT, OUTPUT);
+  gpio_put(PIN_PS2_ATT, 1);
+  float clkdiv = clock_get_hz(clk_sys) / 100000.f;
+  uint cpha1_prog_offs = pio_add_program(spi.pio, &spi_cpha1_program);
+  pio_spi_cs_init(spi.pio, spi.sm, cpha1_prog_offs,
+                  8, // 8 bits per SPI frame
+                  clkdiv, 1, 1, PIN_SPI_SCK, PIN_SPI_MOSI, PIN_SPI_MISO,
+                  PIN_PS2_ACK);
+#endif
 }
 void tickPS2CtrlInput(Controller_t *controller) {
-  signalAttention();
-  noAttention();
-  // if (ps2CtrlType == PSX_NO_DEVICE) {
-  //   if (!begin(controller)) { return; }
-  //   if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
-  //     // Dualshock one controllers don't have config mode
-  //     ps2CtrlType = getControllerType();
-  //     // Enable analog sticks
-  //     sendCommand(commandSetMode, sizeof(commandSetMode));
-  //     // Enable analog buttons (required for guitar)
-  //     sendCommand(commandSetPressures, sizeof(commandSetPressures));
-  //     sendCommand(commandExitConfig, sizeof(commandExitConfig));
-  //   } else {
-  //     ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
-  //   }
-  // }
-  // if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
+  if (ps2CtrlType == PSX_NO_DEVICE) {
+    if (!begin(controller)) { return; }
+    if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
+      // Dualshock one controllers don't have config mode
+      ps2CtrlType = getControllerType();
+      // Enable analog sticks
+      sendCommand(commandSetMode, sizeof(commandSetMode));
+      // Enable analog buttons (required for guitar)
+      sendCommand(commandSetPressures, sizeof(commandSetPressures));
+      sendCommand(commandExitConfig, sizeof(commandExitConfig));
+    } else {
+      ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
+    }
+  }
+  if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
 }
 
 bool readPS2Button(Pin_t pin) {

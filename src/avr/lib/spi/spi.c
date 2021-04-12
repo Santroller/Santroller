@@ -34,7 +34,7 @@ void calculateClock(uint32_t clock, uint8_t config) {
   SPSR = clockDiv & 0x01;
 }
 
-void spi_begin(uint32_t clock, bool cpol, bool cpha) {
+void spi_begin(uint32_t clock, bool cpol, bool cpha, bool lsbfirst) {
   pinMode(PIN_SPI_MOSI, OUTPUT);
   pinMode(PIN_SPI_MISO, INPUT_PULLUP);
   pinMode(PIN_SPI_SCK, OUTPUT);
@@ -46,6 +46,9 @@ void spi_begin(uint32_t clock, bool cpol, bool cpha) {
   }
   if (cpha) {
     config |= _BV(CPHA);
+  }
+  if (lsbfirst) {
+    config |= _BV(DORD);
   }
   calculateClock(clock, config);
 }

@@ -108,6 +108,8 @@
 #define PIN_SPI_MOSI  (16)
 #define PIN_SPI_MISO  (14)
 #define PIN_SPI_SCK   (15)
+#define PIN_PS2_ACK 7
+#define PIN_PS2_ATT 10
 
 // Mapping of analog pins as digital I/O
 // A6-A11 share with digital pins

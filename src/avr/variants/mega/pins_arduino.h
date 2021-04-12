@@ -34,6 +34,8 @@
 #define PIN_SPI_MOSI  (51)
 #define PIN_SPI_MISO  (50)
 #define PIN_SPI_SCK   (52)
+#define PIN_PS2_ACK 7
+#define PIN_PS2_ATT 10
 
 #define PIN_WIRE_SDA        (20)
 #define PIN_WIRE_SCL        (21)

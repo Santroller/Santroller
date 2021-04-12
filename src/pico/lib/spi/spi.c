@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include "hardware/gpio.h"
 
-void spi_begin(uint32_t clock, bool cpol, bool cpha) {
+void spi_begin(uint32_t clock, bool cpol, bool cpha, bool lsbfirst) {
+  // LSBFIRST isnt supported here (also, we may just drop using this and only use PIO)
   spi_init(spi0, clock);
   spi_set_format(spi0, 8, cpol ? SPI_CPOL_1 : SPI_CPOL_0, cpha ? SPI_CPHA_1 : SPI_CPHA_0, SPI_MSB_FIRST);
   gpio_set_function(PIN_SPI_MISO, GPIO_FUNC_SPI);

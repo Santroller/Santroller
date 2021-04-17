@@ -120,7 +120,7 @@ public entry_point:                 ; Must set X,Y to n-2 before starting!
 ; captured on the trailing edge
 
 .program spi_cpha1_cs
-.side_set 1
+.side_set 2
 
 .wrap_target
 bitloop:
@@ -131,16 +131,17 @@ bitloop:
     out pins, 1        side 0x1
     mov x, y           side 0x1
     in pins, 1         side 0x0
-    wait 0 pin 4       side 0x0     ; Wait for controller to acknowledge byte
     jmp !osre bitloop  side 0x0
-    set pins, 1        side 0x0     ; Clear both pins and clock
+
 public entry_point:                 ; Must set X,Y to n-2 before starting!
+    pull ifempty       side 0x2 [1] ; Block with CSn high (minimum 2 cycles)
+    nop                side 0x0 [1]; CSn front porch
 .wrap
 
 % c-sdk {
 #include "hardware/gpio.h"
 static inline void pio_spi_cs_init(PIO pio, uint sm, uint prog_offs, uint n_bits, float clkdiv, bool cpha, bool cpol,
-        uint pin_sck, uint pin_mosi, uint pin_miso, uint pin_ack) {
+        uint pin_sck, uint pin_mosi, uint pin_miso) {
     pio_sm_config c = cpha ? spi_cpha1_cs_program_get_default_config(prog_offs) : spi_cpha0_cs_program_get_default_config(prog_offs);
     sm_config_set_out_pins(&c, pin_mosi, 1);
     sm_config_set_in_pins(&c, pin_miso);
@@ -149,13 +150,12 @@ static inline void pio_spi_cs_init(PIO pio, uint sm, uint prog_offs, uint n_bits
     sm_config_set_in_shift(&c, false, true, n_bits);
     sm_config_set_clkdiv(&c, clkdiv);
 
-    // MOSI, SCK output are high, MISO, ACK is input
-    pio_sm_set_pins_with_mask(pio, sm, (1u << pin_sck) | (1u << pin_mosi), (1u << pin_sck) | (1u << pin_mosi));
-    pio_sm_set_pindirs_with_mask(pio, sm, (1u << pin_sck) | (1u << pin_mosi), (1u << pin_sck) | (1u << pin_mosi) | (1u << pin_miso) | (1u << pin_ack));
+    pio_sm_set_pins_with_mask(pio, sm, (2u << pin_sck), (3u << pin_sck) | (1u << pin_mosi));
+    pio_sm_set_pindirs_with_mask(pio, sm, (3u << pin_sck) | (1u << pin_mosi), (3u << pin_sck) | (1u << pin_mosi) | (1u << pin_miso));
     pio_gpio_init(pio, pin_mosi);
     pio_gpio_init(pio, pin_miso);
     pio_gpio_init(pio, pin_sck);
-    pio_gpio_init(pio, pin_ack);
+    pio_gpio_init(pio, pin_sck + 1);
     gpio_set_outover(pin_sck, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
     hw_set_bits(&pio->input_sync_bypass, 1u << pin_miso);
 

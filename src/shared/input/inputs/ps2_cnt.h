@@ -330,6 +330,10 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
 #else
   // We can parse commands in PIO, and then automagically read the entire packet
   pio_spi_write8_read8_blocking(&spi, out, inputBuffer, len);
+  for (int i = 0; i < len; i++) {
+    printf("%x ", inputBuffer[i]);
+  }
+  printf("\n");
   ret = inputBuffer;
 #endif
   return ret;
@@ -394,7 +398,7 @@ bool read(Controller_t *controller) {
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
     } else {
       // We surely have buttons
-      uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
+      buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
 
       if (isFlightStickReply(in)) { ps2CtrlType = PSX_ANALOG; }
       if (isNegconReply(in)) {
@@ -482,12 +486,11 @@ void initPS2CtrlInput(Configuration_t *config) {
 #else
   pinMode(PIN_PS2_ATT, OUTPUT);
   gpio_put(PIN_PS2_ATT, 1);
-  float clkdiv = clock_get_hz(clk_sys) / 100000.f;
+  float clkdiv = clock_get_hz(clk_sys) / 10000.f;
   uint cpha1_prog_offs = pio_add_program(spi.pio, &spi_cpha1_program);
-  pio_spi_cs_init(spi.pio, spi.sm, cpha1_prog_offs,
+  pio_spi_init(spi.pio, spi.sm, cpha1_prog_offs,
                   8, // 8 bits per SPI frame
-                  clkdiv, 1, 1, PIN_SPI_SCK, PIN_SPI_MOSI, PIN_SPI_MISO,
-                  PIN_PS2_ACK);
+                  clkdiv, 1, 1, PIN_SPI_SCK, PIN_SPI_MOSI, PIN_SPI_MISO);
 #endif
 }
 void tickPS2CtrlInput(Controller_t *controller) {

@@ -504,6 +504,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
       // Enable analog buttons (required for guitar)
       sendCommand(commandSetPressures, sizeof(commandSetPressures));
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
+      ps2CtrlType = PSX_GUITAR_HERO_CONTROLLER;
     } else {
       ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
     }

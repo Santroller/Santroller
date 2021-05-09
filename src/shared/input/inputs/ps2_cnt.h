@@ -330,9 +330,7 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
 #else
   // We can parse commands in PIO, and then automagically read the entire packet
   pio_spi_write8_read8_blocking(&spi, out, inputBuffer, len);
-  for (int i = 0; i < len; i++) {
-    printf("%x ", inputBuffer[i]);
-  }
+  for (int i = 0; i < len; i++) { printf("%x ", inputBuffer[i]); }
   printf("\n");
   ret = inputBuffer;
 #endif
@@ -363,27 +361,6 @@ bool sendCommand(const uint8_t *buf, uint8_t len) {
 
     if (!ret) { _delay_ms(COMMAND_RETRY_INTERVAL); }
   } while (!ret && millis() - start <= COMMAND_TIMEOUT);
-
-  return ret;
-}
-
-uint8_t getControllerType(void) {
-  uint8_t ret = PSX_UNKNOWN_CONTROLLER;
-
-  uint8_t *in = autoShiftData(commandReadType, sizeof(commandReadType));
-
-  if (in != NULL) {
-    const uint8_t controllerType = in[3];
-    if (controllerType == 0x03) {
-      ret = PSX_DUALSHOCK_2_CONTROLLER;
-      //~ } else if (controllerType == 0x01 && in[1] == 0x42) {
-      //~ return 4;		// ???
-    } else if (controllerType == 0x01 && in[1] != 0x42) {
-      ret = PSX_GUITAR_HERO_CONTROLLER;
-    } else if (controllerType == 0x0C) {
-      ret = PSX_WIRELESS_SONY_DUALSHOCK_CONTROLLER;
-    }
-  }
 
   return ret;
 }
@@ -449,18 +426,23 @@ bool read(Controller_t *controller) {
         controller->r_y = -(in[6] - 127) << 8;
         controller->l_x = (in[7] - 128) << 8;
         controller->l_y = -(in[8] - 127) << 8;
+        if (typeIsGuitar) {
+          ps2CtrlType = PSX_GUITAR_HERO_CONTROLLER;
+          controller->l_x = 0;
+          controller->l_y = 0;
+          controller->r_x = (in[8] - 128) << 8;
+          controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
+        }
         if (isDualShock2Reply(in)) {
           controller->lt = in[PSAB_L2 + 9];
           controller->rt = in[PSAB_R2 + 9];
-          if (ps2CtrlType == PSX_GUITAR_HERO_CONTROLLER) {
-            controller->r_x = in[GH_WHAMMY + 9];
-            controller->r_y = bit_check(buttonWord, GH_STAR_POWER) * 32767;
-          }
+          ps2CtrlType = PSX_DUALSHOCK_2_CONTROLLER;
+        } else if (!isFlightStickReply(in)) {
+          ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
         }
       }
-
-      ret = true;
     }
+    ret = true;
   }
 
   return ret;
@@ -489,8 +471,8 @@ void initPS2CtrlInput(Configuration_t *config) {
   float clkdiv = clock_get_hz(clk_sys) / 10000.f;
   uint cpha1_prog_offs = pio_add_program(spi.pio, &spi_cpha1_program);
   pio_spi_init(spi.pio, spi.sm, cpha1_prog_offs,
-                  8, // 8 bits per SPI frame
-                  clkdiv, 1, 1, PIN_SPI_SCK, PIN_SPI_MOSI, PIN_SPI_MISO);
+               8, // 8 bits per SPI frame
+               clkdiv, 1, 1, PIN_SPI_SCK, PIN_SPI_MOSI, PIN_SPI_MISO);
 #endif
 }
 void tickPS2CtrlInput(Controller_t *controller) {
@@ -498,13 +480,11 @@ void tickPS2CtrlInput(Controller_t *controller) {
     if (!begin(controller)) { return; }
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
       // Dualshock one controllers don't have config mode
-      ps2CtrlType = getControllerType();
       // Enable analog sticks
       sendCommand(commandSetMode, sizeof(commandSetMode));
-      // Enable analog buttons (required for guitar)
+      // Enable analog buttons
       sendCommand(commandSetPressures, sizeof(commandSetPressures));
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
-      ps2CtrlType = PSX_GUITAR_HERO_CONTROLLER;
     } else {
       ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
     }

@@ -43,6 +43,7 @@ Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset,
   pin.eq = inverted;
   pin.milliDeBounce = config->debounce.buttons;
   pin.analogOffset = INVALID_PIN;
+  pin.lastMillis = 0;
   return pin;
 }
 bool digitalReadPin(Pin_t pin) {
@@ -138,8 +139,8 @@ void tickAnalog(void) {
     if (!info->hasDigital) {
       data = data - 512;
       if (info->inverted) data = -data;
-      data = data * 64;
     }
+    data = data * 64;
     info->value = data;
     currentAnalog++;
     if (currentAnalog == validAnalog) { currentAnalog = 0; }

@@ -14,7 +14,7 @@ typedef struct {
   bool eq;
   uint8_t pin;
   uint8_t offset;
-  uint8_t lastMillis;
+  uint32_t lastMillis;
   uint8_t milliDeBounce;
   uint8_t analogOffset;
 } Pin_t;
@@ -26,7 +26,7 @@ typedef struct {
   bool eq;
   uint8_t offset;
   uint8_t pin;
-  uint8_t lastMillis;
+  uint32_t lastMillis;
   uint8_t milliDeBounce;
   bool sioFunc;
   uint8_t analogOffset;

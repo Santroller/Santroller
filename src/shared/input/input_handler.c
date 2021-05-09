@@ -51,14 +51,14 @@ void initInputs(Configuration_t *config) {
 void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
-  Pin_t pin;
+  Pin_t* pin;
   for (uint8_t i = 0; i < validPins; i++) {
-    pin = pinData[i];
-    if (millis() - pin.lastMillis > pin.milliDeBounce) {
-      bool val = read_button_function(pin);
-      if (val != (bit_check(controller->buttons, pin.offset))) {
-        pin.lastMillis = millis();
-        bit_write(val, controller->buttons, pin.offset);
+    pin = &pinData[i];
+    if (millis() - pin->lastMillis > pin->milliDeBounce) {
+      bool val = read_button_function(*pin);
+      if (val != (bit_check(controller->buttons, pin->offset))) {
+        pin->lastMillis = millis();
+        bit_write(val, controller->buttons, pin->offset);
       }
     }
   }

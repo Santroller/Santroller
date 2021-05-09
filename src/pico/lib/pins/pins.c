@@ -16,6 +16,7 @@ Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset, bool
   pin.sioFunc = true;
   pin.analogOffset = INVALID_PIN;
   pin.milliDeBounce = config->debounce.buttons;
+  pin.lastMillis = 0;
   return pin;
 }
 bool digitalReadPin(Pin_t pin) {

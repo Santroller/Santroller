@@ -22,7 +22,7 @@ Pin_t pinData[XBOX_BTN_COUNT] = {};
 void initInputs(Configuration_t *config) {
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
-  mergedStrum = config->debounce.combinedStrum;
+  mergedStrum = typeIsGuitar && config->debounce.combinedStrum;
   setupADC();
   switch (config->main.inputType) {
   case WII:

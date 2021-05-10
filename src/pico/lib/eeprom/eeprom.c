@@ -45,6 +45,9 @@ Configuration_t loadConfig(void) {
       break;
     }
   }
+  if (config.main.version < 15) {
+    config.debounce.combinedStrum = false;
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)&config, sizeof(Configuration_t));

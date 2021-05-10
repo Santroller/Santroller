@@ -17,10 +17,12 @@ int joyThreshold;
 int triggerThreshold;
 bool mapJoyLeftDpad;
 bool mapStartSelectHome;
+bool mergedStrum;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 void initInputs(Configuration_t *config) {
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
+  mergedStrum = config->debounce.combinedStrum;
   setupADC();
   switch (config->main.inputType) {
   case WII:
@@ -52,13 +54,19 @@ void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t* pin;
+  uint8_t offset;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = &pinData[i];
+    offset = pin->offset;
+    // If strum is merged, then we want to grab debounce data from the same button for both
+    if (mergedStrum && i == XBOX_DPAD_UP) {
+      offset = pinData[XBOX_DPAD_DOWN].offset;
+    }
     if (millis() - pin->lastMillis > pin->milliDeBounce) {
       bool val = read_button_function(*pin);
-      if (val != (bit_check(controller->buttons, pin->offset))) {
+      if (val != (bit_check(controller->buttons, offset))) {
         pin->lastMillis = millis();
-        bit_write(val, controller->buttons, pin->offset);
+        bit_write(val, controller->buttons, offset);
       }
     }
   }

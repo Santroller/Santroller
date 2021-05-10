@@ -67,6 +67,9 @@ Configuration_t loadConfig(void) {
       break;
     }
   }
+  if (config.main.version < 15) {
+    config.debounce.combinedStrum = false;
+  }
   if (config.main.version < CONFIG_VERSION) {
     config.main.version = CONFIG_VERSION;
     eeprom_update_block(&config, &config_pointer, sizeof(Configuration_t));

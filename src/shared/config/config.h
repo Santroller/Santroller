@@ -119,6 +119,7 @@ typedef struct {
 typedef struct {
   uint8_t buttons;
   uint8_t strum;
+  bool combinedStrum;
 } DebounceConfig_t;
 
 typedef struct {

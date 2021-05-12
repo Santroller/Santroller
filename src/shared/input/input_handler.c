@@ -60,7 +60,7 @@ void tickInputs(Controller_t *controller) {
     offset = pin->offset;
     // If strum is merged, then we want to grab debounce data from the same button for both
     if (mergedStrum && i == XBOX_DPAD_UP) {
-      offset = pinData[XBOX_DPAD_DOWN].offset;
+      pin = &pinData[XBOX_DPAD_DOWN];
     }
     if (millis() - pin->lastMillis > pin->milliDeBounce) {
       bool val = read_button_function(*pin);

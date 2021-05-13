@@ -54,19 +54,19 @@ void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t* pin;
-  uint8_t offset;
+  Pin_t* pin2;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = &pinData[i];
-    offset = pin->offset;
+    pin2 = &pinData[i];
     // If strum is merged, then we want to grab debounce data from the same button for both
     if (mergedStrum && i == XBOX_DPAD_UP) {
-      pin = &pinData[XBOX_DPAD_DOWN];
+      pin2 = &pinData[XBOX_DPAD_DOWN];
     }
-    if (millis() - pin->lastMillis > pin->milliDeBounce) {
+    if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(*pin);
-      if (val != (bit_check(controller->buttons, offset))) {
+      if (val != (bit_check(controller->buttons, pin->offset))) {
         pin->lastMillis = millis();
-        bit_write(val, controller->buttons, offset);
+        bit_write(val, controller->buttons, pin->offset);
       }
     }
   }

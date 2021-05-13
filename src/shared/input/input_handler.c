@@ -65,7 +65,7 @@ void tickInputs(Controller_t *controller) {
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(*pin);
       if (val != (bit_check(controller->buttons, pin->offset))) {
-        pin->lastMillis = millis();
+        pin2->lastMillis = millis();
         bit_write(val, controller->buttons, pin->offset);
       }
     }

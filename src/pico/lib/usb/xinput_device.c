@@ -144,7 +144,7 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
     // Prepare for incoming data
     if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                         sizeof(p_xinput->epout_buf))) {
-      TU_LOG1_FAILED();
+      TU_LOG_FAILED();
       TU_BREAKPOINT();
     }
   }

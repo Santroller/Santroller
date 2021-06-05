@@ -58,7 +58,7 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
 }
 const uint8_t PROGMEM err[] = "ERROR";
 uint8_t dbuf[64];
-void processHIDReadFeatureReport(uint8_t cmd) {
+void processHIDReadFeatureReport(uint8_t cmd, uint8_t report, const void* request) {
   if (isRF && cmd < COMMAND_READ_CONFIG &&
       cmd != COMMAND_GET_CPU_INFO) {
     uint8_t dbuf2[2];
@@ -81,7 +81,7 @@ void processHIDReadFeatureReport(uint8_t cmd) {
         break;
       }
     }
-    writeToUSB(dbuf, len);
+    writeToUSB(dbuf, len, report, request);
     return;
   }
   uint8_t size;
@@ -128,5 +128,5 @@ void processHIDReadFeatureReport(uint8_t cmd) {
       dbuf[4] = 0x06;
     }
   }
-  writeToUSB(dbuf, size);
+  writeToUSB(dbuf, size, report, request);
 }

@@ -36,49 +36,85 @@ bool typeIsGuitar;
 bool typeIsDrum;
 uint8_t inputType;
 uint8_t pollRate;
-uint8_t rhportToWrite;
-tusb_control_request_t const *requestToWrite;
+
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[64];
-TU_ATTR_WEAK bool
-tud_vendor_control_request_cb(uint8_t rhport,
-                              tusb_control_request_t const *request) {
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
+                                tusb_control_request_t const *request) {
   if (request->bRequest == HID_REQ_GetReport &&
       (request->bmRequestType ==
        (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
       request->wIndex == INTERFACE_ID_XInput && request->wValue == 0x0000) {
-    tud_control_xfer(rhport, request, capabilities1, sizeof(capabilities1));
+
+    if (stage == CONTROL_STAGE_SETUP) {
+      tud_control_xfer(rhport, request, capabilities1, sizeof(capabilities1));
+    }
   } else if (request->bRequest == REQ_GetOSFeatureDescriptor &&
              (request->bmRequestType ==
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
              request->wIndex == EXTENDED_PROPERTIES_DESCRIPTOR &&
              request->wValue == INTERFACE_ID_Config) {
-    tud_control_xfer(rhport, request, &ExtendedIDs, ExtendedIDs.TotalLength);
+
+    if (stage == CONTROL_STAGE_SETUP) {
+      tud_control_xfer(rhport, request, &ExtendedIDs, ExtendedIDs.TotalLength);
+    }
   } else if (request->bRequest == REQ_GetOSFeatureDescriptor &&
              request->bmRequestType ==
                  (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE) &&
              request->wIndex == EXTENDED_COMPAT_ID_DESCRIPTOR) {
-    tud_control_xfer(rhport, request, &DevCompatIDs, DevCompatIDs.TotalLength);
+
+    if (stage == CONTROL_STAGE_SETUP) {
+      tud_control_xfer(rhport, request, &DevCompatIDs,
+                       DevCompatIDs.TotalLength);
+    }
   } else if (request->bRequest == HID_REQ_GetReport &&
              (request->bmRequestType ==
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
              request->wIndex == 0x00 && request->wValue == 0x0000) {
-    tud_control_xfer(rhport, request, ID, sizeof(ID));
+
+    if (stage == CONTROL_STAGE_SETUP) {
+      tud_control_xfer(rhport, request, ID, sizeof(ID));
+    }
   } else if (request->bRequest == HID_REQ_GetReport &&
              (request->bmRequestType ==
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
              request->wIndex == INTERFACE_ID_XInput &&
              request->wValue == 0x0100) {
-    tud_control_xfer(rhport, request, capabilities1, sizeof(capabilities2));
+
+    if (stage == CONTROL_STAGE_SETUP) {
+      tud_control_xfer(rhport, request, capabilities1, sizeof(capabilities2));
+    }
   } else if (request->bRequest == HID_REQ_SetReport &&
              request->bmRequestType ==
                  (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    tud_control_xfer(rhport, request, buf, request->wLength);
+    if (stage == CONTROL_STAGE_SETUP) {
+      tud_control_xfer(rhport, request, buf, request->wLength);
+    } else if (stage == CONTROL_STAGE_ACK) {
+      int cmd = request->wValue;
+      processHIDWriteFeatureReport(cmd, request->wLength, buf);
+      if (isRF) {
+        uint8_t buf2[32];
+        uint8_t buf3[32];
+        memcpy(buf3 + 2, buf, 30);
+        buf3[0] = cmd;
+        buf3[1] = false;
+        while (nrf24_txFifoFull()) {
+          rf_interrupt = true;
+          tickRFInput(buf2, 0);
+          nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+        }
+        nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
+        nrf24_writeAckPayload(buf3, sizeof(buf3));
+        rf_interrupt = true;
+      }
+    }
   } else if (request->bRequest == HID_REQ_GetReport &&
              request->bmRequestType ==
                  (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    rhportToWrite = rhport;
-    requestToWrite = request;
-    processHIDReadFeatureReport(request->wValue);
+    if (stage == CONTROL_STAGE_SETUP) {
+      processHIDReadFeatureReport(request->wValue, rhport, request);
+    }
+  } else {
+    return false;
   }
   return true;
 }
@@ -90,7 +126,7 @@ uint8_t const *tud_descriptor_device_cb(void) {
   }
   return (uint8_t const *)&deviceDescriptor;
 }
-uint8_t const *tud_hid_descriptor_report_cb() {
+uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
   if (fullDeviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
     return kbd_report_descriptor;
   } else {
@@ -174,7 +210,7 @@ void hid_task(void) {
     case REPORT_ID_MIDI:
       data++;
       size--;
-      tud_midi_n_send(0, data);
+      tud_midi_n_packet_write(0, data);
       start_ms = millis();
 #endif
     }
@@ -220,53 +256,27 @@ int main() {
     hid_task();
   }
 }
-void writeToUSB(const void *const Buffer, uint8_t Length) {
-  tud_control_xfer(rhportToWrite, requestToWrite, (uint8_t *)Buffer + 1,
-                   Length - 1);
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report,
+                const void *request) {
+  tud_control_xfer(report, request, (uint8_t *)Buffer + 1, Length - 1);
 }
 void stopReading(void) {}
-bool tud_vendor_control_complete_cb(uint8_t rhport,
-                                    tusb_control_request_t const *request) {
-  (void)rhport;
-  if (request->bRequest == HID_REQ_SetReport &&
-      request->bmRequestType ==
-          (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    int cmd = request->wValue;
-    processHIDWriteFeatureReport(cmd, request->wLength, buf);
-    if (isRF) {
-      uint8_t buf2[32];
-      uint8_t buf3[32];
-      memcpy(buf3 + 2, buf, 30);
-      buf3[0] = cmd;
-      buf3[1] = false;
-      while (nrf24_txFifoFull()) {
-        rf_interrupt = true;
-        tickRFInput(buf2, 0);
-        nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      }
-      nrf24_configRegister(STATUS, (1 << TX_DS) | (1 << MAX_RT));
-      nrf24_writeAckPayload(buf3, sizeof(buf3));
-      rf_interrupt = true;
-    }
-  }
-  return true;
-}
-usbd_class_driver_t driver[] = {
-    {.init = xinputd_init,
-     .reset = xinputd_reset,
-     .open = xinputd_open,
-     .control_request = tud_vendor_control_request_cb,
-     .control_complete = tud_vendor_control_complete_cb,
-     .xfer_cb = xinputd_xfer_cb,
-     .sof = NULL}};
+
+usbd_class_driver_t driver[] = {{.init = xinputd_init,
+                                 .reset = xinputd_reset,
+                                 .open = xinputd_open,
+                                 .control_xfer_cb = tud_vendor_control_xfer_cb,
+                                 .xfer_cb = xinputd_xfer_cb,
+                                 .sof = NULL}};
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
   *driver_count = 1;
   return driver;
 }
 
 static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
-uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
-                               uint8_t *buffer, uint16_t reqlen) {
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
+                               hid_report_type_t report_type, uint8_t *buffer,
+                               uint16_t reqlen) {
   if (report_type == HID_REPORT_TYPE_FEATURE) {
     //  When requested, return the ps3 report ids so that we have console
     //  compatibility
@@ -280,5 +290,6 @@ uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type,
   }
   return 0;
 }
-void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type,
-                           uint8_t const *buffer, uint16_t bufsize) {}
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id,
+                           hid_report_type_t report_type, uint8_t const *buffer,
+                           uint16_t bufsize) {}

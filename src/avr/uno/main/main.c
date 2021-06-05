@@ -111,7 +111,7 @@ int main(void) {
           packetCount = data;
           state = 3;
         } else if (state == 2) {
-          processHIDReadFeatureReport(data);
+          processHIDReadFeatureReport(data, 0, NULL);
           state = 0;
           break;
         } else if (state == 3) {
@@ -209,7 +209,7 @@ int main(void) {
   }
 }
 // Data being written back to USB after a read
-void writeToUSB(const void *const Buffer, uint8_t Length) {
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report, const void* request) {
   uint8_t done = FRAME_START_WRITE;
   writeData(&done, 1);
   writeData(&Length, 1);

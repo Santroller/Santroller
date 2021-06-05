@@ -201,7 +201,7 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t len) {
   }
   Endpoint_ClearStatusStage();
 }
-void processHIDReadFeatureReport(uint8_t cmd) {
+void processHIDReadFeatureReport(uint8_t cmd, uint8_t report, const void* request) {
   Endpoint_ClearSETUP();
   uint8_t header = FRAME_START_FEATURE_READ;
   writeData(&header, 1);

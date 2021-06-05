@@ -10,7 +10,7 @@ void deviceControlRequest(void) {
   if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
       USB_ControlRequest.bmRequestType ==
           (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-    processHIDReadFeatureReport(USB_ControlRequest.wValue);
+    processHIDReadFeatureReport(USB_ControlRequest.wValue, 0, NULL);
   } else if (USB_ControlRequest.bRequest == HID_REQ_SetReport &&
              USB_ControlRequest.bmRequestType ==
                  (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {

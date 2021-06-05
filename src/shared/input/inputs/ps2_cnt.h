@@ -14,9 +14,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #ifndef __AVR__
-#  include "hardware/clocks.h"
-#  include "pico/stdlib.h"
-#  include "spi/pio_spi.h"
 #endif
 // TODO: this seems like a much nicer implementation to copy
 // https://github.com/RandomInsano/pscontroller-rs/blob/master/src/lib.rs
@@ -272,10 +269,6 @@ static inline bool isConfigReply(const uint8_t *status) {
 Pin_t attention;
 Pin_t command;
 Pin_t clock;
-
-#ifndef __AVR__
-pio_spi_inst_t spi = {.pio = pio0, .sm = 0};
-#endif
 void noAttention(void) {
   digitalWritePin(command, true);
   digitalWritePin(clock, true);
@@ -299,7 +292,6 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
 
   static uint8_t inputBuffer[BUFFER_SIZE];
   uint8_t *ret = NULL;
-#ifdef __AVR__
   signalAttention();
 
   if (len >= 3 && len <= BUFFER_SIZE) {
@@ -327,13 +319,6 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
     }
   }
   noAttention();
-#else
-  // We can parse commands in PIO, and then automagically read the entire packet
-  pio_spi_write8_read8_blocking(&spi, out, inputBuffer, len);
-  for (int i = 0; i < len; i++) { printf("%x ", inputBuffer[i]); }
-  printf("\n");
-  ret = inputBuffer;
-#endif
   return ret;
 }
 bool sendCommand(const uint8_t *buf, uint8_t len) {
@@ -458,22 +443,12 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(Configuration_t *config) {
-#ifdef __AVR__
-  spi_begin(100000, true, true, true);
+  spi_begin(1000, true, true, true);
   attention = setUpDigital(config, PIN_PS2_ATT, 0, false, true);
   command = setUpDigital(config, PIN_SPI_MOSI, 0, false, true);
   clock = setUpDigital(config, PIN_SPI_SCK, 0, false, true);
   pinMode(PIN_PS2_ATT, OUTPUT);
   noAttention();
-#else
-  pinMode(PIN_PS2_ATT, OUTPUT);
-  gpio_put(PIN_PS2_ATT, 1);
-  float clkdiv = clock_get_hz(clk_sys) / 10000.f;
-  uint cpha1_prog_offs = pio_add_program(spi.pio, &spi_cpha1_program);
-  pio_spi_init(spi.pio, spi.sm, cpha1_prog_offs,
-               8, // 8 bits per SPI frame
-               clkdiv, 1, 1, PIN_SPI_SCK, PIN_SPI_MOSI, PIN_SPI_MISO);
-#endif
 }
 void tickPS2CtrlInput(Controller_t *controller) {
   if (ps2CtrlType == PSX_NO_DEVICE) {

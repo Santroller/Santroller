@@ -93,7 +93,7 @@ int main(void) {
           uint8_t cmd = data[0];
           bool isRead = data[1];
           if (isRead) {
-            processHIDReadFeatureReport(cmd);
+            processHIDReadFeatureReport(cmd, 0, NULL);
           } else {
             if (cmd == COMMAND_WRITE_CONFIG) {
               // 2 bytes for rf header
@@ -113,7 +113,7 @@ int main(void) {
   }
 }
 
-void writeToUSB(const void *const Buffer, uint8_t Length) {
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report, const void* request) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
 }

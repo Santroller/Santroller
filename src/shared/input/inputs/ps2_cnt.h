@@ -270,15 +270,13 @@ Pin_t attention;
 Pin_t command;
 Pin_t clock;
 void noAttention(void) {
-  digitalWritePin(command, true);
-  digitalWritePin(clock, true);
+  spi_high();
   digitalWritePin(attention, true);
   _delay_us(ATTN_DELAY);
 }
 void signalAttention(void) {
   digitalWritePin(attention, false);
-  digitalWritePin(clock, false);
-  digitalWritePin(command, false);
+  spi_low();
   _delay_us(ATTN_DELAY);
 }
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
@@ -443,17 +441,16 @@ bool begin(Controller_t *controller) {
 }
 
 void initPS2CtrlInput(Configuration_t *config) {
-  spi_begin(1000, true, true, true);
+  spi_begin(100000, true, true, true);
   attention = setUpDigital(config, PIN_PS2_ATT, 0, false, true);
-  command = setUpDigital(config, PIN_SPI_MOSI, 0, false, true);
-  clock = setUpDigital(config, PIN_SPI_SCK, 0, false, true);
   pinMode(PIN_PS2_ATT, OUTPUT);
   noAttention();
 }
 void tickPS2CtrlInput(Controller_t *controller) {
   if (ps2CtrlType == PSX_NO_DEVICE) {
     if (!begin(controller)) { return; }
-    if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
+    sendCommand(commandEnterConfig, sizeof(commandEnterConfig));
+    if (true) {
       // Dualshock one controllers don't have config mode
       // Enable analog sticks
       sendCommand(commandSetMode, sizeof(commandSetMode));

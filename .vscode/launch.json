@@ -17,6 +17,20 @@
                 "monitor reset init"
             ],
             "preLaunchTask": "build"
+        },
+        {
+            "name": "GDB - usb",
+            "type": "gdb",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "target": "${workspaceFolder}/buildDebug/ardwiino-pico-rp2040-usb_passthrough.elf",
+            "gdbpath": "/usr/bin/arm-none-eabi-gdb",
+            "autorun": [
+                "target extended-remote | openocd -f interface/picoprobe.cfg -f target/rp2040.cfg  -c \"gdb_port pipe\"",
+                "load",
+                "monitor reset init"
+            ],
+            "preLaunchTask": "build"
         }
     ]
 }

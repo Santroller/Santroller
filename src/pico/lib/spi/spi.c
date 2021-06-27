@@ -23,8 +23,8 @@ void spi_begin(uint32_t clock, bool cpol, bool cpha, bool lsbfirst) {
   // gpio_set_function(PIN_SPI_MOSI, GPIO_FUNC_SPI);
   // gpio_set_function(PIN_SPI_SCK, GPIO_FUNC_SPI);
 
-  pinMode(PIN_PS2_ATT, OUTPUT);
-  gpio_put(PIN_PS2_ATT, 1);
+  // pinMode(PIN_PS2_ATT, OUTPUT);
+  // gpio_put(PIN_PS2_ATT, 1);
   float clkdiv = clock_get_hz(clk_sys) / clock;
   uint cpha_prog_offs =
       pio_add_program(spi.pio, cpha ? &spi_cpha1_program : &spi_cpha0_program);
@@ -44,6 +44,14 @@ uint8_t spi_transfer(uint8_t data) {
   uint8_t resp;
   pio_spi_write8_read8_blocking(&spi, &data, &resp, 1);
   resp = revbits2(resp);
-  printf("0x%x => 0x%x\n", read, resp);
+  printf("0x%02x => 0x%02x\n", read, resp);
   return resp;
+}
+void spi_high(void) {
+  // CPOL = SCK inverted!
+    pio_sm_set_pins_with_mask(pio0, 0, (0u << PIN_SPI_SCK) | (1u << PIN_SPI_MOSI), (1u << PIN_SPI_SCK) | (1u << PIN_SPI_MOSI));
+}
+void spi_low(void) {
+  // CPOL = SCK inverted!
+    pio_sm_set_pins_with_mask(pio0, 0, (1u << PIN_SPI_SCK), (1u << PIN_SPI_SCK) | (1u << PIN_SPI_MOSI));
 }

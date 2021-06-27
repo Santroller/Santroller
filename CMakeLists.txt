@@ -126,7 +126,7 @@ foreach(PROJECT ${PROJECTS})
     endforeach()
   endforeach()
 endforeach()
-set(TYPES "rf;multi;main")
+set(TYPES "rf;multi;main;usb_passthrough")
 foreach(TYPE ${TYPES})
   unset(EXTRA)
   if(NOT (${TYPE} MATCHES "main"))
@@ -164,14 +164,15 @@ foreach(TYPE ${TYPES})
     src/pico/lib/i2c/i2c.c
     src/pico/lib/usb/xinput_device.c
     src/pico/lib/pins/pins.c)
-  include_directories(
-    src/shared/output
-    src/shared
-    src/shared/lib
-    lib
-    src/pico
-    src/pico/lib
-    lib/lufa)
+    target_include_directories(${TARGET} PUBLIC
+      ${SRC}
+      src/shared/output
+      src/shared
+      src/shared/lib
+      lib
+      src/pico
+      src/pico/lib
+      lib/lufa)
   if(${EXTRA} MATCHES "-multi")
     target_compile_definitions(${TARGET} PUBLIC MULTI_ADAPTOR)
   endif()
@@ -187,10 +188,6 @@ foreach(TYPE ${TYPES})
   target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
   # Define a memory section 512 kb away from the start of flash for the rf config
   target_link_options(${TARGET} PUBLIC -Wl,--section-start=.rfrecv=${RF_REGION})
-
-  if(${TYPE} MATCHES "main")
-    include_directories(src/pico/main)
-  endif()
 
   execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git
                           describe --abbrev=0 --tags OUTPUT_VARIABLE OUTPUT)
@@ -240,6 +237,7 @@ foreach(TYPE ${TYPES})
     hardware_sleep
     pico_unique_id
     pico_mem_ops
+    tinyusb_host
     tinyusb_device
     tinyusb_board)
 

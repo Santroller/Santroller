@@ -59,3 +59,11 @@ uint8_t spi_transfer(uint8_t data) {
     ;
   return SPDR;
 }
+void spi_high(void) {
+  digitalWrite(PIN_SPI_SCK, true);
+  digitalWrite(PIN_SPI_MOSI, true);
+}
+void spi_low(void) {
+  digitalWrite(PIN_SPI_SCK, false);
+  digitalWrite(PIN_SPI_MOSI, false);
+}

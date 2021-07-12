@@ -1,5 +1,5 @@
 #pragma once
-#include "attributes.h"
+#include "usb/attributes.h"
 
 /* Public Interface - May be used in end-application: */
 /* Macros: */

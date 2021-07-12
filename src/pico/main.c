@@ -91,6 +91,7 @@ usbd_class_driver_t driver[] = {{.init = xinputd_init,
                                  .control_xfer_cb = tud_vendor_control_xfer_cb,
                                  .xfer_cb = xinputd_xfer_cb,
                                  .sof = NULL}};
+
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
     *driver_count = 1;
     return driver;

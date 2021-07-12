@@ -3,10 +3,10 @@
 #include <stdint.h>
 
 #include "endianness.h"
-#include "hid_descriptors.h"
-#include "midi_descriptors.h"
-#include "std_descriptors.h"
-#include "wcid_descriptors.h"
+#include "usb/hid_descriptors.h"
+#include "usb/midi_descriptors.h"
+#include "usb/std_descriptors.h"
+#include "usb/wcid_descriptors.h"
 
 #define ENDPOINT_SIZE 64
 #define XINPUT_EPSIZE_IN 0x14

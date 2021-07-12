@@ -33,7 +33,8 @@
 //--------------------------------------------------------------------+
 #  include "host/usbh.h"
 #  include "host/usbh_classdriver.h"
-#  include "output/descriptors.h"
+#  include "usb/wcid_descriptors.h"
+#  include "usb/xinput_descriptors.h"
 #  include "xinput_host.h"
 
 //--------------------------------------------------------------------+
@@ -141,8 +142,8 @@ bool xinputh_open_subtask(uint8_t rhport, uint8_t dev_addr,
     // Xinput reserved endpoint
     //-------------- Xinput Descriptor --------------//
     p_desc = tu_desc_next(p_desc);
-    USB_HID_XBOX_Descriptor_HID_t *x_desc =
-        (USB_HID_XBOX_Descriptor_HID_t *)p_desc;
+    XBOX_ID_Descriptor_t *x_desc =
+        (XBOX_ID_Descriptor_t *)p_desc;
     TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
     drv_len += x_desc->Header.Size;
     uint8_t endpoints = itf_desc->bNumEndpoints;
@@ -175,8 +176,8 @@ bool xinputh_open_subtask(uint8_t rhport, uint8_t dev_addr,
     // Xinput reserved endpoint
     //-------------- Xinput Descriptor --------------//
     p_desc = tu_desc_next(p_desc);
-    USB_HID_XBOX_Descriptor_HID_t *x_desc =
-        (USB_HID_XBOX_Descriptor_HID_t *)p_desc;
+    XBOX_ID_Descriptor_t *x_desc =
+        (XBOX_ID_Descriptor_t *)p_desc;
     TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
     drv_len += x_desc->Header.Size;
     p_desc = tu_desc_next(p_desc);

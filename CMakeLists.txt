@@ -1,4 +1,5 @@
 add_subdirectory("src/pico")
+add_subdirectory("src/pico_passthrough")
 cmake_minimum_required(VERSION 3.13)
 project(ardwiino C CXX ASM)
 set(CMAKE_C_STANDARD 11)

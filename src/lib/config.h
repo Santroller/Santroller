@@ -1,6 +1,15 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
+#include "defines.h"
+
+typedef struct {
+  uint8_t pin;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+} Led_t;
+
 typedef struct {
   uint8_t pin;
   bool inverted;
@@ -34,8 +43,8 @@ typedef struct {
 // A version of the above struct, but with everything combined into arrays
 // instead of seperated.
 typedef struct {
-  uint8_t buttons[16];
-  AnalogPin_t axis[6];
+  uint8_t buttons[XBOX_BTN_COUNT];
+  AnalogPin_t axis[XBOX_AXIS_COUNT];
 } PinsCombined_t;
 
 typedef struct {

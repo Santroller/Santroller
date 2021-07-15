@@ -14,7 +14,7 @@ if(GIT_FOUND)
 endif(GIT_FOUND)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/firmware)
 
-set(TARGET ardwiino-pico-rp2040)
+set(TARGET ardwiino-pico-rp2040-passthrough)
 set(SRC .)
 add_executable(
     ${TARGET}

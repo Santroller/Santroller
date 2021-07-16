@@ -13,21 +13,16 @@ ARCH         = AVR8
 OPTIMIZATION = s
 F_USB		 = ${F_CPU}
 
-VERSION = $(shell git describe --abbrev=0 --tags)
-VERSION_LIST = $(subst ., ,$(subst version-,,$(VERSION)))
-VERSION_MAJOR = $(word 1,$(VERSION_LIST))
-VERSION_MINOR = $(word 2,$(VERSION_LIST))
-VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
 SRC = ${VARIANT_ROOT}/main.c
+include ${VARIANT_ROOT}/makefile.mk
 LUFA_PATH    = ${PROJECT_ROOT}/submodules/lufa/LUFA
-CC_FLAGS     += -DUSE_LUFA_CONFIG_HEADER  -I${VARIANT_ROOT}/variants/${VARIANT}  -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin -ffast-math
+CC_FLAGS     += -DUSE_LUFA_CONFIG_HEADER -I${PROJECT_ROOT}/src/avr/lib -I${PROJECT_ROOT}/src/lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin -ffast-math
 CC_FLAGS     += -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 
 CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"'
 LD_FLAGS     += $(REGS) -flto -fuse-linker-plugin 
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}$(if ${MCU_TYPE},-${MCU_TYPE},)-${MCU}-${F_CPU}${MULTI}$(if ${RF},-rf,)
 # ----- No changes should be necessary below this line -----
 
 $(info $(SRC))

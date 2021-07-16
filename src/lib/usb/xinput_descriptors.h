@@ -9,8 +9,8 @@ uint8_t capabilities2[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
                            0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-USB_OSExtendedCompatibleIDDescriptor_t ExtendedIDs = {
-    TotalLength : sizeof(USB_OSExtendedCompatibleIDDescriptor_t),
+TUSB_OSExtendedCompatibleIDDescriptor_t ExtendedIDs = {
+    TotalLength : sizeof(TUSB_OSExtendedCompatibleIDDescriptor_t),
     Version : 0x0100,
     Index : DESC_EXTENDED_PROPERTIES_DESCRIPTOR,
     TotalSections : 1,
@@ -27,8 +27,8 @@ USB_OSExtendedCompatibleIDDescriptor_t ExtendedIDs = {
              'D', '7', '0', '0', 'A', '3', '1', '3', 'D', '7', '8', '}', '\0'}
     }
 };
-USB_OSCompatibleIDDescriptor_t DevCompatIDs = {
-    TotalLength : sizeof(USB_OSCompatibleIDDescriptor_t),
+TUSB_OSCompatibleIDDescriptor_t DevCompatIDs = {
+    TotalLength : sizeof(TUSB_OSCompatibleIDDescriptor_t),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
     TotalSections : 2,

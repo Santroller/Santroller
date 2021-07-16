@@ -11,13 +11,13 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
     if (requestType.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
         if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_VENDOR) {
             if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
-                if (request == HID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+                if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
                     *address = capabilities1;
                     return sizeof(capabilities1);
                 } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
                     *address = (uint8_t *)&ExtendedIDs;
                     return ExtendedIDs.TotalLength;
-                } else if (request == HID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
+                } else if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
                     *address = capabilities2;
                     return sizeof(capabilities2);
                 }
@@ -25,7 +25,7 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
                 if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
                     *address = (uint8_t *)&DevCompatIDs;
                     return DevCompatIDs.TotalLength;
-                } else if (request == HID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {
+                } else if (request == THID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {
                     *address = ID;
                     return sizeof(ID);
                 }
@@ -35,7 +35,7 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
             // 
         }
     } else {
-        uint8_t *data = *address;
+        // uint8_t *data = *address;
         if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
             // hid write feature report received. Do we actually want to use this for the config api, or do we want to do something custom since we have raw usb access?
             // 
@@ -131,7 +131,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
     uint16_t size = NO_DESCRIPTOR;
     const void *address = NULL;
     switch (descriptorType) {
-        case DTYPE_Device:
+        case TDTYPE_Device:
             address = &deviceDescriptor;
             size = deviceDescriptor.Header.Size;
             if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
@@ -143,7 +143,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             *descriptorAddress = address;
 
             return size;
-        case DTYPE_Configuration:
+        case TDTYPE_Configuration:
             if (deviceType <= XINPUT_ARCADE_PAD) {
                 address = &XBOXConfigurationDescriptor;
                 size = XBOXConfigurationDescriptor.Config.TotalConfigurationSize;
@@ -166,7 +166,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
 
             return size;
             // break;
-        case HID_DTYPE_Report:
+        case THID_DTYPE_Report:
             if (deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
                 address = kbd_report_descriptor;
                 size = sizeof(kbd_report_descriptor);
@@ -176,7 +176,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
             *descriptorAddress = address;
             return size;
-        case DTYPE_String:
+        case TDTYPE_String:
             if (descriptorNumber == 4) {
                 address = &xboxString;
             } else if (descriptorNumber == 3) {
@@ -189,7 +189,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 break;
             }
             *descriptorAddress = address;
-            size = ((USB_StdDescriptor_String_t *)address)->bLength;
+            size = ((TUSB_StdDescriptor_String_t *)address)->bLength;
             return size;
     }
+    return NO_DESCRIPTOR;
 }

@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "endianness.h"
 #include "usb/hid_descriptors.h"
 #include "usb/midi_descriptors.h"
 #include "usb/std_descriptors.h"
@@ -73,7 +72,7 @@ enum interfaces_t {
 };
 
 typedef struct {
-    USB_Descriptor_Header_t Header;
+    TUSB_Descriptor_Header_t Header;
     uint8_t reserved[2];
     uint8_t subtype;
     uint8_t reserved2;
@@ -86,47 +85,47 @@ typedef struct {
 } XBOX_ID_Descriptor_t;
 
 typedef struct {
-    USB_Descriptor_Configuration_Header_t Config;
-    USB_Descriptor_Interface_t Interface1;
+    TUSB_Descriptor_Configuration_Header_t Config;
+    TUSB_Descriptor_Interface_t Interface1;
     XBOX_ID_Descriptor_t Interface1ID;
-    USB_Descriptor_Endpoint_t ReportINEndpoint11;
-    USB_Descriptor_Endpoint_t ReportOUTEndpoint12;
-    USB_Descriptor_Interface_t Interface4;
+    TUSB_Descriptor_Endpoint_t ReportINEndpoint11;
+    TUSB_Descriptor_Endpoint_t ReportOUTEndpoint12;
+    TUSB_Descriptor_Interface_t Interface4;
     uint8_t UnkownDescriptor4[0x06];
-    USB_Descriptor_Interface_t InterfaceConfig;
-    USB_Descriptor_Interface_t InterfaceExtra;
-} USB_Descriptor_Configuration_XBOX_t;
+    TUSB_Descriptor_Interface_t InterfaceConfig;
+    TUSB_Descriptor_Interface_t InterfaceExtra;
+} TUSB_Descriptor_Configuration_XBOX_t;
 
 typedef struct {
-    USB_Descriptor_Configuration_Header_t Config;
-    USB_Descriptor_Interface_t InterfaceHID;
-    USB_HID_Descriptor_HID_t HIDDescriptor;
-    USB_Descriptor_Endpoint_t EndpointInHID;
-    USB_Descriptor_Endpoint_t EndpointOutHID;
-    USB_Descriptor_Interface_t InterfaceConfig;
-} USB_Descriptor_HID_Configuration_t;
+    TUSB_Descriptor_Configuration_Header_t Config;
+    TUSB_Descriptor_Interface_t InterfaceHID;
+    TUSB_THID_Descriptor_THID_t HIDDescriptor;
+    TUSB_Descriptor_Endpoint_t EndpointInHID;
+    TUSB_Descriptor_Endpoint_t EndpointOutHID;
+    TUSB_Descriptor_Interface_t InterfaceConfig;
+} TUSB_Descriptor_HID_Configuration_t;
 
 typedef struct {
-    USB_Descriptor_Configuration_Header_t Config;
-    USB_Descriptor_Interface_t Interface_AudioControl;
-    USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
-    USB_Descriptor_Interface_t Interface_AudioStream;
-    USB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
-    USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
-    USB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
-    USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
-    USB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
-    USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_In_Jack_Endpoint;
-    USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
-    USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
-    USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
-    USB_Descriptor_Interface_t InterfaceConfig;
-} USB_Descriptor_MIDI_Configuration_t;
+    TUSB_Descriptor_Configuration_Header_t Config;
+    TUSB_Descriptor_Interface_t Interface_AudioControl;
+    TUSB_TAUDIO_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
+    TUSB_Descriptor_Interface_t Interface_AudioStream;
+    TUSB_MIDI_Descriptor_AudioInterface_AS_t Audio_StreamInterface_SPC;
+    TUSB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Emb;
+    TUSB_MIDI_Descriptor_InputJack_t MIDI_In_Jack_Ext;
+    TUSB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Emb;
+    TUSB_MIDI_Descriptor_OutputJack_t MIDI_Out_Jack_Ext;
+    TUSB_TAUDIO_Descriptor_StreamEndpoint_Std_t MIDI_In_Jack_Endpoint;
+    TUSB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
+    TUSB_TAUDIO_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
+    TUSB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
+    TUSB_Descriptor_Interface_t InterfaceConfig;
+} TUSB_Descriptor_MIDI_Configuration_t;
 
-extern USB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor;
-extern USB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor;
-extern USB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor;
-extern USB_Descriptor_Device_t deviceDescriptor;
-extern const USB_OSDescriptor_t OSDescriptorString;
-extern const USB_Descriptor_String_t *const descriptorStrings[3];
-extern const USB_Descriptor_String_t xboxString;
+extern TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor;
+extern TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor;
+extern TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor;
+extern TUSB_Descriptor_Device_t deviceDescriptor;
+extern const TUSB_OSDescriptor_t OSDescriptorString;
+extern const TUSB_Descriptor_String_t *const descriptorStrings[3];
+extern const TUSB_Descriptor_String_t xboxString;

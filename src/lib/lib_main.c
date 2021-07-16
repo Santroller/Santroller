@@ -9,3 +9,6 @@ void init() {
     generateSerialString(serialString);
     deviceType = XINPUT_GUITAR_HERO_GUITAR;
 }
+void tick() {
+    
+}

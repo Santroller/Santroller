@@ -197,7 +197,7 @@ bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num) {
       .bmRequestType_bit = {.recipient = TUSB_REQ_RCPT_INTERFACE,
                             .type = TUSB_REQ_TYPE_CLASS,
                             .direction = TUSB_DIR_OUT},
-      .bRequest = HID_REQ_SetReport,
+      .bRequest = THID_REQ_SetReport,
       .wValue = tu_u16(report_type, report_id),
       .wIndex = 0x00,
       .wLength = sizeof(init_led)};

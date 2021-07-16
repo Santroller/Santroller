@@ -34,14 +34,7 @@ math(EXPR RF_REGION "${XIP_BASE} + ${FLASH_TARGET_OFFSET}" OUTPUT_FORMAT HEXADEC
 target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
 # Define a memory section 512 kb away from the start of flash for the rf config
 target_link_options(${TARGET} PUBLIC -Wl,--section-start=.rfrecv=${RF_REGION})
-execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git
-                          describe --abbrev=0 --tags OUTPUT_VARIABLE OUTPUT)
-# string(REPLACE version- "" OUTPUT ${OUTPUT})
-# string(REPLACE "." ";" OUTPUT ${OUTPUT})
-# list(GET OUTPUT 0 VERSION_MAJOR)
-# list(GET OUTPUT 1 VERSION_MINOR)
-# list(GET OUTPUT 2 VERSION_REVISION)
-# string(STRIP ${VERSION_REVISION} VERSION_REVISION)
+
 if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     pico_enable_stdio_uart(${TARGET} 0)
     pico_enable_stdio_usb(${TARGET} 0)

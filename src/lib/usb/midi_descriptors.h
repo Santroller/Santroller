@@ -4,235 +4,235 @@
 /** \name Audio Channel Masks */
 /**@{*/
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_LEFT_FRONT (1 << 0)
+#define TAUDIO_CHANNEL_LEFT_FRONT (1 << 0)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_RIGHT_FRONT (1 << 1)
+#define TAUDIO_CHANNEL_RIGHT_FRONT (1 << 1)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_CENTER_FRONT (1 << 2)
+#define TAUDIO_CHANNEL_CENTER_FRONT (1 << 2)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_LOW_FREQ_ENHANCE (1 << 3)
+#define TAUDIO_CHANNEL_LOW_FREQ_ENHANCE (1 << 3)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_LEFT_SURROUND (1 << 4)
+#define TAUDIO_CHANNEL_LEFT_SURROUND (1 << 4)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_RIGHT_SURROUND (1 << 5)
+#define TAUDIO_CHANNEL_RIGHT_SURROUND (1 << 5)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_LEFT_OF_CENTER (1 << 6)
+#define TAUDIO_CHANNEL_LEFT_OF_CENTER (1 << 6)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_RIGHT_OF_CENTER (1 << 7)
+#define TAUDIO_CHANNEL_RIGHT_OF_CENTER (1 << 7)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_SURROUND (1 << 8)
+#define TAUDIO_CHANNEL_SURROUND (1 << 8)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_SIDE_LEFT (1 << 9)
+#define TAUDIO_CHANNEL_SIDE_LEFT (1 << 9)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_SIDE_RIGHT (1 << 10)
+#define TAUDIO_CHANNEL_SIDE_RIGHT (1 << 10)
 
 /** Supported channel mask for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_CHANNEL_TOP (1 << 11)
+#define TAUDIO_CHANNEL_TOP (1 << 11)
 /**@}*/
 
 /** \name Audio Feature Masks */
 /**@{*/
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_MUTE (1 << 0)
+#define TAUDIO_FEATURE_MUTE (1 << 0)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_VOLUME (1 << 1)
+#define TAUDIO_FEATURE_VOLUME (1 << 1)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_BASS (1 << 2)
+#define TAUDIO_FEATURE_BASS (1 << 2)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_MID (1 << 3)
+#define TAUDIO_FEATURE_MID (1 << 3)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_TREBLE (1 << 4)
+#define TAUDIO_FEATURE_TREBLE (1 << 4)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_GRAPHIC_EQUALIZER (1 << 5)
+#define TAUDIO_FEATURE_GRAPHIC_EQUALIZER (1 << 5)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_AUTOMATIC_GAIN (1 << 6)
+#define TAUDIO_FEATURE_AUTOMATIC_GAIN (1 << 6)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_DELAY (1 << 7)
+#define TAUDIO_FEATURE_DELAY (1 << 7)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_BASS_BOOST (1 << 8)
+#define TAUDIO_FEATURE_BASS_BOOST (1 << 8)
 
 /** Supported feature mask for an Audio class feature unit descriptor. See the Audio class specification for more details. */
-#define AUDIO_FEATURE_BASS_LOUDNESS (1 << 9)
+#define TAUDIO_FEATURE_BASS_LOUDNESS (1 << 9)
 /**@}*/
 
 /** \name Audio Terminal Types */
 /**@{*/
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_UNDEFINED 0x0100
+#define TAUDIO_TERMINAL_UNDEFINED 0x0100
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_STREAMING 0x0101
+#define TAUDIO_TERMINAL_STREAMING 0x0101
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_VENDOR 0x01FF
+#define TAUDIO_TERMINAL_VENDOR 0x01FF
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_UNDEFINED 0x0200
+#define TAUDIO_TERMINAL_IN_UNDEFINED 0x0200
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_MIC 0x0201
+#define TAUDIO_TERMINAL_IN_MIC 0x0201
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_DESKTOP_MIC 0x0202
+#define TAUDIO_TERMINAL_IN_DESKTOP_MIC 0x0202
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_PERSONAL_MIC 0x0203
+#define TAUDIO_TERMINAL_IN_PERSONAL_MIC 0x0203
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_OMNIDIR_MIC 0x0204
+#define TAUDIO_TERMINAL_IN_OMNIDIR_MIC 0x0204
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_MIC_ARRAY 0x0205
+#define TAUDIO_TERMINAL_IN_MIC_ARRAY 0x0205
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_PROCESSING_MIC 0x0206
+#define TAUDIO_TERMINAL_IN_PROCESSING_MIC 0x0206
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_IN_OUT_UNDEFINED 0x0300
+#define TAUDIO_TERMINAL_IN_OUT_UNDEFINED 0x0300
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_SPEAKER 0x0301
+#define TAUDIO_TERMINAL_OUT_SPEAKER 0x0301
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_HEADPHONES 0x0302
+#define TAUDIO_TERMINAL_OUT_HEADPHONES 0x0302
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_HEAD_MOUNTED 0x0303
+#define TAUDIO_TERMINAL_OUT_HEAD_MOUNTED 0x0303
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_DESKTOP 0x0304
+#define TAUDIO_TERMINAL_OUT_DESKTOP 0x0304
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_ROOM 0x0305
+#define TAUDIO_TERMINAL_OUT_ROOM 0x0305
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_COMMUNICATION 0x0306
+#define TAUDIO_TERMINAL_OUT_COMMUNICATION 0x0306
 
 /** Terminal type constant for an Audio class terminal descriptor. See the Audio class specification for more details. */
-#define AUDIO_TERMINAL_OUT_LOWFREQ 0x0307
+#define TAUDIO_TERMINAL_OUT_LOWFREQ 0x0307
 /**@}*/
 
-/** Convenience macro to fill a 24-bit \ref USB_Audio_SampleFreq_t structure with the given sample rate as a 24-bit number.
+/** Convenience macro to fill a 24-bit \ref TUSB_TAUDIO_SampleFreq_t structure with the given sample rate as a 24-bit number.
 		 *
 		 *  \param[in] freq  Required audio sampling frequency in HZ
 		 */
-#define AUDIO_SAMPLE_FREQ(freq) \
+#define TAUDIO_SAMPLE_FREQ(freq) \
     { .Byte1 = ((uint32_t)freq & 0xFF), .Byte2 = (((uint32_t)freq >> 8) & 0xFF), .Byte3 = (((uint32_t)freq >> 16) & 0xFF) }
 
 /** Mask for the attributes parameter of an Audio class-specific Endpoint descriptor, indicating that the endpoint
 		 *  accepts only filled endpoint packets of audio samples.
 		 */
-#define AUDIO_EP_FULL_PACKETS_ONLY (1 << 7)
+#define TAUDIO_EP_FULL_PACKETS_ONLY (1 << 7)
 
 /** Mask for the attributes parameter of an Audio class-specific Endpoint descriptor, indicating that the endpoint
 		 *  will accept partially filled endpoint packets of audio samples.
 		 */
-#define AUDIO_EP_ACCEPTS_SMALL_PACKETS (0 << 7)
+#define TAUDIO_EP_ACCEPTS_SMALL_PACKETS (0 << 7)
 
 /** Mask for the attributes parameter of an Audio class-specific Endpoint descriptor, indicating that the endpoint
 		 *  allows for sampling frequency adjustments to be made via control requests directed at the endpoint.
 		 */
-#define AUDIO_EP_SAMPLE_FREQ_CONTROL (1 << 0)
+#define TAUDIO_EP_SAMPLE_FREQ_CONTROL (1 << 0)
 
 /** Mask for the attributes parameter of an Audio class-specific Endpoint descriptor, indicating that the endpoint
 		 *  allows for pitch adjustments to be made via control requests directed at the endpoint.
 		 */
-#define AUDIO_EP_PITCH_CONTROL (1 << 1)
+#define TAUDIO_EP_PITCH_CONTROL (1 << 1)
 
 /* Enums: */
 /** Enum for possible Class, Subclass and Protocol values of device and interface descriptors relating to the Audio
 		 *  device class.
 		 */
-enum Audio_Descriptor_ClassSubclassProtocol_t {
-    AUDIO_CSCP_AudioClass = 0x01,             /**< Descriptor Class value indicating that the device or
+enum TAUDIO_Descriptor_ClassSubclassProtocol_t {
+    TAUDIO_CSCP_AudioClass = 0x01,             /**< Descriptor Class value indicating that the device or
 			                                                   *   interface belongs to the USB Audio 1.0 class.
 			                                                   */
-    AUDIO_CSCP_ControlSubclass = 0x01,        /**< Descriptor Subclass value indicating that the device or
+    TAUDIO_CSCP_ControlSubclass = 0x01,        /**< Descriptor Subclass value indicating that the device or
 			                                                   *   interface belongs to the Audio Control subclass.
 			                                                   */
-    AUDIO_CSCP_ControlProtocol = 0x00,        /**< Descriptor Protocol value indicating that the device or
+    TAUDIO_CSCP_ControlProtocol = 0x00,        /**< Descriptor Protocol value indicating that the device or
 			                                                   *   interface belongs to the Audio Control protocol.
 			                                                   */
-    AUDIO_CSCP_AudioStreamingSubclass = 0x02, /**< Descriptor Subclass value indicating that the device or
+    TAUDIO_CSCP_AudioStreamingSubclass = 0x02, /**< Descriptor Subclass value indicating that the device or
 			                                                   *   interface belongs to the MIDI Streaming subclass.
 			                                                   */
-    AUDIO_CSCP_MIDIStreamingSubclass = 0x03,  /**< Descriptor Subclass value indicating that the device or
+    TAUDIO_CSCP_MIDIStreamingSubclass = 0x03,  /**< Descriptor Subclass value indicating that the device or
 			                                                   *   interface belongs to the Audio streaming subclass.
 			                                                   */
-    AUDIO_CSCP_StreamingProtocol = 0x00,      /**< Descriptor Protocol value indicating that the device or
+    TAUDIO_CSCP_StreamingProtocol = 0x00,      /**< Descriptor Protocol value indicating that the device or
 			                                                   *   interface belongs to the Streaming Audio protocol.
 			                                                   */
 };
 
 /** Enum for the Audio class specific descriptor types. */
-enum AUDIO_DescriptorTypes_t {
-    AUDIO_DTYPE_CSInterface = 0x24, /**< Audio class specific Interface functional descriptor. */
-    AUDIO_DTYPE_CSEndpoint = 0x25,  /**< Audio class specific Endpoint functional descriptor. */
+enum TAUDIO_DescriptorTypes_t {
+    TAUDIO_DTYPE_CSInterface = 0x24, /**< Audio class specific Interface functional descriptor. */
+    TAUDIO_DTYPE_CSEndpoint = 0x25,  /**< Audio class specific Endpoint functional descriptor. */
 };
 
 /** Audio class specific interface description subtypes, for the Audio Control interface. */
-enum Audio_CSInterface_AC_SubTypes_t {
-    AUDIO_DSUBTYPE_CSInterface_Header = 0x01,         /**< Audio class specific control interface header. */
-    AUDIO_DSUBTYPE_CSInterface_InputTerminal = 0x02,  /**< Audio class specific control interface Input Terminal. */
-    AUDIO_DSUBTYPE_CSInterface_OutputTerminal = 0x03, /**< Audio class specific control interface Output Terminal. */
-    AUDIO_DSUBTYPE_CSInterface_Mixer = 0x04,          /**< Audio class specific control interface Mixer Unit. */
-    AUDIO_DSUBTYPE_CSInterface_Selector = 0x05,       /**< Audio class specific control interface Selector Unit. */
-    AUDIO_DSUBTYPE_CSInterface_Feature = 0x06,        /**< Audio class specific control interface Feature Unit. */
-    AUDIO_DSUBTYPE_CSInterface_Processing = 0x07,     /**< Audio class specific control interface Processing Unit. */
-    AUDIO_DSUBTYPE_CSInterface_Extension = 0x08,      /**< Audio class specific control interface Extension Unit. */
+enum TAUDIO_CSInterface_AC_SubTypes_t {
+    TAUDIO_DSUBTYPE_CSInterface_Header = 0x01,         /**< Audio class specific control interface header. */
+    TAUDIO_DSUBTYPE_CSInterface_InputTerminal = 0x02,  /**< Audio class specific control interface Input Terminal. */
+    TAUDIO_DSUBTYPE_CSInterface_OutputTerminal = 0x03, /**< Audio class specific control interface Output Terminal. */
+    TAUDIO_DSUBTYPE_CSInterface_Mixer = 0x04,          /**< Audio class specific control interface Mixer Unit. */
+    TAUDIO_DSUBTYPE_CSInterface_Selector = 0x05,       /**< Audio class specific control interface Selector Unit. */
+    TAUDIO_DSUBTYPE_CSInterface_Feature = 0x06,        /**< Audio class specific control interface Feature Unit. */
+    TAUDIO_DSUBTYPE_CSInterface_Processing = 0x07,     /**< Audio class specific control interface Processing Unit. */
+    TAUDIO_DSUBTYPE_CSInterface_Extension = 0x08,      /**< Audio class specific control interface Extension Unit. */
 };
 
 /** Audio class specific interface description subtypes, for the Audio Streaming interface. */
-enum Audio_CSInterface_AS_SubTypes_t {
-    AUDIO_DSUBTYPE_CSInterface_General = 0x01,        /**< Audio class specific streaming interface general descriptor. */
-    AUDIO_DSUBTYPE_CSInterface_FormatType = 0x02,     /**< Audio class specific streaming interface format type descriptor. */
-    AUDIO_DSUBTYPE_CSInterface_FormatSpecific = 0x03, /**< Audio class specific streaming interface format information descriptor. */
+enum TAUDIO_CSInterface_AS_SubTypes_t {
+    TAUDIO_DSUBTYPE_CSInterface_General = 0x01,        /**< Audio class specific streaming interface general descriptor. */
+    TAUDIO_DSUBTYPE_CSInterface_FormatType = 0x02,     /**< Audio class specific streaming interface format type descriptor. */
+    TAUDIO_DSUBTYPE_CSInterface_FormatSpecific = 0x03, /**< Audio class specific streaming interface format information descriptor. */
 };
 
 /** Audio class specific endpoint description subtypes, for the Audio Streaming interface. */
-enum Audio_CSEndpoint_SubTypes_t {
-    AUDIO_DSUBTYPE_CSEndpoint_General = 0x01, /**< Audio class specific endpoint general descriptor. */
+enum TAUDIO_CSEndpoint_SubTypes_t {
+    TAUDIO_DSUBTYPE_CSEndpoint_General = 0x01, /**< Audio class specific endpoint general descriptor. */
 };
 
 /** Enum for the Audio class specific control requests that can be issued by the USB bus host. */
-enum Audio_ClassRequests_t {
-    AUDIO_REQ_SetCurrent = 0x01,    /**< Audio class-specific request to set the current value of a parameter within the device. */
-    AUDIO_REQ_SetMinimum = 0x02,    /**< Audio class-specific request to set the minimum value of a parameter within the device. */
-    AUDIO_REQ_SetMaximum = 0x03,    /**< Audio class-specific request to set the maximum value of a parameter within the device. */
-    AUDIO_REQ_SetResolution = 0x04, /**< Audio class-specific request to set the resolution value of a parameter within the device. */
-    AUDIO_REQ_SetMemory = 0x05,     /**< Audio class-specific request to set the memory value of a parameter within the device. */
-    AUDIO_REQ_GetCurrent = 0x81,    /**< Audio class-specific request to get the current value of a parameter within the device. */
-    AUDIO_REQ_GetMinimum = 0x82,    /**< Audio class-specific request to get the minimum value of a parameter within the device. */
-    AUDIO_REQ_GetMaximum = 0x83,    /**< Audio class-specific request to get the maximum value of a parameter within the device. */
-    AUDIO_REQ_GetResolution = 0x84, /**< Audio class-specific request to get the resolution value of a parameter within the device. */
-    AUDIO_REQ_GetMemory = 0x85,     /**< Audio class-specific request to get the memory value of a parameter within the device. */
-    AUDIO_REQ_GetStatus = 0xFF,     /**< Audio class-specific request to get the device status. */
+enum TAUDIO_ClassRequests_t {
+    TAUDIO_REQ_SetCurrent = 0x01,    /**< Audio class-specific request to set the current value of a parameter within the device. */
+    TAUDIO_REQ_SetMinimum = 0x02,    /**< Audio class-specific request to set the minimum value of a parameter within the device. */
+    TAUDIO_REQ_SetMaximum = 0x03,    /**< Audio class-specific request to set the maximum value of a parameter within the device. */
+    TAUDIO_REQ_SetResolution = 0x04, /**< Audio class-specific request to set the resolution value of a parameter within the device. */
+    TAUDIO_REQ_SetMemory = 0x05,     /**< Audio class-specific request to set the memory value of a parameter within the device. */
+    TAUDIO_REQ_GetCurrent = 0x81,    /**< Audio class-specific request to get the current value of a parameter within the device. */
+    TAUDIO_REQ_GetMinimum = 0x82,    /**< Audio class-specific request to get the minimum value of a parameter within the device. */
+    TAUDIO_REQ_GetMaximum = 0x83,    /**< Audio class-specific request to get the maximum value of a parameter within the device. */
+    TAUDIO_REQ_GetResolution = 0x84, /**< Audio class-specific request to get the resolution value of a parameter within the device. */
+    TAUDIO_REQ_GetMemory = 0x85,     /**< Audio class-specific request to get the memory value of a parameter within the device. */
+    TAUDIO_REQ_GetStatus = 0xFF,     /**< Audio class-specific request to get the device status. */
 };
 
 /** Enum for Audio class specific Endpoint control modifiers which can be set and retrieved by a USB host, if the corresponding
 		 *  endpoint control is indicated to be supported in the Endpoint's Audio-class specific endpoint descriptor.
 		 */
-enum Audio_EndpointControls_t {
-    AUDIO_EPCONTROL_SamplingFreq = 0x01, /**< Sampling frequency adjustment of the endpoint. */
-    AUDIO_EPCONTROL_Pitch = 0x02,        /**< Pitch adjustment of the endpoint. */
+enum TAUDIO_EndpointControls_t {
+    TAUDIO_EPCONTROL_SamplingFreq = 0x01, /**< Sampling frequency adjustment of the endpoint. */
+    TAUDIO_EPCONTROL_Pitch = 0x02,        /**< Pitch adjustment of the endpoint. */
 };
 
 /* Type Defines: */
@@ -242,15 +242,15 @@ enum Audio_EndpointControls_t {
 		 *  contains an input audio source, either from a physical terminal on the device, or a logical terminal (for example,
 		 *  a USB endpoint). See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_InputTerminal_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_InputTerminal_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   must be \ref AUDIO_DSUBTYPE_CSInterface_InputTerminal.
+			                                  *   must be \ref TAUDIO_DSUBTYPE_CSInterface_InputTerminal.
 			                                  */
 
     uint8_t TerminalID;               /**< ID value of this terminal unit - must be a unique value within the device. */
@@ -263,7 +263,7 @@ typedef struct
 
     uint8_t ChannelStrIndex;  /**< Index of a string descriptor describing this channel within the device. */
     uint8_t TerminalStrIndex; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_Audio_Descriptor_InputTerminal_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_InputTerminal_t;
 
 /** \brief Audio class-specific Input Terminal Descriptor (USB-IF naming conventions).
 		 *
@@ -271,7 +271,7 @@ typedef struct
 		 *  contains an input audio source, either from a physical terminal on the device, or a logical terminal (for example,
 		 *  a USB endpoint). See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_InputTerminal_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_InputTerminal_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -279,12 +279,12 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                              *   must be \ref AUDIO_DSUBTYPE_CSInterface_InputTerminal.
+			                              *   must be \ref TAUDIO_DSUBTYPE_CSInterface_InputTerminal.
 			                              */
     uint8_t bTerminalID;        /**< ID value of this terminal unit - must be a unique value within the device. */
     uint16_t wTerminalType;     /**< Type of terminal, a \c TERMINAL_* mask. */
@@ -296,7 +296,7 @@ typedef struct
 
     uint8_t iChannelNames; /**< Index of a string descriptor describing this channel within the device. */
     uint8_t iTerminal;     /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_Audio_StdDescriptor_InputTerminal_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_InputTerminal_t;
 
 /** \brief Audio class-specific Output Terminal Descriptor (LUFA naming conventions).
 		 *
@@ -304,15 +304,15 @@ typedef struct
 		 *  contains an output audio sink, either to a physical terminal on the device, or a logical terminal (for example,
 		 *  a USB endpoint). See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_OutputTerminal_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_OutputTerminal_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   must be \ref AUDIO_DSUBTYPE_CSInterface_OutputTerminal.
+			                                  *   must be \ref TAUDIO_DSUBTYPE_CSInterface_OutputTerminal.
 			                                  */
 
     uint8_t TerminalID;              /**< ID value of this terminal unit - must be a unique value within the device. */
@@ -323,7 +323,7 @@ typedef struct
     uint8_t SourceID;                /**< ID value of the unit this terminal's audio is sourced from. */
 
     uint8_t TerminalStrIndex; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_Audio_Descriptor_OutputTerminal_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_OutputTerminal_t;
 
 /** \brief Audio class-specific Output Terminal Descriptor (USB-IF naming conventions).
 		 *
@@ -331,7 +331,7 @@ typedef struct
 		 *  contains an output audio sink, either to a physical terminal on the device, or a logical terminal (for example,
 		 *  a USB endpoint). See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_OutputTerminal_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_OutputTerminal_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -340,11 +340,11 @@ typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
     uint8_t bDescriptorType; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                           *   must be \ref AUDIO_DSUBTYPE_CSInterface_OutputTerminal.
+			                           *   must be \ref TAUDIO_DSUBTYPE_CSInterface_OutputTerminal.
 			                           */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                              *   a value from the \ref Audio_CSInterface_AC_SubTypes_t enum.
+			                              *   a value from the \ref TAUDIO_CSInterface_AC_SubTypes_t enum.
 			                              */
     uint8_t bTerminalID;        /**< ID value of this terminal unit - must be a unique value within the device. */
     uint16_t wTerminalType;     /**< Type of terminal, a \c TERMINAL_* mask. */
@@ -354,7 +354,7 @@ typedef struct
     uint8_t bSourceID;          /**< ID value of the unit this terminal's audio is sourced from. */
 
     uint8_t iTerminal; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_Audio_StdDescriptor_OutputTerminal_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_OutputTerminal_t;
 
 /** \brief Audio class-specific Interface Descriptor (LUFA naming conventions).
 		 *
@@ -362,15 +362,15 @@ typedef struct
 		 *  supply extra information about the audio device's layout to the host. See the USB Audio specification for more
 		 *  details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_Interface_AC_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_Interface_AC_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   a value from the \ref Audio_CSInterface_AS_SubTypes_t enum.
+			                                  *   a value from the \ref TAUDIO_CSInterface_AS_SubTypes_t enum.
 			                                  */
 
     uint16_t ACSpecification; /**< Binary Coded Decimal value, indicating the supported Audio Class specification version.
@@ -381,7 +381,7 @@ typedef struct
 
     uint8_t InCollection;    /**< Total number of Audio Streaming interfaces linked to this Audio Control interface (must be 1). */
     uint8_t InterfaceNumber; /**< Interface number of the associated Audio Streaming interface. */
-} ATTR_PACKED USB_Audio_Descriptor_Interface_AC_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_Interface_AC_t;
 
 /** \brief Audio class-specific Interface Descriptor (USB-IF naming conventions).
 		 *
@@ -389,7 +389,7 @@ typedef struct
 		 *  supply extra information about the audio device's layout to the host. See the USB Audio specification for more
 		 *  details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_Interface_AC_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_Interface_AC_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -397,12 +397,12 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                             *   a value from the \ref Audio_CSInterface_AS_SubTypes_t enum.
+			                             *   a value from the \ref TAUDIO_CSInterface_AS_SubTypes_t enum.
 			                             */
 
     uint16_t bcdADC;       /**< Binary coded decimal value, indicating the supported Audio Class specification version.
@@ -413,7 +413,7 @@ typedef struct
 
     uint8_t bInCollection;     /**< Total number of Audio Streaming interfaces linked to this Audio Control interface (must be 1). */
     uint8_t bInterfaceNumbers; /**< Interface number of the associated Audio Streaming interface. */
-} ATTR_PACKED USB_Audio_StdDescriptor_Interface_AC_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_Interface_AC_t;
 
 /** \brief Audio class-specific Feature Unit Descriptor (LUFA naming conventions).
 		 *
@@ -421,15 +421,15 @@ typedef struct
 		 *  are present in the device's audio stream for basic control, such as per-channel volume. See the USB Audio
 		 *  specification for more details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_FeatureUnit_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_FeatureUnit_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   must be \ref AUDIO_DSUBTYPE_CSInterface_Feature.
+			                                  *   must be \ref TAUDIO_DSUBTYPE_CSInterface_Feature.
 			                                  */
 
     uint8_t UnitID;   /**< ID value of this feature unit - must be a unique value within the device. */
@@ -439,7 +439,7 @@ typedef struct
     uint8_t ChannelControls[3]; /**< Feature masks for the control channel, and each separate audio channel. */
 
     uint8_t FeatureUnitStrIndex; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_Audio_Descriptor_FeatureUnit_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_FeatureUnit_t;
 
 /** \brief Audio class-specific Feature Unit Descriptor (USB-IF naming conventions).
 		 *
@@ -447,7 +447,7 @@ typedef struct
 		 *  are present in the device's audio stream for basic control, such as per-channel volume. See the USB Audio
 		 *  specification for more details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_FeatureUnit_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_FeatureUnit_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -455,12 +455,12 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                          *   given by the specific class.
 			                          */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                             *   must be \ref AUDIO_DSUBTYPE_CSInterface_Feature.
+			                             *   must be \ref TAUDIO_DSUBTYPE_CSInterface_Feature.
 			                             */
 
     uint8_t bUnitID;   /**< ID value of this feature unit - must be a unique value within the device. */
@@ -470,36 +470,36 @@ typedef struct
     uint8_t bmaControls[3]; /**< Feature masks for the control channel, and each separate audio channel. */
 
     uint8_t iFeature; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_Audio_StdDescriptor_FeatureUnit_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_FeatureUnit_t;
 
 /** \brief Audio class-specific Streaming Audio Interface Descriptor (LUFA naming conventions).
 		 *
 		 *  Type define for an Audio class-specific streaming interface descriptor. This indicates to the host
 		 *  how audio streams within the device are formatted. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_Interface_AS_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_Interface_AS_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   a value from the \ref Audio_CSInterface_AS_SubTypes_t enum.
+			                                  *   a value from the \ref TAUDIO_CSInterface_AS_SubTypes_t enum.
 			                                  */
 
     uint8_t TerminalLink; /**< ID value of the output terminal this descriptor is describing. */
 
     uint8_t FrameDelay;   /**< Delay in frames resulting from the complete sample processing from input to output. */
     uint16_t AudioFormat; /**< Format of the audio stream, see Audio Device Formats specification. */
-} ATTR_PACKED USB_Audio_Descriptor_Interface_AS_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_Interface_AS_t;
 
 /** \brief Audio class-specific Streaming Audio Interface Descriptor (USB-IF naming conventions).
 		 *
 		 *  Type define for an Audio class-specific streaming interface descriptor. This indicates to the host
 		 *  how audio streams within the device are formatted. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_Interface_AS_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_Interface_AS_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -507,19 +507,19 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                              *   a value from the \ref Audio_CSInterface_AS_SubTypes_t enum.
+			                              *   a value from the \ref TAUDIO_CSInterface_AS_SubTypes_t enum.
 			                              */
 
     uint8_t bTerminalLink; /**< ID value of the output terminal this descriptor is describing. */
 
     uint8_t bDelay;      /**< Delay in frames resulting from the complete sample processing from input to output. */
     uint16_t wFormatTag; /**< Format of the audio stream, see Audio Device Formats specification. */
-} ATTR_PACKED USB_Audio_StdDescriptor_Interface_AS_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_Interface_AS_t;
 
 /** \brief Audio class-specific Format Descriptor (LUFA naming conventions).
 		 *
@@ -527,18 +527,18 @@ typedef struct
 		 *  about the number of channels, the sample resolution, acceptable sample frequencies and encoding method used
 		 *  in the device's audio streams. See the USB Audio specification for more details.
 		 *
-		 *  \attention This descriptor <b>must</b> be followed by one or more \ref USB_Audio_SampleFreq_t elements containing
+		 *  \attention This descriptor <b>must</b> be followed by one or more \ref TUSB_TAUDIO_SampleFreq_t elements containing
 		 *             the continuous or discrete sample frequencies.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_Format_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_Format_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   must be \ref AUDIO_DSUBTYPE_CSInterface_FormatType.
+			                                  *   must be \ref TAUDIO_DSUBTYPE_CSInterface_FormatType.
 			                                  */
 
     uint8_t FormatType; /**< Format of the audio stream, see Audio Device Formats specification. */
@@ -552,12 +552,12 @@ typedef struct
 			                                                   *   frequencies supported by the device; otherwise, this must be followed
 			                                                   *   by the given number of discrete sampling frequencies supported.
 			                                                   */
-} ATTR_PACKED USB_Audio_Descriptor_Format_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_Format_t;
 
 /** \brief 24-Bit Audio Frequency Structure.
 		 *
 		 *  Type define for a 24-bit audio sample frequency structure. As GCC does not contain a built in 24-bit datatype,
-		 *  this this structure is used to build up the value instead. Fill this structure with the \ref AUDIO_SAMPLE_FREQ() macro.
+		 *  this this structure is used to build up the value instead. Fill this structure with the \ref TAUDIO_SAMPLE_FREQ() macro.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
@@ -566,7 +566,7 @@ typedef struct
     uint8_t Byte1; /**< Lowest 8 bits of the 24-bit value. */
     uint8_t Byte2; /**< Middle 8 bits of the 24-bit value. */
     uint8_t Byte3; /**< Upper 8 bits of the 24-bit value. */
-} ATTR_PACKED USB_Audio_SampleFreq_t;
+} TATTR_PACKED TUSB_TAUDIO_SampleFreq_t;
 
 /** \brief Audio class-specific Format Descriptor (USB-IF naming conventions).
 		 *
@@ -577,7 +577,7 @@ typedef struct
 		 *  \attention This descriptor <b>must</b> be followed by one or more 24-bit integer elements containing the continuous
 		 *             or discrete sample frequencies.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_Format_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_Format_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -586,11 +586,11 @@ typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
     uint8_t bDescriptorType; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                          *   must be \ref AUDIO_DSUBTYPE_CSInterface_FormatType.
+			                          *   must be \ref TAUDIO_DSUBTYPE_CSInterface_FormatType.
 			                          */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                            *   a value from the \ref Audio_CSInterface_AS_SubTypes_t enum.
+			                            *   a value from the \ref TAUDIO_CSInterface_AS_SubTypes_t enum.
 			                            */
 
     uint8_t bFormatType; /**< Format of the audio stream, see Audio Device Formats specification. */
@@ -604,31 +604,31 @@ typedef struct
 			                               *   frequencies supported by the device; otherwise, this must be followed
 			                               *   by the given number of discrete sampling frequencies supported.
 			                               */
-} ATTR_PACKED USB_Audio_StdDescriptor_Format_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_Format_t;
 
 /** \brief Audio class-specific Streaming Endpoint Descriptor (LUFA naming conventions).
 		 *
 		 *  Type define for an Audio class-specific endpoint descriptor. This contains a regular endpoint
 		 *  descriptor with a few Audio-class-specific extensions. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_StreamEndpoint_Std_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_StreamEndpoint_Std_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Endpoint_t Endpoint; /**< Standard endpoint descriptor describing the audio endpoint. */
+    TUSB_Descriptor_Endpoint_t Endpoint; /**< Standard endpoint descriptor describing the audio endpoint. */
 
     uint8_t Refresh;            /**< Always set to zero for Audio class devices. */
     uint8_t SyncEndpointNumber; /**< Endpoint address to send synchronization information to, if needed (zero otherwise). */
-} ATTR_PACKED USB_Audio_Descriptor_StreamEndpoint_Std_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_StreamEndpoint_Std_t;
 
 /** \brief Audio class-specific Streaming Endpoint Descriptor (USB-IF naming conventions).
 		 *
 		 *  Type define for an Audio class-specific endpoint descriptor. This contains a regular endpoint
 		 *  descriptor with a few Audio-class-specific extensions. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_StreamEndpoint_Std_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_StreamEndpoint_Std_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -636,14 +636,14 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;          /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType;  /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a
+    uint8_t bDescriptorType;  /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a
 			                           *   value given by the specific class.
 			                           */
     uint8_t bEndpointAddress; /**< Logical address of the endpoint within the device for the current
 			                            *   configuration, including direction mask.
 			                            */
     uint8_t bmAttributes;     /**< Endpoint attributes, comprised of a mask of the endpoint type (\c EP_TYPE_*)
-			                        *   and attributes (\c ENDPOINT_ATTR_*) masks.
+			                        *   and attributes (\c ENDPOINT_TATTR_*) masks.
 			                        */
     uint16_t wMaxPacketSize;  /**< Size of the endpoint bank, in bytes. This indicates the maximum packet size
 			                          *   that the endpoint can receive at a time.
@@ -654,7 +654,7 @@ typedef struct
 
     uint8_t bRefresh;      /**< Always set to zero for Audio class devices. */
     uint8_t bSynchAddress; /**< Endpoint address to send synchronization information to, if needed (zero otherwise). */
-} ATTR_PACKED USB_Audio_StdDescriptor_StreamEndpoint_Std_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_StreamEndpoint_Std_t;
 
 /** \brief Audio class-specific Extended Endpoint Descriptor (LUFA naming conventions).
 		 *
@@ -662,22 +662,22 @@ typedef struct
 		 *  on the usage of endpoints used to stream audio in and out of the USB Audio device, and follows an Audio
 		 *  class-specific extended endpoint descriptor. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_StdDescriptor_StreamEndpoint_Spc_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_TAUDIO_StdDescriptor_StreamEndpoint_Spc_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                                  *   a value from the \ref Audio_CSEndpoint_SubTypes_t enum.
+			                                  *   a value from the \ref TAUDIO_CSEndpoint_SubTypes_t enum.
 			                                  */
 
-    uint8_t Attributes; /**< Audio class-specific endpoint attributes, such as \ref AUDIO_EP_FULL_PACKETS_ONLY. */
+    uint8_t Attributes; /**< Audio class-specific endpoint attributes, such as \ref TAUDIO_EP_FULL_PACKETS_ONLY. */
 
     uint8_t LockDelayUnits; /**< Units used for the LockDelay field, see Audio class specification. */
     uint16_t LockDelay;     /**< Time required to internally lock endpoint's internal clock recovery circuitry. */
-} ATTR_PACKED USB_Audio_Descriptor_StreamEndpoint_Spc_t;
+} TATTR_PACKED TUSB_TAUDIO_Descriptor_StreamEndpoint_Spc_t;
 
 /** \brief Audio class-specific Extended Endpoint Descriptor (USB-IF naming conventions).
 		 *
@@ -685,7 +685,7 @@ typedef struct
 		 *  on the usage of endpoints used to stream audio in and out of the USB Audio device, and follows an Audio
 		 *  class-specific extended endpoint descriptor. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_Audio_Descriptor_StreamEndpoint_Spc_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_TAUDIO_Descriptor_StreamEndpoint_Spc_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -693,19 +693,19 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
     uint8_t bDescriptorSubtype; /**< Sub type value used to distinguish between audio class-specific descriptors,
-			                              *   a value from the \ref Audio_CSEndpoint_SubTypes_t enum.
+			                              *   a value from the \ref TAUDIO_CSEndpoint_SubTypes_t enum.
 			                              */
 
-    uint8_t bmAttributes; /**< Audio class-specific endpoint attributes, such as \ref AUDIO_EP_FULL_PACKETS_ONLY. */
+    uint8_t bmAttributes; /**< Audio class-specific endpoint attributes, such as \ref TAUDIO_EP_FULL_PACKETS_ONLY. */
 
     uint8_t bLockDelayUnits; /**< Units used for the LockDelay field, see Audio class specification. */
     uint16_t wLockDelay;     /**< Time required to internally lock endpoint's internal clock recovery circuitry. */
-} ATTR_PACKED USB_Audio_StdDescriptor_StreamEndpoint_Spc_t;
+} TATTR_PACKED TUSB_TAUDIO_StdDescriptor_StreamEndpoint_Spc_t;
 
 /* Macros: */
 /** \name MIDI Command Values
@@ -713,50 +713,50 @@ typedef struct
 		 */
 /**@{*/
 /** MIDI command for System Exclusive (SysEx) single event that has one byte of data total. */
-#define MIDI_COMMAND_SYSEX_1BYTE MIDI_COMMAND_SYSEX_END_1BYTE
+#define TMIDI_COMMAND_SYSEX_1BYTE TMIDI_COMMAND_SYSEX_END_1BYTE
 
 /** MIDI command for System Exclusive (SysEx) single event that has two bytes of data total. */
-#define MIDI_COMMAND_SYSEX_2BYTE 0x20
+#define TMIDI_COMMAND_SYSEX_2BYTE 0x20
 
 /** MIDI command for System Exclusive (SysEx) single event that has three bytes of data total. */
-#define MIDI_COMMAND_SYSEX_3BYTE 0x30
+#define TMIDI_COMMAND_SYSEX_3BYTE 0x30
 
 /** MIDI command for System Exclusive (SysEx) stream event that has at least four bytes of data total. */
-#define MIDI_COMMAND_SYSEX_START_3BYTE 0x40
+#define TMIDI_COMMAND_SYSEX_START_3BYTE 0x40
 
 /** MIDI command for System Exclusive (SysEx) stream event terminator with one remaining data byte. */
-#define MIDI_COMMAND_SYSEX_END_1BYTE 0x50
+#define TMIDI_COMMAND_SYSEX_END_1BYTE 0x50
 
 /** MIDI command for System Exclusive (SysEx) stream event terminator with two remaining data bytes. */
-#define MIDI_COMMAND_SYSEX_END_2BYTE 0x60
+#define TMIDI_COMMAND_SYSEX_END_2BYTE 0x60
 
 /** MIDI command for System Exclusive (SysEx) stream event terminator with three remaining data bytes. */
-#define MIDI_COMMAND_SYSEX_END_3BYTE 0x70
+#define TMIDI_COMMAND_SYSEX_END_3BYTE 0x70
 
 /** MIDI command for a note off (deactivation) event. */
-#define MIDI_COMMAND_NOTE_OFF 0x80
+#define TMIDI_COMMAND_NOTE_OFF 0x80
 
 /** MIDI command for a note on (activation) event. */
-#define MIDI_COMMAND_NOTE_ON 0x90
+#define TMIDI_COMMAND_NOTE_ON 0x90
 
 /** MIDI command for a note pressure change event. */
-#define MIDI_COMMAND_NOTE_PRESSURE 0xA0
+#define TMIDI_COMMAND_NOTE_PRESSURE 0xA0
 
 /** MIDI command for a control change event. */
-#define MIDI_COMMAND_CONTROL_CHANGE 0xB0
+#define TMIDI_COMMAND_CONTROL_CHANGE 0xB0
 
 /** MIDI command for a control change event. */
-#define MIDI_COMMAND_PROGRAM_CHANGE 0xC0
+#define TMIDI_COMMAND_PROGRAM_CHANGE 0xC0
 
 /** MIDI command for a channel pressure change event. */
-#define MIDI_COMMAND_CHANNEL_PRESSURE 0xD0
+#define TMIDI_COMMAND_CHANNEL_PRESSURE 0xD0
 
 /** MIDI command for a pitch change event. */
-#define MIDI_COMMAND_PITCH_WHEEL_CHANGE 0xE0
+#define TMIDI_COMMAND_PITCH_WHEEL_CHANGE 0xE0
 /**@}*/
 
 /** Standard key press velocity value used for all note events. */
-#define MIDI_STANDARD_VELOCITY 64
+#define TMIDI_STANDARD_VELOCITY 64
 
 /** Convenience macro. MIDI channels are numbered from 1-10 (natural numbers) however the logical channel
 		 *  addresses are zero-indexed. This converts a natural MIDI channel number into the logical channel address.
@@ -765,23 +765,23 @@ typedef struct
 		 *
 		 *  \return Constructed MIDI channel ID.
 		 */
-#define MIDI_CHANNEL(channel) ((channel)-1)
+#define TMIDI_CHANNEL(channel) ((channel)-1)
 
 /** Constructs a MIDI event ID from a given MIDI command and a virtual MIDI cable index. This can then be
-		 *  used to create and decode \ref MIDI_EventPacket_t MIDI event packets.
+		 *  used to create and decode \ref TMIDI_EventPacket_t MIDI event packets.
 		 *
 		 *  \param[in] virtualcable  Index of the virtual MIDI cable the event relates to
 		 *  \param[in] command       MIDI command to send through the virtual MIDI cable
 		 *
 		 *  \return Constructed MIDI event ID.
 		 */
-#define MIDI_EVENT(virtualcable, command) (((virtualcable) << 4) | ((command) >> 4))
+#define TMIDI_EVENT(virtualcable, command) (((virtualcable) << 4) | ((command) >> 4))
 
 /* Enums: */
 /** Enum for the possible MIDI jack types in a MIDI device jack descriptor. */
-enum MIDI_JackTypes_t {
-    MIDI_JACKTYPE_Embedded = 0x01, /**< MIDI class descriptor jack type value for an embedded (logical) MIDI input or output jack. */
-    MIDI_JACKTYPE_External = 0x02, /**< MIDI class descriptor jack type value for an external (physical) MIDI input or output jack. */
+enum TMIDI_JackTypes_t {
+    TMIDI_JACKTYPE_Embedded = 0x01, /**< MIDI class descriptor jack type value for an embedded (logical) MIDI input or output jack. */
+    TMIDI_JACKTYPE_External = 0x02, /**< MIDI class descriptor jack type value for an external (physical) MIDI input or output jack. */
 };
 
 /* Type Defines: */
@@ -791,13 +791,13 @@ enum MIDI_JackTypes_t {
 		 *  how MIDI the specification compliance of the device and the total length of the Audio class-specific descriptors.
 		 *  See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_MIDI_StdDescriptor_AudioInterface_AS_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_MIDI_StdDescriptor_AudioInterface_AS_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors. */
 
     uint16_t AudioSpecification; /**< Binary coded decimal value, indicating the supported Audio Class
@@ -806,7 +806,7 @@ typedef struct
 			                                             *   \see \ref VERSION_BCD() utility macro.
 			                                             */
     uint16_t TotalLength;        /**< Total length of the Audio class-specific descriptors, including this descriptor. */
-} ATTR_PACKED USB_MIDI_Descriptor_AudioInterface_AS_t;
+} TATTR_PACKED TUSB_MIDI_Descriptor_AudioInterface_AS_t;
 
 /** \brief MIDI class-specific Streaming Interface Descriptor (USB-IF naming conventions).
 		 *
@@ -814,7 +814,7 @@ typedef struct
 		 *  how MIDI the specification compliance of the device and the total length of the Audio class-specific descriptors.
 		 *  See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_MIDI_Descriptor_AudioInterface_AS_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_MIDI_Descriptor_AudioInterface_AS_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -822,7 +822,7 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
@@ -833,34 +833,34 @@ typedef struct
 			                  *   \see \ref VERSION_BCD() utility macro.
 			                  */
     uint16_t wTotalLength; /**< Total length of the Audio class-specific descriptors, including this descriptor. */
-} ATTR_PACKED USB_MIDI_StdDescriptor_AudioInterface_AS_t;
+} TATTR_PACKED TUSB_MIDI_StdDescriptor_AudioInterface_AS_t;
 
 /** \brief MIDI class-specific Input Jack Descriptor (LUFA naming conventions).
 		 *
 		 *  Type define for an Audio class-specific MIDI IN jack. This gives information to the host on a MIDI input, either
 		 *  a physical input jack, or a logical jack (receiving input data internally, or from the host via an endpoint).
 		 *
-		 *  \see \ref USB_MIDI_StdDescriptor_InputJack_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_MIDI_StdDescriptor_InputJack_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors. */
 
     uint8_t JackType; /**< Type of jack, one of the \c JACKTYPE_* mask values. */
     uint8_t JackID;   /**< ID value of this jack - must be a unique value within the device. */
 
     uint8_t JackStrIndex; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_MIDI_Descriptor_InputJack_t;
+} TATTR_PACKED TUSB_MIDI_Descriptor_InputJack_t;
 
 /** \brief MIDI class-specific Input Jack Descriptor (USB-IF naming conventions).
 		 *
 		 *  Type define for an Audio class-specific MIDI IN jack. This gives information to the host on a MIDI input, either
 		 *  a physical input jack, or a logical jack (receiving input data internally, or from the host via an endpoint).
 		 *
-		 *  \see \ref USB_MIDI_Descriptor_InputJack_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_MIDI_Descriptor_InputJack_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -868,7 +868,7 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
@@ -878,20 +878,20 @@ typedef struct
     uint8_t bJackID;   /**< ID value of this jack - must be a unique value within the device. */
 
     uint8_t iJack; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_MIDI_StdDescriptor_InputJack_t;
+} TATTR_PACKED TUSB_MIDI_StdDescriptor_InputJack_t;
 
 /** \brief MIDI class-specific Output Jack Descriptor (LUFA naming conventions).
 		 *
 		 *  Type define for an Audio class-specific MIDI OUT jack. This gives information to the host on a MIDI output, either
 		 *  a physical output jack, or a logical jack (sending output data internally, or to the host via an endpoint).
 		 *
-		 *  \see \ref USB_MIDI_StdDescriptor_OutputJack_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_MIDI_StdDescriptor_OutputJack_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors. */
 
     uint8_t JackType; /**< Type of jack, one of the \c JACKTYPE_* mask values. */
@@ -902,14 +902,14 @@ typedef struct
     uint8_t SourcePinID[1];  /**< Pin number in the input jack of each output pin's source data. */
 
     uint8_t JackStrIndex; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_MIDI_Descriptor_OutputJack_t;
+} TATTR_PACKED TUSB_MIDI_Descriptor_OutputJack_t;
 
 /** \brief MIDI class-specific Output Jack Descriptor (USB-IF naming conventions).
 		 *
 		 *  Type define for an Audio class-specific MIDI OUT jack. This gives information to the host on a MIDI output, either
 		 *  a physical output jack, or a logical jack (sending output data internally, or to the host via an endpoint).
 		 *
-		 *  \see \ref USB_MIDI_Descriptor_OutputJack_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_MIDI_Descriptor_OutputJack_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -917,7 +917,7 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
@@ -931,7 +931,7 @@ typedef struct
     uint8_t baSourcePin[1]; /**< Pin number in the input jack of each output pin's source data. */
 
     uint8_t iJack; /**< Index of a string descriptor describing this descriptor within the device. */
-} ATTR_PACKED USB_MIDI_StdDescriptor_OutputJack_t;
+} TATTR_PACKED TUSB_MIDI_StdDescriptor_OutputJack_t;
 
 /** \brief Audio class-specific Jack Endpoint Descriptor (LUFA naming conventions).
 		 *
@@ -939,18 +939,18 @@ typedef struct
 		 *  on the usage of MIDI endpoints used to stream MIDI events in and out of the USB Audio device, and follows an Audio
 		 *  class-specific extended MIDI endpoint descriptor. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_MIDI_StdDescriptor_Jack_Endpoint_t for the version of this type with standard element names.
+		 *  \see \ref TUSB_MIDI_StdDescriptor_Jack_Endpoint_t for the version of this type with standard element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
 		 */
 typedef struct
 {
-    USB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
+    TUSB_Descriptor_Header_t Header; /**< Regular descriptor header containing the descriptor's type and length. */
     uint8_t Subtype;                /**< Sub type value used to distinguish between audio class-specific descriptors. */
 
     uint8_t TotalEmbeddedJacks;  /**< Total number of jacks inside this endpoint. */
     uint8_t AssociatedJackID[1]; /**< IDs of each jack inside the endpoint. */
-} ATTR_PACKED USB_MIDI_Descriptor_Jack_Endpoint_t;
+} TATTR_PACKED TUSB_MIDI_Descriptor_Jack_Endpoint_t;
 
 /** \brief Audio class-specific Jack Endpoint Descriptor (USB-IF naming conventions).
 		 *
@@ -958,7 +958,7 @@ typedef struct
 		 *  on the usage of MIDI endpoints used to stream MIDI events in and out of the USB Audio device, and follows an Audio
 		 *  class-specific extended MIDI endpoint descriptor. See the USB Audio specification for more details.
 		 *
-		 *  \see \ref USB_MIDI_Descriptor_Jack_Endpoint_t for the version of this type with non-standard LUFA specific
+		 *  \see \ref TUSB_MIDI_Descriptor_Jack_Endpoint_t for the version of this type with non-standard LUFA specific
 		 *       element names.
 		 *
 		 *  \note Regardless of CPU architecture, these values should be stored as little endian.
@@ -966,7 +966,7 @@ typedef struct
 typedef struct
 {
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
-    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+    uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
 			                           *   given by the specific class.
 			                           */
 
@@ -974,7 +974,7 @@ typedef struct
 
     uint8_t bNumEmbMIDIJack; /**< Total number of jacks inside this endpoint. */
     uint8_t bAssocJackID[1]; /**< IDs of each jack inside the endpoint. */
-} ATTR_PACKED USB_MIDI_StdDescriptor_Jack_Endpoint_t;
+} TATTR_PACKED TUSB_MIDI_StdDescriptor_Jack_Endpoint_t;
 
 /** \brief MIDI Class Driver Event Packet.
 		 *
@@ -984,9 +984,9 @@ typedef struct
 		 */
 typedef struct
 {
-    uint8_t Event; /**< MIDI event type, constructed with the \ref MIDI_EVENT() macro. */
+    uint8_t Event; /**< MIDI event type, constructed with the \ref TMIDI_EVENT() macro. */
 
     uint8_t Data1; /**< First byte of data in the MIDI event. */
     uint8_t Data2; /**< Second byte of data in the MIDI event. */
     uint8_t Data3; /**< Third byte of data in the MIDI event. */
-} ATTR_PACKED MIDI_EventPacket_t;
+} TATTR_PACKED TMIDI_EventPacket_t;

@@ -179,9 +179,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case TDTYPE_String:
             if (descriptorNumber == 4) {
                 address = &xboxString;
-            } else if (descriptorNumber == 3) {
-                address = &serialString;
-            } else if (descriptorNumber < 3) {
+            } else if (descriptorNumber < 4) {
                 address = descriptorStrings[descriptorNumber];
             } else if (descriptorNumber == 0xEE) {
                 address = &OSDescriptorString;

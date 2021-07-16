@@ -12,6 +12,7 @@
 #include "defines.h"
 #include "descriptors.h"
 #include "lib_main.h"
+#include "serial.h"
 #include "stdbool.h"
 #include "usb.h"
 #include "xinput_device.h"
@@ -22,6 +23,7 @@ bool typeIsGuitar;
 bool typeIsDrum;
 uint8_t inputType;
 uint8_t pollRate;
+
 #define UART_ID uart1
 #define BAUD_RATE 115200
 
@@ -69,11 +71,17 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 }
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     const void *data;
-    descriptorRequest(TDTYPE_String << 8 | index, 0, &data);
+    // Arduinos handle their own serial descriptor, so theres no point in sharing an implementation there.
+    if (index == 3) {
+        return (uint16_t *)&serialString;
+    } else {
+        descriptorRequest(TDTYPE_String << 8 | index, 0, &data);
+    }
     return data;
 }
 
 int main() {
+    generateSerialString(serialString.UnicodeString);
     init();
     board_init();
     tusb_init();

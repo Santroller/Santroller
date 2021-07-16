@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "usb/wcid_descriptors.h"
+#include "lib_main.h"
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first

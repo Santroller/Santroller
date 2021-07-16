@@ -9,3 +9,13 @@ static inline uint16_t generateSerialString(uint16_t* const UnicodeString) {
     }
     return sizeof(id);
 }
+
+typedef struct {
+    TUSB_Descriptor_Header_t Header; /**< Descriptor header, including type and size. */
+    uint16_t UnicodeString[SERIAL_LEN];
+} Serial_Descriptor_String_t;
+Serial_Descriptor_String_t serialString = {
+    Header : {Size : sizeof(TUSB_Descriptor_Header_t) + (SERIAL_LEN * 2),
+              Type : TDTYPE_String},
+    UnicodeString : {}
+};

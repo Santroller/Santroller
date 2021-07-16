@@ -43,5 +43,3 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            const void **const descriptorAddress);
-
-extern uint8_t serialString[];

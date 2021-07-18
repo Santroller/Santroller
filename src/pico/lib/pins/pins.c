@@ -72,7 +72,7 @@ void tickAnalog(void) {
   if (validAnalog == 0) return;
   for (int i = 0; i < validAnalog; i++) {
     AnalogInfo_t *info = &joyData[i];
-    int16_t data = analogRead(info->pin);
+    int16_t data = analogRead(info->pin - PIN_A0);
     if (!joyData[i].hasDigital) {
       data = (data - 512);
       if (info->inverted) data = -data;
@@ -83,7 +83,7 @@ void tickAnalog(void) {
 }
 
 uint16_t analogRead(uint8_t pin) {
-  adc_select_input(pin - PIN_A0);
+  adc_select_input(pin);
   // We have everything coded assuming 10 bits (as that is what the arduino
   // uses) so shift accordingly (12 -> 10)
   return adc_read() >> 2;

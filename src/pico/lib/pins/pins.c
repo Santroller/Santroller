@@ -55,7 +55,7 @@ void setUpAnalogPin(Configuration_t *config, uint8_t offset) {
   ret.pin = pin;
   ret.hasDigital = false;
   ret.inverted = apin.inverted;
-  pinMode(PIN_A0 + pin, INPUT);
+  pinMode(pin, INPUT);
   joyData[validAnalog++] = ret;
 }
 void setUpAnalogDigitalPin(Pin_t *button, uint8_t pin, uint16_t threshold) {
@@ -64,7 +64,7 @@ void setUpAnalogDigitalPin(Pin_t *button, uint8_t pin, uint16_t threshold) {
   ret.hasDigital = true;
   ret.threshold = threshold;
   ret.pin = pin;
-  pinMode(PIN_A0 + pin, INPUT);
+  pinMode(pin, INPUT);
   button->analogOffset = validAnalog;
   joyData[validAnalog++] = ret;
 }
@@ -72,17 +72,18 @@ void tickAnalog(void) {
   if (validAnalog == 0) return;
   for (int i = 0; i < validAnalog; i++) {
     AnalogInfo_t *info = &joyData[i];
-    uint16_t data = analogRead(info->pin - PIN_A0);
+    int16_t data = analogRead(info->pin);
     if (!joyData[i].hasDigital) {
-      if (info->inverted) data *= -1;
-      data = (data - 512) * 64;
+      data = (data - 512);
+      if (info->inverted) data = -data;
     }
+    data = data * 64;
     info->value = data;
   }
 }
 
 uint16_t analogRead(uint8_t pin) {
-  adc_select_input(pin + PIN_A0);
+  adc_select_input(pin - PIN_A0);
   // We have everything coded assuming 10 bits (as that is what the arduino
   // uses) so shift accordingly (12 -> 10)
   return adc_read() >> 2;

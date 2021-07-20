@@ -23,7 +23,15 @@ volatile bool waitingForBoot = true;
 volatile bool stk500Mode = false;
 volatile uint16_t stk500Len = 0;
 
+void txRX(void* data, uint16_t len) {
+    Serial_SendData(data, len);
+    while (!ready) {
+    }
+    ready = false;
+}
 int main(void) {
+    packet_header_t requestData = {
+        VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
     if (jmpToBootloader == JUMP) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -46,16 +54,37 @@ int main(void) {
     USB_Init();
     while (true) {
         USB_USBTask();
+        txRX(&requestData, sizeof(packet_header_t));
     }
-}
-void txRX(void* data, uint16_t len) {
-    Serial_SendData(data, len);
-    while (!ready) {
-    }
-    ready = false;
 }
 
 void EVENT_USB_Device_ControlRequest(void) {
+    bool isStk500 = false;      //TODO: define how we know if we have a stk500 packet
+    bool isBootloader = false;  //TODO: define how we know if we have reached the bootloader
+    bool hostToDevice = ((requestType_t)USB_ControlRequest.bmRequestType).bmRequestType_bit.direction == USB_DIR_HOST_TO_DEVICE;
+    if (isBootloader) {
+        jmpToBootloader = JUMP;
+        cli();
+        wdt_enable(WDTO_15MS);
+        for (;;) {
+        }
+    }
+    if (isStk500) {
+        stk500Len = USB_ControlRequest.wLength;
+        // All read / writes for stk500 will have a write command and then a read command
+        // We stay at the right baudrate for both commands, and the read command
+        // Doesnt actually need to transmit anything as the data is read back as part of the write
+        // command
+        if (hostToDevice) {
+            Serial_InitInterrupt(STK500_BAUD, true);
+            Endpoint_Read_Control_Stream_LE(buf, USB_ControlRequest.wLength);
+            txRX(buf, USB_ControlRequest.wLength);
+        } else {
+            Endpoint_Write_Control_Stream_LE(buf, USB_ControlRequest.wLength);
+            Serial_InitInterrupt(BAUD, true);
+        }
+        return;
+    }
     control_request_t* packet = (control_request_t*)buf;
     packet->header.magic = VALID_PACKET;
     packet->header.id = CONTROL_REQUEST_ID;
@@ -65,20 +94,7 @@ void EVENT_USB_Device_ControlRequest(void) {
     packet->wValue = USB_ControlRequest.wValue;
     packet->wIndex = USB_ControlRequest.wIndex;
     packet->wLength = USB_ControlRequest.wLength;
-    bool hostToDevice = packet->requestType.bmRequestType_bit.direction == USB_DIR_HOST_TO_DEVICE;
-    bool isStk500 = false;      //TODO: define how we know if we have a stk500 packet
-    bool isBootloader = false;  //TODO: define how we know if we have reached the bootloader
-    if (isStk500) {
-        Serial_InitInterrupt(STK500_BAUD, true);
-        stk500Len = USB_ControlRequest.wLength;
-    }
-    if (isBootloader) {
-        jmpToBootloader = JUMP;
-        cli();
-        wdt_enable(WDTO_15MS);
-        for (;;) {
-        }
-    }
+
     if (hostToDevice) {
         packet->header.len += USB_ControlRequest.wLength;
         Endpoint_Read_Control_Stream_LE(packet->data, USB_ControlRequest.wLength);
@@ -86,9 +102,6 @@ void EVENT_USB_Device_ControlRequest(void) {
     txRX(packet, packet->header.len);
     if (!hostToDevice) {
         Endpoint_Write_Control_Stream_LE(ret->data, USB_ControlRequest.wLength);
-    }
-    if (isStk500) {
-        Serial_InitInterrupt(BAUD, true);
     }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {

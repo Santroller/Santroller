@@ -13,6 +13,7 @@
 // By using the STK_INSYNC as our start of packet, we can automatically handle responses from the stk500 programmer too
 #define VALID_PACKET STK_INSYNC
 #endif
+#define CONTROLLER_DATA_REQUEST_ID 0x76
 #define DESCRIPTOR_ID 0x77
 #define CONTROL_REQUEST_ID 0x78
 #define DEVICE_ID 0x79
@@ -36,6 +37,7 @@ typedef struct {
     uint16_t wValue;
     uint16_t wIndex;
 } descriptor_request_t;
+
 
 typedef struct ATTR_PACKED {
     packet_header_t header;

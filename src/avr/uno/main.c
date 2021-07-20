@@ -46,6 +46,8 @@ int main(void) {
                                 controlRequest(ctr->requestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dataPtr);
                             }
                             break;
+                        case DEVICE_ID:
+                            Serial_SendByte(deviceType);
                     }
                     index = 0;
                 }

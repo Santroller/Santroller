@@ -2,8 +2,10 @@
 
 #include <stddef.h>
 
-#include "usb/wcid_descriptors.h"
 #include "lib_main.h"
+#include "usb/wcid_descriptors.h"
+
+// We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
@@ -11,37 +13,33 @@
  * language ID table available at USB.org what languages the device supports for
  * its string descriptors.
  */
-const TUSB_Descriptor_String_t languageString =
-    TUSB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
+const TUSB_Descriptor_String_t languageString = TUSB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 /** Manufacturer descriptor string. This is a Unicode string containing the
  * manufacturer's details in human readable form, and is read out upon request
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const TUSB_Descriptor_String_t manufacturerString = {
-    Header : {Size : sizeof(TUSB_Descriptor_Header_t) + (18),
-              Type : TDTYPE_String},
-    UnicodeString : {'s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0'}
-};
+const TUSB_Descriptor_String_t manufacturerString = TUSB_STRING_DESCRIPTOR_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const TUSB_Descriptor_String_t productString = {
-    Header : {Size : sizeof(TUSB_Descriptor_Header_t) + (16),
-              Type : TDTYPE_String},
-    UnicodeString : {'A', 'r', 'd', 'w', 'i', 'i', 'n', 'o'}
-};
+const TUSB_Descriptor_String_t productString = TUSB_STRING_DESCRIPTOR_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication
  */
-const TUSB_Descriptor_String_t xboxString = {
-    Header : {Size : sizeof(TUSB_Descriptor_Header_t) + (176),
-              Type : TDTYPE_String},
-    UnicodeString : {'X', 'b', 'o', 'x', ' ', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y', ' ', 'M', 'e', 't', 'h', 'o', 'd', ' ', '3', ',', ' ', 'V', 'e', 'r', 's', 'i', 'o', 'n', ' ', '1', '.', '0', '0', ',', ' ', 0xa9, ' ', '2', '0', '0', '5', ' ', 'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', ' ', 'C', 'o', 'r', 'p', 'o', 'r', 'a', 't', 'i', 'o', 'n', '.', ' ', 'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ', 'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.'}
-};
+const TUSB_Descriptor_String_t xboxString = TUSB_STRING_DESCRIPTOR_ARRAY(
+    'X', 'b', 'o', 'x', ' ', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y',
+    ' ', 'M', 'e', 't', 'h', 'o', 'd', ' ', '3', ',', ' ',
+    'V', 'e', 'r', 's', 'i', 'o', 'n', ' ', '1', '.', '0', '0', ',',
+    ' ', 0xa9, ' ', '2', '0', '0', '5', ' ',
+    'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', ' ',
+    'C', 'o', 'r', 'p', 'o', 'r', 'a', 't', 'i', 'o', 'n', '.', ' ',
+    'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ',
+    'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.');
 const TUSB_Descriptor_String_t *const descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
+
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */

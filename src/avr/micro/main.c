@@ -19,7 +19,7 @@ void EVENT_USB_Device_ControlRequest(void) {
     requestType_t type = {bmRequestType : USB_ControlRequest.bmRequestType};
     if (type.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
         if (controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &data)) {
-            Endpoint_Read_Control_Stream_LE(buf, USB_ControlRequest.wLength);
+            Endpoint_Write_Control_Stream_LE(buf, USB_ControlRequest.wLength);
         }
     } else {
         data = buf;

@@ -76,6 +76,11 @@ foreach(PROJECT ${PROJECTS})
       if(NOT (${TYPE} MATCHES "(usb|main)$"))
         set(EXTRA -${TYPE})
       endif()
+      if(${BUILD_TYPE} MATCHES "usb")
+        set(VARIANT_ROOT ${CMAKE_SOURCE_DIR}/src/avr/${PROJECT}_usb)
+      else()
+        set(VARIANT_ROOT ${CMAKE_SOURCE_DIR}/src/avr/${PROJECT})
+      endif()
 
       set(PID ${${VARIANT}_PID})
       foreach(MCU ${${VARIANT}_${BUILD_TYPE}_MCUS})
@@ -85,14 +90,18 @@ foreach(PROJECT ${PROJECTS})
                 ardwiino-${VARIANT}-${BUILD_TYPE}-${MCU}-${F_CPU}${EXTRA})
             set(TARGETD
                 ${VARIANT}-${BUILD_TYPE}-${MCU}-${F_CPU}${EXTRA}-avrdude)
+            set(TARGETDFU
+                ${VARIANT}-${BUILD_TYPE}-${MCU}-${F_CPU}${EXTRA}-dfu)
           else()
             set(TARGET ardwiino-${VARIANT}-${MCU}-${F_CPU}${EXTRA})
             set(TARGETD ${VARIANT}-${F_CPU}${EXTRA}-avrdude)
+            set(TARGETDFU ${VARIANT}-${F_CPU}${EXTRA}-dfu)
           endif()
           set(IN ${CMAKE_SOURCE_DIR}/src/avr)
           set(OUT ${CMAKE_CURRENT_BINARY_DIR}/firmware/${TARGET})
           add_custom_target(${TARGET} ALL)
           add_custom_target(${TARGETD})
+          add_custom_target(${TARGETDFU})
           unset(OUTPUTS)
           foreach(OUTPUT ${OUTPUT_EXT})
             list(APPEND OUTPUTS ${OUT}.${OUTPUT})
@@ -100,7 +109,7 @@ foreach(PROJECT ${PROJECTS})
           add_custom_command(
             TARGET ${TARGET}
             COMMAND
-              make AVR_ROOT=${CMAKE_SOURCE_DIR}/src/avr VARIANT_ROOT=${CMAKE_SOURCE_DIR}/src/avr/${PROJECT} PROJECT_ROOT=${CMAKE_SOURCE_DIR} OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
+              make AVR_ROOT=${CMAKE_SOURCE_DIR}/src/avr VARIANT_ROOT=${VARIANT_ROOT} PROJECT_ROOT=${CMAKE_SOURCE_DIR} OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
               ARDUINO_MODEL_PID=${PID} ARDWIINO_BOARD=${VARIANT} EXTRA=${EXTRA} PROJECT=${PROJECT}
               TARGET=${OUT} MCU=${MCU} VARIANT=${${VARIANT}_VARIANT} VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR} VERSION_REVISION=${VERSION_REVISION}
             WORKING_DIRECTORY ${IN}
@@ -108,9 +117,16 @@ foreach(PROJECT ${PROJECTS})
           add_custom_command(
             TARGET ${TARGETD}
             COMMAND
-              make AVR_ROOT=${CMAKE_SOURCE_DIR}/src/avr VARIANT_ROOT=${CMAKE_SOURCE_DIR}/src/avr/${PROJECT} PROJECT_ROOT=${CMAKE_SOURCE_DIR} OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
+              make AVR_ROOT=${CMAKE_SOURCE_DIR}/src/avr VARIANT_ROOT=${VARIANT_ROOT} PROJECT_ROOT=${CMAKE_SOURCE_DIR} OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
               ARDUINO_MODEL_PID=${PID} ARDWIINO_BOARD=${VARIANT} EXTRA=${EXTRA} PROJECT=${PROJECT}
               TARGET=${OUT} MCU=${MCU} VARIANT=${${VARIANT}_VARIANT} VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR} VERSION_REVISION=${VERSION_REVISION} avrdude
+            WORKING_DIRECTORY ${IN})
+          add_custom_command(
+            TARGET ${TARGETDFU}
+            COMMAND
+              make AVR_ROOT=${CMAKE_SOURCE_DIR}/src/avr VARIANT_ROOT=${VARIANT_ROOT} PROJECT_ROOT=${CMAKE_SOURCE_DIR} OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
+              ARDUINO_MODEL_PID=${PID} ARDWIINO_BOARD=${VARIANT} EXTRA=${EXTRA} PROJECT=${PROJECT}
+              TARGET=${OUT} MCU=${MCU} VARIANT=${${VARIANT}_VARIANT} VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR} VERSION_REVISION=${VERSION_REVISION} dfu
             WORKING_DIRECTORY ${IN})
           message(STATUS ${IN})
           message(STATUS ${OUT})

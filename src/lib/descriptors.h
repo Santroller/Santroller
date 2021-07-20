@@ -52,7 +52,7 @@ enum requests_t {
 
 enum endpoints_t {
     DEVICE_EPADDR_IN = ENDPOINT_IN | 1,
-    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 1,
+    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 2
 };
 
 enum hid_reports_t {

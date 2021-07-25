@@ -30,8 +30,6 @@ void txRX(void* data, uint16_t len) {
     ready = false;
 }
 int main(void) {
-    // packet_header_t requestData = {
-    //     VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
     if (jmpToBootloader == JUMP) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -52,9 +50,33 @@ int main(void) {
     while (waitingForBoot) {
     }
     USB_Init();
+    packet_header_t requestData = {
+        VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     while (true) {
         USB_USBTask();
-        // txRX(&requestData, sizeof(packet_header_t));
+        if (USB_DeviceState != DEVICE_STATE_Configured)
+            continue;
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+        if (Endpoint_IsINReady()) {
+            txRX(&requestData, sizeof(packet_header_t));
+            Endpoint_Write_Stream_LE(ret->data, ret->header.len - sizeof(packet_header_t), NULL);
+            Endpoint_ClearIN();
+        }
+        // TODO: we will need to work out the length of packets. thats going to be different for different consoles..
+
+        // data_transmit_packet_t* dt = data_transmit_packet_t * buf;
+        // Endpoint_SelectEndpoint(CONTROLLER_DATA_TRANSMIT_ID);
+        // if (Endpoint_IsOUTReceived()) {
+        //     packet->header.magic = VALID_PACKET;
+        //     packet->header.id = CONTROL_REQUEST_ID;
+        //     packet->header.len = sizeof(control_request_t);
+        //     /* Check to see if the packet contains data */
+        //     if (Endpoint_IsReadWriteAllowed()) {
+        //         Endpoint_Read_Stream_LE(buf, header->len - sizeof(packet_header_t), NULL);
+        //         txRX(&requestDataOut, sizeof(packet_header_t));
+        //     }
+        //     Endpoint_ClearOUT();
+        // }
     }
 }
 
@@ -120,8 +142,14 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     if (deviceType >= MIDI_GAMEPAD) {
         type = EP_TYPE_BULK;
     }
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, HID_EPSIZE_IN, 1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, HID_EPSIZE_OUT, 1);
+    uint8_t sizein = HID_EPSIZE_IN;
+    uint8_t sizeout = HID_EPSIZE_OUT;
+    if (deviceType <= XINPUT_ARCADE_PAD) {
+        sizein = XINPUT_EPSIZE_IN;
+        sizeout = XINPUT_EPSIZE_OUT;
+    }
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, sizein, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, sizeout, 1);
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

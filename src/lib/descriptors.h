@@ -8,10 +8,10 @@
 #include "usb/wcid_descriptors.h"
 
 #define ENDPOINT_SIZE 64
-#define XINPUT_EPSIZE_IN 0x14
-#define XINPUT_EPSIZE_OUT 0x08
-#define HID_EPSIZE_IN 32
-#define HID_EPSIZE_OUT 0x08
+#define XINPUT_EPSIZE_IN 0x08
+#define XINPUT_EPSIZE_OUT 0x14
+#define HID_EPSIZE_IN 0x08
+#define HID_EPSIZE_OUT 32
 #define VENDOR_EPSIZE 64
 
 #define ARDWIINO_VID 0x1209

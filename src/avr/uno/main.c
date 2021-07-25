@@ -3,6 +3,8 @@
 #include "lib_main.h"
 #include "packets.h"
 #include "usb.h"
+#include "usb/controller_reports.h"
+#include <stdlib.h>
 int main(void) {
     init();
     Serial_Init(BAUD, true);
@@ -13,6 +15,7 @@ int main(void) {
     packet_header_t* header = (packet_header_t*)buf;
     descriptor_request_t* desc = (descriptor_request_t*)buf;
     control_request_t* ctr = (control_request_t*)buf;
+    USB_XInputReport_Data_t out = {0, sizeof(USB_XInputReport_Data_t), 0};
     while (true) {
         tick();
         if (Serial_IsCharReceived()) {
@@ -49,6 +52,16 @@ int main(void) {
                             header->len = sizeof(packet_header_t) + 1;
                             Serial_SendData(buf, sizeof(packet_header_t));
                             Serial_SendByte(deviceType);
+                            break;
+                        case CONTROLLER_DATA_REQUEST_ID:
+                            header->len = sizeof(packet_header_t) + sizeof(USB_XInputReport_Data_t);
+                            out.l_x = rand();
+                            Serial_SendData(buf, sizeof(packet_header_t));
+                            Serial_SendData(&out, sizeof(USB_XInputReport_Data_t));
+                            break;
+                        case CONTROLLER_DATA_TRANSMIT_ID:
+                            header->len = sizeof(packet_header_t);
+                            Serial_SendData(buf, sizeof(packet_header_t));
                             break;
                     }
                     index = 0;

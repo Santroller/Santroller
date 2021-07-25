@@ -35,11 +35,13 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 #define UART_RX_PIN 5
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     uint8_t *data;
+    bool valid = false;
     if (request->bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
         if (stage == CONTROL_STAGE_SETUP) {
             requestType_t r = {bmRequestType : request->bmRequestType};
-            if (controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, &data)) {
-                tud_control_xfer(rhport, request, data, request->wLength);
+            uint16_t len = controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, &data, &valid);
+            if (valid) {
+                tud_control_xfer(rhport, request, data, len);
             }
         }
     } else {
@@ -48,7 +50,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         } else if (stage == CONTROL_STAGE_ACK) {
             data = buf;
             requestType_t r = {bmRequestType : request->bmRequestType};
-            controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, &data);
+            controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, &data, &valid);
         }
     }
 }

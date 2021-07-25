@@ -6,7 +6,7 @@
 #include "usb.h"
 #define READY 0x75
 // megas use stk500v2, unos (and minis) use stk500
-#if VARIANT==megaadk || VARIANT==mega2560
+#if STK_VERSION==1
 // By using the MESSAGE_START as our start of packet, we can automatically handle responses from the stk500v2 programmer too
 #define VALID_PACKET MESSAGE_START
 #else
@@ -29,7 +29,7 @@ typedef struct ATTR_PACKED {
 
 typedef struct ATTR_PACKED {
     packet_header_t header;
-    uint16_t data[];
+    uint8_t data[];
 } ret_packet_t;
 
 typedef struct {

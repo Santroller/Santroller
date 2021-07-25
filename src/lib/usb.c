@@ -7,7 +7,8 @@
 #include "lib_main.h"
 #include "report_descriptors.h"
 #include "usb/xinput_descriptors.h"
-uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t **address) {
+uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t **address, bool *valid) {
+    *valid = true;
     if (requestType.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
         if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_VENDOR) {
             if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
@@ -41,6 +42,7 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
             // 
         }
     }
+    *valid = false;
     return 0;
 }
 // bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,

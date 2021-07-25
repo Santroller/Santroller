@@ -21,7 +21,7 @@ int main(void) {
                 continue;
             }
             index++;
-            if (index > sizeof(packet_header_t)) {
+            if (index >= sizeof(packet_header_t)) {
                 if (header->len == index) {
                     switch (header->id) {
                         case DESCRIPTOR_ID:
@@ -35,19 +35,21 @@ int main(void) {
                             break;
                         case CONTROL_REQUEST_ID:
                             uint8_t* dataPtr;
-                            if (ctr->requestType.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
-                                if (controlRequest(ctr->requestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dataPtr)) {
-                                    header->len = sizeof(packet_header_t) + ctr->wLength;
-                                    Serial_SendData(buf, sizeof(packet_header_t));
-                                    Serial_SendData(dataPtr, ctr->wLength);
-                                }
-                            } else {
-                                dataPtr = ctr->data;
-                                controlRequest(ctr->requestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dataPtr);
+
+                            bool valid;
+                            uint16_t len2 = controlRequest(ctr->requestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dataPtr, &valid);
+                            header->len = sizeof(packet_header_t) + len2 + 1;
+                            Serial_SendData(buf, sizeof(packet_header_t));
+                            Serial_SendByte(valid);
+                            if (len2) {
+                                Serial_SendData(dataPtr, len2);
                             }
                             break;
                         case DEVICE_ID:
+                            header->len = sizeof(packet_header_t) + 1;
+                            Serial_SendData(buf, sizeof(packet_header_t));
                             Serial_SendByte(deviceType);
+                            break;
                     }
                     index = 0;
                 }

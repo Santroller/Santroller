@@ -30,8 +30,8 @@ void txRX(void* data, uint16_t len) {
     ready = false;
 }
 int main(void) {
-    packet_header_t requestData = {
-        VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
+    // packet_header_t requestData = {
+    //     VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
     if (jmpToBootloader == JUMP) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -54,11 +54,12 @@ int main(void) {
     USB_Init();
     while (true) {
         USB_USBTask();
-        txRX(&requestData, sizeof(packet_header_t));
+        // txRX(&requestData, sizeof(packet_header_t));
     }
 }
 
 void EVENT_USB_Device_ControlRequest(void) {
+    if (!(Endpoint_IsSETUPReceived())) return;
     bool isStk500 = false;      //TODO: define how we know if we have a stk500 packet
     bool isBootloader = false;  //TODO: define how we know if we have reached the bootloader
     bool hostToDevice = ((requestType_t)USB_ControlRequest.bmRequestType).bmRequestType_bit.direction == USB_DIR_HOST_TO_DEVICE;
@@ -70,6 +71,7 @@ void EVENT_USB_Device_ControlRequest(void) {
         }
     }
     if (isStk500) {
+        Endpoint_ClearSETUP();
         stk500Len = USB_ControlRequest.wLength;
         // All read / writes for stk500 will have a write command and then a read command
         // We stay at the right baudrate for both commands, and the read command
@@ -83,6 +85,7 @@ void EVENT_USB_Device_ControlRequest(void) {
             Endpoint_Write_Control_Stream_LE(buf, USB_ControlRequest.wLength);
             Serial_InitInterrupt(BAUD, true);
         }
+        Endpoint_ClearStatusStage();
         return;
     }
     control_request_t* packet = (control_request_t*)buf;
@@ -94,14 +97,18 @@ void EVENT_USB_Device_ControlRequest(void) {
     packet->wValue = USB_ControlRequest.wValue;
     packet->wIndex = USB_ControlRequest.wIndex;
     packet->wLength = USB_ControlRequest.wLength;
-
-    if (hostToDevice) {
+    // TODO: we may want to have a list of valid requests, otherwise this will respond to requests that it really should not.
+    if (hostToDevice && packet->requestType.bmRequestType_bit.type == USB_REQ_TYPE_VENDOR && packet->requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
+        Endpoint_ClearSETUP();
         packet->header.len += USB_ControlRequest.wLength;
         Endpoint_Read_Control_Stream_LE(packet->data, USB_ControlRequest.wLength);
+        Endpoint_ClearStatusStage();
     }
     txRX(packet, packet->header.len);
-    if (!hostToDevice) {
-        Endpoint_Write_Control_Stream_LE(ret->data, USB_ControlRequest.wLength);
+    if (ret->data[0] && !hostToDevice) {
+        Endpoint_ClearSETUP();
+        Endpoint_Write_Control_Stream_LE(ret->data + 1, ret->header.len - sizeof(packet_header_t) - 1);
+        Endpoint_ClearStatusStage();
     }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
@@ -110,7 +117,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     txRX(&packet, sizeof(packet_header_t));
     uint8_t deviceType = ret->data[0];
     uint8_t type = EP_TYPE_INTERRUPT;
-    if (deviceType > MIDI_GAMEPAD) {
+    if (deviceType >= MIDI_GAMEPAD) {
         type = EP_TYPE_BULK;
     }
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, HID_EPSIZE_IN, 1);
@@ -120,7 +127,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void** const descriptorAddress) {
-    // pass request to 328p
+    // pass request to 328p / mega
     descriptor_request_t packet = {
         header : DESC_REQUEST_HEADER,
         wValue : wValue,

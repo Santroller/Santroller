@@ -14,17 +14,21 @@
 // mode after the next watchdog reset
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 
+uint8_t* bufTx;
+uint8_t idx_tx = 0;
+
 // TODO: how big does this need to be?
 uint8_t buf[255];
 packet_header_t* header = (packet_header_t*)buf;
 ret_packet_t* ret = (ret_packet_t*)buf;
 volatile bool ready = false;
-volatile bool waitingForBoot = true;
 volatile bool stk500Mode = false;
 volatile uint16_t stk500Len = 0;
 
-void txRX(void* data, uint16_t len) {
-    Serial_SendData(data, len);
+void txRX(void* data, uint8_t len) {
+    idx_tx = len;
+    bufTx = (uint8_t*)data;
+    UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
     while (!ready) {
     }
     ready = false;
@@ -46,16 +50,14 @@ int main(void) {
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     sei();
-    // Wait for the 328p / 1280 to boot
-    while (waitingForBoot) {
+    // Wait for the 328p / 1280 to boot (we receive a READY byte)
+    while (((volatile uint8_t*)buf)[0] != READY) {
     }
     USB_Init();
     packet_header_t requestData = {
         VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     while (true) {
         USB_USBTask();
-        if (USB_DeviceState != DEVICE_STATE_Configured)
-            continue;
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
         if (Endpoint_IsINReady()) {
             txRX(&requestData, sizeof(packet_header_t));
@@ -167,12 +169,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 }
 uint8_t idx = 0;
 ISR(USART1_RX_vect, ISR_BLOCK) {
-    if (waitingForBoot) {
-        if (UDR1 == READY) {
-            waitingForBoot = false;
-        }
-        return;
-    }
     buf[idx] = UDR1;
     if (idx == 0 && buf[0] != VALID_PACKET) {
         return;
@@ -191,5 +187,13 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
             ready = true;
             return;
         }
+    }
+}
+
+ISR(USART1_UDRE_vect, ISR_BLOCK) {
+    if (idx_tx--) {
+        UDR1 = *(bufTx++);
+    } else {
+        UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1));
     }
 }

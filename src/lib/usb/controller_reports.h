@@ -82,23 +82,3 @@ typedef struct {
 //   USB_MIDI_Data_t midi;
 //   USB_MouseReport_Data_t mouse;
 // } USB_Report_Data_t;
-
-enum ControllerButtons {
-  XBOX_DPAD_UP,
-  XBOX_DPAD_DOWN,
-  XBOX_DPAD_LEFT,
-  XBOX_DPAD_RIGHT,
-  XBOX_START,
-  XBOX_BACK,
-  XBOX_LEFT_STICK,
-  XBOX_RIGHT_STICK,
-
-  XBOX_LB,
-  XBOX_RB,
-  XBOX_HOME,
-  XBOX_UNUSED,
-  XBOX_A,
-  XBOX_B,
-  XBOX_X,
-  XBOX_Y,
-};

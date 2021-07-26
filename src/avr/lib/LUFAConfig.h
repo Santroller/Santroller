@@ -5,7 +5,7 @@
 #define USB_DEVICE_ONLY
 #define USE_RAM_DESCRIPTORS
 #define FIXED_CONTROL_ENDPOINT_SIZE 64
-// #define DEVICE_STATE_AS_GPIOR 2 // GPIOR0 is used for the RX ISR with cbi()
+#define DEVICE_STATE_AS_GPIOR 2 // GPIOR0 is used for the RX ISR with cbi()
 #define FIXED_NUM_CONFIGURATIONS 1
 #define NO_DEVICE_REMOTE_WAKEUP
 #define NO_DEVICE_SELF_POWER

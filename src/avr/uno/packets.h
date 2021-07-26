@@ -25,7 +25,7 @@
 typedef struct ATTR_PACKED {
     uint8_t magic;
     uint8_t id;
-    uint16_t len;
+    uint8_t len;
 } packet_header_t;
 
 typedef struct ATTR_PACKED {

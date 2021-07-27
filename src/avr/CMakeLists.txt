@@ -127,8 +127,11 @@ foreach(PROJECT ${PROJECTS})
             WORKING_DIRECTORY ${IN})
           add_custom_command(
             TARGET ${TARGETDFU}
-            COMMAND
-              make ${ARGS} dfu
+            COMMAND dfu-programmer ${MCU} erase
+            COMMAND sleep 2
+            COMMAND make ${ARGS} dfu
+            COMMAND sleep 2
+            COMMAND dfu-programmer ${MCU} launch --no-reset
             WORKING_DIRECTORY ${IN})
           message(STATUS ${IN})
           message(STATUS ${OUT})

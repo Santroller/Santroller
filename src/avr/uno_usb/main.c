@@ -3,6 +3,11 @@
 #include <LUFA/Drivers/Peripheral/Serial.h>
 #include <LUFA/Drivers/USB/Class/CDCClass.h>
 #include <LUFA/Drivers/USB/USB.h>
+#include <avr/boot.h>
+#include <avr/eeprom.h>
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <avr/power.h>
 #include <avr/wdt.h>
 
 #include "defines.h"
@@ -46,8 +51,15 @@ int main(void) {
     MCUSR &= ~(1 << WDRF);
     wdt_disable();
 
+    clock_prescale_set(clock_div_1);
+
     Serial_InitInterrupt(BAUD, true);
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+    // Ensure the 328p is reset so we can also work from bootloader
+    AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+    _delay_ms(1);
+    AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
+    _delay_ms(1);
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     sei();
     // Wait for the 328p / 1280 to boot (we receive a READY byte)
@@ -61,7 +73,9 @@ int main(void) {
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
         if (Endpoint_IsINReady()) {
             txRX(&requestData, sizeof(packet_header_t));
-            Endpoint_Write_Stream_LE(ret->data, ret->header.len - sizeof(packet_header_t), NULL);
+            uint8_t len = ret->header.len - sizeof(packet_header_t);
+            uint8_t* tmp = ret->data;
+            Endpoint_Write_Stream_LE(tmp, len, NULL);
             Endpoint_ClearIN();
         }
         // TODO: we will need to work out the length of packets. thats going to be different for different consoles..
@@ -143,12 +157,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     uint8_t type = EP_TYPE_INTERRUPT;
     if (deviceType >= MIDI_GAMEPAD) {
         type = EP_TYPE_BULK;
-    }
-    uint8_t sizein = HID_EPSIZE_IN;
-    uint8_t sizeout = HID_EPSIZE_OUT;
-    if (deviceType <= XINPUT_ARCADE_PAD) {
-        sizein = XINPUT_EPSIZE_IN;
-        sizeout = XINPUT_EPSIZE_OUT;
     }
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, sizein, 1);
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, sizeout, 1);

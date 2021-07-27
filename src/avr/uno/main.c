@@ -30,7 +30,7 @@ int main(void) {
                 break;
             case CONTROLLER_DATA_REQUEST_ID:
                 header->len = sizeof(packet_header_t) + sizeof(USB_XInputReport_Data_t);
-                out.l_x += 1000;
+                out.l_x += 0xFF;
                 memcpy(buf + sizeof(packet_header_t), &out, sizeof(USB_XInputReport_Data_t));
                 break;
             case DESCRIPTOR_ID:

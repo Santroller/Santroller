@@ -8,8 +8,8 @@
 #include "usb/wcid_descriptors.h"
 
 #define ENDPOINT_SIZE 64
-#define XINPUT_EPSIZE_IN 32
-#define XINPUT_EPSIZE_OUT 0x08
+#define DEVICE_EPSIZE_IN 32
+#define DEVICE_EPSIZE_OUT 0x08
 #define VENDOR_EPSIZE 64
 
 #define ARDWIINO_VID 0x1209
@@ -17,13 +17,17 @@
 #define HORI_VID 0x0f0d
 #define HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID 0x0092
 #define SONY_VID 0x12ba
-#define PS3_GH_GUITAR_VID 0x0100
-#define PS3_GH_DRUM_VID 0x0120
-#define PS3_RB_GUITAR_VID 0x0200
-#define PS3_RB_DRUM_VID 0x0210
+#define PS3_GH_GUITAR_PID 0x0100
+#define PS3_GH_DRUM_PID 0x0120
+#define PS3_RB_GUITAR_PID 0x0200
+#define PS3_RB_DRUM_PID 0x0210
+#define PS3_DJ_TURNTABLE_PID 0x0140
+#define PS3WIIU_GHLIVE_DONGLE_PID 0x074b
 #define WII_RB_VID 0x1bad
-#define WII_RB_GUITAR 0x0004
-#define WII_RB_DRUM 0x074b
+#define WII_RB_GUITAR_PID 0x0004
+#define WII_RB_DRUM_PID 0x074b
+#define NINDENDO_VID 0x057E
+#define PRO_CONTROLLER_PID 0x2009
 
 #define SIMULTANEOUS_KEYS 6
 
@@ -48,9 +52,10 @@ enum requests_t {
     REQ_GET_OS_FEATURE_DESCRIPTOR = 0x20
 };
 
+// By using these endpoints, we can double buffer!
 enum endpoints_t {
-    DEVICE_EPADDR_IN = ENDPOINT_IN | 1,
-    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 2
+    DEVICE_EPADDR_IN = ENDPOINT_IN | 3,
+    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 4
 };
 
 enum hid_reports_t {

@@ -122,8 +122,8 @@ foreach(PROJECT ${PROJECTS})
             BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET} ${OUTPUTS})
           add_custom_command(
             TARGET ${TARGETD}
-            COMMAND
-              make ${ARGS} avrdude
+            COMMAND make ${ARGS} avrdude
+            COMMAND stty -F /dev/ttyACM0 1200
             WORKING_DIRECTORY ${IN})
           add_custom_command(
             TARGET ${TARGETDFU}

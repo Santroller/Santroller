@@ -1,5 +1,7 @@
 #include <LUFA/Drivers/Peripheral/Serial.h>
+#include <avr/io.h>
 
+#include "defines.h"
 #include "lib_main.h"
 #include "packets.h"
 #include "usb.h"
@@ -8,18 +10,21 @@
 uint8_t* bufTx;
 uint8_t idx_tx = 0;
 uint8_t buf[255];
+uint8_t controller[48];
 volatile bool ready = false;
 packet_header_t* header = (packet_header_t*)buf;
 descriptor_request_t* desc = (descriptor_request_t*)buf;
 control_request_t* ctr = (control_request_t*)buf;
+data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
 int main(void) {
     init();
     Serial_InitInterrupt(BAUD, true);
     sei();
     Serial_SendByte(READY);
-    USB_XInputReport_Data_t out = {0, sizeof(USB_XInputReport_Data_t), 0};
+    DDRB |= (1 << PB5);
+    PORTB |= (1 << PB5);
+    // Ensure the 328p is reset so we can also work from bootloader
     while (true) {
-        tick();
         if (!ready) continue;
         __asm volatile("" ::
                            : "memory");
@@ -27,11 +32,13 @@ int main(void) {
         switch (header->id) {
             case CONTROLLER_DATA_TRANSMIT_ID:
                 header->len = sizeof(packet_header_t);
+                // Technically, we could get multiple packets at once, so we should probably loop through them
+                packetReceived(dt->data, header->len - sizeof(packet_header_t));
                 break;
             case CONTROLLER_DATA_REQUEST_ID:
-                header->len = sizeof(packet_header_t) + sizeof(USB_XInputReport_Data_t);
-                out.l_x += 0xFF;
-                memcpy(buf + sizeof(packet_header_t), &out, sizeof(USB_XInputReport_Data_t));
+                uint8_t clen = tick(controller);
+                header->len = sizeof(packet_header_t) + clen;
+                memcpy(buf + sizeof(packet_header_t), controller, clen);
                 break;
             case DESCRIPTOR_ID:
                 const void* data;
@@ -53,8 +60,9 @@ int main(void) {
                 }
                 break;
             case DEVICE_ID:
-                header->len = sizeof(packet_header_t) + 1;
+                header->len = sizeof(packet_header_t) + 2;
                 buf[sizeof(packet_header_t)] = deviceType;
+                buf[sizeof(packet_header_t)+1] = consoleType;
                 break;
             default:
                 continue;

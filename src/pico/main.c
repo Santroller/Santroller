@@ -92,6 +92,17 @@ int main() {
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
     while (1) {
         tud_task();  // tinyusb device task
+        if (consoleType == XBOX360) {
+            if (tud_xinput_n_ready(0)) {
+                tud_xinput_n_report(0, 0, data, size);
+            }
+        } else if (consoleType == MIDI) {
+            if (tud_hid_n_ready(0)) {
+                tud_hid_n_report(0, rid, data, size);
+            }
+        } else {
+            tud_midi_n_packet_write(0, data);
+        }
     }
 }
 
@@ -107,23 +118,17 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
     return driver;
 }
 
-static uint8_t id[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
                                hid_report_type_t report_type, uint8_t *buffer,
                                uint16_t reqlen) {
-    if (report_type == HID_REPORT_TYPE_FEATURE) {
-        //  When requested, return the ps3 report ids so that we have console
-        //  compatibility
-        if (deviceType <= PS3_ROCK_BAND_DRUMS) {
-            id[3] = 0x00;
-        } else if (deviceType <= PS3_GUITAR_HERO_DRUMS) {
-            id[3] = 0x06;
-        }
-        buffer = id;
-        return sizeof(id);
-    }
-    return 0;
+    requestType_t r = {bmRequestType_bit : {direction : USB_DIR_DEVICE_TO_HOST, recipient : USB_REQ_RCPT_INTERFACE, type : USB_REQ_TYPE_CLASS}};
+    uint8_t valid;
+    return controlRequest(r, THID_REQ_GetReport, report_type << 8 | report_id, instance, reqlen, &buffer, &valid);
 }
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id,
                            hid_report_type_t report_type, uint8_t const *buffer,
-                           uint16_t bufsize) {}
+                           uint16_t bufsize) {
+    requestType_t r = {bmRequestType_bit : {direction : USB_DIR_HOST_TO_DEVICE, recipient : USB_REQ_RCPT_INTERFACE, type : USB_REQ_TYPE_CLASS}};
+    uint8_t valid;
+    controlRequest(r, THID_REQ_SetReport, report_type << 8 | report_id, instance, bufsize, &buffer, &valid);
+}

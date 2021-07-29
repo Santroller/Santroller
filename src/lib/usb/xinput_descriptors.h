@@ -1,5 +1,6 @@
 #include "descriptors.h"
 #include "wcid_descriptors.h"
+#include "attributes.h"
 // Dumps from a real guitar
 
 uint8_t ID[] = {0x00, 0x82, 0xf8, 0x23};

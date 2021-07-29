@@ -25,6 +25,13 @@ const TUSB_Descriptor_String_t manufacturerString = TUSB_STRING_DESCRIPTOR_ARRAY
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
 const TUSB_Descriptor_String_t productString = TUSB_STRING_DESCRIPTOR_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
+
+// TODO: is the below actually required for a switch? Borrow one and test
+// const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR(L"Nintendo Co., Ltd.");
+// const USB_Descriptor_String_t PROGMEM ProductString      = USB_STRING_DESCRIPTOR(L"Pro Controller");
+// const USB_Descriptor_String_t PROGMEM SerialNumberString = USB_STRING_DESCRIPTOR(L"000000000001");
+
+
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication
  */
@@ -120,10 +127,10 @@ TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor = {
         reserved : {0x10, 0x01},
         subtype : 0x07,
         reserved2 : 0x25,
-        bEndpointAddressIn : XINPUT_EPSIZE_IN,
+        bEndpointAddressIn : DEVICE_EPSIZE_OUT,
         bMaxDataSizeIn : 0x14,
         reserved3 : {0x03, 0x03, 0x03, 0x04, 0x13},
-        bEndpointAddressOut : XINPUT_EPSIZE_OUT,
+        bEndpointAddressOut : DEVICE_EPSIZE_OUT,
         bMaxDataSizeOut : 0x08,
         reserved4 : {0x03, 0x03},
     },
@@ -132,14 +139,14 @@ TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor = {
         Header : {Size : sizeof(XBOXConfigurationDescriptor.ReportINEndpoint11), Type : TDTYPE_Endpoint},
         EndpointAddress : DEVICE_EPADDR_IN,
         Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : XINPUT_EPSIZE_IN,
+        EndpointSize : DEVICE_EPSIZE_IN,
         PollingIntervalMS : 1,
     },
     ReportOUTEndpoint12 : {
         Header : {Size : sizeof(XBOXConfigurationDescriptor.ReportOUTEndpoint12), Type : TDTYPE_Endpoint},
         EndpointAddress : DEVICE_EPADDR_OUT,
         Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : XINPUT_EPSIZE_OUT,
+        EndpointSize : DEVICE_EPSIZE_OUT,
         PollingIntervalMS : 1,
     },
 };
@@ -172,7 +179,7 @@ TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
         EndpointAddress : DEVICE_EPADDR_IN,
         Attributes :
             (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : XINPUT_EPSIZE_IN,
+        EndpointSize : DEVICE_EPSIZE_IN,
         PollingIntervalMS : 1
     },
     EndpointOutHID : {
@@ -180,7 +187,7 @@ TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
         EndpointAddress : DEVICE_EPADDR_OUT,
         Attributes :
             (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : HID_EPSIZE_IN,
+        EndpointSize : DEVICE_EPSIZE_OUT,
         PollingIntervalMS : 1
     },
     HIDDescriptor : {
@@ -315,7 +322,7 @@ TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor = {
             EndpointAddress : DEVICE_EPADDR_IN,
             Attributes : (EP_TYPE_BULK | ENDPOINT_TATTR_NO_SYNC |
                           ENDPOINT_USAGE_DATA),
-            EndpointSize : HID_EPSIZE_IN,
+            EndpointSize : DEVICE_EPSIZE_IN,
             PollingIntervalMS : 1
         },
         Refresh : 0,
@@ -339,7 +346,7 @@ TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor = {
             EndpointAddress : DEVICE_EPADDR_OUT,
             Attributes : (EP_TYPE_BULK | ENDPOINT_TATTR_NO_SYNC |
                           ENDPOINT_USAGE_DATA),
-            EndpointSize : HID_EPSIZE_OUT,
+            EndpointSize : DEVICE_EPSIZE_OUT,
             PollingIntervalMS : 1,
         },
         Refresh : 0,

@@ -3,12 +3,29 @@
 #include "descriptors.h"
 #include "lib_main.h"
 #include "usb.h"
+uint8_t controller[DEVICE_EPSIZE_IN];
 int main(void) {
     init();
     USB_Init();
     sei();
     while (true) {
-        tick();
+        uint8_t len = tick(controller);
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+        if (Endpoint_IsINReady()) {
+            Endpoint_Write_Stream_LE(controller, len, NULL);
+            Endpoint_ClearIN();
+        }
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
+        if (Endpoint_IsOUTReceived()) {
+            /* Check to see if the packet contains data */
+            if (Endpoint_IsReadWriteAllowed()) {
+                len = Endpoint_BytesInEndpoint();
+                Endpoint_Read_Stream_LE(controller, len, NULL);
+                packetReceived(controller, len);
+                
+            }
+            Endpoint_ClearOUT();
+        }
         USB_USBTask();
     }
 }
@@ -34,11 +51,12 @@ void EVENT_USB_Device_ControlRequest(void) {
     }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
-    // TODO: change to EP_TYPE_BULK for midi
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE_IN,
-                               1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, EP_TYPE_INTERRUPT, HID_EPSIZE_OUT,
-                               1);
+    uint8_t type = EP_TYPE_INTERRUPT;
+    if (consoleType == MIDI) {
+        type = EP_TYPE_BULK;
+    }
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, DEVICE_EPSIZE_IN, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, DEVICE_EPSIZE_OUT, 2);
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

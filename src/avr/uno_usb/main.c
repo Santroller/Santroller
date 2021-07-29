@@ -63,6 +63,7 @@ int main(void) {
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     sei();
     // Wait for the 328p / 1280 to boot (we receive a READY byte)
+    // Since it is set in the isr, we need to treat it as volatile
     while (((volatile uint8_t*)buf)[0] != READY) {
     }
     USB_Init();
@@ -78,21 +79,19 @@ int main(void) {
             Endpoint_Write_Stream_LE(tmp, len, NULL);
             Endpoint_ClearIN();
         }
-        // TODO: we will need to work out the length of packets. thats going to be different for different consoles..
-
-        // data_transmit_packet_t* dt = data_transmit_packet_t * buf;
-        // Endpoint_SelectEndpoint(CONTROLLER_DATA_TRANSMIT_ID);
-        // if (Endpoint_IsOUTReceived()) {
-        //     packet->header.magic = VALID_PACKET;
-        //     packet->header.id = CONTROL_REQUEST_ID;
-        //     packet->header.len = sizeof(control_request_t);
-        //     /* Check to see if the packet contains data */
-        //     if (Endpoint_IsReadWriteAllowed()) {
-        //         Endpoint_Read_Stream_LE(buf, header->len - sizeof(packet_header_t), NULL);
-        //         txRX(&requestDataOut, sizeof(packet_header_t));
-        //     }
-        //     Endpoint_ClearOUT();
-        // }
+        data_transmit_packet_t* packet = (data_transmit_packet_t*)buf;
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
+        if (Endpoint_IsOUTReceived()) {
+            packet->header.magic = VALID_PACKET;
+            packet->header.id = CONTROLLER_DATA_TRANSMIT_ID;
+            packet->header.len = sizeof(control_request_t) + Endpoint_BytesInEndpoint();
+            /* Check to see if the packet contains data */
+            if (Endpoint_IsReadWriteAllowed()) {
+                Endpoint_Read_Stream_LE(packet->data, Endpoint_BytesInEndpoint(), NULL);
+                txRX(packet, packet->header.len);
+            }
+            Endpoint_ClearOUT();
+        }
     }
 }
 
@@ -100,6 +99,8 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (!(Endpoint_IsSETUPReceived())) return;
     bool isStk500 = false;      //TODO: define how we know if we have a stk500 packet
     bool isBootloader = false;  //TODO: define how we know if we have reached the bootloader
+    bool isMainReset = false;
+    bool isMainResume = false;
     bool hostToDevice = ((requestType_t)USB_ControlRequest.bmRequestType).bmRequestType_bit.direction == USB_DIR_HOST_TO_DEVICE;
     if (isBootloader) {
         jmpToBootloader = JUMP;
@@ -108,6 +109,19 @@ void EVENT_USB_Device_ControlRequest(void) {
         for (;;) {
         }
     }
+    if (isMainReset) {
+        Endpoint_ClearSETUP();
+        AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
+        Endpoint_ClearStatusStage();
+        return;
+    }
+    if (isMainResume) {
+        Endpoint_ClearSETUP();
+        AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+        Endpoint_ClearStatusStage();
+        return;
+    }
+
     if (isStk500) {
         Endpoint_ClearSETUP();
         stk500Len = USB_ControlRequest.wLength;
@@ -153,13 +167,14 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     packet_header_t packet = {
         VALID_PACKET, DEVICE_ID, sizeof(packet_header_t)};
     txRX(&packet, sizeof(packet_header_t));
-    uint8_t deviceType = ret->data[0];
+    // uint8_t deviceType = ret->data[0];
+    uint8_t consoleType = ret->data[1];
     uint8_t type = EP_TYPE_INTERRUPT;
-    if (deviceType >= MIDI_GAMEPAD) {
+    if (consoleType == MIDI) {
         type = EP_TYPE_BULK;
     }
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, sizein, 1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, sizeout, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, DEVICE_EPSIZE_IN, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, DEVICE_EPSIZE_OUT, 2);
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

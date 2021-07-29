@@ -6,6 +6,7 @@
 #include "descriptors.h"
 #include "lib_main.h"
 #include "report_descriptors.h"
+#include "usb/ps3_descriptors.h"
 #include "usb/xinput_descriptors.h"
 uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t **address, bool *valid) {
     *valid = true;
@@ -32,14 +33,21 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
                 }
             }
         } else if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
-            // hid read feature report received. Do we actually want to use this for the config api, or do we want to do something custom since we have raw usb access?
-            // 
+            if (consoleType == PS3) {
+                *address = ps3_init;
+                if (deviceType <= ROCK_BAND_DRUMS) {
+                    ps3_init[3] = 0x00;
+                } else if (deviceType <= GUITAR_HERO_DRUMS) {
+                    ps3_init[3] = 0x06;
+                }
+                return sizeof(ps3_init);
+            }
         }
     } else {
         // uint8_t *data = *address;
         if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
             // hid write feature report received. Do we actually want to use this for the config api, or do we want to do something custom since we have raw usb access?
-            // 
+            //
         }
     }
     *valid = false;
@@ -136,27 +144,87 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case TDTYPE_Device:
             address = &deviceDescriptor;
             size = deviceDescriptor.Header.Size;
-            if (deviceType >= SWITCH_GAMEPAD && deviceType < MOUSE) {
-                uint8_t offs = (deviceType - SWITCH_GAMEPAD);
-                deviceDescriptor.VendorID = vid[offs];
-                deviceDescriptor.ProductID = pid[offs];
+            if (consoleType == XBOX360) {
                 // TODO: for the 360, grab this from a passthrough pico
+            } else if (consoleType == PS3) {
+                if (deviceType > GUITAR_HERO_GUITAR) {
+                    deviceDescriptor.VendorID = SONY_VID;
+                    switch (deviceType) {
+                        case GUITAR_HERO_DRUMS:
+                            deviceDescriptor.ProductID = PS3_GH_DRUM_PID;
+                            break;
+                        case GUITAR_HERO_GUITAR:
+                            deviceDescriptor.ProductID = PS3_GH_GUITAR_PID;
+                            break;
+                        case ROCK_BAND_GUITAR:
+                            deviceDescriptor.ProductID = PS3_RB_GUITAR_PID;
+                            break;
+                        case ROCK_BAND_DRUMS:
+                            deviceDescriptor.ProductID = PS3_RB_DRUM_PID;
+                            break;
+                        case GUITAR_HERO_LIVE_GUITAR:
+                            deviceDescriptor.ProductID = PS3WIIU_GHLIVE_DONGLE_PID;
+                            break;
+                        case DJ_HERO_TURNTABLE:
+                            deviceDescriptor.ProductID = PS3_DJ_TURNTABLE_PID;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            } else if (consoleType == SWITCH) {
+                deviceDescriptor.VendorID = NINDENDO_VID;
+                deviceDescriptor.ProductID = PRO_CONTROLLER_PID;
+            } else if (consoleType == WII_RB) {
+                deviceDescriptor.VendorID = WII_RB_VID;
+                if (drum) {
+                    deviceDescriptor.ProductID = WII_RB_DRUM_PID;
+                } else {
+                    deviceDescriptor.ProductID = WII_RB_GUITAR_PID;
+                }
             }
             *descriptorAddress = address;
 
             return size;
         case TDTYPE_Configuration:
-            if (deviceType <= XINPUT_ARCADE_PAD) {
+            if (consoleType == XBOX360) {
                 address = &XBOXConfigurationDescriptor;
                 size = XBOXConfigurationDescriptor.Config.TotalConfigurationSize;
-                int subType = deviceType;
-                if (guitar) {
-                    subType = REAL_GUITAR_SUBTYPE;
-                } else if (drum) {
-                    subType = REAL_DRUM_SUBTYPE;
+                SubType_t subType;
+                switch (deviceType) {
+                    case GAMEPAD:
+                        subType = XINPUT_GAMEPAD;
+                        break;
+                    case WHEEL:
+                        subType = XINPUT_WHEEL;
+                        break;
+                    case ARCADE_STICK:
+                        subType = XINPUT_ARCADE_STICK;
+                        break;
+                    case GUITAR_HERO_GUITAR:
+                    case ROCK_BAND_GUITAR:
+                    case GUITAR_HERO_LIVE_GUITAR:
+                        subType = XINPUT_GUITAR_ALTERNATE;
+                        break;
+                    case GUITAR_HERO_DRUMS:
+                    case ROCK_BAND_DRUMS:
+                        subType = XINPUT_DRUMS;
+                        break;
+                    case FLIGHT_STICK:
+                        subType = XINPUT_FLIGHT_STICK;
+                        break;
+                    case DANCE_PAD:
+                        subType = XINPUT_DANCE_PAD;
+                        break;
+                    case ARCADE_PAD:
+                        subType = XINPUT_ARCADE_PAD;
+                        break;
+                    case DJ_HERO_TURNTABLE:
+                        subType = XINPUT_TURNTABLE;
+                        break;
                 }
                 XBOXConfigurationDescriptor.Interface1ID.subtype = subType;
-            } else if (deviceType <= MOUSE) {
+            } else if (consoleType == KEYBOARD_MOUSE) {
                 address = &HIDConfigurationDescriptor;
                 size = HIDConfigurationDescriptor.Config.TotalConfigurationSize;
             } else {
@@ -169,12 +237,15 @@ uint16_t descriptorRequest(const uint16_t wValue,
             return size;
             // break;
         case THID_DTYPE_Report:
-            if (deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
+            if (consoleType == KEYBOARD_MOUSE) {
                 address = kbd_report_descriptor;
                 size = sizeof(kbd_report_descriptor);
-            } else {
+            } else if (consoleType == PS3 || consoleType == WII_RB) {
                 address = ps3_report_descriptor;
                 size = sizeof(ps3_report_descriptor);
+            } else if (consoleType == SWITCH) {
+                address = switch_report_descriptor;
+                size = sizeof(switch_report_descriptor);
             }
             *descriptorAddress = address;
             return size;

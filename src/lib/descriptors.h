@@ -38,6 +38,13 @@
 #define MaxPhysicalVal 128
 #define AbsoluteCoords false
 
+#ifdef __AVR__
+#include <avr/pgmspace.h>
+#else
+#define memcpy_P memcpy
+#define PROGMEM
+#endif
+
 enum endpoint_dir_t {
     ENDPOINT_OUT = 0x00,
     ENDPOINT_IN = 0x80
@@ -125,10 +132,13 @@ typedef struct {
     TUSB_Descriptor_Interface_t InterfaceConfig;
 } TUSB_Descriptor_MIDI_Configuration_t;
 
-extern TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor;
-extern TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor;
-extern TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor;
-extern TUSB_Descriptor_Device_t deviceDescriptor;
-extern const TUSB_OSDescriptor_t OSDescriptorString;
-extern const TUSB_Descriptor_String_t *const descriptorStrings[3];
-extern const TUSB_Descriptor_String_t xboxString;
+extern const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor;
+extern const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor;
+extern const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor;
+extern const PROGMEM TUSB_Descriptor_Device_t deviceDescriptor;
+extern const PROGMEM TUSB_OSDescriptor_t OSDescriptorString;
+extern const PROGMEM TUSB_Descriptor_String_t *const descriptorStrings[3];
+extern const PROGMEM TUSB_Descriptor_String_t xboxString;
+extern const PROGMEM TUSB_Descriptor_String_t languageString;
+extern const PROGMEM TUSB_Descriptor_String_t manufacturerString;
+extern const PROGMEM TUSB_Descriptor_String_t productString;

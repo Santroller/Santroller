@@ -37,7 +37,7 @@ typedef enum {
     THID_UNIT_DEGREES = 0x14
 } THID_Unit;
 
-const TUSB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
+const PROGMEM TUSB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
     // Controller
     THID_RI_USAGE_PAGE(8, THID_USAGE_PAGE_GENERIC_DESKTOP),
     THID_RI_USAGE(8, THID_USAGE_GAMEPAD),
@@ -126,7 +126,7 @@ const TUSB_Descriptor_HIDReport_Datatype_t ps3_report_descriptor[] = {
     THID_RI_END_COLLECTION(0),
 };
 
-const TUSB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[] = {
+const PROGMEM TUSB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[] = {
     THID_RI_USAGE_PAGE(8, THID_USAGE_PAGE_GENERIC_DESKTOP),
     THID_RI_USAGE(8, THID_USAGE_KEYBOARD),
     THID_RI_COLLECTION(8, 0),
@@ -196,123 +196,5 @@ const TUSB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[] = {
     THID_RI_REPORT_SIZE(8, 8),
     THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_RELATIVE),
     THID_RI_END_COLLECTION(0),
-    THID_RI_END_COLLECTION(0),
-};
-
-const TUSB_Descriptor_HIDReport_Datatype_t switch_report_descriptor[] = {
-    THID_RI_USAGE_PAGE(8,1),                         // Generic desktop controls
-    THID_RI_LOGICAL_MINIMUM(8,0),                    // Logical Minimum (0)
-    THID_RI_USAGE(8,4),                              // Joystick
-    THID_RI_COLLECTION(8,1),                         // Application
-
-    THID_RI_REPORT_ID(8,48),                         // Report ID (48)
-    THID_RI_USAGE_PAGE(8,1),                         // Generic desktop controls
-    THID_RI_USAGE_PAGE(8,9),                         // Button
-    THID_RI_USAGE_MINIMUM(8,1),                      // Usage Minimum (0x01)
-    THID_RI_USAGE_MAXIMUM(8,0x0A),                   // Usage Maximum (0x0A)
-    THID_RI_LOGICAL_MINIMUM(8,0),                    // button off state
-    THID_RI_LOGICAL_MAXIMUM(8,1),                    // button on state
-    THID_RI_REPORT_SIZE(8,1),                        // 1 bit per report field
-    THID_RI_REPORT_COUNT(8,10),                      // 10 report fields (10 buttons)
-    THID_RI_UNIT_EXPONENT(8,0),                      //
-    THID_RI_UNIT(8,0),                               // no unit
-    THID_RI_INPUT(8,2),                              // Variable input
-    THID_RI_USAGE_PAGE(8,9),                         // Button
-    THID_RI_USAGE_MINIMUM(8,0x0B),                   // Usage Minimum (0x0B)
-    THID_RI_USAGE_MAXIMUM(8,0x0E),                   // Usage Maximum (0x0E)
-    THID_RI_LOGICAL_MINIMUM(8,0),                    // button off state
-    THID_RI_LOGICAL_MAXIMUM(8,1),                    // button on state
-    THID_RI_REPORT_SIZE(8,1),                        // 1 bit per report field
-    THID_RI_REPORT_COUNT(8,4),                       // 4 report fields (4 buttons)
-    THID_RI_INPUT(8,2),                              // Variable input
-    THID_RI_REPORT_SIZE(8,1),                        //
-    THID_RI_REPORT_COUNT(8,2),                       // 2 empty bits?
-    THID_RI_INPUT(8,3),                              // Abs input?
-
-    /*
-     * Probably joystick data (16 bits per axis)
-     */
-    THID_RI_USAGE(32,0x010001),                      // Generic Desktop: Pointer
-    THID_RI_COLLECTION(8,0),                         // Physical
-    THID_RI_USAGE(32,0x010030),                      // Axis 0
-    THID_RI_USAGE(32,0x010031),                      // Axis 1
-    THID_RI_USAGE(32,0x010032),                      // Axis 2
-    THID_RI_USAGE(32,0x010035),                      // Axis 3
-    THID_RI_LOGICAL_MINIMUM(8,0),
-    THID_RI_LOGICAL_MAXIMUM(32,65535),
-    THID_RI_REPORT_SIZE(8,16),
-    THID_RI_REPORT_COUNT(8,4),
-    THID_RI_INPUT(8,2),                              // Variable input
-    THID_RI_END_COLLECTION(0),
-
-    /*
-     * DPAD (HAT)
-     */
-    THID_RI_USAGE(32,0x010039),
-    THID_RI_LOGICAL_MINIMUM(8,0),
-    THID_RI_LOGICAL_MAXIMUM(8,7),                    // 8 valid HAT states, sending 0x08 = nothing pressed
-    THID_RI_PHYSICAL_MINIMUM(8,0),
-    THID_RI_PHYSICAL_MAXIMUM(16,315),                // HAT "rotation"
-    THID_RI_UNIT(8,0x14),                            // System: English Rotation, Length: Centimeter
-    THID_RI_REPORT_SIZE(8,4),                        // 4 bits per report field
-    THID_RI_REPORT_COUNT(8,1),                       // 1 report field (a nibble containing entire HAT state)
-    THID_RI_INPUT(8,2),                              // Variable input
-
-    /*
-     * Four unrecognized buttons
-     */
-    THID_RI_USAGE_PAGE(8,9),                         // Button
-    THID_RI_USAGE_MINIMUM(8,0x0F),                   // Usage Minimum (0x0F)
-    THID_RI_USAGE_MAXIMUM(8,0x12),                   // Usage Maximum (0x12)
-    THID_RI_LOGICAL_MINIMUM(8,0),                    // button off state
-    THID_RI_LOGICAL_MAXIMUM(8,1),                    // button on state
-    THID_RI_REPORT_SIZE(8,1),                        // 1 bit per report field
-    THID_RI_REPORT_COUNT(8,4),                       // 4 report fields (4 buttons)
-    THID_RI_INPUT(8,2),                              // Variable input
-    THID_RI_REPORT_SIZE(8,8),                        //
-    THID_RI_REPORT_COUNT(8,52),                      //
-    THID_RI_INPUT(8,3),                              // Input
-
-    /*
-     * Vendor defined
-     */
-    THID_RI_USAGE_PAGE(16,0xFF00),
-
-    THID_RI_REPORT_ID(8,33),                         // Report ID (33)
-    THID_RI_USAGE(8,1),                              // Vendor defined: 1
-    THID_RI_REPORT_SIZE(8,8),
-    THID_RI_REPORT_COUNT(8,63),
-    THID_RI_INPUT(8,3),                              // Input
-
-    THID_RI_REPORT_ID(8,0x81),                       // Report ID (-127)
-    THID_RI_USAGE(8,2),                              // Vendor defined: 2
-    THID_RI_REPORT_SIZE(8,8),
-    THID_RI_REPORT_COUNT(8,63),
-    THID_RI_INPUT(8,3),                              // Input
-
-    THID_RI_REPORT_ID(8,1),                          // Report ID (1)
-    THID_RI_USAGE(8,3),                              // Vendor defined: 3
-    THID_RI_REPORT_SIZE(8,8),
-    THID_RI_REPORT_COUNT(8,63),
-    THID_RI_OUTPUT(8,0x83),                          // Output
-
-    THID_RI_REPORT_ID(8,16),                         // Report ID (16)
-    THID_RI_USAGE(8,4),                              // Vendor defined: 4
-    THID_RI_REPORT_SIZE(8,8),
-    THID_RI_REPORT_COUNT(8,63),
-    THID_RI_OUTPUT(8,0x83),                          // Output
-
-    THID_RI_REPORT_ID(8,0x80),                       // Report ID (-128)
-    THID_RI_USAGE(8,5),                              // Vendor defined: 5
-    THID_RI_REPORT_SIZE(8,8),
-    THID_RI_REPORT_COUNT(8,63),
-    THID_RI_OUTPUT(8,0x83),                          // Output
-
-    THID_RI_REPORT_ID(8,0x82),                       // Report ID (-126)
-    THID_RI_USAGE(8,6),                              // Vendor defined: 6
-    THID_RI_REPORT_SIZE(8,8),
-    THID_RI_REPORT_COUNT(8,63),
-    THID_RI_OUTPUT(8,0x83),                          // Output
-
     THID_RI_END_COLLECTION(0),
 };

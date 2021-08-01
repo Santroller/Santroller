@@ -22,8 +22,6 @@ add_executable(
     ../lib/lib_main.c
     ../lib/report_descriptors.c
     ../lib/usb.c
-    ../lib/switch/EmulatedSPI.c
-    ../lib/switch/response.c
     main.c
     xinput_device.c
 )
@@ -31,10 +29,12 @@ target_include_directories(${TARGET} PUBLIC
       ${SRC}
       ../lib
       .)
+# the pico doesn't really have the port concept that the avr controllers have
 add_compile_definitions(
   PORTS 26
   NUM_DIGITAL_PINS 26
   NUM_ANALOG_INPUTS 3
+  PINS_PER_PORT 1
 )
 set(XIP_BASE 0x10000000)
 math(EXPR RF_TARGET_OFFSET "(256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)

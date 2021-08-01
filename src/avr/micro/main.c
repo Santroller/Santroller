@@ -22,7 +22,6 @@ int main(void) {
                 len = Endpoint_BytesInEndpoint();
                 Endpoint_Read_Stream_LE(controller, len, NULL);
                 packetReceived(controller, len);
-                
             }
             Endpoint_ClearOUT();
         }
@@ -62,5 +61,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void** const descriptorAddress) {
-    return descriptorRequest(wValue, wIndex, descriptorAddress);
+    *descriptorAddress = buf;
+    return descriptorRequest(wValue, wIndex, buf);
 }

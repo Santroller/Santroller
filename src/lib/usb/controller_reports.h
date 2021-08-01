@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "attributes.h"
-#include "../switch/datatypes.h"
 #include "midi_descriptors.h"
 
 #define SIMULTANEOUS_KEYS 6
@@ -51,6 +50,15 @@ typedef struct {
   int16_t r_y;
   uint8_t reserved_1[6];
 } USB_XInputReport_Data_t;
+
+typedef struct {
+  uint8_t rid;
+  uint8_t rsize;
+  uint16_t buttons;
+  uint8_t triggers[2];
+  int16_t joys[4];
+  uint8_t reserved_1[6];
+} USB_XInputReport_Arr_Data_t;
 
 typedef struct {
   TMIDI_EventPacket_t midi[SIMULTANEOUS_MIDI];
@@ -128,5 +136,4 @@ typedef union {
   USB_XInputReport_Data_t xinput;
   USB_MIDI_Data_t midi;
   USB_MouseReport_Data_t mouse;
-  USB_SwitchExtendedReport_t sw;
 } USB_Report_Data_t;

@@ -43,4 +43,4 @@ typedef union
 uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength,  uint8_t **const buffer, bool *valid);
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
-                           const void **const descriptorAddress);
+                           void* descriptorBuffer);

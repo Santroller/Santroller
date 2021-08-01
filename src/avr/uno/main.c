@@ -41,12 +41,8 @@ int main(void) {
                 memcpy(buf + sizeof(packet_header_t), controller, clen);
                 break;
             case DESCRIPTOR_ID:
-                const void* data;
-                uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, &data);
+                uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, buf + sizeof(packet_header_t));
                 header->len = sizeof(packet_header_t) + len;
-                if (len) {
-                    memcpy(buf + sizeof(packet_header_t), data, len);
-                }
                 break;
             case CONTROL_REQUEST_ID:
                 uint8_t* dataPtr;

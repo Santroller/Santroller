@@ -4,7 +4,6 @@
 
 #include "lib_main.h"
 #include "usb/wcid_descriptors.h"
-
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
@@ -13,29 +12,28 @@
  * language ID table available at USB.org what languages the device supports for
  * its string descriptors.
  */
-const TUSB_Descriptor_String_t languageString = TUSB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
+const PROGMEM TUSB_Descriptor_String_t languageString = TUSB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
 /** Manufacturer descriptor string. This is a Unicode string containing the
  * manufacturer's details in human readable form, and is read out upon request
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const TUSB_Descriptor_String_t manufacturerString = TUSB_STRING_DESCRIPTOR_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
+const PROGMEM TUSB_Descriptor_String_t manufacturerString = TUSB_STRING_DESCRIPTOR_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const TUSB_Descriptor_String_t productString = TUSB_STRING_DESCRIPTOR_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
+const PROGMEM TUSB_Descriptor_String_t productString = TUSB_STRING_DESCRIPTOR_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
 
 // TODO: is the below actually required for a switch? Borrow one and test
 // const USB_Descriptor_String_t PROGMEM ManufacturerString = USB_STRING_DESCRIPTOR(L"Nintendo Co., Ltd.");
 // const USB_Descriptor_String_t PROGMEM ProductString      = USB_STRING_DESCRIPTOR(L"Pro Controller");
 // const USB_Descriptor_String_t PROGMEM SerialNumberString = USB_STRING_DESCRIPTOR(L"000000000001");
 
-
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication
  */
-const TUSB_Descriptor_String_t xboxString = TUSB_STRING_DESCRIPTOR_ARRAY(
+const PROGMEM TUSB_Descriptor_String_t xboxString = TUSB_STRING_DESCRIPTOR_ARRAY(
     'X', 'b', 'o', 'x', ' ', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y',
     ' ', 'M', 'e', 't', 'h', 'o', 'd', ' ', '3', ',', ' ',
     'V', 'e', 'r', 's', 'i', 'o', 'n', ' ', '1', '.', '0', '0', ',',
@@ -44,20 +42,24 @@ const TUSB_Descriptor_String_t xboxString = TUSB_STRING_DESCRIPTOR_ARRAY(
     'C', 'o', 'r', 'p', 'o', 'r', 'a', 't', 'i', 'o', 'n', '.', ' ',
     'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ',
     'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.');
-const TUSB_Descriptor_String_t *const descriptorStrings[] = {
+const PROGMEM TUSB_Descriptor_String_t *const PROGMEM descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
 that our device has a Compatible ID to provide. */
-const TUSB_OSDescriptor_t OSDescriptorString = {
+const PROGMEM TUSB_OSDescriptor_t OSDescriptorString = {
     Header : {Size : sizeof(TUSB_OSDescriptor_t), Type : TDTYPE_String},
     Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
     VendorCode : REQ_GET_OS_FEATURE_DESCRIPTOR,
     Reserved : 0
 };
 
-TUSB_Descriptor_Device_t deviceDescriptor = {
+// TODO: while its great having this stuff not in PROGMEM, it does use a fuck ton of ram.
+// we should probably put it back in progmem and just use a buffer for loading the descriptors.
+// For the uno we even already have the buffer that we can just fill,
+// for the micro we can create a buffer and we will be fine.
+const PROGMEM TUSB_Descriptor_Device_t deviceDescriptor = {
     Header : {Size : sizeof(deviceDescriptor), Type : TDTYPE_Device},
     USBSpecification : TVERSION_BCD(2, 0, 0),
     Class : 0xFF,
@@ -73,7 +75,7 @@ TUSB_Descriptor_Device_t deviceDescriptor = {
     NumberOfConfigurations : 1
 };
 
-TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor = {
+const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor = {
     Config : {Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
                         Type : TDTYPE_Configuration},
               TotalConfigurationSize : sizeof(TUSB_Descriptor_Configuration_XBOX_t),
@@ -151,7 +153,7 @@ TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor = {
     },
 };
 
-TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
+const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
     Config : {
         Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
                   Type : TDTYPE_Configuration},
@@ -210,7 +212,7 @@ TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
     },
 };
 
-TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor = {
+const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor = {
     Config : {
         Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
                   Type : TDTYPE_Configuration},

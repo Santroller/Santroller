@@ -6,6 +6,7 @@
 #include "descriptors.h"
 #include "lib_main.h"
 #include "report_descriptors.h"
+#include "string.h"
 #include "usb/ps3_descriptors.h"
 #include "usb/xinput_descriptors.h"
 uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t **address, bool *valid) {
@@ -32,7 +33,7 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
                     return sizeof(ID);
                 }
             }
-        } else if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
+        } else if (request == THID_REQ_GetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
             if (consoleType == PS3) {
                 *address = ps3_init;
                 if (deviceType <= ROCK_BAND_DRUMS) {
@@ -45,7 +46,7 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
         }
     } else {
         // uint8_t *data = *address;
-        if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
+        if (request == THID_REQ_SetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
             // hid write feature report received. Do we actually want to use this for the config api, or do we want to do something custom since we have raw usb access?
             //
         }
@@ -135,61 +136,60 @@ const uint16_t pid[] = {0x0092, 0x0100, 0x0120, 0x0200,
                         0x0210, ARDWIINO_PID, 0x0004, 0x074B};
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
-                           const void **const descriptorAddress) {
+                           void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
     uint16_t size = NO_DESCRIPTOR;
-    const void *address = NULL;
     switch (descriptorType) {
         case TDTYPE_Device:
-            address = &deviceDescriptor;
-            size = deviceDescriptor.Header.Size;
+            size = sizeof(TUSB_Descriptor_Device_t);
+            memcpy_P(descriptorBuffer, &deviceDescriptor, size);
+            TUSB_Descriptor_Device_t *dev = (TUSB_Descriptor_Device_t *)descriptorBuffer;
             if (consoleType == XBOX360) {
                 // TODO: for the 360, grab this from a passthrough pico
             } else if (consoleType == PS3) {
                 if (deviceType > GUITAR_HERO_GUITAR) {
-                    deviceDescriptor.VendorID = SONY_VID;
+                    dev->VendorID = SONY_VID;
                     switch (deviceType) {
                         case GUITAR_HERO_DRUMS:
-                            deviceDescriptor.ProductID = PS3_GH_DRUM_PID;
+                            dev->ProductID = PS3_GH_DRUM_PID;
                             break;
                         case GUITAR_HERO_GUITAR:
-                            deviceDescriptor.ProductID = PS3_GH_GUITAR_PID;
+                            dev->ProductID = PS3_GH_GUITAR_PID;
                             break;
                         case ROCK_BAND_GUITAR:
-                            deviceDescriptor.ProductID = PS3_RB_GUITAR_PID;
+                            dev->ProductID = PS3_RB_GUITAR_PID;
                             break;
                         case ROCK_BAND_DRUMS:
-                            deviceDescriptor.ProductID = PS3_RB_DRUM_PID;
+                            dev->ProductID = PS3_RB_DRUM_PID;
                             break;
                         case GUITAR_HERO_LIVE_GUITAR:
-                            deviceDescriptor.ProductID = PS3WIIU_GHLIVE_DONGLE_PID;
+                            dev->ProductID = PS3WIIU_GHLIVE_DONGLE_PID;
                             break;
                         case DJ_HERO_TURNTABLE:
-                            deviceDescriptor.ProductID = PS3_DJ_TURNTABLE_PID;
+                            dev->ProductID = PS3_DJ_TURNTABLE_PID;
                             break;
                         default:
                             break;
                     }
                 }
             } else if (consoleType == SWITCH) {
-                deviceDescriptor.VendorID = NINDENDO_VID;
-                deviceDescriptor.ProductID = PRO_CONTROLLER_PID;
+                dev->VendorID = HORI_VID;
+                dev->ProductID = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
             } else if (consoleType == WII_RB) {
-                deviceDescriptor.VendorID = WII_RB_VID;
+                dev->VendorID = WII_RB_VID;
                 if (drum) {
-                    deviceDescriptor.ProductID = WII_RB_DRUM_PID;
+                    dev->ProductID = WII_RB_DRUM_PID;
                 } else {
-                    deviceDescriptor.ProductID = WII_RB_GUITAR_PID;
+                    dev->ProductID = WII_RB_GUITAR_PID;
                 }
             }
-            *descriptorAddress = address;
-
-            return size;
+            break;
         case TDTYPE_Configuration:
             if (consoleType == XBOX360) {
-                address = &XBOXConfigurationDescriptor;
-                size = XBOXConfigurationDescriptor.Config.TotalConfigurationSize;
+                size = sizeof(TUSB_Descriptor_Configuration_XBOX_t);
+                memcpy_P(descriptorBuffer, &XBOXConfigurationDescriptor, size);
+                TUSB_Descriptor_Configuration_XBOX_t *desc = (TUSB_Descriptor_Configuration_XBOX_t *)descriptorBuffer;
                 SubType_t subType;
                 switch (deviceType) {
                     case GAMEPAD:
@@ -223,45 +223,44 @@ uint16_t descriptorRequest(const uint16_t wValue,
                         subType = XINPUT_TURNTABLE;
                         break;
                 }
-                XBOXConfigurationDescriptor.Interface1ID.subtype = subType;
-            } else if (consoleType == KEYBOARD_MOUSE) {
-                address = &HIDConfigurationDescriptor;
-                size = HIDConfigurationDescriptor.Config.TotalConfigurationSize;
+                desc->Interface1ID.subtype = subType;
+            } else if (consoleType == MIDI) {
+                size = sizeof(TUSB_Descriptor_MIDI_Configuration_t);
+                memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
             } else {
-                address = &MIDIConfigurationDescriptor;
-                size = MIDIConfigurationDescriptor.Config.TotalConfigurationSize;
+                size = sizeof(TUSB_Descriptor_HID_Configuration_t);
+                memcpy_P(descriptorBuffer, &HIDConfigurationDescriptor, size);
             }
-            // return NO_DESCRIPTOR;
-            *descriptorAddress = address;
-
-            return size;
-            // break;
+            break;
         case THID_DTYPE_Report:
+            const void *address;
             if (consoleType == KEYBOARD_MOUSE) {
                 address = kbd_report_descriptor;
                 size = sizeof(kbd_report_descriptor);
-            } else if (consoleType == PS3 || consoleType == WII_RB) {
+            } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
                 address = ps3_report_descriptor;
                 size = sizeof(ps3_report_descriptor);
-            } else if (consoleType == SWITCH) {
-                address = switch_report_descriptor;
-                size = sizeof(switch_report_descriptor);
-            }
-            *descriptorAddress = address;
-            return size;
+            } 
+            memcpy_P(descriptorBuffer, address, size);
+            break;
         case TDTYPE_String:
+            const void *str;
             if (descriptorNumber == 4) {
-                address = &xboxString;
+                str = &xboxString;
             } else if (descriptorNumber < 4) {
-                address = descriptorStrings[descriptorNumber];
+                str = (void *)pgm_read_word(descriptorStrings + descriptorNumber);
             } else if (descriptorNumber == 0xEE) {
-                address = &OSDescriptorString;
+                str = &OSDescriptorString;
             } else {
                 break;
             }
-            *descriptorAddress = address;
-            size = ((TUSB_StdDescriptor_String_t *)address)->bLength;
-            return size;
+#ifdef __AVR__
+            size = pgm_read_byte(str + offsetof(TUSB_Descriptor_Header_t, Size));
+#else
+            size = ((TUSB_Descriptor_Header_t*)str)->Size;
+#endif
+            memcpy_P(descriptorBuffer, str, size);
+            break;
     }
-    return NO_DESCRIPTOR;
+    return size;
 }

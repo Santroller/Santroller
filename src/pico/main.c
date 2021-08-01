@@ -56,30 +56,25 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
-    const void *data;
-    descriptorRequest(TDTYPE_Device << 8, 0, &data);
-    return data;
+    descriptorRequest(TDTYPE_Device << 8, 0, buf);
+    return buf;
 }
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
-    const void *data;
-    descriptorRequest(THID_DTYPE_Report << 8, 0, &data);
-    return data;
+    descriptorRequest(THID_DTYPE_Report << 8, 0, buf);
+    return buf;
 }
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;  // for multiple configurations
-    const void *data;
-    descriptorRequest(TDTYPE_Configuration << 8, 0, &data);
-    return data;
+    descriptorRequest(TDTYPE_Configuration << 8, 0, buf);
+    return buf;
 }
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
-    const void *data;
     // Arduinos handle their own serial descriptor, so theres no point in sharing an implementation there.
     if (index == 3) {
         return (uint16_t *)&serialString;
-    } else {
-        descriptorRequest(TDTYPE_String << 8 | index, 0, &data);
     }
-    return data;
+    descriptorRequest(TDTYPE_String << 8 | index, 0, buf);
+    return buf;
 }
 
 int main() {

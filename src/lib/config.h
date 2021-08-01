@@ -3,12 +3,6 @@
 #include <stdint.h>
 
 #include "defines.h"
-#ifndef NUM_DIGITAL_PINS
-#define NUM_DIGITAL_PINS 70
-#define NUM_ANALOG_INPUTS 20
-#define PORTS 6
-#define PINS_PER_PORT 7
-#endif
 typedef struct {
     uint8_t pin;
     uint8_t red;
@@ -16,29 +10,34 @@ typedef struct {
     uint8_t blue;
 } Led_t;
 typedef struct {
-  int8_t multiplier;
-  int8_t offset;
-  int8_t deadzone;
+    int8_t multiplier;
+    int8_t offset;
+    int8_t deadzone;
 } AxisScale_t;
 typedef struct {
-    uint8_t type;
-    uint8_t note;
-    uint8_t channel;
+    uint8_t note : 7;
+    bool isCC : 1;
+    uint8_t channel : 4;
 } Midi_t;
 typedef struct {
+    AxisScale_t scale;
+    bool mapToDigital;
+    uint8_t trigger;
+    uint8_t channel;
+} AnalogData_t;
+typedef struct {
     uint8_t binding;
+    bool pulldown;
+    bool pullup;
     Led_t led;
     Midi_t midi;
-    AxisScale_t scale;
-    bool digital;
+    uint8_t analogID; //In the tool itself, we can store a list of what each analog pin maps to, so each analog pin has a unique id in the analog list
 } Binding_t;
 
-
 typedef struct {
-    Binding_t digital[PORTS * 7];
+    Binding_t bindings[PORTS * PINS_PER_PORT];
+    AnalogData_t analog[NUM_ANALOG_INPUTS];
 } Bindings_t;
-uint16_t test = sizeof(Bindings_t);
-
 
 typedef struct {
     uint8_t inputType;
@@ -50,13 +49,9 @@ typedef struct {
     bool mapStartSelectToHome;
     bool mapNunchukAccelToRightJoy;
     uint32_t signature;
-    uint32_t version;
 } MainConfig_t;
 
 typedef struct {
-    uint8_t triggerThreshold;
-    uint8_t joyThreshold;
-    uint8_t drumThreshold;
     uint8_t mpu6050Orientation;
     int16_t tiltSensitivity;
 } AxisConfig_t;

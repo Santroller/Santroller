@@ -3,9 +3,11 @@
 #include "descriptors.h"
 #include "lib_main.h"
 #include "usb.h"
+#include "avr.h"
 uint8_t controller[DEVICE_EPSIZE_IN];
 int main(void) {
     init();
+    setupMicrosTimer();
     USB_Init();
     sei();
     while (true) {

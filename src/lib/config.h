@@ -37,6 +37,9 @@ typedef struct {
 typedef struct {
     Binding_t bindings[PORTS * PINS_PER_PORT];
     AnalogData_t analog[NUM_ANALOG_INPUTS];
+    bool mapLeftJoystickToDPad;
+    bool mapStartSelectToHome;
+    bool mapNunchukAccelToRightJoy;
 } Bindings_t;
 
 typedef struct {
@@ -45,9 +48,6 @@ typedef struct {
     uint8_t tiltType;
     uint8_t pollRate;
     uint8_t fretLEDMode;
-    bool mapLeftJoystickToDPad;
-    bool mapStartSelectToHome;
-    bool mapNunchukAccelToRightJoy;
     uint32_t signature;
 } MainConfig_t;
 
@@ -61,16 +61,9 @@ typedef struct {
     uint32_t id;
 } RFConfig_t;
 
-typedef struct {
-    uint8_t buttons;
-    uint8_t strum;
-    bool combinedStrum;
-} DebounceConfig_t;
 
 typedef struct {
     MainConfig_t main;
     AxisConfig_t axis;
     RFConfig_t rf;
-    uint8_t pinsSP;
-    DebounceConfig_t debounce;
 } Configuration_t;

@@ -33,7 +33,7 @@ volatile uint16_t stk500Len = 0;
 void txRX(void* data, uint8_t len) {
     idx_tx = len;
     bufTx = (uint8_t*)data;
-    UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
+    UCSR1B = (_BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
     while (!ready) {
     }
     ready = false;
@@ -190,6 +190,11 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     *descriptorAddress = ret->data;
     return ret->header.len - sizeof(packet_header_t);
 }
+// Can we write this without needing a circular buffer?
+// Otherwise, a circular buffer isnt too horrific but it would be a bit nicer without out.
+
+// Could we set the length to some magic number after we finish with a packet
+// And then we would know from the main if the length has been set, and how many bytes to
 uint8_t idx = 0;
 ISR(USART1_RX_vect, ISR_BLOCK) {
     buf[idx] = UDR1;

@@ -76,7 +76,7 @@ enum interfaces_t {
     INTERFACE_ID_Padding = 2,
     INTERFACE_ID_XBOX_Security = 3,
     INTERFACE_ID_ControlStream =
-        1, /**< MIDI Control Stream interface descriptor ID */
+        0, /**< MIDI Control Stream interface descriptor ID */
     INTERFACE_ID_AudioStream =
         2, /**< MIDI Audio Stream interface descriptor ID */
 };

@@ -1,8 +1,8 @@
 #pragma once
 #include "std_descriptors.h"
 
-#define CONCAT(x, y)            x ## y
-#define CONCAT_EXPANDED(x, y)   CONCAT(x, y)
+#define TCONCAT(x, y) x##y
+#define TCONCAT_EXPANDED(x, y) TCONCAT(x, y)
 /* Macros: */
 #define THID_RI_DATA_SIZE_MASK 0x03
 #define THID_RI_TYPE_MASK 0x0C
@@ -16,15 +16,17 @@
 #define THID_RI_DATA_BITS_8 0x01
 #define THID_RI_DATA_BITS_16 0x02
 #define THID_RI_DATA_BITS_32 0x03
-#define THID_RI_DATA_BITS(DataBits) CONCAT_EXPANDED(THID_RI_DATA_BITS_, DataBits)
+#define THID_RI_DATA_BITS(DataBits) TCONCAT_EXPANDED(THID_RI_DATA_BITS_, DataBits)
 
 #define _THID_RI_ENCODE_0(Data)
 #define _THID_RI_ENCODE_8(Data) , (Data & 0xFF)
-#define _THID_RI_ENCODE_16(Data) _THID_RI_ENCODE_8(Data) \
-_THID_RI_ENCODE_8(Data >> 8)
-#define _THID_RI_ENCODE_32(Data) _THID_RI_ENCODE_16(Data) \
-_THID_RI_ENCODE_16(Data >> 16)
-#define _THID_RI_ENCODE(DataBits, ...) CONCAT_EXPANDED(_THID_RI_ENCODE_, DataBits(__VA_ARGS__))
+#define _THID_RI_ENCODE_16(Data) \
+    _THID_RI_ENCODE_8(Data)      \
+    _THID_RI_ENCODE_8(Data >> 8)
+#define _THID_RI_ENCODE_32(Data) \
+    _THID_RI_ENCODE_16(Data)     \
+    _THID_RI_ENCODE_16(Data >> 16)
+#define _THID_RI_ENCODE(DataBits, ...) TCONCAT_EXPANDED(_THID_RI_ENCODE_, DataBits(__VA_ARGS__))
 
 #define _THID_RI_ENTRY(Type, Tag, DataBits, ...) (Type | Tag | THID_RI_DATA_BITS(DataBits)) _THID_RI_ENCODE(DataBits, (__VA_ARGS__))
 
@@ -404,7 +406,7 @@ _THID_RI_ENCODE_16(Data >> 16)
         THID_RI_PHYSICAL_MAXIMUM(16, MaxPhysicalVal),                                             \
         THID_RI_REPORT_COUNT(8, 3),                                                               \
         THID_RI_REPORT_SIZE(8, (((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16)),         \
-        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                     \
+        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                  \
         THID_RI_END_COLLECTION(0),                                                                \
         THID_RI_USAGE_PAGE(8, 0x09),                                                              \
         THID_RI_USAGE_MINIMUM(8, 0x01),                                                           \
@@ -413,10 +415,10 @@ _THID_RI_ENCODE_16(Data >> 16)
         THID_RI_LOGICAL_MAXIMUM(8, 0x01),                                                         \
         THID_RI_REPORT_SIZE(8, 0x01),                                                             \
         THID_RI_REPORT_COUNT(8, Buttons),                                                         \
-        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                     \
+        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                  \
         THID_RI_REPORT_SIZE(8, (Buttons % 8) ? (8 - (Buttons % 8)) : 0),                          \
         THID_RI_REPORT_COUNT(8, 0x01),                                                            \
-        THID_RI_INPUT(8, THID_IOF_CONSTANT),                                                       \
+        THID_RI_INPUT(8, THID_IOF_CONSTANT),                                                      \
         THID_RI_END_COLLECTION(0)
 
 /** \hideinitializer
@@ -435,38 +437,38 @@ _THID_RI_ENCODE_16(Data >> 16)
 		 *
 		 *  \param[in] MaxKeys  Number of simultaneous keys that can be reported at the one time (8-bit).
 		 */
-#define THID_DESCRIPTOR_KEYBOARD(MaxKeys)                                                             \
-    THID_RI_USAGE_PAGE(8, 0x01),                                                                      \
-        THID_RI_USAGE(8, 0x06),                                                                       \
-        THID_RI_COLLECTION(8, 0x01),                                                                  \
-        THID_RI_USAGE_PAGE(8, 0x07),                                                                  \
-        THID_RI_USAGE_MINIMUM(8, 0xE0),                                                               \
-        THID_RI_USAGE_MAXIMUM(8, 0xE7),                                                               \
-        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                             \
-        THID_RI_LOGICAL_MAXIMUM(8, 0x01),                                                             \
-        THID_RI_REPORT_SIZE(8, 0x01),                                                                 \
-        THID_RI_REPORT_COUNT(8, 0x08),                                                                \
-        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                         \
-        THID_RI_REPORT_COUNT(8, 0x01),                                                                \
-        THID_RI_REPORT_SIZE(8, 0x08),                                                                 \
-        THID_RI_INPUT(8, THID_IOF_CONSTANT),                                                           \
-        THID_RI_USAGE_PAGE(8, 0x08),                                                                  \
-        THID_RI_USAGE_MINIMUM(8, 0x01),                                                               \
-        THID_RI_USAGE_MAXIMUM(8, 0x05),                                                               \
-        THID_RI_REPORT_COUNT(8, 0x05),                                                                \
-        THID_RI_REPORT_SIZE(8, 0x01),                                                                 \
+#define THID_DESCRIPTOR_KEYBOARD(MaxKeys)                                                                 \
+    THID_RI_USAGE_PAGE(8, 0x01),                                                                          \
+        THID_RI_USAGE(8, 0x06),                                                                           \
+        THID_RI_COLLECTION(8, 0x01),                                                                      \
+        THID_RI_USAGE_PAGE(8, 0x07),                                                                      \
+        THID_RI_USAGE_MINIMUM(8, 0xE0),                                                                   \
+        THID_RI_USAGE_MAXIMUM(8, 0xE7),                                                                   \
+        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                                 \
+        THID_RI_LOGICAL_MAXIMUM(8, 0x01),                                                                 \
+        THID_RI_REPORT_SIZE(8, 0x01),                                                                     \
+        THID_RI_REPORT_COUNT(8, 0x08),                                                                    \
+        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                          \
+        THID_RI_REPORT_COUNT(8, 0x01),                                                                    \
+        THID_RI_REPORT_SIZE(8, 0x08),                                                                     \
+        THID_RI_INPUT(8, THID_IOF_CONSTANT),                                                              \
+        THID_RI_USAGE_PAGE(8, 0x08),                                                                      \
+        THID_RI_USAGE_MINIMUM(8, 0x01),                                                                   \
+        THID_RI_USAGE_MAXIMUM(8, 0x05),                                                                   \
+        THID_RI_REPORT_COUNT(8, 0x05),                                                                    \
+        THID_RI_REPORT_SIZE(8, 0x01),                                                                     \
         THID_RI_OUTPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE | THID_IOF_NON_VOLATILE), \
-        THID_RI_REPORT_COUNT(8, 0x01),                                                                \
-        THID_RI_REPORT_SIZE(8, 0x03),                                                                 \
-        THID_RI_OUTPUT(8, THID_IOF_CONSTANT),                                                          \
-        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                             \
-        THID_RI_LOGICAL_MAXIMUM(16, 0xFF),                                                            \
-        THID_RI_USAGE_PAGE(8, 0x07),                                                                  \
-        THID_RI_USAGE_MINIMUM(8, 0x00),                                                               \
-        THID_RI_USAGE_MAXIMUM(8, 0xFF),                                                               \
-        THID_RI_REPORT_COUNT(8, MaxKeys),                                                             \
-        THID_RI_REPORT_SIZE(8, 0x08),                                                                 \
-        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_ARRAY | THID_IOF_ABSOLUTE),                            \
+        THID_RI_REPORT_COUNT(8, 0x01),                                                                    \
+        THID_RI_REPORT_SIZE(8, 0x03),                                                                     \
+        THID_RI_OUTPUT(8, THID_IOF_CONSTANT),                                                             \
+        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                                 \
+        THID_RI_LOGICAL_MAXIMUM(16, 0xFF),                                                                \
+        THID_RI_USAGE_PAGE(8, 0x07),                                                                      \
+        THID_RI_USAGE_MINIMUM(8, 0x00),                                                                   \
+        THID_RI_USAGE_MAXIMUM(8, 0xFF),                                                                   \
+        THID_RI_REPORT_COUNT(8, MaxKeys),                                                                 \
+        THID_RI_REPORT_SIZE(8, 0x08),                                                                     \
+        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_ARRAY | THID_IOF_ABSOLUTE),                             \
         THID_RI_END_COLLECTION(0)
 
 /** \hideinitializer
@@ -493,34 +495,34 @@ _THID_RI_ENCODE_16(Data >> 16)
 		 *  \param[in] Buttons         Total number of buttons in the device (8-bit).
 		 *  \param[in] AbsoluteCoords  Boolean \c true to use absolute X/Y coordinates (e.g. touchscreen).
 		 */
-#define THID_DESCRIPTOR_MOUSE(MinAxisVal, MaxAxisVal, MinPhysicalVal, MaxPhysicalVal, Buttons, AbsoluteCoords)      \
-    THID_RI_USAGE_PAGE(8, 0x01),                                                                                    \
-        THID_RI_USAGE(8, 0x02),                                                                                     \
-        THID_RI_COLLECTION(8, 0x01),                                                                                \
-        THID_RI_USAGE(8, 0x01),                                                                                     \
-        THID_RI_COLLECTION(8, 0x00),                                                                                \
-        THID_RI_USAGE_PAGE(8, 0x09),                                                                                \
-        THID_RI_USAGE_MINIMUM(8, 0x01),                                                                             \
-        THID_RI_USAGE_MAXIMUM(8, Buttons),                                                                          \
-        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                                           \
-        THID_RI_LOGICAL_MAXIMUM(8, 0x01),                                                                           \
-        THID_RI_REPORT_COUNT(8, Buttons),                                                                           \
-        THID_RI_REPORT_SIZE(8, 0x01),                                                                               \
-        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                                       \
-        THID_RI_REPORT_COUNT(8, 0x01),                                                                              \
-        THID_RI_REPORT_SIZE(8, (Buttons % 8) ? (8 - (Buttons % 8)) : 0),                                            \
-        THID_RI_INPUT(8, THID_IOF_CONSTANT),                                                                         \
-        THID_RI_USAGE_PAGE(8, 0x01),                                                                                \
-        THID_RI_USAGE(8, 0x30),                                                                                     \
-        THID_RI_USAGE(8, 0x31),                                                                                     \
-        THID_RI_LOGICAL_MINIMUM(16, MinAxisVal),                                                                    \
-        THID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal),                                                                    \
-        THID_RI_PHYSICAL_MINIMUM(16, MinPhysicalVal),                                                               \
-        THID_RI_PHYSICAL_MAXIMUM(16, MaxPhysicalVal),                                                               \
-        THID_RI_REPORT_COUNT(8, 0x02),                                                                              \
-        THID_RI_REPORT_SIZE(8, (((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16)),                           \
+#define THID_DESCRIPTOR_MOUSE(MinAxisVal, MaxAxisVal, MinPhysicalVal, MaxPhysicalVal, Buttons, AbsoluteCoords)          \
+    THID_RI_USAGE_PAGE(8, 0x01),                                                                                        \
+        THID_RI_USAGE(8, 0x02),                                                                                         \
+        THID_RI_COLLECTION(8, 0x01),                                                                                    \
+        THID_RI_USAGE(8, 0x01),                                                                                         \
+        THID_RI_COLLECTION(8, 0x00),                                                                                    \
+        THID_RI_USAGE_PAGE(8, 0x09),                                                                                    \
+        THID_RI_USAGE_MINIMUM(8, 0x01),                                                                                 \
+        THID_RI_USAGE_MAXIMUM(8, Buttons),                                                                              \
+        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                                               \
+        THID_RI_LOGICAL_MAXIMUM(8, 0x01),                                                                               \
+        THID_RI_REPORT_COUNT(8, Buttons),                                                                               \
+        THID_RI_REPORT_SIZE(8, 0x01),                                                                                   \
+        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                                        \
+        THID_RI_REPORT_COUNT(8, 0x01),                                                                                  \
+        THID_RI_REPORT_SIZE(8, (Buttons % 8) ? (8 - (Buttons % 8)) : 0),                                                \
+        THID_RI_INPUT(8, THID_IOF_CONSTANT),                                                                            \
+        THID_RI_USAGE_PAGE(8, 0x01),                                                                                    \
+        THID_RI_USAGE(8, 0x30),                                                                                         \
+        THID_RI_USAGE(8, 0x31),                                                                                         \
+        THID_RI_LOGICAL_MINIMUM(16, MinAxisVal),                                                                        \
+        THID_RI_LOGICAL_MAXIMUM(16, MaxAxisVal),                                                                        \
+        THID_RI_PHYSICAL_MINIMUM(16, MinPhysicalVal),                                                                   \
+        THID_RI_PHYSICAL_MAXIMUM(16, MaxPhysicalVal),                                                                   \
+        THID_RI_REPORT_COUNT(8, 0x02),                                                                                  \
+        THID_RI_REPORT_SIZE(8, (((MinAxisVal >= -128) && (MaxAxisVal <= 127)) ? 8 : 16)),                               \
         THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | (AbsoluteCoords ? THID_IOF_ABSOLUTE : THID_IOF_RELATIVE)), \
-        THID_RI_END_COLLECTION(0),                                                                                  \
+        THID_RI_END_COLLECTION(0),                                                                                      \
         THID_RI_END_COLLECTION(0)
 
 /** \hideinitializer
@@ -534,21 +536,21 @@ _THID_RI_ENCODE_16(Data >> 16)
 		 *  \param[in] DataOUTUsage     Vendor Usage for the OUT report data, ranging from 0x00 to 0xFF.
 		 *  \param[in] NumBytes         Length of the data IN and OUT reports.
 		 */
-#define THID_DESCRIPTOR_VENDOR(VendorPageNum, CollectionUsage, DataINUsage, DataOUTUsage, NumBytes)   \
-    THID_RI_USAGE_PAGE(16, (0xFF00 | VendorPageNum)),                                                 \
-        THID_RI_USAGE(8, CollectionUsage),                                                            \
-        THID_RI_COLLECTION(8, 0x01),                                                                  \
-        THID_RI_USAGE(8, DataINUsage),                                                                \
-        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                             \
-        THID_RI_LOGICAL_MAXIMUM(8, 0xFF),                                                             \
-        THID_RI_REPORT_SIZE(8, 0x08),                                                                 \
-        THID_RI_REPORT_COUNT(8, NumBytes),                                                            \
-        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                         \
-        THID_RI_USAGE(8, DataOUTUsage),                                                               \
-        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                             \
-        THID_RI_LOGICAL_MAXIMUM(8, 0xFF),                                                             \
-        THID_RI_REPORT_SIZE(8, 0x08),                                                                 \
-        THID_RI_REPORT_COUNT(8, NumBytes),                                                            \
+#define THID_DESCRIPTOR_VENDOR(VendorPageNum, CollectionUsage, DataINUsage, DataOUTUsage, NumBytes)       \
+    THID_RI_USAGE_PAGE(16, (0xFF00 | VendorPageNum)),                                                     \
+        THID_RI_USAGE(8, CollectionUsage),                                                                \
+        THID_RI_COLLECTION(8, 0x01),                                                                      \
+        THID_RI_USAGE(8, DataINUsage),                                                                    \
+        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                                 \
+        THID_RI_LOGICAL_MAXIMUM(8, 0xFF),                                                                 \
+        THID_RI_REPORT_SIZE(8, 0x08),                                                                     \
+        THID_RI_REPORT_COUNT(8, NumBytes),                                                                \
+        THID_RI_INPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE),                          \
+        THID_RI_USAGE(8, DataOUTUsage),                                                                   \
+        THID_RI_LOGICAL_MINIMUM(8, 0x00),                                                                 \
+        THID_RI_LOGICAL_MAXIMUM(8, 0xFF),                                                                 \
+        THID_RI_REPORT_SIZE(8, 0x08),                                                                     \
+        THID_RI_REPORT_COUNT(8, NumBytes),                                                                \
         THID_RI_OUTPUT(8, THID_IOF_DATA | THID_IOF_VARIABLE | THID_IOF_ABSOLUTE | THID_IOF_NON_VOLATILE), \
         THID_RI_END_COLLECTION(0)
 /**@}*/
@@ -655,29 +657,29 @@ typedef struct
     uint16_t wDescriptorLength; /**< Length of the associated HID report descriptor, in bytes. */
 } TATTR_PACKED TUSB_THID_StdDescriptor_THID_t;
 
-/** \brief Standard HID Boot Protocol Mouse Report.
-		 *
-		 *  Type define for a standard Boot Protocol Mouse report
-		 */
-typedef struct
-{
-    uint8_t Button; /**< Button mask for currently pressed buttons in the mouse. */
-    int8_t X;       /**< Current delta X movement of the mouse. */
-    int8_t Y;       /**< Current delta Y movement on the mouse. */
-} TATTR_PACKED TUSB_MouseReport_Data_t;
-
 /** \brief Standard HID Boot Protocol Keyboard Report.
 		 *
 		 *  Type define for a standard Boot Protocol Keyboard report
 		 */
 typedef struct
 {
-    uint8_t Modifier;   /**< Keyboard modifier byte, indicating pressed modifier keys (a combination of
+    uint8_t rid;
+    uint8_t Modifier; /**< Keyboard modifier byte, indicating pressed modifier keys (a combination of
 			                   *   \c THID_KEYBOARD_MODIFER_* masks).
 			                   */
-    uint8_t Reserved;   /**< Reserved for OEM use, always set to 0. */
-    uint8_t KeyCode[6]; /**< Key codes of the currently pressed keys. */
+                            //   Indicates pressed keys (a combination of THID_KEYBOARD_SC_ masks)
+    uint8_t KeyCodeFlags[(THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN + 1) / 8];  //Bitmask of all pressed keys
 } TATTR_PACKED TUSB_KeyboardReport_Data_t;
+typedef struct
+{
+    uint8_t rid;
+    uint8_t Button; /**< Button mask for currently pressed buttons in the mouse. */
+    int8_t X;       /**< Current delta X movement of the mouse. */
+    int8_t Y;       /**< Current delta Y movement on the mouse. */
+    int8_t ScrollX;
+    int8_t ScrollY;
+
+} TATTR_PACKED TUSB_MouseReport_Data_t;
 
 /** Type define for the data type used to store HID report descriptor elements. */
 typedef uint8_t TUSB_Descriptor_HIDReport_Datatype_t;

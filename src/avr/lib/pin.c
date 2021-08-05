@@ -4,6 +4,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
+#include "avr.h"
 #include "config.h"
 #include "lib_main.h"
 #include "string.h"
@@ -21,16 +22,16 @@ void initPins(void) {
     // setDefaults();
     // Binding_t* bindingn = (Binding_t*)buf;
     // bindingn->analogID = 0xFF;
-    // bindingn->binding = XBOX_A;
+    // bindingn->binding = XBOX_A+1;
     // bindingn->pullup = true;
-    // for the uno, D2 is convently on port D, bit 2
+    // // for the uno, D2 is convently on port D, bit 2
     // eeprom_write_block(bindingn, &bindingsPointer.bindings[(((&PIND - FIRST_PIN) / 3) * 8) + 2], sizeof(Binding_t));
     // bindingn->analogID = 0xFF;
-    // bindingn->binding = XBOX_B;
+    // bindingn->binding = XBOX_B+1;
     // bindingn->pullup = true;
     // eeprom_write_block(bindingn, &bindingsPointer.bindings[(((&PIND - FIRST_PIN) / 3) * 8) + 3], sizeof(Binding_t));
     // bindingn->analogID = 0;
-    // bindingn->binding = XBOX_L_X;
+    // bindingn->binding = XBOX_L_X+1;
     // bindingn->pullup = false;
     // eeprom_write_block(bindingn, &bindingsPointer.bindings[0], sizeof(Binding_t));
     // AnalogData_t* an = (AnalogData_t*)buf;
@@ -44,7 +45,7 @@ void initPins(void) {
     AnalogData_t* analog = (AnalogData_t*)buf + sizeof(Binding_t);
     for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
         eeprom_read_block(binding, &bindingsPointer.bindings[i], sizeof(Binding_t));
-        if (binding->binding != 0xFF) {
+        if (binding->binding) {
             volatile uint8_t* pinx = FIRST_PIN + ((i / PINS_PER_PORT) * 3);
 // For the mega, there are two sections to get pins from, it splits to another memory section after PING
 #ifdef PINH
@@ -57,17 +58,19 @@ void initPins(void) {
             uint8_t bit = _BV(i % PINS_PER_PORT);
             pins[i].port = pinx;
             pins[i].mask = bit;
-            pins[i].binding = binding->binding;
+            pins[i].binding = binding->binding - 1;
             pins[i].pullup = binding->pullup;
+            pins[i].digitalRead = readDigital;
             if (binding->analogID != 0xFF) {
                 eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
-                pins[i].axisInfo = &analogInfo[analogCount++];
+                pins[i].axisInfo = &analogInfo[binding->analogID];
                 pins[i].axisInfo->deadzone = analog->scale.deadzone;
                 pins[i].axisInfo->offset = analog->scale.offset;
                 pins[i].axisInfo->multiplier = analog->scale.multiplier;
                 pins[i].axisInfo->isADC = analog->mapToDigital;
                 pins[i].axisInfo->ADCtrigger = analog->trigger;
                 pins[i].axisInfo->channel = analog->channel;
+                pins[i].axisInfo->analogRead = readAnalog;
             } else {
                 uint8_t oldSREG = SREG;
                 cli();
@@ -102,24 +105,19 @@ void initPins(void) {
 }
 void setDefaults(void) {
     // 0xFF is used everywhere as a flag for something being disabled.
-    memset(buf, 0xff, sizeof(buf));
-    for (size_t i = 0; i < sizeof(Bindings_t); i += sizeof(buf)) {
-        size_t len = i + sizeof(buf);
-        if (len > sizeof(Bindings_t)) {
-            len = sizeof(Bindings_t) - i;
-        }
-        eeprom_update_block(buf, &bindingsPointer + i, len);
+    for (size_t i = 0 ; i < sizeof(Bindings_t); i++) {
+        eeprom_update_byte(((uint8_t*)&bindingsPointer) + i, 0xff);
     }
 }
 
-bool readDigital(Pin_t* pin) {
+bool readDigital(Input_t* pin) {
     if (pin->axisInfo) {
         return readAnalog(pin) > pin->axisInfo->ADCtrigger;
     }
     return ((*pin->port & pin->mask) != 0) != pin->pullup;
 }
 
-int16_t readAnalog(Pin_t* pin) {
+int16_t readAnalog(Input_t* pin) {
     if (!pin->axisInfo) {
         return readDigital(pin) * INT16_MAX;
     }

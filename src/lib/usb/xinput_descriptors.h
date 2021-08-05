@@ -1,16 +1,16 @@
+#include "attributes.h"
 #include "descriptors.h"
 #include "wcid_descriptors.h"
-#include "attributes.h"
 // Dumps from a real guitar
 
-uint8_t ID[] = {0x00, 0x82, 0xf8, 0x23};
-uint8_t capabilities1[] = {0x00, 0x08, 0x00, 0x00,
-                           0x00, 0x00, 0x00, 0x00};
-uint8_t capabilities2[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
-                           0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
-                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const uint8_t PROGMEM ID[] = {0x00, 0x82, 0xf8, 0x23};
+const uint8_t PROGMEM capabilities1[] = {0x00, 0x08, 0x00, 0x00,
+                                         0x00, 0x00, 0x00, 0x00};
+const uint8_t PROGMEM capabilities2[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
+                                         0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
+                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-TUSB_OSExtendedCompatibleIDDescriptor_t ExtendedIDs = {
+const TUSB_OSExtendedCompatibleIDDescriptor_t PROGMEM ExtendedIDs = {
     TotalLength : sizeof(TUSB_OSExtendedCompatibleIDDescriptor_t),
     Version : 0x0100,
     Index : DESC_EXTENDED_PROPERTIES_DESCRIPTOR,
@@ -35,17 +35,18 @@ TUSB_OSCompatibleIDDescriptor_t DevCompatIDs = {
     TotalSections : 2,
     Reserved : {0},
     CompatID : {
-        FirstInterfaceNumber : INTERFACE_ID_Device,
-        Reserved : 0x04,
-        CompatibleID : "XUSB10",
-        SubCompatibleID : {0},
-        Reserved2 : {0}
-    },
-    CompatID2 : {
-        FirstInterfaceNumber : INTERFACE_ID_Config,
-        Reserved : 0x04,
-        CompatibleID : "WINUSB",
-        SubCompatibleID : {0},
-        Reserved2 : {0}
-    }
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Config,
+            Reserved : 0x04,
+            CompatibleID : "WINUSB",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Device,
+            Reserved : 0x04,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        }}
 };

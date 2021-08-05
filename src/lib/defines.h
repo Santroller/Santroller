@@ -15,9 +15,9 @@ enum TiltType { NO_TILT,
                 ANALOGUE };
 
 // Input types
-enum InputType { WII = 1,
-                 DIRECT,
-                 PS2 };
+typedef enum { WII = 1,
+               DIRECT,
+               PS2 } InputType_t;
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
 typedef enum {

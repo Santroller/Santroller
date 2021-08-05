@@ -21,20 +21,7 @@ typedef struct {
     uint16_t Index;
     uint8_t TotalSections;
     uint8_t Reserved[7];
-    TUSB_OSCompatibleSection_t CompatID;
-    TUSB_OSCompatibleSection_t CompatID2;
-    TUSB_OSCompatibleSection_t CompatID3;
-    TUSB_OSCompatibleSection_t CompatID4;
-} TATTR_PACKED TUSB_OSCompatibleIDDescriptor_4_t;
-
-typedef struct {
-    uint32_t TotalLength;
-    uint16_t Version;
-    uint16_t Index;
-    uint8_t TotalSections;
-    uint8_t Reserved[7];
-    TUSB_OSCompatibleSection_t CompatID;
-    TUSB_OSCompatibleSection_t CompatID2;
+    TUSB_OSCompatibleSection_t CompatID[];
 } TATTR_PACKED TUSB_OSCompatibleIDDescriptor_t;
 
 typedef struct {

@@ -15,8 +15,8 @@ extern DeviceType_t deviceType;
 extern bool guitar;
 extern bool drum;
 extern uint8_t pinCount;
-extern Pin_t pins[PORTS*PINS_PER_PORT];
-extern AnalogPin_t analogInfo[NUM_ANALOG_INPUTS];
+extern Input_t pins[PORTS*PINS_PER_PORT];
+extern AnalogInput_t analogInfo[NUM_ANALOG_INPUTS];
 extern uint8_t buf[255];
 
 void init(void);

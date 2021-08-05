@@ -6,6 +6,7 @@
 #include "packets.h"
 #include "usb.h"
 #include "usb/controller_reports.h"
+#include "avr.h"
 
 uint8_t* bufTx;
 uint8_t idx_tx = 0;
@@ -18,6 +19,7 @@ control_request_t* ctr = (control_request_t*)buf;
 data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
 int main(void) {
     init();
+    setupMicrosTimer();
     Serial_InitInterrupt(BAUD, true);
     sei();
     Serial_SendByte(READY);
@@ -45,15 +47,11 @@ int main(void) {
                 header->len = sizeof(packet_header_t) + len;
                 break;
             case CONTROL_REQUEST_ID:
-                uint8_t* dataPtr;
-
                 bool valid;
-                uint16_t len2 = controlRequest(ctr->requestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dataPtr, &valid);
+                uint16_t len2 = controlRequest(ctr->requestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, (buf + sizeof(packet_header_t) + 1), &valid);
+                if (len2 > ctr->wLength) len2 = ctr->wLength;
                 header->len = sizeof(packet_header_t) + len2 + 1;
                 buf[sizeof(packet_header_t)] = valid;
-                if (len2) {
-                    memcpy(buf + sizeof(packet_header_t) + 1, dataPtr, len2);
-                }
                 break;
             case DEVICE_ID:
                 header->len = sizeof(packet_header_t) + 2;
@@ -71,7 +69,7 @@ int main(void) {
 
 uint8_t idx = 0;
 ISR(USART1_RX_vect, ISR_BLOCK) {
-    buf[idx] = UDR0;
+    buf[idx] = UDR1;
     if (idx == 0 && buf[0] != VALID_PACKET) {
         return;
     }

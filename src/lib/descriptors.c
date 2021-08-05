@@ -55,20 +55,16 @@ const PROGMEM TUSB_OSDescriptor_t OSDescriptorString = {
     Reserved : 0
 };
 
-// TODO: while its great having this stuff not in PROGMEM, it does use a fuck ton of ram.
-// we should probably put it back in progmem and just use a buffer for loading the descriptors.
-// For the uno we even already have the buffer that we can just fill,
-// for the micro we can create a buffer and we will be fine.
 const PROGMEM TUSB_Descriptor_Device_t deviceDescriptor = {
     Header : {Size : sizeof(deviceDescriptor), Type : TDTYPE_Device},
     USBSpecification : TVERSION_BCD(2, 0, 0),
-    Class : 0xFF,
-    SubClass : 0xFF,
-    Protocol : 0xFF,
+    Class : TUSB_CSCP_NoDeviceClass,
+    SubClass : TUSB_CSCP_NoDeviceSubclass,
+    Protocol : TUSB_CSCP_NoDeviceProtocol,
     Endpoint0Size : ENDPOINT_SIZE,
     VendorID : ARDWIINO_VID,
     ProductID : ARDWIINO_PID,
-    ReleaseNumber : 0x0110,
+    ReleaseNumber : TVERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
     ManufacturerStrIndex : 0x01,
     ProductStrIndex : 0x02,
     SerialNumStrIndex : 0x03,
@@ -90,8 +86,8 @@ const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor =
                   InterfaceNumber : INTERFACE_ID_Device,
                   AlternateSetting : 0x00,
                   TotalEndpoints : 2,
-                  Class : 0xff,
-                  SubClass : 0x5d,
+                  Class : 0xFF,
+                  SubClass : 0x5D,
                   Protocol : 0x01,
                   InterfaceStrIndex : NO_DESCRIPTOR},
 
@@ -100,8 +96,8 @@ const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor =
                   InterfaceNumber : INTERFACE_ID_XBOX_Security,
                   AlternateSetting : 0x00,
                   TotalEndpoints : 0,
-                  Class : 0xff,
-                  SubClass : 0xfd,
+                  Class : 0xFF,
+                  SubClass : 0xFD,
                   Protocol : 0x13,
                   InterfaceStrIndex : 4},
     InterfaceConfig : {
@@ -129,11 +125,11 @@ const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor =
         reserved : {0x10, 0x01},
         subtype : 0x07,
         reserved2 : 0x25,
-        bEndpointAddressIn : DEVICE_EPSIZE_OUT,
-        bMaxDataSizeIn : 0x14,
+        bEndpointAddressIn : DEVICE_EPADDR_IN,
+        bMaxDataSizeIn : DEVICE_EPSIZE_IN,
         reserved3 : {0x03, 0x03, 0x03, 0x04, 0x13},
-        bEndpointAddressOut : DEVICE_EPSIZE_OUT,
-        bMaxDataSizeOut : 0x08,
+        bEndpointAddressOut : DEVICE_EPADDR_OUT,
+        bMaxDataSizeOut : DEVICE_EPSIZE_OUT,
         reserved4 : {0x03, 0x03},
     },
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
@@ -158,7 +154,7 @@ const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
         Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
                   Type : TDTYPE_Configuration},
         TotalConfigurationSize : sizeof(TUSB_Descriptor_HID_Configuration_t),
-        TotalInterfaces : 4,
+        TotalInterfaces : 2,
         ConfigurationNumber : 1,
         ConfigurationStrIndex : NO_DESCRIPTOR,
         .ConfigAttributes =
@@ -217,7 +213,7 @@ const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor =
         Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
                   Type : TDTYPE_Configuration},
         TotalConfigurationSize : sizeof(TUSB_Descriptor_MIDI_Configuration_t),
-        TotalInterfaces : 4,
+        TotalInterfaces : 3,
         ConfigurationNumber : 1,
         ConfigurationStrIndex : NO_DESCRIPTOR,
         .ConfigAttributes =

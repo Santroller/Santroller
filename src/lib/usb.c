@@ -9,38 +9,43 @@
 #include "string.h"
 #include "usb/ps3_descriptors.h"
 #include "usb/xinput_descriptors.h"
-uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t **address, bool *valid) {
+uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
     *valid = true;
     if (requestType.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
         if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_VENDOR) {
             if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
                 if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
-                    *address = capabilities1;
+                    memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
                     return sizeof(capabilities1);
                 } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
-                    *address = (uint8_t *)&ExtendedIDs;
+                    memcpy(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
                     return ExtendedIDs.TotalLength;
                 } else if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
-                    *address = capabilities2;
+                    memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
                     return sizeof(capabilities2);
                 }
             } else if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_DEVICE) {
                 if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
-                    *address = (uint8_t *)&DevCompatIDs;
+                    // For devices that aren't xbox controllers, we need to drop the xbox WCID descriptor.
+                    if (consoleType != XBOX360) {
+                        DevCompatIDs.TotalSections = 1;
+                        DevCompatIDs.TotalLength = sizeof(TUSB_OSCompatibleIDDescriptor_t) + sizeof(TUSB_OSCompatibleSection_t);
+                    }
+                    memcpy(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
                     return DevCompatIDs.TotalLength;
                 } else if (request == THID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {
-                    *address = ID;
+                    memcpy_P(requestBuffer, ID, sizeof(ID));
                     return sizeof(ID);
                 }
             }
         } else if (request == THID_REQ_GetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
             if (consoleType == PS3) {
-                *address = ps3_init;
                 if (deviceType <= ROCK_BAND_DRUMS) {
                     ps3_init[3] = 0x00;
                 } else if (deviceType <= GUITAR_HERO_DRUMS) {
                     ps3_init[3] = 0x06;
                 }
+                memcpy(requestBuffer, ps3_init, sizeof(ps3_init));
                 return sizeof(ps3_init);
             }
         }
@@ -147,41 +152,43 @@ uint16_t descriptorRequest(const uint16_t wValue,
             TUSB_Descriptor_Device_t *dev = (TUSB_Descriptor_Device_t *)descriptorBuffer;
             if (consoleType == XBOX360) {
                 // TODO: for the 360, grab this from a passthrough pico
-            } else if (consoleType == PS3) {
-                if (deviceType > GUITAR_HERO_GUITAR) {
-                    dev->VendorID = SONY_VID;
-                    switch (deviceType) {
-                        case GUITAR_HERO_DRUMS:
-                            dev->ProductID = PS3_GH_DRUM_PID;
-                            break;
-                        case GUITAR_HERO_GUITAR:
-                            dev->ProductID = PS3_GH_GUITAR_PID;
-                            break;
-                        case ROCK_BAND_GUITAR:
-                            dev->ProductID = PS3_RB_GUITAR_PID;
-                            break;
-                        case ROCK_BAND_DRUMS:
-                            dev->ProductID = PS3_RB_DRUM_PID;
-                            break;
-                        case GUITAR_HERO_LIVE_GUITAR:
-                            dev->ProductID = PS3WIIU_GHLIVE_DONGLE_PID;
-                            break;
-                        case DJ_HERO_TURNTABLE:
-                            dev->ProductID = PS3_DJ_TURNTABLE_PID;
-                            break;
-                        default:
-                            break;
+            } else {
+                if (consoleType == PS3) {
+                    if (deviceType > GUITAR_HERO_GUITAR) {
+                        dev->VendorID = SONY_VID;
+                        switch (deviceType) {
+                            case GUITAR_HERO_DRUMS:
+                                dev->ProductID = PS3_GH_DRUM_PID;
+                                break;
+                            case GUITAR_HERO_GUITAR:
+                                dev->ProductID = PS3_GH_GUITAR_PID;
+                                break;
+                            case ROCK_BAND_GUITAR:
+                                dev->ProductID = PS3_RB_GUITAR_PID;
+                                break;
+                            case ROCK_BAND_DRUMS:
+                                dev->ProductID = PS3_RB_DRUM_PID;
+                                break;
+                            case GUITAR_HERO_LIVE_GUITAR:
+                                dev->ProductID = PS3WIIU_GHLIVE_DONGLE_PID;
+                                break;
+                            case DJ_HERO_TURNTABLE:
+                                dev->ProductID = PS3_DJ_TURNTABLE_PID;
+                                break;
+                            default:
+                                break;
+                        }
                     }
-                }
-            } else if (consoleType == SWITCH) {
-                dev->VendorID = HORI_VID;
-                dev->ProductID = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
-            } else if (consoleType == WII_RB) {
-                dev->VendorID = WII_RB_VID;
-                if (drum) {
-                    dev->ProductID = WII_RB_DRUM_PID;
-                } else {
-                    dev->ProductID = WII_RB_GUITAR_PID;
+                } else if (consoleType == SWITCH) {
+                    dev->VendorID = HORI_VID;
+                    dev->ProductID = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
+                } else if (consoleType == WII_RB) {
+                    dev->VendorID = WII_RB_VID;
+                    if (drum) {
+                        dev->ProductID = WII_RB_DRUM_PID;
+                    } else {
+                        dev->ProductID = WII_RB_GUITAR_PID;
+                    }
                 }
             }
             break;
@@ -230,6 +237,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else {
                 size = sizeof(TUSB_Descriptor_HID_Configuration_t);
                 memcpy_P(descriptorBuffer, &HIDConfigurationDescriptor, size);
+                TUSB_Descriptor_HID_Configuration_t *desc = (TUSB_Descriptor_HID_Configuration_t *)descriptorBuffer;
+                if (consoleType == KEYBOARD_MOUSE) {
+                    desc->HIDDescriptor.HIDReportLength = sizeof(kbd_report_descriptor);
+                } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
+                    desc->HIDDescriptor.HIDReportLength = sizeof(ps3_report_descriptor);
+                }
             }
             break;
         case THID_DTYPE_Report:
@@ -240,7 +253,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
                 address = ps3_report_descriptor;
                 size = sizeof(ps3_report_descriptor);
-            } 
+            }
             memcpy_P(descriptorBuffer, address, size);
             break;
         case TDTYPE_String:
@@ -257,7 +270,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #ifdef __AVR__
             size = pgm_read_byte(str + offsetof(TUSB_Descriptor_Header_t, Size));
 #else
-            size = ((TUSB_Descriptor_Header_t*)str)->Size;
+            size = ((TUSB_Descriptor_Header_t *)str)->Size;
 #endif
             memcpy_P(descriptorBuffer, str, size);
             break;

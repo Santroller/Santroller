@@ -32,20 +32,18 @@ int main(void) {
 uint8_t buf[255];
 void EVENT_USB_Device_ControlRequest(void) {
     bool valid = false;
-    uint8_t* data;
     requestType_t type = {bmRequestType : USB_ControlRequest.bmRequestType};
     if (type.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
-        uint16_t len = controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &data, &valid);
+        uint16_t len = controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf, &valid);
         if (valid) {
             Endpoint_ClearSETUP();
             Endpoint_Write_Control_Stream_LE(buf, len);
             Endpoint_ClearStatusStage();
         }
     } else if (type.bmRequestType_bit.type == USB_REQ_TYPE_VENDOR && type.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
-        data = buf;
         Endpoint_ClearSETUP();
         Endpoint_Read_Control_Stream_LE(buf, USB_ControlRequest.wLength);
-        controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &data, &valid);
+        controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf, &valid);
         Endpoint_ClearStatusStage();
     }
 }

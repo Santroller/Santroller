@@ -4,7 +4,6 @@
 #include <pico/stdlib.h>
 #include <hardware/timer.h>
 
-// there are 1024 microseconds per overflow counter tick.
 unsigned long millis(void) {
   return us_to_ms(time_us_64());
 }

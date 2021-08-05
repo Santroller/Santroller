@@ -134,5 +134,4 @@ typedef struct {
   AxisScaleConfig_t axisScale;
   DebounceConfig_t debounce;
 } Configuration_t;
-
 #pragma pack(pop)

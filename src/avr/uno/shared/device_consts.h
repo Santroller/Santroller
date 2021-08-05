@@ -6,7 +6,7 @@
 #define FRAME_DONE 0x77
 
 #define USART2USB_BUFLEN 128 // 0xFF - 8bit
-#define USB2USART_BUFLEN 128 // 0x7F - 7bit
+#define USB2USART_BUFLEN 64 // 0x7F - 7bit
 
 /** Macro for calculating the baud value from a given baud rate when the \c U2X
  * (double speed) bit is not set.

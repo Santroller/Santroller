@@ -27,6 +27,7 @@ Controller_t prevController;
 uint8_t currentReport[sizeof(USB_Report_Data_t)];
 RingBuffer_t in;
 RingBuffer_t out;
+
 uint8_t bufIn[USB2USART_BUFLEN];
 uint8_t bufOut[USART2USB_BUFLEN];
 bool readyForPacket = true;
@@ -107,6 +108,7 @@ int main(void) {
           } else if (data == FRAME_DONE) {
             readyForPacket = true;
           }
+
         } else if (state == 1) {
           packetCount = data;
           state = 3;
@@ -195,7 +197,8 @@ int main(void) {
         tickLEDs(&controller);
       }
       uint8_t size;
-      if (memcmp(&prevController, &controller, sizeof(XInput_Data_t)) != 0 && readyForPacket) {
+      if (memcmp(&prevController, &controller, sizeof(XInput_Data_t)) != 0 &&
+          readyForPacket) {
         fillReport(currentReport, &size, &controller);
         lastPoll = millis();
         readyForPacket = false;
@@ -209,7 +212,8 @@ int main(void) {
   }
 }
 // Data being written back to USB after a read
-void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report, const void* request) {
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report,
+                const void *request) {
   uint8_t done = FRAME_START_WRITE;
   writeData(&done, 1);
   writeData(&Length, 1);

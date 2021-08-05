@@ -58,9 +58,9 @@ void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len,
 }
 const uint8_t PROGMEM err[] = "ERROR";
 uint8_t dbuf[64];
-void processHIDReadFeatureReport(uint8_t cmd, uint8_t report, const void* request) {
-  if (isRF && cmd < COMMAND_READ_CONFIG &&
-      cmd != COMMAND_GET_CPU_INFO) {
+void processHIDReadFeatureReport(uint8_t cmd, uint8_t report,
+                                 const void *request) {
+  if (isRF && cmd < COMMAND_READ_CONFIG && cmd != COMMAND_GET_CPU_INFO) {
     uint8_t dbuf2[2];
     dbuf2[0] = cmd;
     dbuf2[1] = true;
@@ -91,7 +91,7 @@ void processHIDReadFeatureReport(uint8_t cmd, uint8_t report, const void* reques
     uint16_t index = size * (cmd - COMMAND_READ_CONFIG);
     int16_t size2 = sizeof(Configuration_t) - index;
     if (size2 < size) { size = size2; }
-    readConfigBlock(index, dbuf+1, size);
+    readConfigBlock(index, dbuf + 1, size);
     size = size + 1;
   } else if (cmd == COMMAND_GET_CPU_INFO || cmd == COMMAND_GET_RF_CPU_INFO) {
     size = sizeof(cpu_info_t) + 1;

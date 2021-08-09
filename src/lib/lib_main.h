@@ -1,10 +1,14 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#include "descriptors.h"
-#include "defines.h"
+
 #include "config.h"
+#include "defines.h"
+#include "descriptors.h"
 #include "pin.h"
+#ifndef _BV
+#define _BV(bit) (1 << (bit))
+#endif
 #define bit_set(p, m) ((p) |= _BV(m))
 #define bit_clear(p, m) ((p) &= ~_BV(m))
 // #define bit_write(c, p, m) (c ? bit_set(p, m) : bit_clear(p, m))
@@ -15,7 +19,7 @@ extern DeviceType_t deviceType;
 extern bool guitar;
 extern bool drum;
 extern uint8_t pinCount;
-extern Input_t pins[PORTS*PINS_PER_PORT];
+extern Input_t pins[PORTS * PINS_PER_PORT];
 extern AnalogInput_t analogInfo[NUM_ANALOG_INPUTS];
 extern uint8_t buf[255];
 

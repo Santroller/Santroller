@@ -261,7 +261,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (descriptorNumber == 4) {
                 str = &xboxString;
             } else if (descriptorNumber < 4) {
+#ifdef __AVR__
                 str = (void *)pgm_read_word(descriptorStrings + descriptorNumber);
+#else
+                str = descriptorStrings[descriptorNumber];
+#endif
             } else if (descriptorNumber == 0xEE) {
                 str = &OSDescriptorString;
             } else {

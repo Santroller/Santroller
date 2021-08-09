@@ -16,16 +16,10 @@
 #include "stdbool.h"
 #include "usb.h"
 #include "xinput_device.h"
-int validAnalog = 0;
-
-bool isRF = false;
-bool typeIsGuitar;
-bool typeIsDrum;
-uint8_t inputType;
-uint8_t pollRate;
 
 #define UART_ID uart1
 #define BAUD_RATE 115200
+uint8_t controller[DEVICE_EPSIZE_IN];
 
 // TODO: how big does this need to be?
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
@@ -74,7 +68,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
         return (uint16_t *)&serialString;
     }
     descriptorRequest(TDTYPE_String << 8 | index, 0, buf);
-    return buf;
+    return (uint16_t*)buf;
 }
 
 int main() {
@@ -87,16 +81,17 @@ int main() {
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
     while (1) {
         tud_task();  // tinyusb device task
+        uint8_t len = tick(controller);
         if (consoleType == XBOX360) {
             if (tud_xinput_n_ready(0)) {
-                tud_xinput_n_report(0, 0, data, size);
+                tud_xinput_n_report(0, 0, controller, len);
             }
         } else if (consoleType == MIDI) {
             if (tud_hid_n_ready(0)) {
-                tud_hid_n_report(0, rid, data, size);
+                tud_hid_n_report(0, 0, controller, len);
             }
         } else {
-            tud_midi_n_packet_write(0, data);
+            tud_midi_n_packet_write(0, controller);
         }
     }
 }
@@ -117,13 +112,13 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
                                hid_report_type_t report_type, uint8_t *buffer,
                                uint16_t reqlen) {
     requestType_t r = {bmRequestType_bit : {direction : USB_DIR_DEVICE_TO_HOST, recipient : USB_REQ_RCPT_INTERFACE, type : USB_REQ_TYPE_CLASS}};
-    uint8_t valid;
+    bool valid;
     return controlRequest(r, THID_REQ_GetReport, report_type << 8 | report_id, instance, reqlen, &buffer, &valid);
 }
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id,
                            hid_report_type_t report_type, uint8_t const *buffer,
                            uint16_t bufsize) {
     requestType_t r = {bmRequestType_bit : {direction : USB_DIR_HOST_TO_DEVICE, recipient : USB_REQ_RCPT_INTERFACE, type : USB_REQ_TYPE_CLASS}};
-    uint8_t valid;
+    bool valid;
     controlRequest(r, THID_REQ_SetReport, report_type << 8 | report_id, instance, bufsize, &buffer, &valid);
 }

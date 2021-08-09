@@ -29,6 +29,21 @@ typedef struct {
 } USB_PS3Report_Data_t;
 
 typedef struct {
+  uint8_t rid;
+  uint16_t buttons;
+  uint8_t hat;
+
+  // left and right analog sticks, 0x00 left/up, 0x80 middle, 0xff right/down
+
+  uint8_t joys[4];
+
+  uint8_t axis[12];
+  // Accel values are 10 bits with padding.
+  int16_t accel[4];
+
+} USB_PS3Report_Arr_Data_t;
+
+typedef struct {
   uint16_t buttons;
   uint8_t lt;
   uint8_t rt;

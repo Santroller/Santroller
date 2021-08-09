@@ -9,10 +9,10 @@
 #define XBOX_TILT XBOX_R_Y
 
 // Tilt detection
-enum TiltType { NO_TILT,
-                MPU_6050,
-                DIGITAL,
-                ANALOGUE };
+typedef enum { NO_TILT,
+       MPU_6050,
+       DIGITAL,
+       ANALOGUE } TiltType_t;
 
 // Input types
 typedef enum { WII = 1,
@@ -149,6 +149,20 @@ typedef struct {
     uint8_t triggers[2];
     int16_t sticks[4];
 } ControllerCombined_t;
+enum ControllerAxisPS3 {
+    PS3_DPAD_UP,
+    PS3_DPAD_RIGHT,
+    PS3_DPAD_LEFT,
+    PS3_DPAD_DOWN,
+    PS3_L2,
+    PS3_R2,
+    PS3_L1,
+    PS3_R1,
+    PS3_TRIANGLE,
+    PS3_CIRCLE,
+    PS3_CROSS,
+    PS3_SQUARE
+};
 enum ControllerAxis {
     XBOX_LT,
     XBOX_RT,

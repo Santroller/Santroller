@@ -674,10 +674,10 @@ typedef struct
 {
     uint8_t rid;
     uint8_t Button; /**< Button mask for currently pressed buttons in the mouse. */
-    int8_t X;       /**< Current delta X movement of the mouse. */
-    int8_t Y;       /**< Current delta Y movement on the mouse. */
-    int8_t ScrollX;
-    int8_t ScrollY;
+    uint8_t X;       /**< Current delta X movement of the mouse. */
+    uint8_t Y;       /**< Current delta Y movement on the mouse. */
+    uint8_t ScrollX;
+    uint8_t ScrollY;
 
 } TATTR_PACKED TUSB_MouseReport_Data_t;
 

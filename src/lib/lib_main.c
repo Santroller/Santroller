@@ -4,15 +4,15 @@
 #include <string.h>
 
 #include "defines.h"
-#include "usb/controller_reports.h"
 #include "i2c.h"
-#include "spi_impl.h"
 #include "leds.h"
+#include "spi_impl.h"
+#include "usb/controller_reports.h"
 #define PIN_COUNT PORTS* PINS_PER_PORT
-#ifdef __AVR__ 
-    #define SPI_FREQ F_CPU / 2
+#ifdef __AVR__
+#define SPI_FREQ F_CPU / 2
 #else
-    #define SPI_FREQ 8000000
+#define SPI_FREQ 8000000
 #endif
 ConsoleType_t consoleType;
 DeviceType_t deviceType;
@@ -21,27 +21,27 @@ TiltType_t tiltType;
 FretLedMode_t ledMode;
 bool guitar;
 bool drum;
-uint8_t pinCount;
-Input_t pins[PIN_COUNT];
-AnalogInput_t analogInfo[NUM_ANALOG_INPUTS];
+uint8_t pinCount = 0;
+Input_t pins[PIN_COUNT] = {0};
+AnalogInput_t analogInfo[NUM_ANALOG_INPUTS] = {0};
 uint32_t lastMillisStrum;
-bool mergedStrum = false;
 uint8_t inputCount;
+bool mergedStrum = false;
 void (*tickInput)(void) = NULL;
 // Inside leds there is a colour and a forceColor
 // if forceColor is set or the button is pressed, then the colour is set to color
 // otherwise, it is cleared
-Input_t* ledOrder[PIN_COUNT] = {};
+Input_t* ledOrder[PIN_COUNT] = {0};
 void init() {
     ledMode = NONE;
     inputType = DIRECT;
-    consoleType = XBOX360;
+    consoleType = KEYBOARD_MOUSE;
     deviceType = GUITAR_HERO_GUITAR;
+    // TODO: this will differ for PS3 or keyboard
+    inputCount = XBOX_AXIS_COUNT + XBOX_BTN_COUNT;
     guitar = deviceType == GUITAR_HERO_GUITAR || deviceType == ROCK_BAND_GUITAR || deviceType == GUITAR_HERO_LIVE_GUITAR;
     drum = deviceType == GUITAR_HERO_DRUMS || deviceType == ROCK_BAND_DRUMS;
     tiltType = NONE;
-    inputCount = PIN_COUNT;
-    memset(pins, 0xFF, sizeof(pins));
     if (tiltType == MPU_6050 || inputType == WII) {
         twi_init();
     }
@@ -59,7 +59,9 @@ void init() {
 }
 
 uint32_t last = 0;
-bool val = true;
+uint8_t lastHat = 0;
+bool keyboardReport = true;
+uint8_t firstKeyboardPin = 0;
 uint8_t tick(uint8_t* data) {
     if (tickInput) {
         tickInput();
@@ -68,15 +70,29 @@ uint8_t tick(uint8_t* data) {
     int16_t* joys = NULL;
     uint8_t* joys8 = NULL;
     uint8_t* buttons;
+    uint8_t* hats = NULL;
     size_t size;
+    int start = 0;
+    int end = pinCount;
     if (consoleType == KEYBOARD_MOUSE) {
-        // if mouse has changed use mouse report, else use keyboard report.
-        // Or, just alternate between reports
-        TUSB_KeyboardReport_Data_t* report = (TUSB_KeyboardReport_Data_t*)data;
-        report->rid = REPORT_ID_KBD;
-        // bit_write(val, report->KeyCodeFlags[THID_KEYBOARD_SC_A / 8], THID_KEYBOARD_SC_A % 8);
-        // bit_write(val, report->Modifier, (THID_KEYBOARD_MODIFIER_LEFTSHIFT));
-        size = sizeof(TUSB_KeyboardReport_Data_t);
+        // If firstKeyboardPin is 0, than the user has not specified any mouse bindings
+        // So we can skip the mouse
+        if (keyboardReport || !firstKeyboardPin) {
+            start = firstKeyboardPin;
+            TUSB_KeyboardReport_Data_t* report = (TUSB_KeyboardReport_Data_t*)data;
+            report->rid = REPORT_ID_KBD;
+            buttons = report->KeyCodeFlags;
+            size = sizeof(TUSB_KeyboardReport_Data_t);
+        } else {
+            start = 0;
+            TUSB_MouseReport_Data_t* report = (TUSB_MouseReport_Data_t*)data;
+            report->rid = REPORT_ID_MOUSE;
+            buttons = &report->Button;
+            joys8 = &report->X;
+            size = sizeof(TUSB_MouseReport_Data_t);
+            end = firstKeyboardPin;
+        }
+        keyboardReport = !keyboardReport;
     } else if (consoleType == XBOX360) {
         USB_XInputReport_Arr_Data_t* report = (USB_XInputReport_Arr_Data_t*)data;
         report->rid = 0;
@@ -89,44 +105,53 @@ uint8_t tick(uint8_t* data) {
         // This one will need something specific as it isnt a controller.
     } else {
         USB_PS3Report_Arr_Data_t* report = (USB_PS3Report_Arr_Data_t*)data;
-        report->rid = 0;
         size = sizeof(USB_PS3Report_Arr_Data_t);
         joys8 = report->joys;
         triggers = report->axis + PS3_L2;
         buttons = (uint8_t*)&report->buttons;
+        hats = &report->hat;
+        report->hat = lastHat;
     }
-    for (int i = 0; i < inputCount; i++) {
+    for (int i = start; i < end; i++) {
         Input_t* pin = pins + i;
-        if (pin->binding != 0xFF) {
-            if (pin->axisInfo && !pin->axisInfo->isADC) {
-                int16_t val = pin->axisInfo->analogRead(pin);
-                uint8_t val2 = (val >> 8) + 127;
-                if (pin->binding <= XBOX_RT) {
-                    triggers[pin->binding] = val2;
-                } else if (joys) {
-                    joys[pin->binding - XBOX_RT] = val;
-                } else {
-                    joys8[pin->binding] = val2;
-                }
+        if (pin->axisInfo && !pin->axisInfo->isADC) {
+            int16_t val = pin->axisInfo->analogRead(pin);
+            uint8_t val2 = (val >> 8) + 127;
+            if (pin->binding <= XBOX_RT) {
+                triggers[pin->binding] = val2;
+            } else if (joys) {
+                joys[pin->binding - XBOX_RT] = val;
             } else {
-                bool val = pin->digitalRead(pin);
-                uint32_t current = millis();
-                uint32_t last = pin->lastMillis;
-                // TODO: this is only XPAD_DPAD_DOWN for xinput. we will just need to store the correct binding somewhere.
-                bool usingMerged = mergedStrum && (pin->binding == XBOX_DPAD_DOWN || pin->binding == XBOX_DPAD_UP);
+                joys8[pin->binding] = val2;
+            }
+        } else {
+            bool val = pin->digitalRead(pin);
+            uint32_t current = millis();
+            uint32_t last = pin->lastMillis;
+            // TODO: this is only XPAD_DPAD_DOWN for xinput. we will just need to store the correct binding somewhere.
+            bool usingMerged = mergedStrum && (pin->binding == XBOX_DPAD_DOWN || pin->binding == XBOX_DPAD_UP);
+            if (usingMerged) {
+                last = lastMillisStrum;
+            }
+            if (current - last > pin->milliDeBounce) {
+                // >>3 is equiv to /8 (2^3), %8 is equiv to & 7 (8-1)
+                bit_write(val, buttons[pin->binding >> 3], pin->binding & 7);
+                pin->lastMillis = current;
                 if (usingMerged) {
-                    last = lastMillisStrum;
-                }
-                if (current - last > pin->milliDeBounce) {
-                    // >>3 is equiv to /8 (2^3), %8 is equiv to & 7 (8-1)
-                    bit_write(val, buttons[pin->binding >> 3], pin->binding & 7);
-                    pin->lastMillis = current;
-                    if (usingMerged) {
-                        lastMillisStrum = current;
-                    }
+                    lastMillisStrum = current;
                 }
             }
         }
+    }
+    if (hats) {
+        // To simlpify things, the above code treats the hat as if it is buttons.
+        // Now, we need to transform that into an actual hat
+        static uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07,
+                                         0x05, 0x08, 0x02, 0x01, 0x03};
+        // Note that due to debounce, we need to remember the last had value before it was transformed
+        // As we need to be able to keep it active when the hats are being debounced.
+        lastHat = hats[0];
+        hats[0] = lastHat > 0x0a ? 0x08 : hat_bindings[lastHat];
     }
     if (ledMode == APA102) {
         tickLEDs(ledOrder);

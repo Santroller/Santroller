@@ -11,7 +11,6 @@
  * the HID report descriptor, in Descriptors.c.
  */
 typedef struct {
-  uint8_t rid;
   uint16_t buttons;
   uint8_t hat;
 
@@ -26,10 +25,9 @@ typedef struct {
   // Accel values are 10 bits with padding.
   int16_t accel[4];
 
-} USB_PS3Report_Data_t;
+} TATTR_PACKED USB_PS3Report_Data_t;
 
 typedef struct {
-  uint8_t rid;
   uint16_t buttons;
   uint8_t hat;
 
@@ -41,7 +39,7 @@ typedef struct {
   // Accel values are 10 bits with padding.
   int16_t accel[4];
 
-} USB_PS3Report_Arr_Data_t;
+} TATTR_PACKED USB_PS3Report_Arr_Data_t;
 
 typedef struct {
   uint16_t buttons;
@@ -51,7 +49,7 @@ typedef struct {
   int16_t l_y;
   int16_t r_x;
   int16_t r_y;
-} XInput_Data_t;
+} TATTR_PACKED XInput_Data_t;
 
 typedef struct {
   uint8_t rid;
@@ -64,7 +62,7 @@ typedef struct {
   int16_t r_x;
   int16_t r_y;
   uint8_t reserved_1[6];
-} USB_XInputReport_Data_t;
+} TATTR_PACKED USB_XInputReport_Data_t;
 
 typedef struct {
   uint8_t rid;
@@ -73,7 +71,7 @@ typedef struct {
   uint8_t triggers[2];
   int16_t joys[4];
   uint8_t reserved_1[6];
-} USB_XInputReport_Arr_Data_t;
+} TATTR_PACKED USB_XInputReport_Arr_Data_t;
 
 typedef struct {
   TMIDI_EventPacket_t midi[SIMULTANEOUS_MIDI];

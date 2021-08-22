@@ -40,50 +40,69 @@ void initPins(void) {
     // eeprom_write_block(an, &bindingsPointer.analog[0], sizeof(AnalogData_t));
     // By resetting analogCount and clearing the adc interrupt, we can run this function again when the config is modified
     analogCount = 0;
+    pinCount = 0;
     cbi(ADCSRA, ADIE);
     Binding_t* binding = (Binding_t*)buf;
     AnalogData_t* analog = (AnalogData_t*)buf + sizeof(Binding_t);
-    for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
-        eeprom_read_block(binding, &bindingsPointer.bindings[i], sizeof(Binding_t));
-        if (binding->binding != 0xFF) {
-            volatile uint8_t* pinx = FIRST_PIN + ((i / PINS_PER_PORT) * 3);
+    bool isMouse = true;
+    uint8_t amt = 1;
+    // All mouse bindings will be stored in the config with THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN appended, so that we can tell they are mouse bindings.
+    if (consoleType == KEYBOARD_MOUSE) {
+        amt = THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN;
+    }
+    // For KBD/MOUSE, we want to make sure that mouse bindings appear first.
+    // To do this, we loop twice, once skipping mouse bindings and once skipping keyboard bindings.
+    while (true) {
+        for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
+            eeprom_read_block(binding, &bindingsPointer.bindings[i], sizeof(Binding_t));
+            if (isMouse == (binding->binding > THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN)) continue;
+            if (binding->binding) {
+                volatile uint8_t* pinx = FIRST_PIN + ((i / PINS_PER_PORT) * 3);
 // For the mega, there are two sections to get pins from, it splits to another memory section after PING
 #ifdef PINH
-            if ((i / PINS_PER_PORT) > 7) {
-                pinx = (&PINH) + ((i / PINS_PER_PORT) * 3);
-            }
-#endif
-            volatile uint8_t* ddrx = pinx + 1;
-            volatile uint8_t* portx = pinx + 2;
-            uint8_t bit = _BV(i % PINS_PER_PORT);
-            pins[i].port = pinx;
-            pins[i].mask = bit;
-            pins[i].binding = binding->binding - 1;
-            pins[i].pullup = binding->pullup;
-            pins[i].digitalRead = readDigital;
-            pins[i].axisInfo = NULL;
-            if (binding->analogID != 0xFF) {
-                eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
-                pins[i].axisInfo = &analogInfo[binding->analogID];
-                pins[i].axisInfo->deadzone = analog->scale.deadzone;
-                pins[i].axisInfo->offset = analog->scale.offset;
-                pins[i].axisInfo->multiplier = analog->scale.multiplier;
-                pins[i].axisInfo->isADC = analog->mapToDigital;
-                pins[i].axisInfo->ADCtrigger = analog->trigger;
-                pins[i].axisInfo->channel = analog->channel;
-                pins[i].axisInfo->analogRead = readAnalog;
-            } else {
-                uint8_t oldSREG = SREG;
-                cli();
-                *ddrx &= ~bit;
-                if (binding->pullup) {
-                    *portx |= bit;
-                } else {
-                    *portx &= ~bit;
+                if ((i / PINS_PER_PORT) > 7) {
+                    pinx = (&PINH) + ((i / PINS_PER_PORT) * 3);
                 }
-                SREG = oldSREG;
+#endif
+                volatile uint8_t* ddrx = pinx + 1;
+                volatile uint8_t* portx = pinx + 2;
+                uint8_t bit = _BV(i % PINS_PER_PORT);
+                pins[i].port = pinx;
+                pins[i].mask = bit;
+                pins[i].binding = binding->binding - amt;
+                pins[i].pullup = binding->pullup;
+                pins[i].digitalRead = readDigital;
+                pins[i].axisInfo = NULL;
+                if (binding->analogID) {
+                    eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
+                    pins[i].axisInfo = &analogInfo[binding->analogID];
+                    pins[i].axisInfo->deadzone = analog->scale.deadzone;
+                    pins[i].axisInfo->offset = analog->scale.offset;
+                    pins[i].axisInfo->multiplier = analog->scale.multiplier;
+                    pins[i].axisInfo->isADC = analog->mapToDigital;
+                    pins[i].axisInfo->ADCtrigger = analog->trigger;
+                    pins[i].axisInfo->channel = analog->channel;
+                    pins[i].axisInfo->analogRead = readAnalog;
+                } else {
+                    uint8_t oldSREG = SREG;
+                    cli();
+                    *ddrx &= ~bit;
+                    if (binding->pullup) {
+                        *portx |= bit;
+                    } else {
+                        *portx &= ~bit;
+                    }
+                    SREG = oldSREG;
+                }
+                pinCount++;
             }
         }
+        if (!isMouse || consoleType != KEYBOARD_MOUSE) {
+            break;
+        }
+        firstKeyboardPin = pinCount;
+        amt = 1;
+        isMouse = true;
     }
     setupADC();
 
@@ -106,8 +125,8 @@ void initPins(void) {
 }
 void setDefaults(void) {
     // 0xFF is used everywhere as a flag for something being disabled.
-    for (size_t i = 0 ; i < sizeof(Bindings_t); i++) {
-        eeprom_update_byte(((uint8_t*)&bindingsPointer) + i, 0xff);
+    for (size_t i = 0; i < sizeof(Bindings_t); i++) {
+        eeprom_update_byte(((uint8_t*)&bindingsPointer) + i, 0x00);
     }
 }
 

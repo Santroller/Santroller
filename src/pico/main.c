@@ -67,8 +67,10 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     if (index == 3) {
         return (uint16_t *)&serialString;
     }
-    descriptorRequest(TDTYPE_String << 8 | index, 0, buf);
-    return (uint16_t*)buf;
+    if (descriptorRequest(TDTYPE_String << 8 | index, 0, buf)) {
+        return (uint16_t*)buf;
+    }
+    return NULL;
 }
 
 int main() {
@@ -87,11 +89,11 @@ int main() {
                 tud_xinput_n_report(0, 0, controller, len);
             }
         } else if (consoleType == MIDI) {
+            tud_midi_n_packet_write(0, controller);
+        } else {
             if (tud_hid_n_ready(0)) {
                 tud_hid_n_report(0, 0, controller, len);
             }
-        } else {
-            tud_midi_n_packet_write(0, controller);
         }
     }
 }

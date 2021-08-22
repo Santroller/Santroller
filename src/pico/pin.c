@@ -16,82 +16,97 @@
 uint8_t analogCount = 0;
 int currentAnalog = 0;
 void initPins(void) {
-    setDefaults();
-    // Bindings_t test;
-    // memset(&test, 0xff, sizeof(test));
-    // Bindings_t* bindingsPointer = &test;
-    // bindingsPointer->bindings[9].binding = XBOX_DPAD_UP;
-    // bindingsPointer->bindings[9].pullup = true;
-    // bindingsPointer->bindings[9].pulldown = false;
-    // bindingsPointer->bindings[9].milliDeBounce = 20;
-    // bindingsPointer->bindings[10].binding = XBOX_DPAD_DOWN;
-    // bindingsPointer->bindings[10].pullup = true;
-    // bindingsPointer->bindings[10].pulldown = false;
-    // bindingsPointer->bindings[10].milliDeBounce = 20;
-    // bindingsPointer->bindings[0].binding = XBOX_START;
+    // setDefaults();
+    Bindings_t test = {0};
+    Bindings_t* bindingsPointer = &test;
+    bindingsPointer->bindings[9].binding = THID_KEYBOARD_SC_UP_ARROW + 1;
+    bindingsPointer->bindings[9].pullup = true;
+    bindingsPointer->bindings[9].pulldown = false;
+    bindingsPointer->bindings[9].milliDeBounce = 20;
+    bindingsPointer->bindings[10].binding = THID_KEYBOARD_SC_DOWN_ARROW + 1;
+    bindingsPointer->bindings[10].pullup = true;
+    bindingsPointer->bindings[10].pulldown = false;
+    bindingsPointer->bindings[10].milliDeBounce = 20;
+    // bindingsPointer->bindings[0].binding = XBOX_START + 1;
     // bindingsPointer->bindings[0].pullup = true;
     // bindingsPointer->bindings[0].pulldown = false;
     // bindingsPointer->bindings[0].milliDeBounce = 20;
-    // bindingsPointer->bindings[1].binding = XBOX_BACK;
+    // bindingsPointer->bindings[1].binding = XBOX_BACK + 1;
     // bindingsPointer->bindings[1].pullup = true;
     // bindingsPointer->bindings[1].pulldown = false;
     // bindingsPointer->bindings[1].milliDeBounce = 20;
-    // bindingsPointer->bindings[11].binding = XBOX_A;
-    // bindingsPointer->bindings[11].pullup = true;
-    // bindingsPointer->bindings[11].pulldown = false;
-    // bindingsPointer->bindings[11].milliDeBounce = 20;
-    // bindingsPointer->bindings[12].binding = XBOX_B;
+    bindingsPointer->bindings[11].binding = THID_KEYBOARD_SC_Z + 1;
+    bindingsPointer->bindings[11].pullup = true;
+    bindingsPointer->bindings[11].pulldown = false;
+    bindingsPointer->bindings[11].milliDeBounce = 20;
+    // bindingsPointer->bindings[12].binding = XBOX_B + 1;
     // bindingsPointer->bindings[12].pullup = true;
     // bindingsPointer->bindings[12].pulldown = false;
     // bindingsPointer->bindings[12].milliDeBounce = 20;
-    // bindingsPointer->bindings[13].binding = XBOX_Y;
+    // bindingsPointer->bindings[13].binding = XBOX_Y + 1;
     // bindingsPointer->bindings[13].pullup = true;
     // bindingsPointer->bindings[13].pulldown = false;
     // bindingsPointer->bindings[13].milliDeBounce = 20;
-    // bindingsPointer->bindings[14].binding = XBOX_X;
+    // bindingsPointer->bindings[14].binding = XBOX_X + 1;
     // bindingsPointer->bindings[14].pullup = true;
     // bindingsPointer->bindings[14].pulldown = false;
     // bindingsPointer->bindings[14].milliDeBounce = 20;
-    // bindingsPointer->bindings[15].binding = XBOX_LB;
+    // bindingsPointer->bindings[15].binding = XBOX_LB + 1;
     // bindingsPointer->bindings[15].pullup = true;
     // bindingsPointer->bindings[15].pulldown = false;
     // bindingsPointer->bindings[15].milliDeBounce = 20;
-
-    Binding_t* binding = (Binding_t*)buf;
-    AnalogData_t* analog = (AnalogData_t*)buf + sizeof(Binding_t);
-    for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
-        binding = &bindingsPointer->bindings[i];
-        if (binding->binding != 0xFF) {
-            pins[i].offset = i;
-            pins[i].binding = binding->binding;
-            pins[i].pullup = binding->pullup;
-            pins[i].milliDeBounce = binding->milliDeBounce;
-            pins[i].digitalRead = readDigital;
-            if (binding->analogID != 0xFF) {
-                analog = &bindingsPointer->analog[binding->analogID];
-                pins[i].axisInfo = &analogInfo[binding->analogID];
-                pins[i].axisInfo->deadzone = analog->scale.deadzone;
-                pins[i].axisInfo->offset = analog->scale.offset;
-                pins[i].axisInfo->multiplier = analog->scale.multiplier;
-                pins[i].axisInfo->isADC = analog->mapToDigital;
-                pins[i].axisInfo->ADCtrigger = analog->trigger;
-                pins[i].axisInfo->channel = analog->channel;
-                pins[i].axisInfo->analogRead = readAnalog;
-                adc_gpio_init(i);
-            } else {
-                pins[i].axisInfo = NULL;
-                gpio_init(i);
-                gpio_set_dir(i, false);
-                gpio_set_pulls(i, binding->pullup, binding->pulldown);
+    pinCount = 0;
+    Binding_t* binding;
+    AnalogData_t* analog;
+    bool isMouse = true;
+    uint8_t amt = 1;
+    // All mouse bindings will be stored in the config with THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN appended, so that we can tell they are mouse bindings.
+    if (consoleType == KEYBOARD_MOUSE) {
+        amt = THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN;
+    }
+    // For KBD/MOUSE, we want to make sure that mouse bindings appear first.
+    // To do this, we loop twice, once skipping mouse bindings and once skipping keyboard bindings.
+    while (true) {
+        for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
+            binding = &bindingsPointer->bindings[i];
+            if (isMouse == (binding->binding > THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN)) continue;
+            if (binding->binding) {
+                pins[pinCount].offset = i;
+                pins[pinCount].binding = binding->binding - amt;
+                pins[pinCount].pullup = binding->pullup;
+                pins[pinCount].milliDeBounce = binding->milliDeBounce;
+                pins[pinCount].digitalRead = readDigital;
+                if (binding->analogID) {
+                    analog = &bindingsPointer->analog[binding->analogID];
+                    pins[pinCount].axisInfo = &analogInfo[binding->analogID];
+                    pins[pinCount].axisInfo->deadzone = analog->scale.deadzone;
+                    pins[pinCount].axisInfo->offset = analog->scale.offset;
+                    pins[pinCount].axisInfo->multiplier = analog->scale.multiplier;
+                    pins[pinCount].axisInfo->isADC = analog->mapToDigital;
+                    pins[pinCount].axisInfo->ADCtrigger = analog->trigger;
+                    pins[pinCount].axisInfo->channel = analog->channel;
+                    pins[pinCount].axisInfo->analogRead = readAnalog;
+                    adc_gpio_init(i);
+                } else {
+                    gpio_init(i);
+                    gpio_set_dir(i, false);
+                    gpio_set_pulls(i, binding->pullup, binding->pulldown);
+                }
+                pinCount++;
             }
         }
+        if (!isMouse || consoleType != KEYBOARD_MOUSE) {
+            break;
+        }
+        firstKeyboardPin = pinCount;
+        amt = 1;
+        isMouse = true;
     }
     adc_init();
 }
 void setDefaults(void) {
-    // 0xFF is used everywhere as a flag for something being disabled.
     Bindings_t clear;
-    memset(&clear, 0xff, sizeof(clear));
+    memset(&clear, 0x00, sizeof(clear));
     uint32_t saved_irq;
     saved_irq = save_and_disable_interrupts();
     flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);

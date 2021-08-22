@@ -40,12 +40,12 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
             }
         } else if (request == THID_REQ_GetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
             if (consoleType == PS3) {
+                memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
                 if (deviceType <= ROCK_BAND_DRUMS) {
-                    ps3_init[3] = 0x00;
+                    ((uint8_t*)requestBuffer)[3] = 0x00;
                 } else if (deviceType <= GUITAR_HERO_DRUMS) {
-                    ps3_init[3] = 0x06;
+                    ((uint8_t*)requestBuffer)[3] = 0x06;
                 }
-                memcpy(requestBuffer, ps3_init, sizeof(ps3_init));
                 return sizeof(ps3_init);
             }
         }

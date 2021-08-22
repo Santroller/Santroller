@@ -6,6 +6,7 @@
 #include "usb/midi_descriptors.h"
 #include "usb/std_descriptors.h"
 #include "usb/wcid_descriptors.h"
+#include "eeprom.h"
 
 #define ENDPOINT_SIZE 64
 #define DEVICE_EPSIZE_IN 32
@@ -37,13 +38,6 @@
 #define MinPhysicalVal -127
 #define MaxPhysicalVal 128
 #define AbsoluteCoords false
-
-#ifdef __AVR__
-#include <avr/pgmspace.h>
-#else
-#define memcpy_P memcpy
-#define PROGMEM
-#endif
 
 enum endpoint_dir_t {
     ENDPOINT_OUT = 0x00,

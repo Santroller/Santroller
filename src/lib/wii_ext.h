@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "defines.h"
+#include "eeprom.h"
 #include "fxpt_math/fxpt_math.h"
 #include "i2c.h"
 #include "lib_main.h"
@@ -14,35 +15,40 @@
 #include "timer.h"
 #define I2C_ADDR 0x52
 void tickWiiExtInput(Controller_t *controller);
-// TODO: this stuff might be worth putting into PROGMEM
-uint8_t wiiButtonBindings[16] = {
+// Why dont we just store a xbox -> ps3 map here
+const PROGMEM uint8_t xinputToPs3[16] = {
+    PS3_DPAD_UP_BT, PS3_DPAD_DOWN_BT, PS3_DPAD_LEFT_BT, PS3_DPAD_RIGHT_BT,
+    PS3_START_BT, PS3_SELECT_BT, PS3_LEFT_STICK_BT, PS3_RIGHT_STICK_BT,
+    PS3_L1_BT, PS3_R1_BT, PS3_PS_BT, INVALID_PIN,
+    PS3_CROSS_BT, PS3_CIRCLE_BT, PS3_SQUARE_BT, PS3_TRIANGLE_BT};
+const PROGMEM uint8_t xinputToKBD[16] = {
+    THID_KEYBOARD_SC_UP_ARROW, THID_KEYBOARD_SC_DOWN_ARROW, THID_KEYBOARD_SC_LEFT_ARROW, THID_KEYBOARD_SC_RIGHT_ARROW,
+    THID_KEYBOARD_SC_ENTER, THID_KEYBOARD_SC_ESCAPE, THID_KEYBOARD_SC_Q, THID_KEYBOARD_SC_E,
+    THID_KEYBOARD_SC_R, THID_KEYBOARD_SC_T, THID_KEYBOARD_SC_F, INVALID_PIN,
+    THID_KEYBOARD_SC_Z, THID_KEYBOARD_SC_X, THID_KEYBOARD_SC_C, THID_KEYBOARD_SC_V};
+const PROGMEM uint8_t wiiButtonBindings[16] = {
     INVALID_PIN, INVALID_PIN, XBOX_START, XBOX_HOME,
     XBOX_BACK, INVALID_PIN, XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB, XBOX_Y,
     XBOX_A, XBOX_X, XBOX_B, XBOX_LB};
-uint8_t wiiButtonBindingsUDraw[16] = {
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
-    INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN};
-uint8_t wiiButtonBindingsUDraw[16] = {
+const PROGMEM uint8_t wiiButtonBindingsUDraw[16] = {
     INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
     INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
     XBOX_A, XBOX_B, XBOX_X, INVALID_PIN,
     INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN};
-uint8_t wiiButtonBindingsNunchuk[16] = {
+const PROGMEM uint8_t wiiButtonBindingsNunchuk[16] = {
     INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
     INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN,
     XBOX_A, XBOX_B, INVALID_PIN, INVALID_PIN,
     INVALID_PIN, INVALID_PIN, INVALID_PIN, INVALID_PIN};
-uint8_t wiiButtonBindingsDrum[16] = {
+const PROGMEM uint8_t wiiButtonBindingsDrum[16] = {
     INVALID_PIN, INVALID_PIN, XBOX_START, INVALID_PIN,
     XBOX_BACK, INVALID_PIN, INVALID_PIN, INVALID_PIN,
     INVALID_PIN, INVALID_PIN, XBOX_RB, XBOX_X,
     XBOX_A, XBOX_Y, XBOX_B, XBOX_LB};
 
 // TODO: this button  layout is probably trash
-uint8_t wiiButtonBindingsDJ[16] = {
+const PROGMEM uint8_t wiiButtonBindingsDJ[16] = {
     INVALID_PIN, XBOX_B, XBOX_START, INVALID_PIN,
     XBOX_BACK, XBOX_LB, INVALID_PIN, INVALID_PIN,
     INVALID_PIN, INVALID_PIN, XBOX_X, XBOX_RB,
@@ -279,7 +285,8 @@ void initWiiExt(void) {
         _delay_us(10);
     }
     int16_t (*readFunction)(Input_t *) = NULL;
-    uint8_t *bindings = wiiButtonBindings;
+    uint8_t bindings[16];
+    memcpy_P(bindings, wiiButtonBindings, sizeof(wiiButtonBindings));
     // Most extensions use index 4 and 5 for buttons.
     buttons = (uint16_t *)data + 4;
     if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
@@ -322,22 +329,22 @@ void initWiiExt(void) {
             break;
         case WII_NUNCHUK:
             readFunction = readNunchukExt;
-            bindings = wiiButtonBindingsNunchuk;
+            memcpy_P(bindings, wiiButtonBindingsNunchuk, sizeof(wiiButtonBindingsNunchuk));
             break;
         case WII_GUITAR_HERO_DRUM_CONTROLLER:
             readFunction = readDrumExt;
-            bindings = wiiButtonBindingsDrum;
+            memcpy_P(bindings, wiiButtonBindingsDrum, sizeof(wiiButtonBindingsDrum));
             break;
         case WII_THQ_UDRAW_TABLET:
             readFunction = readUDrawExt;
-            bindings = wiiButtonBindingsUDraw;
+            memcpy_P(bindings, wiiButtonBindingsUDraw, sizeof(wiiButtonBindingsUDraw));
             break;
         case WII_UBISOFT_DRAWSOME_TABLET:
             readFunction = readDrawsomeExt;
             break;
         case WII_DJ_HERO_TURNTABLE:
             readFunction = readDJExt;
-            bindings = wiiButtonBindingsDJ;
+            memcpy_P(bindings, wiiButtonBindingsDJ, sizeof(wiiButtonBindingsDJ));
             break;
         case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
             readFunction = readTataconExt;
@@ -347,12 +354,20 @@ void initWiiExt(void) {
             readFunction = NULL;
             return;
     }
-    Input_t *current = pins;
-    AnalogInput_t *an = analogInfo;
+    uint8_t consoleBindings[16];
+    if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
+        memcpy_P(consoleBindings, xinputToPs3, sizeof(xinputToPs3));
+    } else if (consoleType == KEYBOARD_MOUSE) {
+        memcpy_P(consoleBindings, xinputToKBD, sizeof(xinputToKBD));
+    }
     for (int i = 0; i < 16; i++) {
         uint8_t binding = bindings[i];
+        Input_t *current = pins + pinCount;
         if (binding != INVALID_PIN) {
             current->binding = binding;
+            if (consoleType != XBOX360) {
+                current->binding = consoleBindings[binding];
+            }
             current->mask = _BV(i);
             current->pullup = true;
             // UDraws are dumb and don't invert these pins.
@@ -361,14 +376,18 @@ void initWiiExt(void) {
                     current->pullup = false;
                 }
             }
+            pinCount++;
         }
     }
+    AnalogInput_t *an = analogInfo;
     for (int i = 0; i < XBOX_AXIS_COUNT; i++) {
+        Input_t *current = pins + pinCount;
         an->analogRead = readFunction;
         an->offset = i;
         current->axisInfo = an;
         current->binding = i;
-        current++;
+        an++;
+        pinCount++;
     }
 }
 void tickWiiExtInput() {

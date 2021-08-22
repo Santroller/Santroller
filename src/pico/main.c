@@ -73,12 +73,12 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 
 int main() {
     generateSerialString(serialString.UnicodeString);
-    init();
     board_init();
     tusb_init();
-    uart_init(UART_ID, BAUD_RATE);
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+    init();
+    // uart_init(UART_ID, BAUD_RATE);
+    // gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+    // gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
     while (1) {
         tud_task();  // tinyusb device task
         uint8_t len = tick(controller);
@@ -96,7 +96,11 @@ int main() {
     }
 }
 
-usbd_class_driver_t driver[] = {{.init = xinputd_init,
+usbd_class_driver_t driver[] = {{
+                                  #if CFG_TUSB_DEBUG >= 2
+                                    .name = "XInput",
+                                  #endif
+                                 .init = xinputd_init,
                                  .reset = xinputd_reset,
                                  .open = xinputd_open,
                                  .control_xfer_cb = tud_vendor_control_xfer_cb,

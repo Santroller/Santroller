@@ -17,14 +17,20 @@ typedef struct {
 typedef struct Input_d {
     uint8_t binding;
     uint32_t lastMillis;
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
     uint8_t milliDeBounce;
     AnalogInput_t* axisInfo;  //For digital pins this will be NULL
     bool (*digitalRead)(Input_t*);
     bool pullup : 1;
     bool pulldown : 1;
+    bool forceColor : 1;
+    uint8_t mask;
 #ifdef __AVR__
     volatile uint8_t* port;
-    uint8_t mask;
+#else
+    uint8_t offset;
 #endif
 } Input_t;
 int16_t readAnalog(Input_t* pin);

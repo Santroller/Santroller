@@ -68,6 +68,7 @@ extern "C" {
 #ifndef CFG_TUSB_MEM_ALIGN
 #  define CFG_TUSB_MEM_ALIGN __attribute__((aligned(4)))
 #endif
+#define TUD_OPT_RP2040_USB_DEVICE_ENUMERATION_FIX 1
 
 //--------------------------------------------------------------------
 // DEVICE CONFIGURATION
@@ -83,9 +84,9 @@ extern "C" {
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 1
 #define CFG_TUD_VENDOR 0
-#define CFG_TUD_XINPUT 4
-
-#define CFG_TUSB_DEBUG 4
+#define CFG_TUD_XINPUT 2
+#define CFG_TUSB_DEBUG 1
+// #define CFG_TUSB_DEBUG 20
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
 #define CFG_TUD_HID_EP_BUFSIZE DEVICE_EPSIZE_IN

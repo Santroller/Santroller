@@ -8,8 +8,8 @@
 #include "config.h"
 #include "lib_main.h"
 #include "string.h"
+// Instead of relying on EEMEM to set pointers, we could just manually define regions ourselves.
 static Bindings_t EEMEM bindingsPointer;
-const Bindings_t PROGMEM defaultBindings;
 uint8_t analogCount = 0;
 int currentAnalog = 0;
 void setupADC(void);
@@ -45,7 +45,7 @@ void initPins(void) {
     AnalogData_t* analog = (AnalogData_t*)buf + sizeof(Binding_t);
     for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
         eeprom_read_block(binding, &bindingsPointer.bindings[i], sizeof(Binding_t));
-        if (binding->binding) {
+        if (binding->binding != 0xFF) {
             volatile uint8_t* pinx = FIRST_PIN + ((i / PINS_PER_PORT) * 3);
 // For the mega, there are two sections to get pins from, it splits to another memory section after PING
 #ifdef PINH
@@ -61,6 +61,7 @@ void initPins(void) {
             pins[i].binding = binding->binding - 1;
             pins[i].pullup = binding->pullup;
             pins[i].digitalRead = readDigital;
+            pins[i].axisInfo = NULL;
             if (binding->analogID != 0xFF) {
                 eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
                 pins[i].axisInfo = &analogInfo[binding->analogID];

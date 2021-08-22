@@ -2,6 +2,7 @@ SRC += $(PROJECT_ROOT)/src/lib/descriptors.c
 SRC += $(PROJECT_ROOT)/src/lib/report_descriptors.c
 SRC += $(PROJECT_ROOT)/src/lib/lib_main.c
 SRC += $(PROJECT_ROOT)/src/lib/usb.c
+SRC += $(PROJECT_ROOT)/src/lib/leds.c
 SRC += ${PROJECT_ROOT}/src/avr/lib/pin.c
 SRC += ${PROJECT_ROOT}/src/avr/lib/timer.c
 SRC += $(LUFA_SRC_SERIAL)

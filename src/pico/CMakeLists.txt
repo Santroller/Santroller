@@ -23,6 +23,8 @@ add_executable(
     ../lib/report_descriptors.c
     ../lib/usb.c
     ../lib/i2c.c
+    ../lib/leds.c
+    pin.c
     timer.c
     main.c
     xinput_device.c
@@ -31,6 +33,12 @@ target_include_directories(${TARGET} PUBLIC
       ${SRC}
       ../lib
       .)
+
+set(XIP_BASE 0x10000000)
+math(EXPR RF_TARGET_OFFSET "(256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+math(EXPR FLASH_TARGET_OFFSET "(512 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
+math(EXPR CONF_REGION "${XIP_BASE} + ${RF_TARGET_OFFSET}" OUTPUT_FORMAT HEXADECIMAL)
+math(EXPR RF_REGION "${XIP_BASE} + ${FLASH_TARGET_OFFSET}" OUTPUT_FORMAT HEXADECIMAL)
 
 # the pico doesn't really have the port concept that the avr controllers have
 target_compile_definitions(${TARGET} PUBLIC
@@ -41,12 +49,9 @@ target_compile_definitions(${TARGET} PUBLIC
   VERSION_MINOR=${VERSION_MINOR}
   VERSION_MAJOR=${VERSION_MAJOR}
   VERSION_REVISION=${VERSION_REVISION}
+  FLASH_TARGET_OFFSET=${FLASH_TARGET_OFFSET}
+  RF_TARGET_OFFSET=${RF_TARGET_OFFSET}
 )
-set(XIP_BASE 0x10000000)
-math(EXPR RF_TARGET_OFFSET "(256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
-math(EXPR FLASH_TARGET_OFFSET "(512 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
-math(EXPR CONF_REGION "${XIP_BASE} + ${RF_TARGET_OFFSET}" OUTPUT_FORMAT HEXADECIMAL)
-math(EXPR RF_REGION "${XIP_BASE} + ${FLASH_TARGET_OFFSET}" OUTPUT_FORMAT HEXADECIMAL)
 # Define a memory section 256 kb away from the start of flash for the config
 target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
 # Define a memory section 512 kb away from the start of flash for the rf config

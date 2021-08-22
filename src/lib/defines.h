@@ -10,9 +10,9 @@
 
 // Tilt detection
 typedef enum { NO_TILT,
-       MPU_6050,
-       DIGITAL,
-       ANALOGUE } TiltType_t;
+               MPU_6050,
+               DIGITAL,
+               ANALOGUE } TiltType_t;
 
 // Input types
 typedef enum { WII = 1,
@@ -58,20 +58,11 @@ typedef enum {
 } ConsoleType_t;
 
 // Orientations for gyros
-enum GyroOrientation {
+typedef enum {
     X,
     Y,
     Z
-};
-
-enum GyroOrientationOld {
-    POSITIVE_Z,
-    NEGATIVE_Z,
-    POSITIVE_Y,
-    NEGATIVE_Y,
-    POSITIVE_X,
-    NEGATIVE_X
-};
+} GyroOrientation_t;
 
 // Firmware types
 enum FirmwareType {
@@ -80,20 +71,15 @@ enum FirmwareType {
 };
 
 // Fret Modes
-enum FretLedMode { LEDS_DISABLED,
-                   LEDS_INLINE,
-                   APA102 };
+typedef enum { LEDS_DISABLED,
+               LEDS_INLINE,
+               APA102 } FretLedMode_t;
 
-enum MidiType { DISABLED,
-                NOTE,
-                CONTROL_COMMAND };
+typedef enum { DISABLED,
+               NOTE,
+               CONTROL_COMMAND } MidiType_t;
 
-enum PinTypeFlags {
-    DIGITAL_PIN,
-    ANALOGUE_PIN,
-    INVERTED,
-};
-enum WiiExtType {
+typedef enum {
     WII_NUNCHUK = 0x0000,
     WII_CLASSIC_CONTROLLER = 0x0001,
     WII_CLASSIC_CONTROLLER_PRO = 0x0101,
@@ -106,8 +92,8 @@ enum WiiExtType {
     WII_MOTION_PLUS = 0x0005,
     WII_NO_EXTENSION = 0x180b,
     WII_NOT_INITIALISED = 0xFFFF
-};
-enum PsxControllerType {
+} WiiExtType_t;
+typedef enum {
     PSX_UNKNOWN_CONTROLLER = 0,
     PSX_DUALSHOCK_1_CONTROLLER,
     PSX_DUALSHOCK_2_CONTROLLER,
@@ -119,7 +105,7 @@ enum PsxControllerType {
     PSX_ANALOG,
     PSX_MOUSE,
     PSX_NO_DEVICE
-};
+} PsxControllerType_t;
 
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6

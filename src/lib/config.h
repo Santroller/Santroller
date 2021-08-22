@@ -31,6 +31,7 @@ typedef struct {
     bool pullup;
     Led_t led;
     Midi_t midi;
+    uint8_t milliDeBounce;
     uint8_t analogID; //In the tool itself, we can store a list of what each analog pin maps to, so each analog pin has a unique id in the analog list
 } Binding_t;
 

@@ -71,6 +71,7 @@
 // CONFIGURATION
 //--------------------------------------------------------------------
 
+#define TUD_OPT_RP2040_USB_DEVICE_ENUMERATION_FIX 1
 // Size of buffer to hold descriptors and other data used for enumeration
 #define CFG_TUH_ENUMERATION_BUFSIZE 256
 

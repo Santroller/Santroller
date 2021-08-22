@@ -100,8 +100,7 @@ bool tusbh_xinput_mount_cb(uint8_t rhport, uint8_t d,
   dev_addr = d;
   return true;
 }
-usbh_class_driver_t driver[] = {{.class_code = TUSB_CLASS_VENDOR_SPECIFIC,
-                                 .init = xinputh_init,
+usbh_class_driver_t driver[] = {{.init = xinputh_init,
                                  .open = xinputh_open_subtask,
                                  .set_config = xinputh_set_config,
                                  .xfer_cb = xinputh_isr,

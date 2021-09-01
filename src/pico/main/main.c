@@ -135,11 +135,8 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
 }
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
   (void)index; // for multiple configurations
-  uint8_t devt = fullDeviceType;
-  if (isGuitar(devt)) { devt = REAL_GUITAR_SUBTYPE; }
-  if (isDrum(devt)) { devt = REAL_DRUM_SUBTYPE; }
-  ConfigurationDescriptor.XInputReserved.subtype = devt;
-  if (devt <= KEYBOARD_ROCK_BAND_GUITAR) {
+  ConfigurationDescriptor.XInputReserved.subtype = deviceType;
+  if (fullDeviceType <= KEYBOARD_ROCK_BAND_GUITAR) {
     ConfigurationDescriptor.HIDDescriptor.HIDReportLength =
         sizeof(kbd_report_descriptor);
   }
@@ -227,7 +224,7 @@ void initialise(void) {
   board_init();
   tusb_init();
   Configuration_t config = loadConfig();
-  fullDeviceType = fullDeviceType;
+  fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
   pollRate = config.main.pollRate;
   inputType = config.main.inputType;

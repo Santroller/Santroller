@@ -27,6 +27,7 @@ typedef struct {
 } AnalogData_t;
 typedef struct {
     uint8_t binding;
+    BindingType_t type;
     bool pulldown;
     bool pullup;
     Led_t led;

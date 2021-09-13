@@ -19,7 +19,6 @@ set(SRC .)
 add_executable(
     ${TARGET}
     main.c
-    xinput_host.c
 )
 target_include_directories(${TARGET} PUBLIC
       ${SRC}
@@ -54,14 +53,16 @@ if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     hardware_timer
     hardware_pio
     hardware_sleep
+    hardware_dma
+    hardware_irq
     pico_unique_id
-    pico_mem_ops
-    tinyusb_host
-    tinyusb_device
-    tinyusb_board)
+    pico_mem_ops)
 
   # create map/bin/hex/uf2 file in addition to ELF.
   pico_add_extra_outputs(${TARGET})
+
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/pio_serialiser.pio)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/pio_serialiser_read.pio)
   # Copy built binaries to firmware
   add_custom_command(
     TARGET ${TARGET}

@@ -210,8 +210,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                         break;
                     case GUITAR_HERO_GUITAR:
                     case ROCK_BAND_GUITAR:
-                    case GUITAR_HERO_LIVE_GUITAR:
                         subType = XINPUT_GUITAR_ALTERNATE;
+                        break;
+                    case GUITAR_HERO_LIVE_GUITAR:
+                        subType = XINPUT_LIVE_GUITAR;
                         break;
                     case GUITAR_HERO_DRUMS:
                     case ROCK_BAND_DRUMS:

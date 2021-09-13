@@ -26,6 +26,7 @@ typedef struct Input_d {
     bool pullup : 1;
     bool pulldown : 1;
     bool forceColor : 1;
+    bool isExt : 1;
     uint8_t mask;
 #ifdef __AVR__
     volatile uint8_t* port;

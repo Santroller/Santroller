@@ -22,16 +22,16 @@ void initPins(void) {
     // setDefaults();
     // Binding_t* bindingn = (Binding_t*)buf;
     // bindingn->analogID = 0xFF;
-    // bindingn->binding = XBOX_A+1;
+    // bindingn->binding = XBOX_A;
     // bindingn->pullup = true;
     // // for the uno, D2 is convently on port D, bit 2
     // eeprom_write_block(bindingn, &bindingsPointer.bindings[(((&PIND - FIRST_PIN) / 3) * 8) + 2], sizeof(Binding_t));
     // bindingn->analogID = 0xFF;
-    // bindingn->binding = XBOX_B+1;
+    // bindingn->binding = XBOX_B;
     // bindingn->pullup = true;
     // eeprom_write_block(bindingn, &bindingsPointer.bindings[(((&PIND - FIRST_PIN) / 3) * 8) + 3], sizeof(Binding_t));
     // bindingn->analogID = 0;
-    // bindingn->binding = XBOX_L_X+1;
+    // bindingn->binding = XBOX_L_X;
     // bindingn->pullup = false;
     // eeprom_write_block(bindingn, &bindingsPointer.bindings[0], sizeof(Binding_t));
     // AnalogData_t* an = (AnalogData_t*)buf;
@@ -45,18 +45,13 @@ void initPins(void) {
     Binding_t* binding = (Binding_t*)buf;
     AnalogData_t* analog = (AnalogData_t*)buf + sizeof(Binding_t);
     bool isMouse = true;
-    uint8_t amt = 1;
-    // All mouse bindings will be stored in the config with THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN appended, so that we can tell they are mouse bindings.
-    if (consoleType == KEYBOARD_MOUSE) {
-        amt = THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN;
-    }
-    // For KBD/MOUSE, we want to make sure that mouse bindings appear first.
+    // If an input has mouse bindings, we want them to appear first.
     // To do this, we loop twice, once skipping mouse bindings and once skipping keyboard bindings.
     while (true) {
         for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
             eeprom_read_block(binding, &bindingsPointer.bindings[i], sizeof(Binding_t));
-            if (isMouse == (binding->binding > THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN)) continue;
-            if (binding->binding) {
+            if (isMouse != (binding->type == DIRECT_MOUSE || binding->type == OTHER_MOUSE)) continue;
+            if (binding->type) {
                 volatile uint8_t* pinx = FIRST_PIN + ((i / PINS_PER_PORT) * 3);
 // For the mega, there are two sections to get pins from, it splits to another memory section after PING
 #ifdef PINH
@@ -69,40 +64,42 @@ void initPins(void) {
                 uint8_t bit = _BV(i % PINS_PER_PORT);
                 pins[i].port = pinx;
                 pins[i].mask = bit;
-                pins[i].binding = binding->binding - amt;
+                pins[i].binding = binding->binding;
                 pins[i].pullup = binding->pullup;
-                pins[i].digitalRead = readDigital;
-                pins[i].axisInfo = NULL;
-                if (binding->analogID) {
-                    eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
-                    pins[i].axisInfo = &analogInfo[binding->analogID];
-                    pins[i].axisInfo->deadzone = analog->scale.deadzone;
-                    pins[i].axisInfo->offset = analog->scale.offset;
-                    pins[i].axisInfo->multiplier = analog->scale.multiplier;
-                    pins[i].axisInfo->isADC = analog->mapToDigital;
-                    pins[i].axisInfo->ADCtrigger = analog->trigger;
-                    pins[i].axisInfo->channel = analog->channel;
-                    pins[i].axisInfo->analogRead = readAnalog;
-                } else {
-                    uint8_t oldSREG = SREG;
-                    cli();
-                    *ddrx &= ~bit;
-                    if (binding->pullup) {
-                        *portx |= bit;
+                pins[i].isExt = binding->type == DIRECT_TYPE || binding->type == DIRECT_MOUSE;
+                if (pins[i].isExt) {
+                    pins[i].digitalRead = readDigital;
+                    pins[i].axisInfo = NULL;
+                    if (binding->analogID) {
+                        eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
+                        pins[i].axisInfo = &analogInfo[binding->analogID];
+                        pins[i].axisInfo->deadzone = analog->scale.deadzone;
+                        pins[i].axisInfo->offset = analog->scale.offset;
+                        pins[i].axisInfo->multiplier = analog->scale.multiplier;
+                        pins[i].axisInfo->isADC = analog->mapToDigital;
+                        pins[i].axisInfo->ADCtrigger = analog->trigger;
+                        pins[i].axisInfo->channel = analog->channel;
+                        pins[i].axisInfo->analogRead = readAnalog;
                     } else {
-                        *portx &= ~bit;
+                        uint8_t oldSREG = SREG;
+                        cli();
+                        *ddrx &= ~bit;
+                        if (binding->pullup) {
+                            *portx |= bit;
+                        } else {
+                            *portx &= ~bit;
+                        }
+                        SREG = oldSREG;
                     }
-                    SREG = oldSREG;
-                }
+                } 
                 pinCount++;
             }
         }
-        if (!isMouse || consoleType != KEYBOARD_MOUSE) {
+        if (!isMouse) {
             break;
         }
         firstKeyboardPin = pinCount;
-        amt = 1;
-        isMouse = true;
+        isMouse = false;
     }
     setupADC();
 

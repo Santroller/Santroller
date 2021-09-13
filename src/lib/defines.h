@@ -28,6 +28,7 @@ typedef enum {
     XINPUT_DANCE_PAD,
     XINPUT_GUITAR,
     XINPUT_GUITAR_ALTERNATE,
+    XINPUT_LIVE_GUITAR,
     XINPUT_DRUMS,
     XINPUT_ARCADE_PAD = 0x13,
     XINPUT_TURNTABLE = 0x17,
@@ -216,3 +217,10 @@ enum PS3Buttons {
     PS3_DPAD_LEFT_BT,
     PS3_DPAD_RIGHT_BT,
 };
+typedef enum {
+    UNUSED, // No Binding
+    DIRECT_TYPE, // Direct mode, not used for mouse
+    DIRECT_MOUSE, // Direct mode, used for mouse
+    OTHER, // Wii/PS2 mode, not used for mouse
+    OTHER_MOUSE // Wii/PS2 mode, used for mouse
+} BindingType_t;

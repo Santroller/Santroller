@@ -59,38 +59,36 @@ void initPins(void) {
     Binding_t* binding;
     AnalogData_t* analog;
     bool isMouse = true;
-    uint8_t amt = 1;
-    // All mouse bindings will be stored in the config with THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN appended, so that we can tell they are mouse bindings.
-    if (consoleType == KEYBOARD_MOUSE) {
-        amt = THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN;
-    }
     // For KBD/MOUSE, we want to make sure that mouse bindings appear first.
     // To do this, we loop twice, once skipping mouse bindings and once skipping keyboard bindings.
     while (true) {
         for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
             binding = &bindingsPointer->bindings[i];
-            if (isMouse == (binding->binding > THID_KEYBOARD_SC_KEYPAD_EQUAL_SIGN)) continue;
-            if (binding->binding) {
+            if (isMouse != (binding->type == DIRECT_MOUSE)) continue;
+            if (binding->type) {
                 pins[pinCount].offset = i;
-                pins[pinCount].binding = binding->binding - amt;
+                pins[pinCount].binding = binding->binding;
                 pins[pinCount].pullup = binding->pullup;
                 pins[pinCount].milliDeBounce = binding->milliDeBounce;
-                pins[pinCount].digitalRead = readDigital;
-                if (binding->analogID) {
-                    analog = &bindingsPointer->analog[binding->analogID];
-                    pins[pinCount].axisInfo = &analogInfo[binding->analogID];
-                    pins[pinCount].axisInfo->deadzone = analog->scale.deadzone;
-                    pins[pinCount].axisInfo->offset = analog->scale.offset;
-                    pins[pinCount].axisInfo->multiplier = analog->scale.multiplier;
-                    pins[pinCount].axisInfo->isADC = analog->mapToDigital;
-                    pins[pinCount].axisInfo->ADCtrigger = analog->trigger;
-                    pins[pinCount].axisInfo->channel = analog->channel;
-                    pins[pinCount].axisInfo->analogRead = readAnalog;
-                    adc_gpio_init(i);
-                } else {
-                    gpio_init(i);
-                    gpio_set_dir(i, false);
-                    gpio_set_pulls(i, binding->pullup, binding->pulldown);
+                pins[i].isExt = binding->type == DIRECT_TYPE || binding->type == DIRECT_MOUSE;
+                if (pins[i].isExt) {
+                    pins[pinCount].digitalRead = readDigital;
+                    if (binding->analogID) {
+                        analog = &bindingsPointer->analog[binding->analogID];
+                        pins[pinCount].axisInfo = &analogInfo[binding->analogID];
+                        pins[pinCount].axisInfo->deadzone = analog->scale.deadzone;
+                        pins[pinCount].axisInfo->offset = analog->scale.offset;
+                        pins[pinCount].axisInfo->multiplier = analog->scale.multiplier;
+                        pins[pinCount].axisInfo->isADC = analog->mapToDigital;
+                        pins[pinCount].axisInfo->ADCtrigger = analog->trigger;
+                        pins[pinCount].axisInfo->channel = analog->channel;
+                        pins[pinCount].axisInfo->analogRead = readAnalog;
+                        adc_gpio_init(i);
+                    } else {
+                        gpio_init(i);
+                        gpio_set_dir(i, false);
+                        gpio_set_pulls(i, binding->pullup, binding->pulldown);
+                    }
                 }
                 pinCount++;
             }
@@ -99,8 +97,7 @@ void initPins(void) {
             break;
         }
         firstKeyboardPin = pinCount;
-        amt = 1;
-        isMouse = true;
+        isMouse = false;
     }
     adc_init();
 }

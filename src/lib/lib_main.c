@@ -32,10 +32,17 @@ void (*tickInput)(void) = NULL;
 // if forceColor is set or the button is pressed, then the colour is set to color
 // otherwise, it is cleared
 Input_t* ledOrder[PIN_COUNT] = {0};
+const PROGMEM uint8_t xinputToPs3[16] = {
+    PS3_DPAD_UP_BT, PS3_DPAD_DOWN_BT, PS3_DPAD_LEFT_BT, PS3_DPAD_RIGHT_BT,
+    PS3_START_BT, PS3_SELECT_BT, PS3_LEFT_STICK_BT, PS3_RIGHT_STICK_BT,
+    PS3_L1_BT, PS3_R1_BT, PS3_PS_BT, INVALID_PIN,
+    PS3_CROSS_BT, PS3_CIRCLE_BT, PS3_SQUARE_BT, PS3_TRIANGLE_BT};
+uint8_t strumUp = XBOX_DPAD_UP;
+uint8_t strumDown = XBOX_DPAD_DOWN;
 void init() {
     ledMode = NONE;
     inputType = DIRECT;
-    consoleType = KEYBOARD_MOUSE;
+    consoleType = XBOX360;
     deviceType = GUITAR_HERO_GUITAR;
     // TODO: this will differ for PS3 or keyboard
     inputCount = XBOX_AXIS_COUNT + XBOX_BTN_COUNT;
@@ -48,13 +55,23 @@ void init() {
     if (inputType != PS2 && ledMode == APA102) {
         spi_begin(SPI_FREQ, true, true, false);
     }
-    if (inputType == DIRECT) {
-        initPins();
-    } else if (inputType == WII) {
+    initPins();
+    if (inputType == WII) {
         // Init wii, load in the wii inputs as the "pins" instead
         // One interesting thing is we should be able to just load in tilt as a standard pin here too.
     } else if (inputType == PS2) {
         // Init ps2, load in the ps2 inputs as the "pins" instead
+    }
+    if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
+        for (int i = 0; i < inputCount; i++) {
+            Input_t* input = pins + i;
+            input->binding = xinputToPs3[input->binding];
+        }
+        strumUp = PS3_DPAD_UP;
+        strumDown = PS3_DPAD_DOWN;
+    } else if (consoleType == KEYBOARD_MOUSE) {
+        strumUp = THID_KEYBOARD_SC_UP_ARROW;
+        strumDown = THID_KEYBOARD_SC_DOWN_ARROW;
     }
 }
 
@@ -111,6 +128,7 @@ uint8_t tick(uint8_t* data) {
         buttons = (uint8_t*)&report->buttons;
         hats = &report->hat;
         report->hat = lastHat;
+        // How do we want to handle analogue pressures (axis?)
     }
     for (int i = start; i < end; i++) {
         Input_t* pin = pins + i;
@@ -128,8 +146,7 @@ uint8_t tick(uint8_t* data) {
             bool val = pin->digitalRead(pin);
             uint32_t current = millis();
             uint32_t last = pin->lastMillis;
-            // TODO: this is only XPAD_DPAD_DOWN for xinput. we will just need to store the correct binding somewhere.
-            bool usingMerged = mergedStrum && (pin->binding == XBOX_DPAD_DOWN || pin->binding == XBOX_DPAD_UP);
+            bool usingMerged = mergedStrum && (pin->binding == strumUp || pin->binding == strumDown);
             if (usingMerged) {
                 last = lastMillisStrum;
             }

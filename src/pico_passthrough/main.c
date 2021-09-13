@@ -30,10 +30,11 @@
 
 #define USB_DP_PIN 20
 #define USB_DM_PIN 21
-#define USB_FIRST_PIN USB_DP_PIN
+#define USB_FIRST_PIN 20
 float div;
 
 bool full_speed = false;
+uint8_t bufferTmp[100];
 uint8_t buffer[100];
 uint32_t id = 0;
 int fifoSize = 32;
@@ -42,7 +43,7 @@ int fifoSizeIdx = DMA_SIZE_32;
 bool lastJ = false;
 static void writeBit(uint8_t dm, uint8_t dp) {
     // Give us the ability to swap wires if needed
-    if (USB_FIRST_PIN == USB_DP_PIN) {
+    if (USB_FIRST_PIN == USB_DM_PIN) {
         buffer[id >> 3] |= dp << (id & 7);
         id++;
         buffer[id >> 3] |= dm << (id & 7);
@@ -71,9 +72,8 @@ static void SE0() {
     writeBit(0, 0);
 }
 static void sync() {
-    // Make sure we start on a J
     J();
-
+    J();
     K();
     J();
     K();
@@ -87,9 +87,20 @@ static void EOP() {
     SE0();
     SE0();
     J();
-    int remaining = (fifoSize - (id % fifoSize)) / 2;
+    // Now that we know what we are writing, left pad so we can write to the 32 bit fifo buffer
+    int tmpId = id;
+    id = 0;
+    memcpy(bufferTmp, buffer, (tmpId / 8) + 1);
+    memset(buffer, 0, (tmpId / 8) + 1);
+    int remaining = (fifoSize - (tmpId % fifoSize)) / 2;
     for (int i = 0; i < remaining; i++) {
         J();
+    }
+    int currentBit = 0;
+    while (currentBit != tmpId) {
+        bit_write(bit_check(bufferTmp[currentBit / 8], (currentBit % 8)), buffer[id / 8], (id % 8));
+        currentBit++;
+        id++;
     }
 }
 
@@ -180,7 +191,7 @@ void setAddress2() {
         (((i)&0x20ll) ? '1' : '0'),   \
         (((i)&0x40ll) ? '1' : '0'),   \
         (((i)&0x80ll) ? '1' : '0')
-#define readLen 4096
+#define readLen 128
 uint8_t buffer2[readLen] = {0};
 int dma_chan_read;
 int dma_chan_write;
@@ -253,13 +264,9 @@ void WR() {
     pio_sm_set_consecutive_pindirs(pioRead, smRead, USB_FIRST_PIN, 2, true);
     pio_sm_set_enabled(pio, sm, true);
     dma_channel_wait_for_finish_blocking(dma_chan_write);
-    while (!pio_sm_is_tx_fifo_empty(pio, sm)) {
-    }
-    sleep_us(2);
+    sleep_us(10);
     pio_sm_set_enabled(pio, sm, false);
-    // while (true) {
-
-    // }
+    pio_sm_set_consecutive_pindirs(pio, sm, USB_FIRST_PIN, 2, false);
     dma_channel_set_write_addr(dma_chan_read, buffer2, false);
     dma_channel_set_trans_count(dma_chan_read, readLen / 32, true);
     pio_sm_set_consecutive_pindirs(pioRead, smRead, USB_FIRST_PIN, 2, false);
@@ -274,7 +281,7 @@ void WR() {
         printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(buffer2[i]));
     }
     printf("\n");
-    printf("WR Done!");
+    printf("WR Done!\n");
     id = 0;
     memset(buffer, 0, sizeof(buffer));
     memset(buffer2, 0, sizeof(buffer2));
@@ -282,11 +289,35 @@ void WR() {
 /*------------- MAIN -------------*/
 int main(void) {
     stdio_init_all();
-    div = clock_get_hz(clk_sys) / 1500000.0f;
+    gpio_init(USB_DM_PIN);
+    gpio_init(USB_DP_PIN);
+    while (1) {
+        // D- pull up = Low, D+ pull up = full
+        if (gpio_get(USB_DM_PIN)) {
+            break;
+        } else if (gpio_get(USB_DP_PIN)) {
+            break;
+        }
+    }
+    sleep_ms(2);
+    while (1) {
+        // D- pull up = Low, D+ pull up = full
+        if (gpio_get(USB_DM_PIN)) {
+            div = clock_get_hz(clk_sys) / ((1.5 * 1000000));
+            full_speed = false;
+            break;
+        } else if (gpio_get(USB_DP_PIN)) {
+            div = clock_get_hz(clk_sys) / ((12 * 1000000));
+            full_speed = true;
+            break;
+        }
+    }
+    printf("Speed: %d %f\n", full_speed, div);
     initPIO();
     printf("Address 0\n");
     setAddress1();
     WR();
+    sleep_ms(2);
     printf("Address 1\n");
     setAddress2();
     WR();

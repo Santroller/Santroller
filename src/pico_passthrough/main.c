@@ -52,8 +52,6 @@ float div;
 bool full_speed = false;
 uint8_t bufferTmp[100];
 uint8_t buffer[100];
-uint8_t bufferOut[100];
-uint32_t id3 = 0;
 uint32_t id = 0;
 
 bool lastJ = false;
@@ -103,23 +101,7 @@ static void EOP() {
     SE0();
     SE0();
     J();
-    // Now that we know what we are writing, left pad so we can write to the 32 bit fifo buffer
-    int tmpId = id;
-    id = 0;
-    memcpy(bufferTmp, buffer, (tmpId / 8) + 1);
-    memset(buffer, 0, (tmpId / 8) + 1);
-    int remaining = (32 - (tmpId % 32)) / 2;
-    for (int i = 0; i < remaining; i++) {
-        J();
-    }
-    int currentBit = 0;
-    while (currentBit != tmpId) {
-        bit_write(bit_check(bufferTmp[currentBit / 8], (currentBit % 8)), buffer[id / 8], (id % 8));
-        currentBit++;
-        id++;
-    }
-    memcpy(bufferOut + id3, buffer, (tmpId / 8) + 1);
-    id3 += (tmpId / 8) + 1;
+    K();
 }
 uint8_t packetBuffer[100];
 uint8_t id2 = 0;
@@ -271,6 +253,22 @@ uint sm, smRead;
 PIO pio, pioRead;
 static uint32_t SM_STALL_MASK = 1u << (PIO_FDEBUG_TXSTALL_LSB + 0);
 void WR() {
+
+    // Now that we know what we are writing, left pad so we can write to the 32 bit fifo buffer
+    int tmpId = id;
+    id = 0;
+    memcpy(bufferTmp, buffer, (tmpId / 8) + 1);
+    memset(buffer, 0, (tmpId / 8) + 1);
+    int remaining = (32 - (tmpId % 32)) / 2;
+    for (int i = 0; i < remaining; i++) {
+        J();
+    }
+    int currentBit = 0;
+    while (currentBit != tmpId) {
+        bit_write(bit_check(bufferTmp[currentBit / 8], (currentBit % 8)), buffer[id / 8], (id % 8));
+        currentBit++;
+        id++;
+    }
     // printf("About to write:\n");
     // printf("bits: %d\n", id);
     // printf("transfers: %d\n", id / fifoSize);
@@ -281,12 +279,12 @@ void WR() {
     //     printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(buffer[i]));
     // }
 
-    dma_channel_set_read_addr(dma_chan_write, bufferOut, false);
-    dma_channel_set_trans_count(dma_chan_write, (id3 * 8) / 32, true);
+    dma_channel_set_read_addr(dma_chan_write, buffer, false);
+    dma_channel_set_trans_count(dma_chan_write, id / 32, true);
     pio_sm_set_consecutive_pindirs(pio, sm, USB_FIRST_PIN, 2, true);
     pio_sm_set_consecutive_pindirs(pioRead, smRead, USB_FIRST_PIN, 2, true);
     pio_sm_set_enabled(pio, sm, true);
-    dma_channel_wait_for_finish_blocking(dma_chan_write);
+    // dma_channel_wait_for_finish_blocking(dma_chan_write);
     // Wait until the PIO processor stalls (aka there is no data left to write)
     pio->fdebug = SM_STALL_MASK;
     while (!(pio->fdebug & SM_STALL_MASK)) {

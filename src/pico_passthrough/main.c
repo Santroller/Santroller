@@ -9,7 +9,26 @@
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
 #include "pio_serialiser.pio.h"
-#include "pio_serialiser_read.pio.h"
+
+#define PRINTF_BINARY_PATTERN_INT8 "%c%c, %c%c, %c%c, %c%c, "
+#define PRINTF_BYTE_TO_BINARY_INT8(i) \
+    (((i)&0x01ll) ? '1' : '0'),       \
+        (((i)&0x02ll) ? '1' : '0'),   \
+        (((i)&0x04ll) ? '1' : '0'),   \
+        (((i)&0x08ll) ? '1' : '0'),   \
+        (((i)&0x10ll) ? '1' : '0'),   \
+        (((i)&0x20ll) ? '1' : '0'),   \
+        (((i)&0x40ll) ? '1' : '0'),   \
+        (((i)&0x80ll) ? '1' : '0')
+
+#define readLen 2048
+uint8_t buffer2[readLen] = {0};
+uint8_t buffer3[readLen / 8] = {};
+int dma_chan_read;
+int dma_chan_write;
+uint sm;
+PIO pio;
+uint offset;
 #define T_ATTR_PACKED __attribute__((packed))
 typedef struct T_ATTR_PACKED {
     union {
@@ -27,6 +46,12 @@ typedef struct T_ATTR_PACKED {
     uint16_t wIndex;
     uint16_t wLength;
 } tusb_control_request_t;
+typedef enum {
+    TUSB_DIR_OUT = 0,
+    TUSB_DIR_IN = 1,
+
+    TUSB_DIR_IN_MASK = 0x80
+} tusb_dir_t;
 #ifndef _BV
 #define _BV(bit) (1 << (bit))
 #endif
@@ -101,7 +126,6 @@ static void EOP() {
     SE0();
     SE0();
     J();
-    K();
 }
 uint8_t packetBuffer[100];
 uint8_t id2 = 0;
@@ -120,6 +144,12 @@ void sendData(uint16_t byte, int count, bool reverse) {
             oneCount = 0;
         } else {
             bit_set(packetBuffer[id2 / 8], id2 % 8);
+            // One
+            if (lastJ) {
+                J();
+            } else {
+                K();
+            }
             oneCount++;
             // Bit stuffing - if more than 6 one bits are set, then send an extra 0 bit
             if (oneCount == 7) {
@@ -130,12 +160,6 @@ void sendData(uint16_t byte, int count, bool reverse) {
                     J();
                 }
                 oneCount = 0;
-            }
-            // One
-            if (lastJ) {
-                J();
-            } else {
-                K();
             }
         }
         id2++;
@@ -148,6 +172,31 @@ void sendNibble(uint8_t byte) {
     sendData(byte, 4, false);
 }
 
+void printReceivedP() {
+    for (int i = 0; i < readLen / 8 / 8; i++) {
+        if (i % 4 == 0) {
+            printf("\n");
+        }
+        printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(buffer3[i]));
+    }
+    printf("\n");
+    for (int i = 0; i < readLen / 8 / 8; i++) {
+        if (i % 4 == 0) {
+            printf("\n");
+        }
+        printf("0x%x, ", buffer3[i]);
+    }
+    printf("\n");
+}
+void printReceived() {
+    for (int i = 0; i < readLen / 8; i++) {
+        if (i % 4 == 0) {
+            printf("\n");
+        }
+        printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(buffer2[i]));
+    }
+    printf("\n");
+}
 static uint8_t crc5_usb_bits(const void *data, int vl, uint8_t ival) {
     const unsigned char *d = (const unsigned char *)data;
     /* This function is based on code posted by John Sullivan to Wireshark-dev
@@ -234,26 +283,7 @@ void sendPID(uint8_t byte) {
     sendData(byte, 8, true);
 }
 
-#define PRINTF_BINARY_PATTERN_INT8 "%c%c, %c%c, %c%c, %c%c, "
-#define PRINTF_BYTE_TO_BINARY_INT8(i) \
-    (((i)&0x01ll) ? '1' : '0'),       \
-        (((i)&0x02ll) ? '1' : '0'),   \
-        (((i)&0x04ll) ? '1' : '0'),   \
-        (((i)&0x08ll) ? '1' : '0'),   \
-        (((i)&0x10ll) ? '1' : '0'),   \
-        (((i)&0x20ll) ? '1' : '0'),   \
-        (((i)&0x40ll) ? '1' : '0'),   \
-        (((i)&0x80ll) ? '1' : '0')
-
-#define readLen 128
-uint8_t buffer2[readLen] = {0};
-int dma_chan_read;
-int dma_chan_write;
-uint sm, smRead;
-PIO pio, pioRead;
-static uint32_t SM_STALL_MASK = 1u << (PIO_FDEBUG_TXSTALL_LSB + 0);
-void WR() {
-
+void WR(bool wait) {
     // Now that we know what we are writing, left pad so we can write to the 32 bit fifo buffer
     int tmpId = id;
     id = 0;
@@ -279,61 +309,164 @@ void WR() {
     //     printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(buffer[i]));
     // }
 
-    dma_channel_set_read_addr(dma_chan_write, buffer, false);
-    dma_channel_set_trans_count(dma_chan_write, id / 32, true);
-    pio_sm_set_consecutive_pindirs(pio, sm, USB_FIRST_PIN, 2, true);
-    pio_sm_set_consecutive_pindirs(pioRead, smRead, USB_FIRST_PIN, 2, true);
-    pio_sm_set_enabled(pio, sm, true);
-    // dma_channel_wait_for_finish_blocking(dma_chan_write);
-    // Wait until the PIO processor stalls (aka there is no data left to write)
-    pio->fdebug = SM_STALL_MASK;
-    while (!(pio->fdebug & SM_STALL_MASK)) {
-    }
+    bool found = !wait;
+    do {
+        pio_sm_set_enabled(pio, sm, false);
+        memset(buffer2, 0, sizeof(buffer2));
+        memset(buffer3, 0, sizeof(buffer3));
+        pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
+        dma_channel_set_read_addr(dma_chan_write, buffer, false);
+        dma_channel_set_trans_count(dma_chan_write, id / 32, true);
+        dma_channel_set_write_addr(dma_chan_read, buffer2, false);
+        dma_channel_set_trans_count(dma_chan_read, readLen / 32, true);
+        pio_sm_set_enabled(pio, sm, true);
+        dma_channel_wait_for_finish_blocking(dma_chan_read);
+        int syncCount = 0;
+        bool readingData = false;
+        bool valid = true;
+        bool foundSomething = false;
+        bool lastWasJ;
+        bool skip = false;
+        // printReceived();
+        uint8_t oneCount;
+        uint8_t bit = 0;
+        for (int i = 0; i < readLen; i += 2) {
+            uint8_t bit1 = !!bit_check(buffer2[i / 8], i % 8);
+            uint8_t bit2 = !!bit_check(buffer2[i / 8], (i + 1) % 8);
+            uint8_t dm, dp;
+            if (USB_FIRST_PIN == USB_DM_PIN) {
+                dm = bit1;
+                dp = bit2;
+            } else {
+                dp = bit1;
+                dm = bit2;
+            }
+            // DM = 1 DP = 0 = J for full_speed
+            // for full_speed=true, J is DM low, DP high
+            // for full_speed=false, J is DM low, DP high
+            bool j = dm == !full_speed && dp == full_speed;
+            bool k = dm == full_speed && dp == !full_speed;
+            bool se0 = !dm && !dp;
+
+            if (k) {
+                printf("K");
+                found = true;
+            } else if (j) {
+                printf("J");
+            } else if (se0) {
+                printf("SE0");
+                found = true;
+            }
+            if (readingData) {
+                if (se0) {
+                    found = true;
+                    readingData = false;
+                    printf("DONE\n");
+                    break;
+                }
+                // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
+                // 1 bit is transmitted by leaving the data lines as-is.
+                if (lastWasJ != j) {
+                    if (!skip) {
+                        bit_clear(buffer3[bit / 8], bit % 8);
+                        bit++;
+                    }
+                    skip = false;
+                    oneCount = 0;
+                } else {
+                    bit_set(buffer3[bit / 8], bit % 8);
+                    bit++;
+                    skip = false;
+                    oneCount++;
+                    if (oneCount == 7) {
+                        skip = true;
+                        oneCount = 0;
+                    }
+                }
+            } else {
+                if (j) {
+                    // J
+                    switch (syncCount) {
+                        case 1:
+                        case 3:
+                        case 5:
+                            syncCount++;
+                            break;
+                        default:
+                            valid = false;
+                            break;
+                    }
+                } else if (k) {
+                    // K
+                    switch (syncCount) {
+                        case 0:
+                        case 2:
+                        case 4:
+                        case 6:
+                            syncCount++;
+                            break;
+                        case 7:
+                            readingData = true;
+                            break;
+                        default:
+                            valid = false;
+                            break;
+                    }
+                }
+            }
+            lastWasJ = j;
+        }
+        printf("\n");
+        sleep_us(1000);
+    } while (!found);
+
+    printReceivedP();
+    // TODO: actually parse this data out and work out what the ACK says.
+    // TODO: for example, we are actually getting a NAK back here, which means "retransmit"
     pio_sm_set_enabled(pio, sm, false);
-    pio_sm_set_consecutive_pindirs(pio, sm, USB_FIRST_PIN, 2, false);
-    dma_channel_set_write_addr(dma_chan_read, buffer2, false);
-    dma_channel_set_trans_count(dma_chan_read, readLen / 32, true);
-    pio_sm_set_consecutive_pindirs(pioRead, smRead, USB_FIRST_PIN, 2, false);
-    pio_sm_set_enabled(pioRead, smRead, true);
-    dma_channel_wait_for_finish_blocking(dma_chan_read);
-    pio_sm_set_enabled(pioRead, smRead, false);
-    // printf("\n");
-    // for (int i = 0; i < readLen / 8; i++) {
-    //     if (i % 4 == 0) {
-    //         printf("\n");
-    //     }
-    //     printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(buffer2[i]));
-    // }
-    // printf("\n");
-    // printf("WR Done!\n");
     id = 0;
     memset(buffer, 0, sizeof(buffer));
-    memset(buffer2, 0, sizeof(buffer2));
 }
 void sendOut(uint8_t address, uint8_t endpoint) {
     sync();
-    sendPID(IN);
+    sendPID(OUT);
     memset(packetBuffer, 0, sizeof(packetBuffer));
     id2 = 0;
     sendAddress(address);
     sendNibble(endpoint);
     sendCRC5();
     EOP();
-    WR();
+    WR(true);
 }
 void sendIn(uint8_t address, uint8_t endpoint) {
-    sync();
-    sendPID(IN);
-    memset(packetBuffer, 0, sizeof(packetBuffer));
-    id2 = 0;
-    sendAddress(address);
-    sendNibble(endpoint);
-    sendCRC5();
-    EOP();
-    WR();
+    bool found = false;
+    while (!found) {
+        sync();
+        sendPID(IN);
+        memset(packetBuffer, 0, sizeof(packetBuffer));
+        id2 = 0;
+        sendAddress(address);
+        sendNibble(endpoint);
+        sendCRC5();
+        EOP(true);
+
+        sync();
+        sendPID(DATA1);
+        sendCRC16();
+        EOP();
+        WR(true);
+        for (int i = 0; i < readLen / 32; i++) {
+            if (buffer2[i] != 0b01010101) {
+                found = true;
+                break;
+            }
+        }
+        sleep_us(500);
+    }
 }
 
-void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request) {
+void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request, uint8_t *d) {
+    printf("Token\n");
     sync();
     sendPID(SETUP);
     memset(packetBuffer, 0, sizeof(packetBuffer));
@@ -342,67 +475,105 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
     sendNibble(endpoint);
     sendCRC5();
     EOP();
-    
-    sync();
-    sendPID(DATA0);
-    memset(packetBuffer, 0, sizeof(packetBuffer));
-    id2 = 0;
-    uint8_t *data = (uint8_t *)&request;
-    for (int i = 0; i < sizeof(tusb_control_request_t); i++) {
-        sendByte(*data++);
-    }
-    sendCRC16();
-    EOP();
-    WR();
-}
-void sendRequestData(tusb_control_request_t request) {
-    sync();
-    sendPID(DATA0);
-    memset(packetBuffer, 0, sizeof(packetBuffer));
-    id2 = 0;
-    uint8_t *data = (uint8_t *)&request;
-    for (int i = 0; i < sizeof(tusb_control_request_t); i++) {
-        sendByte(*data++);
-    }
-    sendCRC16();
-    EOP();
-    WR();
-}
-void initPIO() {
-    pioRead = pio1;
-    dma_chan_read = dma_claim_unused_channel(true);
-    dma_channel_config cr = dma_channel_get_default_config(dma_chan_read);
-    channel_config_set_transfer_data_size(&cr, DMA_SIZE_32);
-    channel_config_set_write_increment(&cr, true);
-    channel_config_set_read_increment(&cr, false);
-    channel_config_set_dreq(&cr, DREQ_PIO1_RX0);
-    dma_channel_configure(
-        dma_chan_read,
-        &cr,
-        buffer2,  // Write address (only need to set this once)
-        &pioRead->rxf[0],
-        readLen / 32,
-        false);
 
-    smRead = pio_claim_unused_sm(pioRead, true);
-    uint offsetRead = pio_add_program(pioRead, &pio_serialiser_read_program);
+    sync();
+    sendPID(DATA0);
+    memset(packetBuffer, 0, sizeof(packetBuffer));
+    id2 = 0;
+    uint8_t *data = (uint8_t *)&request;
+    for (int i = 0; i < sizeof(tusb_control_request_t); i++) {
+        sendByte(*data++);
+    }
+    sendCRC16();
+    EOP();
+    WR(true);
+    printf("Direction: %d\n", request.bmRequestType_bit.direction);
+    if (request.bmRequestType_bit.direction == TUSB_DIR_OUT) {
+        if (request.wLength) {
+            printf("Data\n");
+            sync();
+            sendPID(OUT);
+            memset(packetBuffer, 0, sizeof(packetBuffer));
+            id2 = 0;
+            sendAddress(address);
+            sendNibble(endpoint);
+            sendCRC5();
+            EOP();
+            sync();
+            sendPID(DATA1);
+            memset(packetBuffer, 0, sizeof(packetBuffer));
+            id2 = 0;
+            uint8_t *data = (uint8_t *)&d;
+            for (int i = 0; i < request.wLength; i++) {
+                sendByte(*data++);
+            }
+            sendCRC16();
+            EOP();
+            WR(false);
+        }
+        printf("Status\n");
+        sync();
+        sendPID(IN);
+        memset(packetBuffer, 0, sizeof(packetBuffer));
+        id2 = 0;
+        sendAddress(address);
+        sendNibble(endpoint);
+        sendCRC5();
+        EOP();
+        WR(false);
+
+        printf("ACK\n");
+        sync();
+        sendPID(ACK);
+        EOP();
+        WR(false);
+        printf("Done\n");
+    } else {
+        if (request.wLength) {
+            sync();
+            sendPID(IN);
+            memset(packetBuffer, 0, sizeof(packetBuffer));
+            id2 = 0;
+            sendAddress(address);
+            sendNibble(endpoint);
+            sendCRC5();
+            EOP();
+            WR(true);
+        }
+        printf("Data\n");
+        sync();
+        sendPID(OUT);
+        memset(packetBuffer, 0, sizeof(packetBuffer));
+        id2 = 0;
+        sendAddress(address);
+        sendNibble(endpoint);
+        sendCRC5();
+        EOP();
+
+        sync();
+        sendPID(DATA0);
+        memset(packetBuffer, 0, sizeof(packetBuffer));
+        id2 = 0;
+        sendCRC16();
+        EOP();
+        WR(true);
+        printf("Status\n");
+    }
+}
+
+void initPIO() {
     pio = pio0;
 
-    pio_serialiser_read_program_init(pioRead, smRead, offsetRead, USB_FIRST_PIN, div);
-    // Our assembled program needs to be loaded into this PIO's instruction
-    // memory. This SDK function will find a location (offset) in the
-    // instruction memory where there is enough space for our program. We need
-    // to remember this location!
-
-    uint offsetWrite = pio_add_program(pio, &pio_serialiser_program);
+    offset = pio_add_program(pio, &pio_serialiser_program);
 
     // Find a free state machine on our chosen PIO (erroring if there are
     // none). Configure it to run our program, and start it, using the
     // helper function we included in our .pio file.
     sm = pio_claim_unused_sm(pio, true);
-    pio_serialiser_program_init(pio, sm, offsetWrite, USB_FIRST_PIN, div);
+    pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
 
     dma_chan_write = dma_claim_unused_channel(true);
+    dma_chan_read = dma_claim_unused_channel(true);
 
     dma_channel_config c = dma_channel_get_default_config(dma_chan_write);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
@@ -416,6 +587,19 @@ void initPIO() {
         &pio->txf[0],  // Write address (only need to set this once)
         buffer,
         0,
+        false);
+
+    dma_channel_config cr = dma_channel_get_default_config(dma_chan_read);
+    channel_config_set_transfer_data_size(&cr, DMA_SIZE_32);
+    channel_config_set_write_increment(&cr, true);
+    channel_config_set_read_increment(&cr, false);
+    channel_config_set_dreq(&cr, DREQ_PIO0_RX0);
+    dma_channel_configure(
+        dma_chan_read,
+        &cr,
+        buffer2,  // Write address (only need to set this once)
+        &pio->rxf[0],
+        readLen / 32,
         false);
 }
 /*------------- MAIN -------------*/
@@ -438,22 +622,35 @@ int main(void) {
         // D- pull up = Low, D+ pull up = full
         // Could we set the processor clock so it evenly divides into usb
         if (gpio_get(USB_DM_PIN)) {
-            div = clock_get_hz(clk_sys) / ((1500000.0f));
+            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 4;
             full_speed = false;
             break;
         } else if (gpio_get(USB_DP_PIN)) {
-            div = clock_get_hz(clk_sys) / ((12000000.0f));
+            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 4;
             full_speed = true;
             break;
         }
     }
     printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
     initPIO();
+    // Reset
+    sleep_ms(1000);
+    pio_sm_set_pins(pio, sm, 0);
+    sleep_ms(100);
     pio_sm_set_pins(pio, sm, _BV(USB_DM_PIN));
-    sleep_ms(10);
-    tusb_control_request_t req = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 0x0C};
-    sendSetup(0x00, 0x00, req);
-
+    sleep_ms(100);
+    // Repeat the packet until we get an ACK back
+    uint8_t received[100];
+    // tusb_control_request_t req = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 0x0C};
+    // sendSetup(0x00, 0x00, req, received);
+    // // printReceived();
+    // // printReceivedP();
+    // printf("WR Done!\n");
+    // sleep_ms(100);
+    // printf("WR2 TX!\n");
+    // tusb_control_request_t req2 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
+    // sendSetup(0x00, 0x00, req2, received);
+    printf("WR Done!\n");
     while (true) {
     }
     return 0;

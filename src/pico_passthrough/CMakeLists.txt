@@ -62,7 +62,6 @@ if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
   pico_add_extra_outputs(${TARGET})
 
 pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/pio_serialiser.pio)
-pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/pio_serialiser_read.pio)
   # Copy built binaries to firmware
   add_custom_command(
     TARGET ${TARGET}

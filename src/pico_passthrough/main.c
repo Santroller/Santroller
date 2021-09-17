@@ -276,9 +276,6 @@ void WR(bool wait, state_t* state) {
 
     memset(buffer2, 0, sizeof(buffer2));
     memset(buffer3, 0, sizeof(buffer3));
-    // TODO: what if we move reading to the keepalive instead of it being in the serialiser. that way, we can always be reading, and we can even handle reads via an interrupt
-    // TODO: then we could actually handle things a lot better.
-    // TODO: instead of needing to wait for a block, we would then just wait for a real packet from an interrupt.
     pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
     dma_channel_set_read_addr(dma_chan_write, state->buffer, false);
     dma_channel_set_trans_count(dma_chan_write, state->id / 32, true);
@@ -448,7 +445,6 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
     sendNibble(endpoint, &state_pk);
     sendCRC5(&state_pk);
     EOP(&state_pk);
-    WR(true, &state_pk);
     sync(&state_pk);
     sendPID(DATA0, &state_pk);
     memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -472,7 +468,6 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             sendNibble(endpoint, &state_pk);
             sendCRC5(&state_pk);
             EOP(&state_pk);
-            WR(true, &state_pk);
             sync(&state_pk);
             sendPID(DATA1, &state_pk);
             memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -503,6 +498,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
         WR(false, &state_pk);
         printf("Done\n");
     } else {
+        printf("Data\n");
         if (request.wLength) {
             sync(&state_pk);
             sendPID(IN, &state_pk);
@@ -514,7 +510,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             EOP(&state_pk);
             WR(true, &state_pk);
         }
-        printf("Data\n");
+        printf("Status\n");
         sync(&state_pk);
         sendPID(OUT, &state_pk);
         memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -523,7 +519,6 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
         sendNibble(endpoint, &state_pk);
         sendCRC5(&state_pk);
         EOP(&state_pk);
-        WR(true, &state_pk);
         sync(&state_pk);
         sendPID(DATA0, &state_pk);
         memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -531,7 +526,6 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
         sendCRC16(&state_pk);
         EOP(&state_pk);
         WR(true, &state_pk);
-        printf("Status\n");
     }
 }
 

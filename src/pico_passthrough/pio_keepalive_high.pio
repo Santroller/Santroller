@@ -10,14 +10,14 @@
 pull
 mov x, OSR
 init:
-set y, 3
+set y, 2
 loop3:
     set pins, 2 [3]
     set pins, 1
     jmp y-- loop3 [2]
 set pins, 2 [3]
 set pins, 2 [3]
-set y, 2
+set y, 1
 loop4:
     set pins, 2 [3]
     set pins, 1 [3]

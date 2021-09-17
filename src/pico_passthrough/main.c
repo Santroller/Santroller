@@ -20,8 +20,6 @@
 struct repeating_timer timer;
 uint8_t buffer2[readLen] = {0};
 uint8_t buffer3[readLen / 8] = {};
-uint8_t bufferka[100];
-uint8_t packetbufferka[100];
 int dma_chan_read;
 int dma_chan_write;
 int dma_chan_keepalive;
@@ -82,7 +80,7 @@ state_t state_pk;
 static void reset_state(state_t* state) {
     state->id_crc = 0;
     state->id = 0;
-    memset(state->buffer, 0, 4);
+    memset(state->buffer, 0, sizeof(state->buffer));
     memset(state->bufferCRC, 0, sizeof(state->bufferCRC));
 }
 bool lastJ = false;
@@ -275,7 +273,9 @@ void WR(bool wait, state_t* state) {
 
     memset(buffer2, 0, sizeof(buffer2));
     memset(buffer3, 0, sizeof(buffer3));
-
+    // TODO: what if we move reading to the keepalive instead of it being in the serialiser. that way, we can always be reading, and we can even handle reads via an interrupt
+    // TODO: then we could actually handle things a lot better.
+    // TODO: instead of needing to wait for a block, we would then just wait for a real packet from an interrupt.
     pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
     dma_channel_set_read_addr(dma_chan_write, state->buffer, false);
     dma_channel_set_trans_count(dma_chan_write, state->id / 32, true);
@@ -392,7 +392,9 @@ void dma_handler() {
     reset_state(&state_ka);
     sendData(currentFrame++, 11, false, &state_ka);
     sendCRC5(&state_ka);
+    // Since we are only writing one byte, we really dont need to use DMA and probably shouldnt
     dma_channel_start(dma_chan_keepalive);
+   
 }
 
 void initKeepAlive() {
@@ -417,8 +419,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
     sendNibble(endpoint, &state_pk);
     sendCRC5(&state_pk);
     EOP(&state_pk);
-    J(&state_pk);
-    J(&state_pk);
+    WR(true, &state_pk);
     sync(&state_pk);
     sendPID(DATA0, &state_pk);
     memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -442,6 +443,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             sendNibble(endpoint, &state_pk);
             sendCRC5(&state_pk);
             EOP(&state_pk);
+            WR(true, &state_pk);
             sync(&state_pk);
             sendPID(DATA1, &state_pk);
             memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -492,7 +494,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
         sendNibble(endpoint, &state_pk);
         sendCRC5(&state_pk);
         EOP(&state_pk);
-
+        WR(true, &state_pk);
         sync(&state_pk);
         sendPID(DATA0, &state_pk);
         memset(state_pk.bufferCRC, 0, sizeof(state_pk.bufferCRC));
@@ -607,12 +609,12 @@ int main(void) {
     sendSetup(0x00, 0x00, req, received);
     // // printReceived();
     // // printReceivedP();
-    // printf("WR Done!\n");
-    // sleep_ms(100);
-    // printf("WR2 TX!\n");
-    // tusb_control_request_t req2 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
-    // sendSetup(0x0C, 0x00, req2, received);
-    // printf("WR Done!\n");
+    printf("WR Done!\n");
+    sleep_ms(100);
+    printf("WR2 TX!\n");
+    tusb_control_request_t req2 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
+    sendSetup(0x0C, 0x00, req2, received);
+    printf("WR Done!\n");
     while (true) {
     }
     return 0;

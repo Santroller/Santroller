@@ -6,18 +6,26 @@
 
 .program pio_serialiser
 
-; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
-wait 1 irq 2
+; repeatedly send the fifo out as D+ and D-. if the fifo is empty, then switch to reading for readCount*2 bits, and then switch back
+pull
+mov x, osr
+init:
+set pindirs 31
 loop:
+    jmp !osre loop [1]
+    pull ifempty noblock
     out pins, 2
-    jmp !osre loop [2]
+    jmp !osre loop [1]
 set pindirs 0
+mov y,x
 loop2:
+    push iffull noblock
     in pins, 2
-    jmp loop2 [2]
+    jmp y-- loop2 [1]
+    jmp init
 
 % c-sdk {
-static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
+static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t readCount) {
     pio_gpio_init(pio, data_pin);
     pio_gpio_init(pio, data_pin + 1);
     pio_sm_config c = pio_serialiser_program_get_default_config(offset);
@@ -25,11 +33,11 @@ static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, ui
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, true, 32);
+    sm_config_set_in_shift(&c, false, false, 32);
     sm_config_set_set_pins(&c, data_pin, 2);
 
     pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
     pio_sm_set_enabled(pio, sm, true);
+    pio_sm_put_blocking(pio, sm, readCount);
 }
 %}

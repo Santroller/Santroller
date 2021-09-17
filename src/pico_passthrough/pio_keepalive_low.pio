@@ -4,32 +4,34 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 ;
 
-.program pio_serialiser
+.program pio_keepalive_low
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
-wait 1 irq 2
-loop:
-    out pins, 2
-    jmp !osre loop [2]
-set pindirs 0
+pull
+mov x, OSR
+init:
+set pins, 0 [3]
+set pins, 0 [3]
+set pins, 2 [3]
+irq set 2
+mov y, x
 loop2:
-    in pins, 2
-    jmp loop2 [2]
-
+    jmp y-- loop2 [3]
+    jmp init 
 % c-sdk {
-static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
+static inline void pio_keepalive_low_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t delay) {
     pio_gpio_init(pio, data_pin);
     pio_gpio_init(pio, data_pin + 1);
-    pio_sm_config c = pio_serialiser_program_get_default_config(offset);
+    pio_sm_config c = pio_keepalive_low_program_get_default_config(offset);
     sm_config_set_out_pins(&c, data_pin, 2);
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_in_pins(&c, data_pin);
     sm_config_set_in_shift(&c, true, true, 32);
     sm_config_set_set_pins(&c, data_pin, 2);
-
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
     pio_sm_set_enabled(pio, sm, true);
+    pio_sm_put_blocking(pio, sm, delay);
 }
 %}

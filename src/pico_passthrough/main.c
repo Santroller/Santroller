@@ -143,22 +143,25 @@ void sendData(uint16_t byte, int count, bool reverse, state_t* state) {
             state->oneCount = 0;
         } else {
             bit_set(state->bufferCRC[state->id_crc / 8], state->id_crc % 8);
-            // One
-            if (lastJ) {
-                J(state);
-            } else {
-                K(state);
-            }
             state->oneCount++;
-            // Bit stuffing - if more than 6 one bits are set, then send an extra 0 bit
-            if (state->oneCount == 7) {
+            // Bit stuffing - if more than 6 one bits are set, then send an extra 0 bit, and then the 1
+            if (state->oneCount == 5) {
                 // Toggle lines
                 if (lastJ) {
                     K(state);
+                    K(state);
                 } else {
+                    J(state);
                     J(state);
                 }
                 state->oneCount = 0;
+            } else {
+                // One
+                if (lastJ) {
+                    J(state);
+                } else {
+                    K(state);
+                }
             }
         }
         state->id_crc++;
@@ -204,7 +207,7 @@ void printReceived() {
     printf("\n");
 }
 
-uint16_t crc_update(const void* data, size_t data_len) {
+uint16_t crc_16(const void* data, size_t data_len) {
     const unsigned char* d = (const unsigned char*)data;
     unsigned int i;
     bool bit;
@@ -234,7 +237,7 @@ uint16_t crc_update(const void* data, size_t data_len) {
 }
 
 void sendCRC16(state_t* state) {
-    sendData(crc_update(state->bufferCRC, state->id_crc / 8), 16, false, state);
+    sendData(crc_16(state->bufferCRC, state->id_crc / 8), 16, false, state);
 }
 void sendCRC5(state_t* state) {
     uint8_t byte;
@@ -382,28 +385,54 @@ void WR(bool wait, state_t* state) {
     reset_state(state);
 }
 
-void dma_handler() {
-    dma_hw->ints0 = 1u << dma_chan_keepalive;
+void isr() {
     // Increment current frame and then append its crc5
     currentFrame++;
     if (currentFrame > (1 << 11) - 1) {
         currentFrame = 0;
     }
     reset_state(&state_ka);
+    sync(&state_ka);
+    sendPID(SOF, &state_ka);
+    memset(state_ka.bufferCRC, 0, sizeof(state_ka.bufferCRC));
+    state_ka.id_crc = 0;
     sendData(currentFrame++, 11, false, &state_ka);
     sendCRC5(&state_ka);
-    // Since we are only writing one byte, we really dont need to use DMA and probably shouldnt
-    dma_channel_start(dma_chan_keepalive);
-   
+    EOP(&state_ka);
+    int remaining = (32 - (state_ka.id % 32)) / 2;
+    for (int i = 0; i < remaining; i++) {
+        J(&state_ka);
+    }
+    dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
+    pio_interrupt_clear(pio, 2);
 }
 
 void initKeepAlive() {
     keepalive_delay = (clock_get_hz(clk_sys) / div / 4 / 1000) - (((full_speed ? 32 : 0) + 3));
     if (full_speed) {
+        dma_chan_keepalive = dma_claim_unused_channel(true);
+        sm_keepalive = pio_claim_unused_sm(pio, true);
         offset_keepalive = pio_add_program(pio, &pio_keepalive_high_program);
         pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
-        // we need to DMA a frame number and a CRC
-        dma_handler();
+        if (full_speed) {
+            irq_set_exclusive_handler(PIO0_IRQ_1, isr);
+            irq_set_priority(PIO0_IRQ_1, 0x00);
+            irq_set_enabled(PIO0_IRQ_1, true);
+            pio_set_irq1_source_enabled(pio, pis_interrupt2, true);
+            dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
+            channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
+            channel_config_set_write_increment(&cka, false);
+            channel_config_set_read_increment(&cka, true);
+            channel_config_set_dreq(&cka, pio_get_dreq(pio, sm_keepalive, true));
+            dma_channel_configure(
+                dma_chan_keepalive,
+                &cka,
+                &pio->txf[sm_keepalive],  // Write address (only need to set this once)
+                state_ka.buffer,
+                3,
+                false);
+            isr();
+        }
     } else {
         offset_keepalive = pio_add_program(pio, &pio_keepalive_low_program);
         pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
@@ -508,19 +537,16 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
 
 void initPIO() {
     pio = pio0;
-    pio = pio1;
 
     // Find a free state machine on our chosen PIO (erroring if there are
     // none). Configure it to run our program, and start it, using the
     // helper function we included in our .pio file.
     sm = pio_claim_unused_sm(pio, true);
-    sm_keepalive = pio_claim_unused_sm(pio, true);
 
     offset = pio_add_program(pio, &pio_serialiser_program);
 
     dma_chan_write = dma_claim_unused_channel(true);
     dma_chan_read = dma_claim_unused_channel(true);
-    dma_chan_keepalive = dma_claim_unused_channel(true);
 
     dma_channel_config c = dma_channel_get_default_config(dma_chan_write);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
@@ -548,23 +574,6 @@ void initPIO() {
         &pio->rxf[sm],
         readLen / 32,
         false);
-    if (full_speed) {
-        dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
-        channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
-        channel_config_set_write_increment(&cka, false);
-        channel_config_set_read_increment(&cka, false);
-        channel_config_set_dreq(&cka, pio_get_dreq(pio, sm_keepalive, true));
-        dma_channel_set_irq0_enabled(dma_chan_keepalive, true);
-        irq_set_exclusive_handler(DMA_IRQ_0, dma_handler);
-        irq_set_enabled(DMA_IRQ_0, true);
-        dma_channel_configure(
-            dma_chan_keepalive,
-            &cka,
-            &pio->txf[sm_keepalive],  // Write address (only need to set this once)
-            state_pk.buffer,
-            1,  //Just write 32 bits
-            false);
-    }
 }
 /*------------- MAIN -------------*/
 int main(void) {
@@ -603,6 +612,7 @@ int main(void) {
     sleep_ms(100);
     pio_sm_set_pins(pio, sm, _BV(USB_DM_PIN));
     initKeepAlive();
+
     sleep_ms(1000);
     uint8_t received[100];
     tusb_control_request_t req = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 0x0C};

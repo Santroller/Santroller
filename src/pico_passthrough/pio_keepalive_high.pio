@@ -13,7 +13,6 @@ loop:
     out pins, 2
     jmp !osre loop [2]
 irq set 2
-irq set 3
 
 mov y, x
 loop2:

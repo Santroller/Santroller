@@ -13,7 +13,7 @@ init:
 set pins, 0 [3]
 set pins, 0 [3]
 set pins, 2 [3]
-irq set 3
+irq set 2
 mov y, x
 loop2:
     jmp y-- loop2 [3]

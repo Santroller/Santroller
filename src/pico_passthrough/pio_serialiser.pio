@@ -7,7 +7,7 @@
 .program pio_serialiser
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
-wait 1 irq 3
+; wait 1 irq 3
 loop:
     out pins, 2
     jmp !osre loop [2]
@@ -25,7 +25,7 @@ static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, ui
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, true, 32);
+    sm_config_set_in_shift(&c, true, true, 8);
     sm_config_set_set_pins(&c, data_pin, 2);
 
     pio_sm_init(pio, sm, offset, &c);

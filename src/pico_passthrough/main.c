@@ -298,16 +298,36 @@ uint8_t reverse(uint8_t v) {
 }
 void WR(state_t* state) {
     uint current_read = 0;
-    pio_sm_set_enabled(pio, sm_keepalive, false);
+    // pio_sm_set_enabled(pio, sm_keepalive, false);
     for (int p = 0; p < state->current_packet; p++) {
         memset(buffer2, 0, sizeof(buffer2));
         memset(buffer3, 0, sizeof(buffer3));
-        pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
         // dma_channel_set_write_addr(dma_chan_read, buffer2, false);
         // dma_channel_set_trans_count(dma_chan_read, 256 / 32, true);
         dma_channel_set_read_addr(dma_chan_write, state->packets[p], false);
-        dma_channel_set_trans_count(dma_chan_write, state->packetlens[p], true);
-        dma_channel_wait_for_finish_blocking(dma_chan_read);
+        dma_channel_set_trans_count(dma_chan_write, state->packetlens[p] + 1, true);
+        dma_channel_wait_for_finish_blocking(dma_chan_write);
+        // uint32_t* data = (uint32_t*)state->packets[p];
+        // while (state->packetlens[p]--) {
+        //     pio_sm_put_blocking(pio, sm, *(data++));
+        // }
+        // printf("done!");
+        // for (int i = 0; i < state->packetlens[p] * 4; i++) {
+        //     for (int j = 0; j < 8; j += 2) {
+        //         bool first = state->packets[p][i] & _BV(j);
+        //         bool second = state->packets[p][i] & _BV(j + 1);
+        //         if (first && !second) {
+        //             printf("K");
+        //         }
+        //         if (!first && second) {
+        //             printf("J");
+        //         }
+        //         if (!first && !second) {
+        //             printf("SE0\n");
+        //         }
+        //     }
+        // }
+        // printf("\n");
         int syncCount = 0;
         bool readingData = false;
         bool valid = true;
@@ -326,6 +346,7 @@ void WR(state_t* state) {
         }
         while (waiting) {
             uint32_t val = pio_sm_get_blocking(pio, sm);
+            // printf("val: %u\n", val);
             for (int i = 0; i < 32; i += 2) {
                 uint8_t bit1 = !!bit_check(val, i);
                 uint8_t bit2 = !!bit_check(val, i + 1);
@@ -349,7 +370,7 @@ void WR(state_t* state) {
                 // } else if (j) {
                 //     printf("J");
                 // } else if (se0) {
-                //     printf("SE0");
+                //     printf("SE0\n");
                 // }
                 if (readingData) {
                     if (se0) {
@@ -423,9 +444,11 @@ void WR(state_t* state) {
         }
     }
     pio_sm_set_enabled(pio, sm, false);
-    if (!full_speed) {
-        pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
-    }
+    // if (!full_speed) {
+    //     pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
+    // } else {
+    //     pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
+    // }
     // printf("\n");
 
     // printReceivedP();
@@ -440,17 +463,25 @@ void isr() {
         currentFrame = 0;
     }
     reset_state(&state_ka);
-    sync(&state_ka);
-    sendPID(SOF, &state_ka);
+    // sync(&state_ka);
+    // sendPID(SOF, &state_ka);
+    // for (int i = 0; i < 8; i++) {
+    //     if (i % 4 == 0) {
+    //         printf("\n");
+    //     }
+    //     printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(state_ka.buffer[i]));
+    // }
+    // printf("\n");
     reset_crc(&state_ka);
     sendData(currentFrame++, 11, false, &state_ka);
     sendCRC5(&state_ka);
     EOP(&state_ka);
-    int remaining = (32 - (state_ka.id % 32)) / 2;
-    for (int i = 0; i < remaining; i++) {
-        J(&state_ka);
-    }
-    dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
+    pio_sm_put(pio, sm_keepalive, *(uint32_t*)state_ka.buffer);
+    // int remaining = (32 - (state_ka.id % 32)) / 2;
+    // for (int i = 0; i < remaining; i++) {
+    //     J(&state_ka);
+    // }
+    // dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
     pio_interrupt_clear(pio, 2);
 }
 
@@ -458,7 +489,6 @@ void initKeepAlive() {
     keepalive_delay = (clock_get_hz(clk_sys) / div / 4 / 1000) - (((full_speed ? 32 : 0) + 3));
     if (full_speed) {
         dma_chan_keepalive = dma_claim_unused_channel(true);
-        sm_keepalive = pio_claim_unused_sm(pio, true);
         offset_keepalive = pio_add_program(pio, &pio_keepalive_high_program);
         pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
         if (full_speed) {
@@ -466,18 +496,18 @@ void initKeepAlive() {
             irq_set_priority(PIO0_IRQ_1, 0x00);
             irq_set_enabled(PIO0_IRQ_1, true);
             pio_set_irq1_source_enabled(pio, pis_interrupt2, true);
-            dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
-            channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
-            channel_config_set_write_increment(&cka, false);
-            channel_config_set_read_increment(&cka, true);
-            channel_config_set_dreq(&cka, pio_get_dreq(pio, sm_keepalive, true));
-            dma_channel_configure(
-                dma_chan_keepalive,
-                &cka,
-                &pio->txf[sm_keepalive],  // Write address (only need to set this once)
-                state_ka.buffer,
-                3,
-                false);
+            // dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
+            // channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
+            // channel_config_set_write_increment(&cka, false);
+            // channel_config_set_read_increment(&cka, true);
+            // channel_config_set_dreq(&cka, pio_get_dreq(pio, sm_keepalive, true));
+            // dma_channel_configure(
+            //     dma_chan_keepalive,
+            //     &cka,
+            //     &pio->txf[sm_keepalive],  // Write address (only need to set this once)
+            //     state_ka.buffer,
+            //     3,
+            //     false);
             isr();
         }
     } else {
@@ -583,6 +613,7 @@ void initPIO() {
     // Find a free state machine on our chosen PIO (erroring if there are
     // none). Configure it to run our program, and start it, using the
     // helper function we included in our .pio file.
+    sm_keepalive = pio_claim_unused_sm(pio, true);
     sm = pio_claim_unused_sm(pio, true);
 
     offset = pio_add_program(pio, &pio_serialiser_program);
@@ -616,12 +647,15 @@ void initPIO() {
         &pio->rxf[sm],  // read address (only need to set this once)
         0,
         false);
+    pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
 }
 void reset() {
+    pio_sm_set_enabled(pio, sm, false);
     pio_sm_set_enabled(pio, sm_keepalive, false);
-    pio_sm_set_pins(pio, sm_keepalive, 0);
+    pio_sm_set_pins(pio, sm, 0);
     sleep_ms(100);
-    pio_sm_set_pins(pio, sm_keepalive, _BV(USB_DM_PIN));
+    pio_sm_set_pins(pio, sm, _BV(USB_DM_PIN));
+    pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
     if (full_speed) {
         pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
     } else {
@@ -648,11 +682,11 @@ int main(void) {
         // D- pull up = Low, D+ pull up = full
         // Could we set the processor clock so it evenly divides into usb
         if (gpio_get(USB_DM_PIN)) {
-            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 4;
+            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 7;
             full_speed = false;
             break;
         } else if (gpio_get(USB_DP_PIN)) {
-            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 4;
+            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 7;
             full_speed = true;
             break;
         }

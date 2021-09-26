@@ -7,15 +7,22 @@
 .program pio_serialiser
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
-; wait 1 irq 3
+.wrap_target
+top:
+wait 0 irq 2 ; We can set this to 1 in the keepalive pio to make this one wait
+mov x, !STATUS
+jmp !x read
+set pindirs 31 [1]
+set y 14 ; write 15 out of 16 pairs of bits in a loop, with delays
 loop:
-    out pins, 2
-    jmp !osre loop [2]
+out pins, 2 [5] ; write the last bit pair without delays, the check for more data executes instead of the delay
+jmp y-- loop
+out pins, 2
+jmp top
+read:
 set pindirs 0
-loop2:
-    in pins, 2
-    jmp loop2 [2]
-
+push iffull noblock ; we should be able to replace this with autopush if we swap processing incoming data with a interrupt later
+in pins, 2 ; use wrap instead of an explicit jump
 % c-sdk {
 static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);
@@ -25,8 +32,9 @@ static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, ui
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, true, 8);
+    sm_config_set_in_shift(&c, true, false, 32);
     sm_config_set_set_pins(&c, data_pin, 2);
+    sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);

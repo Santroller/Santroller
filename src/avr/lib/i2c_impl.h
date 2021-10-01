@@ -138,7 +138,7 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
     } else {
         timeoutCounter = TIMEOUT;
         while (TWI_READY != twi_state) {
-            //_delay_ms( TIMEOUT_TICK );
+            //delay_ms( TIMEOUT_TICK );
             timeoutCounter--;
             if (timeoutCounter == 0) return 0;
         }
@@ -187,7 +187,7 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
             timeoutCounter = TIMEOUT;
             TWDR = twi_slarw;
             while (TWCR & _BV(TWWC)) {
-                //_delay_ms( TIMEOUT_TICK );
+                //delay_ms( TIMEOUT_TICK );
                 timeoutCounter--;
                 if (timeoutCounter == 0) return false;
                 TWDR = twi_slarw;
@@ -212,7 +212,7 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
     } else {
         timeoutCounter = TIMEOUT;
         while (TWI_MRX == twi_state) {
-            //_delay_ms( TIMEOUT_TICK );
+            //delay_ms( TIMEOUT_TICK );
             timeoutCounter--;
             if (timeoutCounter == 0) return false;
         }
@@ -257,7 +257,7 @@ bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
     } else {
         timeoutCounter = TIMEOUT;
         while (TWI_READY != twi_state) {
-            //_delay_ms( TIMEOUT_TICK );
+            //delay_ms( TIMEOUT_TICK );
             timeoutCounter--;
             if (timeoutCounter == 0) return false;
         }
@@ -305,7 +305,7 @@ bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
             timeoutCounter = TIMEOUT;
             TWDR = twi_slarw;
             while (TWCR & _BV(TWWC)) {
-                //_delay_ms( TIMEOUT_TICK );
+                //delay_ms( TIMEOUT_TICK );
                 timeoutCounter--;
                 if (timeoutCounter == 0) return false;
                 TWDR = twi_slarw;
@@ -332,7 +332,7 @@ bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
     } else {
         timeoutCounter = TIMEOUT;
         while (wait && (TWI_MTX == twi_state)) {
-            //_delay_ms( TIMEOUT_TICK );
+            //delay_ms( TIMEOUT_TICK );
             timeoutCounter--;
             if (timeoutCounter == 0) return false;
         }
@@ -380,7 +380,7 @@ bool twi_stop(void) {
     } else {
         uint16_t timeoutCounter = TIMEOUT;
         while (TWCR & _BV(TWSTO)) {
-            //_delay_ms( TIMEOUT_TICK );
+            //delay_ms( TIMEOUT_TICK );
             timeoutCounter--;
             if (timeoutCounter == 0) return false;
         }

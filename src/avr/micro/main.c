@@ -1,47 +1,66 @@
 #include <LUFA/Drivers/USB/USB.h>
 
 #include "avr.h"
+#include "avr/wdt.h"
 #include "descriptors.h"
 #include "lib_main.h"
 #include "timer.h"
 #include "usb.h"
+volatile bool waiting = true;
 uint8_t controller[DEVICE_EPSIZE_IN];
 int main(void) {
     init();
+    cli();
+    wdt_reset();
+    // Enable the watchdog timer, as it runs from an internal clock so it will not be affected by the crystal
+    MCUSR &= ~_BV(WDRF);
+    /* Start the WDT Config change sequence. */
+    WDTCSR |= _BV(WDCE) | _BV(WDE);
+    /* Configure the prescaler and the WDT for interrupt mode only*/
+    WDTCSR = _BV(WDIE) | WDTO_15MS;
+    sei();
     setupMicrosTimer();
-    // Since the micros timer doesn't rely on the crystal, we can compare it to our own timer, and if it is different then we know someone has programmed the wrong firmware
-    long current = millis();
-    _delay_ms(2);
-    current = millis() - current;
-    PLLCSR = 0;
-    if ((current != 2 && F_CPU == 16000000) || F_CPU == 8000000) {
-        PLLCSR = ((1 << PINDIV) | (1 << PLLE));
-        realFreq = 8000000;
-    } else if ((current != 2 && F_CPU == 8000000) || F_CPU == 16000000) {
-        PLLCSR = (0 | (1 << PLLE));
-        realFreq = 16000000;
+    // work out how many milliseconds it takes for the WDT to trigger
+    long timeSinceWDT = millis();
+    while (waiting) {
     }
+    timeSinceWDT = millis() - timeSinceWDT;
+    // And now compare to what we expect
+    if (F_CPU == 8000000 && timeSinceWDT > 20) {
+        // if the user is running at 16mhz, then it will run twice as fast, thus it will take longer than 15ms
+        realFreq = 16000000;
+    } else if (F_CPU == 16000000 && timeSinceWDT < 8) {
+        // if the user is running at 8mhz, then it will run at half speed, thus it will take less than 15ms
+        realFreq = 8000000;
+    }
+    PLLCSR = 0;
+    if (realFreq == 8000000) {
+        PLLCSR = (0 | (1 << PLLE));
+    } else if (realFreq == 16000000) {
+        PLLCSR = ((1 << PINDIV) | (1 << PLLE));
+    }
+
     // Now that we have calculated the real frequency, set up the timer again with the real speed
     setupMicrosTimer();
     USB_Init();
     sei();
     while (true) {
-        // uint8_t len = tick(controller);
-        // Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
-        // if (Endpoint_IsINReady()) {
-        //     Endpoint_Write_Stream_LE(controller, len, NULL);
-        //     Endpoint_ClearIN();
-        // }
-        // Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
-        // if (Endpoint_IsOUTReceived()) {
-        //     /* Check to see if the packet contains data */
-        //     if (Endpoint_IsReadWriteAllowed()) {
-        //         len = Endpoint_BytesInEndpoint();
-        //         Endpoint_Read_Stream_LE(controller, len, NULL);
-        //         packetReceived(controller, len);
-        //     }
-        //     Endpoint_ClearOUT();
-        // }
+        uint8_t len = tick(controller);
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+        if (Endpoint_IsINReady()) {
+            Endpoint_Write_Stream_LE(controller, len, NULL);
+            Endpoint_ClearIN();
+        }
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
+        if (Endpoint_IsOUTReceived()) {
+            /* Check to see if the packet contains data */
+            if (Endpoint_IsReadWriteAllowed()) {
+                len = Endpoint_BytesInEndpoint();
+                Endpoint_Read_Stream_LE(controller, len, NULL);
+                packetReceived(controller, len);
+            }
+            Endpoint_ClearOUT();
+        }
         USB_USBTask();
     }
 }
@@ -78,4 +97,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const void** const descriptorAddress) {
     *descriptorAddress = buf;
     return descriptorRequest(wValue, wIndex, buf);
+}
+ISR(WDT_vect) {
+    wdt_disable();
+    waiting = false;
 }

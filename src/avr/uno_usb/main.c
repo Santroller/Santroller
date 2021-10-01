@@ -57,9 +57,9 @@ int main(void) {
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
     // Ensure the 328p is reset so we can also work from bootloader
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-    _delay_ms(1);
+    delay_ms(1);
     AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
-    _delay_ms(1);
+    delay_ms(1);
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     sei();
     // Wait for the 328p / 1280 to boot (we receive a READY byte)

@@ -313,17 +313,17 @@ void initWiiExt(void) {
     if (wiiExtensionID == WII_NOT_INITIALISED) {
         // Send packets needed to initialise a controller
         twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
-        _delay_us(10);
+        delay_us(10);
         twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x00);
-        _delay_us(10);
+        delay_us(10);
         wiiExtensionID = readExtID();
-        _delay_us(10);
+        delay_us(10);
     }
     if (wiiExtensionID == WII_UBISOFT_DRAWSOME_TABLET) {
         twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x01);
-        _delay_us(10);
+        delay_us(10);
         twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
-        _delay_us(10);
+        delay_us(10);
     }
     int16_t (*readFunction)(Input_t *) = NULL;
     uint8_t bindings[16];
@@ -334,7 +334,7 @@ void initWiiExt(void) {
         wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
         // Enable high-res mode
         twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
-        _delay_us(10);
+        delay_us(10);
         // Some controllers support high res mode, some dont. Some require it, some
         // dont. To mitigate this issue, we can check if the high res specific bytes
         // are zeroed. However this isnt enough. If a byte is corrupted during
@@ -344,7 +344,7 @@ void initWiiExt(void) {
         uint8_t validate[8];
         while (true) {
             twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(check), check);
-            _delay_us(200);
+            delay_us(200);
             twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
             if (memcmp(check, validate, sizeof(validate)) == 0) {
                 bool highRes = (check[0x06] || check[0x07]);
@@ -358,7 +358,7 @@ void initWiiExt(void) {
                 }
                 break;
             }
-            _delay_us(200);
+            delay_us(200);
         }
     }
     switch (wiiExtensionID) {

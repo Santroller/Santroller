@@ -10,7 +10,7 @@
 .wrap_target
 top:
 wait 0 irq 2 ; We can set this to 1 in the keepalive pio to make this one wait
-mov x, !STATUS
+mov x, !STATUS 
 jmp !x read
 set pindirs 31 [1]
 set y 14 ; write 15 out of 16 pairs of bits in a loop, with delays

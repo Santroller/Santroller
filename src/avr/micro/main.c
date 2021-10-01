@@ -1,32 +1,47 @@
 #include <LUFA/Drivers/USB/USB.h>
 
+#include "avr.h"
 #include "descriptors.h"
 #include "lib_main.h"
+#include "timer.h"
 #include "usb.h"
-#include "avr.h"
 uint8_t controller[DEVICE_EPSIZE_IN];
 int main(void) {
     init();
     setupMicrosTimer();
+    // Since the micros timer doesn't rely on the crystal, we can compare it to our own timer, and if it is different then we know someone has programmed the wrong firmware
+    long current = millis();
+    _delay_ms(2);
+    current = millis() - current;
+    PLLCSR = 0;
+    if ((current != 2 && F_CPU == 16000000) || F_CPU == 8000000) {
+        PLLCSR = ((1 << PINDIV) | (1 << PLLE));
+        realFreq = 8000000;
+    } else if ((current != 2 && F_CPU == 8000000) || F_CPU == 16000000) {
+        PLLCSR = (0 | (1 << PLLE));
+        realFreq = 16000000;
+    }
+    // Now that we have calculated the real frequency, set up the timer again with the real speed
+    setupMicrosTimer();
     USB_Init();
     sei();
     while (true) {
-        uint8_t len = tick(controller);
-        Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
-        if (Endpoint_IsINReady()) {
-            Endpoint_Write_Stream_LE(controller, len, NULL);
-            Endpoint_ClearIN();
-        }
-        Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
-        if (Endpoint_IsOUTReceived()) {
-            /* Check to see if the packet contains data */
-            if (Endpoint_IsReadWriteAllowed()) {
-                len = Endpoint_BytesInEndpoint();
-                Endpoint_Read_Stream_LE(controller, len, NULL);
-                packetReceived(controller, len);
-            }
-            Endpoint_ClearOUT();
-        }
+        // uint8_t len = tick(controller);
+        // Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+        // if (Endpoint_IsINReady()) {
+        //     Endpoint_Write_Stream_LE(controller, len, NULL);
+        //     Endpoint_ClearIN();
+        // }
+        // Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
+        // if (Endpoint_IsOUTReceived()) {
+        //     /* Check to see if the packet contains data */
+        //     if (Endpoint_IsReadWriteAllowed()) {
+        //         len = Endpoint_BytesInEndpoint();
+        //         Endpoint_Read_Stream_LE(controller, len, NULL);
+        //         packetReceived(controller, len);
+        //     }
+        //     Endpoint_ClearOUT();
+        // }
         USB_USBTask();
     }
 }

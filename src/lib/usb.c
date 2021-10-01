@@ -144,8 +144,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
-    printf("Type: %d, num: %d\n", descriptorType, descriptorNumber);
-    printf("CT: %d, DT: %d\n", consoleType, deviceType);
+    // printf("Type: %d, num: %d\n", descriptorType, descriptorNumber);
+    // printf("CT: %d, DT: %d\n", consoleType, deviceType);
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
         case TDTYPE_Device:
@@ -193,10 +193,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     }
                 }
             }
-            for (int i = 0; i < size; i++) {
-                printf("0x%x, ", ((uint8_t*)descriptorBuffer)[i]);
-            }
-            printf("\n");
+            // for (int i = 0; i < size; i++) {
+            //     printf("0x%x, ", ((uint8_t*)descriptorBuffer)[i]);
+            // }
+            // printf("\n");
             break;
         case TDTYPE_Configuration:
             if (consoleType == XBOX360) {

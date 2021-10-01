@@ -12,29 +12,22 @@ mov x, OSR
 .wrap_target
 irq set 2
 set pindirs 31
-set x 3
+; Hardcode sync
+set y 3
 ; JKJKJKJK - extra leading J but thats okay
 loopkj:
-    set pins, 2 [3]
-    set pins, 1 [2]
-    jmp x-- loopkj
-set pins, 1 [3] ; K 
-set x 1
-; JKJKJKJK - extra leading J but thats okay
-loop12: ; 101001
-    set pins, 1 [3]
-    set pins, 2 [3]
-    set pins, 2 [2]
-    jmp x-- loop12
-set pins, 1 [3] ; 0
-set pins, 1 [3] ; 1
+    set pins, 1 [6]
+    set pins, 2 [5]
+    jmp y-- loopkj
+set pins, 2 [6]
 loop:
-    out pins, 2
-    jmp !osre loop [2]
+    out pins, 2 [5]
+    jmp !osre loop
 irq clear 2
+irq set 1
 mov y, x
 loop2:
-    jmp y-- loop2 [4] ; implicit wrap to top
+    jmp y-- loop2 [6] ; implicit wrap to top
 % c-sdk {
 static inline void pio_keepalive_high_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t delay) {
     pio_gpio_init(pio, data_pin);

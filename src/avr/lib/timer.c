@@ -1,8 +1,10 @@
 #include <avr/interrupt.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <util/delay.h>
 
 #include "avr.h"
-#define clockCyclesPerMicrosecond() (F_CPU / 1000000L)
+#define clockCyclesPerMicrosecond() (realFreq / 1000000L)
 
 #define clockCyclesToMicroseconds(a) ((a) / clockCyclesPerMicrosecond())
 
@@ -13,6 +15,10 @@
 #define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
 
 volatile unsigned long timer0_overflow_count = 0;
+
+uint32_t realFreq = F_CPU;
+bool scaleDiv2 = false;
+bool scaleMul2 = false;
 
 #if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || \
     defined(__AVR_ATtiny84__)
@@ -93,3 +99,31 @@ void setupMicrosTimer(void) {
 #error Timer 0 overflow interrupt not set correctly
 #endif
 }
+
+#ifdef __AVR_ATmega32U4__
+void delay_ms(uint32_t __ms) {
+    if (scaleDiv2) {
+        _delay_ms(__ms >> 1);
+    } else if (scaleMul2) {
+        _delay_ms(__ms << 1);
+    } else {
+        _delay_ms(__ms);
+    }
+}
+void delay_us(uint32_t __us) {
+    if (scaleDiv2) {
+        _delay_us(__us >> 1);
+    } else if (scaleMul2) {
+        _delay_us(__us << 1);
+    } else {
+        _delay_us(__us);
+    }
+}
+#else
+void delay_ms(uint32_t __ms) {
+    _delay_ms(__ms);
+}
+void delay_us(uint32_t __us) {
+    _delay_us(__us);
+}
+#endif

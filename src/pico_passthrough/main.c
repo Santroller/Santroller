@@ -443,7 +443,7 @@ void WR(state_t* state) {
             }
         }
     }
-    pio_sm_set_enabled(pio, sm, false);
+    // pio_sm_set_enabled(pio, sm, false);
     // if (!full_speed) {
     //     pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
     // } else {
@@ -455,7 +455,15 @@ void WR(state_t* state) {
     reset_state(state);
     state->current_packet = 0;
 }
-
+void print(state_t* state) {
+    for (int i = 0; i < 8; i++) {
+        if (i % 4 == 0) {
+            printf("\n");
+        }
+        printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(state->buffer[i]));
+    }
+    printf("\n");
+}
 void isr() {
     // Increment current frame and then append its crc5
     currentFrame++;
@@ -463,53 +471,48 @@ void isr() {
         currentFrame = 0;
     }
     reset_state(&state_ka);
-    // sync(&state_ka);
-    // sendPID(SOF, &state_ka);
-    // for (int i = 0; i < 8; i++) {
-    //     if (i % 4 == 0) {
-    //         printf("\n");
-    //     }
-    //     printf(PRINTF_BINARY_PATTERN_INT8, PRINTF_BYTE_TO_BINARY_INT8(state_ka.buffer[i]));
-    // }
-    // printf("\n");
+    // sync(&state_ka); hardcode sync into keepalive so we never send more than 64 bits
+    sendPID(SOF, &state_ka);
     reset_crc(&state_ka);
     sendData(currentFrame++, 11, false, &state_ka);
     sendCRC5(&state_ka);
     EOP(&state_ka);
-    pio_sm_put(pio, sm_keepalive, *(uint32_t*)state_ka.buffer);
-    // int remaining = (32 - (state_ka.id % 32)) / 2;
-    // for (int i = 0; i < remaining; i++) {
-    //     J(&state_ka);
-    // }
+    // printf("%d\n", state_ka.id);
+    int remaining = (32 - (state_ka.id % 32)) / 2;
+    for (int i = 0; i < remaining; i++) {
+        J(&state_ka);
+    }
+    pio_sm_put_blocking(pio, sm_keepalive, ((uint32_t*)state_ka.buffer)[0]);
+    pio_sm_put_blocking(pio, sm_keepalive, ((uint32_t*)state_ka.buffer)[1]);
     // dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
-    pio_interrupt_clear(pio, 2);
+
+    pio_interrupt_clear(pio, 1);
 }
 
 void initKeepAlive() {
-    keepalive_delay = (clock_get_hz(clk_sys) / div / 4 / 1000) - (((full_speed ? 32 : 0) + 3));
+    keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
+    keepalive_delay *= 1.4f;
     if (full_speed) {
         dma_chan_keepalive = dma_claim_unused_channel(true);
         offset_keepalive = pio_add_program(pio, &pio_keepalive_high_program);
         pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
-        if (full_speed) {
-            irq_set_exclusive_handler(PIO0_IRQ_1, isr);
-            irq_set_priority(PIO0_IRQ_1, 0x00);
-            irq_set_enabled(PIO0_IRQ_1, true);
-            pio_set_irq1_source_enabled(pio, pis_interrupt2, true);
-            // dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
-            // channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
-            // channel_config_set_write_increment(&cka, false);
-            // channel_config_set_read_increment(&cka, true);
-            // channel_config_set_dreq(&cka, pio_get_dreq(pio, sm_keepalive, true));
-            // dma_channel_configure(
-            //     dma_chan_keepalive,
-            //     &cka,
-            //     &pio->txf[sm_keepalive],  // Write address (only need to set this once)
-            //     state_ka.buffer,
-            //     3,
-            //     false);
-            isr();
-        }
+        irq_set_exclusive_handler(PIO0_IRQ_1, isr);
+        irq_set_priority(PIO0_IRQ_1, 0x00);
+        irq_set_enabled(PIO0_IRQ_1, true);
+        pio_set_irq1_source_enabled(pio, pis_interrupt1, true);
+        dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
+        channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
+        channel_config_set_write_increment(&cka, false);
+        channel_config_set_read_increment(&cka, true);
+        channel_config_set_dreq(&cka, pio_get_dreq(pio, sm_keepalive, true));
+        dma_channel_configure(
+            dma_chan_keepalive,
+            &cka,
+            &pio->txf[sm_keepalive],  // Write address (only need to set this once)
+            state_ka.buffer,
+            3,
+            false);
+        isr();
     } else {
         offset_keepalive = pio_add_program(pio, &pio_keepalive_low_program);
         pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
@@ -665,7 +668,7 @@ void reset() {
 /*------------- MAIN -------------*/
 int main(void) {
     // If its needed, 120mhz would give us perfectly even clock dividers.
-    set_sys_clock_khz(120000, true);
+    set_sys_clock_khz(126000, true);
     stdio_init_all();
     gpio_init(USB_DM_PIN);
     gpio_init(USB_DP_PIN);
@@ -694,29 +697,29 @@ int main(void) {
     printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
     initPIO();
     // Reset
-    reset();
+    // reset();
     initKeepAlive();
 
-    sleep_ms(1000);
-    TUSB_Descriptor_Device_t deviceDescriptor;
-    tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
-    sendSetup(0x00, 0x00, req, (uint8_t*)&deviceDescriptor);
+    // sleep_ms(1000);
+    // TUSB_Descriptor_Device_t deviceDescriptor;
+    // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
+    // sendSetup(0x00, 0x00, req, (uint8_t*)&deviceDescriptor);
 
-    for (int i = 0; i < sizeof(buffer4); i++) {
-        printf("%x, ", buffer4[i]);
-    }
-    reset();
-    sleep_ms(1000);
-    printf("req2\n");
-    tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
-    sendSetup(0x00, 0x00, req2, NULL);
-    printf("req3\n");
-    sleep_ms(100);
-    tusb_control_request_t req3 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
-    sendSetup(13, 0x00, req3, (uint8_t*)&deviceDescriptor);
-    for (int i = 0; i < sizeof(buffer4); i++) {
-        printf("%x, ", buffer4[i]);
-    }
+    // for (int i = 0; i < sizeof(buffer4); i++) {
+    //     printf("%x, ", buffer4[i]);
+    // }
+    // reset();
+    // sleep_ms(1000);
+    // printf("req2\n");
+    // tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
+    // sendSetup(0x00, 0x00, req2, NULL);
+    // printf("req3\n");
+    // sleep_ms(100);
+    // tusb_control_request_t req3 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
+    // sendSetup(13, 0x00, req3, (uint8_t*)&deviceDescriptor);
+    // for (int i = 0; i < sizeof(buffer4); i++) {
+    //     printf("%x, ", buffer4[i]);
+    // }
     // // printReceived();
     // // printReceivedP();
     // printf("WR Done!\n");

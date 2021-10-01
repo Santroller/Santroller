@@ -9,6 +9,7 @@
 #include <avr/io.h>
 #include <avr/power.h>
 #include <avr/wdt.h>
+#include "timer.h"
 
 #include "defines.h"
 #include "descriptors.h"

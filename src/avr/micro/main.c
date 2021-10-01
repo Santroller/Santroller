@@ -1,12 +1,46 @@
 #include <LUFA/Drivers/USB/USB.h>
 
+#include "avr.h"
+#include "avr/wdt.h"
 #include "descriptors.h"
 #include "lib_main.h"
+#include "timer.h"
 #include "usb.h"
-#include "avr.h"
+volatile bool waiting = true;
 uint8_t controller[DEVICE_EPSIZE_IN];
 int main(void) {
     init();
+    cli();
+    wdt_reset();
+    // Enable the watchdog timer, as it runs from an internal clock so it will not be affected by the crystal
+    MCUSR &= ~_BV(WDRF);
+    /* Start the WDT Config change sequence. */
+    WDTCSR |= _BV(WDCE) | _BV(WDE);
+    /* Configure the prescaler and the WDT for interrupt mode only*/
+    WDTCSR = _BV(WDIE) | WDTO_15MS;
+    sei();
+    setupMicrosTimer();
+    // work out how many milliseconds it takes for the WDT to trigger
+    long timeSinceWDT = millis();
+    while (waiting) {
+    }
+    timeSinceWDT = millis() - timeSinceWDT;
+    // And now compare to what we expect
+    if (F_CPU == 8000000 && timeSinceWDT > 20) {
+        // if the user is running at 16mhz, then it will run twice as fast, thus it will take longer than 15ms
+        realFreq = 16000000;
+    } else if (F_CPU == 16000000 && timeSinceWDT < 8) {
+        // if the user is running at 8mhz, then it will run at half speed, thus it will take less than 15ms
+        realFreq = 8000000;
+    }
+    PLLCSR = 0;
+    if (realFreq == 8000000) {
+        PLLCSR = (0 | (1 << PLLE));
+    } else if (realFreq == 16000000) {
+        PLLCSR = ((1 << PINDIV) | (1 << PLLE));
+    }
+
+    // Now that we have calculated the real frequency, set up the timer again with the real speed
     setupMicrosTimer();
     USB_Init();
     sei();
@@ -63,4 +97,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const void** const descriptorAddress) {
     *descriptorAddress = buf;
     return descriptorRequest(wValue, wIndex, buf);
+}
+ISR(WDT_vect) {
+    wdt_disable();
+    waiting = false;
 }

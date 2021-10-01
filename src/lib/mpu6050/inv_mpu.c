@@ -30,7 +30,6 @@
 #include <string.h>
 #include "util/util.h"
 #define MPU6050
-#define delay_ms _delay_ms
 #define i2c_write !twi_writeToPointer
 #define i2c_read !twi_readFromPointer
 

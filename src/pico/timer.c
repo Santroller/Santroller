@@ -13,3 +13,9 @@ unsigned long micros(void) {
 
 void setupMicrosTimer(void) {
 }
+void delay_ms(uint32_t __ms) {
+    sleep_ms(__ms);
+}
+void delay_us(uint32_t __us) {
+    sleep_us(__us);
+}

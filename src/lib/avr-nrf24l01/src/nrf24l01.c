@@ -26,7 +26,7 @@ void nrf24_init(void) {
   spi_begin(F_CPU, false, false, false);
   nrf24_ce_digitalWrite(LOW);
   nrf24_csn_digitalWrite(HIGH);
-  _delay_ms(5);
+  delay_ms(5);
 }
 void nrf24_flush_tx(void) {
   nrf24_csn_digitalWrite(LOW);

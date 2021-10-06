@@ -8,8 +8,7 @@
 #include "config.h"
 #include "lib_main.h"
 #include "string.h"
-// Instead of relying on EEMEM to set pointers, we could just manually define regions ourselves.
-static Bindings_t EEMEM bindingsPointer;
+static Bindings_t* bindingsPointer = (Bindings_t*)0;
 uint8_t analogCount = 0;
 int currentAnalog = 0;
 void setupADC(void);
@@ -19,25 +18,6 @@ void initPins(void) {
 #else
 #define FIRST_PIN &PINB
 #endif
-    // setDefaults();
-    // Binding_t* bindingn = (Binding_t*)buf;
-    // bindingn->analogID = 0xFF;
-    // bindingn->binding = XBOX_A;
-    // bindingn->pullup = true;
-    // // for the uno, D2 is convently on port D, bit 2
-    // eeprom_write_block(bindingn, &bindingsPointer.bindings[(((&PIND - FIRST_PIN) / 3) * 8) + 2], sizeof(Binding_t));
-    // bindingn->analogID = 0xFF;
-    // bindingn->binding = XBOX_B;
-    // bindingn->pullup = true;
-    // eeprom_write_block(bindingn, &bindingsPointer.bindings[(((&PIND - FIRST_PIN) / 3) * 8) + 3], sizeof(Binding_t));
-    // bindingn->analogID = 0;
-    // bindingn->binding = XBOX_L_X;
-    // bindingn->pullup = false;
-    // eeprom_write_block(bindingn, &bindingsPointer.bindings[0], sizeof(Binding_t));
-    // AnalogData_t* an = (AnalogData_t*)buf;
-    // an->channel = 0;
-    // an->mapToDigital = false;
-    // eeprom_write_block(an, &bindingsPointer.analog[0], sizeof(AnalogData_t));
     // By resetting analogCount and clearing the adc interrupt, we can run this function again when the config is modified
     analogCount = 0;
     pinCount = 0;
@@ -49,7 +29,7 @@ void initPins(void) {
     // To do this, we loop twice, once skipping mouse bindings and once skipping keyboard bindings.
     while (true) {
         for (int i = 0; i < PORTS * PINS_PER_PORT; i++) {
-            eeprom_read_block(binding, &bindingsPointer.bindings[i], sizeof(Binding_t));
+            eeprom_read_block(binding, &bindingsPointer->bindings[i], sizeof(Binding_t));
             if (isMouse != (binding->type == DIRECT_MOUSE || binding->type == OTHER_MOUSE)) continue;
             if (binding->type) {
                 volatile uint8_t* pinx = FIRST_PIN + ((i / PINS_PER_PORT) * 3);
@@ -71,7 +51,7 @@ void initPins(void) {
                     pins[i].digitalRead = readDigital;
                     pins[i].axisInfo = NULL;
                     if (binding->analogID) {
-                        eeprom_read_block(analog, &bindingsPointer.analog[binding->analogID], sizeof(AnalogData_t));
+                        eeprom_read_block(analog, &bindingsPointer->analog[binding->analogID], sizeof(AnalogData_t));
                         pins[i].axisInfo = &analogInfo[binding->analogID];
                         pins[i].axisInfo->deadzone = analog->scale.deadzone;
                         pins[i].axisInfo->offset = analog->scale.offset;
@@ -91,7 +71,7 @@ void initPins(void) {
                         }
                         SREG = oldSREG;
                     }
-                } 
+                }
                 pinCount++;
             }
         }

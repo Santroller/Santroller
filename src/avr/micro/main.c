@@ -29,9 +29,11 @@ int main(void) {
     if (F_CPU == 8000000 && timeSinceWDT > 20) {
         // if the user is running at 16mhz, then it will run twice as fast, thus it will take longer than 15ms
         realFreq = 16000000;
+        scaleDiv2 = true;
     } else if (F_CPU == 16000000 && timeSinceWDT < 8) {
         // if the user is running at 8mhz, then it will run at half speed, thus it will take less than 15ms
         realFreq = 8000000;
+        scaleMul2 = true;
     }
     PLLCSR = 0;
     if (realFreq == 8000000) {

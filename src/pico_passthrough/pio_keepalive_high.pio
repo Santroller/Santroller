@@ -11,15 +11,6 @@ pull
 mov x, OSR
 .wrap_target
 irq set 2
-set pindirs 31
-; Hardcode sync
-set y 3
-; JKJKJKJK - extra leading J but thats okay
-loopkj:
-    set pins, 1 [6]
-    set pins, 2 [5]
-    jmp y-- loopkj
-set pins, 2 [6]
 loop:
     out pins, 2 [5]
     jmp !osre loop

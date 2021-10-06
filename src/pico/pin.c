@@ -11,50 +11,12 @@
 #include "pico/stdlib.h"
 #include "stddef.h"
 #include "string.h"
-// const Bindings_t* bindingsPointer =
-//     (const Bindings_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
+const Bindings_t* bindingsPointer =
+    (const Bindings_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
 uint8_t analogCount = 0;
 int currentAnalog = 0;
 void initPins(void) {
-    // setDefaults();
-    Bindings_t test = {0};
-    Bindings_t* bindingsPointer = &test;
-    bindingsPointer->bindings[9].binding = THID_KEYBOARD_SC_UP_ARROW + 1;
-    bindingsPointer->bindings[9].pullup = true;
-    bindingsPointer->bindings[9].pulldown = false;
-    bindingsPointer->bindings[9].milliDeBounce = 20;
-    bindingsPointer->bindings[10].binding = THID_KEYBOARD_SC_DOWN_ARROW + 1;
-    bindingsPointer->bindings[10].pullup = true;
-    bindingsPointer->bindings[10].pulldown = false;
-    bindingsPointer->bindings[10].milliDeBounce = 20;
-    // bindingsPointer->bindings[0].binding = XBOX_START + 1;
-    // bindingsPointer->bindings[0].pullup = true;
-    // bindingsPointer->bindings[0].pulldown = false;
-    // bindingsPointer->bindings[0].milliDeBounce = 20;
-    // bindingsPointer->bindings[1].binding = XBOX_BACK + 1;
-    // bindingsPointer->bindings[1].pullup = true;
-    // bindingsPointer->bindings[1].pulldown = false;
-    // bindingsPointer->bindings[1].milliDeBounce = 20;
-    bindingsPointer->bindings[11].binding = THID_KEYBOARD_SC_Z + 1;
-    bindingsPointer->bindings[11].pullup = true;
-    bindingsPointer->bindings[11].pulldown = false;
-    bindingsPointer->bindings[11].milliDeBounce = 20;
-    // bindingsPointer->bindings[12].binding = XBOX_B + 1;
-    // bindingsPointer->bindings[12].pullup = true;
-    // bindingsPointer->bindings[12].pulldown = false;
-    // bindingsPointer->bindings[12].milliDeBounce = 20;
-    // bindingsPointer->bindings[13].binding = XBOX_Y + 1;
-    // bindingsPointer->bindings[13].pullup = true;
-    // bindingsPointer->bindings[13].pulldown = false;
-    // bindingsPointer->bindings[13].milliDeBounce = 20;
-    // bindingsPointer->bindings[14].binding = XBOX_X + 1;
-    // bindingsPointer->bindings[14].pullup = true;
-    // bindingsPointer->bindings[14].pulldown = false;
-    // bindingsPointer->bindings[14].milliDeBounce = 20;
-    // bindingsPointer->bindings[15].binding = XBOX_LB + 1;
-    // bindingsPointer->bindings[15].pullup = true;
-    // bindingsPointer->bindings[15].pulldown = false;
-    // bindingsPointer->bindings[15].milliDeBounce = 20;
+    // By resetting analogCount we can run this function again when the config is modified
     pinCount = 0;
     Binding_t* binding;
     AnalogData_t* analog;

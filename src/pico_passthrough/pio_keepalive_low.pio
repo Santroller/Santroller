@@ -15,7 +15,9 @@ set pindirs 31
 set pins, 0 [6]
 set pins, 0 [6]
 set pins, 2 [6]
+set pindirs 0
 irq clear 2
+irq set 1
 mov y, x
 loop2:
     jmp y-- loop2 [6] ; implicit wrap to .wrap

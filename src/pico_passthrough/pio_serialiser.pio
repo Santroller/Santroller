@@ -8,21 +8,18 @@
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
 .wrap_target
-top:
-wait 0 irq 2 ; We can set this to 1 in the keepalive pio to make this one wait
-mov x, !STATUS 
-jmp !x read
-set pindirs 31 [1]
-set y 14 ; write 15 out of 16 pairs of bits in a loop, with delays
-loop:
-out pins, 2 [5] ; write the last bit pair without delays, the check for more data executes instead of the delay
-jmp y-- loop
-out pins, 2
-jmp top
-read:
 set pindirs 0
-push iffull noblock ; we should be able to replace this with autopush if we swap processing incoming data with a interrupt later
-in pins, 2 ; use wrap instead of an explicit jump
+top:
+wait 0 irq 2
+pull IfEmpty
+jmp !OSRE writer
+jmp top
+writer:
+set pindirs 31
+write:
+out pins, 2 [5]
+jmp !OSRE write
+
 % c-sdk {
 static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);

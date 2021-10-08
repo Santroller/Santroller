@@ -30,7 +30,6 @@ static inline void pio_keepalive_high_program_init(PIO pio, uint sm, uint offset
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_set_pins(&c, data_pin, 2);
-    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
     pio_sm_set_enabled(pio, sm, true);

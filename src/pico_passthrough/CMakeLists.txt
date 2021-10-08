@@ -55,6 +55,7 @@ if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     hardware_sleep
     hardware_dma
     hardware_irq
+    pico_multicore
     pico_unique_id
     pico_mem_ops)
 

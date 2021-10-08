@@ -28,9 +28,9 @@ static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, ui
     pio_sm_config c = pio_serialiser_program_get_default_config(offset);
     sm_config_set_out_pins(&c, data_pin, 2);
     sm_config_set_clkdiv(&c, clk_div);
-    sm_config_set_out_shift(&c, true, true, 32);
+    sm_config_set_out_shift(&c, true, true, 8);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, true, 32);
+    sm_config_set_in_shift(&c, true, true, 8);
     sm_config_set_set_pins(&c, data_pin, 2);
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 

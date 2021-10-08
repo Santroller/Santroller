@@ -18,7 +18,7 @@
 
 struct repeating_timer timer;
 #define maxBits 512
-uint32_t data_read[32];
+uint8_t data_read[32];
 uint32_t dma_data_read;
 uint8_t buffer2[maxBits] = {0};
 uint8_t buffer3[maxBits / 8] = {};
@@ -141,14 +141,17 @@ static void K(state_t* state) {
 static void SE0(state_t* state) {
     writeBit(0, 0, state);
 }
+static void SE1(state_t* state) {
+    writeBit(1, 1, state);
+}
 
 static void commit_packet(state_t* state, uint readCount) {
     uint8_t bufferTmp[MAX_PACKET_LEN];
     int tmpId = state->id;
     memcpy(bufferTmp, state->buffer, (tmpId / 8) + 1);
     reset_state(state);
-    // Left pad packets as the fifo is 32 bits in size, but we also want to be able to immediately receive
-    int remaining = (32 - (tmpId % 32)) / 2;
+    // Left pad packets as the fifo is 8 bits in size, but we also want to be able to immediately receive
+    int remaining = (8 - (tmpId % 8)) / 2;
     for (int i = 0; i < remaining; i++) {
         J(state);
     }
@@ -158,8 +161,8 @@ static void commit_packet(state_t* state, uint readCount) {
         currentBit++;
         state->id++;
     }
-    // Store packet length as number of 32 bit transfers
-    state->packetlens[state->current_packet] = state->id / 32;
+    // Store packet length as number of 8 bit transfers
+    state->packetlens[state->current_packet] = state->id / 8;
     state->packetresplens[state->current_packet] = readCount / 8;
     // printf("Packet committed\n");
     // for (int i = 0; i < state->id; i += 2) {
@@ -313,13 +316,12 @@ int readLongs;
 void WR(state_t* state) {
     uint current_read = 0;
     finishedKeepalive = false;
+    // Wait for a keepalive and schedule everything after it
     while (!finishedKeepalive) {
         tight_loop_contents();
     }
     // pio_sm_set_enabled(pio, sm_keepalive, false);
     for (int p = 0; p < state->current_packet; p++) {
-        memset(buffer2, 0, sizeof(buffer2));
-        memset(buffer3, 0, sizeof(buffer3));
         int syncCount = 0;
         int oneCount = 0;
         int bit = 0;
@@ -330,7 +332,6 @@ void WR(state_t* state) {
         waiting = state->packetresplens[p];
         uint8_t currentLong = 0;
         readLongs = 0;
-        // This will trigger just after a keepalive packet has been transmitted
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_wait_for_finish_blocking(dma_chan_write);
         while (waiting) {
@@ -338,8 +339,7 @@ void WR(state_t* state) {
                 tight_loop_contents();
                 continue;
             }
-            // TODO: can we optimise the hell out of this? its a bit slow
-            for (int i = 0; i < 32; i += 2) {
+            for (int i = 0; i < 8; i += 2) {
                 bool bit1 = !!bit_check(data_read[currentLong], i);
                 bool bit2 = !!bit_check(data_read[currentLong], i + 1);
                 bool dm, dp;
@@ -453,11 +453,14 @@ void isr2() {
     pio_interrupt_clear(pio, 1);
 }
 void isrRead() {
+    // TODO: find a way to handle reading on the second core, the interrupt fires too quickly to actually do anything else
+    // TODO: we probably wouldnt even need an ISR or a FIFO if we are dedicating a core to it, we can just blocking read in a loop and push to either a queue or a multicore fifo.
     // If the packet is only SE0's or J's, then its either unplugged, or it is not doing anything
     // There is a limit to how many J's can be read in a row, so this will work
-    if (waiting && dma_data_read && dma_data_read != jBits) {
+    uint8_t v = (dma_data_read >> 24) & 0xff;
+    if (waiting && dma_data_read && v != jBits) {
         // If we have a valid bit of data then write it
-        data_read[readLongs++] = dma_data_read;
+        data_read[readLongs++] = v;
     }
     dma_data_read = 0;
     dma_hw->ints0 = 1u << dma_chan_read;
@@ -483,6 +486,7 @@ void isr() {
     }
     dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
     pio_interrupt_clear(pio, 1);
+    printf("isr\n");
 }
 
 void initKeepAlive() {
@@ -511,9 +515,9 @@ void initKeepAlive() {
         pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
         irq_set_exclusive_handler(PIO0_IRQ_1, isr2);
     }
-    irq_set_priority(PIO0_IRQ_1, 0x00);
-    irq_set_enabled(PIO0_IRQ_1, true);
     pio_set_irq1_source_enabled(pio, pis_interrupt1, true);
+    irq_set_priority(PIO0_IRQ_1, PICO_HIGHEST_IRQ_PRIORITY);
+    irq_set_enabled(PIO0_IRQ_1, true);
 }
 void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request, uint8_t* d) {
     memset(buffer4, 0, sizeof(buffer4));
@@ -612,8 +616,8 @@ void initPIO() {
     // Find a free state machine on our chosen PIO (erroring if there are
     // none). Configure it to run our program, and start it, using the
     // helper function we included in our .pio file.
-    sm_keepalive = pio_claim_unused_sm(pio, true);
     sm = pio_claim_unused_sm(pio, true);
+    sm_keepalive = pio_claim_unused_sm(pio, true);
 
     offset = pio_add_program(pio, &pio_serialiser_program);
 
@@ -621,7 +625,7 @@ void initPIO() {
     dma_chan_read = dma_claim_unused_channel(true);
 
     dma_channel_config c = dma_channel_get_default_config(dma_chan_write);
-    channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
+    channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
     channel_config_set_write_increment(&c, false);
     channel_config_set_read_increment(&c, true);
     channel_config_set_dreq(&c, pio_get_dreq(pio, sm, true));
@@ -651,6 +655,7 @@ void initPIO() {
 
     // Configure the processor to run dma_handler() when DMA IRQ 0 is asserted
     irq_set_exclusive_handler(DMA_IRQ_0, isrRead);
+    // irq_set_priority(DMA_IRQ_0, PICO_HIGHEST_IRQ_PRIORITY);
     irq_set_enabled(DMA_IRQ_0, true);
     isrRead();
 }
@@ -689,20 +694,20 @@ int main(void) {
         if (gpio_get(USB_DM_PIN)) {
             div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 7;
             full_speed = false;
-            jBits = 0xaaaaaaaa;
+            jBits = 0xaa;
             break;
         } else if (gpio_get(USB_DP_PIN)) {
             div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 7;
             full_speed = true;
-            jBits = 0x55555555;
+            jBits = 0x55;
             break;
         }
     }
     printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
     initPIO();
     // Reset
-    reset();
     initKeepAlive();
+    reset();
 
     sleep_ms(1000);
     TUSB_Descriptor_Device_t deviceDescriptor;

@@ -11,8 +11,9 @@
 set pindirs 0
 top:
 wait 0 irq 2
-pull IfEmpty
-jmp !OSRE writer
+mov x, status
+jmp !x writer
+in pins, 2 [2]
 jmp top
 writer:
 set pindirs 31
@@ -29,7 +30,7 @@ static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, ui
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, false, 32);
+    sm_config_set_in_shift(&c, true, true, 32);
     sm_config_set_set_pins(&c, data_pin, 2);
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 

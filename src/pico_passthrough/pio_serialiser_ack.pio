@@ -4,38 +4,38 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 ;
 
-.program pio_serialiser
+.program pio_serialiser_ack
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
+pull
+mov x, OSR
 .wrap_target
-set pindirs 0
-top:
-wait 0 irq 2
-mov x, status
-jmp !x writer
-in pins, 2 [2]
-jmp top
-writer:
+irq set 0
+wait 0 irq 0
+mov OSR, x ;we always send the same data
 set pindirs 31
 write:
 out pins, 2 [5]
 jmp !OSRE write
+set pins, 0 [14] ; SEO SEO (and J is implied)
+set pindirs 0
 
 % c-sdk {
-static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
+static inline void pio_serialiser_ack_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t ack) {
     pio_gpio_init(pio, data_pin);
     pio_gpio_init(pio, data_pin + 1);
     pio_sm_config c = pio_serialiser_program_get_default_config(offset);
-    sm_config_set_out_pins(&c, data_pin, 2);
     sm_config_set_clkdiv(&c, clk_div);
-    sm_config_set_out_shift(&c, true, true, 8);
+    sm_config_set_out_pins(&c, data_pin, 2);
+    sm_config_set_out_shift(&c, true, false, 32);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, true, 16);
+    sm_config_set_in_shift(&c, true, false, 32);
     sm_config_set_set_pins(&c, data_pin, 2);
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
     pio_sm_set_enabled(pio, sm, true);
+    pio_sm_put_blocking(pio, sm, ack);
 }
 %}

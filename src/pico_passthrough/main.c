@@ -18,7 +18,7 @@
 
 struct repeating_timer timer;
 #define maxBits 512
-uint8_t data_read[32];
+uint32_t data_read[32];
 uint32_t dma_data_read;
 uint8_t buffer2[maxBits] = {0};
 uint8_t buffer3[maxBits / 8] = {};
@@ -334,106 +334,112 @@ void WR(state_t* state) {
         readLongs = 0;
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_wait_for_finish_blocking(dma_chan_write);
-        while (waiting) {
-            if (currentLong >= readLongs) {
-                tight_loop_contents();
-                continue;
-            }
-            for (int i = 0; i < 8; i += 2) {
-                bool bit1 = !!bit_check(data_read[currentLong], i);
-                bool bit2 = !!bit_check(data_read[currentLong], i + 1);
-                bool dm, dp;
-                if (USB_FIRST_PIN == USB_DM_PIN) {
-                    dm = bit1;
-                    dp = bit2;
-                } else {
-                    dp = bit1;
-                    dm = bit2;
+        if (waiting) {
+            while (waiting) {
+                if (currentLong >= readLongs) {
+                    tight_loop_contents();
+                    continue;
                 }
-                // DM = 1 DP = 0 = J for full_speed
-                // for full_speed=true, J is DM low, DP high
-                // for full_speed=false, J is DM low, DP high
-                bool j = dm == !full_speed && dp == full_speed;
-                bool k = dm == full_speed && dp == !full_speed;
-                bool se0 = !dm && !dp;
+                for (int i = 24; i < 32; i += 2) {
+                    bool bit1 = !!bit_check(data_read[currentLong], i);
+                    bool bit2 = !!bit_check(data_read[currentLong], i + 1);
+                    bool dm, dp;
+                    if (USB_FIRST_PIN == USB_DM_PIN) {
+                        dm = bit1;
+                        dp = bit2;
+                    } else {
+                        dp = bit1;
+                        dm = bit2;
+                    }
+                    // DM = 1 DP = 0 = J for full_speed
+                    // for full_speed=true, J is DM low, DP high
+                    // for full_speed=false, J is DM low, DP high
+                    bool j = dm == !full_speed && dp == full_speed;
+                    bool k = dm == full_speed && dp == !full_speed;
+                    bool se0 = !dm && !dp;
 
-                // if (k) {
-                //     printf("K");
-                // } else if (j) {
-                //     printf("J");
-                // } else if (se0) {
-                //     printf("SE0\n");
-                // }
-                if (readingData) {
+                    // if (k) {
+                    //     printf("K");
+                    // } else if (j) {
+                    //     printf("J");
+                    // } else if (se0) {
+                    //     printf("SE0\n");
+                    // }
                     if (se0) {
                         waiting = false;
                         // printf("DONE\n");
                         break;
                     }
-                    // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
-                    // 1 bit is transmitted by leaving the data lines as-is.
-                    if (lastWasJ != j) {
-                        if (!skip) {
-                            bit_clear(buffer3[bit / 8], bit % 8);
-                            bit++;
+                    if (readingData) {
+                        if (se0) {
+                            waiting = false;
+                            // printf("DONE\n");
+                            break;
                         }
-                        skip = false;
-                        oneCount = 0;
-                    } else {
-                        bit_set(buffer3[bit / 8], bit % 8);
-                        bit++;
-                        skip = false;
-                        oneCount++;
-                        if (oneCount == 7) {
-                            skip = true;
+                        // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
+                        // 1 bit is transmitted by leaving the data lines as-is.
+                        if (lastWasJ != j) {
+                            if (!skip) {
+                                bit_clear(buffer3[bit / 8], bit % 8);
+                                bit++;
+                            }
+                            skip = false;
                             oneCount = 0;
+                        } else {
+                            bit_set(buffer3[bit / 8], bit % 8);
+                            bit++;
+                            skip = false;
+                            oneCount++;
+                            if (oneCount == 7) {
+                                skip = true;
+                                oneCount = 0;
+                            }
+                        }
+                    } else {
+                        if (j) {
+                            // J
+                            switch (syncCount) {
+                                case 1:
+                                case 3:
+                                case 5:
+                                    syncCount++;
+                                    break;
+                                default:
+                                    valid = false;
+                                    break;
+                            }
+                        } else if (k) {
+                            // K
+                            switch (syncCount) {
+                                case 0:
+                                case 2:
+                                case 4:
+                                case 6:
+                                    syncCount++;
+                                    break;
+                                case 7:
+                                    readingData = true;
+                                    break;
+                                default:
+                                    valid = false;
+                                    break;
+                            }
                         }
                     }
-                } else {
-                    if (j) {
-                        // J
-                        switch (syncCount) {
-                            case 1:
-                            case 3:
-                            case 5:
-                                syncCount++;
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                    } else if (k) {
-                        // K
-                        switch (syncCount) {
-                            case 0:
-                            case 2:
-                            case 4:
-                            case 6:
-                                syncCount++;
-                                break;
-                            case 7:
-                                readingData = true;
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                    }
+                    lastWasJ = j;
                 }
-                lastWasJ = j;
+                currentLong++;
             }
-            currentLong++;
-        }
-
-        uint received = buffer3[0];
-        // printf("%d %d\n", p, reverse(received));
-        if (received == reverse(NAK)) {
-            // Device is not ready, try again.
-            p--;
-        } else if (received == reverse(DATA1) || received == reverse(DATA0)) {
-            // Don't copy the PID
-            memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
-            current_read += 8;
+            uint received = buffer3[0];
+            // printf("%d %d\n", p, reverse(received));
+            if (received == reverse(NAK)) {
+                // Device is not ready, try again.
+                p--;
+            } else if (received == reverse(DATA1) || received == reverse(DATA0)) {
+                // Don't copy the PID
+                memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
+                current_read += 8;
+            }
         }
     }
     reset_state(state);
@@ -453,16 +459,13 @@ void isr2() {
     pio_interrupt_clear(pio, 1);
 }
 void isrRead() {
-    // TODO: find a way to handle reading on the second core, the interrupt fires too quickly to actually do anything else
-    // TODO: we probably wouldnt even need an ISR or a FIFO if we are dedicating a core to it, we can just blocking read in a loop and push to either a queue or a multicore fifo.
     // If the packet is only SE0's or J's, then its either unplugged, or it is not doing anything
     // There is a limit to how many J's can be read in a row, so this will work
-    uint8_t v = (dma_data_read >> 24) & 0xff;
-    if (waiting && dma_data_read && v != jBits) {
+    if (waiting && dma_data_read && dma_data_read != jBits) {
         // If we have a valid bit of data then write it
-        data_read[readLongs++] = v;
+        data_read[readLongs++] = dma_data_read;
     }
-    dma_data_read = 0;
+    // dma_data_read = 0;
     dma_hw->ints0 = 1u << dma_chan_read;
     dma_channel_set_trans_count(dma_chan_read, 1, true);
 }
@@ -486,7 +489,6 @@ void isr() {
     }
     dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
     pio_interrupt_clear(pio, 1);
-    printf("isr\n");
 }
 
 void initKeepAlive() {
@@ -540,56 +542,8 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
     sendCRC16(&state_pk);
     EOP(&state_pk);
     commit_packet(&state_pk, 16);
-    if (!address) {
-        if (request.bmRequestType_bit.direction == TUSB_DIR_OUT) {
-            if (request.wLength) {
-                sync(&state_pk);
-                sendPID(OUT, &state_pk);
-                reset_crc(&state_pk);
-                sendAddress(address, &state_pk);
-                sendNibble(endpoint, &state_pk);
-                sendCRC5(&state_pk);
-                EOP(&state_pk);
-                sync(&state_pk);
-                sendPID(DATA1, &state_pk);
-                reset_crc(&state_pk);
-                uint8_t* data = (uint8_t*)&d;
-                for (int i = 0; i < request.wLength; i++) {
-                    sendByte(*data++, &state_pk);
-                }
-                sendCRC16(&state_pk);
-                EOP(&state_pk);
-                commit_packet(&state_pk, 40);
-            }
-            sync(&state_pk);
-            sendPID(IN, &state_pk);
-            reset_crc(&state_pk);
-            sendAddress(address, &state_pk);
-            sendNibble(endpoint, &state_pk);
-            sendCRC5(&state_pk);
-            EOP(&state_pk);
-            commit_packet(&state_pk, 16);
-            sync(&state_pk);
-            sendPID(ACK, &state_pk);
-            EOP(&state_pk);
-            commit_packet(&state_pk, 0);
-        } else {
-            if (request.wLength) {
-                for (int i = 0; i < (request.wLength / 8) + 1; i++) {
-                    sync(&state_pk);
-                    sendPID(IN, &state_pk);
-                    reset_crc(&state_pk);
-                    sendAddress(address, &state_pk);
-                    sendNibble(endpoint, &state_pk);
-                    sendCRC5(&state_pk);
-                    EOP(&state_pk);
-                    commit_packet(&state_pk, request.wLength + 8);
-                    sync(&state_pk);
-                    sendPID(ACK, &state_pk);
-                    EOP(&state_pk);
-                    commit_packet(&state_pk, 0);
-                }
-            }
+    if (request.bmRequestType_bit.direction == TUSB_DIR_OUT) {
+        if (request.wLength) {
             sync(&state_pk);
             sendPID(OUT, &state_pk);
             reset_crc(&state_pk);
@@ -598,12 +552,58 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             sendCRC5(&state_pk);
             EOP(&state_pk);
             sync(&state_pk);
-            sendPID(DATA0, &state_pk);
+            sendPID(DATA1, &state_pk);
             reset_crc(&state_pk);
+            uint8_t* data = (uint8_t*)&d;
+            for (int i = 0; i < request.wLength; i++) {
+                sendByte(*data++, &state_pk);
+            }
             sendCRC16(&state_pk);
             EOP(&state_pk);
             commit_packet(&state_pk, 40);
         }
+        sync(&state_pk);
+        sendPID(IN, &state_pk);
+        reset_crc(&state_pk);
+        sendAddress(address, &state_pk);
+        sendNibble(endpoint, &state_pk);
+        sendCRC5(&state_pk);
+        EOP(&state_pk);
+        commit_packet(&state_pk, 16);
+        sync(&state_pk);
+        sendPID(ACK, &state_pk);
+        EOP(&state_pk);
+        commit_packet(&state_pk, 0);
+    } else {
+        if (request.wLength) {
+            for (int i = 0; i < (request.wLength / 8) + 1; i++) {
+                sync(&state_pk);
+                sendPID(IN, &state_pk);
+                reset_crc(&state_pk);
+                sendAddress(address, &state_pk);
+                sendNibble(endpoint, &state_pk);
+                sendCRC5(&state_pk);
+                EOP(&state_pk);
+                commit_packet(&state_pk, request.wLength + 8);
+                sync(&state_pk);
+                sendPID(ACK, &state_pk);
+                EOP(&state_pk);
+                commit_packet(&state_pk, 0);
+            }
+        }
+        sync(&state_pk);
+        sendPID(OUT, &state_pk);
+        reset_crc(&state_pk);
+        sendAddress(address, &state_pk);
+        sendNibble(endpoint, &state_pk);
+        sendCRC5(&state_pk);
+        EOP(&state_pk);
+        sync(&state_pk);
+        sendPID(DATA1, &state_pk);
+        reset_crc(&state_pk);
+        sendCRC16(&state_pk);
+        EOP(&state_pk);
+        commit_packet(&state_pk, 40);
     }
     WR(&state_pk);
     if (request.bmRequestType_bit.direction == TUSB_DIR_IN && request.wLength) {
@@ -613,9 +613,6 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
 
 void initPIO() {
     pio = pio0;
-    // Find a free state machine on our chosen PIO (erroring if there are
-    // none). Configure it to run our program, and start it, using the
-    // helper function we included in our .pio file.
     sm = pio_claim_unused_sm(pio, true);
     sm_keepalive = pio_claim_unused_sm(pio, true);
 
@@ -694,12 +691,12 @@ int main(void) {
         if (gpio_get(USB_DM_PIN)) {
             div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 7;
             full_speed = false;
-            jBits = 0xaa;
+            jBits = 0xaaaa0000;
             break;
         } else if (gpio_get(USB_DP_PIN)) {
             div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 7;
             full_speed = true;
-            jBits = 0x55;
+            jBits = 0x55550000;
             break;
         }
     }
@@ -710,31 +707,31 @@ int main(void) {
     reset();
 
     sleep_ms(1000);
-    TUSB_Descriptor_Device_t deviceDescriptor;
-    tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
-    sendSetup(0x00, 0x00, req, (uint8_t*)&deviceDescriptor);
+    // TUSB_Descriptor_Device_t deviceDescriptor;
+    // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 8};
+    // sendSetup(0x00, 0x00, req, (uint8_t*)&deviceDescriptor);
 
-    for (int i = 0; i < sizeof(buffer4); i++) {
-        printf("%x, ", buffer4[i]);
-    }
-    reset();
-    sleep_ms(1000);
-    printf("\nreq2\n");
+    // for (int i = 0; i < sizeof(buffer4); i++) {
+    //     printf("%x, ", buffer4[i]);
+    // }
+    // reset();
+    // sleep_ms(1000);
+    // printf("\nreq2\n");
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
     sendSetup(0x00, 0x00, req2, NULL);
-    printf("req4\n");
-    sleep_ms(1000);
-    tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
-    sendSetup(13, 0x00, req4, (uint8_t*)&deviceDescriptor);
-    for (int i = 0; i < sizeof(buffer4); i++) {
-        printf("%x, ", buffer4[i]);
-    }
+    // printf("req4\n");
+    // sleep_ms(1000);
+    // tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
+    // sendSetup(13, 0x00, req4, (uint8_t*)&deviceDescriptor);
+    // for (int i = 0; i < sizeof(buffer4); i++) {
+    //     printf("%x, ", buffer4[i]);
+    // }
     // printReceived();
     // printReceivedP();
-    printf("\nWR Done!\n");
-    sleep_ms(100);
-    printf("WR2 TX!\n");
-    printf("WR Done!\n");
+    // printf("\nWR Done!\n");
+    // sleep_ms(100);
+    // printf("WR2 TX!\n");
+    // printf("WR Done!\n");
     while (true) {
     }
     return 0;

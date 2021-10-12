@@ -340,7 +340,7 @@ void WR(state_t* state) {
                     tight_loop_contents();
                     continue;
                 }
-                for (int i = 24; i < 32; i += 2) {
+                for (int i = 0; i < 32; i += 2) {
                     bool bit1 = !!bit_check(data_read[currentLong], i);
                     bool bit2 = !!bit_check(data_read[currentLong], i + 1);
                     bool dm, dp;
@@ -365,11 +365,6 @@ void WR(state_t* state) {
                     // } else if (se0) {
                     //     printf("SE0\n");
                     // }
-                    if (se0) {
-                        waiting = false;
-                        // printf("DONE\n");
-                        break;
-                    }
                     if (readingData) {
                         if (se0) {
                             waiting = false;
@@ -431,7 +426,7 @@ void WR(state_t* state) {
                 currentLong++;
             }
             uint received = buffer3[0];
-            // printf("%d %d\n", p, reverse(received));
+            printf("%d %d\n", p, reverse(received));
             if (received == reverse(NAK)) {
                 // Device is not ready, try again.
                 p--;
@@ -691,12 +686,12 @@ int main(void) {
         if (gpio_get(USB_DM_PIN)) {
             div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 7;
             full_speed = false;
-            jBits = 0xaaaa0000;
+            jBits = 0xaaaaaaaa;
             break;
         } else if (gpio_get(USB_DP_PIN)) {
             div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 7;
             full_speed = true;
-            jBits = 0x55550000;
+            jBits = 0x55555555;
             break;
         }
     }

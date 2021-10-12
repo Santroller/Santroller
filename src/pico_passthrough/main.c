@@ -315,11 +315,13 @@ uint8_t reverse(uint8_t v) {
 int readLongs;
 void WR(state_t* state) {
     uint current_read = 0;
+    bool wasData = false;
     finishedKeepalive = false;
     // Wait for a keepalive and schedule everything after it
     while (!finishedKeepalive) {
         tight_loop_contents();
     }
+    int ackCount = 100;
     // pio_sm_set_enabled(pio, sm_keepalive, false);
     for (int p = 0; p < state->current_packet; p++) {
         int syncCount = 0;
@@ -332,15 +334,70 @@ void WR(state_t* state) {
         waiting = state->packetresplens[p];
         uint8_t currentLong = 0;
         readLongs = 0;
+        buffer3[0] = 0;
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_wait_for_finish_blocking(dma_chan_write);
+        if (!state->packetresplens[p + 1]) {
+            // Timing this shit is stupidly precise. Since we have no way of actually knowing if the command is successful, we just retry it a lot of times and hope for the best.
+            // LOW SPEED = 35
+            if (wasData) {
+                busy_wait_us(full_speed ? 2 : 70);
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                __asm volatile("nop\n");
+                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+                dma_channel_wait_for_finish_blocking(dma_chan_write);
+                if (ackCount--) {
+                    p--;
+                    sleep_ms(1);
+                    continue;
+                } else {
+                    ackCount = 100;
+                    wasData = false;
+                    p++;
+                    continue;
+                }
+            }
+        }
+        bool timeout = false;
+        uint32_t last = us_to_ms(time_us_64());
         if (waiting) {
             while (waiting) {
                 if (currentLong >= readLongs) {
-                    tight_loop_contents();
+                    // Timeout
+                    if (us_to_ms(time_us_64()) - last > 1) {
+                        waiting = false;
+                        timeout = true;
+                        break;
+                    }
                     continue;
                 }
-                for (int i = 0; i < 32; i += 2) {
+                for (int i = 16; i < 32; i += 2) {
                     bool bit1 = !!bit_check(data_read[currentLong], i);
                     bool bit2 = !!bit_check(data_read[currentLong], i + 1);
                     bool dm, dp;
@@ -426,14 +483,24 @@ void WR(state_t* state) {
                 currentLong++;
             }
             uint received = buffer3[0];
-            printf("%d %d\n", p, reverse(received));
-            if (received == reverse(NAK)) {
+            printf("%d %d %d %d\n", p, reverse(received), timeout, wasData);
+            if (received == reverse(NAK) || timeout) {
                 // Device is not ready, try again.
                 p--;
+                sleep_ms(10);
+                continue;
             } else if (received == reverse(DATA1) || received == reverse(DATA0)) {
                 // Don't copy the PID
                 memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
                 current_read += 8;
+                if (!state->packetresplens[p + 1]) {
+                    if (!wasData) {
+                        p--;
+                        wasData = true;
+                        sleep_ms(1);
+                        continue;
+                    }
+                }
             }
         }
     }
@@ -546,12 +613,17 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             sendNibble(endpoint, &state_pk);
             sendCRC5(&state_pk);
             EOP(&state_pk);
+            J(&state_pk);
+            J(&state_pk);
             sync(&state_pk);
             sendPID(DATA1, &state_pk);
             reset_crc(&state_pk);
-            uint8_t* data = (uint8_t*)&d;
+            uint8_t* data = (uint8_t*)d;
             for (int i = 0; i < request.wLength; i++) {
                 sendByte(*data++, &state_pk);
+            }
+            for (int i = request.wLength; i < 8; i++) {
+                sendByte(0, &state_pk);
             }
             sendCRC16(&state_pk);
             EOP(&state_pk);
@@ -686,12 +758,14 @@ int main(void) {
         if (gpio_get(USB_DM_PIN)) {
             div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 7;
             full_speed = false;
-            jBits = 0xaaaaaaaa;
+            // jBits = 0xaaaaaaaa;
+            jBits = 0xaaaa0000;
             break;
         } else if (gpio_get(USB_DP_PIN)) {
             div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 7;
             full_speed = true;
-            jBits = 0x55555555;
+            jBits = 0x55550000;
+            // jBits = 0x55555555;
             break;
         }
     }
@@ -703,7 +777,7 @@ int main(void) {
 
     sleep_ms(1000);
     // TUSB_Descriptor_Device_t deviceDescriptor;
-    // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 8};
+    // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
     // sendSetup(0x00, 0x00, req, (uint8_t*)&deviceDescriptor);
 
     // for (int i = 0; i < sizeof(buffer4); i++) {
@@ -711,11 +785,16 @@ int main(void) {
     // }
     // reset();
     // sleep_ms(1000);
-    // printf("\nreq2\n");
+    printf("\nreq2\n");
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
     sendSetup(0x00, 0x00, req2, NULL);
-    // printf("req4\n");
-    // sleep_ms(1000);
+    printf("\nreq3\n");
+    tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01};
+    sendSetup(13, 0x00, req3, NULL);
+    printf("\nreqled\n");
+    tusb_control_request_t reqled = {.bmRequestType = {0x21}, .bRequest = 0x09, .wValue = 0x0002, .wIndex = 0x0000, .wLength = 3};
+    uint8_t data[] = {0x01, 0x03, 0x01};
+    sendSetup(13, 0x00, reqled, data);
     // tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
     // sendSetup(13, 0x00, req4, (uint8_t*)&deviceDescriptor);
     // for (int i = 0; i < sizeof(buffer4); i++) {

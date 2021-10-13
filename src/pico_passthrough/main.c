@@ -35,6 +35,13 @@ uint offset_keepalive;
 uint32_t currentFrame = 0;
 uint32_t keepalive_delay = 0;
 uint32_t jBits = 0;
+uint8_t maxPacket = 64;
+typedef enum {
+    NONE,
+    NEXT_ACK_100,
+    NEXT_ACK_100_32,
+    NEXT_ACK_DATA,
+} PacketAction_t;
 #define T_ATTR_PACKED __attribute__((packed))
 typedef struct T_ATTR_PACKED {
     union {
@@ -60,6 +67,7 @@ typedef enum {
 } tusb_dir_t;
 
 #define SETUP 0b10110100
+#define STALL 0b01111000
 #define DATA0 0b11000011
 #define DATA1 0b11010010
 #define OUT 0b10000111
@@ -94,7 +102,7 @@ typedef struct {
     uint8_t bufferCRC[MAX_PACKET_LEN];
     uint8_t packets[MAX_PACKET_COUNT][MAX_PACKET_LEN];
     uint8_t packetlens[MAX_PACKET_COUNT];
-    uint8_t packetresplens[MAX_PACKET_COUNT];
+    uint8_t packet_actions[MAX_PACKET_COUNT];
     bool lastJ;
 } state_t;
 state_t state_ka;
@@ -145,7 +153,7 @@ static void SE1(state_t* state) {
     writeBit(1, 1, state);
 }
 
-static void commit_packet(state_t* state, uint readCount) {
+static void commit_packet(state_t* state, PacketAction_t actions) {
     uint8_t bufferTmp[MAX_PACKET_LEN];
     int tmpId = state->id;
     memcpy(bufferTmp, state->buffer, (tmpId / 8) + 1);
@@ -163,7 +171,7 @@ static void commit_packet(state_t* state, uint readCount) {
     }
     // Store packet length as number of 8 bit transfers
     state->packetlens[state->current_packet] = state->id / 8;
-    state->packetresplens[state->current_packet] = readCount / 8;
+    state->packet_actions[state->current_packet] = actions;
     // printf("Packet committed\n");
     // for (int i = 0; i < state->id; i += 2) {
     //     uint8_t bit1 = !!bit_check(state->buffer[i / 8], i % 8);
@@ -323,7 +331,7 @@ void WR(state_t* state) {
     }
     int ackCount = 100;
     // pio_sm_set_enabled(pio, sm_keepalive, false);
-    for (int p = 0; p < state->current_packet; p++) {
+    for (int p = 0; p < state->current_packet;) {
         int syncCount = 0;
         int oneCount = 0;
         int bit = 0;
@@ -331,17 +339,27 @@ void WR(state_t* state) {
         bool valid = true;
         bool lastWasJ = true;
         bool skip = false;
-        waiting = state->packetresplens[p];
+        bool wasData0 = true;
+        PacketAction_t action = state->packet_actions[p];
+        waiting = action == NONE;
         uint8_t currentLong = 0;
         readLongs = 0;
         buffer3[0] = 0;
+        uint8_t wait_amt = full_speed ? 3 : 70;
+        if (action == NEXT_ACK_DATA || action == NEXT_ACK_100_32) {
+            wait_amt = full_speed ? 15 : 70;
+        }
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_wait_for_finish_blocking(dma_chan_write);
-        if (!state->packetresplens[p + 1]) {
+        if (!waiting) {
             // Timing this shit is stupidly precise. Since we have no way of actually knowing if the command is successful, we just retry it a lot of times and hope for the best.
-            // LOW SPEED = 35
+            // TODO: Low speed doesn't work, but im also not sure i care
+            // TODO: deal with writing more than 8 bytes
+            // TODO: how well does reading work
+            // TODO: pipe this into the xinput code and test with an xbox
             if (wasData) {
-                busy_wait_us(full_speed ? 2 : 70);
+                // busy_wait_us(full_speed ? 2 : 70);
+                busy_wait_us(wait_amt);
                 __asm volatile("nop\n");
                 __asm volatile("nop\n");
                 __asm volatile("nop\n");
@@ -372,20 +390,27 @@ void WR(state_t* state) {
                 __asm volatile("nop\n");
                 dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
                 dma_channel_wait_for_finish_blocking(dma_chan_write);
-                if (ackCount--) {
-                    p--;
-                    sleep_ms(1);
-                    continue;
+                if (action == NEXT_ACK_100 || action == NEXT_ACK_100_32) {
+                    if (ackCount--) {
+                        sleep_ms(10);
+                        continue;
+                    } else {
+                        ackCount = 100;
+                        wasData = false;
+                        // Skip the ACK
+                        p += 2;
+                        continue;
+                    }
                 } else {
-                    ackCount = 100;
-                    wasData = false;
-                    p++;
-                    continue;
+                    waiting = true;
                 }
+            } else {
+                waiting = true;
             }
         }
         bool timeout = false;
         uint32_t last = us_to_ms(time_us_64());
+        int bits = 0;
         if (waiting) {
             while (waiting) {
                 if (currentLong >= readLongs) {
@@ -398,6 +423,7 @@ void WR(state_t* state) {
                     continue;
                 }
                 for (int i = 16; i < 32; i += 2) {
+                    bits++;
                     bool bit1 = !!bit_check(data_read[currentLong], i);
                     bool bit2 = !!bit_check(data_read[currentLong], i + 1);
                     bool dm, dp;
@@ -486,21 +512,39 @@ void WR(state_t* state) {
             printf("%d %d %d %d\n", p, reverse(received), timeout, wasData);
             if (received == reverse(NAK) || timeout) {
                 // Device is not ready, try again.
-                p--;
                 sleep_ms(10);
                 continue;
+            } else if (received == reverse(STALL)) {
+                // Stalled, return immediately.
+                return;
             } else if (received == reverse(DATA1) || received == reverse(DATA0)) {
                 // Don't copy the PID
                 memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
-                current_read += 8;
-                if (!state->packetresplens[p + 1]) {
-                    if (!wasData) {
-                        p--;
+                current_read += maxPacket;
+                if (action != NONE) {
+                    if ((received == reverse(DATA1) && wasData0) || (received == reverse(DATA0) && !wasData0)) {
+                        wasData0 = !wasData0;
+                        // printf("Received correct data\n");
+                        // p+=2;  //Skip ACK packet as it has already been transmitted.
+                        // continue;
+                        // // p--;
                         wasData = true;
-                        sleep_ms(1);
                         continue;
                     }
+                    // If we are skipping early (since we are detecting the packet length, then we want ignore all ack stuff)
+                } else {
+                    p++;
                 }
+                // if (!wasData) {
+                //     p--;
+                //     wasData = true;
+                //     sleep_ms(1);
+                //     continue;
+                // }
+            } else if (action != NONE) {
+                sleep_ms(10);
+            } else if (received == reverse(ACK)) {
+                p++;
             }
         }
     }
@@ -583,7 +627,7 @@ void initKeepAlive() {
     irq_set_priority(PIO0_IRQ_1, PICO_HIGHEST_IRQ_PRIORITY);
     irq_set_enabled(PIO0_IRQ_1, true);
 }
-void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request, uint8_t* d) {
+void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request, bool terminateEarly, uint8_t* d) {
     memset(buffer4, 0, sizeof(buffer4));
     // printf("Token\n");
     sync(&state_pk);
@@ -603,7 +647,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
     }
     sendCRC16(&state_pk);
     EOP(&state_pk);
-    commit_packet(&state_pk, 16);
+    commit_packet(&state_pk, NONE);
     if (request.bmRequestType_bit.direction == TUSB_DIR_OUT) {
         if (request.wLength) {
             sync(&state_pk);
@@ -627,7 +671,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             }
             sendCRC16(&state_pk);
             EOP(&state_pk);
-            commit_packet(&state_pk, 40);
+            commit_packet(&state_pk, NONE);
         }
         sync(&state_pk);
         sendPID(IN, &state_pk);
@@ -636,14 +680,18 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
         sendNibble(endpoint, &state_pk);
         sendCRC5(&state_pk);
         EOP(&state_pk);
-        commit_packet(&state_pk, 16);
+        commit_packet(&state_pk, NEXT_ACK_100);
         sync(&state_pk);
         sendPID(ACK, &state_pk);
         EOP(&state_pk);
-        commit_packet(&state_pk, 0);
+        commit_packet(&state_pk, NONE);
     } else {
         if (request.wLength) {
-            for (int i = 0; i < (request.wLength / 8) + 1; i++) {
+            uint len = request.wLength / maxPacket;
+            if (request.wLength % maxPacket) {
+                len++;
+            }
+            for (int i = 0; i < len; i++) {
                 sync(&state_pk);
                 sendPID(IN, &state_pk);
                 reset_crc(&state_pk);
@@ -651,31 +699,64 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
                 sendNibble(endpoint, &state_pk);
                 sendCRC5(&state_pk);
                 EOP(&state_pk);
-                commit_packet(&state_pk, request.wLength + 8);
-                sync(&state_pk);
-                sendPID(ACK, &state_pk);
-                EOP(&state_pk);
-                commit_packet(&state_pk, 0);
+                if (terminateEarly) {
+                    commit_packet(&state_pk, NONE);
+                } else {
+                    commit_packet(&state_pk, (i < (len - 1)) ? NEXT_ACK_DATA : NEXT_ACK_100_32);  //NEXT_ACK_DATA for all but last
+                    sync(&state_pk);
+                    sendPID(ACK, &state_pk);
+                    EOP(&state_pk);
+                    commit_packet(&state_pk, NONE);
+                }
             }
         }
-        sync(&state_pk);
-        sendPID(OUT, &state_pk);
-        reset_crc(&state_pk);
-        sendAddress(address, &state_pk);
-        sendNibble(endpoint, &state_pk);
-        sendCRC5(&state_pk);
-        EOP(&state_pk);
-        sync(&state_pk);
-        sendPID(DATA1, &state_pk);
-        reset_crc(&state_pk);
-        sendCRC16(&state_pk);
-        EOP(&state_pk);
-        commit_packet(&state_pk, 40);
+        // If we are working out what size maxPacket is, we need to not bother with ACK's, as we don't know how long to wait.
+        if (!terminateEarly) {
+            sync(&state_pk);
+            sendPID(OUT, &state_pk);
+            reset_crc(&state_pk);
+            sendAddress(address, &state_pk);
+            sendNibble(endpoint, &state_pk);
+            sendCRC5(&state_pk);
+            EOP(&state_pk);
+            sync(&state_pk);
+            sendPID(DATA1, &state_pk);
+            reset_crc(&state_pk);
+            sendCRC16(&state_pk);
+            EOP(&state_pk);
+            commit_packet(&state_pk, NONE);
+        }
     }
     WR(&state_pk);
     if (request.bmRequestType_bit.direction == TUSB_DIR_IN && request.wLength) {
         memcpy(d, buffer4, request.wLength);
     }
+}
+void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* d) {
+    sync(&state_pk);
+    sendPID(OUT, &state_pk);
+    reset_crc(&state_pk);
+    sendAddress(address, &state_pk);
+    sendNibble(endpoint, &state_pk);
+    sendCRC5(&state_pk);
+    EOP(&state_pk);
+    J(&state_pk);
+    J(&state_pk);
+    sync(&state_pk);
+    sendPID(DATA0, &state_pk);
+    reset_crc(&state_pk);
+    uint8_t* data = (uint8_t*)d;
+    for (int i = 0; i < len; i++) {
+        sendByte(*data++, &state_pk);
+    }
+    for (int i = len; i < 8; i++) {
+        sendByte(0, &state_pk);
+    }
+    sendCRC16(&state_pk);
+    EOP(&state_pk);
+    commit_packet(&state_pk, NONE);
+
+    WR(&state_pk);
 }
 
 void initPIO() {
@@ -776,30 +857,38 @@ int main(void) {
     reset();
 
     sleep_ms(1000);
-    // TUSB_Descriptor_Device_t deviceDescriptor;
-    // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
-    // sendSetup(0x00, 0x00, req, (uint8_t*)&deviceDescriptor);
-
-    // for (int i = 0; i < sizeof(buffer4); i++) {
-    //     printf("%x, ", buffer4[i]);
-    // }
-    // reset();
-    // sleep_ms(1000);
+    TUSB_Descriptor_Device_t deviceDescriptor;
+    tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
+    sendSetup(0x00, 0x00, req, true, (uint8_t*)&deviceDescriptor);
+    maxPacket = deviceDescriptor.Endpoint0Size;
+    printf("Max Packet: %d\n", maxPacket);
+    for (int i = 0; i < sizeof(buffer4); i++) {
+        printf("%x, ", buffer4[i]);
+    }
+    reset();
+    sleep_ms(1000);
     printf("\nreq2\n");
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
-    sendSetup(0x00, 0x00, req2, NULL);
+    sendSetup(0x00, 0x00, req2, false, NULL);
     printf("\nreq3\n");
     tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01};
-    sendSetup(13, 0x00, req3, NULL);
-    printf("\nreqled\n");
-    tusb_control_request_t reqled = {.bmRequestType = {0x21}, .bRequest = 0x09, .wValue = 0x0002, .wIndex = 0x0000, .wLength = 3};
-    uint8_t data[] = {0x01, 0x03, 0x01};
-    sendSetup(13, 0x00, reqled, data);
-    // tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 0x0012};
-    // sendSetup(13, 0x00, req4, (uint8_t*)&deviceDescriptor);
-    // for (int i = 0; i < sizeof(buffer4); i++) {
-    //     printf("%x, ", buffer4[i]);
-    // }
+    sendSetup(13, 0x00, req3, false, NULL);
+    // printf("\nreqled\n");
+    // uint8_t data[] = {0x01, 0x03, 0x0A};
+    // sendOut(13, 0x02, sizeof(data), data);
+    // TODO: we are reading the descriptor wrongly on the rock candy controller somehow, are we going to have to start verifying the CRC?
+    // TODO: but the real question is why?
+    tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
+    sendSetup(13, 0x00, req4, false, (uint8_t*)&deviceDescriptor);
+    for (int i = 0; i < sizeof(buffer4); i++) {
+        printf("%x, ", buffer4[i]);
+    }
+    uint8_t data[0x1D];
+    tusb_control_request_t req5 = {.bmRequestType = {0xC1}, .bRequest = 0x81, .wValue = 0x5B17, .wIndex = 0x103, .wLength = sizeof(data)};
+    sendSetup(13, 0x00, req5, false, data);
+    for (int i = 0; i < sizeof(buffer4); i++) {
+        printf("%x, ", buffer4[i]);
+    }
     // printReceived();
     // printReceivedP();
     // printf("\nWR Done!\n");

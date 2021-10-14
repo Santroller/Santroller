@@ -345,18 +345,24 @@ void WR(state_t* state) {
         uint8_t currentLong = 0;
         readLongs = 0;
         buffer3[0] = 0;
-        uint8_t wait_amt = full_speed ? 3 : 70;
-        if (action == NEXT_ACK_DATA || action == NEXT_ACK_100_32) {
-            wait_amt = full_speed ? 15 : 70;
+        uint8_t wait_amt;
+        if (maxPacket == 64) {
+            wait_amt = full_speed ? 3 : 70;
+            if (action == NEXT_ACK_DATA || action == NEXT_ACK_100_32) {
+                wait_amt = full_speed ? 15 : 70;
+            }
+        } else if (maxPacket == 8) {
+            wait_amt = full_speed ? 3 : 70;
+            if (action == NEXT_ACK_DATA) {
+                wait_amt = full_speed ? 9 : 70;
+            }
         }
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_wait_for_finish_blocking(dma_chan_write);
         if (!waiting) {
             // Timing this shit is stupidly precise. Since we have no way of actually knowing if the command is successful, we just retry it a lot of times and hope for the best.
             // TODO: Low speed doesn't work, but im also not sure i care
-            // TODO: deal with writing more than 8 bytes
-            // TODO: how well does reading work
-            // TODO: pipe this into the xinput code and test with an xbox
+            // TODO: deal with reading more than 8 bytes
             if (wasData) {
                 // busy_wait_us(full_speed ? 2 : 70);
                 busy_wait_us(wait_amt);
@@ -468,7 +474,7 @@ void WR(state_t* state) {
                             bit++;
                             skip = false;
                             oneCount++;
-                            if (oneCount == 7) {
+                            if (oneCount == 6) {
                                 skip = true;
                                 oneCount = 0;
                             }
@@ -691,6 +697,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             if (request.wLength % maxPacket) {
                 len++;
             }
+            printf("Reading: %d\n", len);
             for (int i = 0; i < len; i++) {
                 sync(&state_pk);
                 sendPID(IN, &state_pk);
@@ -702,7 +709,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
                 if (terminateEarly) {
                     commit_packet(&state_pk, NONE);
                 } else {
-                    commit_packet(&state_pk, (i < (len - 1)) ? NEXT_ACK_DATA : NEXT_ACK_100_32);  //NEXT_ACK_DATA for all but last
+                    commit_packet(&state_pk, (i != len - 1) ? NEXT_ACK_DATA : NEXT_ACK_100_32);  //NEXT_ACK_DATA for all but last
                     sync(&state_pk);
                     sendPID(ACK, &state_pk);
                     EOP(&state_pk);
@@ -873,11 +880,10 @@ int main(void) {
     printf("\nreq3\n");
     tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01};
     sendSetup(13, 0x00, req3, false, NULL);
+    printf("\nreq4\n");
     // printf("\nreqled\n");
     // uint8_t data[] = {0x01, 0x03, 0x0A};
     // sendOut(13, 0x02, sizeof(data), data);
-    // TODO: we are reading the descriptor wrongly on the rock candy controller somehow, are we going to have to start verifying the CRC?
-    // TODO: but the real question is why?
     tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
     sendSetup(13, 0x00, req4, false, (uint8_t*)&deviceDescriptor);
     for (int i = 0; i < sizeof(buffer4); i++) {

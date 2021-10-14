@@ -39,7 +39,6 @@ uint8_t maxPacket = 64;
 typedef enum {
     NONE,
     NEXT_ACK_100,
-    NEXT_ACK_100_32,
     NEXT_ACK_DATA,
 } PacketAction_t;
 #define T_ATTR_PACKED __attribute__((packed))
@@ -323,14 +322,13 @@ uint8_t reverse(uint8_t v) {
 int readLongs;
 void WR(state_t* state) {
     uint current_read = 0;
-    bool wasData = false;
     finishedKeepalive = false;
     // Wait for a keepalive and schedule everything after it
     while (!finishedKeepalive) {
         tight_loop_contents();
     }
     int ackCount = 100;
-    // pio_sm_set_enabled(pio, sm_keepalive, false);
+    bool wasData0 = true;
     for (int p = 0; p < state->current_packet;) {
         int syncCount = 0;
         int oneCount = 0;
@@ -339,79 +337,48 @@ void WR(state_t* state) {
         bool valid = true;
         bool lastWasJ = true;
         bool skip = false;
-        bool wasData0 = true;
         PacketAction_t action = state->packet_actions[p];
         waiting = action == NONE;
         uint8_t currentLong = 0;
         readLongs = 0;
         buffer3[0] = 0;
         uint8_t wait_amt;
+        // TODO: maxPacket can be either 8, 16, 32 or 64, so we still need to code in 16 and 32
+        // TODO: Low speed doesn't work, but im also not sure i care
         if (maxPacket == 64) {
             wait_amt = full_speed ? 3 : 70;
-            if (action == NEXT_ACK_DATA || action == NEXT_ACK_100_32) {
+            if (action == NEXT_ACK_DATA) {
                 wait_amt = full_speed ? 15 : 70;
             }
         } else if (maxPacket == 8) {
             wait_amt = full_speed ? 3 : 70;
             if (action == NEXT_ACK_DATA) {
-                wait_amt = full_speed ? 9 : 70;
+                wait_amt = full_speed ? 5 : 70;
             }
         }
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_wait_for_finish_blocking(dma_chan_write);
         if (!waiting) {
             // Timing this shit is stupidly precise. Since we have no way of actually knowing if the command is successful, we just retry it a lot of times and hope for the best.
-            // TODO: Low speed doesn't work, but im also not sure i care
-            // TODO: deal with reading more than 8 bytes
-            if (wasData) {
-                // busy_wait_us(full_speed ? 2 : 70);
-                busy_wait_us(wait_amt);
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                __asm volatile("nop\n");
-                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-                dma_channel_wait_for_finish_blocking(dma_chan_write);
-                if (action == NEXT_ACK_100 || action == NEXT_ACK_100_32) {
-                    if (ackCount--) {
-                        sleep_ms(10);
-                        continue;
-                    } else {
-                        ackCount = 100;
-                        wasData = false;
-                        // Skip the ACK
-                        p += 2;
-                        continue;
-                    }
-                } else {
-                    waiting = true;
-                }
-            } else {
+            if (action == NEXT_ACK_DATA) {
                 waiting = true;
+            }
+            busy_wait_us(wait_amt);
+            __asm (".balign 16");
+            uint32_t l = 7;
+            __asm volatile( "0:" "SUB %[count], #1;" "BNE 0b;" :[count]"+r"(l) );
+            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+            dma_channel_wait_for_finish_blocking(dma_chan_write);
+            if (action == NEXT_ACK_100) {
+                if (ackCount--) {
+                    sleep_ms(10);
+                    continue;
+                } else {
+                    ackCount = 100;
+                    // Skip the ACK
+                    p += 2;
+                    continue;
+                }
             }
         }
         bool timeout = false;
@@ -515,7 +482,7 @@ void WR(state_t* state) {
                 currentLong++;
             }
             uint received = buffer3[0];
-            printf("%d %d %d %d\n", p, reverse(received), timeout, wasData);
+            printf("%d %d %d %d %d %d\n", p, action, reverse(received), timeout, wasData0, bits);
             if (received == reverse(NAK) || timeout) {
                 // Device is not ready, try again.
                 sleep_ms(10);
@@ -524,29 +491,24 @@ void WR(state_t* state) {
                 // Stalled, return immediately.
                 return;
             } else if (received == reverse(DATA1) || received == reverse(DATA0)) {
-                // Don't copy the PID
-                memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
-                current_read += maxPacket;
                 if (action != NONE) {
                     if ((received == reverse(DATA1) && wasData0) || (received == reverse(DATA0) && !wasData0)) {
+                        // Don't copy the PID
+                        memcpy(buffer4 + current_read, buffer3 + 1, maxPacket);
+                        current_read += maxPacket;
                         wasData0 = !wasData0;
-                        // printf("Received correct data\n");
-                        // p+=2;  //Skip ACK packet as it has already been transmitted.
-                        // continue;
-                        // // p--;
-                        wasData = true;
+                        p += 2;  //Skip ACK packet as it has already been transmitted.
+                        sleep_ms(1);
                         continue;
                     }
-                    // If we are skipping early (since we are detecting the packet length, then we want ignore all ack stuff)
                 } else {
+                    // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
+                    // Don't copy the PID
+                    memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
+                    current_read += maxPacket;
                     p++;
+                    sleep_ms(1);
                 }
-                // if (!wasData) {
-                //     p--;
-                //     wasData = true;
-                //     sleep_ms(1);
-                //     continue;
-                // }
             } else if (action != NONE) {
                 sleep_ms(10);
             } else if (received == reverse(ACK)) {
@@ -697,7 +659,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
             if (request.wLength % maxPacket) {
                 len++;
             }
-            printf("Reading: %d\n", len);
+            // printf("Reading: %d\n", len);
             for (int i = 0; i < len; i++) {
                 sync(&state_pk);
                 sendPID(IN, &state_pk);
@@ -709,7 +671,7 @@ void sendSetup(uint8_t address, uint8_t endpoint, tusb_control_request_t request
                 if (terminateEarly) {
                     commit_packet(&state_pk, NONE);
                 } else {
-                    commit_packet(&state_pk, (i != len - 1) ? NEXT_ACK_DATA : NEXT_ACK_100_32);  //NEXT_ACK_DATA for all but last
+                    commit_packet(&state_pk, NEXT_ACK_DATA);  //NEXT_ACK_DATA for all but last
                     sync(&state_pk);
                     sendPID(ACK, &state_pk);
                     EOP(&state_pk);
@@ -886,13 +848,14 @@ int main(void) {
     // sendOut(13, 0x02, sizeof(data), data);
     tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(deviceDescriptor)};
     sendSetup(13, 0x00, req4, false, (uint8_t*)&deviceDescriptor);
-    for (int i = 0; i < sizeof(buffer4); i++) {
+    for (int i = 0; i < req4.wLength; i++) {
         printf("%x, ", buffer4[i]);
     }
+    printf("\nreq5\n");
     uint8_t data[0x1D];
     tusb_control_request_t req5 = {.bmRequestType = {0xC1}, .bRequest = 0x81, .wValue = 0x5B17, .wIndex = 0x103, .wLength = sizeof(data)};
     sendSetup(13, 0x00, req5, false, data);
-    for (int i = 0; i < sizeof(buffer4); i++) {
+    for (int i = 0; i < req5.wLength; i++) {
         printf("%x, ", buffer4[i]);
     }
     // printReceived();

@@ -28,6 +28,7 @@ add_executable(
     timer.c
     main.c
     xinput_device.c
+    usb_host/usb_host.c
 )
 target_include_directories(${TARGET} PUBLIC
       ${SRC}
@@ -57,35 +58,39 @@ target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
 # Define a memory section 512 kb away from the start of flash for the rf config
 target_link_options(${TARGET} PUBLIC -Wl,--section-start=.rfrecv=${RF_REGION})
 if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
-    pico_enable_stdio_uart(${TARGET} 0)
-    pico_enable_stdio_usb(${TARGET} 0)
-  else()
-    pico_enable_stdio_uart(${TARGET} 1)
-    pico_enable_stdio_usb(${TARGET} 0)
-  endif()
-  # Add pico_stdlib library which aggregates commonly used features
-  target_link_libraries(
-    ${TARGET}
-    pico_stdlib
-    hardware_i2c
-    hardware_spi
-    hardware_adc
-    hardware_gpio
-    hardware_flash
-    hardware_timer
-    hardware_pio
-    hardware_sleep
-    pico_unique_id
-    pico_mem_ops
-    tinyusb_host
-    tinyusb_device
-    tinyusb_board)
+  pico_enable_stdio_uart(${TARGET} 0)
+  pico_enable_stdio_usb(${TARGET} 0)
+else()
+  pico_enable_stdio_uart(${TARGET} 1)
+  pico_enable_stdio_usb(${TARGET} 0)
+endif()
+# Add pico_stdlib library which aggregates commonly used features
+target_link_libraries(
+  ${TARGET}
+  pico_stdlib
+  hardware_i2c
+  hardware_dma
+  hardware_spi
+  hardware_adc
+  hardware_gpio
+  hardware_flash
+  hardware_timer
+  hardware_pio
+  hardware_sleep
+  pico_unique_id
+  pico_mem_ops
+  tinyusb_host
+  tinyusb_device
+  tinyusb_board)
 
-  # create map/bin/hex/uf2 file in addition to ELF.
-  pico_add_extra_outputs(${TARGET})
-  # Copy built binaries to firmware
-  add_custom_command(
-    TARGET ${TARGET}
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.*
-            ${CMAKE_CURRENT_BINARY_DIR}/firmware)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_serialiser.pio)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive_low.pio)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive_high.pio)
+# create map/bin/hex/uf2 file in addition to ELF.
+pico_add_extra_outputs(${TARGET})
+# Copy built binaries to firmware
+add_custom_command(
+  TARGET ${TARGET}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.*
+          ${CMAKE_CURRENT_BINARY_DIR}/firmware)

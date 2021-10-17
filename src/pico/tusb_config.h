@@ -86,7 +86,7 @@ extern "C" {
 #define CFG_TUD_VENDOR 0
 #define CFG_TUD_XINPUT 2
 // #define CFG_TUSB_DEBUG 1
-#define CFG_TUSB_DEBUG 20
+#define CFG_TUSB_DEBUG 2
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
 #define CFG_TUD_HID_EP_BUFSIZE DEVICE_EPSIZE_IN

@@ -57,7 +57,10 @@ if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
     hardware_irq
     pico_multicore
     pico_unique_id
-    pico_mem_ops)
+    pico_mem_ops
+    tinyusb_host
+    tinyusb_device
+    tinyusb_board)
 
   # create map/bin/hex/uf2 file in addition to ELF.
   pico_add_extra_outputs(${TARGET})

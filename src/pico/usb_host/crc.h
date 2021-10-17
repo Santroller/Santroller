@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "lib_main.h"
 static uint8_t crc5_usb_bits(const void *data, int vl, uint8_t ival) {
     const unsigned char *d = (const unsigned char *)data;
     /* This function is based on code posted by John Sullivan to Wireshark-dev
@@ -36,4 +36,33 @@ uint8_t crc5_usb_11bit_input(const void *input) {
 
 uint8_t crc5_usb_19bit_input(const void *input) {
     return crc5_usb_bits(input, 19, 0x1d);
+}
+
+uint16_t crc_16(const void* data, size_t data_len) {
+    const unsigned char* d = (const unsigned char*)data;
+    unsigned int i;
+    bool bit;
+    unsigned char c;
+    uint16_t crc = 0xffff;
+    while (data_len--) {
+        c = *d++;
+        for (i = 0x01; i & 0xff; i <<= 1) {
+            bit = crc & 0x8000;
+            if (c & i) {
+                bit = !bit;
+            }
+            crc <<= 1;
+            if (bit) {
+                crc ^= 0x8005;
+            }
+        }
+        crc &= 0xffff;
+    }
+
+    uint16_t ret = crc & 0x01;
+    for (i = 1; i < 16; i++) {
+        crc >>= 1;
+        ret = (ret << 1) | (crc & 0x01);
+    }
+    return ret ^ 0xffff;
 }

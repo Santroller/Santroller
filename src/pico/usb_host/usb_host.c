@@ -235,16 +235,11 @@ void WR(state_t* state) {
         if (!initialised) return;
         int syncCount = 0;
         int oneCount = 0;
-        int bit = 0;
         bool readingData = false;
         bool valid = true;
-        bool lastWasJ = true;
-        bool skip = false;
         PacketAction_t action = state->packet_actions[p];
         waiting = action == STANDARD_ACK;
-        uint8_t currentLong = 0;
         readLongs = 0;
-        buffer3[0] = 0;
         uint8_t wait_amt;
         // TODO: maxPacket can be either 8, 16, 32 or 64, so we still need to code in 16 and 32
         // I suspect for offical xbox controllers maxPacket will usually be 8
@@ -291,7 +286,12 @@ void WR(state_t* state) {
         uint8_t test2;
         bool timeout = false;
         uint32_t last = time_us_64();
-        int bits = 0;
+        uint8_t* data = buffer3;
+        bool found_k = false;
+        bool skip = false;
+        bool lastWasJ = true;
+        buffer3[0] = 0;
+        int shift = 1;
         for (int i2 = 0; i2 < read_pkt; i2++) {
             if (!initialised) return;
             test = data_read[i2] >> 24;
@@ -301,105 +301,55 @@ void WR(state_t* state) {
                 bool se0 = !test2;
                 bool j = test2 == jNum;
                 bool k = test2 == kNum;
-                // if (k) {
-                //     printf("k");
-                // }
-                // if (j) {
-                //     printf("j");
-                // }
-                // if (se0) {
-                //     printf("SE0");
-                // }
                 test >>= 2;
-                // }
-                // printf("\nOld:");
-                // for (int i = 24; i < 32; i += 2) {
-                bits++;
-                // bool bit1 = !!bit_check(data_read[i2], i);
-                // bool bit2 = !!bit_check(data_read[i2], i + 1);
-                // bool dm, dp;
-                // if (USB_FIRST_PIN == USB_DM_PIN) {
-                //     dm = bit1;
-                //     dp = bit2;
-                // } else {
-                //     dp = bit1;
-                //     dm = bit2;
-                // }
-                // // DM = 1 DP = 0 = J for full_speed
-                // // for full_speed=true, J is DM low, DP high
-                // // for full_speed=false, J is DM low, DP high
-                // bool j = dm == !full_speed && dp == full_speed;
-                // bool k = dm == full_speed && dp == !full_speed;
-                // bool se0 = !dm && !dp;
-                // if (k) {
-                //     printf("k");
-                // }
+                if (!found_k && !k) {
+                    continue;
+                }
                 // if (j) {
                 //     printf("j");
                 // }
-                // if (se0) {
-                //     printf("SE0");
+                // if (k) {
+                //     printf("k");
                 // }
-                if (readingData) {
-                    if (se0) {
-                        waiting = false;
-                        break;
-                    }
-                    // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
-                    // 1 bit is transmitted by leaving the data lines as-is.
+                // if (se0) {
+                //     printf("se0");
+                // }
+                found_k = true;
+                if (se0) {
+                    waiting = false;
+                    break;
+                }
+                // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
+                // 1 bit is transmitted by leaving the data lines as-is.
+                // If skip is set, then we ignore the next bit
+                if (skip) {
+                    skip = false;
+                } else {
                     if (lastWasJ != j) {
-                        if (!skip) {
-                            bit_clear(buffer3[bit / 8], bit % 8);
-                            bit++;
-                        }
-                        skip = false;
                         oneCount = 0;
                     } else {
-                        bit_set(buffer3[bit / 8], bit % 8);
-                        bit++;
-                        skip = false;
+                        *data |= shift;
                         oneCount++;
                         if (oneCount == 6) {
                             skip = true;
                             oneCount = 0;
                         }
                     }
-                } else if (j) {
-                    switch (syncCount) {
-                        case 1:
-                        case 3:
-                        case 5:
-                            syncCount++;
-                            break;
-                        default:
-                            valid = false;
-                            break;
-                    }
-                } else if (k) {
-                    switch (syncCount) {
-                        case 0:
-                        case 2:
-                        case 4:
-                        case 6:
-                            syncCount++;
-                            break;
-                        case 7:
-                            readingData = true;
-                            break;
-                        default:
-                            valid = false;
-                            break;
+                    shift <<= 1;
+                    if (shift == 256) {
+                        data++;
+                        *data = 0;
+                        shift = 1;
                     }
                 }
                 lastWasJ = j;
             }
-            currentLong++;
         }
         // printf("\n");
-        uint pid = buffer3[0];
-        printf("%d %d %d\n", p, pid, wasData0);
+        uint pid = buffer3[1];
+        printf("%d %d %d %d\n", buffer3[0], p, pid, wasData0);
         printf("%d\n", state->packetresplens[p]);
-        if (pid == NAK || timeout) {
+        if (pid == NAK || timeout || buffer3[0] != 128) {
             // Device is not ready, try again.
             sleep_us(50);
             continue;
@@ -410,8 +360,8 @@ void WR(state_t* state) {
             if (action != STANDARD_ACK) {
                 // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
                 if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
-                    // Don't copy the PID
-                    memcpy(buffer4 + current_read, buffer3 + 1, maxPacket);
+                    // Don't copy the PID or SYNC
+                    memcpy(buffer4 + current_read, buffer3 + 2, maxPacket);
                     current_read += maxPacket;
                     wasData0 = !wasData0;
                     p += 2;  //Skip ACK packet as it has already been transmitted.
@@ -420,8 +370,8 @@ void WR(state_t* state) {
                 }
             } else {
                 // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
-                // Don't copy the PID
-                memcpy(buffer4 + current_read, buffer3 + 1, sizeof(buffer3) - 1);
+                // Don't copy the PID or SYNC
+                memcpy(buffer4 + current_read, buffer3 + 2, sizeof(buffer3) - 2);
                 current_read += maxPacket;
                 p++;
             }

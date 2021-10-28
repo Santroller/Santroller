@@ -13,14 +13,14 @@ mov x, OSR
 irq set 2
 set pindirs 31
 loop:
-    out pins, 2 [5]
+    out pins, 2 [3]
     jmp !osre loop
 set pindirs 0
 irq clear 2
 irq set 1
 mov y, x
 loop2:
-    jmp y-- loop2 [6] ; implicit wrap to top
+    jmp y-- loop2 [4] ; implicit wrap to top
 % c-sdk {
 static inline void pio_keepalive_high_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t delay) {
     pio_gpio_init(pio, data_pin);

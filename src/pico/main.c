@@ -103,7 +103,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 }
 
 int main() {
-    set_sys_clock_khz(126000, true);
+    set_sys_clock_khz(133000, true);
     generateSerialString(serialString.UnicodeString);
     board_init();
     tusb_init();

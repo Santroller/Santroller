@@ -13,12 +13,12 @@ top:
 wait 0 irq 2
 mov x, status
 jmp !x writer
-in pins, 2 [2]
+in pins, 2
 jmp top
 writer:
 set pindirs 31
 write:
-out pins, 2 [5]
+out pins, 2 [3]
 jmp !OSRE write
 
 % c-sdk {

@@ -21,7 +21,6 @@
 #include "usb/std_descriptors.h"
 
 #define maxBits 512
-uint32_t data_read[128];
 uint32_t dma_data_read;
 uint8_t buffer3[maxBits / 8] = {};
 uint8_t buffer4[maxBits / 8] = {0};
@@ -218,8 +217,6 @@ void sendCRC5(state_t* state) {
     }
     sendData(byte, 5, state);
 }
-int readLongs;
-
 #pragma GCC push_options
 #pragma GCC optimize("-O3")
 void WR(state_t* state) {
@@ -233,41 +230,51 @@ void WR(state_t* state) {
     bool wasData0 = true;
     for (int p = 0; p < state->current_packet;) {
         if (!initialised) return;
-        int syncCount = 0;
-        int oneCount = 0;
         bool readingData = false;
         bool valid = true;
         PacketAction_t action = state->packet_actions[p];
         waiting = action == STANDARD_ACK;
-        readLongs = 0;
-        uint8_t wait_amt;
-        // TODO: maxPacket can be either 8, 16, 32 or 64, so we still need to code in 16 and 32
-        // I suspect for offical xbox controllers maxPacket will usually be 8
-        // TODO: Low speed doesn't work, but im also not sure i care
-        if (maxPacket == 64) {
-            wait_amt = full_speed ? 3 : 70;
-            if (action == NEXT_ACK_DATA) {
-                wait_amt = full_speed ? 15 : 70;
-            }
-        } else if (maxPacket == 8) {
-            wait_amt = full_speed ? 3 : 70;
-            if (action == NEXT_ACK_DATA) {
-                wait_amt = full_speed ? 5 : 70;
-            }
-        }
+        uint32_t test;
+        uint8_t test2;
+        uint8_t* data = buffer3;
+        uint16_t sync_pid = 0;
+        bool found_k = false;
+        bool skip = false;
+        bool lastWasJ = true;
+        bool lastWasK = false;
+        bool j, k, se0;
+        buffer3[0] = 0;
+        uint32_t shift = 1;
         uint read_pkt = state->packetresplens[p];
+        uint32_t data_read[read_pkt];
+        uint32_t* data_read2 = data_read + 2;
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         uint8_t t = pio_sm_get_rx_fifo_level(pio, sm);
         while (t--) {
             pio_sm_get_blocking(pio, sm);
         }
-        uint32_t pid_nibble = 0;
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
+
+        for (int i2 = 0; i2 < 4; i2++) {
+            test = data_read2[i2] >> 24;
+            for (int i = 0; i < 4; i++) {
+                k = (test & 3) == kNum;
+                test >>= 2;
+                found_k |= k;
+                if (!found_k) {
+                    continue;
+                }
+                // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
+                // 1 bit is transmitted by leaving the data lines as-is.
+                if (lastWasK == k) {
+                    sync_pid |= shift;
+                }
+                shift <<= 1;
+                lastWasK = k;
+            }
+        }
         if (!waiting) {
-            // TODO: currently, we are ACKing even if the data fails to read. This can cause us to go to the next packet even if we aren't ready for it
-            // We need some way to read the PID here to work out if we were previously successful.
-            // Interestingly, with O3, the parsing code is almost fast enough to run, but we need to make it only parse a PID and nothing else.
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
             dma_channel_wait_for_finish_blocking(dma_chan_write);
             if (action == NEXT_ACK_100) {
@@ -282,41 +289,31 @@ void WR(state_t* state) {
                 }
             }
         }
-        uint32_t test;
-        uint8_t test2;
-        bool timeout = false;
-        uint32_t last = time_us_64();
-        uint8_t* data = buffer3;
-        bool found_k = false;
-        bool skip = false;
-        bool lastWasJ = true;
+        found_k = false;
+        skip = false;
+        lastWasJ = true;
         buffer3[0] = 0;
-        int shift = 1;
+        data = buffer3;
+        shift = 1;
+        int oneCount = 0;
+        bool done = false;
         for (int i2 = 0; i2 < read_pkt; i2++) {
+            if (done) break;
             if (!initialised) return;
             test = data_read[i2] >> 24;
             // printf("\nNew:");
             for (int i = 0; i < 4; i++) {
                 test2 = (test & 3);
-                bool se0 = !test2;
-                bool j = test2 == jNum;
-                bool k = test2 == kNum;
+                se0 = !test2;
+                j = test2 == jNum;
+                k = test2 == kNum;
                 test >>= 2;
                 if (!found_k && !k) {
                     continue;
                 }
-                // if (j) {
-                //     printf("j");
-                // }
-                // if (k) {
-                //     printf("k");
-                // }
-                // if (se0) {
-                //     printf("se0");
-                // }
                 found_k = true;
                 if (se0) {
-                    waiting = false;
+                    done = true;
                     break;
                 }
                 // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
@@ -347,9 +344,10 @@ void WR(state_t* state) {
         }
         // printf("\n");
         uint pid = buffer3[1];
+        printf("l: %d\n", state->packetresplens[p]);
         printf("%d %d %d %d\n", buffer3[0], p, pid, wasData0);
-        printf("%d\n", state->packetresplens[p]);
-        if (pid == NAK || timeout || buffer3[0] != 128) {
+        printf("%d %d\n", sync_pid & 0xff, (sync_pid >> 8) & 0xff);
+        if (pid == NAK || buffer3[0] != 128) {
             // Device is not ready, try again.
             sleep_us(50);
             continue;
@@ -385,24 +383,6 @@ void WR(state_t* state) {
     state->current_packet = 0;
 }
 #pragma GCC pop_options
-// void isrRead() {
-//     // If the packet is only SE0's or J's, then its either unplugged, or it is not doing anything
-//     // There is a limit to how many J's can be read in a row, so this will work
-//     if (waiting && dma_data_read && dma_data_read != jBits) {
-//         // If we have a valid bit of data then write it
-//         data_read[readLongs++] = dma_data_read;
-//     }
-//     if (!dma_data_read) {
-//         pio_sm_set_enabled(pio, sm, false);
-//         pio_sm_set_enabled(pio, sm_keepalive, false);
-//         initialised = false;
-//         dma_hw->ints0 = 1u << dma_chan_read;
-//         return;
-//     }
-//     // dma_data_read = 0;
-//     dma_hw->ints0 = 1u << dma_chan_read;
-//     dma_channel_set_trans_count(dma_chan_read, 1, true);
-// }
 void isrKeepAlive() {
     if (!initialised) {
         return;
@@ -696,12 +676,12 @@ void tick_usb_host(void) {
         }
         sleep_ms(2);
         if (gpio_get(USB_DM_PIN)) {
-            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 7;
+            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 5;
             full_speed = false;
             // First 16 bits, JJJJ low speed
             jBits = 0xaa000000;
         } else if (gpio_get(USB_DP_PIN)) {
-            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 7;
+            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 5;
             full_speed = true;
             // First 16 bits, JJJJ full speed
             jBits = 0x55000000;

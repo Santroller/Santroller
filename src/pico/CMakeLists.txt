@@ -84,8 +84,7 @@ target_link_libraries(
   tinyusb_board)
 
 pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_serialiser.pio)
-pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive_low.pio)
-pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive_high.pio)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive.pio)
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${TARGET})
 # Copy built binaries to firmware

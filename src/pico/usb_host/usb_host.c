@@ -14,8 +14,7 @@
 #include "hardware/uart.h"
 #include "lib_main.h"
 #include "pico/stdlib.h"
-#include "pio_keepalive_high.pio.h"
-#include "pio_keepalive_low.pio.h"
+#include "pio_keepalive.pio.h"
 #include "pio_serialiser.pio.h"
 #include "usb.h"
 #include "usb/std_descriptors.h"
@@ -32,8 +31,7 @@ uint sm;
 PIO pio;
 uint offset;
 uint sm_keepalive;
-uint offset_keepalive_high;
-uint offset_keepalive_low;
+uint offset_keepalive;
 uint32_t currentFrame = 0;
 uint32_t keepalive_delay = 0;
 uint32_t jBits = 0;
@@ -244,10 +242,16 @@ void WR(state_t* state) {
         bool lastWasK = false;
         bool j, k, se0;
         buffer3[0] = 0;
+
+        state_t state2;
+        reset_state(&state2);
+        sync(&state2);
+        uint16_t jktest = state2.buffer[0] | state2.buffer[1] << 8;
         uint32_t shift = 1;
         uint read_pkt = state->packetresplens[p];
         uint32_t data_read[read_pkt];
-        uint32_t* data_read2 = data_read + 2;
+        uint8_t correct = 0;
+        bool wrong = true;
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         uint8_t t = pio_sm_get_rx_fifo_level(pio, sm);
         while (t--) {
@@ -255,37 +259,47 @@ void WR(state_t* state) {
         }
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
-
-        for (int i2 = 0; i2 < 4; i2++) {
-            test = data_read2[i2] >> 24;
-            for (int i = 0; i < 4; i++) {
-                k = (test & 3) == kNum;
-                test >>= 2;
-                found_k |= k;
-                if (!found_k) {
-                    continue;
-                }
-                // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
-                // 1 bit is transmitted by leaving the data lines as-is.
-                if (lastWasK == k) {
-                    sync_pid |= shift;
-                }
-                shift <<= 1;
-                lastWasK = k;
-            }
-        }
+        // for (int i2 = 0; i2 < 2; i2++) {
+        //     test = data_read2[i2] >> 24;
+        //     for (int i = 0; i < 4; i++) {
+        //         k = (test & 3) == kNum;
+        //         test >>= 2;
+        //         found_k |= k;
+        //         if (!found_k) {
+        //             continue;
+        //         }
+        //         // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
+        //         // 1 bit is transmitted by leaving the data lines as-is.
+        //         if (lastWasK == k) {
+        //             sync_pid |= shift;
+        //         }
+        //         shift <<= 1;
+        //         lastWasK = k;
+        //     }
+        // }
+        // TODO: this doesnt even help, maybe we just need to retry the entire packet if it fails too many times.
         if (!waiting) {
-            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-            dma_channel_wait_for_finish_blocking(dma_chan_write);
-            if (action == NEXT_ACK_100) {
-                if (ackCount--) {
-                    // sleep_ms(1);
-                    continue;
-                } else {
-                    ackCount = 100;
-                    // Skip the ACK
-                    p += 2;
-                    continue;
+            test = (data_read[2] >> 24) | (data_read[3] >> 24) << 8 | (data_read[4] >> 24) << 16 | (data_read[5] >> 24) << 24;
+            for (int i = 0; i < 16; i++) {
+                if ((test & 0xffff) == jktest) {
+                    wrong = false;
+                    break;
+                }
+                test >>= 2;
+            }
+            if (!wrong) {
+                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+                dma_channel_wait_for_finish_blocking(dma_chan_write);
+                if (action == NEXT_ACK_100) {
+                    if (ackCount--) {
+                        // sleep_ms(1);
+                        continue;
+                    } else {
+                        ackCount = 100;
+                        // Skip the ACK
+                        p += 2;
+                        continue;
+                    }
                 }
             }
         }
@@ -344,9 +358,9 @@ void WR(state_t* state) {
         }
         // printf("\n");
         uint pid = buffer3[1];
-        printf("l: %d\n", state->packetresplens[p]);
-        printf("%d %d %d %d\n", buffer3[0], p, pid, wasData0);
-        printf("%d %d\n", sync_pid & 0xff, (sync_pid >> 8) & 0xff);
+        // printf("l: %d\n", state->packetresplens[p]);
+        // printf("%d %d %d %d\n", buffer3[0], p, pid, wasData0);
+        // printf("%d\n", correct);
         if (pid == NAK || buffer3[0] != 128) {
             // Device is not ready, try again.
             sleep_us(50);
@@ -405,6 +419,12 @@ void isrKeepAlive() {
         for (int i = 0; i < remaining; i++) {
             J(&state_ka);
         }
+        dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
+    } else {
+        // EOP (SE0 SE0 J), except the J is implicit as the line falls back to J anyways
+        reset_state(&state_ka);
+        SE0(&state_ka);
+        SE0(&state_ka);
         dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
     }
     pio_interrupt_clear(pio, 1);
@@ -557,12 +577,8 @@ void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* d) {
 void initKeepAlive() {
     keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
     keepalive_delay *= 1.4f;
-    if (full_speed) {
-        pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive_high, USB_FIRST_PIN, div, keepalive_delay);
-        isrKeepAlive();
-    } else {
-        pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive_low, USB_FIRST_PIN, div, keepalive_delay);
-    }
+    pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
+    isrKeepAlive();
 }
 void initPIO() {
     pio = pio0;
@@ -625,8 +641,7 @@ void initPIO() {
     pio_set_irq1_source_enabled(pio, pis_interrupt1, true);
     irq_set_priority(PIO0_IRQ_1, PICO_HIGHEST_IRQ_PRIORITY);
     irq_set_enabled(PIO0_IRQ_1, true);
-    offset_keepalive_high = pio_add_program(pio, &pio_keepalive_high_program);
-    offset_keepalive_low = pio_add_program(pio, &pio_keepalive_low_program);
+    offset_keepalive = pio_add_program(pio, &pio_keepalive_program);
 }
 void host_reset() {
     pio_sm_set_enabled(pio, sm, false);
@@ -637,11 +652,7 @@ void host_reset() {
     gpio_put_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN), 0);
     sleep_ms(20);
     pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
-    if (full_speed) {
-        pio_keepalive_high_program_init(pio, sm_keepalive, offset_keepalive_high, USB_FIRST_PIN, div, keepalive_delay);
-    } else {
-        pio_keepalive_low_program_init(pio, sm_keepalive, offset_keepalive_low, USB_FIRST_PIN, div, keepalive_delay);
-    }
+    pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
 }
 void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
@@ -652,6 +663,7 @@ void initialise_device(void) {
     while (true) {
         tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
         send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
+        printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
     }
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
     send_control_request(0x00, 0x00, req2, false, NULL);

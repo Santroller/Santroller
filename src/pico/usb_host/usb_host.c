@@ -16,6 +16,7 @@
 #include "pico/stdlib.h"
 #include "pio_keepalive.pio.h"
 #include "pio_serialiser.pio.h"
+#include "pio_serialiser_byte.pio.h"
 #include "usb.h"
 #include "usb/std_descriptors.h"
 

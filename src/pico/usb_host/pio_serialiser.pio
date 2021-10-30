@@ -13,8 +13,8 @@ top:
 wait 0 irq 2
 mov x, status
 jmp !x writer
-in pins, 2
-jmp top
+; in pins, 2
+jmp top [1]
 writer:
 set pindirs 31
 write:

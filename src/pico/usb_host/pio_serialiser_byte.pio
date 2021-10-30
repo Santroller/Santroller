@@ -7,115 +7,80 @@
 .program pio_serialiser_byte
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
-; technically, we could have it so that when reading, we store the last bit in x, and then take two diferent paths based on the last bit
 set X, 1 ; last bit was one
 set Y, 6 ; bit stuff
 .wrap_target
-wait 0 irq 2
-in pins, 1
-jmp !X lastBitWasZero
+top:
+; wait 0 irq 2
+jmp !X lastBitWasZero [1]
 ; Last bit was One
-mov X, ISR
-jmp !X lastBitWasOneAndCurrentBitIsZero
-; Last Bit was One and Current Bit is One (so one bit is outputted) (note that we delay so that the same amount of time is taken as the stuff above)
-mov  ISR, x [2]
-jmp Y-- bitstuff
-jmp push_and_top
-lastBitWasOneAndCurrentBitIsZero:
-; Last Bit was one and Current Bit is zero (toggle so zero is outputted) (note that we delay so that the same amount of time is taken as the stuff above)
-mov  ISR, x [3]
-jmp push_and_top
+mov OSR, pins ; Read the first bit of pins out by abusing the OSR
+out X, 1
+jmp !X lastBitWasOneCurrentBitIsZero
+; last bit was one current bit was one (same so one is outputted)
+jmp send_one
 lastBitWasZero:
-; Last bit was zero
-mov X, ISR
-jmp !X lastBitWasZeroAndCurrentBitIsZero
-; Last Bit was zero and Current Bit is One (toggle so zero is outputted)
-set X 0
-mov ISR, x
-set X 1 [1]
-jmp push_and_top
-lastBitWasZeroAndCurrentBitIsZero:
-; Last Bit was zero and Current Bit is zero (so one bit is outputted)
-set X 1
-mov  ISR, x
-set X 0
+; last bit was zero
+mov OSR, pins
+out X, 1 
+jmp !X lastBitWasZeroCurrentBitIsZero
+; last bit was zero current bit was one (toggle so zero is outputted)
+jmp send_zero
+lastBitWasOneCurrentBitIsZero:
+; last bit was one current bit was zero (toggle so zero is outputted)
+jmp send_zero
+lastBitWasZeroCurrentBitIsZero:
+; last bit was zero current bit was zero (same so one is outputted)
+jmp send_one
+send_zero:
+in NULL, 1 [1]
+set Y 6
+jmp top
+send_one:
+mov OSR, !NULL ; abuse the OSR once again as a register so we can output a 1
+in OSR, 1
 jmp Y-- bitstuff
-jmp push_and_top
+jmp top
 bitstuff:
-push
-mov !x, x
+mov x, !x
 ; Bit stuffing just means ignoring the next zero, so that means we need to flip the bit
-set Y 6 [7]
-push_and_top:
-push
+; Also we wait a couple of extra bits as bitstuff needs to wait out the previous jmp to top and the automatic wrap
+set Y 6 [11]
 
 
 % c-sdk {
 static inline void pio_serialiser_byte_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);
-    pio_gpio_init(pio, data_pin + 1);
-    pio_sm_config c = pio_serialiser_program_get_default_config(offset);
+    pio_sm_config c = pio_serialiser_byte_program_get_default_config(offset);
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, true, false, 8);
-    sm_config_set_set_pins(&c, data_pin, 2);
-
+    sm_config_set_in_shift(&c, true, true, 8);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
     pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false);
     pio_sm_set_enabled(pio, sm, true);
-    // Read only one pin, and only handle bits, SE0 / SE1 will be ignored
 }
 %}
 
 ; paths:
 
-; zero and zero [10]
-; wait 0 irq 1
-; in pins, 1
+; zero and zero [9]
 ; jmp !X lastBitWasZero
-; mov X, ISR
-; jmp !X lastBitWasZeroAndCurrentBitIsZero
-; set X 1
-; mov ISR, x
-; set X 0
+; mov OSR, pins
+; out X, 1 
+; jmp !X lastBitWasZeroCurrentBitIsZero
+; jmp send_one
+; mov OSR, !NULL
+; in OSR, 1
 ; jmp Y-- bitstuff
-; jmp push_and_top
-; push
+; jmp top
 
-; zero and one [10]
-; wait 0 irq 1
-; in pins, 1
+; zero and one [11]
 ; jmp !X lastBitWasZero
-; mov X, ISR
-; jmp !X lastBitWasZeroAndCurrentBitIsZero
-; set X 0
-; mov ISR, x
-; set X 1 [1]
-; jmp push_and_top
-; push
-
-; one and zero [10]
-; wait 0 irq 1
-; in pins, 1
-; jmp !X lastBitWasZero
-; mov X, ISR
-; jmp !X lastButWasOneAndCurrentBitIsZero
-; mov ISR, x [3]
-; jmp push_and_top
-; push
-
-; one and one [10]
-; wait 0 irq 1
-; in pins, 1
-; jmp !X lastBitWasZero
-; mov X, ISR
-; jmp !X lastButWasOneAndCurrentBitIsZero
-; mov ISR, x [2]
-; jmp Y-- bitstuff
-; jmp push_and_top
-; push
-
-; bit stuff [10]
-; set X 0
-; set Y 6 [7]
-; push
+; mov OSR, pins
+; out X, 1 
+; jmp !X lastBitWasZeroCurrentBitIsZero
+; jmp send_zero
+; in NULL, 1 [1]
+; set Y 6
+; jmp top

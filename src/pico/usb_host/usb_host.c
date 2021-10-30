@@ -28,10 +28,14 @@ int dma_chan_read;
 int dma_chan_write;
 int dma_chan_keepalive;
 int max_packet_size;
+PIO pio_byte;
+uint offset_byte;
+uint sm_byte;
 uint sm;
 PIO pio;
 uint offset;
 uint sm_keepalive;
+;
 uint offset_keepalive;
 uint32_t currentFrame = 0;
 uint32_t keepalive_delay = 0;
@@ -47,11 +51,16 @@ typedef enum {
     NEXT_ACK_DATA,
 } PacketAction_t;
 
+#define USB_DP_BYTE_PIN 18
+#define USB_DM_BYTE_PIN 19
+#define USB_FIRST_BYTE_PIN 18
+
 #define USB_DP_PIN 20
 #define USB_DM_PIN 21
 #define USB_FIRST_PIN 20
 
 float div;
+float div_read;
 bool full_speed = false;
 volatile bool finishedKeepalive = false;
 volatile bool waiting = false;
@@ -254,12 +263,20 @@ void WR(state_t* state) {
         uint8_t correct = 0;
         bool wrong = true;
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
-        uint8_t t = pio_sm_get_rx_fifo_level(pio, sm);
+        uint8_t t = pio_sm_get_rx_fifo_level(pio_byte, sm_byte);
         while (t--) {
-            pio_sm_get_blocking(pio, sm);
+            pio_sm_get_blocking(pio_byte, sm_byte);
         }
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
+
+        printf("Reading!\n");
+        for (int i = 0; i < read_pkt; i++) {
+            printf("%x (%d), ", data_read[i] >> 24, data_read[i] >> 24);
+        }
+        printf("\n");
+        while (true)
+            ;
         // for (int i2 = 0; i2 < 2; i2++) {
         //     test = data_read2[i2] >> 24;
         //     for (int i = 0; i < 4; i++) {
@@ -280,29 +297,29 @@ void WR(state_t* state) {
         // }
         // TODO: this doesnt even help, maybe we just need to retry the entire packet if it fails too many times.
         if (!waiting) {
-            test = (data_read[2] >> 24) | (data_read[3] >> 24) << 8 | (data_read[4] >> 24) << 16 | (data_read[5] >> 24) << 24;
-            for (int i = 0; i < 16; i++) {
-                if ((test & 0xffff) == jktest) {
-                    wrong = false;
-                    break;
-                }
-                test >>= 2;
-            }
-            if (!wrong) {
-                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-                dma_channel_wait_for_finish_blocking(dma_chan_write);
-                if (action == NEXT_ACK_100) {
-                    if (ackCount--) {
-                        // sleep_ms(1);
-                        continue;
-                    } else {
-                        ackCount = 100;
-                        // Skip the ACK
-                        p += 2;
-                        continue;
-                    }
-                }
-            }
+            // test = (data_read[2] >> 24) | (data_read[3] >> 24) << 8 | (data_read[4] >> 24) << 16 | (data_read[5] >> 24) << 24;
+            // for (int i = 0; i < 16; i++) {
+            //     if ((test & 0xffff) == jktest) {
+            //         wrong = false;
+            //         break;
+            //     }
+            //     test >>= 2;
+            // }
+            // if (!wrong) {
+            //     dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+            //     dma_channel_wait_for_finish_blocking(dma_chan_write);
+            //     if (action == NEXT_ACK_100) {
+            //         if (ackCount--) {
+            //             // sleep_ms(1);
+            //             continue;
+            //         } else {
+            //             ackCount = 100;
+            //             // Skip the ACK
+            //             p += 2;
+            //             continue;
+            //         }
+            //     }
+            // }
         }
         found_k = false;
         skip = false;
@@ -583,10 +600,13 @@ void initKeepAlive() {
 }
 void initPIO() {
     pio = pio0;
+    pio_byte = pio1;
     sm = pio_claim_unused_sm(pio, true);
     sm_keepalive = pio_claim_unused_sm(pio, true);
+    sm_byte = pio_claim_unused_sm(pio_byte, true);
 
     offset = pio_add_program(pio, &pio_serialiser_program);
+    offset_byte = pio_add_program(pio_byte, &pio_serialiser_byte_program);
 
     dma_chan_write = dma_claim_unused_channel(true);
     dma_chan_read = dma_claim_unused_channel(true);
@@ -610,12 +630,12 @@ void initPIO() {
     channel_config_set_transfer_data_size(&cr, DMA_SIZE_32);
     channel_config_set_write_increment(&cr, true);
     channel_config_set_read_increment(&cr, false);
-    channel_config_set_dreq(&cr, pio_get_dreq(pio, sm, false));
+    channel_config_set_dreq(&cr, pio_get_dreq(pio_byte, sm_byte, false));
     dma_channel_configure(
         dma_chan_read,
         &cr,
         &dma_data_read,
-        &pio->rxf[sm],
+        &pio_byte->rxf[sm_byte],
         1,
         false);
     // Tell the DMA to raise IRQ line 0 when the channel finishes a block
@@ -647,6 +667,7 @@ void initPIO() {
 void host_reset() {
     pio_sm_set_enabled(pio, sm, false);
     pio_sm_set_enabled(pio, sm_keepalive, false);
+    pio_sm_set_enabled(pio_byte, sm_byte, false);
     gpio_init(USB_DM_PIN);
     gpio_init(USB_DP_PIN);
     gpio_set_dir_out_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN));
@@ -654,6 +675,7 @@ void host_reset() {
     sleep_ms(20);
     pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
     pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
+    pio_serialiser_byte_program_init(pio_byte, sm_byte, offset_byte, full_speed ? USB_DP_BYTE_PIN : USB_DM_BYTE_PIN, div_read);
 }
 void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
@@ -690,11 +712,13 @@ void tick_usb_host(void) {
         sleep_ms(2);
         if (gpio_get(USB_DM_PIN)) {
             div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 5;
+            div_read = (clock_get_hz(clk_sys) / ((1500000.0f))) / 10;
             full_speed = false;
             // First 16 bits, JJJJ low speed
             jBits = 0xaa000000;
         } else if (gpio_get(USB_DP_PIN)) {
             div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 5;
+            div_read = (clock_get_hz(clk_sys) / ((12000000.0f))) / 10;
             full_speed = true;
             // First 16 bits, JJJJ full speed
             jBits = 0x55000000;
@@ -719,7 +743,7 @@ void tick_usb_host(void) {
             }
         }
         initialised = true;
-        printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
+        printf("Speed: %d %f %f %d\n", full_speed, div, div_read, clock_get_hz(clk_sys));
         initKeepAlive();
         // Reset
         host_reset();

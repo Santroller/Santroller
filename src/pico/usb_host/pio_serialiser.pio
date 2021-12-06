@@ -5,7 +5,8 @@
 ;
 
 .program pio_serialiser
-
+; If bit stuffing has occurred, we might have an extra few bits hanging around
+.wrap_target
 top:
 set pindirs 31
 irq clear 2
@@ -23,20 +24,23 @@ set Y, 2 ; compare to K (note that depending on if we are in low speed or high s
 jmp X!=Y top_read [6] ; otherwise, if X isnt Y then k wasn't found
 mov OSR, NULL
 in OSR, 1
-.wrap_target
+read_loop:
 mov y, x
 mov OSR, pins ; Grab the current state of the pins
 mov X, NULL
 out X 2 ; store the current state in X
-jmp !X top; jmp to top if we hit SE0
+jmp !X end; jmp to top if we hit SE0
 jmp X!=Y send_zero
 send_one:
 mov OSR, ~NULL
-jmp end
+jmp end_read_loop
 send_zero:
 mov OSR, NULL [1]
+end_read_loop:
+in OSR, 1
+jmp read_loop
 end:
-in OSR, 1 [1]
+push
 % c-sdk {
 static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);

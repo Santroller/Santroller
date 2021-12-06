@@ -259,7 +259,7 @@ void WR(state_t* state) {
         sync(&state2);
         uint16_t jktest = state2.buffer[0] | state2.buffer[1] << 8;
         uint32_t shift = 1;
-        uint read_pkt = state->packetresplens[p];
+        uint read_pkt = state->packetresplens[p] + 1;
         uint8_t data_read[read_pkt];
         uint8_t correct = 0;
         bool wrong = true;
@@ -275,6 +275,7 @@ void WR(state_t* state) {
         }
         uint sync_data = data_read[0];
         uint pid = data_read[1];
+        printf("%d %d %d\n", p, sync_data, pid);
         if (sync_data != 1) {
             // Sync incorrect, try again
             continue;
@@ -294,7 +295,7 @@ void WR(state_t* state) {
                     memcpy(buffer4 + current_read, data_read + 2, maxPacket);
                     current_read += maxPacket;
                     wasData0 = !wasData0;
-                    p += 2;  //Skip ACK packet as it has already been transmitted.
+                    p++;  //Skip ACK packet as it has already been transmitted.
                     // sleep_ms(1);
                     // sleep_us(50);
                 }

@@ -28,9 +28,6 @@ int dma_chan_read;
 int dma_chan_write;
 int dma_chan_keepalive;
 int max_packet_size;
-PIO pio_byte;
-uint offset_byte;
-uint sm_byte;
 uint sm;
 PIO pio;
 uint offset;
@@ -50,10 +47,6 @@ typedef enum {
     NEXT_ACK_100,
     NEXT_ACK_DATA,
 } PacketAction_t;
-
-#define USB_DP_BYTE_PIN 18
-#define USB_DM_BYTE_PIN 19
-#define USB_FIRST_BYTE_PIN 18
 
 #define USB_DP_PIN 20
 #define USB_DM_PIN 21
@@ -144,8 +137,8 @@ static void commit_packet(state_t* state, PacketAction_t actions, uint response_
     // Store packet length as number of 8 bit transfers
     state->packetlens[state->current_packet] = state->id / 8;
     state->packet_actions[state->current_packet] = actions;
-    // Store packet length as number of 8 bit transfers (noting that we actually transmit two sets of 4 bits)
-    state->packetresplens[state->current_packet] = (response_len / 4) + 3;
+    // Store packet length as number of 8 bit transfers
+    state->packetresplens[state->current_packet] = (response_len / 8);
     memcpy(state->packets[state->current_packet++], state->buffer, sizeof(state->buffer));
     reset_state(state);
 }
@@ -227,6 +220,16 @@ void sendCRC5(state_t* state) {
 }
 #pragma GCC push_options
 #pragma GCC optimize("-O3")
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)       \
+    (byte & 0x80 ? '1' : '0'),     \
+        (byte & 0x40 ? '1' : '0'), \
+        (byte & 0x20 ? '1' : '0'), \
+        (byte & 0x10 ? '1' : '0'), \
+        (byte & 0x08 ? '1' : '0'), \
+        (byte & 0x04 ? '1' : '0'), \
+        (byte & 0x02 ? '1' : '0'), \
+        (byte & 0x01 ? '1' : '0')
 void WR(state_t* state) {
     uint current_read = 0;
     finishedKeepalive = false;
@@ -259,24 +262,22 @@ void WR(state_t* state) {
         uint16_t jktest = state2.buffer[0] | state2.buffer[1] << 8;
         uint32_t shift = 1;
         uint read_pkt = state->packetresplens[p];
-        uint32_t data_read[read_pkt];
+        uint8_t data_read[read_pkt];
         uint8_t correct = 0;
         bool wrong = true;
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
-        uint8_t t = pio_sm_get_rx_fifo_level(pio_byte, sm_byte);
-        while (t--) {
-            pio_sm_get_blocking(pio_byte, sm_byte);
-        }
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
 
         printf("Reading!\n");
         for (int i = 0; i < read_pkt; i++) {
-            printf("%x (%d), ", data_read[i] >> 24, data_read[i] >> 24);
+            printf("%x (%d) ", data_read[i], data_read[i]);
+            printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
+            printf(", ");
         }
-        printf("\n");
-        while (true)
-            ;
+        // printf("\n");
+        // while (true)
+        //     ;
         // for (int i2 = 0; i2 < 2; i2++) {
         //     test = data_read2[i2] >> 24;
         //     for (int i = 0; i < 4; i++) {
@@ -296,7 +297,7 @@ void WR(state_t* state) {
         //     }
         // }
         // TODO: this doesnt even help, maybe we just need to retry the entire packet if it fails too many times.
-        if (!waiting) {
+        // if (!waiting) {
             // test = (data_read[2] >> 24) | (data_read[3] >> 24) << 8 | (data_read[4] >> 24) << 16 | (data_read[5] >> 24) << 24;
             // for (int i = 0; i < 16; i++) {
             //     if ((test & 0xffff) == jktest) {
@@ -320,60 +321,60 @@ void WR(state_t* state) {
             //         }
             //     }
             // }
-        }
-        found_k = false;
-        skip = false;
-        lastWasJ = true;
-        buffer3[0] = 0;
-        data = buffer3;
-        shift = 1;
-        int oneCount = 0;
-        bool done = false;
-        for (int i2 = 0; i2 < read_pkt; i2++) {
-            if (done) break;
-            if (!initialised) return;
-            test = data_read[i2] >> 24;
-            // printf("\nNew:");
-            for (int i = 0; i < 4; i++) {
-                test2 = (test & 3);
-                se0 = !test2;
-                j = test2 == jNum;
-                k = test2 == kNum;
-                test >>= 2;
-                if (!found_k && !k) {
-                    continue;
-                }
-                found_k = true;
-                if (se0) {
-                    done = true;
-                    break;
-                }
-                // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
-                // 1 bit is transmitted by leaving the data lines as-is.
-                // If skip is set, then we ignore the next bit
-                if (skip) {
-                    skip = false;
-                } else {
-                    if (lastWasJ != j) {
-                        oneCount = 0;
-                    } else {
-                        *data |= shift;
-                        oneCount++;
-                        if (oneCount == 6) {
-                            skip = true;
-                            oneCount = 0;
-                        }
-                    }
-                    shift <<= 1;
-                    if (shift == 256) {
-                        data++;
-                        *data = 0;
-                        shift = 1;
-                    }
-                }
-                lastWasJ = j;
-            }
-        }
+        // }
+        // found_k = false;
+        // skip = false;
+        // lastWasJ = true;
+        // buffer3[0] = 0;
+        // data = buffer3;
+        // shift = 1;
+        // int oneCount = 0;
+        // bool done = false;
+        // for (int i2 = 0; i2 < read_pkt; i2++) {
+        //     if (done) break;
+        //     if (!initialised) return;
+        //     test = data_read[i2] >> 24;
+        //     // printf("\nNew:");
+        //     for (int i = 0; i < 4; i++) {
+        //         test2 = (test & 3);
+        //         se0 = !test2;
+        //         j = test2 == jNum;
+        //         k = test2 == kNum;
+        //         test >>= 2;
+        //         if (!found_k && !k) {
+        //             continue;
+        //         }
+        //         found_k = true;
+        //         if (se0) {
+        //             done = true;
+        //             break;
+        //         }
+        //         // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
+        //         // 1 bit is transmitted by leaving the data lines as-is.
+        //         // If skip is set, then we ignore the next bit
+        //         if (skip) {
+        //             skip = false;
+        //         } else {
+        //             if (lastWasJ != j) {
+        //                 oneCount = 0;
+        //             } else {
+        //                 *data |= shift;
+        //                 oneCount++;
+        //                 if (oneCount == 6) {
+        //                     skip = true;
+        //                     oneCount = 0;
+        //                 }
+        //             }
+        //             shift <<= 1;
+        //             if (shift == 256) {
+        //                 data++;
+        //                 *data = 0;
+        //                 shift = 1;
+        //             }
+        //         }
+        //         lastWasJ = j;
+        //     }
+        // }
         // printf("\n");
         uint pid = buffer3[1];
         // printf("l: %d\n", state->packetresplens[p]);
@@ -594,19 +595,15 @@ void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* d) {
 }
 void initKeepAlive() {
     keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
-    keepalive_delay *= 1.4f;
     pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
     isrKeepAlive();
 }
 void initPIO() {
     pio = pio0;
-    pio_byte = pio1;
     sm = pio_claim_unused_sm(pio, true);
     sm_keepalive = pio_claim_unused_sm(pio, true);
-    sm_byte = pio_claim_unused_sm(pio_byte, true);
 
     offset = pio_add_program(pio, &pio_serialiser_program);
-    offset_byte = pio_add_program(pio_byte, &pio_serialiser_byte_program);
 
     dma_chan_write = dma_claim_unused_channel(true);
     dma_chan_read = dma_claim_unused_channel(true);
@@ -627,15 +624,15 @@ void initPIO() {
         false);
 
     dma_channel_config cr = dma_channel_get_default_config(dma_chan_read);
-    channel_config_set_transfer_data_size(&cr, DMA_SIZE_32);
+    channel_config_set_transfer_data_size(&cr, DMA_SIZE_8);
     channel_config_set_write_increment(&cr, true);
     channel_config_set_read_increment(&cr, false);
-    channel_config_set_dreq(&cr, pio_get_dreq(pio_byte, sm_byte, false));
+    channel_config_set_dreq(&cr, pio_get_dreq(pio, sm, false));
     dma_channel_configure(
         dma_chan_read,
         &cr,
         &dma_data_read,
-        &pio_byte->rxf[sm_byte],
+        &pio->rxf[sm],
         1,
         false);
     // Tell the DMA to raise IRQ line 0 when the channel finishes a block
@@ -667,7 +664,6 @@ void initPIO() {
 void host_reset() {
     pio_sm_set_enabled(pio, sm, false);
     pio_sm_set_enabled(pio, sm_keepalive, false);
-    pio_sm_set_enabled(pio_byte, sm_byte, false);
     gpio_init(USB_DM_PIN);
     gpio_init(USB_DP_PIN);
     gpio_set_dir_out_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN));
@@ -675,7 +671,6 @@ void host_reset() {
     sleep_ms(20);
     pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
     pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
-    pio_serialiser_byte_program_init(pio_byte, sm_byte, offset_byte, full_speed ? USB_DP_BYTE_PIN : USB_DM_BYTE_PIN, div_read);
 }
 void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
@@ -711,14 +706,12 @@ void tick_usb_host(void) {
         }
         sleep_ms(2);
         if (gpio_get(USB_DM_PIN)) {
-            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 5;
-            div_read = (clock_get_hz(clk_sys) / ((1500000.0f))) / 10;
+            div = (clock_get_hz(clk_sys) / ((1500000.0f))) / 10;
             full_speed = false;
             // First 16 bits, JJJJ low speed
             jBits = 0xaa000000;
         } else if (gpio_get(USB_DP_PIN)) {
-            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 5;
-            div_read = (clock_get_hz(clk_sys) / ((12000000.0f))) / 10;
+            div = (clock_get_hz(clk_sys) / ((12000000.0f))) / 10;
             full_speed = true;
             // First 16 bits, JJJJ full speed
             jBits = 0x55000000;

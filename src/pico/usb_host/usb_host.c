@@ -157,11 +157,11 @@ static void EOP(state_t* state) {
     SE0(state);
     J(state);
 }
-void sendData(uint16_t byte, int count, state_t* state) {
+void sendData(uint16_t byte, int count, state_t* state, bool rev) {
     for (int i = 0; i < count; i++) {
         // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
         // 1 bit is transmitted by leaving the data lines as-is.
-        if (!bit_check(byte, i)) {
+        if (!bit_check(byte, rev ? count-1-i : i)) {
             // Zero
             if (state->lastJ) {
                 K(state);
@@ -193,21 +193,21 @@ void sendData(uint16_t byte, int count, state_t* state) {
     }
 }
 void sendByte(uint8_t byte, state_t* state) {
-    sendData(byte, 8, state);
+    sendData(byte, 8, state, false);
 }
 void sendNibble(uint8_t byte, state_t* state) {
-    sendData(byte, 4, state);
+    sendData(byte, 4, state, false);
 }
 
 void sendAddress(uint8_t byte, state_t* state) {
-    sendData(byte, 7, state);
+    sendData(byte, 7, state, false);
 }
 void sendPID(uint8_t byte, state_t* state) {
-    sendByte(byte, state);
+    sendData(byte, 8, state, true);
 }
 
 void sendCRC16(state_t* state) {
-    sendData(crc_16(state->bufferCRC, state->id_crc / 8), 16, state);
+    sendData(crc_16(state->bufferCRC, state->id_crc / 8), 16, state, false);
 }
 void sendCRC5(state_t* state) {
     uint8_t byte;
@@ -216,7 +216,7 @@ void sendCRC5(state_t* state) {
     } else {
         byte = crc5_usb_19bit_input(state->bufferCRC);
     }
-    sendData(byte, 5, state);
+    sendData(byte, 5, state, false);
 }
 #pragma GCC push_options
 #pragma GCC optimize("-O3")
@@ -247,14 +247,12 @@ void WR(state_t* state) {
         waiting = action == STANDARD_ACK;
         uint32_t test;
         uint8_t test2;
-        uint8_t* data = buffer3;
         uint16_t sync_pid = 0;
         bool found_k = false;
         bool skip = false;
         bool lastWasJ = true;
         bool lastWasK = false;
         bool j, k, se0;
-        buffer3[0] = 0;
 
         state_t state2;
         reset_state(&state2);
@@ -275,112 +273,13 @@ void WR(state_t* state) {
             printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
             printf(", ");
         }
-        // printf("\n");
-        // while (true)
-        //     ;
-        // for (int i2 = 0; i2 < 2; i2++) {
-        //     test = data_read2[i2] >> 24;
-        //     for (int i = 0; i < 4; i++) {
-        //         k = (test & 3) == kNum;
-        //         test >>= 2;
-        //         found_k |= k;
-        //         if (!found_k) {
-        //             continue;
-        //         }
-        //         // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
-        //         // 1 bit is transmitted by leaving the data lines as-is.
-        //         if (lastWasK == k) {
-        //             sync_pid |= shift;
-        //         }
-        //         shift <<= 1;
-        //         lastWasK = k;
-        //     }
-        // }
-        // TODO: this doesnt even help, maybe we just need to retry the entire packet if it fails too many times.
-        // if (!waiting) {
-            // test = (data_read[2] >> 24) | (data_read[3] >> 24) << 8 | (data_read[4] >> 24) << 16 | (data_read[5] >> 24) << 24;
-            // for (int i = 0; i < 16; i++) {
-            //     if ((test & 0xffff) == jktest) {
-            //         wrong = false;
-            //         break;
-            //     }
-            //     test >>= 2;
-            // }
-            // if (!wrong) {
-            //     dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-            //     dma_channel_wait_for_finish_blocking(dma_chan_write);
-            //     if (action == NEXT_ACK_100) {
-            //         if (ackCount--) {
-            //             // sleep_ms(1);
-            //             continue;
-            //         } else {
-            //             ackCount = 100;
-            //             // Skip the ACK
-            //             p += 2;
-            //             continue;
-            //         }
-            //     }
-            // }
-        // }
-        // found_k = false;
-        // skip = false;
-        // lastWasJ = true;
-        // buffer3[0] = 0;
-        // data = buffer3;
-        // shift = 1;
-        // int oneCount = 0;
-        // bool done = false;
-        // for (int i2 = 0; i2 < read_pkt; i2++) {
-        //     if (done) break;
-        //     if (!initialised) return;
-        //     test = data_read[i2] >> 24;
-        //     // printf("\nNew:");
-        //     for (int i = 0; i < 4; i++) {
-        //         test2 = (test & 3);
-        //         se0 = !test2;
-        //         j = test2 == jNum;
-        //         k = test2 == kNum;
-        //         test >>= 2;
-        //         if (!found_k && !k) {
-        //             continue;
-        //         }
-        //         found_k = true;
-        //         if (se0) {
-        //             done = true;
-        //             break;
-        //         }
-        //         // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
-        //         // 1 bit is transmitted by leaving the data lines as-is.
-        //         // If skip is set, then we ignore the next bit
-        //         if (skip) {
-        //             skip = false;
-        //         } else {
-        //             if (lastWasJ != j) {
-        //                 oneCount = 0;
-        //             } else {
-        //                 *data |= shift;
-        //                 oneCount++;
-        //                 if (oneCount == 6) {
-        //                     skip = true;
-        //                     oneCount = 0;
-        //                 }
-        //             }
-        //             shift <<= 1;
-        //             if (shift == 256) {
-        //                 data++;
-        //                 *data = 0;
-        //                 shift = 1;
-        //             }
-        //         }
-        //         lastWasJ = j;
-        //     }
-        // }
-        // printf("\n");
-        uint pid = buffer3[1];
-        // printf("l: %d\n", state->packetresplens[p]);
-        // printf("%d %d %d %d\n", buffer3[0], p, pid, wasData0);
-        // printf("%d\n", correct);
-        if (pid == NAK || buffer3[0] != 128) {
+        uint sync_data = data_read[0];
+        uint pid = data_read[1];
+        if (sync_data != 1) {
+            // Sync incorrect, try again
+            continue;
+        }
+        if (pid == NAK) {
             // Device is not ready, try again.
             sleep_us(50);
             continue;
@@ -392,7 +291,7 @@ void WR(state_t* state) {
                 // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
                 if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
                     // Don't copy the PID or SYNC
-                    memcpy(buffer4 + current_read, buffer3 + 2, maxPacket);
+                    memcpy(buffer4 + current_read, data_read + 2, maxPacket);
                     current_read += maxPacket;
                     wasData0 = !wasData0;
                     p += 2;  //Skip ACK packet as it has already been transmitted.
@@ -402,7 +301,7 @@ void WR(state_t* state) {
             } else {
                 // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
                 // Don't copy the PID or SYNC
-                memcpy(buffer4 + current_read, buffer3 + 2, sizeof(buffer3) - 2);
+                memcpy(buffer4 + current_read, data_read + 2, sizeof(data_read) - 2);
                 current_read += maxPacket;
                 p++;
             }
@@ -431,7 +330,7 @@ void isrKeepAlive() {
         sync(&state_ka);
         sendPID(SOF, &state_ka);
         reset_crc(&state_ka);
-        sendData(currentFrame++, 11, &state_ka);
+        sendData(currentFrame++, 11, &state_ka, false);
         sendCRC5(&state_ka);
         EOP(&state_ka);
         int remaining = (32 - (state_ka.id % 32)) / 2;

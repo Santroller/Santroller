@@ -6,11 +6,11 @@
 
 .program pio_serialiser
 
-; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
 top:
 set pindirs 31
 irq clear 2
-pull ifempty
+mov x, ~status
+jmp !x top
 irq set 2
 write:
 out pins, 2 [8]

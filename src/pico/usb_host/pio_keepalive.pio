@@ -7,8 +7,6 @@
 .program pio_keepalive
 
 ; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
-pull
-mov x, OSR
 .wrap_target
 wait 0 irq 2
 loop:
@@ -29,7 +27,9 @@ static inline void pio_keepalive_program_init(PIO pio, uint sm, uint offset, uin
     sm_config_set_set_pins(&c, data_pin, 2);
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
-    pio_sm_set_enabled(pio, sm, true);
     pio_sm_put_blocking(pio, sm, delay);
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(true, true));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_mov(pio_x, pio_osr));
+    pio_sm_set_enabled(pio, sm, true);
 }
 %}

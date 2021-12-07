@@ -1,11 +1,4 @@
-;
-; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
-;
-; SPDX-License-Identifier: BSD-3-Clause
-;
-
 .program pio_serialiser
-; If bit stuffing has occurred, we might have an extra few bits hanging around
 .wrap_target
 top:
 set pindirs 31
@@ -21,7 +14,7 @@ top_read:
 mov OSR, pins ; use OSR for getting the top two bits from pins
 out X, 2 ; grab the top two bits from pins
 set Y, 2 ; compare to K (note that depending on if we are in low speed or high speed, this can be either 1 or 2)
-jmp X!=Y top_read [6] ; otherwise, if X isnt Y then k wasn't found
+jmp X!=Y top_read [3] ; otherwise, if X isnt Y then k wasn't found
 mov OSR, NULL
 in OSR, 1
 read_loop:

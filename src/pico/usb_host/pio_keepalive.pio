@@ -1,12 +1,5 @@
-;
-; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
-;
-; SPDX-License-Identifier: BSD-3-Clause
-;
-
 .program pio_keepalive
 
-; Just serialise a stream of bits. Take 32 bits from each FIFO record. LSB-first.
 .wrap_target
 wait 0 irq 2
 loop:

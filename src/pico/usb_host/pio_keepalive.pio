@@ -2,13 +2,7 @@
 
 .wrap_target
 wait 0 irq 2
-loop:
-    out pins, 2 [8]
-    jmp !osre loop
-irq set 1
-mov y, x
-loop2:
-    jmp y-- loop2 [9] ; implicit wrap to top
+out pins, 2 [8]
 % c-sdk {
 static inline void pio_keepalive_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t delay) {
     pio_gpio_init(pio, data_pin);

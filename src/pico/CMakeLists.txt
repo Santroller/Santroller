@@ -68,6 +68,7 @@ endif()
 target_link_libraries(
   ${TARGET}
   pico_stdlib
+  pico_multicore
   hardware_i2c
   hardware_dma
   hardware_spi
@@ -85,6 +86,7 @@ target_link_libraries(
 
 pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_serialiser.pio)
 pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive.pio)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_bitstuff.pio)
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${TARGET})
 # Copy built binaries to firmware

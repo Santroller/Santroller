@@ -5,22 +5,22 @@ top:
 set X, 0
 out X, 1
 in X, 1
-jmp !X zero
-one:
-jmp y-- bitstuff 
-jmp top
-bitstuff:
-out y 1
-zero:
-set Y 6
+jmp !X zero_found
+one_found:
+jmp Y-- top 
+; bitstuff, ignore the next zero
+out X, 1
+zero_found:
+set Y 5
 
 % c-sdk {
-static inline void pio_bitstuff_program_init(PIO pio, uint sm, uint offset, uint data_pin) {
+static inline void pio_bitstuff_program_init(PIO pio, uint sm, uint offset) {
     pio_sm_config c = pio_bitstuff_program_get_default_config(offset);
     sm_config_set_clkdiv(&c, 1);
-    sm_config_set_in_shift(&c, true, true, 8);
-    sm_config_set_out_shift(&c, true, true, 8);
+    sm_config_set_in_shift(&c, false, true, 8);
+    sm_config_set_out_shift(&c, false, true, 8);
     pio_sm_init(pio, sm, offset, &c);
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_set(pio_y, 5));
     pio_sm_set_enabled(pio, sm, true);
 }
 %}

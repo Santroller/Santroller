@@ -16,9 +16,11 @@
 #include "pico/stdlib.h"
 #include "pio_keepalive.pio.h"
 #include "pio_serialiser.pio.h"
-#include "pio_serialiser_byte.pio.h"
+#include "pio_bitstuff.pio.h"
 #include "usb.h"
 #include "usb/std_descriptors.h"
+#include "pico/stdlib.h"
+#include "pico/multicore.h"
 
 #define maxBits 512
 uint32_t dma_data_read;
@@ -27,13 +29,16 @@ uint8_t buffer4[maxBits / 8] = {0};
 int dma_chan_read;
 int dma_chan_write;
 int dma_chan_keepalive;
+int dma_chan_bitstuff;
 int max_packet_size;
 uint sm;
 PIO pio;
+PIO pio_bitstuff;
 uint offset;
 uint sm_keepalive;
-;
+uint sm_bitstuff;
 uint offset_keepalive;
+uint offset_bitstuff;
 uint32_t currentFrame = 0;
 uint32_t keepalive_delay = 0;
 uint32_t jBits = 0;
@@ -232,11 +237,11 @@ void sendCRC5(state_t* state) {
         (byte & 0x01 ? '1' : '0')
 void WR(state_t* state) {
     uint current_read = 0;
-    finishedKeepalive = false;
-    // Wait for a keepalive and schedule everything after it
-    while (!finishedKeepalive) {
-        tight_loop_contents();
-    }
+    // finishedKeepalive = false;
+    // // Wait for a keepalive and schedule everything after it
+    // while (!finishedKeepalive) {
+    //     tight_loop_contents();
+    // }
     int ackCount = 100;
     bool wasData0 = true;
     for (int p = 0; p < state->current_packet;) {
@@ -259,10 +264,16 @@ void WR(state_t* state) {
         sync(&state2);
         uint16_t jktest = state2.buffer[0] | state2.buffer[1] << 8;
         uint32_t shift = 1;
-        uint read_pkt = state->packetresplens[p] + 1;
+        uint read_pkt = state->packetresplens[p];
         uint8_t data_read[read_pkt];
         uint8_t correct = 0;
         bool wrong = true;
+        // TODO: do we actually care? we could just parse the first two bytes here, and then send out a reply assuming the rest is correct, its not like we have the speed
+        // to verify the crc
+        while (pio_sm_get_rx_fifo_level(pio_bitstuff, sm_bitstuff)) {
+            pio_sm_get_blocking(pio_bitstuff, sm_bitstuff);
+        }
+        dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
@@ -316,11 +327,7 @@ void WR(state_t* state) {
     state->current_packet = 0;
 }
 #pragma GCC pop_options
-void isrKeepAlive() {
-    if (!initialised) {
-        return;
-    }
-    finishedKeepalive = true;
+bool isrKeepAlive(struct repeating_timer *t) {
     if (full_speed) {
         // Increment current frame and then append its crc5
         currentFrame++;
@@ -346,7 +353,7 @@ void isrKeepAlive() {
         SE0(&state_ka);
         dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
     }
-    pio_interrupt_clear(pio, 1);
+    return true;
 }
 
 void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d) {
@@ -493,21 +500,27 @@ void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* d) {
     commit_packet(&state_pk, STANDARD_ACK, 19);
     WR(&state_pk);
 }
+struct repeating_timer timer;
 void initKeepAlive() {
     keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
     pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
-    isrKeepAlive();
+    add_repeating_timer_us(800, isrKeepAlive, NULL, &timer);
 }
 void initPIO() {
     pio = pio0;
+    pio_bitstuff = pio1;
     sm = pio_claim_unused_sm(pio, true);
     sm_keepalive = pio_claim_unused_sm(pio, true);
+    sm_bitstuff = pio_claim_unused_sm(pio_bitstuff, true);
 
     offset = pio_add_program(pio, &pio_serialiser_program);
+    offset_keepalive = pio_add_program(pio, &pio_keepalive_program);
+    offset_bitstuff = pio_add_program(pio_bitstuff, &pio_bitstuff_program);
 
     dma_chan_write = dma_claim_unused_channel(true);
     dma_chan_read = dma_claim_unused_channel(true);
     dma_chan_keepalive = dma_claim_unused_channel(true);
+    dma_chan_bitstuff = dma_claim_unused_channel(true);
 
     dma_channel_config c = dma_channel_get_default_config(dma_chan_write);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
@@ -527,12 +540,12 @@ void initPIO() {
     channel_config_set_transfer_data_size(&cr, DMA_SIZE_8);
     channel_config_set_write_increment(&cr, true);
     channel_config_set_read_increment(&cr, false);
-    channel_config_set_dreq(&cr, pio_get_dreq(pio, sm, false));
+    channel_config_set_dreq(&cr, pio_get_dreq(pio_bitstuff, sm_bitstuff, false));
     dma_channel_configure(
         dma_chan_read,
         &cr,
         &dma_data_read,
-        &pio->rxf[sm],
+        &pio_bitstuff->rxf[sm_bitstuff],
         1,
         false);
     // Tell the DMA to raise IRQ line 0 when the channel finishes a block
@@ -543,7 +556,7 @@ void initPIO() {
     // irq_set_priority(DMA_IRQ_0, PICO_HIGHEST_IRQ_PRIORITY);
     // irq_set_enabled(DMA_IRQ_0, true);
 
-    irq_set_exclusive_handler(PIO0_IRQ_1, isrKeepAlive);
+    // irq_set_exclusive_handler(PIO0_IRQ_1, isrKeepAlive);
     dma_channel_config cka = dma_channel_get_default_config(dma_chan_keepalive);
     channel_config_set_transfer_data_size(&cka, DMA_SIZE_32);
     channel_config_set_write_increment(&cka, false);
@@ -556,10 +569,21 @@ void initPIO() {
         state_ka.buffer,
         3,
         false);
-    pio_set_irq1_source_enabled(pio, pis_interrupt1, true);
-    irq_set_priority(PIO0_IRQ_1, PICO_HIGHEST_IRQ_PRIORITY);
-    irq_set_enabled(PIO0_IRQ_1, true);
-    offset_keepalive = pio_add_program(pio, &pio_keepalive_program);
+    dma_channel_config cb = dma_channel_get_default_config(dma_chan_bitstuff);
+    channel_config_set_transfer_data_size(&cb, DMA_SIZE_8);
+    channel_config_set_write_increment(&cb, false);
+    channel_config_set_read_increment(&cb, false);
+    channel_config_set_dreq(&cb, pio_get_dreq(pio, sm, false));
+    dma_channel_configure(
+        dma_chan_bitstuff,
+        &cb,
+        &pio_bitstuff->txf[sm_bitstuff], //write addr
+        &pio->rxf[sm],  //read addr
+        3,
+        false);
+    // pio_set_irq1_source_enabled(pio, pis_interrupt1, true);
+    // irq_set_priority(PIO0_IRQ_1, PICO_HIGHEST_IRQ_PRIORITY);
+    // irq_set_enabled(PIO0_IRQ_1, true);
 }
 void host_reset() {
     pio_sm_set_enabled(pio, sm, false);
@@ -569,6 +593,7 @@ void host_reset() {
     gpio_set_dir_out_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN));
     gpio_put_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN), 0);
     sleep_ms(20);
+    pio_bitstuff_program_init(pio_bitstuff, sm_bitstuff, offset_bitstuff);
     pio_serialiser_program_init(pio, sm, offset, USB_FIRST_PIN, div);
     pio_keepalive_program_init(pio, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
 }
@@ -637,7 +662,7 @@ void tick_usb_host(void) {
         }
         initialised = true;
         printf("Speed: %d %f %f %d\n", full_speed, div, div_read, clock_get_hz(clk_sys));
-        initKeepAlive();
+        multicore_launch_core1(initKeepAlive);
         // Reset
         host_reset();
 

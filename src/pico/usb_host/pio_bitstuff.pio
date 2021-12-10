@@ -17,8 +17,8 @@ set Y 5
 static inline void pio_bitstuff_program_init(PIO pio, uint sm, uint offset) {
     pio_sm_config c = pio_bitstuff_program_get_default_config(offset);
     sm_config_set_clkdiv(&c, 1);
-    sm_config_set_in_shift(&c, false, true, 8);
-    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_in_shift(&c, true, true, 8);
+    sm_config_set_out_shift(&c, true, true, 8);
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_exec_wait_blocking(pio, sm, pio_encode_set(pio_y, 5));
     pio_sm_set_enabled(pio, sm, true);

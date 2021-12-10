@@ -1,5 +1,7 @@
 .program pio_serialiser
 .wrap_target
+top2:
+set y, 1
 top:
 set pindirs 31
 irq clear 2
@@ -9,6 +11,7 @@ irq set 2
 write:
 out pins, 2 [8]
 jmp !OSRE write
+jmp !y top2
 set pindirs 0
 top_read:
 mov OSR, pins ; use OSR for getting the top two bits from pins
@@ -34,6 +37,7 @@ in OSR, 1
 jmp read_loop
 end:
 push
+set y, 1
 % c-sdk {
 static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);
@@ -43,7 +47,7 @@ static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, ui
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, true, true, 8);
     sm_config_set_in_pins(&c, data_pin);
-    sm_config_set_in_shift(&c, false, true, 8);
+    sm_config_set_in_shift(&c, true, true, 8);
     sm_config_set_set_pins(&c, data_pin, 2);
     sm_config_set_mov_status(&c, STATUS_TX_LESSTHAN, 1);
 

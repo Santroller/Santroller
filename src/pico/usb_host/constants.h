@@ -1,20 +1,11 @@
-// #define SETUP 0b00101101
-// #define STALL 0b00011110
-// #define DATA0 0b11000011
-// #define DATA1 0b01001011
-// #define OUT 0b11100001
-// #define IN 0b01101001
-// #define NAK 0b01011010
-// #define ACK 0b11010010
-// #define SOF 0b10100101
-#define SETUP 0b10110100
-#define STALL 0b01111000
+#define SETUP 0b00101101
 #define DATA0 0b11000011
-#define DATA1 0b11010010
-#define OUT 0b10000111
-#define IN 0b10010110
-#define NAK 0b01011010
-#define ACK 0b01001011
+#define DATA1 0b01001011
+#define OUT 0b11100001
+#define IN 0b01101001
 #define SOF 0b10100101
+#define STALL 0b00011110
+#define NAK 0b01011010
+#define ACK 0b11010010
 #define MAX_PACKET_LEN 64
 #define MAX_PACKET_COUNT 64

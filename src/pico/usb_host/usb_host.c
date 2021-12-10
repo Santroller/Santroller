@@ -208,7 +208,7 @@ void sendAddress(uint8_t byte, state_t* state) {
     sendData(byte, 7, state, false);
 }
 void sendPID(uint8_t byte, state_t* state) {
-    sendData(byte, 8, state, true);
+    sendData(byte, 8, state, false);
 }
 
 void sendCRC16(state_t* state) {
@@ -267,27 +267,44 @@ void WR(state_t* state) {
         uint read_pkt = state->packetresplens[p];
         uint8_t data_read[read_pkt];
         uint8_t correct = 0;
+        printf("Packet: %d\n", p);
         bool wrong = true;
-        // TODO: do we actually care? we could just parse the first two bytes here, and then send out a reply assuming the rest is correct, its not like we have the speed
-        // to verify the crc
-        while (pio_sm_get_rx_fifo_level(pio_bitstuff, sm_bitstuff)) {
-            pio_sm_get_blocking(pio_bitstuff, sm_bitstuff);
-        }
+        pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
+        pio_sm_restart(pio_bitstuff, sm_bitstuff);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
-
-        printf("Reading!\n");
+        uint sync_data = data_read[0];
+        uint pid = data_read[1];
+        if (!waiting) {
+            // if (crc != crc_calc) {
+            //     printf("incorrect crc! %d %x!=%x\n", read_pkt, crc,  crc_calc);
+            //     for (int i = 0; i < read_pkt; i++) {
+            //         printf("%x (%d) ", data_read[i], data_read[i]);
+            //         printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
+            //         printf(", ");
+            //     }
+            //     // Crc incorrect, continue
+            //     continue;
+            // }
+            pio_sm_set_enabled(pio, sm, false);
+            pio_sm_exec_wait_blocking(pio, sm, pio_encode_set(pio_y,0));
+            pio_sm_set_enabled(pio, sm, true);
+            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p+1], state->packetlens[p+1]);
+            dma_channel_wait_for_finish_blocking(dma_chan_write);
+            printf("Responded with ACK!\n");
+        }
+        uint16_t crc = crc_update(data_read+2, 8) & 0x7ff;
+        uint16_t crc_calc = (data_read[read_pkt-1] << 8 | data_read[read_pkt-2]) & 0x7ff;
+        printf("Reading! %d\n", read_pkt);
         for (int i = 0; i < read_pkt; i++) {
             printf("%x (%d) ", data_read[i], data_read[i]);
             printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
             printf(", ");
         }
-        uint sync_data = data_read[0];
-        uint pid = data_read[1];
         printf("%d %d %d\n", p, sync_data, pid);
-        if (sync_data != 1) {
+        if (sync_data != 128) {
             // Sync incorrect, try again
             continue;
         }
@@ -299,6 +316,9 @@ void WR(state_t* state) {
             // Stalled, return immediately.
             return;
         } else if (pid == DATA1 || pid == DATA0) {
+            if (crc != crc_calc) {
+                continue;
+            }
             if (action != STANDARD_ACK) {
                 // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
                 if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
@@ -306,10 +326,10 @@ void WR(state_t* state) {
                     memcpy(buffer4 + current_read, data_read + 2, maxPacket);
                     current_read += maxPacket;
                     wasData0 = !wasData0;
-                    p++;  //Skip ACK packet as it has already been transmitted.
+                    p+=2;  //Skip ACK packet as it has already been transmitted.
                     // sleep_ms(1);
                     // sleep_us(50);
-                }
+                } 
             } else {
                 // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
                 // Don't copy the PID or SYNC
@@ -444,6 +464,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 l = 3 + 8 + 8 + 16 + l;
                 if (terminateEarly) {
                     commit_packet(&state_pk, STANDARD_ACK, l);
+                    break;
                 } else {
                     commit_packet(&state_pk, NEXT_ACK_DATA, l);
                     sync(&state_pk);
@@ -545,7 +566,7 @@ void initPIO() {
         dma_chan_read,
         &cr,
         &dma_data_read,
-        &pio_bitstuff->rxf[sm_bitstuff],
+        ((uint8_t*)&pio_bitstuff->rxf[sm_bitstuff])+3,
         1,
         false);
     // Tell the DMA to raise IRQ line 0 when the channel finishes a block
@@ -577,8 +598,8 @@ void initPIO() {
     dma_channel_configure(
         dma_chan_bitstuff,
         &cb,
-        &pio_bitstuff->txf[sm_bitstuff], //write addr
-        &pio->rxf[sm],  //read addr
+        ((uint8_t*)&pio_bitstuff->txf[sm_bitstuff])+3, //write addr
+        ((uint8_t*)&pio->rxf[sm])+3,  //read addr
         3,
         false);
     // pio_set_irq1_source_enabled(pio, pis_interrupt1, true);

@@ -275,6 +275,9 @@ void WR(state_t* state) {
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         dma_channel_wait_for_finish_blocking(dma_chan_read);
+        // while (dma_channel_is_busy(channel))
+        // the dma object dma_hw->ch[channel] does actually tell us the current read / write address, so it should be possible to do CRC as we read, instead of at the end
+        // This should give us CRC hopefully fast
         uint sync_data = data_read[0];
         uint pid = data_read[1];
         if (!waiting) {
@@ -288,9 +291,7 @@ void WR(state_t* state) {
             //     // Crc incorrect, continue
             //     continue;
             // }
-            pio_sm_set_enabled(pio, sm, false);
-            pio_sm_exec_wait_blocking(pio, sm, pio_encode_set(pio_y,0));
-            pio_sm_set_enabled(pio, sm, true);
+            pio_sm_exec(pio, sm, pio_encode_set(pio_y,0));
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p+1], state->packetlens[p+1]);
             dma_channel_wait_for_finish_blocking(dma_chan_write);
             printf("Responded with ACK!\n");

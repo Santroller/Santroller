@@ -248,6 +248,7 @@ void WR(state_t* state) {
     keepalive = false;
     while (!keepalive) {
     }
+    uint tx_ack_count = 0;
     for (int p = 0; p < state->current_packet;) {
         if (!initialised) return;
         PacketAction_t action = state->packet_actions[p];
@@ -261,12 +262,28 @@ void WR(state_t* state) {
         uint8_t* cur = data_read + 2;
         uint8_t cnt = read_pkt - 4;
         uint8_t expected_pid = wasData0 ? DATA1 : DATA0;
+        // printf("Not waiting: %d\n", !waiting);
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
         pio_sm_restart(pio_bitstuff, sm_bitstuff);
+        pio_sm_restart(pio, sm);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
-        if (!waiting) {
+        if (action == NEXT_ACK_100) {
+            dma_channel_wait_for_finish_blocking(dma_chan_bitstuff);
+            pio_sm_restart(pio, sm);
+            pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
+            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+            dma_channel_wait_for_finish_blocking(dma_chan_write);
+            tx_ack_count++;
+            if (tx_ack_count == 2) {
+                memcpy(buffer4 + current_read, data_read + 2, maxPacket);
+                current_read += maxPacket;
+                wasData0 = !wasData0;
+                p += 2;  // Skip ACK packet as it has already been transmitted.
+                tx_ack_count = 0;
+            }
+        } else if (!waiting) {
             while (dma_channel_is_busy(dma_chan_read)) {
                 if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
                     crc = (crc_table[(crc ^ *cur++) & 0xff] ^ (crc >> 8)) & 0xffff;
@@ -287,6 +304,7 @@ void WR(state_t* state) {
             dma_channel_wait_for_finish_blocking(dma_chan_write);
             uint8_t pid = data_read[1] & 0xff;
             if (pid == expected_pid) {
+                // printf("Done\n");
                 memcpy(buffer4 + current_read, data_read + 2, maxPacket);
                 current_read += maxPacket;
                 wasData0 = !wasData0;
@@ -432,7 +450,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
         sendNibble(endpoint, &state_pk);
         sendCRC5(&state_pk);
         EOP(&state_pk);
-        commit_packet(&state_pk, NEXT_ACK_100, 8 + 8 + 16 + 3);
+        commit_packet(&state_pk, NEXT_ACK_100, 8 + 8 + 16);
         sync(&state_pk);
         sendPID(ACK, &state_pk);
         EOP(&state_pk);
@@ -457,7 +475,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                     l = (request.wLength % maxPacket) * 8;
                 }
                 // printf("Pkt: %d, l: %d, total: %d, len: %d\n", (i * 2) + 1, l, 3 + 8 + 8 + 16 + l, len);
-                l = 3 + 8 + 8 + 16 + l;
+                l = 8 + 8 + 16 + l;
                 if (terminateEarly) {
                     commit_packet(&state_pk, STANDARD_ACK, l);
                     break;
@@ -618,15 +636,18 @@ void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
     send_control_request(0x00, 0x00, req, true, (uint8_t*)&hostDescriptor);
     maxPacket = hostDescriptor.Endpoint0Size;
-    printf("Max Packet: %d\n", maxPacket);
+    printf("Max Packet: %d\n\n\n\n\n", maxPacket);
     host_reset();
-    while (true) {
-        tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
-        send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
-        printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
-    }
+    // while (true) {
+    //     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
+    //     send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
+    //     printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
+    // }
+    printf("Setting ID\n");
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
     send_control_request(0x00, 0x00, req2, false, NULL);
+    sleep_ms(100);
+    printf("\n\n\n\nSetting config\n");
     tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01};
     send_control_request(13, 0x00, req3, false, NULL);
     tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};

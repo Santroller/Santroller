@@ -45,6 +45,7 @@ uint8_t maxPacket = 8;
 uint8_t jNum;
 uint8_t kNum;
 volatile bool initialised = false;
+volatile bool keepalive = false;
 TUSB_Descriptor_Device_t hostDescriptor;
 typedef enum {
     STANDARD_ACK,
@@ -125,18 +126,26 @@ static void SE1(state_t* state) {
 static void commit_packet(state_t* state, PacketAction_t actions, uint response_len) {
     uint8_t bufferTmp[MAX_PACKET_LEN];
     int tmpId = state->id;
-    memcpy(bufferTmp, state->buffer, (tmpId / 8) + 1);
-    reset_state(state);
-    // Left pad packets as the fifo is 8 bits in size, but we also want to be able to immediately receive
     int remaining = (8 - (tmpId % 8)) / 2;
-    for (int i = 0; i < remaining; i++) {
-        J(state);
-    }
-    int currentBit = 0;
-    while (currentBit != tmpId) {
-        bit_write(bit_check(bufferTmp[currentBit / 8], (currentBit % 8)), state->buffer[state->id / 8], (state->id % 8));
-        currentBit++;
-        state->id++;
+    if (response_len) {
+        memcpy(bufferTmp, state->buffer, (tmpId / 8) + 1);
+        reset_state(state);
+        // Left pad packets as the fifo is 8 bits in size, but we also want to be able to immediately receive
+        for (int i = 0; i < remaining; i++) {
+            J(state);
+        }
+        int currentBit = 0;
+        while (currentBit != tmpId) {
+            bit_write(bit_check(bufferTmp[currentBit / 8], (currentBit % 8)), state->buffer[state->id / 8], (state->id % 8));
+            currentBit++;
+            state->id++;
+        }
+    } else {
+        // Sending an ACK and not expecting a response, right pad.
+        int remaining = (8 - (tmpId % 8)) / 2;
+        for (int i = 0; i < remaining; i++) {
+            J(state);
+        }
     }
     // Store packet length as number of 8 bit transfers
     state->packetlens[state->current_packet] = state->id / 8;
@@ -232,9 +241,13 @@ void sendCRC5(state_t* state) {
         (byte & 0x04 ? '1' : '0'), \
         (byte & 0x02 ? '1' : '0'), \
         (byte & 0x01 ? '1' : '0')
+
 void WR(state_t* state) {
     uint current_read = 0;
     bool wasData0 = true;
+    keepalive = false;
+    while (!keepalive) {
+    }
     for (int p = 0; p < state->current_packet;) {
         if (!initialised) return;
         PacketAction_t action = state->packet_actions[p];
@@ -244,9 +257,9 @@ void WR(state_t* state) {
         printf("Packet: %d %d\n", p, waiting);
         bool wrong = true;
         uint_fast16_t crc = 0xffff;
+        uint_fast16_t crc_calc;
         uint8_t* cur = data_read + 2;
         uint8_t cnt = read_pkt - 4;
-        uint16_t crc_calc;
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
         pio_sm_restart(pio_bitstuff, sm_bitstuff);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
@@ -259,23 +272,24 @@ void WR(state_t* state) {
                     cnt--;
                 }
             }
-            crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
+            crc_calc = (data_read[read_pkt - 2] | data_read[read_pkt - 1] << 8) & 0x7ff;
             crc = (crc ^ 0xffff) & 0x7ff;
             if (crc != crc_calc) {
                 printf("Wrong CRC! %d!=%d\n", crc, crc_calc);
                 continue;
             }
+            pio_sm_restart(pio, sm);
             // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
-            // if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
-                pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
-                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-                dma_channel_wait_for_finish_blocking(dma_chan_write);
-
-                // memcpy(buffer4 + current_read, data_read + 2, maxPacket);
-                // current_read += maxPacket;
-                // wasData0 = !wasData0;
-                // p += 2;  // Skip ACK packet as it has already been transmitted.
-            // }
+            pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
+            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+            dma_channel_wait_for_finish_blocking(dma_chan_write);
+            uint8_t pid = data_read[1] & 0xff;
+            if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
+                memcpy(buffer4 + current_read, data_read + 2, maxPacket);
+                current_read += maxPacket;
+                wasData0 = !wasData0;
+                p += 2;  // Skip ACK packet as it has already been transmitted.
+            }
             printf("Responded with ACK!\n");
         } else {
             dma_channel_wait_for_finish_blocking(dma_chan_read);
@@ -284,7 +298,7 @@ void WR(state_t* state) {
         uint8_t pid = data_read[1] & 0xff;
         printf("Reading! %d\n", read_pkt);
         for (int i = 0; i < read_pkt; i++) {
-            printf("%x (%d) ", data_read[i]& 0xff, data_read[i]& 0xff);
+            printf("%x (%d) ", data_read[i] & 0xff, data_read[i] & 0xff);
             printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
             printf(", ");
         }
@@ -323,6 +337,7 @@ void WR(state_t* state) {
     reset_state(state);
     state->current_packet = 0;
 }
+
 bool isrKeepAlive(struct repeating_timer* t) {
     if (full_speed) {
         // Increment current frame and then append its crc5
@@ -349,6 +364,7 @@ bool isrKeepAlive(struct repeating_timer* t) {
         SE0(&state_ka);
         dma_channel_transfer_from_buffer_now(dma_chan_keepalive, state_ka.buffer, state_ka.id / 32);
     }
+    keepalive = true;
     return true;
 }
 

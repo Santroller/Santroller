@@ -2,9 +2,9 @@
 .wrap_target
 top2:
 set y, 1
-top:
 set pindirs 31
 irq clear 2
+top:
 mov x, ~status
 jmp !x top
 irq set 2

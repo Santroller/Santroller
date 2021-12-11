@@ -254,12 +254,13 @@ void WR(state_t* state) {
         waiting = action == STANDARD_ACK;
         uint8_t read_pkt = state->packetresplens[p];
         uint8_t data_read[read_pkt];
-        printf("Packet: %d %d\n", p, waiting);
+        // printf("Packet: %d %d\n", p, waiting);
         bool wrong = true;
         uint_fast16_t crc = 0xffff;
         uint_fast16_t crc_calc;
         uint8_t* cur = data_read + 2;
         uint8_t cnt = read_pkt - 4;
+        uint8_t expected_pid = wasData0 ? DATA1 : DATA0;
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
         pio_sm_restart(pio_bitstuff, sm_bitstuff);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
@@ -275,7 +276,8 @@ void WR(state_t* state) {
             crc_calc = (data_read[read_pkt - 2] | data_read[read_pkt - 1] << 8) & 0x7ff;
             crc = (crc ^ 0xffff) & 0x7ff;
             if (crc != crc_calc) {
-                printf("Wrong CRC! %d!=%d\n", crc, crc_calc);
+                // printf("Wrong CRC! %d!=%d\n", crc, crc_calc);
+                sleep_us(50);
                 continue;
             }
             pio_sm_restart(pio, sm);
@@ -284,25 +286,25 @@ void WR(state_t* state) {
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
             dma_channel_wait_for_finish_blocking(dma_chan_write);
             uint8_t pid = data_read[1] & 0xff;
-            if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
+            if (pid == expected_pid) {
                 memcpy(buffer4 + current_read, data_read + 2, maxPacket);
                 current_read += maxPacket;
                 wasData0 = !wasData0;
                 p += 2;  // Skip ACK packet as it has already been transmitted.
             }
-            printf("Responded with ACK!\n");
+            // printf("Responded with ACK!\n");
         } else {
             dma_channel_wait_for_finish_blocking(dma_chan_read);
         }
         uint8_t sync_data = data_read[0] & 0xff;
         uint8_t pid = data_read[1] & 0xff;
-        printf("Reading! %d\n", read_pkt);
-        for (int i = 0; i < read_pkt; i++) {
-            printf("%x (%d) ", data_read[i] & 0xff, data_read[i] & 0xff);
-            printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
-            printf(", ");
-        }
-        printf("%d %d %d\n", p, sync_data, pid);
+        // printf("Reading! %d\n", read_pkt);
+        // for (int i = 0; i < read_pkt; i++) {
+        //     printf("%x (%d) ", data_read[i] & 0xff, data_read[i] & 0xff);
+        //     printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
+        //     printf(", ");
+        // }
+        // printf("%d %d %d\n", p, sync_data, pid);
         if (sync_data != 128) {
             // Sync incorrect, try again
             continue;
@@ -319,7 +321,6 @@ void WR(state_t* state) {
                 uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
                 crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
                 if (crc != crc_calc) {
-                    printf("Wrong crc! %d!=%d\n", crc, crc_calc);
                     continue;
                 }
                 // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
@@ -331,7 +332,10 @@ void WR(state_t* state) {
         } else if (action == STANDARD_ACK && pid == ACK) {
             p++;
         }
-        sleep_ms(10);
+
+        keepalive = false;
+        while (!keepalive) {
+        }
     }
 
     reset_state(state);
@@ -452,7 +456,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 if (i == len - 1) {
                     l = (request.wLength % maxPacket) * 8;
                 }
-                printf("Pkt: %d, l: %d, total: %d, len: %d\n", (i * 2) + 1, l, 3 + 8 + 8 + 16 + l, len);
+                // printf("Pkt: %d, l: %d, total: %d, len: %d\n", (i * 2) + 1, l, 3 + 8 + 8 + 16 + l, len);
                 l = 3 + 8 + 8 + 16 + l;
                 if (terminateEarly) {
                     commit_packet(&state_pk, STANDARD_ACK, l);

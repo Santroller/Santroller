@@ -13,14 +13,13 @@
 #include "hardware/pio.h"
 #include "hardware/uart.h"
 #include "lib_main.h"
+#include "pico/multicore.h"
 #include "pico/stdlib.h"
+#include "pio_bitstuff.pio.h"
 #include "pio_keepalive.pio.h"
 #include "pio_serialiser.pio.h"
-#include "pio_bitstuff.pio.h"
 #include "usb.h"
 #include "usb/std_descriptors.h"
-#include "pico/stdlib.h"
-#include "pico/multicore.h"
 
 #define maxBits 512
 uint32_t dma_data_read;
@@ -166,7 +165,7 @@ void sendData(uint16_t byte, int count, state_t* state, bool rev) {
     for (int i = 0; i < count; i++) {
         // 0 bit is transmitted by toggling the data lines from J to K or vice versa.
         // 1 bit is transmitted by leaving the data lines as-is.
-        if (!bit_check(byte, rev ? count-1-i : i)) {
+        if (!bit_check(byte, rev ? count - 1 - i : i)) {
             // Zero
             if (state->lastJ) {
                 K(state);
@@ -223,8 +222,6 @@ void sendCRC5(state_t* state) {
     }
     sendData(byte, 5, state, false);
 }
-#pragma GCC push_options
-#pragma GCC optimize("-O3")
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)       \
     (byte & 0x80 ? '1' : '0'),     \
@@ -237,70 +234,57 @@ void sendCRC5(state_t* state) {
         (byte & 0x01 ? '1' : '0')
 void WR(state_t* state) {
     uint current_read = 0;
-    // finishedKeepalive = false;
-    // // Wait for a keepalive and schedule everything after it
-    // while (!finishedKeepalive) {
-    //     tight_loop_contents();
-    // }
-    int ackCount = 100;
     bool wasData0 = true;
     for (int p = 0; p < state->current_packet;) {
         if (!initialised) return;
-        bool readingData = false;
-        bool valid = true;
         PacketAction_t action = state->packet_actions[p];
         waiting = action == STANDARD_ACK;
-        uint32_t test;
-        uint8_t test2;
-        uint16_t sync_pid = 0;
-        bool found_k = false;
-        bool skip = false;
-        bool lastWasJ = true;
-        bool lastWasK = false;
-        bool j, k, se0;
-
-        state_t state2;
-        reset_state(&state2);
-        sync(&state2);
-        uint16_t jktest = state2.buffer[0] | state2.buffer[1] << 8;
-        uint32_t shift = 1;
-        uint read_pkt = state->packetresplens[p];
+        uint8_t read_pkt = state->packetresplens[p];
         uint8_t data_read[read_pkt];
-        uint8_t correct = 0;
-        printf("Packet: %d\n", p);
+        printf("Packet: %d %d\n", p, waiting);
         bool wrong = true;
+        uint_fast16_t crc = 0xffff;
+        uint8_t* cur = data_read + 2;
+        uint8_t cnt = read_pkt - 4;
+        uint16_t crc_calc;
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
         pio_sm_restart(pio_bitstuff, sm_bitstuff);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
-        dma_channel_wait_for_finish_blocking(dma_chan_read);
-        // while (dma_channel_is_busy(channel))
-        // the dma object dma_hw->ch[channel] does actually tell us the current read / write address, so it should be possible to do CRC as we read, instead of at the end
-        // This should give us CRC hopefully fast
-        uint sync_data = data_read[0];
-        uint pid = data_read[1];
         if (!waiting) {
-            // if (crc != crc_calc) {
-            //     printf("incorrect crc! %d %x!=%x\n", read_pkt, crc,  crc_calc);
-            //     for (int i = 0; i < read_pkt; i++) {
-            //         printf("%x (%d) ", data_read[i], data_read[i]);
-            //         printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
-            //         printf(", ");
-            //     }
-            //     // Crc incorrect, continue
-            //     continue;
+            while (dma_channel_is_busy(dma_chan_read)) {
+                if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
+                    crc = (crc_table[(crc ^ *cur++) & 0xff] ^ (crc >> 8)) & 0xffff;
+                    cnt--;
+                }
+            }
+            crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
+            crc = (crc ^ 0xffff) & 0x7ff;
+            if (crc != crc_calc) {
+                printf("Wrong CRC! %d!=%d\n", crc, crc_calc);
+                continue;
+            }
+            // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
+            // if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
+                pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
+                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+                dma_channel_wait_for_finish_blocking(dma_chan_write);
+
+                // memcpy(buffer4 + current_read, data_read + 2, maxPacket);
+                // current_read += maxPacket;
+                // wasData0 = !wasData0;
+                // p += 2;  // Skip ACK packet as it has already been transmitted.
             // }
-            pio_sm_exec(pio, sm, pio_encode_set(pio_y,0));
-            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p+1], state->packetlens[p+1]);
-            dma_channel_wait_for_finish_blocking(dma_chan_write);
             printf("Responded with ACK!\n");
+        } else {
+            dma_channel_wait_for_finish_blocking(dma_chan_read);
         }
-        uint16_t crc = crc_update(data_read+2, 8) & 0x7ff;
-        uint16_t crc_calc = (data_read[read_pkt-1] << 8 | data_read[read_pkt-2]) & 0x7ff;
+        uint8_t sync_data = data_read[0] & 0xff;
+        uint8_t pid = data_read[1] & 0xff;
         printf("Reading! %d\n", read_pkt);
         for (int i = 0; i < read_pkt; i++) {
-            printf("%x (%d) ", data_read[i], data_read[i]);
+            printf("%x (%d) ", data_read[i]& 0xff, data_read[i]& 0xff);
             printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
             printf(", ");
         }
@@ -317,24 +301,16 @@ void WR(state_t* state) {
             // Stalled, return immediately.
             return;
         } else if (pid == DATA1 || pid == DATA0) {
-            if (crc != crc_calc) {
-                continue;
-            }
-            if (action != STANDARD_ACK) {
-                // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
-                if ((pid == DATA1 && wasData0) || (pid == DATA0 && !wasData0)) {
-                    // Don't copy the PID or SYNC
-                    memcpy(buffer4 + current_read, data_read + 2, maxPacket);
-                    current_read += maxPacket;
-                    wasData0 = !wasData0;
-                    p+=2;  //Skip ACK packet as it has already been transmitted.
-                    // sleep_ms(1);
-                    // sleep_us(50);
-                } 
-            } else {
+            if (waiting) {
+                uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
+                crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
+                if (crc != crc_calc) {
+                    printf("Wrong crc! %d!=%d\n", crc, crc_calc);
+                    continue;
+                }
                 // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
                 // Don't copy the PID or SYNC
-                memcpy(buffer4 + current_read, data_read + 2, sizeof(data_read) - 2);
+                memcpy(buffer4 + current_read, data_read + 2, read_pkt - 4);
                 current_read += maxPacket;
                 p++;
             }
@@ -347,8 +323,7 @@ void WR(state_t* state) {
     reset_state(state);
     state->current_packet = 0;
 }
-#pragma GCC pop_options
-bool isrKeepAlive(struct repeating_timer *t) {
+bool isrKeepAlive(struct repeating_timer* t) {
     if (full_speed) {
         // Increment current frame and then append its crc5
         currentFrame++;
@@ -567,7 +542,7 @@ void initPIO() {
         dma_chan_read,
         &cr,
         &dma_data_read,
-        ((uint8_t*)&pio_bitstuff->rxf[sm_bitstuff])+3,
+        ((uint8_t*)&pio_bitstuff->rxf[sm_bitstuff]) + 3,
         1,
         false);
     // Tell the DMA to raise IRQ line 0 when the channel finishes a block
@@ -599,8 +574,8 @@ void initPIO() {
     dma_channel_configure(
         dma_chan_bitstuff,
         &cb,
-        ((uint8_t*)&pio_bitstuff->txf[sm_bitstuff])+3, //write addr
-        ((uint8_t*)&pio->rxf[sm])+3,  //read addr
+        ((uint8_t*)&pio_bitstuff->txf[sm_bitstuff]) + 3,  // write addr
+        ((uint8_t*)&pio->rxf[sm]) + 3,                    // read addr
         3,
         false);
     // pio_set_irq1_source_enabled(pio, pis_interrupt1, true);

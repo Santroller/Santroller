@@ -38,40 +38,10 @@ uint8_t crc5_usb_19bit_input(const void *input) {
     return crc5_usb_bits(input, 19, 0x1d);
 }
 
-uint16_t crc_16(const void *data, size_t data_len) {
-    const unsigned char *d = (const unsigned char *)data;
-    unsigned int i;
-    bool bit;
-    unsigned char c;
-    uint16_t crc = 0xffff;
-    while (data_len--) {
-        c = *d++;
-        for (i = 0x01; i & 0xff; i <<= 1) {
-            bit = crc & 0x8000;
-            if (c & i) {
-                bit = !bit;
-            }
-            crc <<= 1;
-            if (bit) {
-                crc ^= 0x8005;
-            }
-        }
-        crc &= 0xffff;
-    }
-
-    uint16_t ret = crc & 0x01;
-    for (i = 1; i < 16; i++) {
-        crc >>= 1;
-        ret = (ret << 1) | (crc & 0x01);
-    }
-    return ret ^ 0xffff;
-}
-
-typedef uint_fast16_t crc_t;
 /**
  * Static table used for the table_driven implementation.
  */
-static const crc_t crc_table[256] = {
+const uint_fast16_t crc_table[256] = {
     0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241,
     0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440,
     0xcc01, 0x0cc0, 0x0d80, 0xcd41, 0x0f00, 0xcfc1, 0xce81, 0x0e40,
@@ -107,11 +77,11 @@ static const crc_t crc_table[256] = {
 };
 
 
-crc_t crc_update(const void *data, size_t data_len)
+uint_fast16_t crc_16(const void *data, size_t data_len)
 {
     const unsigned char *d = (const unsigned char *)data;
     unsigned int tbl_idx;
-    crc_t crc=0xffff;
+    uint_fast16_t crc=0xffff;
     while (data_len--) {
         tbl_idx = (crc ^ *d) & 0xff;
         crc = (crc_table[tbl_idx] ^ (crc >> 8)) & 0xffff;
@@ -119,3 +89,4 @@ crc_t crc_update(const void *data, size_t data_len)
     }
     return (crc & 0xffff) ^ 0xffff;
 }
+

@@ -37,7 +37,6 @@ in OSR, 1
 jmp read_loop
 end:
 push
-set y, 1
 % c-sdk {
 static inline void pio_serialiser_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);

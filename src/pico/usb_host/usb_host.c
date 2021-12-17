@@ -255,6 +255,7 @@ void WR(state_t* state) {
         waiting = action == STANDARD_ACK;
         uint8_t read_pkt = state->packetresplens[p];
         uint8_t data_read[read_pkt];
+        memset(data_read, 0, read_pkt);
         // printf("Packet: %d %d\n", p, waiting);
         bool wrong = true;
         uint_fast16_t crc = 0xffff;
@@ -262,10 +263,15 @@ void WR(state_t* state) {
         uint8_t* cur = data_read + 2;
         uint8_t cnt = read_pkt - 4;
         uint8_t expected_pid = wasData0 ? DATA1 : DATA0;
+        unsigned long m = micros();
         // printf("Not waiting: %d\n", !waiting);
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
         pio_sm_restart(pio_bitstuff, sm_bitstuff);
+        pio_sm_set_enabled(pio, sm, false);
         pio_sm_restart(pio, sm);
+        pio_sm_clear_fifos(pio, sm);
+        pio_sm_exec(pio, sm, pio_encode_jmp(offset));
+        pio_sm_set_enabled(pio, sm, true);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
@@ -283,36 +289,55 @@ void WR(state_t* state) {
                 p += 2;  // Skip ACK packet as it has already been transmitted.
                 tx_ack_count = 0;
             }
-        } else if (!waiting) {
+        } else if (action == NEXT_ACK_DATA) {
             while (dma_channel_is_busy(dma_chan_read)) {
                 if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
                     crc = (crc_table[(crc ^ *cur++) & 0xff] ^ (crc >> 8)) & 0xffff;
                     cnt--;
                 }
+                if ((micros() - m) > 1000) {
+                    p = 0;
+                    break;
+                }
+                if (data_read[1] == NAK) {
+                    break;
+                }
             }
             crc_calc = (data_read[read_pkt - 2] | data_read[read_pkt - 1] << 8) & 0x7ff;
             crc = (crc ^ 0xffff) & 0x7ff;
-            if (crc != crc_calc) {
-                // printf("Wrong CRC! %d!=%d\n", crc, crc_calc);
-                sleep_us(50);
-                continue;
-            }
-            pio_sm_restart(pio, sm);
-            // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
-            pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
-            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-            dma_channel_wait_for_finish_blocking(dma_chan_write);
-            uint8_t pid = data_read[1] & 0xff;
-            if (pid == expected_pid) {
-                // printf("Done\n");
-                memcpy(buffer4 + current_read, data_read + 2, maxPacket);
-                current_read += maxPacket;
-                wasData0 = !wasData0;
-                p += 2;  // Skip ACK packet as it has already been transmitted.
+            if (p && crc == crc_calc) {
+                pio_sm_restart(pio, sm);
+                // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
+                pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
+                dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
+                dma_channel_wait_for_finish_blocking(dma_chan_write);
+
+                uint8_t pid = data_read[1] & 0xff;
+                if (pid == expected_pid) {
+                    // printf("Done\n");
+                    memcpy(buffer4 + current_read, data_read + 2, maxPacket);
+                    current_read += maxPacket;
+                    wasData0 = !wasData0;
+                    p += 2;  // Skip ACK packet as it has already been transmitted.
+                }
             }
             // printf("Responded with ACK!\n");
         } else {
-            dma_channel_wait_for_finish_blocking(dma_chan_read);
+            bool timeout = false;
+            while (dma_channel_is_busy(dma_chan_read)) {
+                if ((micros() - m) > 1000) {
+                    timeout = true;
+                    break;
+                }
+                if (data_read[0] == 128 && data_read[1] == NAK) {
+                    break;
+                }
+            }
+            if (timeout) {
+                p = 0;
+                // printf("timeout\n");
+                continue;
+            }
         }
         uint8_t sync_data = data_read[0] & 0xff;
         uint8_t pid = data_read[1] & 0xff;
@@ -322,38 +347,33 @@ void WR(state_t* state) {
         //     printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(data_read[i]));
         //     printf(", ");
         // }
-        // printf("%d %d %d\n", p, sync_data, pid);
-        if (sync_data != 128) {
+        // printf("%d %d %d %d\n", p, sync_data, pid, action);
+        if (sync_data == 128) {
             // Sync incorrect, try again
-            continue;
-        }
-        if (pid == NAK) {
-            // Device is not ready, try again.
-            sleep_us(50);
-            continue;
-        } else if (pid == STALL) {
-            // Stalled, return immediately.
-            return;
-        } else if (pid == DATA1 || pid == DATA0) {
-            if (waiting) {
-                uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
-                crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
-                if (crc != crc_calc) {
-                    continue;
+            if (pid == STALL) {
+                // Stalled, return immediately.
+                return;
+            } else if (pid == DATA1 || pid == DATA0) {
+                if (waiting) {
+                    uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
+                    crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
+                    if (crc != crc_calc) {
+                        continue;
+                    }
+                    // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
+                    // Don't copy the PID or SYNC
+                    memcpy(buffer4 + current_read, data_read + 2, read_pkt - 4);
+                    current_read += maxPacket;
+                    p++;
                 }
-                // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
-                // Don't copy the PID or SYNC
-                memcpy(buffer4 + current_read, data_read + 2, read_pkt - 4);
-                current_read += maxPacket;
+            } else if (action == STANDARD_ACK && pid == ACK) {
                 p++;
             }
-        } else if (action == STANDARD_ACK && pid == ACK) {
-            p++;
         }
-
-        keepalive = false;
-        while (!keepalive) {
-        }
+        sleep_us(100);
+        // keepalive = false;
+        // while (!keepalive) {
+        // }
     }
 
     reset_state(state);
@@ -638,11 +658,11 @@ void initialise_device(void) {
     maxPacket = hostDescriptor.Endpoint0Size;
     printf("Max Packet: %d\n\n\n\n\n", maxPacket);
     host_reset();
-    // while (true) {
-    //     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
-    //     send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
-    //     printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
-    // }
+    while (true) {
+        tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
+        send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
+        printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
+    }
     printf("Setting ID\n");
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
     send_control_request(0x00, 0x00, req2, false, NULL);

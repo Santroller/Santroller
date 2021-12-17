@@ -21,10 +21,8 @@
 #include "usb.h"
 #include "usb/std_descriptors.h"
 
-#define maxBits 512
 uint32_t dma_data_read;
-uint8_t buffer3[maxBits / 8] = {};
-uint8_t buffer4[maxBits / 8] = {0};
+uint8_t buffer4[4096] = {0};
 int dma_chan_read;
 int dma_chan_write;
 int dma_chan_keepalive;
@@ -263,6 +261,7 @@ void WR(state_t* state) {
         uint8_t* cur = data_read + 2;
         uint8_t cnt = read_pkt - 4;
         uint8_t expected_pid = wasData0 ? DATA1 : DATA0;
+        bool timeout = false;
         unsigned long m = micros();
         // printf("Not waiting: %d\n", !waiting);
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
@@ -276,19 +275,16 @@ void WR(state_t* state) {
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         if (action == NEXT_ACK_100) {
-            dma_channel_wait_for_finish_blocking(dma_chan_bitstuff);
+            while (dma_channel_is_busy(dma_chan_read)) {
+                if ((micros() - m) > 100) {
+                    p += 2;
+                    break;
+                }
+            }
             pio_sm_restart(pio, sm);
             pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
             dma_channel_wait_for_finish_blocking(dma_chan_write);
-            tx_ack_count++;
-            if (tx_ack_count == 2) {
-                memcpy(buffer4 + current_read, data_read + 2, maxPacket);
-                current_read += maxPacket;
-                wasData0 = !wasData0;
-                p += 2;  // Skip ACK packet as it has already been transmitted.
-                tx_ack_count = 0;
-            }
         } else if (action == NEXT_ACK_DATA) {
             while (dma_channel_is_busy(dma_chan_read)) {
                 if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
@@ -323,7 +319,6 @@ void WR(state_t* state) {
             }
             // printf("Responded with ACK!\n");
         } else {
-            bool timeout = false;
             while (dma_channel_is_busy(dma_chan_read)) {
                 if ((micros() - m) > 1000) {
                     timeout = true;
@@ -494,7 +489,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 if (i == len - 1) {
                     l = (request.wLength % maxPacket) * 8;
                 }
-                // printf("Pkt: %d, l: %d, total: %d, len: %d\n", (i * 2) + 1, l, 3 + 8 + 8 + 16 + l, len);
+                // printf("Pkt: %d, l: %d, total: %d, len: %d\n", (i * 2) + 1, l, 8 + 8 + 16 + l, len);
                 l = 8 + 8 + 16 + l;
                 if (terminateEarly) {
                     commit_packet(&state_pk, STANDARD_ACK, l);
@@ -656,22 +651,23 @@ void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
     send_control_request(0x00, 0x00, req, true, (uint8_t*)&hostDescriptor);
     maxPacket = hostDescriptor.Endpoint0Size;
-    printf("Max Packet: %d\n\n\n\n\n", maxPacket);
+    printf("Max Packet: %d\n", maxPacket);
     host_reset();
-    while (true) {
-        tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
-        send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
-        printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
-    }
+    // while (true) {
+    //     tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
+    //     send_control_request(0x00, 0x00, req, false, (uint8_t*)&hostDescriptor);
+    //     printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
+    // }
     printf("Setting ID\n");
     tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
     send_control_request(0x00, 0x00, req2, false, NULL);
     sleep_ms(100);
-    printf("\n\n\n\nSetting config\n");
+    printf("Setting config\n");
     tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01};
     send_control_request(13, 0x00, req3, false, NULL);
     tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
     send_control_request(13, 0x00, req4, false, (uint8_t*)&hostDescriptor);
+    printf("%x\n", hostDescriptor.ProductID);
 }
 void set_xinput_led(int led) {
     uint8_t data2[] = {0x01, 0x03, led};
@@ -728,6 +724,11 @@ void tick_usb_host(void) {
         if (is_xinput()) {
             set_xinput_led(0x0A);
         }
+        // while (true) {
+            // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
+            // send_control_request(13, 0x00, req, false, (uint8_t*)&hostDescriptor);
+            // printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
+        // }
         tud_disconnect();
         tud_connect();
     }

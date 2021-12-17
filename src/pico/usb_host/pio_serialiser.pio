@@ -18,8 +18,7 @@ mov OSR, pins ; use OSR for getting the top two bits from pins
 out X, 2 ; grab the top two bits from pins
 set Y, 2 ; compare to K (note that depending on if we are in low speed or high speed, this can be either 1 or 2)
 jmp X!=Y top_read [4] ; otherwise, if X isnt Y then k wasn't found
-set X 0
-in X, 1
+in NULL, 1 [2]
 read_loop:
 mov y, x
 mov OSR, pins ; Grab the current state of the pins

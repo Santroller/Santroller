@@ -277,7 +277,7 @@ void WR(state_t* state) {
         if (action == NEXT_ACK_100) {
             while (dma_channel_is_busy(dma_chan_read)) {
                 if ((micros() - m) > 100) {
-                    p += 2;
+                    tx_ack_count = 2;
                     break;
                 }
             }
@@ -285,6 +285,10 @@ void WR(state_t* state) {
             pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
             dma_channel_wait_for_finish_blocking(dma_chan_write);
+            tx_ack_count++;
+            if (tx_ack_count >= 2) {
+                p += 2;
+            }
         } else if (action == NEXT_ACK_DATA) {
             while (dma_channel_is_busy(dma_chan_read)) {
                 if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
@@ -725,9 +729,9 @@ void tick_usb_host(void) {
             set_xinput_led(0x0A);
         }
         // while (true) {
-            // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
-            // send_control_request(13, 0x00, req, false, (uint8_t*)&hostDescriptor);
-            // printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
+        // tusb_control_request_t req = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
+        // send_control_request(13, 0x00, req, false, (uint8_t*)&hostDescriptor);
+        // printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
         // }
         tud_disconnect();
         tud_connect();

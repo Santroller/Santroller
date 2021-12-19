@@ -9,6 +9,7 @@
 #include "string.h"
 #include "usb/ps3_descriptors.h"
 #include "usb/xinput_descriptors.h"
+#include <stdio.h>
 uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
     *valid = true;
     if (requestType.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
@@ -18,7 +19,7 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
                     memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
                     return sizeof(capabilities1);
                 } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
-                    memcpy(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
+                    memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
                     return ExtendedIDs.TotalLength;
                 } else if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
                     memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
@@ -27,11 +28,12 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
             } else if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_DEVICE) {
                 if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
                     // For devices that aren't xbox controllers, we need to drop the xbox WCID descriptor.
-                    if (consoleType != XBOX360) {
-                        DevCompatIDs.TotalSections = 1;
-                        DevCompatIDs.TotalLength = sizeof(TUSB_OSCompatibleIDDescriptor_t) + sizeof(TUSB_OSCompatibleSection_t);
-                    }
-                    memcpy(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
+                    // TODO: Do we?
+                    // if (consoleType != XBOX360) {
+                    //     DevCompatIDs.TotalSections = 1;
+                    //     DevCompatIDs.TotalLength = sizeof(TUSB_OSCompatibleIDDescriptor_t) + sizeof(TUSB_OSCompatibleSection_t);
+                    // }
+                    memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
                     return DevCompatIDs.TotalLength;
                 } else if (request == THID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {
                     memcpy_P(requestBuffer, ID, sizeof(ID));

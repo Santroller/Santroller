@@ -18,58 +18,47 @@
 #include "usb_host/usb_host.h"
 #include "xinput_device.h"
 
-#define UART_ID uart1
-#define BAUD_RATE 115200
 uint8_t controller[DEVICE_EPSIZE_IN];
 
 // TODO: how big does this need to be?
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
-// We are using pins 4 and 5, but see the GPIO function select table in the
-// datasheet for information on which other pins can be used.
-#define UART_TX_PIN 4
-#define UART_RX_PIN 5
 tusb_control_request_t lastreq;
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
-    uint8_t *data;
     bool valid = false;
     if (request->bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
         if (stage == CONTROL_STAGE_SETUP) {
             requestType_t r = {bmRequestType : request->bmRequestType};
-            uint16_t len = controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, &data, &valid);
+            uint16_t len = controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
+            if (len > request->wLength) len = request->wLength;
             if (!valid) {
-                if (lastreq.bmRequestType == request->bmRequestType && lastreq.bRequest == request->bRequest && request->bRequest != 0x86 && buf2[request->wLength - 1]) {
-                    data = buf2;
-                } else {
-                    data = buf;
-                    memset(buf, 0, sizeof(buf));
-                    send_control_request(13, 0, *request, false, data);
-                    memcpy(buf2, buf, sizeof(buf));
-                }
+                send_control_request(13, 0, *request, false, buf);
                 len = request->wLength;
             }
-            tud_control_xfer(rhport, request, data, len);
-            if (data != buf2) {
-                printf("Ctrl tx: %d, %x %x, cached=%d\n", valid, request->wIndex, request->wValue, data == buf2);
+            tud_control_xfer(rhport, request, buf, len);
+            if (!valid) {
+                printf("Ctrl rx: %d, %x %x\n", valid, request->wIndex, request->wValue);
                 for (int i = 0; i < request->wLength; i++) {
-                    printf("0x%x, ", data[i]);
+                    printf("0x%x, ", buf[i]);
                 }
                 printf("\n");
             }
-            lastreq = *request;
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
             tud_control_xfer(rhport, request, buf, request->wLength);
         } else if (stage == CONTROL_STAGE_ACK) {
-            data = buf;
             requestType_t r = {bmRequestType : request->bmRequestType};
-            controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, &data, &valid);
+            controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (!valid) {
-                send_control_request(13, 0, *request, false, data);
+                send_control_request(13, 0, *request, false, buf);
+                printf("Ctrl tx: %d, %x %x\n", valid, request->wIndex, request->wValue);
+                for (int i = 0; i < request->wLength; i++) {
+                    printf("0x%x, ", buf[i]);
+                }
+                printf("\n");
             }
-            printf("Ctrl rx: %d, %x %x\n", valid, request->wIndex, request->wValue);
         }
     }
 }

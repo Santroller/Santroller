@@ -47,7 +47,7 @@ volatile bool keepalive = false;
 TUSB_Descriptor_Device_t hostDescriptor;
 typedef enum {
     STANDARD_ACK,
-    NEXT_ACK_100,
+    LAST_ACK_END,
     NEXT_ACK_DATA,
 } PacketAction_t;
 
@@ -249,6 +249,10 @@ void WR(state_t* state) {
     uint tx_ack_count = 0;
     for (int p = 0; p < state->current_packet;) {
         if (!initialised) return;
+        if (p == 0) {
+            current_read = 0;
+            wasData0 = true;
+        }
         PacketAction_t action = state->packet_actions[p];
         waiting = action == STANDARD_ACK;
         uint8_t read_pkt = state->packetresplens[p];
@@ -271,25 +275,23 @@ void WR(state_t* state) {
         pio_sm_clear_fifos(pio, sm);
         pio_sm_exec(pio, sm, pio_encode_jmp(offset));
         pio_sm_set_enabled(pio, sm, true);
-        dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
-        dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
-        dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
-        if (action == NEXT_ACK_100) {
-            while (dma_channel_is_busy(dma_chan_read)) {
-                if ((micros() - m) > 100) {
-                    tx_ack_count = 2;
-                    break;
-                }
-            }
-            pio_sm_restart(pio, sm);
+        if (action == LAST_ACK_END) {
+            pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
+            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
+            dma_channel_wait_for_finish_blocking(dma_chan_write);
             pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
             dma_channel_wait_for_finish_blocking(dma_chan_write);
-            tx_ack_count++;
-            if (tx_ack_count >= 2) {
-                p += 2;
-            }
-        } else if (action == NEXT_ACK_DATA) {
+            // This is always the last packet so we can just return here
+            return;
+        }
+        // TODO: in some cases, we just aren't sending the ACK even if we do get data?
+        // TODO: ah, if we are on the last packet but the ack is missed, then packetlens will be wrong as the previous packet will be maxpacket
+        // TODO: also, implement STALL fully as it seems that it is required stupidly enough
+        dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
+        dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
+        dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
+        if (action == NEXT_ACK_DATA) {
             while (dma_channel_is_busy(dma_chan_read)) {
                 if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
                     crc = (crc_table[(crc ^ *cur++) & 0xff] ^ (crc >> 8)) & 0xffff;
@@ -299,21 +301,22 @@ void WR(state_t* state) {
                     p = 0;
                     break;
                 }
-                if (data_read[1] == NAK) {
+                if (data_read[1] == NAK || data_read[1] == STALL) {
                     break;
                 }
             }
             crc_calc = (data_read[read_pkt - 2] | data_read[read_pkt - 1] << 8) & 0x7ff;
             crc = (crc ^ 0xffff) & 0x7ff;
-            if (p && crc == crc_calc) {
+            uint8_t pid = data_read[1];
+            // If the PIDs don't match up, then we are a packet behind and just need to acknowledge whatever is there
+            // Otherwise, we want to make sure the CRC is correct before we ack
+            if (p && crc == crc_calc || pid != expected_pid) {
                 pio_sm_restart(pio, sm);
-                // When reading, alternating packets will have different DATAx pids, so thats how we know we are on the next packet
                 pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
                 dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
                 dma_channel_wait_for_finish_blocking(dma_chan_write);
 
-                uint8_t pid = data_read[1] & 0xff;
-                if (pid == expected_pid) {
+                if (pid == expected_pid && crc == crc_calc) {
                     // printf("Done\n");
                     memcpy(buffer4 + current_read, data_read + 2, maxPacket);
                     current_read += maxPacket;
@@ -328,14 +331,9 @@ void WR(state_t* state) {
                     timeout = true;
                     break;
                 }
-                if (data_read[0] == 128 && data_read[1] == NAK) {
+                if (data_read[1] == NAK || data_read[1] == STALL) {
                     break;
                 }
-            }
-            if (timeout) {
-                p = 0;
-                // printf("timeout\n");
-                continue;
             }
         }
         uint8_t sync_data = data_read[0] & 0xff;
@@ -347,36 +345,34 @@ void WR(state_t* state) {
         //     printf(", ");
         // }
         // printf("%d %d %d %d\n", p, sync_data, pid, action);
-        if (sync_data == 128) {
+        if (timeout) {
+            p = 0;
+        } else if (sync_data == 128) {
             // Sync incorrect, try again
             if (pid == STALL) {
                 // Stalled, return immediately.
-                return;
+                p = 0;
+                // return;
             } else if (pid == DATA1 || pid == DATA0) {
                 if (waiting) {
                     uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
                     crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
                     if (crc != crc_calc) {
+                        sleep_us(150);
                         continue;
                     }
                     // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
                     // Don't copy the PID or SYNC
                     memcpy(buffer4 + current_read, data_read + 2, read_pkt - 4);
                     current_read += maxPacket;
-                    p++;
+                    return;
                 }
             } else if (action == STANDARD_ACK && pid == ACK) {
                 p++;
             }
         }
-        sleep_us(100);
-        // keepalive = false;
-        // while (!keepalive) {
-        // }
+        sleep_us(150);
     }
-
-    reset_state(state);
-    state->current_packet = 0;
 }
 
 bool isrKeepAlive(struct repeating_timer* t) {
@@ -410,6 +406,8 @@ bool isrKeepAlive(struct repeating_timer* t) {
 }
 
 void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d) {
+    reset_state(&state_pk);
+    state_pk.current_packet = 0;
     memset(buffer4, 0, sizeof(buffer4));
     sync(&state_pk);
     sendPID(SETUP, &state_pk);
@@ -446,15 +444,15 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 sendCRC5(&state_pk);
                 EOP(&state_pk);
                 J(&state_pk);
-                J(&state_pk);
-                J(&state_pk);
                 sync(&state_pk);
                 sendPID(data1 ? DATA1 : DATA0, &state_pk);
                 reset_crc(&state_pk);
-                for (int i2 = 0; i2 < maxPacket; i2++) {
-                    if ((i * maxPacket) + i2 < request.wLength) {
-                        sendByte(*data++, &state_pk);
-                    }
+                uint l = maxPacket;
+                if (i == len - 1) {
+                    l = (request.wLength % maxPacket);
+                }
+                for (int i2 = 0; i2 < l; i2++) {
+                    sendByte(*data++, &state_pk);
                 }
                 sendCRC16(&state_pk);
                 EOP(&state_pk);
@@ -469,7 +467,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
         sendNibble(endpoint, &state_pk);
         sendCRC5(&state_pk);
         EOP(&state_pk);
-        commit_packet(&state_pk, NEXT_ACK_100, 8 + 8 + 16);
+        commit_packet(&state_pk, LAST_ACK_END, 8 + 8 + 16);
         sync(&state_pk);
         sendPID(ACK, &state_pk);
         EOP(&state_pk);
@@ -663,12 +661,15 @@ void initialise_device(void) {
     //     printf("%x %x\n", hostDescriptor.ProductID, hostDescriptor.VendorID);
     // }
     printf("Setting ID\n");
-    tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13};
+    tusb_control_request_t req2 = {.bmRequestType = {0x00}, .bRequest = 0x05, .wValue = 13, .wIndex = 0x0000, .wLength = 0};
     send_control_request(0x00, 0x00, req2, false, NULL);
     sleep_ms(100);
     printf("Setting config\n");
-    tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01};
+    // while (true) {
+    tusb_control_request_t req3 = {.bmRequestType = {0x00}, .bRequest = 0x09, .wValue = 01, .wIndex = 0x0000, .wLength = 0};
     send_control_request(13, 0x00, req3, false, NULL);
+    //     sleep_ms(5);
+    // }
     tusb_control_request_t req4 = {.bmRequestType = {0x80}, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(hostDescriptor)};
     send_control_request(13, 0x00, req4, false, (uint8_t*)&hostDescriptor);
     printf("%x\n", hostDescriptor.ProductID);

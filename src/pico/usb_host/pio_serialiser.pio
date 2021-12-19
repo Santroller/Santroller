@@ -1,7 +1,7 @@
 .program pio_serialiser
 .wrap_target
-top2:
 set y, 1
+top2:
 set pindirs 31
 irq clear 2
 top:

@@ -55,8 +55,8 @@ enum requests_t {
 
 // By using these endpoints, we can double buffer!
 enum endpoints_t {
-    DEVICE_EPADDR_IN = ENDPOINT_IN | 3,
-    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 4
+    DEVICE_EPADDR_IN = ENDPOINT_IN | 1,
+    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 2
 };
 
 enum hid_reports_t {

@@ -28,7 +28,7 @@ const TUSB_OSExtendedCompatibleIDDescriptor_t PROGMEM ExtendedIDs = {
              'D', '7', '0', '0', 'A', '3', '1', '3', 'D', '7', '8', '}', '\0'}
     }
 };
-TUSB_OSCompatibleIDDescriptor_t DevCompatIDs = {
+const TUSB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
     TotalLength : sizeof(TUSB_OSCompatibleIDDescriptor_t),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,

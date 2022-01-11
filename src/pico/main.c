@@ -66,7 +66,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 uint8_t const *tud_descriptor_device_cb(void) {
     descriptorRequest(TDTYPE_Device << 8, 0, buf);
     TUSB_Descriptor_Device_t *td = (TUSB_Descriptor_Device_t *)buf;
-    TUSB_Descriptor_Device_t host = getHostDescriptor();
+    TUSB_Descriptor_Device_t host = getPluggedInDescriptor();
     td->VendorID = host.VendorID;
     td->ProductID = host.ProductID;
     return buf;
@@ -92,7 +92,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 }
 
 int main() {
-    set_sys_clock_khz(140000, true);
+    set_sys_clock_khz(150000, true);
     generateSerialString(serialString.UnicodeString);
     board_init();
     tusb_init();

@@ -24,6 +24,7 @@ uint8_t controller[DEVICE_EPSIZE_IN];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 tusb_control_request_t lastreq;
+bool was_stall = false;
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     bool valid = false;
@@ -33,12 +34,15 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             uint16_t len = controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (len > request->wLength) len = request->wLength;
             if (!valid) {
-                send_control_request(13, 0, *request, false, buf);
+                if (!send_control_request(13, 0, *request, false, buf)) {
+                    printf("STALL Controller to Pico!\n");
+                    return false;
+                }
                 len = request->wLength;
             }
             tud_control_xfer(rhport, request, buf, len);
             if (!valid) {
-                printf("Ctrl rx: %d, %x %x\n", valid, request->wIndex, request->wValue);
+                printf("Ctrl Controller to Pico: %d, %x %x\n", valid, request->wIndex, request->wValue);
                 for (int i = 0; i < request->wLength; i++) {
                     printf("0x%x, ", buf[i]);
                 }
@@ -47,20 +51,31 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
+            if (was_stall) {
+                was_stall = false;
+                return false;
+            }
             tud_control_xfer(rhport, request, buf, request->wLength);
-        } else if (stage == CONTROL_STAGE_ACK) {
+        }
+        if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
             requestType_t r = {bmRequestType : request->bmRequestType};
             controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (!valid) {
-                send_control_request(13, 0, *request, false, buf);
-                printf("Ctrl tx: %d, %x %x\n", valid, request->wIndex, request->wValue);
+                if (!send_control_request(13, 0, *request, false, buf)) {
+                    printf("STALL Pico to controller!\n");
+                    // was_stall = true;
+                    return false;
+                }
+                printf("Ctrl Pico to controller: %d, %x %x\n", valid, request->wIndex, request->wValue);
                 for (int i = 0; i < request->wLength; i++) {
                     printf("0x%x, ", buf[i]);
                 }
                 printf("\n");
+                // return ret;
             }
         }
     }
+    return true;
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
@@ -92,7 +107,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 }
 
 int main() {
-    set_sys_clock_khz(150000, true);
+    set_sys_clock_khz(240000, true);
     generateSerialString(serialString.UnicodeString);
     board_init();
     tusb_init();

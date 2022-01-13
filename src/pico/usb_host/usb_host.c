@@ -56,7 +56,6 @@ bool keepAliveThread(struct repeating_timer* t);
 void initKeepalive(void);
 void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* d);
 void initialise_device(void);
-void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d);
 
 void init_usb_host(void) {
     pio_usb = pio0;
@@ -167,7 +166,6 @@ bool is_xinput(void) {
     return pluggedInDescriptor.Class == 0xFF && pluggedInDescriptor.Protocol == 0xFF && pluggedInDescriptor.SubClass == 0xFF;
 }
 
-
 void tick_usb_host(void) {
     if (!initialised) {
         gpio_init(USB_DM_PIN);
@@ -242,12 +240,14 @@ TUSB_Descriptor_Device_t getPluggedInDescriptor(void) {
     return pluggedInDescriptor;
 }
 
-void transfer(state_t* state, uint8_t* out) {
+bool transfer(uint8_t address, state_t* state, uint8_t* out) {
     waiting_for_keepalive = true;
-    while (waiting_for_keepalive) {} 
-    usb_transfer_start:
+    while (waiting_for_keepalive) {
+    }
+usb_transfer_start:
     uint current_read = 0;
     bool wasData0 = true;
+    uint test = false;
     for (int p = 0; p < state->current_packet;) {
         PacketAction_t action = state->packet_actions[p];
         uint8_t read_pkt = state->packetresplens[p];
@@ -271,14 +271,8 @@ void transfer(state_t* state, uint8_t* out) {
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
+        // With this new method of LAST_ACK_END, i suspect we could clean up a lot of this weirdness
         if (action == LAST_ACK_END) {
-            // TODO: does this still sometimes not work? do some tests.
-            dma_channel_wait_for_finish_blocking(dma_chan_write);
-            // pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
-            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
-            // dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
-            dma_channel_wait_for_finish_blocking(dma_chan_write);
-            // This is always the last packet so we can just return here
             return;
         }
         while (dma_channel_is_busy(dma_chan_read)) {
@@ -311,37 +305,46 @@ void transfer(state_t* state, uint8_t* out) {
                     current_read += maxPacket;
                     wasData0 = !wasData0;
                     p += 2;  // Skip ACK packet as it has already been transmitted.
+                    sleep_us(20);
+                    continue;
                 }
             }
         }
         uint8_t sync_data = data_read[0] & 0xff;
         uint8_t pid = data_read[1] & 0xff;
         if (sync_data == 128) {
-            // Sync incorrect, try again
+            if (pid == DATA1 || pid == DATA0) {
+                uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
+                crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
+                if (crc != crc_calc) {
+                    sleep_us(150);
+                    continue;
+                }
+            }
             if (pid == STALL) {
-                goto usb_transfer_start;
+                return false;
             } else if (action == STANDARD_ACK) {
                 if (pid == DATA1 || pid == DATA0) {
-                        uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
-                        crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
-                        if (crc != crc_calc) {
-                            sleep_us(150);
-                            continue;
-                        }
-                        // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
-                        // Don't copy the PID or SYNC
-                        memcpy(out + current_read, data_read + 2, read_pkt - 4);
-                        current_read += maxPacket;
-                        return;
+                    memcpy(out + current_read, data_read + 2, read_pkt - 4);
+                    current_read += maxPacket;
+                    sleep_us(20);
+                    continue;
                 } else if (pid == ACK) {
                     p++;
                 }
-            }            
+            } else if (action == ABORTED_ACK && (pid == DATA1 || pid == DATA0)) {
+                // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
+                // Don't copy the PID or SYNC
+                memcpy(out + current_read, data_read + 2, read_pkt - 4);
+                current_read += maxPacket;
+                return true;
+            }
         }
+        // TODO: is there a reason why this has to be so bloody high? should work fine at 20 or even lower in theory?
         sleep_us(150);
     }
+    return true;
 }
-
 
 void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* data) {
     sync(&state_usb);
@@ -365,10 +368,10 @@ void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* data) {
     sendCRC16(&state_usb);
     EOP(&state_usb);
     commit_packet(&state_usb, STANDARD_ACK, 19);
-    transfer(&state_usb, NULL);
+    transfer(address, &state_usb, NULL);
 }
 
-void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d) {
+bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d) {
     reset_state(&state_usb);
     state_usb.current_packet = 0;
     sync(&state_usb);
@@ -429,11 +432,14 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
         sendNibble(endpoint, &state_usb);
         sendCRC5(&state_usb);
         EOP(&state_usb);
-        commit_packet(&state_usb, LAST_ACK_END, 8 + 8 + 16);
+        // Since we don't have the time to actually parse DATA0 before responding with an ACK, we can just delay by writing data, and then respond on time
+        for (int i = 0; i < 8 * 5; i++) {
+            J(&state_usb);
+        }
         sync(&state_usb);
         sendPID(ACK, &state_usb);
         EOP(&state_usb);
-        commit_packet(&state_usb, STANDARD_ACK, 0);
+        commit_packet(&state_usb, LAST_ACK_END, 0);
     } else {
         if (request.wLength) {
             uint len = request.wLength / maxPacket;
@@ -455,7 +461,7 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 }
                 l = 8 + 8 + 16 + l;
                 if (terminateEarly) {
-                    commit_packet(&state_usb, STANDARD_ACK, l);
+                    commit_packet(&state_usb, ABORTED_ACK, l);
                     break;
                 } else {
                     commit_packet(&state_usb, NEXT_ACK_DATA, l);
@@ -484,5 +490,5 @@ void send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
             commit_packet(&state_usb, STANDARD_ACK, 19);
         }
     }
-    transfer(&state_usb, d);
+    return transfer(address, &state_usb, d);
 }

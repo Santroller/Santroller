@@ -261,19 +261,18 @@ usb_transfer_start:
         uint8_t expected_pid = wasData0 ? DATA1 : DATA0;
         bool timeout = false;
         unsigned long m = micros();
+        dma_channel_abort(dma_chan_read);
+        dma_channel_abort(dma_chan_bitstuff);
         pio_sm_clear_fifos(pio_bitstuff, sm_bitstuff);
         pio_sm_restart(pio_bitstuff, sm_bitstuff);
-        pio_sm_set_enabled(pio_usb, sm_usb, false);
-        pio_sm_restart(pio_usb, sm_usb);
         pio_sm_clear_fifos(pio_usb, sm_usb);
         pio_sm_exec(pio_usb, sm_usb, pio_encode_jmp(offset_usb));
-        pio_sm_set_enabled(pio_usb, sm_usb, true);
         dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
         dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
-        // With this new method of LAST_ACK_END, i suspect we could clean up a lot of this weirdness
         if (action == LAST_ACK_END) {
-            return;
+            pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
+            return true;
         }
         while (dma_channel_is_busy(dma_chan_read)) {
             if (cnt && cur < dma_hw->ch[dma_chan_read].write_addr) {
@@ -287,13 +286,13 @@ usb_transfer_start:
                 break;
             }
         }
-        if (action == NEXT_ACK_DATA) {
+        if (action == NEXT_ACK_DATA && data_read[1] != NAK) {
             crc_calc = (data_read[read_pkt - 2] | data_read[read_pkt - 1] << 8) & 0x7ff;
             crc = (crc ^ 0xffff) & 0x7ff;
             uint8_t pid = data_read[1];
             // If the PIDs don't match up, then we are a packet behind and just need to acknowledge whatever is there
             // Otherwise, we want to make sure the CRC is correct before we ack
-            if (p && (crc == crc_calc || pid != expected_pid)) {
+            if (crc == crc_calc || pid != expected_pid) {
                 pio_sm_restart(pio_usb, sm_usb);
                 pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
                 dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p + 1], state->packetlens[p + 1]);
@@ -323,21 +322,20 @@ usb_transfer_start:
             }
             if (pid == STALL) {
                 return false;
-            } else if (action == STANDARD_ACK) {
+            } else if (action == STANDARD_ACK || action == ABORTED_PACKET) {
                 if (pid == DATA1 || pid == DATA0) {
                     memcpy(out + current_read, data_read + 2, read_pkt - 4);
+                    if (action == ABORTED_PACKET) {
+                        // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
+                        // Don't copy the PID or SYNC
+                        return true;
+                    }
                     current_read += maxPacket;
                     sleep_us(20);
                     continue;
                 } else if (pid == ACK) {
                     p++;
                 }
-            } else if (action == ABORTED_ACK && (pid == DATA1 || pid == DATA0)) {
-                // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
-                // Don't copy the PID or SYNC
-                memcpy(out + current_read, data_read + 2, read_pkt - 4);
-                current_read += maxPacket;
-                return true;
             }
         }
         // TODO: is there a reason why this has to be so bloody high? should work fine at 20 or even lower in theory?
@@ -461,7 +459,7 @@ bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 }
                 l = 8 + 8 + 16 + l;
                 if (terminateEarly) {
-                    commit_packet(&state_usb, ABORTED_ACK, l);
+                    commit_packet(&state_usb, ABORTED_PACKET, l);
                     break;
                 } else {
                     commit_packet(&state_usb, NEXT_ACK_DATA, l);

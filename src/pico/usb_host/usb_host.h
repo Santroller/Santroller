@@ -13,7 +13,7 @@ bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
 TUSB_Descriptor_Device_t getPluggedInDescriptor(void);
 typedef enum {
     STANDARD_ACK,
-    ABORTED_ACK,
+    ABORTED_PACKET,
     LAST_ACK_END,
     NEXT_ACK_DATA,
 } PacketAction_t;

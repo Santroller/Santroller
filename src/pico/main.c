@@ -63,7 +63,6 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             if (!valid) {
                 if (!send_control_request(13, 0, *request, false, buf)) {
                     printf("STALL Pico to controller!\n");
-                    // was_stall = true;
                     return false;
                 }
                 printf("Ctrl Pico to controller: %d, %x %x\n", valid, request->wIndex, request->wValue);

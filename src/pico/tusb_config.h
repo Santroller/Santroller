@@ -84,7 +84,7 @@ extern "C" {
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 1
 #define CFG_TUD_VENDOR 0
-#define CFG_TUD_XINPUT 2
+#define CFG_TUD_XINPUT 4
 // #define CFG_TUSB_DEBUG 1
 #define CFG_TUSB_DEBUG 2
 

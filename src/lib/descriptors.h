@@ -9,7 +9,7 @@
 #include "eeprom.h"
 
 #define ENDPOINT_SIZE 64
-#define DEVICE_EPSIZE_IN 32
+#define DEVICE_EPSIZE_IN 0x14
 #define DEVICE_EPSIZE_OUT 0x08
 #define VENDOR_EPSIZE 64
 
@@ -98,6 +98,25 @@ typedef struct {
     uint8_t UnkownDescriptor4[0x06];
     TUSB_Descriptor_Interface_t InterfaceConfig;
     TUSB_Descriptor_Interface_t InterfaceExtra;
+} TUSB_Descriptor_Configuration_XBOX_PC_t;
+
+typedef struct {
+    TUSB_Descriptor_Configuration_Header_t Config;
+    TUSB_Descriptor_Interface_t Interface1;
+    XBOX_ID_Descriptor_t Interface1ID;
+    TUSB_Descriptor_Endpoint_t ReportINEndpoint11;
+    TUSB_Descriptor_Endpoint_t ReportOUTEndpoint12;
+    TUSB_Descriptor_Interface_t Interface2;
+    uint8_t UnkownDescriptor2[0x1B];
+    TUSB_Descriptor_Endpoint_t ReportINEndpoint21;
+    TUSB_Descriptor_Endpoint_t ReportOUTEndpoint22;
+    TUSB_Descriptor_Endpoint_t ReportINEndpoint23;
+    TUSB_Descriptor_Endpoint_t ReportOUTEndpoint24;
+    TUSB_Descriptor_Interface_t Interface3;
+    uint8_t UnkownDescriptor3[0x09];
+    TUSB_Descriptor_Endpoint_t ReportINEndpoint31;
+    TUSB_Descriptor_Interface_t Interface4;
+    uint8_t UnkownDescriptor4[0x06];
 } TUSB_Descriptor_Configuration_XBOX_t;
 
 typedef struct {
@@ -129,6 +148,7 @@ typedef struct {
 extern const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor;
 extern const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor;
 extern const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor;
+extern const PROGMEM TUSB_Descriptor_Configuration_XBOX_PC_t XBOXConfigurationDescriptorPC;
 extern const PROGMEM TUSB_Descriptor_Device_t deviceDescriptor;
 extern const PROGMEM TUSB_OSDescriptor_t OSDescriptorString;
 extern const PROGMEM TUSB_Descriptor_String_t *const descriptorStrings[3];

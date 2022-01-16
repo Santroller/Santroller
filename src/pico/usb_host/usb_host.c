@@ -203,6 +203,8 @@ void reset_usb_device(void) {
     //     send_control_request(13, 0x00, req, false, (uint8_t*)&pluggedInDescriptor);
     //     printf("%x %x\n", pluggedInDescriptor.ProductID, pluggedInDescriptor.VendorID);
     // }
+    // TODO: I dont think tud_disconnect / tud_connect is enough, as it appears the device doesnt fully reset
+    // TODO: also, maybe we initialise the host adaptor when we initialise the device, and if the device is reset we also reset the controller
     tud_disconnect();
     tud_connect();
 }

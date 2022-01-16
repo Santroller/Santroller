@@ -130,7 +130,6 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
       (itf_desc->bInterfaceProtocol == 0x01 ||
        itf_desc->bInterfaceProtocol == 0x03 ||
        itf_desc->bInterfaceProtocol == 0x02)) {
-         printf("reserved\n");
     // Xinput reserved endpoint
     //-------------- Xinput Descriptor --------------//
     p_desc = tu_desc_next(p_desc);
@@ -138,7 +137,6 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         (XBOX_ID_Descriptor_t *)p_desc;
     TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
     drv_len += x_desc->Header.Size;
-    printf("test2: %x\n", x_desc->Header.Size);
     p_desc = tu_desc_next(p_desc);
     p_xinput->ep_out = 0xFF;
     TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints,

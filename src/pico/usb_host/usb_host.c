@@ -134,7 +134,7 @@ void host_reset() {
     gpio_init(USB_DP_PIN);
     gpio_set_dir_out_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN));
     gpio_put_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN), 0);
-    sleep_ms(20);
+    sleep_ms(10);
     pio_bitstuff_program_init(pio_bitstuff, sm_bitstuff, offset_bitstuff);
     pio_serialiser_program_init(pio_usb, sm_usb, offset_usb, USB_FIRST_PIN, div);
     uint32_t keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
@@ -142,9 +142,12 @@ void host_reset() {
 }
 
 void initialise_device(void) {
-    tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(pluggedInDescriptor)};
-    send_control_request(0x00, 0x00, req, true, (uint8_t*)&pluggedInDescriptor);
-    maxPacket = pluggedInDescriptor.Endpoint0Size;
+    host_reset();
+    sleep_ms(50);
+    uint8_t dev[64];
+    tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 64};
+    send_control_request(0x00, 0x00, req, true, dev);
+    maxPacket = ((TUSB_Descriptor_Device_t*)dev)->Endpoint0Size;
     printf("Max Packet: %d\n", maxPacket);
     host_reset();
     printf("Setting ID\n");
@@ -184,21 +187,24 @@ void tick_usb_host(void) {
         initialised = true;
         printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
         multicore_launch_core1(initKeepalive);
-        // Reset
-        host_reset();
-
-        initialise_device();
-        if (is_xinput()) {
-            set_xinput_led(0x0A);
-        }
-        // while (true) {
-        //     tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(pluggedInDescriptor)};
-        //     send_control_request(13, 0x00, req, false, (uint8_t*)&pluggedInDescriptor);
-        //     printf("%x %x\n", pluggedInDescriptor.ProductID, pluggedInDescriptor.VendorID);
-        // }
-        tud_disconnect();
-        tud_connect();
+        reset_usb_device();
     }
+}
+
+void reset_usb_device(void) {
+    host_reset();
+
+    initialise_device();
+    if (is_xinput()) {
+        set_xinput_led(0x0A);
+    }
+    // while (true) {
+    //     tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(pluggedInDescriptor)};
+    //     send_control_request(13, 0x00, req, false, (uint8_t*)&pluggedInDescriptor);
+    //     printf("%x %x\n", pluggedInDescriptor.ProductID, pluggedInDescriptor.VendorID);
+    // }
+    tud_disconnect();
+    tud_connect();
 }
 
 bool keepaliveLoop(struct repeating_timer* t) {
@@ -241,10 +247,10 @@ TUSB_Descriptor_Device_t getPluggedInDescriptor(void) {
 }
 
 bool transfer(uint8_t address, state_t* state, uint8_t* out) {
+usb_transfer_start:
     waiting_for_keepalive = true;
     while (waiting_for_keepalive) {
     }
-usb_transfer_start:
     uint current_read = 0;
     bool wasData0 = true;
     uint test = false;
@@ -272,6 +278,10 @@ usb_transfer_start:
         dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
         if (action == LAST_ACK_END) {
             pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
+            dma_channel_wait_for_finish_blocking(dma_chan_write);
+            dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
+            dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
+            dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
             return true;
         }
         while (dma_channel_is_busy(dma_chan_read)) {
@@ -458,35 +468,31 @@ bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                     l = (request.wLength % maxPacket) * 8;
                 }
                 l = 8 + 8 + 16 + l;
+                commit_packet(&state_usb, NEXT_ACK_DATA, l);
+                sync(&state_usb);
+                sendPID(ACK, &state_usb);
+                EOP(&state_usb);
+                commit_packet(&state_usb, STANDARD_ACK, 0);
+
                 if (terminateEarly) {
-                    commit_packet(&state_usb, ABORTED_PACKET, l);
                     break;
-                } else {
-                    commit_packet(&state_usb, NEXT_ACK_DATA, l);
-                    sync(&state_usb);
-                    sendPID(ACK, &state_usb);
-                    EOP(&state_usb);
-                    commit_packet(&state_usb, STANDARD_ACK, 0);
                 }
             }
             memset(d, 0, request.wLength);
         }
-        // If we are working out what size maxPacket is, we need to skip ACKs as we don't know how long to wait and are just gonna reset anyways
-        if (!terminateEarly) {
-            sync(&state_usb);
-            sendPID(OUT, &state_usb);
-            reset_crc(&state_usb);
-            sendAddress(address, &state_usb);
-            sendNibble(endpoint, &state_usb);
-            sendCRC5(&state_usb);
-            EOP(&state_usb);
-            sync(&state_usb);
-            sendPID(DATA1, &state_usb);
-            reset_crc(&state_usb);
-            sendCRC16(&state_usb);
-            EOP(&state_usb);
-            commit_packet(&state_usb, STANDARD_ACK, 19);
-        }
+        sync(&state_usb);
+        sendPID(OUT, &state_usb);
+        reset_crc(&state_usb);
+        sendAddress(address, &state_usb);
+        sendNibble(endpoint, &state_usb);
+        sendCRC5(&state_usb);
+        EOP(&state_usb);
+        sync(&state_usb);
+        sendPID(DATA1, &state_usb);
+        reset_crc(&state_usb);
+        sendCRC16(&state_usb);
+        EOP(&state_usb);
+        commit_packet(&state_usb, STANDARD_ACK, 19);
     }
     return transfer(address, &state_usb, d);
 }

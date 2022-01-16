@@ -20,12 +20,10 @@
 
 uint8_t controller[DEVICE_EPSIZE_IN];
 
-// TODO: how big does this need to be?
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 tusb_control_request_t lastreq;
 bool was_stall = false;
-
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     bool valid = false;
     if (request->bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
@@ -35,19 +33,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             if (len > request->wLength) len = request->wLength;
             if (!valid) {
                 if (!send_control_request(13, 0, *request, false, buf)) {
-                    printf("STALL Controller to Pico!\n");
                     return false;
                 }
                 len = request->wLength;
             }
             tud_control_xfer(rhport, request, buf, len);
-            if (!valid) {
-                printf("Ctrl Controller to Pico: %d, %x %x\n", valid, request->wIndex, request->wValue);
-                for (int i = 0; i < request->wLength; i++) {
-                    printf("0x%x, ", buf[i]);
-                }
-                printf("\n");
-            }
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
@@ -62,15 +52,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (!valid) {
                 if (!send_control_request(13, 0, *request, false, buf)) {
-                    printf("STALL Pico to controller!\n");
                     return false;
                 }
-                printf("Ctrl Pico to controller: %d, %x %x\n", valid, request->wIndex, request->wValue);
-                for (int i = 0; i < request->wLength; i++) {
-                    printf("0x%x, ", buf[i]);
-                }
-                printf("\n");
-                // return ret;
             }
         }
     }
@@ -80,9 +63,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 uint8_t const *tud_descriptor_device_cb(void) {
     descriptorRequest(TDTYPE_Device << 8, 0, buf);
     TUSB_Descriptor_Device_t *td = (TUSB_Descriptor_Device_t *)buf;
-    TUSB_Descriptor_Device_t host = getPluggedInDescriptor();
-    td->VendorID = host.VendorID;
-    td->ProductID = host.ProductID;
+    if (usb_host_initialised()) {
+        TUSB_Descriptor_Device_t host = getPluggedInDescriptor();
+        td->VendorID = host.VendorID;
+        td->ProductID = host.ProductID;
+    }
     return buf;
 }
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
@@ -109,9 +94,9 @@ int main() {
     set_sys_clock_khz(240000, true);
     generateSerialString(serialString.UnicodeString);
     board_init();
-    tusb_init();
-    init();
     init_usb_host();
+    init();
+    tusb_init();
     while (1) {
         tick_usb_host();
         tud_task();  // tinyusb device task

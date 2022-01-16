@@ -12,6 +12,7 @@ void tick_usb_host(void);
 void reset_usb_device(void);
 bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d);
 TUSB_Descriptor_Device_t getPluggedInDescriptor(void);
+bool usb_host_initialised(void);
 typedef enum {
     STANDARD_ACK,
     ABORTED_PACKET,

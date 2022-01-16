@@ -27,12 +27,6 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
                 }
             } else if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_DEVICE) {
                 if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
-                    // For devices that aren't xbox controllers, we need to drop the xbox WCID descriptor.
-                    // TODO: Do we?
-                    // if (consoleType != XBOX360) {
-                    //     DevCompatIDs.TotalSections = 1;
-                    //     DevCompatIDs.TotalLength = sizeof(TUSB_OSCompatibleIDDescriptor_t) + sizeof(TUSB_OSCompatibleSection_t);
-                    // }
                     memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
                     return DevCompatIDs.TotalLength;
                 } else if (request == THID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {

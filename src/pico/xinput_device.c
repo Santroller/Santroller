@@ -26,8 +26,8 @@
  */
 
 #include "tusb_option.h"
-
 #if (TUSB_OPT_DEVICE_ENABLED && CFG_TUD_XINPUT)
+#include "usb_host/usb_host.h"
 
 //--------------------------------------------------------------------+
 // INCLUDE
@@ -106,6 +106,8 @@ void xinputd_init(void) { xinputd_reset(TUD_OPT_RHPORT); }
 void xinputd_reset(uint8_t rhport) {
   (void)rhport;
   tu_memclr(_xinputd_itf, sizeof(_xinputd_itf));
+  reset_usb_device();
+  
 }
 
 uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,

@@ -134,7 +134,7 @@ void host_reset() {
     gpio_init(USB_DP_PIN);
     gpio_set_dir_out_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN));
     gpio_put_masked(_BV(USB_DM_PIN) | _BV(USB_DP_PIN), 0);
-    sleep_ms(10);
+    sleep_ms(100);
     pio_bitstuff_program_init(pio_bitstuff, sm_bitstuff, offset_bitstuff);
     pio_serialiser_program_init(pio_usb, sm_usb, offset_usb, USB_FIRST_PIN, div);
     uint32_t keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
@@ -148,17 +148,13 @@ void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 64};
     send_control_request(0x00, 0x00, req, true, dev);
     maxPacket = ((TUSB_Descriptor_Device_t*)dev)->Endpoint0Size;
-    printf("Max Packet: %d\n", maxPacket);
     host_reset();
-    printf("Setting ID\n");
     tusb_control_request_t req2 = {.bmRequestType = 0x00, .bRequest = 0x05, .wValue = 13, .wIndex = 0x0000, .wLength = 0};
     send_control_request(0x00, 0x00, req2, false, NULL);
-    printf("Setting config\n");
     tusb_control_request_t req3 = {.bmRequestType = 0x00, .bRequest = 0x09, .wValue = 01, .wIndex = 0x0000, .wLength = 0};
     send_control_request(13, 0x00, req3, false, NULL);
     tusb_control_request_t req4 = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(pluggedInDescriptor)};
     send_control_request(13, 0x00, req4, false, (uint8_t*)&pluggedInDescriptor);
-    printf("Detected Device: %x %x\n", pluggedInDescriptor.VendorID, pluggedInDescriptor.ProductID);
 }
 
 void set_xinput_led(int led) {
@@ -170,6 +166,9 @@ bool is_xinput(void) {
 }
 
 void tick_usb_host(void) {
+}
+
+void reset_usb_device(void) {
     if (!initialised) {
         gpio_init(USB_DM_PIN);
         gpio_init(USB_DP_PIN);
@@ -185,28 +184,14 @@ void tick_usb_host(void) {
             full_speed = true;
         }
         initialised = true;
-        printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
         multicore_launch_core1(initKeepalive);
-        reset_usb_device();
     }
-}
-
-void reset_usb_device(void) {
     host_reset();
 
     initialise_device();
     if (is_xinput()) {
         set_xinput_led(0x0A);
     }
-    // while (true) {
-    //     tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(pluggedInDescriptor)};
-    //     send_control_request(13, 0x00, req, false, (uint8_t*)&pluggedInDescriptor);
-    //     printf("%x %x\n", pluggedInDescriptor.ProductID, pluggedInDescriptor.VendorID);
-    // }
-    // TODO: I dont think tud_disconnect / tud_connect is enough, as it appears the device doesnt fully reset
-    // TODO: also, maybe we initialise the host adaptor when we initialise the device, and if the device is reset we also reset the controller
-    tud_disconnect();
-    tud_connect();
 }
 
 bool keepaliveLoop(struct repeating_timer* t) {
@@ -281,6 +266,7 @@ usb_transfer_start:
         if (action == LAST_ACK_END) {
             pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
             dma_channel_wait_for_finish_blocking(dma_chan_write);
+            pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0)); 
             dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
             dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
@@ -380,8 +366,12 @@ void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* data) {
     commit_packet(&state_usb, STANDARD_ACK, 19);
     transfer(address, &state_usb, NULL);
 }
-
+bool usb_host_initialised(void) {
+    return initialised;
+}
 bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_request_t request, bool terminateEarly, uint8_t* d) {
+    // If no device is configured or plugged in then just stall
+    if (!initialised) return false;
     reset_state(&state_usb);
     state_usb.current_packet = 0;
     sync(&state_usb);

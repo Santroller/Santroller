@@ -38,7 +38,7 @@ uint offset_usb;
 uint offset_keepalive;
 uint offset_bitstuff;
 
-uint8_t maxPacket = 8;
+uint8_t maxPacket = 64;
 uint32_t currentFrame = 0;
 
 bool full_speed = false;
@@ -148,13 +148,17 @@ void initialise_device(void) {
     tusb_control_request_t req = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = 64};
     send_control_request(0x00, 0x00, req, true, dev);
     maxPacket = ((TUSB_Descriptor_Device_t*)dev)->Endpoint0Size;
+    printf("Max Packet: %d\n", maxPacket);
     host_reset();
+    printf("Setting ID\n");
     tusb_control_request_t req2 = {.bmRequestType = 0x00, .bRequest = 0x05, .wValue = 13, .wIndex = 0x0000, .wLength = 0};
     send_control_request(0x00, 0x00, req2, false, NULL);
+    printf("Setting config\n");
     tusb_control_request_t req3 = {.bmRequestType = 0x00, .bRequest = 0x09, .wValue = 01, .wIndex = 0x0000, .wLength = 0};
     send_control_request(13, 0x00, req3, false, NULL);
     tusb_control_request_t req4 = {.bmRequestType = 0x80, .bRequest = 0x06, .wValue = 0x0100, .wIndex = 0x0000, .wLength = sizeof(pluggedInDescriptor)};
     send_control_request(13, 0x00, req4, false, (uint8_t*)&pluggedInDescriptor);
+    printf("Detected Device: %x %x\n", pluggedInDescriptor.VendorID, pluggedInDescriptor.ProductID);
 }
 
 void set_xinput_led(int led) {
@@ -184,8 +188,10 @@ void reset_usb_device(void) {
             full_speed = true;
         }
         initialised = true;
+        printf("Speed: %d %f %d\n", full_speed, div, clock_get_hz(clk_sys));
         multicore_launch_core1(initKeepalive);
     }
+    maxPacket = 64;
     host_reset();
 
     initialise_device();
@@ -233,7 +239,7 @@ TUSB_Descriptor_Device_t getPluggedInDescriptor(void) {
     return pluggedInDescriptor;
 }
 
-bool transfer(uint8_t address, state_t* state, uint8_t* out) {
+bool transfer(uint8_t address, state_t* state, uint8_t* out, uint16_t len) {
 usb_transfer_start:
     waiting_for_keepalive = true;
     while (waiting_for_keepalive) {
@@ -252,6 +258,7 @@ usb_transfer_start:
         uint8_t* cur = data_read + 2;
         uint8_t cnt = read_pkt - 4;
         uint8_t expected_pid = wasData0 ? DATA1 : DATA0;
+        bool abort = action == ABORTED_PACKET;
         bool timeout = false;
         unsigned long m = micros();
         dma_channel_abort(dma_chan_read);
@@ -266,7 +273,7 @@ usb_transfer_start:
         if (action == LAST_ACK_END) {
             pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
             dma_channel_wait_for_finish_blocking(dma_chan_write);
-            pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0)); 
+            pio_sm_exec(pio_usb, sm_usb, pio_encode_set(pio_y, 0));
             dma_channel_set_trans_count(dma_chan_bitstuff, read_pkt + 1, true);
             dma_channel_transfer_from_buffer_now(dma_chan_write, state->packets[p], state->packetlens[p]);
             dma_channel_transfer_to_buffer_now(dma_chan_read, data_read, read_pkt);
@@ -278,6 +285,9 @@ usb_transfer_start:
                 cnt--;
             }
             if ((micros() - m) > 1000) {
+                if (abort) {
+                    break;
+                }
                 goto usb_transfer_start;
             }
             if (data_read[1] == NAK || data_read[1] == STALL) {
@@ -298,7 +308,11 @@ usb_transfer_start:
 
                 if (pid == expected_pid && crc == crc_calc) {
                     // printf("Done\n");
-                    memcpy(out + current_read, data_read + 2, maxPacket);
+                    uint16_t packet_length = maxPacket;
+                    if (maxPacket > len - current_read) {
+                        packet_length = len - current_read;
+                    }
+                    memcpy(out + current_read, data_read + 2, packet_length);
                     current_read += maxPacket;
                     wasData0 = !wasData0;
                     p += 2;  // Skip ACK packet as it has already been transmitted.
@@ -309,31 +323,31 @@ usb_transfer_start:
         }
         uint8_t sync_data = data_read[0] & 0xff;
         uint8_t pid = data_read[1] & 0xff;
+        if (action == ABORTED_PACKET) {
+            read_pkt = cur - data_read - 1;
+            // Sometimes, there is an extra byte read, but this count should always be even.
+            if (read_pkt & 1) {
+                read_pkt++;
+            }
+        }
         if (sync_data == 128) {
             if (pid == DATA1 || pid == DATA0) {
-                uint16_t crc_calc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
-                crc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
+                uint16_t crc = (data_read[read_pkt - 1] << 8 | data_read[read_pkt - 2]) & 0x7ff;
+                uint16_t crc_calc = crc_16(data_read + 2, read_pkt - 4) & 0x7ff;
                 if (crc != crc_calc) {
                     sleep_us(150);
                     continue;
                 }
+                
+                if (action == ABORTED_PACKET) {
+                    memcpy(out, data_read + 2, read_pkt - 4);
+                    return true;
+                }
             }
             if (pid == STALL) {
                 return false;
-            } else if (action == STANDARD_ACK || action == ABORTED_PACKET) {
-                if (pid == DATA1 || pid == DATA0) {
-                    memcpy(out + current_read, data_read + 2, read_pkt - 4);
-                    if (action == ABORTED_PACKET) {
-                        // For reading maxPacketLength, we actually just read the first 8 bytes and then do a reset, so we don't care about finishing up the read
-                        // Don't copy the PID or SYNC
-                        return true;
-                    }
-                    current_read += maxPacket;
-                    sleep_us(20);
-                    continue;
-                } else if (pid == ACK) {
-                    p++;
-                }
+            } else if (action == STANDARD_ACK && pid == ACK) {
+                p++;
             }
         }
         // TODO: is there a reason why this has to be so bloody high? should work fine at 20 or even lower in theory?
@@ -364,7 +378,7 @@ void sendOut(uint8_t address, uint8_t endpoint, uint len, uint8_t* data) {
     sendCRC16(&state_usb);
     EOP(&state_usb);
     commit_packet(&state_usb, STANDARD_ACK, 19);
-    transfer(address, &state_usb, NULL);
+    transfer(address, &state_usb, NULL, len);
 }
 bool usb_host_initialised(void) {
     return initialised;
@@ -456,11 +470,11 @@ bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
                 EOP(&state_usb);
                 // maxPacket is expressed in bytes not bits
                 uint l = maxPacket * 8;
-                if (i == len - 1) {
+                if (i == len - 1 && request.wLength % maxPacket) {
                     l = (request.wLength % maxPacket) * 8;
                 }
                 l = 8 + 8 + 16 + l;
-                commit_packet(&state_usb, NEXT_ACK_DATA, l);
+                commit_packet(&state_usb, terminateEarly ? ABORTED_PACKET : NEXT_ACK_DATA, l);
                 sync(&state_usb);
                 sendPID(ACK, &state_usb);
                 EOP(&state_usb);
@@ -472,19 +486,21 @@ bool send_control_request(uint8_t address, uint8_t endpoint, const tusb_control_
             }
             memset(d, 0, request.wLength);
         }
-        sync(&state_usb);
-        sendPID(OUT, &state_usb);
-        reset_crc(&state_usb);
-        sendAddress(address, &state_usb);
-        sendNibble(endpoint, &state_usb);
-        sendCRC5(&state_usb);
-        EOP(&state_usb);
-        sync(&state_usb);
-        sendPID(DATA1, &state_usb);
-        reset_crc(&state_usb);
-        sendCRC16(&state_usb);
-        EOP(&state_usb);
-        commit_packet(&state_usb, STANDARD_ACK, 19);
+        if (!terminateEarly) {
+            sync(&state_usb);
+            sendPID(OUT, &state_usb);
+            reset_crc(&state_usb);
+            sendAddress(address, &state_usb);
+            sendNibble(endpoint, &state_usb);
+            sendCRC5(&state_usb);
+            EOP(&state_usb);
+            sync(&state_usb);
+            sendPID(DATA1, &state_usb);
+            reset_crc(&state_usb);
+            sendCRC16(&state_usb);
+            EOP(&state_usb);
+            commit_packet(&state_usb, STANDARD_ACK, 19);
+        }
     }
-    return transfer(address, &state_usb, d);
+    return transfer(address, &state_usb, d, request.wLength);
 }

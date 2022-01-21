@@ -24,6 +24,8 @@ add_executable(
     ../lib/usb.c
     ../lib/i2c.c
     ../lib/leds.c
+    ../../submodules/Pico-PIO-USB/pio_usb.c 
+    ../../submodules/Pico-PIO-USB/usb_crc.c
     pin.c
     timer.c
     main.c
@@ -33,8 +35,11 @@ add_executable(
 target_include_directories(${TARGET} PUBLIC
       ${SRC}
       ../lib
+      ../../submodules/Pico-PIO-USB
       .)
 
+target_link_options(${TARGET} PRIVATE -Xlinker --print-memory-usage)
+target_compile_options(${TARGET} PRIVATE -Wall -Wextra)
 set(XIP_BASE 0x10000000)
 math(EXPR RF_TARGET_OFFSET "(256 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
 math(EXPR FLASH_TARGET_OFFSET "(512 * 1024)" OUTPUT_FORMAT HEXADECIMAL)
@@ -84,9 +89,10 @@ target_link_libraries(
   tinyusb_device
   tinyusb_board)
 
-pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_serialiser.pio)
-pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_keepalive.pio)
-pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/usb_host/pio_bitstuff.pio)
+
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/../../submodules/Pico-PIO-USB/usb_tx.pio)
+pico_generate_pio_header(${TARGET} ${CMAKE_CURRENT_LIST_DIR}/../../submodules/Pico-PIO-USB/usb_rx.pio)
+
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${TARGET})
 # Copy built binaries to firmware

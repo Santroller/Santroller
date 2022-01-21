@@ -3,15 +3,8 @@
 .wrap_target
 wait 0 irq 2
 out pins, 2 [8]
-; wait 0 irq 2
-; loop:
-;     out pins, 2 [8]
-;     jmp !osre loop
-; mov y, x
-; loop2:
-;     jmp y-- loop2 [9] ; implicit wrap to top
 % c-sdk {
-static inline void pio_keepalive_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div, uint32_t delay) {
+static inline void pio_keepalive_program_init(PIO pio, uint sm, uint offset, uint data_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);
     pio_gpio_init(pio, data_pin + 1);
     pio_sm_config c = pio_keepalive_program_get_default_config(offset);
@@ -21,9 +14,6 @@ static inline void pio_keepalive_program_init(PIO pio, uint sm, uint offset, uin
     sm_config_set_set_pins(&c, data_pin, 2);
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 2, true);
-    pio_sm_put_blocking(pio, sm, delay);
-    pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(true, true));
-    pio_sm_exec_wait_blocking(pio, sm, pio_encode_mov(pio_x, pio_osr));
     pio_sm_set_enabled(pio, sm, true);
 }
 %}

@@ -7,3 +7,6 @@
 [submodule "submodules/lufa"]
 	path = submodules/lufa
 	url = https://github.com/abcminiuser/lufa/
+[submodule "submodules/Pico-PIO-USB"]
+	path = submodules/Pico-PIO-USB
+	url = https://github.com/sanjay900/Pico-PIO-USB

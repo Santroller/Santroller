@@ -106,7 +106,6 @@ void xinputd_init(void) { xinputd_reset(TUD_OPT_RHPORT); }
 void xinputd_reset(uint8_t rhport) {
   (void)rhport;
   tu_memclr(_xinputd_itf, sizeof(_xinputd_itf));
-  reset_usb_device();
   
 }
 

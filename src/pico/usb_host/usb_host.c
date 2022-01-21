@@ -137,8 +137,7 @@ void host_reset() {
     sleep_ms(100);
     pio_bitstuff_program_init(pio_bitstuff, sm_bitstuff, offset_bitstuff);
     pio_serialiser_program_init(pio_usb, sm_usb, offset_usb, USB_FIRST_PIN, div);
-    uint32_t keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
-    pio_keepalive_program_init(pio_usb, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
+    pio_keepalive_program_init(pio_usb, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div);
 }
 
 void initialise_device(void) {
@@ -231,8 +230,7 @@ bool keepaliveLoop(struct repeating_timer* t) {
 }
 
 void initKeepalive() {
-    uint32_t keepalive_delay = ((clock_get_hz(clk_sys) / div) / 10000);
-    pio_keepalive_program_init(pio_usb, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div, keepalive_delay);
+    pio_keepalive_program_init(pio_usb, sm_keepalive, offset_keepalive, USB_FIRST_PIN, div);
     add_repeating_timer_us(800, keepaliveLoop, NULL, &timer);
 }
 TUSB_Descriptor_Device_t getPluggedInDescriptor(void) {
@@ -350,7 +348,6 @@ usb_transfer_start:
                 p++;
             }
         }
-        // TODO: is there a reason why this has to be so bloody high? should work fine at 20 or even lower in theory?
         sleep_us(150);
     }
     return true;

@@ -16,9 +16,9 @@
 #include "serial.h"
 #include "stdbool.h"
 #include "usb.h"
-#include "usb_host/usb_host.h"
 #include "xinput_device.h"
 #include "pio_usb.h"
+#include "pins.h"
 static usb_device_t *usb_device = NULL;
 uint8_t controller[DEVICE_EPSIZE_IN];
 
@@ -27,7 +27,7 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 void core1_main() {
     // To run USB SOF interrupt in core1, create alarm pool in core1.
     static pio_usb_configuration_t config = PIO_USB_DEFAULT_CONFIG;
-    config.pin_dp = USB_DP_PIN;
+    config.pin_dp = PIN_USB_DP_PIN;
     config.alarm_pool = (void *)alarm_pool_create(2, 1);
     usb_device = pio_usb_host_init(&config);
 
@@ -62,6 +62,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                 }
             }
             tud_control_xfer(rhport, request, buf, len);
+            printf("Ctrl Controller to Pico: %x %x %x\n", request->bRequest, request->wIndex, request->wValue);
+            for (int i = 0; i < request->wLength; i++) {
+                printf("0x%x, ", buf[i]);
+            }
+            printf("\n");
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
@@ -95,12 +100,25 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                     len -= real_len;
                 }
                 if (control_out_protocol(usb_device, &req_host, sizeof(req_host), request->wLength ? buf2 : NULL, buf3-buf2) < 0) {
+                    was_stall = true;
                     return false;
                 }
+                printf("Ctrl Pico to controller: %x %x %x\n", request->bRequest, request->wIndex, request->wValue);
+                for (int i = 0; i < request->wLength; i++) {
+                    printf("0x%x, ", buf[i]);
+                }
+                printf("\n");
             }
         }
     }
     return true;
+}
+
+void set_xinput_led(int led) {
+    uint8_t data2[] = {0x01, 0x03, led};
+    endpoint_t *ep = pio_usb_get_endpoint(usb_device, 1);
+    printf("Attr: %d\n", ep->attr);
+    pio_usb_set_out_data(ep, data2, sizeof(data2));
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
@@ -147,6 +165,7 @@ int main() {
         if (usb_device->enumerated != ready) {
             ready = usb_device->enumerated;
             if (ready) {
+                set_xinput_led(0x0A);
                 tud_disconnect();
                 sleep_ms(100);
                 tud_connect();

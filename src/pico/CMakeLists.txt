@@ -30,7 +30,6 @@ add_executable(
     timer.c
     main.c
     xinput_device.c
-    usb_host/usb_host.c
 )
 target_include_directories(${TARGET} PUBLIC
       ${SRC}

@@ -62,11 +62,6 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                 }
             }
             tud_control_xfer(rhport, request, buf, len);
-            printf("Ctrl Controller to Pico: %x %x %x\n", request->bRequest, request->wIndex, request->wValue);
-            for (int i = 0; i < request->wLength; i++) {
-                printf("0x%x, ", buf[i]);
-            }
-            printf("\n");
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
@@ -80,34 +75,10 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             requestType_t r = {bmRequestType : request->bmRequestType};
             controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (!valid) {
-                int data_id = 1;
-                int max_len = usb_device->max_packet_size;
-                int len = request->wLength;
-                uint8_t* buf3 = buf2;
-                uint8_t* buf4 = buf;
-                uint16_t crc; 
-                while (len) {
-                    *buf3++ = USB_SYNC;
-                    *buf3++ = data_id == 0 ? USB_PID_DATA0 : USB_PID_DATA1;
-                    data_id = !data_id;
-                    int real_len = MIN(len, max_len);
-                    memcpy(buf3, buf4, real_len);
-                    crc = calc_usb_crc16(buf3, real_len);
-                    buf3 += real_len;
-                    buf4 += real_len;
-                    *buf3++ = crc & 0xff;
-                    *buf3++ = (crc >> 8) & 0xff;
-                    len -= real_len;
-                }
-                if (control_out_protocol(usb_device, &req_host, sizeof(req_host), request->wLength ? buf2 : NULL, buf3-buf2) < 0) {
+                if (control_out_protocol(usb_device, &req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
                     was_stall = true;
                     return false;
                 }
-                printf("Ctrl Pico to controller: %x %x %x\n", request->bRequest, request->wIndex, request->wValue);
-                for (int i = 0; i < request->wLength; i++) {
-                    printf("0x%x, ", buf[i]);
-                }
-                printf("\n");
             }
         }
     }

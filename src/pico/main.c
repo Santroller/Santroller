@@ -43,6 +43,9 @@ void core1_main() {
 tusb_control_request_t lastreq;
 bool was_stall = false;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
+    if (!usb_device->connected) {
+        return;
+    }
     bool valid = false;
     usb_setup_packet_t req_host = {
         USB_SYNC, USB_PID_DATA0
@@ -62,6 +65,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                 }
             }
             tud_control_xfer(rhport, request, buf, len);
+            printf("Ctrl Controller to Pico: %x %x %x\n", request->bRequest, request->wIndex, request->wValue);
+            for (int i = 0; i < request->wLength; i++) {
+                printf("0x%x, ", buf[i]);
+            }
+            printf("\n");
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
@@ -79,10 +87,20 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                     was_stall = true;
                     return false;
                 }
+                printf("Ctrl Pico to controller: %x %x %x\n", request->bRequest, request->wIndex, request->wValue);
+                for (int i = 0; i < request->wLength; i++) {
+                    printf("0x%x, ", buf[i]);
+                }
+                printf("\n");
             }
         }
     }
     return true;
+}
+
+bool is_xinput(void) {
+    endpoint_t *ep = pio_usb_get_endpoint(usb_device, 1);
+    return ep->class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d;
 }
 
 void set_xinput_led(int led) {
@@ -132,11 +150,14 @@ int main() {
     init();
     tusb_init();
     bool ready = false;
+    usb_device->enumerated = false;
     while (1) {
         if (usb_device->enumerated != ready) {
             ready = usb_device->enumerated;
             if (ready) {
-                set_xinput_led(0x0A);
+                if (is_xinput()) {
+                    set_xinput_led(0x0A);
+                }
                 tud_disconnect();
                 sleep_ms(100);
                 tud_connect();

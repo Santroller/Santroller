@@ -80,7 +80,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             requestType_t r = {bmRequestType : request->bmRequestType};
             controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (!valid) {
-                int data_id = 0;
+                int data_id = 1;
                 int max_len = usb_device->max_packet_size;
                 int len = request->wLength;
                 uint8_t* buf3 = buf2;

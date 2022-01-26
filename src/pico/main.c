@@ -20,6 +20,8 @@
 #include "pio_usb.h"
 #include "pins.h"
 static usb_device_t *usb_device = NULL;
+static usb_device_t *xinput_device = NULL;
+static uint8_t xinput_endpoint = 0;
 uint8_t controller[DEVICE_EPSIZE_IN];
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
@@ -39,7 +41,50 @@ void core1_main() {
         pio_usb_host_task();
     }
 }
+void host_connection(usb_device_t* device) {
+    printf("Device Connected!\n");
+    // Print received packet to EPs
+    for (int ep_idx = 0; ep_idx < PIO_USB_DEV_EP_CNT; ep_idx++) {
+        endpoint_t *ep = pio_usb_get_endpoint(device, ep_idx);
 
+        if (ep == NULL) {
+            break;
+        }
+        if (ep->class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d && !(ep->ep_num & EP_IN)) {
+            printf("XInput device connected!\n", ep_idx);
+            set_xinput_led(device, ep_idx, 0x0A);
+            if (!xinput_device) {
+                xinput_device = device;
+                xinput_endpoint = ep_idx;
+                tud_disconnect();
+                sleep_ms(100);
+                tud_connect();
+                sleep_ms(100);
+            }
+            return;
+        }
+        
+    }
+}
+void host_disconnection(usb_device_t* device) {
+    printf("Device disconnected!\n");
+    for (int ep_idx = 0; ep_idx < PIO_USB_DEV_EP_CNT; ep_idx++) {
+        endpoint_t *ep = pio_usb_get_endpoint(device, ep_idx);
+
+        if (ep == NULL) {
+            break;
+        }
+
+        if (ep->class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d) {
+            if (xinput_device == device) {
+                xinput_device = NULL;   
+            }
+            printf("XInput device disconnected!\n");
+            return;
+        }
+        
+    }
+}
 tusb_control_request_t lastreq;
 bool was_stall = false;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
@@ -60,7 +105,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             uint16_t len = controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (len > request->wLength || !valid) len = request->wLength;
             if (!valid) {
-                if (control_in_protocol(usb_device, &req_host, sizeof(req_host), buf, len) < 0) {
+                if (control_in_protocol(xinput_device, &req_host, sizeof(req_host), buf, len) < 0) {
                     return false;
                 }
             }
@@ -83,7 +128,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             requestType_t r = {bmRequestType : request->bmRequestType};
             controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
             if (!valid) {
-                if (control_out_protocol(usb_device, &req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
+                if (control_out_protocol(xinput_device, &req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
                     was_stall = true;
                     return false;
                 }
@@ -98,14 +143,9 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     return true;
 }
 
-bool is_xinput(void) {
-    endpoint_t *ep = pio_usb_get_endpoint(usb_device, 1);
-    return ep->class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d;
-}
-
-void set_xinput_led(int led) {
+void set_xinput_led(usb_device_t* device, uint endpoint, int led) {
     uint8_t data2[] = {0x01, 0x03, led};
-    endpoint_t *ep = pio_usb_get_endpoint(usb_device, 1);
+    endpoint_t *ep = pio_usb_get_endpoint(device, endpoint);
     printf("Attr: %d\n", ep->attr);
     pio_usb_set_out_data(ep, data2, sizeof(data2));
 }
@@ -149,23 +189,11 @@ int main() {
     multicore_launch_core1(core1_main);
     init();
     tusb_init();
-    bool ready = false;
-    usb_device->enumerated = false;
+    set_device_connection_handler(&host_connection);
+    set_device_disconnection_handler(&host_disconnection);
     while (1) {
-        if (usb_device->enumerated != ready) {
-            ready = usb_device->enumerated;
-            if (ready) {
-                if (is_xinput()) {
-                    set_xinput_led(0x0A);
-                }
-                tud_disconnect();
-                sleep_ms(100);
-                tud_connect();
-                sleep_ms(100);
-                continue;
-            }
-        }
         tud_task();  // tinyusb device task
+        pio_usb_connection_task();
         uint8_t len = tick(controller);
         if (consoleType == XBOX360) {
             if (tud_xinput_n_ready(0)) {

@@ -7,7 +7,7 @@
 #include "timer.h"
 #include "usb.h"
 volatile bool waiting = true;
-uint8_t controller[DEVICE_EPSIZE_IN];
+uint8_t controller[0x20];
 int main(void) {
     init();
     cli();
@@ -87,11 +87,15 @@ void EVENT_USB_Device_ControlRequest(void) {
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
     uint8_t type = EP_TYPE_INTERRUPT;
+    uint8_t epsize = 0x20;
     if (consoleType == MIDI) {
         type = EP_TYPE_BULK;
     }
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, DEVICE_EPSIZE_IN, 1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, DEVICE_EPSIZE_OUT, 2);
+    if (consoleType == XBOX360) {
+        epsize = 0x18;
+    }
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
@@ -103,4 +107,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 ISR(WDT_vect) {
     wdt_disable();
     waiting = false;
+}
+void reset_usb(void) {
+    // TODO: is this working?
+    USB_Disable();
+    USB_Init();
 }

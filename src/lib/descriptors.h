@@ -9,8 +9,6 @@
 #include "eeprom.h"
 
 #define ENDPOINT_SIZE 64
-#define DEVICE_EPSIZE_IN 0x14
-#define DEVICE_EPSIZE_OUT 0x08
 #define VENDOR_EPSIZE 64
 
 #define ARDWIINO_VID 0x1209
@@ -126,6 +124,9 @@ typedef struct {
     TUSB_Descriptor_Endpoint_t EndpointInHID;
     TUSB_Descriptor_Endpoint_t EndpointOutHID;
     TUSB_Descriptor_Interface_t InterfaceConfig;
+    TUSB_Descriptor_Interface_t InterfaceExtra;
+    TUSB_Descriptor_Interface_t Interface4;
+    uint8_t UnkownDescriptor4[0x06];
 } TUSB_Descriptor_HID_Configuration_t;
 
 typedef struct {

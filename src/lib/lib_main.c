@@ -42,7 +42,7 @@ uint8_t strumDown = XBOX_DPAD_DOWN;
 void init() {
     ledMode = NONE;
     inputType = DIRECT;
-    consoleType = XBOX360;
+    consoleType = PC;
     deviceType = GUITAR_HERO_GUITAR;
     // TODO: this will differ for PS3 or keyboard
     inputCount = XBOX_AXIS_COUNT + XBOX_BTN_COUNT;
@@ -62,7 +62,7 @@ void init() {
     } else if (inputType == PS2) {
         // Init ps2, load in the ps2 inputs as the "pins" instead
     }
-    if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
+    if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == PC) {
         for (int i = 0; i < inputCount; i++) {
             Input_t* input = pins + i;
             input->binding = xinputToPs3[input->binding];
@@ -79,6 +79,7 @@ uint32_t last = 0;
 uint8_t lastHat = 0;
 bool keyboardReport = true;
 uint8_t firstKeyboardPin = 0;
+bool test = false;
 uint8_t tick(uint8_t* data) {
     if (tickInput) {
         tickInput();
@@ -173,6 +174,9 @@ uint8_t tick(uint8_t* data) {
     if (ledMode == APA102) {
         tickLEDs(ledOrder);
     }
+    bit_write(test, buttons[PS3_SELECT_BT >> 3], PS3_SELECT_BT & 7);
+    bit_write(test, buttons[PS3_START_BT >> 3], PS3_START_BT & 7);
+    test = !test;
     return size;
 }
 void packetReceived(uint8_t* data, uint8_t len) {
@@ -186,7 +190,7 @@ void packetReceived(uint8_t* data, uint8_t len) {
             (void)rumble;
             // We can receive rumble reports here and do things with them
         }
-    } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH) {
+    } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == PC) {
         ps3_output_report* report = (ps3_output_report*)data;
         (void)report;
     }

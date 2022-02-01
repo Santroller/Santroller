@@ -169,13 +169,17 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
         VALID_PACKET, DEVICE_ID, sizeof(packet_header_t)};
     txRX(&packet, sizeof(packet_header_t));
     // uint8_t deviceType = ret->data[0];
+    uint8_t epsize = 0x20;
     uint8_t consoleType = ret->data[1];
     uint8_t type = EP_TYPE_INTERRUPT;
+    if (consoleType == XBOX360) {
+        epsize = 0x18;
+    }
     if (consoleType == MIDI) {
         type = EP_TYPE_BULK;
     }
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, DEVICE_EPSIZE_IN, 1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, DEVICE_EPSIZE_OUT, 2);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

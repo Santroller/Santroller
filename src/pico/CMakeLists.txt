@@ -30,6 +30,7 @@ add_executable(
     timer.c
     main.c
     xinput_device.c
+    hid/hid_device.c
 )
 target_include_directories(${TARGET} PUBLIC
       ${SRC}

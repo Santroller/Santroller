@@ -96,10 +96,10 @@ const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor =
         subtype : 0x07,
         reserved2 : 0x25,
         bEndpointAddressIn : DEVICE_EPADDR_IN,
-        bMaxDataSizeIn : DEVICE_EPSIZE_IN,
+        bMaxDataSizeIn : 0x14,
         reserved3 : {0x03, 0x03, 0x03, 0x04, 0x13},
         bEndpointAddressOut : DEVICE_EPADDR_OUT,
-        bMaxDataSizeOut : DEVICE_EPSIZE_OUT,
+        bMaxDataSizeOut : 0x08,
         reserved4 : {0x03, 0x03},
     },
     ReportINEndpoint11 : {
@@ -107,14 +107,14 @@ const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor =
         EndpointAddress : DEVICE_EPADDR_IN,
         Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         EndpointSize : 0x20,
-        PollingIntervalMS : 4,
+        PollingIntervalMS : 1,
     },
     ReportOUTEndpoint12 : {
         Header : {Size : sizeof(XBOXConfigurationDescriptor.ReportOUTEndpoint12), Type : TDTYPE_Endpoint},
         EndpointAddress : DEVICE_EPADDR_OUT,
         Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         EndpointSize : 0x20,
-        PollingIntervalMS : 8,
+        PollingIntervalMS : 1,
     },
 
     Interface2 : {Header : {Size : sizeof(XBOXConfigurationDescriptor.Interface2),
@@ -188,89 +188,13 @@ const PROGMEM TUSB_Descriptor_Configuration_XBOX_t XBOXConfigurationDescriptor =
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
 
-const PROGMEM TUSB_Descriptor_Configuration_XBOX_PC_t XBOXConfigurationDescriptorPC = {
-    Config : {Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
-                        Type : TDTYPE_Configuration},
-              TotalConfigurationSize : sizeof(TUSB_Descriptor_Configuration_XBOX_t),
-              TotalInterfaces : 4,
-              ConfigurationNumber : 1,
-              ConfigurationStrIndex : NO_DESCRIPTOR,
-              ConfigAttributes :
-                  (TUSB_CONFIG_TATTR_RESERVED | TUSB_CONFIG_TATTR_REMOTEWAKEUP),
-              MaxPowerConsumption : TUSB_CONFIG_POWER_MA(500)},
-    Interface1 : {Header : {Size : sizeof(XBOXConfigurationDescriptor.Interface1),
-                            Type : TDTYPE_Interface},
-                  InterfaceNumber : INTERFACE_ID_Device,
-                  AlternateSetting : 0x00,
-                  TotalEndpoints : 2,
-                  Class : 0xFF,
-                  SubClass : 0x5D,
-                  Protocol : 0x01,
-                  InterfaceStrIndex : NO_DESCRIPTOR},
-    Interface1ID : {
-        Header : {Size : sizeof(XBOX_ID_Descriptor_t), Type : 0x21},
-        reserved : {0x10, 0x01},
-        subtype : 0x07,
-        reserved2 : 0x25,
-        bEndpointAddressIn : DEVICE_EPADDR_IN,
-        bMaxDataSizeIn : DEVICE_EPSIZE_IN,
-        reserved3 : {0x03, 0x03, 0x03, 0x04, 0x13},
-        bEndpointAddressOut : DEVICE_EPADDR_OUT,
-        bMaxDataSizeOut : DEVICE_EPSIZE_OUT,
-        reserved4 : {0x03, 0x03},
-    },
-    ReportINEndpoint11 : {
-        Header : {Size : sizeof(XBOXConfigurationDescriptor.ReportINEndpoint11), Type : TDTYPE_Endpoint},
-        EndpointAddress : DEVICE_EPADDR_IN,
-        Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : DEVICE_EPSIZE_IN,
-        PollingIntervalMS : 1,
-    },
-    ReportOUTEndpoint12 : {
-        Header : {Size : sizeof(XBOXConfigurationDescriptor.ReportOUTEndpoint12), Type : TDTYPE_Endpoint},
-        EndpointAddress : DEVICE_EPADDR_OUT,
-        Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : DEVICE_EPSIZE_OUT,
-        PollingIntervalMS : 1,
-    },
 
-    Interface4 : {Header : {Size : sizeof(XBOXConfigurationDescriptor.Interface4),
-                            Type : TDTYPE_Interface},
-                  InterfaceNumber : INTERFACE_ID_XBOX_Security,
-                  AlternateSetting : 0x00,
-                  TotalEndpoints : 0,
-                  Class : 0xFF,
-                  SubClass : 0xFD,
-                  Protocol : 0x13,
-                  InterfaceStrIndex : 4},
-    UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
-    InterfaceConfig : {
-        Header : {Size : sizeof(TUSB_Descriptor_Interface_t), Type : TDTYPE_Interface},
-        InterfaceNumber : INTERFACE_ID_Config,
-        AlternateSetting : 0,
-        TotalEndpoints : 0,
-        Class : 0xff,
-        SubClass : 0xff,
-        Protocol : 0xff,
-        InterfaceStrIndex : NO_DESCRIPTOR,
-    },
-    InterfaceExtra : {
-        Header : {Size : sizeof(TUSB_Descriptor_Interface_t), Type : TDTYPE_Interface},
-        InterfaceNumber : 2,
-        AlternateSetting : 0,
-        TotalEndpoints : 0,
-        Class : 0xff,
-        SubClass : 0xff,
-        Protocol : 0xff,
-        InterfaceStrIndex : NO_DESCRIPTOR,
-    },
-};
 const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
     Config : {
         Header : {Size : sizeof(TUSB_Descriptor_Configuration_Header_t),
                   Type : TDTYPE_Configuration},
         TotalConfigurationSize : sizeof(TUSB_Descriptor_HID_Configuration_t),
-        TotalInterfaces : 2,
+        TotalInterfaces : 4,
         ConfigurationNumber : 1,
         ConfigurationStrIndex : NO_DESCRIPTOR,
         .ConfigAttributes =
@@ -293,7 +217,7 @@ const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
         EndpointAddress : DEVICE_EPADDR_IN,
         Attributes :
             (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : DEVICE_EPSIZE_IN,
+        EndpointSize : 0x20,
         PollingIntervalMS : 1
     },
     EndpointOutHID : {
@@ -301,7 +225,7 @@ const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
         EndpointAddress : DEVICE_EPADDR_OUT,
         Attributes :
             (EP_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        EndpointSize : DEVICE_EPSIZE_OUT,
+        EndpointSize : 0x08,
         PollingIntervalMS : 1
     },
     HIDDescriptor : {
@@ -322,6 +246,26 @@ const PROGMEM TUSB_Descriptor_HID_Configuration_t HIDConfigurationDescriptor = {
         Protocol : 0xff,
         InterfaceStrIndex : NO_DESCRIPTOR,
     },
+    InterfaceExtra : {
+        Header : {Size : sizeof(TUSB_Descriptor_Interface_t), Type : TDTYPE_Interface},
+        InterfaceNumber : 2,
+        AlternateSetting : 0,
+        TotalEndpoints : 0,
+        Class : 0xff,
+        SubClass : 0xff,
+        Protocol : 0xff,
+        InterfaceStrIndex : NO_DESCRIPTOR,
+    },
+    Interface4 : {Header : {Size : sizeof(XBOXConfigurationDescriptor.Interface4),
+                            Type : TDTYPE_Interface},
+                  InterfaceNumber : INTERFACE_ID_XBOX_Security,
+                  AlternateSetting : 0x00,
+                  TotalEndpoints : 0,
+                  Class : 0xFF,
+                  SubClass : 0xFD,
+                  Protocol : 0x13,
+                  InterfaceStrIndex : 4},
+    UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
 
 const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor = {
@@ -436,7 +380,7 @@ const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor =
             EndpointAddress : DEVICE_EPADDR_IN,
             Attributes : (EP_TYPE_BULK | ENDPOINT_TATTR_NO_SYNC |
                           ENDPOINT_USAGE_DATA),
-            EndpointSize : DEVICE_EPSIZE_IN,
+            EndpointSize : 0x20,
             PollingIntervalMS : 1
         },
         Refresh : 0,
@@ -460,7 +404,7 @@ const PROGMEM TUSB_Descriptor_MIDI_Configuration_t MIDIConfigurationDescriptor =
             EndpointAddress : DEVICE_EPADDR_OUT,
             Attributes : (EP_TYPE_BULK | ENDPOINT_TATTR_NO_SYNC |
                           ENDPOINT_USAGE_DATA),
-            EndpointSize : DEVICE_EPSIZE_OUT,
+            EndpointSize : 0x08,
             PollingIntervalMS : 1,
         },
         Refresh : 0,

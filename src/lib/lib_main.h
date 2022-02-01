@@ -31,3 +31,4 @@ void packetReceived(uint8_t* data, uint8_t len);
 void initPins(void);
 unsigned long millis(void);
 unsigned long micros(void);
+void reset_usb(void);

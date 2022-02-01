@@ -50,6 +50,7 @@ typedef enum {
 } DeviceType_t;
 
 typedef enum {
+    PC,
     XBOX360,
     PS3,
     WII_RB,

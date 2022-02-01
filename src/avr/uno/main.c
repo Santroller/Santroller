@@ -17,6 +17,9 @@ packet_header_t* header = (packet_header_t*)buf;
 descriptor_request_t* desc = (descriptor_request_t*)buf;
 control_request_t* ctr = (control_request_t*)buf;
 data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
+void reset_usb(void) {
+    // TODO: how do we handle this on the uno?
+}
 int main(void) {
     init();
     setupMicrosTimer();

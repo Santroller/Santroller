@@ -183,6 +183,22 @@ enum TUSB_DescriptorTypes_t {
     TDTYPE_InterfaceAssociation = 0x0B, /**< Indicates that the descriptor is an interface association descriptor. */
 };
 
+enum tusb_request_code_t {
+  USB_REQ_GET_STATUS        = 0  ,
+  USB_REQ_CLEAR_FEATURE     = 1  ,
+  USB_REQ_RESERVED          = 2  ,
+  USB_REQ_SET_FEATURE       = 3  ,
+  USB_REQ_RESERVED2         = 4  ,
+  USB_REQ_SET_ADDRESS       = 5  ,
+  USB_REQ_GET_DESCRIPTOR    = 6  ,
+  USB_REQ_SET_DESCRIPTOR    = 7  ,
+  USB_REQ_GET_CONFIGURATION = 8  ,
+  USB_REQ_SET_CONFIGURATION = 9  ,
+  USB_REQ_GET_INTERFACE     = 10 ,
+  USB_REQ_SET_INTERFACE     = 11 ,
+  USB_REQ_SYNCH_FRAME       = 12
+};
+
 /** Enum for possible Class, Subclass and Protocol values of device and interface descriptors. */
 enum TUSB_Descriptor_ClassSubclassProtocol_t {
     TUSB_CSCP_NoDeviceClass = 0x00,          /**< Descriptor Class value indicating that the device does not belong

@@ -28,7 +28,6 @@ uint8_t controller[0x20];
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
-bool was_desc = false;
 void core1_main() {
     // To run USB SOF interrupt in core1, create alarm pool in core1.
     static pio_usb_configuration_t config = PIO_USB_DEFAULT_CONFIG;
@@ -142,7 +141,6 @@ void set_xinput_led(usb_device_t* device, uint endpoint, int led) {
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
-    was_desc = true;
     descriptorRequest(TDTYPE_Device << 8, 0, buf);
     if (usb_device->enumerated && consoleType == XBOX360) {
         TUSB_Descriptor_Device_t *td = (TUSB_Descriptor_Device_t *)buf;
@@ -156,7 +154,6 @@ uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
     return buf;
 }
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
-    was_desc = false;
     (void)index;  // for multiple configurations
     descriptorRequest(TDTYPE_Configuration << 8, 0, buf);
     return buf;
@@ -183,7 +180,6 @@ int main() {
     tusb_init();
     set_device_connection_handler(&host_connection);
     set_device_disconnection_handler(&host_disconnection);
-    unsigned long last_write = 0;
     while (1) {
         tud_task();  // tinyusb device task
         pio_usb_connection_task();
@@ -201,13 +197,8 @@ int main() {
             tud_midi_n_packet_write(0, controller);
         } else {
             if (tud_hid_custom_n_ready(0)) {
-                last_write = millis();
                 tud_hid_custom_n_report(0, 0, controller, len);
             }
-        }
-        if (millis() - last_write > 1000 && consoleType == PC) {
-            consoleType = WII_RB;
-            reset_usb();
         }
     }
 }

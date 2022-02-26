@@ -50,7 +50,13 @@ typedef enum {
 } DeviceType_t;
 
 typedef enum {
+    HID,
+    XINPUT
+} PCMode_t;
+
+typedef enum {
     PC,
+    PC_XINPUT,
     XBOX360,
     PS3,
     WII_RB,

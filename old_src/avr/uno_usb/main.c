@@ -172,7 +172,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     uint8_t epsize = 0x20;
     uint8_t consoleType = ret->data[1];
     uint8_t type = EP_TYPE_INTERRUPT;
-    if (consoleType == XBOX360) {
+    if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
         epsize = 0x18;
     }
     if (consoleType == MIDI) {

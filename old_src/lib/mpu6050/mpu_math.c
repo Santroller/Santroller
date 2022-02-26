@@ -7,7 +7,6 @@ static int16_t test, sqy, sqz, sqw;
 
 void quaternionToEuler(const struct s_quat *q, int16_t *out, uint8_t angle) {
 
-  test = q->x * q->z - q->w * q->y;
   sqy = q->y * q->y;
   sqz = q->z * q->z;
   sqw = q->w * q->w;
@@ -16,7 +15,7 @@ void quaternionToEuler(const struct s_quat *q, int16_t *out, uint8_t angle) {
       *out = fxpt_atan2(2 * (q->x * q->y - q->z * q->w), 32768 - 2 * (sqy + sqz));
       break;
     case Y:
-      *out = fxpt_asin(test);
+      *out = fxpt_asin(q->x * q->z - q->w * q->y);
       break;
     case Z:
       *out = fxpt_atan2(2 * (q->x * q->w + q->y * q->z), 32768 - 2 * (sqz + sqw));

@@ -19,6 +19,7 @@ control_request_t* ctr = (control_request_t*)buf;
 data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
 void reset_usb(void) {
     // TODO: how do we handle this on the uno?
+    // Maybe CONTROLLER_DATA_REQUEST_ID can store some sort of keepalive as the first byte, and if it isnt set then we restart usb?
 }
 int main(void) {
     init();

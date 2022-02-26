@@ -32,7 +32,7 @@ const TUSB_OSCompatibleIDDescriptor_t PROGMEM DevCompatIDs = {
     TotalLength : sizeof(TUSB_OSCompatibleIDDescriptor_t),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 2,
+    TotalSections : 1,
     Reserved : {0},
     CompatID : {
         {

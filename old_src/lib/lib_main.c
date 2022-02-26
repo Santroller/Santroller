@@ -14,11 +14,13 @@
 #else
 #define SPI_FREQ 8000000
 #endif
+bool read_hid_report_descriptor = false;
 ConsoleType_t consoleType;
 DeviceType_t deviceType;
 InputType_t inputType;
 TiltType_t tiltType;
 FretLedMode_t ledMode;
+PCMode_t pcMode;
 bool guitar;
 bool drum;
 uint8_t pinCount = 0;
@@ -28,6 +30,7 @@ uint32_t lastMillisStrum;
 uint8_t inputCount;
 bool mergedStrum = false;
 void (*tickInput)(void) = NULL;
+unsigned long start;
 // Inside leds there is a colour and a forceColor
 // if forceColor is set or the button is pressed, then the colour is set to color
 // otherwise, it is cleared
@@ -42,7 +45,7 @@ uint8_t strumDown = XBOX_DPAD_DOWN;
 void init() {
     ledMode = NONE;
     inputType = DIRECT;
-    consoleType = PC;
+    consoleType = PC_XINPUT;
     deviceType = GUITAR_HERO_GUITAR;
     // TODO: this will differ for PS3 or keyboard
     inputCount = XBOX_AXIS_COUNT + XBOX_BTN_COUNT;
@@ -73,6 +76,7 @@ void init() {
         strumUp = THID_KEYBOARD_SC_UP_ARROW;
         strumDown = THID_KEYBOARD_SC_DOWN_ARROW;
     }
+    start = millis();
 }
 
 uint32_t last = 0;
@@ -111,7 +115,7 @@ uint8_t tick(uint8_t* data) {
             end = firstKeyboardPin;
         }
         keyboardReport = !keyboardReport;
-    } else if (consoleType == XBOX360) {
+    } else if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
         USB_XInputReport_Arr_Data_t* report = (USB_XInputReport_Arr_Data_t*)data;
         report->rid = 0;
         report->rsize = sizeof(USB_XInputReport_Arr_Data_t);
@@ -174,13 +178,18 @@ uint8_t tick(uint8_t* data) {
     if (ledMode == APA102) {
         tickLEDs(ledOrder);
     }
-    bit_write(test, buttons[PS3_SELECT_BT >> 3], PS3_SELECT_BT & 7);
-    bit_write(test, buttons[PS3_START_BT >> 3], PS3_START_BT & 7);
+    // bit_write(test, buttons[PS3_SELECT_BT >> 3], PS3_SELECT_BT & 7);
+    // bit_write(test, buttons[PS3_START_BT >> 3], PS3_START_BT & 7);
+    // bit_write(test, buttons[XBOX_A << 3], XBOX_A & 7);
     test = !test;
+    if (!read_hid_report_descriptor && millis() - start > 1000 && consoleType == PC) {
+        consoleType = WII_RB;
+        reset_usb();
+    }
     return size;
 }
 void packetReceived(uint8_t* data, uint8_t len) {
-    if (consoleType == XBOX360) {
+    if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
         if (data[0] == 0x01) {
             XInputLEDReport_t* leds = (XInputLEDReport_t*)data;
             (void)leds;

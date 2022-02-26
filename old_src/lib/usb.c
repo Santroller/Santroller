@@ -28,6 +28,10 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
             } else if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_DEVICE) {
                 if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
                     memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
+                    if (consoleType == PC_XINPUT) {
+                        TUSB_OSCompatibleIDDescriptor_t* compat = (TUSB_OSCompatibleIDDescriptor_t*)requestBuffer;
+                        compat->TotalSections = 2;
+                    }
                     return DevCompatIDs.TotalLength;
                 } else if (request == THID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {
                     memcpy_P(requestBuffer, ID, sizeof(ID));
@@ -61,19 +65,6 @@ uint16_t controlRequest(const requestType_t requestType, const uint8_t request, 
                 reset_usb();
             }
         }
-        // Wii appears to STALL / RESET after set address
-        // Switch
-        // USBD Setup Received 02 01 00 00 81 00 00 00
-        //   Clear Feature
-        //   HID control request
-        //   Queue EP 80 with 0 bytes ...
-        // USBD Xfer Complete on EP 80 with 0 bytes
-
-        // USBD Setup Received 02 01 00 00 02 00 00 00
-        //   Clear Feature
-        //   HID control request
-        //   Queue EP 80 with 0 bytes ...
-        // USBD Xfer Complete on EP 80 with 0 bytes
     } else {
         // uint8_t *data = *address;
         if (request == THID_REQ_SetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
@@ -149,7 +140,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             // printf("\n");
             break;
         case TDTYPE_Configuration:
-            if (consoleType == XBOX360) {
+            if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
                 size = sizeof(TUSB_Descriptor_Configuration_XBOX_t);
                 memcpy_P(descriptorBuffer, &XBOXConfigurationDescriptor, size);
                 TUSB_Descriptor_Configuration_XBOX_t *desc = (TUSB_Descriptor_Configuration_XBOX_t *)descriptorBuffer;
@@ -208,6 +199,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
             break;
         case THID_DTYPE_Report:
+            read_hid_report_descriptor = true;
             const void *address;
             if (consoleType == KEYBOARD_MOUSE) {
                 address = kbd_report_descriptor;

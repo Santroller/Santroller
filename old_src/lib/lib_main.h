@@ -18,6 +18,7 @@ extern ConsoleType_t consoleType;
 extern DeviceType_t deviceType;
 extern bool guitar;
 extern bool drum;
+extern bool read_hid_report_descriptor;
 extern uint8_t pinCount;
 extern uint8_t inputCount;
 extern Input_t pins[PORTS * PINS_PER_PORT];

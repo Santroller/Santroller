@@ -24,7 +24,7 @@ typedef struct {
   // Accel values are 10 bits with padding.
   int16_t accel[4];
 
-} USB_PS3Report_Data_t;
+} ATTR_PACKED USB_PS3Report_Data_t;
 
 typedef struct {
   uint16_t buttons;
@@ -34,7 +34,7 @@ typedef struct {
   int16_t l_y;
   int16_t r_x;
   int16_t r_y;
-} XInput_Data_t;
+} ATTR_PACKED XInput_Data_t;
 
 typedef struct {
   uint8_t rid;
@@ -47,7 +47,7 @@ typedef struct {
   int16_t r_x;
   int16_t r_y;
   uint8_t reserved_1[6];
-} USB_XInputReport_Data_t;
+} ATTR_PACKED USB_XInputReport_Data_t;
 
 typedef struct {
   uint8_t rid;

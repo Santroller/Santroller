@@ -96,6 +96,7 @@ extern "C" {
 #define CFG_TUD_XINPUT_TX_BUFSIZE VENDOR_EPSIZE
 #define CFG_TUD_XINPUT_RX_BUFSIZE VENDOR_EPSIZE
 
+
 #ifdef __cplusplus
 }
 #endif

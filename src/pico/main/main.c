@@ -192,7 +192,6 @@ void hid_task(void) {
         start_ms = millis();
       }
       break;
-#ifndef MULTI_ADAPTOR
     case REPORT_ID_GAMEPAD:
       rid = 0;
     case REPORT_ID_KBD:
@@ -209,7 +208,6 @@ void hid_task(void) {
       size--;
       tud_midi_n_packet_write(0, data);
       start_ms = millis();
-#endif
     }
 
     // Remote wakeup

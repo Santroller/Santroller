@@ -82,17 +82,17 @@ void twi_init(void) {
   cbi(TWSR, TWPS0);
   cbi(TWSR, TWPS1);
   // TWI_FREQ results in a TWBR of > 10 at 8mhz, so we need to round it to 10.
-// #if F_CPU < 9000000UL
+#if F_CPU < 9000000UL
 // Just run at the max speed we can
   TWBR = 10;
-// #else
+#else
   /* twi bit rate formula from atmega128 manual pg 204
   SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
   note: TWBR should be 10 or higher for master mode
   It is 72 for a 16mhz Wiring board with 100kHz TWI */
 
-  // TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
-// #endif
+  TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
+#endif
   // enable twi module, acks, and twi interrupt
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
 }

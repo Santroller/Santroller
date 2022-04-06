@@ -50,7 +50,6 @@ void initInputs(Configuration_t *config) {
   joyThreshold = config->axis.joyThreshold << 8;
   triggerThreshold = config->axis.triggerThreshold;
 }
-bool test = false;
 void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);

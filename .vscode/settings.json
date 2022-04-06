@@ -113,5 +113,6 @@
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "cmake.generator": "Unix Makefiles"
+    "cmake.generator": "Unix Makefiles",
+    "sonarlint.pathToCompileCommands": "/home/sanjay/Code/Ardwiino/build/compile_commands.json"
 }

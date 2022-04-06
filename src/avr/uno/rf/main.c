@@ -2,6 +2,7 @@
 #define ARDUINO_MAIN
 #include "avr-nrf24l01/src/nrf24l01-mnemonics.h"
 #include "avr-nrf24l01/src/nrf24l01.h"
+#include "controller/guitar_includes.h"
 #include "eeprom/eeprom.h"
 #include "input/input_handler.h"
 #include "leds/leds.h"
@@ -22,7 +23,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <util/delay.h>
-#include "controller/guitar_includes.h"
 // Sleep pin: 3
 Controller_t controller;
 Controller_t prevCtrl;
@@ -37,7 +37,8 @@ uint8_t pollRate;
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 void initialise(void) {
-  Configuration_t config = loadConfig();
+  Configuration_t config;
+  loadConfig(&config);
   config.rf.rfInEnabled = false;
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
@@ -113,7 +114,8 @@ int main(void) {
   }
 }
 
-void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report, const void* request) {
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report,
+                const void *request) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
 }

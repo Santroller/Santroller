@@ -106,6 +106,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     // GH PS3 guitars have a tilt axis, this seems to be how my ps3 guitar is mapped.
     JoystickReport->accel[0] = tilt ? -4000 : 7975;
     // r_y is tap, so lets disable it.
+    // TODO: if triggers aren't used by the game maybe we just map tilt to that as well?
     JoystickReport->r_y = 0x7d;
   } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||
              fullDeviceType == WII_ROCK_BAND_GUITAR) {

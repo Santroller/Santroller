@@ -57,7 +57,8 @@ void writeData(const uint8_t *buf, uint8_t len) {
   UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0));
 }
 void initialise(void) {
-  Configuration_t config = loadConfig();
+  Configuration_t config;
+  loadConfig(&config);
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
   pollRate = config.main.pollRate;

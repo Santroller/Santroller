@@ -72,7 +72,8 @@ uint8_t deviceType;
 uint8_t fullDeviceType;
 uint8_t pollRate;
 void initialise(void) {
-  Configuration_t config = loadConfig();
+  Configuration_t config;
+  loadConfig(&config);
   config.rf.rfInEnabled = false;
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;

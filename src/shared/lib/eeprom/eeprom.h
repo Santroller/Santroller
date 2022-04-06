@@ -3,7 +3,7 @@
 #include "config/defaults.h"
 
 // extern Configuration_t EEMEM config_pointer;
-Configuration_t loadConfig(void);
+void loadConfig(Configuration_t* config);
 void resetConfig(void);
 void writeConfigBlock(uint16_t offset, const uint8_t *data, uint16_t len);
 void writeConfigByte(uint16_t offset, uint8_t byte);

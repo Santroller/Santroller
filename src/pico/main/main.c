@@ -221,7 +221,8 @@ void hid_task(void) {
 void initialise(void) {
   board_init();
   tusb_init();
-  Configuration_t config = loadConfig();
+  Configuration_t config;
+  loadConfig(&config);
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
   pollRate = config.main.pollRate;

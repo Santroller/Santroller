@@ -39,7 +39,8 @@ void stopReading(void) {}
 
 void initialise(void) {
   board_init();
-  Configuration_t config = loadConfig();
+  Configuration_t config;
+  loadConfig(&config);
   config.rf.rfInEnabled = false;
   fullDeviceType = fullDeviceType;
   deviceType = fullDeviceType;
@@ -94,7 +95,8 @@ int main(void) {
     }
   }
 }
-void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report, const void* request) {
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report,
+                const void *request) {
   uint8_t data[32];
   tickRFTX((uint8_t *)Buffer, data, Length);
 }

@@ -46,6 +46,7 @@ mega:
 	$(MAKE) -C src/avr/uno/main MCU=$(MEGAMCU) ARDWIINO_BOARD=mega
 uno:
 	# $(MAKE) -C src/avr/uno/
+	stty -F /dev/ttyACM0 1200 || true
 	sleep 0.5
 	scripts/bootloader.py || true
 	sleep 1

@@ -31,7 +31,8 @@ long lastPoll = 0;
 uint8_t inputType;
 uint8_t pollRate;
 void initialise(void) {
-  Configuration_t config = loadConfig();
+  Configuration_t config;
+  loadConfig(&config);
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
   pollRate = config.main.pollRate;
@@ -154,7 +155,8 @@ void EVENT_CDC_Device_ControLineStateChanged(
     bootloader();
   }
 }
-void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report, const void* request) {
+void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report,
+                const void *request) {
   Endpoint_ClearSETUP();
   Endpoint_Write_Control_Stream_LE(Buffer + 1, Length - 1);
   Endpoint_ClearStatusStage();

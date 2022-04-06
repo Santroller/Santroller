@@ -4,16 +4,16 @@
 // #include "input_handler.h"
 // #include <avr/power.h>
 #include "spi/spi.h"
-bool ledsEnabled;
+bool spiLedsDisabled;
 Led_t ledConfig[XBOX_AXIS_COUNT + XBOX_BTN_COUNT];
 Led_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
 void initLEDs(Configuration_t* config) {
-  ledsEnabled = config->main.fretLEDMode != APA102;
+  spiLedsDisabled = config->main.fretLEDMode != APA102;
   memcpy(ledConfig, config->leds, sizeof(leds));
 }
 void tickLEDs(Controller_t *controller) {
   // Don't do anything if the leds are disabled.
-  if (ledsEnabled) return;
+  if (spiLedsDisabled) return;
   int led = 0;
   for (uint8_t i = 0; i < 4; i++) { spi_transfer(0); }
   Led_t configLED;

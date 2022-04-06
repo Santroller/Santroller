@@ -16,6 +16,7 @@ AnalogInfo_t joyData[NUM_ANALOG_INPUTS];
 int16_t analogueData[XBOX_AXIS_COUNT];
 bool usingI2C;
 bool usingSPI;
+bool misoAvailable;
 uint8_t spPin;
 uint8_t tiltType;
 uint8_t drumVelocity[8];
@@ -33,6 +34,7 @@ void initDirectInput(Configuration_t *config) {
       (config->main.tiltType == MPU_6050 || config->main.inputType == WII);
   usingSPI =
       (config->main.fretLEDMode == APA102) || config->main.inputType == PS2;
+  misoAvailable = config->main.inputType != PS2;
   spPin = config->pinsSP;
   tiltType = config->main.tiltType;
   uint8_t *pins = (uint8_t *)&config->pins;
@@ -93,8 +95,11 @@ bool shouldSkipPin(uint8_t i) {
 #  endif
 #endif
   // Skip SPI pins when using peripherials that utilise SPI
-  if (usingSPI && (i == PIN_SPI_MOSI || i == PIN_SPI_MISO || i == PIN_SPI_SCK ||
+  if (usingSPI && (i == PIN_SPI_MOSI|| i == PIN_SPI_SCK ||
                    i == PIN_SPI_SS)) {
+    return true;
+  }
+  if (!misoAvailable && i == PIN_SPI_MISO) {
     return true;
   }
   return false;
@@ -129,9 +134,9 @@ void findAnalogPin(void) {
 void stopSearching(void) {
   if (lookingForDigital) {
     for (int i = 0; i < NUM_DIGITAL_PINS; i++) {
-      if (!shouldSkipPin(i)) { pinMode(i, INPUT); }
       lastDigitalValue[i] = digitalRead(i);
     }
+    reinitDirectInput();
   }
   lookingForDigital = lookingForAnalog = false;
 }

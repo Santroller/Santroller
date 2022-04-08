@@ -55,11 +55,6 @@ typedef struct ATTR_PACKED {
     uint8_t data[];
 } control_request_t;
 
-typedef struct {
-    packet_header_t header;
-
-} controller_data_t;
-
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
     UBRR1 = (DoubleSpeed ? SERIAL_2X_UBBRVAL(BaudRate) : SERIAL_UBBRVAL(BaudRate));

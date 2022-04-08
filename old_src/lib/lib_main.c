@@ -45,7 +45,7 @@ uint8_t strumDown = XBOX_DPAD_DOWN;
 void init() {
     ledMode = NONE;
     inputType = DIRECT;
-    consoleType = PC_XINPUT;
+    consoleType = PC;
     deviceType = GUITAR_HERO_GUITAR;
     // TODO: this will differ for PS3 or keyboard
     inputCount = XBOX_AXIS_COUNT + XBOX_BTN_COUNT;

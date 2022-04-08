@@ -6,7 +6,6 @@
 #include "defines.h"
 
 typedef struct {
-    uint8_t pin;
     uint8_t red;
     uint8_t green;
     uint8_t blue;
@@ -32,6 +31,7 @@ typedef struct {
     BindingType_t type;
     bool pulldown : 1;
     bool pullup : 1;
+    uint8_t led_index;
     Led_t led_on;
     Led_t led_off;
     Midi_t midi;
@@ -73,5 +73,8 @@ typedef struct {
     RFConfig_t rf;
 } Configuration_t;
 
-uint16_t test = sizeof(Bindings_t)
-// TODO: there has to be a more compact and a way to store all this data that is more organised and makes more sense
+extern DeviceType_t deviceType;
+extern ConsoleType_t consoleType;
+extern bool guitar;
+extern bool drum;
+extern bool read_hid_report_descriptor;

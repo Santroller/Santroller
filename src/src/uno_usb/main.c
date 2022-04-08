@@ -92,7 +92,6 @@ int main(void) {
 
     clock_prescale_set(clock_div_1);
 
-
     UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
     UCSR1A = (1 << U2X1);
     UCSR1B = ((1 << TXEN1) | (1 << RXCIE1) | (1 << RXEN1));
@@ -157,9 +156,24 @@ int main(void) {
             }
         }
     }
+    uint16_t count = 0;
+    uint8_t count2 = 0;
     // Wait for the 328p / 1280 to boot (we receive a READY byte)
     // Since it is set in the isr, we need to treat it as volatile
+    // If we don't get it in time, we can assume the 328p is missing its firmware and drop to the 328p programming mode
     while (((volatile uint8_t*)buf)[0] != READY) {
+        count++;
+        if (count > 0xFFFE) {
+            count2++;
+            count = 0;
+        }
+        if (count2 > 0x2F) {
+            bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);
+            cli();
+            wdt_enable(WDTO_15MS);
+            for (;;) {
+            }
+        }
     }
     USB_Init();
     packet_header_t requestData = {
@@ -256,11 +270,7 @@ void EVENT_USB_Device_ControlRequest(void) {
     packet->header.magic = VALID_PACKET;
     packet->header.id = CONTROL_REQUEST_ID;
     packet->header.len = sizeof(control_request_t);
-    packet->bmRequestType = USB_ControlRequest.bmRequestType;
-    packet->request = USB_ControlRequest.bRequest;
-    packet->wValue = USB_ControlRequest.wValue;
-    packet->wIndex = USB_ControlRequest.wIndex;
-    packet->wLength = USB_ControlRequest.wLength;
+    memcpy(&packet->bmRequestType, &USB_ControlRequest, sizeof(USB_ControlRequest));
     if (packet->bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_VENDOR | REQREC_INTERFACE)) {
         Endpoint_ClearSETUP();
         packet->header.len += USB_ControlRequest.wLength;

@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-# import hid
-# h = hid.device()
-# h.open(0x1209, 0x2882)
-# h.send_feature_report([0x00,52])
-
 import subprocess
-import re
 import sys
 try:
     import usb.core
@@ -29,14 +23,20 @@ def launch_dfu():
 
 Import("env")
 def before_upload(source, target, env):
-    idVendor = 0x03eb
-    idProduct = None
-    b_request = BOOTLOADER
+    b_request = None
+    exists = False
+    if "/arduino_uno_mega_usb" in str(source[0]):
+        idVendor = 0x03eb
+        idProduct = None
+        b_request = BOOTLOADER
+        if (usb.core.find(idVendor=0x1209, idProduct=0x2883)):
+            env.AutodetectUploadPort()
+            env.TouchSerialPort("$UPLOAD_PORT", 1200)
     if "/arduino_uno/" in str(source[0]):
         b_request = BOOTLOADER_SERIAL
         idVendor = 0x1209
         idProduct = 0x2883
-    print(b_request)
+        exists = usb.core.find(idProduct=idProduct, idVendor=idVendor)
     # find our device
     dev = usb.core.find(idVendor=0x1209, idProduct=0x2882)
     try:
@@ -47,16 +47,16 @@ def before_upload(source, target, env):
         dev.ctrl_transfer(0x21, b_request, 0x00,0x00,[])
     except:
         pass
-    
-    args = {"idVendor": idVendor}
-    if idProduct:
-        args["idProduct"] = idProduct
-    
-    before_ports = get_serial_ports()
-    while not usb.core.find(**args):
-        pass
-    if idProduct == 0x2883:
-        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
+    if b_request:
+        args = {"idVendor": idVendor}
+        if idProduct:
+            args["idProduct"] = idProduct
+        
+        before_ports = get_serial_ports()
+        while not usb.core.find(**args):
+            pass
+        if not exists and idProduct == 0x2883:
+            env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
 
 def post_upload(source, target, env):
     if "/arduino_uno/" in str(source[0]):

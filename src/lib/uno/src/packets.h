@@ -2,8 +2,9 @@
 #include <stdint.h>
 #include "attributes.h"
 
-#define READY 0x75
+#define READY 0x65
 #define VALID_PACKET 0x14
+#define CONTROLLER_DATA_REBOOT_ID 0x73
 #define DESCRIPTOR_SERIAL_ID 0x74
 #define CONTROLLER_DATA_TRANSMIT_ID 0x75
 #define CONTROLLER_DATA_REQUEST_ID 0x76
@@ -11,7 +12,7 @@
 #define CONTROL_REQUEST_ID 0x78
 #define DEVICE_ID 0x79
 #define BAUD 1000000
-#define STK500_BAUD 115200
+#define SERIAL_2X_UBBRVAL(Baud) ((((F_CPU / 8) + (Baud / 2)) / (Baud)) - 1)
 #define DESC_REQUEST_HEADER \
     { VALID_PACKET, DESCRIPTOR_ID, sizeof(descriptor_request_t) }
 typedef struct TATTR_PACKED {

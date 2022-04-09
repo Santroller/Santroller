@@ -25,26 +25,15 @@
 #include "defines.h"
 #include "endpoints.h"
 #include "packets.h"
+#include "bootloader.h"
+#include "serial_descriptors.h"
 #define JUMP 0xDE00
 #define BUFFER_NEARLY_FULL 96
 static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
                                           .CharFormat = CDC_LINEENCODING_OneStopBit,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
-typedef struct
-{
-    USB_Descriptor_Configuration_Header_t Config;
-    USB_Descriptor_Interface_t CDC_CCI_Interface;
-    USB_CDC_Descriptor_FunctionalHeader_t CDC_Functional_Header;
-    USB_CDC_Descriptor_FunctionalACM_t CDC_Functional_ACM;
-    USB_CDC_Descriptor_FunctionalUnion_t CDC_Functional_Union;
-    USB_Descriptor_Endpoint_t CDC_NotificationEndpoint;
-    USB_Descriptor_Interface_t CDC_DCI_Interface;
-    USB_Descriptor_Endpoint_t CDC_DataOutEndpoint;
-    USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
-} USB_Descriptor_Configuration_t;
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor;
-const USB_Descriptor_Device_t PROGMEM DeviceDescriptor;
+
 uint8_t buf_desc[sizeof(ConfigurationDescriptor)];
 // if bootloaderState is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
@@ -169,10 +158,7 @@ int main(void) {
         }
         if (count2 > 0x2F) {
             bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);
-            cli();
-            wdt_enable(WDTO_15MS);
-            for (;;) {
-            }
+            reboot();
         }
     }
     USB_Init();
@@ -185,6 +171,10 @@ int main(void) {
             txRX(&requestData, sizeof(packet_header_t));
             uint8_t len = ret->header.len - sizeof(packet_header_t);
             uint8_t* tmp = ret->data;
+            if (ret->header.id == CONTROLLER_DATA_REBOOT_ID) {
+                bootloaderState = JUMP;
+                reboot();
+            }
             Endpoint_Write_Stream_LE(tmp, len, NULL);
             Endpoint_ClearIN();
         }
@@ -216,14 +206,10 @@ void EVENT_USB_Device_ControlRequest(void) {
                 Endpoint_ClearIN();
                 if (LineEncoding.BaudRateBPS == 1200) {
                     bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER);
+                    reboot();
                 } else if (LineEncoding.BaudRateBPS == 2400) {
                     bootloaderState = JUMP;
-                }
-                if (bootloaderState) {
-                    cli();
-                    wdt_enable(WDTO_15MS);
-                    for (;;) {
-                    }
+                    reboot();
                 }
 
                 /* Must turn off USART before reconfiguring it, otherwise incorrect operation may occur */
@@ -259,10 +245,7 @@ void EVENT_USB_Device_ControlRequest(void) {
             Endpoint_ClearSETUP();
             Endpoint_ClearStatusStage();
             bootloaderState = (JUMP | USB_ControlRequest.bRequest);
-            cli();
-            wdt_enable(WDTO_15MS);
-            for (;;) {
-            }
+            reboot();
             return;
         }
     }
@@ -367,122 +350,3 @@ ISR(USART1_UDRE_vect, ISR_BLOCK) {
         UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1));
     }
 }
-const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
-    {
-        .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
-
-        .USBSpecification = VERSION_BCD(1, 1, 0),
-        .Class = 0x02,
-        .SubClass = 0x00,
-        .Protocol = 0x00,
-
-        .Endpoint0Size = FIXED_CONTROL_ENDPOINT_SIZE,
-
-        .VendorID = 0x1209,
-
-        .ProductID = 0x2883,
-        .ReleaseNumber = 0x0001,
-
-        .ManufacturerStrIndex = NO_DESCRIPTOR,
-        .ProductStrIndex = NO_DESCRIPTOR,
-        .SerialNumStrIndex = NO_DESCRIPTOR,
-
-        .NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS};
-
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
-    {
-        .Config =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
-
-                .TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
-                .TotalInterfaces = 2,
-
-                .ConfigurationNumber = 1,
-                .ConfigurationStrIndex = NO_DESCRIPTOR,
-
-                .ConfigAttributes = 0,
-
-                .MaxPowerConsumption = USB_CONFIG_POWER_MA(100)},
-
-        .CDC_CCI_Interface =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
-
-                .InterfaceNumber = 0,
-                .AlternateSetting = 0,
-
-                .TotalEndpoints = 1,
-
-                .Class = 0x02,
-                .SubClass = 0x02,
-                .Protocol = 0x01,
-
-                .InterfaceStrIndex = NO_DESCRIPTOR},
-
-        .CDC_Functional_Header =
-            {
-                .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalHeader_t), .Type = CDC_DTYPE_CSInterface},
-                .Subtype = CDC_DSUBTYPE_CSInterface_Header,
-
-                .CDCSpecification = VERSION_BCD(1, 1, 0),
-            },
-
-        .CDC_Functional_ACM =
-            {
-                .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalACM_t), .Type = CDC_DTYPE_CSInterface},
-                .Subtype = CDC_DSUBTYPE_CSInterface_ACM,
-
-                .Capabilities = 0x06,
-            },
-
-        .CDC_Functional_Union =
-            {
-                .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalUnion_t), .Type = CDC_DTYPE_CSInterface},
-                .Subtype = CDC_DSUBTYPE_CSInterface_Union,
-
-                .MasterInterfaceNumber = 0,
-                .SlaveInterfaceNumber = 1,
-            },
-
-        .CDC_NotificationEndpoint =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
-
-                .EndpointAddress = CDC_NOTIFICATION,
-                .Attributes = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = ENDPOINT_SIZE,
-                .PollingIntervalMS = 0xFF},
-
-        .CDC_DCI_Interface =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
-
-                .InterfaceNumber = 1,
-                .AlternateSetting = 0,
-
-                .TotalEndpoints = 2,
-
-                .Class = 0x0A,
-                .SubClass = 0x00,
-                .Protocol = 0x00,
-
-                .InterfaceStrIndex = NO_DESCRIPTOR},
-
-        .CDC_DataOutEndpoint =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
-
-                .EndpointAddress = DEVICE_EPADDR_OUT,
-                .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = SERIAL_ENDPOINT_SIZE,
-                .PollingIntervalMS = 0x01},
-
-        .CDC_DataInEndpoint =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
-
-                .EndpointAddress = DEVICE_EPADDR_IN,
-                .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = SERIAL_ENDPOINT_SIZE,
-                .PollingIntervalMS = 0x01}};

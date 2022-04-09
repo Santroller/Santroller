@@ -1,70 +1,129 @@
 /**
  * You should have a LUFAConfig.h for this to work.
  */
-#include "LUFAConfig.h"
 
 /**
  * Include LUFA.h after LUFAConfig.h
  */
-#include <LUFA.h>
-
 #include <Wire.h>
 #include <SPI.h>
+#include <avr/io.h>
+#include <avr/wdt.h>
+#include <avr/power.h>
+#include <avr/interrupt.h>
+#include <string.h>
 
-/**
- * Finally include the LUFA device setup header
- */
-#include "DualVirtualSerial.h"
+#include "descriptors_detect.h"
+#include "bootloader.h"
 
-#include "ArduinoSerial.h"
+#include <LUFA.h>
+#include <LUFA/LUFA/Drivers/Board/LEDs.h>
+#include <LUFA/LUFA/Drivers/USB/USB.h>
+#include <LUFA/LUFA/Drivers/USB/Class/CDCClass.h>
+#include <LUFA/LUFA/Platform/Platform.h>
 
+USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
+	{
+		.Config =
+			{
+				.ControlInterfaceNumber   = INTERFACE_ID_Device,
+				.DataINEndpoint           =
+					{
+						.Address          = DEVICE_EPADDR_IN,
+						.Size             = ENDPOINT_SIZE,
+						.Type			  = EP_TYPE_BULK,
+						.Banks            = 1,
+					},
+				.DataOUTEndpoint =
+					{
+						.Address          = DEVICE_EPADDR_IN,
+						.Size             = ENDPOINT_SIZE,
+						.Type			  = EP_TYPE_BULK,
+						.Banks            = 1,
+					},
+				.NotificationEndpoint =
+					{
+						.Address          = CDC_NOTIFICATION,
+						.Size             = ENDPOINT_SIZE,
+						.Type			  = EP_TYPE_BULK,
+						.Banks            = 1,
+					},
+			},
+		.State = {
+			.ControlLineStates = {
+				.HostToDevice = 0,
+				.DeviceToHost = 0
+			},
+			.LineEncoding = {
+				.BaudRateBPS = 0,
+				.CharFormat = 0,
+				.ParityType = 0,
+				.DataBits = 0
+			}
+		}
+	};
+
+void SetupHardware(void);
+
+volatile bool waiting = true;
 void setup()
 {
-  
-	SetupHardware(); // ask LUFA to setup the hardware
-
 	GlobalInterruptEnable(); // enable global interrupts
+	SetupHardware(); // ask LUFA to setup the hardware
 }
 
 void loop()
 {
-	delayMicroseconds(100);
-	delay(500); // a little delay so we don't spam the console...
-
-	// write to the first Serial
-	SerialU1.print("SerialU1: ");
-	SerialU1.println(millis());
-
-	// write to the second Serial
-	SerialU2.print("SerialU2: ");
-	SerialU2.println(millis());
-
-	// read from the first serial
-	while (SerialU1.available())
-	{
-		char c = SerialU1.read();
-		SerialU1.print("From 1: ");
-		SerialU1.println(c);
-		SerialU2.print("From 1: ");
-		SerialU2.println(c);
-	}
-
-	// read from the second serial
-	while (SerialU2.available())
-	{
-		char c = SerialU2.read();
-		SerialU1.print("From 2: ");
-		SerialU1.println(c);
-		SerialU2.print("From 2: ");
-		SerialU2.println(c);
-	}
-
-	// These 3 lines let LUFA to process the USB task
-	CDC_Device_USBTask(&VirtualSerial1_CDC_Interface);
-	CDC_Device_USBTask(&VirtualSerial2_CDC_Interface);
+	CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 	USB_USBTask();
+}
 
-	// These 2 lets the LUFACDCSerial to accept buffers.
-	SerialU1.accept();
-	SerialU2.accept();
+/** Configures the board hardware and chip peripherals for the demo's functionality. */
+void SetupHardware(void)
+{
+	/* Disable watchdog if enabled by bootloader/fuses */
+	MCUSR &= ~(1 << WDRF);
+	wdt_disable();
+
+	/* Disable clock division */
+	clock_prescale_set(clock_div_1);
+
+	/* Hardware Initialization */
+	USB_Init();
+
+}
+
+ISR(WDT_vect) {
+    wdt_disable();
+    waiting = false;
+}
+
+/** Event handler for the library USB Configuration Changed event. */
+void EVENT_USB_Device_ConfigurationChanged(void)
+{
+	bool ConfigSuccess = true;
+
+	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
+}
+
+/** Event handler for the library USB Control Request reception event. */
+void EVENT_USB_Device_ControlRequest(void)
+{
+	CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
+}
+
+void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
+{
+	if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 1200) {
+		bootloader();
+	}
+}
+
+/** CDC class driver callback function the processing of changes to the virtual
+ *  control lines sent from the host..
+ *
+ *  \param[in] CDCInterfaceInfo  Pointer to the CDC class interface configuration structure being referenced
+ */
+void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo)
+{
 }

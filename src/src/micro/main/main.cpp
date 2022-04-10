@@ -2,6 +2,7 @@
  * You should have a LUFAConfig.h for this to work.
  */
 
+#include "LUFAConfig.h"
 /**
  * Include LUFA.h after LUFAConfig.h
  */
@@ -12,8 +13,9 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include "config.h"
 
-#include "descriptors_detect.h"
+#include "descriptors.h"
 #include "bootloader.h"
 
 #include <LUFA.h>
@@ -21,47 +23,6 @@
 #include <LUFA/LUFA/Drivers/USB/USB.h>
 #include <LUFA/LUFA/Drivers/USB/Class/CDCClass.h>
 #include <LUFA/LUFA/Platform/Platform.h>
-
-USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
-	{
-		.Config =
-			{
-				.ControlInterfaceNumber   = INTERFACE_ID_Device,
-				.DataINEndpoint           =
-					{
-						.Address          = DEVICE_EPADDR_IN,
-						.Size             = ENDPOINT_SIZE,
-						.Type			  = EP_TYPE_BULK,
-						.Banks            = 1,
-					},
-				.DataOUTEndpoint =
-					{
-						.Address          = DEVICE_EPADDR_IN,
-						.Size             = ENDPOINT_SIZE,
-						.Type			  = EP_TYPE_BULK,
-						.Banks            = 1,
-					},
-				.NotificationEndpoint =
-					{
-						.Address          = CDC_NOTIFICATION,
-						.Size             = ENDPOINT_SIZE,
-						.Type			  = EP_TYPE_BULK,
-						.Banks            = 1,
-					},
-			},
-		.State = {
-			.ControlLineStates = {
-				.HostToDevice = 0,
-				.DeviceToHost = 0
-			},
-			.LineEncoding = {
-				.BaudRateBPS = 0,
-				.CharFormat = 0,
-				.ParityType = 0,
-				.DataBits = 0
-			}
-		}
-	};
 
 void SetupHardware(void);
 
@@ -74,11 +35,9 @@ void setup()
 
 void loop()
 {
-	CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 	USB_USBTask();
 }
 
-/** Configures the board hardware and chip peripherals for the demo's functionality. */
 void SetupHardware(void)
 {
 	/* Disable watchdog if enabled by bootloader/fuses */
@@ -93,37 +52,48 @@ void SetupHardware(void)
 
 }
 
+uint8_t buf[255];
+void EVENT_USB_Device_ControlRequest(void) {
+    bool valid = false;
+    if ((USB_ControlRequest.bmRequestType & CONTROL_REQTYPE_DIRECTION) == (REQDIR_DEVICETOHOST)) {
+        // uint16_t len = controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf, &valid);
+        // if (valid) {
+        //     Endpoint_ClearSETUP();
+        //     Endpoint_Write_Control_Stream_LE(buf, len);
+        //     Endpoint_ClearStatusStage();
+        // }
+    } else if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) {
+        // Endpoint_ClearSETUP();
+        // Endpoint_Read_Control_Stream_LE(buf, USB_ControlRequest.wLength);
+        // controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf, &valid);
+        // Endpoint_ClearStatusStage();
+    }
+}
+void EVENT_USB_Device_ConfigurationChanged(void) {
+    uint8_t type = EP_TYPE_INTERRUPT;
+    uint8_t epsize = 0x20;
+    if (consoleType == MIDI) {
+        type = EP_TYPE_BULK;
+    }
+    if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
+        epsize = 0x18;
+    }
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 1);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
+}
+
+uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
+                                    const uint16_t wIndex,
+                                    const void** const descriptorAddress) {
+    *descriptorAddress = buf;
+    return descriptorRequest(wValue, wIndex, buf);
+}
 ISR(WDT_vect) {
     wdt_disable();
     waiting = false;
 }
-
-/** Event handler for the library USB Configuration Changed event. */
-void EVENT_USB_Device_ConfigurationChanged(void)
-{
-	bool ConfigSuccess = true;
-
-	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
-}
-
-/** Event handler for the library USB Control Request reception event. */
-void EVENT_USB_Device_ControlRequest(void)
-{
-	CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
-}
-
-void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
-{
-	if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 1200) {
-		bootloader();
-	}
-}
-
-/** CDC class driver callback function the processing of changes to the virtual
- *  control lines sent from the host..
- *
- *  \param[in] CDCInterfaceInfo  Pointer to the CDC class interface configuration structure being referenced
- */
-void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo)
-{
+void reset_usb(void) {
+    // TODO: is this working?
+    USB_Disable();
+    USB_Init();
 }

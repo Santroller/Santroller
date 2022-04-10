@@ -1,5 +1,6 @@
+#pragma once
 #include <stdint.h>
-#include "eeprom.h"
+#include "progmem.h"
 #define HID_IOF_VARIABLE (1 << 1)
 #define HID_IOF_RELATIVE (1 << 2)
 #define HID_IOF_ABSOLUTE (0 << 2)
@@ -9,7 +10,7 @@
 #define MinPhysicalVal -127
 #define MaxPhysicalVal 128
 #define AbsoluteCoords false
-AVR_CONST uint8_t keyboard_mouse_descriptor[] = {
+const PROGMEM uint8_t keyboard_mouse_descriptor[] = {
     0x05, 0x01,                                                                           // Usage Page (Generic Desktop Ctrls)
     0x09, 0x06,                                                                           // Usage (Keyboard)
     0xA1, 0x01,                                                                           // Collection (Application)

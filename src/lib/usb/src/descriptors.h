@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include "Usb.h"
 #include "wcid.h"

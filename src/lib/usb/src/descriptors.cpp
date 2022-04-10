@@ -3,6 +3,7 @@
 #include "config.h"
 #include "keyboard_mouse.h"
 #include "ps3_wii_switch.h"
+#include "usbhid.h"
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
@@ -11,23 +12,23 @@
  * language ID table available at USB.org what languages the device supports for
  * its string descriptors.
  */
-const PROGMEM STRING_DESCRIPTOR languageString = USB_STRING_DESCRIPTOR_ARRAY(LANGUAGE_ID_ENG);
+const PROGMEM STRING_DESCRIPTOR languageString = USB_DESCRIPTOR_STRING_ARRAY(LANGUAGE_ID_ENG);
 /** Manufacturer descriptor string. This is a Unicode string containing the
  * manufacturer's details in human readable form, and is read out upon request
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_STRING_DESCRIPTOR_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
+const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const PROGMEM STRING_DESCRIPTOR productString = USB_STRING_DESCRIPTOR_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
+const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
 
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication
  */
-const PROGMEM STRING_DESCRIPTOR xboxString = USB_STRING_DESCRIPTOR_ARRAY(
+const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_ARRAY(
     'X', 'b', 'o', 'x', ' ', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y',
     ' ', 'M', 'e', 't', 'h', 'o', 'd', ' ', '3', ',', ' ',
     'V', 'e', 'r', 's', 'i', 'o', 'n', ' ', '1', '.', '0', '0', ',',
@@ -53,14 +54,14 @@ const PROGMEM OS_DESCRIPTOR OSDescriptorString = {
 const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bLength : sizeof(deviceDescriptor),
     bDescriptorType : USB_DESCRIPTOR_DEVICE,
-    bcdUSB : VERSION_BCD(2, 0, 0),
-    bDeviceClass : USB_CSCP_NoDeviceClass,
-    bDeviceSubClass : USB_CSCP_NoDeviceSubclass,
-    bDeviceProtocol : USB_CSCP_NoDeviceProtocol,
+    bcdUSB : USB_VERSION_BCD(2, 0, 0),
+    bDeviceClass : USB_CLASS_USE_CLASS_INFO,
+    bDeviceSubClass : USB_CLASS_USE_CLASS_INFO,
+    bDeviceProtocol : USB_CLASS_USE_CLASS_INFO,
     bMaxPacketSize0 : ENDPOINT_SIZE,
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-    bcdDevice : VERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
+    bcdDevice : USB_VERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
     iManufacturer : 0x01,
     iProduct : 0x02,
     iSerialNumber : 0x03,
@@ -76,7 +77,7 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
         bConfigurationValue : 1,
         iConfiguration : NO_DESCRIPTOR,
         bmAttributes :
-            (USB_CONFIG_TATTR_RESERVED | USB_CONFIG_TATTR_REMOTEWAKEUP),
+            (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500)
     },
     Interface1 : {
@@ -210,7 +211,7 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
         bConfigurationValue : 1,
         iConfiguration : NO_DESCRIPTOR,
         bmAttributes :
-            (USB_CONFIG_TATTR_RESERVED | USB_CONFIG_TATTR_REMOTEWAKEUP),
+            (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500),
     },
     InterfaceHID : {
@@ -219,15 +220,15 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
         bInterfaceNumber : INTERFACE_ID_Device,
         bAlternateSetting : 0,
         bNumEndpoints : 2,
-        bInterfaceClass : HID_CSCP_HIDClass,
-        bInterfaceSubClass : HID_CSCP_NonBootSubclass,
-        bInterfaceProtocol : HID_CSCP_NonBootProtocol,
+        bInterfaceClass : HID_INTF,
+        bInterfaceSubClass : USB_HID_PROTOCOL_NONE,
+        bInterfaceProtocol : USB_HID_PROTOCOL_NONE,
         iInterface : NO_DESCRIPTOR
     },
     HIDDescriptor : {
         bLength : sizeof(USB_HID_DESCRIPTOR),
         bDescriptorType : HID_DESCRIPTOR_HID,
-        bcdHID : VERSION_BCD(1, 0, 1),
+        bcdHID : USB_VERSION_BCD(1, 0, 1),
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
@@ -296,7 +297,7 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
         bConfigurationValue : 1,
         iConfiguration : NO_DESCRIPTOR,
         .bmAttributes =
-            (USB_CONFIG_TATTR_RESERVED | USB_CONFIG_TATTR_REMOTEWAKEUP),
+            (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500),
     },
     Interface_AudioControl : {
@@ -305,16 +306,16 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
         bInterfaceNumber : INTERFACE_ID_ControlStream,
         bAlternateSetting : 0x00,
         bNumEndpoints : 0,
-        bInterfaceClass : AUDIO_CSCP_AudioClass,
-        bInterfaceSubClass : AUDIO_CSCP_ControlSubclass,
-        bInterfaceProtocol : AUDIO_CSCP_ControlProtocol,
+        bInterfaceClass : USB_CLASS_AUDIO,
+        bInterfaceSubClass : USB_SUBCLASS_CONTROL,
+        bInterfaceProtocol : USB_PROTOCOL_CONTROL,
         iInterface : NO_DESCRIPTOR
     },
     Audio_ControlInterface_SPC : {
         bLength : sizeof(AUDIO_INTERFACE_AC_DESCRIPTOR),
-        bDescriptorType : AUDIO_DESCRIPTOR_CSInterface,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSInterface_Header,
-        bcdADC : VERSION_BCD(1, 0, 0),
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSINTERFACE,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSINTERFACE_HEADER,
+        bcdADC : USB_VERSION_BCD(1, 0, 0),
         wTotalLength : sizeof(AUDIO_INTERFACE_AC_DESCRIPTOR),
         bInCollection : 1,
         bInterfaceNumbers : INTERFACE_ID_AudioStream,
@@ -325,16 +326,16 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
         bInterfaceNumber : INTERFACE_ID_AudioStream,
         bAlternateSetting : 0x00,
         bNumEndpoints : 2,
-        bInterfaceClass : AUDIO_CSCP_AudioClass,
-        bInterfaceSubClass : AUDIO_CSCP_MIDIStreamingSubclass,
-        bInterfaceProtocol : AUDIO_CSCP_StreamingProtocol,
+        bInterfaceClass : USB_CLASS_AUDIO,
+        bInterfaceSubClass : USB_SUBCLASS_MIDI_STREAMING,
+        bInterfaceProtocol : USB_PROTOCOL_STREAMING,
         iInterface : NO_DESCRIPTOR
     },
     Audio_StreamInterface_SPC : {
         bLength : sizeof(MIDI_AUDIOINTERFACE_AS_DESCRIPTOR),
-        bDescriptorType : AUDIO_DESCRIPTOR_CSInterface,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSInterface_General,
-        bcdMSC : VERSION_BCD(1, 0, 0),
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSINTERFACE,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSINTERFACE_GENERAL,
+        bcdMSC : USB_VERSION_BCD(1, 0, 0),
         wTotalLength :
             (sizeof(MIDI_CONFIGURATION_DESCRIPTOR) -
              offsetof(MIDI_CONFIGURATION_DESCRIPTOR, Audio_StreamInterface_SPC))
@@ -342,25 +343,25 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 
     MIDI_In_Jack_Emb : {
         bLength : sizeof(MIDI_INPUTJACK_DESCRIPTOR),
-        bDescriptorType : AUDIO_DESCRIPTOR_CSInterface,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
-        bJackType : MIDI_JACKTYPE_Embedded,
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSINTERFACE,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSINTERFACE_INPUT_TERMINAL,
+        bJackType : MIDI_JACK_TYPE_EMBEDDED,
         bJackID : 0x01,
         iJack : NO_DESCRIPTOR
     },
     MIDI_In_Jack_Ext : {
         bLength : sizeof(MIDI_INPUTJACK_DESCRIPTOR),
-        bDescriptorType : AUDIO_DESCRIPTOR_CSInterface,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSInterface_InputTerminal,
-        bJackType : MIDI_JACKTYPE_External,
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSINTERFACE,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSINTERFACE_INPUT_TERMINAL,
+        bJackType : MIDI_JACK_TYPE_EXTERNAL,
         bJackID : 0x02,
         iJack : NO_DESCRIPTOR
     },
     MIDI_Out_Jack_Emb : {
         bLength : sizeof(MIDI_OUTPUTJACK_DESCRIPTOR),
-        bDescriptorType : AUDIO_DESCRIPTOR_CSInterface,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
-        bJackType : MIDI_JACKTYPE_Embedded,
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSINTERFACE,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSINTERFACE_OUTPUT_TERMINAL,
+        bJackType : MIDI_JACK_TYPE_EMBEDDED,
         bJackID : 0x03,
         bNrInputPins : 1,
         baSourceID : {0x02},
@@ -369,9 +370,9 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
     },
     MIDI_Out_Jack_Ext : {
         bLength : sizeof(MIDI_OUTPUTJACK_DESCRIPTOR),
-        bDescriptorType : AUDIO_DESCRIPTOR_CSInterface,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSInterface_OutputTerminal,
-        bJackType : MIDI_JACKTYPE_External,
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSINTERFACE,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSINTERFACE_OUTPUT_TERMINAL,
+        bJackType : MIDI_JACK_TYPE_EXTERNAL,
         bJackID : 0x04,
         bNrInputPins : 1,
         baSourceID : {0x01},
@@ -391,8 +392,8 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
     },
     MIDI_In_Jack_Endpoint_SPC : {
         bLength : sizeof(MIDI_JACK_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : AUDIO_DTYPE_CSEndpoint,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSEndpoint_General,
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSENDPOINT,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSENDPOINT_GENERAL,
         bNumEmbMIDIJack : 0x01,
         bAssocJackID : {0x01}
     },
@@ -409,8 +410,8 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
     },
     MIDI_Out_Jack_Endpoint_SPC : {
         bLength : sizeof(MIDI_JACK_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : AUDIO_DTYPE_CSEndpoint,
-        bDescriptorSubtype : AUDIO_DSUBTYPE_CSEndpoint_General,
+        bDescriptorType : USB_DESCRIPTOR_AUDIO_CSENDPOINT,
+        bDescriptorSubtype : USB_AUDIO_SUBTYPE_CSENDPOINT_GENERAL,
         bNumEmbMIDIJack : 0x01,
         bAssocJackID : {0x03}
     },

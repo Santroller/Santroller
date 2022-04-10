@@ -73,14 +73,14 @@ def post_upload(source, target, env):
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
     if "/arduino_uno_mega_usb" in str(source[0]):
         launch_dfu()
-def before_build(source, target, env):
-    print("BEFORE BUILD!")
-    print(target)
+
+
 env.AddPreAction("upload", before_upload)
 env.AddPostAction("upload", post_upload)
+
 if "upload" in BUILD_TARGETS:
     upload_options = env.BoardConfig().get("upload", {})
-    if upload_options["detect_frequency"]:
+    if "detect_frequency" in upload_options and upload_options["detect_frequency"]:
         print("Uploading script to detect speed")
         project_dir = env["PROJECT_DIR"]
         with fs.cd(project_dir):
@@ -96,14 +96,4 @@ if "upload" in BUILD_TARGETS:
             pass
         rate = usb.util.get_string(dev, dev.iProduct).split("\x00")[0].rpartition(" - ")[2]
         rate = f"{rate}L"
-        # actual_env = re.search(r".pio\/build\/(.+?)\/firmware.hex", str(source[0])).group(1)
-        # processor = EnvironmentProcessor(Context(), actual_env,config,["upload"],"",True,True, 1)
-        # processor.options["board_build.f_cpu"] = rate
-        # processor.process()
-        print(env["BOARD_F_CPU"])
         env["BOARD_F_CPU"] = rate
-        # env.AutodetectUploadPort()
-        # env.TouchSerialPort("$UPLOAD_PORT", 1200)
-if env["BOARD_F_CPU"] == "skip":
-    env["BOARD_F_CPU"] = "16000000L"
-

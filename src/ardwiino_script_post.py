@@ -3,6 +3,7 @@ from pprint import pp
 import subprocess
 import sys
 import re
+import traceback
 try:
     import usb.core
     import usb.util
@@ -27,26 +28,30 @@ def launch_dfu():
     command = [0x04, 0x03, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
 
-class Context:
-    def __init__(self):
-        self.meta = ""
-
 Import("env")
 def before_upload(source, target, env):
+    upload_options = env.BoardConfig().get("upload", {})
     b_request = None
     exists = False
+    id_vendor = None
+    id_product = None
+    wait_for_serial = False
+    if "ardwiino_bootloader" in upload_options and upload_options["ardwiino_bootloader"] == "true":
+        b_request = BOOTLOADER
+        wait_for_serial = True
     if "/arduino_uno_mega_usb" in str(source[0]):
-        idVendor = 0x03eb
-        idProduct = None
+        id_vendor = 0x03eb
+        id_product = None
         b_request = BOOTLOADER
         if (usb.core.find(idVendor=0x1209, idProduct=0x2883)):
             env.AutodetectUploadPort()
             env.TouchSerialPort("$UPLOAD_PORT", 1200)
     if "/arduino_uno/" in str(source[0]):
         b_request = BOOTLOADER_SERIAL
-        idVendor = 0x1209
-        idProduct = 0x2883
-        exists = usb.core.find(idProduct=idProduct, idVendor=idVendor)
+        id_vendor = 0x1209
+        id_product = 0x2883
+        exists = usb.core.find(idProduct=id_product, idVendor=id_vendor)
+    before_ports = get_serial_ports()
     # find our device
     dev = usb.core.find(idVendor=0x1209, idProduct=0x2882)
     try:
@@ -57,16 +62,17 @@ def before_upload(source, target, env):
         dev.ctrl_transfer(0x21, b_request, 0x00,0x00,[])
     except:
         pass
-    if b_request:
-        args = {"idVendor": idVendor}
-        if idProduct:
-            args["idProduct"] = idProduct
+    if id_vendor:
+        args = {"idVendor": id_vendor}
+        if id_product:
+            args["idProduct"] = id_product
         
-        before_ports = get_serial_ports()
         while not usb.core.find(**args):
             pass
-        if not exists and idProduct == 0x2883:
-            env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
+        if not exists and id_product == 0x2883:
+            wait_for_serial = True
+    if wait_for_serial:
+        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
 
 def post_upload(source, target, env):
     if "/arduino_uno/" in str(source[0]):
@@ -77,23 +83,3 @@ def post_upload(source, target, env):
 
 env.AddPreAction("upload", before_upload)
 env.AddPostAction("upload", post_upload)
-
-if "upload" in BUILD_TARGETS:
-    upload_options = env.BoardConfig().get("upload", {})
-    if "detect_frequency" in upload_options and upload_options["detect_frequency"]:
-        print("Uploading script to detect speed")
-        project_dir = env["PROJECT_DIR"]
-        with fs.cd(project_dir):
-            config = ProjectConfig.get_instance(
-                os.path.join(project_dir, "platformio.ini")
-            )
-        config.validate()
-        processor = EnvironmentProcessor(Context(), "microdetect",config,["upload"],"",False,False, 1)
-        processor.process()
-        dev = None
-        while not dev:
-            dev = usb.core.find(idVendor=0x1209, idProduct=0x2883)
-            pass
-        rate = usb.util.get_string(dev, dev.iProduct).split("\x00")[0].rpartition(" - ")[2]
-        rate = f"{rate}L"
-        env["BOARD_F_CPU"] = rate

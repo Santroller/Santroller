@@ -17,6 +17,8 @@
 
 #include "descriptors.h"
 #include "bootloader.h"
+#include "reboot.h"
+#include "commands.h"
 
 #include <LUFA.h>
 #include <LUFA/LUFA/Drivers/Board/LEDs.h>
@@ -67,6 +69,20 @@ void EVENT_USB_Device_ControlRequest(void) {
         // Endpoint_Read_Control_Stream_LE(buf, USB_ControlRequest.wLength);
         // controlRequest(type, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf, &valid);
         // Endpoint_ClearStatusStage();
+    }
+	if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
+        if (USB_ControlRequest.bRequest == COMMAND_REBOOT) {
+            Endpoint_ClearSETUP();
+            Endpoint_ClearStatusStage();
+            reboot();
+            return;
+        }
+		if (USB_ControlRequest.bRequest == COMMAND_JUMP_BOOTLOADER) {
+            Endpoint_ClearSETUP();
+            Endpoint_ClearStatusStage();
+            bootloader();
+            return;
+        }
     }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {

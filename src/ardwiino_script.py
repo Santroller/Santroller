@@ -79,30 +79,31 @@ def before_build(source, target, env):
 env.AddPreAction("upload", before_upload)
 env.AddPostAction("upload", post_upload)
 if "upload" in BUILD_TARGETS:
-    if "+<micro>" in env["SRC_FILTER"]:
-        if env["BOARD_F_CPU"] == "16000000L":
-            print("Uploading script to detect speed")
-            project_dir = env["PROJECT_DIR"]
-            with fs.cd(project_dir):
-                config = ProjectConfig.get_instance(
-                    os.path.join(project_dir, "platformio.ini")
-                )
-            config.validate()
-            processor = EnvironmentProcessor(Context(), "microdetect",config,["upload"],"",False,False, 1)
-            processor.process()
-            dev = None
-            while not dev:
-                dev = usb.core.find(idVendor=0x1209, idProduct=0x2883)
-                pass
-            rate = usb.util.get_string(dev, dev.iProduct).split("\x00")[0].rpartition(" - ")[2]
-            rate = f"{rate}L"
-            # actual_env = re.search(r".pio\/build\/(.+?)\/firmware.hex", str(source[0])).group(1)
-            # processor = EnvironmentProcessor(Context(), actual_env,config,["upload"],"",True,True, 1)
-            # processor.options["board_build.f_cpu"] = rate
-            # processor.process()
-            print(env["BOARD_F_CPU"])
-            env["BOARD_F_CPU"] = rate
-            # env.AutodetectUploadPort()
-            # env.TouchSerialPort("$UPLOAD_PORT", 1200)
+    upload_options = env.BoardConfig().get("upload", {})
+    if upload_options["detect_frequency"]:
+        print("Uploading script to detect speed")
+        project_dir = env["PROJECT_DIR"]
+        with fs.cd(project_dir):
+            config = ProjectConfig.get_instance(
+                os.path.join(project_dir, "platformio.ini")
+            )
+        config.validate()
+        processor = EnvironmentProcessor(Context(), "microdetect",config,["upload"],"",False,False, 1)
+        processor.process()
+        dev = None
+        while not dev:
+            dev = usb.core.find(idVendor=0x1209, idProduct=0x2883)
+            pass
+        rate = usb.util.get_string(dev, dev.iProduct).split("\x00")[0].rpartition(" - ")[2]
+        rate = f"{rate}L"
+        # actual_env = re.search(r".pio\/build\/(.+?)\/firmware.hex", str(source[0])).group(1)
+        # processor = EnvironmentProcessor(Context(), actual_env,config,["upload"],"",True,True, 1)
+        # processor.options["board_build.f_cpu"] = rate
+        # processor.process()
+        print(env["BOARD_F_CPU"])
+        env["BOARD_F_CPU"] = rate
+        # env.AutodetectUploadPort()
+        # env.TouchSerialPort("$UPLOAD_PORT", 1200)
 if env["BOARD_F_CPU"] == "skip":
     env["BOARD_F_CPU"] = "16000000L"
+

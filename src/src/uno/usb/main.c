@@ -25,7 +25,7 @@
 #include "defines.h"
 #include "endpoints.h"
 #include "packets.h"
-#include "bootloader.h"
+#include "reboot.h"
 #include "serial_descriptors.h"
 #define JUMP 0xDE00
 #define BUFFER_NEARLY_FULL 96

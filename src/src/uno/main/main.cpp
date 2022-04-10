@@ -1,8 +1,9 @@
 #include <Arduino.h>
+#include <SPI.h>
+#include "Usb.h"
 #include <Wire.h>
 #include <avr/io.h>
 
-#include "Usb.h"
 #include "config.h"
 #include "controller_reports.h"
 #include "defines.h"

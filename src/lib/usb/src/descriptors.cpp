@@ -1,5 +1,4 @@
 #include "descriptors.h"
-
 #include "config.h"
 #include "keyboard_mouse.h"
 #include "ps3_wii_switch.h"
@@ -639,7 +638,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #ifdef __AVR__
                 str = (uint8_t *)pgm_read_word(descriptorStrings + descriptorNumber);
 #else
-                str = descriptorStrings[descriptorNumber];
+                str = (uint8_t *)descriptorStrings[descriptorNumber];
 #endif
             } else if (descriptorNumber == 0xEE) {
                 str = (uint8_t *)&OSDescriptorString;

@@ -3,7 +3,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
     {
         .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
-        .USBSpecification = USB_VERSION_BCD(1, 1, 0),
+        .USBSpecification = VERSION_BCD(1, 1, 0),
         .Class = 0x02,
         .SubClass = 0x00,
         .Protocol = 0x00,
@@ -57,7 +57,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
                 .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalHeader_t), .Type = CDC_DTYPE_CSInterface},
                 .Subtype = CDC_DSUBTYPE_CSInterface_Header,
 
-                .CDCSpecification = USB_VERSION_BCD(1, 1, 0),
+                .CDCSpecification = VERSION_BCD(1, 1, 0),
             },
 
         .CDC_Functional_ACM =

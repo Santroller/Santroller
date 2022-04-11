@@ -1,11 +1,12 @@
 #pragma once
-#include <stdint.h>
 #include "Usb.h"
+#include <stdint.h>
 #include "wcid.h"
 #include "xbox.h"
 #include "midi.h"
 #include "usb_macros.h"
 #include "endpoints.h"
+#include "progmem.h"
 
 
 typedef struct

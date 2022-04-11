@@ -1,5 +1,8 @@
 #pragma once
 #include <Arduino.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -78,3 +81,6 @@ extern ConsoleType_t consoleType;
 extern bool guitar;
 extern bool drum;
 extern bool read_hid_report_descriptor;
+#ifdef __cplusplus
+}
+#endif

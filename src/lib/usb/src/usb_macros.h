@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+
 #define USB_DESCRIPTOR_STRING_ARRAY(...)                                                                                                                \
     {                                                                                                                                                   \
         .bLength = sizeof(uint8_t) + sizeof(uint8_t)  + sizeof((uint16_t[]){__VA_ARGS__}), .bDescriptorType = USB_DESCRIPTOR_STRING, .UnicodeString = { __VA_ARGS__ } \
@@ -21,6 +22,8 @@
 #define USB_CONFIG_ATTRIBUTE_RESERVED 0x80
 #define USB_CONFIG_ATTRIBUTE_SELFPOWERED 0x40
 #define USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP 0x20
+
+#define HID_DESCRIPTOR_REPORT 0x22
 
 #define ENDPOINT_TATTR_NO_SYNC (0 << 2)
 #define ENDPOINT_TATTR_ASYNC (1 << 2)

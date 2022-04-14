@@ -1,4 +1,6 @@
 #include "descriptors.h"
+
+#include "Usb.h"
 #include "config.h"
 #include "keyboard_mouse.h"
 #include "ps3_wii_switch.h"
@@ -427,76 +429,55 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
     },
 };
 
-// uint16_t controlRequest(const requestType_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
-//     *valid = true;
-//     if (requestType.bmRequestType_bit.direction == USB_DIR_DEVICE_TO_HOST) {
-//         if (requestType.bmRequestType_bit.type == USB_REQ_TYPE_VENDOR) {
-//             if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
-//                 if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
-//                     memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
-//                     return sizeof(capabilities1);
-//                 } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
-//                     memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
-//                     return ExtendedIDs.TotalLength;
-//                 } else if (request == THID_REQ_GetReport && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
-//                     memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
-//                     return sizeof(capabilities2);
-//                 }
-//             } else if (requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_DEVICE) {
-//                 if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
-//                     memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
-//                     if (consoleType == PC_XINPUT) {
-//                         TUSB_OSCompatibleIDDescriptor_t* compat = (TUSB_OSCompatibleIDDescriptor_t*)requestBuffer;
-//                         compat->TotalSections = 2;
-//                     }
-//                     return DevCompatIDs.TotalLength;
-//                 } else if (request == THID_REQ_GetReport && wIndex == 0x00 && wValue == 0x0000) {
-//                     memcpy_P(requestBuffer, ID, sizeof(ID));
-//                     return sizeof(ID);
-//                 }
-//             }
-//         } else if (request == THID_REQ_GetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE && wIndex == 0x0300) {
-//             if (consoleType == PS3) {
-//                 memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-//                 if (deviceType <= ROCK_BAND_DRUMS) {
-//                     ((uint8_t *)requestBuffer)[3] = 0x00;
-//                 } else if (deviceType <= GUITAR_HERO_DRUMS) {
-//                     ((uint8_t *)requestBuffer)[3] = 0x06;
-//                 }
-//                 return sizeof(ps3_init);
-//             } else if (consoleType == PC) {
-//                 consoleType = PS3;
-//                 reset_usb();
-//             }
-//         } else if (request == THID_REQ_GetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE && wIndex == 0x0300) {
-//             if (consoleType == PS3) {
-//                 memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-//                 if (deviceType <= ROCK_BAND_DRUMS) {
-//                     ((uint8_t *)requestBuffer)[3] = 0x00;
-//                 } else if (deviceType <= GUITAR_HERO_DRUMS) {
-//                     ((uint8_t *)requestBuffer)[3] = 0x06;
-//                 }
-//                 return sizeof(ps3_init);
-//             } else if (consoleType == PC) {
-//                 consoleType = PS3;
-//                 reset_usb();
-//             }
-//         }
-//     } else {
-//         // uint8_t *data = *address;
-//         if (request == THID_REQ_SetReport && requestType.bmRequestType_bit.type == USB_REQ_TYPE_CLASS && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_INTERFACE) {
+const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
+                                   0x00, 0x00, 0x00, 0x00};
 
-//         } else if (consoleType == PC && request == USB_REQ_CLEAR_FEATURE && requestType.bmRequestType_bit.type == USB_REQ_TYPE_STANDARD && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_ENDPOINT && wIndex == DEVICE_EPADDR_OUT) {
-//             consoleType = SWITCH;
-//             reset_usb();
-//         } else if (consoleType == PC && request == USB_REQ_CLEAR_FEATURE && requestType.bmRequestType_bit.type == USB_REQ_TYPE_STANDARD && requestType.bmRequestType_bit.recipient == USB_REQ_RCPT_ENDPOINT && wIndex == DEVICE_EPADDR_IN) {
-//             consoleType = SWITCH;
-//             reset_usb();
-//         }
-//     }
-//     *valid = false;
-//     return 0;
-// }
+uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
+    *valid = true;
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+            memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
+            return sizeof(capabilities1);
+        } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
+            memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
+            return ExtendedIDs.TotalLength;
+        } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
+            memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
+            return sizeof(capabilities2);
+        }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
+            memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
+            if (consoleType == PC_XINPUT) {
+                OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
+                compat->TotalSections = 2;
+            }
+            return DevCompatIDs.TotalLength;
+        } else if (request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
+            memcpy_P(requestBuffer, ID, sizeof(ID));
+            return sizeof(ID);
+        }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
+        if (consoleType == PS3) {
+            memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
+            if (deviceType <= ROCK_BAND_DRUMS) {
+                ((uint8_t *)requestBuffer)[3] = 0x00;
+            } else if (deviceType <= GUITAR_HERO_DRUMS) {
+                ((uint8_t *)requestBuffer)[3] = 0x06;
+            }
+            return sizeof(ps3_init);
+        } else if (consoleType == PC) {
+            consoleType = PS3;
+            reset_usb();
+        }
+    } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+    } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
+        consoleType = SWITCH;
+        reset_usb();
+    }
+    *valid = false;
+    return 0;
+}
 const uint16_t vid[] = {0x0F0D, 0x12ba, 0x12ba, 0x12ba,
                         0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
 const uint16_t pid[] = {0x0092, 0x0100, 0x0120, 0x0200,
@@ -506,8 +487,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
-    // printf("Type: %d, num: %d\n", descriptorType, descriptorNumber);
-    // printf("CT: %d, DT: %d\n", consoleType, deviceType);
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
         case USB_DESCRIPTOR_DEVICE: {

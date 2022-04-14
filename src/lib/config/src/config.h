@@ -39,7 +39,7 @@ typedef struct {
     Led_t led_off;
     Midi_t midi;
     uint8_t milliDeBounce;
-    uint8_t analogID; //In the tool itself, we can store a list of what each analog pin maps to, so each analog pin has a unique id in the analog list
+    uint8_t analogID;
 } Binding_t;
 
 typedef struct {
@@ -81,6 +81,7 @@ extern ConsoleType_t consoleType;
 extern bool guitar;
 extern bool drum;
 extern bool read_hid_report_descriptor;
+void reset_usb();
 #ifdef __cplusplus
 }
 #endif

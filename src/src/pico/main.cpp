@@ -84,7 +84,7 @@ void host_disconnection(usb_device_t *device) {
     }
 }
 void setup() {
-    set_sys_clock_khz(120000, true);
+	uart_set_baudrate(uart0, 115200);
     generateSerialString(serialString.UnicodeString);
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
@@ -184,28 +184,26 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     update_packet_crc16(&req_host);
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
         if (stage == CONTROL_STAGE_SETUP) {
-            // requestType_t r = {bmRequestType : request->bmRequestType};
-            // uint16_t len = controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
-            // if (len > request->wLength || !valid) len = request->wLength;
-            // if (!valid && xinput_device) {
-            //     if (control_in_protocol(xinput_device, &req_host, sizeof(req_host), buf, len) < 0) {
-            //         return false;
-            //     }
-            // }
-            // tud_control_xfer(rhport, request, buf, len);
+            uint16_t len = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
+            if (len > request->wLength || !valid) len = request->wLength;
+            if (!valid && xinput_device) {
+                if (control_in_protocol(xinput_device, (uint8_t*)&req_host, sizeof(req_host), buf, len) < 0) {
+                    return false;
+                }
+            }
+            tud_control_xfer(rhport, request, buf, len);
         }
     } else {
         if (stage == CONTROL_STAGE_SETUP) {
             tud_control_xfer(rhport, request, buf, request->wLength);
         }
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-            // requestType_t r = {bmRequestType : request->bmRequestType};
-            // controlRequest(r, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
-            // if (!valid && xinput_device) {
-            //     if (control_out_protocol(xinput_device, &req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
-            //         return false;
-            //     }
-            // }
+            controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
+            if (!valid && xinput_device) {
+                if (control_out_protocol(xinput_device, (uint8_t*)&req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
+                    return false;
+                }
+            }
         }
     }
     return true;

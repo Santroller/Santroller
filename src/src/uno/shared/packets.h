@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include "attributes.h"
 
 #define READY 0x65
 #define VALID_PACKET 0x14
@@ -15,30 +14,30 @@
 #define SERIAL_2X_UBBRVAL(Baud) ((((F_CPU / 8) + (Baud / 2)) / (Baud)) - 1)
 #define DESC_REQUEST_HEADER \
     { VALID_PACKET, DESCRIPTOR_ID, sizeof(descriptor_request_t) }
-typedef struct TATTR_PACKED {
+typedef struct {
     uint8_t magic;
     uint8_t id;
     uint8_t len;
-} packet_header_t;
+} __attribute__((packed)) packet_header_t;
 
-typedef struct TATTR_PACKED {
+typedef struct {
     packet_header_t header;
     uint8_t data[];
-} ret_packet_t;
+} __attribute__((packed)) ret_packet_t;
 
-typedef struct TATTR_PACKED {
+typedef struct {
     packet_header_t header;
     uint8_t data[];
-} data_transmit_packet_t;
+} __attribute__((packed)) data_transmit_packet_t;
 
 typedef struct {
     packet_header_t header;
     uint16_t wValue;
     uint16_t wIndex;
-} descriptor_request_t;
+} __attribute__((packed)) descriptor_request_t;
 
 
-typedef struct TATTR_PACKED {
+typedef struct {
     packet_header_t header;
     uint8_t bmRequestType;
     uint8_t request;
@@ -46,4 +45,4 @@ typedef struct TATTR_PACKED {
     uint16_t wIndex;
     uint16_t wLength;
     uint8_t data[];
-} control_request_t;
+} __attribute__((packed)) control_request_t;

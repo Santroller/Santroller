@@ -135,4 +135,4 @@ extern const PROGMEM STRING_DESCRIPTOR productString;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void* requestBuffer, bool* valid);
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
-                           void* descriptorBuffer);
+                           void* descriptorBuffer, uint8_t* const DescriptorMemorySpace);

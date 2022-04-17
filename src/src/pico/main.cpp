@@ -132,7 +132,8 @@ void tud_hid_custom_set_report_cb(uint8_t instance, uint8_t report_id,
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
-    descriptorRequest(USB_DESCRIPTOR_DEVICE << 8, 0, buf);
+    uint8_t* mspace;
+    descriptorRequest(USB_DESCRIPTOR_DEVICE << 8, 0, buf, mspace);
     if (usb_device->enumerated && consoleType == XBOX360) {
         USB_DEVICE_DESCRIPTOR *td = (USB_DEVICE_DESCRIPTOR *)buf;
         td->idVendor = usb_device->vid;
@@ -141,12 +142,14 @@ uint8_t const *tud_descriptor_device_cb(void) {
     return buf;
 }
 uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
-    descriptorRequest(HID_DESCRIPTOR_REPORT << 8, 0, buf);
+    uint8_t* mspace;
+    descriptorRequest(HID_DESCRIPTOR_REPORT << 8, 0, buf, mspace);
     return buf;
 }
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;  // for multiple configurations
-    descriptorRequest(USB_DESCRIPTOR_CONFIGURATION << 8, 0, buf);
+    uint8_t* mspace;
+    descriptorRequest(USB_DESCRIPTOR_CONFIGURATION << 8, 0, buf, mspace);
     return buf;
 }
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
@@ -154,7 +157,8 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     if (index == 3) {
         return (uint16_t *)&serialString;
     }
-    if (descriptorRequest(USB_DESCRIPTOR_STRING << 8 | index, 0, buf)) {
+    uint8_t* mspace;
+    if (descriptorRequest(USB_DESCRIPTOR_STRING << 8 | index, 0, buf, mspace)) {
         return (uint16_t *)buf;
     }
     return NULL;

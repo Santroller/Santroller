@@ -34,30 +34,29 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
                                           .ParityType = CDC_PARITY_None,
                                           .DataBits = 8};
 
-uint8_t buf_desc[sizeof(ConfigurationDescriptor)];
 // if bootloaderState is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
-uint16_t bootloaderState __attribute__((section(".noinit")));
+volatile uint16_t bootloaderState __attribute__((section(".noinit")));
 
-uint8_t* bufTx;
-uint8_t idx_tx = 0;
+uint8_t* bufTX;
+uint8_t idxTX = 0;
 
-uint8_t buf[128];
-uint8_t bufout[128];
+uint8_t bufToPC[255];
+uint8_t bufToUno[128];
 /** Circular buffer to hold data from the host before it is sent to the device via the serial port. */
 RingBuffer_t USBtoUSART_Buffer;
 
 /** Circular buffer to hold data from the serial port before it is sent to the host. */
 RingBuffer_t USARTtoUSB_Buffer;
 
-packet_header_t* header = (packet_header_t*)buf;
-ret_packet_t* ret = (ret_packet_t*)buf;
+packet_header_t* header = (packet_header_t*)bufToPC;
+ret_packet_t* ret = (ret_packet_t*)bufToPC;
 volatile bool ready = false;
 bool serial = false;
 
 void txRX(void* data, uint8_t len) {
-    idx_tx = len;
-    bufTx = (uint8_t*)data;
+    idxTX = len;
+    bufTX = (uint8_t*)data;
     UCSR1B = (_BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1));
     while (!ready) {
     }
@@ -89,14 +88,17 @@ int main(void) {
     DDRD |= (1 << 3);
     PORTD |= (1 << 2);
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+    // Ensure the 328p is reset so we can also work from bootloader
+    AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+    _delay_ms(1);
     AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
     _delay_ms(1);
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     sei();
     if (serial) {
         USB_Init();
-        RingBuffer_InitBuffer(&USBtoUSART_Buffer, buf, sizeof(buf));
-        RingBuffer_InitBuffer(&USARTtoUSB_Buffer, bufout, sizeof(bufout));
+        RingBuffer_InitBuffer(&USBtoUSART_Buffer, bufToUno, sizeof(bufToUno));
+        RingBuffer_InitBuffer(&USARTtoUSB_Buffer, bufToPC, sizeof(bufToPC));
         TCCR0B = (1 << CS02);
         while (true) {
             USB_USBTask();
@@ -150,7 +152,7 @@ int main(void) {
     // Wait for the 328p / 1280 to boot (we receive a READY byte)
     // Since it is set in the isr, we need to treat it as volatile
     // If we don't get it in time, we can assume the 328p is missing its firmware and drop to the 328p programming mode
-    while (((volatile uint8_t*)buf)[0] != READY) {
+    while (((volatile uint8_t*)bufToPC)[0] != READY) {
         count++;
         if (count > 0xFFFE) {
             count2++;
@@ -178,7 +180,7 @@ int main(void) {
             Endpoint_Write_Stream_LE(tmp, len, NULL);
             Endpoint_ClearIN();
         }
-        data_transmit_packet_t* packet = (data_transmit_packet_t*)buf;
+        data_transmit_packet_t* packet = (data_transmit_packet_t*)bufToUno;
         Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
         if (Endpoint_IsOUTReceived()) {
             packet->header.magic = VALID_PACKET;
@@ -243,13 +245,12 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
         if (USB_ControlRequest.bRequest >= COMMAND_REBOOT && USB_ControlRequest.bRequest <= COMMAND_JUMP_BOOTLOADER_UNO) {
             Endpoint_ClearSETUP();
-            Endpoint_ClearStatusStage();
+            Endpoint_ClearIN();
             bootloaderState = (JUMP | USB_ControlRequest.bRequest);
             reboot();
-            return;
         }
     }
-    control_request_t* packet = (control_request_t*)buf;
+    control_request_t* packet = (control_request_t*)bufToPC;
     packet->header.magic = VALID_PACKET;
     packet->header.id = CONTROL_REQUEST_ID;
     packet->header.len = sizeof(control_request_t);
@@ -293,11 +294,11 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void** const descriptorAddress) {
+                                    const void** const descriptorAddress, uint8_t* const descriptorMemorySpace) {
     if (serial) {
         const uint8_t DescriptorType = (wValue >> 8);
         const void* Address = NULL;
-        uint16_t Size = NO_DESCRIPTOR;
+        uint16_t Size = 0;
 
         switch (DescriptorType) {
             case DTYPE_Device:
@@ -309,8 +310,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                 Size = sizeof(USB_Descriptor_Configuration_t);
                 break;
         }
-        memcpy_P(buf_desc, Address, Size);
-        *descriptorAddress = buf_desc;
+        *descriptorMemorySpace = MEMSPACE_FLASH;
+        *descriptorAddress = Address;
         return Size;
     }
     // pass request to 328p / mega
@@ -321,6 +322,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     };
     txRX(&packet, sizeof(descriptor_request_t));
     *descriptorAddress = ret->data;
+    *descriptorMemorySpace = MEMSPACE_RAM;
     return ret->header.len - sizeof(packet_header_t);
 }
 
@@ -330,8 +332,8 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
         RingBuffer_Insert(&USARTtoUSB_Buffer, UDR1);
         return;
     }
-    buf[idx] = UDR1;
-    if (idx == 0 && buf[0] != VALID_PACKET) {
+    bufToPC[idx] = UDR1;
+    if (idx == 0 && bufToPC[0] != VALID_PACKET) {
         return;
     }
     idx++;
@@ -344,8 +346,8 @@ ISR(USART1_RX_vect, ISR_BLOCK) {
 }
 
 ISR(USART1_UDRE_vect, ISR_BLOCK) {
-    if (idx_tx--) {
-        UDR1 = *(bufTx++);
+    if (idxTX--) {
+        UDR1 = *(bufTX++);
     } else {
         UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1));
     }

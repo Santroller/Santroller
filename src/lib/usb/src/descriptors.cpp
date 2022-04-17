@@ -38,6 +38,7 @@ const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_ARRAY(
     'C', 'o', 'r', 'p', 'o', 'r', 'a', 't', 'i', 'o', 'n', '.', ' ',
     'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ',
     'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.');
+
 const PROGMEM STRING_DESCRIPTOR *const PROGMEM descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
 
@@ -484,7 +485,7 @@ const uint16_t pid[] = {0x0092, 0x0100, 0x0120, 0x0200,
                         0x0210, ARDWIINO_PID, 0x0004, 0x074B};
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
-                           void *descriptorBuffer) {
+                           void *descriptorBuffer, uint8_t* const descriptorMemorySpace) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
     uint16_t size = NO_DESCRIPTOR;

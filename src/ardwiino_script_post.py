@@ -5,10 +5,11 @@ import sys
 import re
 import traceback
 try:
-    import usb.core
-    import usb.util
+    import libusb_package
 except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyusb"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])
+
+import libusb_package
 
 import usb.core
 import usb.util
@@ -23,7 +24,7 @@ BOOTLOADER=49
 BOOTLOADER_SERIAL=50
 
 def launch_dfu():
-    dev = usb.core.find(idVendor=0x03eb)
+    dev = libusb_package.find(idVendor=0x03eb)
     dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
     command = [0x04, 0x03, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
@@ -43,31 +44,33 @@ def before_upload(source, target, env):
         id_vendor = 0x03eb
         id_product = None
         b_request = BOOTLOADER
-        if (usb.core.find(idVendor=0x1209, idProduct=0x2883)):
+        if (libusb_package.find(idVendor=0x1209, idProduct=0x2883)):
             env.AutodetectUploadPort()
             env.TouchSerialPort("$UPLOAD_PORT", 1200)
     if "/arduino_uno/" in str(source[0]):
-        b_request = BOOTLOADER_SERIAL
-        id_vendor = 0x1209
-        id_product = 0x2883
-        exists = usb.core.find(idProduct=id_product, idVendor=id_vendor)
+        if libusb_package.find(idVendor=0x1209, idProduct=0x2882):
+            b_request = BOOTLOADER_SERIAL
+            id_vendor = 0x1209
+            id_product = 0x2883
+            exists = libusb_package.find(idProduct=id_product, idVendor=id_vendor)
     before_ports = get_serial_ports()
-    # find our device
-    dev = usb.core.find(idVendor=0x1209, idProduct=0x2882)
-    try:
-        dev.detach_kernel_driver(0)
-    except:
-        pass
-    try:
-        dev.ctrl_transfer(0x21, b_request, 0x00,0x00,[])
-    except:
-        pass
+    if b_request:
+        # find our device
+        dev = libusb_package.find(idVendor=0x1209, idProduct=0x2882)
+        try:
+            dev.detach_kernel_driver(0)
+        except:
+            pass
+        try:
+            dev.ctrl_transfer(0x21, b_request)
+        except:
+            pass
     if id_vendor:
         args = {"idVendor": id_vendor}
         if id_product:
             args["idProduct"] = id_product
         
-        while not usb.core.find(**args):
+        while not libusb_package.find(**args):
             pass
         if not exists and id_product == 0x2883:
             wait_for_serial = True

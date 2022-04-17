@@ -48,7 +48,7 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 	};
 
 void SetupHardware(void);
-
+char freqString[10];
 volatile bool waiting = true;
 void setup()
 {
@@ -79,12 +79,15 @@ void setup()
     } else if (realFreq == 16) {
         PLLCSR = ((1 << PINDIV) | (1 << PLLE));
     }
+	itoa(realFreq, freqString, 10);
+	freqString[strlen(freqString)] = '\n';
 	SetupHardware(); // ask LUFA to setup the hardware
 }
 
 void loop()
 {
 	CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
+	CDC_Device_SendString(&VirtualSerial_CDC_Interface, freqString);
 	USB_USBTask();
 }
 

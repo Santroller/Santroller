@@ -4,19 +4,19 @@ import subprocess
 import sys
 import re
 try:
-    import usb.core
-    import usb.util
+    import libusb_package
 except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyusb"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])
 
-import usb.core
-import usb.util
+import libusb_package
+from serial import Serial, SerialException
 from platformio import fs
 from platformio.util import get_serial_ports
 from platformio.project.config import ProjectConfig
 from platformio.commands.run.processor import EnvironmentProcessor
 from platformio.commands.run.helpers import clean_build_dir
 import os
+from time import sleep
 
 class Context:
     def __init__(self):
@@ -38,8 +38,14 @@ if "upload" in BUILD_TARGETS:
         processor.process()
         dev = None
         while not dev:
-            dev = usb.core.find(idVendor=0x1209, idProduct=0x2883)
+            dev = libusb_package.find(idVendor=0x1209, idProduct=0x2883)
             pass
-        rate = usb.util.get_string(dev, dev.iProduct).split("\x00")[0].rpartition(" - ")[2]
+        sleep(0.5)
+        env.AutodetectUploadPort()
+        port = env.subst("$UPLOAD_PORT")
+        s = Serial(port=port, baudrate=115200)
+        rate = f"{s.readline().decode('utf-8').strip()}000000"
+        print(rate)
+        # rate = usb.util.get_string(dev, dev.iProduct, 0x0409).split("\x00")[0].rpartition(" - ")[2]
         rate = f"{rate}L"
         env["BOARD_F_CPU"] = rate

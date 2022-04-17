@@ -10,8 +10,8 @@
 #include "descriptors.h"
 #include "packets.h"
 
-uint8_t* bufTx;
-uint8_t idx_tx = 0;
+uint8_t* bufTX;
+uint8_t idxTX = 0;
 uint8_t buf[255];
 uint8_t controller[48];
 volatile bool ready = false;
@@ -53,15 +53,15 @@ void loop() {
             break;
         }
         case DESCRIPTOR_ID: {
-            uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, buf + sizeof(packet_header_t));
+            uint8_t* mspace;
+            uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, buf + sizeof(packet_header_t), mspace);
             header->len = sizeof(packet_header_t) + len;
             break;
         }
         case CONTROL_REQUEST_ID: {
             bool valid = false;
-            uint16_t len = 0;
-            // uint16_t len2 = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, (buf + sizeof(packet_header_t) + 1), &valid);
-            // if (len2 > ctr->wLength) len2 = ctr->wLength;
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, (buf + sizeof(packet_header_t) + 1), &valid);
+            if (len > ctr->wLength) len = ctr->wLength;
             header->len = sizeof(packet_header_t) + len + 1;
             buf[sizeof(packet_header_t)] = valid;
             break;
@@ -74,8 +74,8 @@ void loop() {
         default:
             return;
     }
-    bufTx = buf;
-    idx_tx = header->len;
+    bufTX = buf;
+    idxTX = header->len;
     UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0));
 }
 
@@ -94,8 +94,8 @@ ISR(USART_RX_vect, ISR_BLOCK) {
 }
 
 ISR(USART_UDRE_vect, ISR_BLOCK) {
-    if (idx_tx--) {
-        UDR0 = *(bufTx++);
+    if (idxTX--) {
+        UDR0 = *(bufTX++);
     } else {
         UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0));
     }

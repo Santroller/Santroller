@@ -83,7 +83,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 
                 .EndpointAddress = CDC_NOTIFICATION,
                 .Attributes = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = ENDPOINT_SIZE,
+                .EndpointSize = SERIAL_NOTIFICATION_SIZE,
                 .PollingIntervalMS = 0xFF},
 
         .CDC_DCI_Interface =
@@ -107,7 +107,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 
                 .EndpointAddress = DEVICE_EPADDR_OUT,
                 .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = SERIAL_ENDPOINT_SIZE,
+                .EndpointSize = SERIAL_TX_SIZE,
                 .PollingIntervalMS = 0x01},
 
         .CDC_DataInEndpoint =
@@ -116,5 +116,5 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 
                 .EndpointAddress = DEVICE_EPADDR_IN,
                 .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = SERIAL_ENDPOINT_SIZE,
+                .EndpointSize = SERIAL_RX_SIZE,
                 .PollingIntervalMS = 0x01}};

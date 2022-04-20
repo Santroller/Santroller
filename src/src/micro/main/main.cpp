@@ -100,10 +100,9 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
-                                    const void** const descriptorAddress, uint8_t* const descriptorMemorySpace) {
+                                    const void** const descriptorAddress) {
     *descriptorAddress = buf;
-    *descriptorMemorySpace = MEMSPACE_RAM;
-    return descriptorRequest(wValue, wIndex, buf, descriptorMemorySpace);
+        return descriptorRequest(wValue, wIndex, buf);
 }
 ISR(WDT_vect) {
     wdt_disable();

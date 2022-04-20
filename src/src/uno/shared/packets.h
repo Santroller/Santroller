@@ -12,8 +12,6 @@
 #define DEVICE_ID 0x79
 #define BAUD 1000000
 #define SERIAL_2X_UBBRVAL(Baud) ((((F_CPU / 8) + (Baud / 2)) / (Baud)) - 1)
-#define DESC_REQUEST_HEADER \
-    { VALID_PACKET, DESCRIPTOR_ID, sizeof(descriptor_request_t) }
 typedef struct {
     uint8_t magic;
     uint8_t id;
@@ -34,6 +32,7 @@ typedef struct {
     packet_header_t header;
     uint16_t wValue;
     uint16_t wIndex;
+    uint16_t wLength;
 } __attribute__((packed)) descriptor_request_t;
 
 

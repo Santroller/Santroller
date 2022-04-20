@@ -37,12 +37,11 @@ void loop() {
     ready = false;
     switch (header->id) {
         case CONTROLLER_DATA_TRANSMIT_ID:
-            header->len = sizeof(packet_header_t);
             // Technically, we could get multiple packets at once, so we should probably loop through them
             // packetReceived(dt->data, header->len - sizeof(packet_header_t));
-            break;
+            return;
         case CONTROLLER_DATA_REQUEST_ID: {
-            header->len = sizeof(packet_header_t);
+            header->len = 0;
             if (should_reboot) {
                 header->id = CONTROLLER_DATA_REBOOT_ID;
             } else {
@@ -53,29 +52,29 @@ void loop() {
             break;
         }
         case DESCRIPTOR_ID: {
-            uint8_t* mspace;
-            uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, buf + sizeof(packet_header_t), mspace);
-            header->len = sizeof(packet_header_t) + len;
+            uint16_t wLength = desc->wLength;
+            uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, dt->data);
+            if (len > wLength) len = wLength;
+            header->len = len;
             break;
         }
         case CONTROL_REQUEST_ID: {
             bool valid = false;
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, (buf + sizeof(packet_header_t) + 1), &valid);
             if (len > ctr->wLength) len = ctr->wLength;
-            header->len = sizeof(packet_header_t) + len + 1;
-            buf[sizeof(packet_header_t)] = valid;
+            header->len = len;
+            // TODO: how does this work with host to device
             break;
         }
         case DEVICE_ID:
-            header->len = sizeof(packet_header_t) + 2;
-            buf[sizeof(packet_header_t)] = deviceType;
-            buf[sizeof(packet_header_t) + 1] = consoleType;
+            header->len = 1;
+            buf[sizeof(packet_header_t)] = consoleType;
             break;
         default:
             return;
     }
     bufTX = buf;
-    idxTX = header->len;
+    idxTX = header->len + sizeof(packet_header_t);
     UCSR0B = (_BV(RXCIE0) | _BV(TXEN0) | _BV(RXEN0) | _BV(UDRIE0));
 }
 

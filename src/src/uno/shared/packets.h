@@ -3,6 +3,7 @@
 
 #define READY 0x65
 #define VALID_PACKET 0x14
+#define CONTROL_REQUEST_INVALID_ID 0x72
 #define CONTROLLER_DATA_REBOOT_ID 0x73
 #define DESCRIPTOR_SERIAL_ID 0x74
 #define CONTROLLER_DATA_TRANSMIT_ID 0x75
@@ -12,6 +13,12 @@
 #define DEVICE_ID 0x79
 #define BAUD 1000000
 #define SERIAL_2X_UBBRVAL(Baud) ((((F_CPU / 8) + (Baud / 2)) / (Baud)) - 1)
+
+#define STATE_NO_PACKET 0
+#define STATE_READ_PACKET_TYPE 1
+#define STATE_READ_LENGTH 2
+#define STATE_READ_INVALID_CONTROL_REQUEST_LENGTH 3
+#define STATE_READ_DEVICE_ID 4
 typedef struct {
     uint8_t magic;
     uint8_t id;

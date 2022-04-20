@@ -60,9 +60,13 @@ void loop() {
         }
         case CONTROL_REQUEST_ID: {
             bool valid = false;
-            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, (buf + sizeof(packet_header_t) + 1), &valid);
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1], &valid);
             if (len > ctr->wLength) len = ctr->wLength;
             header->len = len;
+            if (!valid) {
+                header->id = CONTROL_REQUEST_INVALID_ID;
+            }
+
             // TODO: how does this work with host to device
             break;
         }

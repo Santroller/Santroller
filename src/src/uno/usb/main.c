@@ -45,7 +45,8 @@ void readControlData() {
         while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
         }
 
-        READ_BYTE_FROM_BUF(tmp);
+        register uint8_t data;
+        READ_BYTE_FROM_BUF(data, tmp);
         if (state == STATE_NO_PACKET && data == VALID_PACKET) {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {
@@ -114,7 +115,9 @@ void readEndpointData() {
         // Wait for a byte
         while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
         }
-        READ_BYTE_FROM_BUF(tmp);
+
+        register uint8_t data;
+        READ_BYTE_FROM_BUF(data, tmp);
         if (state == STATE_NO_PACKET && data == VALID_PACKET) {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {

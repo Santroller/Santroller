@@ -23,13 +23,12 @@ extern volatile uint8_t USARTtoUSB_ReadPtr;
         : [readPtr] "m"(USARTtoUSB_ReadPtr) /* Memory location */                      \
     )
 
-#define READ_BYTE_FROM_BUF(tmp_ptr)                                                  \
-    register uint8_t data;                                                           \
+#define READ_BYTE_FROM_BUF(data_ptr, tmp_ptr)                                        \
     asm(                                                                             \
         "ldi %B[tmp] , 0x01\n\t"     /* (1) Force high byte to 0x01 */               \
         "ld %[data] , %a[tmp] +\n\t" /* (2) Load next data byte, wraps around 255 */ \
         /* Outputs */                                                                \
-        : [data] "=&r"(data),        /* Output only */                               \
+        : [data] "=&r"(data_ptr),    /* Output only */                               \
           [tmp] "=e"(tmp_ptr)        /* Input and output */                          \
         /* Inputs */                                                                 \
         : "1"(tmp_ptr))

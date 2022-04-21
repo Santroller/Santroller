@@ -435,6 +435,7 @@ const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
 
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
     *valid = true;
+    // Note, if something is added here, it also needs to be mirrored in src/uno/usb/main.c, we could automatically have that implemented but it would be a pain
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));

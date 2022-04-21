@@ -59,15 +59,14 @@ void loop() {
             break;
         }
         case CONTROL_REQUEST_ID: {
+            // We don't need to bother with valid, as it is handled in usb/main.c
             bool valid = false;
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1], &valid);
             if (len > ctr->wLength) len = ctr->wLength;
             header->len = len;
-            if (!valid) {
-                header->id = CONTROL_REQUEST_INVALID_ID;
+            if ((ctr->bmRequestType & USB_SETUP_DEVICE_TO_HOST) == USB_SETUP_HOST_TO_DEVICE) {
+                return;
             }
-
-            // TODO: how does this work with host to device
             break;
         }
         case DEVICE_ID:

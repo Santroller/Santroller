@@ -61,9 +61,9 @@ void readControlOutData() {
         } else if (state == STATE_READ_LENGTH) {
             packetCount = data;
             break;
-        } 
+        }
     }
-    
+
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Buffer_LE(&tmp, packetCount);
     // With a control request, we can end early. Due to this we can't rely on tmp having read all the data, so we just reset both pointers
@@ -91,7 +91,7 @@ void readControlData() {
                 state = STATE_READ_DEVICE_ID;
             } else if (data == DESCRIPTOR_ID || data == CONTROL_REQUEST_ID) {
                 state = STATE_READ_LENGTH;
-            } 
+            }
         } else if (state == STATE_READ_LENGTH) {
             packetCount = data;
             break;
@@ -112,14 +112,39 @@ void readControlData() {
         }
     }
     Endpoint_ClearSETUP();
-    // Now wait to read the whole packet
-    while (USARTtoUSB_WritePtr - (tmp & 0xff) < packetCount) {
+    if (!packetCount) {
+        Endpoint_ClearIN();
     }
-    Endpoint_Write_Control_Buffer_LE(&tmp, packetCount);
-    // With a control request, we can end early. Due to this we can't rely on tmp having read all the data, so we just reset both pointers
-    USARTtoUSB_ReadPtr = 0;
-    USARTtoUSB_WritePtr = 0;
-    Endpoint_ClearOUT();
+    bool lastPacketFull = false;
+    while (packetCount || lastPacketFull) {
+        if (Endpoint_IsOUTReceived())
+            break;
+        if (Endpoint_IsSETUPReceived())
+            break;
+
+        if (Endpoint_IsINReady()) {
+            uint16_t bytesInEndpoint = Endpoint_BytesInEndpoint();
+
+            while (packetCount && (bytesInEndpoint < USB_Device_ControlEndpointSize)) {
+                while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
+                }
+                register uint8_t data;
+                READ_BYTE_FROM_BUF(data, tmp);
+                Endpoint_Write_8(data);
+                packetCount--;
+                bytesInEndpoint++;
+            }
+
+            lastPacketFull = (bytesInEndpoint == USB_Device_ControlEndpointSize);
+            Endpoint_ClearIN();
+        }
+    }
+    Endpoint_ClearStatusStage();
+    while (packetCount--) {
+        register uint8_t data;
+        READ_BYTE_FROM_BUF(data, tmp);
+    }
+    USARTtoUSB_ReadPtr = tmp & 0xFF;
 }
 void readSerialData() {
     uint16_t tmp;
@@ -145,6 +170,7 @@ void readEndpointData() {
     INIT_TMP_BUF(tmp);
     uint8_t txcount;
     uint8_t state = STATE_NO_PACKET;
+    uint8_t type;
     while (true) {
         // Wait for a byte
         while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
@@ -155,13 +181,18 @@ void readEndpointData() {
         if (state == STATE_NO_PACKET && data == VALID_PACKET) {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {
-            if (data == CONTROLLER_DATA_REQUEST_ID) {
+            type = data;
+            if (data == CONTROLLER_DATA_REQUEST_ID || data == CONTROLLER_DATA_TRANSMIT_ID) {
                 state = STATE_READ_LENGTH;
             } else if (data == CONTROLLER_DATA_REBOOT_ID) {
                 reboot();
             }
         } else if (state == STATE_READ_LENGTH) {
             txcount = data;
+            if (type == CONTROLLER_DATA_TRANSMIT_ID) {
+                USARTtoUSB_ReadPtr = tmp & 0xFF;
+                return;
+            }
             break;
         }
     }
@@ -195,7 +226,7 @@ int main(void) {
     UCSR1B = ((1 << TXEN1) | (1 << RXEN1));
     UBRR1 = SERIAL_2X_UBBRVAL(BAUD);
 
-    DDRD |= (1 << 3);
+    DDRD |= (1 << 3) | (1 << 4) | (1 << 5);
     PORTD |= (1 << 2);
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
     // Ensure the 328p is reset so we can also work from bootloader
@@ -255,20 +286,18 @@ int main(void) {
     }
     packet_header_t requestData = {
         VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
+    data_transmit_packet_t packet = {
+        {VALID_PACKET, CONTROLLER_DATA_TRANSMIT_ID, 0}
+    };
     while (true) {
         USB_USBTask();
-        if (waitingForData) {
-            waitingForData = false;
-            Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
-            if (Endpoint_IsINReady()) {
-                writeData(&requestData, sizeof(packet_header_t));
-            }
+        Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+        if (Endpoint_IsINReady()) {
+            writeData(&requestData, sizeof(packet_header_t));
+            readEndpointData();
         }
         Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
         if (Endpoint_IsOUTReceived()) {
-            data_transmit_packet_t packet;
-            packet.header.magic = VALID_PACKET;
-            packet.header.id = CONTROLLER_DATA_TRANSMIT_ID;
             packet.header.len = sizeof(data_transmit_packet_t) + Endpoint_BytesInEndpoint();
             writeData(&packet, sizeof(data_transmit_packet_t));
             /* Check to see if the packet contains data */
@@ -279,6 +308,7 @@ int main(void) {
                     writeData(&byte, 1);
                 }
             }
+            readEndpointData();
             Endpoint_ClearOUT();
         }
     }
@@ -431,6 +461,8 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         Endpoint_ClearOUT();
         return 0;
     }
+    if (wValue == 0x0304) return 0;
+    if (wValue == 0x0403) return 0;
     // pass request to 328p / mega
     descriptor_request_t packet = {
         header : {VALID_PACKET, DESCRIPTOR_ID, sizeof(descriptor_request_t)},

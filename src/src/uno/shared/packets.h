@@ -19,6 +19,12 @@
 #define STATE_READ_LENGTH 2
 #define STATE_READ_INVALID_CONTROL_REQUEST_LENGTH 3
 #define STATE_READ_DEVICE_ID 4
+
+#define LEDs_TurnOnTXLED (PORTD &= ~LEDMASK_TX)
+#define LEDs_TurnOnRXLED (PORTD &= ~LEDMASK_RX)
+#define LEDs_TurnOffTXLED (PORTD |= LEDMASK_TX)
+#define LEDs_TurnOffRXLED (PORTD |= LEDMASK_RX)
+
 typedef struct {
     uint8_t magic;
     uint8_t id;
@@ -41,7 +47,6 @@ typedef struct {
     uint16_t wIndex;
     uint16_t wLength;
 } __attribute__((packed)) descriptor_request_t;
-
 
 typedef struct {
     packet_header_t header;

@@ -39,6 +39,8 @@ const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_ARRAY(
     'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ',
     'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.');
 
+
+
 const PROGMEM STRING_DESCRIPTOR *const PROGMEM descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
 

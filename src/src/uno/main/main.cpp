@@ -39,7 +39,8 @@ void loop() {
         case CONTROLLER_DATA_TRANSMIT_ID:
             // Technically, we could get multiple packets at once, so we should probably loop through them
             // packetReceived(dt->data, header->len - sizeof(packet_header_t));
-            return;
+            header->len = 0;
+            break;
         case CONTROLLER_DATA_REQUEST_ID: {
             header->len = 0;
             if (should_reboot) {
@@ -63,7 +64,7 @@ void loop() {
             bool valid = false;
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1], &valid);
             if (len > ctr->wLength) len = ctr->wLength;
-            header->len = len;
+            
             if ((ctr->bmRequestType & USB_SETUP_DEVICE_TO_HOST) == USB_SETUP_HOST_TO_DEVICE) {
                 return;
             }

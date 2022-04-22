@@ -7,25 +7,6 @@
 /* USARTtoUSB_ReadPtr needs to be visible to CDC LineEncoding Event. */
 volatile uint8_t USBtoUSART_WritePtr = 0;
 volatile uint8_t USARTtoUSB_ReadPtr = 0;
-#define TEMPLATE_FUNC_NAME Endpoint_Write_Control_Buffer_LE
-#define TEMPLATE_BUFFER_OFFSET(Length) 0
-#define TEMPLATE_BUFFER_MOVE(BufferPtr, Amount)
-#define TEMPLATE_TRANSFER_BYTE(BufferPtr)      \
-    register uint8_t data;                     \
-    READ_BYTE_FROM_BUF(data, *(uint16_t*)BufferPtr); \
-    Endpoint_Write_8(data)
-#include "LUFA/LUFA/Drivers/USB/Core/AVR8/Template/Template_Endpoint_Control_W.c"
-
-#define TEMPLATE_FUNC_NAME Endpoint_Write_Buffer_LE
-#define TEMPLATE_BUFFER_TYPE const void*
-#define TEMPLATE_CLEAR_ENDPOINT() Endpoint_ClearIN()
-#define TEMPLATE_BUFFER_OFFSET(Length) 0
-#define TEMPLATE_BUFFER_MOVE(BufferPtr, Amount)
-#define TEMPLATE_TRANSFER_BYTE(BufferPtr)      \
-    register uint8_t data;                     \
-    READ_BYTE_FROM_BUF(data, *(uint16_t*)BufferPtr); \
-    Endpoint_Write_8(data)
-#include "LUFA/LUFA/Drivers/USB/Core/AVR8/Template/Template_Endpoint_RW.c"
 
 void writeData(const void* data, uint8_t len) {
     uint8_t* buf = (uint8_t*)data;

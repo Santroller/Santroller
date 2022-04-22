@@ -137,7 +137,13 @@ void readSerialData() {
     if (txcount > count) {
         txcount = count;
     }
-    Endpoint_Write_Buffer_LE(&tmp, txcount, NULL);
+    while (!Endpoint_IsINReady()) {
+    }
+    while (txcount--) {
+        register uint8_t data;
+        READ_BYTE_FROM_BUF(data, tmp);
+        Endpoint_Write_8(data);
+    }
     // Save new pointer position
     USARTtoUSB_ReadPtr = tmp & 0xFF;
     Endpoint_ClearIN();
@@ -176,7 +182,13 @@ void readEndpointData() {
     // Now wait to read the whole packet
     while (USARTtoUSB_WritePtr - (tmp & 0xff) < txcount) {
     }
-    Endpoint_Write_Buffer_LE(&tmp, txcount, NULL);
+    while (!Endpoint_IsINReady()) {
+    }
+    while (txcount--) {
+        register uint8_t data;
+        READ_BYTE_FROM_BUF(data, tmp);
+        Endpoint_Write_8(data);
+    }
     // Save new pointer position
     USARTtoUSB_ReadPtr = tmp & 0xFF;
     Endpoint_ClearIN();

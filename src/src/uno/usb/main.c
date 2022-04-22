@@ -24,6 +24,7 @@
 #include "serial_descriptors.h"
 #include "serial_macros.h"
 #define JUMP 0xDE00
+
 /* USBtoUSART_WritePtr needs to be visible to ISR. */
 /* USARTtoUSB_ReadPtr needs to be visible to CDC LineEncoding Event. */
 volatile uint8_t USBtoUSART_WritePtr = 0;
@@ -37,24 +38,21 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
 // mode after the next watchdog reset
 volatile uint16_t bootloaderState __attribute__((section(".noinit")));
 
-volatile bool ready = false;
+// Are we in usbserial mode or controller mode
 bool serial = false;
 
-bool waitingForData = true;
-
-bool handleControlRequest() {
+// Handle receiving data from the 328p during a control request
+int handleControlRequest() {
     uint16_t tmp;
     INIT_TMP_SERIAL_TO_USB(tmp);
     uint8_t state = STATE_NO_PACKET;
     uint8_t type;
     uint8_t packetCount = 0;
     while (true) {
-        // Wait for a byte
-        while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
-        }
-
+        WAIT_FOR_BYTES(tmp, 1);
         register uint8_t data;
         READ_BYTE_FROM_BUF(data, tmp);
+        // First we need to read out the packet header
         if (state == STATE_NO_PACKET && data == VALID_PACKET) {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {
@@ -69,35 +67,29 @@ bool handleControlRequest() {
                 state = STATE_READ_VALID;
                 continue;
             }
+            // For host to device requests, we don't have any more data to read as the host was writing the data
             if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
-                USARTtoUSB_ReadPtr = tmp & 0xFF;
-                return false;
+                FINISH_READ(tmp);
+                return 0;
             }
             packetCount = data;
             break;
         } else if (state == STATE_READ_VALID) {
-            USARTtoUSB_ReadPtr = tmp & 0xFF;
+            // For checking if a control request is valid, only the boolean value of the validness of the control request is returned
+            FINISH_READ(tmp);
             return data;
         } else if (state == STATE_READ_DEVICE_ID) {
-            uint8_t type = EP_TYPE_INTERRUPT;
-            uint8_t epsize = 0x20;
-            uint8_t consoleType = data;
-            if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
-                epsize = 0x18;
-            }
-            if (consoleType == MIDI) {
-                type = EP_TYPE_BULK;
-            }
-            Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);
-            Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
-            USARTtoUSB_ReadPtr = tmp & 0xFF;
-            return false;
+            // We have a device type, return it
+            FINISH_READ(tmp);
+            return data;
         }
     }
+    // Header is read, acknowledge the setup packet, and start writing bytes out from the circular buffer.
     Endpoint_ClearSETUP();
     if (!packetCount) {
         Endpoint_ClearIN();
     }
+    WAIT_FOR_BYTES(tmp, packetCount);
     bool lastPacketFull = false;
     while (packetCount || lastPacketFull) {
         if (Endpoint_IsOUTReceived())
@@ -109,8 +101,6 @@ bool handleControlRequest() {
             uint16_t bytesInEndpoint = Endpoint_BytesInEndpoint();
 
             while (packetCount && (bytesInEndpoint < USB_Device_ControlEndpointSize)) {
-                while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
-                }
                 register uint8_t data;
                 READ_BYTE_FROM_BUF(data, tmp);
                 Endpoint_Write_8(data);
@@ -123,57 +113,60 @@ bool handleControlRequest() {
         }
     }
     Endpoint_ClearStatusStage();
+    // If the packet ends early, we still need to finish reading everything out of the buffer
     while (packetCount--) {
         register uint8_t data;
         READ_BYTE_FROM_BUF(data, tmp);
     }
-    USARTtoUSB_ReadPtr = tmp & 0xFF;
-    return false;
+    FINISH_READ(tmp);
+    return 0;
 }
-void handleControllerData() {
-    uint16_t tmp;
-    INIT_TMP_SERIAL_TO_USB(tmp);
-    uint8_t txcount;
-    uint8_t state = STATE_NO_PACKET;
-    uint8_t type;
-    while (true) {
-        // Wait for a byte
-        while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
-        }
 
+// Handle writing data for the controller endpoints (both in and out)
+void handleControllerData() {
+    uint8_t txcount;
+    uint8_t type;
+    uint16_t tmp;
+    uint8_t state = STATE_NO_PACKET;
+    INIT_TMP_SERIAL_TO_USB(tmp);
+    // Read the header
+    while (true) {
+        WAIT_FOR_BYTES(tmp, 1);
         register uint8_t data;
         READ_BYTE_FROM_BUF(data, tmp);
         if (state == STATE_NO_PACKET && data == VALID_PACKET) {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {
             type = data;
-            if (data == CONTROLLER_DATA_REQUEST_ID || data == CONTROLLER_DATA_TRANSMIT_ID) {
-                state = STATE_READ_LENGTH;
-            } else if (data == CONTROLLER_DATA_REBOOT_ID) {
-                reboot();
-            }
+            state = STATE_READ_LENGTH;
         } else if (state == STATE_READ_LENGTH) {
             txcount = data;
+            // If the packet was host to device, than we are done here as the data was written already
             if (type == CONTROLLER_DATA_TRANSMIT_ID) {
-                USARTtoUSB_ReadPtr = tmp & 0xFF;
+                FINISH_READ(tmp);
+                return;
+            }
+            if (data == CONTROLLER_DATA_RESTART_USB_ID) {
+                // The 328p  wants to restart the usb layer, so do so. When this happens no data will follow.
+                USB_Disable();
+                USB_Init();
+                FINISH_READ(tmp);
                 return;
             }
             break;
         }
     }
-    // Now wait to read the whole packet
-    while (USARTtoUSB_WritePtr - (tmp & 0xff) < txcount) {
-    }
+    // This is device to host, so write out all the data to the endpoint
+    WAIT_FOR_BYTES(tmp, txcount);
     while (txcount--) {
         register uint8_t data;
         READ_BYTE_FROM_BUF(data, tmp);
         Endpoint_Write_8(data);
     }
-    // Save new pointer position
-    USARTtoUSB_ReadPtr = tmp & 0xFF;
-    Endpoint_ClearIN();
+    FINISH_READ(tmp);
 }
 int main(void) {
+    // Handle jumping to different states depending on bootloaderState (which is preserved on a reboot)
     if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER)) {
         // We don't want to jump again after the bootloader returns control flow to
         // us
@@ -182,6 +175,8 @@ int main(void) {
     } else if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO)) {
         serial = true;
     }
+    // We don't want to jump again after the bootloader returns control flow to
+    // us
     bootloaderState = 0;
 
     /* Disable watchdog if enabled by bootloader/fuses */
@@ -190,28 +185,29 @@ int main(void) {
 
     clock_prescale_set(clock_div_1);
 
+    // Configure the serial port for controller mode, usbserial mode will reconfigure it later
     UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
     UCSR1A = (1 << U2X1);
     UCSR1B = ((1 << TXEN1) | (1 << RXEN1));
     UBRR1 = SERIAL_2X_UBBRVAL(BAUD);
 
-    DDRD |= (1 << 3);
-    PORTD |= (1 << 2);
+    // Make sure that the 328p is fully reset, as it sends us the ready byte on bootup
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-    // Ensure the 328p is reset so we can also work from bootloader
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
     _delay_ms(1);
     AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
     _delay_ms(1);
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-    sei();
+
+    interrupts();
     if (serial) {
+        // Enable a timer to rapidly flush bytes over serial
         TCCR0B = (1 << CS02);
     } else {
+        // Wait for the 328p / 1280 to boot (we receive a READY byte)
+        // If we don't get it in time, we can assume the 328p is missing its firmware or has a wonky config and drop to the 328p programming mode
         uint16_t count = 0;
         uint8_t count2 = 0;
-        // Wait for the 328p / 1280 to boot (we receive a READY byte)
-        // If we don't get it in time, we can assume the 328p is missing its firmware and drop to the 328p programming mode
         while (!(UCSR1A & (1 << RXC1)) || UDR1 != READY) {
             count++;
             if (count > 0xFFFE) {
@@ -224,11 +220,17 @@ int main(void) {
             }
         }
     }
+    // Now that we have the ready byte above, we can turn on the serial receive interrupt handler
     UCSR1B = ((1 << TXEN1) | (1 << RXCIE1) | (1 << RXEN1));
+
     USB_Init();
+
+    // Loop for handling serial data
     if (serial) {
         while (true) {
             USB_USBTask();
+
+            // Send any data from the serial out buffer over USB
             Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
             if (Endpoint_IsINReady()) {
                 uint16_t tmp;
@@ -250,54 +252,72 @@ int main(void) {
                     Endpoint_Write_8(data);
                 }
                 // Save new pointer position
-                USARTtoUSB_ReadPtr = tmp & 0xFF;
+                FINISH_READ(tmp);
                 Endpoint_ClearIN();
             }
+
+            // Send any data received from usb to the serial in buffer
             Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
             uint8_t countRX = 0;
             if (Endpoint_IsOUTReceived()) {
-                // Check if we received any new bytes and if we still have space in the buffer
+                // Check if we received any new bytes
                 countRX = Endpoint_BytesInEndpoint();
 
-                // Acknowledge zero length packet and dont call any read functions
+                // Acknowledge zero length packet
                 if (!countRX)
                     Endpoint_ClearOUT();
             }
-
-            uint16_t tmp;
-            INIT_TMP_USB_TO_SERIAL(tmp);
+            // Check if there is space for the data to receive
             uint8_t USBtoUSART_free = (USB2USART_BUFLEN - 1) - ((USBtoUSART_WritePtr - USBtoUSART_ReadPtr) & (USB2USART_BUFLEN - 1));
             if (countRX && countRX <= USBtoUSART_free) {
+                // There is space, receive the data
+                uint16_t tmp;
+                INIT_TMP_USB_TO_SERIAL(tmp);
                 while (countRX--) {
                     register uint8_t data = Endpoint_Read_8();
                     WRITE_BYTE_TO_BUF(data, tmp);
                 }
+                // Acknowledge the read
                 Endpoint_ClearOUT();
+                FINISH_WRITE(tmp);
             }
-            COMPLETE_WRITE(tmp);
         }
     }
+
+    // Controller mode, construct packets that we will need to send later
     packet_header_t requestData = {
         VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     data_transmit_packet_t packet = {
         {VALID_PACKET, CONTROLLER_DATA_TRANSMIT_ID, 0}};
+
+    // Loop for handling controller mode
     while (true) {
         USB_USBTask();
+
+        // Check if the host is ready to receive a controller packet
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
         if (Endpoint_IsINReady()) {
+            // It is, request one from the 328p and then send it
             uint16_t tmp;
             INIT_TMP_USB_TO_SERIAL(tmp);
             WRITE_ARRAY_TO_BUF(tmp, &requestData, sizeof(packet_header_t));
-            COMPLETE_WRITE(tmp);
+
+            // Now wait for and process the response from the 328p
+            FINISH_WRITE(tmp);
             handleControllerData();
+            // Acknowledge the packet
+            Endpoint_ClearIN();
         }
+
+        // Check if the host has sent us a controller packet (for example, LEDs or other controller info)
         Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
         if (Endpoint_IsOUTReceived()) {
+            // It has, send the packet to the 328p for processing
             uint16_t tmp;
             INIT_TMP_USB_TO_SERIAL(tmp);
             packet.header.len = sizeof(data_transmit_packet_t) + Endpoint_BytesInEndpoint();
             WRITE_ARRAY_TO_BUF(tmp, &packet, sizeof(data_transmit_packet_t));
-            /* Check to see if the packet contains data */
+            // Check if the packet is empty or has data
             if (Endpoint_IsReadWriteAllowed()) {
                 uint8_t count = Endpoint_BytesInEndpoint();
                 while (count--) {
@@ -305,8 +325,11 @@ int main(void) {
                     WRITE_BYTE_TO_BUF(data, tmp);
                 }
             }
-            COMPLETE_WRITE(tmp);
+
+            // Now wait for and process the response from the 328p
+            FINISH_WRITE(tmp);
             handleControllerData();
+            // Acknowledge the packet
             Endpoint_ClearOUT();
         }
     }
@@ -314,6 +337,7 @@ int main(void) {
 
 void EVENT_USB_Device_ControlRequest(void) {
     if (!(Endpoint_IsSETUPReceived())) return;
+    // Handle usbserial related control requests
     if (serial) {
         if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
             if (USB_ControlRequest.bRequest == CDC_REQ_SetLineEncoding) {
@@ -322,28 +346,73 @@ void EVENT_USB_Device_ControlRequest(void) {
                 /* Read the line coding data in from the host into the global struct */
                 Endpoint_Read_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
                 Endpoint_ClearIN();
+
+                // Handle the "1200bps touch" that pro micros use for jumping to the bootloader, only we reuse it here to jump to dfu moode
                 if (LineEncoding.BaudRateBPS == 1200) {
                     bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER);
                     reboot();
                 } else if (LineEncoding.BaudRateBPS == 2400) {
-                    bootloaderState = JUMP;
+                    // And we have our own "2400bps touch" that just reboots, which will jump from usbserial back to controller mode
                     reboot();
                 }
+
                 /* Keep the TX line held high (idle) while the USART is reconfigured */
                 PORTD |= (1 << 3);
-                /* Must turn off USART before reconfiguring it, otherwise incorrect operation may occur */
-                UCSR1B = 0;
-                UCSR1A = 0;
-                UCSR1C = 0;
+
+                /* Flush data that was about to be sent. */
                 USBtoUSART_ReadPtr = 0;
                 USBtoUSART_WritePtr = 0;
                 USARTtoUSB_ReadPtr = 0;
                 USARTtoUSB_WritePtr = 0;
 
-                UBRR1 = SERIAL_2X_UBBRVAL(LineEncoding.BaudRateBPS);
+                // Reconfigure the USART based on the LineEncoding
+                int8_t ConfigMask = 0;
 
-                UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
-                UCSR1A = (1 << U2X1);
+                switch (LineEncoding.ParityType) {
+                    case CDC_PARITY_Odd:
+                        ConfigMask = ((1 << UPM11) | (1 << UPM10));
+                        break;
+                    case CDC_PARITY_Even:
+                        ConfigMask = (1 << UPM11);
+                        break;
+                }
+
+                if (LineEncoding.CharFormat == CDC_LINEENCODING_TwoStopBits)
+                    ConfigMask |= (1 << USBS1);
+
+                switch (LineEncoding.DataBits) {
+                    case 6:
+                        ConfigMask |= (1 << UCSZ10);
+                        break;
+                    case 7:
+                        ConfigMask |= (1 << UCSZ11);
+                        break;
+                    case 8:
+                        ConfigMask |= ((1 << UCSZ11) | (1 << UCSZ10));
+                        break;
+                }
+
+                // Set the new baud rate before configuring the USART
+                uint8_t clockSpeed = (1 << U2X1);
+                uint16_t brr = SERIAL_2X_UBBRVAL(LineEncoding.BaudRateBPS);
+
+                // No need U2X or cant have U2X.
+                if ((brr & 1) || (brr > 4095)) {
+                    brr >>= 1;
+                    clockSpeed = 0;
+                }
+
+                // Or special case 57600 baud for compatibility with the ATmega328 bootloader.
+                else if (brr == SERIAL_2X_UBBRVAL(57600)) {
+                    brr = SERIAL_UBBRVAL(57600);
+                    clockSpeed = 0;
+                }
+
+                UBRR1 = brr;
+
+                // Reconfigure the USART
+                UCSR1C = ConfigMask;
+                UCSR1A = clockSpeed;
                 UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 
                 /* Release the TX line after the USART has been reconfigured */
@@ -352,6 +421,7 @@ void EVENT_USB_Device_ControlRequest(void) {
                 Endpoint_ClearSETUP();
                 Endpoint_ClearStatusStage();
 
+                // Handle the DTR line resetting the UNO, as the arduino uno uses this for programming
                 if (USB_ControlRequest.wValue & CDC_CONTROL_LINE_OUT_DTR) {
                     AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
                 } else {
@@ -359,6 +429,7 @@ void EVENT_USB_Device_ControlRequest(void) {
                 }
             }
         } else if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE) && USB_ControlRequest.bRequest == CDC_REQ_GetLineEncoding) {
+            // If the host requests the current line encoding return it
             Endpoint_ClearSETUP();
             Endpoint_Write_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
             Endpoint_ClearOUT();
@@ -366,29 +437,41 @@ void EVENT_USB_Device_ControlRequest(void) {
 
         return;
     }
+    // Handle control requests for controller mode
+    // We uses a few control requests to jump between different modes on the uno, so handle that here
     if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
         if (USB_ControlRequest.bRequest >= COMMAND_REBOOT && USB_ControlRequest.bRequest <= COMMAND_JUMP_BOOTLOADER_UNO) {
             Endpoint_ClearSETUP();
             Endpoint_ClearStatusStage();
+            // We cheat a little and use the commands for jumping as flags for when to jump to different modes
             bootloaderState = (JUMP | USB_ControlRequest.bRequest);
             reboot();
         }
     }
+
+    // Ask the 328p if wants to handle a control request, by sending it a validation header and the control request header
     uint16_t tmp;
     INIT_TMP_USB_TO_SERIAL(tmp);
     packet_header_t control_request_packet = {VALID_PACKET, CONTROL_REQUEST_VALIDATION_ID, sizeof(control_request_t)};
     WRITE_ARRAY_TO_BUF(tmp, &control_request_packet, sizeof(packet_header_t));
     WRITE_ARRAY_TO_BUF(tmp, &USB_ControlRequest, sizeof(USB_ControlRequest));
-    COMPLETE_WRITE(tmp);
+    FINISH_WRITE(tmp);
     if (!handleControlRequest()) {
+        // It does not want to handle the control request, return
         return;
     }
+
+    // Handle the control request
     control_request_packet.id = CONTROL_REQUEST_ID;
+
+    // For host to device requests, we also send the data itself so increase the length
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         control_request_packet.len += USB_ControlRequest.wLength;
     }
     WRITE_ARRAY_TO_BUF(tmp, &control_request_packet, sizeof(packet_header_t));
     WRITE_ARRAY_TO_BUF(tmp, &USB_ControlRequest, sizeof(USB_ControlRequest));
+
+    // For host to device requests, send the data from the host
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         Endpoint_ClearSETUP();
         uint8_t len = USB_ControlRequest.wLength;
@@ -398,52 +481,70 @@ void EVENT_USB_Device_ControlRequest(void) {
         }
         Endpoint_ClearStatusStage();
     }
-    COMPLETE_WRITE(tmp);
+
+    // Now wait for and process the response from the 328p.
+    FINISH_WRITE(tmp);
     handleControlRequest();
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
-    if (!serial) {
-        uint16_t tmp;
-        INIT_TMP_USB_TO_SERIAL(tmp);
-        packet_header_t packet = {
-            VALID_PACKET, DEVICE_ID, sizeof(packet_header_t)};
-        uint8_t len = sizeof(packet_header_t);
-        uint8_t* buf = (uint8_t*)&packet;
-        do {
-            register uint8_t data;
-            data = *(buf++);
-            WRITE_BYTE_TO_BUF(data, tmp);
-        } while (--len);
-        COMPLETE_WRITE(tmp);
-        handleControlRequest();
+    if (serial) {
+        // Configure endpoints for usbserial mode
+        Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, EP_TYPE_BULK, SERIAL_TX_SIZE, 1);
+        Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, EP_TYPE_BULK, SERIAL_RX_SIZE, 1);
+        Endpoint_ConfigureEndpoint(CDC_NOTIFICATION, EP_TYPE_INTERRUPT, SERIAL_NOTIFICATION_SIZE, 1);
         return;
     }
+    // When in controller mode, we need to ask the 328p what type of controller we are emulating, so we can configure the endpoints correctly
+    uint16_t tmp;
+    INIT_TMP_USB_TO_SERIAL(tmp);
+    packet_header_t packet = {
+        VALID_PACKET, DEVICE_ID, sizeof(packet_header_t)};
+    WRITE_ARRAY_TO_BUF(tmp, &packet, sizeof(packet_header_t));
 
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, EP_TYPE_BULK, SERIAL_TX_SIZE, 1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, EP_TYPE_BULK, SERIAL_RX_SIZE, 1);
-    Endpoint_ConfigureEndpoint(CDC_NOTIFICATION, EP_TYPE_INTERRUPT, SERIAL_NOTIFICATION_SIZE, 1);
+    // Now wait for and process the response from the 328p
+    FINISH_WRITE(tmp);
+    uint8_t consoleType = handleControlRequest();
+
+    // Now that we have the console type, we can configure the endpoints accordingly
+    uint8_t type = EP_TYPE_INTERRUPT;
+    uint8_t epsize = 0x20;
+    if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
+        epsize = 0x18;
+    }
+    if (consoleType == MIDI) {
+        type = EP_TYPE_BULK;
+    }
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
+    return;
 }
+
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void** const descriptorAddress) {
     if (serial) {
-        const uint8_t DescriptorType = (wValue >> 8);
-        const void* Address = NULL;
-        uint16_t Size = 0;
+        // For usbserial mode, we have descriptors from "serial_descriptors.h" that we send
+        const uint8_t descriptorType = (wValue >> 8);
+        const void* address = NULL;
+        uint16_t size = 0;
 
-        switch (DescriptorType) {
+        switch (descriptorType) {
             case DTYPE_Device:
-                Address = &DeviceDescriptor;
-                Size = sizeof(USB_Descriptor_Device_t);
+                address = &usbSerialDeviceDescriptor;
+                size = sizeof(USB_Descriptor_Device_t);
                 break;
             case DTYPE_Configuration:
-                Address = &ConfigurationDescriptor;
-                Size = sizeof(USB_Descriptor_Configuration_t);
+                address = &usbSerialConfigurationDescriptor;
+                size = sizeof(USB_Descriptor_Configuration_t);
                 break;
         }
-        Endpoint_ClearSETUP();
-        Endpoint_Write_Control_PStream_LE(Address, Size);
-        Endpoint_ClearOUT();
+        if (address) {
+            // To avoid needing to enable support for different descriptor areas
+            // we can write the descriptor outselves and act like we don't have a descriptor to write
+            Endpoint_ClearSETUP();
+            Endpoint_Write_Control_PStream_LE(address, size);
+            Endpoint_ClearOUT();
+        }
         return 0;
     }
     // pass request to 328p / mega
@@ -456,7 +557,9 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     uint16_t tmp;
     INIT_TMP_USB_TO_SERIAL(tmp);
     WRITE_ARRAY_TO_BUF(tmp, &packet, sizeof(descriptor_request_t));
-    COMPLETE_WRITE(tmp);
+
+    // wait for a response from the 328p. At this point we can handle it exactly the same was as a control request
+    FINISH_WRITE(tmp);
     handleControlRequest();
     return 0;
 }

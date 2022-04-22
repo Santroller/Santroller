@@ -1,5 +1,7 @@
 #include "serial_descriptors.h"
-const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
+
+// Device descriptor for usbserial mode
+const USB_Descriptor_Device_t PROGMEM usbSerialDeviceDescriptor =
     {
         .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
@@ -21,7 +23,8 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
 
         .NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS};
 
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
+// Configuration descriptor for usbserial mode
+const USB_Descriptor_Configuration_t PROGMEM usbSerialConfigurationDescriptor =
     {
         .Config =
             {

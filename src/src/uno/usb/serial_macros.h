@@ -10,6 +10,8 @@ extern volatile uint8_t USARTtoUSB_ReadPtr;
 #define USART2USB_BUFLEN 128  // 0xFF - 8bit
 #define USB2USART_BUFLEN 64   // 0x7F - 7bit
 
+// A collection of asm snippets that get reused everywhere, so they are made into macros
+
 #define INIT_TMP_SERIAL_TO_USB(tmp_ptr)                                                \
     asm(                                                                               \
         "lds %A[tmp], %[readPtr]\n\t"       /* (1) Copy read pointer into lower byte*/ \
@@ -62,6 +64,12 @@ extern volatile uint8_t USARTtoUSB_ReadPtr;
         } while (--len);                             \
     }
 
-#define COMPLETE_WRITE(tmp_ptr)           \
-    USBtoUSART_WritePtr = tmp_ptr & 0xFF; \
+#define FINISH_WRITE(tmp_ptr)                                       \
+    USBtoUSART_WritePtr = tmp_ptr & 0xFF;                           \
     UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1))
+
+#define FINISH_READ(tmp_ptr)                                        \
+    USARTtoUSB_ReadPtr = tmp & 0xFF
+
+#define WAIT_FOR_BYTES(tmp_ptr, n) \
+    while (USARTtoUSB_WritePtr - (tmp_ptr & 0xff) < n) {}

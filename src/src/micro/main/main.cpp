@@ -109,7 +109,6 @@ ISR(WDT_vect) {
     waiting = false;
 }
 void reset_usb(void) {
-    // TODO: is this working?
     USB_Disable();
     USB_Init();
 }

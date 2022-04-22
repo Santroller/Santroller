@@ -16,6 +16,6 @@ typedef struct
     USB_Descriptor_Endpoint_t CDC_DataInEndpoint;
 } USB_Descriptor_Configuration_t;
 
-extern const USB_Descriptor_Device_t DeviceDescriptor;
+extern const USB_Descriptor_Device_t usbSerialDeviceDescriptor;
 
-extern const USB_Descriptor_Configuration_t ConfigurationDescriptor;
+extern const USB_Descriptor_Configuration_t usbSerialConfigurationDescriptor;

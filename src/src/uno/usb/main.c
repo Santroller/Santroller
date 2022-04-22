@@ -130,31 +130,6 @@ bool handleControlRequest() {
     USARTtoUSB_ReadPtr = tmp & 0xFF;
     return false;
 }
-void handleSerialToUSB() {
-    uint16_t tmp;
-    INIT_TMP_SERIAL_TO_USB(tmp);
-    uint8_t txcount;
-    uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
-    // Check if the UART receive buffer flush timer has expired or the buffer is nearly full
-    if (!((TIFR0 & (1 << TOV0)) || (count >= (SERIAL_TX_SIZE - 1)))) {
-        return;
-    }
-    TIFR0 = (1 << TOV0);
-    txcount = SERIAL_TX_SIZE - 1;
-    if (txcount > count) {
-        txcount = count;
-    }
-    while (!Endpoint_IsINReady()) {
-    }
-    while (txcount--) {
-        register uint8_t data;
-        READ_BYTE_FROM_BUF(data, tmp);
-        Endpoint_Write_8(data);
-    }
-    // Save new pointer position
-    USARTtoUSB_ReadPtr = tmp & 0xFF;
-    Endpoint_ClearIN();
-}
 void handleControllerData() {
     uint16_t tmp;
     INIT_TMP_SERIAL_TO_USB(tmp);
@@ -188,8 +163,6 @@ void handleControllerData() {
     }
     // Now wait to read the whole packet
     while (USARTtoUSB_WritePtr - (tmp & 0xff) < txcount) {
-    }
-    while (!Endpoint_IsINReady()) {
     }
     while (txcount--) {
         register uint8_t data;
@@ -258,7 +231,27 @@ int main(void) {
             USB_USBTask();
             Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
             if (Endpoint_IsINReady()) {
-                handleSerialToUSB();
+                uint16_t tmp;
+                INIT_TMP_SERIAL_TO_USB(tmp);
+                uint8_t txcount;
+                uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
+                // Check if the UART receive buffer flush timer has expired or the buffer is nearly full
+                if (!((TIFR0 & (1 << TOV0)) || (count >= (SERIAL_TX_SIZE - 1)))) {
+                    continue;
+                }
+                TIFR0 = (1 << TOV0);
+                txcount = SERIAL_TX_SIZE - 1;
+                if (txcount > count) {
+                    txcount = count;
+                }
+                while (txcount--) {
+                    register uint8_t data;
+                    READ_BYTE_FROM_BUF(data, tmp);
+                    Endpoint_Write_8(data);
+                }
+                // Save new pointer position
+                USARTtoUSB_ReadPtr = tmp & 0xFF;
+                Endpoint_ClearIN();
             }
             Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
             uint8_t countRX = 0;

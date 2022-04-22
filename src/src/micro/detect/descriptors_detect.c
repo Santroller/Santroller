@@ -148,7 +148,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 
                 .EndpointAddress = DEVICE_EPADDR_OUT,
                 .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = SERIAL_ENDPOINT_SIZE,
+                .EndpointSize = ENDPOINT_SIZE,
                 .PollingIntervalMS = 0x01},
 
         .CDC_DataInEndpoint =
@@ -157,7 +157,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
 
                 .EndpointAddress = DEVICE_EPADDR_IN,
                 .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = SERIAL_ENDPOINT_SIZE,
+                .EndpointSize = ENDPOINT_SIZE,
                 .PollingIntervalMS = 0x01}};
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is returned when the host requests

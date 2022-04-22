@@ -31,13 +31,16 @@ def launch_dfu():
 
 Import("env")
 def before_upload(source, target, env):
+    upload_protocol = env.subst("$UPLOAD_PROTOCOL")
     upload_options = env.BoardConfig().get("upload", {})
     b_request = None
     exists = False
     id_vendor = None
     id_product = None
     wait_for_serial = False
-    if "ardwiino_bootloader" in upload_options and upload_options["ardwiino_bootloader"] == "true":
+    if "ardwiino_bootloader_teensy" in upload_options and upload_options["ardwiino_bootloader_teensy"] == "true":
+        b_request = BOOTLOADER
+    elif "ardwiino_bootloader" in upload_options and upload_options["ardwiino_bootloader"] == "true":
         b_request = BOOTLOADER
         wait_for_serial = True
     if "/arduino_uno_mega_usb" in str(source[0]):

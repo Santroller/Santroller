@@ -469,8 +469,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
             return DevCompatIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
-            memcpy_P(requestBuffer, ID, sizeof(ID));
-            return sizeof(ID);
+            memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
+            return sizeof(XBOX_ID);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
         if (consoleType == PS3) {

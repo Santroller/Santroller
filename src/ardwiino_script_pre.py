@@ -25,7 +25,6 @@ class Context:
 Import("env")
 if "upload" in BUILD_TARGETS:
     upload_options = env.BoardConfig().get("upload", {})
-    print(upload_options)
     if "detect_frequency" in upload_options and upload_options["detect_frequency"] == "true":
         print("Uploading script to detect speed")
         project_dir = env["PROJECT_DIR"]

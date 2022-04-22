@@ -35,10 +35,11 @@ bool serial = false;
 
 bool waitingForData = true;
 
-void readControlOutData() {
+bool readControlData() {
     uint16_t tmp;
     INIT_TMP_BUF(tmp);
     uint8_t state = STATE_NO_PACKET;
+    uint8_t type;
     uint8_t packetCount = 0;
     while (true) {
         // Wait for a byte
@@ -50,51 +51,26 @@ void readControlOutData() {
         if (state == STATE_NO_PACKET && data == VALID_PACKET) {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {
-            if (data == CONTROL_REQUEST_ID) {
-                state = STATE_READ_LENGTH;
-            } else if (data == CONTROL_REQUEST_INVALID_ID) {
-                state = STATE_READ_INVALID_CONTROL_REQUEST_LENGTH;
-            }
-        } else if (state == STATE_READ_INVALID_CONTROL_REQUEST_LENGTH) {
-            USARTtoUSB_ReadPtr = tmp & 0xFF;
-            return;
-        } else if (state == STATE_READ_LENGTH) {
-            packetCount = data;
-            break;
-        }
-    }
-
-    Endpoint_ClearSETUP();
-    Endpoint_Write_Control_Buffer_LE(&tmp, packetCount);
-    // With a control request, we can end early. Due to this we can't rely on tmp having read all the data, so we just reset both pointers
-    USARTtoUSB_ReadPtr = 0;
-    USARTtoUSB_WritePtr = 0;
-    Endpoint_ClearOUT();
-}
-
-void readControlData() {
-    uint16_t tmp;
-    INIT_TMP_BUF(tmp);
-    uint8_t state = STATE_NO_PACKET;
-    uint8_t packetCount = 0;
-    while (true) {
-        // Wait for a byte
-        while (USARTtoUSB_WritePtr - (tmp & 0xff) == 0) {
-        }
-
-        register uint8_t data;
-        READ_BYTE_FROM_BUF(data, tmp);
-        if (state == STATE_NO_PACKET && data == VALID_PACKET) {
-            state = STATE_READ_PACKET_TYPE;
-        } else if (state == STATE_READ_PACKET_TYPE) {
+            type = data;
             if (data == DEVICE_ID) {
                 state = STATE_READ_DEVICE_ID;
-            } else if (data == DESCRIPTOR_ID || data == CONTROL_REQUEST_ID) {
+            } else if (data == DESCRIPTOR_ID || data == CONTROL_REQUEST_ID || CONTROL_REQUEST_VALIDATION_ID) {
                 state = STATE_READ_LENGTH;
             }
         } else if (state == STATE_READ_LENGTH) {
+            if (type == CONTROL_REQUEST_VALIDATION_ID) {
+                state = STATE_READ_VALID;
+                continue;
+            }
+            if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
+                USARTtoUSB_ReadPtr = tmp & 0xFF;
+                return false;
+            }
             packetCount = data;
             break;
+        } else if (state == STATE_READ_VALID) {
+            USARTtoUSB_ReadPtr = tmp & 0xFF;
+            return data;
         } else if (state == STATE_READ_DEVICE_ID) {
             uint8_t type = EP_TYPE_INTERRUPT;
             uint8_t epsize = 0x20;
@@ -105,10 +81,10 @@ void readControlData() {
             if (consoleType == MIDI) {
                 type = EP_TYPE_BULK;
             }
-            Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 1);
+            Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);
             Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
             USARTtoUSB_ReadPtr = tmp & 0xFF;
-            return;
+            return false;
         }
     }
     Endpoint_ClearSETUP();
@@ -145,6 +121,7 @@ void readControlData() {
         READ_BYTE_FROM_BUF(data, tmp);
     }
     USARTtoUSB_ReadPtr = tmp & 0xFF;
+    return false;
 }
 void readSerialData() {
     uint16_t tmp;
@@ -226,7 +203,7 @@ int main(void) {
     UCSR1B = ((1 << TXEN1) | (1 << RXEN1));
     UBRR1 = SERIAL_2X_UBBRVAL(BAUD);
 
-    DDRD |= (1 << 3) | (1 << 4) | (1 << 5);
+    DDRD |= (1 << 3);
     PORTD |= (1 << 2);
     AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
     // Ensure the 328p is reset so we can also work from bootloader
@@ -287,8 +264,7 @@ int main(void) {
     packet_header_t requestData = {
         VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
     data_transmit_packet_t packet = {
-        {VALID_PACKET, CONTROLLER_DATA_TRANSMIT_ID, 0}
-    };
+        {VALID_PACKET, CONTROLLER_DATA_TRANSMIT_ID, 0}};
     while (true) {
         USB_USBTask();
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
@@ -315,28 +291,10 @@ int main(void) {
 }
 
 bool validControlRequest() {
-    // Note, if something is added here, it also needs to be mirrored in usb_endpoints/src/commands.c
-    if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQREC_INTERFACE | REQTYPE_VENDOR)) {
-        if (USB_ControlRequest.bRequest == HID_REQ_GetReport && USB_ControlRequest.wIndex == INTERFACE_ID_Device && USB_ControlRequest.wValue == 0x0000) {
-            return true;
-        } else if (USB_ControlRequest.bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && USB_ControlRequest.wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && USB_ControlRequest.wValue == INTERFACE_ID_Config) {
-            return true;
-        } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport && USB_ControlRequest.wIndex == INTERFACE_ID_Device && USB_ControlRequest.wValue == 0x0100) {
-            return true;
-        }
-    } else if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQREC_INTERFACE | REQTYPE_VENDOR)) {
-        if (USB_ControlRequest.bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && USB_ControlRequest.wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
-            return true;
-        } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport && USB_ControlRequest.wIndex == 0x00 && USB_ControlRequest.wValue == 0x0000) {
-            return true;
-        }
-    } else if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQREC_INTERFACE | REQTYPE_CLASS) && USB_ControlRequest.wIndex == 0x0300) {
-        return true;
-    } else if (USB_ControlRequest.bRequest == HID_REQ_SetReport && USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQREC_INTERFACE | REQTYPE_CLASS)) {
-    } else if (USB_ControlRequest.bRequest == REQ_ClearFeature && (USB_ControlRequest.wIndex == DEVICE_EPADDR_IN || USB_ControlRequest.wIndex == DEVICE_EPADDR_OUT)) {
-        return true;
-    }
-    return false;
+    packet_header_t control_request_packet = {VALID_PACKET, CONTROL_REQUEST_VALIDATION_ID, sizeof(control_request_t)};
+    writeData(&control_request_packet, sizeof(control_request_packet));
+    writeData(&USB_ControlRequest, sizeof(USB_ControlRequest));
+    return readControlData();
 }
 
 void EVENT_USB_Device_ControlRequest(void) {
@@ -404,14 +362,11 @@ void EVENT_USB_Device_ControlRequest(void) {
     if (!validControlRequest()) {
         return;
     }
-    packet_header_t packet;
-    packet.magic = VALID_PACKET;
-    packet.id = CONTROL_REQUEST_ID;
-    packet.len = sizeof(control_request_t);
+    packet_header_t control_request_packet = {VALID_PACKET, CONTROL_REQUEST_ID, sizeof(control_request_t)};
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
-        packet.len += USB_ControlRequest.wLength;
+        control_request_packet.len += USB_ControlRequest.wLength;
     }
-    writeData(&packet, sizeof(packet_header_t));
+    writeData(&control_request_packet, sizeof(packet_header_t));
     writeData(&USB_ControlRequest, sizeof(USB_ControlRequest));
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         Endpoint_ClearSETUP();
@@ -421,9 +376,8 @@ void EVENT_USB_Device_ControlRequest(void) {
             writeData(&byte, 1);
         }
         Endpoint_ClearStatusStage();
-    } else {
-        readControlData();
     }
+    readControlData();
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
     if (!serial) {
@@ -461,8 +415,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         Endpoint_ClearOUT();
         return 0;
     }
-    if (wValue == 0x0304) return 0;
-    if (wValue == 0x0403) return 0;
     // pass request to 328p / mega
     descriptor_request_t packet = {
         header : {VALID_PACKET, DESCRIPTOR_ID, sizeof(descriptor_request_t)},

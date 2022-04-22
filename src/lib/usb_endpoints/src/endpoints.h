@@ -6,9 +6,14 @@ enum endpoint_dir_t {
 
 // By using these endpoints, we can double buffer!
 enum endpoints_t {
-    DEVICE_EPADDR_IN = ENDPOINT_IN | 1,
-    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 2,
-    CDC_NOTIFICATION = ENDPOINT_IN | 3
+    CDC_NOTIFICATION = ENDPOINT_IN | 1,
+    DEVICE_EPADDR_IN = ENDPOINT_IN | 3,
+    DEVICE_EPADDR_OUT = ENDPOINT_OUT | 4,
+    XINPUT_EXTRA_1 = ENDPOINT_IN | 5,
+    XINPUT_EXTRA_2 = ENDPOINT_OUT | 6,
+    XINPUT_EXTRA_3 = ENDPOINT_IN | 7,
+    XINPUT_EXTRA_4 = ENDPOINT_OUT | 8,
+    XINPUT_EXTRA_5 = ENDPOINT_IN | 9,
 };
 
 #define SERIAL_TX_SIZE 32

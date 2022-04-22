@@ -1,14 +1,15 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include "Usb.h"
 #include <Wire.h>
 #include <avr/io.h>
 
+#include "Usb.h"
 #include "config.h"
 #include "controller_reports.h"
 #include "defines.h"
 #include "descriptors.h"
 #include "packets.h"
+#include "controller_reports.h"
 
 uint8_t* bufTX;
 uint8_t idxTX = 0;
@@ -46,6 +47,12 @@ void loop() {
             if (should_reboot) {
                 header->id = CONTROLLER_DATA_REBOOT_ID;
             } else {
+                memset(dt->data, 0, sizeof(USB_XInputReport_Data_t));
+                USB_XInputReport_Data_t* xinput = (USB_XInputReport_Data_t*)dt->data;
+                xinput->rid=0;
+                xinput->rsize = sizeof(XInput_Data_t);
+                xinput->r_x = rand();
+                header->len = sizeof(USB_XInputReport_Data_t);
                 // uint8_t clen = tick(controller);
                 // memcpy(buf + sizeof(packet_header_t), controller, clen);
                 // header->len += clen;
@@ -59,15 +66,21 @@ void loop() {
             header->len = len;
             break;
         }
+        case CONTROL_REQUEST_VALIDATION_ID: {
+            bool valid = controlRequestValid(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength);
+            dt->data[0] = valid;
+            header->len = 1;
+            break;
+        }
         case CONTROL_REQUEST_ID: {
-            // We don't need to bother with valid, as it is handled in usb/main.c
             bool valid = false;
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1], &valid);
             if (len > ctr->wLength) len = ctr->wLength;
-            
+            header->len = len;
             if ((ctr->bmRequestType & USB_SETUP_DEVICE_TO_HOST) == USB_SETUP_HOST_TO_DEVICE) {
-                return;
+                header->len = 0;
             }
+
             break;
         }
         case DEVICE_ID:

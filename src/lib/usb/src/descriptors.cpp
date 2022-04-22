@@ -39,8 +39,6 @@ const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_ARRAY(
     'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ',
     'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.');
 
-
-
 const PROGMEM STRING_DESCRIPTOR *const PROGMEM descriptorStrings[] = {
     &languageString, &manufacturerString, &productString};
 
@@ -136,13 +134,13 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
         bInterfaceProtocol : 0x03,
         iInterface : 0
     },
-    UnkownDescriptor2 : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, 0x83, 0x40, 0x01, 0x04,
-                         0x20, 0x16, 0x85, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
-                         0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+    UnkownDescriptor2 : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_EXTRA_1, 0x40, 0x01, XINPUT_EXTRA_2,
+                         0x20, 0x16, XINPUT_EXTRA_3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
+                         XINPUT_EXTRA_4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     ReportINEndpoint21 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : ENDPOINT_IN | 3,
+        bEndpointAddress : XINPUT_EXTRA_1,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 2,
@@ -150,7 +148,7 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
     ReportOUTEndpoint22 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : ENDPOINT_OUT | 4,
+        bEndpointAddress : XINPUT_EXTRA_2,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 4,
@@ -158,7 +156,7 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
     ReportINEndpoint23 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : ENDPOINT_IN | 5,
+        bEndpointAddress : XINPUT_EXTRA_3,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 0x40,
@@ -166,7 +164,7 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
     ReportOUTEndpoint24 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : ENDPOINT_OUT | 5,
+        bEndpointAddress : XINPUT_EXTRA_4,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 0x10,
@@ -183,11 +181,11 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
         iInterface : 0
     },
     UnkownDescriptor3 : {
-        0x09, 0x21, 0x00, 0x01, 0x01, 0x22, 0x86, 0x07, 0x00},
+        0x09, 0x21, 0x00, 0x01, 0x01, 0x22, XINPUT_EXTRA_5, 0x07, 0x00},
     ReportINEndpoint31 : {
         bLength : sizeof(XBOXConfigurationDescriptor.ReportINEndpoint31),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : ENDPOINT_IN | 6,
+        bEndpointAddress : XINPUT_EXTRA_5,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 16,
@@ -433,11 +431,24 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 };
 
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
-                                   0x00, 0x00, 0x00, 0x00};
+                                    0x00, 0x00, 0x00, 0x00};
+
+bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
+        return true;
+    } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+    } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
+        return true;
+    }
+    return false;
+}
 
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
     *valid = true;
-    // Note, if something is added here, it also needs to be mirrored in src/uno/usb/main.c, we could automatically have that implemented but it would be a pain
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
@@ -473,11 +484,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (consoleType == PC) {
             consoleType = PS3;
             reset_usb();
+            return 0;
         }
     } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return 0;
     } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         consoleType = SWITCH;
         reset_usb();
+        return 0;
     }
     *valid = false;
     return 0;

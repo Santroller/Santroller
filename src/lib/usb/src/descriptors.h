@@ -136,3 +136,4 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void* descriptorBuffer);
+bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength);

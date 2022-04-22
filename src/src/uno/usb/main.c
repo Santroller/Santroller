@@ -1,5 +1,7 @@
 // This include needs to be at the top
-#include "circular_buffer.h"
+#include "LUFAConfig.h"
+// And then this one
+#include <LUFA.h>
 // And then all others after it
 #include <LUFA/LUFA/Drivers/Board/Board.h>
 #include <LUFA/LUFA/Drivers/Board/LEDs.h>
@@ -20,7 +22,12 @@
 #include "packets.h"
 #include "reboot.h"
 #include "serial_descriptors.h"
+#include "serial_macros.h"
 #define JUMP 0xDE00
+/* USBtoUSART_WritePtr needs to be visible to ISR. */
+/* USARTtoUSB_ReadPtr needs to be visible to CDC LineEncoding Event. */
+volatile uint8_t USBtoUSART_WritePtr = 0;
+volatile uint8_t USARTtoUSB_ReadPtr = 0;
 static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
                                           .CharFormat = CDC_LINEENCODING_OneStopBit,
                                           .ParityType = CDC_PARITY_None,
@@ -35,9 +42,9 @@ bool serial = false;
 
 bool waitingForData = true;
 
-bool readControlData() {
+bool handleControlRequest() {
     uint16_t tmp;
-    INIT_TMP_BUF(tmp);
+    INIT_TMP_SERIAL_TO_USB(tmp);
     uint8_t state = STATE_NO_PACKET;
     uint8_t type;
     uint8_t packetCount = 0;
@@ -123,9 +130,9 @@ bool readControlData() {
     USARTtoUSB_ReadPtr = tmp & 0xFF;
     return false;
 }
-void readSerialData() {
+void handleSerialToUSB() {
     uint16_t tmp;
-    INIT_TMP_BUF(tmp);
+    INIT_TMP_SERIAL_TO_USB(tmp);
     uint8_t txcount;
     uint8_t count = USARTtoUSB_WritePtr - USARTtoUSB_ReadPtr;
     // Check if the UART receive buffer flush timer has expired or the buffer is nearly full
@@ -148,9 +155,9 @@ void readSerialData() {
     USARTtoUSB_ReadPtr = tmp & 0xFF;
     Endpoint_ClearIN();
 }
-void readEndpointData() {
+void handleControllerData() {
     uint16_t tmp;
-    INIT_TMP_BUF(tmp);
+    INIT_TMP_SERIAL_TO_USB(tmp);
     uint8_t txcount;
     uint8_t state = STATE_NO_PACKET;
     uint8_t type;
@@ -251,7 +258,7 @@ int main(void) {
             USB_USBTask();
             Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
             if (Endpoint_IsINReady()) {
-                readSerialData();
+                handleSerialToUSB();
             }
             Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
             uint8_t countRX = 0;
@@ -263,14 +270,18 @@ int main(void) {
                 if (!countRX)
                     Endpoint_ClearOUT();
             }
+
+            uint16_t tmp;
+            INIT_TMP_USB_TO_SERIAL(tmp);
             uint8_t USBtoUSART_free = (USB2USART_BUFLEN - 1) - ((USBtoUSART_WritePtr - USBtoUSART_ReadPtr) & (USB2USART_BUFLEN - 1));
             if (countRX && countRX <= USBtoUSART_free) {
                 while (countRX--) {
-                    uint8_t byte = Endpoint_Read_8();
-                    writeData(&byte, 1);
+                    register uint8_t data = Endpoint_Read_8();
+                    WRITE_BYTE_TO_BUF(data, tmp);
                 }
                 Endpoint_ClearOUT();
             }
+            COMPLETE_WRITE(tmp);
         }
     }
     packet_header_t requestData = {
@@ -281,32 +292,31 @@ int main(void) {
         USB_USBTask();
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
         if (Endpoint_IsINReady()) {
-            writeData(&requestData, sizeof(packet_header_t));
-            readEndpointData();
+            uint16_t tmp;
+            INIT_TMP_USB_TO_SERIAL(tmp);
+            WRITE_ARRAY_TO_BUF(tmp, &requestData, sizeof(packet_header_t));
+            COMPLETE_WRITE(tmp);
+            handleControllerData();
         }
         Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
         if (Endpoint_IsOUTReceived()) {
+            uint16_t tmp;
+            INIT_TMP_USB_TO_SERIAL(tmp);
             packet.header.len = sizeof(data_transmit_packet_t) + Endpoint_BytesInEndpoint();
-            writeData(&packet, sizeof(data_transmit_packet_t));
+            WRITE_ARRAY_TO_BUF(tmp, &packet, sizeof(data_transmit_packet_t));
             /* Check to see if the packet contains data */
             if (Endpoint_IsReadWriteAllowed()) {
                 uint8_t count = Endpoint_BytesInEndpoint();
                 while (count--) {
-                    uint8_t byte = Endpoint_Read_8();
-                    writeData(&byte, 1);
+                    register uint8_t data = Endpoint_Read_8();
+                    WRITE_BYTE_TO_BUF(data, tmp);
                 }
             }
-            readEndpointData();
+            COMPLETE_WRITE(tmp);
+            handleControllerData();
             Endpoint_ClearOUT();
         }
     }
-}
-
-bool validControlRequest() {
-    packet_header_t control_request_packet = {VALID_PACKET, CONTROL_REQUEST_VALIDATION_ID, sizeof(control_request_t)};
-    writeData(&control_request_packet, sizeof(control_request_packet));
-    writeData(&USB_ControlRequest, sizeof(USB_ControlRequest));
-    return readControlData();
 }
 
 void EVENT_USB_Device_ControlRequest(void) {
@@ -371,32 +381,48 @@ void EVENT_USB_Device_ControlRequest(void) {
             reboot();
         }
     }
-    if (!validControlRequest()) {
+    uint16_t tmp;
+    INIT_TMP_USB_TO_SERIAL(tmp);
+    packet_header_t control_request_packet = {VALID_PACKET, CONTROL_REQUEST_VALIDATION_ID, sizeof(control_request_t)};
+    WRITE_ARRAY_TO_BUF(tmp, &control_request_packet, sizeof(packet_header_t));
+    WRITE_ARRAY_TO_BUF(tmp, &USB_ControlRequest, sizeof(USB_ControlRequest));
+    COMPLETE_WRITE(tmp);
+    if (!handleControlRequest()) {
         return;
     }
-    packet_header_t control_request_packet = {VALID_PACKET, CONTROL_REQUEST_ID, sizeof(control_request_t)};
+    control_request_packet.id = CONTROL_REQUEST_ID;
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         control_request_packet.len += USB_ControlRequest.wLength;
     }
-    writeData(&control_request_packet, sizeof(packet_header_t));
-    writeData(&USB_ControlRequest, sizeof(USB_ControlRequest));
+    WRITE_ARRAY_TO_BUF(tmp, &control_request_packet, sizeof(packet_header_t));
+    WRITE_ARRAY_TO_BUF(tmp, &USB_ControlRequest, sizeof(USB_ControlRequest));
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         Endpoint_ClearSETUP();
         uint8_t len = USB_ControlRequest.wLength;
         while (len--) {
-            uint8_t byte = Endpoint_Read_8();
-            writeData(&byte, 1);
+            register uint8_t data = Endpoint_Read_8();
+            WRITE_BYTE_TO_BUF(data, tmp);
         }
         Endpoint_ClearStatusStage();
     }
-    readControlData();
+    COMPLETE_WRITE(tmp);
+    handleControlRequest();
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
     if (!serial) {
+        uint16_t tmp;
+        INIT_TMP_USB_TO_SERIAL(tmp);
         packet_header_t packet = {
             VALID_PACKET, DEVICE_ID, sizeof(packet_header_t)};
-        writeData(&packet, sizeof(packet_header_t));
-        readControlData();
+        uint8_t len = sizeof(packet_header_t);
+        uint8_t* buf = (uint8_t*)&packet;
+        do {
+            register uint8_t data;
+            data = *(buf++);
+            WRITE_BYTE_TO_BUF(data, tmp);
+        } while (--len);
+        COMPLETE_WRITE(tmp);
+        handleControlRequest();
         return;
     }
 
@@ -434,7 +460,74 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
         wIndex : wIndex,
         wLength : USB_ControlRequest.wLength
     };
-    writeData(&packet, sizeof(descriptor_request_t));
-    readControlData();
+    uint16_t tmp;
+    INIT_TMP_USB_TO_SERIAL(tmp);
+    WRITE_ARRAY_TO_BUF(tmp, &packet, sizeof(descriptor_request_t));
+    COMPLETE_WRITE(tmp);
+    handleControlRequest();
     return 0;
+}
+
+/** ISR to manage the reception of data from the serial port, placing received
+ * bytes into a circular buffer for later transmission to the host.
+ */
+ISR(USART1_RX_vect, ISR_NAKED) {
+    // This ISR doesnt change SREG. Whoa.
+    asm volatile(
+        "lds r3, %[UDR1_Reg]\n\t"       // (1) Load new Serial byte (UDR1) into r3
+        "movw r4, r30\n\t"              // (1) Backup Z pointer (r30 -> r4, r31 -> r5)
+        "in r30, %[writePointer]\n\t"   // (1) Load USARTtoUSB write buffer 8 bit
+                                        // pointer to lower Z pointer
+        "ldi r31, 0x01\n\t"             // (1) Set higher Z pointer to 0x01
+        "st Z+, r3\n\t"                 // (2) Save UDR1 in Z pointer (USARTtoUSB write buffer)
+                                        // and increment
+        "out %[writePointer], r30\n\t"  // (1) Save back new USARTtoUSB buffer
+                                        // pointer location
+        "movw r30, r4\n\t"              // (1) Restore backuped Z pointer
+        "reti\n\t"                      // (4) Exit ISR
+
+        // Inputs:
+        ::[UDR1_Reg] "m"(UDR1),  // Memory location of UDR1
+        [writePointer] "I"(_SFR_IO_ADDR(
+            USARTtoUSB_WritePtr))  // 8 bit pointer to USARTtoUSB write buffer
+    );
+}
+
+ISR(USART1_UDRE_vect, ISR_NAKED) {
+    // Another SREG-less ISR.
+    asm volatile(
+        "movw r4, r30\n\t"             // (1) Backup Z pointer (r30 -> r4, r31 -> r5)
+        "in r30, %[readPointer]\n\t"   // (1) Load USBtoUSART read buffer 8 bit
+                                       // pointer to lower Z pointer
+        "ldi r31, 0x02\n\t"            // (1) Set higher Z pointer to 0x02
+        "ld r3, Z+\n\t"                // (2) Load next byte from USBtoUSART buffer into r3
+        "sts %[UDR1_Reg], r3\n\t"      // (2) Save r3 (next byte) in UDR1
+        "out %[readPointer], r30\n\t"  // (1) Save back new USBtoUSART read
+                                       // buffer pointer location
+        "cbi %[readPointer], 7\n\t"    // (2) Wrap around for 128 bytes
+        //     smart after-the-fact andi 0x7F without using SREG
+        "movw r30, r4\n\t"             // (1) Restore backuped Z pointer
+        "in r2, %[readPointer]\n\t"    // (1) Load USBtoUSART read buffer 8 bit
+                                       // pointer to r2
+        "lds r3, %[writePointer]\n\t"  // (1) Load USBtoUSART write buffer to r3
+        "cpse r2, r3\n\t"              // (1/2) Check if USBtoUSART read buffer == USBtoUSART
+                                       // write buffer
+        "reti\n\t"                     // (4) They are not equal, more bytes coming soon!
+        "ldi r30, 0x98\n\t"            // (1) Set r30 temporary to new UCSR1B setting
+                                       // ((1<<RXCIE1) | (1 << RXEN1) | (1 << TXEN1))
+        //     ldi needs an upper register, restore Z once more afterwards
+        "sts %[UCSR1B_Reg], r30\n\t"  // (2) Turn off this interrupt (UDRIE1),
+                                      // all bytes sent
+        "movw r30, r4\n\t"            // (1) Restore backuped Z pointer again (was
+                                      // overwritten again above)
+        "reti\n\t"                    // (4) Exit ISR
+
+        // Inputs:
+        ::[UDR1_Reg] "m"(UDR1),  // Memory location of UDR1
+        [readPointer] "I"(_SFR_IO_ADDR(
+            USBtoUSART_ReadPtr)),  // 7 bit pointer to USBtoUSART read buffer
+        [writePointer] "m"(
+            USBtoUSART_WritePtr),  // 7 bit pointer to USBtoUSART write buffer
+        [UCSR1B_Reg] "m"(UCSR1B)   // Memory location of UCSR1B
+    );
 }

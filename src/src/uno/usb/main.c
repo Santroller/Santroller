@@ -20,7 +20,6 @@
 #include "defines.h"
 #include "endpoints.h"
 #include "packets.h"
-#include "reboot.h"
 #include "serial_descriptors.h"
 #include "serial_macros.h"
 #define JUMP 0xDE00

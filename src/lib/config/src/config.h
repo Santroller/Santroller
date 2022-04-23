@@ -69,19 +69,47 @@ typedef struct {
     uint32_t id;
 } RFConfig_t;
 
-
 typedef struct {
     MainConfig_t main;
     AxisConfig_t axis;
     RFConfig_t rf;
 } Configuration_t;
+#define DEVICE_TYPE GUITAR_HERO_GUITAR
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR || DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_LIVE_GUITAR
+#define DEVICE_TYPE_IS_GUITAR true
+#define DEVICE_TYPE_IS_DRUM false
+#elif DEVICE_TYPE == GUITAR_HERO_DRUMS || DEVICE_TYPE == ROCK_BAND_DRUMS
+#define DEVICE_TYPE_IS_GUITAR false
+#define DEVICE_TYPE_IS_DRUM true
+#else
+#define DEVICE_TYPE_IS_GUITAR false
+#define DEVICE_TYPE_IS_DRUM false
+#endif
 
-extern DeviceType_t deviceType;
-extern ConsoleType_t consoleType;
-extern bool guitar;
-extern bool drum;
-extern bool read_hid_report_descriptor;
-void reset_usb();
+#if DEVICE_TYPE == GAMEPAD
+#define SUB_TYPE XINPUT_GAMEPAD
+#elif DEVICE_TYPE == WHEEL
+#define SUB_TYPE XINPUT_WHEEL
+#elif DEVICE_TYPE == ARCADE_STICK
+#define SUB_TYPE XINPUT_ARCADE_STICK
+#elif DEVICE_TYPE == GUITAR_HERO_GUITAR || DEVICE_TYPE == ROCK_BAND_GUITAR
+#define SUB_TYPE XINPUT_GUITAR_ALTERNATE
+#elif DEVICE_TYPE == GUITAR_HERO_LIVE_GUITAR
+#define SUB_TYPE XINPUT_LIVE_GUITAR
+#elif DEVICE_TYPE == GUITAR_HERO_DRUMS || DEVICE_TYPE == ROCK_BAND_DRUMS
+#define SUB_TYPE XINPUT_DRUMS
+#elif DEVICE_TYPE == FLIGHT_STICK
+#define SUB_TYPE XINPUT_FLIGHT_STICK
+#elif DEVICE_TYPE == DANCE_PAD
+#define SUB_TYPE XINPUT_DANCE_PAD
+#elif DEVICE_TYPE == ARCADE_PAD
+#define SUB_TYPE XINPUT_ARCADE_PAD
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+#define SUB_TYPE XINPUT_TURNTABLE
+#endif
+
+// ConsoleType can change due to console detection
+extern uint8_t consoleType;
 #ifdef __cplusplus
 }
 #endif

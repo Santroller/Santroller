@@ -72,3 +72,13 @@ enum interfaces_t {
     INTERFACE_ID_AudioStream =
         2, /**< MIDI Audio Stream interface descriptor ID */
 };
+
+void reset_usb(void);
+#ifdef __cplusplus
+extern "C" {
+#endif
+void reboot(void);
+void bootloader(void);
+#ifdef __cplusplus
+}
+#endif

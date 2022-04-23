@@ -9,6 +9,7 @@
 #include "defines.h"
 #include "descriptors.h"
 #include "packets.h"
+#include "config_impl.h"
 
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
@@ -94,9 +95,8 @@ void loop() {
             break;
         }
         case CONTROL_REQUEST_ID: {
-            // 8u2/16u2 wants us to handle a control request. Note that due to the above code, we don't need to do anything with the valid bool created here.
-            bool valid = false;
-            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1], &valid);
+            // 8u2/16u2 wants us to handle a control request.
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1]);
             if (len > ctr->wLength) len = ctr->wLength;
             header->len = len;
             if ((ctr->bmRequestType & USB_SETUP_DEVICE_TO_HOST) == USB_SETUP_HOST_TO_DEVICE) {

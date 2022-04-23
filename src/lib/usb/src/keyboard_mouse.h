@@ -1,5 +1,5 @@
-#pragma once
 #include <stdint.h>
+#include <stdbool.h>
 #include "progmem.h"
 #define HID_IOF_VARIABLE (1 << 1)
 #define HID_IOF_RELATIVE (1 << 2)

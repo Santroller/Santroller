@@ -2,9 +2,11 @@
 
 #include "Usb.h"
 #include "config.h"
+#include "controllers.h"
 #include "keyboard_mouse.h"
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
+#include "commands.h"
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
@@ -97,7 +99,7 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
         reserved : {0x10, 0x01},
-        subtype : 0x07,
+        subtype : SUB_TYPE,
         reserved2 : 0x25,
         bEndpointAddressIn : DEVICE_EPADDR_IN,
         bMaxDataSizeIn : 0x14,
@@ -432,24 +434,49 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
                                     0x00, 0x00, 0x00, 0x00};
-
+uint8_t idle_rate;
+uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        if (request == COMMAND_REBOOT) {
+            return true;
+        }
+        if (request == COMMAND_JUMP_BOOTLOADER) {
+            return true;
+        }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
         return true;
-    } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
     } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
+        return true;
+    } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return true;
+    } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return true;
+    } else if (request == HID_REQUEST_GET_IDLE && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return true;
+    } else if (request == HID_REQUEST_SET_IDLE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return true;
+    } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return true;
+    } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return true;
     }
     return false;
 }
 
-uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer, bool *valid) {
-    *valid = true;
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer) {
+    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        if (request == COMMAND_REBOOT) {
+            reboot();
+        }
+        if (request == COMMAND_JUMP_BOOTLOADER) {
+            bootloader();
+        }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
             return sizeof(capabilities1);
@@ -475,9 +502,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
         if (consoleType == PS3) {
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-            if (deviceType <= ROCK_BAND_DRUMS) {
+            if (DEVICE_TYPE <= ROCK_BAND_DRUMS) {
                 ((uint8_t *)requestBuffer)[3] = 0x00;
-            } else if (deviceType <= GUITAR_HERO_DRUMS) {
+            } else if (DEVICE_TYPE <= GUITAR_HERO_DRUMS) {
                 ((uint8_t *)requestBuffer)[3] = 0x06;
             }
             return sizeof(ps3_init);
@@ -486,14 +513,27 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
             return 0;
         }
+    } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        ((uint8_t *)requestBuffer)[0] = protocol_mode;
+        return 1;
+    } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        protocol_mode = (uint8_t)wValue;
+        return 0;
+    } else if (request == HID_REQUEST_GET_IDLE && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        ((uint8_t *)requestBuffer)[0] = idle_rate;
+        return 1;
+    } else if (request == HID_REQUEST_SET_IDLE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        idle_rate = (wValue >> 8) & 0xff;
+        return 0;
     } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return 0;
+    } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 0;
     } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         consoleType = SWITCH;
         reset_usb();
         return 0;
     }
-    *valid = false;
     return 0;
 }
 const uint16_t vid[] = {0x0F0D, 0x12ba, 0x12ba, 0x12ba,
@@ -512,9 +552,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
             if (consoleType == PS3 || consoleType == PC) {
-                if (deviceType > GUITAR_HERO_GUITAR) {
+                if (DEVICE_TYPE > GUITAR_HERO_GUITAR) {
                     dev->idVendor = SONY_VID;
-                    switch (deviceType) {
+                    switch (DEVICE_TYPE) {
                         case GUITAR_HERO_DRUMS:
                             dev->idProduct = PS3_GH_DRUM_PID;
                             break;
@@ -542,59 +582,18 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
             } else if (consoleType == WII_RB) {
                 dev->idVendor = WII_RB_VID;
-                if (drum) {
+                if (DEVICE_TYPE_IS_DRUM) {
                     dev->idProduct = WII_RB_DRUM_PID;
                 } else {
                     dev->idProduct = WII_RB_GUITAR_PID;
                 }
             }
-            // for (int i = 0; i < size; i++) {
-            //     printf("0x%x, ", ((uint8_t*)descriptorBuffer)[i]);
-            // }
-            // printf("\n");
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
             if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
                 size = sizeof(CONFIGURATION_XBOX_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXConfigurationDescriptor, size);
-                CONFIGURATION_XBOX_DESCRIPTOR *desc = (CONFIGURATION_XBOX_DESCRIPTOR *)descriptorBuffer;
-                SubType_t subType;
-                switch (deviceType) {
-                    case GAMEPAD:
-                        subType = XINPUT_GAMEPAD;
-                        break;
-                    case WHEEL:
-                        subType = XINPUT_WHEEL;
-                        break;
-                    case ARCADE_STICK:
-                        subType = XINPUT_ARCADE_STICK;
-                        break;
-                    case GUITAR_HERO_GUITAR:
-                    case ROCK_BAND_GUITAR:
-                        subType = XINPUT_GUITAR_ALTERNATE;
-                        break;
-                    case GUITAR_HERO_LIVE_GUITAR:
-                        subType = XINPUT_LIVE_GUITAR;
-                        break;
-                    case GUITAR_HERO_DRUMS:
-                    case ROCK_BAND_DRUMS:
-                        subType = XINPUT_DRUMS;
-                        break;
-                    case FLIGHT_STICK:
-                        subType = XINPUT_FLIGHT_STICK;
-                        break;
-                    case DANCE_PAD:
-                        subType = XINPUT_DANCE_PAD;
-                        break;
-                    case ARCADE_PAD:
-                        subType = XINPUT_ARCADE_PAD;
-                        break;
-                    case DJ_HERO_TURNTABLE:
-                        subType = XINPUT_TURNTABLE;
-                        break;
-                }
-                desc->Interface1ID.subtype = subType;
             } else if (consoleType == MIDI) {
                 size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
@@ -632,6 +631,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;
             } else if (descriptorNumber < 4) {
+                // TODO: make this not require specific AVR stuff
 #ifdef __AVR__
                 str = (uint8_t *)pgm_read_word(descriptorStrings + descriptorNumber);
 #else
@@ -642,11 +642,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else {
                 break;
             }
-#ifdef __AVR__
             size = pgm_read_byte(str + offsetof(STRING_DESCRIPTOR, bLength));
-#else
-            size = ((STRING_DESCRIPTOR *)str)->bLength;
-#endif
             memcpy_P(descriptorBuffer, str, size);
             break;
         }

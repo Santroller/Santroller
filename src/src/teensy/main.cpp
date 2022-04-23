@@ -6,6 +6,7 @@
 #include <Wire.h>  // All other platforms
 #endif
 #include <SPI.h>
+#include "config_impl.h"
 void setup() {
 	delay(2000);
 }

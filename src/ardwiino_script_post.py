@@ -31,7 +31,6 @@ def launch_dfu():
 
 Import("env")
 def before_upload(source, target, env):
-    upload_protocol = env.subst("$UPLOAD_PROTOCOL")
     upload_options = env.BoardConfig().get("upload", {})
     b_request = None
     exists = False

@@ -20,50 +20,39 @@ typedef enum { WII = 1,
                PS2 } InputType_t;
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
-typedef enum {
-    XINPUT_GAMEPAD = 1,
-    XINPUT_WHEEL,
-    XINPUT_ARCADE_STICK,
-    XINPUT_FLIGHT_STICK,
-    XINPUT_DANCE_PAD,
-    XINPUT_GUITAR,
-    XINPUT_GUITAR_ALTERNATE,
-    XINPUT_LIVE_GUITAR,
-    XINPUT_DRUMS,
-    XINPUT_ARCADE_PAD = 0x13,
-    XINPUT_TURNTABLE = 0x17,
-} SubType_t;
+#define XINPUT_GAMEPAD 1
+#define XINPUT_WHEEL 2
+#define XINPUT_ARCADE_STICK 3
+#define XINPUT_FLIGHT_STICK 4
+#define XINPUT_DANCE_PAD 5
+#define XINPUT_GUITAR 6
+#define XINPUT_GUITAR_ALTERNATE 7
+#define XINPUT_LIVE_GUITAR 8
+#define XINPUT_DRUMS 9
+#define XINPUT_ARCADE_PAD 19
+#define XINPUT_TURNTABLE 23
 
-typedef enum {
-    GAMEPAD,
-    WHEEL,
-    ARCADE_STICK,
-    FLIGHT_STICK,
-    DANCE_PAD,
-    ARCADE_PAD,
-    GUITAR_HERO_GUITAR,
-    GUITAR_HERO_DRUMS,
-    ROCK_BAND_GUITAR,
-    ROCK_BAND_DRUMS,
-    GUITAR_HERO_LIVE_GUITAR,
-    DJ_HERO_TURNTABLE
-} DeviceType_t;
+#define GAMEPAD 1
+#define WHEEL 2
+#define ARCADE_STICK 3
+#define FLIGHT_STICK 4
+#define DANCE_PAD 5
+#define ARCADE_PAD 6
+#define GUITAR_HERO_GUITAR 7
+#define GUITAR_HERO_DRUMS 8
+#define ROCK_BAND_GUITAR 9
+#define ROCK_BAND_DRUMS 10
+#define GUITAR_HERO_LIVE_GUITAR 11
+#define DJ_HERO_TURNTABLE 12
 
-typedef enum {
-    HID,
-    XINPUT
-} PCMode_t;
-
-typedef enum {
-    PC,
-    PC_XINPUT,
-    XBOX360,
-    PS3,
-    WII_RB,
-    SWITCH,
-    KEYBOARD_MOUSE,
-    MIDI
-} ConsoleType_t;
+#define PC 1
+#define PC_XINPUT 2
+#define XBOX360 3
+#define PS3 4
+#define WII_RB 5
+#define SWITCH 6
+#define KEYBOARD_MOUSE 7
+#define MIDI 8
 
 // Orientations for gyros
 typedef enum {
@@ -71,12 +60,6 @@ typedef enum {
     Y,
     Z
 } GyroOrientation_t;
-
-// Firmware types
-enum FirmwareType {
-    GUITAR_DEVICE_TYPE = 0xfea124,
-    ARDWIINO_DEVICE_TYPE = 0xa2d415
-};
 
 // Fret Modes
 typedef enum { LEDS_DISABLED,

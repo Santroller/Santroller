@@ -3,20 +3,20 @@
 #include <Wire.h>
 #include <pico/stdlib.h>
 #include <pico/unique_id.h>
-#include "pico/multicore.h"
+#include <tusb.h>
 
-#include "config.h"
+#include "common/tusb_types.h"
+#include "config_impl.h"
 #include "device/usbd_pvt.h"
-#include "hid/hid_device.h"
+#include "pico/multicore.h"
 #include "pins.h"
 extern "C" {
-	#include "common/tusb_types.h"
-	#include "pio_usb.h"
-	#include <tusb.h>
+#include "pio_usb.h"
 }
 #include "serial.h"
 #include "xinput_device.h"
-
+#include "pico/bootrom.h"
+#include "hardware/watchdog.h"
 
 static usb_device_t *usb_device = NULL;
 static usb_device_t *xinput_device = NULL;
@@ -35,7 +35,6 @@ void core1_main() {
         pio_usb_host_task();
     }
 }
-
 
 void set_xinput_led(usb_device_t *device, uint endpoint, uint8_t led) {
     uint8_t data2[] = {0x01, 0x03, led};
@@ -84,7 +83,7 @@ void host_disconnection(usb_device_t *device) {
     }
 }
 void setup() {
-	uart_set_baudrate(uart0, 115200);
+    uart_set_baudrate(uart0, 115200);
     generateSerialString(serialString.UnicodeString);
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
@@ -113,22 +112,6 @@ void loop() {
     //         tud_hid_custom_n_report(0, 0, controller, len);
     //     }
     // }
-}
-
-uint16_t tud_hid_custom_get_report_cb(uint8_t instance, uint8_t report_id,
-                                      hid_report_type_t report_type, uint8_t *buffer,
-                                      uint16_t reqlen) {
-    // requestType_t r = {bmRequestType_bit : {direction : USB_DIR_DEVICE_TO_HOST, recipient : USB_REQ_RCPT_INTERFACE, type : USB_REQ_TYPE_CLASS}};
-    // bool valid;
-    // return controlRequest(r, THID_REQ_GetReport, instance, report_type << 8 | report_id, reqlen, &buffer, &valid);
-    return 0;
-}
-void tud_hid_custom_set_report_cb(uint8_t instance, uint8_t report_id,
-                                  hid_report_type_t report_type, uint8_t const *buffer,
-                                  uint16_t bufsize) {
-    //     requestType_t r = {bmRequestType_bit : {direction : USB_DIR_HOST_TO_DEVICE, recipient : USB_REQ_RCPT_INTERFACE, type : USB_REQ_TYPE_CLASS}};
-    //     bool valid;
-    //     controlRequest(r, THID_REQ_SetReport, instance, report_type << 8 | report_id, bufsize, &buffer, &valid);
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
@@ -172,65 +155,90 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         printf("XBOX detected!\n");
         if (xinput_device) {
             reset_usb();
-            return 0;
+            return false;
         }
     }
-    bool valid = false;
-    usb_setup_packet_t req_host = {
-        USB_SYNC, USB_PID_DATA0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    req_host.crc16[0] = USB_CRC16_PLACE;
-    req_host.crc16[1] = USB_CRC16_PLACE;
-    memcpy(&req_host.request_type, request, sizeof(tusb_control_request_t));
-    update_packet_crc16(&req_host);
-    if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
+    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
+        //------------- STD Request -------------//
         if (stage == CONTROL_STAGE_SETUP) {
-            uint16_t len = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
-            if (len > request->wLength || !valid) len = request->wLength;
-            if (!valid && xinput_device) {
-                if (control_in_protocol(xinput_device, (uint8_t*)&req_host, sizeof(req_host), buf, len) < 0) {
-                    return false;
-                }
+            uint8_t const desc_type = tu_u16_high(request->wValue);
+            // uint8_t const desc_index = tu_u16_low (request->wValue);
+
+            if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESCRIPTOR_HID) {
+                uint16_t len = descriptorRequest(HID_DESCRIPTOR_HID << 8, 0, buf);
+                TU_VERIFY(tud_control_xfer(rhport, request, buf, len));
+                return true;
+            } else if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESCRIPTOR_REPORT) {
+                uint16_t len = descriptorRequest(HID_DESCRIPTOR_REPORT << 8, 0, buf);
+                TU_VERIFY(tud_control_xfer(rhport, request, buf, len));
+                return true;
+            } else {
+                return false;  // stall unsupported request
             }
-            tud_control_xfer(rhport, request, buf, len);
         }
-    } else {
-        if (stage == CONTROL_STAGE_SETUP) {
+    }
+    if (controlRequestValid(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength)) {
+        if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
+            if (stage == CONTROL_STAGE_SETUP) {
+                uint16_t len = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
+                tud_control_xfer(rhport, request, buf, len);
+            }
+        } else if (stage == CONTROL_STAGE_SETUP) {
             tud_control_xfer(rhport, request, buf, request->wLength);
         }
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-            controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &valid);
-            if (!valid && xinput_device) {
-                if (control_out_protocol(xinput_device, (uint8_t*)&req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
+            controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
+        }
+    } else if (xinput_device) {
+        // TODO: we need to expose a generic interface for USB host stuff, so that we can support it on anything, including the teensy or using a usb host shield
+        usb_setup_packet_t req_host = {
+            USB_SYNC, USB_PID_DATA0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        req_host.crc16[0] = USB_CRC16_PLACE;
+        req_host.crc16[1] = USB_CRC16_PLACE;
+        memcpy(&req_host.request_type, request, sizeof(tusb_control_request_t));
+        update_packet_crc16(&req_host);
+        if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
+            if (stage == CONTROL_STAGE_SETUP) {
+                if (control_in_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), buf, request->wLength) < 0) {
+                    return false;
+                }
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+        } else {
+            if (stage == CONTROL_STAGE_SETUP) {
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+            if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
+                if (control_out_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
                     return false;
                 }
             }
         }
     }
+
     return true;
 }
 
-usbd_class_driver_t driver[] = {{
+usbd_class_driver_t driver[] = {
+    {
 #if CFG_TUSB_DEBUG >= 2
-                                    .name = "XInput",
+        .name = "XInput_HID",
 #endif
-                                    .init = xinputd_init,
-                                    .reset = xinputd_reset,
-                                    .open = xinputd_open,
-                                    .control_xfer_cb = tud_vendor_control_xfer_cb,
-                                    .xfer_cb = xinputd_xfer_cb,
-                                    .sof = NULL},
-                                {
-#if CFG_TUSB_DEBUG >= 2
-                                    .name = "HID",
-#endif
-                                    .init = hidd_custom_init,
-                                    .reset = hidd_custom_reset,
-                                    .open = hidd_custom_open,
-                                    .control_xfer_cb = hidd_custom_control_xfer_cb,
-                                    .xfer_cb = hidd_custom_xfer_cb,
-                                    .sof = NULL}};
+        .init = xinputd_init,
+        .reset = xinputd_reset,
+        .open = xinputd_open,
+        .control_xfer_cb = tud_vendor_control_xfer_cb,
+        .xfer_cb = xinputd_xfer_cb,
+        .sof = NULL}};
 
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
-    *driver_count = 2;
+    *driver_count = 1;
     return driver;
+}
+void reboot(void) {
+    watchdog_enable(1, false);
+    for (;;) {}
+}
+void bootloader(void) {
+   reset_usb_boot(0,0);
 }

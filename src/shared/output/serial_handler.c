@@ -111,9 +111,10 @@ void processHIDReadFeatureReport(uint8_t cmd, uint8_t report,
     size = 3;
     if (inputType == WII) {
       dbuf[1] = wiiExtensionID & 0xff;
-      dbuf[2] = wiiExtensionID << 8;
+      dbuf[2] = wiiExtensionID >> 8;
     } else if (inputType == PS2) {
-      dbuf[1] = ps2CtrlType;
+      dbuf[1] = ps2CtrlType & 0xff;
+      dbuf[2] = 0;
     }
   } else if (cmd == COMMAND_GET_FOUND) {
     size = 2;

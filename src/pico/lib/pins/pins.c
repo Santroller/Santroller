@@ -72,7 +72,7 @@ void tickAnalog(void) {
   if (validAnalog == 0) return;
   for (int i = 0; i < validAnalog; i++) {
     AnalogInfo_t *info = &joyData[i];
-    int16_t data = analogRead(info->pin);
+    int16_t data = analogRead(info->pin - PIN_A0);
     if (!joyData[i].hasDigital) {
       data = (data - 512);
       if (info->inverted) data = -data;
@@ -89,7 +89,7 @@ uint16_t analogRead(uint8_t pin) {
   return adc_read() >> 2;
 }
 void pinMode(uint8_t pin, uint8_t mode) {
-  if ((mode == INPUT) && pin >= PIN_A0) {
+  if (mode == INPUT && pin >= PIN_A0) {
     adc_gpio_init(pin);
   } else {
     gpio_init(pin);

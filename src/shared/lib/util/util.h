@@ -25,6 +25,7 @@
 #define OUTPUT 0
 #define INPUT 1
 #define INPUT_PULLUP 2
+#define INPUT_PULLUP_ANALOG 3
 #define NOT_ON_TIMER 0
 #define TIMER0A 1
 #define TIMER0B 2

@@ -8,7 +8,8 @@
 void digitalWrite(uint8_t pin, uint8_t val) { gpio_put(pin, val); }
 
 bool digitalRead(uint8_t pin) { return gpio_get(pin) != 0; }
-Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset, bool inverted, bool output) {
+Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset,
+                   bool inverted, bool output) {
   Pin_t pin = {};
   pin.offset = offset;
   pin.pin = pinNum;
@@ -48,8 +49,7 @@ void setUpAnalogPin(Configuration_t *config, uint8_t offset) {
   AnalogPin_t apin = ((PinsCombined_t *)&config->pins)->axis[offset];
   uint8_t pin = apin.pin;
   if (pin == INVALID_PIN) { return; }
-  if (ret.offset == 5 && typeIsGuitar &&
-      config->main.tiltType != ANALOGUE) {
+  if (ret.offset == 5 && typeIsGuitar && config->main.tiltType != ANALOGUE) {
     return;
   }
   ret.pin = pin;
@@ -72,7 +72,10 @@ void tickAnalog(void) {
   if (validAnalog == 0) return;
   for (int i = 0; i < validAnalog; i++) {
     AnalogInfo_t *info = &joyData[i];
-    int16_t data = analogRead(info->pin - PIN_A0);
+    adc_select_input(info->pin - PIN_A0);
+    // We have everything coded assuming 10 bits (as that is what the arduino
+    // uses) so shift accordingly (12 -> 10)
+    int16_t data = adc_read() >> 2;
     if (!joyData[i].hasDigital) {
       data = (data - 512);
       if (info->inverted) data = -data;
@@ -82,19 +85,20 @@ void tickAnalog(void) {
   }
 }
 
-uint16_t analogRead(uint8_t pin) {
-  adc_select_input(pin);
-  // We have everything coded assuming 10 bits (as that is what the arduino
-  // uses) so shift accordingly (12 -> 10)
-  return adc_read() >> 2;
+uint16_t analogDetectRead(uint8_t pin) {
+  // This function is used for pin detection. On the pico, we can't combine
+  // pulling and the ADC, so instead, we weakly pull in both directions, and
+  // that way if the signal changes we will pick it up.
+  return digitalRead(PIN_A0 + pin) ? 100 : 0;
 }
 void pinMode(uint8_t pin, uint8_t mode) {
-  if (mode == INPUT && pin >= PIN_A0) {
+  if ((mode == INPUT) && pin >= PIN_A0) {
     adc_gpio_init(pin);
   } else {
     gpio_init(pin);
     gpio_set_dir(pin, mode == OUTPUT);
-    gpio_set_pulls(pin, mode == INPUT_PULLUP, false);
+    gpio_set_pulls(pin, mode == INPUT_PULLUP || mode == INPUT_PULLUP_ANALOG,
+                   mode == INPUT_PULLUP_ANALOG);
   }
 }
 

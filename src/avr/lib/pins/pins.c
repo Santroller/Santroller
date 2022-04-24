@@ -248,7 +248,7 @@ void pinMode(uint8_t pin, uint8_t mode) {
     *reg &= ~bit;
     *out &= ~bit;
     SREG = oldSREG;
-  } else if (mode == INPUT_PULLUP) {
+  } else if (mode == INPUT_PULLUP || mode == INPUT_PULLUP_ANALOG) {
     uint8_t oldSREG = SREG;
     cli();
     *reg &= ~bit;

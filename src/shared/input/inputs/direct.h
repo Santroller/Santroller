@@ -124,7 +124,7 @@ void findAnalogPin(void) {
   detectedPin = 0xff;
   stopReading();
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-    pinMode(PIN_A0 + i, INPUT_PULLUP);
+    pinMode(PIN_A0 + i, INPUT_PULLUP_ANALOG);
     _delay_us(100);
     lastAnalogValue[i] = analogRead(i);
   }

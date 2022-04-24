@@ -78,7 +78,6 @@ int main(void) {
   bool checkEndpoint = true;
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-  // bool waitingForCheck = false;
   while (true) {
 
     //================================================================================

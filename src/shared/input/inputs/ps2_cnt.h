@@ -409,13 +409,7 @@ bool read(Controller_t *controller) {
         controller->r_y = -(in[6] - 127) << 8;
         controller->l_x = (in[7] - 128) << 8;
         controller->l_y = -(in[8] - 127) << 8;
-        if (typeIsGuitar) {
-          ps2CtrlType = PSX_GUITAR_HERO_CONTROLLER;
-          controller->l_x = 0;
-          controller->l_y = 0;
-          controller->r_x = (in[8] - 128) << 8;
-          controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
-        } else if (isDualShock2Reply(in)) {
+        if (isDualShock2Reply(in)) {
           controller->lt = in[PSAB_L2 + 9];
           controller->rt = in[PSAB_R2 + 9];
           ps2CtrlType = PSX_DUALSHOCK_2_CONTROLLER;
@@ -423,6 +417,13 @@ bool read(Controller_t *controller) {
           ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
         }
       }
+      if (typeIsGuitar) {
+        ps2CtrlType = PSX_GUITAR_HERO_CONTROLLER;
+        controller->l_x = 0;
+        controller->l_y = 0;
+        controller->r_x = (in[8] - 128) << 8;
+        controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
+      } 
     }
     ret = true;
   }

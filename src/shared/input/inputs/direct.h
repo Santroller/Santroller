@@ -126,7 +126,7 @@ void findAnalogPin(void) {
   for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
     pinMode(PIN_A0 + i, INPUT_PULLUP_ANALOG);
     _delay_us(100);
-    lastAnalogValue[i] = analogRead(i);
+    lastAnalogValue[i] = analogDetectRead(i);
   }
   lookingForAnalog = true;
 }
@@ -148,7 +148,7 @@ void setSP(bool sp) {
 void tickDirectInput(Controller_t *controller) {
   if (lookingForAnalog) {
     for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-      if (abs(analogRead(i) - lastAnalogValue[i]) > 10) {
+      if (abs(analogDetectRead(i) - lastAnalogValue[i]) > 10) {
         detectedPin = i + PIN_A0;
         lookingForAnalog = false;
         return;

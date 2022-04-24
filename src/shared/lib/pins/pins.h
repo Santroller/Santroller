@@ -54,7 +54,7 @@ bool digitalReadPin(Pin_t pin);
 void pinMode(uint8_t pin, uint8_t mode);
 void setupADC(void);
 void tickAnalog(void);
-uint16_t analogRead(uint8_t pin);
+uint16_t analogDetectRead(uint8_t pin);
 void stopReading(void);
 void setUpValidPins(Configuration_t* config);
 void setUpAnalogDigitalPin(Pin_t* button, uint8_t pin, uint16_t threshold);

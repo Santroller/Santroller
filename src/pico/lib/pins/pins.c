@@ -72,10 +72,7 @@ void tickAnalog(void) {
   if (validAnalog == 0) return;
   for (int i = 0; i < validAnalog; i++) {
     AnalogInfo_t *info = &joyData[i];
-    adc_select_input(info->pin - PIN_A0);
-    // We have everything coded assuming 10 bits (as that is what the arduino
-    // uses) so shift accordingly (12 -> 10)
-    int16_t data = adc_read() >> 2;
+    int16_t data = analogRead(info->pin);
     if (!joyData[i].hasDigital) {
       data = (data - 512);
       if (info->inverted) data = -data;
@@ -85,11 +82,11 @@ void tickAnalog(void) {
   }
 }
 
-uint16_t analogDetectRead(uint8_t pin) {
-  // This function is used for pin detection. On the pico, we can't combine
-  // pulling and the ADC, so instead, we weakly pull in both directions, and
-  // that way if the signal changes we will pick it up.
-  return digitalRead(PIN_A0 + pin) ? 100 : 0;
+uint16_t analogRead(uint8_t pin) {
+  adc_select_input(pin);
+  // We have everything coded assuming 10 bits (as that is what the arduino
+  // uses) so shift accordingly (12 -> 10)
+  return adc_read() >> 2;
 }
 void pinMode(uint8_t pin, uint8_t mode) {
   if ((mode == INPUT) && pin >= PIN_A0) {
@@ -98,7 +95,8 @@ void pinMode(uint8_t pin, uint8_t mode) {
     gpio_init(pin);
     gpio_set_dir(pin, mode == OUTPUT);
     gpio_set_pulls(pin, mode == INPUT_PULLUP || mode == INPUT_PULLUP_ANALOG,
-                   mode == INPUT_PULLUP_ANALOG);
+                   false);
+    if (mode == INPUT_PULLUP_ANALOG) { gpio_set_input_enabled(pin, false); }
   }
 }
 

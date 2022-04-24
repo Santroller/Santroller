@@ -415,8 +415,7 @@ bool read(Controller_t *controller) {
           controller->l_y = 0;
           controller->r_x = (in[8] - 128) << 8;
           controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
-        }
-        if (isDualShock2Reply(in)) {
+        } else if (isDualShock2Reply(in)) {
           controller->lt = in[PSAB_L2 + 9];
           controller->rt = in[PSAB_R2 + 9];
           ps2CtrlType = PSX_DUALSHOCK_2_CONTROLLER;

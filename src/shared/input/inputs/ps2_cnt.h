@@ -349,7 +349,6 @@ bool sendCommand(const uint8_t *buf, uint8_t len) {
 }
 uint16_t buttonWord;
 bool read(Controller_t *controller) {
-  bool ret = false;
   uint8_t *in = autoShiftData(commandPollInput, sizeof(commandPollInput));
 
   if (in != NULL) {
@@ -424,11 +423,11 @@ bool read(Controller_t *controller) {
         controller->r_x = (in[8] - 128) << 8;
         controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
       } 
+      return true;
     }
-    ret = true;
   }
 
-  return ret;
+  return false;
 }
 
 bool begin(Controller_t *controller) {

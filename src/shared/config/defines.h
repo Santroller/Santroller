@@ -89,15 +89,15 @@ enum WiiExtType {
   WII_NOT_INITIALISED = 0xFFFF
 };
 enum PsxControllerType {
-  PSX_UNKNOWN_CONTROLLER = 0,
-  PSX_DUALSHOCK_1_CONTROLLER,
-  PSX_DUALSHOCK_2_CONTROLLER,
-  PSX_WIRELESS_SONY_DUALSHOCK_CONTROLLER,
-  PSX_GUITAR_HERO_CONTROLLER,
-  PSX_NEGCON,
-  PSX_JOGCON,
-  PSX_GUNCON,
-  PSX_ANALOG,
-  PSX_MOUSE,
-  PSX_NO_DEVICE
+  PSPROTO_UNKNOWN = 0,		//!< No idea
+	PSPROTO_DIGITAL,			//!< Original controller (SCPH-1010) protocol (8 digital buttons + START + SELECT)
+	PSPROTO_DUALSHOCK,			//!< DualShock (has analog axes)
+	PSPROTO_DUALSHOCK2,			//!< DualShock 2 (has analog axes and buttons)
+	PSPROTO_FLIGHTSTICK,		//!< Green-mode (like DualShock but missing SELECT, L3 and R3)
+	PSPROTO_NEGCON,				//!< Namco neGcon (has 1 analog X axis and analog Square, Circle and L1 buttons)
+	PSPROTO_JOGCON,				//!< Namco Jogcon (Wheel is mapped to analog X axis, half a rotation in each direction)
+	PSPROTO_GUNCON,
+  PSPROTO_GUITAR,
+  PSPROTO_MOUSE,
+  PSPROTO_NO_DEVICE
 };

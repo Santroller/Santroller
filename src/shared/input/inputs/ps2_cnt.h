@@ -49,6 +49,9 @@
  * edge (us).
  */
 #define ATTN_DELAY 15
+
+#define PSX_ANALOG_BTN_DATA_SIZE 12
+uint8_t analogButtonData[PSX_ANALOG_BTN_DATA_SIZE];
 enum PsxButton {
   PSB_SELECT,
   PSB_L3,
@@ -99,9 +102,10 @@ enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
 void tickPS2CtrlInput(Controller_t *controller);
 // Commands for communicating with a PSX controller
-static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01};
-static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00};
-static const uint8_t commandReadType[] = {0x01, 0x45, 0x00};
+static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01, 0x5A,
+                                             0x5A, 0x5A, 0x5A, 0x5A};
+static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00, 0x5A,
+                                            0x5A, 0x5A, 0x5A, 0x5A};
 static const uint8_t commandSetMode[] = {0x01, 0x44, 0x00, /* enabled */ 0x01,
                                          /* locked */ 0x00};
 
@@ -202,24 +206,16 @@ static const uint8_t mouseButtonBindings[] = {
     [XBOX_X] = INVALID,          [XBOX_Y] = INVALID};
 
 static const uint8_t guitarHeroButtonBindings[] = {
-    [XBOX_DPAD_UP] = PSB_PAD_UP,
-    [XBOX_DPAD_DOWN] = PSB_PAD_DOWN,
-    [XBOX_DPAD_LEFT] = PSB_PAD_LEFT,
-    [XBOX_DPAD_RIGHT] = PSB_PAD_RIGHT,
-    [XBOX_START] = PSB_START,
-    [XBOX_BACK] = PSB_SELECT,
-    [XBOX_LEFT_STICK] = INVALID,
-    [XBOX_RIGHT_STICK] = INVALID,
-    [XBOX_LB] = GH_ORANGE,
-    [XBOX_RB] = INVALID,
-    [XBOX_HOME] = INVALID,
-    [XBOX_UNUSED] = INVALID,
-    [XBOX_A] = GH_GREEN,
-    [XBOX_B] = GH_RED,
-    [XBOX_X] = GH_BLUE,
-    [XBOX_Y] = GH_YELLOW};
+    [XBOX_DPAD_UP] = INVALID,    [XBOX_DPAD_DOWN] = INVALID,
+    [XBOX_DPAD_LEFT] = INVALID,  [XBOX_DPAD_RIGHT] = INVALID,
+    [XBOX_START] = PSB_START,    [XBOX_BACK] = PSB_SELECT,
+    [XBOX_LEFT_STICK] = INVALID, [XBOX_RIGHT_STICK] = INVALID,
+    [XBOX_LB] = GH_ORANGE,       [XBOX_RB] = INVALID,
+    [XBOX_HOME] = INVALID,       [XBOX_UNUSED] = INVALID,
+    [XBOX_A] = GH_GREEN,         [XBOX_B] = GH_RED,
+    [XBOX_X] = GH_BLUE,          [XBOX_Y] = GH_YELLOW};
 uint16_t lastButtons;
-uint8_t ps2CtrlType = PSX_NO_DEVICE;
+uint8_t ps2CtrlType = PSPROTO_UNKNOWN;
 
 static inline bool isValidReply(const uint8_t *status) {
   return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
@@ -358,21 +354,78 @@ bool read(Controller_t *controller) {
     } else {
       // We surely have buttons
       buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
-
-      if (isFlightStickReply(in)) { ps2CtrlType = PSX_ANALOG; }
-      if (isNegconReply(in)) {
-        ps2CtrlType = PSX_NEGCON;
-        controller->l_x = (in[5] - 128) << 8;
-        // These buttons are only analog, map them to digital
-        bit_write(in[6] > NEGCON_I_II_BUTTON_THRESHOLD, controller->buttons,
-                  XBOX_X);
-        bit_write(in[7] > NEGCON_I_II_BUTTON_THRESHOLD, controller->buttons,
-                  XBOX_Y);
-        bit_write(in[8] > NEGCON_L_BUTTON_THRESHOLD, controller->buttons,
-                  XBOX_LB);
+      if (isDualShock2Reply(in)) {
+        ps2CtrlType = PSPROTO_DUALSHOCK2;
+      } else if (isDualShockReply(in)) {
+        ps2CtrlType = PSPROTO_DUALSHOCK;
+      } else if (isFlightStickReply(in)) {
+        ps2CtrlType = PSPROTO_FLIGHTSTICK;
+      } else if (isNegconReply(in)) {
+        ps2CtrlType = PSPROTO_NEGCON;
+      } else if (isJogconReply(in)) {
+        ps2CtrlType = PSPROTO_JOGCON;
+      } else if (isGunconReply(in)) {
+        ps2CtrlType = PSPROTO_GUNCON;
+      } else if (isMouseReply(in)) {
+        ps2CtrlType = PSPROTO_MOUSE;
+      } else {
+        ps2CtrlType = PSPROTO_DIGITAL;
       }
-      if (isJogconReply(in)) {
-        ps2CtrlType = PSX_JOGCON;
+      if (typeIsGuitar && bit_check(buttonWord, PSB_PAD_LEFT)) {
+        ps2CtrlType = PSPROTO_GUITAR;
+      }
+      switch (ps2CtrlType) {
+      case PSPROTO_DUALSHOCK2:
+        for (int i = 0; i < PSX_ANALOG_BTN_DATA_SIZE; ++i) {
+          analogButtonData[i] = in[i + 9];
+        }
+        /* Now fall through to DualShock case, the next line
+         * avoids GCC warning
+         */
+        /* FALLTHRU */
+      case PSPROTO_MOUSE:
+        controller->l_x = (in[5] - 128) << 8;
+        controller->l_y = -(in[6] - 127) << 8;
+        break;
+      case PSPROTO_GUNCON:
+        /* The Guncon uses the same reply format as DualShocks,
+         * by just falling through we'll end up with:
+         * - A (Left side) -> Start
+         * - B (Right side) -> Cross
+         * - Trigger -> Circle
+         * - Low byte of HSYNC -> RX
+         * - High byte of HSYNC -> RY
+         * - Low byte of VSYNC -> LX
+         * - High byte of VSYNC -> LY
+         */
+      case PSPROTO_DUALSHOCK:
+      case PSPROTO_FLIGHTSTICK:
+        // We have analog stick data
+        controller->r_x = (in[5] - 128) << 8;
+        controller->r_y = -(in[6] - 127) << 8;
+        controller->l_x = (in[7] - 128) << 8;
+        controller->l_y = -(in[8] - 127) << 8;
+        break;
+      case PSPROTO_NEGCON:
+        // Map the twist axis to X axis of left analog
+        controller->l_x = (in[5] - 128) << 8;
+
+        analogButtonData[PSAB_CROSS] = in[6];
+        analogButtonData[PSAB_SQUARE] = in[7];
+        analogButtonData[PSAB_L1] = in[8];
+
+        // Make up "missing" digital data
+        if (analogButtonData[PSAB_SQUARE] >= NEGCON_I_II_BUTTON_THRESHOLD) {
+          buttonWord &= ~PSB_SQUARE;
+        }
+        if (analogButtonData[PSAB_CROSS] >= NEGCON_I_II_BUTTON_THRESHOLD) {
+          buttonWord &= ~PSB_CROSS;
+        }
+        if (analogButtonData[PSAB_L1] >= NEGCON_L_BUTTON_THRESHOLD) {
+          buttonWord &= ~PSB_L1;
+        }
+        break;
+      case PSPROTO_JOGCON:
         /* Map the wheel X axis of left analog, half a rotation
          * per direction: byte 5 has the wheel position, it is
          * 0 at startup, then we have 0xFF down to 0x80 for
@@ -386,50 +439,32 @@ bool read(Controller_t *controller) {
          * We'll want to cap the movement halfway in each
          * direction, for ease of use/implementation.
          */
-        controller->l_x = in[5];
+        int16_t test = (in[5] - 128) << 8;
         if (in[6] < 0x80) {
           // CW up to half
-          controller->l_x = in[5] < 0x80 ? in[5] : (0x80 - 1);
+          controller->l_x = in[5] < 0x80 ? test : -1;
         } else {
           // CCW down to half
-          controller->l_x = in[5] > 0x80 ? in[5] : (0x80 + 1);
+          controller->l_x = in[5] > 0x80 ? test : 1;
         }
 
-        // Bring to the usual 0-255 range
         controller->l_x += 0x80;
-      }
-      if (isMouseReply(in)) {
-        ps2CtrlType = PSX_MOUSE;
-        controller->l_x = (in[5] - 128) << 8;
-        controller->l_y = -(in[6] - 127) << 8;
-      }
-      if (isDualShockReply(in) || isFlightStickReply(in)) {
-        controller->r_x = (in[5] - 128) << 8;
-        controller->r_y = -(in[6] - 127) << 8;
-        controller->l_x = (in[7] - 128) << 8;
-        controller->l_y = -(in[8] - 127) << 8;
-        if (isDualShock2Reply(in)) {
-          controller->lt = in[PSAB_L2 + 9];
-          controller->rt = in[PSAB_R2 + 9];
-          ps2CtrlType = PSX_DUALSHOCK_2_CONTROLLER;
-        } else if (!isFlightStickReply(in)) {
-          ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
-        }
-      }
-      if (typeIsGuitar) {
-        ps2CtrlType = PSX_GUITAR_HERO_CONTROLLER;
+        break;
+      case PSPROTO_GUITAR:
+        bit_clear(buttonWord, PSB_PAD_LEFT);
         controller->l_x = 0;
         controller->l_y = 0;
         controller->r_x = (in[8] - 128) << 8;
         controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
-      } 
-      return true;
+      default:
+        break;
+      }
     }
-  }
 
+    return true;
+  }
   return false;
 }
-
 bool begin(Controller_t *controller) {
   // Some disposable readings to let the controller know we are here
   for (uint8_t i = 0; i < 5; ++i) {
@@ -446,28 +481,24 @@ void initPS2CtrlInput(Configuration_t *config) {
   noAttention();
 }
 void tickPS2CtrlInput(Controller_t *controller) {
-  if (ps2CtrlType == PSX_NO_DEVICE) {
+  if (ps2CtrlType == PSPROTO_UNKNOWN) {
     if (!begin(controller)) { return; }
     sendCommand(commandEnterConfig, sizeof(commandEnterConfig));
-    if (true) {
-      // Dualshock one controllers don't have config mode
-      // Enable analog sticks
-      sendCommand(commandSetMode, sizeof(commandSetMode));
-      // Enable analog buttons
-      sendCommand(commandSetPressures, sizeof(commandSetPressures));
-      sendCommand(commandExitConfig, sizeof(commandExitConfig));
-    } else {
-      ps2CtrlType = PSX_DUALSHOCK_1_CONTROLLER;
-    }
+    // Dualshock one controllers don't have config mode
+    // Enable analog sticks
+    sendCommand(commandSetMode, sizeof(commandSetMode));
+    // Enable analog buttons
+    sendCommand(commandSetPressures, sizeof(commandSetPressures));
+    sendCommand(commandExitConfig, sizeof(commandExitConfig));
   }
-  if (!read(controller)) { ps2CtrlType = PSX_NO_DEVICE; }
+  if (!read(controller)) { ps2CtrlType = PSPROTO_NO_DEVICE; }
 }
 
 bool readPS2Button(Pin_t pin) {
   const uint8_t *buttons = dualShockButtonBindings;
-  if (ps2CtrlType == PSX_GUITAR_HERO_CONTROLLER) {
+  if (ps2CtrlType == PSPROTO_GUITAR) {
     buttons = guitarHeroButtonBindings;
-  } else if (ps2CtrlType == PSX_MOUSE) {
+  } else if (ps2CtrlType == PSPROTO_MOUSE) {
     buttons = mouseButtonBindings;
   }
   uint8_t btn = buttons[pin.offset];

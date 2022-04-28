@@ -315,12 +315,7 @@ bool sendCommand(const uint8_t *buf, uint8_t len) {
   unsigned long start = millis();
   uint8_t cnt = 0;
   do {
-    // printf("\n");
-    // for (int i = 0; i < len; i++) { printf("%02x, ", buf[i]); }
-    // printf("\n");
     uint8_t *in = autoShiftData(buf, len);
-    // for (int i = 0; i < len; i++) { printf("%02x, ", in[i]); }
-    // printf("\n");
     /* We can't know if we have successfully enabled analog mode until
      * we get out of config mode, so let's just be happy if we get a few
      * consecutive valid replies
@@ -338,7 +333,6 @@ bool sendCommand(const uint8_t *buf, uint8_t len) {
 
     if (!ret) { _delay_ms(COMMAND_RETRY_INTERVAL); }
   } while (!ret && millis() - start <= COMMAND_TIMEOUT);
-  // printf("ret: %d", ret);
   return ret;
 }
 uint16_t buttonWord;
@@ -358,7 +352,6 @@ bool read(Controller_t *controller) {
         controller->lt = in[9];
         controller->rt = in[10];
         /* Now fall through to DualShock case */
-        [[fallthrough]];
       }
       case PSPROTO_GUNCON:
         /* The Guncon uses the same reply format as DualShocks,

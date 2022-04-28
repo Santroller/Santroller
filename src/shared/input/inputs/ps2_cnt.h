@@ -354,13 +354,12 @@ bool read(Controller_t *controller) {
       buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
 
       switch (ps2CtrlType) {
-      case PSPROTO_DUALSHOCK2:
+      case PSPROTO_DUALSHOCK2: {
         controller->lt = in[9];
         controller->rt = in[10];
-        /* Now fall through to DualShock case, the next line
-         * avoids GCC warning
-         */
-        /* FALLTHRU */
+        /* Now fall through to DualShock case */
+        [[fallthrough]];
+      }
       case PSPROTO_GUNCON:
         /* The Guncon uses the same reply format as DualShocks,
          * by just falling through we'll end up with:
@@ -373,18 +372,20 @@ bool read(Controller_t *controller) {
          * - High byte of VSYNC -> LY
          */
       case PSPROTO_DUALSHOCK:
-      case PSPROTO_FLIGHTSTICK:
+      case PSPROTO_FLIGHTSTICK: {
         // We have analog stick data
         controller->r_x = (in[5] - 128) << 8;
         controller->r_y = -(in[6] - 127) << 8;
         controller->l_x = (in[7] - 128) << 8;
         controller->l_y = -(in[8] - 127) << 8;
         break;
-      case PSPROTO_MOUSE:
+      }
+      case PSPROTO_MOUSE: {
         controller->l_x = (in[5] - 128) << 8;
         controller->l_y = -(in[6] - 127) << 8;
         break;
-      case PSPROTO_NEGCON:
+      }
+      case PSPROTO_NEGCON: {
         // Map the twist axis to X axis of left analog
         controller->l_x = (in[5] - 128) << 8;
 
@@ -395,7 +396,8 @@ bool read(Controller_t *controller) {
         if (in[7] >= NEGCON_I_II_BUTTON_THRESHOLD) { buttonWord &= ~PSB_CROSS; }
         if (in[8] >= NEGCON_L_BUTTON_THRESHOLD) { buttonWord &= ~PSB_L1; }
         break;
-      case PSPROTO_JOGCON:
+      }
+      case PSPROTO_JOGCON: {
         /* Map the wheel X axis of left analog, half a rotation
          * per direction: byte 5 has the wheel position, it is
          * 0 at startup, then we have 0xFF down to 0x80 for
@@ -420,12 +422,14 @@ bool read(Controller_t *controller) {
 
         controller->l_x += 0x80;
         break;
-      case PSPROTO_GUITAR:
+      }
+      case PSPROTO_GUITAR: {
         bit_clear(buttonWord, PSB_PAD_LEFT);
         controller->l_x = 0;
         controller->l_y = 0;
         controller->r_x = (in[5] - 128) << 8;
         controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
+      }
       default:
         break;
       }

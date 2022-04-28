@@ -269,26 +269,11 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
     m = micros();
     if (i < (len - 1)) {
       while (!spi_acknowledged) {
+        // If for some reason the controller doesn't respond to us, we need to
+        // make sure we finish the transfer anyways
         if (micros() - m > INTER_CMD_BYTE_DELAY) { break; }
       }
     }
-    // if (i < (len - 1)) {
-    // printf("%d->", digitalReadPin(acknowledge));
-    // unsigned long m = micros();
-    // while (!digitalReadPin(acknowledge)) {
-    //   // printf("high");
-    //   if (micros() - m > INTER_CMD_BYTE_DELAY) {
-    //     break;
-    //   }
-    // }
-    // printf("%d, ", digitalReadPin(acknowledge));
-    // printf("low\n");
-    // }
-    // printf("\n");
-
-    // printf("%d->", digitalReadPin(acknowledge));
-    // _delay_us(INTER_CMD_BYTE_DELAY); // Very important!
-    // printf("%d\n", digitalReadPin(acknowledge));
   }
 }
 uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
@@ -471,7 +456,8 @@ void initPS2CtrlInput(Configuration_t *config) {
 bool initialised = false;
 void tickPS2CtrlInput(Controller_t *controller) {
   if (!initialised) {
-    // Drop to the highest speed supported on all controllers for the initial config
+    // Drop to the highest speed supported on all controllers for the initial
+    // config
     spi_begin(250000, true, true, true);
     if (!begin(controller)) {
       initialised = false;
@@ -534,8 +520,11 @@ void tickPS2CtrlInput(Controller_t *controller) {
       }
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
     }
-    // Now that we know what controller we are dealing with, we can bump the speed up on supported controllers
-    if (ps2CtrlType != PSPROTO_DIGITAL && ps2CtrlType != PSPROTO_GUITAR) { spi_begin(500000, true, true, true); }
+    // Now that we know what controller we are dealing with, we can bump the
+    // speed up on supported controllers
+    if (ps2CtrlType != PSPROTO_DIGITAL && ps2CtrlType != PSPROTO_GUITAR) {
+      spi_begin(500000, true, true, true);
+    }
     initialised = true;
   }
   if (initialised && !read(controller)) { initialised = false; }

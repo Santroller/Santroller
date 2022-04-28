@@ -160,7 +160,6 @@ foreach(TYPE ${TYPES})
     src/pico/lib/util/util.c
     src/pico/lib/timer/timer.c
     src/pico/lib/spi/spi.c
-    src/pico/lib/spi/pio_spi.c
     src/pico/lib/i2c/i2c.c
     src/pico/lib/usb/xinput_device.c
     src/pico/lib/pins/pins.c)
@@ -222,7 +221,6 @@ foreach(TYPE ${TYPES})
     pico_enable_stdio_uart(${TARGET} 1)
     pico_enable_stdio_usb(${TARGET} 0)
   endif()
-  pico_generate_pio_header(${TARGET} ../src/pico/lib/spi/spi.pio)
   # Add pico_stdlib library which aggregates commonly used features
   target_link_libraries(
     ${TARGET}

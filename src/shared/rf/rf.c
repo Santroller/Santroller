@@ -52,7 +52,9 @@ uint32_t generate_crc32(void) {
 #endif
 void nrf24_ce_digitalWrite(uint8_t state) { digitalWrite(CE, state); }
 void nrf24_csn_digitalWrite(uint8_t state) { digitalWrite(CSN, state); }
-void triggerInterrupt(unsigned int gpio, uint32_t events) { rf_interrupt = true; }
+void triggerInterrupt(unsigned int gpio, uint32_t events) {
+  rf_interrupt = true;
+}
 void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   rf_interrupt = tx;
 
@@ -78,7 +80,8 @@ void initRF(bool tx, uint32_t txid, uint32_t rxid) {
   EIMSK |= _BV(INT0);
 #  endif
 #else
-  gpio_set_irq_enabled_with_callback(PIN_RF_IRQ, GPIO_IRQ_EDGE_FALL, true, &triggerInterrupt);
+  gpio_set_irq_enabled_with_callback(PIN_RF_IRQ, GPIO_IRQ_EDGE_FALL, true,
+                                     &triggerInterrupt);
 #endif
 }
 int tickRFTX(uint8_t *data, uint8_t *arr, uint8_t len) {
@@ -103,12 +106,8 @@ uint8_t tickRFInput(uint8_t *data, uint8_t len) {
   return false;
 }
 
-#ifdef __AVR__
-#  if defined(__AVR_ATmega32U4__)
+#if defined(__AVR_ATmega32U4__)
 ISR(INT3_vect) {
-#  else
-ISR(INT0_vect) {
-#  endif
-  rf_interrupt = true;
+rf_interrupt = true;
 }
 #endif

@@ -110,6 +110,10 @@
 #define PIN_SPI_SCK   (15)
 #define PIN_PS2_ACK 7
 #define PIN_PS2_ATT 10
+#define INTERRUPT_PS2_ACK INT6_vect
+#define INTERRUPT_PS2_ACK_BIT _BV(INT6)
+#define INTERRUPT_PS2_ACK_EICRA _BV(ISC60) | _BV(ISC61)
+
 
 // Mapping of analog pins as digital I/O
 // A6-A11 share with digital pins
@@ -126,10 +130,10 @@
 #define PIN_A10  (28)
 #define PIN_A11  (29)
 
-#define digitalPinToPCICR(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= A8 && (p) <= A10)) ? (&PCICR) : ((uint8_t *)0))
+#define digitalPinToPCICR(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= PIN_A8 && (p) <= PIN_A10)) ? (&PCICR) : ((uint8_t *)0))
 #define digitalPinToPCICRbit(p) 0
-#define digitalPinToPCMSK(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= A8 && (p) <= A10)) ? (&PCMSK0) : ((uint8_t *)0))
-#define digitalPinToPCMSKbit(p) ( ((p) >= 8 && (p) <= 11) ? (p) - 4 : ((p) == 14 ? 3 : ((p) == 15 ? 1 : ((p) == 16 ? 2 : ((p) == 17 ? 0 : (p - A8 + 4))))))
+#define digitalPinToPCMSK(p)    ((((p) >= 8 && (p) <= 11) || ((p) >= 14 && (p) <= 17) || ((p) >= PIN_A8 && (p) <= PIN_A10)) ? (&PCMSK0) : ((uint8_t *)0))
+#define digitalPinToPCMSKbit(p) ( ((p) >= 8 && (p) <= 11) ? (p) - 4 : ((p) == 14 ? 3 : ((p) == 15 ? 1 : ((p) == 16 ? 2 : ((p) == 17 ? 0 : (p - PIN_A8 + 4))))))
 
 //	__AVR_ATmega32U4__ has an unusual mapping of pins to channels
 extern const uint8_t PROGMEM analog_pin_to_channel_PGM[];

@@ -34,8 +34,11 @@
 #define PIN_SPI_MOSI  (51)
 #define PIN_SPI_MISO  (50)
 #define PIN_SPI_SCK   (52)
-#define PIN_PS2_ACK 7
 #define PIN_PS2_ATT 10
+#define PIN_PS2_ACK 2
+#define INTERRUPT_PS2_ACK INT0_vect
+#define INTERRUPT_PS2_ACK_BIT _BV(INT0)
+#define INTERRUPT_PS2_ACK_EICRA _BV(ISC00) | _BV(ISC01)
 
 #define PIN_WIRE_SDA        (20)
 #define PIN_WIRE_SCL        (21)

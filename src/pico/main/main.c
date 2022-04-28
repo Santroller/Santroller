@@ -221,6 +221,7 @@ void hid_task(void) {
 void initialise(void) {
   board_init();
   tusb_init();
+  uart_set_baudrate(uart0, 115200);
   Configuration_t config;
   loadConfig(&config);
   fullDeviceType = config.main.subType;

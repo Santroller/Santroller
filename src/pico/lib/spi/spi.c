@@ -11,6 +11,7 @@
 #include <math.h>
 #include <stdio.h>
 volatile bool spi_acknowledged = false;
+bool lsb_first = false;
 void spi_begin(uint32_t clock, bool cpol, bool cpha, bool lsbfirst) {
   // LSBFIRST isnt supported here (also, we may just drop using this and only
   // use PIO)
@@ -21,8 +22,10 @@ void spi_begin(uint32_t clock, bool cpol, bool cpha, bool lsbfirst) {
   gpio_set_function(PIN_SPI_MOSI, GPIO_FUNC_SPI);
   gpio_set_function(PIN_SPI_SCK, GPIO_FUNC_SPI);
   gpio_set_pulls(PIN_SPI_MISO, true, false);
+  lsb_first = lsbfirst;
 }
 uint8_t revbits2(uint8_t b) {
+  if (!lsb_first) return b;
   b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
   b = (b & 0b11001100) >> 2 | (b & 0b00110011) << 2;
   b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;

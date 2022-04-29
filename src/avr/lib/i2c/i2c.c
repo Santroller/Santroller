@@ -81,18 +81,8 @@ void twi_init(void) {
   // initialize twi prescaler and bit rate
   cbi(TWSR, TWPS0);
   cbi(TWSR, TWPS1);
-  // TWI_FREQ results in a TWBR of > 10 at 8mhz, so we need to round it to 10.
-#if F_CPU < 9000000UL
-// Just run at the max speed we can
+  // We run at max speed, for either microcontroller
   TWBR = 10;
-#else
-  /* twi bit rate formula from atmega128 manual pg 204
-  SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
-  note: TWBR should be 10 or higher for master mode
-  It is 72 for a 16mhz Wiring board with 100kHz TWI */
-
-  TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
-#endif
   // enable twi module, acks, and twi interrupt
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
 }
@@ -124,7 +114,7 @@ void twi_disable(void) {
  */
 // === MODIFIED ===
 bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
-                     uint8_t sendStop) {
+                  uint8_t sendStop) {
 
   // ensure data will fit into buffer
   if (TWI_BUFFER_LENGTH < length) return 0;
@@ -242,8 +232,8 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
  * NACK received 3 .. data send, NACK received 4 .. other twi error (lost bus
  * arbitration, bus error, ..)
  */
-bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length,
-                    uint8_t wait, uint8_t sendStop) {
+bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
+                 uint8_t sendStop) {
 
   // ensure data will fit into buffer
   if (TWI_BUFFER_LENGTH < length) return false;

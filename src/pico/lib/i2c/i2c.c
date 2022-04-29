@@ -27,8 +27,8 @@
 #include <string.h>
 
 // === MODIFIED ===
-#include "hardware/i2c.h"
 #include "hardware/gpio.h"
+#include "hardware/i2c.h"
 #include "i2c/i2c.h"
 #include "pins/pins.h"
 #include "pins_arduino.h"
@@ -95,8 +95,7 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
  */
 bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
-  uint8_t ret = i2c_write_blocking(i2c1, address, data, length, !sendStop);
-  // i2c_write_blocking finishes when the write is sent but not when it is complete. Delaying 60us is enough to actually wait for the write.
-  _delay_us(200);
+  int ret = i2c_write_blocking(i2c1, address, data, length, !sendStop);
+  if (ret < 0) ret = i2c_write_blocking(i2c1, address, data, length, !sendStop);
   return ret > 0;
 }

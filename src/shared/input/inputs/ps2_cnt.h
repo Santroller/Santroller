@@ -287,7 +287,10 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
     shiftDataInOut(out, inputBuffer, 3);
     if (isValidReply(inputBuffer)) {
       // Reply is good, get full length
-
+      unsigned long m = micros();
+      while (!spi_acknowledged) {
+        if (micros() - m > INTER_CMD_BYTE_DELAY) { break; }
+      }
       uint8_t replyLen = (inputBuffer[1] & 0x0F) * 2;
 
       // Shift out rest of command
@@ -298,6 +301,11 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
         // The whole reply was gathered
         ret = inputBuffer;
       } else if (len + left <= BUFFER_SIZE) {
+        // Reply is good, get full length
+        m = micros();
+        while (!spi_acknowledged) {
+          if (micros() - m > INTER_CMD_BYTE_DELAY) { break; }
+        }
         // Part of reply is still missing and we have space for it
         shiftDataInOut(NULL, inputBuffer + len, left);
         ret = inputBuffer;
@@ -422,6 +430,7 @@ bool read(Controller_t *controller) {
         controller->l_y = 0;
         controller->r_x = (in[5] - 128) << 8;
         controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
+        break;
       }
       default:
         break;

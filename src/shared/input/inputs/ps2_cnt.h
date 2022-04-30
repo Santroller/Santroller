@@ -131,10 +131,6 @@ static const uint8_t commandSetPressuresDS2[] = {
 static const uint8_t commandSetPressuresMouse[] = {
     0x01, 0x4F, 0x00, 0b1111, 0x00, 0b11, 0x00, 0x00, 0x00};
 
-// Only get buttons, and whammy (right stick y)
-static const uint8_t commandSetPressuresGuitar[] = {
-    0x01, 0x4F, 0x00, 0b110010, 0x00, 0x00, 0x00, 0x00, 0x00};
-
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 /** \brief neGcon I/II-button press threshold
  *
@@ -425,10 +421,9 @@ bool read(Controller_t *controller) {
         break;
       }
       case PSPROTO_GUITAR: {
-        bit_clear(buttonWord, PSB_PAD_LEFT);
         controller->l_x = 0;
         controller->l_y = 0;
-        controller->r_x = (in[5] - 128) << 8;
+        controller->r_x = -(in[8] - 128) << 8;
         controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
         break;
       }
@@ -508,14 +503,10 @@ void tickPS2CtrlInput(Controller_t *controller) {
           ps2CtrlType == PSPROTO_JOGCON || ps2CtrlType == PSPROTO_NEGCON) {
         sendCommand(commandSetPressuresSticksOnly,
                     sizeof(commandSetPressuresSticksOnly));
-      } else if (ps2CtrlType == PSPROTO_GUITAR) {
-        // Guitar is its own thing for speed
-        sendCommand(commandSetPressuresGuitar,
-                    sizeof(commandSetPressuresGuitar));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {
         // Mouse is its own thing for speed
         sendCommand(commandSetPressuresMouse, sizeof(commandSetPressuresMouse));
-      } else {
+      } else if (ps2CtrlType != PSPROTO_GUITAR) {
         // Dualshock and dualshock 2 are pretty much the same controller.
         sendCommand(commandSetPressuresDS2, sizeof(commandSetPressuresDS2));
       }
@@ -523,7 +514,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
     }
     // Now that we know what controller we are dealing with, we can bump the
     // speed up on supported controllers
-    if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
+    if (ps2CtrlType != PSPROTO_DIGITAL && ps2CtrlType != PSPROTO_GUITAR) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
   // For now, until we get a ps2 guitar board to properly test, we will just have to do this.

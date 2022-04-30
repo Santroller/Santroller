@@ -423,7 +423,7 @@ bool read(Controller_t *controller) {
       case PSPROTO_GUITAR: {
         controller->l_x = 0;
         controller->l_y = 0;
-        controller->r_x = -(in[8] - 128) << 8;
+        controller->r_x = -(in[8] - 127) << 8;
         controller->r_y = (!!bit_check(buttonWord, GH_STAR_POWER)) * 32767;
         break;
       }
@@ -515,11 +515,13 @@ void tickPS2CtrlInput(Controller_t *controller) {
     }
     // Now that we know what controller we are dealing with, we can bump the
     // speed up on supported controllers
-    if (ps2CtrlType != PSPROTO_DIGITAL && ps2CtrlType != PSPROTO_GUITAR) { spi_begin(500000, true, true, true); }
+    if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
   // For now, until we get a ps2 guitar board to properly test, we will just have to do this.
-  if (initialised && !read(controller)) { initialised = false; }
+  // Something is a bit odd here, where it seems that the guitars sometimes must not return valid data
+  if (initialised) { read(controller); }
+  // if (initialised && !read(controller)) { initialised = false; }
 }
 
 bool readPS2Button(Pin_t pin) {

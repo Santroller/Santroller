@@ -112,8 +112,8 @@ void readClassicExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] & 0x3f) - 32;
   controller->l_y = (data[1] & 0x3f) - 32;
   controller->r_x =
-      (((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) - 16;
-  controller->r_y = (data[2] & 0x1f) - 16;
+      ((((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) - 16) << 10;
+  controller->r_y = ((data[2] & 0x1f) - 16) << 10;
   controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
   controller->rt = data[3] & 0x1f;
   buttons = ~(data[4] | data[5] << 8);

@@ -133,7 +133,7 @@ static const uint8_t commandSetPressuresMouse[] = {
 
 // Only get buttons, and whammy (right stick y)
 static const uint8_t commandSetPressuresGuitar[] = {
-    0x01, 0x4F, 0x00, 0b110001, 0x00, 0x00, 0x00, 0x00, 0x00};
+    0x01, 0x4F, 0x00, 0b110010, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 /** \brief neGcon I/II-button press threshold
@@ -498,7 +498,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
     } else if (isDigitalReply(in)) {
       ps2CtrlType = PSPROTO_DIGITAL;
     }
-    if (typeIsGuitar && ps2CtrlType == PSPROTO_DUALSHOCK &&  bit_check(buttonWord, PSB_PAD_LEFT)) {
+    if (typeIsGuitar && ps2CtrlType == PSPROTO_DUALSHOCK &&
+        bit_check(buttonWord, PSB_PAD_LEFT)) {
       ps2CtrlType = PSPROTO_GUITAR;
     }
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
@@ -509,8 +510,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
                     sizeof(commandSetPressuresSticksOnly));
       } else if (ps2CtrlType == PSPROTO_GUITAR) {
         // Guitar is its own thing for speed
-        sendCommand(commandSetPressuresGuitar,
-                    sizeof(commandSetPressuresGuitar));
+        // sendCommand(commandSetPressuresGuitar,
+        //             sizeof(commandSetPressuresGuitar));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {
         // Mouse is its own thing for speed
         sendCommand(commandSetPressuresMouse, sizeof(commandSetPressuresMouse));
@@ -525,7 +526,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
     if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
-  read(controller);
+  // For now, until we get a ps2 guitar board to properly test, we will just have to do this.
+  if (initialised) { read(controller); }
   // if (initialised && !read(controller)) { initialised = false; }
 }
 

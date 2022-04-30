@@ -510,8 +510,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
                     sizeof(commandSetPressuresSticksOnly));
       } else if (ps2CtrlType == PSPROTO_GUITAR) {
         // Guitar is its own thing for speed
-        // sendCommand(commandSetPressuresGuitar,
-        //             sizeof(commandSetPressuresGuitar));
+        sendCommand(commandSetPressuresGuitar,
+                    sizeof(commandSetPressuresGuitar));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {
         // Mouse is its own thing for speed
         sendCommand(commandSetPressuresMouse, sizeof(commandSetPressuresMouse));

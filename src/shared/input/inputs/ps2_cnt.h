@@ -470,7 +470,6 @@ void tickPS2CtrlInput(Controller_t *controller) {
       return;
     }
     uint8_t *in = autoShiftData(commandPollInput, sizeof(commandPollInput));
-    bool enteredConfig = false;
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
       // Dualshock one controllers don't have config mode
       // Enable analog sticks
@@ -480,7 +479,6 @@ void tickPS2CtrlInput(Controller_t *controller) {
       // Enable pressure sensitive buttons
       sendCommand(commandSetPressures, sizeof(commandSetPressures));
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
-      enteredConfig = true;
     }
 
     if (isDualShock2Reply(in)) {
@@ -500,11 +498,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
     } else if (isDigitalReply(in)) {
       ps2CtrlType = PSPROTO_DIGITAL;
     }
-    // Note that you can tell a ps1 controller and a gh controller apart by the
-    // fact that the gh controller responds to config commands, and it also has
-    // left held down permanently
-    if (typeIsGuitar && ps2CtrlType == PSPROTO_DIGITAL &&
-        bit_check(buttonWord, PSB_PAD_LEFT) && enteredConfig) {
+    if (typeIsGuitar && ps2CtrlType == PSPROTO_DUALSHOCK &&  bit_check(buttonWord, PSB_PAD_LEFT)) {
       ps2CtrlType = PSPROTO_GUITAR;
     }
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
@@ -528,9 +522,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
     }
     // Now that we know what controller we are dealing with, we can bump the
     // speed up on supported controllers
-    if (ps2CtrlType != PSPROTO_DIGITAL && ps2CtrlType != PSPROTO_GUITAR) {
-      spi_begin(500000, true, true, true);
-    }
+    if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
   if (initialised && !read(controller)) { initialised = false; }

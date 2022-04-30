@@ -493,6 +493,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
     } else if (isDigitalReply(in)) {
       ps2CtrlType = PSPROTO_DIGITAL;
     }
+    buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
     if (typeIsGuitar && ps2CtrlType == PSPROTO_DUALSHOCK &&
         bit_check(buttonWord, PSB_PAD_LEFT)) {
       ps2CtrlType = PSPROTO_GUITAR;
@@ -518,8 +519,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
     initialised = true;
   }
   // For now, until we get a ps2 guitar board to properly test, we will just have to do this.
-  if (initialised) { read(controller); }
-  // if (initialised && !read(controller)) { initialised = false; }
+  if (initialised && !read(controller)) { initialised = false; }
 }
 
 bool readPS2Button(Pin_t pin) {

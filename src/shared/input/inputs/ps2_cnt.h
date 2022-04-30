@@ -509,8 +509,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
                     sizeof(commandSetPressuresSticksOnly));
       } else if (ps2CtrlType == PSPROTO_GUITAR) {
         // Guitar is its own thing for speed
-        // sendCommand(commandSetPressuresGuitar,
-        //             sizeof(commandSetPressuresGuitar));
+        sendCommand(commandSetPressuresGuitar,
+                    sizeof(commandSetPressuresGuitar));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {
         // Mouse is its own thing for speed
         sendCommand(commandSetPressuresMouse, sizeof(commandSetPressuresMouse));
@@ -525,7 +525,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
     if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
-  if (initialised && !read(controller)) { initialised = false; }
+  read(controller);
+  // if (initialised && !read(controller)) { initialised = false; }
 }
 
 bool readPS2Button(Pin_t pin) {

@@ -78,7 +78,7 @@ void twi_disable(void) { i2c_deinit(i2c0); }
 bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
   int ret = i2c_read_blocking(i2c1, address, data, length, !sendStop);
-  return ret > 0;
+  return ret > 0 ? ret : 0;
 }
 /*
  * Function twi_writeTo

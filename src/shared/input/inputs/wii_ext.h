@@ -182,7 +182,11 @@ void initWiiExt(void) {
   }
   if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
       wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
-    // Enable high-res mode
+    // Enable high-res mode (try a few times, sometimes the controller doesnt pick it up)
+    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
+    _delay_us(10);
+    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
+    _delay_us(10);
     twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
     _delay_us(10);
     // Some controllers support high res mode, some dont. Some require it, some
@@ -193,6 +197,7 @@ void initWiiExt(void) {
     uint8_t check[8];
     uint8_t validate[8];
     while (true) {
+      _delay_us(200);
       twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(check), check);
       _delay_us(200);
       twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
@@ -242,10 +247,11 @@ void initWiiExt(void) {
 }
 void tickWiiExtInput(Controller_t *controller) {
   uint8_t data[8];
+  memset(data, 0, sizeof(data));
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      (twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) &&
-       !verifyData(data, bytes))) {
+      !twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) ||
+      !verifyData(data, bytes)) {
     initWiiExt();
     return;
   }

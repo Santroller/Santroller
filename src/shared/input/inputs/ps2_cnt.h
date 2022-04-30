@@ -509,8 +509,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
                     sizeof(commandSetPressuresSticksOnly));
       } else if (ps2CtrlType == PSPROTO_GUITAR) {
         // Guitar is its own thing for speed
-        sendCommand(commandSetPressuresGuitar,
-                    sizeof(commandSetPressuresGuitar));
+        // sendCommand(commandSetPressuresGuitar,
+        //             sizeof(commandSetPressuresGuitar));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {
         // Mouse is its own thing for speed
         sendCommand(commandSetPressuresMouse, sizeof(commandSetPressuresMouse));
@@ -522,7 +522,7 @@ void tickPS2CtrlInput(Controller_t *controller) {
     }
     // Now that we know what controller we are dealing with, we can bump the
     // speed up on supported controllers
-    if (ps2CtrlType != PSPROTO_DIGITAL && ps2CtrlType != PSPROTO_GUITAR) { spi_begin(500000, true, true, true); }
+    if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
   if (initialised && !read(controller)) { initialised = false; }

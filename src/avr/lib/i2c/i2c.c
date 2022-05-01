@@ -58,7 +58,7 @@ static uint16_t TIMEOUT = 32767;
  * Input    none
  * Output   none
  */
-void twi_init(void) {
+void twi_init(bool fivetar) {
   // initialize state
   twi_state = TWI_READY;
   twi_sendStop = true; // default value
@@ -81,22 +81,22 @@ void twi_init(void) {
   // initialize twi prescaler and bit rate
   cbi(TWSR, TWPS0);
   cbi(TWSR, TWPS1);
-// #if F_CPU < 9000000UL
-  TWBR = 10;
-// #else
-  //   // TWI_FREQ results in a TWBR of > 10 at 8mhz, so we need to round it
-  //   to 10.
-  // #if F_CPU < 9000000UL
-  // // Just run at the max speed we can
-  //   TWBR = 10;
-  // #else
-  /* twi bit rate formula from atmega128 manual pg 204
-  SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
-  note: TWBR should be 10 or higher for master mode
-  It is 72 for a 16mhz Wiring board with 100kHz TWI */
+  // note: TWBR should be 10 or higher for master mode
+#if F_CPU == 16000000UL
+  if (fivetar) {
+    /* SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR)) */
+    TWBR = ((F_CPU / TWI_FREQ_5TAR) - 16) / 2;
+  } else {
+    // Just run at the max speed we can on the 3.3v boards, its always slower
+    // than the TWI_FREQ
+    TWBR = 10;
+  }
 
-  // TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
-// #endif
+#else
+  // Just run at the max speed we can on the 3.3v boards, its always slower than
+  // the TWI_FREQ_5TAR
+  TWBR = 10;
+#endif
   // enable twi module, acks, and twi interrupt
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
 }
@@ -111,9 +111,19 @@ void twi_disable(void) {
   // disable twi module, acks, and twi interrupt
   TWCR &= ~(_BV(TWEN) | _BV(TWIE) | _BV(TWEA));
 
-  // deactivate internal pullups for twi.
-  // digitalWrite(SDA, 0);
-  // digitalWrite(SCL, 0);
+// deactivate internal pullups for twi.
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) ||                  \
+    defined(__AVR_ATmega328P__)
+  // activate internal pull-ups for twi
+  // as per note from atmega8 manual pg167
+  cbi(PORTC, 4);
+  cbi(PORTC, 5);
+#else
+  // activate internal pull-ups for twi
+  // as per note from atmega128 manual pg204
+  cbi(PORTD, 0);
+  cbi(PORTD, 1);
+#endif
 }
 
 /*

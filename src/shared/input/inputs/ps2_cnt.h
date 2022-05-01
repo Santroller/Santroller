@@ -457,21 +457,20 @@ void initPS2CtrlInput(Configuration_t *config) {
 bool initialised = false;
 void tickPS2CtrlInput(Controller_t *controller) {
   if (!initialised) {
-    // Drop to the highest speed supported on all controllers for the initial
-    // config
-    spi_begin(250000, true, true, true);
+    spi_begin(500000, true, true, true);
     if (!begin(controller)) {
       initialised = false;
       return;
     }
     uint8_t *in = autoShiftData(commandPollInput, sizeof(commandPollInput));
     if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
-      // Dualshock one controllers don't have config mode
       // Enable analog sticks
       sendCommand(commandSetMode, sizeof(commandSetMode));
       // Enable analog buttons
 
-      // Enable pressure sensitive buttons
+      // Enable pressure sensitive buttons, enable them all as we want to test
+      // specifically the analog buttons, as that is how you differenciate
+      // dualshock one from dualshock 2
       sendCommand(commandSetPressures, sizeof(commandSetPressures));
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
     }
@@ -513,14 +512,8 @@ void tickPS2CtrlInput(Controller_t *controller) {
       }
       sendCommand(commandExitConfig, sizeof(commandExitConfig));
     }
-    // Now that we know what controller we are dealing with, we can bump the
-    // speed up on supported controllers
-    if (ps2CtrlType != PSPROTO_DIGITAL) { spi_begin(500000, true, true, true); }
     initialised = true;
   }
-  // For now, until we get a ps2 guitar board to properly test, we will just have to do this.
-  // Something is a bit odd here, where it seems that the guitars sometimes must not return valid data
-  // if (initialised) { read(controller); }
   if (initialised && !read(controller)) { initialised = false; }
 }
 

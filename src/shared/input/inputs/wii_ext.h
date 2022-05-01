@@ -13,6 +13,11 @@
 #include <stdlib.h>
 #include <string.h>
 #define I2C_ADDR 0x52
+#define READ_ID 0xFA
+#define ID_LEN 6
+#define SET_RES 0xFE
+#define LOWRES_MODE 0x03
+#define HIGHRES_MODE 0x03
 void tickWiiExtInput(Controller_t *controller);
 // uint8_t wiiButtonBindings[16] = {
 //     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
@@ -46,8 +51,10 @@ bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
 }
 
 uint16_t readExtID(void) {
-  uint8_t data[6];
-  twi_readFromPointerSlow(I2C_ADDR, 0xFA, 6, data);
+  uint8_t data[ID_LEN];
+  memset(data, 0, sizeof(data));
+  twi_readFromPointerSlow(I2C_ADDR, READ_ID, ID_LEN, data);
+  _delay_us(200);
   if (!verifyData(data, sizeof(data))) { return WII_NOT_INITIALISED; }
   return data[0] << 8 | data[5];
 }
@@ -112,7 +119,9 @@ void readClassicExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] & 0x3f) - 32;
   controller->l_y = (data[1] & 0x3f) - 32;
   controller->r_x =
-      ((((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) - 16) << 10;
+      ((((data[0] & 0xc0) >> 3) | ((data[1] & 0xc0) >> 5) | (data[2] >> 7)) -
+       16)
+      << 10;
   controller->r_y = ((data[2] & 0x1f) - 16) << 10;
   controller->lt = ((data[3] >> 5) | ((data[2] & 0x60) >> 2));
   controller->rt = data[3] & 0x1f;
@@ -164,6 +173,7 @@ void readTataconExt(Controller_t *controller, uint8_t *data) {
   buttons = ~(data[4] << 8 | data[5]);
 }
 void initWiiExt(void) {
+  // twi_init(false);
   wiiExtensionID = readExtID();
   if (wiiExtensionID == WII_NOT_INITIALISED) {
     // Send packets needed to initialise a controller
@@ -180,49 +190,42 @@ void initWiiExt(void) {
     twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
     _delay_us(10);
   }
-  if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
-      wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
-    // Enable high-res mode (try a few times, sometimes the controller doesnt pick it up)
-    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
-    _delay_us(10);
-    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
-    _delay_us(10);
-    twi_writeSingleToPointer(I2C_ADDR, 0xFE, 0x03);
-    _delay_us(10);
-    // Some controllers support high res mode, some dont. Some require it, some
-    // dont. To mitigate this issue, we can check if the high res specific bytes
-    // are zeroed. However this isnt enough. If a byte is corrupted during
-    // transit than it may be triggered. Reading twice will allow us to confirm
-    // that nothing was corrupted,
-    uint8_t check[8];
-    uint8_t validate[8];
-    while (true) {
-      _delay_us(200);
-      twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(check), check);
-      _delay_us(200);
-      twi_readFromPointerSlow(I2C_ADDR, 0, sizeof(validate), validate);
-      if (memcmp(check, validate, sizeof(validate)) == 0) {
-        bool highRes = (check[0x06] || check[0x07]);
-        if (highRes) {
-          readFunction = readClassicExtHighRes;
-          bytes = 8;
-        } else {
-          readFunction = readClassicExt;
-          bytes = 6;
-        }
-        break;
-      }
-      _delay_us(200);
-    }
-  }
   switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:
+    // // detect the not 5tar, and then run
+    // twi_init(false);
     readFunction = readGuitarExt;
     break;
   case WII_CLASSIC_CONTROLLER:
   case WII_CLASSIC_CONTROLLER_PRO:
+    // We know that classic controllers and classic pro controllers support
+    // higher speed
+    // twi_init(false);
+    // Enable high-res mode (try a few times, sometimes the controller doesnt
+    // pick it up)
+    for (int i = 0; i < 3; i++) {
+      twi_writeSingleToPointer(I2C_ADDR, SET_RES, HIGHRES_MODE);
+      _delay_us(200);
+    }
+
+    // Some controllers support high res mode, some dont. Some require it, some
+    // dont. When a controller goes into high res mode, its ID will change,
+    // so check.
+
+    uint8_t id[ID_LEN];
+    twi_readFromPointerSlow(I2C_ADDR, READ_ID, ID_LEN, id);
+    _delay_us(200);
+    if (id[4] == HIGHRES_MODE) {
+      readFunction = readClassicExtHighRes;
+      bytes = 8;
+    } else if (id[4] == 0x1) {
+      readFunction = readClassicExt;
+      bytes = 6;
+    }
     break;
   case WII_NUNCHUK:
+    // We know that nunchuk controllers support higher speed
+    // twi_init(false);
     readFunction = readNunchukExt;
     break;
   case WII_GUITAR_HERO_DRUM_CONTROLLER:

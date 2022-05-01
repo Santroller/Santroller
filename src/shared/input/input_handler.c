@@ -43,7 +43,9 @@ void initInputs(Configuration_t *config) {
     spi_begin(MIN(F_CPU / 2, 12000000), true, true, false);
   }
   if (config->main.inputType == WII || config->main.tiltType == MPU_6050) {
-    twi_init();
+    // Start off by configuring things for the slower speed when using wii extensions
+    // twi_init(config->main.inputType == WII);
+    twi_init(false);
   }
   initDirectInput(config);
   initGuitar(config);

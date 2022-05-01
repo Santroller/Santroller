@@ -1,25 +1,3 @@
-/*
-  twi.c - TWI/I2C library for Wiring & Arduino
-  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-  Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
-  Modified 2019 by IanSC to return after a timeout period
-*/
-
 #include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
@@ -48,8 +26,8 @@ static uint16_t TIMEOUT = 1000;
  * Input    none
  * Output   none
  */
-void twi_init(void) {
-  i2c_init(i2c1, TWI_FREQ);
+void twi_init(bool fivetar) {
+  i2c_init(i2c1, fivetar ? TWI_FREQ_5TAR : TWI_FREQ);
   gpio_set_function(PIN_WIRE_SDA, GPIO_FUNC_I2C);
   gpio_set_function(PIN_WIRE_SCL, GPIO_FUNC_I2C);
   gpio_pull_up(PIN_WIRE_SDA);
@@ -62,7 +40,7 @@ void twi_init(void) {
  * Input    none
  * Output   none
  */
-void twi_disable(void) { i2c_deinit(i2c0); }
+void twi_disable(void) { i2c_deinit(i2c1); }
 
 /*
  * Function twi_readFrom

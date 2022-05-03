@@ -7,23 +7,11 @@
 #include "spi/spi.h"
 #include "timer/timer.h"
 #include "util/util.h"
-// #include <avr/io.h>
 #include "timer/timer.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#ifndef __AVR__
-#endif
-/** \brief Command Inter-Byte Delay (us)
- *
- * Commands are several bytes long. This is the time to wait between two
- * consecutive bytes.
- *
- * This should actually be done by watching the \a Acknowledge line, but we are
- * ignoring it at the moment.
- */
-#define INTER_CMD_BYTE_DELAY 50
 
 /** \brief Command timeout (ms)
  *
@@ -96,42 +84,47 @@ enum PsxAnalogButton {
   PSAB_L2,
   PSAB_R2
 };
+enum MultitapPort { A = 0x01, B = 0x02, C = 0x03, D = 0x04 };
 enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
 void tickPS2CtrlInput(Controller_t *controller);
 // Commands for communicating with a PSX controller
-static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01, 0x5A,
+static const uint8_t commandEnterConfig[] = {0x43, 0x00, 0x01, 0x5A,
                                              0x5A, 0x5A, 0x5A, 0x5A};
-static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00, 0x5A,
+static const uint8_t commandExitConfig[] = {0x43, 0x00, 0x00, 0x5A,
                                             0x5A, 0x5A, 0x5A, 0x5A};
-static const uint8_t commandSetMode[] = {0x01, 0x44, 0x00, /* enabled */ 0x01,
+static const uint8_t commandSetMode[] = {0x44, 0x00, /* enabled */ 0x01,
                                          /* locked */ 0x00};
 
 // Enable all analog values
-static const uint8_t commandSetPressures[] = {0x01, 0x4F, 0x00, 0xFF, 0xFF,
+static const uint8_t commandSetPressures[] = {0x4F, 0x00, 0xFF, 0xFF,
                                               0x03, 0x00, 0x00, 0x00};
 
-// The pressures data format is 0x01, 0x4F, 0x00, followed by 18 bits, for each
+// The pressures data format is 0x4F, 0x00, followed by 18 bits, for each
 // of the 18 possible bytes that a controller can return
 
 // For some controllers, we want the buttons (2 bytes, and then 4 bytes of
 // sticks (rx, ry, lx, ly)).
 static const uint8_t commandSetPressuresSticksOnly[] = {
-    0x01, 0x4F, 0x00, 0b111111, 0x00, 0b00, 0x00, 0x00, 0x00};
+    0x4F, 0x00, 0b111111, 0x00, 0b00, 0x00, 0x00, 0x00};
+
+// For guitars, we want the buttons (2 bytes, and then ly).
+static const uint8_t commandSetPressuresGuitar[] = {0x4F, 0x00, 0b110001, 0x00,
+                                                    0b00, 0x00, 0x00,     0x00};
 
 // For the ds2, we want the buttons (2 bytes, and then 4 bytes of sticks (rx,
 // ry, lx, ly)). We also want triggers, which luckily happen to be the last two
 // bits and hence in their own byte
-static const uint8_t commandSetPressuresDS2[] = {
-    0x01, 0x4F, 0x00, 0b111111, 0x00, 0b11, 0x00, 0x00, 0x00};
+static const uint8_t commandSetPressuresDS2[] = {0x4F, 0x00, 0b111111, 0x00,
+                                                 0b11, 0x00, 0x00,     0x00};
 
 // For the mouse, we want the buttons (2 bytes, and then 2 bytes of axis (x,
 // y)). We also want triggers, which luckily happen to be the last two
 // bits and hence in their own byte
-static const uint8_t commandSetPressuresMouse[] = {
-    0x01, 0x4F, 0x00, 0b1111, 0x00, 0b11, 0x00, 0x00, 0x00};
+static const uint8_t commandSetPressuresMouse[] = {0x4F, 0x00, 0b1111, 0x00,
+                                                   0b11, 0x00, 0x00,   0x00};
 
-static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
+static const uint8_t commandPollInput[] = {0x42, 0x00, 0xFF, 0xFF};
 /** \brief neGcon I/II-button press threshold
  *
  * The neGcon does not report digital button press data for its analog buttons,
@@ -255,7 +248,8 @@ void signalAttention(void) {
   digitalWritePin(attention, false);
   _delay_us(ATTN_DELAY);
 }
-void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
+void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len,
+                    bool force) {
   unsigned long m = micros();
   for (uint8_t i = 0; i < len; ++i) {
     uint8_t resp = spi_transfer(out != NULL ? out[i] : 0x5A);
@@ -263,7 +257,9 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
 
     spi_acknowledged = false;
     m = micros();
-    if (i < (len - 1)) {
+    // The controller does not acknowledge the last byte, however, we do
+    // transfers in multiple steps so we need a wait either way
+    if (i < (len - 1) || force) {
       while (!spi_acknowledged) {
         // If for some reason the controller doesn't respond to us, we need to
         // make sure we finish the transfer anyways
@@ -272,7 +268,7 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
     }
   }
 }
-uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
+uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
 
   static uint8_t inputBuffer[BUFFER_SIZE];
   uint8_t *ret = NULL;
@@ -280,30 +276,22 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
 
   if (len >= 3 && len <= BUFFER_SIZE) {
     // All commands have at least 3 bytes, so shift out those first
-    shiftDataInOut(out, inputBuffer, 3);
+    shiftDataInOut(&port, inputBuffer, 1, true);
+    shiftDataInOut(out, inputBuffer + 1, 2, true);
     if (isValidReply(inputBuffer)) {
       // Reply is good, get full length
-      unsigned long m = micros();
-      while (!spi_acknowledged) {
-        if (micros() - m > INTER_CMD_BYTE_DELAY) { break; }
-      }
       uint8_t replyLen = (inputBuffer[1] & 0x0F) * 2;
 
-      // Shift out rest of command
-      if (len > 3) { shiftDataInOut(out + 3, inputBuffer + 3, len - 3); }
-
       uint8_t left = replyLen - len + 3;
+      // Shift out rest of command
+      if (len > 3) { shiftDataInOut(out + 3, inputBuffer + 3, len - 3, left); }
+
       if (left == 0) {
         // The whole reply was gathered
         ret = inputBuffer;
       } else if (len + left <= BUFFER_SIZE) {
-        // Reply is good, get full length
-        m = micros();
-        while (!spi_acknowledged) {
-          if (micros() - m > INTER_CMD_BYTE_DELAY) { break; }
-        }
         // Part of reply is still missing and we have space for it
-        shiftDataInOut(NULL, inputBuffer + len, left);
+        shiftDataInOut(NULL, inputBuffer + len, left, false);
         ret = inputBuffer;
       } else {
         // Reply incomplete but not enough space provided
@@ -313,13 +301,13 @@ uint8_t *autoShiftData(const uint8_t *out, const uint8_t len) {
   noAttention();
   return ret;
 }
-bool sendCommand(const uint8_t *buf, uint8_t len) {
+bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
   bool ret = false;
 
   unsigned long start = millis();
   uint8_t cnt = 0;
   do {
-    uint8_t *in = autoShiftData(buf, len);
+    uint8_t *in = autoShiftData(port, buf, len);
     /* We can't know if we have successfully enabled analog mode until
      * we get out of config mode, so let's just be happy if we get a few
      * consecutive valid replies
@@ -340,13 +328,13 @@ bool sendCommand(const uint8_t *buf, uint8_t len) {
   return ret;
 }
 uint16_t buttonWord;
-bool read(Controller_t *controller) {
-  uint8_t *in = autoShiftData(commandPollInput, sizeof(commandPollInput));
+bool read(uint8_t port, Controller_t *controller) {
+  uint8_t *in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
 
   if (in != NULL) {
     if (isConfigReply(in)) {
       // We're stuck in config mode, try to get out
-      sendCommand(commandExitConfig, sizeof(commandExitConfig));
+      sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
     } else {
       // We surely have buttons
       buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
@@ -436,13 +424,13 @@ bool read(Controller_t *controller) {
   }
   return false;
 }
-bool begin(Controller_t *controller) {
+bool begin(uint8_t port, Controller_t *controller) {
   // Some disposable readings to let the controller know we are here
   for (uint8_t i = 0; i < 5; ++i) {
-    read(controller);
+    read(port, controller);
     _delay_ms(1);
   }
-  return read(controller);
+  return read(port, controller);
 }
 
 void initPS2CtrlInput(Configuration_t *config) {
@@ -456,23 +444,26 @@ void initPS2CtrlInput(Configuration_t *config) {
 }
 bool initialised = false;
 void tickPS2CtrlInput(Controller_t *controller) {
+  // If this is changed to a different port, you can talk to different devices on a multitap.
+  // Not sure how useful this is unless we make a ps2 variant that works with the multitap, and offers four devices
+  uint8_t port = A;
   if (!initialised) {
     spi_begin(500000, true, true, true);
-    if (!begin(controller)) {
+    if (!begin(port, controller)) {
       initialised = false;
       return;
     }
-    uint8_t *in = autoShiftData(commandPollInput, sizeof(commandPollInput));
-    if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
+    uint8_t *in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
+    if (sendCommand(port, commandEnterConfig, sizeof(commandEnterConfig))) {
       // Enable analog sticks
-      sendCommand(commandSetMode, sizeof(commandSetMode));
+      sendCommand(port, commandSetMode, sizeof(commandSetMode));
       // Enable analog buttons
 
       // Enable pressure sensitive buttons, enable them all as we want to test
       // specifically the analog buttons, as that is how you differenciate
       // dualshock one from dualshock 2
-      sendCommand(commandSetPressures, sizeof(commandSetPressures));
-      sendCommand(commandExitConfig, sizeof(commandExitConfig));
+      sendCommand(port, commandSetPressures, sizeof(commandSetPressures));
+      sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
     }
 
     if (isDualShock2Reply(in)) {
@@ -496,25 +487,36 @@ void tickPS2CtrlInput(Controller_t *controller) {
     if (typeIsGuitar && ps2CtrlType == PSPROTO_DUALSHOCK &&
         bit_check(buttonWord, PSB_PAD_LEFT)) {
       ps2CtrlType = PSPROTO_GUITAR;
+      // Interestingly, guitar hero guitars supposedly do respond to set
+      // pressures Dualshock controllers dont do this. This means that we could
+      // possibly detect guitars by checking for a response to setPressures. I'd
+      // be interested in knowing if that means we can get
+      // sendCommand(commandSetPressuresGuitar,
+      // sizeof(commandSetPressuresGuitar)); working. This is something we can
+      // test once we have a ps2 board.
     }
-    if (sendCommand(commandEnterConfig, sizeof(commandEnterConfig))) {
+    if (sendCommand(port, commandEnterConfig, sizeof(commandEnterConfig))) {
       // These controllers only have sticks
       if (ps2CtrlType == PSPROTO_FLIGHTSTICK || ps2CtrlType == PSPROTO_GUNCON ||
-          ps2CtrlType == PSPROTO_JOGCON || ps2CtrlType == PSPROTO_NEGCON) {
-        sendCommand(commandSetPressuresSticksOnly,
+          ps2CtrlType == PSPROTO_JOGCON || ps2CtrlType == PSPROTO_NEGCON ||
+          ps2CtrlType == PSPROTO_DUALSHOCK) {
+        sendCommand(port, commandSetPressuresSticksOnly,
                     sizeof(commandSetPressuresSticksOnly));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {
         // Mouse is its own thing for speed
-        sendCommand(commandSetPressuresMouse, sizeof(commandSetPressuresMouse));
-      } else if (ps2CtrlType != PSPROTO_GUITAR) {
-        // Dualshock and dualshock 2 are pretty much the same controller.
-        sendCommand(commandSetPressuresDS2, sizeof(commandSetPressuresDS2));
+        sendCommand(port, commandSetPressuresMouse,
+                    sizeof(commandSetPressuresMouse));
+      } else if (ps2CtrlType == PSPROTO_DUALSHOCK2) {
+        // Dualshock 2 is its own thing, it has analog buttons that we want to
+        // disable, but we still want triggers
+        sendCommand(port, commandSetPressuresDS2,
+                    sizeof(commandSetPressuresDS2));
       }
-      sendCommand(commandExitConfig, sizeof(commandExitConfig));
+      sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
     }
     initialised = true;
   }
-  if (initialised && !read(controller)) { initialised = false; }
+  if (initialised && !read(port, controller)) { initialised = false; }
 }
 
 bool readPS2Button(Pin_t pin) {

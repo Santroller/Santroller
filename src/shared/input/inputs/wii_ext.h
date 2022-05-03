@@ -5,7 +5,6 @@
 #include "i2c/i2c.h"
 #include "pins/pins.h"
 #include "util/util.h"
-// #  include <avr/io.h>
 #include "fxpt_math/fxpt_math.h"
 #include "timer/timer.h"
 #include <stdbool.h>
@@ -15,22 +14,30 @@
 #define I2C_ADDR 0x52
 #define READ_ID 0xFA
 #define ID_LEN 6
-#define SET_RES 0xFE
+#define SET_RES_MODE 0xFE
 #define LOWRES_MODE 0x03
 #define HIGHRES_MODE 0x03
 void tickWiiExtInput(Controller_t *controller);
-// uint8_t wiiButtonBindings[16] = {
-//     INVALID_PIN,  INVALID_PIN,    XBOX_START,     XBOX_HOME,
-//     XBOX_BACK,    INVALID_PIN,    XBOX_DPAD_DOWN, XBOX_DPAD_RIGHT,
-//     XBOX_DPAD_UP, XBOX_DPAD_LEFT, XBOX_RB,        XBOX_Y,
-//     XBOX_A,       XBOX_X,         XBOX_B,         XBOX_LB};
-// Inverted version of above
-uint8_t wiiButtonBindings[XBOX_BTN_COUNT] = {
-    8,  6,  9, 7,           2,  4,  INVALID_PIN, INVALID_PIN,
-    15, 10, 3, INVALID_PIN, 12, 14, 13,          11};
+uint8_t wiiButtonBindings[XBOX_BTN_COUNT] = {[XBOX_DPAD_UP] = WII_DPAD_UP,
+                                             [XBOX_DPAD_DOWN] = WII_DPAD_DOWN,
+                                             [XBOX_DPAD_LEFT] = WII_DPAD_LEFT,
+                                             [XBOX_DPAD_RIGHT] = WII_DPAD_RIGHT,
+                                             [XBOX_START] = WII_PLUS,
+                                             [XBOX_BACK] = WII_MINUS,
+                                             [XBOX_LEFT_STICK] = INVALID_PIN,
+                                             [XBOX_RIGHT_STICK] = INVALID_PIN,
+                                             [XBOX_LB] = WII_ZL,
+                                             [XBOX_RB] = WII_ZR,
+                                             [XBOX_HOME] = WII_HOME,
+                                             [XBOX_UNUSED] = INVALID_PIN,
+                                             [XBOX_A] = WII_A,
+                                             [XBOX_B] = WII_B,
+                                             [XBOX_X] = WII_Y,
+                                             [XBOX_Y] = WII_X};
 uint16_t wiiExtensionID = WII_NO_EXTENSION;
 uint16_t buttons;
 uint8_t bytes = 6;
+uint8_t dataReadIndex = 0;
 bool mapNunchukAccelToRightJoy;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
@@ -84,6 +91,8 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
       break;
     case 0x12:
       drumVelocity[XBOX_A - 8] = vel;
+      break;
+    default:
       break;
     }
   }
@@ -170,7 +179,8 @@ void readDrawsomeExt(Controller_t *controller, uint8_t *data) {
   // controller->status = data[5]>>4;
 }
 void readTataconExt(Controller_t *controller, uint8_t *data) {
-  buttons = ~(data[4] << 8 | data[5]);
+  // We can just skip all the other bytes except for the buttons
+  buttons = ~(data[0]);
 }
 void initWiiExt(void) {
   // twi_init(false);
@@ -185,11 +195,13 @@ void initWiiExt(void) {
     _delay_us(10);
   }
   if (wiiExtensionID == WII_UBISOFT_DRAWSOME_TABLET) {
+    // Drawsome tablet needs some additional init
     twi_writeSingleToPointer(I2C_ADDR, 0xFB, 0x01);
     _delay_us(10);
     twi_writeSingleToPointer(I2C_ADDR, 0xF0, 0x55);
     _delay_us(10);
   }
+  dataReadIndex = 0;
   switch (wiiExtensionID) {
   case WII_GUITAR_HERO_GUITAR_CONTROLLER:
     // // detect the not 5tar, and then run
@@ -204,7 +216,7 @@ void initWiiExt(void) {
     // Enable high-res mode (try a few times, sometimes the controller doesnt
     // pick it up)
     for (int i = 0; i < 3; i++) {
-      twi_writeSingleToPointer(I2C_ADDR, SET_RES, HIGHRES_MODE);
+      twi_writeSingleToPointer(I2C_ADDR, SET_RES_MODE, HIGHRES_MODE);
       _delay_us(200);
     }
 
@@ -218,7 +230,7 @@ void initWiiExt(void) {
     if (id[4] == HIGHRES_MODE) {
       readFunction = readClassicExtHighRes;
       bytes = 8;
-    } else if (id[4] == 0x1) {
+    } else {
       readFunction = readClassicExt;
       bytes = 6;
     }
@@ -241,7 +253,11 @@ void initWiiExt(void) {
     readFunction = readDJExt;
     break;
   case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
+    // We can cheat a little with these controllers, as most of the bytes that
+    // get read back are constant. Hence we start at 0x5 instead of 0x0.
     readFunction = readTataconExt;
+    dataReadIndex = 5;
+    bytes = 1;
     break;
   default:
     wiiExtensionID = WII_NO_EXTENSION;
@@ -253,11 +269,18 @@ void tickWiiExtInput(Controller_t *controller) {
   memset(data, 0, sizeof(data));
   if (wiiExtensionID == WII_NOT_INITIALISED ||
       wiiExtensionID == WII_NO_EXTENSION ||
-      !twi_readFromPointerSlow(I2C_ADDR, 0x00, bytes, data) ||
+      !twi_readFromPointerSlow(I2C_ADDR, dataReadIndex, bytes, data) ||
       !verifyData(data, bytes)) {
     initWiiExt();
     return;
   }
+  // printf("%02x ", data[0] & (~0x3f));
+  // printf("%02x ", data[1] & (~0x3f));
+  // printf("%02x ", data[2] & (~0x1f));
+  // printf("%02x ", data[3] & (~0x1f));
+  // printf("%02x ", data[4]);
+  // printf("%02x ", data[5]);
+  // printf("\n");
   if (readFunction) readFunction(controller, data);
 }
 bool readWiiButton(Pin_t pin) {

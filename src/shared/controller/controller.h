@@ -87,3 +87,22 @@ enum SwitchButtons {
   SWITCH_HOME,
   SWITCH_CAPTURE,
 };
+
+enum WiiButtons {
+  WII_UNUSED_0,
+  WII_RT,
+  WII_PLUS,
+  WII_HOME,
+  WII_MINUS,
+  WII_LT,
+  WII_DPAD_DOWN,
+  WII_DPAD_RIGHT,
+  WII_DPAD_UP,
+  WII_DPAD_LEFT,
+  WII_ZR,
+  WII_X,
+  WII_A,
+  WII_Y,
+  WII_B,
+  WII_ZL,
+};

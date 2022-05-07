@@ -99,13 +99,12 @@ foreach(PROJECT ${PROJECTS})
           add_custom_command(
             TARGET ${TARGET}
             COMMAND
-              make OBJDIR=obj/${TARGET} F_USB=${F_CPU} F_CPU=${F_CPU}
+              make OBJDIR=obj/${TARGET} VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR}
+              VERSION_REVISION=${VERSION_REVISION} F_USB=${F_CPU} F_CPU=${F_CPU}
               ARDUINO_MODEL_PID=${PID} ARDWIINO_BOARD=${VARIANT} EXTRA=${EXTRA}
               TARGET=${OUT} MCU=${MCU} VARIANT=${${VARIANT}_VARIANT}
             WORKING_DIRECTORY ${IN}
             BYPRODUCTS ${IN}/obj/${TARGET} ${OUTPUTS})
-          message(STATUS ${IN})
-          message(STATUS ${OUT})
         endforeach()
       endforeach()
     endforeach()

@@ -11,7 +11,6 @@ foreach(TYPE ${TYPES})
     set(TYPE main)
   endif()
   set(SRC src/pico/${TYPE})
-  message(STATUS ${TARGET})
   add_executable(
     ${TARGET}
     ${SRC}/main.c

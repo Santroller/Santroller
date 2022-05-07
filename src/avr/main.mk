@@ -13,11 +13,6 @@ ARCH         = AVR8
 OPTIMIZATION = s
 F_USB		 = ${F_CPU}
 
-VERSION = $(shell git describe --abbrev=0 --tags)
-VERSION_LIST = $(subst ., ,$(subst version-,,$(VERSION)))
-VERSION_MAJOR = $(word 1,$(VERSION_LIST))
-VERSION_MINOR = $(word 2,$(VERSION_LIST))
-VERSION_REVISION = $(word 3,$(VERSION_LIST))
 SIGNATURE = ardwiino
 MULTI_ADAPTOR=$(if $(findstring -multi,$(EXTRA)),-DDMULTI_ADAPTOR,)
 SRC += ${PROJECT_ROOT}/src/avr/lib/bootloader/bootloader.c

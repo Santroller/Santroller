@@ -1,8 +1,5 @@
 
 find_package(Git)
-if(GIT_FOUND)
-  message("git found: ${GIT_EXECUTABLE} in version ${GIT_VERSION_STRING}")
-endif(GIT_FOUND)
 execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git
   describe --abbrev=0 --tags OUTPUT_VARIABLE OUTPUT)
 string(REPLACE version- "" OUTPUT ${OUTPUT})

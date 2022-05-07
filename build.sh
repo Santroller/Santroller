@@ -11,3 +11,4 @@ for filename in ../submodules/pico-sdk/src/boards/include/boards/*.h; do
         make -j`nproc`
     fi
 done
+cmake .. -DBOARD=

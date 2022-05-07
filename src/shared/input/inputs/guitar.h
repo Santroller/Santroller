@@ -31,7 +31,7 @@ int16_t mpuTilt;
 AnalogInfo_t analog;
 volatile bool ready = false;
 uint8_t mpuOrientation;
-uint8_t tiltPin;
+Pin_t tiltPin;
 bool tiltInverted;
 AxisScale_t scale;
 void tickMPUTilt(Controller_t *controller) {
@@ -59,7 +59,7 @@ void tickMPUTilt(Controller_t *controller) {
   controller->r_y = val;
 }
 void tickDigitalTilt(Controller_t *controller) {
-  controller->r_y = (!digitalRead(tiltPin)) * 32767;
+  controller->r_y = (!digitalReadPin(tiltPin)) * 32767;
 }
 void (*tick)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?
@@ -82,8 +82,8 @@ void initGuitar(Configuration_t *config) {
     initMPU6050(30);
     tick = tickMPUTilt;
   } else if (config->main.tiltType == DIGITAL) {
-    tiltPin = config->pins.r_y.pin;
-    pinMode(tiltPin, INPUT_PULLUP);
+    tiltPin = setUpDigital(config, config->pins.r_y.pin, 0, false, false);
+    pinMode(tiltPin.pin, INPUT_PULLUP);
     tick = tickDigitalTilt;
   }
   scale = config->axisScale.r_y;

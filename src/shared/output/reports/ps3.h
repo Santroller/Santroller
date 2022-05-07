@@ -85,11 +85,10 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     bool bit_set = bit_check(controller->buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
     if (i < currentAxisBindingsLen) {
-      button = ps3AxisBindings[i];
       if (fullDeviceType == PS3_GUITAR_HERO_GUITAR &&
           i < sizeof(ghAxisBindings2)) {
         button = ghAxisBindings2[i];
-        bit_set |= bit_check(controller->buttons, button);
+        bit_set = bit_check(controller->buttons, button);
       }
       JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
     }

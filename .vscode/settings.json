@@ -109,7 +109,8 @@
         "inv_mpu_dmp_motion_driver.h": "c",
         "iobank0.h": "c",
         "functional": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "config_autogen.h": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

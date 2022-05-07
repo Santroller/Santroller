@@ -13,6 +13,15 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/** \brief Command Inter-Byte Delay (us)
+ *
+ * Commands are several bytes long. This is the time to wait between two
+ * consecutive bytes.
+ *
+ * This should actually be done by watching the \a Acknowledge line, but we are
+ * ignoring it at the moment.
+ */
+#define INTER_CMD_BYTE_DELAY 50
 /** \brief Command timeout (ms)
  *
  * Commands are sent to the controller repeatedly, until they succeed or time
@@ -36,7 +45,6 @@
  */
 #define ATTN_DELAY 50
 
-#define PSX_ANALOG_BTN_DATA_SIZE 12
 enum PsxButton {
   // PSB_NONE,
   PSB_SELECT,
@@ -56,6 +64,7 @@ enum PsxButton {
   PSB_CROSS,
   PSB_SQUARE
 };
+
 enum MouseButton {
   PMB_LEFT = 9,
   PMB_RIGHT,
@@ -85,7 +94,6 @@ enum PsxAnalogButton {
   PSAB_R2
 };
 enum MultitapPort { A = 0x01, B = 0x02, C = 0x03, D = 0x04 };
-enum GHAnalogButton { GH_WHAMMY = PSAB_L1 };
 
 void tickPS2CtrlInput(Controller_t *controller);
 // Commands for communicating with a PSX controller
@@ -125,6 +133,8 @@ static const uint8_t commandSetPressuresMouse[] = {0x4F, 0x00, 0b1111, 0x00,
                                                    0b11, 0x00, 0x00,   0x00};
 
 static const uint8_t commandPollInput[] = {0x42, 0x00, 0xFF, 0xFF};
+
+
 /** \brief neGcon I/II-button press threshold
  *
  * The neGcon does not report digital button press data for its analog buttons,
@@ -250,7 +260,7 @@ void signalAttention(void) {
 }
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len,
                     bool force) {
-  unsigned long m = micros();
+  unsigned long m;
   for (uint8_t i = 0; i < len; ++i) {
     uint8_t resp = spi_transfer(out != NULL ? out[i] : 0x5A);
     if (in != NULL) { in[i] = resp; }
@@ -434,7 +444,7 @@ bool begin(uint8_t port, Controller_t *controller) {
 }
 
 void initPS2CtrlInput(Configuration_t *config) {
-  spi_begin(250000, true, true, true);
+  spi_begin(500000, true, true, true);
   attention = setUpDigital(config, PIN_PS2_ATT, 0, false, true);
   acknowledge = setUpDigital(config, PIN_PS2_ACK, 0, true, false);
   pinMode(PIN_PS2_ATT, OUTPUT);
@@ -448,7 +458,6 @@ void tickPS2CtrlInput(Controller_t *controller) {
   // Not sure how useful this is unless we make a ps2 variant that works with the multitap, and offers four devices
   uint8_t port = A;
   if (!initialised) {
-    spi_begin(500000, true, true, true);
     if (!begin(port, controller)) {
       initialised = false;
       return;

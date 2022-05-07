@@ -98,7 +98,7 @@ foreach(TYPE ${TYPES})
            strcpy_P=strcpy
            F_CPU=133000000
            PSTR=
-           ARDWIINO_BOARD="pico"
+           ARDWIINO_BOARD=${BOARD}
            VERSION_MAJOR=${VERSION_MAJOR}
            VERSION_MINOR=${VERSION_MINOR}
            VERSION_REVISION=${VERSION_REVISION}

@@ -8,16 +8,13 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/firmware)
+include(version.cmake)
 if (NOT BOARD)
   include(avr.cmake)
   set(BOARD pico)
 endif()
 set(PICO_BOARD ${BOARD})
 pico_sdk_init()
-find_package(Git)
-if(GIT_FOUND)
-  message("git found: ${GIT_EXECUTABLE} in version ${GIT_VERSION_STRING}")
-endif(GIT_FOUND)
 set(TYPES "rf;multi;main")
 foreach(TYPE ${TYPES})
   unset(EXTRA)
@@ -79,15 +76,6 @@ foreach(TYPE ${TYPES})
   target_link_options(${TARGET} PUBLIC -Wl,--section-start=.ardCfg=${CONF_REGION})
   # Define a memory section 512 kb away from the start of flash for the rf config
   target_link_options(${TARGET} PUBLIC -Wl,--section-start=.rfrecv=${RF_REGION})
-
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git
-                          describe --abbrev=0 --tags OUTPUT_VARIABLE OUTPUT)
-  string(REPLACE version- "" OUTPUT ${OUTPUT})
-  string(REPLACE "." ";" OUTPUT ${OUTPUT})
-  list(GET OUTPUT 0 VERSION_MAJOR)
-  list(GET OUTPUT 1 VERSION_MINOR)
-  list(GET OUTPUT 2 VERSION_REVISION)
-  string(STRIP ${VERSION_REVISION} VERSION_REVISION)
 
   target_compile_definitions(
     ${TARGET}

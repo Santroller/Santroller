@@ -213,8 +213,9 @@ AVR_CONST USB_Descriptor_HIDReport_Datatype_t kbd_report_descriptor[] = {
     HID_RI_END_COLLECTION(0),
     HID_RI_END_COLLECTION(0),
 };
-#define ARDWIINO_VID 0x1430
-#define ARDWIINO_PID 0x4748
+
+#define ARDWIINO_VID 0x1209
+#define ARDWIINO_PID 0x2882
 AVR_CONST USB_Descriptor_Device_t deviceDescriptor = {
   Header : {Size : sizeof(USB_Descriptor_Device_t), Type : DTYPE_Device},
   USBSpecification : VERSION_BCD(2, 0, 0),

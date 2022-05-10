@@ -83,7 +83,13 @@ void twi_init(bool fivetar) {
   cbi(TWSR, TWPS1);
   // note: TWBR should be 10 or higher for master mode
 #if F_CPU == 16000000UL
-  TWBR = ((F_CPU / TWI_FREQ_AVR) - 16) / 2;
+  if (fivetar) {
+    /* SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR)) */
+    TWBR = ((F_CPU / TWI_FREQ_5TAR) - 16) / 2;
+  } else {
+    // Seems that wiitars can work okay at this speed
+    TWBR = 18;
+  }
 
 #else
   // Just run at the max speed we can on the 3.3v boards, its always slower than

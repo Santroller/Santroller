@@ -59,7 +59,7 @@ void tickMPUTilt(Controller_t *controller) {
   controller->r_y = val;
 }
 void tickDigitalTilt(Controller_t *controller) {
-  controller->r_y = (!digitalReadPin(tiltPin)) * 32767;
+  controller->r_y = digitalReadPin(tiltPin) ? 32767 : 0;
 }
 void (*tick)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?

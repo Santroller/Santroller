@@ -5,6 +5,10 @@ import sys
 import re
 import traceback
 try:
+    import usb
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyusb"])
+try:
     import libusb_package
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])

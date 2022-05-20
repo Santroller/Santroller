@@ -26,7 +26,7 @@ const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_ARRAY
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
-const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY('A', 'r', 'd', 'w', 'i', 'i', 'n', 'o');
+const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY('S', 'a', 'n', 't', 'r', 'o', 'l', 'l', 'e', 'r');
 
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication

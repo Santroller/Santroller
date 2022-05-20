@@ -8,16 +8,16 @@
 #define XBOX_WHAMMY XBOX_R_X
 #define XBOX_TILT XBOX_R_Y
 
-// Tilt detection
-typedef enum { NO_TILT,
-               MPU_6050,
-               DIGITAL,
-               ANALOGUE } TiltType_t;
+#define TILT_DISABLED 0
+#define TILT_MPU6050 1
+#define TILT_ADXL3XX 2
+#define TILT_ANALOG 3
 
-// Input types
-typedef enum { WII = 1,
-               DIRECT,
-               PS2 } InputType_t;
+#define INPUT_WII 0
+#define INPUT_DIRECT 1
+#define INPUT_PS2 2
+#define INPUT_USBHOST 3
+
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
 #define XINPUT_GAMEPAD 1
@@ -51,24 +51,20 @@ typedef enum { WII = 1,
 #define PS3 4
 #define WII_RB 5
 #define SWITCH 6
-#define KEYBOARD_MOUSE 7
-#define MIDI 8
+#define KEYBOARD_MOUSE_ABS 7
+#define KEYBOARD_MOUSE_REL 8
+#define MIDI 9
 
-// Orientations for gyros
-typedef enum {
-    X,
-    Y,
-    Z
-} GyroOrientation_t;
+#define GYRO_X 0
+#define GYRO_Y 1
+#define GYRO_Z 2
 
-// Fret Modes
-typedef enum { LEDS_DISABLED,
-               LEDS_INLINE,
-               APA102 } FretLedMode_t;
+#define LEDS_DISABLED 0 
+#define LEDS_APA102 1
+#define LEDS_WS2812 2
 
-typedef enum { DISABLED,
-               NOTE,
-               CONTROL_COMMAND } MidiType_t;
+#define MIDI_TYPE_NOTE 0
+#define MIDI_TYPE_CONTROL_COMMAND 1
 
 typedef enum {
     WII_NUNCHUK = 0x0000,
@@ -207,10 +203,3 @@ enum PS3Buttons {
     PS3_DPAD_LEFT_BT,
     PS3_DPAD_RIGHT_BT,
 };
-typedef enum {
-    UNUSED, // No Binding
-    DIRECT_TYPE, // Direct mode, not used for mouse
-    DIRECT_MOUSE, // Direct mode, used for mouse
-    OTHER, // Wii/PS2 mode, not used for mouse
-    OTHER_MOUSE // Wii/PS2 mode, used for mouse
-} BindingType_t;

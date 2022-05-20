@@ -26,6 +26,8 @@ enum endpoints_t {
 #define ARDWIINO_PID 0x2882
 #define HORI_VID 0x0f0d
 #define HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID 0x0092
+#define NINTENDO_VID 0x057E
+#define SWITCH_PID 0x2009
 #define SONY_VID 0x12ba
 #define PS3_GH_GUITAR_PID 0x0100
 #define PS3_GH_DRUM_PID 0x0120

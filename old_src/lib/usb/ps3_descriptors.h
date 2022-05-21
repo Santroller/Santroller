@@ -1,4 +1,0 @@
-#include <stdint.h>
-#include "eeprom.h"
-const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
-                                   0x00, 0x00, 0x00, 0x00};

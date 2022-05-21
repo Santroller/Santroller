@@ -1,3 +1,0 @@
-BOARD        = UNO
-CC_FLAGS     += -I${PROJECT_ROOT}/src/avr/uno
-SRC += $(LUFA_SRC_USBCLASS) $(LUFA_SRC_USB) $(LUFA_SRC_SERIAL)

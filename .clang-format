@@ -1,5 +1,0 @@
-BreakBeforeBraces: Attach
-IndentPPDirectives: AfterHash
-AllowShortLoopsOnASingleLine: true
-AllowShortBlocksOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: true

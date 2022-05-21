@@ -1,9 +1,0 @@
-[submodule "src/avr/uno/usbserial"]
-	path = src/avr/arduino-usbserial-bootloader
-	url = https://github.com/sanjay900/arduino-usbserial-bootloader
-[submodule "submodules/pico-sdk"]
-	path = submodules/pico-sdk
-	url = https://github.com/raspberrypi/pico-sdk
-[submodule "submodules/pico-extras"]
-	path = submodules/pico-extras
-	url = https://github.com/raspberrypi/pico-extras

@@ -4,6 +4,7 @@
 #include "hardware/gpio.h"
 #include "stddef.h"
 #include "util/util.h"
+#include "timer/timer.h"
 
 void digitalWrite(uint8_t pin, uint8_t val) { gpio_put(pin, val); }
 
@@ -19,6 +20,47 @@ Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset,
   pin.milliDeBounce = config->debounce.buttons;
   pin.lastMillis = 0;
   return pin;
+}
+unsigned long digitalReadPulse(Pin_t pin, uint8_t state, unsigned long timeout)
+{
+	uint32_t init_time = micros();
+  uint32_t curr_time = init_time;
+  uint32_t max_time = init_time + timeout;
+  int pin_state = 0;
+
+  /* read GPIO info */
+  pin_state = digitalReadPin(pin);
+
+  // wait for any previous pulse to end
+  while ((pin_state == state) && (curr_time < max_time))
+  {
+    curr_time = micros();
+    pin_state = digitalReadPin(pin);
+  }
+
+  // wait for the pulse to start
+  while ((pin_state != state) && (curr_time < max_time))
+  {
+    curr_time = micros();
+    init_time = curr_time;
+    pin_state = digitalReadPin(pin);
+  }
+
+  // wait for the pulse to stop
+  while ((pin_state == state) && (curr_time < max_time))
+  {
+    curr_time = micros();
+    pin_state = digitalReadPin(pin);
+  }
+
+  if (curr_time < max_time)
+  {
+    return (curr_time - init_time);
+  }
+  else
+  {
+    return 0;
+  }
 }
 bool digitalReadPin(Pin_t pin) {
   if (pin.analogOffset == INVALID_PIN) {

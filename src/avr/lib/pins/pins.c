@@ -46,6 +46,29 @@ Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset,
   pin.lastMillis = 0;
   return pin;
 }
+uint32_t countPulseASM(volatile uint8_t *port, uint8_t bit, uint8_t stateMask, unsigned long maxloops);
+
+unsigned long digitalReadPulse(Pin_t pin, uint8_t state, unsigned long timeout)
+{
+	// cache the port and bit of the pin in order to speed up the
+	// pulse width measuring loop and achieve finer resolution.  calling
+	// digitalRead() instead yields much coarser resolution.
+	uint8_t bit = pin.mask;
+	uint8_t stateMask = (state ? bit : 0);
+
+	// convert the timeout from microseconds to a number of times through
+	// the initial loop; it takes approximately 16 clock cycles per iteration
+	unsigned long maxloops = microsecondsToClockCycles(timeout)/16;
+
+	unsigned long width = countPulseASM(pin.port, bit, stateMask, maxloops);
+
+	// prevent clockCyclesToMicroseconds to return bogus values if countPulseASM timed out
+	if (width)
+		return clockCyclesToMicroseconds(width * 16 + 16);
+	else
+		return 0;
+}
+
 bool digitalReadPin(Pin_t pin) {
   if (pin.analogOffset == INVALID_PIN) {
     return ((*pin.port & pin.mask) != 0) == pin.eq;

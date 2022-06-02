@@ -63,7 +63,7 @@
 #ifndef sbi
 #  define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
-
+extern uint8_t reverse(uint8_t b);
 #define NOT_AN_INTERRUPT -1
 #define clockCyclesPerMicrosecond() (F_CPU / 1000000L)
 

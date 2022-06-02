@@ -48,6 +48,7 @@
 #define PIN_WIRE_SCL (19)
 
 #define LED_BUILTIN 13
+#define PIN_WT_NECK 9
 
 #define PIN_A0 (14)
 #define PIN_A1 (15)

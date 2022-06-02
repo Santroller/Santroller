@@ -61,3 +61,4 @@ void setUpAnalogDigitalPin(Pin_t* button, uint8_t pin, uint16_t threshold);
 Pin_t setUpDigital(Configuration_t* config, uint8_t pin, uint8_t offset, bool inverted, bool output);
 void digitalWritePin(Pin_t pin, bool value);
 void digitalWrite(uint8_t pin, uint8_t value);
+unsigned long digitalReadPulse(Pin_t pin, uint8_t state, unsigned long timeout);

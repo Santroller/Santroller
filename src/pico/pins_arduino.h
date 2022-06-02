@@ -13,6 +13,7 @@
 #define PIN_PS2_ATT 10
 #define PIN_RF_IRQ 7
 #define PIN_WAKEUP 8
+#define PIN_WT_NECK 9
 // RF pins
 #define PIN_SPI_SS 5
 #define CE 8

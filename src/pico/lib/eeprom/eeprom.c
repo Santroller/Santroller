@@ -47,6 +47,13 @@ void loadConfig(Configuration_t* config) {
   if (config->main.version < 15) {
     config->debounce.combinedStrum = false;
   }
+  if (config->main.version < 16) {
+    config->neck.gh5Neck = false;
+    config->neck.gh5NeckBar = false;
+    config->neck.wtNeck = false;
+    config->neck.wiiNeck = false;
+    config->neck.ps2Neck = false;
+  }
   if (config->main.version < CONFIG_VERSION) {
     config->main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)config, sizeof(Configuration_t));

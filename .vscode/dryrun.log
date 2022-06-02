@@ -1,0 +1,5 @@
+make --dry-run --keep-going --print-directory
+make: Entering directory '/home/sanjay/Code/Ardwiino_v1'
+make: Nothing to be done for 'all'.
+make: Leaving directory '/home/sanjay/Code/Ardwiino_v1'
+ 

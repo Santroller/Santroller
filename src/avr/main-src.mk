@@ -5,3 +5,5 @@ SRC += ${PROJECT_ROOT}/src/avr/lib/spi/spi.c ${PROJECT_ROOT}/src/avr/lib/i2c/i2c
 SRC += ${PROJECT_ROOT}/src/shared/rf/rf.c ${PROJECT_ROOT}/src/shared/input/input_handler.c ${PROJECT_ROOT}/src/avr/lib/eeprom/eeprom.c
 SRC += ${PROJECT_ROOT}/lib/avr-nrf24l01/src/nrf24l01.c ${PROJECT_ROOT}/src/shared/controller/guitar_includes.c ${PROJECT_ROOT}/src/shared/lib/i2c/i2c_shared.c
 SRC += ${PROJECT_ROOT}/lib/fxpt_math/fxpt_math.c
+SRC += ${PROJECT_ROOT}/src/avr/lib/pins/pins_pulse.S
+SRC += ${PROJECT_ROOT}/src/shared/lib/util/util_shared.c

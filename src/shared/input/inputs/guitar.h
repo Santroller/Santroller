@@ -13,12 +13,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #define GH5NECK_ADDR 0x0D
-#define GH5NECK_OK_PTR 0x11
 #define GH5NECK_BUTTONS_PTR 0x12
-// Extended GH5 slider with full multi-touch
-#define GH5NECK_SLIDER_NEW_PTR 0x15
-// Older style slider with WT-type detection, adjacent frets only
-#define GH5NECK_SLIDER_OLD_PTR 0x16
 // Constants used by the mpu 6050
 #define FSR 2000
 //#define GYRO_SENS       ( 131.0f * 250.f / (float)FSR )
@@ -34,6 +29,7 @@ uint8_t mpuOrientation;
 Pin_t tiltPin;
 bool tiltInverted;
 AxisScale_t scale;
+Pin_t wtPin;
 void tickMPUTilt(Controller_t *controller) {
   static short sensors;
   static unsigned char fifoCount;
@@ -62,6 +58,7 @@ void tickDigitalTilt(Controller_t *controller) {
   controller->r_y = digitalReadPin(tiltPin) ? 32767 : 0;
 }
 void (*tick)(Controller_t *controller) = NULL;
+void (*tickNeck)(Controller_t *controller) = NULL;
 // Would it be worth only doing this check once for speed?
 void initMPU6050(unsigned int rate) {
   sei();
@@ -75,6 +72,82 @@ void initMPU6050(unsigned int rate) {
   mpu_set_dmp_state(1);
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
+uint16_t fivetartapbindings[] = {[0x95] = _BV(XBOX_A),
+                                 [0xCD] = _BV(XBOX_B),
+                                 [0x1A] = _BV(XBOX_Y),
+                                 [0x49] = _BV(XBOX_X),
+                                 [0x7F] = _BV(XBOX_LB),
+                                 [0xB0] = _BV(XBOX_A) | _BV(XBOX_B),
+                                 [0x19] = _BV(XBOX_A) | _BV(XBOX_Y),
+                                 [0x47] = _BV(XBOX_A) | _BV(XBOX_X),
+                                 [0x7B] = _BV(XBOX_A) | _BV(XBOX_LB),
+                                 [0xE6] = _BV(XBOX_B) | _BV(XBOX_Y),
+                                 [0x48] = _BV(XBOX_B) | _BV(XBOX_X),
+                                 [0x7D] = _BV(XBOX_B) | _BV(XBOX_LB),
+                                 [0x2F] = _BV(XBOX_Y) | _BV(XBOX_X),
+                                 [0x7E] = _BV(XBOX_Y) | _BV(XBOX_LB),
+                                 [0x66] = _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x65] = _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x64] = _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x7C] = _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB),
+                                 [0x2E] = _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X),
+                                 [0x62] = _BV(XBOX_A) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x7A] = _BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_LB),
+                                 [0x2D] = _BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X),
+                                 [0x79] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_LB),
+                                 [0x46] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X),
+                                 [0xE5] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y),
+                                 [0x63] = _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x61] = _BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x60] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0x78] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB),
+                                 [0x2C] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X),
+                                 [0x5F] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
+                                 [0xFF] = 0};
+uint16_t wttapbindings[] = {[0x2C] = _BV(XBOX_A),
+                            [0x2D] = _BV(XBOX_A),
+                            [0x2E] = _BV(XBOX_A),
+                            [0x28] = _BV(XBOX_A) | _BV(XBOX_B),
+                            [0x22] = _BV(XBOX_B),
+                            [0x23] = _BV(XBOX_B),
+                            [0x24] = _BV(XBOX_B),
+                            [0x1E] = _BV(XBOX_B) | _BV(XBOX_X),
+                            [0x13] = _BV(XBOX_Y),
+                            [0x14] = _BV(XBOX_Y),
+                            [0x15] = _BV(XBOX_Y),
+                            [0x16] = _BV(XBOX_Y),
+                            [0x12] = _BV(XBOX_X) | _BV(XBOX_Y),
+                            [0xE] = _BV(XBOX_X),
+                            [0xA] = _BV(XBOX_X) | _BV(XBOX_LB),
+                            [0x9] = _BV(XBOX_X) | _BV(XBOX_LB),
+                            [0x8] = _BV(XBOX_X) | _BV(XBOX_LB),
+                            [0x7] = _BV(XBOX_X) | _BV(XBOX_LB),
+                            [0x00] = _BV(XBOX_LB),
+                            [0x01] = _BV(XBOX_LB)};
+
+void tickGH5Neck(Controller_t *controller) {
+  uint8_t buttons;
+  twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 1, &buttons);
+  // Annoyingly, the bits for the buttons presses are reversed compared to what we want.
+  controller->buttons |= reverse(buttons);
+}
+void tickGH5NeckBar(Controller_t *controller) {
+  uint8_t buttons[2];
+  twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 2, buttons);
+  // Annoyingly, the bits for the buttons presses are reversed compared to what we want.
+  controller->buttons |= reverse(buttons[0]);
+  lastTap = wttapbindings[buttons[1]];
+  controller->buttons |= lastTap;
+}
+uint16_t lastTap;
+void tickWTNeck(Controller_t *controller) {
+  long pulse = digitalReadPulse(wtPin, LOW, 0);
+  if (pulse == digitalReadPulse(wtPin, LOW, 0)) {
+    lastTap = wttapbindings[pulse];
+  }
+  controller->buttons |= lastTap;
+}
+
 void initGuitar(Configuration_t *config) {
   if (!typeIsGuitar) return;
   if (config->main.tiltType == MPU_6050) {
@@ -86,11 +159,23 @@ void initGuitar(Configuration_t *config) {
     pinMode(tiltPin.pin, INPUT_PULLUP);
     tick = tickDigitalTilt;
   }
+  if (config->neck.wtNeck) {
+    wtPin = setUpDigital(config, PIN_WT_NECK, 0, false, false);
+    tickNeck = tickWTNeck;
+  } else if (config->neck.gh5Neck) {
+    tickNeck = tickGH5Neck;
+  } else if (config->neck.gh5NeckBar) {
+    tickNeck = tickGH5NeckBar;
+  }
+  pinMode(wtPin.pin, INPUT);
   scale = config->axisScale.r_y;
   tiltInverted = config->pins.r_y.inverted;
 }
 void tickGuitar(Controller_t *controller) {
   if (!typeIsGuitar) return;
+  if (tickNeck) {
+    tickWTNeck(controller);
+  }
   Guitar_t *g = (Guitar_t *)controller;
   int32_t whammy = g->whammy;
   if (whammy > 0xFFFF) { whammy = 0xFFFF; }
@@ -98,18 +183,4 @@ void tickGuitar(Controller_t *controller) {
   g->whammy = whammy;
   if (tick == NULL) return;
   tick(controller);
-}
-
-// TODO: this is all we need for grabbing data from a gh5 neck. We should test
-// this, do we actually need to run it at 100khz, or does our i2c implementation
-// work better somehow
-void tickGH5Neck(Controller_t *controller) {
-  uint8_t ok;
-  twi_readFromPointer(GH5NECK_ADDR, GH5NECK_OK_PTR, 1, &ok);
-  if (ok) {
-    uint8_t buttons;
-    twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 1, &buttons);
-    uint8_t slider;
-    twi_readFromPointer(GH5NECK_ADDR, GH5NECK_SLIDER_NEW_PTR, 1, &slider);
-  }
 }

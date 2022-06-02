@@ -20,6 +20,7 @@ bool mapStartSelectHome;
 bool mergedStrum;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 void initInputs(Configuration_t *config) {
+  
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
   mergedStrum = typeIsGuitar && config->debounce.combinedStrum;
@@ -53,6 +54,7 @@ void initInputs(Configuration_t *config) {
   triggerThreshold = config->axis.triggerThreshold;
 }
 void tickInputs(Controller_t *controller) {
+  controller->buttons = 0;
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t* pin;

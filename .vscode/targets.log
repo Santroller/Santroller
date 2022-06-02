@@ -1,0 +1,592 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.3
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Thu Jun  2 22:07:27 2022
+
+# Variables
+
+# environment
+GDK_BACKEND = x11
+# environment
+LC_ALL = C
+# environment
+NO_AT_BRIDGE = 1
+# environment
+I3SOCK = /run/user/1000/i3/ipc-socket.3415
+# environment
+CSF_EXCEPTION_PROMPT = 1
+# environment
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-149e660f-c45a-4147-9729-0e73b5d581bc.sock
+# environment
+CSF_XmlOcafResource = /usr/share/opencascade/resources/XmlOcafResource
+# environment
+LC_NAME = en_NZ.UTF-8
+# environment
+LC_NUMERIC = en_NZ.UTF-8
+# environment
+VSCODE_CWD = /home/sanjay
+# environment
+WINDOWID = 73400322
+# environment
+MMGT_CLEAR = 1
+# environment
+LESS_TERMCAP_me = [0m
+# environment
+CSF_XCAFDefaults = /usr/share/opencascade/resources/StdResource
+# environment
+CSF_PluginDefaults = /usr/share/opencascade/resources/StdResource
+# environment
+UBUNTU_MENUPROXY = 1
+# environment
+CASROOT = /usr
+# environment
+LC_ADDRESS = en_NZ.UTF-8
+# default
+MAKE_COMMAND := make
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/sanjay/Code/Ardwiino_v1
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+MAIL = /var/spool/mail/sanjay
+# environment
+XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+VSCODE_LOG_STACK = false
+# automatic
+%F = $(notdir $%)
+# environment
+ALACRITTY_SOCKET = /run/user/1000/Alacritty-:0-5711.sock
+# environment
+VSCODE_CODE_CACHE_PATH = /home/sanjay/.config/Code/CachedData/57fd6d0195bb9b9d1b49f6da5db789060795de47
+# environment
+XDG_SESSION_PATH = /org/freedesktop/DisplayManager/Session0
+# environment
+CSF_ShadersDirectory = /usr/share/opencascade/resources/Shaders
+# environment
+LANG = C
+# environment
+XAUTHORITY = /home/sanjay/.Xauthority
+# makefile (from 'makefile', line 6)
+MEGAADK_PID = 0x003f
+# default
+.LOADED := 
+# environment
+LESS_TERMCAP_md = [01;32m
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# makefile
+MAKEFLAGS = pqrR
+# environment
+LESS_TERMCAP_so = [01;47;34m
+# environment
+ANDROID_NDK_HOME = /opt/android-ndk
+# makefile
+CURDIR := /home/sanjay/Code/Ardwiino_v1
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# environment
+PS2DEV = /usr/local/ps2dev
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+LESS_TERMCAP_ue = [0m
+# environment
+MFLAGS = -pqrR
+# environment
+SSH_AUTH_SOCK = /run/user/1000/ssh-agent.socket
+# default
+.SHELLFLAGS := -c
+# environment
+CSF_MDTVTexturesDirectory = /usr/share/opencascade/resources/Textures
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+P9K_SSH = 0
+# environment
+PS2SDK = /usr/local/ps2dev/ps2sdk
+# environment
+XDG_SESSION_DESKTOP = i3
+# makefile (from 'makefile', line 1)
+MAKEFILE_LIST := makefile
+# automatic
+@F = $(notdir $@)
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+VSCODE_PID = 5812
+# environment
+XDG_SESSION_TYPE = x11
+# environment
+CUDA_PATH = /opt/cuda
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# environment
+CSF_XSMessage = /usr/share/opencascade/resources/XSMessage
+# environment
+DRAWDEFAULT = /usr/share/opencascade/resources/DrawResources/DrawDefault
+# automatic
+*F = $(notdir $*)
+# environment
+QT_QPA_PLATFORMTHEME = qt5ct
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# environment
+CSF_SHMessage = /usr/share/opencascade/resources/SHMessage
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+P9K_TTY = old
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en-gb","availableLanguages":{},"_languagePackSupport":true}
+# environment
+ANDROID_SDK_ROOT = /opt/android-sdk
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+ANDROID_HOME = /opt/android-sdk
+# makefile
+SHELL = /bin/sh
+# environment
+LESS_TERMCAP_us = [01;36m
+# default
+MAKECMDGOALS := all
+# environment
+PLATFORMIO_CALLER = vscode
+# environment
+DOTNET_BUNDLE_EXTRACT_BASE_DIR = /home/sanjay/.cache/dotnet_bundle_extract
+# environment
+SHLVL = 1
+# environment
+ANDROID_NDK = /opt/android-ndk
+# environment
+CSF_TObjDefaults = /usr/share/opencascade/resources/StdResource
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+PATH = /home/sanjay/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/opt/android-ndk:/opt/android-sdk/platform-tools:/opt/android-sdk/tools:/opt/android-sdk/tools/bin:/opt/cuda/bin:/opt/cuda/nsight_compute:/opt/cuda/nsight_systems/bin:/home/sanjay/.dotnet/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/var/lib/snapd/snap/bin
+# environment
+LESS_TERMCAP_se = [0m
+# default
+MAKEFILES := 
+# environment
+LC_MONETARY = en_NZ.UTF-8
+# environment
+CSF_OCCTResourcePath = /usr/share/opencascade/resources
+# environment
+MOTD_SHOWN = pam
+# automatic
+^F = $(notdir $^)
+# environment
+LC_TIME = en_NZ.UTF-8
+# environment
+LESS_TERMCAP_mb = [01;32m
+# environment
+GRADLE_HOME = /usr/share/java/gradle
+# environment
+GSKIT = /usr/local/ps2dev/gsKit
+# environment
+VSCODE_LOG_NATIVE = false
+# environment
+CSF_StandardLiteDefaults = /usr/share/opencascade/resources/StdResource
+# environment
+CSF_STEPDefaults = /usr/share/opencascade/resources/XSTEPResource
+# environment
+LC_TELEPHONE = en_NZ.UTF-8
+# automatic
+?F = $(notdir $?)
+# environment
+XDG_SEAT = seat0
+# environment
+NO_PROXY = 127.0.0.1
+# environment
+XDG_CURRENT_DESKTOP = i3
+# environment
+CSF_MIGRATION_TYPES = /usr/share/opencascade/resources/StdResource/MigrationSheet.txt
+# environment
+ALACRITTY_LOG = /tmp/Alacritty-5711.log
+# environment
+LS_COLORS = rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.swp=00;90:*.tmp=00;90:*.dpkg-dist=00;90:*.dpkg-old=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:
+# automatic
++F = $(notdir $+)
+# environment
+XDG_SEAT_PATH = /org/freedesktop/DisplayManager/Seat0
+# environment
+LESS = -R
+# environment
+DESKTOP_SESSION = i3
+# makefile (from 'makefile', line 4)
+UNO_PID = 0x0001
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = i3
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+BROWSER = /usr/bin/palemoon
+# environment
+LOGNAME = sanjay
+# environment
+CSF_LANGUAGE = us
+# environment
+PLATFORMIO_PATH = /home/sanjay/.platformio/penv/bin:/home/sanjay/.platformio/penv:/home/sanjay/.platformio/python3/bin:/home/sanjay/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/opt/android-ndk:/opt/android-sdk/platform-tools:/opt/android-sdk/tools:/opt/android-sdk/tools/bin:/opt/cuda/bin:/opt/cuda/nsight_compute:/opt/cuda/nsight_systems/bin:/home/sanjay/.dotnet/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/var/lib/snapd/snap/bin
+# environment
+XDG_VTNR = 7
+# makefile
+.DEFAULT_GOAL := all
+# environment
+CSF_TObjMessage = /usr/share/opencascade/resources/TObj
+# makefile (from 'makefile', line 5)
+MEGA2560_PID = 0x0010
+# environment
+EDITOR = /usr/bin/nano
+# environment
+DISPLAY = :0
+# environment
+GTK_MODULES = canberra-gtk-module:appmenu-gtk-module
+# environment
+USER = sanjay
+# default
+MAKE_VERSION := 4.3
+# environment
+LC_MEASUREMENT = en_NZ.UTF-8
+# environment
+DEBUGINFOD_URLS = https://debuginfod.archlinux.org 
+# environment
+_ = /usr/bin/make
+# environment
+LC_PAPER = en_NZ.UTF-8
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# environment
+COLORTERM = truecolor
+# environment
+CSF_DrawPluginDefaults = /usr/share/opencascade/resources/DrawResources
+# environment
+CSF_IGESDefaults = /usr/share/opencascade/resources/XSTEPResource
+# makefile (from 'makefile', line 3)
+UNOMCU8 = at90usb82
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+PLATFORMIO_IDE = 2.4.3
+# environment
+GTK2_RC_FILES = /home/sanjay/.gtkrc-2.0
+# environment
+HOME = /home/sanjay
+# environment
+ELECTRON_RUN_AS_NODE = 1
+ 
+# environment
+DRAWHOME = /usr/share/opencascade/resources/DrawResources
+# environment
+VSCODE_IPC_HOOK = /run/user/1000/vscode-6af0c35b-1.67.0-main.sock
+# environment
+TERM = alacritty
+# environment
+XDG_SESSION_ID = 2
+# makefile (from 'makefile', line 2)
+MEGAMCU = atmega2560
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# default
+SUFFIXES := 
+# environment
+_P9K_TTY = /dev/pts/0
+# environment
+VSCODE_CLI = 1
+# environment
+ELECTRON_NO_ATTACH_CONSOLE = 1
+# environment
+LS_OPTIONS = --color=auto
+# environment
+XDG_GREETER_DATA_DIR = /var/lib/lightdm-data/sanjay
+# environment
+CSF_StandardDefaults = /usr/share/opencascade/resources/StdResource
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink guile load
+# makefile (from 'makefile', line 1)
+UNOMCU = atmega16u2
+# environment
+DOTNET_ROOT = /usr/share/dotnet
+# environment
+GDMSESSION = i3
+# environment
+PKGFILE_PROMPT_INSTALL_MISSING = 1
+# environment
+LC_IDENTIFICATION = en_NZ.UTF-8
+# variable set hash-table stats:
+# Load=163/1024=16%, Rehash=0, Collisions=24/193=12%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 66306, inode 21594133): 27 files, no impossibilities.
+
+# 27 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+micro_rf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 16):
+	$(MAKE) -C src/avr/micro/rf
+	-stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	sleep 2
+	$(MAKE) -C src/avr/micro/rf avrdude
+
+uno-rf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 98):
+	$(MAKE) -C src/avr/uno
+	sleep 0.5
+	-scripts/bootloader.py
+	-stty -F /dev/ttyACM1 1200
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	dfu-programmer $(UNOMCU) flash output/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU) launch
+	sleep 2
+	$(MAKE) -C src/avr/uno/main avrdude PORT=/dev/ttyACM1
+	sleep 1
+	stty -F /dev/ttyACM1 1200
+	sleep 1
+	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+	$(MAKE) -C src/avr/uno/rf
+	$(MAKE) -C src/avr/uno/rf avrdude PORT=/dev/ttyACM0
+	
+
+uno-rf2:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 116):
+	$(MAKE) -C src/avr/uno/rfRecTest
+	$(MAKE) -C src/avr/uno/rfRecTest avrdude
+	$(MAKE) -C src/avr/uno/rf
+	$(MAKE) -C src/avr/uno/rf avrdude
+
+uno-rftx:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 65):
+	$(MAKE) -C src/avr/uno/rf
+	$(MAKE) -C src/avr/uno/rf avrdude
+	$(MAKE) -C src/avr/uno/rf_rx
+	$(MAKE) -C src/avr/uno/rf_rx avrdude
+
+uno:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 48):
+	# $(MAKE) -C src/avr/uno/
+	stty -F /dev/ttyACM0 1200 || true
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	dfu-programmer $(UNOMCU) flash build/firmware/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU) launch
+	sleep 2
+	$(MAKE) -C src/avr/uno/main avrdude PORT=/dev/ttyACM0
+	sleep 2
+	stty -F /dev/ttyACM0 1200
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+
+clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 132):
+	$(MAKE) -C src/avr/micro/main clean
+	$(MAKE) -C src/avr/uno clean
+
+unob:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 39):
+	# $(MAKE) -C src/avr/uno/
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+
+mega:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 46):
+	$(MAKE) -C src/avr/uno/main MCU=$(MEGAMCU) ARDWIINO_BOARD=mega
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+all:
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Successfully updated.
+
+build:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 136):
+	$(MAKE) -C src/avr/micro/main
+	$(MAKE) -C src/avr/uno
+
+mini-rf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 71):
+	# $(MAKE) -C src/avr/micro/main
+	# -stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	# sleep 1
+	# $(MAKE) -C src/avr/micro/main avrdude
+	$(MAKE) -C src/avr/uno/rf
+	$(MAKE) -C src/avr/uno/rf avrdude PORT=/dev/ttyUSB0
+
+micro:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 10):
+	$(MAKE) -C src/avr/micro/main
+	-stty -F /dev/ttyACM0 1200 || scripts/bootloader.py
+	sleep 2
+	$(MAKE) -C src/avr/micro/main avrdude
+
+uno-rf3:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 122):
+	$(MAKE) -C src/avr/uno
+	$(MAKE) -C src/avr/uno/main avrdude PORT=/dev/ttyACM1
+	# sleep 1
+	# stty -F /dev/ttyACM1 1200
+	# sleep 1
+	# $(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+	$(MAKE) -C src/avr/uno/rf
+	$(MAKE) -C src/avr/uno/rf avrdude PORT=/dev/ttyACM0
+
+uno-8:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 25):
+	$(MAKE) -C src/avr/uno
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU8) erase || true
+	dfu-programmer $(UNOMCU8) flash build/firmware/ardwiino-uno-usb-$(UNOMCU8)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU8) launch
+	sleep 1
+	$(MAKE) -C src/avr/uno/main avrdude
+	sleep 1
+	stty -F /dev/ttyACM0 1200
+	sleep 1
+	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU8)
+
+# Not a target:
+makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-05-23 21:05:24.099600321
+#  File has been updated.
+#  Successfully updated.
+
+unomini-rf:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 78):
+	$(MAKE) -C src/avr/uno
+	sleep 0.5
+	scripts/bootloader.py || true
+	sleep 1
+	dfu-programmer $(UNOMCU) erase || true
+	dfu-programmer $(UNOMCU) flash output/ardwiino-uno-usb-$(UNOMCU)-16000000-usbserial.hex
+	dfu-programmer $(UNOMCU) launch
+	sleep 1
+	$(MAKE) -C src/avr/uno/main avrdude
+	sleep 1
+	stty -F /dev/ttyACM0 1200
+	sleep 1
+	$(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+	# sleep 1
+	# stty -F /dev/ttyACM1 1200
+	# sleep 1
+	# $(MAKE) -C src/avr/uno/usb dfu MCU=$(UNOMCU)
+	$(MAKE) -C src/avr/mini/rf
+	$(MAKE) -C src/avr/mini/rf avrdude PORT=/dev/ttyUSB0
+
+gdb:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 22):
+	-avarice -j /dev/ttyUSB0 -P atmega32 :4242 -r -R & avr-gdb ./src/avr/micro/main/bin/ardwiino-micro-atmega32u4-8000000.elf
+
+# files hash-table stats:
+# Load=19/1024=2%, Rehash=0, Collisions=0/30=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 47 / storage = 436 B / avg = 9 B
+# current buf: size = 8162 B / used = 436 B / count = 47 / avg = 9 B
+
+# strcache performance: lookups = 68 / hit rate = 30%
+# hash-table stats:
+ 
+# Load=47/8192=1%, Rehash=0, Collisions=0/68=0%
+# Finished Make data base on Thu Jun  2 22:07:27 2022
+
+ 

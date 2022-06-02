@@ -110,7 +110,14 @@
         "iobank0.h": "c",
         "functional": "c",
         "type_traits": "c",
-        "config_autogen.h": "c"
+        "config_autogen.h": "c",
+        "array": "c",
+        "deque": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "string_view": "c",
+        "initializer_list": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

@@ -1,0 +1,1 @@
+{"buildTargets":["all","build","clean","gdb","mega","micro","micro_rf","mini-rf","uno","uno-8","uno-rf","uno-rf2","uno-rf3","uno-rftx","unob","unomini-rf"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

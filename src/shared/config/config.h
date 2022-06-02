@@ -123,6 +123,14 @@ typedef struct {
 } DebounceConfig_t;
 
 typedef struct {
+  bool wtNeck;
+  bool gh5Neck;
+  bool gh5NeckBar;
+  bool wiiNeck;
+  bool ps2Neck;
+} NeckConfig_t;
+
+typedef struct {
   MainConfig_t main;
   Pins_t pins;
   AxisConfig_t axis;
@@ -133,5 +141,6 @@ typedef struct {
   uint8_t pinsSP;
   AxisScaleConfig_t axisScale;
   DebounceConfig_t debounce;
+  NeckConfig_t neck; 
 } Configuration_t;
 #pragma pack(pop)

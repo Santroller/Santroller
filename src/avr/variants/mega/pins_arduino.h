@@ -39,6 +39,7 @@
 #define INTERRUPT_PS2_ACK INT0_vect
 #define INTERRUPT_PS2_ACK_BIT _BV(INT0)
 #define INTERRUPT_PS2_ACK_EICRA _BV(ISC00) | _BV(ISC01)
+#define PIN_WT_NECK 9
 
 #define PIN_WIRE_SDA        (20)
 #define PIN_WIRE_SCL        (21)

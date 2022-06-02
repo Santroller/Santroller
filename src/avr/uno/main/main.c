@@ -48,8 +48,8 @@ static inline void Serial_InitInterrupt(const uint32_t BaudRate,
   UCSR0A = (DoubleSpeed ? (1 << U2X0) : 0);
   UCSR0B = ((1 << TXEN0) | (1 << RXCIE0) | (1 << RXEN0));
 
-  DDRD |= (1 << 3);
-  PORTD |= (1 << 2);
+  DDRD |= (1 << 3); //TX
+  PORTD |= (1 << 2); //RX
 }
 void writeData(const uint8_t *buf, uint8_t len) {
   for (int i = 0; i < len; i++) { RingBuffer_Insert(&out, *(buf++)); }

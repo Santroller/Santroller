@@ -59,6 +59,7 @@ static uint16_t TIMEOUT = 32767;
  * Output   none
  */
 void twi_init(bool fivetar) {
+  // TODO: how fast can we go with the pro micro 3.3v if we use something like https://github.com/bitbank2/BitBang_I2C/blob/master/src/BitBang_I2C.cpp
   // initialize state
   twi_state = TWI_READY;
   twi_sendStop = true; // default value

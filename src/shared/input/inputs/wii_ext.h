@@ -38,6 +38,7 @@ uint16_t wiiExtensionID = WII_NO_EXTENSION;
 uint16_t buttons;
 uint8_t bytes = 6;
 uint8_t dataReadIndex = 0;
+bool guitarTapBar = false;
 bool mapNunchukAccelToRightJoy;
 void (*readFunction)(Controller_t *, uint8_t *) = NULL;
 
@@ -101,6 +102,20 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
   bit_write(!bit_check(data[5], 3), buttons, wiiButtonBindings[XBOX_X]);
   bit_write(!bit_check(data[5], 5), buttons, wiiButtonBindings[XBOX_Y]);
 }
+uint16_t wiiwttapbindings[] = {[0x04] = _BV(XBOX_A),
+                            [0x07] = _BV(XBOX_A) | _BV(XBOX_B),
+                            [0x0a] = _BV(XBOX_B),
+                            [0x0C] = _BV(XBOX_B) | _BV(XBOX_X),
+                            [0x0D] = _BV(XBOX_B) | _BV(XBOX_X),
+                            [0x12] = _BV(XBOX_Y),
+                            [0x13] = _BV(XBOX_Y),
+                            [0x14] = _BV(XBOX_X) | _BV(XBOX_Y),
+                            [0x15] = _BV(XBOX_X) | _BV(XBOX_Y),
+                            [0x17] = _BV(XBOX_X),
+                            [0x18] = _BV(XBOX_X),
+                            [0x1A] = _BV(XBOX_X) | _BV(XBOX_LB),
+                            [0x1F] = _BV(XBOX_LB)};
+
 void readGuitarExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[0] & 0x3f) - 32) << 10;
   controller->l_y = ((data[1] & 0x3f) - 32) << 10;
@@ -114,6 +129,10 @@ void readGuitarExt(Controller_t *controller, uint8_t *data) {
   controller->r_x <<= 11;
 
   buttons = ~(data[4] | data[5] << 8);
+  if (guitarTapBar) {
+    uint8_t tap = ((data[3] & 0x1f) - 14);
+    buttons |= wiiwttapbindings[tap];
+  }
 }
 void readClassicExtHighRes(Controller_t *controller, uint8_t *data) {
   controller->l_x = (data[0] - 0x80) << 8;

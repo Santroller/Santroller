@@ -1,7 +1,7 @@
 #pragma once
 #include "../leds/led_colours.h"
 #include "./defines.h"
-#define CONFIG_VERSION 15
+#define CONFIG_VERSION 16
 #define TILT_SENSOR NONE
 #define DEVICE_TYPE DIRECT
 #define OUTPUT_TYPE XINPUT_GUITAR_HERO_GUITAR
@@ -88,11 +88,12 @@
         DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE, DEFAULT_AXIS_SCALE,            \
         DEFAULT_AXIS_SCALE                                                     \
   }
+  #define DEFAULT_NECK {false, false, false, false, false}
 #define DEFAULT_DEBOUNCE                                                       \
   { BUTTON_DEBOUNCE, STRUM_DEBOUNCE, false }
 #define DEFAULT_CONFIG                                                         \
   {                                                                            \
     DEFAULT_CONFIG_MAIN, PINS, DEFAULT_THRESHOLDS, KEYS, LED_PINS,             \
         DEFAULT_MIDI, {false}, INVALID_PIN, DEFAULT_AXIS_SCALES,               \
-        DEFAULT_DEBOUNCE                                                       \
+        DEFAULT_DEBOUNCE, DEFAULT_NECK                                                       \
   }

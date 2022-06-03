@@ -30,6 +30,7 @@ Pin_t tiltPin;
 bool tiltInverted;
 AxisScale_t scale;
 Pin_t wtPin;
+uint16_t lastTap;
 void tickMPUTilt(Controller_t *controller) {
   static short sensors;
   static unsigned char fifoCount;
@@ -139,7 +140,6 @@ void tickGH5NeckBar(Controller_t *controller) {
   lastTap = wttapbindings[buttons[1]];
   controller->buttons |= lastTap;
 }
-uint16_t lastTap;
 void tickWTNeck(Controller_t *controller) {
   long pulse = digitalReadPulse(wtPin, LOW, 0);
   if (pulse == digitalReadPulse(wtPin, LOW, 0)) {

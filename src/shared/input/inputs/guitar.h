@@ -30,20 +30,18 @@ Pin_t tiltPin;
 bool tiltInverted;
 AxisScale_t scale;
 Pin_t wtPin;
-uint16_t lastTap;
+uint8_t lastTap;
 void tickMPUTilt(Controller_t *controller) {
   static short sensors;
   static unsigned char fifoCount;
   dmp_read_fifo(NULL, NULL, q._l, NULL, &sensors, &fifoCount);
-  if (sensors == INV_WXYZ_QUAT) {
-    q._f.w = q._l[0] >> 23;
-    q._f.x = q._l[1] >> 23;
-    q._f.y = q._l[2] >> 23;
-    q._f.z = q._l[3] >> 23;
+  q._f.w = q._l[0] >> 23;
+  q._f.x = q._l[1] >> 23;
+  q._f.y = q._l[2] >> 23;
+  q._f.z = q._l[3] >> 23;
 
-    quaternionToEuler(&q._f, &mpuTilt, mpuOrientation);
-    mpuTilt = tiltInverted ? -mpuTilt : mpuTilt;
-  }
+  quaternionToEuler(&q._f, &mpuTilt, mpuOrientation);
+  mpuTilt = tiltInverted ? -mpuTilt : mpuTilt;
   analogueData[XBOX_TILT] = mpuTilt;
   int32_t val = mpuTilt;
   val -= scale.offset;
@@ -56,7 +54,7 @@ void tickMPUTilt(Controller_t *controller) {
   controller->r_y = val;
 }
 void tickDigitalTilt(Controller_t *controller) {
-  controller->r_y = digitalReadPin(tiltPin) ? 32767 : 0;
+  controller->r_y = digitalReadPin(&tiltPin) ? 32767 : 0;
 }
 void (*tick)(Controller_t *controller) = NULL;
 void (*tickNeck)(Controller_t *controller) = NULL;
@@ -73,79 +71,78 @@ void initMPU6050(unsigned int rate) {
   mpu_set_dmp_state(1);
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
-uint16_t fivetartapbindings[] = {[0x95] = _BV(XBOX_A),
-                                 [0xCD] = _BV(XBOX_B),
-                                 [0x1A] = _BV(XBOX_Y),
-                                 [0x49] = _BV(XBOX_X),
-                                 [0x7F] = _BV(XBOX_LB),
-                                 [0xB0] = _BV(XBOX_A) | _BV(XBOX_B),
-                                 [0x19] = _BV(XBOX_A) | _BV(XBOX_Y),
-                                 [0x47] = _BV(XBOX_A) | _BV(XBOX_X),
-                                 [0x7B] = _BV(XBOX_A) | _BV(XBOX_LB),
-                                 [0xE6] = _BV(XBOX_B) | _BV(XBOX_Y),
-                                 [0x48] = _BV(XBOX_B) | _BV(XBOX_X),
-                                 [0x7D] = _BV(XBOX_B) | _BV(XBOX_LB),
-                                 [0x2F] = _BV(XBOX_Y) | _BV(XBOX_X),
-                                 [0x7E] = _BV(XBOX_Y) | _BV(XBOX_LB),
-                                 [0x66] = _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x65] = _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x64] = _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x7C] = _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB),
-                                 [0x2E] = _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X),
-                                 [0x62] = _BV(XBOX_A) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x7A] = _BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_LB),
-                                 [0x2D] = _BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X),
-                                 [0x79] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_LB),
-                                 [0x46] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X),
-                                 [0xE5] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y),
-                                 [0x63] = _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x61] = _BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x60] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0x78] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB),
-                                 [0x2C] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X),
-                                 [0x5F] = _BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB),
-                                 [0xFF] = 0};
-uint16_t wttapbindings[] = {[0x2C] = _BV(XBOX_A),
-                            [0x2D] = _BV(XBOX_A),
-                            [0x2E] = _BV(XBOX_A),
-                            [0x28] = _BV(XBOX_A) | _BV(XBOX_B),
-                            [0x22] = _BV(XBOX_B),
-                            [0x23] = _BV(XBOX_B),
-                            [0x24] = _BV(XBOX_B),
-                            [0x1E] = _BV(XBOX_B) | _BV(XBOX_X),
-                            [0x13] = _BV(XBOX_Y),
-                            [0x14] = _BV(XBOX_Y),
-                            [0x15] = _BV(XBOX_Y),
-                            [0x16] = _BV(XBOX_Y),
-                            [0x12] = _BV(XBOX_X) | _BV(XBOX_Y),
-                            [0xE] = _BV(XBOX_X),
-                            [0xA] = _BV(XBOX_X) | _BV(XBOX_LB),
-                            [0x9] = _BV(XBOX_X) | _BV(XBOX_LB),
-                            [0x8] = _BV(XBOX_X) | _BV(XBOX_LB),
-                            [0x7] = _BV(XBOX_X) | _BV(XBOX_LB),
-                            [0x00] = _BV(XBOX_LB),
-                            [0x01] = _BV(XBOX_LB)};
+
+uint8_t fivetartapbindings[] = {
+    [0x19 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y)) >> 8,
+    [0x1A - 0x19] = (_BV(XBOX_Y)) >> 8,
+    [0x2C - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
+    [0x2D - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
+    [0x2E - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
+    [0x2F - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
+    [0x46 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X)) >> 8,
+    [0x47 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_X)) >> 8,
+    [0x48 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_X)) >> 8,
+    [0x49 - 0x19] = (_BV(XBOX_X)) >> 8,
+    [0x5F - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) |  _BV(XBOX_LB)) >> 8,
+    [0x60 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x61 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x62 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x63 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x64 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x65 - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x66 - 0x19] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x78 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
+    [0x79 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_LB)) >> 8,
+    [0x7A - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
+    [0x7B - 0x19] = (_BV(XBOX_A) | _BV(XBOX_LB)) >> 8,
+    [0x7C - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
+    [0x7D - 0x19] = (_BV(XBOX_B) | _BV(XBOX_LB)) >> 8,
+    [0x7E - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
+    [0x7F - 0x19] = (_BV(XBOX_LB)) >> 8,
+    [0x95 - 0x19] = (_BV(XBOX_A)) >> 8,
+    [0xB0 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,
+    [0xCD - 0x19] = (_BV(XBOX_B)) >> 8,
+    [0xE5 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
+    [0xE6 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
+};
+uint8_t wttapbindings[] = {[0x17] = (_BV(XBOX_A)) >> 8,
+                           [0x16] = (_BV(XBOX_A)) >> 8,
+                           [0x14] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,
+                           [0x11] = (_BV(XBOX_B)) >> 8,
+                           [0x12] = (_BV(XBOX_B)) >> 8,
+                           [0xf] = (_BV(XBOX_B) | _BV(XBOX_X)) >> 8,
+                           [0x9] = (_BV(XBOX_Y)) >> 8,
+                           [0xa] = (_BV(XBOX_Y)) >> 8,
+                           [0xb] = (_BV(XBOX_Y)) >> 8,
+                           [0x9] = (_BV(XBOX_X) | _BV(XBOX_Y)) >> 8,
+                           [0x7] = (_BV(XBOX_X)) >> 8,
+                           [0x5] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+                           [0x4] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+                           [0x3] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+                           [0x0] = (_BV(XBOX_LB)) >> 8};
 
 void tickGH5Neck(Controller_t *controller) {
   uint8_t buttons;
   twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 1, &buttons);
-  // Annoyingly, the bits for the buttons presses are reversed compared to what we want.
+  // Annoyingly, the bits for the buttons presses are reversed compared to what
+  // we want.
   controller->buttons |= reverse(buttons);
 }
 void tickGH5NeckBar(Controller_t *controller) {
   uint8_t buttons[2];
   twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 2, buttons);
-  // Annoyingly, the bits for the buttons presses are reversed compared to what we want.
+  // Annoyingly, the bits for the buttons presses are reversed compared to what
+  // we want.
   controller->buttons |= reverse(buttons[0]);
-  lastTap = wttapbindings[buttons[1]];
-  controller->buttons |= lastTap;
+  lastTap = fivetartapbindings[buttons[1] - 0x19];
+  controller->buttons |= lastTap << 8;
 }
 void tickWTNeck(Controller_t *controller) {
-  long pulse = digitalReadPulse(wtPin, LOW, 0);
-  if (pulse == digitalReadPulse(wtPin, LOW, 0)) {
-    lastTap = wttapbindings[pulse];
+  long pulse = digitalReadPulse(&wtPin, LOW, 0);
+  if (pulse == digitalReadPulse(&wtPin, LOW, 0)) {
+    lastTap = wttapbindings[pulse >> 1];
   }
-  controller->buttons |= lastTap;
+  controller->buttons |= lastTap << 8;
 }
 
 void initGuitar(Configuration_t *config) {
@@ -155,27 +152,25 @@ void initGuitar(Configuration_t *config) {
     initMPU6050(30);
     tick = tickMPUTilt;
   } else if (config->main.tiltType == DIGITAL) {
-    tiltPin = setUpDigital(config, config->pins.r_y.pin, 0, false, false);
+    setUpDigital(&tiltPin, config, config->pins.r_y.pin, 0, false, false);
     pinMode(tiltPin.pin, INPUT_PULLUP);
     tick = tickDigitalTilt;
   }
   if (config->neck.wtNeck) {
-    wtPin = setUpDigital(config, PIN_WT_NECK, 0, false, false);
+    setUpDigital(&wtPin, config, PIN_WT_NECK, 0, false, false);
+    pinMode(PIN_WT_NECK, INPUT);
     tickNeck = tickWTNeck;
   } else if (config->neck.gh5Neck) {
     tickNeck = tickGH5Neck;
   } else if (config->neck.gh5NeckBar) {
     tickNeck = tickGH5NeckBar;
   }
-  pinMode(wtPin.pin, INPUT);
   scale = config->axisScale.r_y;
   tiltInverted = config->pins.r_y.inverted;
 }
 void tickGuitar(Controller_t *controller) {
   if (!typeIsGuitar) return;
-  if (tickNeck) {
-    tickWTNeck(controller);
-  }
+  if (tickNeck) { tickWTNeck(controller); }
   Guitar_t *g = (Guitar_t *)controller;
   int32_t whammy = g->whammy;
   if (whammy > 0xFFFF) { whammy = 0xFFFF; }

@@ -99,11 +99,7 @@ void processHIDReadFeatureReport(uint8_t cmd, uint8_t report,
     strcpy_P(info->board, PSTR(ARDWIINO_BOARD));
     info->cpu_freq = F_CPU;
     info->rfID = generate_crc32();
-#ifdef MULTI_ADAPTOR
-    info->multi = true;
-#else
     info->multi = false;
-#endif
   } else if (cmd == COMMAND_GET_VALUES) {
     memcpy(dbuf + 1, &analogueData, sizeof(analogueData));
     size = sizeof(analogueData) + 1;

@@ -238,11 +238,7 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
       Type : DTYPE_Configuration
     },
     TotalConfigurationSize : sizeof(USB_Descriptor_Configuration_t),
-#ifdef MULTI_ADAPTOR
-    TotalInterfaces : 6,
-#else
     TotalInterfaces : 5,
-#endif
     ConfigurationNumber : 1,
     ConfigurationStrIndex : NO_DESCRIPTOR,
     ConfigAttributes : USB_CONFIG_ATTR_RESERVED,
@@ -285,120 +281,6 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-
-#ifdef MULTI_ADAPTOR
-  InterfaceXInput2 : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-    InterfaceNumber : INTERFACE_ID_XInput_2,
-    AlternateSetting : 0,
-    TotalEndpoints : 2,
-    Class : 0xFF,
-    SubClass : 0x5D,
-    Protocol : 0x01,
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  XInputReserved2 : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    reserved : {0x00, 0x01},
-    subtype : 0x00,
-    reserved2 : 0x25,
-    bEndpointAddressIn : XINPUT_2_EPADDR_IN,
-    bMaxDataSizeIn : HID_EPSIZE,
-    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
-    bEndpointAddressOut : XINPUT_2_EPADDR_OUT,
-    bMaxDataSizeOut : HID_EPSIZE,
-    reserved4 : {0x00, 0x00}
-  },
-  EndpointInXInput2 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : XINPUT_2_EPADDR_IN,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  EndpointOutXInput2 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : XINPUT_2_EPADDR_OUT,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  InterfaceXInput3 : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-    InterfaceNumber : INTERFACE_ID_XInput_3,
-    AlternateSetting : 0,
-    TotalEndpoints : 2,
-    Class : 0xFF,
-    SubClass : 0x5D,
-    Protocol : 0x01,
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  XInputReserved3 : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    reserved : {0x00, 0x01},
-    subtype : 0x00,
-    reserved2 : 0x25,
-    bEndpointAddressIn : XINPUT_3_EPADDR_IN,
-    bMaxDataSizeIn : HID_EPSIZE,
-    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
-    bEndpointAddressOut : XINPUT_3_EPADDR_OUT,
-    bMaxDataSizeOut : HID_EPSIZE,
-    reserved4 : {0x00, 0x00}
-  },
-  EndpointInXInput3 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : XINPUT_3_EPADDR_IN,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  EndpointOutXInput3 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : XINPUT_3_EPADDR_OUT,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  InterfaceXInput4 : {
-    Header :
-        {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
-    InterfaceNumber : INTERFACE_ID_XInput_4,
-    AlternateSetting : 0,
-    TotalEndpoints : 2,
-    Class : 0xFF,
-    SubClass : 0x5D,
-    Protocol : 0x01,
-    InterfaceStrIndex : NO_DESCRIPTOR
-  },
-  XInputReserved4 : {
-    Header : {Size : sizeof(USB_HID_XBOX_Descriptor_HID_t), Type : 0x21},
-    reserved : {0x00, 0x01},
-    subtype : 0x00,
-    reserved2 : 0x25,
-    bEndpointAddressIn : XINPUT_4_EPADDR_IN,
-    bMaxDataSizeIn : HID_EPSIZE,
-    reserved3 : {0x00, 0x00, 0x00, 0x00, 0x13},
-    bEndpointAddressOut : XINPUT_4_EPADDR_OUT,
-    bMaxDataSizeOut : HID_EPSIZE,
-    reserved4 : {0x00, 0x00}
-  },
-  EndpointInXInput4 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : XINPUT_4_EPADDR_IN,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-  EndpointOutXInput4 : {
-    Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
-    EndpointAddress : XINPUT_4_EPADDR_OUT,
-    Attributes : EP_TYPE_INTERRUPT,
-    EndpointSize : HID_EPSIZE,
-    PollingIntervalMS : 1
-  },
-#else
 
   Interface_AudioControl : {
     Header :
@@ -537,7 +419,6 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     TotalEmbeddedJacks : 0x01,
     AssociatedJackID : {0x03}
   },
-#endif
   InterfaceConfig : {
     Header :
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
@@ -554,18 +435,13 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
         {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
     InterfaceNumber : INTERFACE_ID_HID,
     AlternateSetting : 0,
-#ifdef MULTI_ADAPTOR
-    TotalEndpoints : 0,
-#else
     TotalEndpoints : 2,
-#endif
     Class : HID_CSCP_HIDClass,
     SubClass : HID_CSCP_NonBootSubclass,
     Protocol : HID_CSCP_NonBootProtocol,
     InterfaceStrIndex : NO_DESCRIPTOR
   },
 
-#ifndef MULTI_ADAPTOR
   EndpointInHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_IN,
@@ -580,7 +456,6 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
-#endif
   HIDDescriptor : {
     Header : {Size : sizeof(USB_HID_Descriptor_HID_t), Type : HID_DTYPE_HID},
     HIDSpec : VERSION_BCD(1, 0, 1),

@@ -9,19 +9,17 @@
 void digitalWrite(uint8_t pin, uint8_t val) { gpio_put(pin, val); }
 
 bool digitalRead(uint8_t pin) { return gpio_get(pin) != 0; }
-Pin_t setUpDigital(Configuration_t *config, uint8_t pinNum, uint8_t offset,
+void setUpDigital(Pin_t* pin, Configuration_t *config, uint8_t pinNum, uint8_t offset,
                    bool inverted, bool output) {
-  Pin_t pin = {};
-  pin.offset = offset;
-  pin.pin = pinNum;
-  pin.eq = inverted;
-  pin.sioFunc = true;
-  pin.analogOffset = INVALID_PIN;
-  pin.milliDeBounce = config->debounce.buttons;
-  pin.lastMillis = 0;
-  return pin;
+  pin->offset = offset;
+  pin->pin = pinNum;
+  pin->eq = inverted;
+  pin->sioFunc = true;
+  pin->analogOffset = INVALID_PIN;
+  pin->milliDeBounce = config->debounce.buttons;
+  pin->lastMillis = 0;
 }
-unsigned long digitalReadPulse(Pin_t pin, uint8_t state, unsigned long timeout)
+unsigned long digitalReadPulse(Pin_t* pin, uint8_t state, unsigned long timeout)
 {
 	uint32_t init_time = micros();
   uint32_t curr_time = init_time;
@@ -62,28 +60,28 @@ unsigned long digitalReadPulse(Pin_t pin, uint8_t state, unsigned long timeout)
     return 0;
   }
 }
-bool digitalReadPin(Pin_t pin) {
-  if (pin.analogOffset == INVALID_PIN) {
-    return (gpio_get(pin.pin) != 0) == pin.eq;
+bool digitalReadPin(Pin_t* pin) {
+  if (pin->analogOffset == INVALID_PIN) {
+    return (gpio_get(pin->pin) != 0) == pin->eq;
   }
-  AnalogInfo_t info = joyData[pin.analogOffset];
+  AnalogInfo_t info = joyData[pin->analogOffset];
   return info.value > info.threshold;
 }
-void digitalWritePin(Pin_t pin, bool value) {
+void digitalWritePin(Pin_t* pin, bool value) {
   // If SIO is disabled for a pin (aka its using a different function like i2c
   // or spi), then digitalWrite needs to override it.
-  if (!pin.sioFunc) {
+  if (!pin->sioFunc) {
     if (value) {
       // Enable output
-      gpio_set_oeover(pin.pin, GPIO_OVERRIDE_HIGH);
-      gpio_set_outover(pin.pin, GPIO_OVERRIDE_HIGH);
+      gpio_set_oeover(pin->pin, GPIO_OVERRIDE_HIGH);
+      gpio_set_outover(pin->pin, GPIO_OVERRIDE_HIGH);
     } else {
-      gpio_set_oeover(pin.pin, GPIO_OVERRIDE_NORMAL);
-      gpio_set_outover(pin.pin, GPIO_OVERRIDE_NORMAL);
+      gpio_set_oeover(pin->pin, GPIO_OVERRIDE_NORMAL);
+      gpio_set_outover(pin->pin, GPIO_OVERRIDE_NORMAL);
     }
     return;
   }
-  gpio_put(pin.pin, value);
+  gpio_put(pin->pin, value);
 }
 void setUpAnalogPin(Configuration_t *config, uint8_t offset) {
   AnalogInfo_t ret = {0};

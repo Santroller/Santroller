@@ -84,14 +84,16 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     if (button == 0xff) continue;
     bool bit_set = bit_check(controller->buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
-    if (i < currentAxisBindingsLen) {
-      if (fullDeviceType == PS3_GUITAR_HERO_GUITAR &&
-          i < sizeof(ghAxisBindings2)) {
-        button = ghAxisBindings2[i];
-        bit_set = bit_check(controller->buttons, button);
-      }
-      JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
-    }
+    // TODO: is the below even necessary? Bring it back when we migrate to the new codebase as we will have room for it
+    // TODO: and in that case, we can even support it on normal controllers.
+    // if (i < currentAxisBindingsLen) {
+    //   if (fullDeviceType == PS3_GUITAR_HERO_GUITAR &&
+    //       i < sizeof(ghAxisBindings2)) {
+    //     button = ghAxisBindings2[i];
+    //     bit_set = bit_check(controller->buttons, button);
+    //   }
+    //   JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
+    // }
   }
 
   // Hat Switch
@@ -101,11 +103,13 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
   // Tilt / whammy
   bool tilt = controller->r_y == 32767;
   if (fullDeviceType == PS3_GUITAR_HERO_GUITAR) {
+    // TODO: check this stuff, tilt is wrong
+    // TODO: also, could we map tilt to l_x as well as the tilt bit? then PCs can use this.
+    // Whammy
     JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
     // GH PS3 guitars have a tilt axis, this seems to be how my ps3 guitar is mapped.
     JoystickReport->accel[0] = tilt ? -4000 : 7975;
     // r_y is tap, so lets disable it.
-    // TODO: if triggers aren't used by the game maybe we just map tilt to that as well?
     JoystickReport->r_y = 0x7d;
   } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||
              fullDeviceType == WII_ROCK_BAND_GUITAR) {

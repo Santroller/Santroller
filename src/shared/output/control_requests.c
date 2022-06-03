@@ -34,11 +34,7 @@ AVR_CONST CompatibleDescriptorType DevCompatIDs = {
   TotalLength : sizeof(CompatibleDescriptorType),
   Version : 0x0100,
   Index : EXTENDED_COMPAT_ID_DESCRIPTOR,
-#ifdef MULTI_ADAPTOR
-  TotalSections : 4,
-#else
   TotalSections : 2,
-#endif
   Reserved : {0},
   CompatID : {
     FirstInterfaceNumber : INTERFACE_ID_XInput,
@@ -53,28 +49,5 @@ AVR_CONST CompatibleDescriptorType DevCompatIDs = {
     CompatibleID : "WINUSB",
     SubCompatibleID : {0},
     Reserved2 : {0}
-  },
-#ifdef MULTI_ADAPTOR
-  CompatID2 : {
-    FirstInterfaceNumber : INTERFACE_ID_XInput_2,
-    Reserved : 0x04,
-    CompatibleID : "XUSB10",
-    SubCompatibleID : {0},
-    Reserved2 : {0}
-  },
-  CompatID3 : {
-    FirstInterfaceNumber : INTERFACE_ID_XInput_3,
-    Reserved : 0x04,
-    CompatibleID : "XUSB10",
-    SubCompatibleID : {0},
-    Reserved2 : {0}
-  },
-  CompatID4 : {
-    FirstInterfaceNumber : INTERFACE_ID_XInput_4,
-    Reserved : 0x04,
-    CompatibleID : "XUSB10",
-    SubCompatibleID : {0},
-    Reserved2 : {0}
   }
-#endif
 };

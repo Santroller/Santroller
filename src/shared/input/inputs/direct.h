@@ -43,38 +43,36 @@ void initDirectInput(Configuration_t *config) {
   setUpValidPins(config);
   if (config->pinsSP != INVALID_PIN) { pinMode(config->pinsSP, OUTPUT); }
   for (size_t i = 0; i < XBOX_BTN_COUNT; i++) {
+    Pin_t *pin = &pinData[validPins];
     if (config->main.inputType == DIRECT) {
       if (pins[i] != INVALID_PIN) {
         bool is_fret = (i >= XBOX_A || i == XBOX_LB || i == XBOX_RB);
-        Pin_t pin = setUpDigital(
-            config, pins[i], i,
-            is_fret && config->main.fretLEDMode == LEDS_INLINE, false);
+        validPins++;
+        setUpDigital(pin, config, pins[i], i,
+                     is_fret && config->main.fretLEDMode == LEDS_INLINE, false);
         if (typeIsDrum && is_fret && pins[i] >= PIN_A0) {
           // We should probably keep a list of drum specific buttons, instead of
           // using isfret
           // ADC is 10 bit, thereshold is specified as an 8 bit value, so shift
           // it
-          setUpAnalogDigitalPin(&pin, pins[i], config->axis.drumThreshold << 3);
+          setUpAnalogDigitalPin(pin, pins[i], config->axis.drumThreshold << 3);
         } else {
-          pinMode(pins[i], pin.eq ? INPUT : INPUT_PULLUP);
-          if (typeIsGuitar && (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
-            pin.milliDeBounce = config->debounce.strum;
-          }
+          pinMode(pins[i], pin->eq ? INPUT : INPUT_PULLUP);
         }
-        pinData[validPins++] = pin;
       }
     } else {
-      // Fill data for debounce in wii and ps2_cnt
-      Pin_t pin = setUpDigital(config, 0, i, false, false);
-      if (typeIsGuitar && (i == XBOX_DPAD_DOWN || i == XBOX_DPAD_UP)) {
-        pin.milliDeBounce = config->debounce.strum;
-      }
-      pinData[validPins++] = pin;
+      validPins++;
+      setUpDigital(pin, config, 0, i, false, false);
+    }
+      // Fill data for debounce
+    if (typeIsGuitar && (pin->offset == XBOX_DPAD_DOWN || pin->offset == XBOX_DPAD_UP)) {
+      pin->milliDeBounce = config->debounce.strum;
     }
   }
 }
 bool shouldSkipPin(uint8_t i) {
-  // On the 328p, due to an inline LED, it isn't possible to check pin 13, also if debug is turned on then also dont allow uart pins.
+  // On the 328p, due to an inline LED, it isn't possible to check pin 13, also
+  // if debug is turned on then also dont allow uart pins.
 #if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) ||              \
     defined(__AVR_ATmega328P__) || !defined(NDEBUG)
   if (i == 13 || i == 0 || i == 1) return true;
@@ -95,13 +93,10 @@ bool shouldSkipPin(uint8_t i) {
 #  endif
 #endif
   // Skip SPI pins when using peripherials that utilise SPI
-  if (usingSPI && (i == PIN_SPI_MOSI|| i == PIN_SPI_SCK ||
-                   i == PIN_SPI_SS)) {
+  if (usingSPI && (i == PIN_SPI_MOSI || i == PIN_SPI_SCK || i == PIN_SPI_SS)) {
     return true;
   }
-  if (!misoAvailable && i == PIN_SPI_MISO) {
-    return true;
-  }
+  if (!misoAvailable && i == PIN_SPI_MISO) { return true; }
   return false;
 }
 
@@ -202,6 +197,4 @@ void tickDirectInput(Controller_t *controller) {
       }
     }
   }
-
-  
 }

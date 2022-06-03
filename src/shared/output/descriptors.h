@@ -77,16 +77,10 @@ enum InterfaceDescriptors_t {
   INTERFACE_ID_HID = 0,    /**< HID interface descriptor ID */
   INTERFACE_ID_XInput = 1, /**< XInput interface descriptor ID */
   INTERFACE_ID_Config = 2, /**< Config interface descriptor ID */
-#ifdef MULTI_ADAPTOR
-  INTERFACE_ID_XInput_2 = 3, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_3 = 4, /**< XInput interface descriptor ID */
-  INTERFACE_ID_XInput_4 = 5, /**< XInput interface descriptor ID */
-#else
   INTERFACE_ID_ControlStream =
       3, /**< MIDI Control Stream interface descriptor ID */
   INTERFACE_ID_AudioStream =
       4, /**< MIDI Audio Stream interface descriptor ID */
-#endif
 };
 typedef struct {
   USB_Descriptor_Header_t Header;
@@ -112,22 +106,7 @@ typedef struct {
   USB_HID_XBOX_Descriptor_HID_t XInputReserved;
   USB_Descriptor_Endpoint_t EndpointInXInput;
   USB_Descriptor_Endpoint_t EndpointOutXInput;
-#ifdef MULTI_ADAPTOR
-  USB_Descriptor_Interface_t InterfaceXInput2;
-  USB_HID_XBOX_Descriptor_HID_t XInputReserved2;
-  USB_Descriptor_Endpoint_t EndpointInXInput2;
-  USB_Descriptor_Endpoint_t EndpointOutXInput2;
-  USB_Descriptor_Interface_t InterfaceXInput3;
-  USB_HID_XBOX_Descriptor_HID_t XInputReserved3;
-  USB_Descriptor_Endpoint_t EndpointInXInput3;
-  USB_Descriptor_Endpoint_t EndpointOutXInput3;
-  USB_Descriptor_Interface_t InterfaceXInput4;
-  USB_HID_XBOX_Descriptor_HID_t XInputReserved4;
-  USB_Descriptor_Endpoint_t EndpointInXInput4;
-  USB_Descriptor_Endpoint_t EndpointOutXInput4;
-#endif
   USB_Descriptor_Interface_t InterfaceConfig;
-#ifndef MULTI_ADAPTOR
   USB_Descriptor_Interface_t Interface_AudioControl;
   USB_Audio_Descriptor_Interface_AC_t Audio_ControlInterface_SPC;
   USB_Descriptor_Interface_t Interface_AudioStream;
@@ -140,7 +119,6 @@ typedef struct {
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_In_Jack_Endpoint_SPC;
   USB_Audio_Descriptor_StreamEndpoint_Std_t MIDI_Out_Jack_Endpoint;
   USB_MIDI_Descriptor_Jack_Endpoint_t MIDI_Out_Jack_Endpoint_SPC;
-#endif
 } USB_Descriptor_Configuration_t;
 
 typedef struct {

@@ -12,7 +12,7 @@
 #include "util/util.h"
 #include <stdlib.h>
 void (*tick_function)(Controller_t *);
-bool (*read_button_function)(Pin_t pin);
+bool (*read_button_function)(Pin_t* pin);
 int joyThreshold;
 int triggerThreshold;
 bool mapJoyLeftDpad;
@@ -54,7 +54,6 @@ void initInputs(Configuration_t *config) {
   triggerThreshold = config->axis.triggerThreshold;
 }
 void tickInputs(Controller_t *controller) {
-  controller->buttons = 0;
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t* pin;
@@ -67,7 +66,7 @@ void tickInputs(Controller_t *controller) {
       pin2 = &pinData[XBOX_DPAD_DOWN];
     }
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
-      bool val = read_button_function(*pin);
+      bool val = read_button_function(pin);
       if (val != (bit_check(controller->buttons, pin->offset))) {
         pin2->lastMillis = millis();
         bit_write(val, controller->buttons, pin->offset);
@@ -75,6 +74,7 @@ void tickInputs(Controller_t *controller) {
     }
   }
   if (mapJoyLeftDpad) {
+    controller->buttons &= ~(_BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
   }
@@ -84,6 +84,8 @@ void tickInputs(Controller_t *controller) {
       bit_clear(controller->buttons, XBOX_START);
       bit_clear(controller->buttons, XBOX_BACK);
       bit_set(controller->buttons, XBOX_HOME);
+    } else {
+      bit_clear(controller->buttons, XBOX_HOME);
     }
   }
   tickGuitar(controller);

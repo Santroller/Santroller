@@ -251,11 +251,11 @@ Pin_t command;
 Pin_t clock;
 void noAttention(void) {
   spi_high();
-  digitalWritePin(attention, true);
+  digitalWritePin(&attention, true);
   _delay_us(ATTN_DELAY);
 }
 void signalAttention(void) {
-  digitalWritePin(attention, false);
+  digitalWritePin(&attention, false);
   _delay_us(ATTN_DELAY);
 }
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len,
@@ -445,8 +445,8 @@ bool begin(uint8_t port, Controller_t *controller) {
 
 void initPS2CtrlInput(Configuration_t *config) {
   spi_begin(500000, true, true, true);
-  attention = setUpDigital(config, PIN_PS2_ATT, 0, false, true);
-  acknowledge = setUpDigital(config, PIN_PS2_ACK, 0, true, false);
+  setUpDigital(&attention, config, PIN_PS2_ATT, 0, false, true);
+  setUpDigital(&acknowledge, config, PIN_PS2_ACK, 0, true, false);
   pinMode(PIN_PS2_ATT, OUTPUT);
   pinMode(PIN_PS2_ACK, INPUT);
   init_ack(acknowledge);
@@ -528,14 +528,14 @@ void tickPS2CtrlInput(Controller_t *controller) {
   if (initialised && !read(port, controller)) { initialised = false; }
 }
 
-bool readPS2Button(Pin_t pin) {
+bool readPS2Button(Pin_t* pin) {
   const uint8_t *buttons = dualShockButtonBindings;
   if (ps2CtrlType == PSPROTO_GUITAR) {
     buttons = guitarHeroButtonBindings;
   } else if (ps2CtrlType == PSPROTO_MOUSE) {
     buttons = mouseButtonBindings;
   }
-  uint8_t btn = buttons[pin.offset];
+  uint8_t btn = buttons[pin->offset];
   if (btn == INVALID) { return false; }
   return !!bit_check(buttonWord, btn);
 }

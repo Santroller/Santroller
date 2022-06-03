@@ -14,12 +14,11 @@ OPTIMIZATION = s
 F_USB		 = ${F_CPU}
 
 SIGNATURE = ardwiino
-MULTI_ADAPTOR=$(if $(findstring -multi,$(EXTRA)),-DDMULTI_ADAPTOR,)
 SRC += ${PROJECT_ROOT}/src/avr/lib/bootloader/bootloader.c
 LUFA_PATH    = ${PROJECT_ROOT}/lib/lufa/LUFA
 CC_FLAGS     += -DUSE_LUFA_CONFIG_HEADER -I${PROJECT_ROOT}/src/shared/output -I${PROJECT_ROOT}/src/avr/shared -I${PROJECT_ROOT}/src/avr/variants/${VARIANT} -I ${PROJECT_ROOT}/src/shared -I ${PROJECT_ROOT}/src/shared/lib -I${PROJECT_ROOT}/lib -I${PROJECT_ROOT}/src/avr/lib -Werror $(REGS) -DARDUINO=1000  -flto -fuse-linker-plugin -ffast-math
 CC_FLAGS     += -DARDWIINO_BOARD='"${ARDWIINO_BOARD}"' 
-CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' ${MULTI_ADAPTOR} -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"'
+CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION='"${VERSION}"' -DVERSION_MAJOR='${VERSION_MAJOR}' -DVERSION_MINOR='${VERSION_MINOR}' -DVERSION_REVISION='${VERSION_REVISION}' -DMCU='"${MCU}"'
 LD_FLAGS     += $(REGS) -flto -fuse-linker-plugin 
 OBJDIR		 = obj
 BIN		 	 = bin

@@ -1,15 +1,12 @@
 set(PICO_BOARD ${BOARD})
 pico_sdk_init()
-set(TYPES "rf;multi;main")
+set(TYPES "rf;main")
 foreach(TYPE ${TYPES})
   unset(EXTRA)
   if(NOT (${TYPE} MATCHES "main"))
     set(EXTRA -${TYPE})
   endif()
   set(TARGET ardwiino-${BOARD}-rp2040${EXTRA})
-  if(${TYPE} MATCHES "multi")
-    set(TYPE main)
-  endif()
   set(SRC src/pico/${TYPE})
   add_executable(
     ${TARGET}
@@ -35,7 +32,8 @@ foreach(TYPE ${TYPES})
     src/pico/lib/spi/spi.c
     src/pico/lib/i2c/i2c.c
     src/pico/lib/usb/xinput_device.c
-    src/pico/lib/pins/pins.c)
+    src/pico/lib/pins/pins.c
+    src/shared/lib/util/util_shared.c)
     target_include_directories(${TARGET} PUBLIC
       ${SRC}
       src/shared/output
@@ -45,9 +43,6 @@ foreach(TYPE ${TYPES})
       src/pico
       src/pico/lib
       lib/lufa)
-  if(${EXTRA} MATCHES "-multi")
-    target_compile_definitions(${TARGET} PUBLIC MULTI_ADAPTOR)
-  endif()
   if(${EXTRA} MATCHES "-rf")
     target_compile_definitions(${TARGET} PUBLIC RF_TX=true)
   endif()

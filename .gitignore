@@ -8,3 +8,4 @@ pcb/ardwiino.kicad_pcb-bak
 /output
 build/
 buildDebug/
+.vscode/targets.log

@@ -2,11 +2,11 @@
 #include "config/defines.h"
 #include "controller/controller.h"
 #include "eeprom/eeprom.h"
+#include "fxpt_math/fxpt_math.h"
 #include "i2c/i2c.h"
 #include "pins/pins.h"
-#include "util/util.h"
-#include "fxpt_math/fxpt_math.h"
 #include "timer/timer.h"
+#include "util/util.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,19 +102,16 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
   bit_write(!bit_check(data[5], 3), buttons, wiiButtonBindings[XBOX_X]);
   bit_write(!bit_check(data[5], 5), buttons, wiiButtonBindings[XBOX_Y]);
 }
-uint16_t wiiwttapbindings[] = {[0x04] = _BV(XBOX_A),
-                            [0x07] = _BV(XBOX_A) | _BV(XBOX_B),
-                            [0x0a] = _BV(XBOX_B),
-                            [0x0C] = _BV(XBOX_B) | _BV(XBOX_X),
-                            [0x0D] = _BV(XBOX_B) | _BV(XBOX_X),
-                            [0x12] = _BV(XBOX_Y),
-                            [0x13] = _BV(XBOX_Y),
-                            [0x14] = _BV(XBOX_X) | _BV(XBOX_Y),
-                            [0x15] = _BV(XBOX_X) | _BV(XBOX_Y),
-                            [0x17] = _BV(XBOX_X),
-                            [0x18] = _BV(XBOX_X),
-                            [0x1A] = _BV(XBOX_X) | _BV(XBOX_LB),
-                            [0x1F] = _BV(XBOX_LB)};
+uint8_t wiiwttapbindings[] = {[0x2] = (_BV(XBOX_A)) >> 8,
+                              [0x3] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,
+                              [0x5] = (_BV(XBOX_B)) >> 8,
+                              [0x6] = (_BV(XBOX_B) | _BV(XBOX_X)) >> 8,
+                              [0x9] = (_BV(XBOX_Y)) >> 8,
+                              [0xa] = (_BV(XBOX_X) | _BV(XBOX_Y)) >> 8,
+                              [0xb] = (_BV(XBOX_X)) >> 8,
+                              [0xc] = (_BV(XBOX_X)) >> 8,
+                              [0xd] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+                              [0xf] = (_BV(XBOX_LB)) >> 8};
 
 void readGuitarExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[0] & 0x3f) - 32) << 10;
@@ -131,7 +128,7 @@ void readGuitarExt(Controller_t *controller, uint8_t *data) {
   buttons = ~(data[4] | data[5] << 8);
   if (guitarTapBar) {
     uint8_t tap = ((data[3] & 0x1f) - 14);
-    buttons |= wiiwttapbindings[tap];
+    buttons |= wiiwttapbindings[tap >> 1] << 8;
   }
 }
 void readClassicExtHighRes(Controller_t *controller, uint8_t *data) {
@@ -221,14 +218,10 @@ void initWiiExt(void) {
     _delay_us(10);
   }
   dataReadIndex = 0;
-  switch (wiiExtensionID) {
-  case WII_GUITAR_HERO_GUITAR_CONTROLLER:
-    // // detect the not 5tar, and then run
-    // twi_init(false);
+  if (wiiExtensionID == WII_GUITAR_HERO_GUITAR_CONTROLLER) {
     readFunction = readGuitarExt;
-    break;
-  case WII_CLASSIC_CONTROLLER:
-  case WII_CLASSIC_CONTROLLER_PRO:
+  } else if (wiiExtensionID == WII_CLASSIC_CONTROLLER ||
+             wiiExtensionID == WII_CLASSIC_CONTROLLER_PRO) {
     // We know that classic controllers and classic pro controllers support
     // higher speed
     // twi_init(false);
@@ -253,32 +246,23 @@ void initWiiExt(void) {
       readFunction = readClassicExt;
       bytes = 6;
     }
-    break;
-  case WII_NUNCHUK:
-    // We know that nunchuk controllers support higher speed
-    // twi_init(false);
+  } else if (wiiExtensionID == WII_NUNCHUK) {
     readFunction = readNunchukExt;
-    break;
-  case WII_GUITAR_HERO_DRUM_CONTROLLER:
+  } else if (wiiExtensionID == WII_GUITAR_HERO_DRUM_CONTROLLER) {
     readFunction = readDrumExt;
-    break;
-  case WII_THQ_UDRAW_TABLET:
+  } else if (wiiExtensionID == WII_THQ_UDRAW_TABLET) {
     readFunction = readUDrawExt;
-    break;
-  case WII_UBISOFT_DRAWSOME_TABLET:
+  } else if (wiiExtensionID == WII_UBISOFT_DRAWSOME_TABLET) {
     readFunction = readDrawsomeExt;
-    break;
-  case WII_DJ_HERO_TURNTABLE:
+  } else if (wiiExtensionID == WII_DJ_HERO_TURNTABLE) {
     readFunction = readDJExt;
-    break;
-  case WII_TAIKO_NO_TATSUJIN_CONTROLLER:
+  } else if (wiiExtensionID == WII_TAIKO_NO_TATSUJIN_CONTROLLER) {
     // We can cheat a little with these controllers, as most of the bytes that
     // get read back are constant. Hence we start at 0x5 instead of 0x0.
     readFunction = readTataconExt;
     dataReadIndex = 5;
     bytes = 1;
-    break;
-  default:
+  } else {
     wiiExtensionID = WII_NO_EXTENSION;
     readFunction = NULL;
   }
@@ -293,20 +277,14 @@ void tickWiiExtInput(Controller_t *controller) {
     initWiiExt();
     return;
   }
-  // printf("%02x ", data[0] & (~0x3f));
-  // printf("%02x ", data[1] & (~0x3f));
-  // printf("%02x ", data[2] & (~0x1f));
-  // printf("%02x ", data[3] & (~0x1f));
-  // printf("%02x ", data[4]);
-  // printf("%02x ", data[5]);
-  // printf("\n");
   if (readFunction) readFunction(controller, data);
 }
-bool readWiiButton(Pin_t pin) {
-  uint8_t idx = wiiButtonBindings[pin.offset];
+bool readWiiButton(Pin_t *pin) {
+  uint8_t idx = wiiButtonBindings[pin->offset];
   if (idx == INVALID_PIN) return false;
   return !!bit_check(buttons, idx);
 }
 void initWiiExtensions(Configuration_t *config) {
   mapNunchukAccelToRightJoy = config->main.mapNunchukAccelToRightJoy;
+  guitarTapBar = config->neck.wiiNeck;
 }

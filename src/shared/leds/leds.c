@@ -15,7 +15,10 @@ void tickLEDs(Controller_t *controller) {
   // Don't do anything if the leds are disabled.
   if (spiLedsDisabled) return;
   int led = 0;
-  for (uint8_t i = 0; i < 4; i++) { spi_transfer(0); }
+  spi_transfer(0);
+  spi_transfer(0);
+  spi_transfer(0);
+  spi_transfer(0);
   Led_t configLED;
   Led_t contLED;
   // Loop until either config.leds runs out, or controller->leds runs out. This

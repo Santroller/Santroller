@@ -6,7 +6,7 @@
 #endif
 #define DRUM 1
 #define GUITAR 2
-const uint8_t PROGMEM types[MIDI_ROCK_BAND_DRUMS + 1] = {
+const uint8_t PROGMEM types[] = {
     [PS3_GUITAR_HERO_DRUMS] = DRUM,      [PS3_ROCK_BAND_DRUMS] = DRUM,
     [WII_ROCK_BAND_DRUMS] = DRUM,        [XINPUT_ROCK_BAND_DRUMS] = DRUM,
     [XINPUT_GUITAR_HERO_DRUMS] = DRUM,   [MIDI_ROCK_BAND_DRUMS] = DRUM,

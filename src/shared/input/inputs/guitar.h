@@ -110,8 +110,7 @@ uint8_t wttapbindings[] = {[0x17] = (_BV(XBOX_A)) >> 8,
                            [0x14] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,
                            [0x11] = (_BV(XBOX_B)) >> 8,
                            [0x12] = (_BV(XBOX_B)) >> 8,
-                           [0xf] = (_BV(XBOX_B) | _BV(XBOX_X)) >> 8,
-                           [0x9] = (_BV(XBOX_Y)) >> 8,
+                           [0xf] = (_BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
                            [0xa] = (_BV(XBOX_Y)) >> 8,
                            [0xb] = (_BV(XBOX_Y)) >> 8,
                            [0x9] = (_BV(XBOX_X) | _BV(XBOX_Y)) >> 8,
@@ -138,8 +137,9 @@ void tickGH5NeckBar(Controller_t *controller) {
   controller->buttons |= lastTap << 8;
 }
 void tickWTNeck(Controller_t *controller) {
-  long pulse = digitalReadPulse(&wtPin, LOW, 0);
-  if (pulse == digitalReadPulse(&wtPin, LOW, 0)) {
+  controller -> buttons = 0;
+  long pulse = digitalReadPulse(&wtPin, LOW, 50);
+  if (pulse == digitalReadPulse(&wtPin, LOW, 50)) {
     lastTap = wttapbindings[pulse >> 1];
   }
   controller->buttons |= lastTap << 8;

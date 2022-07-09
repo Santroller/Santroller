@@ -31,41 +31,13 @@
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUB_TYPE XINPUT_TURNTABLE
 #endif
-#if LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
-typedef struct {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-} Led_t;
-#endif
-#if CONSOLE_TYPE == MIDI
-typedef struct {
-    uint8_t note : 7;
-    bool isCC : 1;
-    uint8_t channel : 4;
-} Midi_t;
-#endif
-typedef struct {
-    int8_t multiplier;
-    int8_t offset;
-    int8_t deadzone;
-    bool mapToDigital;
-    uint8_t trigger;
-    uint8_t pin;
-} AnalogData_t;
-typedef struct {
-    uint8_t pin;
-    bool pulldown : 1;
-    bool pullup : 1;
-
-#if LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
-    uint8_t led_index;
-    Led_t led_on;
-    Led_t led_off;
-#endif
-#if CONSOLE_TYPE == MIDI
-    Midi_t midi;
-#endif
-    uint8_t milliDeBounce;
-    uint8_t analogID;
-} Binding_t;
+#define SUPPORTS_LEDS LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
+#define SUPPORTS_MIDI CONSOLE_TYPE == MIDI
+#define SUPPORTS_HID CONSOLE_TYPE != MIDI
+#define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
+#define SUPPORTS_AVR defined(__AVR__)
+#define SUPPORTS_TEENSY defined(__arm__) && defined(CORE_TEENSY)
+#define SUPPORTS_PINS INPUT_TYPE == INPUT_DIRECT
+#define SUPPORTS_WII INPUT_TYPE == INPUT_WII
+#define SUPPORTS_PS2 INPUT_TYPE == INPUT_PS2
+#define SUPPORTS_PASSTHROUGH INPUT_TYPE == INPUT_USBHOST

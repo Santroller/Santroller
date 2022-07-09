@@ -55,6 +55,11 @@
 #define KEYBOARD_MOUSE_REL 8
 #define MIDI 9
 
+#define PINMODE_PULLUP 0
+#define PINMODE_PULLDOWN 1
+#define PINMODE_FLOATING 2
+#define PINMODE_BUS 3
+
 #define GYRO_X 0
 #define GYRO_Y 1
 #define GYRO_Z 2

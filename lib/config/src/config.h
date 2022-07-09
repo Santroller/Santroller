@@ -1,5 +1,4 @@
 #pragma once
-#include <Arduino.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,19 +24,27 @@ extern "C" {
 #define RF_ENABLED false
 #define RF_ID 0
 
-#define ANALOG_DATA {}
-#define ANALOG_DATA_COUNT 0
-#define BINDINGS {}
-#define BINDINGS_COUNT 0
+#define ADC_COUNT 1
+#define ADC_PINS {}
+
+#define SKIP_MASK_PICO 0
+
+#define SKIP_MASK_AVR {0}
+
+#define PIN_INIT
+
+#define PIN_TICK
+
+#define WII_TICK
+
+#define PS2_TICK
 
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
-#define CONFIGURATION {}
+#define CONFIGURATION ""
 
 #include "config_definitions.h"
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
-const extern PROGMEM AnalogData_t analog_data[ANALOG_DATA_COUNT]; 
-const extern PROGMEM Binding_t bindings[BINDINGS_COUNT];
 #ifdef __cplusplus
 }
 #endif

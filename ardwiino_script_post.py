@@ -20,8 +20,8 @@ import usb.util
 from platformio import fs
 from platformio.util import get_serial_ports
 from platformio.project.config import ProjectConfig
-from platformio.commands.run.processor import EnvironmentProcessor
-from platformio.commands.run.helpers import clean_build_dir
+from platformio.run.processor import EnvironmentProcessor
+from platformio.run.helpers import clean_build_dir
 import os
 REBOOT=48
 BOOTLOADER=49

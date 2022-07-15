@@ -51,8 +51,7 @@
 #define PS3 4
 #define WII_RB 5
 #define SWITCH 6
-#define KEYBOARD_MOUSE_ABS 7
-#define KEYBOARD_MOUSE_REL 8
+#define KEYBOARD_MOUSE 7
 #define MIDI 9
 
 #define PINMODE_PULLUP 0

@@ -605,7 +605,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->Config.bNumInterfaces = 1;
                     desc->Config.wTotalLength = offsetof(HID_CONFIGURATION_DESCRIPTOR, InterfaceConfig);
                 }
-                if (consoleType == KEYBOARD_MOUSE_ABS || consoleType == KEYBOARD_MOUSE_REL) {
+                if (consoleType == KEYBOARD_MOUSE) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(keyboard_mouse_descriptor);
                 } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == PC) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
@@ -616,7 +616,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case HID_DESCRIPTOR_REPORT: {
             read_hid_report_descriptor = true;
             const void *address;
-            if (consoleType == KEYBOARD_MOUSE_ABS || consoleType == KEYBOARD_MOUSE_REL) {
+            if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);
             } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == PC) {

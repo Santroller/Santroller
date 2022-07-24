@@ -27,6 +27,7 @@ void fillKeyboardReport(void *ReportData, uint8_t *const ReportSize,
   *ReportSize = sizeof(USB_ID_KeyboardReport_Data_t);
   USB_ID_KeyboardReport_Data_t *KeyboardReport =
       (USB_ID_KeyboardReport_Data_t *)ReportData;
+  memset(ReportData, 0, sizeof(USB_ID_KeyboardReport_Data_t));
   KeyboardReport->rid = REPORT_ID_KBD;
   uint8_t usedKeys = 0;
   uint8_t *keys = (uint8_t *)&keysConfig;

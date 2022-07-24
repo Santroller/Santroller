@@ -73,9 +73,11 @@ void initMPU6050(unsigned int rate) {
 }
 
 uint8_t fivetartapbindings[] = {
+#ifndef __AVR_ATmega328P__
     [0x19 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y)) >> 8,
     [0x1A - 0x19] = (_BV(XBOX_Y)) >> 8,
-    [0x2C - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
+    [0x2C - 0x19] =
+        (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
     [0x2D - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
     [0x2E - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
     [0x2F - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
@@ -83,15 +85,21 @@ uint8_t fivetartapbindings[] = {
     [0x47 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_X)) >> 8,
     [0x48 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_X)) >> 8,
     [0x49 - 0x19] = (_BV(XBOX_X)) >> 8,
-    [0x5F - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) |  _BV(XBOX_LB)) >> 8,
-    [0x60 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x61 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x5F - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) |
+                     _BV(XBOX_LB)) >>
+                    8,
+    [0x60 - 0x19] =
+        (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x61 - 0x19] =
+        (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
     [0x62 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x63 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
+    [0x63 - 0x19] =
+        (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
     [0x64 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
     [0x65 - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
     [0x66 - 0x19] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x78 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
+    [0x78 - 0x19] =
+        (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
     [0x79 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_LB)) >> 8,
     [0x7A - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
     [0x7B - 0x19] = (_BV(XBOX_A) | _BV(XBOX_LB)) >> 8,
@@ -104,6 +112,7 @@ uint8_t fivetartapbindings[] = {
     [0xCD - 0x19] = (_BV(XBOX_B)) >> 8,
     [0xE5 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
     [0xE6 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
+#endif
 };
 uint8_t wttapbindings[] = {[0x17] = (_BV(XBOX_A)) >> 8,
                            [0x16] = (_BV(XBOX_A)) >> 8,
@@ -137,7 +146,7 @@ void tickGH5NeckBar(Controller_t *controller) {
   controller->buttons |= lastTap << 8;
 }
 void tickWTNeck(Controller_t *controller) {
-  controller -> buttons = 0;
+  controller->buttons = 0;
   long pulse = digitalReadPulse(&wtPin, LOW, 50);
   if (pulse == digitalReadPulse(&wtPin, LOW, 50)) {
     lastTap = wttapbindings[pulse >> 1];

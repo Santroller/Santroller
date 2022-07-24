@@ -5,7 +5,6 @@ VARIANT		 = uno
 PORT 		 = /dev/ttyUSB0
 
 ARDWIINO_BOARD = uno
-SIGNATURE = ardwiino
 
 SRC = main.c
 

@@ -1,3 +1,3 @@
 #include "defines.h"
 #include "config.h"
-uint8_t consoleType = PC;
+uint8_t consoleType = XBOX360;

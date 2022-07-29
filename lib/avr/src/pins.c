@@ -90,10 +90,7 @@ void initDetectionDigital(void) {
         volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + i)));
         // ddr is one memory address above port
         volatile uint8_t* ddr = port - 1;
-        uint8_t masked = 0;
-        // Shift the skip mask so that the current port is inline
-        // If we skip further than the size of SKIP_MASK, than we get 0 which is what we want
-        masked = (pgm_read_word(skip_mask + i));
+        uint8_t masked = (pgm_read_word(skip_mask + i));
         // Then write it to mask (zeros set input, and the mask already sets bits we aren't skipping to 0)
         *port |= masked;
         // And write it inverted to ddr (ones set pullup)
@@ -135,6 +132,5 @@ void detectDigital(uint8_t* mask, uint8_t* pin) {
 }
 
 void tickPins(void) {
-    PIN_TICK;
     tickAnalog();
 }

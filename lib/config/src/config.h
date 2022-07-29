@@ -33,11 +33,7 @@ extern "C" {
 
 #define PIN_INIT
 
-#define PIN_TICK
-
-#define WII_TICK
-
-#define PS2_TICK
+#define TICK
 
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
 #define CONFIGURATION ""

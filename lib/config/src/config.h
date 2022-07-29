@@ -19,6 +19,7 @@ extern "C" {
 #define RF_ENABLED false
 #define RF_ID 0
 
+#define DIGITAL_COUNT 1
 #define ADC_COUNT 1
 #define ADC_PINS {}
 

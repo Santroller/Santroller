@@ -10,6 +10,7 @@
 
 uint16_t adcReading[ADC_COUNT];
 uint8_t analogPins[ADC_COUNT] = ADC_PINS;
+uint8_t debounce[DIGITAL_COUNT];
 bool first = true;
 int16_t adc(uint8_t analogIndex, int16_t offset, int16_t multiplier, int16_t deadzone) {
     int32_t val = (adcReading[analogIndex] - 512) * 64;

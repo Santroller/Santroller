@@ -4,7 +4,7 @@
 #include "pins_define.h"
 #include "Arduino.h"
 #include "util.h"
-uint16_t adcReading[ADC_COUNT];
+uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
 
 int16_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
@@ -68,7 +68,7 @@ int detectDigital() {
 }
 
 int detectAnalog() {
-    for (int i = 0; i < ADC_COUNT; i++) {
+    for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
         adc_select_input(i);
         if (abs(adc_read() - lastAnalogValue[i]) > 30) {
             return i;

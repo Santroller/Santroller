@@ -8,11 +8,6 @@
 #define XBOX_WHAMMY XBOX_R_X
 #define XBOX_TILT XBOX_R_Y
 
-#define TILT_DISABLED 0
-#define TILT_MPU6050 1
-#define TILT_ADXL3XX 2
-#define TILT_ANALOG 3
-
 #define INPUT_WII 0
 #define INPUT_DIRECT 1
 #define INPUT_PS2 2
@@ -58,10 +53,6 @@
 #define PINMODE_PULLDOWN 1
 #define PINMODE_FLOATING 2
 #define PINMODE_BUS 3
-
-#define GYRO_X 0
-#define GYRO_Y 1
-#define GYRO_Z 2
 
 #define LEDS_DISABLED 0 
 #define LEDS_APA102 1

@@ -6,6 +6,7 @@
 #include "util.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
+uint8_t debounce[DIGITAL_COUNT];
 
 int16_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     adc_select_input(pin);
@@ -75,4 +76,10 @@ int detectAnalog() {
         }
     }
     return -1;
+}
+
+
+
+void initPins(void) {
+    PIN_INIT;
 }

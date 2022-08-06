@@ -32,7 +32,8 @@ extern "C" {
 #define TICK
 
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
-#define CONFIGURATION ""
+#define CONFIGURATION {0}
+#define CONFIGURATION_LEN 1
 
 #include "config_definitions.h"
 // ConsoleType can change due to console detection

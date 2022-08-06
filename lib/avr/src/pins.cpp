@@ -10,31 +10,53 @@
 
 uint16_t adcReading[ADC_COUNT];
 uint8_t analogPins[ADC_COUNT] = ADC_PINS;
-uint8_t debounce[DIGITAL_COUNT];
 bool first = true;
-int16_t adc(uint8_t analogIndex, int16_t offset, int16_t multiplier, int16_t deadzone) {
+#if CONSOLE_TYPE == PC_XINPUT
+int16_t adc(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
     int32_t val = (adcReading[analogIndex] - 512) * 64;
     val -= offset;
     val *= multiplier;
-    val /= 1024;
-    val += INT16_MIN;
     if (val > INT16_MAX) val = INT16_MAX;
     if (val < INT16_MIN) val = INT16_MIN;
     if (val < deadzone && val > -deadzone) val = 0;
-    return (int16_t)val;
+    return (int16_t)val >> 8;
 }
 
-uint16_t adc_trigger(uint8_t analogIndex, int16_t offset, int16_t multiplier, int16_t deadzone) {
+uint16_t adc_trigger(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
     uint32_t val = adcReading[analogIndex] * 64;
     val -= offset;
     val *= multiplier;
-    val /= 1024;
-    val += INT16_MAX;
     if (val > INT16_MAX) val = UINT16_MAX;
     if (val < INT16_MIN) val = 0;
     if (val < deadzone) val = 0;
-    return (uint16_t)val;
+    return (uint16_t)val >> 8;
 }
+#else
+uint8_t adc(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
+    deadzone >>= 8;
+    offset >>= 8;
+    int16_t val = (adcReading[analogIndex] - 512) >> 2;
+    val -= offset;
+    val *= multiplier;
+    if (val > INT8_MAX) val = INT8_MAX;
+    if (val < INT8_MIN) val = INT8_MIN;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return ((int8_t)val) + INT8_MAX;
+}
+
+uint8_t adc_trigger(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
+    deadzone >>= 8;
+    offset >>= 8;
+    uint32_t val = adcReading[analogIndex] >> 2;
+    val -= offset;
+    val *= multiplier;
+    if (val > INT16_MAX) val = UINT16_MAX;
+    if (val < INT16_MIN) val = 0;
+    if (val < deadzone) val = 0;
+    return (uint16_t)val >> 8;
+}
+
+#endif
 int lastAnalogValue[NUM_ANALOG_INPUTS];
 uint8_t lastDigitalValue[PORT_COUNT];
 const uint16_t PROGMEM ports[PORT_COUNT] = PORTS;

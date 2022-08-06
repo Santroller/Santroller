@@ -13,3 +13,13 @@
 #define PIN_SPI_SS 5
 #define CE 8
 #define CSN PIN_SPI_SS
+
+void initPins(void);
+void initDetectionDigital(void);
+void initDetectionAnalog(void);
+int detectAnalog();
+void detectDigital(uint8_t* mask, uint8_t* pin);
+void tickPins(void);
+void stopReading(void);
+int16_t adc(uint8_t analogIndex, int16_t offset, int16_t multiplier, int16_t deadzone);
+uint16_t adc_trigger(uint8_t analogIndex, int16_t offset, int16_t multiplier, int16_t deadzone);

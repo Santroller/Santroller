@@ -22,17 +22,23 @@
 #include "commands.h"
 #include "config_impl.h"
 #include "descriptors.h"
+#include "shared_main.h"
 
 void SetupHardware(void);
 
-volatile bool waiting = true;
 void setup() {
+    init_main();
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
 }
 
+REPORT_TYPE report;
 void loop() {
     USB_USBTask();
+    tick(&report);
+    Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+    Endpoint_Write_Stream_LE(&report, sizeof(REPORT_TYPE), NULL);
+    Endpoint_ClearIN();
 }
 
 void SetupHardware(void) {
@@ -81,10 +87,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const void** const descriptorAddress) {
     *descriptorAddress = buf;
     return descriptorRequest(wValue, wIndex, buf);
-}
-ISR(WDT_vect) {
-    wdt_disable();
-    waiting = false;
 }
 void reset_usb(void) {
     USB_Disable();

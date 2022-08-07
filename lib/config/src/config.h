@@ -38,6 +38,7 @@ extern "C" {
 #include "config_definitions.h"
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
+extern const uint8_t config[CONFIGURATION_LEN];
 #ifdef __cplusplus
 }
 #endif

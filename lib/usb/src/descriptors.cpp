@@ -1,13 +1,12 @@
 #include "descriptors.h"
 
 #include "Usb.h"
+#include "commands.h"
 #include "config.h"
 #include "controllers.h"
 #include "keyboard_mouse.h"
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
-#include "commands.h"
-#include "config.h"
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
@@ -237,11 +236,11 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
-        #if SUPPORTS_KEYBOARD
+#if SUPPORTS_KEYBOARD
         wDescriptorLength : sizeof(keyboard_mouse_descriptor)
-        #else
+#else
         wDescriptorLength : sizeof(ps3_descriptor)
-        #endif
+#endif
     },
     EndpointInHID : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
@@ -449,6 +448,8 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         if (request == COMMAND_JUMP_BOOTLOADER) {
             return true;
         }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+        return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
@@ -483,7 +484,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
         if (request == COMMAND_READ_CONFIG) {
             memcpy_P(requestBuffer, config, sizeof(config));
+            return sizeof(config);
         }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+        memcpy_P(requestBuffer, config, sizeof(config));
+        return sizeof(config);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));

@@ -40,7 +40,7 @@ uint8_t adc(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t dead
     val *= multiplier;
     if (val > INT8_MAX) val = INT8_MAX;
     if (val < INT8_MIN) val = INT8_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
+    if (val < (uint8_t)deadzone && val > -(uint8_t)deadzone) val = 0;
     return ((int8_t)val) + INT8_MAX;
 }
 

@@ -8,7 +8,6 @@
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
-#include "pio_usb.h"
 #include "xinput_device.h"
 
 //--------------------------------------------------------------------+

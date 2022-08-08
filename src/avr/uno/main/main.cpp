@@ -9,7 +9,7 @@
 #include "defines.h"
 #include "descriptors.h"
 #include "packets.h"
-#include "config_impl.h"
+#include "config.h"
 
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];

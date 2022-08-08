@@ -6,7 +6,7 @@
 #include <tusb.h>
 
 #include "common/tusb_types.h"
-#include "config_impl.h"
+#include "config.h"
 #include "device/usbd_pvt.h"
 #include "pico/multicore.h"
 #include "pins.h"

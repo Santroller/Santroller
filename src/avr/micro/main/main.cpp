@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "commands.h"
-#include "config_impl.h"
+#include "config.h"
 #include "descriptors.h"
 #include "shared_main.h"
 

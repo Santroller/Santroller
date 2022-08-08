@@ -69,6 +69,7 @@ def before_upload(source, target, env):
             pass
         try:
             dev.ctrl_transfer(0x21, b_request)
+            dev.ctrl_transfer(0x21, 0x09, b_request)
         except:
             pass
     if id_vendor:

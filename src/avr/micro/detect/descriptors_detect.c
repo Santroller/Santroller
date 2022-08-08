@@ -40,7 +40,7 @@
 
 uint8_t realFreq = 16;
 
-const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
+const USB_Descriptor_Device_t DeviceDescriptor =
     {
         .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
@@ -62,7 +62,7 @@ const USB_Descriptor_Device_t PROGMEM DeviceDescriptor =
 
         .NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS};
 
-const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
+const USB_Descriptor_Configuration_t ConfigurationDescriptor =
     {
         .Config =
             {
@@ -164,7 +164,7 @@ const USB_Descriptor_Configuration_t PROGMEM ConfigurationDescriptor =
  *  the string descriptor with index 0 (the first index). It is actually an array of 16-bit integers, which indicate
  *  via the language ID table available at USB.org what languages the device supports for its string descriptors.
  */
-const USB_Descriptor_String_t PROGMEM LanguageString =
+const USB_Descriptor_String_t LanguageString =
     {
         .Header = {.Size = USB_STRING_LEN(1), .Type = DTYPE_String},
 
@@ -174,7 +174,7 @@ const USB_Descriptor_String_t PROGMEM LanguageString =
  *  form, and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ManufacturerString =
+const USB_Descriptor_String_t ManufacturerString =
     {
         .Header = {.Size = USB_STRING_LEN(11), .Type = DTYPE_String},
 
@@ -184,13 +184,13 @@ const USB_Descriptor_String_t PROGMEM ManufacturerString =
  *  and is read out upon request by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
-const USB_Descriptor_String_t PROGMEM ProductString16 =
+const USB_Descriptor_String_t ProductString16 =
     {
         .Header = {.Size = USB_STRING_LEN(56), .Type = DTYPE_String},
 
         .UnicodeString = L"Ardwiino - Detect - 16000000"};
 
-const USB_Descriptor_String_t PROGMEM ProductString8 =
+const USB_Descriptor_String_t ProductString8 =
     {
         .Header = {.Size = USB_STRING_LEN(54), .Type = DTYPE_String},
 
@@ -224,19 +224,19 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
             switch (DescriptorNumber) {
                 case STRING_ID_Language:
                     Address = &LanguageString;
-                    Size = pgm_read_byte(&LanguageString.Header.Size);
+                    Size = LanguageString.Header.Size;
                     break;
                 case STRING_ID_Manufacturer:
                     Address = &ManufacturerString;
-                    Size = pgm_read_byte(&ManufacturerString.Header.Size);
+                    Size = ManufacturerString.Header.Size;
                     break;
                 case STRING_ID_Product:
                     if (realFreq == 16) {
                         Address = &ProductString16;
-                        Size = pgm_read_byte(&ProductString16.Header.Size);
+                        Size = ProductString16.Header.Size;
                     } else {
                         Address = &ProductString8;
-                        Size = pgm_read_byte(&ProductString8.Header.Size);
+                        Size = ProductString8.Header.Size;
                     }
                     break;
             }

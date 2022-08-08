@@ -7,11 +7,7 @@
 #include "progmem.h"
 #include "wcid.h"
 #include "xbox.h"
-
-#define USB_DESCRIPTOR_STRING_ARRAY(...)                                                                                                                             \
-    {                                                                                                                                                                \
-        .bLength = sizeof(uint8_t) + sizeof(uint8_t) + sizeof((uint16_t[]){__VA_ARGS__}), .bDescriptorType = USB_DESCRIPTOR_STRING, .UnicodeString = { __VA_ARGS__ } \
-    }
+#include "string_descriptors.h"
 
 #define USB_VERSION_BCD(Major, Minor, Revision) \
     (((Major & 0xFF) << 8) |                    \
@@ -21,8 +17,6 @@
 #define USB_CONFIG_POWER_MA(mA) ((mA) >> 1)
 
 #define NO_DESCRIPTOR 0
-
-#define LANGUAGE_ID_ENG 0x0409
 
 #define USB_CONFIG_ATTRIBUTE_RESERVED 0x80
 #define USB_CONFIG_ATTRIBUTE_SELFPOWERED 0x40
@@ -37,24 +31,6 @@
 #define ENDPOINT_USAGE_DATA (0 << 4)
 #define ENDPOINT_USAGE_FEEDBACK (1 << 4)
 #define ENDPOINT_USAGE_IMPLICIT_FEEDBACK (2 << 4)
-
-typedef struct
-{
-    uint8_t bLength;          // Length of this descriptor.
-    uint8_t bDescriptorType;  // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
-    uint16_t UnicodeString[]; /**< String data, as unicode characters (alternatively,
-                               *   string language IDs). If normal ASCII characters are
-                               *   to be used, they must be added as an array of characters
-                               *   rather than a normal C string so that they are widened to
-                               *   Unicode size.
-                               *
-                               *   Under GCC, strings prefixed with the "L" character (before
-                               *   the opening string quotation mark) are considered to be
-                               *   Unicode strings, and may be used instead of an explicit
-                               *   array of ASCII characters on little endian devices with
-                               *   UTF-16-LE \c wchar_t encoding.
-                               */
-} __attribute__((packed)) STRING_DESCRIPTOR;
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
@@ -132,11 +108,6 @@ extern const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor;
 extern const PROGMEM CONFIGURATION_XBOX_PC_DESCRIPTOR XBOXConfigurationDescriptorPC;
 extern const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor;
 extern const PROGMEM OS_DESCRIPTOR OSDescriptorString;
-extern const PROGMEM STRING_DESCRIPTOR* const descriptorStrings[3];
-extern const PROGMEM STRING_DESCRIPTOR xboxString;
-extern const PROGMEM STRING_DESCRIPTOR languageString;
-extern const PROGMEM STRING_DESCRIPTOR manufacturerString;
-extern const PROGMEM STRING_DESCRIPTOR productString;
 
 #define VERSION_MAJOR 3
 #define VERSION_MINOR 0

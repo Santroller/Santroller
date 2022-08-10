@@ -581,6 +581,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 memcpy_P(descriptorBuffer, &HIDConfigurationDescriptor, size);
                 HID_CONFIGURATION_DESCRIPTOR *desc = (HID_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
                 // TODO: test wii RB without this?
+                // TODO: one cool thing is we don't actually need to support configuring when using 
+                // Switch / PS3 modes, so we could just straight up define a configuration descriptor with no extra info
+                // Such as our SWITCH_CONFIGURATION_DESCRIPTOR?
+                // Or we just do this for all consoles if we don't want to hardcode duplicate  data
                 if (consoleType == WII_RB) {
                     desc->Config.bNumInterfaces = 1;
                     desc->Config.wTotalLength = offsetof(HID_CONFIGURATION_DESCRIPTOR, InterfaceConfig);

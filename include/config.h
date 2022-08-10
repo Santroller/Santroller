@@ -27,9 +27,9 @@ extern "C" {
 
 #define SKIP_MASK_AVR {0}
 
-#define PIN_INIT
+#define PIN_INIT {}
 
-#define TICK
+#define TICK {}
 
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
 #define CONFIGURATION {0}

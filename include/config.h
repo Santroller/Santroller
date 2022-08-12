@@ -31,6 +31,8 @@ extern "C" {
 
 #define TICK {}
 
+#define BOARD ""
+
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
 #define CONFIGURATION {0}
 #define CONFIGURATION_LEN 1

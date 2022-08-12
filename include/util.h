@@ -12,3 +12,5 @@
 // #define bit_write(c, p, m) (c ? bit_set(p, m) : bit_clear(p, m))
 #define bit_write(c, p, m) ((p) = (p & ~(_BV(m))) | ((!!(c)) << m))
 #define bit_check(value, bit) (value & _BV(bit))
+#define STR_INDIR(x) #x
+#define STR(x) STR_INDIR(x)

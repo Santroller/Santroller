@@ -7,6 +7,7 @@
 #include "keyboard_mouse.h"
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
+#include "util.h"
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 
@@ -404,6 +405,7 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
                                     0x00, 0x00, 0x00, 0x00};
+const PROGMEM char board[] = BOARD;
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
@@ -414,7 +416,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         if (request == COMMAND_JUMP_BOOTLOADER) {
             return true;
         }
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && (request == COMMAND_READ_CONFIG || request == COMMAND_READ_BOARD || request == COMMAND_READ_F_CPU)) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         return true;
@@ -455,6 +457,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));
         return sizeof(config);
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {
+        memcpy(requestBuffer, board, sizeof(board));
+        return sizeof(board);
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_F_CPU) {
+        char f_cpu[] = STR(F_CPU);
+        memcpy(requestBuffer, f_cpu, sizeof(f_cpu));
+        return sizeof(f_cpu);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));

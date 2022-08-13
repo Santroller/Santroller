@@ -8,52 +8,61 @@
 #include "pins_define.h"
 #include "util.h"
 
-uint16_t adcReading[ADC_COUNT];
+uint8_t adcReading[ADC_COUNT];
 uint8_t analogPins[ADC_COUNT] = ADC_PINS;
 bool first = true;
+uint8_t adc_raw(uint8_t pin) {
+    return adcReading[pin];
+}
 #if CONSOLE_TYPE == PC_XINPUT
-int16_t adc(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
-    int32_t val = (adcReading[analogIndex] - 512) * 64;
+int16_t adc(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
+    int16_t val = (adcReading[analogIndex] - 128);
     val -= offset;
     val *= multiplier;
-    if (val > INT16_MAX) val = INT16_MAX;
-    if (val < INT16_MIN) val = INT16_MIN;
+    val /= 64;
+    if (val > INT8_MAX) val = INT8_MAX;
+    if (val < INT8_MIN) val = INT8_MIN;
     if (val < deadzone && val > -deadzone) val = 0;
     return (int16_t)val >> 8;
 }
 
-uint16_t adc_trigger(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
-    uint32_t val = adcReading[analogIndex] * 64;
+uint16_t adc_trigger(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
+    int16_t val = adcReading[analogIndex];
     val -= offset;
     val *= multiplier;
-    if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < INT16_MIN) val = 0;
+    val /= 64;
+    if (multiplier < 0 && val > -UINT8_MAX) {
+        val = UINT8_MAX + val;
+    }
+    val *= 2;
+    if (val > UINT8_MAX) val = UINT8_MAX;
     if (val < deadzone) val = 0;
     return (uint16_t)val >> 8;
 }
 #else
-uint8_t adc(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
-    deadzone >>= 8;
-    offset >>= 8;
-    int16_t val = (adcReading[analogIndex] - 512) >> 2;
+uint8_t adc(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
+    int16_t val = (adcReading[analogIndex] - 128);
     val -= offset;
     val *= multiplier;
+    val /= 64;
     if (val > INT8_MAX) val = INT8_MAX;
     if (val < INT8_MIN) val = INT8_MIN;
-    if (val < (uint8_t)deadzone && val > -(uint8_t)deadzone) val = 0;
-    return ((int8_t)val) + INT8_MAX;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return ((int8_t)val) + INT8_MAX + 1;
 }
 
-uint8_t adc_trigger(uint8_t analogIndex, int16_t offset, float multiplier, uint16_t deadzone) {
-    deadzone >>= 8;
-    offset >>= 8;
-    uint32_t val = adcReading[analogIndex] >> 2;
+uint8_t adc_trigger(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
+    int16_t val = adcReading[analogIndex];
     val -= offset;
     val *= multiplier;
-    if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < INT16_MIN) val = 0;
+    val /= 64;
+    if (multiplier < 0 && val > -UINT8_MAX) {
+        val = UINT8_MAX + val;
+    }
+    val *= 2;
+    if (val > UINT8_MAX) val = UINT8_MAX;
     if (val < deadzone) val = 0;
-    return (uint16_t)val >> 8;
+    return (uint8_t)val;
 }
 
 #endif
@@ -71,7 +80,7 @@ void tickAnalog(void) {
         low = ADCL;
         high = ADCH;
         uint16_t data = (high << 8) | low;
-        adcReading[currentAnalog] = data;
+        adcReading[currentAnalog] = data >> 2;
         currentAnalog++;
         if (currentAnalog == ADC_COUNT) {
             currentAnalog = 0;

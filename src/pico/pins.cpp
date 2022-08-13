@@ -6,7 +6,7 @@
 #include "util.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
-
+// TODO: copy avr
 int16_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     adc_select_input(pin);
     int32_t val = (adc_read() - 2048) * 16;
@@ -19,7 +19,10 @@ int16_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     if (val < deadzone && val > -deadzone) val = 0;
     return (int16_t)val;
 }
-
+int16_t adc_raw(uint8_t pin) {
+    adc_select_input(pin);
+    return adc_read();
+}
 uint16_t adc_trigger(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     adc_select_input(pin);
     uint32_t val = adc_read() * 16;

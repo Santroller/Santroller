@@ -405,7 +405,7 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
                                     0x00, 0x00, 0x00, 0x00};
-const PROGMEM char board[] = BOARD;
+const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu[] = STR(F_CPU);
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;

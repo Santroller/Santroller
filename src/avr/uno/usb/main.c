@@ -1,13 +1,11 @@
 // This include needs to be at the top
 #include "LUFAConfig.h"
-// And then this one
-#include <LUFA.h>
 // And then all others after it
-#include <LUFA/LUFA/Drivers/Board/Board.h>
-#include <LUFA/LUFA/Drivers/Board/LEDs.h>
-#include <LUFA/LUFA/Drivers/Peripheral/Serial.h>
-#include <LUFA/LUFA/Drivers/USB/Class/CDCClass.h>
-#include <LUFA/LUFA/Drivers/USB/USB.h>
+#include <LUFA/Drivers/Board/Board.h>
+#include <LUFA/Drivers/Board/LEDs.h>
+#include <LUFA/Drivers/Peripheral/Serial.h>
+#include <LUFA/Drivers/USB/Class/CDCClass.h>
+#include <LUFA/Drivers/USB/USB.h>
 #include <avr/boot.h>
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
@@ -198,7 +196,7 @@ int main(void) {
     _delay_ms(1);
     AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
 
-    interrupts();
+    sei();
     if (serial) {
         // Enable a timer to rapidly flush bytes over serial
         TCCR0B = (1 << CS02);

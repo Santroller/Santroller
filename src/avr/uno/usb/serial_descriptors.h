@@ -1,5 +1,5 @@
 #include "LUFAConfig.h"
-#include <LUFA/LUFA/Drivers/USB/USB.h>
+#include <LUFA/Drivers/USB/USB.h>
 #include <avr/pgmspace.h>
 #include "endpoints.h"
 

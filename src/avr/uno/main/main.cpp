@@ -10,6 +10,7 @@
 #include "descriptors.h"
 #include "packets.h"
 #include "config.h"
+#include "shared_main.h"
 
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
@@ -47,6 +48,7 @@ void setup() {
     // Let the 8u2/16u2 know we are ready to receive data
     UDR0 = READY;
 }
+REPORT_TYPE report;
 void loop() {
     // Wait for a packet from the 8u2/16u2.
     if (!ready) return;
@@ -67,15 +69,9 @@ void loop() {
                 header->id = CONTROLLER_DATA_RESTART_USB_ID;
             } else {
                 // Write the controller input data
-                memset(dt->data, 0, sizeof(USB_XInputReport_Data_t));
-                USB_XInputReport_Data_t* xinput = (USB_XInputReport_Data_t*)dt->data;
-                xinput->rid = 0;
-                xinput->rsize = sizeof(XInput_Data_t);
-                xinput->r_x = rand();
-                header->len = sizeof(USB_XInputReport_Data_t);
-                // uint8_t clen = tick(controller);
-                // memcpy(buf + sizeof(packet_header_t), controller, clen);
-                // header->len += clen;
+                tick(&report);
+                memcpy(buf + sizeof(packet_header_t), controller, sizeof(REPORT_TYPE));
+                header->len += sizeof(REPORT_TYPE);
             }
             break;
         }

@@ -24,7 +24,7 @@
     { 0b0001111, 0, 0b00001011, 0, 0b1101111 }
 #elif defined(__AVR_AT90USB1286__)
 #define NUM_TOTAL_PINS 44
-#define PORT_COUNT 5
+#define PORT_COUNT 6
 #define PORTS \
     { (uint16_t) &PORTA, (uint16_t) &PORTB, (uint16_t)&PORTC, (uint16_t)&PORTD, (uint16_t)&PORTE, (uint16_t)&PORTF }
 // PF

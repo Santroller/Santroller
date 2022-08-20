@@ -14,7 +14,6 @@
 
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
-uint8_t controller[48];
 
 // Flag for if we have received a packet that needs to be processed
 volatile bool ready = false;
@@ -70,7 +69,7 @@ void loop() {
             } else {
                 // Write the controller input data
                 tick(&report);
-                memcpy(buf + sizeof(packet_header_t), controller, sizeof(REPORT_TYPE));
+                memcpy(buf + sizeof(packet_header_t), &report, sizeof(REPORT_TYPE));
                 header->len += sizeof(REPORT_TYPE);
             }
             break;

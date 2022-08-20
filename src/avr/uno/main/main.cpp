@@ -96,12 +96,9 @@ void loop() {
         }
         case CONTROL_REQUEST_ID: {
             // 8u2/16u2 wants us to handle a control request.
-            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[1]);
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[0]);
             if (len > ctr->wLength) len = ctr->wLength;
             header->len = len;
-            if ((ctr->bmRequestType & USB_SETUP_DEVICE_TO_HOST) == USB_SETUP_HOST_TO_DEVICE) {
-                header->len = 0;
-            }
 
             break;
         }

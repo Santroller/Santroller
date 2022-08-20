@@ -451,10 +451,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == COMMAND_JUMP_BOOTLOADER) {
             bootloader();
         }
-        if (request == COMMAND_READ_CONFIG) {
-            memcpy_P(requestBuffer, config, sizeof(config));
-            return sizeof(config);
-        }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));
         return sizeof(config);

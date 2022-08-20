@@ -24,6 +24,7 @@
 #define STATE_READ_LENGTH 2
 #define STATE_READ_VALID 3
 #define STATE_READ_DEVICE_ID 4
+#define STATE_READ_AND_RETURN 5
 
 // structure of data sent between 8u2/16u2 and the 328p/mega2560 when in controller mode
 typedef struct {

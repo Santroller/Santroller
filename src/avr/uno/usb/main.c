@@ -55,13 +55,13 @@ int handleControlRequest() {
         } else if (state == STATE_READ_PACKET_TYPE) {
             type = data;
             if (data == DEVICE_ID) {
-                state = STATE_READ_DEVICE_ID;
-            } else if (data == DESCRIPTOR_ID || data == CONTROL_REQUEST_ID || CONTROL_REQUEST_VALIDATION_ID) {
+                state = STATE_READ_AND_RETURN;
+            } else {
                 state = STATE_READ_LENGTH;
             }
         } else if (state == STATE_READ_LENGTH) {
             if (type == CONTROL_REQUEST_VALIDATION_ID) {
-                state = STATE_READ_VALID;
+                state = STATE_READ_AND_RETURN;
                 continue;
             }
             // For host to device requests, we don't have any more data to read as the host was writing the data
@@ -71,15 +71,11 @@ int handleControlRequest() {
             }
             packetCount = data;
             break;
-        } else if (state == STATE_READ_VALID) {
-            // For checking if a control request is valid, only the boolean value of the validness of the control request is returned
+        } else if (state == STATE_READ_AND_RETURN) {
+            // We are done
             FINISH_READ(tmp);
             return data;
-        } else if (state == STATE_READ_DEVICE_ID) {
-            // We have a device type, return it
-            FINISH_READ(tmp);
-            return data;
-        }
+        } 
     }
     // Header is read, acknowledge the setup packet, and start writing bytes out from the circular buffer.
     Endpoint_ClearSETUP();

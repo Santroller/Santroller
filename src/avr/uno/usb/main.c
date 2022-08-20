@@ -54,13 +54,9 @@ int handleControlRequest() {
             state = STATE_READ_PACKET_TYPE;
         } else if (state == STATE_READ_PACKET_TYPE) {
             type = data;
-            if (data == DEVICE_ID) {
-                state = STATE_READ_AND_RETURN;
-            } else {
-                state = STATE_READ_LENGTH;
-            }
+            state = STATE_READ_LENGTH;
         } else if (state == STATE_READ_LENGTH) {
-            if (type == CONTROL_REQUEST_VALIDATION_ID) {
+            if (type == CONTROL_REQUEST_VALIDATION_ID || type == DEVICE_ID) {
                 state = STATE_READ_AND_RETURN;
                 continue;
             }
@@ -300,6 +296,7 @@ int main(void) {
             handleControllerData();
             // Acknowledge the packet
             Endpoint_ClearIN();
+            continue;
         }
 
         // Check if the host has sent us a controller packet (for example, LEDs or other controller info)

@@ -94,7 +94,6 @@ void loop() {
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[0]);
             if (len > ctr->wLength) len = ctr->wLength;
             header->len = len;
-
             break;
         }
         case DEVICE_ID:

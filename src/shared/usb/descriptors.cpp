@@ -417,7 +417,8 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         if (request == COMMAND_JUMP_BOOTLOADER) {
             return true;
         }
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && (request == COMMAND_READ_CONFIG || request == COMMAND_READ_BOARD || request == COMMAND_READ_F_CPU)) {
+    } 
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && (request == COMMAND_READ_CONFIG || request == COMMAND_READ_BOARD || request == COMMAND_READ_F_CPU)) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         return true;
@@ -451,7 +452,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == COMMAND_JUMP_BOOTLOADER) {
             bootloader();
         }
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+    }
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));
         return sizeof(config);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {

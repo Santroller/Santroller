@@ -3,6 +3,7 @@
 
 // Types of requests used between the 8u2/16u2 and the 328p/mega2560
 #define READY 0x65
+#define USB_READY 0x64
 #define VALID_PACKET 0x14
 #define CONTROL_REQUEST_VALIDATION_ID 0x71
 #define CONTROL_REQUEST_INVALID_ID 0x72
@@ -32,11 +33,6 @@ typedef struct {
     uint8_t id;
     uint8_t len;
 } __attribute__((packed)) packet_header_t;
-
-typedef struct {
-    packet_header_t header;
-    uint8_t data[];
-} __attribute__((packed)) ret_packet_t;
 
 typedef struct {
     packet_header_t header;

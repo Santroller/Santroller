@@ -71,7 +71,7 @@ int handleControlRequest() {
             // We are done
             FINISH_READ(tmp);
             return data;
-        } 
+        }
     }
     // Header is read, acknowledge the setup packet, and start writing bytes out from the circular buffer.
     Endpoint_ClearSETUP();
@@ -327,6 +327,10 @@ int main(void) {
 
 void EVENT_USB_Device_ControlRequest(void) {
     if (!(Endpoint_IsSETUPReceived())) return;
+    // Standard requests NEED to shortcut this system!
+    if ((USB_ControlRequest.bmRequestType & (REQTYPE_VENDOR | REQTYPE_CLASS)) == REQTYPE_STANDARD) {
+        return;
+    }
     // Handle usbserial related control requests
     if (serial) {
         if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
@@ -460,14 +464,14 @@ void EVENT_USB_Device_ControlRequest(void) {
     }
     WRITE_ARRAY_TO_BUF(tmp, &control_request_packet, sizeof(packet_header_t));
     WRITE_ARRAY_TO_BUF(tmp, &USB_ControlRequest, sizeof(USB_ControlRequest));
-
     // For host to device requests, send the data from the host
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         Endpoint_ClearSETUP();
         uint8_t len = USB_ControlRequest.wLength;
-        while (len--) {
+        while (len) {
             register uint8_t data = Endpoint_Read_8();
             WRITE_BYTE_TO_BUF(data, tmp);
+            len--;
         }
         Endpoint_ClearStatusStage();
     }

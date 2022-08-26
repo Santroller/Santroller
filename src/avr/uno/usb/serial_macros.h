@@ -7,8 +7,8 @@
 extern volatile uint8_t USBtoUSART_WritePtr;
 extern volatile uint8_t USARTtoUSB_ReadPtr;
 
-#define USART2USB_BUFLEN 128  // 0xFF - 8bit
-#define USB2USART_BUFLEN 64   // 0x7F - 7bit
+#define USART2USB_BUFLEN 256  // 0xFF - 8bit
+#define USB2USART_BUFLEN 128  // 0x7F - 7bit
 
 // A collection of asm snippets that get reused everywhere, so they are made into macros
 
@@ -69,7 +69,7 @@ extern volatile uint8_t USARTtoUSB_ReadPtr;
     UCSR1B = (_BV(RXCIE1) | _BV(TXEN1) | _BV(RXEN1) | _BV(UDRIE1))
 
 #define FINISH_READ(tmp_ptr)                                        \
-    USARTtoUSB_ReadPtr = tmp & 0xFF
+    USARTtoUSB_ReadPtr = tmp_ptr & 0xFF
 
 #define WAIT_FOR_BYTES(tmp_ptr, n) \
-    while (USARTtoUSB_WritePtr - (tmp_ptr & 0xff) < n) {}
+    while (((USARTtoUSB_WritePtr - tmp_ptr) & 0xFF) < n) {}

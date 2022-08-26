@@ -8,11 +8,11 @@ void init_main(void) {
     initPins();
 }
 void tick(REPORT_TYPE* report) {
-    tickPins();
     report->buttons = 0;
 #if CONSOLE_TYPE != PC_XINPUT
     report->hat = 0;
 #endif
+    tickPins();
     TICK;
 #if CONSOLE_TYPE != PC_XINPUT
     report->hat = (report->hat & 0xf) > 0x0a ? 0x08 : hat_bindings[report->hat];

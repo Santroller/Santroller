@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <avr/io.h>
+#include <util/delay.h>
 
 #include "Usb.h"
 #include "config.h"
@@ -9,7 +10,6 @@
 #include "defines.h"
 #include "descriptors.h"
 #include "packets.h"
-#include "config.h"
 #include "shared_main.h"
 
 // Set up some arrays for storing received data / data to transmit
@@ -91,7 +91,7 @@ void loop() {
         }
         case CONTROL_REQUEST_ID: {
             // 8u2/16u2 wants us to handle a control request.
-            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, &dt->data[0]);
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, dt->data);
             if (len > ctr->wLength) len = ctr->wLength;
             header->len = len;
             break;

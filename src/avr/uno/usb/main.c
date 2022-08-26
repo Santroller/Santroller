@@ -40,7 +40,7 @@ bool serial = false;
 
 // Handle receiving data from the 328p during a control request
 int handleControlRequest() {
-    uint16_t tmp;
+    register uint16_t tmp;
     INIT_TMP_SERIAL_TO_USB(tmp);
     uint8_t state = STATE_NO_PACKET;
     uint8_t type;
@@ -115,7 +115,7 @@ int handleControlRequest() {
 void handleControllerData() {
     uint8_t txcount;
     uint8_t type;
-    uint16_t tmp;
+    register uint16_t tmp;
     uint8_t state = STATE_NO_PACKET;
     INIT_TMP_SERIAL_TO_USB(tmp);
     // Read the header

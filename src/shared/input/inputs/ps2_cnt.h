@@ -294,7 +294,7 @@ uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
 
       uint8_t left = replyLen - len + 3;
       // Shift out rest of command
-      if (len > 3) { shiftDataInOut(out + 3, inputBuffer + 3, len - 3, left); }
+      if (len > 3) { shiftDataInOut(out + 2, inputBuffer + 3, len - 3, left); }
 
       if (left == 0) {
         // The whole reply was gathered

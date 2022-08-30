@@ -72,8 +72,8 @@ void initMPU6050(unsigned int rate) {
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
 
-uint8_t fivetartapbindings[] = {
 #ifndef __AVR_ATmega328P__
+uint8_t fivetartapbindings[] = {
     [0x19 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y)) >> 8,
     [0x1A - 0x19] = (_BV(XBOX_Y)) >> 8,
     [0x2C - 0x19] =
@@ -112,7 +112,6 @@ uint8_t fivetartapbindings[] = {
     [0xCD - 0x19] = (_BV(XBOX_B)) >> 8,
     [0xE5 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
     [0xE6 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
-#endif
 };
 uint8_t wttapbindings[] = {[0x17] = (_BV(XBOX_A)) >> 8,
                            [0x16] = (_BV(XBOX_A)) >> 8,
@@ -153,7 +152,7 @@ void tickWTNeck(Controller_t *controller) {
   }
   controller->buttons |= lastTap << 8;
 }
-
+#endif
 void initGuitar(Configuration_t *config) {
   if (!typeIsGuitar) return;
   if (config->main.tiltType == MPU_6050) {
@@ -165,6 +164,8 @@ void initGuitar(Configuration_t *config) {
     pinMode(tiltPin.pin, INPUT_PULLUP);
     tick = tickDigitalTilt;
   }
+
+#ifndef __AVR_ATmega328P__
   if (config->neck.wtNeck) {
     setUpDigital(&wtPin, config, PIN_WT_NECK, 0, false, false);
     pinMode(PIN_WT_NECK, INPUT);
@@ -174,12 +175,13 @@ void initGuitar(Configuration_t *config) {
   } else if (config->neck.gh5NeckBar) {
     tickNeck = tickGH5NeckBar;
   }
+#endif
   scale = config->axisScale.r_y;
   tiltInverted = config->pins.r_y.inverted;
 }
 void tickGuitar(Controller_t *controller) {
   if (!typeIsGuitar) return;
-  if (tickNeck) { tickWTNeck(controller); }
+  if (tickNeck) { tickNeck(controller); }
   Guitar_t *g = (Guitar_t *)controller;
   int32_t whammy = g->whammy;
   if (whammy > 0xFFFF) { whammy = 0xFFFF; }

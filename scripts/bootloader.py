@@ -14,6 +14,7 @@ try:
 except:
     print("Probably already detached")
 try:
+    dev.ctrl_transfer(0x21, 49)
     dev.ctrl_transfer(0x21, 0x09, 49,0x00,[])
     dev.ctrl_transfer(0x21, 0x09, 49,0x02,[0x00])
 except:

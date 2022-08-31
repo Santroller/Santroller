@@ -34,6 +34,11 @@ set(uno_VARIANT uno)
 set(mega2560_VARIANT mega)
 set(megaadk_VARIANT mega)
 
+# for micro based builds, the multi firmare is based on the main firmware, but
+# it is based on the usb firmware for unos.
+set(uno_multi_BUILD_TYPE usb)
+set(micro_multi_BUILD_TYPE main)
+
 set(uno_VARIANTS "uno;mega2560;megaadk;mini")
 set(micro_VARIANTS "micro;a-micro;leonardo")
 set(F_CPU_8_mini TRUE)
@@ -56,7 +61,9 @@ foreach(PROJECT ${PROJECTS})
         list(APPEND F_CPUS 8000000)
       endif()
       # Find the correct type of build for the spefied type
-      if(NOT ${TYPE} MATCHES "usb")
+      if(${TYPE} MATCHES "multi")
+        set(BUILD_TYPE ${${PROJECT}_multi_BUILD_TYPE})
+      elseif(NOT ${TYPE} MATCHES "usb")
         set(BUILD_TYPE main)
       else()
         set(BUILD_TYPE usb)

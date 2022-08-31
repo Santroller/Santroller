@@ -22,7 +22,8 @@ CC_FLAGS 	 += -DSIGNATURE='"${SIGNATURE}"' -DVERSION_MAJOR='${VERSION_MAJOR}' -D
 LD_FLAGS     += $(REGS) -flto -fuse-linker-plugin 
 OBJDIR		 = obj
 BIN		 	 = bin
-TARGET       = $(BIN)/ardwiino-${ARDWIINO_BOARD}$(if ${MCU_TYPE},-${MCU_TYPE},)-${MCU}-${F_CPU}${MULTI}$(if ${RF},-rf,)
+TARGET       ?= $(BIN)/ardwiino-${ARDWIINO_BOARD}$(if ${MCU_TYPE},-${MCU_TYPE},)-${MCU}-${F_CPU}${MULTI}$(if ${RF},-rf,)
+$(info $(TARGET))
 # ----- No changes should be necessary below this line -----
 $(info $(SRC))
 $(info $(shell mkdir -p $(BIN)))

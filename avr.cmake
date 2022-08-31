@@ -81,7 +81,7 @@ foreach(PROJECT ${PROJECTS})
       endif()
 
       set(PID ${${VARIANT}_PID})
-      foreach(MCU ${${VARIANT}_${BUILD_TYPE}_MCUS})
+      foreach(MCU ${${VARIANT}_${TYPE}_MCUS})
         foreach(F_CPU ${F_CPUS})
           if(${PROJECT} MATCHES "uno")
             set(TARGET

@@ -8,7 +8,7 @@ extern "C" {
 #include "defines.h"
 
 
-#define CONSOLE_TYPE PC //This can either be PC;MIDI;KEYBOARD_MOUSE
+#define CONSOLE_TYPE XBOX360 //This can either be PC;MIDI;KEYBOARD_MOUSE
 #define DEVICE_TYPE GUITAR_HERO_GUITAR
 #define POLL_RATE 1
 
@@ -38,7 +38,7 @@ extern "C" {
 #define CONFIGURATION_LEN 1
 
 // ConsoleType can change due to console detection
-extern uint8_t consoleType;
+extern const uint8_t consoleType;
 extern const uint8_t config[CONFIGURATION_LEN];
 #ifdef __cplusplus
 }

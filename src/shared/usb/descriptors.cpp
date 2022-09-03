@@ -8,8 +8,10 @@
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
 #include "util.h"
+extern "C" {
+#include "xsm3/xsm3.h"
+}
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
-
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
 Windows for "OS Descriptors", which in this case allows us to indicate
@@ -417,7 +419,15 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         if (request == COMMAND_JUMP_BOOTLOADER) {
             return true;
         }
-    } 
+    }
+    switch (request) {
+        case 0x81:
+        case 0x82:
+        case 0x87:
+        case 0x83:
+        case 0x86:
+            return true;
+    }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && (request == COMMAND_READ_CONFIG || request == COMMAND_READ_BOARD || request == COMMAND_READ_F_CPU)) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
@@ -443,7 +453,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
-
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer) {
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
@@ -452,6 +461,27 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == COMMAND_JUMP_BOOTLOADER) {
             bootloader();
         }
+    }
+    switch (request) {
+        case 0x81:
+            xsm3_initialise_state();
+            xsm3_set_identification_data(xsm3_id_data_ms_controller);
+            xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
+            memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
+            break;
+        case 0x82:
+            xsm3_do_challenge_init((uint8_t *)requestBuffer);
+            break;
+        case 0x87:
+            xsm3_do_challenge_verify((uint8_t *)requestBuffer);
+            break;
+        case 0x83:
+            memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
+            break;
+        case 0x86:
+            short state = 2;  // 1 = in-progress, 2 = complete
+            memcpy(requestBuffer, &state, sizeof(state));
+            break;
     }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));
@@ -495,8 +525,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
             return sizeof(ps3_init);
         } else if (consoleType == PC) {
-            consoleType = PS3;
-            reset_usb();
+            // consoleType = PS3;
+            // reset_usb();
             return 0;
         }
     } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
@@ -516,8 +546,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 0;
     } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
-        consoleType = SWITCH;
-        reset_usb();
+        // consoleType = SWITCH;
+        // reset_usb();
         return 0;
     }
     return 0;
@@ -574,6 +604,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = WII_RB_GUITAR_PID;
                 }
             }
+            dev->idVendor = 0x045E;
+            dev->idProduct = 0x028E;
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
@@ -588,7 +620,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 memcpy_P(descriptorBuffer, &HIDConfigurationDescriptor, size);
                 HID_CONFIGURATION_DESCRIPTOR *desc = (HID_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
                 // TODO: test wii RB without this?
-                // TODO: one cool thing is we don't actually need to support configuring when using 
+                // TODO: one cool thing is we don't actually need to support configuring when using
                 // Switch / PS3 modes, so we could just straight up define a configuration descriptor with no extra info
                 // Such as our SWITCH_CONFIGURATION_DESCRIPTOR?
                 // Or we just do this for all consoles if we don't want to hardcode duplicate  data

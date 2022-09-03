@@ -137,14 +137,14 @@ void reset_usb(void) {
 }
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
-    if (consoleType != XBOX360 && request->bmRequestType == 0xC1 && request->bRequest == 0x81) {
-        consoleType = XBOX360;
-        printf("XBOX detected!\n");
-        // if (xinput_device) {
-        //     reset_usb();
-        //     return false;
-        // }
-    }
+    // if (consoleType != XBOX360 && request->bmRequestType == 0xC1 && request->bRequest == 0x81) {
+    //     consoleType = XBOX360;
+    //     printf("XBOX detected!\n");
+    //     // if (xinput_device) {
+    //         reset_usb();
+    //     //     return false;
+    //     // }
+    // }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
         //------------- STD Request -------------//
         if (stage == CONTROL_STAGE_SETUP) {

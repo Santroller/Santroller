@@ -6,3 +6,4 @@ usb-ideas.md
 devices.md
 modules.md
 .pio
+include/keyvault.h

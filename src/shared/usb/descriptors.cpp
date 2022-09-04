@@ -10,6 +10,7 @@
 #include "util.h"
 extern "C" {
 #include "xsm3/xsm3.h"
+#include "keyvault.h"
 }
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 

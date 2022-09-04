@@ -9,8 +9,8 @@
 #include "usbhid.h"
 #include "util.h"
 extern "C" {
-#include "xsm3/xsm3.h"
 #include "keyvault.h"
+#include "xsm3/xsm3.h"
 }
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
@@ -608,8 +608,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 }
             }
             // printf("%d %02x %02x\n", consoleType, dev->idVendor, dev->idProduct);
-            dev->idVendor = 0x045E;
-            dev->idProduct = 0x028E;
+            // TODO: eventually this wont be necessary?
+            if (consoleType == XBOX360) {
+                dev->idVendor = 0x045E;
+                dev->idProduct = 0x028E;
+            }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {

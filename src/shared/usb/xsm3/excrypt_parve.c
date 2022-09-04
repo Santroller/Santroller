@@ -69,7 +69,10 @@ void ExCryptChainAndSumMac(const uint32_t* cd, const uint32_t* ab, const uint32_
 
     input += 2;
   }
-
-  output[0] = SWAP32((out0 + ab1) % 0x7FFFFFFF);
-  output[1] = SWAP32((out1 + cd1) % 0x7FFFFFFF);
+  out0 = SWAP32((out0 + ab1) % 0x7FFFFFFF);
+  out1 = SWAP32((out1 + cd1) % 0x7FFFFFFF);
+  memcpy(output, &out0,  sizeof(out0));
+  memcpy(output+1, &out1,  sizeof(out1));
+  // output[0] = SWAP32((out0 + ab1) % 0x7FFFFFFF);
+  // output[1] = SWAP32((out1 + cd1) % 0x7FFFFFFF);
 }

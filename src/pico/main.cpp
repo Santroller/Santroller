@@ -8,14 +8,14 @@
 #include "common/tusb_types.h"
 #include "config.h"
 #include "device/usbd_pvt.h"
+#include "hardware/watchdog.h"
 #include "host/usbh_classdriver.h"
+#include "pico/bootrom.h"
 #include "pico/multicore.h"
 #include "pins.h"
 #include "serial.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#include "pico/bootrom.h"
-#include "hardware/watchdog.h"
 
 // static usb_device_t *usb_device = NULL;
 // static usb_device_t *xinput_device = NULL;
@@ -23,7 +23,6 @@
 // static uint8_t xinput_endpoint_in = 0;
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
-
 
 // void set_xinput_led(usb_device_t *device, uint endpoint, uint8_t led) {
 //     uint8_t data2[] = {0x01, 0x03, led};
@@ -140,8 +139,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         consoleType = XBOX360;
         printf("XBOX detected!\n");
         // if (xinput_device) {
-            reset_usb();
-        //     return false;
+        reset_usb();
+        return false;
         // }
     }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
@@ -175,31 +174,31 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
-    // } else if (xinput_device) {
-    //     // TODO: we need to expose a generic interface for USB host stuff, so that we can support it on anything, including the teensy or using a usb host shield
-    //     usb_setup_packet_t req_host = {
-    //         USB_SYNC, USB_PID_DATA0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    //     req_host.crc16[0] = USB_CRC16_PLACE;
-    //     req_host.crc16[1] = USB_CRC16_PLACE;
-    //     memcpy(&req_host.request_type, request, sizeof(tusb_control_request_t));
-    //     update_packet_crc16(&req_host);
-    //     if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
-    //         if (stage == CONTROL_STAGE_SETUP) {
-    //             if (control_in_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), buf, request->wLength) < 0) {
-    //                 return false;
-    //             }
-    //             tud_control_xfer(rhport, request, buf, request->wLength);
-    //         }
-    //     } else {
-    //         if (stage == CONTROL_STAGE_SETUP) {
-    //             tud_control_xfer(rhport, request, buf, request->wLength);
-    //         }
-    //         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-    //             if (control_out_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
-    //                 return false;
-    //             }
-    //         }
-    //     }
+        // } else if (xinput_device) {
+        //     // TODO: we need to expose a generic interface for USB host stuff, so that we can support it on anything, including the teensy or using a usb host shield
+        //     usb_setup_packet_t req_host = {
+        //         USB_SYNC, USB_PID_DATA0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        //     req_host.crc16[0] = USB_CRC16_PLACE;
+        //     req_host.crc16[1] = USB_CRC16_PLACE;
+        //     memcpy(&req_host.request_type, request, sizeof(tusb_control_request_t));
+        //     update_packet_crc16(&req_host);
+        //     if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
+        //         if (stage == CONTROL_STAGE_SETUP) {
+        //             if (control_in_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), buf, request->wLength) < 0) {
+        //                 return false;
+        //             }
+        //             tud_control_xfer(rhport, request, buf, request->wLength);
+        //         }
+        //     } else {
+        //         if (stage == CONTROL_STAGE_SETUP) {
+        //             tud_control_xfer(rhport, request, buf, request->wLength);
+        //         }
+        //         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
+        //             if (control_out_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
+        //                 return false;
+        //             }
+        //         }
+        //     }
     }
 
     return true;
@@ -238,8 +237,9 @@ usbh_class_driver_t const *usbh_app_driver_get_cb(uint8_t *driver_count) {
 }
 void reboot(void) {
     watchdog_enable(1, false);
-    for (;;) {}
+    for (;;) {
+    }
 }
 void bootloader(void) {
-   reset_usb_boot(0,0);
+    reset_usb_boot(0, 0);
 }

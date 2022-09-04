@@ -1,5 +1,6 @@
 #include "excrypt.h"
 #include "excrypt_des_data.h"
+#include <string.h>
 
 #define LODWORD(_qw)    ((uint32_t)(_qw))
 #define HIDWORD(_qw)    ((uint32_t)(((_qw) >> 32) & 0xffffffff))
@@ -106,7 +107,11 @@ void feistel(uint32_t* L, uint32_t* R, uint32_t F)
 
 void ExCryptDesEcb(const EXCRYPT_DES_STATE* state, const uint8_t* input, uint8_t* output, uint8_t encrypt)
 {
-  uint64_t block = SWAP64(*(uint64_t*)input);
+  uint64_t block;
+  memcpy(&block, input, sizeof(block));
+  block = SWAP64(block);
+  //  = SWAP64(*(uint64_t*)input)
+
 
   // initial permutation
   uint64_t result = 0;
@@ -137,7 +142,8 @@ void ExCryptDesEcb(const EXCRYPT_DES_STATE* state, const uint8_t* input, uint8_t
     result <<= 1;
     result |= (block >> (64 - FP[i])) & LB64_MASK;
   }
-  *(uint64_t*)output = SWAP64(result);
+  result = SWAP64(result);
+  memcpy(output, &result, sizeof(result));
 }
 
 void ExCryptDes3Key(EXCRYPT_DES3_STATE* state, const uint64_t* keys)
@@ -169,15 +175,21 @@ void ExCryptDes3Cbc(const EXCRYPT_DES3_STATE* state, const uint8_t* input, uint3
   for (uint32_t i = 0; i < input_size / 8; i++)
   {
     if (encrypt) {
-      *(uint64_t*)output = (*(uint64_t*)input) ^ last_block;
+      uint64_t temp;
+      memcpy(&temp, input, sizeof(temp));
+      temp = temp ^ last_block;
+      memcpy(output, &temp, sizeof(temp));
       ExCryptDes3Ecb(state, output, output, encrypt);
-      last_block = *(uint64_t*)output;
+      memcpy(&last_block, output, sizeof(last_block));
     }
     else
     {
       ExCryptDes3Ecb(state, input, output, encrypt);
-      *(uint64_t*)output = (*(uint64_t*)output) ^ last_block;
-      last_block = *(uint64_t*)input;
+      uint64_t temp;
+      memcpy(&temp, output, sizeof(temp));
+      temp = temp ^ last_block;
+      memcpy(output, &temp, sizeof(temp));
+      memcpy(&last_block, input, sizeof(last_block));
     }
     input += 8;
     output += 8;

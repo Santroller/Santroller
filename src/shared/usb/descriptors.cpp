@@ -453,12 +453,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
-uint8_t kv_key_1[] = {
-    0x17, 0xAA, 0x59, 0xCD, 0x21, 0x30, 0x17, 0x89,
-    0x4B, 0x4E, 0x71, 0x37, 0x3C, 0xBD, 0xCB, 0x60};
-uint8_t kv_key_2[] = {
-    0xB7, 0xAE, 0xBA, 0x43, 0x03, 0x09, 0xCF, 0xC3,
-    0x0D, 0xF9, 0x33, 0x71, 0x20, 0x71, 0x24, 0xC7};
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer) {
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
@@ -474,20 +468,20 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             xsm3_set_identification_data(xsm3_id_data_ms_controller);
             xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
             memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
-            break;
+            return sizeof(xsm3_id_data_ms_controller);
         case 0x82:
             xsm3_do_challenge_init((uint8_t *)requestBuffer);
-            break;
+            return 0;
         case 0x87:
             xsm3_do_challenge_verify((uint8_t *)requestBuffer);
-            break;
+            return 0;
         case 0x83:
             memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
-            break;
+            return sizeof(xsm3_challenge_response);
         case 0x86:
             short state = 2;  // 1 = in-progress, 2 = complete
             memcpy(requestBuffer, &state, sizeof(state));
-            break;
+            return sizeof(state);
     }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));

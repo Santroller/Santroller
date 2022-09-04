@@ -97,6 +97,7 @@ void UsbdSecXSM3AuthenticationMac(const uint8_t *key, const uint8_t *salt, uint8
 	uint64_t sk[3];
 	uint8_t iv[8];
 	uint8_t temp[8];
+	uint64_t input_temp;
 	int i;
 
 	// clear iv + temp value of stack junk
@@ -114,7 +115,9 @@ void UsbdSecXSM3AuthenticationMac(const uint8_t *key, const uint8_t *salt, uint8
 	}
 	// for every 8 byte input block, xor the temp value with it and encrypt over itself
 	for (i = 0; i < length; i += 8) {
-		*(uint64_t *)temp ^= *(uint64_t *)(input + i);
+		memcpy(&input_temp, input+i, sizeof(input_temp));
+		*(uint64_t *)temp ^= input_temp;
+		
 		ExCryptDesEcb(&des, temp, temp, 1);
 	}
 	// xor the highest bit of the temp value
@@ -142,5 +145,9 @@ void UsbdSecXSMAuthenticationAcr(const uint8_t *console_id, const uint8_t *input
 	ExCryptParveEcb(key, UsbdSecSboxData, block, cd);
 	ExCryptParveCbcMac(key, UsbdSecSboxData, iv, UsbdSecPlainTextData, 0x80, ab);
 	ExCryptChainAndSumMac((uint32_t *)cd, (uint32_t *)ab, (uint32_t *)UsbdSecPlainTextData, 0x20, (uint32_t *)output);
-	*(uint64_t *)output ^= *(uint64_t *)ab;
+	uint64_t current;
+	memcpy(&current, output, sizeof(current));
+	current ^= *(uint64_t *)ab;
+	// *(uint64_t *)output ^= *(uint64_t *)ab;
+	memcpy(output, &current, sizeof(current));
 }

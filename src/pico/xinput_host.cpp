@@ -1,4 +1,4 @@
-/*
+/* 
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -26,127 +26,184 @@
 
 #include "tusb_option.h"
 
-#if (TUSB_OPT_HOST_ENABLED && CFG_TUH_XINPUT)
+#if (CFG_TUH_ENABLED && CFG_TUH_XINPUT)
 
-//--------------------------------------------------------------------+
-// INCLUDE
-//--------------------------------------------------------------------+
-#  include "host/usbh.h"
-#  include "host/usbh_classdriver.h"
-#  include "usb/wcid_descriptors.h"
-#  include "usb/xinput_descriptors.h"
-#  include "xinput_host.h"
+#include "host/usbh.h"
+#include "host/usbh_classdriver.h"
+
+#include "xinput_host.h"
+#include "descriptors.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
 //--------------------------------------------------------------------+
 
-typedef struct {
+typedef struct
+{
   uint8_t itf_num;
   uint8_t ep_in;
   uint8_t ep_out;
 
-  uint16_t report_size;
+  uint8_t itf_protocol;   // None, Keyboard, Mouse
+  uint8_t protocol_mode;  // Boot (0) or Report protocol (1)
+
+  uint8_t  report_desc_type;
+  uint16_t report_desc_len;
+
+  uint16_t epin_size;
+  uint16_t epout_size;
+
+  uint8_t epin_buf[CFG_TUH_XINPUT_EPIN_BUFSIZE];
+  uint8_t epout_buf[CFG_TUH_XINPUT_EPOUT_BUFSIZE];
 } xinputh_interface_t;
 
-//--------------------------------------------------------------------+
-// INTERNAL OBJECT & FUNCTION DECLARATION
-//--------------------------------------------------------------------+
-xinputh_interface_t xinput_interface[CFG_TUH_XINPUT];
+typedef struct
+{
+  uint8_t inst_count;
+  xinputh_interface_t instances[CFG_TUH_XINPUT];
+} xinputh_device_t;
 
-static tusb_error_t xinputh_validate_paras(uint8_t dev_addr, uint16_t vendor_id,
-                                           uint16_t product_id, void *p_buffer,
-                                           uint16_t length) {
-  if (!tusbh_xinput_is_mounted(dev_addr, vendor_id, product_id)) {
-    return TUSB_ERROR_DEVICE_NOT_READY;
+static xinputh_device_t _xinputh_dev[CFG_TUH_DEVICE_MAX];
+
+//------------- Internal prototypes -------------//
+
+// Get HID device & interface
+TU_ATTR_ALWAYS_INLINE static inline xinputh_device_t* get_dev(uint8_t dev_addr);
+TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t* get_instance(uint8_t dev_addr, uint8_t instance);
+static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf);
+static uint8_t get_instance_id_by_epaddr(uint8_t dev_addr, uint8_t ep_addr);
+
+//--------------------------------------------------------------------+
+// Interface API
+//--------------------------------------------------------------------+
+
+uint8_t tuh_xinput_instance_count(uint8_t dev_addr)
+{
+  return get_dev(dev_addr)->inst_count;
+}
+
+bool tuh_xinput_mounted(uint8_t dev_addr, uint8_t instance)
+{
+  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
+  return (hid_itf->ep_in != 0) || (hid_itf->ep_out != 0);
+}
+
+uint8_t tuh_xinput_interface_protocol(uint8_t dev_addr, uint8_t instance)
+{
+  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
+  return hid_itf->itf_protocol;
+}
+
+
+//--------------------------------------------------------------------+
+// Interrupt Endpoint API
+//--------------------------------------------------------------------+
+
+bool tuh_xinput_receive_report(uint8_t dev_addr, uint8_t instance)
+{
+  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
+
+  // claim endpoint
+  TU_VERIFY( usbh_edpt_claim(dev_addr, hid_itf->ep_in) );
+
+  if ( !usbh_edpt_xfer(dev_addr, hid_itf->ep_in, hid_itf->epin_buf, hid_itf->epin_size) )
+  {
+    usbh_edpt_claim(dev_addr, hid_itf->ep_in);
+    return false;
   }
 
-  TU_ASSERT(p_buffer != NULL && length != 0, TUSB_ERROR_INVALID_PARA);
-
-  return TUSB_ERROR_NONE;
-}
-//--------------------------------------------------------------------+
-// APPLICATION API (need to check parameters)
-//--------------------------------------------------------------------+
-tusb_error_t tusbh_xinput_read(uint8_t dev_addr, uint16_t vendor_id,
-                               uint16_t product_id, void *p_buffer,
-                               uint16_t length) {
-  // TU_ASSERT_ERR( xinputh_validate_paras(dev_addr, vendor_id, product_id,
-  // p_buffer, length) );
-
-  // if ( !hcd_pipe_is_idle(xinput_interface[dev_addr-1].pipe_in) )
-  // {
-  //   return TUSB_ERROR_INTERFACE_IS_BUSY;
-  // }
-
-  //   (void)usbh_edpt_xfer(dev_addr, xinput_interface[dev_addr - 1].ep_in,
-  //   p_buffer,
-  //                        length);
-
-  return TUSB_ERROR_NONE;
+  return true;
 }
 
-tusb_error_t tusbh_xinput_write(uint8_t dev_addr, uint16_t vendor_id,
-                                uint16_t product_id, void const *p_data,
-                                uint16_t length) {
-  // TU_ASSERT_ERR( xinputh_validate_paras(dev_addr, vendor_id, product_id,
-  // p_data, length) );
+//bool tuh_n_hid_n_ready(uint8_t dev_addr, uint8_t instance)
+//{
+//  TU_VERIFY(tuh_n_hid_n_mounted(dev_addr, instance));
+//
+//  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
+//  return !usbh_edpt_busy(dev_addr, hid_itf->ep_in);
+//}
 
-  // if ( !hcd_pipe_is_idle(xinput_interface[dev_addr-1].pipe_out) )
-  // {
-  //   return TUSB_ERROR_INTERFACE_IS_BUSY;
-  // }
-
-  //   (void)usbh_edpt_xfer(dev_addr, xinput_interface[dev_addr - 1].ep_out,
-  //   p_data,
-  //                        length);
-
-  return TUSB_ERROR_NONE;
-}
+//void tuh_xinput_send_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t const* report, uint16_t len);
 
 //--------------------------------------------------------------------+
-// USBH-CLASS API
+// USBH API
 //--------------------------------------------------------------------+
-void xinputh_init(void) {
-  tu_memclr(&xinput_interface, sizeof(xinputh_interface_t) * CFG_TUH_XINPUT);
+void xinputh_init(void)
+{
+  tu_memclr(_xinputh_dev, sizeof(_xinputh_dev));
 }
 
-static bool set_led_complete(uint8_t dev_addr,
-                             tusb_control_request_t const *request,
-                             xfer_result_t result) {
-  printf("LED DONE!");
+bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
+{
+  (void) result;
+
+  uint8_t const dir = tu_edpt_dir(ep_addr);
+  uint8_t const instance = get_instance_id_by_epaddr(dev_addr, ep_addr);
+  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
+
+  if ( dir == TUSB_DIR_IN )
+  {
+    TU_LOG2("  Get Report callback (%u, %u)\r\n", dev_addr, instance);
+    TU_LOG3_MEM(hid_itf->epin_buf, xferred_bytes, 2);
+    // tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t) xferred_bytes);
+  }else
+  {
+    // if (tuh_xinput_report_sent_cb) tuh_xinput_report_sent_cb(dev_addr, instance, hid_itf->epout_buf, (uint16_t) xferred_bytes);
+  }
+
+  return true;
 }
 
-bool xinputh_open_subtask(uint8_t rhport, uint8_t dev_addr,
-                          tusb_desc_interface_t const *itf_desc,
-                          uint16_t *p_length) {
-  TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass, 0);
+void xinputh_close(uint8_t dev_addr)
+{
+  TU_VERIFY(dev_addr <= CFG_TUH_DEVICE_MAX, );
+
+  xinputh_device_t* hid_dev = get_dev(dev_addr);
+
+  if (tuh_xinput_umount_cb)
+  {
+    for (uint8_t inst = 0; inst < hid_dev->inst_count; inst++ ) tuh_xinput_umount_cb(dev_addr, inst);
+  }
+
+  tu_memclr(hid_dev, sizeof(xinputh_device_t));
+}
+
+//--------------------------------------------------------------------+
+// Enumeration
+//--------------------------------------------------------------------+
+
+bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+{
+  (void) rhport;
+  (void) max_len;
+  printf("ID: %02x\n", desc_itf->bInterfaceClass);
+  TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, 0);
   uint16_t drv_len = sizeof(tusb_desc_interface_t) +
-                     (itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
+                     (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
 
   // Find available interface
   xinputh_interface_t *p_xinput = NULL;
   for (uint8_t i = 0; i < CFG_TUH_XINPUT; i++) {
-    if (xinput_interface[i].ep_in == 0 && xinput_interface[i].ep_out == 0) {
-      p_xinput = &xinput_interface[i];
+    if (_xinputh_dev->instances[i].ep_in == 0 && _xinputh_dev->instances[i].ep_out == 0) {
+      p_xinput = &_xinputh_dev->instances[i];
       break;
     }
   }
   TU_VERIFY(p_xinput, 0);
 
-  uint8_t const *p_desc = (uint8_t const *)itf_desc;
-  if (itf_desc->bInterfaceSubClass == 0x5D &&
-      (itf_desc->bInterfaceProtocol == 0x01 ||
-       itf_desc->bInterfaceProtocol == 0x03 ||
-       itf_desc->bInterfaceProtocol == 0x02)) {
+  uint8_t const *p_desc = (uint8_t const *)desc_itf;
+  if (desc_itf->bInterfaceSubClass == 0x5D &&
+      (desc_itf->bInterfaceProtocol == 0x01 ||
+       desc_itf->bInterfaceProtocol == 0x03 ||
+       desc_itf->bInterfaceProtocol == 0x02)) {
     // Xinput reserved endpoint
     //-------------- Xinput Descriptor --------------//
     p_desc = tu_desc_next(p_desc);
-    XBOX_ID_Descriptor_t *x_desc =
-        (XBOX_ID_Descriptor_t *)p_desc;
-    TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
-    drv_len += x_desc->Header.Size;
-    uint8_t endpoints = itf_desc->bNumEndpoints;
+    XBOX_ID_DESCRIPTOR *x_desc =
+        (XBOX_ID_DESCRIPTOR *)p_desc;
+    TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+    drv_len += x_desc->bLength;
+    uint8_t endpoints = desc_itf->bNumEndpoints;
     while (endpoints--) {
 
       p_desc = tu_desc_next(p_desc);
@@ -155,13 +212,13 @@ bool xinputh_open_subtask(uint8_t rhport, uint8_t dev_addr,
       TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
       if (desc_ep->bEndpointAddress & 0x80) {
         p_xinput->ep_in = desc_ep->bEndpointAddress;
-        TU_ASSERT(usbh_edpt_open(rhport, dev_addr, desc_ep));
+        TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
       } else {
         p_xinput->ep_out = desc_ep->bEndpointAddress;
-        TU_ASSERT(usbh_edpt_open(rhport, dev_addr, desc_ep));
+        TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
       }
     }
-    p_xinput->itf_num = itf_desc->bInterfaceNumber;
+    p_xinput->itf_num = desc_itf->bInterfaceNumber;
     // Prepare for incoming data
     // if (p_xinput->ep_out != 0xFF) {
     //   if (!usbh_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
@@ -171,64 +228,93 @@ bool xinputh_open_subtask(uint8_t rhport, uint8_t dev_addr,
     //   }
     // }
 
-  } else if (itf_desc->bInterfaceSubClass == 0xfD &&
-             itf_desc->bInterfaceProtocol == 0x13) {
+  } else if (desc_itf->bInterfaceSubClass == 0xfD &&
+             desc_itf->bInterfaceProtocol == 0x13) {
     // Xinput reserved endpoint
     //-------------- Xinput Descriptor --------------//
     p_desc = tu_desc_next(p_desc);
-    XBOX_ID_Descriptor_t *x_desc =
-        (XBOX_ID_Descriptor_t *)p_desc;
-    TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->Header.Type, 0);
-    drv_len += x_desc->Header.Size;
+    XBOX_ID_DESCRIPTOR *x_desc =
+        (XBOX_ID_DESCRIPTOR *)p_desc;
+    TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+    drv_len += x_desc->bLength;
     p_desc = tu_desc_next(p_desc);
   }
-  *p_length = drv_len;
-  return tusbh_xinput_mount_cb(rhport, dev_addr, itf_desc, p_length);
-}
-uint8_t init_led[] = {0x01, 0x03, 0x02};
-bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num) {
-  printf("Sending LEDS!\n");
-
-  //   uint8_t buf[] = {0x01, 0x03, 0x02};
-  //   (void)usbh_edpt_xfer(dev_addr, 0x02, buf, 3);
-  uint8_t report_type = 0x02;
-  uint8_t report_id = 0x00;
-  tusb_control_request_t const request = {
-      .bmRequestType_bit = {.recipient = TUSB_REQ_RCPT_INTERFACE,
-                            .type = TUSB_REQ_TYPE_CLASS,
-                            .direction = TUSB_DIR_OUT},
-      .bRequest = THID_REQ_SetReport,
-      .wValue = tu_u16(report_type, report_id),
-      .wIndex = 0x00,
-      .wLength = sizeof(init_led)};
-  tuh_control_xfer(dev_addr, &request, init_led, set_led_complete);
-
-  return true;
-}
-bool xinputh_isr(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result,
-                 uint32_t xferred_bytes) {
-  printf("Got Data: %d %d %d %d", dev_addr, ep_addr, result, xferred_bytes);
+  _xinputh_dev->inst_count++;
   return true;
 }
 
-void xinputh_close(uint8_t dev_addr) {
-  tusb_error_t err1, err2;
-  xinputh_interface_t *p_interface = &xinput_interface[dev_addr - 1];
+//--------------------------------------------------------------------+
+// Set Configure
+//--------------------------------------------------------------------+
 
-  // // TODO re-consider to check pipe valid before calling pipe_close
-  // if( pipehandle_is_valid( p_interface->pipe_in ) )
-  // {
-  //   err1 = hcd_pipe_close( p_interface->pipe_in );
-  // }
+enum {
+  CONFG_SET_IDLE,
+  CONFIG_SET_PROTOCOL,
+  CONFIG_GET_REPORT_DESC,
+  CONFIG_COMPLETE
+};
 
-  // if ( pipehandle_is_valid( p_interface->pipe_out ) )
-  // {
-  //   err2 = hcd_pipe_close( p_interface->pipe_out );
-  // }
+static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len);
+static void process_set_config(tuh_xfer_t* xfer);
 
-  tu_memclr(p_interface, sizeof(xinputh_interface_t));
+bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num)
+{
+  return true;
+}
 
-  TU_ASSERT(err1 == TUSB_ERROR_NONE && err2 == TUSB_ERROR_NONE, (void)0);
+
+static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
+{
+  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
+
+  // enumeration is complete
+  tuh_xinput_mount_cb(dev_addr, instance, desc_report, desc_len);
+
+  // notify usbh that driver enumeration is complete
+  usbh_driver_set_config_complete(dev_addr, hid_itf->itf_num);
+}
+
+
+//--------------------------------------------------------------------+
+// Helper
+//--------------------------------------------------------------------+
+
+// Get Device by address
+TU_ATTR_ALWAYS_INLINE static inline xinputh_device_t* get_dev(uint8_t dev_addr)
+{
+  return &_xinputh_dev[dev_addr-1];
+}
+
+// Get Interface by instance number
+TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t* get_instance(uint8_t dev_addr, uint8_t instance)
+{
+  return &_xinputh_dev[dev_addr-1].instances[instance];
+}
+
+// Get instance ID by interface number
+static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf)
+{
+  for ( uint8_t inst = 0; inst < CFG_TUH_XINPUT; inst++ )
+  {
+    xinputh_interface_t *hid = get_instance(dev_addr, inst);
+
+    if ( (hid->itf_num == itf) && (hid->ep_in || hid->ep_out) ) return inst;
+  }
+
+  return 0xff;
+}
+
+// Get instance ID by endpoint address
+static uint8_t get_instance_id_by_epaddr(uint8_t dev_addr, uint8_t ep_addr)
+{
+  for ( uint8_t inst = 0; inst < CFG_TUH_XINPUT; inst++ )
+  {
+    xinputh_interface_t *hid = get_instance(dev_addr, inst);
+
+    if ( (ep_addr == hid->ep_in) || ( ep_addr == hid->ep_out) ) return inst;
+  }
+
+  return 0xff;
 }
 
 #endif

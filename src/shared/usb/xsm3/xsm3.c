@@ -127,6 +127,7 @@ void xsm3_set_identification_data(const uint8_t id_data[0x1D]) {
     memcpy(xsm3_identification_data, id_data, 0xF);
     // vendor ID
     *(unsigned short *)(xsm3_identification_data + 0x10) = *(unsigned short *)(id_data + 0xF);
+
     // product ID
 	*(unsigned short *)(xsm3_identification_data + 0x12) = *(unsigned short *)(id_data + 0x11);
     // unknown
@@ -134,7 +135,8 @@ void xsm3_set_identification_data(const uint8_t id_data[0x1D]) {
     // unknown
 	*(unsigned char *)(xsm3_identification_data + 0x15) = *(unsigned char *)(id_data + 0x16);
     // unknown
-	*(unsigned short *)(xsm3_identification_data + 0x16) = *(unsigned short *)(id_data + 0x14);
+    xsm3_identification_data[0x16] = id_data[0x14];
+    xsm3_identification_data[0x17] = id_data[0x15];
 }
 
 void xsm3_import_kv_keys(const uint8_t key1[0x10], const uint8_t key2[0x10]) {

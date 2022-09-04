@@ -8,10 +8,12 @@
 #include "common/tusb_types.h"
 #include "config.h"
 #include "device/usbd_pvt.h"
+#include "host/usbh_classdriver.h"
 #include "pico/multicore.h"
 #include "pins.h"
 #include "serial.h"
 #include "xinput_device.h"
+#include "xinput_host.h"
 #include "pico/bootrom.h"
 #include "hardware/watchdog.h"
 
@@ -72,15 +74,12 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 void setup() {
     uart_set_baudrate(uart0, 115200);
     generateSerialString(serialString.UnicodeString);
-    // multicore_reset_core1();
-    // multicore_launch_core1(core1_main);
     tusb_init();
-    // set_device_connection_handler(&host_connection);
-    // set_device_disconnection_handler(&host_disconnection);
 }
 
 void loop() {
     tud_task();  // tinyusb device task
+    tuh_task();
     // pio_usb_connection_task();
     // uint8_t len = 20;
     // if (xinput_device) {
@@ -137,14 +136,14 @@ void reset_usb(void) {
 }
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
-    // if (consoleType != XBOX360 && request->bmRequestType == 0xC1 && request->bRequest == 0x81) {
-    //     consoleType = XBOX360;
-    //     printf("XBOX detected!\n");
-    //     // if (xinput_device) {
-    //         reset_usb();
-    //     //     return false;
-    //     // }
-    // }
+    if (consoleType != XBOX360 && request->bmRequestType == 0xC1 && request->bRequest == 0x81) {
+        consoleType = XBOX360;
+        printf("XBOX detected!\n");
+        // if (xinput_device) {
+            reset_usb();
+        //     return false;
+        // }
+    }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
         //------------- STD Request -------------//
         if (stage == CONTROL_STAGE_SETUP) {
@@ -209,7 +208,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 usbd_class_driver_t driver[] = {
     {
 #if CFG_TUSB_DEBUG >= 2
-        .name = "XInput_HID",
+        .name = "XInput_Device_HID",
 #endif
         .init = xinputd_init,
         .reset = xinputd_reset,
@@ -221,6 +220,21 @@ usbd_class_driver_t driver[] = {
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
     *driver_count = 1;
     return driver;
+}
+usbh_class_driver_t driver_host[] = {
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "XInput_Host_HID",
+#endif
+        .init = xinputh_init,
+        .open = xinputh_open,
+        .set_config = xinputh_set_config,
+        .xfer_cb = xinputh_xfer_cb,
+        .close = xinputh_close}};
+
+usbh_class_driver_t const *usbh_app_driver_get_cb(uint8_t *driver_count) {
+    *driver_count = 1;
+    return driver_host;
 }
 void reboot(void) {
     watchdog_enable(1, false);

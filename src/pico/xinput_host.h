@@ -1,4 +1,4 @@
-/*
+/* 
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -24,52 +24,131 @@
  * This file is part of the TinyUSB stack.
  */
 
-#ifndef _TUSB_VENDOR_HOST_H_
-#define _TUSB_VENDOR_HOST_H_
+#ifndef _TUSB_HID_HOST_H_
+#define _TUSB_HID_HOST_H_
 
-#include "common/tusb_common.h"
+#include <stdint.h>
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
 #define XINPUT_DESC_TYPE_RESERVED 0x21
 #define XINPUT_SECURITY_DESC_TYPE_RESERVED 0x41
-#ifdef __cplusplus
-extern "C" {
+
+//--------------------------------------------------------------------+
+// Class Driver Configuration
+//--------------------------------------------------------------------+
+
+// TODO Highspeed interrupt can be up to 512 bytes
+#ifndef CFG_TUH_XINPUT_EPIN_BUFSIZE
+#define CFG_TUH_XINPUT_EPIN_BUFSIZE 64
 #endif
 
-//--------------------------------------------------------------------+
-// USBH-CLASS DRIVER API
-//--------------------------------------------------------------------+
-static inline bool tusbh_xinput_is_mounted(uint8_t dev_addr, uint16_t vendor_id,
-                                           uint16_t product_id) {
-  (void)vendor_id; // TODO check this later
-  (void)product_id;
-  //  return (tusbh_device_get_mounted_class_flag(dev_addr) &
-  //  TU_BIT(TUSB_CLASS_MAPPED_INDEX_END-1) ) != 0;
-  return false;
-}
+#ifndef CFG_TUH_XINPUT_EPOUT_BUFSIZE
+#define CFG_TUH_XINPUT_EPOUT_BUFSIZE 64
+#endif
 
-tusb_error_t tusbh_xinput_read(uint8_t dev_addr, uint16_t vendor_id,
-                               uint16_t product_id, void *p_buffer,
-                               uint16_t length);
-tusb_error_t tusbh_xinput_write(uint8_t dev_addr, uint16_t vendor_id,
-                                uint16_t product_id, void const *p_data,
-                                uint16_t length);
-bool tusbh_xinput_mount_cb(uint8_t rhport, uint8_t dev_addr,
-                           tusb_desc_interface_t const *itf_desc,
-                           uint16_t *p_length);
+
+typedef struct
+{
+  uint8_t  report_id;
+  uint8_t  usage;
+  uint16_t usage_page;
+
+  // TODO still use the endpoint size for now
+//  uint8_t in_len;      // length of IN report
+//  uint8_t out_len;     // length of OUT report
+} tuh_xinput_report_info_t;
+
+//--------------------------------------------------------------------+
+// Interface API
+//--------------------------------------------------------------------+
+
+// Get the number of HID instances
+uint8_t tuh_xinput_instance_count(uint8_t dev_addr);
+
+// Check if HID instance is mounted
+bool tuh_xinput_mounted(uint8_t dev_addr, uint8_t instance);
+
+// Get interface supported protocol (bInterfaceProtocol) check out hid_interface_protocol_enum_t for possible values
+uint8_t tuh_xinput_interface_protocol(uint8_t dev_addr, uint8_t instance);
+
+// Parse report descriptor into array of report_info struct and return number of reports.
+// For complicated report, application should write its own parser.
+uint8_t tuh_xinput_parse_report_descriptor(tuh_xinput_report_info_t* reports_info_arr, uint8_t arr_count, uint8_t const* desc_report, uint16_t desc_len) TU_ATTR_UNUSED;
+
+//--------------------------------------------------------------------+
+// Control Endpoint API
+//--------------------------------------------------------------------+
+
+// Get current protocol: HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
+// Note: Device will be initialized in Boot protocol for simplicity.
+//       Application can use set_protocol() to switch back to Report protocol.
+uint8_t tuh_xinput_get_protocol(uint8_t dev_addr, uint8_t instance);
+
+// Set protocol to HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
+// This function is only supported by Boot interface (tuh_n_hid_interface_protocol() != NONE)
+bool tuh_xinput_set_protocol(uint8_t dev_addr, uint8_t instance, uint8_t protocol);
+
+// Set Report using control endpoint
+// report_type is either Intput, Output or Feature, (value from hid_report_type_t)
+bool tuh_xinput_set_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
+
+//--------------------------------------------------------------------+
+// Interrupt Endpoint API
+//--------------------------------------------------------------------+
+
+// Check if the interface is ready to use
+//bool tuh_n_hid_n_ready(uint8_t dev_addr, uint8_t instance);
+
+// Try to receive next report on Interrupt Endpoint. Immediately return
+// - true If succeeded, tuh_xinput_report_received_cb() callback will be invoked when report is available
+// - false if failed to queue the transfer e.g endpoint is busy
+bool tuh_xinput_receive_report(uint8_t dev_addr, uint8_t instance);
+
+// Send report using interrupt endpoint
+// If report_id > 0 (composite), it will be sent as 1st byte, then report contents. Otherwise only report content is sent.
+//void tuh_xinput_send_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t const* report, uint16_t len);
+
+//--------------------------------------------------------------------+
+// Callbacks (Weak is optional)
+//--------------------------------------------------------------------+
+
+// Invoked when device with hid interface is mounted
+// Report descriptor is also available for use. tuh_xinput_parse_report_descriptor()
+// can be used to parse common/simple enough descriptor.
+// Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
+// therefore report_desc = NULL, desc_len = 0
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report_desc, uint16_t desc_len);
+
+// Invoked when device with hid interface is un-mounted
+TU_ATTR_WEAK void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance);
+
+// Invoked when received report from device via interrupt endpoint
+// Note: if there is report ID (composite), it is 1st byte of report
+void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
+
+// Invoked when sent report to device successfully via interrupt endpoint
+TU_ATTR_WEAK void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
+
+// Invoked when Sent Report to device via either control endpoint
+// len = 0 indicate there is error in the transfer e.g stalled response
+TU_ATTR_WEAK void tuh_xinput_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, uint16_t len);
+
+// Invoked when Set Protocol request is complete
+TU_ATTR_WEAK void tuh_xinput_set_protocol_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t protocol);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void xinputh_init(void);
-bool xinputh_open_subtask(uint8_t rhport, uint8_t dev_addr,
-                          tusb_desc_interface_t const *desc_itf,
-                          uint16_t *p_length);
-bool xinputh_isr(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result,
-                 uint32_t xferred_bytes);
-void xinputh_close(uint8_t dev_addr);
-bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num);
+void xinputh_init       (void);
+bool xinputh_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
+bool xinputh_set_config (uint8_t dev_addr, uint8_t itf_num);
+bool xinputh_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void xinputh_close      (uint8_t dev_addr);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _TUSB_VENDOR_HOST_H_ */
+#endif /* _TUSB_HID_HOST_H_ */

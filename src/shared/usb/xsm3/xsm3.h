@@ -23,7 +23,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 // Identification data taken from an official wired controller. (Serial number is static.)
 extern const uint8_t xsm3_id_data_ms_controller[0x1D];
 
@@ -47,5 +49,7 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]);
 
 // Completes a verify challenge passed from request 0x87 and places the response data in xsm3_challenge_response.
 void xsm3_do_challenge_verify(uint8_t challenge_packet[0x16]);
-
+#ifdef __cplusplus
+}
+#endif
 #endif // XSM3_H_

@@ -453,6 +453,12 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
+uint8_t kv_key_1[] = {
+    0x17, 0xAA, 0x59, 0xCD, 0x21, 0x30, 0x17, 0x89,
+    0x4B, 0x4E, 0x71, 0x37, 0x3C, 0xBD, 0xCB, 0x60};
+uint8_t kv_key_2[] = {
+    0xB7, 0xAE, 0xBA, 0x43, 0x03, 0x09, 0xCF, 0xC3,
+    0x0D, 0xF9, 0x33, 0x71, 0x20, 0x71, 0x24, 0xC7};
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer) {
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
@@ -525,8 +531,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
             return sizeof(ps3_init);
         } else if (consoleType == PC) {
-            // consoleType = PS3;
-            // reset_usb();
+            consoleType = PS3;
+            printf("PS3 detected!\n");
+            reset_usb();
             return 0;
         }
     } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
@@ -546,8 +553,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 0;
     } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
-        // consoleType = SWITCH;
-        // reset_usb();
+        consoleType = SWITCH;
+        printf("Switch detected!\n");
+        reset_usb();
         return 0;
     }
     return 0;
@@ -604,6 +612,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = WII_RB_GUITAR_PID;
                 }
             }
+            // printf("%d %02x %02x\n", consoleType, dev->idVendor, dev->idProduct);
             dev->idVendor = 0x045E;
             dev->idProduct = 0x028E;
             break;

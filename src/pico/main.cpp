@@ -31,21 +31,26 @@ void setup() {
     generateSerialString(serialString.UnicodeString);
     tusb_init();
 }
+bool reset_on_next = false;
 REPORT_TYPE report;
 void loop() {
-    tud_task();  // tinyusb device task
+    if (reset_on_next) {
+        // After a tud_disconnect, the pico appears to not clean up after itself correctly, but a init handles that for us.
+        tud_disconnect();
+        tud_init(0);
+        tud_connect();
+        reset_on_next = false;
+        return;
+    }
+    tud_task();
     tuh_task();
     tick(&report);
-    if (consoleType == XBOX360) {
+    if (consoleType == MIDI) {
+        // tud_midi_n_packet_write(0, controller);
+    } else {
         if (tud_xinput_n_ready(0)) {
             tud_xinput_n_report(0, 0, &report, sizeof(REPORT_TYPE));
         }
-    } else if (consoleType == MIDI) {
-        // tud_midi_n_packet_write(0, controller);
-    } else {
-        // if (tud_hid_custom_n_ready(0)) {
-        //     tud_hid_custom_n_report(0, 0, controller, len);
-        // }
     }
 }
 
@@ -99,9 +104,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 }
 
 void reset_usb(void) {
-    tud_disconnect();
-    sleep_ms(1000);
-    tud_connect();
+    reset_on_next = true;
 }
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
@@ -110,7 +113,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         reset_usb();
         return false;
     }
-    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
+    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && request->bRequest == TUSB_REQ_GET_DESCRIPTOR) {
         //------------- STD Request -------------//
         if (stage == CONTROL_STAGE_SETUP) {
             uint8_t const desc_type = tu_u16_high(request->wValue);

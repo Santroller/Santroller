@@ -2,6 +2,7 @@
 #include "config.h"
 #include "controller_reports.h"
 #include "pins.h"
+#include "util.h"
 uint8_t debounce[DIGITAL_COUNT];
 static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 void init_main(void) {

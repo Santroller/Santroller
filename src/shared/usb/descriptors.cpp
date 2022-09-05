@@ -447,7 +447,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
         return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wValue == 0x0300) {
         return true;
     } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return true;
@@ -526,7 +526,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
         memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
         return sizeof(XBOX_ID);
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wValue == 0x0300) {
         if (consoleType == PS3) {
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             if (DEVICE_TYPE <= ROCK_BAND_DRUMS) {
@@ -617,9 +617,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = WII_RB_GUITAR_PID;
                 }
             }
-            // printf("%d %02x %02x\n", consoleType, dev->idVendor, dev->idProduct);
-            // TODO: eventually this wont be necessary?
+            printf("dev: %d %02x %02x\n", consoleType, dev->idVendor, dev->idProduct);
             if (consoleType == XBOX360) {
+                // TODO: eventually this wont be necessary?
                 // dev->idVendor = 0x045E;
                 // dev->idProduct = 0x028E;
                 dev->bDeviceClass = 0xFF;
@@ -629,6 +629,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
+
+            printf("conf: %d\n", consoleType);
             if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
                 size = sizeof(CONFIGURATION_XBOX_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXConfigurationDescriptor, size);

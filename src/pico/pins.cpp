@@ -85,3 +85,5 @@ int detectAnalog() {
 void initPins(void) {
     PIN_INIT;
 }
+void tickPins(void) {
+}

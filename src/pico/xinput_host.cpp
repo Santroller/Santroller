@@ -44,12 +44,6 @@ typedef struct
   uint8_t ep_in;
   uint8_t ep_out;
 
-  uint8_t itf_protocol;   // None, Keyboard, Mouse
-  uint8_t protocol_mode;  // Boot (0) or Report protocol (1)
-
-  uint8_t  report_desc_type;
-  uint16_t report_desc_len;
-
   uint16_t epin_size;
   uint16_t epout_size;
 
@@ -86,12 +80,6 @@ bool tuh_xinput_mounted(uint8_t dev_addr, uint8_t instance)
 {
   xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
   return (hid_itf->ep_in != 0) || (hid_itf->ep_out != 0);
-}
-
-uint8_t tuh_xinput_interface_protocol(uint8_t dev_addr, uint8_t instance)
-{
-  xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
-  return hid_itf->itf_protocol;
 }
 
 
@@ -254,21 +242,23 @@ enum {
   CONFIG_COMPLETE
 };
 
-static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len);
+static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance);
 static void process_set_config(tuh_xfer_t* xfer);
 
 bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num)
 {
+  uint8_t instance = get_instance_id_by_itfnum(dev_addr, itf_num);
+  config_driver_mount_complete(dev_addr, instance);
   return true;
 }
 
 
-static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
+static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance)
 {
   xinputh_interface_t* hid_itf = get_instance(dev_addr, instance);
-
+  
   // enumeration is complete
-  tuh_xinput_mount_cb(dev_addr, instance, desc_report, desc_len);
+  tuh_xinput_mount_cb(dev_addr, instance);
 
   // notify usbh that driver enumeration is complete
   usbh_driver_set_config_complete(dev_addr, hid_itf->itf_num);

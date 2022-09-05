@@ -125,18 +125,21 @@ void xsm3_set_identification_data(const uint8_t id_data[0x1D]) {
 
     // contains serial number (len: 0xC), unknown (len: 0x2) and the "category node" to use (len: 0x1)
     memcpy(xsm3_identification_data, id_data, 0xF);
-    // vendor ID
-    *(unsigned short *)(xsm3_identification_data + 0x10) = *(unsigned short *)(id_data + 0xF);
-
-    // product ID
-	*(unsigned short *)(xsm3_identification_data + 0x12) = *(unsigned short *)(id_data + 0x11);
-    // unknown
-	*(unsigned char *)(xsm3_identification_data + 0x14) = *(unsigned char *)(id_data + 0x13);
-    // unknown
-	*(unsigned char *)(xsm3_identification_data + 0x15) = *(unsigned char *)(id_data + 0x16);
-    // unknown
-    xsm3_identification_data[0x16] = id_data[0x14];
-    xsm3_identification_data[0x17] = id_data[0x15];
+    // // vendor ID
+    //  *(unsigned short *)(xsm3_identification_data + 0x10) = *(unsigned short *)(id_data + 0xF);
+    // // product ID
+	// *(unsigned short *)(xsm3_identification_data + 0x12) = *(unsigned short *)(id_data + 0x11);
+    // // unknown
+	// *(unsigned char *)(xsm3_identification_data + 0x14) = *(unsigned char *)(id_data + 0x13);
+    // // unknown
+	// *(unsigned char *)(xsm3_identification_data + 0x15) = *(unsigned char *)(id_data + 0x16);
+    // // unknown
+	// *(unsigned short *)(xsm3_identification_data + 0x16) = *(unsigned short *)(id_data + 0x14);
+    memcpy(xsm3_identification_data + 0x10, id_data + 0xF, sizeof(unsigned short));
+    memcpy(xsm3_identification_data + 0x12, id_data + 0x11, sizeof(unsigned short));
+    memcpy(xsm3_identification_data + 0x14, id_data + 0x13, sizeof(unsigned char));
+    memcpy(xsm3_identification_data + 0x15, id_data + 0x16, sizeof(unsigned char));
+    memcpy(xsm3_identification_data + 0x16, id_data + 0x14, sizeof(unsigned short));
 }
 
 void xsm3_import_kv_keys(const uint8_t key1[0x10], const uint8_t key2[0x10]) {

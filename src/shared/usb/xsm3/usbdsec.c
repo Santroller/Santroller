@@ -110,7 +110,9 @@ void UsbdSecXSM3AuthenticationMac(const uint8_t *key, const uint8_t *salt, uint8
 	ExCryptDesKey(&des, (uint8_t *)&sk[0]);
 	// if we have a salt, encrypt it into the temp value
 	if (salt) {
-		*(uint64_t *)salt = SWAP64(SWAP64(*(uint64_t *)salt) + 1); // no idea what this does
+		memcpy(&input_temp, salt, sizeof(input_temp));
+		input_temp = SWAP64(SWAP64(input_temp) + 1);
+		memcpy(&salt, input_temp, sizeof(input_temp)); // no idea what this does
 		ExCryptDesEcb(&des, salt, temp, 1);
 	}
 	// for every 8 byte input block, xor the temp value with it and encrypt over itself

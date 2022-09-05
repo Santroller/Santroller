@@ -20,8 +20,8 @@ typedef struct {
     uint8_t boot_protocol;  // Boot mouse or keyboard
     bool boot_mode;         // default = false (Report)
 
-    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_VENDOR_EP_BUFSIZE];
-    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_VENDOR_EP_BUFSIZE];
+    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
+    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
 } xinputd_interface_t;
 
 CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_XINPUT];
@@ -53,14 +53,14 @@ bool tud_xinput_n_report(uint8_t itf, uint8_t report_id, void const *report,
 
     // prepare data
     if (report_id) {
-        len = tu_min8(len, CFG_TUD_VENDOR_EP_BUFSIZE - 1);
+        len = tu_min8(len, CFG_TUD_XINPUT_TX_BUFSIZE - 1);
 
         p_xinput->epin_buf[0] = report_id;
         memcpy(p_xinput->epin_buf + 1, report, len);
         len++;
     } else {
         // If report id = 0, skip ID field
-        len = tu_min8(len, CFG_TUD_VENDOR_EP_BUFSIZE);
+        len = tu_min8(len, CFG_TUD_XINPUT_TX_BUFSIZE);
         memcpy(p_xinput->epin_buf, report, len);
     }
 

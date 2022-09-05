@@ -14,98 +14,68 @@
 #include "pico/multicore.h"
 #include "pins.h"
 #include "serial.h"
+#include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
 
-// static usb_device_t *usb_device = NULL;
-// static usb_device_t *xinput_device = NULL;
-// static uint8_t xinput_endpoint = 0;
-// static uint8_t xinput_endpoint_in = 0;
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 
-// void set_xinput_led(usb_device_t *device, uint endpoint, uint8_t led) {
-//     uint8_t data2[] = {0x01, 0x03, led};
-//     endpoint_t *ep = pio_usb_get_endpoint(device, endpoint);
-//     pio_usb_set_out_data(ep, data2, sizeof(data2));
-// }
-// void host_connection(usb_device_t *device) {
-//     // Print received packet to EPs
-//     for (int ep_idx = 0; ep_idx < PIO_USB_DEV_EP_CNT; ep_idx++) {
-//         endpoint_t *ep = pio_usb_get_endpoint(device, ep_idx);
+uint16_t host_vid = 0;
+uint16_t host_pid = 0;
+uint8_t host_dev_addr = 0;
+bool passthrough_ready = false;
 
-//         if (ep == NULL) {
-//             break;
-//         }
-//         if (ep->dev_class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d && !(ep->ep_num & EP_IN)) {
-//             set_xinput_led(device, ep_idx, 0x0A);
-//             if (!xinput_device) {
-//                 xinput_device = device;
-//                 xinput_endpoint = ep_idx;
-//                 tud_disconnect();
-//                 sleep_ms(1000);
-//                 tud_connect();
-//             }
-//             return;
-//         } else if (ep->dev_class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d && (ep->ep_num & EP_IN)) {
-//             if (!xinput_device || xinput_device == device) {
-//                 xinput_endpoint_in = ep_idx;
-//             }
-//         }
-//     }
-// }
-// void host_disconnection(usb_device_t *device) {
-//     for (int ep_idx = 0; ep_idx < PIO_USB_DEV_EP_CNT; ep_idx++) {
-//         endpoint_t *ep = pio_usb_get_endpoint(device, ep_idx);
-
-//         if (ep == NULL) {
-//             break;
-//         }
-
-//         if (ep->dev_class == 0xFF && ep->protocol == 0x01 && ep->sub_class == 0x5d) {
-//             if (xinput_device == device) {
-//                 xinput_device = NULL;
-//             }
-//             return;
-//         }
-//     }
-// }
 void setup() {
     uart_set_baudrate(uart0, 115200);
     generateSerialString(serialString.UnicodeString);
     tusb_init();
 }
-
+REPORT_TYPE report;
 void loop() {
     tud_task();  // tinyusb device task
     tuh_task();
-    // pio_usb_connection_task();
-    // uint8_t len = 20;
-    // if (xinput_device) {
-    //     pio_usb_get_in_data(pio_usb_get_endpoint(xinput_device, xinput_endpoint_in), controller, 20);
-    // } else {
-    //     len = tick(controller);
-    // }
-    // if (consoleType == XBOX360) {
-    //     if (tud_xinput_n_ready(0)) {
-    //         tud_xinput_n_report(0, 0, controller, len);
-    //     }
-    // } else if (consoleType == MIDI) {
-    //     tud_midi_n_packet_write(0, controller);
-    // } else {
-    //     if (tud_hid_custom_n_ready(0)) {
-    //         tud_hid_custom_n_report(0, 0, controller, len);
-    //     }
-    // }
+    tick(&report);
+    if (consoleType == XBOX360) {
+        if (tud_xinput_n_ready(0)) {
+            tud_xinput_n_report(0, 0, &report, sizeof(REPORT_TYPE));
+        }
+    } else if (consoleType == MIDI) {
+        // tud_midi_n_packet_write(0, controller);
+    } else {
+        // if (tud_hid_custom_n_ready(0)) {
+        //     tud_hid_custom_n_report(0, 0, controller, len);
+        // }
+    }
+}
+
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance) {
+    if (passthrough_ready) {
+        return;
+    }
+    host_dev_addr = dev_addr;
+    tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
+    passthrough_ready = true;
+    if (consoleType == XBOX360) {
+        reset_usb();
+    }
+}
+
+void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
+    host_vid = 0;
+    host_pid = 0;
+    host_dev_addr = 0;
+    passthrough_ready = false;
+    reset_usb();
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
     descriptorRequest(USB_DESCRIPTOR_DEVICE << 8, 0, buf);
-    // if (usb_device->enumerated && consoleType == XBOX360) {
-    //     USB_DEVICE_DESCRIPTOR *td = (USB_DEVICE_DESCRIPTOR *)buf;
-    //     td->idVendor = usb_device->vid;
-    //     td->idProduct = usb_device->pid;
-    // }
+    if (passthrough_ready && consoleType == XBOX360) {
+        USB_DEVICE_DESCRIPTOR *td = (USB_DEVICE_DESCRIPTOR *)buf;
+        td->idVendor = host_vid;
+        td->idProduct = host_pid;
+    }
     return buf;
 }
 uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
@@ -137,11 +107,8 @@ tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     if (consoleType != XBOX360 && request->bmRequestType == 0xC1 && request->bRequest == 0x81) {
         consoleType = XBOX360;
-        printf("XBOX detected!\n");
-        // if (xinput_device) {
         reset_usb();
         return false;
-        // }
     }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD) {
         //------------- STD Request -------------//
@@ -174,31 +141,33 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
-        // } else if (xinput_device) {
-        //     // TODO: we need to expose a generic interface for USB host stuff, so that we can support it on anything, including the teensy or using a usb host shield
-        //     usb_setup_packet_t req_host = {
-        //         USB_SYNC, USB_PID_DATA0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        //     req_host.crc16[0] = USB_CRC16_PLACE;
-        //     req_host.crc16[1] = USB_CRC16_PLACE;
-        //     memcpy(&req_host.request_type, request, sizeof(tusb_control_request_t));
-        //     update_packet_crc16(&req_host);
-        //     if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
-        //         if (stage == CONTROL_STAGE_SETUP) {
-        //             if (control_in_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), buf, request->wLength) < 0) {
-        //                 return false;
-        //             }
-        //             tud_control_xfer(rhport, request, buf, request->wLength);
-        //         }
-        //     } else {
-        //         if (stage == CONTROL_STAGE_SETUP) {
-        //             tud_control_xfer(rhport, request, buf, request->wLength);
-        //         }
-        //         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-        //             if (control_out_protocol(xinput_device, (uint8_t *)&req_host, sizeof(req_host), request->wLength ? buf : NULL, request->wLength) < 0) {
-        //                 return false;
-        //             }
-        //         }
-        //     }
+    } else if (passthrough_ready) {
+        tuh_xfer_t xfer = {};
+        xfer.daddr = host_dev_addr;
+        xfer.ep_addr = 0;
+        xfer.setup = request;
+        xfer.buffer = buf;
+        xfer.complete_cb = NULL;
+        xfer.user_data = 0;
+        if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
+            if (stage == CONTROL_STAGE_SETUP) {
+                tuh_control_xfer(&xfer);
+                if (xfer.result != XFER_RESULT_SUCCESS) {
+                    return false;
+                }
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+        } else {
+            if (stage == CONTROL_STAGE_SETUP) {
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+            if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
+                tuh_control_xfer(&xfer);
+                if (xfer.result != XFER_RESULT_SUCCESS) {
+                    return false;
+                }
+            }
+        }
     }
 
     return true;

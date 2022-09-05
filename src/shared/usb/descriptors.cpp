@@ -421,23 +421,33 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             return true;
         }
     }
-    switch (request) {
-        case 0x81:
-        case 0x82:
-        case 0x87:
-        case 0x83:
-        case 0x86:
+    // switch (request) {
+    //     case 0x81:
+    //     case 0x82:
+    //     case 0x87:
+    //     case 0x83:
+    //     case 0x86:
+    //         return true;
+    // }
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_F_CPU) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             return true;
-    }
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && (request == COMMAND_READ_CONFIG || request == COMMAND_READ_BOARD || request == COMMAND_READ_F_CPU)) {
+        } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
+            return true;
+        } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
+            return true;
+        }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
-        return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
-        return true;
-    } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         return true;
     } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return true;
@@ -451,6 +461,8 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         return true;
     } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return true;
+    } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
+        return true;
     }
     return false;
 }
@@ -463,27 +475,27 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             bootloader();
         }
     }
-    switch (request) {
-        case 0x81:
-            xsm3_initialise_state();
-            xsm3_set_identification_data(xsm3_id_data_ms_controller);
-            xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
-            memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
-            return sizeof(xsm3_id_data_ms_controller);
-        case 0x82:
-            xsm3_do_challenge_init((uint8_t *)requestBuffer);
-            return 0;
-        case 0x87:
-            xsm3_do_challenge_verify((uint8_t *)requestBuffer);
-            return 0;
-        case 0x83:
-            memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
-            return sizeof(xsm3_challenge_response);
-        case 0x86:
-            short state = 2;  // 1 = in-progress, 2 = complete
-            memcpy(requestBuffer, &state, sizeof(state));
-            return sizeof(state);
-    }
+    // switch (request) {
+    //     case 0x81:
+    //         xsm3_initialise_state();
+    //         xsm3_set_identification_data(xsm3_id_data_ms_controller);
+    //         xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
+    //         memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
+    //         return sizeof(xsm3_id_data_ms_controller);
+    //     case 0x82:
+    //         xsm3_do_challenge_init((uint8_t *)requestBuffer);
+    //         return 0;
+    //     case 0x87:
+    //         xsm3_do_challenge_verify((uint8_t *)requestBuffer);
+    //         return 0;
+    //     case 0x83:
+    //         memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
+    //         return sizeof(xsm3_challenge_response);
+    //     case 0x86:
+    //         short state = 2;  // 1 = in-progress, 2 = complete
+    //         memcpy(requestBuffer, &state, sizeof(state));
+    //         return sizeof(state);
+    // }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));
         return sizeof(config);
@@ -504,18 +516,16 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
         }
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
-        if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
-            memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
-            if (consoleType == PC_XINPUT) {
-                OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
-                compat->TotalSections = 2;
-            }
-            return DevCompatIDs.TotalLength;
-        } else if (request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
-            memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
-            return sizeof(XBOX_ID);
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
+        memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
+        if (consoleType == PC_XINPUT) {
+            OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
+            compat->TotalSections = 2;
         }
+        return DevCompatIDs.TotalLength;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
+        memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
+        return sizeof(XBOX_ID);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wIndex == 0x0300) {
         if (consoleType == PS3) {
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
@@ -610,8 +620,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
             // printf("%d %02x %02x\n", consoleType, dev->idVendor, dev->idProduct);
             // TODO: eventually this wont be necessary?
             if (consoleType == XBOX360) {
-                dev->idVendor = 0x045E;
-                dev->idProduct = 0x028E;
+                // dev->idVendor = 0x045E;
+                // dev->idProduct = 0x028E;
+                dev->bDeviceClass = 0xFF;
+                dev->bDeviceSubClass = 0xFF;
+                dev->bDeviceProtocol = 0xFF;
             }
             break;
         }

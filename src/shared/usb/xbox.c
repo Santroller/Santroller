@@ -32,7 +32,7 @@ const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
     TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 1,
+    TotalSections : 2,
     Reserved : {0},
     CompatID : {
         {

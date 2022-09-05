@@ -7,9 +7,12 @@
 
 #include "common/tusb_types.h"
 #include "config.h"
+#include "controller_reports.h"
+#include "device/dcd.h"
 #include "device/usbd_pvt.h"
 #include "hardware/watchdog.h"
 #include "host/usbh_classdriver.h"
+#include "hardware/structs/usb.h"
 #include "pico/bootrom.h"
 #include "pico/multicore.h"
 #include "pins.h"
@@ -32,24 +35,23 @@ void setup() {
     tusb_init();
 }
 bool reset_on_next = false;
-REPORT_TYPE report;
+USB_Report_Data_t report;
 void loop() {
     if (reset_on_next) {
-        // After a tud_disconnect, the pico appears to not clean up after itself correctly, but a init handles that for us.
         tud_disconnect();
-        tud_init(0);
+        sleep_ms(100);
         tud_connect();
         reset_on_next = false;
         return;
     }
     tud_task();
     tuh_task();
-    tick(&report);
+    uint8_t size = tick(&report);
     if (consoleType == MIDI) {
         // tud_midi_n_packet_write(0, controller);
     } else {
         if (tud_xinput_n_ready(0)) {
-            tud_xinput_n_report(0, 0, &report, sizeof(REPORT_TYPE));
+            tud_xinput_n_report(0, 0, &report, size);
         }
     }
 }
@@ -109,6 +111,7 @@ void reset_usb(void) {
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     if (consoleType != XBOX360 && request->bmRequestType == 0xC1 && request->bRequest == 0x81) {
+        
         consoleType = XBOX360;
         reset_usb();
         return false;

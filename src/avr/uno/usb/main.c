@@ -502,7 +502,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     // Now that we have the console type, we can configure the endpoints accordingly
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
-    if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
+    if (consoleType == XBOX360) {
         epsize = 0x18;
     }
     if (consoleType == MIDI) {

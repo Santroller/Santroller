@@ -461,7 +461,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         return true;
     } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return true;
-    } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
+    } else if (consoleType == UNIVERSAL && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         return true;
     }
     return false;
@@ -518,9 +518,16 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
-        if (consoleType == PC_XINPUT) {
+        if (consoleType == XBOX360) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 2;
+            compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
+            return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
+        } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
+            printf("Windows detected\n");
+            consoleType = XBOX360;
+            reset_usb();
+            return DevCompatIDs.TotalLength;
         }
         return DevCompatIDs.TotalLength;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
@@ -535,7 +542,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 ((uint8_t *)requestBuffer)[3] = 0x06;
             }
             return sizeof(ps3_init);
-        } else if (consoleType == PC) {
+        } else if (consoleType == UNIVERSAL) {
             consoleType = PS3;
             printf("PS3 detected!\n");
             reset_usb();
@@ -557,7 +564,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return 0;
     } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 0;
-    } else if (consoleType == PC && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
+    } else if (consoleType == UNIVERSAL && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         consoleType = SWITCH;
         printf("Switch detected!\n");
         reset_usb();
@@ -580,7 +587,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-            if (consoleType == PS3 || consoleType == PC) {
+            if (consoleType == PS3 || consoleType == UNIVERSAL) {
                 if (DEVICE_TYPE > GUITAR_HERO_GUITAR) {
                     dev->idVendor = SONY_VID;
                     switch (DEVICE_TYPE) {
@@ -621,14 +628,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 // TODO: eventually this wont be necessary?
                 // dev->idVendor = 0x045E;
                 // dev->idProduct = 0x028E;
-                dev->bDeviceClass = 0xFF;
-                dev->bDeviceSubClass = 0xFF;
-                dev->bDeviceProtocol = 0xFF;
             }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-            if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
+            if (consoleType == XBOX360) {
                 size = sizeof(CONFIGURATION_XBOX_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXConfigurationDescriptor, size);
             } else if (consoleType == MIDI) {
@@ -656,7 +660,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);
-            } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == PC) {
+            } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == UNIVERSAL) {
                 address = ps3_descriptor;
                 size = sizeof(ps3_descriptor);
             }

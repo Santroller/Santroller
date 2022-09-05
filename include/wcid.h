@@ -23,6 +23,15 @@ typedef struct {
     uint16_t Index;
     uint8_t TotalSections;
     uint8_t Reserved[7];
+    OS_COMPATIBLE_SECTION CompatID[1];
+} __attribute__((packed)) OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE;
+
+typedef struct {
+    uint32_t TotalLength;
+    uint16_t Version;
+    uint16_t Index;
+    uint8_t TotalSections;
+    uint8_t Reserved[7];
     OS_COMPATIBLE_SECTION CompatID[2];
 } __attribute__((packed)) OS_COMPATIBLE_ID_DESCRIPTOR;
 

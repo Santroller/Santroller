@@ -40,8 +40,7 @@
 #define GUITAR_HERO_LIVE_GUITAR 11
 #define DJ_HERO_TURNTABLE 12
 
-#define PC 1
-#define PC_XINPUT 2
+#define UNIVERSAL 1
 #define XBOX360 3
 #define PS3 4
 #define WII_RB 5

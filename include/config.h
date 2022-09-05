@@ -8,9 +8,10 @@ extern "C" {
 #include "defines.h"
 
 
-#define CONSOLE_TYPE PC //This can either be PC;PC_XINPUT;MIDI;KEYBOARD_MOUSE
+#define CONSOLE_TYPE UNIVERSAL //This can either be UNIVERSAL;MIDI;KEYBOARD_MOUSE
 #define DEVICE_TYPE GUITAR_HERO_GUITAR
 #define POLL_RATE 1
+#define WINDOWS_USES_XINPUT true
 
 #define LED_TYPE LEDS_DISABLED
 
@@ -29,7 +30,9 @@ extern "C" {
 
 #define PIN_INIT {}
 
-#define TICK {}
+#define TICK_PS3 {}
+
+#define TICK_XINPUT {}
 
 #define ARDWIINO_BOARD ""
 
@@ -84,8 +87,3 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
 #define SUPPORTS_AVR defined(__AVR__)
 #define SUPPORTS_TEENSY defined(__arm__) && defined(CORE_TEENSY)
-#if CONSOLE_TYPE == PC_XINPUT 
-#define REPORT_TYPE USB_XInputReport_Data_t
-#else
-#define REPORT_TYPE USB_PS3Report_Data_t
-#endif

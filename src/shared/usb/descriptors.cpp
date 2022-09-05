@@ -617,7 +617,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = WII_RB_GUITAR_PID;
                 }
             }
-            printf("dev: %d %02x %02x\n", consoleType, dev->idVendor, dev->idProduct);
             if (consoleType == XBOX360) {
                 // TODO: eventually this wont be necessary?
                 // dev->idVendor = 0x045E;
@@ -629,8 +628,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-
-            printf("conf: %d\n", consoleType);
             if (consoleType == XBOX360 || consoleType == PC_XINPUT) {
                 size = sizeof(CONFIGURATION_XBOX_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXConfigurationDescriptor, size);

@@ -588,7 +588,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
             if (consoleType == PS3 || consoleType == UNIVERSAL) {
-                if (DEVICE_TYPE > GUITAR_HERO_GUITAR) {
+                if (DEVICE_TYPE >= GUITAR_HERO_GUITAR) {
                     dev->idVendor = SONY_VID;
                     switch (DEVICE_TYPE) {
                         case GUITAR_HERO_DRUMS:

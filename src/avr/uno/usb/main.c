@@ -20,9 +20,6 @@
 
 const uint8_t endpoints[] PROGMEM = {[REPORT_ID_CONTROL] = ENDPOINT_CONTROLEP,
                                      [REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
-                                     [REPORT_ID_XINPUT_2] = XINPUT_2_EPADDR_IN,
-                                     [REPORT_ID_XINPUT_3] = XINPUT_3_EPADDR_IN,
-                                     [REPORT_ID_XINPUT_4] = XINPUT_4_EPADDR_IN,
                                      [REPORT_ID_GAMEPAD] = HID_EPADDR_IN,
                                      [REPORT_ID_KBD] = HID_EPADDR_IN,
                                      [REPORT_ID_MOUSE] = HID_EPADDR_IN,

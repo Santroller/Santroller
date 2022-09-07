@@ -54,17 +54,14 @@ void Endpoint_Write_Control_Stream_LE(const void *const Buffer,
 /** Endpoint address of the DEVICE IN endpoint. */
 #define MIDI_EPADDR_IN (ENDPOINT_DIR_IN | 3)
 /** Endpoint address of the DEVICE OUT endpoint. */
-#define XINPUT_2_EPADDR_IN (ENDPOINT_DIR_IN | 2)
-#define XINPUT_3_EPADDR_IN (ENDPOINT_DIR_IN | 3)
-#define XINPUT_4_EPADDR_IN (ENDPOINT_DIR_IN | 4)
 /** Endpoint address of the DEVICE IN endpoint. */
 // We don't actually utilise the next descriptors, and since the UNO limits
 // us to 4 endpoints, putting them last ensures that they are the unusable
 // endpoints.
 /** Endpoint address of the DEVICE OUT endpoint.*/
 /** Endpoint address of the DEVICE OUT endpoint.  */
-#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 6)
-#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 7)
+#define HID_EPADDR_OUT (ENDPOINT_DIR_OUT | 5)
+#define XINPUT_EPADDR_OUT (ENDPOINT_DIR_OUT | 4)
 #define MIDI_EPADDR_OUT (ENDPOINT_DIR_OUT | 8)
 #define XINPUT_2_EPADDR_OUT (ENDPOINT_DIR_OUT | 9)
 #define XINPUT_3_EPADDR_OUT (ENDPOINT_DIR_OUT | 10)

@@ -6,7 +6,9 @@ extern "C" {
 #include <stdint.h>
 
 #include "defines.h"
-
+#if __has_include("config_test.h")
+#include "config_test.h"
+#else
 
 #define CONSOLE_TYPE UNIVERSAL //This can either be UNIVERSAL;MIDI;KEYBOARD_MOUSE
 #define DEVICE_TYPE GUITAR_HERO_GUITAR
@@ -32,6 +34,9 @@ extern "C" {
 
 #define TICK_PS3 {}
 
+#define KV_KEY_1 {}
+#define KV_KEY_2 {}
+
 #define TICK_XINPUT {}
 
 #define ARDWIINO_BOARD ""
@@ -39,6 +44,7 @@ extern "C" {
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
 #define CONFIGURATION {0}
 #define CONFIGURATION_LEN 1
+#endif
 
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;

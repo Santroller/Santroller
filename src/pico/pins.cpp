@@ -6,8 +6,11 @@
 #include "util.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
-// TODO: copy avr
-int16_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
+int16_t adc_raw(uint8_t pin) {
+    adc_select_input(pin);
+    return adc_read();
+}
+int16_t adc_xbox(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     adc_select_input(pin);
     int32_t val = (adc_read() - 2048) * 16;
     val -= offset;
@@ -19,11 +22,7 @@ int16_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     if (val < deadzone && val > -deadzone) val = 0;
     return (int16_t)val;
 }
-int16_t adc_raw(uint8_t pin) {
-    adc_select_input(pin);
-    return adc_read();
-}
-uint16_t adc_trigger(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
+uint16_t adc_trigger_xbox(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
     adc_select_input(pin);
     uint32_t val = adc_read() * 16;
     val -= offset;
@@ -35,6 +34,31 @@ uint16_t adc_trigger(uint8_t pin, int16_t offset, int16_t multiplier, int16_t de
     if (val < deadzone) val = 0;
     return (uint16_t)val;
 }
+int8_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    adc_select_input(pin);
+    int32_t val = (adc_read() - 2048) * 16;
+    val -= offset;
+    val *= multiplier;
+    val /= 2048;
+    val += INT8_MIN;
+    if (val > INT8_MAX) val = INT8_MAX;
+    if (val < INT8_MIN) val = INT16_MIN;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return (int8_t)val;
+}
+uint8_t adc_trigger(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    adc_select_input(pin);
+    uint32_t val = adc_read() * 16;
+    val -= offset;
+    val *= multiplier;
+    val /= 2048;
+    val += INT8_MIN;
+    if (val > UINT8_MAX) val = UINT8_MAX;
+    if (val < 0) val = 0;
+    if (val < deadzone) val = 0;
+    return (uint8_t)val;
+}
+
 
 int lastAnalogValue[NUM_ANALOG_INPUTS];
 uint32_t lastDigitalValue;

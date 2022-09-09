@@ -14,9 +14,7 @@ bool first = true;
 uint8_t adc_raw(uint8_t pin) {
     return adcReading[pin];
 }
-// TODO: this should be done differently.
-#if CONSOLE_TYPE == PC_XINPUT
-int16_t adc(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
+int16_t adc_xbox(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
     int16_t val = (adcReading[analogIndex] - 128);
     val -= offset;
     val *= multiplier;
@@ -27,7 +25,7 @@ int16_t adc(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t dea
     return (int16_t)val >> 8;
 }
 
-uint16_t adc_trigger(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
+uint16_t adc_trigger_xbox(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
     int16_t val = adcReading[analogIndex];
     val -= offset;
     val *= multiplier;
@@ -40,7 +38,6 @@ uint16_t adc_trigger(uint8_t analogIndex, uint8_t offset, int16_t multiplier, ui
     if (val < deadzone) val = 0;
     return (uint16_t)val >> 8;
 }
-#else
 uint8_t adc(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uint8_t deadzone) {
     int16_t val = (adcReading[analogIndex] - 128);
     val -= offset;
@@ -66,7 +63,6 @@ uint8_t adc_trigger(uint8_t analogIndex, uint8_t offset, int16_t multiplier, uin
     return (uint8_t)val;
 }
 
-#endif
 int lastAnalogValue[NUM_ANALOG_INPUTS];
 uint8_t lastDigitalValue[PORT_COUNT];
 const uint16_t PROGMEM ports[PORT_COUNT] = PORTS;

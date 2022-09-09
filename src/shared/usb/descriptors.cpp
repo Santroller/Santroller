@@ -9,9 +9,11 @@
 #include "usbhid.h"
 #include "util.h"
 extern "C" {
-#include "keyvault.h"
 #include "xsm3/xsm3.h"
 }
+
+const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
+const PROGMEM uint8_t kv_key_2[16] = KV_KEY_2;
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
@@ -420,6 +422,12 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         if (request == COMMAND_JUMP_BOOTLOADER) {
             return true;
         }
+    }
+
+    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        consoleType = XBOX360;
+        reset_usb();
+        return false;
     }
     // switch (request) {
     //     case 0x81:

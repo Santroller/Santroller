@@ -46,16 +46,6 @@ typedef struct {
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
-
-    // Joystick HID Interface
-    USB_INTERFACE_DESCRIPTOR HID_Interface;
-    USB_HID_DESCRIPTOR HID_JoystickHID;
-    USB_ENDPOINT_DESCRIPTOR HID_ReportOUTEndpoint;
-    USB_ENDPOINT_DESCRIPTOR HID_ReportINEndpoint;
-} __attribute__((packed)) SWITCH_CONFIGURATION_DESCRIPTOR;
-
-typedef struct {
-    USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR Interface1;
     XBOX_ID_DESCRIPTOR Interface1ID;
     USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
@@ -85,6 +75,14 @@ typedef struct {
     uint8_t UnkownDescriptor4[0x06];
 } __attribute__((packed)) HID_CONFIGURATION_DESCRIPTOR;
 
+
+typedef struct {
+    USB_CONFIGURATION_DESCRIPTOR Config;
+    USB_INTERFACE_DESCRIPTOR InterfaceHID;
+    USB_HID_DESCRIPTOR HIDDescriptor;
+    USB_ENDPOINT_DESCRIPTOR EndpointInHID;
+    USB_ENDPOINT_DESCRIPTOR EndpointOutHID;
+} __attribute__((packed)) HID_DESCRIPTOR;
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR Interface_AudioControl;

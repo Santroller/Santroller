@@ -474,6 +474,8 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
+bool cleared_input = false;
+bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer) {
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
@@ -532,7 +534,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
         } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
-            printf("Windows detected\n");
             consoleType = XBOX360;
             reset_usb();
             return DevCompatIDs.TotalLength;
@@ -552,7 +553,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return sizeof(ps3_init);
         } else if (consoleType == UNIVERSAL) {
             consoleType = PS3;
-            printf("PS3 detected!\n");
             reset_usb();
             return 0;
         }
@@ -573,10 +573,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 0;
     } else if (consoleType == UNIVERSAL && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
-        consoleType = SWITCH;
-        printf("Switch detected!\n");
-        reset_usb();
-        return 0;
+        // Switch clears a halt on both endpoints
+        cleared_input |= wIndex == DEVICE_EPADDR_IN;
+        cleared_output |= wIndex == DEVICE_EPADDR_OUT;
+        if (cleared_input && cleared_output) {
+            consoleType = SWITCH;
+            reset_usb();
+            return 0;
+        }
     }
     return 0;
 }
@@ -595,48 +599,27 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-            if (consoleType == PS3 || consoleType == UNIVERSAL) {
-                if (DEVICE_TYPE >= GUITAR_HERO_GUITAR) {
-                    dev->idVendor = SONY_VID;
-                    switch (DEVICE_TYPE) {
-                        case GUITAR_HERO_DRUMS:
-                            dev->idProduct = PS3_GH_DRUM_PID;
-                            break;
-                        case GUITAR_HERO_GUITAR:
-                            dev->idProduct = PS3_GH_GUITAR_PID;
-                            break;
-                        case ROCK_BAND_GUITAR:
-                            dev->idProduct = PS3_RB_GUITAR_PID;
-                            break;
-                        case ROCK_BAND_DRUMS:
-                            dev->idProduct = PS3_RB_DRUM_PID;
-                            break;
-                        case GUITAR_HERO_LIVE_GUITAR:
-                            dev->idProduct = PS3WIIU_GHLIVE_DONGLE_PID;
-                            break;
-                        case DJ_HERO_TURNTABLE:
-                            dev->idProduct = PS3_DJ_TURNTABLE_PID;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            } else if (consoleType == SWITCH) {
+            if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
-            } else if (consoleType == WII_RB) {
+            }
+#ifdef WII_TYPE
+            else if (consoleType == WII_RB) {
                 dev->idVendor = WII_RB_VID;
-                if (DEVICE_TYPE_IS_DRUM) {
-                    dev->idProduct = WII_RB_DRUM_PID;
-                } else {
-                    dev->idProduct = WII_RB_GUITAR_PID;
-                }
+                dev->idProduct = WII_TYPE;
             }
-            if (consoleType == XBOX360) {
-                // TODO: eventually this wont be necessary?
-                // dev->idVendor = 0x045E;
-                // dev->idProduct = 0x028E;
+#endif
+#ifdef PS3_TYPE
+            else if (consoleType == PS3) {
+                dev->idVendor = SONY_VID;
+                dev->idProduct = PS3_TYPE;
             }
+#endif
+            // TODO: Only really necessary if we end up implementing xsm3, and even though it may not be necessary eventually?
+            // if (consoleType == XBOX360) {
+            // dev->idVendor = 0x045E;
+            // dev->idProduct = 0x028E;
+            // }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
@@ -650,14 +633,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 size = sizeof(HID_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &HIDConfigurationDescriptor, size);
                 HID_CONFIGURATION_DESCRIPTOR *desc = (HID_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
-                // TODO: test wii RB without this?
-                // TODO: one cool thing is we don't actually need to support configuring when using
-                // Switch / PS3 modes, so we could just straight up define a configuration descriptor with no extra info
-                // Such as our SWITCH_CONFIGURATION_DESCRIPTOR?
-                // Or we just do this for all consoles if we don't want to hardcode duplicate  data
-                if (consoleType == WII_RB) {
+                if (consoleType != UNIVERSAL) {
+                    // Strip out all the extra interfaces used for configuring / x360 compat, the wii doesn't like em
                     desc->Config.bNumInterfaces = 1;
-                    desc->Config.wTotalLength = offsetof(HID_CONFIGURATION_DESCRIPTOR, InterfaceConfig);
+                    desc->Config.wTotalLength = sizeof(HID_DESCRIPTOR);
                 }
             }
             break;
@@ -668,7 +647,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);
-            } else if (consoleType == PS3 || consoleType == WII_RB || consoleType == SWITCH || consoleType == UNIVERSAL) {
+            } else {
                 address = ps3_descriptor;
                 size = sizeof(ps3_descriptor);
             }

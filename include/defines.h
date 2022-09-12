@@ -40,13 +40,14 @@
 #define GUITAR_HERO_LIVE_GUITAR 11
 #define DJ_HERO_TURNTABLE 12
 
-#define UNIVERSAL 1
+#define UNIVERSAL 0
+#define KEYBOARD_MOUSE 1
+#define MIDI 2
+
 #define XBOX360 3
 #define PS3 4
 #define WII_RB 5
 #define SWITCH 6
-#define KEYBOARD_MOUSE 7
-#define MIDI 9
 
 #define PINMODE_PULLUP 0
 #define PINMODE_PULLDOWN 1

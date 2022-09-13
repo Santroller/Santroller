@@ -74,6 +74,9 @@ void loadConfig(Configuration_t *config) {
     config->neck.wiiNeck = false;
     config->neck.ps2Neck = false;
   }
+  if (config->main.version < 17 && config.main.subtype > XINPUT_ARCADE_PAD) {
+    config->main.subtype += XINPUT_TURNTABLE - XINPUT_ARCADE_PAD;
+  }
   if (config->main.version < CONFIG_VERSION) {
     config->main.version = CONFIG_VERSION;
     eeprom_update_block(config, &config_pointer, sizeof(Configuration_t));

@@ -5,6 +5,7 @@
 #include "inputs/guitar.h"
 #include "inputs/ps2_cnt.h"
 #include "inputs/wii_ext.h"
+#include "inputs/dj.h"
 #include "leds/leds.h"
 #include "output/descriptors.h"
 #include "pins/pins.h"

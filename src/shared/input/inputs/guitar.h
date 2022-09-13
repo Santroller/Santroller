@@ -131,6 +131,7 @@ uint8_t wttapbindings[] = {[0x17] = (_BV(XBOX_A)) >> 8,
 void tickGH5Neck(Controller_t *controller) {
   uint8_t buttons;
   twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 1, &buttons);
+  // TODO: the dj turntable actually gives us bits in both directions, does the neck do the same?
   // Annoyingly, the bits for the buttons presses are reversed compared to what
   // we want.
   controller->buttons |= reverse(buttons);

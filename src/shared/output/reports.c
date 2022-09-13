@@ -17,7 +17,7 @@ void initReports(Configuration_t* config) {
   } else if (fullDeviceType >= MIDI_GAMEPAD) {
     initMIDI(config);
     fillReport = fillMIDIReport;
-  } else if (fullDeviceType <= XINPUT_ARCADE_PAD) {
+  } else if (fullDeviceType <= XINPUT_TURNTABLE) {
     fillReport = fillXInputReport;
   } else if (fullDeviceType >= KEYBOARD_GAMEPAD &&
              fullDeviceType <= KEYBOARD_ROCK_BAND_DRUMS) {

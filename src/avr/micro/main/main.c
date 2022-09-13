@@ -41,10 +41,10 @@ void initialise(void) {
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
   typeIsDJ = isDJ(fullDeviceType);
-  if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
+  if (typeIsGuitar && deviceType <= XINPUT_TURNTABLE) {
     deviceType = REAL_GUITAR_SUBTYPE;
   }
-  if (typeIsDrum && deviceType <= XINPUT_ARCADE_PAD) {
+  if (typeIsDrum && deviceType <= XINPUT_TURNTABLE) {
     deviceType = REAL_DRUM_SUBTYPE;
   }
   setupMicrosTimer();

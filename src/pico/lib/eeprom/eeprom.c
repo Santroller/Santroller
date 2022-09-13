@@ -54,6 +54,10 @@ void loadConfig(Configuration_t* config) {
     config->neck.wiiNeck = false;
     config->neck.ps2Neck = false;
   }
+
+  if (config->main.version < 17 && config->main.subType > XINPUT_ARCADE_PAD) {
+    config->main.subType += XINPUT_TURNTABLE - XINPUT_ARCADE_PAD;
+  }
   if (config->main.version < CONFIG_VERSION) {
     config->main.version = CONFIG_VERSION;
     writeConfigBlock(0, (uint8_t *)config, sizeof(Configuration_t));

@@ -34,6 +34,7 @@ uint8_t pollRate;
 uint8_t inputType;
 bool typeIsGuitar;
 bool typeIsDrum;
+bool typeIsDJ;
 bool isRF = false;
 void stopReading(void) {}
 

@@ -27,6 +27,7 @@ bool xinputEnabled = false;
 bool isRF = false;
 bool typeIsGuitar;
 bool typeIsDrum;
+bool typeIsDJ;
 long lastPoll = 0;
 uint8_t inputType;
 uint8_t pollRate;
@@ -39,6 +40,7 @@ void initialise(void) {
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
+  typeIsDJ = isDJ(fullDeviceType);
   if (typeIsGuitar && deviceType <= XINPUT_ARCADE_PAD) {
     deviceType = REAL_GUITAR_SUBTYPE;
   }

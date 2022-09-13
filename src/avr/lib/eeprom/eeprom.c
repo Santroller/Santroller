@@ -76,7 +76,11 @@ void loadConfig(Configuration_t *config) {
   }
   if (config->main.version < 17 && config->main.subType > XINPUT_ARCADE_PAD) {
     config->main.subType += XINPUT_TURNTABLE - XINPUT_ARCADE_PAD;
+    if (config->main.subType > PS3_GAMEPAD) {
+      config->main.subType += 1; 
+    }
   }
+  
   if (config->main.version < CONFIG_VERSION) {
     config->main.version = CONFIG_VERSION;
     eeprom_update_block(config, &config_pointer, sizeof(Configuration_t));

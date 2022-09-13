@@ -14,5 +14,6 @@ extern uint8_t deviceType;
 extern uint8_t fullDeviceType;
 extern bool typeIsGuitar;
 extern bool typeIsDrum;
+extern bool typeIsDJ;
 extern Led_t leds[XBOX_BTN_COUNT + XBOX_AXIS_COUNT];
 extern uint8_t drumVelocity[8];

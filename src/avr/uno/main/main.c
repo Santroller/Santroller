@@ -37,6 +37,7 @@ uint8_t deviceType;
 uint8_t fullDeviceType;
 bool typeIsGuitar;
 bool typeIsDrum;
+bool typeIsDJ;
 uint8_t inputType;
 uint8_t pollRate;
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
@@ -65,6 +66,7 @@ void initialise(void) {
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
+  typeIsDJ = isDJ(fullDeviceType);
   setupMicrosTimer();
   if (config.rf.rfInEnabled) {
     initRF(false, config.rf.id, generate_crc32());

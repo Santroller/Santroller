@@ -90,6 +90,7 @@ void tickInputs(Controller_t *controller) {
     }
   }
   tickGuitar(controller);
+  tickDJ(controller);
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {

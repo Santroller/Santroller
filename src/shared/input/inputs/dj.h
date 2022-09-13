@@ -21,6 +21,7 @@ typedef struct {
   int16_t turntable;
 } __attribute__((packed)) dj_t;
 void tickDJ(Controller_t *controller) {
+  if (!typeIsDJ) return;
   dj_t left;
   dj_t right;
   if (twi_readFromPointer(DJLEFT_ADDR, GH5NECK_BUTTONS_PTR, sizeof(dj_t),

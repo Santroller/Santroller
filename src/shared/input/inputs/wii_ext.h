@@ -183,12 +183,12 @@ void readDJExt(Controller_t *controller, uint8_t *data) {
   
   buttons = ~(data[4] << 8 | data[5]) & 0x63CD;
   
-  uint8_t l_x = ((data[0] & 0x3F) - 0x20);
-  uint8_t l_y = ((data[1] & 0x3F) - 0x20);
-  if (l_x < -joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_LEFT); }
-  if (l_x > joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_RIGHT); }
-  if (l_y < -joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_UP); }
-  if (l_y > joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_DOWN); }
+  int8_t l_x = ((data[0] & 0x3F) - 0x20);
+  int8_t l_y = ((data[1] & 0x3F) - 0x20);
+  if (l_x < -32) { bit_set(controller->buttons, XBOX_DPAD_LEFT); }
+  if (l_x > 32) { bit_set(controller->buttons, XBOX_DPAD_RIGHT); }
+  if (l_y < -32) { bit_set(controller->buttons, XBOX_DPAD_UP); }
+  if (l_y > 32) { bit_set(controller->buttons, XBOX_DPAD_DOWN); }
 }
 void readUDrawExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[2] & 0x0f) << 8) | data[0];

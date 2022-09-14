@@ -107,8 +107,8 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     // TODO: also, could we map tilt to l_x as well as the tilt bit? then PCs can use this.
     // Whammy
     JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
-    // GH PS3 guitars have a tilt axis, this seems to be how my ps3 guitar is mapped.
-    JoystickReport->accel[0] = tilt ? -4000 : 7975;
+    // GH PS3 guitars have a tilt axis
+    JoystickReport->accel[0] = controller->r_y;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
   } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||

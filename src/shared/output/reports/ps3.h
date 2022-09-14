@@ -102,7 +102,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
 
   // Tilt / whammy
   bool tilt = controller->r_y == 32767;
-  if (fullDeviceType == PS3_GUITAR_HERO_GUITAR) {
+  if (fullDeviceType == PS3_GUITAR_HERO_GUITAR || fullDeviceType == PS3_LIVE_GUITAR || fullDeviceType == WII_LIVE_GUITAR) {
     // TODO: check this stuff, tilt is wrong
     // TODO: also, could we map tilt to l_x as well as the tilt bit? then PCs can use this.
     // Whammy
@@ -134,6 +134,12 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     // l_x and l_y are unused on guitars and drums. Center them.
     JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
+  }
+  if (fullDeviceType == PS3_TURNTABLE) {
+    JoystickReport->r_x = (controller->l_x >> 8) + 128;
+    JoystickReport->r_y = (controller->l_y >> 8) + 128;
+    JoystickReport->accel[0] = controller->l_x;
+    JoystickReport->accel[1] = controller->l_y;
   }
   if (fullDeviceType == SWITCH_GAMEPAD) {
     JoystickReport->l_y = 255-JoystickReport->l_y;

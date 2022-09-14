@@ -58,6 +58,9 @@ void loadConfig(Configuration_t* config) {
   if (config->main.version < 17 && config->main.subType > XINPUT_ARCADE_PAD) {
     config->main.subType += XINPUT_TURNTABLE - XINPUT_ARCADE_PAD;
     if (config->main.subType > PS3_GAMEPAD) {
+      config->main.subType += 2; 
+    }
+    if (config->main.subType > WII_ROCK_BAND_DRUMS) {
       config->main.subType += 1; 
     }
   }

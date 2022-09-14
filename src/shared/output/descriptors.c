@@ -445,14 +445,16 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
   EndpointInHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_IN,
-    Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    Attributes :
+        (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
   EndpointOutHID : {
     Header : {Size : sizeof(USB_Descriptor_Endpoint_t), Type : DTYPE_Endpoint},
     EndpointAddress : HID_EPADDR_OUT,
-    Attributes : (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    Attributes :
+        (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
     EndpointSize : HID_EPSIZE,
     PollingIntervalMS : 1
   },
@@ -465,7 +467,7 @@ AVR_CONST USB_Descriptor_Configuration_t ConfigurationDescriptor = {
     HIDReportLength : sizeof(ps3_report_descriptor)
   },
 };
-AVR_CONST uint16_t vid[] = {0x0F0D, 0x12ba,       0x12ba, 0x12ba,
-                            0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
-AVR_CONST uint16_t pid[] = {0x0092, 0x0100,       0x0120, 0x0200,
-                            0x0210, ARDWIINO_PID, 0x0004, 0x074B};
+AVR_CONST uint16_t vid[] = {0x0F0D,       0x12ba, 0x12ba, 0x12ba, 0x12ba,
+                            ARDWIINO_VID, 0x12ba, 0x12ba, 0x1bad, 0x1bad};
+AVR_CONST uint16_t pid[] = {0x0092,       0x0100, 0x0120, 0x0200, 0x0210,
+                            ARDWIINO_PID, 0x0140, 0x074b, 0x0004, 0x074B};

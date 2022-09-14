@@ -91,6 +91,7 @@ foreach(PROJECT ${PROJECTS})
           endif()
           set(IN ../src/avr/${PROJECT}/${TYPE})
           set(OUT ${CMAKE_CURRENT_BINARY_DIR}/firmware/${TARGET})
+          set(OBJDIRF ${CMAKE_CURRENT_BINARY_DIR}/obj/${TARGET})
           add_custom_target(${TARGET} ALL)
           unset(OUTPUTS)
           foreach(OUTPUT ${OUTPUT_EXT})
@@ -99,12 +100,12 @@ foreach(PROJECT ${PROJECTS})
           add_custom_command(
             TARGET ${TARGET}
             COMMAND
-              make OBJDIR=obj/${TARGET} VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR}
+              make OBJDIR=${OBJDIRF} VERSION_MAJOR=${VERSION_MAJOR} VERSION_MINOR=${VERSION_MINOR}
               VERSION_REVISION=${VERSION_REVISION} F_USB=${F_CPU} F_CPU=${F_CPU}
               ARDUINO_MODEL_PID=${PID} ARDWIINO_BOARD=${VARIANT} EXTRA=${EXTRA}
               TARGET=${OUT} MCU=${MCU} VARIANT=${${VARIANT}_VARIANT}
             WORKING_DIRECTORY ${IN}
-            BYPRODUCTS ${IN}/obj/${TARGET} ${OUTPUTS})
+            BYPRODUCTS ${OBJDIRF} ${OUTPUTS})
         endforeach()
       endforeach()
     endforeach()

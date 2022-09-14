@@ -15,31 +15,29 @@
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
-typedef struct {
-  uint8_t buttons_flipped;
-  uint8_t buttons;
-  int16_t turntable;
-} __attribute__((packed)) dj_t;
 void tickDJ(Controller_t *controller) {
-  dj_t dj;
-  if (twi_readFromPointer(DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_t),
-                          (uint8_t *)&dj)) {
-    if (dj.buttons) {
+  if (!typeIsDJ) return;
+  uint8_t data[3];
+  if (twi_readFromPointer(DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(data), data)) {
+    if (data[1]) {
       controller->buttons |= _BV(XBOX_LB);
-      controller->buttons |= dj.buttons_flipped << 8;
+      controller->buttons |= data[0] << 8;
     } else {
       controller->buttons &= ~_BV(XBOX_LB);
     }
-    controller->l_x = dj.turntable << 3;
+    controller->l_x = ((int8_t)data[2]) << 5;
+  } else {
+    controller->buttons &= ~_BV(XBOX_LB);
   }
-  if (twi_readFromPointer(DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_t),
-                          (uint8_t *)&dj)) {
-    if (dj.buttons) {
+  if (twi_readFromPointer(DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(data), data)) {
+    if (data[1]) {
       controller->buttons |= _BV(XBOX_RB);
-      controller->buttons |= dj.buttons_flipped << 8;
+      controller->buttons |= data[0] << 8;
     } else {
       controller->buttons &= ~_BV(XBOX_RB);
     }
-    controller->l_y = dj.turntable << 3;
+    controller->l_y = ((int8_t)data[2]) << 5;
+  } else {
+    controller->buttons &= ~_BV(XBOX_RB);
   }
 }

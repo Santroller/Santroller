@@ -31,7 +31,7 @@ void reinitDirectInput(void) {
 }
 void initDirectInput(Configuration_t *config) {
   usingI2C =
-      (config->main.tiltType == MPU_6050 || config->main.inputType == WII);
+      (config->main.tiltType == MPU_6050 || config->main.inputType == WII || typeIsDJ);
   usingSPI =
       (config->main.fretLEDMode == APA102) || config->main.inputType == PS2;
   misoAvailable = config->main.inputType != PS2;

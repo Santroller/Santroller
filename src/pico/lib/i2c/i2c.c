@@ -55,7 +55,7 @@ void twi_disable(void) { i2c_deinit(i2c1); }
 // === MODIFIED ===
 bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
-  int ret = i2c_read_blocking(i2c1, address, data, length, !sendStop);
+  int ret = i2c_read_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
   return ret > 0 ? ret : 0;
 }
 /*
@@ -73,7 +73,7 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
  */
 bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
-  int ret = i2c_write_blocking(i2c1, address, data, length, !sendStop);
-  if (ret < 0) ret = i2c_write_blocking(i2c1, address, data, length, !sendStop);
+  int ret = i2c_write_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
+  if (ret < 0) ret = i2c_write_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
   return ret > 0;
 }

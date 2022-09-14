@@ -2,10 +2,10 @@
 #include "eeprom/eeprom.h"
 #include "i2c/i2c.h"
 #include "inputs/direct.h"
+#include "inputs/dj.h"
 #include "inputs/guitar.h"
 #include "inputs/ps2_cnt.h"
 #include "inputs/wii_ext.h"
-#include "inputs/dj.h"
 #include "leds/leds.h"
 #include "output/descriptors.h"
 #include "pins/pins.h"
@@ -13,15 +13,17 @@
 #include "util/util.h"
 #include <stdlib.h>
 void (*tick_function)(Controller_t *);
-bool (*read_button_function)(Pin_t* pin);
+bool (*read_button_function)(Pin_t *pin);
 int joyThreshold;
 int triggerThreshold;
 bool mapJoyLeftDpad;
 bool mapStartSelectHome;
 bool mergedStrum;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
+Pin_t euphoriaPin;
+Pin_t *downStrumPin;
 void initInputs(Configuration_t *config) {
-  
+
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
   mergedStrum = typeIsGuitar && config->debounce.combinedStrum;
@@ -41,33 +43,49 @@ void initInputs(Configuration_t *config) {
     tick_function = tickPS2CtrlInput;
     break;
   }
+
   if (config->main.inputType != PS2 && config->main.fretLEDMode == APA102) {
     spi_begin(MIN(F_CPU / 2, 12000000), true, true, false);
   }
-  if (config->main.inputType == WII || config->main.tiltType == MPU_6050) {
-    // Start off by configuring things for the slower speed when using wii extensions
-    // twi_init(config->main.inputType == WII);
-    twi_init(false);
+  if (typeIsDJ || config->main.inputType == WII ||
+      config->main.tiltType == MPU_6050) {
+    // Start off by configuring things for the slower speed when using wii
+    // extensions twi_init(config->main.inputType == WII);
+    twi_init(typeIsDJ || config->neck.gh5Neck || config->neck.gh5NeckBar);
   }
   initDirectInput(config);
   initGuitar(config);
   joyThreshold = config->axis.joyThreshold << 8;
   triggerThreshold = config->axis.triggerThreshold;
+  for (uint8_t i = 0; i < validPins; i++) {
+    Pin_t *pin = &pinData[i];
+    if (pin->offset == XBOX_LEFT_STICK && typeIsDJ) {
+      euphoriaPin = *pin;
+      // We don't want to treat this like a normal pin, so we move whatever is
+      // at the end to this slot, so it isn't treated as a pin anymore
+      if (i != validPins - 1) { pinData[i] = pinData[validPins - 1]; }
+      validPins--;
+    }
+    if (pin->offset == XBOX_DPAD_DOWN && mergedStrum) { downStrumPin = pin; }
+  }
 }
 void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
-  Pin_t* pin;
-  Pin_t* pin2;
+  Pin_t *pin;
+  Pin_t *pin2;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = &pinData[i];
     pin2 = &pinData[i];
-    // If strum is merged, then we want to grab debounce data from the same button for both
-    if (mergedStrum && i == XBOX_DPAD_UP) {
-      pin2 = &pinData[XBOX_DPAD_DOWN];
-    }
+    // If strum is merged, then we want to grab debounce data from the same
+    // button for both
+    if (mergedStrum && pin->offset == XBOX_DPAD_UP) { pin2 = downStrumPin; }
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(pin);
+      // With DJ controllers, euphoria and y are going to different pins but are the same output.
+      if (typeIsDJ && pin->offset == XBOX_Y) {
+        val |= read_button_function(&euphoriaPin);
+      }
       if (val != (bit_check(controller->buttons, pin->offset))) {
         pin2->lastMillis = millis();
         bit_write(val, controller->buttons, pin->offset);

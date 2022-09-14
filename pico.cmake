@@ -115,11 +115,7 @@ add_custom_command(
   POST_BUILD
   COMMAND ${CMAKE_SOURCE_DIR}/scripts/bootloader.py)
 add_custom_command(
-    TARGET pico
-    POST_BUILD
-    COMMAND sleep 10)
-add_custom_command(
   TARGET pico
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/firmware/ardwiino-${BOARD}-rp2040.uf2
-    /run/media/$ENV{USERNAME}/RPI-RP2/)
+    /run/media/$ENV{USER}/RPI-RP2/)

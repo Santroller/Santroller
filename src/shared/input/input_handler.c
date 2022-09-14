@@ -22,6 +22,8 @@ bool mergedStrum;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
+Pin_t *startPin;
+Pin_t *selectPin;
 void initInputs(Configuration_t *config) {
 
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
@@ -67,6 +69,8 @@ void initInputs(Configuration_t *config) {
       validPins--;
     }
     if (pin->offset == XBOX_DPAD_DOWN && mergedStrum) { downStrumPin = pin; }
+    if (pin->offset == XBOX_START && mapStartSelectHome) { startPin = pin; }
+    if (pin->offset == XBOX_BACK && mapStartSelectHome) { selectPin = pin; }
   }
 }
 void tickInputs(Controller_t *controller) {
@@ -74,6 +78,7 @@ void tickInputs(Controller_t *controller) {
   tickDirectInput(controller);
   Pin_t *pin;
   Pin_t *pin2;
+  bool startSelect = false;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = &pinData[i];
     pin2 = &pinData[i];
@@ -82,6 +87,16 @@ void tickInputs(Controller_t *controller) {
     if (mergedStrum && pin->offset == XBOX_DPAD_UP) { pin2 = downStrumPin; }
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(pin);
+      if (mapStartSelectHome) {
+        if (pin->offset == XBOX_START || pin->offset == XBOX_BACK) {
+          if (read_button_function(startPin) && read_button_function(selectPin)) {
+            val = false;
+            bit_set(controller->buttons, XBOX_HOME);
+          } else {
+            bit_clear(controller->buttons, XBOX_HOME);
+          }
+        }
+      }
       // With DJ controllers, euphoria and y are going to different pins but are the same output.
       if (typeIsDJ && pin->offset == XBOX_Y) {
         val |= read_button_function(&euphoriaPin);
@@ -96,16 +111,6 @@ void tickInputs(Controller_t *controller) {
     controller->buttons &= ~(_BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
-  }
-  if (mapStartSelectHome) {
-    if (bit_check(controller->buttons, XBOX_START) &&
-        bit_check(controller->buttons, XBOX_BACK)) {
-      bit_clear(controller->buttons, XBOX_START);
-      bit_clear(controller->buttons, XBOX_BACK);
-      bit_set(controller->buttons, XBOX_HOME);
-    } else {
-      bit_clear(controller->buttons, XBOX_HOME);
-    }
   }
   tickGuitar(controller);
   tickDJ(controller);

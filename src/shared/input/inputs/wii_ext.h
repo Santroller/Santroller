@@ -170,14 +170,25 @@ void readDJExt(Controller_t *controller, uint8_t *data) {
   uint8_t rtt =
       (data[2] & 0x80) >> 7 | (data[1] & 0xC0) >> 5 | (data[0] & 0xC0) >> 3;
 
-  controller->l_x = ((data[0] & 0x3F) - 0x20) << 10;
-  controller->l_y = ((data[1] & 0x3F) - 0x20) << 10;
-  controller->r_x =
+  uint8_t ltt =
       (data[4] & 1) ? 32 + (0x1F - (data[3] & 0x1F)) : 32 - (data[3] & 0x1F);
-  controller->r_y = (data[2] & 1) ? 32 + (0x1F - rtt) : 32 - rtt;
-  controller->lt = (data[3] & 0xE0) >> 5 | (data[2] & 0x60) >> 2;
-  controller->rt = (data[2] & 0x1E) >> 1;
+  rtt = (data[2] & 1) ? 32 + (0x1F - rtt) : 32 - rtt;
+  uint8_t effect_dial = (data[3] & 0xE0) >> 5 | (data[2] & 0x60) >> 2;
+  uint8_t crossfade = (data[2] & 0x1E) >> 1;
+
+  controller->l_x = ltt;
+  controller->l_y = rtt;
+  controller->r_x = effect_dial;
+  controller->r_y = crossfade;
+  
   buttons = ~(data[4] << 8 | data[5]) & 0x63CD;
+  
+  uint8_t l_x = ((data[0] & 0x3F) - 0x20);
+  uint8_t l_y = ((data[1] & 0x3F) - 0x20);
+  if (l_x < -joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_LEFT); }
+  if (l_x > joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_RIGHT); }
+  if (l_y < -joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_UP); }
+  if (l_y > joyThreshold) { bit_set(controller->buttons, XBOX_DPAD_DOWN); }
 }
 void readUDrawExt(Controller_t *controller, uint8_t *data) {
   controller->l_x = ((data[2] & 0x0f) << 8) | data[0];

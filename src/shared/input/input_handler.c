@@ -78,7 +78,6 @@ void tickInputs(Controller_t *controller) {
   tickDirectInput(controller);
   Pin_t *pin;
   Pin_t *pin2;
-  bool startSelect = false;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = &pinData[i];
     pin2 = &pinData[i];

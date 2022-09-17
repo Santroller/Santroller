@@ -72,61 +72,6 @@ void initMPU6050(unsigned int rate) {
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
 
-#ifndef __AVR_ATmega328P__
-uint8_t fivetartapbindings[] = {
-    [0x19 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y)) >> 8,
-    [0x1A - 0x19] = (_BV(XBOX_Y)) >> 8,
-    [0x2C - 0x19] =
-        (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
-    [0x2D - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
-    [0x2E - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
-    [0x2F - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_X)) >> 8,
-    [0x46 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X)) >> 8,
-    [0x47 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_X)) >> 8,
-    [0x48 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_X)) >> 8,
-    [0x49 - 0x19] = (_BV(XBOX_X)) >> 8,
-    [0x5F - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) |
-                     _BV(XBOX_LB)) >>
-                    8,
-    [0x60 - 0x19] =
-        (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x61 - 0x19] =
-        (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x62 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x63 - 0x19] =
-        (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x64 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x65 - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x66 - 0x19] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-    [0x78 - 0x19] =
-        (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
-    [0x79 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_LB)) >> 8,
-    [0x7A - 0x19] = (_BV(XBOX_A) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
-    [0x7B - 0x19] = (_BV(XBOX_A) | _BV(XBOX_LB)) >> 8,
-    [0x7C - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
-    [0x7D - 0x19] = (_BV(XBOX_B) | _BV(XBOX_LB)) >> 8,
-    [0x7E - 0x19] = (_BV(XBOX_Y) | _BV(XBOX_LB)) >> 8,
-    [0x7F - 0x19] = (_BV(XBOX_LB)) >> 8,
-    [0x95 - 0x19] = (_BV(XBOX_A)) >> 8,
-    [0xB0 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,
-    [0xCD - 0x19] = (_BV(XBOX_B)) >> 8,
-    [0xE5 - 0x19] = (_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
-    [0xE6 - 0x19] = (_BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
-};
-uint8_t wttapbindings[] = {[0x17] = (_BV(XBOX_A)) >> 8,
-                           [0x16] = (_BV(XBOX_A)) >> 8,
-                           [0x14] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,
-                           [0x11] = (_BV(XBOX_B)) >> 8,
-                           [0x12] = (_BV(XBOX_B)) >> 8,
-                           [0xf] = (_BV(XBOX_B) | _BV(XBOX_Y)) >> 8,
-                           [0xa] = (_BV(XBOX_Y)) >> 8,
-                           [0xb] = (_BV(XBOX_Y)) >> 8,
-                           [0x9] = (_BV(XBOX_X) | _BV(XBOX_Y)) >> 8,
-                           [0x7] = (_BV(XBOX_X)) >> 8,
-                           [0x5] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-                           [0x4] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-                           [0x3] = (_BV(XBOX_X) | _BV(XBOX_LB)) >> 8,
-                           [0x0] = (_BV(XBOX_LB)) >> 8};
 
 void tickGH5Neck(Controller_t *controller) {
   uint8_t buttons;
@@ -136,24 +81,6 @@ void tickGH5Neck(Controller_t *controller) {
   // we want.
   controller->buttons |= reverse(buttons);
 }
-void tickGH5NeckBar(Controller_t *controller) {
-  uint8_t buttons[2];
-  twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 2, buttons);
-  // Annoyingly, the bits for the buttons presses are reversed compared to what
-  // we want.
-  controller->buttons |= reverse(buttons[0]);
-  lastTap = fivetartapbindings[buttons[1] - 0x19];
-  controller->buttons |= lastTap << 8;
-}
-void tickWTNeck(Controller_t *controller) {
-  controller->buttons = 0;
-  long pulse = digitalReadPulse(&wtPin, LOW, 50);
-  if (pulse == digitalReadPulse(&wtPin, LOW, 50)) {
-    lastTap = wttapbindings[pulse >> 1];
-  }
-  controller->buttons |= lastTap << 8;
-}
-#endif
 void initGuitar(Configuration_t *config) {
   if (!typeIsGuitar) return;
   if (config->main.tiltType == MPU_6050) {
@@ -166,17 +93,9 @@ void initGuitar(Configuration_t *config) {
     tick = tickDigitalTilt;
   }
 
-#ifndef __AVR_ATmega328P__
-  if (config->neck.wtNeck) {
-    setUpDigital(&wtPin, config, PIN_WT_NECK, 0, false, false);
-    pinMode(PIN_WT_NECK, INPUT);
-    tickNeck = tickWTNeck;
-  } else if (config->neck.gh5Neck) {
+  if (config->neck.gh5Neck || config->neck.gh5NeckBar) {
     tickNeck = tickGH5Neck;
-  } else if (config->neck.gh5NeckBar) {
-    tickNeck = tickGH5NeckBar;
-  }
-#endif
+  } 
   scale = config->axisScale.r_y;
   tiltInverted = config->pins.r_y.inverted;
 }

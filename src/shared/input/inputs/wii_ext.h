@@ -101,8 +101,8 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
   // swapped, so swap them
   bit_write(!bit_check(data[5], 3), buttons, wiiButtonBindings[XBOX_X]);
   bit_write(!bit_check(data[5], 5), buttons, wiiButtonBindings[XBOX_Y]);
-  bit_write(!bit_check(data[5], 7), buttons, wiiButtonBindings[XBOX_LB]);
-  bit_write(!bit_check(data[5], 2), buttons, wiiButtonBindings[XBOX_RB]);
+  bit_write(!bit_check(data[5], 7), buttons, wiiButtonBindings[XBOX_RB]);
+  bit_write(!bit_check(data[5], 2), buttons, wiiButtonBindings[XBOX_LB]);
 }
 uint8_t wiiwttapbindings[] = {[0x2] = (_BV(XBOX_A)) >> 8,
                               [0x3] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,

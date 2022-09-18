@@ -76,7 +76,7 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
     uint8_t which = (data[2] & 0b01111100) >> 1;
     switch (which) {
     case 0x1B:
-      drumVelocity[XBOX_RB - 8] = vel;
+      drumVelocity[XBOX_LB - 8] = vel;
       break;
     case 0x19:
       drumVelocity[XBOX_B - 8] = vel;
@@ -87,8 +87,8 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
     case 0x0F:
       drumVelocity[XBOX_Y - 8] = vel;
       break;
-    case 0x1E:
-      drumVelocity[XBOX_LB - 8] = vel;
+    case 0x0E:
+      drumVelocity[XBOX_RB - 8] = vel;
       break;
     case 0x12:
       drumVelocity[XBOX_A - 8] = vel;
@@ -101,6 +101,8 @@ void readDrumExt(Controller_t *controller, uint8_t *data) {
   // swapped, so swap them
   bit_write(!bit_check(data[5], 3), buttons, wiiButtonBindings[XBOX_X]);
   bit_write(!bit_check(data[5], 5), buttons, wiiButtonBindings[XBOX_Y]);
+  bit_write(!bit_check(data[5], 7), buttons, wiiButtonBindings[XBOX_LB]);
+  bit_write(!bit_check(data[5], 2), buttons, wiiButtonBindings[XBOX_RB]);
 }
 uint8_t wiiwttapbindings[] = {[0x2] = (_BV(XBOX_A)) >> 8,
                               [0x3] = (_BV(XBOX_A) | _BV(XBOX_B)) >> 8,

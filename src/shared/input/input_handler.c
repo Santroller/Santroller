@@ -19,6 +19,7 @@ int triggerThreshold;
 bool mapJoyLeftDpad;
 bool mapStartSelectHome;
 bool mergedStrum;
+bool ghDrum = false;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
@@ -72,6 +73,7 @@ void initInputs(Configuration_t *config) {
     if (pin->offset == XBOX_START && mapStartSelectHome) { startPin = pin; }
     if (pin->offset == XBOX_BACK && mapStartSelectHome) { selectPin = pin; }
   }
+  ghDrum = config->main.subType == XINPUT_GUITAR_HERO_DRUMS;
 }
 void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
@@ -88,7 +90,8 @@ void tickInputs(Controller_t *controller) {
       bool val = read_button_function(pin);
       if (mapStartSelectHome) {
         if (pin->offset == XBOX_START || pin->offset == XBOX_BACK) {
-          if (read_button_function(startPin) && read_button_function(selectPin)) {
+          if (read_button_function(startPin) &&
+              read_button_function(selectPin)) {
             val = false;
             bit_set(controller->buttons, XBOX_HOME);
           } else {
@@ -96,7 +99,8 @@ void tickInputs(Controller_t *controller) {
           }
         }
       }
-      // With DJ controllers, euphoria and y are going to different pins but are the same output.
+      // With DJ controllers, euphoria and y are going to different pins but are
+      // the same output.
       if (typeIsDJ && pin->offset == XBOX_Y) {
         val |= read_button_function(&euphoriaPin);
       }
@@ -113,6 +117,9 @@ void tickInputs(Controller_t *controller) {
   }
   tickGuitar(controller);
   tickDJ(controller);
+  if (ghDrum) {
+    controller->buttons |= _BV(XBOX_LEFT_STICK);
+  }
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {

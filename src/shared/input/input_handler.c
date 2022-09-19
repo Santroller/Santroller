@@ -51,7 +51,7 @@ void initInputs(Configuration_t *config) {
     spi_begin(MIN(F_CPU / 2, 12000000), true, true, false);
   }
   if (typeIsDJ || config->main.inputType == WII ||
-      config->main.tiltType == MPU_6050) {
+      config->main.tiltType == MPU_6050 || config->neck.gh5Neck || config->neck.gh5NeckBar) {
     // Start off by configuring things for the slower speed when using wii
     // extensions twi_init(config->main.inputType == WII);
     twi_init(typeIsDJ || config->neck.gh5Neck || config->neck.gh5NeckBar);

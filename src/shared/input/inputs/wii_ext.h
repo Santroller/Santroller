@@ -129,7 +129,7 @@ void readGuitarExt(Controller_t *controller, uint8_t *data) {
 
   buttons = ~(data[4] | data[5] << 8);
   if (guitarTapBar) {
-    uint8_t tap = ((data[3] & 0x1f) - 14);
+    uint8_t tap = ((data[2] & 0x1f) - 14);
     buttons |= wiiwttapbindings[tap >> 1] << 8;
   }
 }

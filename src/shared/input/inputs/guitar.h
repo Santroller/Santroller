@@ -12,6 +12,7 @@
 #include "util/util.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
 // Constants used by the mpu 6050
@@ -25,6 +26,8 @@ union u_quat q;
 int16_t mpuTilt;
 AnalogInfo_t analog;
 volatile bool ready = false;
+bool gh5Neck = false;
+bool gh5Tap = false;
 uint8_t mpuOrientation;
 Pin_t tiltPin;
 bool tiltInverted;
@@ -72,15 +75,6 @@ void initMPU6050(unsigned int rate) {
   dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);
 }
 
-
-void tickGH5Neck(Controller_t *controller) {
-  uint8_t buttons;
-  twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, 1, &buttons);
-  // TODO: the dj turntable actually gives us bits in both directions, does the neck do the same?
-  // Annoyingly, the bits for the buttons presses are reversed compared to what
-  // we want.
-  controller->buttons |= reverse(buttons);
-}
 void initGuitar(Configuration_t *config) {
   if (!typeIsGuitar) return;
   if (config->main.tiltType == MPU_6050) {
@@ -93,15 +87,21 @@ void initGuitar(Configuration_t *config) {
     tick = tickDigitalTilt;
   }
 
-  if (config->neck.gh5Neck || config->neck.gh5NeckBar) {
-    tickNeck = tickGH5Neck;
-  } 
+  gh5Neck = config->neck.gh5Neck || config->neck.gh5NeckBar;
+
   scale = config->axisScale.r_y;
   tiltInverted = config->pins.r_y.inverted;
 }
 void tickGuitar(Controller_t *controller) {
   if (!typeIsGuitar) return;
-  if (tickNeck) { tickNeck(controller); }
+  if (gh5Neck) {
+    uint8_t data[2];
+    if (twi_readFromPointer(GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(data),
+                            data)) {
+      controller->buttons &= ~(_BV(XBOX_A) | _BV(XBOX_B) | _BV(XBOX_Y) | _BV(XBOX_X) | _BV(XBOX_LB));
+      controller->buttons |= data[0] << 8;
+    } 
+  }
   Guitar_t *g = (Guitar_t *)controller;
   int32_t whammy = g->whammy;
   if (whammy > 0xFFFF) { whammy = 0xFFFF; }

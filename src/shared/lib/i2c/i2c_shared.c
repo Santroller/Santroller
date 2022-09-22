@@ -4,7 +4,11 @@
 bool twi_readFromPointerSlow(uint8_t address, uint8_t pointer, uint8_t length,
                              uint8_t *data) {
   if (!twi_writeTo(address, &pointer, 1, true, true)) return false;
-  _delay_us(175);
+#ifdef PICO
+  _delay_us(170);
+#else
+  _delay_us(180);
+#endif
   return twi_readFrom(address, data, length, true);
 }
 bool twi_readFromPointer(uint8_t address, uint8_t pointer, uint8_t length,

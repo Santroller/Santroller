@@ -58,8 +58,9 @@ static uint16_t TIMEOUT = 32767;
  * Input    none
  * Output   none
  */
-void twi_init(bool fivetar) {
-  // TODO: how fast can we go with the pro micro 3.3v if we use something like https://github.com/bitbank2/BitBang_I2C/blob/master/src/BitBang_I2C.cpp
+void twi_init(bool fivetar, bool dj) {
+  // TODO: how fast can we go with the pro micro 3.3v if we use something like
+  // https://github.com/bitbank2/BitBang_I2C/blob/master/src/BitBang_I2C.cpp
   // initialize state
   twi_state = TWI_READY;
   twi_sendStop = true; // default value
@@ -87,15 +88,21 @@ void twi_init(bool fivetar) {
   if (fivetar) {
     /* SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR)) */
     TWBR = ((F_CPU / TWI_FREQ_5TAR) - 16) / 2;
+  } else if (dj) {
+    TWBR = ((F_CPU / TWI_FREQ_DJ) - 16) / 2;
   } else {
     // Seems that wiitars can work okay at this speed
     TWBR = 18;
   }
 
 #else
-  // Just run at the max speed we can on the 3.3v boards, its always slower than
-  // the TWI_FREQ_5TAR
-  TWBR = 10;
+  if (fivetar) {
+    TWBR = ((F_CPU / TWI_FREQ_5TAR) - 16) / 2;
+  } else {
+    // Just run at the max speed we can on the 3.3v boards, its always slower
+    // than the TWI_FREQ_DJ
+    TWBR = 10;
+  }
 #endif
   // enable twi module, acks, and twi interrupt
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);

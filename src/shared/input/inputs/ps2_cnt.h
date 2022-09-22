@@ -331,6 +331,7 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
 
     if (!ret) { _delay_ms(COMMAND_RETRY_INTERVAL); }
   } while (!ret && millis() - start <= COMMAND_TIMEOUT);
+
   return ret;
 }
 uint16_t buttonWord;
@@ -439,7 +440,7 @@ bool begin(uint8_t port, Controller_t *controller) {
 }
 
 void initPS2CtrlInput(Configuration_t *config) {
-  spi_begin(100000, true, true, true);
+  spi_begin(500000, true, true, true);
   setUpDigital(&attention, config, PIN_PS2_ATT, 0, false, true);
   setUpDigital(&acknowledge, config, PIN_PS2_ACK, 0, true, false);
   pinMode(PIN_PS2_ATT, OUTPUT);
@@ -448,7 +449,11 @@ void initPS2CtrlInput(Configuration_t *config) {
   noAttention();
 }
 bool initialised = false;
+long last = 0;
 void tickPS2CtrlInput(Controller_t *controller) {
+  // PS2 guitars die if you poll them too fast
+  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 6000) { return; }
+  last = micros();
   // If this is changed to a different port, you can talk to different devices
   // on a multitap. Not sure how useful this is unless we make a ps2 variant
   // that works with the multitap, and offers four devices
@@ -493,8 +498,10 @@ void tickPS2CtrlInput(Controller_t *controller) {
       if (ps2CtrlType == PSPROTO_DUALSHOCK) {
         in = autoShiftData(port, commandGetStatus, sizeof(commandGetStatus));
         if (in[3] == 0x01) { ps2CtrlType = PSPROTO_GUITAR; }
-      } else if (ps2CtrlType == PSPROTO_FLIGHTSTICK || ps2CtrlType == PSPROTO_GUNCON ||
-          ps2CtrlType == PSPROTO_JOGCON || ps2CtrlType == PSPROTO_NEGCON) {
+      } else if (ps2CtrlType == PSPROTO_FLIGHTSTICK ||
+                 ps2CtrlType == PSPROTO_GUNCON ||
+                 ps2CtrlType == PSPROTO_JOGCON ||
+                 ps2CtrlType == PSPROTO_NEGCON) {
         sendCommand(port, commandSetPressuresSticksOnly,
                     sizeof(commandSetPressuresSticksOnly));
       } else if (ps2CtrlType == PSPROTO_MOUSE) {

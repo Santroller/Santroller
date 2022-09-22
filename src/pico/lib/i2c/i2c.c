@@ -26,8 +26,8 @@ static uint16_t TIMEOUT = 1000;
  * Input    none
  * Output   none
  */
-void twi_init(bool fivetar) {
-  i2c_init(i2c1, fivetar ? TWI_FREQ_5TAR : TWI_FREQ);
+void twi_init(bool fivetar, bool dj) {
+  i2c_init(i2c1, fivetar ? TWI_FREQ_5TAR : (dj ? TWI_FREQ_DJ : TWI_FREQ));
   gpio_set_function(PIN_WIRE_SDA, GPIO_FUNC_I2C);
   gpio_set_function(PIN_WIRE_SCL, GPIO_FUNC_I2C);
   gpio_pull_up(PIN_WIRE_SDA);
@@ -55,7 +55,8 @@ void twi_disable(void) { i2c_deinit(i2c1); }
 // === MODIFIED ===
 bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
-  int ret = i2c_read_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
+  int ret =
+      i2c_read_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
   return ret > 0 ? ret : 0;
 }
 /*
@@ -73,7 +74,10 @@ bool twi_readFrom(uint8_t address, uint8_t *data, uint8_t length,
  */
 bool twi_writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
-  int ret = i2c_write_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
-  if (ret < 0) ret = i2c_write_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
+  int ret =
+      i2c_write_timeout_per_char_us(i2c1, address, data, length, !sendStop, 10);
+  if (ret < 0)
+    ret = i2c_write_timeout_per_char_us(i2c1, address, data, length, !sendStop,
+                                        10);
   return ret > 0;
 }

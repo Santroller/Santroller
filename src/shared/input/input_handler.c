@@ -54,7 +54,7 @@ void initInputs(Configuration_t *config) {
       config->main.tiltType == MPU_6050 || config->neck.gh5Neck || config->neck.gh5NeckBar) {
     // Start off by configuring things for the slower speed when using wii
     // extensions twi_init(config->main.inputType == WII);
-    twi_init(typeIsDJ || config->neck.gh5Neck || config->neck.gh5NeckBar);
+    twi_init(config->neck.gh5Neck || config->neck.gh5NeckBar, typeIsDJ);
   }
   initDirectInput(config);
   initGuitar(config);

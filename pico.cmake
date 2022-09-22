@@ -67,6 +67,7 @@ foreach(TYPE ${TYPES})
            PSTR=
            ARDWIINO_BOARD="${BOARD}"
            VERSION_MAJOR=${VERSION_MAJOR}
+           PICO=1
            VERSION_MINOR=${VERSION_MINOR}
            VERSION_REVISION=${VERSION_REVISION}
            USE_INTERNAL_SERIAL=3

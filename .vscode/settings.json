@@ -118,7 +118,9 @@
         "vector": "c",
         "string_view": "c",
         "initializer_list": "c",
-        "mpu_math.h": "c"
+        "mpu_math.h": "c",
+        "compare": "c",
+        "cstdint": "c"
     },
     "python.pythonPath": "/usr/bin/python3",
     "python.linting.pylintEnabled": true,

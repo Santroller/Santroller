@@ -23,8 +23,9 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define TWI_FREQ 500000L
-#define TWI_FREQ_5TAR 250000L
+#define TWI_FREQ 400000L
+#define TWI_FREQ_5TAR 100000L
+#define TWI_FREQ_DJ 250000L
 #define TWI_FREQ_AVR 250000L
 
 #ifndef TWI_BUFFER_LENGTH
@@ -37,7 +38,7 @@
 #define TWI_SRX 3
 #define TWI_STX 4
 
-void twi_init(bool ftar);
+void twi_init(bool fivetar, bool dj);
 void twi_disable(void);
 bool twi_readFrom(uint8_t, uint8_t *, uint8_t, uint8_t);
 bool twi_writeTo(uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);

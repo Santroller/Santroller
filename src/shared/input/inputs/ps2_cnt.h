@@ -100,10 +100,12 @@ static const uint8_t commandEnterConfig[] = {0x43, 0x00, 0x01, 0x5A,
                                              0x5A, 0x5A, 0x5A, 0x5A};
 static const uint8_t commandExitConfig[] = {0x43, 0x00, 0x00, 0x5A,
                                             0x5A, 0x5A, 0x5A, 0x5A};
+static const uint8_t commandEnableRumble[] = {0x4d, 0x00, 0x01, 0xff,
+                                              0xff, 0xff, 0xff, 0xff};
 static const uint8_t commandGetStatus[] = {0x45, 0x00, 0x00, 0x5A,
                                            0x5A, 0x5A, 0x5A, 0x5A};
 static const uint8_t commandSetMode[] = {0x44, 0x00, /* enabled */ 0x01,
-                                         /* locked */ 0x00};
+                                         /* locked */ 0x00, 0x02};
 
 // Enable all analog values
 static const uint8_t commandSetPressures[] = {0x4F, 0x00, 0xFF, 0xFF,
@@ -331,13 +333,16 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
 
     if (!ret) { _delay_ms(COMMAND_RETRY_INTERVAL); }
   } while (!ret && millis() - start <= COMMAND_TIMEOUT);
-
   return ret;
 }
 uint16_t buttonWord;
 bool read(uint8_t port, Controller_t *controller) {
   uint8_t *in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
   if (in != NULL) {
+    if (ps2CtrlType == PSPROTO_GUITAR) {
+      autoShiftData(port, commandExitConfig, sizeof(commandExitConfig));
+    }
+
     if (isConfigReply(in)) {
       // We're stuck in config mode, try to get out
       sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
@@ -452,7 +457,7 @@ bool initialised = false;
 long last = 0;
 void tickPS2CtrlInput(Controller_t *controller) {
   // PS2 guitars die if you poll them too fast
-  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 6000) { return; }
+  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 3000) { return; }
   last = micros();
   // If this is changed to a different port, you can talk to different devices
   // on a multitap. Not sure how useful this is unless we make a ps2 variant
@@ -496,8 +501,10 @@ void tickPS2CtrlInput(Controller_t *controller) {
     }
     if (sendCommand(port, commandEnterConfig, sizeof(commandEnterConfig))) {
       if (ps2CtrlType == PSPROTO_DUALSHOCK) {
-        in = autoShiftData(port, commandGetStatus, sizeof(commandGetStatus));
-        if (in[3] == 0x01) { ps2CtrlType = PSPROTO_GUITAR; }
+        uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
+        if (bit_check(buttonWord, PSB_PAD_LEFT)) {
+          ps2CtrlType = PSPROTO_GUITAR;
+        }
       } else if (ps2CtrlType == PSPROTO_FLIGHTSTICK ||
                  ps2CtrlType == PSPROTO_GUNCON ||
                  ps2CtrlType == PSPROTO_JOGCON ||

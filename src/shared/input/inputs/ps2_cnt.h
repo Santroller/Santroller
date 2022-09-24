@@ -337,11 +337,13 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
 }
 uint16_t buttonWord;
 bool read(uint8_t port, Controller_t *controller) {
-  uint8_t *in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
+  uint8_t *in;
+  if (ps2CtrlType == PSPROTO_GUITAR) {
+    in = autoShiftData(port, commandExitConfig, sizeof(commandExitConfig));
+  } else {
+    in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
+  }
   if (in != NULL) {
-    if (ps2CtrlType == PSPROTO_GUITAR) {
-      autoShiftData(port, commandExitConfig, sizeof(commandExitConfig));
-    }
 
     if (isConfigReply(in)) {
       // We're stuck in config mode, try to get out
@@ -455,9 +457,10 @@ void initPS2CtrlInput(Configuration_t *config) {
 }
 bool initialised = false;
 long last = 0;
+uint8_t invalidCount = 0;
 void tickPS2CtrlInput(Controller_t *controller) {
   // PS2 guitars die if you poll them too fast
-  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 3000) { return; }
+  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 5000 && !invalidCount) { return; }
   last = micros();
   // If this is changed to a different port, you can talk to different devices
   // on a multitap. Not sure how useful this is unless we make a ps2 variant
@@ -524,8 +527,18 @@ void tickPS2CtrlInput(Controller_t *controller) {
       sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
     }
     initialised = true;
+    invalidCount = 0;
   }
-  if (initialised && !read(port, controller)) { initialised = false; }
+  // Ocassionally, the controller returns a bad packet because it isn't ready. We should ignore that instead of reinitialisng, and 
+  // We only want to reinit if we recevied several bad packets in a row.
+  if (initialised) {
+    if (read(port, controller)) {
+      invalidCount = 0;
+    } else {
+      invalidCount++;
+      if (invalidCount > 4) { initialised = false; }
+    }
+  }
 }
 
 bool readPS2Button(Pin_t *pin) {

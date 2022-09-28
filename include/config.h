@@ -6,8 +6,8 @@ extern "C" {
 #include <stdint.h>
 
 #include "defines.h"
-#if __has_include("config_test.h")
-#include "config_test.h"
+#if __has_include("config_data.h")
+#include "config_data.h"
 #else
 
 #define CONSOLE_TYPE UNIVERSAL //This can either be UNIVERSAL;MIDI;KEYBOARD_MOUSE

@@ -6,5 +6,5 @@ usb-ideas.md
 devices.md
 modules.md
 .pio
-include/config_test.h
+include/config_data.h
 .idea

@@ -31,3 +31,7 @@
 #define ANALOG_MASK \
     { 0, 0, 0, 0, 0, 0xff }
 #endif
+
+
+#define TWI_BLOCK void*
+#define SPI_BLOCK void*

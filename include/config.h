@@ -44,6 +44,34 @@ extern "C" {
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
 #define CONFIGURATION {0}
 #define CONFIGURATION_LEN 1
+
+// #define TWI_0_SDA 0
+// #define TWI_0_SCL 1
+// #define TWI_0_FREQ 400000L
+// #define TWI_1_SDA 2
+// #define TWI_1_SCL 2
+// #define TWI_1_FREQ 400000L
+
+// #define PS2_ACK 0
+// #define PS2_ATT 0
+// #define RF_IRQ 0
+// #define RF_WAKEUP 1
+
+// #define SPI_0_MOSI 0
+// #define SPI_0_MISO 1
+// #define SPI_0_SCK 1
+// #define SPI_0_CPOL 1
+// #define SPI_0_CPHA 1
+// #define SPI_0_MSBFIRST 0
+// #define SPI_0_CLOCK 100000L
+
+// #define SPI_1_MOSI 0
+// #define SPI_1_MISO 1
+// #define SPI_1_SCK 1
+// #define SPI_1_CPOL 1
+// #define SPI_1_CPHA 1
+// #define SPI_1_MSBFIRST 0
+// #define SPI_1_CLOCK 100000L
 #endif
 
 // ConsoleType can change due to console detection

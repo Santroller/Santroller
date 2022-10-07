@@ -11,8 +11,6 @@
 #include <LUFA/LUFA/Drivers/USB/Class/CDCClass.h>
 #include <LUFA/LUFA/Drivers/USB/USB.h>
 #include <LUFA/LUFA/Platform/Platform.h>
-#include <SPI.h>
-#include <Wire.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/power.h>
@@ -32,12 +30,12 @@ void setup() {
     SetupHardware();          // ask LUFA to setup the hardware
 }
 
-REPORT_TYPE report;
+USB_Report_Data_t report;
 void loop() {
     USB_USBTask();
-    tick(&report);
+    uint8_t size = tick(&report);
     Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
-    Endpoint_Write_Stream_LE(&report, sizeof(REPORT_TYPE), NULL);
+    Endpoint_Write_Stream_LE(&report, size, NULL);
     Endpoint_ClearIN();
 }
 

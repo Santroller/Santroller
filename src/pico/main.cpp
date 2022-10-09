@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <Wire.h>
 #include <pico/stdlib.h>
 #include <pico/unique_id.h>
 #include <tusb.h>

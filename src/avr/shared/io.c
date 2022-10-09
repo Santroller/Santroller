@@ -7,10 +7,15 @@
 #include <stdio.h>
 #include <util/delay.h>
 #include <util/twi.h>
+#include <string.h>
 #ifndef TWI_BUFFER_LENGTH
 #include "string.h"
 #  define TWI_BUFFER_LENGTH 32
 #endif
+
+#define INTERRUPT_PS2_ACK_EICRA _BV(ISC00) | _BV(ISC01)
+#define INTERRUPT_PS2_ACK_VECT INTERRUPT_PS2_ACK##_vect
+
 
 #define TWI_READY 0
 #define TWI_MRX 1
@@ -105,14 +110,14 @@ void twi_init() {
 }
 
 #ifdef PS2_ACK
-ISR(INTERRUPT_PS2_ACK) {
+ISR(INTERRUPT_PS2_ACK_VECT) {
     spi_acknowledged = true;
 }
 // TODO: we need to define these
 void init_ack() {
     cli();
     EICRA |= INTERRUPT_PS2_ACK_EICRA;
-    EIMSK |= INTERRUPT_PS2_ACK_BIT;
+    EIMSK |= _BV(INTERRUPT_PS2_ACK);
     sei();
 }
 #endif
@@ -131,6 +136,12 @@ static volatile uint8_t twi_error;
 // === MODIFIED ===
 static uint16_t TIMEOUT = 32767;
 
+bool twi_readFromPointerSlow(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
+                             uint8_t *data) {
+  if (!twi_writeTo(block, address, &pointer, 1, true, true)) return false;
+  _delay_us(180);
+  return twi_readFrom(block, address, data, length, true);
+}
 bool twi_readFrom(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
 

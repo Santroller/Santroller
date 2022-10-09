@@ -8,11 +8,6 @@
 #define XBOX_WHAMMY XBOX_R_X
 #define XBOX_TILT XBOX_R_Y
 
-#define INPUT_WII 0
-#define INPUT_DIRECT 1
-#define INPUT_PS2 2
-#define INPUT_USBHOST 3
-
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
 #define XINPUT_GAMEPAD 1
@@ -77,14 +72,14 @@ typedef enum {
 } WiiExtType_t;
 typedef enum {
     PSX_UNKNOWN_CONTROLLER = 0,
+    PSX_DIGITAL,
     PSX_DUALSHOCK_1_CONTROLLER,
     PSX_DUALSHOCK_2_CONTROLLER,
-    PSX_WIRELESS_SONY_DUALSHOCK_CONTROLLER,
     PSX_GUITAR_HERO_CONTROLLER,
     PSX_NEGCON,
     PSX_JOGCON,
     PSX_GUNCON,
-    PSX_ANALOG,
+    PSX_FLIGHTSTICK,
     PSX_MOUSE,
     PSX_NO_DEVICE
 } PsxControllerType_t;

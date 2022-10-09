@@ -3,7 +3,7 @@
     defined(__MK64FX512__) || defined(__MK66FX1M0__) // Teensy 3.0/3.1-3.2/LC/3.5/3.6
 #include <i2c_t3.h>
 #else
-#include <Wire.h>  // All other platforms
+// #include <Wire.h>  // All other platforms
 #endif
 #include <SPI.h>
 #include "config.h"

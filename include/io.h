@@ -13,7 +13,9 @@
 #define TWI_SRX 3
 #define TWI_STX 4
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void twi_init();
 bool twi_readFrom(TWI_BLOCK, uint8_t, uint8_t *, uint8_t, uint8_t);
@@ -31,3 +33,6 @@ uint8_t spi_transfer(SPI_BLOCK block, uint8_t data);
 void spi_high(SPI_BLOCK block);
 void init_ack();
 extern volatile bool spi_acknowledged;
+#ifdef __cplusplus
+}
+#endif

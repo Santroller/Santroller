@@ -35,3 +35,5 @@
 
 #define TWI_BLOCK void*
 #define SPI_BLOCK void*
+#define GC_TWI NULL
+#define GC_SPI NULL

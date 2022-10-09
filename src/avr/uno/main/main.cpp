@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <Wire.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -47,7 +46,7 @@ void setup() {
     // Let the 8u2/16u2 know we are ready to receive data
     UDR0 = READY;
 }
-REPORT_TYPE report;
+USB_Report_Data_t report;
 void loop() {
     // Wait for a packet from the 8u2/16u2.
     if (!ready) return;
@@ -68,9 +67,9 @@ void loop() {
                 header->id = CONTROLLER_DATA_RESTART_USB_ID;
             } else {
                 // Write the controller input data
-                tick(&report);
-                memcpy(buf + sizeof(packet_header_t), &report, sizeof(REPORT_TYPE));
-                header->len += sizeof(REPORT_TYPE);
+                uint8_t len = tick(&report);
+                memcpy(buf + sizeof(packet_header_t), &report, len);
+                header->len += len;
             }
             break;
         }

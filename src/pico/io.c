@@ -69,6 +69,12 @@ void twi_init() {
     gpio_pull_up(TWI_1_SCL);
 #endif
 }
+bool twi_readFromPointerSlow(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
+                             uint8_t *data) {
+  if (!twi_writeTo(block, address, &pointer, 1, true, true)) return false;
+  delayMicroseconds(170);
+  return twi_readFrom(block, address, data, length, true);
+}
 bool twi_readFrom(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
     int ret =

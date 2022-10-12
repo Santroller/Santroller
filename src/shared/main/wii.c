@@ -1,8 +1,10 @@
+
 #include "io.h"
 #include "config.h"
 #include "wii.h"
 #include "Arduino.h"
 #include <string.h>
+#ifdef INPUT_WII
 uint8_t bytes;
 uint8_t wiiPointer = 0;
 bool hiRes = false;
@@ -95,3 +97,4 @@ uint8_t* tickWii() {
     }
     return data;
 }
+#endif

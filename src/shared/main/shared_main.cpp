@@ -16,6 +16,7 @@
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 uint8_t lastTap;
+uint8_t lastTapShift;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
 static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
@@ -27,17 +28,18 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
     uint8_t dj_left[3] = {0, 0, 0};
     uint8_t dj_right[3] = {0, 0, 0};
-    twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_left), dj_left);
-    twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_right), dj_right);
+    bool djLeftValid = twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_left), dj_left);
+    bool djRightValid = twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_right), dj_right);
 #endif
 #ifdef INPUT_GH5_NECK
     uint8_t fivetar_buttons[2] = {0, 0};
-    twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(fivetar_buttons), fivetar_buttons);
+    bool gh5Valid = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(fivetar_buttons), fivetar_buttons);
 #endif
 #ifdef INPUT_WT_NECK
     long pulse = WT_NECK_READ();
     if (pulse == WT_NECK_READ()) {
         lastTap = pulse;
+        lastTapShift = pulse >> 1;
     }
 #endif
 #ifdef INPUT_PS2

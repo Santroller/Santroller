@@ -4,44 +4,8 @@
 #include "Arduino.h"
 #include <stddef.h>
 #include "util.h"
+#ifdef INPUT_PS2
 
-/** \brief Size of internal communication buffer
- *
- * This can be sized after the longest command reply (which is 21 bytes for
- * 01 42 when in DualShock 2 mode), but we're better safe than sorry.
- */
-#define BUFFER_SIZE 32
-/** \brief Command Inter-Byte Delay (us)
- *
- * Commands are several bytes long. This is the time to wait between two
- * consecutive bytes.
- *
- * This should actually be done by watching the \a Acknowledge line, but we are
- * ignoring it at the moment.
- */
-#define INTER_CMD_BYTE_DELAY 50
-/** \brief Command timeout (ms)
- *
- * Commands are sent to the controller repeatedly, until they succeed or time
- * out. This is the length of that timeout.
- *
- * \sa COMMAND_RETRY_INTERVAL
- */
-#define COMMAND_TIMEOUT 250
-
-/** \brief Command Retry Interval (ms)
- *
- * When sending a command to the controller, if it does not succeed, it is
- * retried after this amount of time.
- */
-#define COMMAND_RETRY_INTERVAL 10
-
-/** \brief Attention Delay
- *
- * Time between attention being issued to the controller and the first clock
- * edge (us).
- */
-#define ATTN_DELAY 50
 
 static inline bool isValidReply(const uint8_t *status) {
     return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
@@ -80,29 +44,6 @@ static inline bool isDigitalReply(const uint8_t *status) {
 static inline bool isConfigReply(const uint8_t *status) {
     return (status[1] & 0xF0) == 0xF0;
 }
-enum PsxButton {
-    // PSB_NONE,
-    PSB_SELECT,
-    PSB_L3,
-    PSB_R3,
-    PSB_START,
-    PSB_PAD_UP,
-    PSB_PAD_RIGHT,
-    PSB_PAD_DOWN,
-    PSB_PAD_LEFT,
-    PSB_L2,
-    PSB_R2,
-    PSB_L1,
-    PSB_R1,
-    PSB_TRIANGLE,
-    PSB_CIRCLE,
-    PSB_CROSS,
-    PSB_SQUARE
-};
-enum MultitapPort { A = 0x01,
-                    B = 0x02,
-                    C = 0x03,
-                    D = 0x04 };
 static const uint8_t commandEnterConfig[] = {0x43, 0x00, 0x01, 0x5A,
                                              0x5A, 0x5A, 0x5A, 0x5A};
 static const uint8_t commandExitConfig[] = {0x43, 0x00, 0x00, 0x5A,
@@ -143,44 +84,16 @@ static const uint8_t commandSetPressuresMouse[] = {0x4F, 0x00, 0b1111, 0x00,
 
 static const uint8_t commandPollInput[] = {0x42, 0x00, 0xFF, 0xFF};
 
-/** \brief neGcon I/II-button press threshold
- *
- * The neGcon does not report digital button press data for its analog buttons,
- * so we have to make it up. The Square, Cross digital buttons will be
- * reported as pressed when the analog value of the II and I buttons
- * (respectively), goes over this threshold.
- *
- * \sa NEGCON_L_BUTTON_THRESHOLD
- */
-const uint8_t NEGCON_I_II_BUTTON_THRESHOLD = 128U;
-
-/** \brief neGcon L-button press threshold
- *
- * The neGcon does not report digital button press data for its analog buttons,
- * so we have to make it up. The L1 digital button will be reported as pressed
- * when the analog value of the L buttons goes over this threshold.
- *
- * This value has been tuned so that the L button gets digitally triggered at
- * about the same point as the non-analog R button. This is done "empirically"
- * and might need tuning on a different controller than the one I actually have.
- *
- * \sa NEGCON_I_II_BUTTON_THRESHOLD
- */
-const uint8_t NEGCON_L_BUTTON_THRESHOLD = 240U;
-#define INVALID 0xFF
-
 static bool initialised = false;
 static long last = 0;
 static uint8_t invalidCount = 0;
 void noAttention(void) {
     spi_high(PS2_SPI_PORT);
-    //   TODO: this
-    //   digitalWritePin(&attention, true);
+    INPUT_PS2_ATT_SET();
     delayMicroseconds(ATTN_DELAY);
 }
 void signalAttention(void) {
-    //   TODO: this
-    //   digitalWritePin(&attention, false);
+    INPUT_PS2_ATT_CLEAR();
     delayMicroseconds(ATTN_DELAY);
 }
 void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
@@ -360,3 +273,4 @@ uint8_t* tickPS2() {
     }
     return in;
 }
+#endif

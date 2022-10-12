@@ -32,6 +32,7 @@ void setup() {
     uart_set_baudrate(uart0, 115200);
     generateSerialString(serialString.UnicodeString);
     tusb_init();
+    init_main();
 }
 bool reset_on_next = false;
 USB_Report_Data_t report;

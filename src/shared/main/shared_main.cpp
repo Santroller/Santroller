@@ -23,6 +23,8 @@ uint8_t ps2ControllerType = PSX_NO_DEVICE;
 static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 void init_main(void) {
     initPins();
+    twi_init();
+    spi_begin();
 }
 
 uint8_t tick(USB_Report_Data_t *combined_report) {

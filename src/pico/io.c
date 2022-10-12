@@ -3,10 +3,12 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "config.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include "pico/stdlib.h"
+#include "Arduino.h"
 volatile bool spi_acknowledged = false;
 void spi_begin() {
 #ifdef SPI_0_MOSI
@@ -54,15 +56,15 @@ uint8_t spi_transfer(SPI_BLOCK block, uint8_t data) {
 }
 void spi_high(SPI_BLOCK block) {}
 void twi_init() {
-#ifdef TWI_0_FREQ
-    i2c_init(i2c0, TWI_0_FREQ);
+#ifdef TWI_0_CLOCK
+    i2c_init(i2c0, TWI_0_CLOCK);
     gpio_set_function(TWI_0_SDA, GPIO_FUNC_I2C);
     gpio_set_function(TWI_0_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(TWI_0_SDA);
     gpio_pull_up(TWI_0_SCL);
 #endif
-#ifdef TWI_1_FREQ
-    i2c_init(i2c1, TWI_1_FREQ);
+#ifdef TWI_1_CLOCK
+    i2c_init(i2c1, TWI_1_CLOCK);
     gpio_set_function(TWI_1_SDA, GPIO_FUNC_I2C);
     gpio_set_function(TWI_1_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(TWI_1_SDA);
@@ -71,9 +73,9 @@ void twi_init() {
 }
 bool twi_readFromPointerSlow(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
                              uint8_t *data) {
-  if (!twi_writeTo(block, address, &pointer, 1, true, true)) return false;
-  delayMicroseconds(170);
-  return twi_readFrom(block, address, data, length, true);
+    if (!twi_writeTo(block, address, &pointer, 1, true, true)) return false;
+    delayMicroseconds(170);
+    return twi_readFrom(block, address, data, length, true);
 }
 bool twi_readFrom(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {

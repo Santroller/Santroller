@@ -42,5 +42,12 @@
  * @param x x-coordinate in signed 16-bit
  * @return angle in (val / 32768) * pi radian increments from 0x0000 to 0xFFFF
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 uint16_t fxpt_atan2(const int16_t y, const int16_t x);
 uint16_t fxpt_asin(int16_t x);
+
+#ifdef __cplusplus
+}
+#endif

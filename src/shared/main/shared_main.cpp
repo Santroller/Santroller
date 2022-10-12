@@ -7,6 +7,7 @@
 #include "util.h"
 #include "ps2.h"
 #include "wii.h"
+#include "fxpt_math.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12

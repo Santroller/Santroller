@@ -4,6 +4,7 @@
 #include "wii.h"
 #include "Arduino.h"
 #include <string.h>
+#include "fxpt_math.h"
 #ifdef INPUT_WII
 uint8_t bytes;
 uint8_t wiiPointer = 0;

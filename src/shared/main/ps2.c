@@ -179,7 +179,7 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
 uint8_t* tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
-    if (ps2ControllerType != PSX_GUITAR_HERO_CONTROLLER && micros() - last < 5000 && !invalidCount) {
+    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 5000 && !invalidCount) {
         return NULL;
     }
     last = micros();
@@ -188,7 +188,7 @@ uint8_t* tickPS2() {
     // that works with the multitap, and offers four devices
     uint8_t port = A;
     if (!initialised) {
-        if (autoShiftData(port, commandPollInput, sizeof(commandPollInput))) {
+        if (!autoShiftData(port, commandPollInput, sizeof(commandPollInput))) {
             initialised = false;
             return NULL;
         }

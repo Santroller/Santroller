@@ -1,13 +1,13 @@
 #include "Arduino.h"
 #include "config.h"
 #include "controller_reports.h"
+#include "fxpt_math.h"
 #include "io.h"
 #include "pins.h"
 #include "pins_define.h"
-#include "util.h"
 #include "ps2.h"
+#include "util.h"
 #include "wii.h"
-#include "fxpt_math.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -26,7 +26,93 @@ void init_main(void) {
     twi_init();
     spi_begin();
 }
-
+int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    int32_t val = orig_val;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    val += INT16_MIN;
+    if (val > INT16_MAX) val = INT16_MAX;
+    if (val < INT16_MIN) val = INT16_MIN;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return (int16_t)val;
+}
+int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    int32_t val = orig_val - INT16_MAX;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    val += INT16_MIN;
+    if (val > INT16_MAX) val = INT16_MAX;
+    if (val < INT16_MIN) val = INT16_MIN;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return (int16_t)val;
+}
+uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    uint32_t val = orig_val + INT16_MAX;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    val += INT16_MAX;
+    if (val > INT16_MAX) val = UINT16_MAX;
+    if (val < INT16_MIN) val = 0;
+    if (val < deadzone) val = 0;
+    return (uint16_t)val;
+}
+uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    uint32_t val = orig_val;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    val += INT16_MAX;
+    if (val > INT16_MAX) val = UINT16_MAX;
+    if (val < INT16_MIN) val = 0;
+    if (val < deadzone) val = 0;
+    return (uint16_t)val;
+}
+uint8_t handle_calibration_ps3_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    int32_t val = orig_val >> 8;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    if (val > INT8_MAX) val = INT8_MAX;
+    if (val < INT8_MIN) val = INT16_MIN;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return (uint8_t)(val - INT8_MAX);
+}
+uint8_t handle_calibration_ps3_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    int32_t val = (orig_val >> 8) - INT16_MAX;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    val += INT8_MIN;
+    if (val > INT8_MAX) val = INT8_MAX;
+    if (val < INT8_MIN) val = INT16_MIN;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return (uint8_t)(val - INT8_MAX);
+}
+uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    uint32_t val = (orig_val >> 8) + INT16_MAX;
+    val -= offset;
+    val *= multiplier;
+    val /= 1024;
+    val += INT8_MIN;
+    if (val > UINT8_MAX) val = UINT8_MAX;
+    if (val < 0) val = 0;
+    if (val < deadzone) val = 0;
+    return (uint8_t)val;
+}
+uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+    uint32_t val = (orig_val >> 8);
+    val -= offset;
+    val *= multiplier;
+    val /= 2048;
+    val += INT8_MIN;
+    if (val > UINT8_MAX) val = UINT8_MAX;
+    if (val < 0) val = 0;
+    if (val < deadzone) val = 0;
+    return (uint8_t)val;
+}
 uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
     uint8_t dj_left[3] = {0, 0, 0};
@@ -46,12 +132,12 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
     }
 #endif
 #ifdef INPUT_PS2
-    uint8_t* ps2Data = tickPS2();
-    bool ps2Valid = ps2Data == NULL;
+    uint8_t *ps2Data = tickPS2();
+    bool ps2Valid = ps2Data != NULL;
 #endif
 #ifdef INPUT_WII
-    uint8_t* wiiData = tickWii();
-    bool wiiValid = wiiData == NULL;
+    uint8_t *wiiData = tickWii();
+    bool wiiValid = wiiData != NULL;
 #ifdef INPUT_WII_DRUM
     uint8_t vel = (7 - (wiiData[3] >> 5)) << 5;
     uint8_t which = (wiiData[2] & 0b01111100) >> 1;

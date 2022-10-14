@@ -8,10 +8,7 @@
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
 #include "util.h"
-extern "C" {
-#include "xsm3/xsm3.h"
-}
-
+#include "pins.h"
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
 const PROGMEM uint8_t kv_key_2[16] = KV_KEY_2;
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
@@ -506,7 +503,19 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     //         memcpy(requestBuffer, &state, sizeof(state));
     //         return sizeof(state);
     // }
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_ANALOG) {
+        uint8_t pin = wValue & 0xff;
+        uint8_t mask = (wValue << 8) & 0xff;
+        uint16_t response = adc_read(pin, mask);
+        memcpy(requestBuffer, &response, sizeof(response));
+        return sizeof(response);
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
+        uint8_t pin = wValue & 0xff;
+        uint8_t mask = (wValue << 8) & 0xff;
+        uint16_t response = digital_read(pin, mask);
+        memcpy(requestBuffer, &response, sizeof(response));
+        return sizeof(response);
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         memcpy_P(requestBuffer, config, sizeof(config));
         return sizeof(config);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {

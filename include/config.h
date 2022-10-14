@@ -26,10 +26,6 @@ extern "C" {
 #define ADC_COUNT 1
 #define ADC_PINS {}
 
-#define SKIP_MASK_PICO 0
-
-#define SKIP_MASK_AVR {0}
-
 #define PIN_INIT {}
 
 #define TICK_PS3 {}

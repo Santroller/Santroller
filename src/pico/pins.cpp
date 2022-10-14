@@ -1,113 +1,41 @@
 #include <stdint.h>
 
+#include "Arduino.h"
 #include "config.h"
 #include "pins_define.h"
-#include "Arduino.h"
 #include "util.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
-int16_t adc_raw(uint8_t pin) {
+uint16_t adc(uint8_t pin) {
     adc_select_input(pin);
     return adc_read();
 }
-int16_t adc_xbox(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    adc_select_input(pin);
-    int32_t val = (adc_read() - 2048) * 16;
-    val -= offset;
-    val *= multiplier;
-    val /= 1024;
-    val += INT16_MIN;
-    if (val > INT16_MAX) val = INT16_MAX;
-    if (val < INT16_MIN) val = INT16_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
-    return (int16_t)val;
-}
-uint16_t adc_trigger_xbox(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    adc_select_input(pin);
-    uint32_t val = adc_read() * 16;
-    val -= offset;
-    val *= multiplier;
-    val /= 1024;
-    val += INT16_MAX;
-    if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < INT16_MIN) val = 0;
-    if (val < deadzone) val = 0;
-    return (uint16_t)val;
-}
-int8_t adc(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    adc_select_input(pin);
-    int32_t val = (adc_read() - 2048) * 16;
-    val -= offset;
-    val *= multiplier;
-    val /= 2048;
-    val += INT8_MIN;
-    if (val > INT8_MAX) val = INT8_MAX;
-    if (val < INT8_MIN) val = INT16_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
-    return (int8_t)val;
-}
-uint8_t adc_trigger(uint8_t pin, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    adc_select_input(pin);
-    uint32_t val = adc_read() * 16;
-    val -= offset;
-    val *= multiplier;
-    val /= 2048;
-    val += INT8_MIN;
-    if (val > UINT8_MAX) val = UINT8_MAX;
-    if (val < 0) val = 0;
-    if (val < deadzone) val = 0;
-    return (uint8_t)val;
-}
-
-
-int lastAnalogValue[NUM_ANALOG_INPUTS];
-uint32_t lastDigitalValue;
-
-void initDetectionDigital(void) {
-    for (int i = 0; i < NUM_TOTAL_PINS; i++) {
-        if (_BV(i) & SKIP_MASK_PICO) continue;
-        gpio_init(i);
-        gpio_set_dir(i, false);
-        gpio_set_pulls(i, true, false);
-    }
-    lastDigitalValue = gpio_get_all() & SKIP_MASK_PICO;
-}
-
-void initDetectionAnalog(void) {
-    for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-        gpio_init(i + PIN_A0);
-        gpio_set_dir(i + PIN_A0, false);
-        gpio_set_pulls(i + PIN_A0, true, false);
-        gpio_set_input_enabled(i + PIN_A0, false);
-        adc_select_input(i);
-        lastAnalogValue[i] = adc_read();
-    }
-}
-
-int detectDigital() {
-    uint32_t changed = (lastDigitalValue & gpio_get_all()) & (~SKIP_MASK_PICO);
-    for (int i = 0; i < NUM_TOTAL_PINS; i++) {
-        if (changed & _BV(i)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int detectAnalog() {
-    for (int i = 0; i < NUM_ANALOG_INPUTS; i++) {
-        adc_select_input(i);
-        if (abs(adc_read() - lastAnalogValue[i]) > 30) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-
 
 void initPins(void) {
+    adc_init();
     PIN_INIT;
 }
 void tickPins(void) {
+}
+
+uint32_t digital_read(uint8_t port, uint8_t mask) {
+    uint32_t mask32 = mask << port;
+    gpio_init_mask(mask32);
+    uint32_t ret = sio_hw->gpio_in;
+    PIN_INIT;
+    return ret;
+}
+
+uint16_t adc_read(uint8_t pin, uint8_t mask) {
+    gpio_function f = gpio_get_function(pin);
+    bool down = gpio_is_pulled_down(pin);
+    bool up = gpio_is_pulled_up(pin);
+    gpio_init(pin);
+    gpio_set_pulls(pin, true, false);
+    gpio_set_input_enabled(pin, false);
+    adc_select_input(pin);
+    uint16_t data = adc_read();
+    gpio_set_function(pin, f);
+    gpio_set_pulls(pin, up, down);
+    return data;
 }

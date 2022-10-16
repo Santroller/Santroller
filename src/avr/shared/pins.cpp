@@ -9,7 +9,7 @@
 #include "util.h"
 
 uint16_t adcReading[ADC_COUNT];
-uint8_t analogPins[ADC_COUNT] = ADC_PINS;
+const uint8_t analogPins[ADC_COUNT] = ADC_PINS;
 bool first = true;
 uint16_t adc(uint8_t pin) {
     return adcReading[pin];
@@ -25,7 +25,7 @@ void tickAnalog(void) {
         low = ADCL;
         high = ADCH;
         uint16_t data = (high << 8) | low;
-        adcReading[currentAnalog] = data << 2;
+        adcReading[currentAnalog] = data << 6;
         currentAnalog++;
         if (currentAnalog == ADC_COUNT) {
             currentAnalog = 0;
@@ -50,8 +50,8 @@ void tickAnalog(void) {
 #endif
 }
 
-uint32_t digital_read(uint8_t port, uint8_t mask) {
-    volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port)));
+uint32_t digital_read(uint8_t port_num, uint8_t mask) {
+    volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port_num)));
     // ddr is one memory address above port
     volatile uint8_t* ddr = port - 1;
     uint8_t prevPort = *port;
@@ -106,14 +106,13 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     data = data << 2;
 
     // Revert the settings we changed
-    uint8_t oldSREG = SREG;
+    oldSREG = SREG;
     cli();
     *port = prevPort;
     *ddr &= prevDdr;
     SREG = oldSREG;
     return data;
 }
-
 void initPins(void) {
     PIN_INIT;
     tickAnalog();

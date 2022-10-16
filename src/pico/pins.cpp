@@ -20,7 +20,13 @@ void tickPins(void) {
 
 uint32_t digital_read(uint8_t port, uint8_t mask) {
     uint32_t mask32 = mask << port;
-    gpio_init_mask(mask32);
+    for(uint i=0;i<NUM_BANK0_GPIOS;i++) {
+        if (mask32 & 1) {
+            gpio_init(i);
+            gpio_set_pulls(i, true,false);
+        }
+        mask32 >>= 1;
+    }
     uint32_t ret = sio_hw->gpio_in;
     PIN_INIT;
     return ret;

@@ -6,7 +6,7 @@
 // PC0-5
 #define ANALOG_MASK \
     { 0, 0b11111, 0 }
-#define ANALOG_PORT(chan) PORTC
+#define ANALOG_PORT(chan) &PORTC
 #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define NUM_TOTAL_PINS 70
 #define PORT_COUNT 11
@@ -15,7 +15,7 @@
 // PF and PK
 #define ANALOG_MASK \
     { 0, 0, 0, 0, 0, 0xff, 0, 0, 0, 0xff, 0 }
-#define ANALOG_PORT(chan) chan <= 7 ? PORTF : PORTK
+#define ANALOG_PORT(chan) chan <= 7 ? &PORTF : &PORTK
 #elif defined(__AVR_ATmega32U4__)
 #define NUM_TOTAL_PINS 24
 #define PORT_COUNT 5
@@ -24,7 +24,7 @@
 // PF0-1 PF4-7 PB4-6 PD4,6,7
 #define ANALOG_MASK \
     { 0b0001111, 0, 0b00001011, 0, 0b1101111 }
-#define ANALOG_PORT(chan) chan <= 7 ? PORTF : (chan <= 10 : PORTD : PORTB)
+#define ANALOG_PORT(chan) chan <= 7 ? &PORTF : (chan <= 10 ? &PORTD : &PORTB)
 #elif defined(__AVR_AT90USB1286__)
 #define NUM_TOTAL_PINS 44
 #define PORT_COUNT 6
@@ -33,7 +33,7 @@
 // PF
 #define ANALOG_MASK \
     { 0, 0, 0, 0, 0, 0xff }
-#define ANALOG_PORT(chan) PORTF 
+#define ANALOG_PORT(chan) &PORTF 
 #endif
 
 

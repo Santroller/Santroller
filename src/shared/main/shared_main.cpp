@@ -26,6 +26,7 @@ void init_main(void) {
     twi_init();
     spi_begin();
 }
+// TODO: just write these again
 int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
     val -= offset;
@@ -48,69 +49,64 @@ int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, int16_t 
     if (val < deadzone && val > -deadzone) val = 0;
     return (int16_t)val;
 }
-uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    uint32_t val = orig_val + INT16_MAX;
+uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
+    int32_t val = orig_val + INT16_MAX;
     val -= offset;
     val *= multiplier;
     val /= 1024;
     val += INT16_MAX;
     if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < INT16_MIN) val = 0;
     if (val < deadzone) val = 0;
     return (uint16_t)val;
 }
-uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    uint32_t val = orig_val;
+uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
+    int32_t val = orig_val;
     val -= offset;
     val *= multiplier;
     val /= 1024;
     val += INT16_MAX;
     if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < INT16_MIN) val = 0;
     if (val < deadzone) val = 0;
     return (uint16_t)val;
 }
+// TODO: for ps3, the shifting should be done at the end, not the beginning, as all the math is designed around uint16_t, not uint8
 uint8_t handle_calibration_ps3_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    int32_t val = orig_val >> 8;
-    val -= offset;
-    val *= multiplier;
-    val /= 1024;
-    if (val > INT8_MAX) val = INT8_MAX;
-    if (val < INT8_MIN) val = INT16_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
+    int32_t val = (orig_val - INT16_MAX) >> 8;
+    // val -= offset;
+    // val *= multiplier;
+    // val /= 1024;
+    // if (val > INT8_MAX) val = INT8_MAX;
+    // if (val < INT8_MIN) val = INT16_MIN;
+    // if (val < deadzone && val > -deadzone) val = 0;
     return (uint8_t)(val - INT8_MAX);
 }
 uint8_t handle_calibration_ps3_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    int32_t val = (orig_val >> 8) - INT16_MAX;
+    int32_t val = (orig_val >> 8);
     val -= offset;
     val *= multiplier;
     val /= 1024;
-    val += INT8_MIN;
-    if (val > INT8_MAX) val = INT8_MAX;
-    if (val < INT8_MIN) val = INT16_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
-    return (uint8_t)(val - INT8_MAX);
-}
-uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    uint32_t val = (orig_val >> 8) + INT16_MAX;
-    val -= offset;
-    val *= multiplier;
-    val /= 1024;
-    val += INT8_MIN;
     if (val > UINT8_MAX) val = UINT8_MAX;
-    if (val < 0) val = 0;
     if (val < deadzone) val = 0;
+    if (val < deadzone && val > -deadzone) val = 0;
+    return (uint8_t)(val);
+}
+uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
+    int32_t val = ((orig_val + INT16_MAX) >> 8);
+    // val -= offset;
+    // val *= multiplier;
+    // val /= 1024;
+    // val += INT8_MIN;
+    // if (val > UINT8_MAX) val = UINT8_MAX;
+    // if (val < deadzone) val = 0;
     return (uint8_t)val;
 }
-uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    uint32_t val = (orig_val >> 8);
+uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
+    int32_t val = (orig_val >> 8);
     val -= offset;
     val *= multiplier;
-    val /= 2048;
-    val += INT8_MIN;
+    val /= 1024;
     if (val > UINT8_MAX) val = UINT8_MAX;
-    if (val < 0) val = 0;
-    if (val < deadzone) val = 0;
+    // if (val < deadzone) val = 0;
     return (uint8_t)val;
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
@@ -138,37 +134,47 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_WII
     uint8_t *wiiData = tickWii();
     bool wiiValid = wiiData != NULL;
+    uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which = 0;
+    uint16_t accX, accY, accZ = 0;
+    if (wiiValid) {
+        wiiButtonsLow = ~wiiData[4];
+        wiiButtonsHigh = ~wiiData[5];
+        if (hiRes) {
+            wiiButtonsLow = ~wiiData[6];
+            wiiButtonsHigh = ~wiiData[7];
+        }
 #ifdef INPUT_WII_DRUM
-    uint8_t vel = (7 - (wiiData[3] >> 5)) << 5;
-    uint8_t which = (wiiData[2] & 0b01111100) >> 1;
-    switch (which) {
-        case 0x1B:
-            drumVelocity[DRUM_KICK] = vel;
-            break;
-        case 0x12:
-            drumVelocity[DRUM_GREEN] = vel;
-            break;
-        case 0x19:
-            drumVelocity[DRUM_RED] = vel;
-            break;
-        case 0x11:
-            drumVelocity[DRUM_YELLOW] = vel;
-            break;
-        case 0x0F:
-            drumVelocity[DRUM_BLUE] = vel;
-            break;
-        case 0x0E:
-            drumVelocity[DRUM_ORANGE] = vel;
-            break;
-        default:
-            break;
-    }
+        vel = (7 - (wiiData[3] >> 5)) << 5;
+        which = (wiiData[2] & 0b01111100) >> 1;
+        switch (which) {
+            case 0x1B:
+                drumVelocity[DRUM_KICK] = vel;
+                break;
+            case 0x12:
+                drumVelocity[DRUM_GREEN] = vel;
+                break;
+            case 0x19:
+                drumVelocity[DRUM_RED] = vel;
+                break;
+            case 0x11:
+                drumVelocity[DRUM_YELLOW] = vel;
+                break;
+            case 0x0F:
+                drumVelocity[DRUM_BLUE] = vel;
+                break;
+            case 0x0E:
+                drumVelocity[DRUM_ORANGE] = vel;
+                break;
+            default:
+                break;
+        }
 #endif
 #ifdef INPUT_WII_NUNCHUK
-    uint16_t accX = ((wiiData[2] << 2) | ((wiiData[5] & 0xC0) >> 6)) - 511;
-    uint16_t accY = ((wiiData[3] << 2) | ((wiiData[5] & 0x30) >> 4)) - 511;
-    uint16_t accZ = ((wiiData[4] << 2) | ((wiiData[5] & 0xC) >> 2)) - 511;
+        uint16_t accX = ((wiiData[2] << 2) | ((wiiData[5] & 0xC0) >> 6)) - 511;
+        uint16_t accY = ((wiiData[3] << 2) | ((wiiData[5] & 0x30) >> 4)) - 511;
+        uint16_t accZ = ((wiiData[4] << 2) | ((wiiData[5] & 0xC) >> 2)) - 511;
 #endif
+    }
 #endif
     if (consoleType == XBOX360) {
         USB_XInputReport_Data_t *report = &combined_report->xinput;

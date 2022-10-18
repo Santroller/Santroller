@@ -20,11 +20,18 @@ uint8_t lastTap;
 uint8_t lastTapShift;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
+typedef struct {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} Led_t;
+Led_t ledState[LED_COUNT];  
 static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 void init_main(void) {
     initPins();
     twi_init();
     spi_begin();
+    memset(ledState, 0, sizeof(ledState));
 }
 // TODO: just write these again
 int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
@@ -176,6 +183,7 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
 #endif
     }
 #endif
+    TICK_SHARED;
     if (consoleType == XBOX360) {
         USB_XInputReport_Data_t *report = &combined_report->xinput;
         report->buttons = 0;

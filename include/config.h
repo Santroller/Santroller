@@ -22,6 +22,8 @@ extern "C" {
 #define RF_ENABLED false
 #define RF_ID 0
 
+#define LED_COUNT 0
+
 #define DIGITAL_COUNT 1
 #define ADC_COUNT 1
 #define ADC_PINS {}
@@ -34,6 +36,8 @@ extern "C" {
 #define KV_KEY_2 {}
 
 #define TICK_XINPUT {}
+
+#define TICK_SHARED {}
 
 #define ARDWIINO_BOARD ""
 

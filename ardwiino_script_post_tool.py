@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+from os.path import join
 from pprint import pp
 import subprocess
 import sys
 import re
 import traceback
+
 try:
     import usb
 except ImportError:
@@ -17,15 +19,12 @@ import libusb_package
 
 import usb.core
 import usb.util
-from platformio import fs
-from platformio.util import get_serial_ports
-from platformio.project.config import ProjectConfig
-from platformio.run.processor import EnvironmentProcessor
-from platformio.run.helpers import clean_build_dir
 import os
-REBOOT=48
-BOOTLOADER=49
-BOOTLOADER_SERIAL=50
+
+REBOOT = 48
+BOOTLOADER = 49
+BOOTLOADER_SERIAL = 50
+
 
 def launch_dfu():
     dev = libusb_package.find(idVendor=0x03eb)
@@ -33,25 +32,31 @@ def launch_dfu():
     command = [0x04, 0x03, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
 
+
 def launch_dfu_no_reset(dev):
     dev = libusb_package.find(idVendor=0x03eb)
     dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
     command = [0x04, 0x03, 0x01, 0x00, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
     dev.ctrl_transfer(0x21, 1, 0, 0)
+
+
 Import("env")
+
 
 class Context:
     def __init__(self):
         self.meta = ""
+
+
 def post_upload(source, target, env):
     if "/arduino_uno/" in str(source[0]):
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
     if "_usb" in str(source[0]):
         launch_dfu()
-        dev = None
-        while not dev:
-
+        print("searching for uno")
+        new_env = None
+        while not new_env:
             dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2FF7)
             if dev:
                 launch_dfu_no_reset(dev)
@@ -79,16 +84,15 @@ def post_upload(source, target, env):
                 try:
                     dev.ctrl_transfer(0x21, BOOTLOADER_SERIAL)
                     dev.ctrl_transfer(0x21, 0x09, BOOTLOADER_SERIAL)
-                except:
+                except Exception as e:
+                    print(e)
                     pass
-        project_dir = env["PROJECT_DIR"]
-        with fs.cd(project_dir):
-            config = ProjectConfig.get_instance(
-                os.path.join(project_dir, "platformio.ini")
-            )
-        config.validate()
-        processor = EnvironmentProcessor(Context(), new_env,config,["upload"],"",False,False, 1)
-        processor.process()
+        cwd = os.getcwd()
+        os.chdir(env["PROJECT_DIR"])
+        executable = join(os.getenv("PLATFORMIO_CORE_DIR"), "penv", "bin", "platformio")
+        print(f"Calling {new_env}")
+        subprocess.run([executable, "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
+        os.chdir(cwd)
 
 
 env.AddPostAction("upload", post_upload)

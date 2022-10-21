@@ -1,4 +1,5 @@
 #include "io.h"
+#include <string.h>
 bool twi_readFromPointer(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
                          uint8_t *data) {
   return twi_writeTo(block, address, &pointer, 1, true, true) &&

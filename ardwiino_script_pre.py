@@ -3,6 +3,7 @@ from pprint import pp
 import subprocess
 import sys
 import re
+from os import path
 try:
     import libusb_package
 except ImportError:
@@ -10,11 +11,6 @@ except ImportError:
 
 import libusb_package
 from serial import Serial, SerialException
-from platformio import fs
-from platformio.util import get_serial_ports
-from platformio.project.config import ProjectConfig
-from platformio.run.processor import EnvironmentProcessor
-from platformio.run.helpers import clean_build_dir
 import os
 from time import sleep
 
@@ -44,14 +40,11 @@ if "upload" in BUILD_TARGETS:
             pass
     if "detect_frequency" in upload_options and upload_options["detect_frequency"] == "true":
         print("Uploading script to detect speed")
-        project_dir = env["PROJECT_DIR"]
-        with fs.cd(project_dir):
-            config = ProjectConfig.get_instance(
-                os.path.join(project_dir, "platformio.ini")
-            )
-        config.validate()
-        processor = EnvironmentProcessor(Context(), "microdetect",config,["upload"],"",False,False, 1)
-        processor.process()
+        cwd = os.getcwd()
+        os.chdir(env["PROJECT_DIR"])
+        executable = join(os.getenv("PLATFORMIO_CORE_DIR"), "penv", "bin", "platformio")
+        subprocess.run([executable, "run", "--target", "upload", "--environment", "microdetect"], stderr=subprocess.STDOUT)
+        os.chdir(cwd)
         dev = None
         while not dev:
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2883)

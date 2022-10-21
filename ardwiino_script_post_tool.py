@@ -27,18 +27,23 @@ BOOTLOADER_SERIAL = 50
 
 
 def launch_dfu():
-    dev = libusb_package.find(idVendor=0x03eb)
-    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
-    command = [0x04, 0x03, 0x00]
-    dev.ctrl_transfer(0x21, 1, 0, 0, command)
-
+    try:
+        dev = libusb_package.find(idVendor=0x03eb)
+        dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+        command = [0x04, 0x03, 0x00]
+        dev.ctrl_transfer(0x21, 1, 0, 0, command)
+    except:
+        pass
 
 def launch_dfu_no_reset(dev):
-    dev = libusb_package.find(idVendor=0x03eb)
-    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
-    command = [0x04, 0x03, 0x01, 0x00, 0x00]
-    dev.ctrl_transfer(0x21, 1, 0, 0, command)
-    dev.ctrl_transfer(0x21, 1, 0, 0)
+    try:
+        dev = libusb_package.find(idVendor=0x03eb)
+        dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+        command = [0x04, 0x03, 0x01, 0x00, 0x00]
+        dev.ctrl_transfer(0x21, 1, 0, 0, command)
+        dev.ctrl_transfer(0x21, 1, 0, 0)
+    except:
+        pass
 
 
 Import("env")

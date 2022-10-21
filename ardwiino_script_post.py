@@ -97,7 +97,7 @@ def post_upload(source, target, env):
     if "/arduino_uno/" in str(source[0]):
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
     if "_usb" in str(source[0]):
-        launch_dfu_no_reset()
+        launch_dfu_no_reset()   
 
 
 env.AddPreAction("upload", before_upload)

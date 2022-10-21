@@ -50,7 +50,7 @@ if "upload" in BUILD_TARGETS:
                 os.path.join(project_dir, "platformio.ini")
             )
         config.validate()
-        processor = EnvironmentProcessor(Context(), "microdetect",config,["upload"],"",False,False, 1)
+        processor = EnvironmentProcessor(Context(), "microdetect",config,["upload"],"",1,"",False, False)
         processor.process()
         dev = None
         while not dev:

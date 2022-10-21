@@ -87,7 +87,7 @@ def post_upload(source, target, env):
                 os.path.join(project_dir, "platformio.ini")
             )
         config.validate()
-        processor = EnvironmentProcessor(Context(), new_env,config,["upload"],"",1,"",False, False)
+        processor = EnvironmentProcessor(Context(), new_env,config,["upload"],"",False,False, 1)
         processor.process()
 
 

@@ -25,6 +25,23 @@ class Context:
 Import("env")
 if "upload" in BUILD_TARGETS:
     upload_options = env.BoardConfig().get("upload", {})
+    if "detect_controller" in upload_options and upload_options["detect_controller"] == "true":
+        if (libusb_package.find(idVendor=0x03eb,idProduct=0x0010) or libusb_package.find(idVendor=0x03eb,idProduct=0x003f) or libusb_package.find(idVendor=0x03eb,idProduct=0x0001)):
+            print("Found Uno/Mega, touching port")
+            env.AutodetectUploadPort()
+            env.TouchSerialPort("$UPLOAD_PORT", 1200)
+        print("Detecting microcontroller type")
+        dev = None
+        while not dev:
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2FF7)
+            if dev:
+                env["BOARD_MCU"] = "at90usb82"
+                break
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2FEF)
+            if dev:
+                env["BOARD_MCU"] = "atmega16u2"
+                break
+            pass
     if "detect_frequency" in upload_options and upload_options["detect_frequency"] == "true":
         print("Uploading script to detect speed")
         project_dir = env["PROJECT_DIR"]

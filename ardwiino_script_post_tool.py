@@ -28,6 +28,12 @@ def launch_dfu():
     command = [0x04, 0x03, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
 
+def launch_dfu_no_reset():
+    dev = libusb_package.find(idVendor=0x03eb)
+    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+    command = [0x04, 0x03, 0x01, 0x00, 0x00]
+    dev.ctrl_transfer(0x21, 1, 0, 0, command)
+    dev.ctrl_transfer(0x21, 1, 0, 0)
 Import("env")
 
 def post_upload(source, target, env):

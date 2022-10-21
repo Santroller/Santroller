@@ -12,9 +12,9 @@ const USB_Descriptor_Device_t PROGMEM usbSerialDeviceDescriptor =
 
         .Endpoint0Size = FIXED_CONTROL_ENDPOINT_SIZE,
 
-        .VendorID = 0x1209,
+        .VendorID = 0x03EB,
 
-        .ProductID = 0x2883,
+        .ProductID = PID,
         .ReleaseNumber = 0x0001,
 
         .ManufacturerStrIndex = NO_DESCRIPTOR,

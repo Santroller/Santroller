@@ -32,7 +32,16 @@ def launch_dfu():
     dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
     command = [0x04, 0x03, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
-
+def launch_dfu_no_reset():
+    dev = libusb_package.find(idVendor=0x03eb)
+    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+    command = [0x04, 0x03, 0x01, 0x00, 0x00]
+    dev.ctrl_transfer(0x21, 1, 0, 0, command)
+    # Since the device disconnects after this, it is expected this request will fail
+    try:
+        dev.ctrl_transfer(0x21, 1, 0, 0)
+    except:
+        pass
 Import("env")
 def before_upload(source, target, env):
     upload_options = env.BoardConfig().get("upload", {})
@@ -87,8 +96,8 @@ def before_upload(source, target, env):
 def post_upload(source, target, env):
     if "/arduino_uno/" in str(source[0]):
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
-    if "/arduino_uno_mega_usb" in str(source[0]):
-        launch_dfu()
+    if "_usb" in str(source[0]):
+        launch_dfu_no_reset()
 
 
 env.AddPreAction("upload", before_upload)

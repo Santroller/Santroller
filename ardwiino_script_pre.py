@@ -2,8 +2,7 @@
 from pprint import pp
 import subprocess
 import sys
-import re
-from os import path
+from os.path import join
 try:
     import libusb_package
 except ImportError:

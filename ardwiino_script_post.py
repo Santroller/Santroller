@@ -14,6 +14,7 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])
 
 import libusb_package
+from os.path import join
 
 import usb.core
 import usb.util

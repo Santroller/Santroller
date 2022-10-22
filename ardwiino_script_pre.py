@@ -48,7 +48,7 @@ if "upload" in BUILD_TARGETS:
         while not dev:
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2883)
             pass
-        sleep(0.5)
+        sleep(2)
         env.AutodetectUploadPort()
         port = env.subst("$UPLOAD_PORT")
         s = Serial(port=port, baudrate=115200)

@@ -33,15 +33,11 @@ uint32_t digital_read(uint8_t port, uint8_t mask) {
 }
 
 uint16_t adc_read(uint8_t pin, uint8_t mask) {
-    gpio_function f = gpio_get_function(pin);
-    bool down = gpio_is_pulled_down(pin);
-    bool up = gpio_is_pulled_up(pin);
     gpio_init(pin);
     gpio_set_pulls(pin, true, false);
     gpio_set_input_enabled(pin, false);
     adc_select_input(pin);
     uint16_t data = adc_read();
-    gpio_set_function(pin, f);
-    gpio_set_pulls(pin, up, down);
+    PIN_INIT;
     return data;
 }

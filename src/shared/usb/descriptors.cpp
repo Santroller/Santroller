@@ -405,7 +405,7 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
     },
 };
 
-const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07,
+const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
@@ -434,7 +434,11 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     //     case 0x86:
     //         return true;
     // }
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_ANALOG) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
+        return true;
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {
         return true;
@@ -512,7 +516,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
         uint8_t pin = wValue & 0xff;
         uint8_t mask = (wValue << 8) & 0xff;
-        uint16_t response = digital_read(pin, mask);
+        uint32_t response = digital_read(pin, mask);
         memcpy(requestBuffer, &response, sizeof(response));
         return sizeof(response);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
@@ -554,11 +558,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wValue == 0x0300) {
         if (consoleType == PS3) {
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-            if (DEVICE_TYPE <= ROCK_BAND_DRUMS) {
-                ((uint8_t *)requestBuffer)[3] = 0x00;
-            } else if (DEVICE_TYPE <= GUITAR_HERO_DRUMS) {
-                ((uint8_t *)requestBuffer)[3] = 0x06;
-            }
             return sizeof(ps3_init);
         } else if (consoleType == UNIVERSAL) {
             consoleType = PS3;

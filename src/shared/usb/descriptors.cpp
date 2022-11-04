@@ -516,7 +516,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
         uint8_t pin = wValue & 0xff;
         uint8_t mask = (wValue << 8) & 0xff;
-        uint32_t response = digital_read(pin, mask);
+        uint8_t response = digital_read(pin, mask);
         memcpy(requestBuffer, &response, sizeof(response));
         return sizeof(response);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {

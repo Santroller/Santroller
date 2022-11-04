@@ -50,7 +50,7 @@ void tickAnalog(void) {
 #endif
 }
 
-uint32_t digital_read(uint8_t port_num, uint8_t mask) {
+uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port_num)));
     // ddr is one memory address above port
     volatile uint8_t* ddr = port - 1;
@@ -61,7 +61,7 @@ uint32_t digital_read(uint8_t port_num, uint8_t mask) {
     *port |= mask;
     // And write it inverted to ddr (ones set pullup)
     *ddr &= ~mask;
-    uint16_t data = *port;
+    uint8_t data = *port;
     // Revert the settings we changed
     *port = prevPort;
     *ddr &= prevDdr;

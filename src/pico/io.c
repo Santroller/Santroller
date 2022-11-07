@@ -9,6 +9,8 @@
 #include "hardware/spi.h"
 #include "pico/stdlib.h"
 #include "Arduino.h"
+#include "pico/bootrom.h"
+#include <pico/unique_id.h>
 volatile bool spi_acknowledged = false;
 void spi_begin() {
 #ifdef SPI_0_MOSI
@@ -102,3 +104,7 @@ void init_ack() {
     gpio_set_irq_enabled_with_callback(PS2_ACK, GPIO_IRQ_EDGE_RISE, true, &callback);
 }
 #endif
+
+void read_serial(uint8_t* id, uint8_t len) {
+    pico_get_unique_board_id_string((char*)id, len);
+}

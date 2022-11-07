@@ -16,7 +16,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+void read_serial(uint8_t* out, uint8_t len);
 void twi_init();
 bool twi_readFrom(TWI_BLOCK, uint8_t, uint8_t *, uint8_t, uint8_t);
 bool twi_writeTo(TWI_BLOCK, uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);

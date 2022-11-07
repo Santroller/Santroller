@@ -481,3 +481,7 @@ ISR(TWI_vect) {
     break;
   }
 }
+
+void read_serial(uint8_t* id, uint8_t len) {
+  USB_Device_GetSerialString(id);
+}

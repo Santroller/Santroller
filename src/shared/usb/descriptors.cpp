@@ -4,13 +4,18 @@
 #include "commands.h"
 #include "config.h"
 #include "controllers.h"
+#include "io.h"
 #include "keyboard_mouse.h"
+#include "pins.h"
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
 #include "util.h"
-#include "pins.h"
+#include "xsm3/xsm3.h"
+
+#ifdef KV_KEY_1
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
 const PROGMEM uint8_t kv_key_2[16] = KV_KEY_2;
+#endif
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
@@ -426,14 +431,17 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         reset_usb();
         return false;
     }
-    // switch (request) {
-    //     case 0x81:
-    //     case 0x82:
-    //     case 0x87:
-    //     case 0x83:
-    //     case 0x86:
-    //         return true;
-    // }
+#ifdef KV_KEY_1
+    switch (request) {
+        case 0x81:
+        case 0x82:
+        case 0x87:
+        case 0x83:
+        case 0x84:
+        case 0x86:
+            return true;
+    }
+#endif
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_ANALOG) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
@@ -486,27 +494,34 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             bootloader();
         }
     }
-    // switch (request) {
-    //     case 0x81:
-    //         xsm3_initialise_state();
-    //         xsm3_set_identification_data(xsm3_id_data_ms_controller);
-    //         xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
-    //         memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
-    //         return sizeof(xsm3_id_data_ms_controller);
-    //     case 0x82:
-    //         xsm3_do_challenge_init((uint8_t *)requestBuffer);
-    //         return 0;
-    //     case 0x87:
-    //         xsm3_do_challenge_verify((uint8_t *)requestBuffer);
-    //         return 0;
-    //     case 0x83:
-    //         memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
-    //         return sizeof(xsm3_challenge_response);
-    //     case 0x86:
-    //         short state = 2;  // 1 = in-progress, 2 = complete
-    //         memcpy(requestBuffer, &state, sizeof(state));
-    //         return sizeof(state);
-    // }
+#ifdef KV_KEY_1
+    switch (request) {
+        case 0x81:
+            uint8_t serial[0x0B];
+            read_serial(serial, sizeof(serial));
+            xsm3_set_serial(serial);
+            xsm3_initialise_state();
+            xsm3_set_identification_data(xsm3_id_data_ms_controller);
+            xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
+            memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
+            return sizeof(xsm3_id_data_ms_controller);
+        case 0x82:
+            xsm3_do_challenge_init((uint8_t *)requestBuffer);
+            return 0;
+        case 0x87:
+            xsm3_do_challenge_verify((uint8_t *)requestBuffer);
+            return 0;
+        case 0x84:
+            return 0;
+        case 0x83:
+            memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
+            return sizeof(xsm3_challenge_response);
+        case 0x86:
+            short state = 2;  // 1 = in-progress, 2 = complete
+            memcpy(requestBuffer, &state, sizeof(state));
+            return sizeof(state);
+    }
+#endif
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_ANALOG) {
         uint8_t pin = wValue & 0xff;
         uint8_t mask = (wValue >> 8);
@@ -625,8 +640,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #endif
             // TODO: Only really necessary if we end up implementing xsm3, and even though it may not be necessary eventually?
             // if (consoleType == XBOX360) {
-            // dev->idVendor = 0x045E;
-            // dev->idProduct = 0x028E;
+            //     dev->idVendor = 0x045E;
+            //     dev->idProduct = 0x028E;
             // }
             break;
         }

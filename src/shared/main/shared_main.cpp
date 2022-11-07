@@ -33,88 +33,90 @@ void init_main(void) {
     spi_begin();
     memset(ledState, 0, sizeof(ledState));
 }
-// TODO: just write these again
-int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
+int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, float multiplier, int16_t deadzone) {
     int32_t val = orig_val;
     val -= offset;
+    if (val < deadzone && val > -deadzone) {
+        return 0;
+    }
+    if (val < 0) {
+        deadzone = -deadzone;
+    }
+    val -= deadzone;
     val *= multiplier;
-    val /= 1024;
-    val += INT16_MIN;
-    if (val > INT16_MAX) val = INT16_MAX;
-    if (val < INT16_MIN) val = INT16_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
-    return (int16_t)val;
+    if (val > INT16_MAX) {
+        val = INT16_MAX;
+    }
+    if (val < INT16_MIN) {
+        val = INT16_MIN;
+    }
+    return val;
+
 }
-int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    int32_t val = orig_val - INT16_MAX;
-    val -= offset;
-    val *= multiplier;
-    val /= 1024;
-    val += INT16_MIN;
-    if (val > INT16_MAX) val = INT16_MAX;
-    if (val < INT16_MIN) val = INT16_MIN;
-    if (val < deadzone && val > -deadzone) val = 0;
-    return (int16_t)val;
-}
-uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
-    int32_t val = orig_val + INT16_MAX;
-    val -= offset;
-    val *= multiplier;
-    val /= 1024;
-    val += INT16_MAX;
-    if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < deadzone) val = 0;
-    return (uint16_t)val;
-}
-uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
+int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, float multiplier, int16_t deadzone) {
     int32_t val = orig_val;
     val -= offset;
+    if (val < deadzone) {
+        return 0;
+    }
+    val -= deadzone;
     val *= multiplier;
-    val /= 1024;
-    val += INT16_MAX;
-    if (val > INT16_MAX) val = UINT16_MAX;
-    if (val < deadzone) val = 0;
-    return (uint16_t)val;
+    val += UINT16_MAX;
+    if (val > INT16_MAX) {
+        val = INT16_MAX;
+    }
+    if (val < INT16_MIN) {
+        val = INT16_MIN;
+    }
+    return val;
 }
-// TODO: for ps3, the shifting should be done at the end, not the beginning, as all the math is designed around uint16_t, not uint8
-uint8_t handle_calibration_ps3_int(int16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    int32_t val = (orig_val - INT16_MAX) >> 8;
-    // val -= offset;
-    // val *= multiplier;
-    // val /= 1024;
-    // if (val > INT8_MAX) val = INT8_MAX;
-    // if (val < INT8_MIN) val = INT16_MIN;
-    // if (val < deadzone && val > -deadzone) val = 0;
-    return (uint8_t)(val - INT8_MAX);
-}
-uint8_t handle_calibration_ps3_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, int16_t deadzone) {
-    int32_t val = (orig_val >> 8);
+uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, float multiplier, uint16_t deadzone) {
+    int32_t val = orig_val;
     val -= offset;
+    if (val < deadzone && val > -deadzone) {
+        return 0;
+    }
+    if (val < 0) {
+        deadzone = -deadzone;
+    }
+    val -= deadzone;
     val *= multiplier;
-    val /= 1024;
-    if (val > UINT8_MAX) val = UINT8_MAX;
-    if (val < deadzone) val = 0;
-    if (val < deadzone && val > -deadzone) val = 0;
-    return (uint8_t)(val);
+    if (val > UINT16_MAX) {
+        val = UINT16_MAX;
+    }
+    if (val < 0) {
+        val = 0;
+    }
+    return val;
 }
-uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
-    int32_t val = ((orig_val + INT16_MAX) >> 8);
-    // val -= offset;
-    // val *= multiplier;
-    // val /= 1024;
-    // val += INT8_MIN;
-    // if (val > UINT8_MAX) val = UINT8_MAX;
-    // if (val < deadzone) val = 0;
-    return (uint8_t)val;
-}
-uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, int16_t multiplier, uint16_t deadzone) {
-    int32_t val = (orig_val >> 8);
+uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset, float multiplier, uint16_t deadzone) {
+    int32_t val = orig_val;
     val -= offset;
+    if (val < deadzone) {
+        return 0;
+    }
+    val -= deadzone;
     val *= multiplier;
-    val /= 1024;
-    if (val > UINT8_MAX) val = UINT8_MAX;
-    // if (val < deadzone) val = 0;
-    return (uint8_t)val;
+    val -= UINT16_MAX;
+    if (val > UINT16_MAX) {
+        val = UINT16_MAX;
+    }
+    if (val < 0) {
+        val = 0;
+    }
+    return val;
+}
+uint8_t handle_calibration_ps3_int(int16_t orig_val, int16_t offset, float multiplier, int16_t deadzone) {
+    return (uint8_t)(handle_calibration_xbox_int(orig_val, offset, multiplier, deadzone) >> 8);
+}
+uint8_t handle_calibration_ps3_uint(uint16_t orig_val, int16_t offset, float multiplier, int16_t deadzone) {
+    return (uint8_t)(handle_calibration_xbox_uint(orig_val, offset, multiplier, deadzone) >> 8);
+}
+uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, float multiplier, uint16_t deadzone) {
+    return (uint8_t)(handle_calibration_ps3_trigger_int(orig_val, offset, multiplier, deadzone) >> 8);
+}
+uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, float multiplier, uint16_t deadzone) {
+    return (uint8_t)(handle_calibration_ps3_trigger_uint(orig_val, offset, multiplier, deadzone) >> 8);
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE

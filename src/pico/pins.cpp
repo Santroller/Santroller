@@ -8,7 +8,7 @@ uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
 uint16_t adc(uint8_t pin) {
     adc_select_input(pin);
-    return adc_read();
+    return adc_read() << 4;
 }
 
 void initPins(void) {

@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <util/delay.h>
 #include <util/twi.h>
+#include <LUFA.h>
+#include <LUFA/LUFA/Drivers/USB/USB.h>
 #include <string.h>
 #ifndef TWI_BUFFER_LENGTH
 #include "string.h"
@@ -483,5 +485,5 @@ ISR(TWI_vect) {
 }
 
 void read_serial(uint8_t* id, uint8_t len) {
-  USB_Device_GetSerialString(id);
+  USB_Device_GetSerialString((uint16_t*)id);
 }

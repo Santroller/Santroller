@@ -20,12 +20,24 @@ uint8_t lastTap;
 uint8_t lastTapShift;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
+uint8_t lastSuccessfulPS2Packet[BUFFER_SIZE];
+uint8_t lastSuccessfulWiiPacket[8];
+uint8_t lastSuccessfulGH5Packet[2];
+uint8_t lastSuccessfulTurntablePacketLeft[3];
+uint8_t lastSuccessfulTurntablePacketRight[3];
+long lastSuccessfulGHWTPacket;
+bool lastGHWTWasSuccessful = false;
+bool lastGH5WasSuccessful = false;
+bool lastTurntableWasSuccessfulLeft = false;
+bool lastTurntableWasSuccessfulRight = false;
+bool lastWiiWasSuccessful = false;
+bool lastPS2WasSuccessful = false;
 typedef struct {
     uint8_t r;
     uint8_t g;
     uint8_t b;
 } Led_t;
-Led_t ledState[LED_COUNT];  
+Led_t ledState[LED_COUNT];
 static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 void init_main(void) {
     initPins();
@@ -52,7 +64,6 @@ int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, uint16_t m
         val = INT16_MIN;
     }
     return val;
-
 }
 int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, uint16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
@@ -126,29 +137,43 @@ uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, u
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
-    uint8_t dj_left[3] = {0, 0, 0};
-    uint8_t dj_right[3] = {0, 0, 0};
-    bool djLeftValid = twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_left), dj_left);
-    bool djRightValid = twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(dj_right), dj_right);
+    uint8_t* dj_left = lastSuccessfulTurntablePacketLeft;
+    uint8_t* dj_right = lastSuccessfulTurntablePacketRight;
+    bool djLeftValid = twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketLeft), dj_left);
+    bool djRightValid = twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketRight), dj_right);
+    lastTurntableWasSuccessfulLeft = djLeftValid;
+    lastTurntableWasSuccessfulRight = djRightValid;
 #endif
 #ifdef INPUT_GH5_NECK
-    uint8_t fivetar_buttons[2] = {0, 0};
-    bool gh5Valid = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(fivetar_buttons), fivetar_buttons);
+    uint8_t* fivetar_buttons = lastSuccessfulGH5Packet;
+    bool gh5Valid = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(lastSuccessfulGH5Packet), lastSuccessfulGH5Packet);
+    lastGH5WasSuccessful = gh5Valid;
 #endif
 #ifdef INPUT_WT_NECK
     long pulse = WT_NECK_READ();
     if (pulse == WT_NECK_READ()) {
         lastTap = pulse;
         lastTapShift = pulse >> 1;
+        lastGHWTWasSuccessful = true;
+    } else {
+        lastGH5WasSuccessful = false;
     }
 #endif
 #ifdef INPUT_PS2
     uint8_t *ps2Data = tickPS2();
     bool ps2Valid = ps2Data != NULL;
+    lastPS2WasSuccessful = ps2Valid;
+    if (ps2Valid) {
+        memcpy(lastSuccessfulPS2Packet, ps2Data, sizeof(lastSuccessfulPS2Packet));
+    }
 #endif
 #ifdef INPUT_WII
     uint8_t *wiiData = tickWii();
     bool wiiValid = wiiData != NULL;
+    lastWiiWasSuccessful = wiiValid;
+    if (wiiValid) {
+        memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
+    }
     uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which = 0;
     uint16_t accX, accY, accZ = 0;
     if (wiiValid) {
@@ -179,8 +204,6 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
                 break;
             case 0x0E:
                 drumVelocity[DRUM_ORANGE] = vel;
-                break;
-            default:
                 break;
         }
 #endif

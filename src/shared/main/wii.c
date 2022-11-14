@@ -4,8 +4,8 @@
 #include "wii.h"
 #include "Arduino.h"
 #include <string.h>
+uint8_t wiiBytes;
 #ifdef INPUT_WII
-uint8_t bytes;
 uint8_t wiiPointer = 0;
 bool hiRes = false;
 bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
@@ -70,16 +70,16 @@ void initWiiExt(void) {
         delayMicroseconds(200);
         if (id[4] == WII_HIGHRES_MODE) {
             hiRes = true;
-            bytes = 8;
+            wiiBytes = 8;
         } else {
             hiRes = false;
-            bytes = 6;
+            wiiBytes = 6;
         }
     } else if (wiiControllerType == WII_TAIKO_NO_TATSUJIN_CONTROLLER) {
         // We can cheat a little with these controllers, as most of the bytes that
         // get read back are constant. Hence we start at 0x5 instead of 0x0.
         wiiPointer = 5;
-        bytes = 1;
+        wiiBytes = 1;
     } else {
         wiiControllerType = WII_NO_EXTENSION;
     }
@@ -90,8 +90,8 @@ uint8_t* tickWii() {
     memset(data, 0, sizeof(data));
     if (wiiControllerType == WII_NOT_INITIALISED ||
         wiiControllerType == WII_NO_EXTENSION ||
-        !twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, bytes, data) ||
-        !verifyData(data, bytes)) {
+        !twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, wiiBytes, data) ||
+        !verifyData(data, wiiBytes)) {
         initWiiExt();
         return NULL;
     }

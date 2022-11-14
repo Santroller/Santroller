@@ -417,15 +417,6 @@ const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
-    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        if (request == COMMAND_REBOOT) {
-            return true;
-        }
-        if (request == COMMAND_JUMP_BOOTLOADER) {
-            return true;
-        }
-    }
-
     if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
         reset_usb();
@@ -442,16 +433,39 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             return true;
     }
 #endif
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_ANALOG) {
-        return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
-        return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
-        return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {
-        return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_F_CPU) {
-        return true;
+    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        switch (request) {
+            case COMMAND_REBOOT:
+            case COMMAND_JUMP_BOOTLOADER:
+            case HID_REQUEST_SET_PROTOCOL:
+            case HID_REQUEST_SET_IDLE:
+            case HID_REQUEST_SET_REPORT:
+                return true;
+        }
+    }
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        switch (request) {
+            case COMMAND_READ_CONFIG:
+            case COMMAND_READ_F_CPU:
+            case COMMAND_READ_BOARD:
+            case COMMAND_READ_DIGITAL:
+            case COMMAND_READ_ANALOG:
+            case COMMAND_READ_PS2:
+            case COMMAND_READ_WII:
+            case COMMAND_READ_DJ_LEFT:
+            case COMMAND_READ_DJ_RIGHT:
+            case COMMAND_READ_GH5:
+            case COMMAND_READ_GHWT:
+            case COMMAND_GET_EXTENSION_WII:
+            case COMMAND_GET_EXTENSION_PS2:
+            case HID_REQUEST_GET_PROTOCOL:
+            case HID_REQUEST_GET_IDLE:
+            case HID_REQUEST_GET_REPORT:
+                return true;
+        }
+        if (wValue == 0x0300) {
+            return true;
+        }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             return true;
@@ -463,20 +477,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
-        return true;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wValue == 0x0300) {
-        return true;
-    } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return true;
-    } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return true;
-    } else if (request == HID_REQUEST_GET_IDLE && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return true;
-    } else if (request == HID_REQUEST_SET_IDLE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return true;
-    } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return true;
-    } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return true;
     } else if (consoleType == UNIVERSAL && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         return true;
@@ -522,27 +522,99 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return sizeof(state);
     }
 #endif
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_ANALOG) {
-        uint8_t pin = wValue & 0xff;
-        uint8_t mask = (wValue >> 8);
-        uint16_t response = adc_read(pin, mask);
-        memcpy(requestBuffer, &response, sizeof(response));
-        return sizeof(response);
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_DIGITAL) {
-        uint8_t port = wValue & 0xff;
-        uint8_t mask = (wValue >> 8);
-        uint8_t response = digital_read(port, mask);
-        memcpy(requestBuffer, &response, sizeof(response));
-        return sizeof(response);
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_CONFIG) {
-        memcpy_P(requestBuffer, config, sizeof(config));
-        return sizeof(config);
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_BOARD) {
-        memcpy_P(requestBuffer, board, sizeof(board));
-        return sizeof(board);
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == COMMAND_READ_F_CPU) {
-        memcpy_P(requestBuffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
-        return sizeof(f_cpu_descriptor_str);
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        switch (request) {
+            case COMMAND_GET_EXTENSION_WII:
+                if (!lastWiiWasSuccessful) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &wiiControllerType, sizeof(wiiControllerType));
+                return sizeof(wiiControllerType);
+            case COMMAND_GET_EXTENSION_PS2:
+                if (!lastPS2WasSuccessful) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &ps2ControllerType, sizeof(ps2ControllerType));
+                return sizeof(ps2ControllerType);
+            case COMMAND_READ_WII:
+                if (!lastWiiWasSuccessful) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &lastSuccessfulWiiPacket, wiiBytes);
+                return wiiBytes;
+            case COMMAND_READ_PS2:
+                if (!lastPS2WasSuccessful) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &lastSuccessfulPS2Packet, sizeof(lastSuccessfulPS2Packet));
+                return sizeof(lastSuccessfulPS2Packet);
+            case COMMAND_READ_DJ_LEFT:
+                if (!lastTurntableWasSuccessfulLeft) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &lastSuccessfulTurntablePacketLeft, sizeof(lastSuccessfulTurntablePacketLeft));
+                return sizeof(lastSuccessfulTurntablePacketLeft);
+            case COMMAND_READ_DJ_RIGHT:
+                if (!lastTurntableWasSuccessfulRight) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &lastSuccessfulTurntablePacketRight, sizeof(lastSuccessfulTurntablePacketRight));
+                return sizeof(lastSuccessfulTurntablePacketRight);
+            case COMMAND_READ_GH5:
+                if (!lastGH5WasSuccessful) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &lastSuccessfulGH5Packet, sizeof(lastSuccessfulGH5Packet));
+                return sizeof(lastSuccessfulGH5Packet);
+
+            case COMMAND_READ_GHWT:
+                if (!lastGHWTWasSuccessful) {
+                    return 0;
+                }
+                memcpy(requestBuffer, &lastTap, sizeof(lastTap));
+                return sizeof(lastTap);
+            case COMMAND_READ_ANALOG: {
+                uint8_t pin = wValue & 0xff;
+                uint8_t mask = (wValue >> 8);
+                uint16_t response = adc_read(pin, mask);
+                memcpy(requestBuffer, &response, sizeof(response));
+                return sizeof(response);
+            }
+            case COMMAND_READ_DIGITAL: {
+                uint8_t port = wValue & 0xff;
+                uint8_t mask = (wValue >> 8);
+                uint8_t response = digital_read(port, mask);
+                memcpy(requestBuffer, &response, sizeof(response));
+                return sizeof(response);
+            }
+            case COMMAND_READ_CONFIG:
+                memcpy_P(requestBuffer, config, sizeof(config));
+                return sizeof(config);
+            case COMMAND_READ_BOARD:
+                memcpy_P(requestBuffer, board, sizeof(board));
+                return sizeof(board);
+            case COMMAND_READ_F_CPU:
+                memcpy_P(requestBuffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
+                return sizeof(f_cpu_descriptor_str);
+            case HID_REQUEST_GET_PROTOCOL:
+                ((uint8_t *)requestBuffer)[0] = protocol_mode;
+                return 1;
+            case HID_REQUEST_GET_IDLE:
+                ((uint8_t *)requestBuffer)[0] = idle_rate;
+                return 1;
+            case HID_REQUEST_GET_REPORT:
+                return 0;
+        }
+        if (wValue == 0x0300) {
+            if (consoleType == PS3) {
+                memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
+                return sizeof(ps3_init);
+            } else if (consoleType == UNIVERSAL) {
+                consoleType = PS3;
+                reset_usb();
+                return 0;
+            }
+        }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
@@ -570,30 +642,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
         memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
         return sizeof(XBOX_ID);
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && wValue == 0x0300) {
-        if (consoleType == PS3) {
-            memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-            return sizeof(ps3_init);
-        } else if (consoleType == UNIVERSAL) {
-            consoleType = PS3;
-            reset_usb();
-            return 0;
-        }
-    } else if (request == HID_REQUEST_GET_PROTOCOL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        ((uint8_t *)requestBuffer)[0] = protocol_mode;
-        return 1;
     } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         protocol_mode = (uint8_t)wValue;
         return 0;
-    } else if (request == HID_REQUEST_GET_IDLE && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        ((uint8_t *)requestBuffer)[0] = idle_rate;
-        return 1;
     } else if (request == HID_REQUEST_SET_IDLE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         idle_rate = (wValue >> 8) & 0xff;
         return 0;
     } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return 0;
-    } else if (request == HID_REQUEST_GET_REPORT && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 0;
     } else if (consoleType == UNIVERSAL && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         // Switch clears a halt on both endpoints

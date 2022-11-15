@@ -587,9 +587,15 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 memcpy(requestBuffer, &response, sizeof(response));
                 return sizeof(response);
             }
-            case COMMAND_READ_CONFIG:
-                memcpy_P(requestBuffer, config, sizeof(config));
-                return sizeof(config);
+            case COMMAND_READ_CONFIG: {
+                if (wValue > sizeof(config)) {
+                    return 0;
+                }
+                uint16_t size = sizeof(config) - wValue;
+                if (size > 64) size = 64;
+                memcpy_P(requestBuffer, config+wValue, size);
+                return size;
+            }
             case COMMAND_READ_BOARD:
                 memcpy_P(requestBuffer, board, sizeof(board));
                 return sizeof(board);

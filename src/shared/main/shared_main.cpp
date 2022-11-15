@@ -133,7 +133,7 @@ uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, uin
     return (uint8_t)(ret - INT8_MAX - 1);
 }
 uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, uint16_t multiplier, uint16_t deadzone) {
-    return handle_calibration_ps3_trigger_uint(orig_val, offset, multiplier, deadzone) >> 8;
+    return handle_calibration_xbox_trigger_uint(orig_val, offset, multiplier, deadzone) >> 8;
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
@@ -171,12 +171,10 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
     uint8_t *wiiData = tickWii();
     bool wiiValid = wiiData != NULL;
     lastWiiWasSuccessful = wiiValid;
-    if (wiiValid) {
-        memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
-    }
     uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which = 0;
     uint16_t accX, accY, accZ = 0;
     if (wiiValid) {
+        memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
         wiiButtonsLow = ~wiiData[4];
         wiiButtonsHigh = ~wiiData[5];
         if (hiRes) {
@@ -208,9 +206,9 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         }
 #endif
 #ifdef INPUT_WII_NUNCHUK
-        uint16_t accX = ((wiiData[2] << 2) | ((wiiData[5] & 0xC0) >> 6)) - 511;
-        uint16_t accY = ((wiiData[3] << 2) | ((wiiData[5] & 0x30) >> 4)) - 511;
-        uint16_t accZ = ((wiiData[4] << 2) | ((wiiData[5] & 0xC) >> 2)) - 511;
+        accX = ((wiiData[2] << 2) | ((wiiData[5] & 0xC0) >> 6)) - 511;
+        accY = ((wiiData[3] << 2) | ((wiiData[5] & 0x30) >> 4)) - 511;
+        accZ = ((wiiData[4] << 2) | ((wiiData[5] & 0xC) >> 2)) - 511;
 #endif
     }
 #endif

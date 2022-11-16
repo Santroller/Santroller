@@ -52,6 +52,7 @@ void initWiiExt(void) {
         delayMicroseconds(10);
     }
     wiiPointer = 0;
+    wiiBytes = 6;
     if (wiiControllerType == WII_CLASSIC_CONTROLLER ||
         wiiControllerType == WII_CLASSIC_CONTROLLER_PRO) {
         // Enable high-res mode (try a few times, sometimes the controller doesnt
@@ -73,20 +74,16 @@ void initWiiExt(void) {
             wiiBytes = 8;
         } else {
             hiRes = false;
-            wiiBytes = 6;
         }
     } else if (wiiControllerType == WII_TAIKO_NO_TATSUJIN_CONTROLLER) {
         // We can cheat a little with these controllers, as most of the bytes that
         // get read back are constant. Hence we start at 0x5 instead of 0x0.
         wiiPointer = 5;
         wiiBytes = 1;
-    } else {
-        wiiControllerType = WII_NO_EXTENSION;
-    }
+    } 
 }
 uint8_t* tickWii() {
     static uint8_t data[8];
-    bool wiiValid = true;
     memset(data, 0, sizeof(data));
     if (wiiControllerType == WII_NOT_INITIALISED ||
         wiiControllerType == WII_NO_EXTENSION ||

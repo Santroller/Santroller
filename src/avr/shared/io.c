@@ -116,7 +116,6 @@ void twi_init() {
 ISR(INTERRUPT_PS2_ACK_VECT) {
     spi_acknowledged = true;
 }
-// TODO: we need to define these
 void init_ack() {
     cli();
     EICRA |= INTERRUPT_PS2_ACK_EICRA;

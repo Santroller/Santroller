@@ -100,7 +100,6 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
     unsigned long m;
     for (uint8_t i = 0; i < len; ++i) {
         uint8_t resp = spi_transfer(PS2_SPI_PORT, out != NULL ? out[i] : 0x5A);
-        // printf("%02x %02x\n", out != NULL ? out[i] : 0x5A, resp);
         if (in != NULL) {
             in[i] = resp;
         }
@@ -116,8 +115,8 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
         }
     }
 }
+static uint8_t inputBuffer[BUFFER_SIZE];
 uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
-    static uint8_t inputBuffer[BUFFER_SIZE];
     uint8_t *ret = NULL;
 
     if (len >= 2 && len <= BUFFER_SIZE) {
@@ -180,7 +179,7 @@ uint8_t* tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
     if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 5000 && !invalidCount) {
-        return NULL;
+        return inputBuffer;
     }
     last = micros();
     // If this is changed to a different port, you can talk to different devices

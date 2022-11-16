@@ -44,6 +44,9 @@ void init_main(void) {
     twi_init();
     spi_begin();
     memset(ledState, 0, sizeof(ledState));
+#ifdef INPUT_PS2
+    init_ack();
+#endif
 }
 int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, uint16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
@@ -137,15 +140,15 @@ uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, u
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
-    uint8_t* dj_left = lastSuccessfulTurntablePacketLeft;
-    uint8_t* dj_right = lastSuccessfulTurntablePacketRight;
+    uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
+    uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
     bool djLeftValid = twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketLeft), dj_left);
     bool djRightValid = twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketRight), dj_right);
     lastTurntableWasSuccessfulLeft = djLeftValid;
     lastTurntableWasSuccessfulRight = djRightValid;
 #endif
 #ifdef INPUT_GH5_NECK
-    uint8_t* fivetar_buttons = lastSuccessfulGH5Packet;
+    uint8_t *fivetar_buttons = lastSuccessfulGH5Packet;
     bool gh5Valid = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(lastSuccessfulGH5Packet), lastSuccessfulGH5Packet);
     lastGH5WasSuccessful = gh5Valid;
 #endif

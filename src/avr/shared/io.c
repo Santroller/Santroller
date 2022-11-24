@@ -11,6 +11,7 @@
 #include <LUFA.h>
 #include <LUFA/LUFA/Drivers/USB/USB.h>
 #include <string.h>
+#include <Arduino.h>
 #ifndef TWI_BUFFER_LENGTH
 #include "string.h"
 #  define TWI_BUFFER_LENGTH 32
@@ -27,24 +28,24 @@
 #define TWI_STX 4
 volatile bool spi_acknowledged = false;
 void spi_begin() {
-#ifdef SPI_CLOCK
-    pinMode(PIN_SPI_MOSI, OUTPUT);
-    pinMode(PIN_SPI_MISO, INPUT_PULLUP);
-    pinMode(PIN_SPI_SCK, OUTPUT);
-    digitalWrite(PIN_SPI_SS, 1);
-    pinMode(PIN_SPI_SS, OUTPUT);
+#ifdef GC_SPI_CLOCK
+    pinMode(MOSI, OUTPUT);
+    pinMode(MISO, INPUT_PULLUP);
+    pinMode(SCK, OUTPUT);
+    digitalWrite(SS, 1);
+    pinMode(SS, OUTPUT);
     uint8_t clockDiv;
-    if (SPI_CLOCK >= F_CPU / 2) {
+    if (GC_SPI_CLOCK >= F_CPU / 2) {
         clockDiv = 0;
-    } else if (SPI_CLOCK >= F_CPU / 4) {
+    } else if (GC_SPI_CLOCK >= F_CPU / 4) {
         clockDiv = 1;
-    } else if (SPI_CLOCK >= F_CPU / 8) {
+    } else if (GC_SPI_CLOCK >= F_CPU / 8) {
         clockDiv = 2;
-    } else if (SPI_CLOCK >= F_CPU / 16) {
+    } else if (GC_SPI_CLOCK >= F_CPU / 16) {
         clockDiv = 3;
-    } else if (SPI_CLOCK >= F_CPU / 32) {
+    } else if (GC_SPI_CLOCK >= F_CPU / 32) {
         clockDiv = 4;
-    } else if (SPI_CLOCK >= F_CPU / 64) {
+    } else if (GC_SPI_CLOCK >= F_CPU / 64) {
         clockDiv = 5;
     } else {
         clockDiv = 7;
@@ -54,18 +55,15 @@ void spi_begin() {
     clockDiv ^= 0x1;
 
     uint8_t config = 0;
-#if SPI_CPHA == 1
+#if GC_SPI_CPHA == 1
     config |= _BV(CPHA);
 #endif
-#if SPI_CPOL == 1
+#if GC_SPI_CPOL == 1
     config |= _BV(CPOL);
 #endif
-#if SPI_MSBFIRST == 0
+#if GC_SPI_MSBFIRST == 0
     config |= _BV(DORD);
 #endif
-    if (cpha) {
-        config |= _BV(CPHA);
-    }
     SPCR = _BV(SPE) | _BV(MSTR) | config | ((clockDiv >> 1) & 0x03);
     SPSR = clockDiv & 0x01;
 #endif
@@ -79,7 +77,7 @@ uint8_t spi_transfer(SPI_BLOCK block, uint8_t data) {
 }
 void spi_high(SPI_BLOCK block) {}
 void twi_init() {
-#ifdef TWI_FREQ
+#ifdef GC_TWI_FREQ
     twi_state = TWI_READY;
     twi_sendStop = true;  // default value
     twi_inRepStart = false;
@@ -102,7 +100,7 @@ void twi_init() {
     cbi(TWSR, TWPS0);
     cbi(TWSR, TWPS1);
 // note: TWBR should be 10 or higher for master mode
-#if ((F_CPU / TWI_FREQ) - 16) / 2 > 10
+#if ((F_CPU / GC_TWI_FREQ) - 16) / 2 > 10
     TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
 #else
     TWBR = 10;

@@ -54,6 +54,7 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port_num)));
     // ddr is one memory address above port
     volatile uint8_t* ddr = port - 1;
+    volatile uint8_t* pin = port - 2;
     uint8_t prevPort = *port;
     uint8_t prevDdr = *ddr;
     uint8_t oldSREG = SREG;
@@ -61,7 +62,7 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     *port |= mask;
     // And write it inverted to ddr (ones set pullup)
     *ddr &= ~mask;
-    uint8_t data = *port;
+    uint8_t data = *pin;
     // Revert the settings we changed
     *port = prevPort;
     *ddr &= prevDdr;
@@ -103,7 +104,7 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     low = ADCL;
     high = ADCH;
     uint16_t data = (high << 8) | low;
-    data = data << 2;
+    data = data << 6;
 
     // Revert the settings we changed
     oldSREG = SREG;

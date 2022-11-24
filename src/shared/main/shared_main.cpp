@@ -221,6 +221,12 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         report->buttons = 0;
         tickPins();
         TICK_XINPUT;
+// TODO: probably handle this within TICK_XINPUT
+#ifdef APA102_SPI_PORT
+        for (uint8_t i = 0; i < LED_COUNT; i += 16) {
+            spi_transfer(APA102_SPI_PORT, 0xff);  // 8 more clock cycles
+        }
+#endif
         return sizeof(USB_XInputReport_Data_t);
     } else {
         USB_PS3Report_Data_t *report = &combined_report->ps3;
@@ -228,6 +234,13 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         report->hat = 0;
         tickPins();
         TICK_PS3;
+
+// TODO: probably handle this within TICK_PS3
+#ifdef APA102_SPI_PORT
+        for (uint8_t i = 0; i < LED_COUNT; i += 16) {
+            spi_transfer(APA102_SPI_PORT, 0xff);  // 8 more clock cycles
+        }
+#endif
         report->hat = (report->hat & 0xf) > 0x0a ? 0x08 : hat_bindings[report->hat];
         return sizeof(USB_PS3Report_Data_t);
     }

@@ -217,8 +217,6 @@ int main(void) {
     // Loop for handling serial data
     if (serial) {
         while (true) {
-            USB_USBTask();
-
             // Send any data from the serial out buffer over USB
             Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
             if (Endpoint_IsINReady()) {

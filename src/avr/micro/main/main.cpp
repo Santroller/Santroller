@@ -32,7 +32,6 @@ void setup() {
 
 USB_Report_Data_t report;
 void loop() {
-    // USB_USBTask();
     uint8_t size = tick(&report);
     Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
     Endpoint_Write_Stream_LE(&report, size, NULL);

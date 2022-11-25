@@ -16,8 +16,8 @@
 
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
-uint8_t lastTap;
-uint8_t lastTapShift;
+long lastTap;
+long lastTapShift;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
 uint8_t lastSuccessfulPS2Packet[BUFFER_SIZE];
@@ -48,18 +48,24 @@ void init_main(void) {
     init_ack();
 #endif
 }
-int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, uint16_t multiplier, int16_t deadzone) {
+int16_t adc_i(uint8_t pin) {
+    int32_t ret = adc(pin);
+    return ret - 32767;
+}
+int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
-    val -= offset;
-    if (val < deadzone && val > -deadzone) {
+    int16_t val_deadzone = orig_val - offset;
+    if (val_deadzone < deadzone && val_deadzone > -deadzone) {
         return 0;
     }
     if (val < 0) {
         deadzone = -deadzone;
     }
     val -= deadzone;
+    val -= min;
     val *= multiplier;
     val /= 1024;
+    val += INT16_MIN;
     if (val > INT16_MAX) {
         val = INT16_MAX;
     }
@@ -68,13 +74,18 @@ int16_t handle_calibration_xbox_int(int16_t orig_val, int16_t offset, uint16_t m
     }
     return val;
 }
-int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, uint16_t multiplier, int16_t deadzone) {
+int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t min, int16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
-    val -= offset;
-    if (val < deadzone) {
-        return 0;
+    if (multiplier < 0) {
+        if ((val - min) < deadzone) {
+            return 0;
+        }
+    } else {
+        if (val > min) {
+            return 0;
+        }
     }
-    val -= deadzone;
+    val -= min;
     val *= multiplier;
     val /= 1024;
     val += UINT16_MAX;
@@ -86,18 +97,20 @@ int16_t handle_calibration_xbox_uint(uint16_t orig_val, int16_t offset, uint16_t
     }
     return val;
 }
-uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, uint16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
-    val -= offset;
-    if (val < deadzone && val > -deadzone) {
+    int16_t val_deadzone = orig_val - offset;
+    if (val_deadzone < deadzone && val_deadzone > -deadzone) {
         return 0;
     }
     if (val < 0) {
         deadzone = -deadzone;
     }
     val -= deadzone;
+    val -= min;
     val *= multiplier;
     val /= 1024;
+    val += INT16_MIN;
     if (val > UINT16_MAX) {
         val = UINT16_MAX;
     }
@@ -106,16 +119,21 @@ uint16_t handle_calibration_xbox_trigger_int(int16_t orig_val, int16_t offset, u
     }
     return val;
 }
-uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset, uint16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
-    val -= offset;
-    if (val < deadzone) {
-        return 0;
+    if (multiplier > 0) {
+        if ((val - min) < deadzone) {
+            return 0;
+        }
+    } else {
+        if (val > min) {
+            return 0;
+        }
     }
-    val -= deadzone;
+    val -= min;
     val *= multiplier;
     val /= 1024;
-    val -= UINT16_MAX;
+    // val -= UINT16_MAX;
     if (val > UINT16_MAX) {
         val = UINT16_MAX;
     }
@@ -124,19 +142,20 @@ uint16_t handle_calibration_xbox_trigger_uint(uint16_t orig_val, int16_t offset,
     }
     return val;
 }
-uint8_t handle_calibration_ps3_int(int16_t orig_val, int16_t offset, uint16_t multiplier, int16_t deadzone) {
-    int8_t ret = handle_calibration_xbox_int(orig_val, offset, multiplier, deadzone) >> 8;
+uint8_t handle_calibration_ps3_int(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
+    int8_t ret = handle_calibration_xbox_int(orig_val, offset, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret - INT8_MAX - 1);
 }
-uint8_t handle_calibration_ps3_uint(uint16_t orig_val, int16_t offset, uint16_t multiplier, int16_t deadzone) {
-    return handle_calibration_xbox_uint(orig_val, offset, multiplier, deadzone) >> 8;
+uint8_t handle_calibration_ps3_uint(uint16_t orig_val, int16_t min, int16_t multiplier, int16_t deadzone) {
+    return handle_calibration_xbox_uint(orig_val, min, multiplier, deadzone) >> 8;
 }
-uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, uint16_t multiplier, uint16_t deadzone) {
-    int8_t ret = handle_calibration_xbox_trigger_int(orig_val, offset, multiplier, deadzone) >> 8;
+uint8_t handle_calibration_ps3_trigger_int(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, uint16_t deadzone) {
+    int8_t ret = handle_calibration_xbox_trigger_int(orig_val, offset, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret - INT8_MAX - 1);
 }
-uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t offset, uint16_t multiplier, uint16_t deadzone) {
-    return handle_calibration_xbox_trigger_uint(orig_val, offset, multiplier, deadzone) >> 8;
+
+uint8_t handle_calibration_ps3_trigger_uint(uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
+    return handle_calibration_xbox_trigger_uint(orig_val, min, multiplier, deadzone) >> 8;
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
@@ -215,18 +234,19 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
 #endif
     }
 #endif
+// APA102 start frame
+#ifdef APA102_SPI_PORT
+    spi_transfer(APA102_SPI_PORT, 0x00);
+    spi_transfer(APA102_SPI_PORT, 0x00);
+    spi_transfer(APA102_SPI_PORT, 0x00);
+    spi_transfer(APA102_SPI_PORT, 0x00);
+#endif
     TICK_SHARED;
     if (consoleType == XBOX360) {
         USB_XInputReport_Data_t *report = &combined_report->xinput;
         report->buttons = 0;
         tickPins();
         TICK_XINPUT;
-// TODO: probably handle this within TICK_XINPUT
-#ifdef APA102_SPI_PORT
-        for (uint8_t i = 0; i < LED_COUNT; i += 16) {
-            spi_transfer(APA102_SPI_PORT, 0xff);  // 8 more clock cycles
-        }
-#endif
         return sizeof(USB_XInputReport_Data_t);
     } else {
         USB_PS3Report_Data_t *report = &combined_report->ps3;
@@ -234,13 +254,6 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         report->hat = 0;
         tickPins();
         TICK_PS3;
-
-// TODO: probably handle this within TICK_PS3
-#ifdef APA102_SPI_PORT
-        for (uint8_t i = 0; i < LED_COUNT; i += 16) {
-            spi_transfer(APA102_SPI_PORT, 0xff);  // 8 more clock cycles
-        }
-#endif
         report->hat = (report->hat & 0xf) > 0x0a ? 0x08 : hat_bindings[report->hat];
         return sizeof(USB_PS3Report_Data_t);
     }

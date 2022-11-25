@@ -88,7 +88,6 @@ void loop()
 {
 	CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 	CDC_Device_SendString(&VirtualSerial_CDC_Interface, freqString);
-	USB_USBTask();
 }
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */

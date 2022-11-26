@@ -8,3 +8,4 @@ modules.md
 .pio
 include/config_data.h
 .idea
+include/kv.h

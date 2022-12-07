@@ -216,6 +216,7 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
     TICK_SHARED;
     if (consoleType == XBOX360) {
         USB_XInputReport_Data_t *report = &combined_report->xinput;
+        USB_XInputDrumGhReport_Data_t *reportGhDrum = &combined_report->ghDrum;
         report->buttons = 0;
         TICK_XINPUT;
     } else {

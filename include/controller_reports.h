@@ -66,6 +66,21 @@ typedef struct {
   uint8_t rid;
   uint8_t rsize;
   uint16_t buttons;
+  int32_t unused;
+  uint8_t greenVelocity;
+  uint8_t redVelocity;
+  uint8_t yellowVelocity;
+  uint8_t blueVelocity;
+  uint8_t orangeVelocity;
+  uint8_t kickVelocity;
+  uint8_t reserved_1[6];
+} __attribute__((packed)) USB_XInputDrumGhReport_Data_t;
+
+
+typedef struct {
+  uint8_t rid;
+  uint8_t rsize;
+  uint16_t buttons;
   uint8_t triggers[2];
   int16_t joys[4];
   uint8_t reserved_1[6];
@@ -145,6 +160,7 @@ typedef union {
   // USB_KeyboardReport_Data_t keyboard;
   USB_PS3Report_Data_t ps3;
   USB_XInputReport_Data_t xinput;
+  USB_XInputDrumGhReport_Data_t ghDrum;
   USB_MIDI_Data_t midi;
   // USB_MouseReport_Data_t mouse;
 } USB_Report_Data_t;

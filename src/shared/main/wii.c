@@ -53,6 +53,7 @@ void initWiiExt(void) {
     }
     wiiPointer = 0;
     wiiBytes = 6;
+    hiRes = false;
     if (wiiControllerType == WII_CLASSIC_CONTROLLER ||
         wiiControllerType == WII_CLASSIC_CONTROLLER_PRO) {
         // Enable high-res mode (try a few times, sometimes the controller doesnt

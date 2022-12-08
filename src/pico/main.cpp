@@ -9,9 +9,9 @@
 #include "controller_reports.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
+#include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
 #include "host/usbh_classdriver.h"
-#include "hardware/structs/usb.h"
 #include "pico/bootrom.h"
 #include "pico/multicore.h"
 #include "pins.h"
@@ -46,12 +46,13 @@ void loop() {
     }
     tud_task();
     tuh_task();
-    uint8_t size = tick(&report);
     if (consoleType == MIDI) {
-        // tud_midi_n_packet_write(0, controller);
+        // uint8_t size = tick(&report);
+        // tud_midi_n_packet_write(0, report);
     } else {
         if (tud_xinput_n_ready(0)) {
-            tud_xinput_n_report(0, 0, &report, size);
+            uint8_t size2 = tick(&report);
+            tud_xinput_n_report(0, 0, &report, size2);
         }
     }
 }

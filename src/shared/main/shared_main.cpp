@@ -77,7 +77,6 @@ int16_t handle_calibration_xbox(int16_t orig_val, int16_t offset, int16_t min, i
     return val;
 }
 
-
 int16_t handle_calibration_xbox_whammy(uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
@@ -226,7 +225,9 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         TICK_PS3;
         report->hat = (report->hat & 0xf) > 0x0a ? 0x08 : hat_bindings[report->hat];
     }
+#ifdef TICK_LED
     TICK_LED;
+#endif
     if (consoleType == XBOX360) {
         return sizeof(USB_XInputReport_Data_t);
     } else {

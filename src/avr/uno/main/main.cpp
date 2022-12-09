@@ -45,6 +45,7 @@ void setup() {
 
     // Let the 8u2/16u2 know we are ready to receive data
     UDR0 = READY;
+    init_main();
 }
 USB_Report_Data_t report;
 void loop() {

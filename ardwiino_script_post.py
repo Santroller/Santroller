@@ -62,8 +62,8 @@ def before_upload(source, target, env):
     if "/arduino_uno/" in str(source[0]):
         if libusb_package.find(idVendor=0x1209, idProduct=0x2882):
             b_request = BOOTLOADER_SERIAL
-            id_vendor = 0x1209
-            id_product = 0x2883
+            id_vendor = 0x03eb
+            id_product = 0x0001
             exists = libusb_package.find(idProduct=id_product, idVendor=id_vendor)
     before_ports = get_serial_ports()
     if b_request:

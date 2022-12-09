@@ -94,9 +94,8 @@ def post_upload(source, target, env):
                     pass
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
-        executable = join(os.getenv("PLATFORMIO_CORE_DIR"), "penv", "bin", "platformio")
         print(f"Calling {new_env}")
-        subprocess.run([executable, "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
+        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
         os.chdir(cwd)
 
 

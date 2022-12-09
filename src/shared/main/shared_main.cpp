@@ -217,6 +217,8 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         USB_XInputReport_Data_t *report = &combined_report->xinput;
         USB_XInputDrumGhReport_Data_t *reportGhDrum = &combined_report->ghDrum;
         report->buttons = 0;
+        report->rid = 0;
+        report->rsize = sizeof(USB_XInputReport_Data_t);
         TICK_XINPUT;
     } else {
         USB_PS3Report_Data_t *report = &combined_report->ps3;

@@ -279,8 +279,6 @@ int main(void) {
 
     // Loop for handling controller mode
     while (true) {
-        USB_USBTask();
-
         // Check if the host is ready to receive a controller packet
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
         if (Endpoint_IsINReady()) {

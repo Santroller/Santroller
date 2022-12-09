@@ -89,3 +89,7 @@ void reset_usb(void) {
     USB_Disable();
     USB_Init();
 }
+
+void read_serial(uint8_t* id, uint8_t len) {
+  USB_Device_GetSerialString((uint16_t*)id);
+}

@@ -11,4 +11,6 @@
 #define NO_DEVICE_SELF_POWER
 #define USE_INTERNAL_SERIAL 3
 #define F_USB F_CPU
+#ifdef __AVR_ATmega32U4__
 #define INTERRUPT_CONTROL_ENDPOINT 1
+#endif

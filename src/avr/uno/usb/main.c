@@ -217,6 +217,7 @@ int main(void) {
     // Loop for handling serial data
     if (serial) {
         while (true) {
+            USB_USBTask();
             // Send any data from the serial out buffer over USB
             Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
             if (Endpoint_IsINReady()) {
@@ -279,6 +280,8 @@ int main(void) {
 
     // Loop for handling controller mode
     while (true) {
+        USB_USBTask();
+
         // Check if the host is ready to receive a controller packet
         Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
         if (Endpoint_IsINReady()) {

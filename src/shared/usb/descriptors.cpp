@@ -628,7 +628,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
             return sizeof(capabilities1);
-        } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
+        } else if (consoleType == XBOX360 && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
             memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
             return ExtendedIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
@@ -647,7 +647,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
             return DevCompatIDs.TotalLength;
         }
-        return DevCompatIDs.TotalLength;
+        return 0;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
         memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
         return sizeof(XBOX_ID);
@@ -700,11 +700,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = PS3_TYPE;
             }
 #endif
-            // TODO: Only really necessary if we end up implementing xsm3, and even though it may not be necessary eventually?
-            // if (consoleType == XBOX360) {
-            //     dev->idVendor = 0x045E;
-            //     dev->idProduct = 0x028E;
-            // }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {

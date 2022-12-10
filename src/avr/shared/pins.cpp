@@ -71,17 +71,26 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
 }
 
 uint16_t adc_read(uint8_t pin, uint8_t mask) {
+    bool reset = false;
+    // When we are not doing pin detection, we don't want to be fiddling with the ports
+    if (pin & (1 << 7)) {
+        pin = pin & ~(1 << 7);
+        reset = true;
+    }
+
     volatile uint8_t* port = ANALOG_PORT(pin);
     // ddr is one memory address above port
     volatile uint8_t* ddr = port - 1;
     uint8_t prevPort = *port;
     uint8_t prevDdr = *ddr;
-    uint8_t oldSREG = SREG;
-    cli();
-    *port |= mask;
-    // And write it inverted to ddr (ones set pullup)
-    *ddr &= ~mask;
-    SREG = oldSREG;
+    if (reset) {
+        uint8_t oldSREG = SREG;
+        cli();
+        *port |= mask;
+        // And write it inverted to ddr (ones set pullup)
+        *ddr &= ~mask;
+        SREG = oldSREG;
+    }
     while (bit_is_set(ADCSRA, ADSC))
         ;
     first = true;
@@ -105,13 +114,14 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     high = ADCH;
     uint16_t data = (high << 8) | low;
     data = data << 6;
-
-    // Revert the settings we changed
-    oldSREG = SREG;
-    cli();
-    *port = prevPort;
-    *ddr &= prevDdr;
-    SREG = oldSREG;
+    if (reset) {
+        // Revert the settings we changed
+        uint8_t oldSREG = SREG;
+        cli();
+        *port = prevPort;
+        *ddr &= prevDdr;
+        SREG = oldSREG;
+    }
     return data;
 }
 void initPins(void) {

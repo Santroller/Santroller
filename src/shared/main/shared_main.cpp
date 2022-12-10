@@ -66,7 +66,7 @@ int16_t handle_calibration_xbox(int16_t orig_val, int16_t offset, int16_t min, i
     val -= deadzone;
     val -= min;
     val *= multiplier;
-    val /= 1024;
+    val /= 512;
     val += INT16_MIN;
     if (val > INT16_MAX) {
         val = INT16_MAX;
@@ -77,7 +77,7 @@ int16_t handle_calibration_xbox(int16_t orig_val, int16_t offset, int16_t min, i
     return val;
 }
 
-int16_t handle_calibration_xbox_whammy(uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
+int16_t handle_calibration_xbox_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -90,7 +90,7 @@ int16_t handle_calibration_xbox_whammy(uint16_t orig_val, int16_t min, int16_t m
     }
     val -= min;
     val *= multiplier;
-    val /= 1024;
+    val /= 512;
     val -= INT16_MAX;
     if (val > INT16_MAX) {
         val = INT16_MAX;
@@ -100,7 +100,7 @@ int16_t handle_calibration_xbox_whammy(uint16_t orig_val, int16_t min, int16_t m
     }
     return val;
 }
-uint16_t handle_calibration_xbox_trigger(uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_xbox_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -113,7 +113,7 @@ uint16_t handle_calibration_xbox_trigger(uint16_t orig_val, int16_t min, int16_t
     }
     val -= min;
     val *= multiplier;
-    val /= 1024;
+    val /= 512;
     if (val > UINT16_MAX) {
         val = UINT16_MAX;
     }
@@ -126,11 +126,11 @@ uint8_t handle_calibration_ps3(int16_t orig_val, int16_t offset, int16_t min, in
     int8_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret - INT8_MAX - 1);
 }
-uint8_t handle_calibration_ps3_trigger(int16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
+uint8_t handle_calibration_ps3_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     return handle_calibration_xbox_trigger(orig_val, min, multiplier, deadzone) >> 8;
 }
 
-uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
+uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret - INT8_MAX - 1);
 }

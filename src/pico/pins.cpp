@@ -21,10 +21,10 @@ void tickPins(void) {
 uint8_t digital_read(uint8_t port, uint8_t mask) {
     port = port * 8;
     uint32_t mask32 = mask << port;
-    for(uint i=0;i<NUM_BANK0_GPIOS;i++) {
+    for (uint i = 0; i < NUM_BANK0_GPIOS; i++) {
         if (mask32 & (1 << i)) {
             gpio_init(i);
-            gpio_set_pulls(i, true,false);
+            gpio_set_pulls(i, true, false);
         }
     }
     uint32_t ret = sio_hw->gpio_in;
@@ -33,11 +33,17 @@ uint8_t digital_read(uint8_t port, uint8_t mask) {
 }
 
 uint16_t adc_read(uint8_t pin, uint8_t mask) {
-    gpio_init(pin);
-    gpio_set_pulls(pin, true, false);
-    gpio_set_input_enabled(pin, false);
-    adc_select_input(pin - PIN_A0);
+    bool detecting = pin & (1 << 7);
+    if (detecting) {
+        pin = pin & ~(1 << 7);
+        gpio_init(pin + PIN_A0);
+        gpio_set_pulls(pin + PIN_A0, true, false);
+        gpio_set_input_enabled(pin + PIN_A0, false);
+    }
+    adc_select_input(pin);
     uint16_t data = adc_read() << 4;
-    PIN_INIT;
+    if (detecting) {
+        PIN_INIT;
+    }
     return data;
 }

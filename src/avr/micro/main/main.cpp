@@ -22,10 +22,15 @@
 #include "descriptors.h"
 #include "shared_main.h"
 
+volatile uint16_t test __attribute__((section(".noinit")));
+volatile uint16_t test2 __attribute__((section(".noinit")));
 void SetupHardware(void);
 
 void setup() {
     init_main();
+    if (test2 == 0x3A2F) {
+        consoleType = test;
+    }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
 }
@@ -86,6 +91,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     return descriptorRequest(wValue, wIndex, buf);
 }
 void reset_usb(void) {
-    USB_Disable();
-    USB_Init();
+    test = consoleType;
+    test2 = 0x3A2F;
+    reboot();
 }

@@ -463,9 +463,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case HID_REQUEST_GET_REPORT:
                 return true;
         }
-        if (wValue == 0x0300) {
-            return true;
-        }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             return true;

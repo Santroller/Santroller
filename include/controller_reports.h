@@ -35,7 +35,7 @@ typedef struct {
 
   uint8_t axis[12];
   // Accel values are 10 bits with padding.
-  int16_t accel[4];
+  uint16_t accel[4];
 
 } __attribute__((packed)) USB_PS3Report_Arr_Data_t;
 

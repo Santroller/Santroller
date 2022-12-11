@@ -593,7 +593,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 }
                 uint16_t size = sizeof(config) - wValue;
                 if (size > 64) size = 64;
-                memcpy_P(requestBuffer, config+wValue, size);
+                memcpy_P(requestBuffer, config + wValue, size);
                 return size;
             }
             case COMMAND_READ_BOARD:
@@ -609,17 +609,17 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 ((uint8_t *)requestBuffer)[0] = idle_rate;
                 return 1;
             case HID_REQUEST_GET_REPORT:
+                if (wValue == 0x0300) {
+                    if (consoleType == PS3) {
+                        memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
+                        return sizeof(ps3_init);
+                    } else if (consoleType == UNIVERSAL) {
+                        consoleType = PS3;
+                        reset_usb();
+                        return 0;
+                    }
+                }
                 return 0;
-        }
-        if (wValue == 0x0300) {
-            if (consoleType == PS3) {
-                memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-                return sizeof(ps3_init);
-            } else if (consoleType == UNIVERSAL) {
-                consoleType = PS3;
-                reset_usb();
-                return 0;
-            }
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         // TODO: ps2s with pademu will appearently do this? Do ps3s do this too, and if so, when?

@@ -40,7 +40,6 @@ void setup() {
     UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
     UCSR0A = (1 << U2X0);
     UCSR0B = ((1 << TXEN0) | (1 << RXCIE0) | (1 << RXEN0));
-
     interrupts();
 
     // Let the 8u2/16u2 know we are ready to receive data
@@ -63,15 +62,10 @@ void loop() {
             break;
         case CONTROLLER_DATA_REQUEST_ID: {
             header->len = 0;
-            // We are reloading usb, so instead of sending data back, let the 8u2/16u2 know we want usb reset
-            if (should_reload_usb) {
-                header->id = CONTROLLER_DATA_RESTART_USB_ID;
-            } else {
-                // Write the controller input data
-                uint8_t len = tick(&report);
-                memcpy(buf + sizeof(packet_header_t), &report, len);
-                header->len += len;
-            }
+            uint8_t len = tick(&report);
+            // Write the controller input data
+            memcpy(buf + sizeof(packet_header_t), &report, len);
+            header->len += len;
             break;
         }
         case DESCRIPTOR_ID: {
@@ -104,6 +98,12 @@ void loop() {
         default:
             // unknown packet, do nothing
             return;
+    }
+    // We are reloading usb, so instead of sending data back, let the 8u2/16u2 know we want usb reset
+    if (should_reload_usb) {
+        header->id = CONTROLLER_DATA_RESTART_USB_ID;
+        header->len = 0;
+        should_reload_usb = false;
     }
     // Send back any data in the buffers. enable the interrupt for pushing out data
     bufTX = buf;

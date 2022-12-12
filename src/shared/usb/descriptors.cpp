@@ -417,11 +417,6 @@ const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
-    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
-        consoleType = XBOX360;
-        reset_usb();
-        return false;
-    }
 #ifdef KV_KEY_1
     switch (request) {
         case 0x81:
@@ -433,6 +428,9 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             return true;
     }
 #endif
+    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        return true;
+    }
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         switch (request) {
             case COMMAND_REBOOT:
@@ -490,6 +488,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == COMMAND_JUMP_BOOTLOADER) {
             bootloader();
         }
+    }
+    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        consoleType = XBOX360;
+        reset_usb();
+        return 0;
     }
 #ifdef KV_KEY_1
     switch (request) {

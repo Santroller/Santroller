@@ -34,7 +34,7 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
 // if bootloaderState is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
 volatile uint16_t bootloaderState __attribute__((section(".noinit")));
-
+#define COMMAND_SKIP_WAIT 0x24
 // Are we in usbserial mode or controller mode
 bool serial = false;
 
@@ -59,6 +59,11 @@ int handleControlRequest() {
             if (type == CONTROL_REQUEST_VALIDATION_ID || type == DEVICE_ID) {
                 state = STATE_READ_AND_RETURN;
                 continue;
+            }
+            if (type == CONTROLLER_DATA_RESTART_USB_ID) {
+                // The 328p  wants to restart the usb layer, so just reboot the microcontroller
+                bootloaderState = (JUMP | COMMAND_SKIP_WAIT);
+                reboot();
             }
             // For host to device requests, we don't have any more data to read as the host was writing the data
             if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
@@ -135,13 +140,6 @@ void handleControllerData() {
                 FINISH_READ(tmp);
                 return;
             }
-            if (data == CONTROLLER_DATA_RESTART_USB_ID) {
-                // The 328p  wants to restart the usb layer, so do so. When this happens no data will follow.
-                USB_Disable();
-                USB_Init();
-                FINISH_READ(tmp);
-                return;
-            }
             break;
         }
     }
@@ -155,6 +153,7 @@ void handleControllerData() {
     FINISH_READ(tmp);
 }
 int main(void) {
+    bool skip_wait = false;
     // Handle jumping to different states depending on bootloaderState (which is preserved on a reboot)
     if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER)) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -163,6 +162,8 @@ int main(void) {
         asm volatile("jmp 0x1000");
     } else if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO)) {
         serial = true;
+    } else if (bootloaderState == (JUMP | COMMAND_SKIP_WAIT)) {
+        skip_wait = true;
     }
     // We don't want to jump again after the bootloader returns control flow to
     // us
@@ -180,32 +181,38 @@ int main(void) {
     UCSR1B = ((1 << TXEN1) | (1 << RXEN1));
     UBRR1 = SERIAL_2X_UBBRVAL(BAUD);
 
-    // Make sure that the 328p is fully reset, as it sends us the ready byte on bootup
-    AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
-    AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-    _delay_ms(1);
-    AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
-    _delay_ms(1);
-    AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
-
-    sei();
-    if (serial) {
-        // Enable a timer to rapidly flush bytes over serial
-        TCCR0B = (1 << CS02);
+    if (skip_wait) {
+        // Soft reset, assume the microcontroller is already booted and just continue
+        AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+        sei();
     } else {
-        // Wait for the 328p / 1280 to boot (we receive a READY byte)
-        // If we don't get it in time, we can assume the 328p is missing its firmware or has a wonky config and drop to the 328p programming mode
-        uint16_t count = 0;
-        uint8_t count2 = 0;
-        while (!(UCSR1A & (1 << RXC1)) || UDR1 != READY) {
-            count++;
-            if (count > 0xFFFE) {
-                count2++;
-                count = 0;
-            }
-            if (count2 > 0x2F) {
-                bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);
-                reboot();
+        // Make sure that the 328p is fully reset, as it sends us the ready byte on bootup
+        AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
+        AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+        _delay_ms(1);
+        AVR_RESET_LINE_PORT &= ~AVR_RESET_LINE_MASK;
+        _delay_ms(1);
+        AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
+
+        sei();
+        if (serial) {
+            // Enable a timer to rapidly flush bytes over serial
+            TCCR0B = (1 << CS02);
+        } else {
+            // Wait for the 328p / 1280 to boot (we receive a READY byte)
+            // If we don't get it in time, we can assume the 328p is missing its firmware or has a wonky config and drop to the 328p programming mode
+            uint16_t count = 0;
+            uint8_t count2 = 0;
+            while (!(UCSR1A & (1 << RXC1)) || UDR1 != READY) {
+                count++;
+                if (count > 0xFFFE) {
+                    count2++;
+                    count = 0;
+                }
+                if (count2 > 0x2F) {
+                    bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);
+                    reboot();
+                }
             }
         }
     }

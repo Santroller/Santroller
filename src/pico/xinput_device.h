@@ -42,6 +42,7 @@ extern "C" {
 // Check if the interface is ready to use
 bool tud_xinput_n_ready(uint8_t itf);
 
+
 // Check if current mode is Boot (true) or Report (false)
 bool tud_xinput_n_boot_mode(uint8_t itf);
 

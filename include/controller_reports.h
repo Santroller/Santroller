@@ -131,7 +131,7 @@ typedef struct {
 } __attribute__((packed)) XInputRumbleReport_t;
 
 typedef struct {
-    uint8_t padding;
+  uint8_t padding;
 	uint8_t right_duration; /* Right motor duration (0xff means forever) */
 	uint8_t right_motor_on; /* Right (small) motor on/off, only supports values of 0 or 1 (off/on) */
 	uint8_t left_duration;    /* Left motor duration (0xff means forever) */

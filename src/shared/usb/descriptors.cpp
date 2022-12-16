@@ -622,6 +622,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 return 0;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        printf("PS2 i think!\n");
         // TODO: ps2s with pademu will appearently do this? Do ps3s do this too, and if so, when?
         return 0;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
@@ -667,6 +668,15 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return 0;
         }
     }
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    else if (consoleType == PS3 && request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        uint8_t *data = (uint8_t *)requestBuffer;
+        if (data[0] == 0x91) {
+            uint8_t euphoria_on = data[2];
+        }
+        return 0;
+    } 
+#endif
     return 0;
 }
 const uint16_t vid[] = {0x0F0D, 0x12ba, 0x12ba, 0x12ba,

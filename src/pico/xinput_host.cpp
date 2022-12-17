@@ -27,7 +27,6 @@
 #include "tusb_option.h"
 
 #if (CFG_TUH_ENABLED && CFG_TUH_XINPUT)
-
 #include "host/usbh.h"
 #include "host/usbh_classdriver.h"
 

@@ -4,6 +4,8 @@
 #include "config.h"
 #include "pins_define.h"
 #include "util.h"
+#include <hardware/gpio.h>
+#include <hardware/adc.h>
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
 uint16_t adc(uint8_t pin) {

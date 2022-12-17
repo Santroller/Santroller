@@ -1,8 +1,11 @@
+#include "pio_usb.h"
 #include <Arduino.h>
 #include <SPI.h>
 #include <pico/stdlib.h>
 #include <pico/unique_id.h>
 #include <tusb.h>
+#include "xinput_device.h"
+#include "xinput_host.h"
 
 #include "common/tusb_types.h"
 #include "config.h"
@@ -17,11 +20,11 @@
 #include "pins.h"
 #include "serial.h"
 #include "shared_main.h"
-#include "xinput_device.h"
-#include "xinput_host.h"
+#include <string.h>
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
+CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint16_t serialstring[255];
 
 uint16_t host_vid = 0;
 uint16_t host_pid = 0;
@@ -30,7 +33,7 @@ bool passthrough_ready = false;
 
 void setup() {
     uart_set_baudrate(uart0, 115200);
-    generateSerialString(serialString.UnicodeString);
+    generateSerialString(serialstring);
     tusb_init();
     init_main();
 }
@@ -98,7 +101,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     // Arduinos handle their own serial descriptor, so theres no point in sharing an implementation there.
     if (index == 3) {
-        return (uint16_t *)&serialString;
+        return serialstring;
     }
     if (descriptorRequest(USB_DESCRIPTOR_STRING << 8 | index, 0, buf)) {
         return (uint16_t *)buf;
@@ -190,6 +193,7 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
     *driver_count = 1;
     return driver;
 }
+
 usbh_class_driver_t driver_host[] = {
     {
 #if CFG_TUSB_DEBUG >= 2

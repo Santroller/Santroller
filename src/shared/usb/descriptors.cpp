@@ -629,7 +629,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
             return sizeof(capabilities1);
-        } else if (consoleType == XBOX360 && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
+        } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
             memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
             return ExtendedIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {

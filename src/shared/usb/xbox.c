@@ -25,7 +25,7 @@ const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {
         PropertyData :
             {'{', 'D', 'F', '5', '9', '0', '3', '7', 'D', '-', '7', 'C', '9',
              '2', '-', '4', '1', '5', '5', '-', 'A', 'C', '1', '2', '-', '7',
-             'D', '7', '0', '0', 'A', '3', '1', '3', 'D', '7', '8', '}', '\0'}
+             'D', '7', '0', '0', 'A', '3', '1', '3', 'D', '7', '9', '}', '\0'}
     }
 };
 const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {

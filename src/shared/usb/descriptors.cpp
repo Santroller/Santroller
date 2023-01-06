@@ -635,6 +635,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
             memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
+        } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+            memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
+            return sizeof(XBOX_ID);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, DevCompatIDs.TotalLength);
@@ -646,12 +649,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
             consoleType = XBOX360;
             reset_usb();
-            return DevCompatIDs.TotalLength;
         }
-        return 0;
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
-        memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
-        return sizeof(XBOX_ID);
+        return DevCompatIDs.TotalLength;
     } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         protocol_mode = (uint8_t)wValue;
         return 0;
@@ -675,7 +674,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             uint8_t euphoria_on = data[2];
         }
         return 0;
-    } 
+    }
 #endif
     return 0;
 }
@@ -697,6 +696,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
+            } else if (consoleType == XBOX360) {
+                dev->idProduct = 0x2884;
             }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {

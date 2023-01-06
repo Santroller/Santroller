@@ -24,7 +24,10 @@
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
-CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint16_t serialstring[255];
+CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
+    .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + SERIAL_LEN),
+    .bDescriptorType = USB_DESCRIPTOR_STRING
+};
 
 uint16_t host_vid = 0;
 uint16_t host_pid = 0;
@@ -34,16 +37,17 @@ bool passthrough_ready = false;
 void setup()
 {
     uart_set_baudrate(uart0, 115200);
-    generateSerialString(serialstring);
+    generateSerialString(&serialstring);
     tusb_init();
     init_main();
 }
 bool reset_on_next = false;
 USB_Report_Data_t report;
 long last = 0;
-#define TICK_CHECK
 #if CONSOLE_TYPE != MIDI
 #define TICK_CHECK tud_xinput_n_ready(0)
+#else
+#define TICK_CHECK false
 #endif
 void loop()
 {
@@ -127,7 +131,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
     // Arduinos handle their own serial descriptor, so theres no point in sharing an implementation there.
     if (index == 3) {
-        return serialstring;
+        return (uint16_t*)&serialstring;
     }
     if (descriptorRequest(USB_DESCRIPTOR_STRING << 8 | index, 0, buf))
     {

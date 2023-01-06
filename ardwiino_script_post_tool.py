@@ -81,6 +81,8 @@ def post_upload(source, target, env):
                 new_env = "arduino_mega_adk"
                 break
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2882)
+            if not dev:
+                dev = libusb_package.find(idVendor=0x1209, idProduct=0x2884)
             if dev:
                 try:
                     dev.detach_kernel_driver(0)

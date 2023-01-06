@@ -60,6 +60,11 @@ def before_upload(source, target, env):
             env.AutodetectUploadPort()
             env.TouchSerialPort("$UPLOAD_PORT", 1200)
     if "/arduino_uno/" in str(source[0]):
+        if libusb_package.find(idVendor=0x1209, idProduct=0x2884):
+            b_request = BOOTLOADER_SERIAL
+            id_vendor = 0x03eb
+            id_product = 0x0001
+            exists = libusb_package.find(idProduct=id_product, idVendor=id_vendor)
         if libusb_package.find(idVendor=0x1209, idProduct=0x2882):
             b_request = BOOTLOADER_SERIAL
             id_vendor = 0x03eb
@@ -69,6 +74,8 @@ def before_upload(source, target, env):
     if b_request:
         # find our device
         dev = libusb_package.find(idVendor=0x1209, idProduct=0x2882)
+        if not dev:
+            dev = libusb_package.find(idVendor=0x1209, idProduct=0x2884)
         try:
             dev.detach_kernel_driver(0)
         except:

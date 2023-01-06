@@ -29,10 +29,10 @@ const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {
     }
 };
 const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
-    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR),
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 2,
+    TotalSections : 1,
     Reserved : {0},
     CompatID : {
         {

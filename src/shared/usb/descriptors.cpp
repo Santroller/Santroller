@@ -666,22 +666,18 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
             return 0;
         }
-    }
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    else if (consoleType == PS3 && request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+    } else if (consoleType == PS3 && request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         uint8_t *data = (uint8_t *)requestBuffer;
-        if (data[0] == 0x91) {
+        if (data[0] == 1) {
+            uint8_t player_led = (data[2] >> 2);
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        } else if (data[0] == 0x91) {
             uint8_t euphoria_on = data[2];
-        }
-        return 0;
-    }
 #endif
+        }
+    }
     return 0;
 }
-const uint16_t vid[] = {0x0F0D, 0x12ba, 0x12ba, 0x12ba,
-                        0x12ba, ARDWIINO_VID, 0x1bad, 0x1bad};
-const uint16_t pid[] = {0x0092, 0x0100, 0x0120, 0x0200,
-                        0x0210, ARDWIINO_PID, 0x0004, 0x074B};
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void *descriptorBuffer) {

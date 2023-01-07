@@ -622,8 +622,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 return 0;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        printf("PS2 i think!\n");
-        // TODO: ps2s with pademu will appearently do this? Do ps3s do this too, and if so, when?
+        consoleType = PS2;
         return 0;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
@@ -635,7 +634,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
             memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
-        } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+        } else if (consoleType == XBOX360 && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
             return sizeof(XBOX_ID);
         }

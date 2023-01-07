@@ -43,6 +43,7 @@
 #define PS3 4
 #define WII_RB 5
 #define SWITCH 6
+#define PS2 7
 
 #define PINMODE_PULLUP 0
 #define PINMODE_PULLDOWN 1

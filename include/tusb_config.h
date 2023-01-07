@@ -18,7 +18,8 @@
 // #define CFG_TUSB_DEBUG 2
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
-#define CFG_TUD_HID_EP_BUFSIZE 0x20
+#define CFG_TUD_HID_EP_IN_BUFSIZE 0x20
+#define CFG_TUD_HID_EP_OUT_BUFSIZE 0x8
 #define CFG_TUD_MIDI_TX_BUFSIZE 0x20
 #define CFG_TUD_MIDI_RX_BUFSIZE 0x08
 #define CFG_TUD_VENDOR_EP_BUFSIZE VENDOR_EPSIZE

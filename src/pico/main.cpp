@@ -26,7 +26,8 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + SERIAL_LEN),
-    .bDescriptorType = USB_DESCRIPTOR_STRING
+    .bDescriptorType = USB_DESCRIPTOR_STRING,
+    .UnicodeString = {}
 };
 
 uint16_t host_vid = 0;
@@ -43,7 +44,7 @@ void setup()
 }
 bool reset_on_next = false;
 USB_Report_Data_t report;
-long last = 0;
+unsigned int last = 0;
 #if CONSOLE_TYPE != MIDI
 #define TICK_CHECK tud_xinput_n_ready(0)
 #else
@@ -62,7 +63,7 @@ void loop()
     tud_task();
     tuh_task();
     uint8_t size = 0;
-    if (TICK_CHECK || last - millis() > 5)
+    if (TICK_CHECK || millis() - last > 5)
     {
         last = millis();
         size = tick(&report);

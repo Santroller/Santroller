@@ -674,11 +674,12 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             uint8_t euphoria_on = data[2];
 #endif
         }
+        // printf("bRequest: %02x, bRequestType: %02x, wIndex:%04x, wValue:%04x\n", request, requestType, wIndex, wValue);
         // for (int i = 0; i < wLength; i++) {
         //     printf("%x, ", data[i]);
         // }
         // printf("\n");
-        return wLength;
+        return 0;
     }
     return 0;
 }

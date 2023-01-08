@@ -110,6 +110,7 @@ extern const PROGMEM OS_DESCRIPTOR OSDescriptorString;
 #define VERSION_MAJOR 3
 #define VERSION_MINOR 0
 #define VERSION_REVISION 0
+void hidInterrupt(const uint8_t* data, uint8_t len);
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void* requestBuffer);
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,

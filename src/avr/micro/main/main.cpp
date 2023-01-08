@@ -35,12 +35,18 @@ void setup() {
     SetupHardware();          // ask LUFA to setup the hardware
 }
 
+uint8_t buf[255];
 USB_Report_Data_t report;
 void loop() {
     uint8_t size = tick(&report);
     Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
     Endpoint_Write_Stream_LE(&report, size, NULL);
     Endpoint_ClearIN();
+    Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
+    if (Endpoint_IsOUTReceived()) {
+        size = Endpoint_Read_Stream_LE(buf, 0x08, NULL);
+        hidInterrupt(dt->data, size);
+    }
 }
 
 void SetupHardware(void) {
@@ -55,7 +61,6 @@ void SetupHardware(void) {
     USB_Init();
 }
 
-uint8_t buf[255];
 void EVENT_USB_Device_ControlRequest(void) {
     if (controlRequestValid(USB_ControlRequest.bmRequestType, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength)) {
         if ((USB_ControlRequest.bmRequestType & CONTROL_REQTYPE_DIRECTION) == (REQDIR_DEVICETOHOST)) {

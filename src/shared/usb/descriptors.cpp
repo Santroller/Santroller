@@ -683,6 +683,42 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
     return 0;
 }
+uint8_t xbox_players[] = {
+    0, // 0x00	 All off
+    0, // 0x01	 All blinking
+    1, // 0x02	 1 flashes, then on
+    2, // 0x03	 2 flashes, then on
+    3, // 0x04	 3 flashes, then on
+    4, // 0x05	 4 flashes, then on
+    1, // 0x06	 1 on
+    2, // 0x07	 2 on
+    3, // 0x08	 3 on
+    4, // 0x09	 4 on
+    0, // 0x0A	 Rotating (e.g. 1-2-4-3)
+    0, // 0x0B	 Blinking*
+    0, // 0x0C	 Slow blinking*
+    0, // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
+};
+#define XBOX_LED_ID 0x01
+#define XBOX_RUMBLE_ID 0x00
+void hidInterrupt(const uint8_t *data, uint8_t len) {
+    if (consoleType == XBOX360) {
+        while (len) {
+            uint8_t id = data[0];
+            uint8_t size = data[1];
+            len -= size;
+            if (id == XBOX_LED_ID) {
+                uint8_t led = data[2];
+                uint8_t player = xbox_players[led];
+                
+            } else if (id == XBOX_RUMBLE_ID) {
+                uint8_t rumble_left = data[3];
+                uint8_t runble_right = data[4];
+            }
+            data += len;
+        }
+    }
+}
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void *descriptorBuffer) {

@@ -9,6 +9,7 @@
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "xinput_device.h"
+#include "descriptors.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -197,6 +198,7 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     }
 
     if (ep_addr == p_xinput->ep_out) {
+        hidInterrupt(p_xinput->epout_buf, xferred_bytes);
         TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                 sizeof(p_xinput->epout_buf)));
     }

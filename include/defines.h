@@ -17,7 +17,7 @@
 #define XINPUT_DANCE_PAD 5
 #define XINPUT_GUITAR 6
 #define XINPUT_GUITAR_ALTERNATE 7
-#define XINPUT_DRUMS 9
+#define XINPUT_DRUMS 8
 #define XINPUT_ARCADE_PAD 19
 #define XINPUT_TURNTABLE 23
 
@@ -31,6 +31,7 @@
 #define LIVE_GUITAR 8
 #define DRUMS 9
 #define DJ_HERO_TURNTABLE 10
+#define STAGE_KIT 11
 
 #define GUITAR_HERO 0
 #define ROCK_BAND 1
@@ -57,20 +58,48 @@
 #define MIDI_TYPE_NOTE 0
 #define MIDI_TYPE_CONTROL_COMMAND 1
 
-// Right Motor
-#define RUMBLE_TURNTABLE_START 0x1F
-#define RUMBLE_TURNTABLE_END 0xFF
+// HID "Report IDs" used by xinput for 360 rumble and led
+#define XBOX_LED_ID 0x01
+#define XBOX_RUMBLE_ID 0x00
 
-// Left Motor
-#define RUMBLE_GUITAR_COMBO_1 0x1F
-#define RUMBLE_GUITAR_COMBO_2 0x20
-#define RUMBLE_GUITAR_COMBO_3 0x21
-#define RUMBLE_GUITAR_COMBO_4 0x22
-#define RUMBLE_GUITAR_OPEN 0x23
-#define RUMBLE_GUITAR_START_POWER_FILL_START 0x20
-#define RUMBLE_GUITAR_START_POWER_FILL_END 0x40
-#define RUMBLE_GUITAR_START_POWER_ACTIVE_START 0x40
-#define RUMBLE_GUITAR_START_POWER_ACTIVE_END 0x60
+// HID "Report IDs" used for rumble and led data from the console
+#define PS3_LED_ID 0x01
+#define DJ_LED_ID 0x91
+#define SANTROLLER_PS3_ID 0x92
+
+// For turntables, both left and right are set to the same thing
+// For these, left is set to 0, and right to these values
+#define RUMBLE_STAGEKIT_FOG_ON 0x1
+#define RUMBLE_STAGEKIT_FOG_OFF 0x2
+#define RUMBLE_STAGEKIT_SLOW_STROBE 0x3
+#define RUMBLE_STAGEKIT_MEDIUM_STROBE 0x4
+#define RUMBLE_STAGEKIT_FAST_STROBE 0x5
+#define RUMBLE_STAGEKIT_FASTEST_STROBE 0x6
+#define RUMBLE_STAGEKIT_NO_STROBE 0x7
+#define RUMBLE_STAGEKIT_ALLOFF 0xFF
+
+// For these, left is a bitmask of leds (0-7) and right is the command again
+#define RUMBLE_STAGEKIT_RED 0x80
+#define RUMBLE_STAGEKIT_YELLOW 0x60
+#define RUMBLE_STAGEKIT_GREEN 0x40
+#define RUMBLE_STAGEKIT_BLUE 0x20
+#define RUMBLE_STAGEKIT_OFF 0xFF
+
+// set left to 0/1 for on and off, and right to these values for our commands
+#define RUMBLE_SANTROLLER_COMBO_1 0x8
+#define RUMBLE_SANTROLLER_COMBO_2 0x9
+#define RUMBLE_SANTROLLER_COMBO_3 0xa
+#define RUMBLE_SANTROLLER_COMBO_4 0xb
+#define RUMBLE_SANTROLLER_OPEN_KICK 0xc
+#define RUMBLE_SANTROLLER_FRET_GREEN 0xd
+#define RUMBLE_SANTROLLER_FRET_RED 0xe
+#define RUMBLE_SANTROLLER_FRET_YELLOW 0xf
+#define RUMBLE_SANTROLLER_FRET_BLUE 0x10
+#define RUMBLE_SANTROLLER_FRET_ORANGE 0x11
+
+// set left to the star power value, and right to these values for our commands
+#define RUMBLE_SANTROLLER_STAR_POWER_FILL 0x12
+#define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x13
 typedef enum {
     WII_NUNCHUK = 0x0000,
     WII_CLASSIC_CONTROLLER = 0x0001,

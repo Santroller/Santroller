@@ -32,17 +32,6 @@
 #define ENDPOINT_USAGE_FEEDBACK (1 << 4)
 #define ENDPOINT_USAGE_IMPLICIT_FEEDBACK (2 << 4)
 
-typedef struct {
-    USB_CONFIGURATION_DESCRIPTOR Config;
-    USB_INTERFACE_DESCRIPTOR Interface1;
-    XBOX_ID_DESCRIPTOR Interface1ID;
-    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
-    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
-    USB_INTERFACE_DESCRIPTOR Interface4;
-    uint8_t UnkownDescriptor4[0x06];
-    USB_INTERFACE_DESCRIPTOR InterfaceConfig;
-    USB_INTERFACE_DESCRIPTOR InterfaceExtra;
-} __attribute__((packed)) CONFIGURATION_XBOX_PC_DESCRIPTOR;
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
@@ -103,7 +92,6 @@ typedef struct {
 extern const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor;
 extern const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor;
 extern const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor;
-extern const PROGMEM CONFIGURATION_XBOX_PC_DESCRIPTOR XBOXConfigurationDescriptorPC;
 extern const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor;
 extern const PROGMEM OS_DESCRIPTOR OSDescriptorString;
 

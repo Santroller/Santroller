@@ -435,6 +435,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         switch (request) {
             case COMMAND_REBOOT:
             case COMMAND_JUMP_BOOTLOADER:
+            case COMMAND_SET_DETECT:
             case HID_REQUEST_SET_PROTOCOL:
             case HID_REQUEST_SET_IDLE:
             case HID_REQUEST_SET_REPORT:
@@ -665,15 +666,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
             return 0;
         }
-    } else if (consoleType == PS3 && request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        uint8_t *data = (uint8_t *)requestBuffer;
-        if (data[0] == 1) {
-            uint8_t player_led = (data[2] >> 2);
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        } else if (data[0] == 0x91) {
-            uint8_t euphoria_on = data[2];
-#endif
-        }
+    } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        hidInterrupt((uint8_t *)requestBuffer, wLength);
         // printf("bRequest: %02x, bRequestType: %02x, wIndex:%04x, wValue:%04x\n", request, requestType, wIndex, wValue);
         // for (int i = 0; i < wLength; i++) {
         //     printf("%x, ", data[i]);
@@ -684,38 +678,63 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     return 0;
 }
 uint8_t xbox_players[] = {
-    0, // 0x00	 All off
-    0, // 0x01	 All blinking
-    1, // 0x02	 1 flashes, then on
-    2, // 0x03	 2 flashes, then on
-    3, // 0x04	 3 flashes, then on
-    4, // 0x05	 4 flashes, then on
-    1, // 0x06	 1 on
-    2, // 0x07	 2 on
-    3, // 0x08	 3 on
-    4, // 0x09	 4 on
-    0, // 0x0A	 Rotating (e.g. 1-2-4-3)
-    0, // 0x0B	 Blinking*
-    0, // 0x0C	 Slow blinking*
-    0, // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
+    0,  // 0x00	 All off
+    0,  // 0x01	 All blinking
+    1,  // 0x02	 1 flashes, then on
+    2,  // 0x03	 2 flashes, then on
+    3,  // 0x04	 3 flashes, then on
+    4,  // 0x05	 4 flashes, then on
+    1,  // 0x06	 1 on
+    2,  // 0x07	 2 on
+    3,  // 0x08	 3 on
+    4,  // 0x09	 4 on
+    0,  // 0x0A	 Rotating (e.g. 1-2-4-3)
+    0,  // 0x0B	 Blinking*
+    0,  // 0x0C	 Slow blinking*
+    0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
-#define XBOX_LED_ID 0x01
-#define XBOX_RUMBLE_ID 0x00
+void handlePlayer(uint8_t player) {
+    // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
+}
+void handleRumble(uint8_t rumble_left, uint8_t rumble_right) {
+    // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
+}
 void hidInterrupt(const uint8_t *data, uint8_t len) {
+    uint8_t id = data[0];
     if (consoleType == XBOX360) {
         while (len) {
-            uint8_t id = data[0];
             uint8_t size = data[1];
             len -= size;
             if (id == XBOX_LED_ID) {
                 uint8_t led = data[2];
                 uint8_t player = xbox_players[led];
-                
+                handlePlayer(player);
             } else if (id == XBOX_RUMBLE_ID) {
                 uint8_t rumble_left = data[3];
-                uint8_t runble_right = data[4];
+                uint8_t rumble_right = data[4];
+                handleRumble(rumble_left, rumble_right);
             }
-            data += len;
+        }
+        data += len;
+    } else {
+        uint8_t *data = (uint8_t *)data;
+        if (id == PS3_LED_ID) {
+            uint8_t player = (data[2] >> 2);
+            handlePlayer(player);
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        } else if (id == DJ_LED_ID) {
+            uint8_t euphoria_on = data[2] * 0xFF;
+            handleRumble(euphoria_on, euphoria_on);
+#endif
+        } else if (id == SANTROLLER_PS3_ID) {
+            uint8_t rumble_left = data[3];
+            uint8_t rumble_right = data[4];
+            handleRumble(rumble_left, rumble_right);
+        } else if (id == COMMAND_SET_DETECT) {
+            uint8_t enabled = data[2];
+            uint8_t r2_value = data[3];
+            overrideR2 = enabled > 0;
+            overriddenR2 = r2_value;
         }
     }
 }
@@ -772,13 +791,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case HID_DESCRIPTOR_REPORT: {
             read_hid_report_descriptor = true;
             const void *address;
-            if (consoleType == KEYBOARD_MOUSE) {
-                address = keyboard_mouse_descriptor;
-                size = sizeof(keyboard_mouse_descriptor);
-            } else {
-                address = ps3_descriptor;
-                size = sizeof(ps3_descriptor);
-            }
+#if SUPPORTS_KEYBOARD
+            address = keyboard_mouse_descriptor;
+            size = sizeof(keyboard_mouse_descriptor);
+#else
+            address = ps3_descriptor;
+            size = sizeof(ps3_descriptor);
+#endif
             memcpy_P(descriptorBuffer, address, size);
             break;
         }

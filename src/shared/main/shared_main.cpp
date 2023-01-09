@@ -32,6 +32,8 @@ bool lastTurntableWasSuccessfulLeft = false;
 bool lastTurntableWasSuccessfulRight = false;
 bool lastWiiWasSuccessful = false;
 bool lastPS2WasSuccessful = false;
+bool overrideR2 = false;
+uint8_t overriddenR2 = 0;
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
@@ -232,6 +234,9 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         report->buttons = 0;
         report->hat = 0;
         TICK_PS3;
+        if (overrideR2) {
+            report->axis[PS3_R2] = overriddenR2;
+        }
         report->hat = (report->hat & 0xf) > 0x0a ? 0x08 : hat_bindings[report->hat];
     }
 #ifdef TICK_LED

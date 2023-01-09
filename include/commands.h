@@ -17,6 +17,7 @@ enum SerialCommands {
     COMMAND_GET_EXTENSION_WII,
     COMMAND_GET_EXTENSION_PS2,
     COMMAND_SET_LEDS,
+    COMMAND_SET_DETECT,
     MAX
 };
 
@@ -35,3 +36,5 @@ extern bool lastWiiWasSuccessful;
 extern bool lastPS2WasSuccessful;
 extern uint16_t wiiControllerType;
 extern uint8_t ps2ControllerType;
+extern bool overrideR2;
+extern uint8_t overriddenR2;

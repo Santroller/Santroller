@@ -87,20 +87,26 @@
 #define RUMBLE_STAGEKIT_OFF 0xFF
 
 // set left to 0/1 for on and off, and right to these values for our commands
+#define RUMBLE_SANTROLLER_OFF 0x0
+#define RUMBLE_SANTROLLER_ON 0x1
+
 #define RUMBLE_SANTROLLER_COMBO_1 0x8
 #define RUMBLE_SANTROLLER_COMBO_2 0x9
 #define RUMBLE_SANTROLLER_COMBO_3 0xa
 #define RUMBLE_SANTROLLER_COMBO_4 0xb
-#define RUMBLE_SANTROLLER_OPEN_KICK 0xc
-#define RUMBLE_SANTROLLER_FRET_GREEN 0xd
-#define RUMBLE_SANTROLLER_FRET_RED 0xe
-#define RUMBLE_SANTROLLER_FRET_YELLOW 0xf
-#define RUMBLE_SANTROLLER_FRET_BLUE 0x10
-#define RUMBLE_SANTROLLER_FRET_ORANGE 0x11
+#define RUMBLE_SANTROLLER_SOLO 0xc
+#define RUMBLE_SANTROLLER_OPEN_KICK 0xd
+#define RUMBLE_SANTROLLER_FRET_GREEN 0xe
+#define RUMBLE_SANTROLLER_FRET_RED 0xf
+#define RUMBLE_SANTROLLER_FRET_YELLOW 0x10
+#define RUMBLE_SANTROLLER_FRET_BLUE 0x11
+#define RUMBLE_SANTROLLER_FRET_ORANGE 0x12
 
 // set left to the star power value, and right to these values for our commands
-#define RUMBLE_SANTROLLER_STAR_POWER_FILL 0x12
-#define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x13
+// For compatibility reasons, probably start star power at 0x20, so that we never end up with issues on turntables
+// Since then we would just check left == right for turntable state
+#define RUMBLE_SANTROLLER_STAR_POWER_FILL 0x13
+#define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x14
 typedef enum {
     WII_NUNCHUK = 0x0000,
     WII_CLASSIC_CONTROLLER = 0x0001,

@@ -1,11 +1,12 @@
+#include "ps2.h"
+
+#include <stddef.h>
+
+#include "Arduino.h"
 #include "config.h"
 #include "io.h"
-#include "ps2.h"
-#include "Arduino.h"
-#include <stddef.h>
 #include "util.h"
 #ifdef INPUT_PS2
-
 
 static inline bool isValidReply(const uint8_t *status) {
     return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
@@ -116,6 +117,7 @@ void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len) {
     }
 }
 static uint8_t inputBuffer[BUFFER_SIZE];
+static uint8_t inputBuffer2[BUFFER_SIZE];
 uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
     uint8_t *ret = NULL;
 
@@ -175,13 +177,12 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
     } while (!ret && millis() - start <= COMMAND_TIMEOUT);
     return ret;
 }
-uint8_t* tickPS2() {
+uint8_t *tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
-    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 5000 && !invalidCount) {
+    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 6000 && !invalidCount) {
         return inputBuffer;
     }
-    last = micros();
     // If this is changed to a different port, you can talk to different devices
     // on a multitap. Not sure how useful this is unless we make a ps2 variant
     // that works with the multitap, and offers four devices
@@ -252,24 +253,29 @@ uint8_t* tickPS2() {
     // Ocassionally, the controller returns a bad packet because it isn't ready. We should ignore that instead of reinitialisng, and
     // We only want to reinit if we recevied several bad packets in a row.
     if (initialised) {
+        // For some weird reason, PS2 guitars seem to just not report whammy if you use the standard poll command?
         if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER) {
             in = autoShiftData(port, commandExitConfig, sizeof(commandExitConfig));
         } else {
             in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
         }
+
         if (in != NULL) {
             invalidCount = 0;
             if (isConfigReply(in)) {
                 // We're stuck in config mode, try to get out
                 sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
-            } 
+            }
+            memcpy(inputBuffer2, inputBuffer, sizeof(inputBuffer));
         } else {
             invalidCount++;
             if (invalidCount > 4) {
                 initialised = false;
             }
+            in = inputBuffer2;
         }
     }
+    last = micros();
     return in;
 }
 #endif

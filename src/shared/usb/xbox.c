@@ -50,3 +50,20 @@ const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
             Reserved2 : {0}
         }}
 };
+
+// TODO: is this needed?
+const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDsOne = {
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
+    Version : 0x0100,
+    Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
+    TotalSections : 1,
+    Reserved : {0},
+    CompatID : {
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Config,
+            Reserved : 0x04,
+            CompatibleID : "XGIP10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        }}
+};

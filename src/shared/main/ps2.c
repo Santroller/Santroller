@@ -180,7 +180,7 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
 uint8_t *tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
-    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 6000 && !invalidCount) {
+    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 3000 && !invalidCount) {
         return inputBuffer;
     }
     // If this is changed to a different port, you can talk to different devices

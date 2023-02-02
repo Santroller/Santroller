@@ -46,6 +46,7 @@
 #define WII_RB 5
 #define SWITCH 6
 #define PS2 7
+#define XBOXONE 8
 
 #define PINMODE_PULLUP 0
 #define PINMODE_PULLDOWN 1
@@ -65,6 +66,7 @@
 
 // HID "Report IDs" used for rumble and led data from the console
 #define PS3_LED_ID 0x01
+#define XONE_IDENTIFY_ID 0x04
 #define DJ_LED_ID 0x91
 #define SANTROLLER_PS3_ID 0x92
 

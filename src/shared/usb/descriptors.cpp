@@ -102,7 +102,7 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
     Interface2 : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : 1,
+        bInterfaceNumber : INTERFACE_ID_Config,
         bAlternateSetting : 0x00,
         bNumEndpoints : 4,
         bInterfaceClass : 0xFF,
@@ -148,12 +148,12 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
     Interface3 : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : 2,
+        bInterfaceNumber : INTERFACE_ID_Config,
         bAlternateSetting : 0x00,
         bNumEndpoints : 1,
         bInterfaceClass : 0xFF,
-        bInterfaceSubClass : 0x5D,
-        bInterfaceProtocol : 0x02,
+        bInterfaceSubClass : 0xFD,
+        bInterfaceProtocol : 0x13,
         iInterface : 0
     },
     UnkownDescriptor3 : {
@@ -173,8 +173,8 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
         bAlternateSetting : 0x00,
         bNumEndpoints : 0,
         bInterfaceClass : 0xFF,
-        bInterfaceSubClass : 0xFD,
-        bInterfaceProtocol : 0x13,
+        bInterfaceSubClass : 0x47,
+        bInterfaceProtocol : 0xD0,
         iInterface : 4
     },
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
@@ -237,7 +237,7 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
     InterfaceConfig : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : 1,
+        bInterfaceNumber : INTERFACE_ID_Config,
         bAlternateSetting : 0,
         bNumEndpoints : 0,
         bInterfaceClass : 0xff,
@@ -248,7 +248,7 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
     InterfaceExtra : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : 2,
+        bInterfaceNumber : INTERFACE_ID_Padding,
         bAlternateSetting : 0,
         bNumEndpoints : 0,
         bInterfaceClass : 0xff,
@@ -622,6 +622,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 }
                 return 0;
         }
+    } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F0 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        printf("PS4! (Maybe PS5 too?)\n");
+        consoleType = PS3;
+        return 0;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         consoleType = PS2;
         return 0;
@@ -643,7 +647,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
         if (consoleType == XBOX360) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
-            compat->TotalSections = 2;
+            compat->TotalSections = 3;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
         } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
@@ -668,11 +672,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
     } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         hidInterrupt((uint8_t *)requestBuffer, wLength);
-        // printf("bRequest: %02x, bRequestType: %02x, wIndex:%04x, wValue:%04x\n", request, requestType, wIndex, wValue);
-        // for (int i = 0; i < wLength; i++) {
-        //     printf("%x, ", data[i]);
-        // }
-        // printf("\n");
         return 0;
     }
     return 0;
@@ -716,7 +715,15 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
             }
         }
         data += len;
+    } else if (consoleType == XBOXONE) {
+        // TODO: this
     } else {
+        if (wcidFound && id == XONE_IDENTIFY_ID) {
+            consoleType = XBOXONE;
+            reset_usb();
+            printf("XBOX ONE!\n");
+            return;
+        }
         uint8_t *data = (uint8_t *)data;
         if (id == PS3_LED_ID) {
             uint8_t player = (data[2] >> 2);

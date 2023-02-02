@@ -61,15 +61,17 @@ void loop() {
     }
     if (consoleType == UNIVERSAL) {
         if (wcidFound && one_timer == 0) {
-            one_timer = millis();
             if (tud_xinput_n_ready(1)) {
-                tud_xinput_n_report(1, 0, &announce, sizeof(announce));
+                one_timer = millis();
+                printf("XBOX ONE ANNOUNCE %d\n", tud_xusb_n_report(1, &announce, sizeof(announce)));
+                ;
             }
         }
         // TODO: this
-        if (one_timer != 0 && millis() - one_timer > 100) {
+        if (one_timer != 0 && millis() - one_timer > 10000) {
             consoleType = XBOX360;
             reset_usb();
+            printf("XBOX 360\n");
         }
     }
     tud_task();

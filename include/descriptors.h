@@ -48,7 +48,7 @@ typedef struct {
     USB_INTERFACE_DESCRIPTOR Interface3;
     uint8_t UnkownDescriptor3[0x09];
     USB_ENDPOINT_DESCRIPTOR ReportINEndpoint31;
-    USB_INTERFACE_DESCRIPTOR Interface4;
+    USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
     uint8_t UnkownDescriptor4[0x06];
 } __attribute__((packed)) CONFIGURATION_XBOX_DESCRIPTOR;
 
@@ -60,7 +60,9 @@ typedef struct {
     USB_ENDPOINT_DESCRIPTOR EndpointOutHID;
     USB_INTERFACE_DESCRIPTOR InterfaceConfig;
     USB_INTERFACE_DESCRIPTOR InterfaceExtra;
-    USB_INTERFACE_DESCRIPTOR Interface4;
+    USB_ENDPOINT_DESCRIPTOR EndpointInExtra;
+    USB_ENDPOINT_DESCRIPTOR EndpointOutExtra;
+    USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
     uint8_t UnkownDescriptor4[0x06];
 } __attribute__((packed)) HID_CONFIGURATION_DESCRIPTOR;
 

@@ -43,7 +43,7 @@ const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
             Reserved2 : {0}
         },
         {
-            FirstInterfaceNumber : INTERFACE_ID_Device,
+            FirstInterfaceNumber : INTERFACE_ID_Padding,
             Reserved : 0x04,
             CompatibleID : "XUSB10",
             SubCompatibleID : {0},

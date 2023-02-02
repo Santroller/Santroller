@@ -19,3 +19,5 @@ extern const uint8_t capabilities1[8];
 extern const uint8_t capabilities2[20];
 extern const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR ExtendedIDs;
 extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs; 
+extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs360;
+extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDsOne; 

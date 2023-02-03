@@ -153,7 +153,7 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         } else if (itf_desc->bInterfaceSubClass == 0x47 &&
                    itf_desc->bInterfaceProtocol == 0xD0) {
             p_desc = tu_desc_next(p_desc);
-            TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &p_xinput->ep_out, &p_xinput->ep_in), 0);
+            TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_ISOCHRONOUS, &p_xinput->ep_out, &p_xinput->ep_in), 0);
 
             p_xinput->itf_num = itf_desc->bInterfaceNumber;
 

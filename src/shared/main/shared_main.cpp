@@ -34,7 +34,6 @@ bool lastWiiWasSuccessful = false;
 bool lastPS2WasSuccessful = false;
 bool overrideR2 = false;
 uint8_t overriddenR2 = 0;
-bool wcidFound = false;
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;

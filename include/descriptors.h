@@ -64,7 +64,7 @@ typedef struct {
     USB_ENDPOINT_DESCRIPTOR EndpointOutExtra;
     USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
     uint8_t UnkownDescriptor4[0x06];
-} __attribute__((packed)) HID_CONFIGURATION_DESCRIPTOR;
+} __attribute__((packed)) UNIVERSAL_CONFIGURATION_DESCRIPTOR;
 
 
 typedef struct {
@@ -73,7 +73,7 @@ typedef struct {
     USB_HID_DESCRIPTOR HIDDescriptor;
     USB_ENDPOINT_DESCRIPTOR EndpointInHID;
     USB_ENDPOINT_DESCRIPTOR EndpointOutHID;
-} __attribute__((packed)) HID_DESCRIPTOR;
+} __attribute__((packed)) HID_CONFIGURATION_DESCRIPTOR;
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR Interface_AudioControl;
@@ -92,6 +92,7 @@ typedef struct {
 } __attribute__((packed)) MIDI_CONFIGURATION_DESCRIPTOR;
 
 extern const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor;
+extern const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescriptor;
 extern const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor;
 extern const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor;
 extern const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor;

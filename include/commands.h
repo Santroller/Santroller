@@ -38,4 +38,3 @@ extern uint16_t wiiControllerType;
 extern uint8_t ps2ControllerType;
 extern bool overrideR2;
 extern uint8_t overriddenR2;
-extern bool wcidFound;

@@ -9,6 +9,7 @@
 #include "common/tusb_types.h"
 #include "config.h"
 #include "controller_reports.h"
+#include "controllers.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
 #include "hardware/structs/usb.h"
@@ -51,6 +52,10 @@ unsigned int last = 0;
 #define TICK_CHECK false
 #endif
 long one_timer = 0;
+long ps5_timer = 0;
+long wii_timer = 0;
+bool read_config = false;
+bool read_config_attempt = false;
 void loop() {
     if (reset_on_next) {
         tud_disconnect();
@@ -60,12 +65,26 @@ void loop() {
         return;
     }
     if (consoleType == UNIVERSAL) {
-        if (wcidFound && one_timer == 0) {
-            if (tud_xinput_n_ready(1)) {
+        if (windows_or_xbox_one && one_timer == 0) {
+            if (tud_xinput_n_ready(0)) {
                 one_timer = millis();
-                printf("XBOX ONE ANNOUNCE %d\n", tud_xusb_n_report(1, &announce, sizeof(announce)));
-                ;
+                printf("XBOX ONE ANNOUNCE %d\n", tud_xusb_n_report(0, &announce, sizeof(announce)));
             }
+            
+        }
+        // PS5 just stops communicating after sending a set idle
+        if (!windows_or_xbox_one && set_idle && ps5_timer == 0) {
+            ps5_timer = millis();
+        }
+        if (ps5_timer != 0 && millis() - ps5_timer > 100) {
+            consoleType = PS3;
+            reset_usb();
+            printf("PS5\n");
+        }
+        if (!windows_or_xbox_one && read_config_attempt && millis() - wii_timer > 100) {
+            consoleType = WII_RB;
+            reset_usb();
+            printf("WII\n");
         }
         // TODO: this
         if (one_timer != 0 && millis() - one_timer > 10000) {
@@ -129,6 +148,9 @@ uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;  // for multiple configurations
     descriptorRequest(USB_DESCRIPTOR_CONFIGURATION << 8, 0, buf);
+    wii_timer = millis();
+    read_config = true;
+    read_config_attempt = true;
     return buf;
 }
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
@@ -147,6 +169,15 @@ void reset_usb(void) {
 }
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
+    if (stage == CONTROL_STAGE_SETUP) {
+        if (set_idle && ps5_timer != 0) {
+            set_idle = false;
+            ps5_timer = 0;
+        }
+        if (read_config) {
+            read_config_attempt = false;
+        }
+    }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && request->bRequest == TUSB_REQ_GET_DESCRIPTOR) {
         //------------- STD Request -------------//
         if (stage == CONTROL_STAGE_SETUP) {

@@ -180,11 +180,11 @@ const PROGMEM CONFIGURATION_XBOX_DESCRIPTOR XBOXConfigurationDescriptor = {
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
 
-const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
+const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_CONFIGURATION,
-        wTotalLength : sizeof(HID_CONFIGURATION_DESCRIPTOR),
+        wTotalLength : sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR),
         bNumInterfaces : 4,
         bConfigurationValue : 1,
         iConfiguration : NO_DESCRIPTOR,
@@ -261,7 +261,7 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
         bEndpointAddress : XINPUT_EXTRA_1,
         bmAttributes :
-            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+            (USB_TRANSFER_TYPE_ISOCHRONOUS | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 64,
         bInterval : 0x01
     },
@@ -270,7 +270,7 @@ const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor = {
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
         bEndpointAddress : XINPUT_EXTRA_2,
         bmAttributes :
-            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+            (USB_TRANSFER_TYPE_ISOCHRONOUS | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 64,
         bInterval : 0x01
     },
@@ -460,6 +460,12 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
                 return true;
         }
     }
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_STANDARD) && request == USB_REQUEST_GET_INTERFACE) {
+        return true;
+    }
+    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_STANDARD) && request == USB_REQUEST_GET_INTERFACE) {
+        return true;
+    }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         switch (request) {
             case COMMAND_READ_CONFIG:
@@ -507,6 +513,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (request == COMMAND_JUMP_BOOTLOADER) {
             bootloader();
         }
+    }
+
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_STANDARD) && request == USB_REQUEST_GET_INTERFACE) {
+        ((uint8_t *)requestBuffer)[0] = 0;
+        return 1;
+    }
+    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_STANDARD) && request == USB_REQUEST_SET_INTERFACE) {
+        return 0;
     }
     if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
@@ -634,6 +648,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                         return sizeof(ps3_init);
                     } else if (consoleType == UNIVERSAL) {
                         consoleType = PS3;
+                        printf("PS3!\n");
                         reset_usb();
                         return 0;
                     }
@@ -641,13 +656,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 return 0;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F0 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        printf("PS4! (Maybe PS5 too?)\n");
+        printf("PS4!\n");
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DRUMS
         consoleType = PS3;
 #endif
         return 0;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         consoleType = PS2;
+        printf("PS2!\n");
         return 0;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
@@ -664,17 +680,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return sizeof(XBOX_ID);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
-
-        memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
         if (consoleType == XBOX360) {
-            OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
-            compat->TotalSections = 2;
-            compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
-            return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
+            memcpy_P(requestBuffer, &DevCompatIDs360, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
+            return DevCompatIDs360.TotalLength;
         } else {
-
+            memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
             if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
-                wcidFound = true;
+                windows_or_xbox_one = true;
                 // consoleType = XBOX360;
                 // reset_usb();
             }
@@ -685,6 +697,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return 0;
     } else if (request == HID_REQUEST_SET_IDLE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         idle_rate = (wValue >> 8) & 0xff;
+        set_idle = true;
         return 0;
     } else if (consoleType == UNIVERSAL && request == USB_REQUEST_CLEAR_FEATURE && (wIndex == DEVICE_EPADDR_IN || wIndex == DEVICE_EPADDR_OUT)) {
         // Switch clears a halt on both endpoints
@@ -692,6 +705,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         cleared_output |= wIndex == DEVICE_EPADDR_OUT;
         if (cleared_input && cleared_output) {
             consoleType = SWITCH;
+            printf("Switch!\n");
             reset_usb();
             return 0;
         }
@@ -743,7 +757,7 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
     } else if (consoleType == XBOXONE) {
         // TODO: this
     } else {
-        if (wcidFound && id == XONE_IDENTIFY_ID) {
+        if (windows_or_xbox_one && id == XONE_IDENTIFY_ID) {
             consoleType = XBOXONE;
             reset_usb();
             printf("XBOX ONE!\n");
@@ -809,13 +823,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
             } else {
-                size = sizeof(HID_CONFIGURATION_DESCRIPTOR);
-                memcpy_P(descriptorBuffer, &HIDConfigurationDescriptor, size);
-                HID_CONFIGURATION_DESCRIPTOR *desc = (HID_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
+                size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
+                memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
+                UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
                 if (consoleType != UNIVERSAL) {
                     // Strip out all the extra interfaces used for configuring / x360 compat, the wii doesn't like em
                     desc->Config.bNumInterfaces = 1;
-                    desc->Config.wTotalLength = sizeof(HID_DESCRIPTOR);
+                    desc->Config.wTotalLength = sizeof(HID_CONFIGURATION_DESCRIPTOR);
                 }
             }
             break;

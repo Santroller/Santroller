@@ -29,10 +29,10 @@ const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {
     }
 };
 const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
-    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 1,
+    TotalSections : 2,
     Reserved : {0},
     CompatID : {
         {
@@ -45,24 +45,30 @@ const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
         {
             FirstInterfaceNumber : INTERFACE_ID_Padding,
             Reserved : 0x04,
-            CompatibleID : "XUSB10",
+            CompatibleID : "XGIP10",
             SubCompatibleID : {0},
             Reserved2 : {0}
         }}
 };
 
-// TODO: is this needed?
-const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDsOne = {
-    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
+const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs360 = {
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 1,
+    TotalSections : 2,
     Reserved : {0},
     CompatID : {
         {
             FirstInterfaceNumber : INTERFACE_ID_Config,
             Reserved : 0x04,
-            CompatibleID : "XGIP10",
+            CompatibleID : "WINUSB",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Device,
+            Reserved : 0x04,
+            CompatibleID : "XUSB10",
             SubCompatibleID : {0},
             Reserved2 : {0}
         }}

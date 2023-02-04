@@ -123,6 +123,23 @@ typedef enum {
     WII_NO_EXTENSION = 0x180b,
     WII_NOT_INITIALISED = 0xFFFF
 } WiiExtType_t;
+
+typedef enum {
+    Announce,
+    Waiting1,
+    Ident1,
+    Waiting2,
+    Ident2,
+    Waiting3,
+    Ident3,
+    Waiting4,
+    Ident4,
+    Waiting5,
+    Ident5,
+    Waiting6,
+    Auth,
+    Ready
+} Xbox_One_State_t;
 typedef enum {
     PSX_UNKNOWN_CONTROLLER = 0,
     PSX_DIGITAL,

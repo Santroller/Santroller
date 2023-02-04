@@ -162,5 +162,6 @@ typedef union {
   USB_XInputReport_Data_t xinput;
   USB_XInputDrumGhReport_Data_t ghDrum;
   USB_MIDI_Data_t midi;
+  uint8_t xbox_one[64];
   // USB_MouseReport_Data_t mouse;
 } USB_Report_Data_t;

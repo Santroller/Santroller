@@ -119,6 +119,8 @@ bool tuh_xinput_receive_report(uint8_t dev_addr, uint8_t instance);
 // Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
 // therefore report_desc = NULL, desc_len = 0
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance);
+bool tuh_xinput_ready(uint8_t dev_addr, uint8_t instance);
+bool tuh_xinput_send_report(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len);
 
 // Invoked when device with XINPUT interface is un-mounted
 TU_ATTR_WEAK void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance);
@@ -145,7 +147,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const*
 bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num);
 bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
 void xinputh_close(uint8_t dev_addr);
-
 #ifdef __cplusplus
 }
 #endif

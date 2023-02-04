@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "config.h"
 #include "controller_reports.h"
+#include "controllers.h"
 #include "fxpt_math.h"
 #include "io.h"
 #include "pins.h"
@@ -8,6 +9,7 @@
 #include "ps2.h"
 #include "util.h"
 #include "wii.h"
+#include "xbox_one.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -133,8 +135,6 @@ uint8_t handle_calibration_ps3_trigger(uint16_t orig_val, uint16_t min, int16_t 
     return handle_calibration_xbox_trigger(orig_val, min, multiplier, deadzone) >> 8;
 }
 
-
-
 uint16_t handle_calibration_ps3_accel(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     return handle_calibration_xbox_trigger(orig_val, min, multiplier, deadzone) >> 6;
 }
@@ -144,6 +144,45 @@ uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t m
     return (uint8_t)(ret - INT8_MAX - 1);
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
+    if (consoleType == XBOXONE) {
+        switch (xbox_one_state) {
+            case Announce:
+                xbox_one_state = Waiting1;
+                memcpy(combined_report, announce, sizeof(announce));
+                return sizeof(announce);
+            case Ident1:
+                xbox_one_state = Waiting2;
+                memcpy(combined_report, identify_1, sizeof(identify_1));
+                return sizeof(identify_1);
+            case Ident2:
+                xbox_one_state = Ident3;
+                memcpy(combined_report, identify_2, sizeof(identify_2));
+                return sizeof(identify_2);
+            case Ident3:
+                xbox_one_state = Ident4;
+                memcpy(combined_report, identify_3, sizeof(identify_3));
+                return sizeof(identify_3);
+            case Ident4:
+                xbox_one_state = Waiting5;
+                memcpy(combined_report, identify_4, sizeof(identify_4));
+                return sizeof(identify_4);
+            case Ident5:
+                xbox_one_state = Auth;
+                memcpy(combined_report, identify_5, sizeof(identify_5));
+                return sizeof(identify_5);
+            case Auth:
+                if (fromControllerLen) {
+                    uint8_t size = fromControllerLen;
+                    fromControllerLen = 0;
+                    memcpy(combined_report, fromController, size);
+                    return size;
+                }
+            default:
+                return 0;
+        }
+        return 0;
+    }
+
 #ifdef INPUT_DJ_TURNTABLE
     uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
     uint8_t *dj_right = lastSuccessfulTurntablePacketRight;

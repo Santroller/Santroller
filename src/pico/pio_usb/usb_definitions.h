@@ -86,8 +86,8 @@ typedef struct struct_usb_device_t usb_device_t;
 typedef struct struct_root_port_t {
   volatile bool initialized;
   volatile bool addr0_exists;
-  volatile uint8_t pin_dp;
-  volatile uint8_t pin_dm;
+  volatile uint pin_dp;
+  volatile uint pin_dm;
   volatile usb_device_event_t event;
   usb_device_t *root_device;
 
@@ -198,7 +198,7 @@ typedef struct {
   uint8_t length;
   uint8_t type;
   uint8_t string[62];
-} string_descriptor_t;
+} __attribute__((aligned(2))) string_descriptor_t;
 
 typedef struct {
   uint8_t length;

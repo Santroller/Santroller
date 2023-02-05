@@ -793,9 +793,8 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
         } else if (xbox_one_state == Waiting5) {
             xbox_one_state = Ident5;
         } else if (xbox_one_state == Auth) {
-            if (data[0]==6 && len==6 && data[3]==2 && data[4]==1 && data[5]==0) {
+            if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                 xbox_one_state = Ready;
-                printf("Auth Success!\n");
             } else {
                 fromConsoleLen = len;
                 memcpy(fromConsole, data, len);

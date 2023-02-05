@@ -71,7 +71,6 @@ void loop() {
         if (ps5_timer != 0 && millis() - ps5_timer > 100) {
             consoleType = PS3;
             reset_usb();
-            printf("PS5 or PS4\n");
         }
         // Windows and XBOX One both send out a WCID request
         if (xbox_timer == 0 && windows_or_xbox_one) {
@@ -81,13 +80,11 @@ void loop() {
         if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
             consoleType = XBOX360;
             reset_usb();
-            printf("WINDOWS\n");
         }
         // Wii gives up after reading the config descriptor
         if (read_config && !received_after_read_config && millis() - wii_timer > 100) {
             consoleType = WII_RB;
             reset_usb();
-            printf("WII\n");
             received_after_read_config = true;
         }
     }
@@ -120,6 +117,11 @@ void tud_mount_cb(void) {
     xbox_one_state = Announce;
     fromControllerLen = 0;
     fromConsoleLen = 0;
+    if (consoleType == XBOXONE && tuh_xinput_mounted(1, 0)) {
+        fromConsole[0] = 0x05;
+        fromConsole[1] = 0x00;
+        tuh_xinput_send_report(1, 0, fromConsole,  2);
+    }
 }
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance) {

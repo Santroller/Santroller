@@ -177,6 +177,10 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
                     memcpy(combined_report, fromController, size);
                     return size;
                 }
+            case Ready:
+                // Generate a 03, 20, seq, 04, 80, 01, 00, 00 packet every second or so
+                // Generate a 20 input report every tick that isnt the 03
+                return 0;
             default:
                 return 0;
         }

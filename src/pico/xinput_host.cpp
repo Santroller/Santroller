@@ -74,6 +74,7 @@ uint8_t tuh_xinput_instance_count(uint8_t dev_addr) {
 }
 
 bool tuh_xinput_mounted(uint8_t dev_addr, uint8_t instance) {
+    if (get_dev(dev_addr)->inst_count < instance) return false; 
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
     return (hid_itf->ep_in != 0) || (hid_itf->ep_out != 0);
 }

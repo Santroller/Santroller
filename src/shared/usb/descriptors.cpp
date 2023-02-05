@@ -12,6 +12,7 @@
 #include "util.h"
 #include "xbox_one_structs.h"
 #include "xsm3/xsm3.h"
+#include "shared_main.h"
 
 #ifdef KV_KEY_1
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
@@ -796,6 +797,7 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
         } else if (xbox_one_state == Auth) {
             if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                 handleAuthLed();
+                printf("Auth!\n");
                 xbox_one_state = Ready;
                 fromConsoleLen = len;
                 memcpy(fromConsole, data, len);
@@ -812,7 +814,7 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
                     uint8_t player = (data[3] >> 2);
                     handlePlayer(player);
                 } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
-                    millis_since_ghl_poke = millis();
+                    last_ghl_poke_time = millis();
                 }
             }
 #endif
@@ -854,7 +856,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
             } else if (consoleType == XBOX360) {
-                dev->idProduct = ARDWIINO_360_PID;
+                dev->idVendor = xbox_360_vid;
+                dev->idProduct = xbox_360_pid;
             }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {
@@ -880,6 +883,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
+            wii_timer = millis();
+            read_config = true;
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);

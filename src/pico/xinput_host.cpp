@@ -31,6 +31,7 @@
 #include "host/usbh.h"
 #include "host/usbh_classdriver.h"
 #include "xinput_host.h"
+#include "defines.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -41,6 +42,7 @@ typedef struct
     uint8_t itf_num;
     uint8_t ep_in;
     uint8_t ep_out;
+    uint8_t type;
 
     uint16_t epin_size;
     uint16_t epout_size;
@@ -131,12 +133,8 @@ bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, ui
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
 
     if (dir == TUSB_DIR_IN) {
-        TU_LOG2("  Get Report callback (%u, %u)\r\n", dev_addr, instance);
-        TU_LOG3_MEM(hid_itf->epin_buf, xferred_bytes, 2);
         tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
-    } else {
-        // if (tuh_xinput_report_sent_cb) tuh_xinput_report_sent_cb(dev_addr, instance, hid_itf->epout_buf, (uint16_t) xferred_bytes);
-    }
+    } 
 
     return true;
 }
@@ -201,6 +199,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
+        p_xinput->type = XBOX360;
         _xinputh_dev->inst_count++;
 
     } else if (desc_itf->bInterfaceSubClass == 0xfD &&
@@ -213,6 +212,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
+        p_xinput->type = XBOX360;
         _xinputh_dev->inst_count++;
     } else if (desc_itf->bInterfaceSubClass == 0x47 &&
                desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bNumEndpoints) {
@@ -231,6 +231,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
+        p_xinput->type = XBOXONE;
         _xinputh_dev->inst_count++;
     }
     return true;
@@ -258,9 +259,9 @@ bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num) {
 
 static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance) {
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
-
+    
     // enumeration is complete
-    tuh_xinput_mount_cb(dev_addr, instance);
+    tuh_xinput_mount_cb(dev_addr, instance, hid_itf->type);
 
     // notify usbh that driver enumeration is complete
     usbh_driver_set_config_complete(dev_addr, hid_itf->itf_num);

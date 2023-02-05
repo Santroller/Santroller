@@ -62,7 +62,7 @@ void loop() {
             break;
         case CONTROLLER_DATA_REQUEST_ID: {
             header->len = 0;
-            uint8_t len = tick(&report);
+            uint8_t len = tick_inputs(&report);
             // Write the controller input data
             memcpy(buf + sizeof(packet_header_t), &report, len);
             header->len += len;

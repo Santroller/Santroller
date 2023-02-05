@@ -82,7 +82,7 @@ enum interfaces_t {
         2, /**< MIDI Audio Stream interface descriptor ID */
 };
 
-void reset_usb(void);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

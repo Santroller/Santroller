@@ -118,7 +118,7 @@ bool tuh_xinput_receive_report(uint8_t dev_addr, uint8_t instance);
 // can be used to parse common/simple enough descriptor.
 // Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
 // therefore report_desc = NULL, desc_len = 0
-void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance);
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t type);
 bool tuh_xinput_ready(uint8_t dev_addr, uint8_t instance);
 bool tuh_xinput_send_report(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len);
 

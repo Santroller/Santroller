@@ -1,3 +1,5 @@
+#include "shared_main.h"
+
 #include "Arduino.h"
 #include "config.h"
 #include "controller_reports.h"
@@ -16,7 +18,6 @@
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
-
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastTap;
@@ -144,7 +145,40 @@ uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t m
     int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret - INT8_MAX - 1);
 }
-uint8_t tick(USB_Report_Data_t *combined_report) {
+void tick(void) {
+    if (consoleType == UNIVERSAL) {
+        // PS5 just stops communicating after sending a set idle
+        if (set_idle && ps5_timer == 0) {
+            ps5_timer = millis();
+        }
+        if (ps5_timer != 0 && millis() - ps5_timer > 100) {
+            consoleType = PS3;
+            reset_usb();
+        }
+        // Windows and XBOX One both send out a WCID request
+        if (xbox_timer == 0 && windows_or_xbox_one) {
+            xbox_timer = millis();
+        }
+        // But xbox follows that up with a SET_INTERFACE call, so if we don't see one of those then we can assume windows
+        if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
+            consoleType = XBOX360;
+            reset_usb();
+        }
+        // Wii gives up after reading the config descriptor
+        if (read_config && !received_after_read_config && millis() - wii_timer > 100) {
+            consoleType = WII_RB;
+            reset_usb();
+            received_after_read_config = true;
+        }
+    }
+
+    // If we have something pending to send to the xbox one controller, send it
+    if (fromConsoleLen) {
+        send_report_to_controller(fromConsole, fromConsoleLen);
+        fromConsoleLen = 0;
+    }
+}
+uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #ifdef INPUT_DJ_TURNTABLE
     uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
     uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
@@ -267,7 +301,7 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
         // To switch modes, a poke command is sent every 8 seconds
         // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
 
-        if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - millis_since_ghl_poke < 8000) {
+        if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
             uint8_t size;
             StandardControllerReport_t *report = (StandardControllerReport_t *)combined_report;
             GIP_HEADER(report, GIP_INPUT_REPORT, false, reportSequenceNumber++);
@@ -319,12 +353,59 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
     }
 }
 
-void reset_xbox_one(void) {
+void device_reset(void) {
     xbox_one_state = Announce;
     fromControllerLen = 0;
     fromConsoleLen = 0;
     hidSequenceNumber = 0;
     reportSequenceNumber = 0;
-    arrivalSequenceNumber = 0;
-    ghl_in_navigation_mode = true;
+    last_ghl_poke_time = 0;
+}
+
+void received_any_request(void) {
+    if (set_idle && ps5_timer != 0) {
+        set_idle = false;
+        ps5_timer = 0;
+    }
+    if (read_config) {
+        received_after_read_config = true;
+    }
+}
+
+void receive_report_from_controller(uint8_t const *report, uint16_t len) {
+    if (xbox_one_state != Auth) {
+        return;
+    }
+    fromControllerLen = len;
+    memcpy(fromController, report, len);
+    if (report[0] == GIP_INPUT_REPORT) {
+        reportSequenceNumber = report[2] + 1;
+    }
+}
+
+void xinput_controller_connected(uint8_t vid, uint8_t pid) {
+    if (consoleType != XBOX360 || xbox_360_authenticated) return;
+    xbox_360_vid = vid;
+    xbox_360_pid = pid;
+    reset_usb();
+}
+
+void xone_controller_connected(void) {
+    if (consoleType != XBOXONE || xbox_one_state == Ready) return;
+    reset_usb();
+
+    if (consoleType == XBOXONE) {
+        GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
+        GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 0);
+        powerMode->subcommand = 0;
+        send_report_to_controller(fromConsole, sizeof(GipPowerMode_t));
+    }
+}
+void controller_disconnected(void) {
+    if (consoleType == XBOXONE && xbox_one_state != Ready) {
+        reset_usb();
+    }
+    if (consoleType == XBOX360 && !xbox_360_authenticated) {
+        reset_usb();
+    }
 }

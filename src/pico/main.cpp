@@ -32,10 +32,8 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
 
-uint16_t host_vid = 0;
-uint16_t host_pid = 0;
-uint8_t host_dev_addr = 0;
-bool passthrough_ready = false;
+uint8_t xone_dev_addr = 0;
+uint8_t x360_dev_addr = 0;
 
 void setup() {
     uart_set_baudrate(uart0, 115200);
@@ -51,11 +49,7 @@ unsigned int last = 0;
 #else
 #define TICK_CHECK false
 #endif
-long xbox_timer = 0;
-long ps5_timer = 0;
-long wii_timer = 0;
-bool read_config = false;
-bool received_after_read_config = false;
+
 void loop() {
     if (reset_on_next) {
         tud_disconnect();
@@ -64,44 +58,17 @@ void loop() {
         reset_on_next = false;
         return;
     }
-    if (consoleType == UNIVERSAL) {
-        // PS5 just stops communicating after sending a set idle
-        if (set_idle && ps5_timer == 0) {
-            ps5_timer = millis();
-        }
-        if (ps5_timer != 0 && millis() - ps5_timer > 100) {
-            consoleType = PS3;
-            reset_usb();
-        }
-        // Windows and XBOX One both send out a WCID request
-        if (xbox_timer == 0 && windows_or_xbox_one) {
-            xbox_timer = millis();
-        }
-        // But xbox follows that up with a SET_INTERFACE call, so if we don't see one of those then we can assume windows
-        if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
-            consoleType = XBOX360;
-            reset_usb();
-        }
-        // Wii gives up after reading the config descriptor
-        if (read_config && !received_after_read_config && millis() - wii_timer > 100) {
-            consoleType = WII_RB;
-            reset_usb();
-            received_after_read_config = true;
-        }
-    }
-    if (fromConsoleLen) {
-        tuh_xinput_send_report(1, 0, fromConsole, fromConsoleLen);
-        fromConsoleLen = 0;
-    }
-    if (tuh_xinput_ready(1, 0)) {
-        tuh_xinput_receive_report(1, 0);
+    tick();
+    // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
+    if (xbox_one_state != Ready && xone_dev_addr && tuh_xinput_ready(xone_dev_addr, 0)) {
+        tuh_xinput_receive_report(xone_dev_addr, 0);
     }
     tud_task();
     tuh_task();
     uint8_t size = 0;
     if (TICK_CHECK || millis() - last > 5) {
         last = millis();
-        size = tick(&report);
+        size = tick_inputs(&report);
     }
 
     if (size) {
@@ -114,48 +81,37 @@ void loop() {
 #endif
     }
 }
-void tud_mount_cb(void) {
-    reset_xbox_one();
-    if (consoleType == XBOXONE && tuh_xinput_mounted(1, 0)) {
-        GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
-        GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 0);
-        powerMode->subcommand = 0;
-        tuh_xinput_send_report(1, 0, fromConsole, sizeof(GipPowerMode_t));
+void send_report_to_controller(uint8_t *report, uint8_t len) {
+    if (xone_dev_addr && tuh_xinput_mounted(xone_dev_addr, 0)) {
+        tuh_xinput_send_report(xone_dev_addr, 0, report, len);
     }
 }
+void tud_mount_cb(void) {
+    device_reset();
+}
 
-void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance) {
-    if (consoleType == XBOX360) {
-        if (passthrough_ready) {
-            return;
-        }
-        host_dev_addr = dev_addr;
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType) {
+    if (controllerType == XBOX360) {
+        x360_dev_addr = dev_addr;
+        uint16_t host_vid = 0;
+        uint16_t host_pid = 0;
         tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
-        passthrough_ready = true;
+        xinput_controller_connected(host_vid, host_pid);
     }
-    if (consoleType != XBOXONE || xbox_one_state != Ready) {
-        reset_usb();
+    if (controllerType == XBOXONE) {
+        xone_dev_addr = dev_addr;
+        xone_controller_connected();
     }
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
-    host_vid = 0;
-    host_pid = 0;
-    host_dev_addr = 0;
-    passthrough_ready = false;
-    
-    if (consoleType != XBOXONE || xbox_one_state != Ready) {
-        reset_usb();
-    }
+    xone_dev_addr = 0;
+    x360_dev_addr = 0;
+    controller_disconnected();
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
     descriptorRequest(USB_DESCRIPTOR_DEVICE << 8, 0, buf);
-    if (passthrough_ready && consoleType == XBOX360) {
-        USB_DEVICE_DESCRIPTOR *td = (USB_DEVICE_DESCRIPTOR *)buf;
-        td->idVendor = host_vid;
-        td->idProduct = host_pid;
-    }
     return buf;
 }
 uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
@@ -165,8 +121,6 @@ uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;  // for multiple configurations
     descriptorRequest(USB_DESCRIPTOR_CONFIGURATION << 8, 0, buf);
-    wii_timer = millis();
-    read_config = true;
     return buf;
 }
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
@@ -180,22 +134,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return NULL;
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
-    // printf("From Controller: ");
-    // for (int i = 0; i < len; i++) {
-    //     printf("%02x, ", report[i]);
-    // }
-    // printf("\n");
-    if (xbox_one_state != Auth) {
-        return;
-    }
-    fromControllerLen = len;
-    memcpy(fromController, report, len);
-    if (report[0] == GIP_ARRIVAL) {
-        arrivalSequenceNumber = report[2] + 1;
-    }
-    if (report[0] == GIP_INPUT_REPORT) {
-        reportSequenceNumber = report[2] + 1;
-    }
+    receive_report_from_controller(report, len);
 }
 void reset_usb(void) {
     reset_on_next = true;
@@ -203,13 +142,7 @@ void reset_usb(void) {
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     if (stage == CONTROL_STAGE_SETUP) {
-        if (set_idle && ps5_timer != 0) {
-            set_idle = false;
-            ps5_timer = 0;
-        }
-        if (read_config) {
-            received_after_read_config = true;
-        }
+        received_any_request();
     }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && request->bRequest == TUSB_REQ_GET_DESCRIPTOR) {
         //------------- STD Request -------------//
@@ -242,9 +175,10 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
-    } else if (passthrough_ready) {
+        // Forward any unknown control requests to the 360 controller, if it is plugged in.
+    } else if (x360_dev_addr != 0 && !xbox_360_authenticated) {
         tuh_xfer_t xfer = {};
-        xfer.daddr = host_dev_addr;
+        xfer.daddr = x360_dev_addr;
         xfer.ep_addr = 0;
         xfer.setup = request;
         xfer.buffer = buf;

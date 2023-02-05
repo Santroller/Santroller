@@ -176,7 +176,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
         // Forward any unknown control requests to the 360 controller, if it is plugged in.
-    } else if (x360_dev_addr != 0 && !xbox_360_authenticated) {
+        // TODO: do auth with a 360, and capture whatever the auth success packet is and then flag that auth was a success
+    } else if (x360_dev_addr != 0 && xbox_360_state != Authenticated) {
         tuh_xfer_t xfer = {};
         xfer.daddr = x360_dev_addr;
         xfer.ep_addr = 0;

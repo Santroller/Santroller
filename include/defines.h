@@ -137,6 +137,12 @@ typedef enum {
     Auth,
     Ready
 } Xbox_One_State_t;
+
+typedef enum {
+    Auth1,
+    Auth2,
+    Authenticated
+} Xbox_360_State_t;
 typedef enum {
     PSX_UNKNOWN_CONTROLLER = 0,
     PSX_DIGITAL,

@@ -19,7 +19,7 @@ extern long wii_timer;
 extern Xbox_One_State_t xbox_one_state;
 
 // State of the Xbox 360 controller init
-extern bool xbox_360_authenticated;
+extern Xbox_360_State_t xbox_360_state;
 extern uint16_t xbox_360_vid;
 extern uint16_t xbox_360_pid;
 

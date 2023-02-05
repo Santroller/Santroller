@@ -8,11 +8,21 @@
 #include "keyboard_mouse.h"
 #include "pins.h"
 #include "ps3_wii_switch.h"
+#include "shared_main.h"
 #include "usbhid.h"
 #include "util.h"
 #include "xbox_one_structs.h"
 #include "xsm3/xsm3.h"
-#include "shared_main.h"
+
+void handleAuthLed() {
+    HANDLE_AUTH_LED;
+}
+void handlePlayer(uint8_t player) {
+    HANDLE_PLAYER_LED;
+}
+void handleRumble(uint8_t rumble_left, uint8_t rumble_right) {
+    HANDLE_RUMBLE;
+}
 
 #ifdef KV_KEY_1
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
@@ -462,6 +472,17 @@ const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
+    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        return true;
+    }
+    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
+        if (xbox_360_state == Auth1) {
+            xbox_360_state = Auth2;
+        } else if (xbox_360_state == Auth2) {
+            xbox_360_state = Authenticated;
+            handleAuthLed();
+        }
+    }
 #ifdef KV_KEY_1
     switch (request) {
         case 0x81:
@@ -473,9 +494,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             return true;
     }
 #endif
-    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
-        return true;
-    }
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         switch (request) {
             case COMMAND_REBOOT:
@@ -545,7 +563,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_GET_INTERFACE) {
         ((uint8_t *)requestBuffer)[0] = 0;
         if (consoleType == UNIVERSAL && windows_or_xbox_one) {
-            printf("XBOX ONE! \n");
             consoleType = XBOXONE;
             reset_usb();
             return 0;
@@ -558,7 +575,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
         reset_usb();
-        printf("XBOX360!\n");
         return 0;
     }
 #ifdef KV_KEY_1
@@ -743,6 +759,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
     return 0;
 }
+
 uint8_t xbox_players[] = {
     0,  // 0x00	 All off
     0,  // 0x01	 All blinking
@@ -759,15 +776,6 @@ uint8_t xbox_players[] = {
     0,  // 0x0C	 Slow blinking*
     0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
-void handleAuthLed() {
-    // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
-}
-void handlePlayer(uint8_t player) {
-    // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
-}
-void handleRumble(uint8_t rumble_left, uint8_t rumble_right) {
-    // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
-}
 void hidInterrupt(const uint8_t *data, uint8_t len) {
     uint8_t id = data[0];
     // Handle Xbox 360 LEDs and rumble
@@ -797,7 +805,6 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
         } else if (xbox_one_state == Auth) {
             if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                 handleAuthLed();
-                printf("Auth!\n");
                 xbox_one_state = Ready;
                 fromConsoleLen = len;
                 memcpy(fromConsole, data, len);
@@ -818,6 +825,10 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
                 }
             }
 #endif
+            if (id == GIP_CMD_RUMBLE) {
+                GipRumble_t *rumble = (GipRumble_t *)data;
+                handleRumble(rumble->left, rumble->right);
+            }
         }
     } else {
         uint8_t *data = (uint8_t *)data;

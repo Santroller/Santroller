@@ -384,7 +384,7 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
 }
 
 void xinput_controller_connected(uint8_t vid, uint8_t pid) {
-    if (consoleType != XBOX360 || xbox_360_authenticated) return;
+    if (consoleType != XBOX360 || xbox_360_state == Authenticated) return;
     xbox_360_vid = vid;
     xbox_360_pid = pid;
     reset_usb();
@@ -405,7 +405,7 @@ void controller_disconnected(void) {
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         reset_usb();
     }
-    if (consoleType == XBOX360 && !xbox_360_authenticated) {
+    if (consoleType == XBOX360 && xbox_360_state != Authenticated) {
         reset_usb();
     }
 }

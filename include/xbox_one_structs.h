@@ -1,6 +1,7 @@
 #include <stdint.h>
 #define GIP_POWER_MODE_DEVICE_CONFIG 0x05
 #define GIP_ARRIVAL 0x03
+#define GIP_CMD_RUMBLE   0x09
 #define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
 typedef struct
@@ -52,6 +53,19 @@ typedef struct
     GipHeader_t Header;
     uint8_t subcommand;
 } __attribute__((packed)) GipPowerMode_t;
+
+typedef struct {
+    GipHeader_t Header;
+	uint8_t unknown;
+	uint8_t motors;
+	uint8_t left_trigger;
+	uint8_t right_trigger;
+	uint8_t left;
+	uint8_t right;
+	uint8_t duration;
+	uint8_t delay;
+	uint8_t repeat;
+} __attribute__((packed)) GipRumble_t;
 
 #define GIP_HEADER(packet, cmd, isInternal, seq) \
     packet->Header.command = cmd; \

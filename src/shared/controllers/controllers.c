@@ -15,7 +15,7 @@ bool windows_or_xbox_one = false;
 Xbox_One_State_t xbox_one_state = Announce;
 uint16_t xbox_360_vid = ARDWIINO_VID;
 uint16_t xbox_360_pid = ARDWIINO_360_PID;
-bool xbox_360_authenticated = false;
+Xbox_360_State_t xbox_360_state = Auth1;
 uint8_t fromConsoleLen = 0;
 uint8_t fromControllerLen = 0;
 uint8_t fromConsole[64];

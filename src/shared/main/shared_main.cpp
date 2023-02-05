@@ -10,6 +10,7 @@
 #include "util.h"
 #include "wii.h"
 #include "xbox_one.h"
+#include "xbox_one_structs.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -144,49 +145,6 @@ uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t m
     return (uint8_t)(ret - INT8_MAX - 1);
 }
 uint8_t tick(USB_Report_Data_t *combined_report) {
-    if (consoleType == XBOXONE) {
-        switch (xbox_one_state) {
-            case Announce:
-                xbox_one_state = Waiting1;
-                memcpy(combined_report, announce, sizeof(announce));
-                return sizeof(announce);
-            case Ident1:
-                xbox_one_state = Waiting2;
-                memcpy(combined_report, identify_1, sizeof(identify_1));
-                return sizeof(identify_1);
-            case Ident2:
-                xbox_one_state = Ident3;
-                memcpy(combined_report, identify_2, sizeof(identify_2));
-                return sizeof(identify_2);
-            case Ident3:
-                xbox_one_state = Ident4;
-                memcpy(combined_report, identify_3, sizeof(identify_3));
-                return sizeof(identify_3);
-            case Ident4:
-                xbox_one_state = Waiting5;
-                memcpy(combined_report, identify_4, sizeof(identify_4));
-                return sizeof(identify_4);
-            case Ident5:
-                xbox_one_state = Auth;
-                memcpy(combined_report, identify_5, sizeof(identify_5));
-                return sizeof(identify_5);
-            case Auth:
-                if (fromControllerLen) {
-                    uint8_t size = fromControllerLen;
-                    fromControllerLen = 0;
-                    memcpy(combined_report, fromController, size);
-                    return size;
-                }
-            case Ready:
-                // Generate a 03, 20, seq, 04, 80, 01, 00, 00 packet every second or so
-                // Generate a 20 input report every tick that isnt the 03
-                return 0;
-            default:
-                return 0;
-        }
-        return 0;
-    }
-
 #ifdef INPUT_DJ_TURNTABLE
     uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
     uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
@@ -265,6 +223,73 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
 #endif
     tickPins();
     TICK_SHARED;
+
+    if (consoleType == XBOXONE) {
+        switch (xbox_one_state) {
+            case Announce:
+                xbox_one_state = Waiting1;
+                memcpy(combined_report, announce, sizeof(announce));
+                return sizeof(announce);
+            case Ident1:
+                xbox_one_state = Waiting2;
+                memcpy(combined_report, identify_1, sizeof(identify_1));
+                return sizeof(identify_1);
+            case Ident2:
+                xbox_one_state = Ident3;
+                memcpy(combined_report, identify_2, sizeof(identify_2));
+                return sizeof(identify_2);
+            case Ident3:
+                xbox_one_state = Ident4;
+                memcpy(combined_report, identify_3, sizeof(identify_3));
+                return sizeof(identify_3);
+            case Ident4:
+                xbox_one_state = Waiting5;
+                memcpy(combined_report, identify_4, sizeof(identify_4));
+                return sizeof(identify_4);
+            case Ident5:
+                xbox_one_state = Auth;
+                memcpy(combined_report, identify_5, sizeof(identify_5));
+                return sizeof(identify_5);
+            case Auth:
+                if (fromControllerLen) {
+                    uint8_t size = fromControllerLen;
+                    fromControllerLen = 0;
+                    memcpy(combined_report, fromController, size);
+                    return size;
+                }
+                return 0;
+            case Ready:
+                break;
+            default:
+                return 0;
+        }
+        // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
+        // To switch modes, a poke command is sent every 8 seconds
+        // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
+
+        if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - millis_since_ghl_poke < 8000) {
+            uint8_t size;
+            StandardControllerReport_t *report = (StandardControllerReport_t *)combined_report;
+            GIP_HEADER(report, GIP_INPUT_REPORT, false, reportSequenceNumber++);
+#if DEVICE_TYPE == GUITAR
+            size = sizeof(RbGuitarReport_t);
+#elif DEVICE_TYPE == DRUM
+            size = sizeof(RbDrumReport_t);
+#else
+            size = sizeof(StandardControllerReport_t);
+#endif
+            report->Header.length = size - sizeof(GipHeader_t);
+            combined_report = (USB_Report_Data_t *)report->report;
+            memset(combined_report, 0, size);
+            TICK_XBOX_ONE;
+            return size;
+        } else {
+            GhlHidReport_t *report = (GhlHidReport_t *)combined_report;
+            memset(combined_report, 0, sizeof(GhlHidReport_t));
+            GIP_HEADER(report, GHL_HID_REPORT, false, hidSequenceNumber++);
+            combined_report = (USB_Report_Data_t *)&report->report;
+        }
+    }
     if (consoleType == XBOX360) {
         USB_XInputReport_Data_t *report = &combined_report->xinput;
         USB_XInputDrumGhReport_Data_t *reportGhDrum = &combined_report->ghDrum;
@@ -287,7 +312,19 @@ uint8_t tick(USB_Report_Data_t *combined_report) {
 #endif
     if (consoleType == XBOX360) {
         return sizeof(USB_XInputReport_Data_t);
+    } else if (consoleType == XBOXONE) {
+        return sizeof(GhlHidReport_t);
     } else {
         return sizeof(USB_PS3Report_Data_t);
     }
+}
+
+void reset_xbox_one(void) {
+    xbox_one_state = Announce;
+    fromControllerLen = 0;
+    fromConsoleLen = 0;
+    hidSequenceNumber = 0;
+    reportSequenceNumber = 0;
+    arrivalSequenceNumber = 0;
+    ghl_in_navigation_mode = true;
 }

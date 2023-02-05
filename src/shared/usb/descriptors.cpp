@@ -10,6 +10,7 @@
 #include "ps3_wii_switch.h"
 #include "usbhid.h"
 #include "util.h"
+#include "xbox_one_structs.h"
 #include "xsm3/xsm3.h"
 
 #ifdef KV_KEY_1
@@ -680,7 +681,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                         return sizeof(ps3_init);
                     } else if (consoleType == UNIVERSAL) {
                         consoleType = PS3;
-                        printf("PS3!\n");
                         reset_usb();
                         return 0;
                     }
@@ -758,6 +758,9 @@ uint8_t xbox_players[] = {
     0,  // 0x0C	 Slow blinking*
     0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
+void handleAuthLed() {
+    // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
+}
 void handlePlayer(uint8_t player) {
     // Should be straight-forward enought to just have the gui generate if statements here, that write straight to the led array
 }
@@ -766,6 +769,7 @@ void handleRumble(uint8_t rumble_left, uint8_t rumble_right) {
 }
 void hidInterrupt(const uint8_t *data, uint8_t len) {
     uint8_t id = data[0];
+    // Handle Xbox 360 LEDs and rumble
     if (consoleType == XBOX360) {
         while (len) {
             uint8_t size = data[1];
@@ -781,24 +785,37 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
             }
         }
         data += len;
+        // Handle XBOX One Auth
     } else if (consoleType == XBOXONE) {
         if (xbox_one_state == Waiting1) {
             xbox_one_state = Ident1;
         } else if (xbox_one_state == Waiting2) {
             xbox_one_state = Ident2;
-        } else if (xbox_one_state == Waiting3) {
-            xbox_one_state = Ident3;
-        } else if (xbox_one_state == Waiting4) {
-            xbox_one_state = Ident4;
         } else if (xbox_one_state == Waiting5) {
             xbox_one_state = Ident5;
         } else if (xbox_one_state == Auth) {
             if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
+                handleAuthLed();
                 xbox_one_state = Ready;
+                fromConsoleLen = len;
+                memcpy(fromConsole, data, len);
             } else {
                 fromConsoleLen = len;
                 memcpy(fromConsole, data, len);
             }
+        } else if (xbox_one_state == Ready) {
+            // Live guitar is a bit special, so handle it here
+#if DEVICE_TYPE == LIVE_GUITAR
+            if (id == 0x22) {
+                uint8_t sub_id = data[1];
+                if (sub_id == PS3_LED_ID) {
+                    uint8_t player = (data[3] >> 2);
+                    handlePlayer(player);
+                } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
+                    millis_since_ghl_poke = millis();
+                }
+            }
+#endif
         }
     } else {
         uint8_t *data = (uint8_t *)data;

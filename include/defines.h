@@ -66,6 +66,7 @@
 
 // HID "Report IDs" used for rumble and led data from the console
 #define PS3_LED_ID 0x01
+#define XBOX_ONE_GHL_POKE_ID 0x02
 #define XONE_IDENTIFY_ID 0x04
 #define DJ_LED_ID 0x91
 #define SANTROLLER_PS3_ID 0x92
@@ -123,20 +124,16 @@ typedef enum {
     WII_NO_EXTENSION = 0x180b,
     WII_NOT_INITIALISED = 0xFFFF
 } WiiExtType_t;
-
 typedef enum {
     Announce,
     Waiting1,
     Ident1,
     Waiting2,
     Ident2,
-    Waiting3,
     Ident3,
-    Waiting4,
     Ident4,
     Waiting5,
     Ident5,
-    Waiting6,
     Auth,
     Ready
 } Xbox_One_State_t;

@@ -83,6 +83,11 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #include "defines.h"
 #include "controller_reports.h"
+#if DEVICE_TYPE == LIVE_GUITAR
+#define DEVICE_TYPE_IS_LIVE_GUITAR true
+#else
+#define DEVICE_TYPE_IS_LIVE_GUITAR false
+#endif
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == LIVE_GUITAR
 #define DEVICE_TYPE_IS_GUITAR true
 #define DEVICE_TYPE_IS_DRUM false

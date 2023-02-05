@@ -21,6 +21,7 @@
 #include "pio_usb.h"
 #include "serial.h"
 #include "shared_main.h"
+#include "xbox_one_structs.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
 
@@ -89,11 +90,11 @@ void loop() {
         }
     }
     if (fromConsoleLen) {
-        tuh_xinput_send_report(1, 0, fromConsole,  fromConsoleLen);
+        tuh_xinput_send_report(1, 0, fromConsole, fromConsoleLen);
         fromConsoleLen = 0;
     }
     if (tuh_xinput_ready(1, 0)) {
-        tuh_xinput_receive_report(1,0);
+        tuh_xinput_receive_report(1, 0);
     }
     tud_task();
     tuh_task();
@@ -114,13 +115,12 @@ void loop() {
     }
 }
 void tud_mount_cb(void) {
-    xbox_one_state = Announce;
-    fromControllerLen = 0;
-    fromConsoleLen = 0;
+    reset_xbox_one();
     if (consoleType == XBOXONE && tuh_xinput_mounted(1, 0)) {
-        fromConsole[0] = 0x05;
-        fromConsole[1] = 0x00;
-        tuh_xinput_send_report(1, 0, fromConsole,  2);
+        GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
+        GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 0);
+        powerMode->subcommand = 0;
+        tuh_xinput_send_report(1, 0, fromConsole, sizeof(GipPowerMode_t));
     }
 }
 
@@ -133,7 +133,9 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance) {
         tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
         passthrough_ready = true;
     }
-    reset_usb();
+    if (consoleType != XBOXONE || xbox_one_state != Ready) {
+        reset_usb();
+    }
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
@@ -141,7 +143,10 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     host_pid = 0;
     host_dev_addr = 0;
     passthrough_ready = false;
-    reset_usb();
+    
+    if (consoleType != XBOXONE || xbox_one_state != Ready) {
+        reset_usb();
+    }
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
@@ -175,11 +180,22 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return NULL;
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
+    // printf("From Controller: ");
+    // for (int i = 0; i < len; i++) {
+    //     printf("%02x, ", report[i]);
+    // }
+    // printf("\n");
     if (xbox_one_state != Auth) {
         return;
     }
     fromControllerLen = len;
     memcpy(fromController, report, len);
+    if (report[0] == GIP_ARRIVAL) {
+        arrivalSequenceNumber = report[2] + 1;
+    }
+    if (report[0] == GIP_INPUT_REPORT) {
+        reportSequenceNumber = report[2] + 1;
+    }
 }
 void reset_usb(void) {
     reset_on_next = true;

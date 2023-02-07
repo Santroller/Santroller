@@ -886,9 +886,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             else if (consoleType == XBOXONE) {
                 dev->idVendor = XBOX_ONE_VID;
                 dev->idProduct = XBOX_ONE_PID;
-                dev->bDeviceClass = 0xFF;
-                dev->bDeviceSubClass = 0xFF;
-                dev->bDeviceProtocol = 0xFF;
             }
 #endif
             break;

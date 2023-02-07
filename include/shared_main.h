@@ -1,5 +1,5 @@
 #include "pins.h"
-#include "controller_reports.h"
+#include "reports/controller_reports.h"
 
 void init_main(void);
 

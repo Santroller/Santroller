@@ -2,7 +2,6 @@
 
 #include "Arduino.h"
 #include "config.h"
-#include "controller_reports.h"
 #include "controllers.h"
 #include "fxpt_math.h"
 #include "io.h"
@@ -11,8 +10,6 @@
 #include "ps2.h"
 #include "util.h"
 #include "wii.h"
-#include "xbox_one.h"
-#include "xbox_one_structs.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -46,7 +43,7 @@ typedef struct {
     uint8_t b;
 } Led_t;
 Led_t ledState[LED_COUNT];
-static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
+static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 void init_main(void) {
     initPins();
     twi_init();
@@ -106,7 +103,7 @@ int16_t handle_calibration_xbox_whammy(uint16_t orig_val, uint16_t min, int16_t 
     }
     return val;
 }
-uint16_t handle_calibration_xbox_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_xbox_one_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -133,12 +130,12 @@ uint8_t handle_calibration_ps3(int16_t orig_val, int16_t offset, int16_t min, in
     return (uint8_t)(ret - INT8_MAX - 1);
 }
 
-uint8_t handle_calibration_ps3_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
-    return handle_calibration_xbox_trigger(orig_val, min, multiplier, deadzone) >> 8;
+uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+    return handle_calibration_xbox_one_trigger(orig_val, min, multiplier, deadzone) >> 8;
 }
 
-uint16_t handle_calibration_ps3_accel(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
-    return handle_calibration_xbox_trigger(orig_val, min, multiplier, deadzone) >> 6;
+int16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+    return handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
 }
 
 uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
@@ -303,53 +300,52 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 
         if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
             uint8_t size;
-            StandardControllerReport_t *report = (StandardControllerReport_t *)combined_report;
+            XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)combined_report;
             GIP_HEADER(report, GIP_INPUT_REPORT, false, reportSequenceNumber++);
-#if DEVICE_TYPE == GUITAR
-            size = sizeof(RbGuitarReport_t);
-#elif DEVICE_TYPE == DRUM
-            size = sizeof(RbDrumReport_t);
-#else
-            size = sizeof(StandardControllerReport_t);
-#endif
-            report->Header.length = size - sizeof(GipHeader_t);
-            combined_report = (USB_Report_Data_t *)report->report;
-            memset(combined_report, 0, size);
             TICK_XBOX_ONE;
             return size;
         } else {
-            GhlHidReport_t *report = (GhlHidReport_t *)combined_report;
-            memset(combined_report, 0, sizeof(GhlHidReport_t));
+            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)combined_report;
+            memset(combined_report, 0, sizeof(XboxOneGHLGuitar_Data_t));
             GIP_HEADER(report, GHL_HID_REPORT, false, hidSequenceNumber++);
             combined_report = (USB_Report_Data_t *)&report->report;
         }
     }
     if (consoleType == XBOX360) {
-        USB_XInputReport_Data_t *report = &combined_report->xinput;
-        USB_XInputDrumGhReport_Data_t *reportGhDrum = &combined_report->ghDrum;
-        report->buttons = 0;
+        XINPUT_REPORT *report = (XINPUT_REPORT*)&combined_report;
+        memset(combined_report, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
-        report->rsize = sizeof(USB_XInputReport_Data_t);
+        report->rsize = sizeof(XINPUT_REPORT);
         TICK_XINPUT;
     } else {
-        USB_PS3Report_Data_t *report = &combined_report->ps3;
-        report->buttons = 0;
-        report->hat = 0;
+        PS3_REPORT *report = (PS3_REPORT*)&combined_report;
+        memset(combined_report, 0, sizeof(PS3_REPORT));
         TICK_PS3;
-        if (overrideR2) {
-            report->axis[PS3_R2] = overriddenR2;
+        #if DEVICE_TYPE == DJ_HERO_TURNTABLE
+            if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
+                report->tableNeutral = true;
+            }
+        #endif
+        PS3Dpad_Data_t* dpad = (PS3Dpad_Data_t*)report;
+        dpad->dpad = (dpad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[dpad->dpad];
+        // Switch swaps a and b
+        if (consoleType == SWITCH) {
+            bool a = report->a;
+            bool b = report->b;
+            report->b = a;
+            report->a = b;
         }
-        report->hat = (report->hat & 0xf) > 0x0a ? 0x08 : hat_bindings[report->hat];
     }
 #ifdef TICK_LED
     TICK_LED;
 #endif
     if (consoleType == XBOX360) {
-        return sizeof(USB_XInputReport_Data_t);
+        return sizeof(XINPUT_REPORT);
     } else if (consoleType == XBOXONE) {
-        return sizeof(GhlHidReport_t);
+        // If we got here, we are sending a GHL report.
+        return sizeof(XboxOneGHLGuitar_Data_t);
     } else {
-        return sizeof(USB_PS3Report_Data_t);
+        return sizeof(PS3_REPORT);
     }
 }
 

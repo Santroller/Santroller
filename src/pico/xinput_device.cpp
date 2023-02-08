@@ -26,7 +26,7 @@ typedef struct {
 } xinputd_interface_t;
 
 CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_XINPUT];
-
+static bool sending = false;
 /*------------- Helpers -------------*/
 static inline uint8_t get_index_by_itfnum(uint8_t itf_num) {
     for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++) {
@@ -42,6 +42,10 @@ static inline uint8_t get_index_by_itfnum(uint8_t itf_num) {
 bool tud_xinput_n_ready(uint8_t itf) {
     uint8_t const ep_in = _xinputd_itf[itf].ep_in;
     return tud_ready() && (ep_in != 0) && !usbd_edpt_busy(TUD_OPT_RHPORT, ep_in);
+}
+
+bool tud_ready_for_packet(void) {
+    return !sending;
 }
 
 bool tud_xusb_n_report(uint8_t itf, void const *report, uint8_t len) {
@@ -76,7 +80,7 @@ bool tud_xinput_n_report(uint8_t itf, uint8_t report_id, void const *report,
         len = tu_min8(len, CFG_TUD_XINPUT_TX_BUFSIZE);
         memcpy(p_xinput->epin_buf, report, len);
     }
-
+    sending = true;
     return usbd_edpt_xfer(TUD_OPT_RHPORT, p_xinput->ep_in, p_xinput->epin_buf,
                           len);
 }
@@ -220,13 +224,15 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     for (;; itf++, p_xinput++) {
         if (itf >= TU_ARRAY_SIZE(_xinputd_itf)) return false;
 
-        if (ep_addr == p_xinput->ep_out) break;
+        if (ep_addr == p_xinput->ep_out || ep_addr == p_xinput->ep_in) break;
     }
 
     if (ep_addr == p_xinput->ep_out) {
         hidInterrupt(p_xinput->epout_buf, xferred_bytes);
         TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                  sizeof(p_xinput->epout_buf)));
+    } else if (ep_addr == p_xinput->ep_in) {
+        sending = false;
     }
     return true;
 }

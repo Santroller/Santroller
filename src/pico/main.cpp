@@ -8,7 +8,7 @@
 #include "commands.h"
 #include "common/tusb_types.h"
 #include "config.h"
-#include "controller_reports.h"
+#include "reports/controller_reports.h"
 #include "controllers.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
@@ -21,7 +21,6 @@
 #include "pio_usb.h"
 #include "serial.h"
 #include "shared_main.h"
-#include "xbox_one_structs.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
 
@@ -45,7 +44,7 @@ bool reset_on_next = false;
 USB_Report_Data_t report;
 unsigned int last = 0;
 #if CONSOLE_TYPE != MIDI
-#define TICK_CHECK tud_xinput_n_ready(0)
+#define TICK_CHECK (tud_xinput_n_ready(0) && tud_ready_for_packet())
 #else
 #define TICK_CHECK false
 #endif
@@ -53,7 +52,7 @@ unsigned int last = 0;
 void loop() {
     if (reset_on_next) {
         tud_disconnect();
-        sleep_ms(100);
+        sleep_ms(1000);
         tud_connect();
         reset_on_next = false;
         return;
@@ -66,7 +65,7 @@ void loop() {
     tud_task();
     tuh_task();
     uint8_t size = 0;
-    if (TICK_CHECK || millis() - last > 5) {
+    if (TICK_CHECK || millis() - last > 5 || (consoleType == XBOXONE && xbox_one_state != Ready)) {
         last = millis();
         size = tick_inputs(&report);
     }

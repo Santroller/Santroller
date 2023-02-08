@@ -1,6 +1,8 @@
+#pragma once
 #include <stdint.h>
 
-#include "reports/xbox_one_reports.h"
+#define PS3_STICK_CENTER 0x80
+#define PS3_ACCEL_CENTER 0x0200
 
 typedef struct {
     uint8_t padding;
@@ -70,7 +72,7 @@ typedef struct {
     uint8_t rightStickY;
 
     uint8_t unused2[12];
-    int16_t unused3[4];
+    uint16_t unused3[4];
 
 } __attribute__((packed)) SwitchGamepad_Data_t;
 
@@ -128,10 +130,10 @@ typedef struct {
 
     // Each of the following are 10 bits in accuracy
     // Centered/neutral state is nominally 0x0200, actual values may vary
-    int16_t accelX;  // Left/right acceleration (roll)
-    int16_t accelZ;  // Forward/back acceleration (pitch)
-    int16_t accelY;  // Up/down acceleration (gravity)
-    int16_t gyro;    // Left/right instantaneous rotation (yaw)
+    uint16_t accelX;  // Left/right acceleration (roll)
+    uint16_t accelZ;  // Forward/back acceleration (pitch)
+    uint16_t accelY;  // Up/down acceleration (gravity)
+    uint16_t gyro;    // Left/right instantaneous rotation (yaw)
 
 } __attribute__((packed)) PS3Gamepad_Data_t;
 
@@ -171,7 +173,7 @@ typedef struct
     uint8_t blueVelocity;
 
     uint8_t unused2[4];
-    int16_t unused3[4];
+    uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandDrums_Data_t;
 
 typedef struct
@@ -212,7 +214,7 @@ typedef struct
     uint8_t orangeVelocity;
 
     uint8_t unused2[2];
-    int16_t unused3[4];
+    uint16_t unused3[4];
 } __attribute__((packed)) PS3GuitarHeroDrums_Data_t;
 
 typedef struct
@@ -257,10 +259,10 @@ typedef struct
     uint8_t unused2[6];
 
     // Reminder that these values are 10-bit in range
-    int16_t tilt;  // accelX
-    int16_t accelZ;
-    int16_t accelY;
-    int16_t unused3;
+    uint16_t tilt;  // accelX
+    uint16_t accelZ;
+    uint16_t accelY;
+    uint16_t unused3;
 } __attribute__((packed)) PS3GuitarHeroGuitar_Data_t;
 
 typedef struct
@@ -297,7 +299,7 @@ typedef struct
     uint8_t pickup;
 
     uint8_t unused2[12];
-    int16_t unused3[4];
+    uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
 
 typedef struct
@@ -343,16 +345,16 @@ typedef struct
     // Reminder that these values are 10-bit in range
     int16_t effectsKnob;
     int16_t crossfader;
-    bool : 6;
-    bool tableNeutral : 1;
-    bool : 3;
-    bool leftBlue : 1;
-    bool leftRed : 1;
-    bool leftGreen : 1;
-    bool rightBlue : 1;
-    bool rightRed : 1;
-    bool rightGreen : 1;
-    int16_t unused3;
+    uint16_t : 6;
+    uint16_t tableNeutral : 1;
+    uint16_t : 3;
+    uint16_t leftBlue : 1;
+    uint16_t leftRed : 1;
+    uint16_t leftGreen : 1;
+    uint16_t rightBlue : 1;
+    uint16_t rightRed : 1;
+    uint16_t rightGreen : 1;
+    uint16_t unused3;
 } __attribute__((packed)) PS3Turntable_Data_t;
 
 typedef struct
@@ -391,7 +393,7 @@ typedef struct
     uint8_t unused3[12];
 
     // Reminder that this value is 10-bit in range
-    int16_t tilt;
+    uint16_t tilt;
 
-    int16_t unused4[3];
+    uint16_t unused4[3];
 } __attribute__((packed)) PS3GHLGuitar_Data_t;

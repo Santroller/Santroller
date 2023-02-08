@@ -20,6 +20,7 @@ uint8_t fromConsoleLen = 0;
 uint8_t fromControllerLen = 0;
 uint8_t fromConsole[64];
 uint8_t fromController[64];
+uint8_t keystrokeSequenceNumber;
 uint8_t reportSequenceNumber;
 uint8_t hidSequenceNumber;
 #ifdef __cplusplus

@@ -34,7 +34,9 @@ bool lastTurntableWasSuccessfulRight = false;
 bool lastWiiWasSuccessful = false;
 bool lastPS2WasSuccessful = false;
 bool overrideR2 = false;
+bool lastXboxOneGuide = false;
 uint8_t overriddenR2 = 0;
+USB_Report_Data_t lastReport;
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
@@ -127,20 +129,21 @@ uint16_t handle_calibration_xbox_one_trigger(uint16_t orig_val, uint16_t min, in
 }
 uint8_t handle_calibration_ps3(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
     int8_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8;
-    return (uint8_t)(ret - INT8_MAX - 1);
+    return (uint8_t)(ret - PS3_STICK_CENTER);
 }
 
 uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     return handle_calibration_xbox_one_trigger(orig_val, min, multiplier, deadzone) >> 8;
 }
 
-int16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
-    return handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
+uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+    int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
+    return (uint8_t)(ret - PS3_ACCEL_CENTER);
 }
 
 uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
-    return (uint8_t)(ret - INT8_MAX - 1);
+    return (uint8_t)(ret - PS3_STICK_CENTER);
 }
 void tick(void) {
     if (consoleType == UNIVERSAL) {
@@ -176,6 +179,46 @@ void tick(void) {
     }
 }
 uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
+    if (consoleType == XBOXONE) {
+        switch (xbox_one_state) {
+            case Announce:
+                xbox_one_state = Waiting1;
+                memcpy(combined_report, announce, sizeof(announce));
+                return sizeof(announce);
+            case Ident1:
+                xbox_one_state = Waiting2;
+                memcpy(combined_report, identify_1, sizeof(identify_1));
+                return sizeof(identify_1);
+            case Ident2:
+                xbox_one_state = Ident3;
+                memcpy(combined_report, identify_2, sizeof(identify_2));
+                return sizeof(identify_2);
+            case Ident3:
+                xbox_one_state = Ident4;
+                memcpy(combined_report, identify_3, sizeof(identify_3));
+                return sizeof(identify_3);
+            case Ident4:
+                xbox_one_state = Waiting5;
+                memcpy(combined_report, identify_4, sizeof(identify_4));
+                return sizeof(identify_4);
+            case Ident5:
+                xbox_one_state = Auth;
+                memcpy(combined_report, identify_5, sizeof(identify_5));
+                return sizeof(identify_5);
+            case Auth:
+                if (fromControllerLen) {
+                    uint8_t size = fromControllerLen;
+                    fromControllerLen = 0;
+                    memcpy(combined_report, fromController, size);
+                    return size;
+                }
+                return 0;
+            case Ready:
+                break;
+            default:
+                return 0;
+        }
+    }
 #ifdef INPUT_DJ_TURNTABLE
     uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
     uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
@@ -255,78 +298,72 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     tickPins();
     TICK_SHARED;
 
+    uint8_t size;
+    uint8_t report_size;
     if (consoleType == XBOXONE) {
-        switch (xbox_one_state) {
-            case Announce:
-                xbox_one_state = Waiting1;
-                memcpy(combined_report, announce, sizeof(announce));
-                return sizeof(announce);
-            case Ident1:
-                xbox_one_state = Waiting2;
-                memcpy(combined_report, identify_1, sizeof(identify_1));
-                return sizeof(identify_1);
-            case Ident2:
-                xbox_one_state = Ident3;
-                memcpy(combined_report, identify_2, sizeof(identify_2));
-                return sizeof(identify_2);
-            case Ident3:
-                xbox_one_state = Ident4;
-                memcpy(combined_report, identify_3, sizeof(identify_3));
-                return sizeof(identify_3);
-            case Ident4:
-                xbox_one_state = Waiting5;
-                memcpy(combined_report, identify_4, sizeof(identify_4));
-                return sizeof(identify_4);
-            case Ident5:
-                xbox_one_state = Auth;
-                memcpy(combined_report, identify_5, sizeof(identify_5));
-                return sizeof(identify_5);
-            case Auth:
-                if (fromControllerLen) {
-                    uint8_t size = fromControllerLen;
-                    fromControllerLen = 0;
-                    memcpy(combined_report, fromController, size);
-                    return size;
-                }
-                return 0;
-            case Ready:
-                break;
-            default:
-                return 0;
-        }
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
         // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
 
         if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
-            uint8_t size;
             XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)combined_report;
+            size = sizeof(XBOX_ONE_REPORT);
+            report_size = size - sizeof(GipHeader_t);
+            memset(combined_report, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, reportSequenceNumber++);
             TICK_XBOX_ONE;
-            return size;
+            if (report->guide != lastXboxOneGuide) {
+                lastXboxOneGuide = report->guide;
+                GipKeystroke_t *keystroke = (GipKeystroke_t *)combined_report;
+                GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystrokeSequenceNumber++);
+                keystroke->pressed = report->guide;
+                keystroke->keycode = GIP_VKEY_LEFT_WIN;
+                return sizeof(GipKeystroke_t);
+            }
+            // We use an unused bit as a flag for sending the guide key code, so flip it back
+            report->guide = false;
+            GipPacket_t *packet = (GipPacket_t *)combined_report;
+            combined_report = (USB_Report_Data_t *)packet->data;
         } else {
             XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)combined_report;
+            size = sizeof(XboxOneGHLGuitar_Data_t);
+            report_size = sizeof(PS3_REPORT);
             memset(combined_report, 0, sizeof(XboxOneGHLGuitar_Data_t));
             GIP_HEADER(report, GHL_HID_REPORT, false, hidSequenceNumber++);
             combined_report = (USB_Report_Data_t *)&report->report;
         }
     }
     if (consoleType == XBOX360) {
-        XINPUT_REPORT *report = (XINPUT_REPORT*)&combined_report;
+        XINPUT_REPORT *report = (XINPUT_REPORT *)combined_report;
         memset(combined_report, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
         report->rsize = sizeof(XINPUT_REPORT);
+// Whammy on the xbox guitars goes from min to max, so it needs to default to min
+#if DEVICE_TYPE_IS_GUITAR
+        report->whammy = INT16_MIN;
+#endif
         TICK_XINPUT;
+        report_size = size = sizeof(XINPUT_REPORT);
     } else {
-        PS3_REPORT *report = (PS3_REPORT*)&combined_report;
+        PS3_REPORT *report = (PS3_REPORT *)combined_report;
         memset(combined_report, 0, sizeof(PS3_REPORT));
+
+        PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)combined_report;
+        gamepad->accelX = PS3_ACCEL_CENTER;
+        gamepad->accelY = PS3_ACCEL_CENTER;
+        gamepad->accelZ = PS3_ACCEL_CENTER;
+        gamepad->gyro = PS3_ACCEL_CENTER;
+        gamepad->leftStickX = PS3_STICK_CENTER;
+        gamepad->leftStickY = PS3_STICK_CENTER;
+        gamepad->rightStickX = PS3_STICK_CENTER;
+        gamepad->rightStickY = PS3_STICK_CENTER;
         TICK_PS3;
-        #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
-                report->tableNeutral = true;
-            }
-        #endif
-        PS3Dpad_Data_t* dpad = (PS3Dpad_Data_t*)report;
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
+            report->tableNeutral = true;
+        }
+#endif
+        PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)report;
         dpad->dpad = (dpad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[dpad->dpad];
         // Switch swaps a and b
         if (consoleType == SWITCH) {
@@ -335,18 +372,17 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             report->b = a;
             report->a = b;
         }
+        report_size = size = sizeof(PS3_REPORT);
     }
 #ifdef TICK_LED
     TICK_LED;
 #endif
-    if (consoleType == XBOX360) {
-        return sizeof(XINPUT_REPORT);
-    } else if (consoleType == XBOXONE) {
-        // If we got here, we are sending a GHL report.
-        return sizeof(XboxOneGHLGuitar_Data_t);
-    } else {
-        return sizeof(PS3_REPORT);
+    uint8_t cmp = memcmp(&lastReport, combined_report, report_size);
+    if (cmp == 0) {
+        return 0;
     }
+    memcpy(&lastReport, combined_report, report_size);
+    return size;
 }
 
 void device_reset(void) {
@@ -380,22 +416,26 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
 }
 
 void xinput_controller_connected(uint8_t vid, uint8_t pid) {
-    if (consoleType != XBOX360 || xbox_360_state == Authenticated) return;
+    if (xbox_360_state == Authenticated) return;
     xbox_360_vid = vid;
     xbox_360_pid = pid;
+    if (consoleType != XBOX360) return;
     reset_usb();
 }
 
 void xone_controller_connected(void) {
-    if (consoleType != XBOXONE || xbox_one_state == Ready) return;
-    reset_usb();
+    if (xbox_one_state == Ready) return;
 
-    if (consoleType == XBOXONE) {
-        GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
-        GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 0);
-        powerMode->subcommand = 0;
-        send_report_to_controller(fromConsole, sizeof(GipPowerMode_t));
-    }
+    GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
+    GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 0);
+    powerMode->subcommand = 0;
+    send_report_to_controller(fromConsole, sizeof(GipPowerMode_t));
+    fromConsole[0] = 0x05;
+    fromConsole[1] = 0x00;
+    send_report_to_controller(fromConsole, 2);
+
+    if (consoleType != XBOXONE) return;
+    reset_usb();
 }
 void controller_disconnected(void) {
     if (consoleType == XBOXONE && xbox_one_state != Ready) {

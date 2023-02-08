@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "reports/controller_reports.h"
+#include "reports/ps3_reports.h"
 #define GIP_POWER_MODE_DEVICE_CONFIG 0x05
 #define GIP_ARRIVAL 0x03
 #define GIP_VIRTUAL_KEYCODE 0x07
@@ -24,7 +24,7 @@ typedef struct
 {
     GipHeader_t Header;
     bool sync : 1;
-    bool : 1;
+    bool guide : 1;
     bool start : 1;  // menu
     bool back : 1;   // view
 
@@ -56,7 +56,7 @@ typedef struct
 {
     GipHeader_t Header;
     bool sync : 1;
-    bool : 1;
+    bool guide : 1;
     bool start : 1;  // menu
     bool back : 1;   // view
 
@@ -65,8 +65,8 @@ typedef struct
     bool x : 1; // blue
     bool y : 1; // yellow
 
-    bool dpadStrumUp : 1;
-    bool dpadStrumDown : 1;
+    bool dpadUp : 1; // dpadStrumUp
+    bool dpadDown : 1; // dpadStrumDown
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
@@ -84,14 +84,14 @@ typedef struct
     bool upperYellow : 1;
     bool upperBlue : 1;
     bool upperOrange : 1;
-    bool : 3;
+    uint8_t : 3;
 
     bool lowerGreen : 1;
     bool lowerRed : 1;
     bool lowerYellow : 1;
     bool lowerBlue : 1;
     bool lowerOrange : 1;
-    bool : 3;
+    uint8_t : 3;
 
     uint8_t unknown[3];
 } __attribute__((packed)) XboxOneRockBandGuitar_Data_t;
@@ -100,7 +100,7 @@ typedef struct
 {
     GipHeader_t Header;
     bool sync : 1;
-    bool : 1;
+    bool guide : 1;
     bool start : 1;  // menu
     bool back : 1;   // view
 
@@ -134,7 +134,7 @@ typedef struct
 {
     GipHeader_t Header;
     bool sync : 1;
-    bool : 1;
+    bool guide : 1;
     bool start : 1;  // menu
     bool back : 1;   // view
 
@@ -154,7 +154,7 @@ typedef struct
     bool rightThumbClick : 1;
 
     uint16_t leftTrigger;
-    bool : 10;
+    uint16_t : 10;
     bool leftBlue : 1;
     bool leftRed : 1;
     bool leftGreen : 1;
@@ -177,6 +177,7 @@ typedef struct
 
 typedef struct
 {
+    GipHeader_t Header;
     bool pressed : 1;
     uint8_t : 7;
     uint8_t keycode;
@@ -187,6 +188,12 @@ typedef struct
     GipHeader_t Header;
     uint8_t subcommand;
 } __attribute__((packed)) GipPowerMode_t;
+
+typedef struct
+{
+    GipHeader_t Header;
+    uint8_t data[];
+} __attribute__((packed)) GipPacket_t;
 
 typedef struct {
     GipHeader_t Header;

@@ -11,7 +11,6 @@
 #include "shared_main.h"
 #include "usbhid.h"
 #include "util.h"
-#include "xbox_one_structs.h"
 #include "xsm3/xsm3.h"
 
 void handleAuthLed() {
@@ -564,6 +563,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         ((uint8_t *)requestBuffer)[0] = 0;
         if (consoleType == UNIVERSAL && windows_or_xbox_one) {
             consoleType = XBOXONE;
+            printf("Xbox One!\n");
             reset_usb();
             return 0;
         }
@@ -805,6 +805,7 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
         } else if (xbox_one_state == Auth) {
             if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                 handleAuthLed();
+                printf("Ready!\n");
                 xbox_one_state = Ready;
                 fromConsoleLen = len;
                 memcpy(fromConsole, data, len);

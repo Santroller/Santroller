@@ -31,4 +31,5 @@ extern uint8_t fromController[64];
 
 // Sequence numbers used for sending reports to the xbox one
 extern uint8_t reportSequenceNumber;
+extern uint8_t keystrokeSequenceNumber;
 extern uint8_t hidSequenceNumber;

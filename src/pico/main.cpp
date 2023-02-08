@@ -23,6 +23,7 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
+#include "pico/bootrom.h"
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
@@ -31,6 +32,8 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
 
+uint32_t __uninitialized_ram(test);
+uint32_t __uninitialized_ram(test2);
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 
@@ -39,8 +42,10 @@ void setup() {
     generateSerialString(&serialstring);
     tusb_init();
     init_main();
+    if (test2 == 0x3A2F) {
+        consoleType = test;
+    }
 }
-bool reset_on_next = false;
 USB_Report_Data_t report;
 unsigned int last = 0;
 #if CONSOLE_TYPE != MIDI
@@ -50,13 +55,6 @@ unsigned int last = 0;
 #endif
 
 void loop() {
-    if (reset_on_next) {
-        tud_disconnect();
-        sleep_ms(1000);
-        tud_connect();
-        reset_on_next = false;
-        return;
-    }
     tick();
     // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
     if (xbox_one_state != Ready && xone_dev_addr && tuh_xinput_ready(xone_dev_addr, 0)) {
@@ -135,9 +133,6 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     receive_report_from_controller(report, len);
 }
-void reset_usb(void) {
-    reset_on_next = true;
-}
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     if (stage == CONTROL_STAGE_SETUP) {
@@ -175,7 +170,6 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
         // Forward any unknown control requests to the 360 controller, if it is plugged in.
-        // TODO: do auth with a 360, and capture whatever the auth success packet is and then flag that auth was a success
     } else if (x360_dev_addr != 0 && xbox_360_state != Authenticated) {
         tuh_xfer_t xfer = {};
         xfer.daddr = x360_dev_addr;
@@ -247,4 +241,9 @@ void reboot(void) {
 }
 void bootloader(void) {
     reset_usb_boot(0, 0);
+}
+void reset_usb(void) {
+    test = consoleType;
+    test2 = 0x3A2F;
+    reboot();
 }

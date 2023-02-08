@@ -419,29 +419,13 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid) {
     if (xbox_360_state == Authenticated) return;
     xbox_360_vid = vid;
     xbox_360_pid = pid;
-    if (consoleType != XBOX360) return;
-    reset_usb();
 }
 
 void xone_controller_connected(void) {
     if (xbox_one_state == Ready) return;
-
-    GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
-    GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 0);
-    powerMode->subcommand = 0;
-    send_report_to_controller(fromConsole, sizeof(GipPowerMode_t));
-    fromConsole[0] = 0x05;
-    fromConsole[1] = 0x00;
+    fromConsole[0] = GIP_POWER_MODE_DEVICE_CONFIG;
+    fromConsole[1] = 0;
     send_report_to_controller(fromConsole, 2);
-
-    if (consoleType != XBOXONE) return;
-    reset_usb();
 }
 void controller_disconnected(void) {
-    if (consoleType == XBOXONE && xbox_one_state != Ready) {
-        reset_usb();
-    }
-    if (consoleType == XBOX360 && xbox_360_state != Authenticated) {
-        reset_usb();
-    }
 }

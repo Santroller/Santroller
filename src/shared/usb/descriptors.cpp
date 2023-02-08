@@ -796,6 +796,12 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
         data += len;
         // Handle XBOX One Auth
     } else if (consoleType == XBOXONE) {
+        // printf("GOT (%d): ", xbox_one_state);
+
+        // for (int i = 0; i < len; i++) {
+        //     printf("%02x, ", data[i]);
+        // }
+        // printf("\n");
         if (xbox_one_state == Waiting1) {
             xbox_one_state = Ident1;
         } else if (xbox_one_state == Waiting2) {

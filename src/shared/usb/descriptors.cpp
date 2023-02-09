@@ -834,7 +834,7 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
 #endif
             if (id == GIP_CMD_RUMBLE) {
                 GipRumble_t *rumble = (GipRumble_t *)data;
-                handleRumble(rumble->left, rumble->right);
+                handleRumble(rumble->leftMotor, rumble->rightMotor);
             }
         }
     } else {
@@ -913,7 +913,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
-                if (consoleType != UNIVERSAL) {
+                if (consoleType == UNIVERSAL) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor);
+                } else {
                     // Strip out all the extra interfaces used for configuring / x360 compat, the wii doesn't like em
                     desc->Config.bNumInterfaces = 1;
                     desc->Config.wTotalLength = sizeof(HID_CONFIGURATION_DESCRIPTOR);
@@ -928,8 +930,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
 #else
-            address = ps3_descriptor;
-            size = sizeof(ps3_descriptor);
+            if (consoleType != UNIVERSAL) {
+                address = ps3_descriptor;
+                size = sizeof(ps3_descriptor);
+            } else {
+                address = pc_descriptor;
+                size = sizeof(pc_descriptor);
+            }
 #endif
             memcpy_P(descriptorBuffer, address, size);
             break;

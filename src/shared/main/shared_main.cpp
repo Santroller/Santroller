@@ -180,6 +180,12 @@ void tick(void) {
 }
 uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     if (consoleType == XBOXONE) {
+        if (reportSequenceNumber == 0) {
+            reportSequenceNumber = 1;
+        }
+        if (hidSequenceNumber == 0) {
+            hidSequenceNumber = 1;
+        }
         switch (xbox_one_state) {
             case Announce:
                 xbox_one_state = Waiting1;
@@ -300,6 +306,9 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 
     uint8_t size;
     uint8_t report_size;
+    bool updateSequence = false;
+    bool updateHIDSequence = false;
+    uint8_t *orig = (uint8_t *)combined_report;
     if (consoleType == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
@@ -310,7 +319,7 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             size = sizeof(XBOX_ONE_REPORT);
             report_size = size - sizeof(GipHeader_t);
             memset(combined_report, 0, size);
-            GIP_HEADER(report, GIP_INPUT_REPORT, false, reportSequenceNumber++);
+            GIP_HEADER(report, GIP_INPUT_REPORT, false, reportSequenceNumber);
             TICK_XBOX_ONE;
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
@@ -324,13 +333,15 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             report->guide = false;
             GipPacket_t *packet = (GipPacket_t *)combined_report;
             combined_report = (USB_Report_Data_t *)packet->data;
+            updateSequence = true;
         } else {
             XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)combined_report;
             size = sizeof(XboxOneGHLGuitar_Data_t);
             report_size = sizeof(PS3_REPORT);
             memset(combined_report, 0, sizeof(XboxOneGHLGuitar_Data_t));
-            GIP_HEADER(report, GHL_HID_REPORT, false, hidSequenceNumber++);
+            GIP_HEADER(report, GHL_HID_REPORT, false, hidSequenceNumber);
             combined_report = (USB_Report_Data_t *)&report->report;
+            updateHIDSequence = true;
         }
     }
     if (consoleType == XBOX360) {
@@ -344,7 +355,7 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #endif
         TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
-    } else {
+    } else if (!updateSequence) {
         PS3_REPORT *report = (PS3_REPORT *)combined_report;
         memset(combined_report, 0, sizeof(PS3_REPORT));
 
@@ -382,6 +393,11 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
         return 0;
     }
     memcpy(&lastReport, combined_report, report_size);
+    if (updateSequence) {
+        reportSequenceNumber++;
+    } else if (updateHIDSequence) {
+        hidSequenceNumber++;
+    }
     return size;
 }
 
@@ -389,8 +405,8 @@ void device_reset(void) {
     xbox_one_state = Announce;
     fromControllerLen = 0;
     fromConsoleLen = 0;
-    hidSequenceNumber = 0;
-    reportSequenceNumber = 0;
+    hidSequenceNumber = 1;
+    reportSequenceNumber = 1;
     last_ghl_poke_time = 0;
 }
 
@@ -423,9 +439,9 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid) {
 
 void xone_controller_connected(void) {
     if (xbox_one_state == Ready) return;
-    fromConsole[0] = GIP_POWER_MODE_DEVICE_CONFIG;
-    fromConsole[1] = 0;
-    send_report_to_controller(fromConsole, 2);
+    GipPowerMode_t *powerMode = (GipPowerMode_t *)fromConsole;
+    GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
+    send_report_to_controller(fromConsole, sizeof(GipPowerMode_t));
 }
 void controller_disconnected(void) {
 }

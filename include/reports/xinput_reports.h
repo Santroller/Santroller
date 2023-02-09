@@ -155,7 +155,7 @@ typedef struct
 
     uint8_t accelZ;
     uint8_t accelX;
-    int16_t touchBar;
+    int16_t slider;
     int16_t unused;
     int16_t whammy;
     int16_t tilt;

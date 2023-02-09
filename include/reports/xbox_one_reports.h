@@ -197,15 +197,15 @@ typedef struct
 
 typedef struct {
     GipHeader_t Header;
-    uint8_t unknown;
-    uint8_t motors;
-    uint8_t left_trigger;
-    uint8_t right_trigger;
-    uint8_t left;
-    uint8_t right;
-    uint8_t duration;
-    uint8_t delay;
-    uint8_t repeat;
+    uint8_t subCommand; // Assumed based on the descriptor reporting a larger max length than what this uses
+    uint8_t flags;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
+    uint8_t leftMotor;
+    uint8_t rightMotor;
+    uint8_t duration; // in deciseconds?
+    uint8_t delay; // in deciseconds?
+    uint8_t repeat; // in deciseconds?
 } __attribute__((packed)) GipRumble_t;
 
 #define GIP_HEADER(packet, cmd, isInternal, seq) \

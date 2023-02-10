@@ -41,7 +41,7 @@
 #define KEYBOARD_MOUSE 1
 #define MIDI 2
 
-#define XBOX360 3
+#define WINDOWS_XBOX360 3
 #define PS3 4
 #define WII_RB 5
 #define SWITCH 6

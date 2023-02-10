@@ -88,7 +88,7 @@ void tud_mount_cb(void) {
 }
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType) {
-    if (controllerType == XBOX360) {
+    if (controllerType == WINDOWS_XBOX360) {
         x360_dev_addr = dev_addr;
         uint16_t host_vid = 0;
         uint16_t host_pid = 0;

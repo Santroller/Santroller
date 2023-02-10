@@ -161,7 +161,7 @@ void tick(void) {
         }
         // But xbox follows that up with a SET_INTERFACE call, so if we don't see one of those then we can assume windows
         if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
-            consoleType = XBOX360;
+            consoleType = WINDOWS_XBOX360;
             reset_usb();
         }
         // Wii gives up after reading the config descriptor
@@ -344,7 +344,7 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             updateHIDSequence = true;
         }
     }
-    if (consoleType == XBOX360) {
+    if (consoleType == WINDOWS_XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)combined_report;
         memset(combined_report, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;

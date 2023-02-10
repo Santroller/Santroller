@@ -471,10 +471,10 @@ const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
-    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+    if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
-    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
+    if (consoleType == WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
         if (xbox_360_state == Auth1) {
             xbox_360_state = Auth2;
         } else if (xbox_360_state == Auth2) {
@@ -572,8 +572,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_SET_INTERFACE) {
         return 0;
     }
-    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
-        consoleType = XBOX360;
+    if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        consoleType = WINDOWS_XBOX360;
         reset_usb();
         return 0;
     }
@@ -718,7 +718,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
             memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
-        } else if (consoleType == XBOX360 && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+        } else if (consoleType == WINDOWS_XBOX360 && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
             return sizeof(XBOX_ID);
         }
@@ -727,7 +727,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (consoleType == XBOXONE) {
             memcpy_P(requestBuffer, &DevCompatIDsOne, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
             return DevCompatIDsOne.TotalLength;
-        } else if (consoleType == XBOX360) {
+        } else if (consoleType == WINDOWS_XBOX360) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
@@ -779,7 +779,7 @@ uint8_t xbox_players[] = {
 void hidInterrupt(const uint8_t *data, uint8_t len) {
     uint8_t id = data[0];
     // Handle Xbox 360 LEDs and rumble
-    if (consoleType == XBOX360) {
+    if (consoleType == WINDOWS_XBOX360) {
         while (len) {
             uint8_t size = data[1];
             len -= size;
@@ -873,7 +873,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
-            } else if (consoleType == XBOX360) {
+            } else if (consoleType == WINDOWS_XBOX360) {
                 dev->idVendor = xbox_360_vid;
                 dev->idProduct = xbox_360_pid;
             }
@@ -903,7 +903,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
-            } else if (consoleType == XBOX360) {
+            } else if (consoleType == WINDOWS_XBOX360) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
             } else if (consoleType == MIDI) {

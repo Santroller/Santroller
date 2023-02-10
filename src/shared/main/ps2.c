@@ -75,7 +75,7 @@ static const uint8_t commandSetPressuresGuitar[] = {0x4F, 0x00, 0b110001, 0x00,
 // For the ds2, we want the buttons (2 bytes, and then 4 bytes of sticks (rx,
 // ry, lx, ly)). We also want triggers, which luckily happen to be the last two
 // bits and hence in their own byte
-static const uint8_t commandSetPressuresDS2[] = {0x4F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t commandSetPressuresDS2[] = {0x4F, 0x00, PRESSURES_DS2, 0x00, 0x00};
 
 // For the mouse, we want the buttons (2 bytes, and then 2 bytes of axis (x,
 // y)). We also want triggers, which luckily happen to be the last two

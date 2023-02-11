@@ -20,8 +20,8 @@ typedef struct {
     bool right : 1;
     bool middle : 1;
     uint8_t : 5;
-    int8_t MouseX;  /**< Current delta X movement of the mouse. */
-    int8_t MouseY;  /**< Current delta Y movement on the mouse. */
+    int8_t X;  /**< Current delta X movement of the mouse. */
+    int8_t Y;  /**< Current delta Y movement on the mouse. */
     int8_t ScrollY; /** Current scroll Y delta movement on the mouse */
     int8_t ScrollX; /** Current scroll X delta movement on the mouse */
 } __attribute__((packed)) USB_MouseReport_Data_t;
@@ -39,14 +39,14 @@ typedef struct {
 
 typedef struct {
     uint8_t rid;
-    bool lCtrl : 1;
-    bool lShift : 1;
-    bool lAlt : 1;
-    bool lMeta : 1;
-    bool rCtrl : 1;
-    bool rShift : 1;
-    bool rAlt : 1;
-    bool rMeta : 1;
+    bool leftCtrl : 1;
+    bool leftShift : 1;
+    bool leftAlt : 1;
+    bool lWin : 1;
+    bool rightCtrl : 1;
+    bool rightShift : 1;
+    bool rightAlt : 1;
+    bool rWin : 1;
     uint8_t : 4;
     bool a : 1;
     bool b : 1;

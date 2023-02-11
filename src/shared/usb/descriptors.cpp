@@ -870,10 +870,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-
-#if CONSOLE_TYPE == KEYBOARD_MOUSE || CONSOLE_TYPE == MIDI
-
-#else
+#if CONSOLE_TYPE != KEYBOARD_MOUSE && CONSOLE_TYPE != MIDI
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;

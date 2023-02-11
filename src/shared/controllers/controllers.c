@@ -16,13 +16,15 @@ Xbox_One_State_t xbox_one_state = Announce;
 uint16_t xbox_360_vid = ARDWIINO_VID;
 uint16_t xbox_360_pid = ARDWIINO_360_PID;
 Xbox_360_State_t xbox_360_state = Auth1;
-uint8_t fromConsoleLen = 0;
-uint8_t fromControllerLen = 0;
-uint8_t fromConsole[64];
-uint8_t fromController[64];
-uint8_t keystrokeSequenceNumber;
-uint8_t reportSequenceNumber;
-uint8_t hidSequenceNumber;
+uint8_t data_from_console_size = 0;
+uint8_t data_from_controller_size = 0;
+uint8_t data_from_console[64];
+uint8_t data_from_controller[64];
+uint8_t keystroke_sequence_number;
+uint8_t report_sequence_number;
+uint8_t hid_sequence_number;
+uint8_t idle_rate;
+bool protocol_mode_report = true;
 #ifdef __cplusplus
 }
 #endif

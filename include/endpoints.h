@@ -68,10 +68,6 @@ enum requests_t {
     REQ_GET_OS_FEATURE_DESCRIPTOR = 0x20
 };
 
-enum hid_reports_t {
-    REPORT_ID_MOUSE = 1,
-    REPORT_ID_KBD,
-};
 
 enum interfaces_t {
     INTERFACE_ID_Device = 0, /**< XInput interface descriptor ID */

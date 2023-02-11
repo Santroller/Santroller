@@ -24,12 +24,12 @@ extern uint16_t xbox_360_vid;
 extern uint16_t xbox_360_pid;
 
 // Used for passing authentication data between the console and authentication controller
-extern uint8_t fromConsoleLen;
-extern uint8_t fromControllerLen;
-extern uint8_t fromConsole[64];
-extern uint8_t fromController[64];
+extern uint8_t data_from_console_size;
+extern uint8_t data_from_controller_size;
+extern uint8_t data_from_console[64];
+extern uint8_t data_from_controller[64];
 
 // Sequence numbers used for sending reports to the xbox one
-extern uint8_t reportSequenceNumber;
-extern uint8_t keystrokeSequenceNumber;
-extern uint8_t hidSequenceNumber;
+extern uint8_t report_sequence_number;
+extern uint8_t keystroke_sequence_number;
+extern uint8_t hid_sequence_number;

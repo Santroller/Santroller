@@ -813,11 +813,11 @@ void hidInterrupt(const uint8_t *data, uint8_t len) {
                 handleAuthLed();
                 printf("Ready!\n");
                 xbox_one_state = Ready;
-                fromConsoleLen = len;
-                memcpy(fromConsole, data, len);
+                data_from_console_size = len;
+                memcpy(data_from_console, data, len);
             } else {
-                fromConsoleLen = len;
-                memcpy(fromConsole, data, len);
+                data_from_console_size = len;
+                memcpy(data_from_console, data, len);
             }
         } else if (xbox_one_state == Ready) {
             // Live guitar is a bit special, so handle it here
@@ -870,6 +870,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
+
+#if CONSOLE_TYPE == KEYBOARD_MOUSE || CONSOLE_TYPE == MIDI
+
+#else
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
@@ -895,9 +899,14 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = XBOX_ONE_PID;
             }
 #endif
+#endif
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
+#if CONSOLE_TYPE == KEYBOARD_MOUSE || CONSOLE_TYPE == MIDI
+            size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
+            memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
+#else
             wii_timer = millis();
             read_config = true;
             if (consoleType == XBOXONE) {
@@ -921,15 +930,16 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->Config.wTotalLength = sizeof(HID_CONFIGURATION_DESCRIPTOR);
                 }
             }
+#endif
             break;
         }
         case HID_DESCRIPTOR_REPORT: {
-            read_hid_report_descriptor = true;
             const void *address;
 #if SUPPORTS_KEYBOARD
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
 #else
+            read_hid_report_descriptor = true;
             if (consoleType != UNIVERSAL) {
                 address = ps3_descriptor;
                 size = sizeof(ps3_descriptor);

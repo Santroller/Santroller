@@ -188,6 +188,7 @@ void tick(void) {
         data_from_console_size = 0;
     }
 }
+long lastTick;
 uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     uint8_t size = 0;
     // Tick Inputs
@@ -223,7 +224,14 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     }
 #endif
 #ifdef INPUT_WII
-    uint8_t *wiiData = tickWii();
+    uint8_t *wiiData;
+    // If we didn't send the last packet, then we need to wait some time as the wii controllers do not like being polled quickly
+    if (micros() - lastTick > 800) {
+        lastTick = micros();
+        wiiData = tickWii();
+    } else {
+        wiiData = lastSuccessfulWiiPacket;
+    }
     bool wiiValid = wiiData != NULL;
     lastWiiWasSuccessful = wiiValid;
     uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which = 0;

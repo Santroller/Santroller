@@ -16,6 +16,7 @@
 #include <avr/power.h>
 #include <avr/wdt.h>
 #include <string.h>
+#include "hid.h"
 
 #include "commands.h"
 #include "config.h"
@@ -45,7 +46,7 @@ void loop() {
     Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
     if (Endpoint_IsOUTReceived()) {
         size = Endpoint_Read_Stream_LE(buf, 0x08, NULL);
-        hidInterrupt(dt->data, size);
+        hid_set_report(buf, size, INTERRUPT_ID, INTERRUPT_ID);
     }
 }
 

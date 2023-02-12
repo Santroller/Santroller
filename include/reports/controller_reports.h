@@ -24,7 +24,7 @@ typedef struct {
     int8_t Y;  /**< Current delta Y movement on the mouse. */
     int8_t ScrollY; /** Current scroll Y delta movement on the mouse */
     int8_t ScrollX; /** Current scroll X delta movement on the mouse */
-} __attribute__((packed)) USB_MouseReport_Data_t;
+} __attribute__((packed)) USB_Mouse_Data_t;
 typedef struct {
     uint8_t rid;
     bool mediaNextTrack : 1;
@@ -35,7 +35,7 @@ typedef struct {
     bool volumeUp : 1;
     bool volumeDown : 1;
     bool : 1;
-} USB_ConsumerControlReport_Data_t;
+} USB_ConsumerControl_Data_t;
 
 typedef struct {
     uint8_t rid;
@@ -162,11 +162,11 @@ typedef struct {
     bool f24 : 1;
     uint8_t : 4;
 
-} __attribute__((packed)) USB_NKROReport_Data_t;
+} __attribute__((packed)) USB_NKRO_Data_t;
 
 typedef union {
-    USB_NKROReport_Data_t keyboard;
+    USB_NKRO_Data_t keyboard;
     USB_MIDI_Data_t midi;
     uint8_t raw[64];
-    USB_MouseReport_Data_t mouse;
+    USB_Mouse_Data_t mouse;
 } USB_Report_Data_t;

@@ -57,7 +57,7 @@ void loop() {
             // We received a hid out request, we need to process it
 
             // Technically, we could get multiple packets at once, so we should probably loop through them
-            hidInterrupt(dt->data, header->len - sizeof(packet_header_t));
+            hid_set_report(dt->data, header->len - sizeof(packet_header_t));
             header->len = 0;
             break;
         case CONTROLLER_DATA_REQUEST_ID: {

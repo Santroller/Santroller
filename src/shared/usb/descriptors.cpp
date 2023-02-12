@@ -5,23 +5,15 @@
 #include "config.h"
 #include "controllers.h"
 #include "io.h"
-#include "keyboard_mouse.h"
 #include "pins.h"
-#include "ps3_wii_switch.h"
+#include "hid.h"
 #include "shared_main.h"
 #include "usbhid.h"
 #include "util.h"
+#include "hid.h"
 #include "xsm3/xsm3.h"
 
-void handleAuthLed() {
-    HANDLE_AUTH_LED;
-}
-void handlePlayer(uint8_t player) {
-    HANDLE_PLAYER_LED;
-}
-void handleRumble(uint8_t rumble_left, uint8_t rumble_right) {
-    HANDLE_RUMBLE;
-}
+
 
 #ifdef KV_KEY_1
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
@@ -479,7 +471,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             xbox_360_state = Auth2;
         } else if (xbox_360_state == Auth2) {
             xbox_360_state = Authenticated;
-            handleAuthLed();
+            handle_auth_led();
         }
     }
 #ifdef KV_KEY_1
@@ -754,111 +746,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return 0;
         }
     } else if (request == HID_REQUEST_SET_REPORT && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        hidInterrupt((uint8_t *)requestBuffer, wLength);
+        const uint8_t reportType = (wValue >> 8);
+        const uint8_t reportId = (wValue & 0xFF);
+        hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
         return 0;
     }
     return 0;
 }
 
-uint8_t xbox_players[] = {
-    0,  // 0x00	 All off
-    0,  // 0x01	 All blinking
-    1,  // 0x02	 1 flashes, then on
-    2,  // 0x03	 2 flashes, then on
-    3,  // 0x04	 3 flashes, then on
-    4,  // 0x05	 4 flashes, then on
-    1,  // 0x06	 1 on
-    2,  // 0x07	 2 on
-    3,  // 0x08	 3 on
-    4,  // 0x09	 4 on
-    0,  // 0x0A	 Rotating (e.g. 1-2-4-3)
-    0,  // 0x0B	 Blinking*
-    0,  // 0x0C	 Slow blinking*
-    0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
-};
-void hidInterrupt(const uint8_t *data, uint8_t len) {
-    uint8_t id = data[0];
-    // Handle Xbox 360 LEDs and rumble
-    if (consoleType == WINDOWS_XBOX360) {
-        while (len) {
-            uint8_t size = data[1];
-            len -= size;
-            if (id == XBOX_LED_ID) {
-                uint8_t led = data[2];
-                uint8_t player = xbox_players[led];
-                handlePlayer(player);
-            } else if (id == XBOX_RUMBLE_ID) {
-                uint8_t rumble_left = data[3];
-                uint8_t rumble_right = data[4];
-                handleRumble(rumble_left, rumble_right);
-            }
-        }
-        data += len;
-        // Handle XBOX One Auth
-    } else if (consoleType == XBOXONE) {
-        // printf("GOT (%d): ", xbox_one_state);
-
-        // for (int i = 0; i < len; i++) {
-        //     printf("%02x, ", data[i]);
-        // }
-        // printf("\n");
-        if (xbox_one_state == Waiting1) {
-            xbox_one_state = Ident1;
-        } else if (xbox_one_state == Waiting2) {
-            xbox_one_state = Ident2;
-        } else if (xbox_one_state == Waiting5) {
-            xbox_one_state = Ident5;
-        } else if (xbox_one_state == Auth) {
-            if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
-                handleAuthLed();
-                printf("Ready!\n");
-                xbox_one_state = Ready;
-                data_from_console_size = len;
-                memcpy(data_from_console, data, len);
-            } else {
-                data_from_console_size = len;
-                memcpy(data_from_console, data, len);
-            }
-        } else if (xbox_one_state == Ready) {
-            // Live guitar is a bit special, so handle it here
-#if DEVICE_TYPE == LIVE_GUITAR
-            if (id == 0x22) {
-                uint8_t sub_id = data[1];
-                if (sub_id == PS3_LED_ID) {
-                    uint8_t player = (data[3] >> 2);
-                    handlePlayer(player);
-                } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
-                    last_ghl_poke_time = millis();
-                }
-            }
-#endif
-            if (id == GIP_CMD_RUMBLE) {
-                GipRumble_t *rumble = (GipRumble_t *)data;
-                handleRumble(rumble->leftMotor, rumble->rightMotor);
-            }
-        }
-    } else {
-        uint8_t *data = (uint8_t *)data;
-        if (id == PS3_LED_ID) {
-            uint8_t player = (data[2] >> 2);
-            handlePlayer(player);
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        } else if (id == DJ_LED_ID) {
-            uint8_t euphoria_on = data[2] * 0xFF;
-            handleRumble(euphoria_on, euphoria_on);
-#endif
-        } else if (id == SANTROLLER_PS3_ID) {
-            uint8_t rumble_left = data[3];
-            uint8_t rumble_right = data[4];
-            handleRumble(rumble_left, rumble_right);
-        } else if (id == COMMAND_SET_DETECT) {
-            uint8_t enabled = data[2];
-            uint8_t r2_value = data[3];
-            overrideR2 = enabled > 0;
-            overriddenR2 = r2_value;
-        }
-    }
-}
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void *descriptorBuffer) {

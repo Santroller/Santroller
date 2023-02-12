@@ -39,13 +39,13 @@ bool lastXboxOneGuide = false;
 uint8_t overriddenR2 = 0;
 USB_Report_Data_t lastReport;
 #ifdef TICK_NKRO
-USB_NKROReport_Data_t lastNKROReport;
+USB_NKRO_Data_t lastNKROReport;
 #endif
 #ifdef TICK_MOUSE
-USB_MouseReport_Data_t lastMouseReport;
+USB_Mouse_Data_t lastMouseReport;
 #endif
 #ifdef TICK_CONSUMER
-USB_ConsumerControlReport_Data_t lastConsumerReport;
+USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
@@ -285,9 +285,9 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     for (int i = 1; i < REPORT_ID_END; i++) {
 #ifdef TICK_MOUSE
         if (i == REPORT_ID_MOUSE) {
-            size = sizeof(USB_MouseReport_Data_t);
+            size = sizeof(USB_Mouse_Data_t);
             memset(combined_report, 0, size);
-            USB_MouseReport_Data_t *report = (USB_MouseReport_Data_t *)combined_report;
+            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)combined_report;
             report->rid = REPORT_ID_MOUSE;
             TICK_MOUSE;
             lastReportToCheck = &lastMouseReport;
@@ -295,9 +295,9 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #endif
 #ifdef TICK_CONSUMER
         if (i == REPORT_ID_CONSUMER) {
-            size = sizeof(USB_ConsumerControlReport_Data_t);
+            size = sizeof(USB_ConsumerControl_Data_t);
             memset(combined_report, 0, size);
-            USB_ConsumerControlReport_Data_t *report = (USB_ConsumerControlReport_Data_t *)combined_report;
+            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)combined_report;
             report->rid = REPORT_ID_CONSUMER;
             TICK_CONSUMER;
             lastReportToCheck = &lastConsumerReport;
@@ -305,9 +305,9 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #endif
 #ifdef TICK_NKRO
         if (i == REPORT_ID_NKRO) {
-            size = sizeof(USB_NKROReport_Data_t);
+            size = sizeof(USB_NKRO_Data_t);
             memset(combined_report, 0, size);
-            USB_NKROReport_Data_t *report = (USB_NKROReport_Data_t *)combined_report;
+            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)combined_report;
             report->rid = REPORT_ID_NKRO;
             TICK_NKRO;
             lastReportToCheck = &lastNKROReport;

@@ -275,7 +275,6 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #endif
     }
 #endif
-    tickPins();
     TICK_SHARED;
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
@@ -373,7 +372,6 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
                 return 0;
         }
     }
-    uint8_t *orig = (uint8_t *)combined_report;
     if (consoleType == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds

@@ -17,8 +17,6 @@ void initPins(void) {
     adc_init();
     PIN_INIT;
 }
-void tickPins(void) {
-}
 
 uint8_t digital_read(uint8_t port, uint8_t mask) {
     port = port * 8;

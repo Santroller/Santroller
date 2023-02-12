@@ -55,9 +55,7 @@ void loop() {
     switch (header->id) {
         case CONTROLLER_DATA_TRANSMIT_ID:
             // We received a hid out request, we need to process it
-
-            // Technically, we could get multiple packets at once, so we should probably loop through them
-            hid_set_report(dt->data, header->len - sizeof(packet_header_t));
+            hid_set_report(dt->data, header->len - sizeof(packet_header_t), INTERRUPT_ID, INTERRUPT_ID);
             header->len = 0;
             break;
         case CONTROLLER_DATA_REQUEST_ID: {

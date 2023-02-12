@@ -32,7 +32,6 @@
 #define LIVE_GUITAR 8
 #define DRUMS 9
 #define DJ_HERO_TURNTABLE 10
-#define STAGE_KIT 11
 
 #define GUITAR_HERO 0
 #define ROCK_BAND 1
@@ -40,13 +39,14 @@
 #define UNIVERSAL 0
 #define KEYBOARD_MOUSE 1
 #define MIDI 2
+#define STAGE_KIT 3
 
-#define WINDOWS_XBOX360 3
-#define PS3 4
-#define WII_RB 5
-#define SWITCH 6
-#define PS2 7
-#define XBOXONE 8
+#define WINDOWS_XBOX360 4
+#define PS3 5
+#define WII_RB 6
+#define SWITCH 7
+#define PS2 8
+#define XBOXONE 9
 
 #define PINMODE_PULLUP 0
 #define PINMODE_PULLDOWN 1

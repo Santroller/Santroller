@@ -38,7 +38,7 @@ uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 
 void setup() {
-    uart_set_baudrate(uart0, 115200);
+    Serial1.begin(115200);
     generateSerialString(&serialstring);
     tusb_init();
     init_main();

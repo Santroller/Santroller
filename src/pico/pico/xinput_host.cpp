@@ -158,6 +158,7 @@ void xinputh_close(uint8_t dev_addr) {
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
+    Serial1.printf("Hello\n");
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, 0);
     uint16_t drv_len = sizeof(tusb_desc_interface_t) +
                        (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));

@@ -23,8 +23,6 @@ uint8_t data_from_controller[64];
 uint8_t keystroke_sequence_number;
 uint8_t report_sequence_number;
 uint8_t hid_sequence_number;
-uint8_t idle_rate;
-bool protocol_mode_report = true;
 #ifdef __cplusplus
 }
 #endif

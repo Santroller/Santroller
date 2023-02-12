@@ -65,13 +65,12 @@
 #define RUMBLE_SANTROLLER_FRET_ORANGE 0x12
 
 // set left to the star power value, and right to these values for our commands
-// For compatibility reasons, probably start star power at 0x20, so that we never end up with issues on turntables
-// Since then we would just check left == right for turntable state
 #define RUMBLE_SANTROLLER_STAR_POWER_FILL 0x13
 #define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x14
 extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
 extern const uint8_t ps3_descriptor[137];
 extern const uint8_t pc_descriptor[150];
 void handle_auth_led(void);
+void tick_leds(void);
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id);
 uint8_t hid_get_report(uint8_t *data, uint8_t reportType, uint8_t report_id);

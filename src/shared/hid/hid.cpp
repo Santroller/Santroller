@@ -23,6 +23,9 @@ uint8_t xbox_players[] = {
     0,  // 0x0C	 Slow blinking*
     0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
+uint8_t strobe_delay = 0;
+bool strobing = false;
+long last_strobe = 0;
 void handle_auth_led(void) {
     HANDLE_AUTH_LED;
 }
@@ -32,8 +35,14 @@ void handle_player_leds(uint8_t player) {
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     HANDLE_RUMBLE;
 }
+void handle_keyboard_leds(uint8_t leds) {
+    HANDLE_KEYBOARD_LED;
+}
 
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
+    #if CONSOLE_TYPE == KEYBOARD_MOUSE
+        handle_keyboard_leds(data[0]);  
+    #endif
     uint8_t id = data[0];
     // Handle Xbox 360 LEDs and rumble
     if (report_id == INTERRUPT_ID) {
@@ -53,12 +62,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         data += len;
         // Handle XBOX One Auth
     } else if (consoleType == XBOXONE) {
-        // printf("GOT (%d): ", xbox_one_state);
-
-        // for (int i = 0; i < len; i++) {
-        //     printf("%02x, ", data[i]);
-        // }
-        // printf("\n");
         if (xbox_one_state == Waiting1) {
             xbox_one_state = Ident1;
         } else if (xbox_one_state == Waiting2) {

@@ -107,7 +107,13 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #else
     #define PS3_ID 0x07
 #endif
-#if DEVICE_TYPE == GAMEPAD
+#if CONSOLE_TYPE == STAGE_KIT
+#define SUB_TYPE XINPUT_STAGE_KIT
+#define XINPUT_FLAGS 0x00
+#define XINPUT_REPORT XInputGamepad_Data_t
+#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
+#define PS3_REPORT PS3Gamepad_Data_t
+#elif DEVICE_TYPE == GAMEPAD
 #define SUB_TYPE XINPUT_GAMEPAD
 #define XINPUT_FLAGS 0x10
 #define XINPUT_REPORT XInputGamepad_Data_t
@@ -178,12 +184,6 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == ARCADE_PAD
 #define SUB_TYPE XINPUT_ARCADE_PAD
 #define XINPUT_FLAGS 0x10
-#define XINPUT_REPORT XInputGamepad_Data_t
-#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
-#define PS3_REPORT PS3Gamepad_Data_t
-#elif DEVICE_TYPE == STAGE_KIT
-#define SUB_TYPE XINPUT_STAGE_KIT
-#define XINPUT_FLAGS 0x00
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PS3_REPORT PS3Gamepad_Data_t

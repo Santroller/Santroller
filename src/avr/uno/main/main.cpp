@@ -8,6 +8,7 @@
 #include "controller_reports.h"
 #include "defines.h"
 #include "descriptors.h"
+#include "hid.h"
 #include "packets.h"
 #include "shared_main.h"
 

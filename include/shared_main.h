@@ -4,6 +4,8 @@
 void init_main(void);
 
 uint8_t tick_inputs(USB_Report_Data_t* report);
+uint8_t tick_xbox_one(USB_Report_Data_t *combined_report);
+uint8_t tick_all(USB_Report_Data_t *combined_report);
 void device_reset(void);
 void tick(void);
 void reset_usb(void);

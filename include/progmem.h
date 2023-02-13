@@ -1,5 +1,5 @@
 #pragma once
-#ifdef __AVR__
+#if defined(__AVR__) || defined(_15_)
 #include <avr/pgmspace.h>
 #else
 #ifndef memcpy_P

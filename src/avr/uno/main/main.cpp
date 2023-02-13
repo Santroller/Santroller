@@ -10,8 +10,11 @@
 #include "descriptors.h"
 #include "hid.h"
 #include "packets.h"
+#include "rf.h"
 #include "shared_main.h"
 
+USB_Report_Data_t report;
+#include "rf_rx.h"
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
 
@@ -46,8 +49,8 @@ void setup() {
     // Let the 8u2/16u2 know we are ready to receive data
     UDR0 = READY;
     init_main();
+    INIT();
 }
-USB_Report_Data_t report;
 void loop() {
     // Wait for a packet from the 8u2/16u2.
     if (!ready) return;
@@ -61,7 +64,7 @@ void loop() {
             break;
         case CONTROLLER_DATA_REQUEST_ID: {
             header->len = 0;
-            uint8_t len = tick_inputs(&report);
+            uint8_t len = TICK();
             // Write the controller input data
             memcpy(buf + sizeof(packet_header_t), &report, len);
             header->len += len;
@@ -93,6 +96,7 @@ void loop() {
             // 8u2/16u2 wants to know the console type, so return that
             dt->data[0] = consoleType;
             header->len = 1;
+            RX_CONSOLE_ID();
             break;
         default:
             // unknown packet, do nothing

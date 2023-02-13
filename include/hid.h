@@ -71,6 +71,10 @@ extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE
 extern const uint8_t ps3_descriptor[137];
 extern const uint8_t pc_descriptor[150];
 void handle_auth_led(void);
+void handle_player_leds(uint8_t player);
+void handle_rumble(uint8_t rumble_left, uint8_t rumble_right);
+void handle_keyboard_leds(uint8_t leds);
 void tick_leds(void);
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id);
 uint8_t hid_get_report(uint8_t *data, uint8_t reportType, uint8_t report_id);
+uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t* response_buffer, bool* success);

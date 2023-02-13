@@ -16,16 +16,19 @@
 #include <avr/power.h>
 #include <avr/wdt.h>
 #include <string.h>
-#include "hid.h"
 
 #include "commands.h"
 #include "config.h"
 #include "descriptors.h"
+#include "hid.h"
 #include "shared_main.h"
 
 volatile uint16_t test __attribute__((section(".noinit")));
 volatile uint16_t test2 __attribute__((section(".noinit")));
 void SetupHardware(void);
+
+USB_Report_Data_t report;
+#include "rf_rx.h"
 
 void setup() {
     init_main();
@@ -34,12 +37,14 @@ void setup() {
     }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
+    INIT();
+    // Latest console id is always here on bootup as we reboot the microcontroller when we switch.
+    RX_CONSOLE_ID();
 }
 
 uint8_t buf[255];
-USB_Report_Data_t report;
 void loop() {
-    uint8_t size = tick_inputs(&report);
+    uint8_t size = TICK();
     Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
     Endpoint_Write_Stream_LE(&report, size, NULL);
     Endpoint_ClearIN();

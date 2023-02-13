@@ -37,16 +37,22 @@ uint32_t __uninitialized_ram(test2);
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 
+USB_Report_Data_t report;
+#include "rf_rx.h"
+SPIClass SPI(spi0);
+
 void setup() {
-    Serial1.begin(115200);
+    uart_set_baudrate(uart0, 115200);
     generateSerialString(&serialstring);
     tusb_init();
     init_main();
     if (test2 == 0x3A2F) {
         consoleType = test;
     }
+    INIT();
+    // Latest console id is always here on bootup as we reboot the microcontroller when we switch.
+    RX_CONSOLE_ID();
 }
-USB_Report_Data_t report;
 unsigned int last = 0;
 #if CONSOLE_TYPE != MIDI
 #define TICK_CHECK (tud_xinput_n_ready(0) && tud_ready_for_packet())
@@ -65,7 +71,7 @@ void loop() {
     uint8_t size = 0;
     if (TICK_CHECK || millis() - last > 5 || (consoleType == XBOXONE && xbox_one_state != Ready)) {
         last = millis();
-        size = tick_inputs(&report);
+        size = tick_all(&report);
     }
 
     if (size) {

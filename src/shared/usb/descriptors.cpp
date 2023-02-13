@@ -458,8 +458,6 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
-const PROGMEM char board[] = ARDWIINO_BOARD;
-const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
@@ -541,7 +539,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
 }
 bool cleared_input = false;
 bool cleared_output = false;
-uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, void *requestBuffer) {
+uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
             reboot();
@@ -598,103 +596,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
 #endif
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        switch (request) {
-            case COMMAND_GET_EXTENSION_WII:
-                if (!lastWiiWasSuccessful) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &wiiControllerType, sizeof(wiiControllerType));
-                return sizeof(wiiControllerType);
-            case COMMAND_GET_EXTENSION_PS2:
-                if (!lastPS2WasSuccessful) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &ps2ControllerType, sizeof(ps2ControllerType));
-                return sizeof(ps2ControllerType);
-            case COMMAND_READ_WII:
-                if (!lastWiiWasSuccessful) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &lastSuccessfulWiiPacket, wiiBytes);
-                return wiiBytes;
-            case COMMAND_READ_PS2:
-                if (!lastPS2WasSuccessful) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &lastSuccessfulPS2Packet, sizeof(lastSuccessfulPS2Packet));
-                return sizeof(lastSuccessfulPS2Packet);
-            case COMMAND_READ_DJ_LEFT:
-                if (!lastTurntableWasSuccessfulLeft) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &lastSuccessfulTurntablePacketLeft, sizeof(lastSuccessfulTurntablePacketLeft));
-                return sizeof(lastSuccessfulTurntablePacketLeft);
-            case COMMAND_READ_DJ_RIGHT:
-                if (!lastTurntableWasSuccessfulRight) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &lastSuccessfulTurntablePacketRight, sizeof(lastSuccessfulTurntablePacketRight));
-                return sizeof(lastSuccessfulTurntablePacketRight);
-            case COMMAND_READ_GH5:
-                if (!lastGH5WasSuccessful) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &lastSuccessfulGH5Packet, sizeof(lastSuccessfulGH5Packet));
-                return sizeof(lastSuccessfulGH5Packet);
-
-            case COMMAND_READ_GHWT:
-                if (!lastGHWTWasSuccessful) {
-                    return 0;
-                }
-                memcpy(requestBuffer, &lastTap, sizeof(lastTap));
-                return sizeof(lastTap);
-            case COMMAND_READ_ANALOG: {
-                uint8_t pin = wValue & 0xff;
-                uint8_t mask = (wValue >> 8);
-                uint16_t response = adc_read(pin, mask);
-                memcpy(requestBuffer, &response, sizeof(response));
-                return sizeof(response);
-            }
-            case COMMAND_READ_DIGITAL: {
-                uint8_t port = wValue & 0xff;
-                uint8_t mask = (wValue >> 8);
-                uint8_t response = digital_read(port, mask);
-                memcpy(requestBuffer, &response, sizeof(response));
-                return sizeof(response);
-            }
-            case COMMAND_READ_CONFIG: {
-                if (wValue > sizeof(config)) {
-                    return 0;
-                }
-                uint16_t size = sizeof(config) - wValue;
-                if (size > 64) size = 64;
-                memcpy_P(requestBuffer, config + wValue, size);
-                return size;
-            }
-            case COMMAND_READ_BOARD:
-                memcpy_P(requestBuffer, board, sizeof(board));
-                return sizeof(board);
-            case COMMAND_READ_F_CPU:
-                memcpy_P(requestBuffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
-                return sizeof(f_cpu_descriptor_str);
-            case HID_REQUEST_GET_PROTOCOL:
-                ((uint8_t *)requestBuffer)[0] = protocol_mode;
-                return 1;
-            case HID_REQUEST_GET_IDLE:
-                ((uint8_t *)requestBuffer)[0] = idle_rate;
-                return 1;
-            case HID_REQUEST_GET_REPORT:
-                if (wValue == 0x0300) {
-                    if (consoleType == PS3) {
-                        memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-                        return sizeof(ps3_init);
-                    } else if (consoleType == UNIVERSAL) {
-                        consoleType = PS3;
-                        reset_usb();
-                        return 0;
-                    }
-                }
-                return 0;
+        bool test = true;
+        uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);
+        if (test) {
+            return size;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         consoleType = PS2;

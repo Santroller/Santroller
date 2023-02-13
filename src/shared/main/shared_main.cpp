@@ -188,6 +188,54 @@ void tick(void) {
         data_from_console_size = 0;
     }
 }
+uint8_t tick_xbox_one(USB_Report_Data_t *combined_report) {
+    switch (xbox_one_state) {
+        case Announce:
+            xbox_one_state = Waiting1;
+            memcpy(combined_report, announce, sizeof(announce));
+            return sizeof(announce);
+        case Ident1:
+            xbox_one_state = Waiting2;
+            memcpy(combined_report, identify_1, sizeof(identify_1));
+            return sizeof(identify_1);
+        case Ident2:
+            xbox_one_state = Ident3;
+            memcpy(combined_report, identify_2, sizeof(identify_2));
+            return sizeof(identify_2);
+        case Ident3:
+            xbox_one_state = Ident4;
+            memcpy(combined_report, identify_3, sizeof(identify_3));
+            return sizeof(identify_3);
+        case Ident4:
+            xbox_one_state = Waiting5;
+            memcpy(combined_report, identify_4, sizeof(identify_4));
+            return sizeof(identify_4);
+        case Ident5:
+            xbox_one_state = Auth;
+            memcpy(combined_report, identify_5, sizeof(identify_5));
+            return sizeof(identify_5);
+        case Auth:
+            if (data_from_controller_size) {
+                uint8_t size = data_from_controller_size;
+                data_from_controller_size = 0;
+                memcpy(combined_report, data_from_controller, size);
+                return size;
+            }
+            return 0;
+        case Ready:
+            return 0;
+        default:
+            return 0;
+    }
+}
+uint8_t tick_all(USB_Report_Data_t *combined_report) {
+    if (consoleType == XBOXONE && xbox_one_state != Ready) {
+        return tick_xbox_one(combined_report);
+    } else {
+        return tick_inputs(combined_report);
+    }
+    return 0;
+}
 long lastTick;
 uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     uint8_t size = 0;
@@ -234,7 +282,7 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     }
     bool wiiValid = wiiData != NULL;
     lastWiiWasSuccessful = wiiValid;
-    uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which = 0;
+    uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which, lastTapWii = 0;
     uint16_t accX, accY, accZ = 0;
     if (wiiValid) {
         memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
@@ -244,6 +292,9 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             wiiButtonsLow = ~wiiData[6];
             wiiButtonsHigh = ~wiiData[7];
         }
+#ifdef INPUT_WII_TAP
+        lastTapWii = (wiiData[2] & 0x1f);
+#endif
 #ifdef INPUT_WII_DRUM
         vel = (7 - (wiiData[3] >> 5)) << 5;
         which = (wiiData[2] & 0b01111100) >> 1;
@@ -326,52 +377,6 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
-    if (consoleType == XBOXONE) {
-        if (report_sequence_number == 0) {
-            report_sequence_number = 1;
-        }
-        if (hid_sequence_number == 0) {
-            hid_sequence_number = 1;
-        }
-        switch (xbox_one_state) {
-            case Announce:
-                xbox_one_state = Waiting1;
-                memcpy(combined_report, announce, sizeof(announce));
-                return sizeof(announce);
-            case Ident1:
-                xbox_one_state = Waiting2;
-                memcpy(combined_report, identify_1, sizeof(identify_1));
-                return sizeof(identify_1);
-            case Ident2:
-                xbox_one_state = Ident3;
-                memcpy(combined_report, identify_2, sizeof(identify_2));
-                return sizeof(identify_2);
-            case Ident3:
-                xbox_one_state = Ident4;
-                memcpy(combined_report, identify_3, sizeof(identify_3));
-                return sizeof(identify_3);
-            case Ident4:
-                xbox_one_state = Waiting5;
-                memcpy(combined_report, identify_4, sizeof(identify_4));
-                return sizeof(identify_4);
-            case Ident5:
-                xbox_one_state = Auth;
-                memcpy(combined_report, identify_5, sizeof(identify_5));
-                return sizeof(identify_5);
-            case Auth:
-                if (data_from_controller_size) {
-                    uint8_t size = data_from_controller_size;
-                    data_from_controller_size = 0;
-                    memcpy(combined_report, data_from_controller, size);
-                    return size;
-                }
-                return 0;
-            case Ready:
-                break;
-            default:
-                return 0;
-        }
-    }
     if (consoleType == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
@@ -457,8 +462,14 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;
+        if (report_sequence_number == 0) {
+            report_sequence_number = 1;
+        }
     } else if (updateHIDSequence) {
         hid_sequence_number++;
+        if (hid_sequence_number == 0) {
+            hid_sequence_number = 1;
+        }
     }
 #endif
 #endif

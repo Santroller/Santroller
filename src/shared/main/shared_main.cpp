@@ -407,7 +407,7 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             updateHIDSequence = true;
         }
     }
-    if (consoleType == WINDOWS_XBOX360 || ConsoleType == STAGE_KIT) {
+    if (consoleType == WINDOWS_XBOX360 || consoleType == STAGE_KIT) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)combined_report;
         memset(combined_report, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;

@@ -23,6 +23,12 @@ uint8_t xbox_players[] = {
     0,  // 0x0C	 Slow blinking*
     0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
+uint8_t stage_kit_millis[] = {
+    150, // Slow
+    125, // Medium
+    100, // Fast
+    75,  // Fastest
+};
 uint8_t strobe_delay = 0;
 bool strobing = false;
 long last_strobe = 0;

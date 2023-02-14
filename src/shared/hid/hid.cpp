@@ -4,15 +4,14 @@
 #include <string.h>
 
 #include "commands.h"
+#include "config.h"
 #include "controllers.h"
 #include "keyboard_mouse.h"
+#include "pins.h"
 #include "ps3_wii_switch.h"
 #include "rf.h"
-#include "pins.h"
 #include "stdint.h"
-#include "config.h"
 #include "util.h"
-#include <string.h>
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
@@ -87,56 +86,59 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     uint8_t id = data[0];
     // Handle Xbox 360 LEDs and rumble
     if (report_id == INTERRUPT_ID) {
-        while (len) {
-            uint8_t size = data[1];
-            len -= size;
-            if (id == XBOX_LED_ID) {
-                uint8_t led = data[2];
-                uint8_t player = xbox_players[led];
-                handle_player_leds(player);
-            } else if (id == XBOX_RUMBLE_ID) {
-                uint8_t rumble_left = data[3];
-                uint8_t rumble_right = data[4];
-                handle_rumble(rumble_left, rumble_right);
-            }
-        }
-        data += len;
         // Handle XBOX One Auth
-    } else if (consoleType == XBOXONE) {
-        if (xbox_one_state == Waiting1) {
-            xbox_one_state = Ident1;
-        } else if (xbox_one_state == Waiting2) {
-            xbox_one_state = Ident2;
-        } else if (xbox_one_state == Waiting5) {
-            xbox_one_state = Ident5;
-        } else if (xbox_one_state == Auth) {
-            if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
-                handle_auth_led();
-                printf("Ready!\n");
-                xbox_one_state = Ready;
-                data_from_console_size = len;
-                memcpy(data_from_console, data, len);
-            } else {
-                data_from_console_size = len;
-                memcpy(data_from_console, data, len);
-            }
-        } else if (xbox_one_state == Ready) {
-            // Live guitar is a bit special, so handle it here
+        if (consoleType == XBOXONE) {
+            if (xbox_one_state == Waiting1) {
+                xbox_one_state = Ident1;
+            } else if (xbox_one_state == Waiting2) {
+                xbox_one_state = Ident2;
+            } else if (xbox_one_state == Waiting5) {
+                xbox_one_state = Ident5;
+            } else if (xbox_one_state == Auth) {
+                // if (data[0] == 5 && len == 5 && data[4] == 0x07) return;
+                if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
+                    handle_auth_led();
+                    printf("Ready!\n");
+                    xbox_one_state = Ready;
+                    data_from_console_size = len;
+                    memcpy(data_from_console, data, len);
+                } else {
+                    data_from_console_size = len;
+                    memcpy(data_from_console, data, len);
+                }
+            } else if (xbox_one_state == Ready) {
+                // Live guitar is a bit special, so handle it here
 #if DEVICE_TYPE == LIVE_GUITAR
-            if (id == 0x22) {
-                uint8_t sub_id = data[1];
-                if (sub_id == PS3_LED_ID) {
-                    uint8_t player = (data[3] >> 2);
-                    handle_player_leds(player);
-                } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
-                    last_ghl_poke_time = millis();
+                if (id == 0x22) {
+                    uint8_t sub_id = data[1];
+                    if (sub_id == PS3_LED_ID) {
+                        uint8_t player = (data[3] >> 2);
+                        handle_player_leds(player);
+                    } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
+                        last_ghl_poke_time = millis();
+                    }
+                }
+#endif
+                if (id == GIP_CMD_RUMBLE) {
+                    GipRumble_t *rumble = (GipRumble_t *)data;
+                    handle_rumble(rumble->leftMotor, rumble->rightMotor);
                 }
             }
-#endif
-            if (id == GIP_CMD_RUMBLE) {
-                GipRumble_t *rumble = (GipRumble_t *)data;
-                handle_rumble(rumble->leftMotor, rumble->rightMotor);
+        } else {
+            while (len) {
+                uint8_t size = data[1];
+                len -= size;
+                if (id == XBOX_LED_ID) {
+                    uint8_t led = data[2];
+                    uint8_t player = xbox_players[led];
+                    handle_player_leds(player);
+                } else if (id == XBOX_RUMBLE_ID) {
+                    uint8_t rumble_left = data[3];
+                    uint8_t rumble_right = data[4];
+                    handle_rumble(rumble_left, rumble_right);
+                }
             }
+            data += len;
         }
     } else {
         uint8_t *data = (uint8_t *)data;
@@ -161,7 +163,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     }
 }
 long millis_since_command = 0;
-uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t* response_buffer, bool* success) {
+uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success) {
     // These are always handled by the RX controller
     switch (request) {
         case COMMAND_READ_CONFIG: {
@@ -180,28 +182,27 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t* respons
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);
     }
-    #ifdef RF_RX
-        millis_since_command = millis();
-        RfCommandRequestPacket_t packet = {
-            AckCommandRequest,
-            request,
-            wValue
-        };
-        nrfRadio.addAckData(&packet, sizeof(packet));
-        // If we don't receive a response (say the packet is dropped in transit) don't loop forever.
-        while (millis() - millis_since_command < 1000) {
-            uint8_t size = nrfRadio.hasData();
-            uint8_t response[32];
-            if (size) {
-                nrfRadio.readData(response);
-                if (response[0] == CommandResponse) {
-                    memcpy(response_buffer, response+1, size-1);
-                    return size-1;
-                }
+#ifdef RF_RX
+    millis_since_command = millis();
+    RfCommandRequestPacket_t packet = {
+        AckCommandRequest,
+        request,
+        wValue};
+    nrfRadio.addAckData(&packet, sizeof(packet));
+    // If we don't receive a response (say the packet is dropped in transit) don't loop forever.
+    while (millis() - millis_since_command < 1000) {
+        uint8_t size = nrfRadio.hasData();
+        uint8_t response[32];
+        if (size) {
+            nrfRadio.readData(response);
+            if (response[0] == CommandResponse) {
+                memcpy(response_buffer, response + 1, size - 1);
+                return size - 1;
             }
         }
-        return 0;
-    #endif
+    }
+    return 0;
+#endif
     switch (request) {
         case COMMAND_GET_EXTENSION_WII:
             if (!lastWiiWasSuccessful) {

@@ -25,6 +25,7 @@ void set_report(uint8_t report_id,
 }
 void setup() {
     init_main();
+    Serial1.begin(115200);
     Serial.begin(115200);
     usb_hid.enableOutEndpoint(true);
     usb_hid.setReportCallback(get_report, set_report);

@@ -175,7 +175,7 @@ void tick(void) {
             reset_usb();
         }
         // Wii gives up after reading the config descriptor
-        if (read_config && !received_after_read_config && millis() - wii_timer > 100) {
+        if (read_config && !received_after_read_config && millis() - wii_timer > 1000) {
             consoleType = WII_RB;
             reset_usb();
             received_after_read_config = true;
@@ -497,7 +497,7 @@ void received_any_request(void) {
         received_after_read_config = true;
     }
 }
-
+uint8_t last_len = false;
 void receive_report_from_controller(uint8_t const *report, uint16_t len) {
     if (xbox_one_state != Auth) {
         return;
@@ -516,9 +516,11 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid) {
 }
 
 void xone_controller_connected(void) {
-    if (xbox_one_state == Ready) return;
+    if (xbox_one_state == Ready || consoleType == XBOXONE) return;
+
     GipPowerMode_t *powerMode = (GipPowerMode_t *)data_from_console;
     GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
+    powerMode->subcommand = 0x00;
     send_report_to_controller(data_from_console, sizeof(GipPowerMode_t));
 }
 void controller_disconnected(void) {

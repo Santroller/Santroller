@@ -27,11 +27,11 @@
 #include "tusb_option.h"
 
 #if (CFG_TUH_ENABLED && CFG_TUH_XINPUT)
+#include "defines.h"
 #include "descriptors.h"
 #include "host/usbh.h"
 #include "host/usbh_classdriver.h"
 #include "xinput_host.h"
-#include "defines.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -76,7 +76,7 @@ uint8_t tuh_xinput_instance_count(uint8_t dev_addr) {
 }
 
 bool tuh_xinput_mounted(uint8_t dev_addr, uint8_t instance) {
-    if (get_dev(dev_addr)->inst_count < instance) return false; 
+    if (get_dev(dev_addr)->inst_count < instance) return false;
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
     return (hid_itf->ep_in != 0) || (hid_itf->ep_out != 0);
 }
@@ -134,7 +134,7 @@ bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, ui
 
     if (dir == TUSB_DIR_IN) {
         tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
-    } 
+    }
 
     return true;
 }
@@ -158,7 +158,6 @@ void xinputh_close(uint8_t dev_addr) {
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
-    Serial1.printf("Hello\n");
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, 0);
     uint16_t drv_len = sizeof(tusb_desc_interface_t) +
                        (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
@@ -202,6 +201,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = WINDOWS_XBOX360;
         _xinputh_dev->inst_count++;
+        return true;
 
     } else if (desc_itf->bInterfaceSubClass == 0xfD &&
                desc_itf->bInterfaceProtocol == 0x13) {
@@ -215,6 +215,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_desc = tu_desc_next(p_desc);
         p_xinput->type = WINDOWS_XBOX360;
         _xinputh_dev->inst_count++;
+        return true;
     } else if (desc_itf->bInterfaceSubClass == 0x47 &&
                desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bNumEndpoints) {
         uint8_t endpoints = desc_itf->bNumEndpoints;
@@ -234,8 +235,9 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = XBOXONE;
         _xinputh_dev->inst_count++;
+        return true;
     }
-    return true;
+    return false;
 }
 
 //--------------------------------------------------------------------+
@@ -260,7 +262,7 @@ bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num) {
 
 static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance) {
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
-    
+
     // enumeration is complete
     tuh_xinput_mount_cb(dev_addr, instance, hid_itf->type);
 
@@ -274,12 +276,12 @@ static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance) {
 
 // Get Device by address
 TU_ATTR_ALWAYS_INLINE static inline xinputh_device_t *get_dev(uint8_t dev_addr) {
-    return &_xinputh_dev[dev_addr-1];
+    return &_xinputh_dev[dev_addr - 1];
 }
 
 // Get Interface by instance number
 TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t *get_instance(uint8_t dev_addr, uint8_t instance) {
-    return &_xinputh_dev[dev_addr-1].instances[instance];
+    return &_xinputh_dev[dev_addr - 1].instances[instance];
 }
 
 // Get instance ID by interface number

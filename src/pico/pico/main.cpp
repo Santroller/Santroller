@@ -8,7 +8,6 @@
 #include "commands.h"
 #include "common/tusb_types.h"
 #include "config.h"
-#include "reports/controller_reports.h"
 #include "controllers.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
@@ -18,12 +17,11 @@
 #include "pico/bootrom.h"
 #include "pico/multicore.h"
 #include "pins.h"
-#include "pio_usb.h"
+#include "reports/controller_reports.h"
 #include "serial.h"
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#include "pico/bootrom.h"
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
@@ -32,22 +30,20 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
 
-uint32_t __uninitialized_ram(test);
-uint32_t __uninitialized_ram(test2);
+static uint32_t *persistedConsoleType = (uint32_t *)0x20040020;
+static uint32_t *persistedConsoleTypeValid = (uint32_t *)0x20040010;
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 
 USB_Report_Data_t report;
 #include "rf_rx.h"
-SPIClass SPI(spi0);
 
 void setup() {
-    uart_set_baudrate(uart0, 115200);
     generateSerialString(&serialstring);
     tusb_init();
     init_main();
-    if (test2 == 0x3A2F) {
-        consoleType = test;
+    if (*persistedConsoleTypeValid == 0x3A2F) {
+        consoleType = *persistedConsoleType;
     }
     INIT();
     // Latest console id is always here on bootup as we reboot the microcontroller when we switch.
@@ -249,7 +245,8 @@ void bootloader(void) {
     reset_usb_boot(0, 0);
 }
 void reset_usb(void) {
-    test = consoleType;
-    test2 = 0x3A2F;
+    // If we start using the second core for anything, make sure to stop it before doing this, as we are trashing its stack here.
+    *persistedConsoleType = consoleType;
+    *persistedConsoleTypeValid = 0x3A2F;
     reboot();
 }

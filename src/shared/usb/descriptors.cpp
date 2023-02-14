@@ -4,16 +4,13 @@
 #include "commands.h"
 #include "config.h"
 #include "controllers.h"
+#include "hid.h"
 #include "io.h"
 #include "pins.h"
-#include "hid.h"
 #include "shared_main.h"
 #include "usbhid.h"
 #include "util.h"
-#include "hid.h"
 #include "xsm3/xsm3.h"
-
-
 
 #ifdef KV_KEY_1
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
@@ -564,6 +561,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
     if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = WINDOWS_XBOX360;
+        printf("Xbox 360!\n");
         reset_usb();
         return 0;
     }
@@ -629,9 +627,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
-        } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
+        } else if (consoleType == UNIVERSAL) {
             windows_or_xbox_one = true;
-        }
+            printf("win or one!\n");
+        } 
         return DevCompatIDs.TotalLength;
     } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         protocol_mode = (uint8_t)wValue;

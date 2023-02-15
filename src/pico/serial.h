@@ -20,7 +20,7 @@ typedef struct
                                *   array of ASCII characters on little endian devices with
                                *   UTF-16-LE \c wchar_t encoding.
                                */
-} __attribute__((packed)) STRING_DESCRIPTOR_PICO;
+} __attribute__((packed)) __attribute__((aligned (16))) STRING_DESCRIPTOR_PICO;
 
 
 static inline uint16_t generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeString) {

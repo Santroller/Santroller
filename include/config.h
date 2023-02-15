@@ -10,7 +10,7 @@ extern "C" {
 #include "config_data.h"
 #else
 
-#define CONSOLE_TYPE UNIVERSAL //This can either be UNIVERSAL;MIDI;KEYBOARD_MOUSE
+#define CONSOLE_TYPE UNIVERSAL  // This can either be UNIVERSAL;MIDI;KEYBOARD_MOUSE
 #define DEVICE_TYPE GUITAR
 #define RHYTHM_TYPE GUITAR_HERO
 #define POLL_RATE 1
@@ -27,23 +27,31 @@ extern "C" {
 
 #define DIGITAL_COUNT 1
 #define ADC_COUNT 1
-#define ADC_PINS {}
+#define ADC_PINS \
+    {}
 
-#define PIN_INIT {}
+#define PIN_INIT \
+    {}
 
-#define TICK_PS3 {}
+#define TICK_PS3 \
+    {}
 
-#define KV_KEY_1 {}
-#define KV_KEY_2 {}
+#define KV_KEY_1 \
+    {}
+#define KV_KEY_2 \
+    {}
 
-#define TICK_XINPUT {}
+#define TICK_XINPUT \
+    {}
 
-#define TICK_SHARED {}
+#define TICK_SHARED \
+    {}
 
 #define ARDWIINO_BOARD ""
 
 // Serialise whatever configuration structure we use on the GUI side, so that we can pull it back
-#define CONFIGURATION {0}
+#define CONFIGURATION \
+    { 0 }
 #define CONFIGURATION_LEN 1
 
 // #define TWI_0_SDA 0
@@ -99,13 +107,13 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define DEVICE_TYPE_IS_DRUM false
 #endif
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
-    #if RHYTHM_TYPE == GUITAR_HERO
-        #define PS3_ID 0x06
-    #elif RHYTHM_TYPE == ROCK_BAND
-        #define PS3_ID 0x00
-    #endif
+#if RHYTHM_TYPE == GUITAR_HERO
+#define PS3_ID 0x06
+#elif RHYTHM_TYPE == ROCK_BAND
+#define PS3_ID 0x00
+#endif
 #else
-    #define PS3_ID 0x07
+#define PS3_ID 0x07
 #endif
 #if CONSOLE_TYPE == STAGE_KIT
 #define SUB_TYPE XINPUT_STAGE_KIT
@@ -214,6 +222,9 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XBOX_ONE_PID XBOX_ONE_CONTROLLER_PID
 #define IDENTIFY_4_SIZE 46
 #endif
+#if defined(RF_RX) || defined(RF_TX)
+#define RF
+#endif
 extern const uint8_t announce[32];
 extern const uint8_t identify_1[64];
 extern const uint8_t identify_2[64];
@@ -229,14 +240,14 @@ extern const uint8_t identify_5[8];
 #define SUPPORTS_TEENSY defined(__arm__) && defined(CORE_TEENSY)
 enum hid_reports_t {
     REPORT_ID_NONE,
-    #ifdef TICK_NKRO
+#ifdef TICK_NKRO
     REPORT_ID_NKRO,
-    #endif
-    #ifdef TICK_CONSUMER
+#endif
+#ifdef TICK_CONSUMER
     REPORT_ID_CONSUMER,
-    #endif
-    #ifdef TICK_MOUSE
+#endif
+#ifdef TICK_MOUSE
     REPORT_ID_MOUSE,
-    #endif
+#endif
     REPORT_ID_END
 };

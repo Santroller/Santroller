@@ -34,28 +34,28 @@ static uint32_t *persistedConsoleType = (uint32_t *)0x20040020;
 static uint32_t *persistedConsoleTypeValid = (uint32_t *)0x20040010;
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
-
-USB_Report_Data_t report;
-#include "rf_rx.h"
+bool connected = false;
 
 void setup() {
     generateSerialString(&serialstring);
     tusb_init();
-    init_main();
     if (*persistedConsoleTypeValid == 0x3A2F) {
         consoleType = *persistedConsoleType;
     }
-    INIT();
-    // Latest console id is always here on bootup as we reboot the microcontroller when we switch.
-    RX_CONSOLE_ID();
+    init_main();
 }
-unsigned int last = 0;
-#if CONSOLE_TYPE != MIDI
-#define TICK_CHECK (tud_xinput_n_ready(0) && tud_ready_for_packet())
-#else
-#define TICK_CHECK false
-#endif
 
+bool ready_for_next_packet() {
+    return tud_xinput_n_ready(0) && tud_ready_for_packet();
+}
+
+bool usb_connected() {
+    return connected;
+}
+
+void send_report_to_pc(const void *report, uint8_t len) {
+    tud_xinput_n_report(0, 0, &report, len);
+}
 void loop() {
     tick();
     // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
@@ -64,21 +64,6 @@ void loop() {
     }
     tud_task();
     tuh_task();
-    uint8_t size = 0;
-    if (TICK_CHECK || millis() - last > 5 || (consoleType == XBOXONE && xbox_one_state != Ready)) {
-        last = millis();
-        size = tick_all(&report);
-    }
-
-    if (size) {
-#if CONSOLE_TYPE == MIDI
-        // tud_midi_n_packet_write(0, report);
-#else
-        if (tud_xinput_n_ready(0)) {
-            tud_xinput_n_report(0, 0, &report, size);
-        }
-#endif
-    }
 }
 void send_report_to_controller(uint8_t *report, uint8_t len) {
     if (xone_dev_addr && tuh_xinput_mounted(xone_dev_addr, 0)) {
@@ -87,6 +72,7 @@ void send_report_to_controller(uint8_t *report, uint8_t len) {
 }
 void tud_mount_cb(void) {
     device_reset();
+    connected = true;
 }
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType) {

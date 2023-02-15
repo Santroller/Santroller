@@ -5,14 +5,17 @@ extern NRFLite nrfRadio;
 typedef enum {
     Heartbeat,
     Input,
-    CommandResponse,
     AckConsoleType,
     AckAuthLed,
     AckPlayerLed,
     AckRumble,
-    AckKeyboardLed,
-    AckCommandRequest,
+    AckKeyboardLed
 } RFPacket_t;
+
+typedef enum {
+    Wired,
+    Wireless
+} TransmissionMode_t;
 
 typedef struct {
     RFPacket_t id;

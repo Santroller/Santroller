@@ -5,19 +5,24 @@
 #include "controllers.h"
 #include "endpoints.h"
 #include "fxpt_math.h"
+#include "hid.h"
 #include "io.h"
 #include "pins.h"
 #include "pins_define.h"
 #include "ps2.h"
 #include "util.h"
 #include "wii.h"
+#include "rf.h";
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
+
+USB_Report_Data_t combined_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
+long lastSentPacket = 0;
 long lastTap;
 long lastTapShift;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
@@ -47,6 +52,17 @@ USB_Mouse_Data_t lastMouseReport;
 #ifdef TICK_CONSUMER
 USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
+#ifdef RF_TX
+RfInputPacket_t rf_report = {Input};
+RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
+;
+#endif
+#ifdef RF
+#include "rf.h"
+NRFLite nrfRadio;
+uint8_t rf_data[32];
+bool rf_successful = false;
+#endif
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
@@ -63,6 +79,16 @@ void init_main(void) {
     memset(ledState, 0, sizeof(ledState));
 #ifdef INPUT_PS2
     init_ack();
+#endif
+#ifdef RF
+    rf_successful = nrfRadio.init(RADIO_ID, RADIO_CE, RADIO_CSN);
+#endif
+#ifdef RF_RX
+    if (rf_successful) {
+        RfConsoleTypePacket_t packet = {
+            AckConsoleType, consoleType};
+        nrfRadio.addAckData(&packet, sizeof(packet));
+    }
 #endif
 }
 int16_t adc_i(uint8_t pin) {
@@ -155,70 +181,38 @@ uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t m
     int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret - PS3_STICK_CENTER);
 }
-void tick(void) {
-    if (consoleType == UNIVERSAL) {
-        // PS5 just stops communicating after sending a set idle
-        if (set_idle && ps5_timer == 0) {
-            ps5_timer = millis();
-        }
-        if (ps5_timer != 0 && millis() - ps5_timer > 100) {
-            consoleType = PS3;
-            reset_usb();
-        }
-        // Windows and XBOX One both send out a WCID request
-        if (xbox_timer == 0 && windows_or_xbox_one) {
-            xbox_timer = millis();
-        }
-        // But xbox follows that up with a SET_INTERFACE call, so if we don't see one of those then we can assume windows
-        if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
-            consoleType = WINDOWS_XBOX360;
-            reset_usb();
-        }
-        // Wii gives up after reading the config descriptor
-        if (read_config && !received_after_read_config && millis() - wii_timer > 1000) {
-            consoleType = WII_RB;
-            reset_usb();
-            received_after_read_config = true;
-        }
-    }
 
-    // If we have something pending to send to the xbox one controller, send it
-    if (data_from_console_size) {
-        send_report_to_controller(data_from_console, data_from_console_size);
-        data_from_console_size = 0;
-    }
-}
-uint8_t tick_xbox_one(USB_Report_Data_t *combined_report) {
+uint8_t tick_xbox_one() {
     switch (xbox_one_state) {
         case Announce:
             xbox_one_state = Waiting1;
-            memcpy(combined_report, announce, sizeof(announce));
+            memcpy(&combined_report, announce, sizeof(announce));
             return sizeof(announce);
         case Ident1:
             xbox_one_state = Waiting2;
-            memcpy(combined_report, identify_1, sizeof(identify_1));
+            memcpy(&combined_report, identify_1, sizeof(identify_1));
             return sizeof(identify_1);
         case Ident2:
             xbox_one_state = Ident3;
-            memcpy(combined_report, identify_2, sizeof(identify_2));
+            memcpy(&combined_report, identify_2, sizeof(identify_2));
             return sizeof(identify_2);
         case Ident3:
             xbox_one_state = Ident4;
-            memcpy(combined_report, identify_3, sizeof(identify_3));
+            memcpy(&combined_report, identify_3, sizeof(identify_3));
             return sizeof(identify_3);
         case Ident4:
             xbox_one_state = Waiting5;
-            memcpy(combined_report, identify_4, sizeof(identify_4));
+            memcpy(&combined_report, identify_4, sizeof(identify_4));
             return sizeof(identify_4);
         case Ident5:
             xbox_one_state = Auth;
-            memcpy(combined_report, identify_5, sizeof(identify_5));
+            memcpy(&combined_report, identify_5, sizeof(identify_5));
             return sizeof(identify_5);
         case Auth:
             if (data_from_controller_size) {
                 uint8_t size = data_from_controller_size;
                 data_from_controller_size = 0;
-                memcpy(combined_report, data_from_controller, size);
+                memcpy(&combined_report, data_from_controller, size);
                 return size;
             }
             return 0;
@@ -228,16 +222,9 @@ uint8_t tick_xbox_one(USB_Report_Data_t *combined_report) {
             return 0;
     }
 }
-uint8_t tick_all(USB_Report_Data_t *combined_report) {
-    if (consoleType == XBOXONE && xbox_one_state != Ready) {
-        return tick_xbox_one(combined_report);
-    } else {
-        return tick_inputs(combined_report);
-    }
-    return 0;
-}
+
 long lastTick;
-uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
+uint8_t tick_inputs() {
     uint8_t size = 0;
     // Tick Inputs
 #ifdef INPUT_DJ_TURNTABLE
@@ -336,8 +323,8 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #ifdef TICK_MOUSE
         if (i == REPORT_ID_MOUSE) {
             size = sizeof(USB_Mouse_Data_t);
-            memset(combined_report, 0, size);
-            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)combined_report;
+            memset(&combined_report, 0, size);
+            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)&combined_report;
             report->rid = REPORT_ID_MOUSE;
             TICK_MOUSE;
             lastReportToCheck = &lastMouseReport;
@@ -346,8 +333,8 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #ifdef TICK_CONSUMER
         if (i == REPORT_ID_CONSUMER) {
             size = sizeof(USB_ConsumerControl_Data_t);
-            memset(combined_report, 0, size);
-            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)combined_report;
+            memset(&combined_report, 0, size);
+            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)&combined_report;
             report->rid = REPORT_ID_CONSUMER;
             TICK_CONSUMER;
             lastReportToCheck = &lastConsumerReport;
@@ -356,24 +343,25 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
 #ifdef TICK_NKRO
         if (i == REPORT_ID_NKRO) {
             size = sizeof(USB_NKRO_Data_t);
-            memset(combined_report, 0, size);
-            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)combined_report;
+            memset(&combined_report, 0, size);
+            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)&combined_report;
             report->rid = REPORT_ID_NKRO;
             TICK_NKRO;
             lastReportToCheck = &lastNKROReport;
         }
 #endif
-        uint8_t cmp = memcmp(lastReportToCheck, combined_report, size);
+        uint8_t cmp = memcmp(lastReportToCheck, &combined_report, size);
         if (cmp == 0) {
             size = 0;
             continue;
         }
-        memcpy(lastReportToCheck, combined_report, size);
+        memcpy(lastReportToCheck, &combined_report, size);
         break;
     }
 #elif CONSOLE_TYPE == MIDI
 
 #else
+    USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
@@ -383,15 +371,15 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
         // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
 
         if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
-            XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)combined_report;
+            XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)&combined_report;
             size = sizeof(XBOX_ONE_REPORT);
             report_size = size - sizeof(GipHeader_t);
-            memset(combined_report, 0, size);
+            memset(&combined_report, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
             TICK_XBOX_ONE;
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
-                GipKeystroke_t *keystroke = (GipKeystroke_t *)combined_report;
+                GipKeystroke_t *keystroke = (GipKeystroke_t *)&combined_report;
                 GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystroke_sequence_number++);
                 keystroke->pressed = report->guide;
                 keystroke->keycode = GIP_VKEY_LEFT_WIN;
@@ -399,22 +387,22 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
             }
             // We use an unused bit as a flag for sending the guide key code, so flip it back
             report->guide = false;
-            GipPacket_t *packet = (GipPacket_t *)combined_report;
-            combined_report = (USB_Report_Data_t *)packet->data;
+            GipPacket_t *packet = (GipPacket_t *)&combined_report;
+            report_data = (USB_Report_Data_t *)packet->data;
             updateSequence = true;
         } else {
-            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)combined_report;
+            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)&combined_report;
             size = sizeof(XboxOneGHLGuitar_Data_t);
             report_size = sizeof(PS3_REPORT);
-            memset(combined_report, 0, sizeof(XboxOneGHLGuitar_Data_t));
+            memset(&combined_report, 0, sizeof(XboxOneGHLGuitar_Data_t));
             GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
-            combined_report = (USB_Report_Data_t *)&report->report;
+            report_data = (USB_Report_Data_t *)&report->report;
             updateHIDSequence = true;
         }
     }
     if (consoleType == WINDOWS_XBOX360 || consoleType == STAGE_KIT) {
-        XINPUT_REPORT *report = (XINPUT_REPORT *)combined_report;
-        memset(combined_report, 0, sizeof(XINPUT_REPORT));
+        XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
+        memset(report_data, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
         report->rsize = sizeof(XINPUT_REPORT);
 // Whammy on the xbox guitars goes from min to max, so it needs to default to min
@@ -424,10 +412,10 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
         TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
     } else if (!updateSequence) {
-        PS3_REPORT *report = (PS3_REPORT *)combined_report;
-        memset(combined_report, 0, sizeof(PS3_REPORT));
+        PS3_REPORT *report = (PS3_REPORT *)report_data;
+        memset(report_data, 0, sizeof(PS3_REPORT));
 
-        PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)combined_report;
+        PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report_data;
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -454,11 +442,11 @@ uint8_t tick_inputs(USB_Report_Data_t *combined_report) {
         report_size = size = sizeof(PS3_REPORT);
     }
 
-    uint8_t cmp = memcmp(&lastReport, combined_report, report_size);
+    uint8_t cmp = memcmp(&lastReport, report_data, report_size);
     if (cmp == 0) {
         return 0;
     }
-    memcpy(&lastReport, combined_report, report_size);
+    memcpy(&lastReport, report_data, report_size);
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;
@@ -524,4 +512,99 @@ void xone_controller_connected(void) {
     send_report_to_controller(data_from_console, sizeof(GipPowerMode_t));
 }
 void controller_disconnected(void) {
+}
+
+void tick(void) {
+    if (consoleType == UNIVERSAL) {
+        // PS5 just stops communicating after sending a set idle
+        if (set_idle && ps5_timer == 0) {
+            ps5_timer = millis();
+        }
+        if (ps5_timer != 0 && millis() - ps5_timer > 100) {
+            consoleType = PS3;
+            reset_usb();
+        }
+        // Windows and XBOX One both send out a WCID request
+        if (xbox_timer == 0 && windows_or_xbox_one) {
+            xbox_timer = millis();
+        }
+        // But xbox follows that up with a SET_INTERFACE call, so if we don't see one of those then we can assume windows
+        if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
+            consoleType = WINDOWS_XBOX360;
+            reset_usb();
+        }
+        // Wii gives up after reading the config descriptor
+        if (read_config && !received_after_read_config && millis() - wii_timer > 1000) {
+            consoleType = WII_RB;
+            reset_usb();
+            received_after_read_config = true;
+        }
+    }
+
+    // If we have something pending to send to the xbox one controller, send it
+    if (data_from_console_size) {
+        send_report_to_controller(data_from_console, data_from_console_size);
+        data_from_console_size = 0;
+    }
+    uint8_t size = 0;
+    bool ready = ready_for_next_packet();
+#ifdef RF_TX
+    if (!usb_connected()) {
+        if (size > 0) {
+            memcpy(rf_report.data, &combined_report, size);
+            nrfRadio.send(DEST_RADIO_ID, &rf_report, size + 1);
+        } else {
+            nrfRadio.send(DEST_RADIO_ID, &rf_heartbeat, sizeof(rf_heartbeat));
+        }
+        size = nrfRadio.hasAckData();
+        if (size) {
+            nrfRadio.readData(rf_data);
+            switch (rf_data[0]) {
+                case AckConsoleType:
+                    consoleType = rf_data[1];
+                    break;
+                case AckAuthLed:
+                    handle_auth_led();
+                    break;
+                case AckPlayerLed:
+                    handle_player_leds(rf_data[1]);
+                    break;
+                case AckRumble:
+                    handle_rumble(rf_data[1], rf_data[2]);
+                    break;
+                case AckKeyboardLed:
+                    handle_keyboard_leds(rf_data[1]);
+                    break;
+            }
+        }
+        return;
+    }
+#endif
+    if (consoleType == XBOXONE && xbox_one_state != Ready) {
+        if (!ready) {
+            return;
+        }
+        size = tick_xbox_one();
+        send_report_to_pc(&combined_report, size);
+        return;
+    }
+    // Tick the guitar every 5ms if usb is not ready
+    if (ready || millis() - lastSentPacket > 5) {
+        lastSentPacket = millis();
+
+#ifdef RF_RX
+        size = nrfRadio.hasData();
+        if (size) {
+            nrfRadio.readData(rf_data);
+            if (rf_data[0] == Input) {
+                memcpy(&combined_report, rf_data + 1, size - 1);
+            }
+        }
+#else
+        size = tick_inputs();
+#endif
+        if (size && ready) {
+            send_report_to_pc(&combined_report, size);
+        }
+    }
 }

@@ -2,7 +2,7 @@
 
 #define CFG_TUSB_RHPORT0_MODE (OPT_MODE_DEVICE)
 #define CFG_TUSB_RHPORT1_MODE (OPT_MODE_HOST)
-
+#define TUP_DCD_ENDPOINT_MAX 8
 // RHPort max operational speed can defined by board.mk
 #ifndef BOARD_TUH_MAX_SPEED
 #define BOARD_TUH_MAX_SPEED OPT_MODE_DEFAULT_SPEED

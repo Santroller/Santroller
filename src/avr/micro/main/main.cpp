@@ -70,14 +70,14 @@ void SetupHardware(void) {
 void EVENT_USB_Device_ControlRequest(void) {
     if (controlRequestValid(USB_ControlRequest.bmRequestType, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength)) {
         if ((USB_ControlRequest.bmRequestType & CONTROL_REQTYPE_DIRECTION) == (REQDIR_DEVICETOHOST)) {
-            uint16_t len = controlRequest(USB_ControlRequest.bmRequestType, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf);
+            uint16_t len = controlRequest(USB_ControlRequest.bmRequestType, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, buf);
             Endpoint_ClearSETUP();
             Endpoint_Write_Control_Stream_LE(buf, len);
             Endpoint_ClearStatusStage();
         } else {
             Endpoint_ClearSETUP();
             Endpoint_Read_Control_Stream_LE(buf, USB_ControlRequest.wLength);
-            controlRequest(USB_ControlRequest.bmRequestType, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, &buf);
+            controlRequest(USB_ControlRequest.bmRequestType, USB_ControlRequest.bRequest, USB_ControlRequest.wValue, USB_ControlRequest.wIndex, USB_ControlRequest.wLength, buf);
             Endpoint_ClearStatusStage();
         }
     }

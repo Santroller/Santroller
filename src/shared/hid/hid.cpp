@@ -181,29 +181,6 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_F_CPU:
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);
-    }
-#ifdef RF_RX
-    millis_since_command = millis();
-    RfCommandRequestPacket_t packet = {
-        AckCommandRequest,
-        request,
-        wValue};
-    nrfRadio.addAckData(&packet, sizeof(packet));
-    // If we don't receive a response (say the packet is dropped in transit) don't loop forever.
-    while (millis() - millis_since_command < 1000) {
-        uint8_t size = nrfRadio.hasData();
-        uint8_t response[32];
-        if (size) {
-            nrfRadio.readData(response);
-            if (response[0] == CommandResponse) {
-                memcpy(response_buffer, response + 1, size - 1);
-                return size - 1;
-            }
-        }
-    }
-    return 0;
-#endif
-    switch (request) {
         case COMMAND_GET_EXTENSION_WII:
             if (!lastWiiWasSuccessful) {
                 return 0;

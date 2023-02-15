@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include "config.h"
-#include "progmem.h"
+#include <avr/pgmspace.h>
 #define HID_IOF_VARIABLE (1 << 1)
 #define HID_IOF_RELATIVE (1 << 2)
 #define HID_IOF_ABSOLUTE (0 << 2)

@@ -51,12 +51,6 @@ void loop() {
             case AckKeyboardLed:
                 handle_keyboard_leds(response[1]);
                 break;
-            case AckCommandRequest:
-                RfCommandRequestPacket_t* request = (RfCommandRequestPacket_t*)response;
-                bool success;
-                size = handle_serial_command(request->request, request->wValue, (response + 1), &success);
-                response[0] = CommandResponse;
-                nrfRadio.send(DEST_RADIO_ID, response, size + 1);
         }
     }
 }

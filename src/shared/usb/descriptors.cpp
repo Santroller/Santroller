@@ -752,12 +752,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;
             } else if (descriptorNumber < 4) {
-                // TODO: make this not require specific AVR stuff
-#ifdef __AVR__
-                str = (uint8_t *)pgm_read_word(descriptorStrings + descriptorNumber);
-#else
-                str = (uint8_t *)descriptorStrings[descriptorNumber];
-#endif
+                str = (uint8_t *)pgm_read_pointer(descriptorStrings + descriptorNumber);
             } else if (descriptorNumber == 0xEE) {
                 str = (uint8_t *)&OSDescriptorString;
             } else {

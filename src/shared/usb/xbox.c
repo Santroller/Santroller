@@ -1,8 +1,10 @@
 #include "xbox.h"
-#include "wcid.h"
-#include "stdint.h"
-#include "progmem.h"
+
+#include <avr/pgmspace.h>
+
 #include "endpoints.h"
+#include "stdint.h"
+#include "wcid.h"
 const uint8_t PROGMEM XBOX_ID[] = {0x00, 0x82, 0xf8, 0x23};
 const uint8_t PROGMEM capabilities1[] = {0x00, 0x08, 0x00, 0x00,
                                          0x00, 0x00, 0x00, 0x00};

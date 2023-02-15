@@ -4,7 +4,7 @@
 #include "Usb.h"
 #include "endpoints.h"
 #include "midi.h"
-#include "progmem.h"
+#include <avr/pgmspace.h>
 #include "wcid.h"
 #include "xbox.h"
 #include "string_descriptors.h"

@@ -10,9 +10,10 @@
 #include "pins.h"
 #include "pins_define.h"
 #include "ps2.h"
+#include "rf.h"
 #include "util.h"
 #include "wii.h"
-#include "rf.h";
+#include "bt.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -20,6 +21,8 @@
 #define GH5NECK_BUTTONS_PTR 0x12
 
 USB_Report_Data_t combined_report;
+PS3_REPORT bt_report;
+PS3_REPORT last_bt_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastSentPacket = 0;
@@ -361,6 +364,9 @@ uint8_t tick_inputs() {
 #elif CONSOLE_TYPE == MIDI
 
 #else
+#if BLUETOOTH
+    bool ticked_bluetooth = false;
+#endif
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
@@ -411,11 +417,14 @@ uint8_t tick_inputs() {
 #endif
         TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
-    } else if (!updateSequence) {
-        PS3_REPORT *report = (PS3_REPORT *)report_data;
-        memset(report_data, 0, sizeof(PS3_REPORT));
+    }
+    bool actuallyIsPS3 = consoleType != WINDOWS_XBOX360 && consoleType != STAGE_KIT && !updateSequence;
+    // If bluetooth is enabled, then we can use the same code to tick both usb and bluetooth
+    if (actuallyIsPS3 || BLUETOOTH) {
+        PS3_REPORT *report = (PS3_REPORT *)&bt_report;
+        memset(report, 0, sizeof(PS3_REPORT));
 
-        PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report_data;
+        PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report;
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -432,14 +441,19 @@ uint8_t tick_inputs() {
 #endif
         PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)report;
         dpad->dpad = (dpad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[dpad->dpad];
-        // Switch swaps a and b
-        if (consoleType == SWITCH) {
-            bool a = report->a;
-            bool b = report->b;
-            report->b = a;
-            report->a = b;
+        // Only usb ever needs the switch bindings
+        if (actuallyIsPS3) {
+            memcpy(report_data, report, sizeof(PS3_REPORT));
+            report = (PS3_REPORT *)report_data;
+            // Switch swaps a and b
+            if (consoleType == SWITCH) {
+                bool a = report->a;
+                bool b = report->b;
+                report->b = a;
+                report->a = b;
+            }
+            report_size = size = sizeof(PS3_REPORT);
         }
-        report_size = size = sizeof(PS3_REPORT);
     }
 
     uint8_t cmp = memcmp(&lastReport, report_data, report_size);
@@ -447,6 +461,10 @@ uint8_t tick_inputs() {
         return 0;
     }
     memcpy(&lastReport, report_data, report_size);
+    #if BLUETOOTH
+        memcpy(&last_bt_report, &bt_report, sizeof(PS3_REPORT));
+        queue_report_send();
+    #endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;

@@ -14,7 +14,7 @@
 #include "util.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
-const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU_FREQ);
+const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
 uint8_t xbox_players[] = {
     0,  // 0x00	 All off
     0,  // 0x01	 All blinking

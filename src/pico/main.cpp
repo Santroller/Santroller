@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <pico/stdlib.h>
+#include "pico/cyw43_arch.h"
 #include <pico/unique_id.h>
 #include <string.h>
 #include <tusb.h>
@@ -22,6 +23,8 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
+#include "bt.h"
+
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
@@ -35,15 +38,8 @@ static uint32_t *persistedConsoleTypeValid = (uint32_t *)0x20040010;
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 bool connected = false;
+bool bt = true;
 
-void setup() {
-    generateSerialString(&serialstring);
-    tusb_init();
-    if (*persistedConsoleTypeValid == 0x3A2F) {
-        consoleType = *persistedConsoleType;
-    }
-    init_main();
-}
 
 bool ready_for_next_packet() {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
@@ -64,6 +60,16 @@ void loop() {
     }
     tud_task();
     tuh_task();
+}
+void setup() {
+    generateSerialString(&serialstring);
+    tusb_init();
+    if (*persistedConsoleTypeValid == 0x3A2F) {
+        consoleType = *persistedConsoleType;
+    }
+    init_main();
+    btstack_main();
+    
 }
 void send_report_to_controller(uint8_t *report, uint8_t len) {
     if (xone_dev_addr && tuh_xinput_mounted(xone_dev_addr, 0)) {

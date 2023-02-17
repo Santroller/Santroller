@@ -1,20 +1,18 @@
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
-
-#include "config.h"
-#include "endpoints.h"
-#include "hid.h"
-#include "shared_main.h"
-#include "btstack.h"
-#include "bt_profile.h"
 
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
 #include "ble/gatt-service/hids_device.h"
-
+#include "bt_profile.h"
+#include "btstack.h"
+#include "config.h"
+#include "endpoints.h"
+#include "hid.h"
+#include "shared_main.h"
 
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -23,33 +21,53 @@ static uint8_t battery = 100;
 static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 static uint8_t protocol_mode = 1;
 
-static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
+static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 
 const uint8_t adv_data[] = {
     // Flags general discoverable, BR/EDR not supported
-    0x02, BLUETOOTH_DATA_TYPE_FLAGS, 0x06,
+    0x02,
+    BLUETOOTH_DATA_TYPE_FLAGS,
+    0x06,
     // Name
-    0x0d, BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME, 'S', 'a', 'n', 't', 'r', 'o', 'l', 'l', 'e', 'r', 'B', 'T',
+    0x0d,
+    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
+    'S',
+    'a',
+    'n',
+    't',
+    'r',
+    'o',
+    'l',
+    'l',
+    'e',
+    'r',
+    'B',
+    'T',
     // 16-bit Service UUIDs
-    0x03, BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
+    0x03,
+    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
+    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
+    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
     // Appearance HID - Gamepad (Category 15, Sub-Category 4)
-    0x03, BLUETOOTH_DATA_TYPE_APPEARANCE, 0xC4, 0x03,
+    0x03,
+    BLUETOOTH_DATA_TYPE_APPEARANCE,
+    0xC4,
+    0x03,
 };
 bool check_bluetooth_ready() {
-    return true;
+    return con_handle != HCI_CON_HANDLE_INVALID;
 }
-void send_report() {
-    hids_device_send_input_report(con_handle, (uint8_t *)&last_bt_report.report, sizeof(last_bt_report.report));
+void send_report(uint8_t size, uint8_t* report) {
+    hids_device_send_input_report(con_handle, report, size);
 }
 const uint8_t adv_data_len = sizeof(adv_data);
 
-static void le_keyboard_setup(void){
-
+static void le_keyboard_setup(void) {
     l2cap_init();
 
     sm_init();
     sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
-    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION|SM_AUTHREQ_MITM_PROTECTION);
+    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION);
     sm_use_fixed_passkey_in_display_role(1111);
 
     // setup ATT server
@@ -60,9 +78,12 @@ static void le_keyboard_setup(void){
 
     // setup device information service
     device_information_service_server_init();
-
+#if SUPPORTS_KEYBOARD
+    hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
+#else
     // setup HID Device service
     hids_device_init(0, pc_descriptor, sizeof(pc_descriptor));
+#endif
 
     // setup advertisements
     uint16_t adv_int_min = 0x0030;
@@ -71,7 +92,7 @@ static void le_keyboard_setup(void){
     bd_addr_t null_addr;
     memset(null_addr, 0, 6);
     gap_advertisements_set_params(adv_int_min, adv_int_max, adv_type, 0, null_addr, 0x07, 0x00);
-    gap_advertisements_set_data(adv_data_len, (uint8_t*) adv_data);
+    gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data);
     gap_advertisements_enable(1);
 
     // register for HCI events
@@ -86,7 +107,7 @@ static void le_keyboard_setup(void){
     hids_device_register_packet_handler(packet_handler);
 }
 
-static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
+static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(channel);
     UNUSED(size);
 
@@ -102,14 +123,14 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
             sm_just_works_confirm(sm_event_just_works_request_get_handle(packet));
             break;
         case SM_EVENT_NUMERIC_COMPARISON_REQUEST:
-            printf("Confirming numeric comparison: %"PRIu32"\n", sm_event_numeric_comparison_request_get_passkey(packet));
+            printf("Confirming numeric comparison: %" PRIu32 "\n", sm_event_numeric_comparison_request_get_passkey(packet));
             sm_numeric_comparison_confirm(sm_event_passkey_display_number_get_handle(packet));
             break;
         case SM_EVENT_PASSKEY_DISPLAY_NUMBER:
-            printf("Display Passkey: %"PRIu32"\n", sm_event_passkey_display_number_get_passkey(packet));
+            printf("Display Passkey: %" PRIu32 "\n", sm_event_passkey_display_number_get_passkey(packet));
             break;
         case SM_EVENT_PAIRING_COMPLETE:
-            switch (sm_event_pairing_complete_get_status(packet)){
+            switch (sm_event_pairing_complete_get_status(packet)) {
                 case ERROR_CODE_SUCCESS:
                     printf("Pairing complete, success\n");
                     break;
@@ -127,7 +148,7 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
             }
             break;
         case HCI_EVENT_HIDS_META:
-            switch (hci_event_hids_meta_get_subevent_code(packet)){
+            switch (hci_event_hids_meta_get_subevent_code(packet)) {
                 case HIDS_SUBEVENT_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_input_report_enable_get_con_handle(packet);
                     printf("Report Characteristic Subscribed %u\n", hids_subevent_input_report_enable_get_enable(packet));
@@ -147,15 +168,14 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
                     break;
             }
             break;
-            
+
         default:
             break;
     }
 }
 
 int btstack_main(void);
-int btstack_main(void)
-{
+int btstack_main(void) {
     le_keyboard_setup();
 
     // turn on!

@@ -21,8 +21,7 @@
 #define GH5NECK_BUTTONS_PTR 0x12
 
 USB_Report_Data_t combined_report;
-ps3_bluetooth_report_t bt_report;
-ps3_bluetooth_report_t last_bt_report;
+PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastSentPacket = 0;
@@ -80,7 +79,6 @@ void init_main(void) {
     twi_init();
     spi_begin();
     memset(ledState, 0, sizeof(ledState));
-    bt_report.state = 0xa1;
 #ifdef INPUT_PS2
     init_ack();
 #endif
@@ -362,12 +360,12 @@ uint8_t tick_inputs() {
         memcpy(lastReportToCheck, &combined_report, size);
         break;
     }
+    #if BLUETOOTH
+         send_report(size, (uint8_t*)&combined_report);
+    #endif
 #elif CONSOLE_TYPE == MIDI
 
 #else
-#if BLUETOOTH
-    bool ticked_bluetooth = false;
-#endif
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
@@ -422,7 +420,7 @@ uint8_t tick_inputs() {
     bool actuallyIsPS3 = consoleType != WINDOWS_XBOX360 && consoleType != STAGE_KIT && !updateSequence;
     // If bluetooth is enabled, then we can use the same code to tick both usb and bluetooth
     if (actuallyIsPS3 || BLUETOOTH) {
-        PS3_REPORT *report = &bt_report.report;
+        PS3_REPORT *report = &bt_report;
         memset(report, 0, sizeof(PS3_REPORT));
 
         PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report;
@@ -464,8 +462,7 @@ uint8_t tick_inputs() {
     }
     memcpy(&lastReport, report_data, report_size);
     #if BLUETOOTH
-        memcpy(&last_bt_report, &bt_report, sizeof(PS3_REPORT));
-        send_report();
+        send_report(sizeof(PS3_REPORT), (uint8_t*)&bt_report);
     #endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {

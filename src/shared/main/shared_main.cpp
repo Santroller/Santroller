@@ -21,8 +21,8 @@
 #define GH5NECK_BUTTONS_PTR 0x12
 
 USB_Report_Data_t combined_report;
-PS3_REPORT bt_report;
-PS3_REPORT last_bt_report;
+ps3_bluetooth_report_t bt_report;
+ps3_bluetooth_report_t last_bt_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastSentPacket = 0;
@@ -80,6 +80,7 @@ void init_main(void) {
     twi_init();
     spi_begin();
     memset(ledState, 0, sizeof(ledState));
+    bt_report.state = 0xa1;
 #ifdef INPUT_PS2
     init_ack();
 #endif
@@ -421,7 +422,7 @@ uint8_t tick_inputs() {
     bool actuallyIsPS3 = consoleType != WINDOWS_XBOX360 && consoleType != STAGE_KIT && !updateSequence;
     // If bluetooth is enabled, then we can use the same code to tick both usb and bluetooth
     if (actuallyIsPS3 || BLUETOOTH) {
-        PS3_REPORT *report = (PS3_REPORT *)&bt_report;
+        PS3_REPORT *report = &bt_report.report;
         memset(report, 0, sizeof(PS3_REPORT));
 
         PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report;
@@ -441,10 +442,11 @@ uint8_t tick_inputs() {
 #endif
         PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)report;
         dpad->dpad = (dpad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[dpad->dpad];
-        // Only usb ever needs the switch bindings
         if (actuallyIsPS3) {
+            // Actually a usb hid controller, copy the report to the usb one
             memcpy(report_data, report, sizeof(PS3_REPORT));
             report = (PS3_REPORT *)report_data;
+            // Only usb ever needs the switch bindings
             // Switch swaps a and b
             if (consoleType == SWITCH) {
                 bool a = report->a;
@@ -606,6 +608,7 @@ void tick(void) {
         send_report_to_pc(&combined_report, size);
         return;
     }
+    // TODO: also tick in here if bluetooh is ready
     // Tick the guitar every 5ms if usb is not ready
     if (ready || millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
@@ -620,6 +623,7 @@ void tick(void) {
         }
 #else
         size = tick_inputs();
+
 #endif
         if (size && ready) {
             send_report_to_pc(&combined_report, size);

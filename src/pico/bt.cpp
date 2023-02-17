@@ -65,7 +65,7 @@ static uint16_t host_min_timeout = 3200;
 
 // STATE
 
-static uint8_t hid_service_buffer[300];
+static uint8_t hid_service_buffer[400];
 static uint8_t device_id_sdp_service_buffer[100];
 static const char hid_device_name[] = "SantrollerBT";
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -117,6 +117,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             }
                             app_state = APP_CONNECTED;
                             hid_cid = hid_subevent_connection_opened_get_hid_cid(packet);
+                            printf("HID Connected %d\n", hid_cid);
                             break;
                         case HID_SUBEVENT_CONNECTION_CLOSED:
                             printf("HID Disconnected\n");
@@ -169,7 +170,7 @@ int btstack_main() {
     bool hid_normally_connectable = 1;
 
     hid_sdp_record_t hid_params = {
-        // hid sevice subclass 2540 Keyboard, hid counntry code 33 US
+        // hid sevice subclass 2540 Generic HID, hid country code 33 US
         0x2500, 33,
         hid_virtual_cable, hid_remote_wake,
         hid_reconnect_initiate, hid_normally_connectable,
@@ -177,8 +178,7 @@ int btstack_main() {
         host_max_latency, host_min_timeout,
         3200,
         pc_descriptor,
-        // TODO: this shouldn't be necessary why is there an extra byte (https://github.com/bluekitchen/btstack/issues/458)
-        sizeof(pc_descriptor) + 1,
+        sizeof(pc_descriptor),
         hid_device_name};
 
     hid_create_sdp_record(hid_service_buffer, 0x10001, &hid_params);

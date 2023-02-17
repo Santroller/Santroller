@@ -15,4 +15,4 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len);
 void xinput_controller_connected(uint8_t vid, uint8_t pid);
 void xone_controller_connected(void);
 void controller_disconnected(void);
-extern PS3_REPORT last_bt_report;
+extern ps3_bluetooth_report_t last_bt_report;

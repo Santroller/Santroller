@@ -254,3 +254,7 @@ enum hid_reports_t {
 #endif
     REPORT_ID_END
 };
+typedef struct {
+    uint8_t state;
+    PS3_REPORT report;
+} ps3_bluetooth_report_t;

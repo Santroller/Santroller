@@ -50,7 +50,7 @@ bool usb_connected() {
 }
 
 void send_report_to_pc(const void *report, uint8_t len) {
-    tud_xinput_n_report(0, 0, &report, len);
+    tud_xinput_n_report(0, 0, report, len);
 }
 void loop() {
     tick();

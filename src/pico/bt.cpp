@@ -50,7 +50,7 @@ static void le_keyboard_setup(void){
     sm_init();
     sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION|SM_AUTHREQ_MITM_PROTECTION);
-    sm_use_fixed_passkey_in_display_role(0);
+    sm_use_fixed_passkey_in_display_role(1111);
 
     // setup ATT server
     att_server_init(profile_data, NULL, NULL);

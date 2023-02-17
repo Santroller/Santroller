@@ -1,3 +1,5 @@
 #pragma once
+#include <stdbool.h>
 int btstack_main();
-void queue_report_send(void);
+void send_report(void);
+bool check_bluetooth_ready(void);

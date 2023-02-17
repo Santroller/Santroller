@@ -435,6 +435,7 @@ uint8_t tick_inputs() {
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         TICK_PS3;
+        gamepad->rightStickY = rand();
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
             report->tableNeutral = true;
@@ -465,7 +466,7 @@ uint8_t tick_inputs() {
     memcpy(&lastReport, report_data, report_size);
     #if BLUETOOTH
         memcpy(&last_bt_report, &bt_report, sizeof(PS3_REPORT));
-        queue_report_send();
+        send_report();
     #endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
@@ -568,6 +569,7 @@ void tick(void) {
     }
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
+    bool bluetooth_ready = BLUETOOTH && check_bluetooth_ready();
 #ifdef RF_TX
     if (!usb_connected()) {
         if (size > 0) {
@@ -610,7 +612,7 @@ void tick(void) {
     }
     // TODO: also tick in here if bluetooh is ready
     // Tick the guitar every 5ms if usb is not ready
-    if (ready || millis() - lastSentPacket > 5) {
+    if (ready || bluetooth_ready || millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
 
 #ifdef RF_RX

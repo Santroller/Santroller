@@ -38,7 +38,6 @@ static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 bool connected = false;
-bool bt = true;
 
 
 bool ready_for_next_packet() {
@@ -69,7 +68,9 @@ void setup() {
     }
     printf("ConsoleType: %d\n", consoleType);
     init_main();
+    #if BLUETOOTH
     btstack_main();
+    #endif
     
 }
 void send_report_to_controller(uint8_t *report, uint8_t len) {

@@ -33,8 +33,8 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
 
-static uint32_t *persistedConsoleType = (uint32_t *)0x20040020;
-static uint32_t *persistedConsoleTypeValid = (uint32_t *)0x20040010;
+static uint32_t __uninitialized_ram(persistedConsoleType);
+static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 bool connected = false;
@@ -64,9 +64,10 @@ void loop() {
 void setup() {
     generateSerialString(&serialstring);
     tusb_init();
-    if (*persistedConsoleTypeValid == 0x3A2F) {
-        consoleType = *persistedConsoleType;
+    if (persistedConsoleTypeValid == 0x3A2F) {
+        consoleType = persistedConsoleType;
     }
+    printf("ConsoleType: %d\n", consoleType);
     init_main();
     btstack_main();
     
@@ -237,8 +238,7 @@ void bootloader(void) {
     reset_usb_boot(0, 0);
 }
 void reset_usb(void) {
-    // If we start using the second core for anything, make sure to stop it before doing this, as we are trashing its stack here.
-    *persistedConsoleType = consoleType;
-    *persistedConsoleTypeValid = 0x3A2F;
+    persistedConsoleType = consoleType;
+    persistedConsoleTypeValid = 0x3A2F;
     reboot();
 }

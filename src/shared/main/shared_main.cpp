@@ -435,7 +435,6 @@ uint8_t tick_inputs() {
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         TICK_PS3;
-        gamepad->rightStickY = rand();
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
             report->tableNeutral = true;

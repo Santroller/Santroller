@@ -225,6 +225,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #if defined(RF_RX) || defined(RF_TX)
 #define RF
 #endif
+typedef union {
+    PS3_REPORT ps3;
+    XINPUT_REPORT xinput;
+    XBOX_ONE_REPORT xone;
+    USB_NKRO_Data_t keyboard;
+    USB_MIDI_Data_t midi;
+    USB_Mouse_Data_t mouse;
+} combined_report_t;
 extern const uint8_t announce[32];
 extern const uint8_t identify_1[64];
 extern const uint8_t identify_2[64];
@@ -254,3 +262,8 @@ enum hid_reports_t {
 #endif
     REPORT_ID_END
 };
+#ifdef RF_TX
+#define RADIO_ID TRANSMIT_RADIO_ID
+#else
+#define RADIO_ID DEST_RADIO_ID
+#endif

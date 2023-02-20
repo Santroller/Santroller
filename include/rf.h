@@ -5,6 +5,7 @@ extern NRFLite nrfRadio;
 typedef enum {
     Heartbeat,
     Input,
+    Mask,
     AckConsoleType,
     AckAuthLed,
     AckPlayerLed,
@@ -19,45 +20,47 @@ typedef enum {
 
 typedef struct {
     RFPacket_t id;
+    uint8_t radio_id;
 } RfHeartbeatPacket_t;
+typedef struct {
+    RFPacket_t packet_id;
+    uint8_t radio_id;
+    uint8_t mask[sizeof(combined_report_t)];
+} RfMaskPacket_t;
+typedef struct {
+    RFPacket_t packet_id;
+    uint8_t radio_id;
+    GipHeader_t header;
+    uint8_t mask[sizeof(PS3GHLGuitar_Data_t)];
+} RfMaskPacketGHL_t;
 
 typedef struct {
-    uint8_t id;
-    uint8_t response[30];
-} RfCommandResponsePacket_t;
-
-typedef struct {
-    uint8_t id;
-    uint8_t request;
-    uint16_t wValue;
-} RfCommandRequestPacket_t;
-
-typedef struct {
-    RFPacket_t id;
+    RFPacket_t packet_id;
+    uint8_t radio_id;
     uint8_t data[30];
 } RfInputPacket_t;
 
 
 typedef struct {
-    RFPacket_t id;
+    RFPacket_t packet_id;
     uint8_t consoleType;
 } RfConsoleTypePacket_t;
 
 typedef struct {
-    RFPacket_t id;
+    RFPacket_t packet_id;
 } RfAuthLedPacket_t;
 
 typedef struct {
-    RFPacket_t id;
+    RFPacket_t packet_id;
     uint8_t player;
 } RfPlayerLed_t;
 typedef struct {
-    RFPacket_t id;
+    RFPacket_t packet_id;
     uint8_t led;
 } RfKeyboardLed_t;
 
 typedef struct {
-    RFPacket_t id;
+    RFPacket_t packet_id;
     uint8_t left;
     uint8_t right;
 } RfRumbleLed_t;

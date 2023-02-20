@@ -1,19 +1,20 @@
 #include "shared_main.h"
 
 #include "Arduino.h"
+#include "bt.h"
 #include "config.h"
 #include "controllers.h"
 #include "endpoints.h"
 #include "fxpt_math.h"
 #include "hid.h"
 #include "io.h"
+#include "mask.h"
 #include "pins.h"
 #include "pins_define.h"
 #include "ps2.h"
 #include "rf.h"
 #include "util.h"
 #include "wii.h"
-#include "bt.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -55,12 +56,12 @@ USB_Mouse_Data_t lastMouseReport;
 USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
 #ifdef RF_TX
-RfInputPacket_t rf_report = {Input};
-RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
-;
+RfInputPacket_t rf_report = {Input, TRANSMIT_RADIO_ID};
+RfHeartbeatPacket_t rf_heartbeat = {Heartbeat, TRANSMIT_RADIO_ID};
 #endif
 #ifdef RF
 #include "rf.h"
+#include "SPI.h"
 NRFLite nrfRadio;
 uint8_t rf_data[32];
 bool rf_successful = false;
@@ -83,6 +84,9 @@ void init_main(void) {
     init_ack();
 #endif
 #ifdef RF
+    SPI.setTX(RADIO_MOSI);
+    SPI.setRX(RADIO_MISO);
+    SPI.setSCK(RADIO_SCK);
     rf_successful = nrfRadio.init(RADIO_ID, RADIO_CE, RADIO_CSN);
 #endif
 #ifdef RF_RX
@@ -360,11 +364,9 @@ uint8_t tick_inputs() {
         memcpy(lastReportToCheck, &combined_report, size);
         break;
     }
-    #if BLUETOOTH
-         send_report(size, (uint8_t*)&combined_report);
-    #endif
-#elif CONSOLE_TYPE == MIDI
-
+#if BLUETOOTH
+    send_report(size, (uint8_t *)&combined_report);
+#endif
 #else
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
@@ -461,9 +463,9 @@ uint8_t tick_inputs() {
         return 0;
     }
     memcpy(&lastReport, report_data, report_size);
-    #if BLUETOOTH
-        send_report(sizeof(PS3_REPORT), (uint8_t*)&bt_report);
-    #endif
+#if BLUETOOTH
+    send_report(sizeof(PS3_REPORT), (uint8_t *)&bt_report);
+#endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;
@@ -531,7 +533,131 @@ void xone_controller_connected(void) {
 void controller_disconnected(void) {
 }
 
+#ifdef RF_TX
+void send_mask(void) {
+    uint8_t size;
+    RfMaskPacket_t mask;
+    mask.packet_id = Mask;
+    mask.radio_id = TRANSMIT_RADIO_ID;
+#if CONSOLE_TYPE == KEYBOARD_MOUSE
+    for (int i = 1; i < REPORT_ID_END; i++) {
+        // set report id
+        mask.mask[0] = i;
+        memset(&mask, 0, sizeof(mask));
+#ifdef TICK_MOUSE
+        // report size + packet id
+        if (i == REPORT_ID_MOUSE) {
+            size = sizeof(USB_Mouse_Data_t);
+            MOUSE_MASK;
+            nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+        }
+#endif
+#ifdef TICK_CONSUMER
+        // report size + packet id
+        if (i == REPORT_ID_CONSUMER) {
+            size = sizeof(USB_ConsumerControl_Data_t);
+            CONSUMER_MASK;
+            nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+        }
+#endif
+#ifdef TICK_NKRO
+        // report size + packet id
+        if (i == REPORT_ID_NKRO) {
+            size = sizeof(USB_NKRO_Data_t);
+            KEYBOARD_MASK;
+            nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+        }
+#endif
+    }
+#else
+    memset(&mask, 0, sizeof(mask));
+    if (consoleType == XBOXONE) {
+        size = sizeof(XBOX_ONE_REPORT);
+        XBOX_ONE_MASK;
+        mask.mask[0] = GIP_INPUT_REPORT;
+    } else if (consoleType == WINDOWS_XBOX360) {
+        size = sizeof(XINPUT_REPORT);
+        XINPUT_MASK;
+    } else {
+        size = sizeof(PS3_REPORT);
+        PS3_MASK;
+    }
+    // report size + packet id
+    nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+// GHL XB1 guitars have two seperate reports, so we need to send masks for both.
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+    if (consoleType == XBOXONE) {
+        memset(&mask, 0, sizeof(mask));
+        size = sizeof(XboxOneGHLGuitar_Data_t);
+        PS3_MASK;
+        RfMaskPacketGHL_t ghl_mask;
+        memcpy(ghl_mask.mask, mask.mask, sizeof(PS3GHLGuitar_Data_t));
+        ghl_mask.header.command = GHL_HID_REPORT;
+        nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+    }
+#endif
+#endif
+}
+#endif
+uint8_t ghl_mask[RF_COUNT][sizeof(PS3GHLGuitar_Data_t)];
+uint8_t standard_mask[RF_COUNT][sizeof(combined_report_t)];
+uint8_t keyboard_masks[RF_COUNT][3][sizeof(combined_report_t)];
+#ifdef RF_RX
+void parse_mask(uint8_t size) {
+    RfMaskPacket_t *mask = (RfMaskPacket_t *)rf_data;
+#if CONSOLE_TYPE == KEYBOARD_MOUSE
+    uint8_t report_id = mask->mask[0];
+    mask->mask[0] = 0xFF;
+    memcpy(keyboard_masks[mask->radio_id][report_id], mask->mask, size - 1);
+#else
+    if (consoleType == XBOXONE) {
+        size = sizeof(XBOX_ONE_REPORT);
+        if (mask->mask[0] = GIP_INPUT_REPORT) {
+            mask->mask[0] = 0xFF;
+            memcpy(standard_mask[mask->radio_id], mask->mask, size - 1);
+        } else if (mask->mask[0] == GHL_HID_REPORT) {
+            mask->mask[0] = 0xFF;
+            RfMaskPacketGHL_t *mask_ghl = (RfMaskPacketGHL_t *)rf_data;
+            memcpy(ghl_mask[mask->radio_id], mask_ghl->mask, size - 2);
+        }
+    } else if (consoleType == WINDOWS_XBOX360) {
+        size = sizeof(XINPUT_REPORT);
+        memcpy(standard_mask[mask->radio_id], mask->mask, size - 1);
+    } else {
+        size = sizeof(PS3_REPORT);
+        memcpy(standard_mask[mask->radio_id], mask->mask, size - 1);
+    }
+#endif
+}
+#endif
+
 void tick(void) {
+    uint8_t size = 0;
+#ifdef RF_TX
+    size = nrfRadio.hasAckData();
+    if (size) {
+        nrfRadio.readData(rf_data);
+        switch (rf_data[0]) {
+            case AckConsoleType:
+                consoleType = rf_data[1];
+                send_mask();
+                break;
+            case AckAuthLed:
+                handle_auth_led();
+                break;
+            case AckPlayerLed:
+                handle_player_leds(rf_data[1]);
+                break;
+            case AckRumble:
+                handle_rumble(rf_data[1], rf_data[2]);
+                break;
+            case AckKeyboardLed:
+                handle_keyboard_leds(rf_data[1]);
+                break;
+        }
+    }
+
+#endif
     if (consoleType == UNIVERSAL) {
         // PS5 just stops communicating after sending a set idle
         if (set_idle && ps5_timer == 0) {
@@ -563,7 +689,6 @@ void tick(void) {
         send_report_to_controller(data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
-    uint8_t size = 0;
     bool ready = ready_for_next_packet();
     bool bluetooth_ready = BLUETOOTH && check_bluetooth_ready();
 #ifdef RF_TX
@@ -573,27 +698,6 @@ void tick(void) {
             nrfRadio.send(DEST_RADIO_ID, &rf_report, size + 1);
         } else {
             nrfRadio.send(DEST_RADIO_ID, &rf_heartbeat, sizeof(rf_heartbeat));
-        }
-        size = nrfRadio.hasAckData();
-        if (size) {
-            nrfRadio.readData(rf_data);
-            switch (rf_data[0]) {
-                case AckConsoleType:
-                    consoleType = rf_data[1];
-                    break;
-                case AckAuthLed:
-                    handle_auth_led();
-                    break;
-                case AckPlayerLed:
-                    handle_player_leds(rf_data[1]);
-                    break;
-                case AckRumble:
-                    handle_rumble(rf_data[1], rf_data[2]);
-                    break;
-                case AckKeyboardLed:
-                    handle_keyboard_leds(rf_data[1]);
-                    break;
-            }
         }
         return;
     }
@@ -606,17 +710,51 @@ void tick(void) {
         send_report_to_pc(&combined_report, size);
         return;
     }
-    // TODO: also tick in here if bluetooh is ready
     // Tick the guitar every 5ms if usb is not ready
     if (ready || bluetooth_ready || millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
-
 #ifdef RF_RX
         size = nrfRadio.hasData();
         if (size) {
             nrfRadio.readData(rf_data);
             if (rf_data[0] == Input) {
-                memcpy(&combined_report, rf_data + 1, size - 1);
+                RfInputPacket_t *input = (RfInputPacket_t *)rf_data;
+
+#if CONSOLE_TYPE == KEYBOARD_MOUSE
+                uint8_t report_id = mask->mask[0];
+                uint8_t *mask = keyboard_masks[input->radio_id][report_id];
+#else
+                uint8_t *mask = standard_mask[input->radio_id];
+                if (consoleType == XBOXONE) {
+                    // Put together a new header, as the old one will be masked away and have the wrong sequence ids
+                    XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)&combined_report;
+                    GipHeader_t *header = (GipHeader_t *)&combined_report;
+                    if (header->command == GHL_HID_REPORT) {
+                        mask = ghl_mask[input->radio_id];
+                    }
+                }
+#endif
+
+                for (int i = 1; i < size; i++) {
+                    // Fliter out the masked bits from the current report
+                    combined_report.raw[i - 1] &= ~mask[i - 1];
+                    // And then write in the new bits
+                    combined_report.raw[i - 1] |= rf_data[i];
+                }
+            }
+            if (rf_data[0] == Mask) {
+                parse_mask(size);
+                return;
+            }
+            if (consoleType == XBOXONE) {
+                // Put together a new header, as the old one will be masked away and have the wrong sequence ids
+                XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)&combined_report;
+                GipHeader_t *header = (GipHeader_t *)&combined_report;
+                if (header->command == GIP_INPUT_REPORT) {
+                    GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number++);
+                } else {
+                    GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number++);
+                }
             }
         }
 #else

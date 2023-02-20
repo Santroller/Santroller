@@ -20,7 +20,11 @@
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
-
+#ifdef RF_RX
+uint8_t ghl_mask[RF_COUNT][sizeof(PS3GHLGuitar_Data_t)];
+uint8_t standard_mask[RF_COUNT][sizeof(combined_report_t)];
+uint8_t keyboard_masks[RF_COUNT][3][sizeof(combined_report_t)];
+#endif
 USB_Report_Data_t combined_report;
 PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
@@ -601,9 +605,6 @@ void send_mask(void) {
 #endif
 }
 #endif
-uint8_t ghl_mask[RF_COUNT][sizeof(PS3GHLGuitar_Data_t)];
-uint8_t standard_mask[RF_COUNT][sizeof(combined_report_t)];
-uint8_t keyboard_masks[RF_COUNT][3][sizeof(combined_report_t)];
 #ifdef RF_RX
 void parse_mask(uint8_t size) {
     RfMaskPacket_t *mask = (RfMaskPacket_t *)rf_data;

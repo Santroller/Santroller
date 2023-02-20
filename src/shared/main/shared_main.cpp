@@ -83,10 +83,12 @@ void init_main(void) {
 #ifdef INPUT_PS2
     init_ack();
 #endif
-#ifdef RF
+#ifdef RADIO_MOSI
     SPI.setTX(RADIO_MOSI);
     SPI.setRX(RADIO_MISO);
     SPI.setSCK(RADIO_SCK);
+#endif
+#ifdef RF
     rf_successful = nrfRadio.init(RADIO_ID, RADIO_CE, RADIO_CSN);
 #endif
 #ifdef RF_RX

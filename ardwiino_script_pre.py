@@ -39,9 +39,10 @@ if "upload" in BUILD_TARGETS:
             pass
     if "detect_frequency" in upload_options and upload_options["detect_frequency"] == "true":
         print("Uploading script to detect speed")
+        subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"])
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
-        subprocess.run([sys.executable, "-m", "platformio", "run", "--target", "upload", "--environment", "microdetect"], stderr=subprocess.STDOUT)
+        subprocess.run([sys.executable, "-m", "platformio", "run", "--target", "upload", "--environment", "microdetect", "--upload-port", env.subst("$UPLOAD_PORT")], stderr=subprocess.STDOUT)
         os.chdir(cwd)
         dev = None
         while not dev:

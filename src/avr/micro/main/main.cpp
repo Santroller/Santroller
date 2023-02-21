@@ -27,8 +27,6 @@ volatile uint16_t test __attribute__((section(".noinit")));
 volatile uint16_t test2 __attribute__((section(".noinit")));
 void SetupHardware(void);
 
-USB_Report_Data_t report;
-#include "rf_rx.h"
 
 void setup() {
     init_main();
@@ -37,22 +35,25 @@ void setup() {
     }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
-    INIT();
-    // Latest console id is always here on bootup as we reboot the microcontroller when we switch.
-    RX_CONSOLE_ID();
 }
 
 uint8_t buf[255];
 void loop() {
-    uint8_t size = TICK();
-    Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
-    Endpoint_Write_Stream_LE(&report, size, NULL);
-    Endpoint_ClearIN();
+    tick();
     Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
     if (Endpoint_IsOUTReceived()) {
         size = Endpoint_Read_Stream_LE(buf, 0x08, NULL);
         hid_set_report(buf, size, INTERRUPT_ID, INTERRUPT_ID);
     }
+}
+bool ready_for_next_packet() {
+    Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+    return Endpoint_IsINReady();
+}
+void send_report_to_pc(const void* report, uint8_t len) {
+    Endpoint_SelectEndpoint(DEVICE_EPADDR_IN);
+    Endpoint_Write_Stream_LE(report, len, NULL);
+    Endpoint_ClearIN();
 }
 
 void SetupHardware(void) {

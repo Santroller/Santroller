@@ -64,8 +64,8 @@ RfInputPacket_t rf_report = {Input, TRANSMIT_RADIO_ID};
 RfHeartbeatPacket_t rf_heartbeat = {Heartbeat, TRANSMIT_RADIO_ID};
 #endif
 #ifdef RF
-#include "rf.h"
 #include "SPI.h"
+#include "rf.h"
 NRFLite nrfRadio;
 uint8_t rf_data[32];
 bool rf_successful = false;
@@ -79,6 +79,15 @@ typedef struct {
 } Led_t;
 Led_t ledState[LED_COUNT];
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
+#ifdef RF_RX
+void send_rf_console_type() {
+    if (rf_successful) {
+        RfConsoleTypePacket_t packet = {
+            AckConsoleType, consoleType};
+        nrfRadio.addAckData(&packet, sizeof(packet));
+    }
+}
+#endif
 void init_main(void) {
     initPins();
     twi_init();
@@ -96,11 +105,7 @@ void init_main(void) {
     rf_successful = nrfRadio.init(RADIO_ID, RADIO_CE, RADIO_CSN);
 #endif
 #ifdef RF_RX
-    if (rf_successful) {
-        RfConsoleTypePacket_t packet = {
-            AckConsoleType, consoleType};
-        nrfRadio.addAckData(&packet, sizeof(packet));
-    }
+    send_rf_console_type();
 #endif
 }
 int16_t adc_i(uint8_t pin) {

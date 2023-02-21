@@ -41,8 +41,7 @@ if "upload" in BUILD_TARGETS:
         print("Uploading script to detect speed")
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
-        executable = join(os.getenv("PLATFORMIO_CORE_DIR"), "penv", "bin", "platformio")
-        subprocess.run([executable, "run", "--target", "upload", "--environment", "microdetect"], stderr=subprocess.STDOUT)
+        subprocess.run([sys.executable, "-m", "platformio", "run", "--target", "upload", "--environment", "microdetect"], stderr=subprocess.STDOUT)
         os.chdir(cwd)
         dev = None
         while not dev:

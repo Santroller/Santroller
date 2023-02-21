@@ -1,5 +1,5 @@
 #pragma once
-#include <cstddef>
+#include <stddef.h>
 
 // Collection of helper macros used for generating masks for the various controller structs for RF
 // 3 uint64_ts is enough to store our biggest packet (keyboard)

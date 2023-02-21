@@ -81,6 +81,7 @@ void loop() {
             break;
         }
         case CONTROL_REQUEST_VALIDATION_ID: {
+            received_any_request();
             // 8u2/16u2 wants to know if we handle a descriptor, so let it know that
             bool valid = controlRequestValid(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength);
             dt->data[0] = valid;

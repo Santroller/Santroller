@@ -666,6 +666,7 @@ void tick(void) {
     }
 
 #endif
+#ifndef RF_ONLY
     if (consoleType == UNIVERSAL) {
         // PS5 just stops communicating after sending a set idle
         if (set_idle && ps5_timer == 0) {
@@ -699,6 +700,7 @@ void tick(void) {
     }
     bool ready = ready_for_next_packet();
     bool bluetooth_ready = BLUETOOTH && check_bluetooth_ready();
+#endif
 #ifdef RF_TX
     if (!usb_connected()) {
         if (size > 0) {
@@ -710,6 +712,7 @@ void tick(void) {
         return;
     }
 #endif
+#ifndef RF_ONLY
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         if (!ready) {
             return;
@@ -773,4 +776,5 @@ void tick(void) {
             send_report_to_pc(&combined_report, size);
         }
     }
+#endif
 }

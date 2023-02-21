@@ -37,6 +37,19 @@ if "upload" in BUILD_TARGETS:
                 env["BOARD_MCU"] = "atmega16u2"
                 break
             pass
+    if "detect_frequency_mini" in upload_options and upload_options["detect_frequency_mini"] == "true":
+        print("Uploading script to detect speed")
+        cwd = os.getcwd()
+        os.chdir(env["PROJECT_DIR"])
+        subprocess.run([sys.executable, "-m", "platformio", "run", "--target", "upload", "--environment", "minidetect", "--upload-port", env.subst("$UPLOAD_PORT")], stderr=subprocess.STDOUT)
+        os.chdir(cwd)
+        port = env.subst("$UPLOAD_PORT")
+        s = Serial(port=port, baudrate=115200)
+        rate = f"{s.readline().decode('utf-8').strip()}000000"
+        print(rate)
+        # rate = usb.util.get_string(dev, dev.iProduct, 0x0409).split("\x00")[0].rpartition(" - ")[2]
+        rate = f"{rate}L"
+        env["BOARD_F_CPU"] = rate
     if "detect_frequency" in upload_options and upload_options["detect_frequency"] == "true":
         print("Uploading script to detect speed")
         subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"])

@@ -19,6 +19,7 @@ enum SerialCommands {
     COMMAND_SET_LEDS,
     COMMAND_SET_DETECT,
     COMMAND_READ_VERSION,
+    COMMAND_READ_SERIAL,
     MAX
 };
 

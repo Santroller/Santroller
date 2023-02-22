@@ -12,6 +12,7 @@
 #include "rf.h"
 #include "stdint.h"
 #include "util.h"
+#include "io.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -174,6 +175,9 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy_P(response_buffer, config + wValue, size);
             return size;
         }
+        case COMMAND_READ_SERIAL:
+            read_serial(response_buffer, 20);
+            return 20;
         case COMMAND_READ_BOARD:
             memcpy_P(response_buffer, board, sizeof(board));
             return sizeof(board);

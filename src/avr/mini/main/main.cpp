@@ -14,8 +14,14 @@
 
 void setup() {
     init_main();
-    Serial.begin(38400);
+    Serial.begin(57600);
     sei();
+    Serial.println("Santroller");
+    Serial.print(VERSION_MAJOR);
+    Serial.print(".");
+    Serial.print(VERSION_MINOR);
+    Serial.print(".");
+    Serial.println(VERSION_REVISION);
 }
 uint8_t buffer[200];
 void loop() {

@@ -15,6 +15,7 @@
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
+const PROGMEM uint8_t version[] = {VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION};
 uint8_t xbox_players[] = {
     0,  // 0x00	 All off
     0,  // 0x01	 All blinking
@@ -95,7 +96,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             } else if (xbox_one_state == Waiting5) {
                 xbox_one_state = Ident5;
             } else if (xbox_one_state == Auth) {
-                // if (data[0] == 5 && len == 5 && data[4] == 0x07) return;
                 if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                     handle_auth_led();
                     printf("Ready!\n");
@@ -164,7 +164,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 }
 long millis_since_command = 0;
 uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success) {
-    // These are always handled by the RX controller
     switch (request) {
         case COMMAND_READ_CONFIG: {
             if (wValue > sizeof(config)) {
@@ -178,6 +177,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_BOARD:
             memcpy_P(response_buffer, board, sizeof(board));
             return sizeof(board);
+        case COMMAND_READ_VERSION: {
+            memcpy_P(response_buffer, version, sizeof(version));
+            return sizeof(version);
+        }
         case COMMAND_READ_F_CPU:
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);

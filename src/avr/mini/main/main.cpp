@@ -12,24 +12,28 @@
 #include "rf.h"
 #include "shared_main.h"
 
-
 void setup() {
     init_main();
-    Serial.begin(115200);
+    Serial.begin(38400);
+    sei();
 }
 uint8_t buffer[200];
 void loop() {
-    if (Serial.available() > 3) {
-        bool success = false;
-        uint8_t command = Serial.read();
-        uint8_t wValue = Serial.read() | (Serial.read() << 8);
-        uint8_t size = handle_serial_command(command, wValue, buffer, &success);
-        if (success) {
-            Serial.write(buffer, size);
+    if (Serial.available()) {
+        if (Serial.read() == 0x1f) {
+            while (Serial.available() < 3) {
+            }
+            bool success = true;
+            uint8_t command = Serial.read();
+            uint8_t wValue = Serial.read() | (Serial.read() << 8);
+            uint8_t size = handle_serial_command(command, wValue, buffer, &success);
+            if (success) {
+                Serial.write(size);
+                Serial.write(buffer, size);
+            }
         }
     }
     tick();
-    
 }
 bool usb_connected() {
     return true;

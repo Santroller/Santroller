@@ -5,7 +5,7 @@
 
 #include "Usb.h"
 #include "config.h"
-#include "controller_reports.h"
+#include "reports/controller_reports.h"
 #include "defines.h"
 #include "descriptors.h"
 #include "hid.h"

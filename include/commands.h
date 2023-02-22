@@ -18,6 +18,7 @@ enum SerialCommands {
     COMMAND_GET_EXTENSION_PS2,
     COMMAND_SET_LEDS,
     COMMAND_SET_DETECT,
+    COMMAND_READ_VERSION,
     MAX
 };
 

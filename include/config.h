@@ -267,3 +267,7 @@ enum hid_reports_t {
 #else
 #define RADIO_ID DEST_RADIO_ID
 #endif
+
+#define VERSION_MAJOR 3
+#define VERSION_MINOR 0
+#define VERSION_REVISION 0

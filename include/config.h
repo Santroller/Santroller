@@ -262,11 +262,7 @@ enum hid_reports_t {
 #endif
     REPORT_ID_END
 };
-#ifdef RF_TX
-#define RADIO_ID TRANSMIT_RADIO_ID
-#else
-#define RADIO_ID DEST_RADIO_ID
-#endif
+
 
 #define VERSION_MAJOR 3
 #define VERSION_MINOR 0

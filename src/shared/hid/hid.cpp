@@ -45,26 +45,26 @@ long last_strobe = 0;
 void handle_auth_led(void) {
     RfAuthLedPacket_t packet = {
         AckAuthLed};
-    nrfRadio.addAckData(&packet, sizeof(packet));
+    radio.writeAckPayload(1, &packet, sizeof(packet));
 }
 void handle_player_leds(uint8_t player) {
     RfPlayerLed_t packet = {
         AckPlayerLed,
         player};
-    nrfRadio.addAckData(&packet, sizeof(packet));
+    radio.writeAckPayload(1, &packet, sizeof(packet));
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     RfRumbleLed_t packet = {
         AckRumble,
         rumble_left,
         rumble_right};
-    nrfRadio.addAckData(&packet, sizeof(packet));
+    radio.writeAckPayload(1, &packet, sizeof(packet));
 }
 void handle_keyboard_leds(uint8_t leds) {
     RfRumbleLed_t packet = {
         AckKeyboardLed,
         leds};
-    nrfRadio.addAckData(&packet, sizeof(packet));
+    radio.writeAckPayload(1, &packet, sizeof(packet));
 }
 #else
 void handle_auth_led(void) {

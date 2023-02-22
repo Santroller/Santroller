@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
-#include "NRFLite.h"
-extern NRFLite nrfRadio;
+#include "RF24.h"
+extern RF24 radio;
 typedef enum {
     Heartbeat,
     Input,
@@ -20,23 +20,19 @@ typedef enum {
 
 typedef struct {
     RFPacket_t id;
-    uint8_t radio_id;
 } RfHeartbeatPacket_t;
 typedef struct {
     RFPacket_t packet_id;
-    uint8_t radio_id;
     uint8_t mask[sizeof(combined_report_t)];
 } RfMaskPacket_t;
 typedef struct {
     RFPacket_t packet_id;
-    uint8_t radio_id;
     GipHeader_t header;
     uint8_t mask[sizeof(PS3GHLGuitar_Data_t)];
 } RfMaskPacketGHL_t;
 
 typedef struct {
     RFPacket_t packet_id;
-    uint8_t radio_id;
     uint8_t data[30];
 } RfInputPacket_t;
 

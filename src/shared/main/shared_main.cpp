@@ -60,13 +60,13 @@ USB_Mouse_Data_t lastMouseReport;
 USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
 #ifdef RF_TX
-RfInputPacket_t rf_report = {Input, TRANSMIT_RADIO_ID};
-RfHeartbeatPacket_t rf_heartbeat = {Heartbeat, TRANSMIT_RADIO_ID};
+RfInputPacket_t rf_report = {Input};
+RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
 #endif
 #ifdef RF
 #include "SPI.h"
 #include "rf.h"
-NRFLite nrfRadio;
+RF24 radio(RADIO_CE, RADIO_CSN);
 uint8_t rf_data[32];
 bool rf_successful = false;
 #endif
@@ -80,11 +80,12 @@ typedef struct {
 Led_t ledState[LED_COUNT];
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 #ifdef RF_RX
+uint64_t addresses[RF_COUNT] = RF_ADDRESSES;
 void send_rf_console_type() {
     if (rf_successful) {
         RfConsoleTypePacket_t packet = {
             AckConsoleType, consoleType};
-        nrfRadio.addAckData(&packet, sizeof(packet));
+        radio.writeAckPayload(1, &packet, sizeof(packet));
     }
 }
 #endif
@@ -102,9 +103,26 @@ void init_main(void) {
     SPI.setSCK(RADIO_SCK);
 #endif
 #ifdef RF
-    rf_successful = nrfRadio.init(RADIO_ID, RADIO_CE, RADIO_CSN);
+    rf_successful = radio.begin();
+    radio.setPALevel(RF24_PA_LOW);
+    radio.enableDynamicPayloads();
+    radio.enableAckPayload();
+#endif
+#ifdef RF_TX
+    radio.openWritingPipe((uint64_t)TRANSMIT_RADIO_ID);  // always uses pipe 0
+
+    // set the RX address of the TX node into a RX pipe
+    radio.openReadingPipe(1, (uint64_t)DEST_RADIO_ID);
+    radio.stopListening();  
 #endif
 #ifdef RF_RX
+    radio.openWritingPipe((uint64_t)DEST_RADIO_ID);  // always uses pipe 0
+
+    // set the RX address of the TX node into a RX pipe
+    for (int i = 0; i < RF_COUNT; i++) {
+        radio.openReadingPipe(i + 1, addresses[i]);
+    }
+    radio.startListening();
     send_rf_console_type();
 #endif
 }
@@ -549,7 +567,6 @@ void send_mask(void) {
     uint8_t size;
     RfMaskPacket_t mask;
     mask.packet_id = Mask;
-    mask.radio_id = TRANSMIT_RADIO_ID;
 #if CONSOLE_TYPE == KEYBOARD_MOUSE
     for (int i = 1; i < REPORT_ID_END; i++) {
         // set report id
@@ -560,7 +577,7 @@ void send_mask(void) {
         if (i == REPORT_ID_MOUSE) {
             size = sizeof(USB_Mouse_Data_t);
             MOUSE_MASK;
-            nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+            radio.write(&mask, size + 1);
         }
 #endif
 #ifdef TICK_CONSUMER
@@ -568,7 +585,7 @@ void send_mask(void) {
         if (i == REPORT_ID_CONSUMER) {
             size = sizeof(USB_ConsumerControl_Data_t);
             CONSUMER_MASK;
-            nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+            radio.write(&mask, size + 1);
         }
 #endif
 #ifdef TICK_NKRO
@@ -576,7 +593,7 @@ void send_mask(void) {
         if (i == REPORT_ID_NKRO) {
             size = sizeof(USB_NKRO_Data_t);
             KEYBOARD_MASK;
-            nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+            radio.write(&mask, size + 1);
         }
 #endif
     }
@@ -594,7 +611,7 @@ void send_mask(void) {
         PS3_MASK;
     }
     // report size + packet id
-    nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+    radio.write(&mask, size + 1);
 // GHL XB1 guitars have two seperate reports, so we need to send masks for both.
 #if DEVICE_TYPE_IS_LIVE_GUITAR
     if (consoleType == XBOXONE) {
@@ -611,7 +628,7 @@ void send_mask(void) {
 }
 #endif
 #ifdef RF_RX
-void parse_mask(uint8_t size) {
+void parse_mask(uint8_t size, uint8_t pipe) {
     RfMaskPacket_t *mask = (RfMaskPacket_t *)rf_data;
 #if CONSOLE_TYPE == KEYBOARD_MOUSE
     uint8_t report_id = mask->mask[0];
@@ -620,20 +637,20 @@ void parse_mask(uint8_t size) {
 #else
     if (consoleType == XBOXONE) {
         size = sizeof(XBOX_ONE_REPORT);
-        if (mask->mask[0] = GIP_INPUT_REPORT) {
+        if (mask->mask[0] == GIP_INPUT_REPORT) {
             mask->mask[0] = 0xFF;
-            memcpy(standard_mask[mask->radio_id], mask->mask, size - 1);
+            memcpy(standard_mask[pipe-1], mask->mask, size - 1);
         } else if (mask->mask[0] == GHL_HID_REPORT) {
             mask->mask[0] = 0xFF;
             RfMaskPacketGHL_t *mask_ghl = (RfMaskPacketGHL_t *)rf_data;
-            memcpy(ghl_mask[mask->radio_id], mask_ghl->mask, size - 2);
+            memcpy(ghl_mask[pipe-1], mask_ghl->mask, size - 2);
         }
     } else if (consoleType == WINDOWS_XBOX360) {
         size = sizeof(XINPUT_REPORT);
-        memcpy(standard_mask[mask->radio_id], mask->mask, size - 1);
+        memcpy(standard_mask[pipe-1], mask->mask, size - 1);
     } else {
         size = sizeof(PS3_REPORT);
-        memcpy(standard_mask[mask->radio_id], mask->mask, size - 1);
+        memcpy(standard_mask[pipe-1], mask->mask, size - 1);
     }
 #endif
 }
@@ -642,9 +659,9 @@ void parse_mask(uint8_t size) {
 void tick(void) {
     uint8_t size = 0;
 #ifdef RF_TX
-    size = nrfRadio.hasAckData();
-    if (size) {
-        nrfRadio.readData(rf_data);
+    uint8_t pipe;
+    if (radio.available(&pipe)) {
+        radio.read(rf_data, sizeof(rf_data));
         switch (rf_data[0]) {
             case AckConsoleType:
                 consoleType = rf_data[1];
@@ -716,9 +733,10 @@ void tick(void) {
     if (ready || bluetooth_ready || millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
 #ifdef RF_RX
-        size = nrfRadio.hasData();
-        if (size) {
-            nrfRadio.readData(rf_data);
+        uint8_t pipe;
+        if (radio.available(&pipe)) {
+            radio.read(rf_data, sizeof(rf_data));
+            size = radio.getDynamicPayloadSize();
             if (rf_data[0] == Input) {
                 RfInputPacket_t *input = (RfInputPacket_t *)rf_data;
 
@@ -726,13 +744,12 @@ void tick(void) {
                 uint8_t report_id = mask->mask[0];
                 uint8_t *mask = keyboard_masks[input->radio_id][report_id];
 #else
-                uint8_t *mask = standard_mask[input->radio_id];
+                uint8_t *mask = standard_mask[pipe-1];
                 if (consoleType == XBOXONE) {
-                    // Put together a new header, as the old one will be masked away and have the wrong sequence ids
-                    XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)&combined_report;
+                    // GHL Guitars use a different mask
                     GipHeader_t *header = (GipHeader_t *)&combined_report;
                     if (header->command == GHL_HID_REPORT) {
-                        mask = ghl_mask[input->radio_id];
+                        mask = ghl_mask[pipe-1];
                     }
                 }
 #endif
@@ -741,11 +758,11 @@ void tick(void) {
                     // Fliter out the masked bits from the current report
                     combined_report.raw[i - 1] &= ~mask[i - 1];
                     // And then write in the new bits
-                    combined_report.raw[i - 1] |= rf_data[i];
+                    combined_report.raw[i - 1] |= input->data[i];
                 }
             }
             if (rf_data[0] == Mask) {
-                parse_mask(size);
+                parse_mask(size, pipe);
                 return;
             }
             if (consoleType == XBOXONE) {
@@ -768,9 +785,9 @@ void tick(void) {
         if (!usb_connected()) {
             if (size > 0) {
                 memcpy(rf_report.data, &combined_report, size);
-                nrfRadio.send(DEST_RADIO_ID, &rf_report, size + 1);
+                radio.write(&rf_report, size + 1);
             } else {
-                nrfRadio.send(DEST_RADIO_ID, &rf_heartbeat, sizeof(rf_heartbeat));
+                radio.write(&rf_heartbeat, sizeof(rf_heartbeat));
             }
             return;
         }

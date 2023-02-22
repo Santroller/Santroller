@@ -700,19 +700,6 @@ void tick(void) {
     }
     bool ready = ready_for_next_packet();
     bool bluetooth_ready = BLUETOOTH && check_bluetooth_ready();
-#endif
-#ifdef RF_TX
-    if (!usb_connected()) {
-        if (size > 0) {
-            memcpy(rf_report.data, &combined_report, size);
-            nrfRadio.send(DEST_RADIO_ID, &rf_report, size + 1);
-        } else {
-            nrfRadio.send(DEST_RADIO_ID, &rf_heartbeat, sizeof(rf_heartbeat));
-        }
-        return;
-    }
-#endif
-#ifndef RF_ONLY
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         if (!ready) {
             return;
@@ -721,6 +708,10 @@ void tick(void) {
         send_report_to_pc(&combined_report, size);
         return;
     }
+#else
+    bool ready = true;
+    bool bluetooth_ready = BLUETOOTH;
+#endif
     // Tick the guitar every 5ms if usb is not ready
     if (ready || bluetooth_ready || millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
@@ -772,9 +763,23 @@ void tick(void) {
         size = tick_inputs();
 
 #endif
+
+#ifdef RF_TX
+        if (!usb_connected()) {
+            if (size > 0) {
+                memcpy(rf_report.data, &combined_report, size);
+                nrfRadio.send(DEST_RADIO_ID, &rf_report, size + 1);
+            } else {
+                nrfRadio.send(DEST_RADIO_ID, &rf_heartbeat, sizeof(rf_heartbeat));
+            }
+            return;
+        }
+#endif
+
+#ifndef RF_ONLY
         if (size && ready) {
             send_report_to_pc(&combined_report, size);
         }
-    }
 #endif
+    }
 }

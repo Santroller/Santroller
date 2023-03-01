@@ -67,7 +67,7 @@ static void le_keyboard_setup(void) {
 
     sm_init();
     sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
-    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION);
+    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
     sm_use_fixed_passkey_in_display_role(1111);
 
     // setup ATT server
@@ -78,6 +78,7 @@ static void le_keyboard_setup(void) {
 
     // setup device information service
     device_information_service_server_init();
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, 0x0110);
 #if SUPPORTS_KEYBOARD
     hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else

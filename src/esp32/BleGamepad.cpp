@@ -14,6 +14,7 @@
 #include "hid.h"
 #include "sdkconfig.h"
 #include "shared_main.h"
+#include <byteswap.h>
 
 #if defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
@@ -59,9 +60,6 @@ void BleGamepad::begin() {
     firmwareRevision = "";
     hardwareRevision = "";
 
-    vid = ARDWIINO_VID;
-    pid = ARDWIINO_PID_BLE;
-
     xTaskCreate(this->taskServer, "server", 20000, (void *)this, 5, NULL);
 }
 
@@ -83,8 +81,8 @@ void BleGamepad::setBatteryLevel(uint8_t level) {
     }
 }
 
-void BleGamepad::sendReport(void* report, uint8_t len) {
-    this->inputGamepad->setValue((uint8_t*)report, len);
+void BleGamepad::sendReport(void *report, uint8_t len) {
+    this->inputGamepad->setValue((uint8_t *)report, len);
     this->inputGamepad->notify();
 }
 
@@ -133,11 +131,13 @@ void BleGamepad::taskServer(void *pvParameter) {
         CHARACTERISTIC_UUID_HARDWARE_REVISION,
         NIMBLE_PROPERTY::READ);
     pCharacteristic_Hardware_Revision->setValue(hardwareRevision);
-
-    BleGamepadInstance->hid->pnp(0x01, vid, pid, 0x0110);
+    // the pnp function seems to assume a specific endianness which isn't correct, so we need to swap the bytes around
+    BleGamepadInstance->hid->pnp(0x01, __bswap16(ARDWIINO_VID),  __bswap16(ARDWIINO_PID_BLE), 0x0110);
     BleGamepadInstance->hid->hidInfo(0x00, 0x01);
 
-    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
+    NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM);
+    NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY);
+    NimBLEDevice::setSecurityPasskey(1111);
 
     uint8_t *customHidReportDescriptor = new uint8_t[hidReportDescriptorSize];
     memcpy(customHidReportDescriptor, tempHidReportDescriptor, hidReportDescriptorSize);
@@ -146,7 +146,6 @@ void BleGamepad::taskServer(void *pvParameter) {
     // for (int i = 0; i < hidReportDescriptorSize; i++)
     //    Serial.printf("%02x", customHidReportDescriptor[i]);
 
-    
 #if SUPPORTS_KEYBOARD
     BleGamepadInstance->hid->reportMap((uint8_t *)keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else

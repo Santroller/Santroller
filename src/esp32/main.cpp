@@ -17,9 +17,9 @@ void loop(void) {
     tick();
 }
 
-void send_report_to_pc(const void *report, uint8_t len) {
+void send_report(uint8_t size, uint8_t* report) {
     if (bleGamepad.isConnected()) {
-        bleGamepad.sendReport((void*) report, len);
+        bleGamepad.sendReport((void*) report, size);
     }
 }
 

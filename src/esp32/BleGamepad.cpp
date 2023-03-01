@@ -142,10 +142,6 @@ void BleGamepad::taskServer(void *pvParameter) {
     uint8_t *customHidReportDescriptor = new uint8_t[hidReportDescriptorSize];
     memcpy(customHidReportDescriptor, tempHidReportDescriptor, hidReportDescriptorSize);
 
-    // Testing
-    // for (int i = 0; i < hidReportDescriptorSize; i++)
-    //    Serial.printf("%02x", customHidReportDescriptor[i]);
-
 #if SUPPORTS_KEYBOARD
     BleGamepadInstance->hid->reportMap((uint8_t *)keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else

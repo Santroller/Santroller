@@ -6,7 +6,7 @@ BleConnectionStatus::BleConnectionStatus(void)
 
 void BleConnectionStatus::onConnect(NimBLEServer *pServer, ble_gap_conn_desc* desc)
 {
-    pServer->updateConnParams(desc->conn_handle, 6, 7, 0, 600);
+    pServer->updateConnParams(desc->conn_handle, 6, 25, 0, 6000);
     this->connected = true;
 }
 

@@ -549,9 +549,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_GET_INTERFACE) {
         ((uint8_t *)requestBuffer)[0] = 0;
         if (consoleType == UNIVERSAL && windows_or_xbox_one) {
-            consoleType = XBOXONE;
-            printf("Xbox One!\n");
-            reset_usb();
+            // consoleType = XBOXONE;
+            // printf("Xbox One!\n");
+            // reset_usb();
             return 0;
         }
         return 1;
@@ -608,6 +608,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
             return sizeof(capabilities1);
         } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
+            printf("ExtendedIDs\n");
             memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
             return ExtendedIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {

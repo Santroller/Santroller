@@ -1,4 +1,4 @@
-#include <avr/pgmspace.h>
+#include "progmem.h"
 #include <stdint.h>
 #ifdef __cplusplus
 extern "C" {

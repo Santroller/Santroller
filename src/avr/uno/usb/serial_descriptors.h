@@ -1,6 +1,6 @@
 #include "LUFAConfig.h"
 #include <LUFA/Drivers/USB/USB.h>
-#include <avr/pgmspace.h>
+#include "progmem.h"
 #include "endpoints.h"
 
 typedef struct

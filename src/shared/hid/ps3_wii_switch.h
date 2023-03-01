@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <avr/pgmspace.h>
+#include "progmem.h"
 const uint8_t PROGMEM ps3_descriptor[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
     0x09, 0x05,        // Usage (Game Pad)

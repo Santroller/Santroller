@@ -1,5 +1,5 @@
 #include <avr/io.h>
-#include <avr/pgmspace.h>
+#include "progmem.h"
 #include <inttypes.h>
 #include <stdint.h>
 

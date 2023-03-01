@@ -1,6 +1,6 @@
 #include "xbox.h"
 
-#include <avr/pgmspace.h>
+#include "progmem.h"
 
 #include "endpoints.h"
 #include "stdint.h"

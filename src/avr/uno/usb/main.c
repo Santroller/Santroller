@@ -10,7 +10,7 @@
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include <avr/pgmspace.h>
+#include "progmem.h"
 #include <avr/power.h>
 #include <avr/wdt.h>
 

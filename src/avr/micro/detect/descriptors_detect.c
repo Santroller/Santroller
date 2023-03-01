@@ -36,7 +36,7 @@
  */
 
 #include "descriptors_detect.h"
-#include <avr/pgmspace.h>
+#include "progmem.h"
 
 uint8_t realFreq = 16;
 

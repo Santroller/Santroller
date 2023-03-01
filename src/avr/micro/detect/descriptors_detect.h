@@ -37,7 +37,7 @@
 #define _DESCRIPTORS_H_
 
 /* Includes: */
-#include <avr/pgmspace.h>
+#include "progmem.h"
 
 #include "endpoints.h"
 #include "LUFAConfig.h"

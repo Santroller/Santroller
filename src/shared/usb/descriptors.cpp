@@ -503,6 +503,8 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_READ_F_CPU:
             case COMMAND_READ_BOARD:
             case COMMAND_READ_DIGITAL:
+            case COMMAND_READ_SERIAL:
+            case COMMAND_READ_VERSION:
             case COMMAND_READ_ANALOG:
             case COMMAND_READ_PS2:
             case COMMAND_READ_WII:

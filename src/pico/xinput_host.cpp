@@ -214,6 +214,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
         p_xinput->type = WINDOWS_XBOX360;
+        p_xinput->itf_num = desc_itf->bInterfaceNumber;
         _xinputh_dev->inst_count++;
         return true;
     } else if (desc_itf->bInterfaceSubClass == 0x47 &&
@@ -289,7 +290,7 @@ static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf) {
     for (uint8_t inst = 0; inst < CFG_TUH_XINPUT; inst++) {
         xinputh_interface_t *hid = get_instance(dev_addr, inst);
 
-        if ((hid->itf_num == itf) && (hid->ep_in || hid->ep_out)) return inst;
+        if ((hid->itf_num == itf)) return inst;
     }
 
     return 0xff;

@@ -2,7 +2,7 @@
 
 #include "Arduino.h"
 #include "config.h"
-#include "pins_define.h"
+#include "io_define.h"
 #include "util.h"
 #include <hardware/gpio.h>
 #include <hardware/adc.h>

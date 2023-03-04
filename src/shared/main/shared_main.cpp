@@ -10,7 +10,7 @@
 #include "io.h"
 #include "mask.h"
 #include "pins.h"
-#include "pins_define.h"
+#include "io_define.h"
 #include "ps2.h"
 #include "rf.h"
 #include "util.h"

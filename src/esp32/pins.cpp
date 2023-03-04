@@ -2,7 +2,7 @@
 
 #include "Arduino.h"
 #include "config.h"
-#include "pins_define.h"
+#include "io_define.h"
 #include "util.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;

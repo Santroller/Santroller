@@ -6,7 +6,7 @@
 #include "Arduino.h"
 #include "config.h"
 #include "esp_system.h"
-#include "pins_define.h"
+#include "io_define.h"
 #if SPI_0_CPHA==0 && SPI_0_CPOL==0
 #define SPI_0_MODE 0
 #elif SPI_0_CPHA==0 && SPI_0_CPOL==1

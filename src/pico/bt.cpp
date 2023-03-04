@@ -1,3 +1,4 @@
+#if BLUETOOTH
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -183,3 +184,4 @@ int btstack_main(void) {
 
     return 0;
 }
+#endif

@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
-#include "pins_define.h"
+#include "io_define.h"
 
 #ifndef TWI_BUFFER_LENGTH
 #  define TWI_BUFFER_LENGTH 32

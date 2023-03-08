@@ -9,8 +9,8 @@
 #include "common/tusb_common.h"
 #include "descriptors.h"
 #include "device/usbd_pvt.h"
-#include "xinput_device.h"
 #include "hid.h"
+#include "xinput_device.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -27,7 +27,7 @@ typedef struct {
 } xinputd_interface_t;
 
 CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_XINPUT];
-static bool sending = false;
+static volatile bool sending = false;
 /*------------- Helpers -------------*/
 static inline uint8_t get_index_by_itfnum(uint8_t itf_num) {
     for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++) {
@@ -91,11 +91,14 @@ bool tud_xinput_n_boot_mode(uint8_t itf) { return _xinputd_itf[itf].boot_mode; }
 //--------------------------------------------------------------------+
 // USBD-CLASS API
 //--------------------------------------------------------------------+
-void xinputd_init(void) { xinputd_reset(TUD_OPT_RHPORT); }
+void xinputd_init(void) {
+    xinputd_reset(TUD_OPT_RHPORT);
+}
 
 void xinputd_reset(uint8_t rhport) {
     (void)rhport;
     tu_memclr(_xinputd_itf, sizeof(_xinputd_itf));
+    sending = false;
 }
 
 uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,

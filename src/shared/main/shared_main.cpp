@@ -526,11 +526,6 @@ void device_reset(void) {
 
 uint8_t last_len = false;
 void receive_report_from_controller(uint8_t const *report, uint16_t len) {
-    printf("From controller (state: %d): ", xbox_one_state);
-    for (int i = 0; i < len; i++) {
-        printf("%02x, ", report[i]);
-    }
-    printf("\r\n");
     if (xbox_one_state != Auth) {
         return;
     }

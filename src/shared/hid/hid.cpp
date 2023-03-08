@@ -85,11 +85,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if CONSOLE_TYPE == KEYBOARD_MOUSE
     handle_keyboard_leds(data[0]);
 #endif
-    printf("From console (state: %d, repord_id: %d, reportType: %d): ", xbox_one_state, report_id, reportType);
-    for (int i = 0; i < len; i++) {
-        printf("%02x, ", data[i]);
-    }
-    printf("\r\n");
     uint8_t id = data[0];
     // Handle Xbox 360 LEDs and rumble
     if (report_id == INTERRUPT_ID) {

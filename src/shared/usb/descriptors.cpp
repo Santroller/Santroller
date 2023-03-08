@@ -102,7 +102,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     Interface2 : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : INTERFACE_ID_Config,
+        bInterfaceNumber : INTERFACE_ID_Padding,
         bAlternateSetting : 0x00,
         bNumEndpoints : 4,
         bInterfaceClass : 0xFF,
@@ -148,7 +148,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     Interface3 : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : INTERFACE_ID_Padding,
+        bInterfaceNumber : INTERFACE_ID_Config,
         bAlternateSetting : 0x00,
         bNumEndpoints : 1,
         bInterfaceClass : 0xFF,
@@ -234,10 +234,10 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         wMaxPacketSize : 0x08,
         bInterval : 1
     },
-    InterfaceConfig : {
+    InterfaceExtra : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : INTERFACE_ID_Config,
+        bInterfaceNumber : INTERFACE_ID_Padding,
         bAlternateSetting : 0,
         bNumEndpoints : 0,
         bInterfaceClass : 0xff,
@@ -245,10 +245,10 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bInterfaceProtocol : 0xff,
         iInterface : NO_DESCRIPTOR,
     },
-    InterfaceExtra : {
+    InterfaceConfig : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : INTERFACE_ID_Padding,
+        bInterfaceNumber : INTERFACE_ID_Config,
         bAlternateSetting : 0,
         bNumEndpoints : 0,
         bInterfaceClass : 0xff,
@@ -552,12 +552,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_GET_INTERFACE) {
         ((uint8_t *)requestBuffer)[0] = 0;
-        if (consoleType == UNIVERSAL && windows_or_xbox_one) {
-            // consoleType = XBOXONE;
-            // printf("Xbox One!\n");
-            // reset_usb();
-            return 0;
-        }
         return 1;
     }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_SET_INTERFACE) {

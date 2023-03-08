@@ -72,8 +72,8 @@ enum requests_t {
 
 enum interfaces_t {
     INTERFACE_ID_Device = 0, /**< XInput interface descriptor ID */
-    INTERFACE_ID_Config = 1, /**< Config interface descriptor ID */
-    INTERFACE_ID_Padding = 2,
+    INTERFACE_ID_Padding = 1,
+    INTERFACE_ID_Config = 2, /**< Config interface descriptor ID */
     INTERFACE_ID_XBOX_Security = 3,
     INTERFACE_ID_ControlStream =
         0, /**< MIDI Control Stream interface descriptor ID */

@@ -58,8 +58,8 @@ typedef struct {
     USB_HID_DESCRIPTOR HIDDescriptor;
     USB_ENDPOINT_DESCRIPTOR EndpointInHID;
     USB_ENDPOINT_DESCRIPTOR EndpointOutHID;
-    USB_INTERFACE_DESCRIPTOR InterfaceConfig;
     USB_INTERFACE_DESCRIPTOR InterfaceExtra;
+    USB_INTERFACE_DESCRIPTOR InterfaceConfig;
     USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
     uint8_t UnkownDescriptor4[0x06];
 } __attribute__((packed)) UNIVERSAL_CONFIGURATION_DESCRIPTOR;

@@ -535,6 +535,11 @@ void received_any_request(void) {
 }
 uint8_t last_len = false;
 void receive_report_from_controller(uint8_t const *report, uint16_t len) {
+    printf("From controller (state: %d): ", xbox_one_state);
+    for (int i = 0; i < len; i++) {
+        printf("%02x, ", report[i]);
+    }
+    printf("\r\n");
     if (xbox_one_state != Auth) {
         return;
     }
@@ -552,7 +557,7 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid) {
 }
 
 void xone_controller_connected(void) {
-    if (xbox_one_state == Ready || consoleType == XBOXONE) return;
+    if (xbox_one_state == Ready) return;
 
     GipPowerMode_t *powerMode = (GipPowerMode_t *)data_from_console;
     GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);

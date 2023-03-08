@@ -137,14 +137,6 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                       0);
 
             p_xinput->itf_num = itf_desc->bInterfaceNumber;
-            // // Prepare for incoming data
-            // if (p_xinput->ep_out != 0xFF) {
-            //     if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
-            //                         sizeof(p_xinput->epout_buf))) {
-            //         TU_LOG_FAILED();
-            //         TU_BREAKPOINT();
-            //     }
-            // }
         } else if (itf_desc->bInterfaceSubClass == 0xfD &&
                    itf_desc->bInterfaceProtocol == 0x13) {
             // Xinput reserved endpoint

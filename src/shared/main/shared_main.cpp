@@ -524,15 +524,6 @@ void device_reset(void) {
     last_ghl_poke_time = 0;
 }
 
-void received_any_request(void) {
-    if (set_idle && ps5_timer != 0) {
-        set_idle = false;
-        ps5_timer = 0;
-    }
-    if (read_config) {
-        received_after_read_config = true;
-    }
-}
 uint8_t last_len = false;
 void receive_report_from_controller(uint8_t const *report, uint16_t len) {
     printf("From controller (state: %d): ", xbox_one_state);
@@ -689,32 +680,6 @@ void tick(void) {
 
 #endif
 #ifndef RF_ONLY
-    if (consoleType == UNIVERSAL) {
-        // PS5 just stops communicating after sending a set idle
-        if (set_idle && ps5_timer == 0) {
-            ps5_timer = millis();
-        }
-        if (ps5_timer != 0 && millis() - ps5_timer > 100) {
-            consoleType = PS3;
-            reset_usb();
-        }
-        // Windows and XBOX One both send out a WCID request
-        if (xbox_timer == 0 && windows_or_xbox_one) {
-            xbox_timer = millis();
-        }
-        // But xbox follows that up with a SET_INTERFACE call, so if we don't see one of those then we can assume windows
-        if (xbox_timer != 0 && millis() - xbox_timer > 1000) {
-            consoleType = WINDOWS_XBOX360;
-            reset_usb();
-        }
-        // Wii gives up after reading the config descriptor
-        if (read_config && !received_after_read_config && millis() - wii_timer > 1000) {
-            consoleType = WII_RB;
-            reset_usb();
-            received_after_read_config = true;
-        }
-    }
-
     // If we have something pending to send to the xbox one controller, send it
     if (data_from_console_size) {
         send_report_to_controller(data_from_console, data_from_console_size);

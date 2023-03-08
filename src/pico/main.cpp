@@ -132,9 +132,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
 }
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
-    if (stage == CONTROL_STAGE_SETUP) {
-        received_any_request();
-    }
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && request->bRequest == TUSB_REQ_GET_DESCRIPTOR) {
         //------------- STD Request -------------//
         if (stage == CONTROL_STAGE_SETUP) {

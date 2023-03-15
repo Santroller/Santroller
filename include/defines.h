@@ -45,7 +45,7 @@
 #define PS3 5
 #define WII_RB 6
 #define SWITCH 7
-#define PS2 8
+#define PS4 8
 #define XBOXONE 9
 
 #define PINMODE_PULLUP 0

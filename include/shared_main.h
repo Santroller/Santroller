@@ -5,6 +5,7 @@ void init_main(void);
 
 void device_reset(void);
 void tick(void);
+uint8_t tick_inputs(uint8_t* buf);
 void reset_usb(void);
 void send_report_to_controller(uint8_t *report, uint8_t len);
 void send_report_to_pc(const void *report, uint8_t len);

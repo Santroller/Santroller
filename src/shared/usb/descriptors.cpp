@@ -601,15 +601,20 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }
+        if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
+            return tick_inputs(requestBuffer);
+        }
         bool test = true;
         uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);
         if (test) {
             return size;
         }
+    } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        printf("Fakemote or OPL\r\n");
+        return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        consoleType = PS2;
-        printf("PS2!\n");
-        return 0;
+        printf("Fakemote or OPL\r\n");
+        return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
@@ -639,6 +644,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = WINDOWS_XBOX360;
             printf("Xbox 360! (windows fallback)\n");
             reset_usb();
+        } else {
+            return 0;
         }
         return DevCompatIDs.TotalLength;
     } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {

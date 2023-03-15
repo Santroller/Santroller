@@ -259,7 +259,7 @@ uint8_t tick_xbox_one() {
 }
 
 long lastTick;
-uint8_t tick_inputs() {
+uint8_t tick_inputs(uint8_t* buf) {
     uint8_t size = 0;
     // Tick Inputs
 #ifdef INPUT_DJ_TURNTABLE
@@ -358,8 +358,8 @@ uint8_t tick_inputs() {
 #ifdef TICK_MOUSE
         if (i == REPORT_ID_MOUSE) {
             size = sizeof(USB_Mouse_Data_t);
-            memset(&combined_report, 0, size);
-            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)&combined_report;
+            memset(buf, 0, size);
+            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
             report->rid = REPORT_ID_MOUSE;
             TICK_MOUSE;
             lastReportToCheck = &lastMouseReport;
@@ -368,8 +368,8 @@ uint8_t tick_inputs() {
 #ifdef TICK_CONSUMER
         if (i == REPORT_ID_CONSUMER) {
             size = sizeof(USB_ConsumerControl_Data_t);
-            memset(&combined_report, 0, size);
-            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)&combined_report;
+            memset(buf, 0, size);
+            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)buf;
             report->rid = REPORT_ID_CONSUMER;
             TICK_CONSUMER;
             lastReportToCheck = &lastConsumerReport;
@@ -378,26 +378,26 @@ uint8_t tick_inputs() {
 #ifdef TICK_NKRO
         if (i == REPORT_ID_NKRO) {
             size = sizeof(USB_NKRO_Data_t);
-            memset(&combined_report, 0, size);
-            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)&combined_report;
+            memset(buf, 0, size);
+            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)buf;
             report->rid = REPORT_ID_NKRO;
             TICK_NKRO;
             lastReportToCheck = &lastNKROReport;
         }
 #endif
-        uint8_t cmp = memcmp(lastReportToCheck, &combined_report, size);
+        uint8_t cmp = memcmp(lastReportToCheck, buf, size);
         if (cmp == 0) {
             size = 0;
             continue;
         }
-        memcpy(lastReportToCheck, &combined_report, size);
+        memcpy(lastReportToCheck, buf, size);
         break;
     }
 #if BLUETOOTH
-    send_report(size, (uint8_t *)&combined_report);
+    send_report(size, (uint8_t *)buf);
 #endif
 #else
-    USB_Report_Data_t *report_data = &combined_report;
+    USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
@@ -407,15 +407,15 @@ uint8_t tick_inputs() {
         // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
 
         if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
-            XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)&combined_report;
+            XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
             size = sizeof(XBOX_ONE_REPORT);
             report_size = size - sizeof(GipHeader_t);
-            memset(&combined_report, 0, size);
+            memset(buf, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
             TICK_XBOX_ONE;
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
-                GipKeystroke_t *keystroke = (GipKeystroke_t *)&combined_report;
+                GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
                 GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystroke_sequence_number++);
                 keystroke->pressed = report->guide;
                 keystroke->keycode = GIP_VKEY_LEFT_WIN;
@@ -423,14 +423,14 @@ uint8_t tick_inputs() {
             }
             // We use an unused bit as a flag for sending the guide key code, so flip it back
             report->guide = false;
-            GipPacket_t *packet = (GipPacket_t *)&combined_report;
+            GipPacket_t *packet = (GipPacket_t *)buf;
             report_data = (USB_Report_Data_t *)packet->data;
             updateSequence = true;
         } else {
-            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)&combined_report;
+            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)buf;
             size = sizeof(XboxOneGHLGuitar_Data_t);
             report_size = sizeof(PS3_REPORT);
-            memset(&combined_report, 0, sizeof(XboxOneGHLGuitar_Data_t));
+            memset(buf, 0, sizeof(XboxOneGHLGuitar_Data_t));
             GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
             report_data = (USB_Report_Data_t *)&report->report;
             updateHIDSequence = true;
@@ -486,7 +486,9 @@ uint8_t tick_inputs() {
             report_size = size = sizeof(PS3_REPORT);
         }
     }
-
+    if (report_data != &combined_report) {
+        return size;
+    }
     uint8_t cmp = memcmp(&lastReport, report_data, report_size);
     if (cmp == 0) {
         return 0;
@@ -512,6 +514,9 @@ uint8_t tick_inputs() {
 #ifdef TICK_LED
     TICK_LED;
 #endif
+    if (millis() < 1000 && consoleType == UNIVERSAL) {
+        TICK_DETECTION;
+    }
     return size;
 }
 
@@ -646,7 +651,6 @@ void parse_mask(uint8_t size, uint8_t pipe) {
 #endif
 }
 #endif
-
 void tick(void) {
     uint8_t size = 0;
 #ifdef RF_TX
@@ -742,7 +746,7 @@ void tick(void) {
             }
         }
 #else
-        size = tick_inputs();
+        size = tick_inputs((uint8_t*)&combined_report);
 
 #endif
 

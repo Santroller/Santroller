@@ -8,9 +8,9 @@
 #include "fxpt_math.h"
 #include "hid.h"
 #include "io.h"
+#include "io_define.h"
 #include "mask.h"
 #include "pins.h"
-#include "io_define.h"
 #include "ps2.h"
 #include "rf.h"
 #include "util.h"
@@ -113,7 +113,7 @@ void init_main(void) {
 
     // set the RX address of the TX node into a RX pipe
     radio.openReadingPipe(1, (uint64_t)DEST_RADIO_ID);
-    radio.stopListening();  
+    radio.stopListening();
 #endif
 #ifdef RF_RX
     radio.openWritingPipe((uint64_t)DEST_RADIO_ID);  // always uses pipe 0
@@ -208,8 +208,13 @@ uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int1
 }
 
 uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+#if DEVICE_TYPE == GUITAR
+    // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
+    int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8;
+#else
     int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
-    return (uint8_t)(ret - PS3_ACCEL_CENTER);
+#endif
+    return PS3_ACCEL_CENTER + ret;
 }
 
 uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
@@ -259,7 +264,7 @@ uint8_t tick_xbox_one() {
 }
 
 long lastTick;
-uint8_t tick_inputs(uint8_t* buf) {
+uint8_t tick_inputs(uint8_t *buf) {
     uint8_t size = 0;
     // Tick Inputs
 #ifdef INPUT_DJ_TURNTABLE
@@ -316,6 +321,10 @@ uint8_t tick_inputs(uint8_t* buf) {
         }
 #ifdef INPUT_WII_TAP
         lastTapWii = (wiiData[2] & 0x1f);
+        // GH3 guitars set this bit, while WT and GH5 guitars do not
+        if (wiiData[0] & 1 << 7 == 0) {
+            lastTapWii = 0;
+        }
 #endif
 #ifdef INPUT_WII_DRUM
         vel = (7 - (wiiData[3] >> 5)) << 5;
@@ -635,18 +644,18 @@ void parse_mask(uint8_t size, uint8_t pipe) {
         size = sizeof(XBOX_ONE_REPORT);
         if (mask->mask[0] == GIP_INPUT_REPORT) {
             mask->mask[0] = 0xFF;
-            memcpy(standard_mask[pipe-1], mask->mask, size - 1);
+            memcpy(standard_mask[pipe - 1], mask->mask, size - 1);
         } else if (mask->mask[0] == GHL_HID_REPORT) {
             mask->mask[0] = 0xFF;
             RfMaskPacketGHL_t *mask_ghl = (RfMaskPacketGHL_t *)rf_data;
-            memcpy(ghl_mask[pipe-1], mask_ghl->mask, size - 2);
+            memcpy(ghl_mask[pipe - 1], mask_ghl->mask, size - 2);
         }
     } else if (consoleType == WINDOWS_XBOX360) {
         size = sizeof(XINPUT_REPORT);
-        memcpy(standard_mask[pipe-1], mask->mask, size - 1);
+        memcpy(standard_mask[pipe - 1], mask->mask, size - 1);
     } else {
         size = sizeof(PS3_REPORT);
-        memcpy(standard_mask[pipe-1], mask->mask, size - 1);
+        memcpy(standard_mask[pipe - 1], mask->mask, size - 1);
     }
 #endif
 }
@@ -713,12 +722,12 @@ void tick(void) {
                 uint8_t report_id = mask->mask[0];
                 uint8_t *mask = keyboard_masks[input->radio_id][report_id];
 #else
-                uint8_t *mask = standard_mask[pipe-1];
+                uint8_t *mask = standard_mask[pipe - 1];
                 if (consoleType == XBOXONE) {
                     // GHL Guitars use a different mask
                     GipHeader_t *header = (GipHeader_t *)&combined_report;
                     if (header->command == GHL_HID_REPORT) {
-                        mask = ghl_mask[pipe-1];
+                        mask = ghl_mask[pipe - 1];
                     }
                 }
 #endif
@@ -746,7 +755,7 @@ void tick(void) {
             }
         }
 #else
-        size = tick_inputs((uint8_t*)&combined_report);
+        size = tick_inputs((uint8_t *)&combined_report);
 
 #endif
 

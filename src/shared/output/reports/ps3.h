@@ -108,7 +108,8 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     // Whammy
     JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
     // GH PS3 guitars have a tilt axis
-    JoystickReport->accel[0] = controller->r_y;
+    // Since the PS3 tilt is based on an accelerometer, we need to subtract 40 as they start at a value of 1G, which works out to be around 40.
+    JoystickReport->accel[0] = (controller->r_y >> 6) - 40;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
   } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||

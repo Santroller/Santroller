@@ -79,7 +79,7 @@ void setup() {
     generateSerialString(&serialstring);
     #if USB_HOST_STACK
     pio_usb_configuration_t config = {
-        USB_HOST_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1};
+        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1};
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     #endif
     tusb_init();

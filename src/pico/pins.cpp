@@ -1,11 +1,11 @@
+#include <hardware/adc.h>
+#include <hardware/gpio.h>
 #include <stdint.h>
 
 #include "Arduino.h"
 #include "config.h"
 #include "io_define.h"
 #include "util.h"
-#include <hardware/gpio.h>
-#include <hardware/adc.h>
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
 uint16_t adc(uint8_t pin) {
@@ -47,3 +47,19 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     }
     return data;
 }
+
+#ifdef INPUT_WT_NECK
+long readWt(int pin) {
+    digitalWrite(WT_PIN_S0, pin & 0b001);
+    digitalWrite(WT_PIN_S1, pin & 0b010);
+    digitalWrite(WT_PIN_S2, pin & 0b100);
+    long m = 0;
+    for (int i = 0; i < 8; i++) {
+        pinMode(WT_PIN_INPUT, INPUT_PULLUP);
+        delayMicroseconds(10);
+        pinMode(WT_PIN_INPUT, INPUT);
+        m += analogRead(WT_PIN_INPUT);
+    }
+    return m;
+}
+#endif

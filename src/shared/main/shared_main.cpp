@@ -50,6 +50,8 @@ bool overrideR2 = false;
 bool lastXboxOneGuide = false;
 uint8_t overriddenR2 = 0;
 USB_Report_Data_t lastReport;
+long initialWt[5] = {0};
+uint8_t rawWt;
 #ifdef TICK_NKRO
 USB_NKRO_Data_t lastNKROReport;
 #endif
@@ -89,6 +91,49 @@ void send_rf_console_type() {
     }
 }
 #endif
+
+#ifdef INPUT_WT_NECK
+uint8_t gh5_mapping[] = {
+    0x00,
+    0x95,
+    0xCD,
+    0xB0,
+    0x1A,
+    0x19,
+    0xE6,
+    0xE5,
+    0x49,
+    0x47,
+    0x48,
+    0x46,
+    0x2F,
+    0x2D,
+    0x2E,
+    0x2C,
+    0x7F,
+    0x7B,
+    0x7D,
+    0x79,
+    0x7E,
+    0x7A,
+    0x7C,
+    0x78,
+    0x66,
+    0x62,
+    0x64,
+    0x60,
+    0x65,
+    0x61,
+    0x63,
+    0x5F,
+};
+bool checkWt(int pin) {
+    return readWt(pin) > initialWt[pin];
+}
+uint8_t readWtAnalog() {
+    return gh5_mapping[rawWt];
+}
+#endif
 void init_main(void) {
     initPins();
     twi_init();
@@ -124,6 +169,17 @@ void init_main(void) {
     }
     radio.startListening();
     send_rf_console_type();
+#endif
+#ifdef INPUT_WT_NECK
+    memset(initialWt, 0, sizeof(initialWt));
+    for (int j = 0; j < 50; j++) {
+        for (int i = 0; i < 5; i++) {
+            long reading = readWt(i) + WT_SENSITIVITY;
+            if (reading > initialWt[i]) {
+                initialWt[i] = reading;
+            }
+        }
+    }
 #endif
 }
 int16_t adc_i(uint8_t pin) {
@@ -280,16 +336,6 @@ uint8_t tick_inputs(uint8_t *buf) {
     bool gh5Valid = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(lastSuccessfulGH5Packet), lastSuccessfulGH5Packet);
     lastGH5WasSuccessful = gh5Valid;
 #endif
-#ifdef INPUT_WT_NECK
-    long pulse = WT_NECK_READ();
-    if (pulse == WT_NECK_READ()) {
-        lastTap = pulse;
-        lastTapShift = pulse >> 1;
-        lastGHWTWasSuccessful = true;
-    } else {
-        lastGH5WasSuccessful = false;
-    }
-#endif
 #ifdef INPUT_PS2
     uint8_t *ps2Data = tickPS2();
     bool ps2Valid = ps2Data != NULL;
@@ -356,6 +402,9 @@ uint8_t tick_inputs(uint8_t *buf) {
         accZ = ((wiiData[4] << 2) | ((wiiData[5] & 0xC) >> 2)) - 511;
 #endif
     }
+#endif
+#ifdef INPUT_WT_NECK
+    rawWt = checkWt(4) | (checkWt(3) << 1) | (checkWt(2) << 2) | (checkWt(0) << 3) | (checkWt(1) << 4);
 #endif
     TICK_SHARED;
     // Tick all three reports, and then go for the first one that has changes

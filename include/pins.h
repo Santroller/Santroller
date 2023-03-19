@@ -9,3 +9,6 @@ void stopReading(void);
 uint16_t adc(uint8_t pin);
 uint8_t digital_read(uint8_t port, uint8_t mask);
 uint16_t adc_read(uint8_t pin, uint8_t mask);
+#ifdef INPUT_WT_NECK
+long readWt(int pin);
+#endif

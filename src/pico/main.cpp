@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <pico/stdlib.h>
-#include "pico/cyw43_arch.h"
 #include <pico/unique_id.h>
 #include <string.h>
 #include <tusb.h>
 
+#include "bt.h"
 #include "commands.h"
 #include "common/tusb_types.h"
 #include "config.h"
@@ -16,6 +16,7 @@
 #include "hardware/watchdog.h"
 #include "host/usbh_classdriver.h"
 #include "pico/bootrom.h"
+#include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
 #include "pins.h"
 #include "reports/controller_reports.h"
@@ -23,8 +24,6 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#include "bt.h"
-
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
@@ -39,6 +38,18 @@ uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 bool connected = false;
 
+typedef struct {
+    uint8_t pin_dp;
+    uint8_t pio_tx_num;
+    uint8_t sm_tx;
+    uint8_t tx_ch;
+    uint8_t pio_rx_num;
+    uint8_t sm_rx;
+    uint8_t sm_eop;
+    void *alarm_pool;
+    int8_t debug_pin_rx;
+    int8_t debug_pin_eop;
+} pio_usb_configuration_t;
 
 bool ready_for_next_packet() {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
@@ -53,25 +64,33 @@ void send_report_to_pc(const void *report, uint8_t len) {
 }
 void loop() {
     tick();
+    #if USB_HOST_STACK
     // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
     if (xbox_one_state != Ready && xone_dev_addr && tuh_xinput_ready(xone_dev_addr, 0)) {
         tuh_xinput_receive_report(xone_dev_addr, 0);
     }
+    #endif
     tud_task();
+    #if USB_HOST_STACK
     tuh_task();
+    #endif
 }
 void setup() {
     generateSerialString(&serialstring);
+    #if USB_HOST_STACK
+    pio_usb_configuration_t config = {
+        USB_HOST_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1};
+    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    #endif
     tusb_init();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
     }
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
-    #if BLUETOOTH
+#if BLUETOOTH
     btstack_main();
-    #endif
-    
+#endif
 }
 void send_report_to_controller(uint8_t *report, uint8_t len) {
     if (xone_dev_addr && tuh_xinput_mounted(xone_dev_addr, 0)) {

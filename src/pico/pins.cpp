@@ -48,6 +48,12 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     return data;
 }
 
+uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits) {
+    gpio_put_masked(mask, bits);
+    adc_select_input(pin);
+    return adc_read() << 4;
+}
+
 #ifdef INPUT_WT_NECK
 long readWt(int pin) {
     digitalWrite(WT_PIN_S0, pin & 0b001);

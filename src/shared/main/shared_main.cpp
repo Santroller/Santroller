@@ -91,7 +91,6 @@ void send_rf_console_type() {
     }
 }
 #endif
-
 #ifdef INPUT_WT_NECK
 uint8_t gh5_mapping[] = {
     0x00,
@@ -355,7 +354,7 @@ uint8_t tick_inputs(uint8_t *buf) {
     }
     bool wiiValid = wiiData != NULL;
     lastWiiWasSuccessful = wiiValid;
-    uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which, lastTapWii = 0;
+    uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which, lastTapWiiGh5, lastTapWii = 0;
     uint16_t accX, accY, accZ = 0;
     if (wiiValid) {
         memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
@@ -368,9 +367,31 @@ uint8_t tick_inputs(uint8_t *buf) {
 #ifdef INPUT_WII_TAP
         lastTapWii = (wiiData[2] & 0x1f);
         // GH3 guitars set this bit, while WT and GH5 guitars do not
-        if (wiiData[0] & 1 << 7 == 0) {
+        if (wiiData[0] & (1 << 7) == 0) {
             lastTapWii = 0;
         }
+        if (lastTapWii == 0x0f) {
+            lastTapWiiGh5 = 0;
+        } else if (lastTapWii == 0x04) {
+            lastTapWiiGh5 = 0x95;
+        } else if (lastTapWii == 0x07) {
+            lastTapWiiGh5 = 0xB0;
+        } else if (lastTapWii == 0x0A) {
+            lastTapWiiGh5 = 0xCD;
+        } else if (lastTapWii == 0x0C || lastTapWii == 0x0D) {
+            lastTapWiiGh5 = 0xE6;
+        } else if (lastTapWii == 0x12 || lastTapWii == 0x13) {
+            lastTapWiiGh5 = 0x1A;
+        } else if (lastTapWii == 0x14 || lastTapWii == 0x15) {
+            lastTapWiiGh5 = 0x2F;
+        } else if (lastTapWii == 0x17 || lastTapWii == 0x18) {
+            lastTapWiiGh5 = 0x49;
+        } else if (lastTapWii == 0x1A) {
+            lastTapWiiGh5 = 0x66;
+        } else if (lastTapWii == 0x1F) {
+            lastTapWiiGh5 = 0x7F;
+        }
+        
 #endif
 #ifdef INPUT_WII_DRUM
         vel = (7 - (wiiData[3] >> 5)) << 5;

@@ -267,11 +267,11 @@ typedef struct
 
 typedef struct
 {
-    bool blue : 1;
-    bool green : 1;
-    bool red : 1;
-    bool yellow : 1;
-
+    bool x : 1;  // square, blue
+    bool a : 1;  // cross, green
+    bool b : 1;  // circle, red
+    bool y : 1;  // triangle, yellow
+    
     bool leftShoulder : 1;  // orange, l1
     bool tilt : 1;          // tilt, r1
     bool solo : 1;          // l2

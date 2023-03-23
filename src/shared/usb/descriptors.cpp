@@ -734,12 +734,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #endif
 #ifdef PS3_TYPE
             else if (consoleType == PS3) {
-                dev->idVendor = SONY_VID;
+                dev->idVendor = SONY_DS_VID;
                 dev->idProduct = PS3_TYPE;
             }
 #else
             else if (consoleType == PS3) {
-                dev->idVendor = PS3_VID;
+                dev->idVendor = SONY_DS_VID;
                 dev->idProduct = PS3_PID;
             }
 #endif

@@ -527,6 +527,7 @@ uint8_t tick_inputs(uint8_t *buf) {
         TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
     }
+    // PS4 and PS3 controllers are close enough to eachother that we can just use the PS3 generated code for PS4 as well.
     if (consoleType == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
         PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
@@ -534,7 +535,7 @@ uint8_t tick_inputs(uint8_t *buf) {
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-        TICK_PS4;
+        TICK_PS3;
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
         report_size = size = sizeof(PS4_REPORT);
     }

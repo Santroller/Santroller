@@ -129,6 +129,12 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 }
             }
         } else {
+            #if DEVICE_TYPE == STAGE_KIT
+                if (passthrough_stage_kit) {
+                    data_from_console_size = len;
+                    memcpy(data_from_console, data, len);
+                }
+            #endif
             while (len) {
                 uint8_t size = data[1];
                 len -= size;

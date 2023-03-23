@@ -43,6 +43,7 @@ typedef struct
     uint8_t ep_in;
     uint8_t ep_out;
     uint8_t type;
+    uint8_t subtype;
 
     uint16_t epin_size;
     uint16_t epout_size;
@@ -249,6 +250,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = WINDOWS_XBOX360;
+        p_xinput->subtype = x_desc->subtype;
         _xinputh_dev->inst_count++;
         return true;
 

@@ -16,6 +16,7 @@ uint8_t keystroke_sequence_number;
 uint8_t report_sequence_number;
 uint8_t hid_sequence_number;
 uint8_t ps4_sequence_number;
+bool passthrough_stage_kit = false;;
 #ifdef __cplusplus
 }
 #endif

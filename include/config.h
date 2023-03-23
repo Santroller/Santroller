@@ -154,7 +154,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGHLGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PS3_REPORT PS3GHLGuitar_Data_t
-#define PS4_REPORT PS4Gamepad_Data_t
+#define PS4_REPORT PS4GHLGuitar_Data_t
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID

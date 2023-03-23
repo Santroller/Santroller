@@ -535,7 +535,7 @@ uint8_t tick_inputs(uint8_t *buf) {
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-        TICK_PS3;
+        TICK_PS4;
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
         report_size = size = sizeof(PS4_REPORT);
     }

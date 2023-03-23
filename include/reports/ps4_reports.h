@@ -59,14 +59,14 @@ typedef struct {
     bool guide : 1;    // ps
     bool capture : 1;  // touchpad click
     // 6 bit report counter.
-    uint32_t report_counter : 6;
+    uint32_t reportCounter : 6;
 
-    uint32_t left_trigger : 8;
-    uint32_t right_trigger : 8;
+    uint32_t leftTrigger : 8;
+    uint32_t rightTrigger : 8;
 
     uint32_t padding : 24;
     uint8_t mystery[22];
-    uint8_t touchpad_data[8];
+    uint8_t touchpadData[8];
     uint8_t mystery_2[21];
 } __attribute__((packed)) PS4Gamepad_Data_t;
 
@@ -75,7 +75,7 @@ typedef struct
     uint8_t reportId;
 
     uint8_t unused1;
-    uint8_t strum;
+    uint8_t strumBar;
     uint8_t whammy;
     uint8_t tilt;
 

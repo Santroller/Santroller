@@ -36,6 +36,7 @@ static uint32_t __uninitialized_ram(persistedConsoleType);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
+uint8_t ps4_dev_addr = 0;
 bool connected = false;
 
 typedef struct {
@@ -115,6 +116,9 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         xone_dev_addr = dev_addr;
         xone_controller_connected();
     }
+    if (controllerType == PS4) {
+        ps4_dev_addr = dev_addr;
+    }
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
@@ -183,7 +187,34 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
         // Forward any unknown control requests to the 360 controller, if it is plugged in.
-    } else if (x360_dev_addr != 0 && xbox_360_state != Authenticated) {
+    } else if (consoleType == WINDOWS_XBOX360 && x360_dev_addr != 0 && xbox_360_state != Authenticated) {
+        tuh_xfer_t xfer = {};
+        xfer.daddr = x360_dev_addr;
+        xfer.ep_addr = 0;
+        xfer.setup = request;
+        xfer.buffer = buf;
+        xfer.complete_cb = NULL;
+        xfer.user_data = 0;
+        if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
+            if (stage == CONTROL_STAGE_SETUP) {
+                tuh_control_xfer(&xfer);
+                if (xfer.result != XFER_RESULT_SUCCESS) {
+                    return false;
+                }
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+        } else {
+            if (stage == CONTROL_STAGE_SETUP) {
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+            if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
+                tuh_control_xfer(&xfer);
+                if (xfer.result != XFER_RESULT_SUCCESS) {
+                    return false;
+                }
+            }
+        }
+    } else if (consoleType == PS4) {
         tuh_xfer_t xfer = {};
         xfer.daddr = x360_dev_addr;
         xfer.ep_addr = 0;

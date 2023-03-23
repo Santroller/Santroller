@@ -391,7 +391,7 @@ uint8_t tick_inputs(uint8_t *buf) {
         } else if (lastTapWii == 0x1F) {
             lastTapWiiGh5 = 0x7F;
         }
-        
+
 #endif
 #ifdef INPUT_WII_DRUM
         vel = (7 - (wiiData[3] >> 5)) << 5;
@@ -527,13 +527,27 @@ uint8_t tick_inputs(uint8_t *buf) {
         TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
     }
-    bool actuallyIsPS3 = consoleType != WINDOWS_XBOX360 && consoleType != STAGE_KIT && !updateSequence;
+    if (consoleType == PS4) {
+        PS4_REPORT *report = (PS4_REPORT *)report_data;
+        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
+        gamepad->leftStickX = PS3_STICK_CENTER;
+        gamepad->leftStickY = PS3_STICK_CENTER;
+        gamepad->rightStickX = PS3_STICK_CENTER;
+        gamepad->rightStickY = PS3_STICK_CENTER;
+        TICK_PS4;
+        report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+        report_size = size = sizeof(PS4_REPORT);
+    }
     // If bluetooth is enabled, then we can use the same code to tick both usb and bluetooth
-    if (actuallyIsPS3 || BLUETOOTH) {
+    if (consoleType != WINDOWS_XBOX360 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
         PS3_REPORT *report = &bt_report;
         memset(report, 0, sizeof(PS3_REPORT));
-
+        // If we are in instrument mode, then set defaults using the PC gamepad data report, which is modelled after the instrument ones
+#if SUPPORTS_INSTRUMENT
+        PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
+#else
         PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report;
+#endif
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -548,23 +562,46 @@ uint8_t tick_inputs(uint8_t *buf) {
             report->tableNeutral = true;
         }
 #endif
-        PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)report;
-        dpad->dpad = (dpad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[dpad->dpad];
-        if (actuallyIsPS3) {
-            // Actually a usb hid controller, copy the report to the usb one
-            memcpy(report_data, report, sizeof(PS3_REPORT));
-            report = (PS3_REPORT *)report_data;
-            // Only usb ever needs the switch bindings
-            // Switch swaps a and b
-            if (consoleType == SWITCH) {
-                bool a = report->a;
-                bool b = report->b;
-                report->b = a;
-                report->a = b;
-            }
-            report_size = size = sizeof(PS3_REPORT);
+// On anything that isnt a standard PS3 controller
+#if SUPPORTS_INSTRUMENT
+        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+#endif
+
+        // Actually a usb hid controller, copy the report to the usb one
+        memcpy(report_data, report, sizeof(PS3_REPORT));
+        report = (PS3_REPORT *)report_data;
+        // Only usb ever needs the switch bindings
+        // Switch swaps a and b
+        if (consoleType == SWITCH) {
+            bool a = report->a;
+            bool b = report->b;
+            report->b = a;
+            report->a = b;
         }
+        report_size = size = sizeof(PS3_REPORT);
     }
+    // For bluetooth, tick it seperately
+#if BLUETOOTH
+    PS3_REPORT *report = &bt_report;
+    memset(report, 0, sizeof(PS3_REPORT));
+    // If we are in instrument mode, then set defaults using the PC gamepad data report, which is modelled after the instrument ones
+    PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
+    gamepad->accelX = PS3_ACCEL_CENTER;
+    gamepad->accelY = PS3_ACCEL_CENTER;
+    gamepad->accelZ = PS3_ACCEL_CENTER;
+    gamepad->gyro = PS3_ACCEL_CENTER;
+    gamepad->leftStickX = PS3_STICK_CENTER;
+    gamepad->leftStickY = PS3_STICK_CENTER;
+    gamepad->rightStickX = PS3_STICK_CENTER;
+    gamepad->rightStickY = PS3_STICK_CENTER;
+    TICK_PS3;
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
+        report->tableNeutral = true;
+    }
+#endif
+    gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+#endif
     if (report_data != &combined_report) {
         return size;
     }

@@ -6,13 +6,13 @@
 #include "commands.h"
 #include "config.h"
 #include "controllers.h"
+#include "io.h"
 #include "keyboard_mouse.h"
 #include "pins.h"
 #include "ps3_wii_switch.h"
 #include "rf.h"
 #include "stdint.h"
 #include "util.h"
-#include "io.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -73,6 +73,9 @@ void handle_auth_led(void) {
 }
 void handle_player_leds(uint8_t player) {
     HANDLE_PLAYER_LED;
+}
+void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
+    HANDLE_LIGHTBAR_LED;
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     HANDLE_RUMBLE;
@@ -143,24 +146,21 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         }
     } else {
         uint8_t *data = (uint8_t *)data;
-        if (id == PS3_LED_ID) {
-            uint8_t player = (data[2] >> 2);
+        if (id == PS4_LED_RUMBLE_ID) {
+            ps4_output_report *report = (ps4_output_report *)data;
+            handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
+            handle_rumble(report->motor_left, report->motor_right);
+        } else if (id == PS3_LED_RUMBLE_ID) {
+            ps3_output_report *report = (ps3_output_report *)data;
+            uint8_t player = report->leds_bitmap;
             handle_player_leds(player);
+            handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         } else if (id == DJ_LED_ID) {
             uint8_t euphoria_on = data[2] * 0xFF;
             handle_rumble(euphoria_on, euphoria_on);
 #endif
-        } else if (id == SANTROLLER_PS3_RUMBLE_ID) {
-            uint8_t rumble_left = data[3];
-            uint8_t rumble_right = data[4];
-            handle_rumble(rumble_left, rumble_right);
-        } else if (id == COMMAND_SET_DETECT) {
-            uint8_t enabled = data[2];
-            uint8_t r2_value = data[3];
-            overrideR2 = enabled > 0;
-            overriddenR2 = r2_value;
-        }
+        } 
     }
 }
 long millis_since_command = 0;
@@ -250,6 +250,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             uint8_t response = digital_read(port, mask);
             memcpy(response_buffer, &response, sizeof(response));
             return sizeof(response);
+        }
+        case COMMAND_SET_DETECT: {
+            overrideR2 = wValue > 0;
+            overriddenR2 = wValue;
         }
     }
     *success = false;

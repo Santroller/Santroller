@@ -29,10 +29,6 @@ typedef struct {
     ps3_led_t _reserved; /* LED5, not actually soldered */
 } __attribute__((packed)) ps3_output_report;
 
-typedef struct {
-    uint16_t buttons;
-    uint8_t dpad;
-} __attribute__((packed)) PS3Dpad_Data_t;
 
 typedef struct {
     // Button bits
@@ -56,10 +52,15 @@ typedef struct {
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     // Stick axes
@@ -76,6 +77,55 @@ typedef struct {
 
 } __attribute__((packed)) SwitchGamepad_Data_t;
 
+typedef struct {
+
+    bool back : 1;  // select
+    bool start : 1;
+    bool leftThumbClick : 1;   // l3
+    bool rightThumbClick : 1;  // r3
+    
+    bool dpadUp : 1;
+    bool dpadDown : 1;
+    bool dpadLeft : 1;
+    bool dpadRight : 1;
+
+    bool leftShoulder : 1;   // l1
+    bool rightShoulder : 1;  // r1
+    bool l2 : 1;             // l2
+    bool r2 : 1;             // r2
+
+    bool x : 1;  // square, white1
+    bool a : 1;  // cross, black1
+    bool b : 1;  // circle, black2
+    bool y : 1;  // triangle, black3
+
+    bool guide : 1;
+    uint8_t : 3;
+    uint8_t padding_2 : 4;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint8_t pressureDpadUp;
+    uint8_t pressureDpadRight;
+    uint8_t pressureDpadDown;
+    uint8_t pressureDpadLeft;
+    uint8_t leftTrigger;   // pressure_l2
+    uint8_t rightTrigger;  // pressure_r2
+    uint8_t pressureL1;
+    uint8_t pressureR1;
+    uint8_t pressureTriangle;
+    uint8_t pressureCircle;
+    uint8_t pressureCross;
+    uint8_t pressureSquare;
+
+    // Each of the following are 10 bits in accuracy
+    // Centered/neutral state is nominally 0x0200, actual values may vary
+    uint16_t accelX;  // Left/right acceleration (roll)
+    uint16_t accelZ;  // Forward/back acceleration (pitch)
+    uint16_t accelY;  // Up/down acceleration (gravity)
+    uint16_t gyro;    // Left/right instantaneous rotation (yaw)
+} __attribute__((packed)) PS3Gamepad_Data_t;
 typedef struct {
     // Button bits
     bool x : 1;  // square
@@ -98,10 +148,15 @@ typedef struct {
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     // Stick axes
@@ -135,7 +190,7 @@ typedef struct {
     uint16_t accelY;  // Up/down acceleration (gravity)
     uint16_t gyro;    // Left/right instantaneous rotation (yaw)
 
-} __attribute__((packed)) PS3Gamepad_Data_t;
+} __attribute__((packed)) PCGamepad_Data_t;
 
 typedef struct
 {
@@ -159,10 +214,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     uint8_t unused1[8];
@@ -198,10 +258,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     uint8_t unused1[8];
@@ -239,10 +304,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     uint8_t tilt_pc;
@@ -287,10 +357,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     uint8_t tilt_pc;
@@ -324,10 +399,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     uint8_t unused1[2];
@@ -379,10 +459,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    union {
+        struct {
+            bool dpadUp : 1;
+            bool dpadDown : 1;
+            bool dpadLeft : 1;
+            bool dpadRight : 1;
+        };
+        uint8_t dpad : 4;
+    };
     uint8_t : 4;
 
     uint8_t tilt_pc;

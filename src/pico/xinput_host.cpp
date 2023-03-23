@@ -158,6 +158,55 @@ void xinputh_close(uint8_t dev_addr) {
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
+    uint16_t host_vid = 0;
+    uint16_t host_pid = 0;
+    tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
+    // Support standard HID devices
+    if (TUSB_CLASS_HID == desc_itf->bInterfaceClass) {
+        TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
+        uint16_t drv_len = sizeof(tusb_desc_interface_t) +
+                           (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
+        xinputh_interface_t *p_xinput = NULL;
+        for (uint8_t i = 0; i < CFG_TUH_XINPUT; i++) {
+            if (_xinputh_dev->instances[i].ep_in == 0 && _xinputh_dev->instances[i].ep_out == 0) {
+                p_xinput = &_xinputh_dev->instances[i];
+                break;
+            }
+        }
+        TU_VERIFY(p_xinput, 0);
+
+        uint8_t const *p_desc = (uint8_t const *)desc_itf;
+        // Xinput reserved endpoint
+        //-------------- Xinput Descriptor --------------//
+        p_desc = tu_desc_next(p_desc);
+        USB_HID_DESCRIPTOR *x_desc =
+            (USB_HID_DESCRIPTOR *)p_desc;
+        TU_ASSERT(HID_DESCRIPTOR_HID == x_desc->bDescriptorType, 0);
+        drv_len += x_desc->bLength;
+        uint8_t endpoints = desc_itf->bNumEndpoints;
+        while (endpoints--) {
+            p_desc = tu_desc_next(p_desc);
+            tusb_desc_endpoint_t const *desc_ep =
+                (tusb_desc_endpoint_t const *)p_desc;
+            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            if (desc_ep->bEndpointAddress & 0x80) {
+                p_xinput->ep_in = desc_ep->bEndpointAddress;
+                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+            } else {
+                p_xinput->ep_out = desc_ep->bEndpointAddress;
+                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+            }
+        }
+        p_xinput->itf_num = desc_itf->bInterfaceNumber;
+        // Specifically handle PS4 controllers for auth reasons
+        if (host_vid == PS4_VID && (host_pid == PS4_DS_PID_1 || host_pid == PS4_DS_PID_2 || host_pid == PS4_DS_PID_3)) {
+            p_xinput->type = PS4;
+        } else {
+            p_xinput->type = UNKNOWN;
+        }
+        _xinputh_dev->inst_count++;
+        return true;
+    }
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, 0);
     uint16_t drv_len = sizeof(tusb_desc_interface_t) +
                        (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));

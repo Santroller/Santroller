@@ -24,11 +24,11 @@
 #define INTERRUPT_ID 0x16
 
 // HID "Report IDs" used for rumble and led data from the console
-#define PS3_LED_ID 0x01
+#define PS3_LED_RUMBLE_ID 0x01
 #define XBOX_ONE_GHL_POKE_ID 0x02
 #define XONE_IDENTIFY_ID 0x04
+#define PS4_LED_RUMBLE_ID 0x04
 #define DJ_LED_ID 0x91
-#define SANTROLLER_PS3_RUMBLE_ID 0x92
 
 // For turntables, both left and right are set to the same thing
 // For these, left is set to 0, and right to these values
@@ -69,6 +69,8 @@
 #define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x14
 extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
 extern const uint8_t ps3_descriptor[137];
+extern const uint8_t ps3_instrument_descriptor[137];
+extern const uint8_t ps4_descriptor[160];
 extern const uint8_t pc_descriptor[150];
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);

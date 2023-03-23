@@ -210,10 +210,12 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
-#if SUPPORTS_KEYBOARD
+#if SUPPORTS_INSTRUMENT
+        wDescriptorLength : sizeof(ps3_descriptor)
+#elif SUPPORTS_KEYBOARD
         wDescriptorLength : sizeof(keyboard_mouse_descriptor)
 #else
-        wDescriptorLength : sizeof(ps3_descriptor)
+        wDescriptorLength : sizeof(ps3_instrument_descriptor)
 #endif
     },
     EndpointInHID : {
@@ -455,6 +457,12 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
+const PROGMEM uint8_t ps4_init_0x03[] = {
+    0x3, 0x21, 0x27, 0x4, 0x40, 0x7, 0x2c, 0x56, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0xd, 0xd, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+const PROGMEM uint8_t ps4_init_0xf3[] = {
+    0xf3, 0x0, 0x38, 0x38, 0, 0, 0, 0};
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
@@ -487,7 +495,12 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_SET_DETECT:
             case HID_REQUEST_SET_PROTOCOL:
             case HID_REQUEST_SET_IDLE:
+                return true;
             case HID_REQUEST_SET_REPORT:
+                // Handle auth on the pi pico side
+                if (consoleType == PS4 && wValue == 0x03F0) {
+                    return false;
+                }
                 return true;
         }
     }
@@ -516,7 +529,12 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_GET_EXTENSION_PS2:
             case HID_REQUEST_GET_PROTOCOL:
             case HID_REQUEST_GET_IDLE:
+                return true;
             case HID_REQUEST_GET_REPORT:
+                // Handle auth on the pi pico side
+                if (consoleType == PS4 && (wValue == 0x03F1 || wValue == 0x03F2)) {
+                    return false;
+                }
                 return true;
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
@@ -592,7 +610,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
 #endif
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        if (wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
+        if ((consoleType == UNIVERSAL || consoleType == PS3) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
             if (consoleType == UNIVERSAL) {
                 consoleType = PS3;
                 printf("PS3\n");
@@ -600,6 +618,16 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
+        }
+        if (consoleType == PS4) {
+            if (wValue == 0x0303 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+                memcpy_P(requestBuffer, ps4_init_0x03, sizeof(ps4_init_0x03));
+                return sizeof(ps3_init);
+            }
+            if (wValue == 0x03F3 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+                memcpy_P(requestBuffer, ps4_init_0xf3, sizeof(ps4_init_0xf3));
+                return sizeof(ps4_init_0xf3);
+            }
         }
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
             return tick_inputs(requestBuffer);
@@ -610,10 +638,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return size;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        printf("Fakemote or OPL\r\n");
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        printf("Fakemote or OPL\r\n");
         return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
@@ -691,6 +717,14 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == WINDOWS_XBOX360) {
                 dev->idVendor = xbox_360_vid;
                 dev->idProduct = xbox_360_pid;
+            } else if (consoleType == PS4) {
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+                dev->idVendor = SONY_VID;
+                dev->idProduct = PS4_GHLIVE_DONGLE_PID;
+#else
+                dev->idVendor = PS4_VID;
+                dev->idProduct = PS4_PID;
+#endif
             }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {
@@ -702,6 +736,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
             else if (consoleType == PS3) {
                 dev->idVendor = SONY_VID;
                 dev->idProduct = PS3_TYPE;
+            }
+#else
+            else if (consoleType == PS3) {
+                dev->idVendor = PS3_VID;
+                dev->idProduct = PS3_PID;
             }
 #endif
 #ifdef XBOX_ONE_VID
@@ -731,6 +770,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
+                if (consoleType == PS4) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
+                }
                 if (consoleType == UNIVERSAL) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor);
                 } else {
@@ -748,9 +790,17 @@ uint16_t descriptorRequest(const uint16_t wValue,
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
 #else
-            if (consoleType != UNIVERSAL) {
+            if (consoleType == PS4) {
+                address = ps4_descriptor;
+                size = sizeof(ps4_descriptor);
+            } else if (consoleType != UNIVERSAL) {
+#if SUPPORTS_INSTRUMENT
+                address = ps3_instrument_descriptor;
+                size = sizeof(ps3_instrument_descriptor);
+#else
                 address = ps3_descriptor;
                 size = sizeof(ps3_descriptor);
+#endif
             } else {
                 address = pc_descriptor;
                 size = sizeof(pc_descriptor);

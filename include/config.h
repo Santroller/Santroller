@@ -121,23 +121,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PS3_REPORT PS3Gamepad_Data_t
-#elif DEVICE_TYPE == GAMEPAD
+#define PS4_REPORT PS4Gamepad_Data_t
+#elif DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == ARCADE_STICK || DEVICE_TYPE == FLIGHT_STICK || DEVICE_TYPE == DANCE_PAD || DEVICE_TYPE == ARCADE_PAD
 #define SUB_TYPE XINPUT_GAMEPAD
 #define XINPUT_FLAGS 0x10
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PS3_REPORT PS3Gamepad_Data_t
-#elif DEVICE_TYPE == WHEEL
-#define SUB_TYPE XINPUT_WHEEL
-#define XINPUT_FLAGS 0x10
-#define XINPUT_REPORT XInputGamepad_Data_t
-#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
-#define PS3_REPORT PS3Gamepad_Data_t
-#elif DEVICE_TYPE == ARCADE_STICK
-#define SUB_TYPE XINPUT_ARCADE_STICK
-#define XINPUT_REPORT XInputGamepad_Data_t
-#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
-#define PS3_REPORT PS3Gamepad_Data_t
+#define PS4_REPORT PS4Gamepad_Data_t
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3_GH_GUITAR_PID
@@ -146,6 +137,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGuitarHeroGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
+#define PS4_REPORT PS3GuitarHeroGuitar_Data_t
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3_RB_GUITAR_PID
@@ -154,6 +146,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputRockBandGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
+#define PS4_REPORT PS3RockBandGuitar_Data_t
 #elif DEVICE_TYPE == LIVE_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3WIIU_GHLIVE_DONGLE_PID
@@ -161,6 +154,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGHLGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PS3_REPORT PS3GHLGuitar_Data_t
+#define PS4_REPORT PS4Gamepad_Data_t
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID
@@ -169,6 +163,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGuitarHeroDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PS3_REPORT PS3GuitarHeroDrums_Data_t
+#define PS4_REPORT PS3GuitarHeroDrums_Data_t
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_RB_DRUM_PID
@@ -177,24 +172,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t
-#elif DEVICE_TYPE == FLIGHT_STICK
-#define SUB_TYPE XINPUT_FLIGHT_STICK
-#define XINPUT_FLAGS 0x10
-#define XINPUT_REPORT XInputGamepad_Data_t
-#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
-#define PS3_REPORT PS3Gamepad_Data_t
-#elif DEVICE_TYPE == DANCE_PAD
-#define SUB_TYPE XINPUT_DANCE_PAD
-#define XINPUT_FLAGS 0x10
-#define XINPUT_REPORT XInputGamepad_Data_t
-#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
-#define PS3_REPORT PS3Gamepad_Data_t
-#elif DEVICE_TYPE == ARCADE_PAD
-#define SUB_TYPE XINPUT_ARCADE_PAD
-#define XINPUT_FLAGS 0x10
-#define XINPUT_REPORT XInputGamepad_Data_t
-#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
-#define PS3_REPORT PS3Gamepad_Data_t
+#define PS4_REPORT PS3RockBandDrums_Data_t
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUB_TYPE XINPUT_TURNTABLE
 #define PS3_TYPE PS3_DJ_TURNTABLE_PID
@@ -202,6 +180,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputTurntable_Data_t
 #define XBOX_ONE_REPORT XboxOneTurntable_Data_t
 #define PS3_REPORT PS3Turntable_Data_t
+#define PS4_REPORT PS3Turntable_Data_t
 #endif
 // Xbox One Controller config
 #define TEMP 0xFF
@@ -239,6 +218,7 @@ extern const uint8_t identify_2[64];
 extern const uint8_t identify_3[64];
 extern const uint8_t identify_4[IDENTIFY_4_SIZE];
 extern const uint8_t identify_5[8];
+#define SUPPORTS_INSTRUMENT DEVICE_TYPE == GUITAR || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == DJ_HERO_TURNTABLE 
 #define SUPPORTS_KEYBOARD CONSOLE_TYPE == KEYBOARD_MOUSE
 #define SUPPORTS_LEDS LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
 #define SUPPORTS_MIDI CONSOLE_TYPE == MIDI

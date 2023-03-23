@@ -70,7 +70,6 @@ RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
 #include "rf.h"
 RF24 radio(RADIO_CE, RADIO_CSN);
 uint8_t rf_data[32];
-bool rf_successful = false;
 #endif
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
@@ -84,7 +83,7 @@ static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05
 #ifdef RF_RX
 uint64_t addresses[RF_COUNT] = RF_ADDRESSES;
 void send_rf_console_type() {
-    if (rf_successful) {
+    if (rf_initialised) {
         RfConsoleTypePacket_t packet = {
             AckConsoleType, consoleType};
         radio.writeAckPayload(1, &packet, sizeof(packet));
@@ -147,7 +146,7 @@ void init_main(void) {
     SPI.setSCK(RADIO_SCK);
 #endif
 #ifdef RF
-    rf_successful = radio.begin();
+    rf_initialised = radio.begin();
     radio.setPALevel(RF24_PA_LOW);
     radio.enableDynamicPayloads();
     radio.enableAckPayload();
@@ -741,7 +740,7 @@ void send_mask(void) {
         RfMaskPacketGHL_t ghl_mask;
         memcpy(ghl_mask.mask, mask.mask, sizeof(PS3GHLGuitar_Data_t));
         ghl_mask.header.command = GHL_HID_REPORT;
-        nrfRadio.send(DEST_RADIO_ID, &mask, size + 1);
+        radio.write(&mask, size + 1);
     }
 #endif
 #endif
@@ -780,6 +779,7 @@ void tick(void) {
 #ifdef RF_TX
     uint8_t pipe;
     if (radio.available(&pipe)) {
+        rf_connected = true;
         radio.read(rf_data, sizeof(rf_data));
         switch (rf_data[0]) {
             case AckConsoleType:
@@ -828,6 +828,7 @@ void tick(void) {
 #ifdef RF_RX
         uint8_t pipe;
         if (radio.available(&pipe)) {
+            rf_connected = true;
             radio.read(rf_data, sizeof(rf_data));
             size = radio.getDynamicPayloadSize();
             if (rf_data[0] == Input) {
@@ -878,9 +879,9 @@ void tick(void) {
         if (!usb_connected()) {
             if (size > 0) {
                 memcpy(rf_report.data, &combined_report, size);
-                radio.write(&rf_report, size + 1);
+                rf_connected = radio.write(&rf_report, size + 1);
             } else {
-                radio.write(&rf_heartbeat, sizeof(rf_heartbeat));
+                rf_connected = radio.write(&rf_heartbeat, sizeof(rf_heartbeat));
             }
             return;
         }

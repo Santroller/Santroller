@@ -194,6 +194,15 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_F_CPU:
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);
+        
+        case COMMAND_READ_RF_INIT:
+            memcpy(response_buffer, &rf_initialised, sizeof(rf_initialised));
+            return sizeof(rf_initialised);
+        
+        case COMMAND_READ_RF_CONNECTED:
+            memcpy(response_buffer, &rf_connected, sizeof(rf_connected));
+            return sizeof(rf_connected);
+
         case COMMAND_GET_EXTENSION_WII:
             if (!lastWiiWasSuccessful) {
                 return 0;

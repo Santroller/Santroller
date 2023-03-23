@@ -21,3 +21,6 @@ extern uint8_t data_from_controller[64];
 extern uint8_t report_sequence_number;
 extern uint8_t keystroke_sequence_number;
 extern uint8_t hid_sequence_number;
+
+// Sequence number used for sending reports to the ps4
+extern uint8_t ps4_sequence_number;

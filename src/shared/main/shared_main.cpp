@@ -527,21 +527,27 @@ uint8_t tick_inputs(uint8_t *buf) {
         TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
     }
-    // PS4 and PS3 controllers are close enough to eachother that we can just use the PS3 generated code for PS4 as well.
+// Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
+// DJ Hero was never on ps4, so we can't really implement that either. For both of these fall back to PS3.
+#if SUPPORTS_PS4
     if (consoleType == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
         PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
+        gamepad->report_id = 0x01;
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+#if !SUPPORTS_INSTRUMENT
+        gamepad->reportCounter = ps4_sequence_number;
+#endif
         TICK_PS4;
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
         report_size = size = sizeof(PS4_REPORT);
-    }
-    // If bluetooth is enabled, then we can use the same code to tick both usb and bluetooth
+    } 
+#endif
     if (consoleType != WINDOWS_XBOX360 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
-        PS3_REPORT *report = &bt_report;
+        PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
         // If we are in instrument mode, then set defaults using the PC gamepad data report, which is modelled after the instrument ones
 #if SUPPORTS_INSTRUMENT
@@ -567,11 +573,6 @@ uint8_t tick_inputs(uint8_t *buf) {
 #if SUPPORTS_INSTRUMENT
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
 #endif
-
-        // Actually a usb hid controller, copy the report to the usb one
-        memcpy(report_data, report, sizeof(PS3_REPORT));
-        report = (PS3_REPORT *)report_data;
-        // Only usb ever needs the switch bindings
         // Switch swaps a and b
         if (consoleType == SWITCH) {
             bool a = report->a;
@@ -614,6 +615,9 @@ uint8_t tick_inputs(uint8_t *buf) {
 #if BLUETOOTH
     send_report(sizeof(PS3_REPORT), (uint8_t *)&bt_report);
 #endif
+    if (consoleType == PS4) {
+        ps4_sequence_number++;
+    }
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;

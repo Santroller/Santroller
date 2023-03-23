@@ -65,24 +65,24 @@ void send_report_to_pc(const void *report, uint8_t len) {
 }
 void loop() {
     tick();
-    #if USB_HOST_STACK
+#if USB_HOST_STACK
     // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
     if (xbox_one_state != Ready && xone_dev_addr && tuh_xinput_ready(xone_dev_addr, 0)) {
         tuh_xinput_receive_report(xone_dev_addr, 0);
     }
-    #endif
+#endif
     tud_task();
-    #if USB_HOST_STACK
+#if USB_HOST_STACK
     tuh_task();
-    #endif
+#endif
 }
 void setup() {
     generateSerialString(&serialstring);
-    #if USB_HOST_STACK
+#if USB_HOST_STACK
     pio_usb_configuration_t config = {
         USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1};
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-    #endif
+#endif
     tusb_init();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
@@ -103,14 +103,14 @@ void tud_mount_cb(void) {
     connected = true;
 }
 
-void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType) {
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType, uint8_t subtype) {
     printf("Detected controller: %d\r\n", controllerType);
     if (controllerType == WINDOWS_XBOX360) {
         x360_dev_addr = dev_addr;
         uint16_t host_vid = 0;
         uint16_t host_pid = 0;
         tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
-        xinput_controller_connected(host_vid, host_pid);
+        xinput_controller_connected(host_vid, host_pid, subtype);
     }
     if (controllerType == XBOXONE) {
         xone_dev_addr = dev_addr;
@@ -153,6 +153,28 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     receive_report_from_controller(report, len);
 }
+
+uint8_t transfer_with_usb_controller(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t* buffer) {
+    tusb_control_request_t setup = {
+        bmRequestType: requestType,
+        bRequest: request,
+        wValue: wValue,
+        wIndex: wIndex,
+        wLength: wLength
+    };
+    tuh_xfer_t xfer = {};
+    xfer.daddr = x360_dev_addr;
+    xfer.ep_addr = 0;
+    xfer.setup = &setup;
+    xfer.buffer = buffer;
+    xfer.complete_cb = NULL;
+    xfer.user_data = 0;
+    tuh_control_xfer(&xfer);
+    if (xfer.result != XFER_RESULT_SUCCESS) {
+        return false;
+    }
+    return xfer.actual_len;
+}
 tusb_control_request_t lastreq;
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
     if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && request->bRequest == TUSB_REQ_GET_DESCRIPTOR) {
@@ -186,63 +208,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
-        // Forward any unknown control requests to the 360 controller, if it is plugged in.
-        // Maybe we should implement this in a way where we dont need to handle it here.
-    } else if (consoleType == WINDOWS_XBOX360 && x360_dev_addr != 0 && xbox_360_state != Authenticated) {
-        tuh_xfer_t xfer = {};
-        xfer.daddr = x360_dev_addr;
-        xfer.ep_addr = 0;
-        xfer.setup = request;
-        xfer.buffer = buf;
-        xfer.complete_cb = NULL;
-        xfer.user_data = 0;
-        if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
-            if (stage == CONTROL_STAGE_SETUP) {
-                tuh_control_xfer(&xfer);
-                if (xfer.result != XFER_RESULT_SUCCESS) {
-                    return false;
-                }
-                tud_control_xfer(rhport, request, buf, request->wLength);
-            }
-        } else {
-            if (stage == CONTROL_STAGE_SETUP) {
-                tud_control_xfer(rhport, request, buf, request->wLength);
-            }
-            if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-                tuh_control_xfer(&xfer);
-                if (xfer.result != XFER_RESULT_SUCCESS) {
-                    return false;
-                }
-            }
-        }
-    } else if (consoleType == PS4) {
-        tuh_xfer_t xfer = {};
-        xfer.daddr = x360_dev_addr;
-        xfer.ep_addr = 0;
-        xfer.setup = request;
-        xfer.buffer = buf;
-        xfer.complete_cb = NULL;
-        xfer.user_data = 0;
-        if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
-            if (stage == CONTROL_STAGE_SETUP) {
-                tuh_control_xfer(&xfer);
-                if (xfer.result != XFER_RESULT_SUCCESS) {
-                    return false;
-                }
-                tud_control_xfer(rhport, request, buf, request->wLength);
-            }
-        } else {
-            if (stage == CONTROL_STAGE_SETUP) {
-                tud_control_xfer(rhport, request, buf, request->wLength);
-            }
-            if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-                tuh_control_xfer(&xfer);
-                if (xfer.result != XFER_RESULT_SUCCESS) {
-                    return false;
-                }
-            }
-        }
-    }
+    } 
 
     return true;
 }

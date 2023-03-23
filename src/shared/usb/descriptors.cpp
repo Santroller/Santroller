@@ -495,12 +495,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_SET_DETECT:
             case HID_REQUEST_SET_PROTOCOL:
             case HID_REQUEST_SET_IDLE:
-                return true;
             case HID_REQUEST_SET_REPORT:
-                // Handle auth on the pi pico side
-                if (consoleType == PS4 && wValue == 0x03F0) {
-                    return false;
-                }
                 return true;
         }
     }
@@ -529,12 +524,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_GET_EXTENSION_PS2:
             case HID_REQUEST_GET_PROTOCOL:
             case HID_REQUEST_GET_IDLE:
-                return true;
             case HID_REQUEST_GET_REPORT:
-                // Handle auth on the pi pico side
-                if (consoleType == PS4 && (wValue == 0x03F1 || wValue == 0x03F2)) {
-                    return false;
-                }
                 return true;
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
@@ -608,6 +598,16 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy(requestBuffer, &state, sizeof(state));
             return sizeof(state);
     }
+#elif USB_HOST_STACK
+    switch (request) {
+        case 0x81:
+        case 0x82:
+        case 0x87:
+        case 0x84:
+        case 0x83:
+        case 0x86:
+            return transfer_with_usb_controller(requestType, request, wValue, wIndex, wLength, requestBuffer);
+    }
 #endif
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if ((consoleType == UNIVERSAL || consoleType == PS3) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
@@ -619,16 +619,21 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }
-        if (consoleType == PS4) {
-            if (wValue == 0x0303 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
-                memcpy_P(requestBuffer, ps4_init_0x03, sizeof(ps4_init_0x03));
-                return sizeof(ps3_init);
-            }
-            if (wValue == 0x03F3 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
-                memcpy_P(requestBuffer, ps4_init_0xf3, sizeof(ps4_init_0xf3));
-                return sizeof(ps4_init_0xf3);
+#if USB_HOST_STACK
+        if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+            switch (wValue) {
+                case 0x0303:
+                    memcpy_P(requestBuffer, ps4_init_0x03, sizeof(ps4_init_0x03));
+                    return sizeof(ps3_init);
+                case 0x03F1:
+                case 0x03F2:
+                    return transfer_with_usb_controller(requestType, request, wValue, wIndex, wLength, requestBuffer);
+                case 0x03F3:
+                    memcpy_P(requestBuffer, ps4_init_0xf3, sizeof(ps4_init_0xf3));
+                    return sizeof(ps4_init_0xf3);
             }
         }
+#endif
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
             return tick_inputs(requestBuffer);
         }
@@ -637,6 +642,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (test) {
             return size;
         }
+    } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F0 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        return transfer_with_usb_controller(requestType, request, wValue, wIndex, wLength, requestBuffer);
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {

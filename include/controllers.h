@@ -26,8 +26,8 @@ extern uint8_t hid_sequence_number;
 extern uint8_t ps4_sequence_number;
 
 // If a stage kit is used for auth, pass any stage kit commands through to it
-bool passthrough_stage_kit;
+extern bool passthrough_stage_kit;
 
 // If we successfully managed to communicate with a RF module, flag that
-bool rf_initialised = false;
-bool rf_connected = false;
+extern bool rf_initialised;
+extern bool rf_connected;

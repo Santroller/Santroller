@@ -109,14 +109,12 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         uint16_t host_pid = 0;
         tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
         xinput_controller_connected(host_vid, host_pid, subtype);
-    }
-    if (controllerType == XBOXONE) {
+    } else if (controllerType == XBOXONE) {
         xone_dev_addr = dev_addr;
         xone_controller_connected();
-    }
-    if (controllerType == PS4) {
+    } else if (controllerType == PS4) {
         ps4_dev_addr = dev_addr;
-    }
+    } 
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
@@ -152,16 +150,22 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
     receive_report_from_controller(report, len);
 }
 
-uint8_t transfer_with_usb_controller(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t* buffer) {
+uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
     tusb_control_request_t setup = {
-        bmRequestType: requestType,
-        bRequest: request,
-        wValue: wValue,
-        wIndex: wIndex,
-        wLength: wLength
+        bmRequestType : requestType,
+        bRequest : request,
+        wValue : wValue,
+        wIndex : wIndex,
+        wLength : wLength
     };
     tuh_xfer_t xfer = {};
-    xfer.daddr = x360_dev_addr;
+    if (device == WINDOWS_XBOX360) {
+        xfer.daddr = x360_dev_addr;
+    } else if (device == PS4) {
+        xfer.daddr = ps4_dev_addr;
+    } else if (device == XBOXONE) {
+        xfer.daddr = xone_dev_addr;
+    }
     xfer.ep_addr = 0;
     xfer.setup = &setup;
     xfer.buffer = buffer;
@@ -206,7 +210,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
             controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
         }
-    } 
+    }
 
     return true;
 }

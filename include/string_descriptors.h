@@ -32,6 +32,7 @@ typedef struct
 } __attribute__((packed)) STRING_DESCRIPTOR;
 
 extern const PROGMEM STRING_DESCRIPTOR *const descriptorStrings[3];
+extern const PROGMEM STRING_DESCRIPTOR *const ps3DescriptorStrings[3];
 extern const PROGMEM STRING_DESCRIPTOR xboxString;
 extern const PROGMEM STRING_DESCRIPTOR languageString;
 extern const PROGMEM STRING_DESCRIPTOR manufacturerString;

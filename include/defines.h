@@ -47,6 +47,7 @@
 #define SWITCH 7
 #define PS4 8
 #define XBOXONE 9
+#define REAL_PS3 10
 #define UNKNOWN 0xFF
 
 #define PINMODE_PULLUP 0

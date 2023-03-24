@@ -29,7 +29,6 @@ typedef struct {
     ps3_led_t _reserved; /* LED5, not actually soldered */
 } __attribute__((packed)) ps3_output_report;
 
-
 typedef struct {
     // Button bits
     bool x : 1;
@@ -78,12 +77,13 @@ typedef struct {
 } __attribute__((packed)) SwitchGamepad_Data_t;
 
 typedef struct {
-
+    uint8_t reportId;
+    uint8_t : 8;
     bool back : 1;  // select
     bool start : 1;
     bool leftThumbClick : 1;   // l3
     bool rightThumbClick : 1;  // r3
-    
+
     bool dpadUp : 1;
     bool dpadDown : 1;
     bool dpadLeft : 1;
@@ -100,12 +100,13 @@ typedef struct {
     bool y : 1;  // triangle, black3
 
     bool guide : 1;
-    uint8_t : 3;
-    uint8_t padding_2 : 4;
+    uint8_t : 7;
+    uint8_t : 8;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t rightStickX;
     uint8_t rightStickY;
+    uint8_t padding_3[4];
     uint8_t pressureDpadUp;
     uint8_t pressureDpadRight;
     uint8_t pressureDpadDown;
@@ -118,7 +119,7 @@ typedef struct {
     uint8_t pressureCircle;
     uint8_t pressureCross;
     uint8_t pressureSquare;
-
+    uint8_t padding_4[15];
     // Each of the following are 10 bits in accuracy
     // Centered/neutral state is nominally 0x0200, actual values may vary
     uint16_t accelX;  // Left/right acceleration (roll)
@@ -157,7 +158,6 @@ typedef struct {
         };
         uint8_t dpad : 4;
     };
-    uint8_t : 4;
 
     // Stick axes
     // Neutral state is 0x80
@@ -223,7 +223,6 @@ typedef struct
         };
         uint8_t dpad : 4;
     };
-    uint8_t : 4;
 
     uint8_t unused1[8];
 
@@ -341,7 +340,7 @@ typedef struct
     bool a : 1;  // cross, green
     bool b : 1;  // circle, red
     bool y : 1;  // triangle, yellow
-    
+
     bool leftShoulder : 1;  // orange, l1
     bool tilt : 1;          // tilt, r1
     bool solo : 1;          // l2

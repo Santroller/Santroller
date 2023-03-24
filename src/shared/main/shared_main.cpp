@@ -537,23 +537,48 @@ uint8_t tick_inputs(uint8_t *buf) {
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-#if !SUPPORTS_INSTRUMENT
+#if !DEVICE_TYPE_IS_LIVE_GUITAR
         gamepad->reportCounter = ps4_sequence_number;
 #endif
         TICK_PS4;
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
         report_size = size = sizeof(PS4_REPORT);
-    } 
+    }
 #endif
+// If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
+// However, acutual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
+#if !(SUPPORTS_INSTRUMENT)
+    if (consoleType == PS3) {
+        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
+        memset(report, 0, sizeof(PS3_REPORT));
+        report->reportId = 1;
+        report->accelX = PS3_ACCEL_CENTER;
+        report->accelY = PS3_ACCEL_CENTER;
+        report->accelZ = PS3_ACCEL_CENTER;
+        report->gyro = PS3_ACCEL_CENTER;
+        report->leftStickX = PS3_STICK_CENTER;
+        report->leftStickY = PS3_STICK_CENTER;
+        report->rightStickX = PS3_STICK_CENTER;
+        report->rightStickY = PS3_STICK_CENTER;
+        report->padding_4[3] = 0x03;
+        report->padding_4[4] = 0x05;
+        report->padding_4[5] = 0x10;
+        report->padding_4[10] = 0x02;
+        report->padding_4[11] = 0xff;
+        report->padding_4[12] = 0x77;
+        report->padding_4[13] = 0x01;
+        report->padding_4[14] = 0x80;
+        TICK_PS3;
+        report_size = size = sizeof(PS3Gamepad_Data_t);
+    }
+    if (consoleType != WINDOWS_XBOX360 && consoleType != PS3 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
+#else
+    // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
     if (consoleType != WINDOWS_XBOX360 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
+#endif
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
-        // If we are in instrument mode, then set defaults using the PC gamepad data report, which is modelled after the instrument ones
-#if SUPPORTS_INSTRUMENT
         PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
-#else
-        PS3Gamepad_Data_t *gamepad = (PS3Gamepad_Data_t *)report;
-#endif
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -568,10 +593,7 @@ uint8_t tick_inputs(uint8_t *buf) {
             report->tableNeutral = true;
         }
 #endif
-// On anything that isnt a standard PS3 controller
-#if SUPPORTS_INSTRUMENT
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-#endif
         // Switch swaps a and b
         if (consoleType == SWITCH) {
             bool a = report->a;

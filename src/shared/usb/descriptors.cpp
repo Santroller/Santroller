@@ -210,9 +210,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
-#if SUPPORTS_INSTRUMENT
-        wDescriptorLength : sizeof(ps3_descriptor)
-#elif SUPPORTS_KEYBOARD
+#if SUPPORTS_KEYBOARD
         wDescriptorLength : sizeof(keyboard_mouse_descriptor)
 #else
         wDescriptorLength : sizeof(ps3_instrument_descriptor)
@@ -454,7 +452,6 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
         iInterface : NO_DESCRIPTOR,
     },
 };
-
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
 const PROGMEM uint8_t ps4_init_0x03[] = {
@@ -466,6 +463,7 @@ const PROGMEM uint8_t ps4_init_0xf3[] = {
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
+    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
     if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
@@ -606,18 +604,23 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x84:
         case 0x83:
         case 0x86:
-            return transfer_with_usb_controller(requestType, request, wValue, wIndex, wLength, requestBuffer);
+            return transfer_with_usb_controller(WINDOWS_XBOX360, requestType, request, wValue, wIndex, wLength, requestBuffer);
     }
 #endif
+// So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
+// But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        if ((consoleType == UNIVERSAL || consoleType == PS3) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
+        if ((consoleType == UNIVERSAL || consoleType == REAL_PS3) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
             if (consoleType == UNIVERSAL) {
-                consoleType = PS3;
-                printf("PS3\n");
+                consoleType = REAL_PS3;
                 reset_usb();
             }
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
+        }
+        if (consoleType == PS3 && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
+            consoleType = REAL_PS3;
+            reset_usb();
         }
 #if USB_HOST_STACK
         if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
@@ -627,7 +630,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     return sizeof(ps3_init);
                 case 0x03F1:
                 case 0x03F2:
-                    return transfer_with_usb_controller(requestType, request, wValue, wIndex, wLength, requestBuffer);
+                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 case 0x03F3:
                     memcpy_P(requestBuffer, ps4_init_0xf3, sizeof(ps4_init_0xf3));
                     return sizeof(ps4_init_0xf3);
@@ -643,7 +646,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return size;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F0 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return transfer_with_usb_controller(requestType, request, wValue, wIndex, wLength, requestBuffer);
+        return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
@@ -780,10 +783,15 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 if (consoleType == PS4) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
                 }
+#if !(SUPPORTS_INSTRUMENT)
+                if (consoleType == PS3) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
+                }
+#endif
                 if (consoleType == UNIVERSAL) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor);
                 } else {
-                    // Strip out all the extra interfaces used for configuring / x360 compat, the wii doesn't like em
+                    // Strip out all the extra interfaces used for configuring / x360 compat, consoles dont need them
                     desc->Config.bNumInterfaces = 1;
                     desc->Config.wTotalLength = sizeof(HID_CONFIGURATION_DESCRIPTOR);
                 }
@@ -805,8 +813,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 address = ps3_instrument_descriptor;
                 size = sizeof(ps3_instrument_descriptor);
 #else
-                address = ps3_descriptor;
-                size = sizeof(ps3_descriptor);
+                if (consoleType == REAL_PS3) {
+                    address = ps3_instrument_descriptor;
+                    size = sizeof(ps3_instrument_descriptor);
+                } else {
+                    address = ps3_descriptor;
+                    size = sizeof(ps3_descriptor);
+                }
 #endif
             } else {
                 address = pc_descriptor;

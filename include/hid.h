@@ -68,7 +68,7 @@
 #define RUMBLE_SANTROLLER_STAR_POWER_FILL 0x13
 #define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x14
 extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
-extern const uint8_t ps3_descriptor[137];
+extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
 extern const uint8_t pc_descriptor[150];

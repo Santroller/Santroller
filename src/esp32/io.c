@@ -37,14 +37,20 @@ void spi_begin() {
 #ifdef SPI_0_MOSI
     spiStartBus(0, spiFrequencyToClockDiv(SPI_0_CLOCK), SPI_0_MODE, SPI_0_BITORDER);
     spiAttachSCK(SPI_0, SPI_0_SCK);
-    spiAttachMISO(SPI_0, SPI_0_MISO);
     spiAttachMOSI(SPI_0, SPI_0_MOSI);
+    // In some cases, we dont need MISO (apa102)
+    #ifdef SPI_0_MISO
+    spiAttachMISO(SPI_0, SPI_0_MISO);
+    #endif
 #endif
 #ifdef SPI_1_MOSI
     spiStartBus(1, spiFrequencyToClockDiv(SPI_1_CLOCK), SPI_1_MODE, SPI_1_BITORDER);
     spiAttachSCK(SPI_1, SPI_1_SCK);
-    spiAttachMISO(SPI_1, SPI_1_MISO);
     spiAttachMOSI(SPI_1, SPI_1_MOSI);
+    // In some cases, we dont need MISO (apa102)
+    #ifdef SPI_1_MISO
+    spiAttachMISO(SPI_1, SPI_1_MISO);
+    #endif
 #endif
 }
 // SINCE LSB_FIRST isn't supported, we need to invert bits ourselves when its set

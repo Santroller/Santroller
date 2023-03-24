@@ -65,14 +65,12 @@ void send_report_to_pc(const void *report, uint8_t len) {
 }
 void loop() {
     tick();
+    tud_task();
 #if USB_HOST_STACK
     // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
     if (xbox_one_state != Ready && xone_dev_addr && tuh_xinput_ready(xone_dev_addr, 0)) {
         tuh_xinput_receive_report(xone_dev_addr, 0);
     }
-#endif
-    tud_task();
-#if USB_HOST_STACK
     tuh_task();
 #endif
 }

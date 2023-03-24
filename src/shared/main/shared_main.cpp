@@ -527,7 +527,7 @@ uint8_t tick_inputs(uint8_t *buf) {
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
-// DJ Hero was never on ps4, so we can't really implement that either. For both of these fall back to PS3.
+// DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
 #if SUPPORTS_PS4
     if (consoleType == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;

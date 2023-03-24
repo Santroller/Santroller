@@ -1,35 +1,39 @@
 #include "io.h"
 
 #include <math.h>
+#include <pico/unique_id.h>
 #include <stdio.h>
 
+#include "Arduino.h"
 #include "config.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
-#include "pico/stdlib.h"
-#include "Arduino.h"
 #include "pico/bootrom.h"
-#include <pico/unique_id.h>
+#include "pico/stdlib.h"
 volatile bool spi_acknowledged = false;
 void spi_begin() {
 #ifdef SPI_0_MOSI
     spi_init(spi0, SPI_0_CLOCK);
     spi_set_format(spi0, 8, SPI_0_CPOL,
                    SPI_0_CPHA, SPI_MSB_FIRST);
-    gpio_set_function(SPI_0_MISO, GPIO_FUNC_SPI);
     gpio_set_function(SPI_0_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(SPI_0_SCK, GPIO_FUNC_SPI);
+#ifdef SPI_0_MISO
+    gpio_set_function(SPI_0_MISO, GPIO_FUNC_SPI);
     gpio_set_pulls(SPI_0_MISO, true, false);
+#endif
 #endif
 #ifdef SPI_1_MOSI
     spi_init(spi1, SPI_1_CLOCK);
     spi_set_format(spi1, 8, SPI_1_CPOL,
                    SPI_1_CPHA, SPI_MSB_FIRST);
-    gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
     gpio_set_function(SPI_1_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(SPI_1_SCK, GPIO_FUNC_SPI);
+#ifdef SPI_1_MISO
+    gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
     gpio_set_pulls(SPI_1_MISO, true, false);
+#endif
 #endif
 }
 static uint8_t revbits(uint8_t b) {
@@ -105,6 +109,6 @@ void init_ack() {
 }
 #endif
 
-void read_serial(uint8_t* id, uint8_t len) {
-    pico_get_unique_board_id_string((char*)id, len);
+void read_serial(uint8_t *id, uint8_t len) {
+    pico_get_unique_board_id_string((char *)id, len);
 }

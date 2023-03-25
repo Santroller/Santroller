@@ -584,16 +584,16 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         }
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
         if (report->yellowVelocity) {
-            out->yellowVelocity = -(report->yellowVelocity << 7);
+            out->yellowVelocity = -(0x7FFF - (report->yellowVelocity << 7));
         }
         if (report->redVelocity) {
-            out->redVelocity = (report->redVelocity << 7);
+            out->redVelocity = (0x7FFF - (report->redVelocity << 7));
         }
         if (report->greenVelocity) {
-            out->greenVelocity = -(report->greenVelocity << 7);
+            out->greenVelocity = -(0x7FFF - (report->greenVelocity << 7));
         }
         if (report->blueVelocity) {
-            out->blueVelocity = (report->blueVelocity << 7);
+            out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
         }
 #elif DEVICE_TYPE_IS_LIVE_GUITAR
         if (report->tilt_pc != PS3_STICK_CENTER) {

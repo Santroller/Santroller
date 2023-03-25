@@ -178,7 +178,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS3_TYPE PS3_DJ_TURNTABLE_PID
 #define XINPUT_FLAGS 0x00
 #define XINPUT_REPORT XInputTurntable_Data_t
-#define XBOX_ONE_REPORT XboxOneTurntable_Data_t
+#define XBOX_ONE_REPORT XInputTurntable_Data_t
 #define PS3_REPORT PS3Turntable_Data_t
 #define PS4_REPORT PS3Turntable_Data_t
 #endif
@@ -218,12 +218,13 @@ extern const uint8_t identify_2[64];
 extern const uint8_t identify_3[64];
 extern const uint8_t identify_4[IDENTIFY_4_SIZE];
 extern const uint8_t identify_5[8];
-#define SUPPORTS_INSTRUMENT DEVICE_TYPE == GUITAR || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == DJ_HERO_TURNTABLE 
+#define SUPPORTS_INSTRUMENT DEVICE_TYPE == GUITAR || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUPPORTS_KEYBOARD CONSOLE_TYPE == KEYBOARD_MOUSE
+#define SUPPORTS_CONTROLLER CONSOLE_TYPE != KEYBOARD_MOUSE
 #define SUPPORTS_LEDS LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
 #define SUPPORTS_MIDI CONSOLE_TYPE == MIDI
 #define SUPPORTS_HID CONSOLE_TYPE != MIDI
-#define SUPPORTS_PS4 DEVICE_TYPE != GUITAR && DEVICE_TYPE != DRUMS && DEVICE_TYPE != TURNTABLES
+#define SUPPORTS_PS4 DEVICE_TYPE != GUITAR&& DEVICE_TYPE != DRUMS&& DEVICE_TYPE != TURNTABLES
 #define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
 #define SUPPORTS_AVR defined(__AVR__)
 #define SUPPORTS_TEENSY defined(__arm__) && defined(CORE_TEENSY)
@@ -244,6 +245,25 @@ enum hid_reports_t {
     REPORT_ID_END
 };
 
+typedef struct {
+#ifdef TICK_NKRO
+    USB_NKRO_Data_t lastNKROReport;
+#endif
+#ifdef TICK_MOUSE
+    USB_Mouse_Data_t lastMouseReport;
+#endif
+#ifdef TICK_CONSUMER
+    USB_ConsumerControl_Data_t lastConsumerReport;
+#endif
+#if SUPPORTS_CONTROLLER
+    union {
+        PS4_REPORT ps4;
+        PS3_REPORT ps3;
+        XINPUT_REPORT xinput;
+        XBOX_ONE_REPORT xone;
+    } lastControllerReport;
+#endif
+} USB_LastReport_Data_t;
 
 #define VERSION_MAJOR 3
 #define VERSION_MINOR 0

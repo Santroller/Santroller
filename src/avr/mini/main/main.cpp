@@ -41,6 +41,3 @@ void loop() {
     }
     tick();
 }
-bool usb_connected() {
-    return false;
-}

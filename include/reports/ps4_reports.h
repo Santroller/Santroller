@@ -3,6 +3,7 @@
 
 #define PS3_STICK_CENTER 0x80
 #define PS3_ACCEL_CENTER 0x0200
+#define GUITAR_ONE_G 40
 
 typedef struct {
     uint8_t report_id; /* 0x5 */

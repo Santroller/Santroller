@@ -119,55 +119,16 @@ typedef struct
     bool : 1;
     bool : 1;
 
-    uint8_t yellowPad : 4;
-    uint8_t redPad : 4;
-    uint8_t greenPad : 4;
-    uint8_t bluePad : 4;
+    uint8_t yellowVelocity : 4;
+    uint8_t redVelocity : 4;
+    uint8_t greenVelocity : 4;
+    uint8_t blueVelocity : 4;
 
-    uint8_t blueCymbal : 4;
-    uint8_t yellowCymbal : 4;
+    uint8_t blueCymbalVelocity : 4;
+    uint8_t yellowCymbalVelocity : 4;
     uint8_t : 4;
-    uint8_t greenCymbal : 4;
+    uint8_t greenCymbalVelocity : 4;
 } __attribute__((packed)) XboxOneRockBandDrums_Data_t;
-
-typedef struct
-{
-    GipHeader_t Header;
-    bool sync : 1;
-    bool guide : 1;
-    bool start : 1;  // menu
-    bool back : 1;   // view
-
-    bool a : 1;
-    bool b : 1;
-    bool x : 1;
-    bool y : 1;
-
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
-
-    bool leftShoulder : 1;
-    bool rightShoulder : 1;
-    bool leftThumbClick : 1;
-    bool rightThumbClick : 1;
-
-    uint16_t leftTrigger;
-    uint16_t : 10;
-    bool leftBlue : 1;
-    bool leftRed : 1;
-    bool leftGreen : 1;
-    bool rightBlue : 1;
-    bool rightRed : 1;
-    bool rightGreen : 1;
-
-    int16_t effectsKnob;
-    int16_t crossfader;
-    
-    int16_t leftTableVelocity;
-    int16_t rightTableVelocity;
-} __attribute__((packed)) XboxOneTurntable_Data_t;
 
 typedef struct
 {

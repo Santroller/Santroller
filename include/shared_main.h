@@ -5,7 +5,7 @@ void init_main(void);
 
 void device_reset(void);
 void tick(void);
-uint8_t tick_inputs(uint8_t* buf);
+uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type);
 void reset_usb(void);
 uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t* buffer);
 void send_report_to_controller(uint8_t *report, uint8_t len);
@@ -17,4 +17,5 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid, uint8_t subtype);
 void xone_controller_connected(void);
 void controller_disconnected(void);
 void send_rf_console_type(void);
+void set_console_type(uint8_t new_console_type);
 extern PS3_REPORT last_bt_report;

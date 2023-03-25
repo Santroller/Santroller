@@ -54,6 +54,13 @@ void handle_player_leds(uint8_t player) {
         player};
     radio.writeAckPayload(1, &packet, sizeof(packet));
 }
+void handle_lightbar_leds(uint8_t r, uint8_t g, uint8_t b) {
+
+    RfPlayerLed_t packet = {
+        AckPlayerLed,
+        r};
+    radio.writeAckPayload(1, &packet, sizeof(packet));
+}
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     RfRumbleLed_t packet = {
         AckRumble,

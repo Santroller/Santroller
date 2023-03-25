@@ -638,7 +638,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
 #endif
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
-            return tick_inputs(requestBuffer);
+            return tick_inputs(requestBuffer, NULL, consoleType);
         }
         bool test = true;
         uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);

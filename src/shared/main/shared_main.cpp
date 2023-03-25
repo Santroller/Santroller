@@ -9,7 +9,6 @@
 #include "hid.h"
 #include "io.h"
 #include "io_define.h"
-#include "mask.h"
 #include "pins.h"
 #include "ps2.h"
 #include "rf.h"
@@ -20,11 +19,6 @@
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
-#ifdef RF_RX
-uint8_t ghl_mask[RF_COUNT][sizeof(PS3GHLGuitar_Data_t)];
-uint8_t standard_mask[RF_COUNT][sizeof(combined_report_t)];
-uint8_t keyboard_masks[RF_COUNT][3][sizeof(combined_report_t)];
-#endif
 USB_Report_Data_t combined_report;
 PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
@@ -49,27 +43,31 @@ bool lastPS2WasSuccessful = false;
 bool overrideR2 = false;
 bool lastXboxOneGuide = false;
 uint8_t overriddenR2 = 0;
-USB_Report_Data_t lastReport;
+USB_LastReport_Data_t last_report_usb;
+USB_LastReport_Data_t last_report_bt;
+USB_LastReport_Data_t last_report_rf;
 long initialWt[5] = {0};
 uint8_t rawWt;
-#ifdef TICK_NKRO
-USB_NKRO_Data_t lastNKROReport;
-#endif
-#ifdef TICK_MOUSE
-USB_Mouse_Data_t lastMouseReport;
-#endif
-#ifdef TICK_CONSUMER
-USB_ConsumerControl_Data_t lastConsumerReport;
-#endif
 #ifdef RF_TX
 RfInputPacket_t rf_report = {Input};
 RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
+void send_rf_console_type() {
+    if (rf_initialised) {
+        RfConsoleTypePacket_t packet = {
+            ConsoleType, consoleType};
+        radio.write(&packet, sizeof(packet));
+    }
+}
 #endif
 #ifdef RF
 #include "SPI.h"
 #include "rf.h"
 RF24 radio(RADIO_CE, RADIO_CSN);
 uint8_t rf_data[32];
+#endif
+#ifdef RF_RX
+uint64_t addresses[RF_COUNT] = RF_ADDRESSES;
+RfInputPacket_t last_rf_inputs[RF_COUNT];
 #endif
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
@@ -79,17 +77,13 @@ typedef struct {
     uint8_t b;
 } Led_t;
 Led_t ledState[LED_COUNT];
+#define UP 1 << 0
+#define DOWN 1 << 1
+#define LEFT 1 << 2
+#define RIGHT 1 << 3
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
-#ifdef RF_RX
-uint64_t addresses[RF_COUNT] = RF_ADDRESSES;
-void send_rf_console_type() {
-    if (rf_initialised) {
-        RfConsoleTypePacket_t packet = {
-            AckConsoleType, consoleType};
-        radio.writeAckPayload(1, &packet, sizeof(packet));
-    }
-}
-#endif
+static const uint8_t dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RIGHT, DOWN, DOWN | LEFT, LEFT, UP | LEFT};
+
 #ifdef INPUT_WT_NECK
 uint8_t gh5_mapping[] = {
     0x00,
@@ -157,6 +151,7 @@ void init_main(void) {
     // set the RX address of the TX node into a RX pipe
     radio.openReadingPipe(1, (uint64_t)DEST_RADIO_ID);
     radio.stopListening();
+    send_rf_console_type();
 #endif
 #ifdef RF_RX
     radio.openWritingPipe((uint64_t)DEST_RADIO_ID);  // always uses pipe 0
@@ -166,7 +161,6 @@ void init_main(void) {
         radio.openReadingPipe(i + 1, addresses[i]);
     }
     radio.startListening();
-    send_rf_console_type();
 #endif
 #ifdef INPUT_WT_NECK
     memset(initialWt, 0, sizeof(initialWt));
@@ -264,7 +258,7 @@ uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int1
 uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
 #if DEVICE_TYPE == GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
-    int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8;
+    int16_t ret = (handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8) - GUITAR_ONE_G;
 #else
     int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
 #endif
@@ -318,7 +312,501 @@ uint8_t tick_xbox_one() {
 }
 
 long lastTick;
-uint8_t tick_inputs(uint8_t *buf) {
+uint8_t keyboard_report = 0;
+#if defined(RF_RX) || BLUETOOTH
+// When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
+void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
+    uint8_t dpad = report->dpad > RIGHT ? 0 : dpad_bindings_reverse[report->dpad];
+    bool up = dpad & UP;
+    bool down = dpad & DOWN;
+    bool left = dpad & LEFT;
+    bool right = dpad & RIGHT;
+    bool universal_report = output_console_type == UNIVERSAL || output_console_type == REAL_PS3;
+#if SUPPORTS_INSTRUMENT
+    universal_report |= output_console_type == PS3;
+#elif SUPPORTS_CONTROLLER
+    if (consoleType == PS3) {
+        PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = report->leftStickX;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = report->leftStickY;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = report->rightStickX;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = report->rightStickY;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+        if (report->pressureDpadUp) {
+            out->pressureDpadUp = report->pressureDpadUp;
+        }
+        if (report->pressureDpadRight) {
+            out->pressureDpadRight = report->pressureDpadRight;
+        }
+        if (report->pressureDpadDown) {
+            out->pressureDpadDown = report->pressureDpadDown;
+        }
+        if (report->pressureDpadLeft) {
+            out->pressureDpadLeft = report->pressureDpadLeft;
+        }
+        if (report->pressureL1) {
+            out->pressureL1 = report->pressureL1;
+        }
+        if (report->pressureR1) {
+            out->pressureR1 = report->pressureR1;
+        }
+        if (report->pressureTriangle) {
+            out->pressureTriangle = report->pressureTriangle;
+        }
+        if (report->pressureCircle) {
+            out->pressureCircle = report->pressureCircle;
+        }
+        if (report->pressureCross) {
+            out->pressureCross = report->pressureCross;
+        }
+        if (report->pressureSquare) {
+            out->pressureSquare = report->pressureSquare;
+        }
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+    }
+#endif
+    if (consoleType == PS4) {
+        PS4_REPORT *out = (PS4_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+        out->capture |= report->capture;
+        if (report->dpad) {
+            out->dpad = report->dpad;
+        }
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = report->tilt_pc;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->strumBar != PS3_STICK_CENTER) {
+            out->strumBar = report->strumBar;
+        }
+#elif SUPPORTS_CONTROLLER
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = report->leftStickX;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = report->leftStickY;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = report->rightStickX;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = report->rightStickY;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+#endif
+    }
+    if (consoleType == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+#if SUPPORTS_CONTROLLER
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = (report->leftStickX - 128) << 8;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = (report->leftStickY - 128) << 8;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = (report->rightStickX - 128) << 8;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = (report->rightStickY - 128) << 8;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = (report->leftTrigger) << 8;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = (report->rightTrigger) << 8;
+        }
+#elif DEVICE_TYPE_IS_LIVE_GUITAR
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = report->tilt_pc;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->strumBar != PS3_STICK_CENTER) {
+            out->strumBar = report->strumBar;
+        }
+#elif DEVICE_TYPE_IS_GUITAR
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = report->tilt_pc;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->pickup != PS3_STICK_CENTER) {
+            out->pickup = report->pickup;
+        }
+#elif DEVICE_TYPE_IS_DRUM
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity >> 4;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity >> 4;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity >> 4;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity >> 4;
+        }
+#endif
+    }
+    if (consoleType == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+#if SUPPORTS_CONTROLLER
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = (report->leftStickX - 128) << 8;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = (report->leftStickY - 128) << 8;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = (report->rightStickX - 128) << 8;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = (report->rightStickY - 128) << 8;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity;
+        }
+        if (report->kickVelocity) {
+            out->kickVelocity = report->kickVelocity;
+        }
+        if (report->orangeVelocity) {
+            out->orangeVelocity = report->orangeVelocity;
+        }
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
+        if (report->yellowVelocity) {
+            out->yellowVelocity = -(report->yellowVelocity << 7);
+        }
+        if (report->redVelocity) {
+            out->redVelocity = (report->redVelocity << 7);
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = -(report->greenVelocity << 7);
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = (report->blueVelocity << 7);
+        }
+#elif DEVICE_TYPE_IS_LIVE_GUITAR
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->strumBar != PS3_STICK_CENTER) {
+            out->strumBar = (report->strumBar - 128) << 8;
+        }
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->slider != PS3_STICK_CENTER) {
+            out->slider = (report->slider) << 8;
+        }
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->pickup != PS3_STICK_CENTER) {
+            out->pickup = report->pickup;
+        }
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+
+        if (report->leftTableVelocity != PS3_STICK_CENTER) {
+            out->leftTableVelocity = (report->leftTableVelocity - 128) << 8;
+        }
+        if (report->rightTableVelocity != PS3_STICK_CENTER) {
+            out->rightTableVelocity = (report->rightTableVelocity - 128) << 8;
+        }
+        if (report->effectsKnob != PS3_ACCEL_CENTER) {
+            out->effectsKnob = (report->effectsKnob - 128) << 8;
+        }
+        if (report->crossfader != PS3_ACCEL_CENTER) {
+            out->crossfader = (report->crossfader - 128) << 8;
+        }
+#endif
+    }
+    if (universal_report) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide = report->guide;
+        out->capture = report->capture;
+        if (report->dpad) {
+            out->dpad = report->dpad;
+        }
+#if SUPPORTS_CONTROLLER
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = report->leftStickX;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = report->leftStickY;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = report->rightStickX;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = report->rightStickY;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+        if (report->pressureDpadUp) {
+            out->pressureDpadUp = report->pressureDpadUp;
+        }
+        if (report->pressureDpadRight) {
+            out->pressureDpadRight = report->pressureDpadRight;
+        }
+        if (report->pressureDpadDown) {
+            out->pressureDpadDown = report->pressureDpadDown;
+        }
+        if (report->pressureDpadLeft) {
+            out->pressureDpadLeft = report->pressureDpadLeft;
+        }
+        if (report->pressureL1) {
+            out->pressureL1 = report->pressureL1;
+        }
+        if (report->pressureR1) {
+            out->pressureR1 = report->pressureR1;
+        }
+        if (report->pressureTriangle) {
+            out->pressureTriangle = report->pressureTriangle;
+        }
+        if (report->pressureCircle) {
+            out->pressureCircle = report->pressureCircle;
+        }
+        if (report->pressureCross) {
+            out->pressureCross = report->pressureCross;
+        }
+        if (report->pressureSquare) {
+            out->pressureSquare = report->pressureSquare;
+        }
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity;
+        }
+        if (report->kickVelocity) {
+            out->kickVelocity = report->kickVelocity;
+        }
+        if (report->orangeVelocity) {
+            out->orangeVelocity = report->orangeVelocity;
+        }
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity;
+        }
+#elif DEVICE_TYPE_IS_LIVE_GUITAR
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+                out->tilt = (PS3_ACCEL_CENTER + (report->tilt_pc - 128) - GUITAR_ONE_G);
+            } else {
+                out->tilt_pc = report->tilt_pc;
+            }
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->strumBar != PS3_STICK_CENTER) {
+            out->strumBar = report->strumBar;
+        }
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+                out->tilt = (PS3_ACCEL_CENTER + (report->tilt_pc - 128) - GUITAR_ONE_G);
+            } else {
+                out->tilt_pc = report->tilt_pc;
+            }
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->slider != PS3_STICK_CENTER) {
+            out->slider = report->slider;
+        }
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            // TODO: what are we actually setting tilt_pc to these days?
+            if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+                out->tilt = report->tilt_pc > 128;
+            } else {
+                out->tilt_pc = report->tilt_pc;
+            }
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->pickup != PS3_STICK_CENTER) {
+            out->pickup = report->pickup;
+        }
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+
+        if (report->leftTableVelocity != PS3_STICK_CENTER) {
+            out->leftTableVelocity = report->leftTableVelocity;
+        }
+        if (report->rightTableVelocity != PS3_STICK_CENTER) {
+            out->rightTableVelocity = report->rightTableVelocity;
+        }
+        if (report->effectsKnob != PS3_ACCEL_CENTER) {
+            out->effectsKnob = report->effectsKnob;
+        }
+        if (report->crossfader != PS3_ACCEL_CENTER) {
+            out->crossfader = report->crossfader;
+        }
+#endif
+    }
+}
+#endif
+#ifndef RF_RX
+uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
     // Tick Inputs
 #ifdef INPUT_DJ_TURNTABLE
@@ -427,6 +915,12 @@ uint8_t tick_inputs(uint8_t *buf) {
     rawWt = checkWt(4) | (checkWt(3) << 1) | (checkWt(2) << 2) | (checkWt(0) << 3) | (checkWt(1) << 4);
 #endif
     TICK_SHARED;
+    // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
+    if (!buf) return 0;
+    // Handle button combos for detection logic
+    if (millis() < 1000 && consoleType == UNIVERSAL) {
+        TICK_DETECTION;
+    }
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
     // Then mouse, as it is an axis so it is more likley to have changes
@@ -440,7 +934,9 @@ uint8_t tick_inputs(uint8_t *buf) {
             USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
             report->rid = REPORT_ID_MOUSE;
             TICK_MOUSE;
-            lastReportToCheck = &lastMouseReport;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastMouseReport;
+            }
         }
 #endif
 #ifdef TICK_CONSUMER
@@ -450,7 +946,9 @@ uint8_t tick_inputs(uint8_t *buf) {
             USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)buf;
             report->rid = REPORT_ID_CONSUMER;
             TICK_CONSUMER;
-            lastReportToCheck = &lastConsumerReport;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastConsumerReport;
+            }
         }
 #endif
 #ifdef TICK_NKRO
@@ -460,20 +958,24 @@ uint8_t tick_inputs(uint8_t *buf) {
             USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)buf;
             report->rid = REPORT_ID_NKRO;
             TICK_NKRO;
-            lastReportToCheck = &lastNKROReport;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastNKROReport;
+            }
         }
 #endif
-        uint8_t cmp = memcmp(lastReportToCheck, buf, size);
-        if (cmp == 0) {
-            size = 0;
-            continue;
+        // If we are directly asked for a HID report, always just reply with the NKRO one
+        if (lastReportToCheck) {
+            uint8_t cmp = memcmp(lastReportToCheck, buf, size);
+            if (cmp == 0) {
+                size = 0;
+                continue;
+            }
+            memcpy(lastReportToCheck, buf, size);
+            break;
+        } else {
+            break;
         }
-        memcpy(lastReportToCheck, buf, size);
-        break;
     }
-#if BLUETOOTH
-    send_report(size, (uint8_t *)buf);
-#endif
 #else
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
@@ -546,7 +1048,8 @@ uint8_t tick_inputs(uint8_t *buf) {
     }
 #endif
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
-// However, acutual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
+// This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
+// However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
 #if !(SUPPORTS_INSTRUMENT)
     if (consoleType == PS3) {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
@@ -560,14 +1063,6 @@ uint8_t tick_inputs(uint8_t *buf) {
         report->leftStickY = PS3_STICK_CENTER;
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
-        report->padding_4[3] = 0x03;
-        report->padding_4[4] = 0x05;
-        report->padding_4[5] = 0x10;
-        report->padding_4[10] = 0x02;
-        report->padding_4[11] = 0xff;
-        report->padding_4[12] = 0x77;
-        report->padding_4[13] = 0x01;
-        report->padding_4[14] = 0x80;
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
@@ -603,39 +1098,14 @@ uint8_t tick_inputs(uint8_t *buf) {
         }
         report_size = size = sizeof(PS3_REPORT);
     }
-    // For bluetooth, tick it seperately
-#if BLUETOOTH
-    PS3_REPORT *report = &bt_report;
-    memset(report, 0, sizeof(PS3_REPORT));
-    // If we are in instrument mode, then set defaults using the PC gamepad data report, which is modelled after the instrument ones
-    PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
-    gamepad->accelX = PS3_ACCEL_CENTER;
-    gamepad->accelY = PS3_ACCEL_CENTER;
-    gamepad->accelZ = PS3_ACCEL_CENTER;
-    gamepad->gyro = PS3_ACCEL_CENTER;
-    gamepad->leftStickX = PS3_STICK_CENTER;
-    gamepad->leftStickY = PS3_STICK_CENTER;
-    gamepad->rightStickX = PS3_STICK_CENTER;
-    gamepad->rightStickY = PS3_STICK_CENTER;
-    TICK_PS3;
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
-        report->tableNeutral = true;
+    // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
+    if (last_report) {
+        uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
+        if (cmp == 0) {
+            return 0;
+        }
+        memcpy(&last_report->lastControllerReport, report_data, report_size);
     }
-#endif
-    gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-#endif
-    if (report_data != &combined_report) {
-        return size;
-    }
-    uint8_t cmp = memcmp(&lastReport, report_data, report_size);
-    if (cmp == 0) {
-        return 0;
-    }
-    memcpy(&lastReport, report_data, report_size);
-#if BLUETOOTH
-    send_report(sizeof(PS3_REPORT), (uint8_t *)&bt_report);
-#endif
     if (consoleType == PS4) {
         ps4_sequence_number++;
     }
@@ -653,13 +1123,382 @@ uint8_t tick_inputs(uint8_t *buf) {
     }
 #endif
 #endif
+    return size;
+}
+#else
+uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+    uint8_t rf_size;
+    uint8_t size;
+    uint8_t pipe;
+    bool updated = false;
+    if (radio.available(&pipe)) {
+        rf_connected = true;
+        radio.read(rf_data, sizeof(rf_data));
+        rf_size = radio.getDynamicPayloadSize();
+        switch (rf_data[0]) {
+            case ConsoleType:
+                set_console_type(rf_data[1]);
+                if (last_report) {
+                    return 0;
+                }
+                break;
+            case Input:
+                updated = true;
+                break;
+            case Heartbeat:
+                if (last_report) {
+                    return 0;
+                }
+                break;
+        }
+#if SUPPORTS_KEYBOARD
+        if (!updated) {
+            size = sizeof(USB_NKRO_Data_t);
+            memcpy(&last_report->lastNKROReport, buf, size);
+            return size;
+        }
+#ifdef TICK_NKRO
+        if (rf_data[1] == REPORT_ID_NKRO) {
+            memcpy(&last_rf_inputs[pipe].lastNKROReport, rf_data + 1, rf_size - 1);
+        }
+#endif
+#ifdef TICK_MOUSE
+        if (rf_data[1] == REPORT_ID_MOUSE) {
+            memcpy(&last_rf_inputs[pipe].lastMouseReport, rf_data + 1, rf_size - 1);
+        }
+#endif
+#ifdef TICK_CONSUMER
+        if (rf_data[1] == REPORT_ID_CONSUMER) {
+            memcpy(&last_rf_inputs[pipe].lastConsumerReport, rf_data + 1, rf_size - 1);
+        }
+#endif
+        void *lastReportToCheck;
+        for (int i = 1; i < REPORT_ID_END; i++) {
+            for (int dev = 0; dev < RF_COUNT; dev++) {
+#ifdef TICK_MOUSE
+                if (i == REPORT_ID_MOUSE) {
+                    USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
+                    size = sizeof(USB_Mouse_Data_t);
+                    if (dev == 0) {
+                        memset(buf, 0, size);
+                    }
+                    report->rid = REPORT_ID_MOUSE;
+                    // Since the mouse report has analog inputs we need to handle it manually
+                    USB_Mouse_Data_t *report_from_rf = &last_rf_inputs[pipe].lastMouseReport;
+                    report->left |= report_from_rf->left;
+                    report->right |= report_from_rf->right;
+                    report->middle |= report_from_rf->middle;
+                    if (report_from_rf->X) {
+                        report->X = report_from_rf->X;
+                    }
+                    if (report_from_rf->Y) {
+                        report->Y = report_from_rf->Y;
+                    }
+                    if (report_from_rf->ScrollX) {
+                        report->ScrollX = report_from_rf->ScrollX;
+                    }
+                    if (report_from_rf->ScrollY) {
+                        report->ScrollY = report_from_rf->ScrollY;
+                    }
+                    if (last_report) {
+                        lastReportToCheck = &last_report->lastMouseReport;
+                    }
+                }
+#endif
+#ifdef TICK_CONSUMER
+                if (i == REPORT_ID_CONSUMER) {
+                    size = sizeof(USB_ConsumerControl_Data_t);
+                    if (dev == 0) {
+                        memset(buf, 0, size);
+                    }
+                    // Consumer is easy, as we are only dealing with bits per button, so ORing is fine
+                    uint8_t *current_report = (uint8_t *)&last_rf_inputs[pipe];
+                    for (size_t j = 0; j < size; j++) {
+                        buf[j] |= current_report[j];
+                    }
+                    if (last_report) {
+                        lastReportToCheck = &last_report->lastConsumerReport;
+                    }
+                }
+#endif
+#ifdef TICK_NKRO
+                if (i == REPORT_ID_NKRO) {
+                    size = sizeof(USB_NKRO_Data_t);
+                    if (dev == 0) {
+                        memset(buf, 0, size);
+                    }
+                    // NKRO is easy, as we are only dealing with bits per button, so ORing is fine
+                    uint8_t *current_report = (uint8_t *)&last_rf_inputs[pipe];
+                    for (size_t j = 0; j < size; j++) {
+                        buf[j] |= current_report[j];
+                    }
+                    if (last_report) {
+                        lastReportToCheck = &last_report->lastNKROReport;
+                    }
+                }
+#endif
+            }
+            // If we are directly asked for a HID report, always just reply with the NKRO one
+            if (lastReportToCheck) {
+                uint8_t cmp = memcmp(lastReportToCheck, buf, size);
+                if (cmp == 0) {
+                    size = 0;
+                    continue;
+                }
+                memcpy(lastReportToCheck, buf, size);
+                break;
+            } else {
+                break;
+            }
+        }
+#else
+        memcpy(&last_rf_inputs[pipe].lastControllerReport, rf_data + 1, rf_size - 1);
+        USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
+        uint8_t report_size;
+        bool updateSequence = false;
+        bool updateHIDSequence = false;
+        if (consoleType == XBOXONE) {
+            // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
+            // To switch modes, a poke command is sent every 8 seconds
+            // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
+
+            if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
+                XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
+                size = sizeof(XBOX_ONE_REPORT);
+                report_size = size - sizeof(GipHeader_t);
+                if (updated) {
+                    memset(buf, 0, size);
+                }
+                GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
+                if (updated) {
+                    for (int dev = 0; dev < RF_COUNT; dev++) {
+                        convert_ps3_to_type(buf, &last_rf_inputs[dev].lastControllerReport, consoleType);
+                    }
+                }
+                if (report->guide != lastXboxOneGuide) {
+                    lastXboxOneGuide = report->guide;
+                    GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
+                    GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystroke_sequence_number++);
+                    keystroke->pressed = report->guide;
+                    keystroke->keycode = GIP_VKEY_LEFT_WIN;
+                    return sizeof(GipKeystroke_t);
+                }
+                // We use an unused bit as a flag for sending the guide key code, so flip it back
+                report->guide = false;
+                GipPacket_t *packet = (GipPacket_t *)buf;
+                report_data = (USB_Report_Data_t *)packet->data;
+                updateSequence = true;
+            } else {
+                XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)buf;
+                size = sizeof(XboxOneGHLGuitar_Data_t);
+                report_size = sizeof(PS3_REPORT);
+                if (updated) {
+                    memset(buf, 0, sizeof(XboxOneGHLGuitar_Data_t));
+                }
+                GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
+                report_data = (USB_Report_Data_t *)&report->report;
+                updateHIDSequence = true;
+            }
+        }
+        if (consoleType == WINDOWS_XBOX360 || consoleType == STAGE_KIT) {
+            XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
+            if (updated) {
+                memset(report_data, 0, sizeof(XINPUT_REPORT));
+                report->rid = 0;
+                report->rsize = sizeof(XINPUT_REPORT);
+// Whammy on the xbox guitars goes from min to max, so it needs to default to min
+#if DEVICE_TYPE_IS_GUITAR
+                report->whammy = INT16_MIN;
+#endif
+                for (int dev = 0; dev < RF_COUNT; dev++) {
+                    convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, WINDOWS_XBOX360);
+                }
+            }
+            report_size = size = sizeof(XINPUT_REPORT);
+        }
+// Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
+// DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
+#if SUPPORTS_PS4
+        if (consoleType == PS4) {
+            PS4_REPORT *report = (PS4_REPORT *)report_data;
+            if (updated) {
+                PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
+                gamepad->report_id = 0x01;
+                gamepad->leftStickX = PS3_STICK_CENTER;
+                gamepad->leftStickY = PS3_STICK_CENTER;
+                gamepad->rightStickX = PS3_STICK_CENTER;
+                gamepad->rightStickY = PS3_STICK_CENTER;
+#if !DEVICE_TYPE_IS_LIVE_GUITAR
+                gamepad->reportCounter = ps4_sequence_number;
+#endif
+
+                for (int dev = 0; dev < RF_COUNT; dev++) {
+                    convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, consoleType);
+                }
+            }
+            report_size = size = sizeof(PS4_REPORT);
+        }
+#endif
+// If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
+// This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
+// However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
+#if !(SUPPORTS_INSTRUMENT)
+        if (consoleType == PS3) {
+            PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
+
+            if (updated) {
+                memset(report, 0, sizeof(PS3_REPORT));
+                report->reportId = 1;
+                for (int dev = 0; dev < RF_COUNT; dev++) {
+                    convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, consoleType);
+                }
+                report_size = size = sizeof(PS3Gamepad_Data_t);
+            }
+            if (consoleType != WINDOWS_XBOX360 && consoleType != PS3 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
+#else
+        // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
+        if (consoleType != WINDOWS_XBOX360 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
+#endif
+                PS3_REPORT *report = (PS3_REPORT *)report_data;
+                memset(report, 0, sizeof(PS3_REPORT));
+                PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
+                gamepad->accelX = PS3_ACCEL_CENTER;
+                gamepad->accelY = PS3_ACCEL_CENTER;
+                gamepad->accelZ = PS3_ACCEL_CENTER;
+                gamepad->gyro = PS3_ACCEL_CENTER;
+                gamepad->leftStickX = PS3_STICK_CENTER;
+                gamepad->leftStickY = PS3_STICK_CENTER;
+                gamepad->rightStickX = PS3_STICK_CENTER;
+                gamepad->rightStickY = PS3_STICK_CENTER;
+                for (int dev = 0; dev < RF_COUNT; dev++) {
+                    convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, REAL_PS3);
+                }
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+                if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
+                    report->tableNeutral = true;
+                }
+#endif
+                // Switch swaps a and b
+                if (consoleType == SWITCH) {
+                    bool a = report->a;
+                    bool b = report->b;
+                    report->b = a;
+                    report->a = b;
+                }
+            }
+            report_size = size = sizeof(PS3_REPORT);
+        }
+        // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
+        if (last_report) {
+            uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
+            if (cmp == 0) {
+                return 0;
+            }
+            memcpy(&last_report->lastControllerReport, report_data, report_size);
+        }
+        if (consoleType == PS4) {
+            ps4_sequence_number++;
+        }
+#if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
+        if (updateSequence) {
+            report_sequence_number++;
+            if (report_sequence_number == 0) {
+                report_sequence_number = 1;
+            }
+        } else if (updateHIDSequence) {
+            hid_sequence_number++;
+            if (hid_sequence_number == 0) {
+                hid_sequence_number = 1;
+            }
+        }
+#endif
+#endif
+    }
+    return size;
+}
+#endif
+
+#ifdef RF_TX
+void tick_rf_tx(void) {
+    uint8_t size = 0;
+    uint8_t pipe;
+    if (radio.available(&pipe)) {
+        rf_connected = true;
+        radio.read(rf_data, sizeof(rf_data));
+        switch (rf_data[0]) {
+            case AckAuthLed:
+                handle_auth_led();
+                break;
+            case AckPlayerLed:
+                handle_player_leds(rf_data[1]);
+                break;
+            case AckRumble:
+                handle_rumble(rf_data[1], rf_data[2]);
+                break;
+            case AckKeyboardLed:
+                handle_keyboard_leds(rf_data[1]);
+                break;
+        }
+    }
+    size = tick_inputs((uint8_t *)&combined_report, &last_report_rf, UNIVERSAL);
+    if (size > 0) {
+        memcpy(rf_report.data, &combined_report, size);
+        rf_connected = radio.write(&rf_report, size + 1);
+    } else {
+        rf_connected = radio.write(&rf_heartbeat, sizeof(rf_heartbeat));
+    }
+    return;
+}
+#endif
+#if BLUETOOTH
+bool tick_bluetooth(void) {
+    uint8_t size = tick_inputs((uint8_t *)&bt_report, &last_report_bt, UNIVERSAL);
+    if (size) {
+        send_report(size, (uint8_t *)&bt_report);
+    }
+    return size;
+}
+#endif
+#ifndef RF_ONLY
+bool tick_usb(void) {
+    // If we have something pending to send to the xbox one controller, send it
+    uint8_t size = 0;
+    bool ready = ready_for_next_packet();
+    if (!ready) return 0;
+    if (data_from_console_size) {
+        send_report_to_controller(data_from_console, data_from_console_size);
+        data_from_console_size = 0;
+    }
+    if (consoleType == XBOXONE && xbox_one_state != Ready) {
+        size = tick_xbox_one();
+    }
+    if (!size) {
+        size = tick_inputs((uint8_t *)&combined_report, &last_report_usb, consoleType);
+    }
+    send_report_to_pc(&combined_report, size);
+    return size;
+}
+#endif
+void tick(void) {
 #ifdef TICK_LED
     TICK_LED;
 #endif
-    if (millis() < 1000 && consoleType == UNIVERSAL) {
-        TICK_DETECTION;
+#ifndef RF_ONLY
+    bool ready = tick_usb();
+#endif
+#ifdef RF_TX
+    tick_rf_tx();
+#endif
+#if BLUETOOTH
+    tick_bluetooth();
+#endif
+#if !defined(RF_TX) && !BLUETOOTH
+    // Tick the controller every 5ms if this device is usb only, and usb is not ready
+    if (!ready && millis() - lastSentPacket > 5) {
+        lastSentPacket = millis();
+        tick_inputs(NULL, NULL, consoleType);
     }
-    return size;
+#endif
 }
 
 void device_reset(void) {
@@ -703,216 +1542,8 @@ void xone_controller_connected(void) {
 void controller_disconnected(void) {
 }
 
-#ifdef RF_TX
-void send_mask(void) {
-    uint8_t size;
-    RfMaskPacket_t mask;
-    mask.packet_id = Mask;
-#if CONSOLE_TYPE == KEYBOARD_MOUSE
-    for (int i = 1; i < REPORT_ID_END; i++) {
-        // set report id
-        mask.mask[0] = i;
-        memset(&mask, 0, sizeof(mask));
-#ifdef TICK_MOUSE
-        // report size + packet id
-        if (i == REPORT_ID_MOUSE) {
-            size = sizeof(USB_Mouse_Data_t);
-            MOUSE_MASK;
-            radio.write(&mask, size + 1);
-        }
-#endif
-#ifdef TICK_CONSUMER
-        // report size + packet id
-        if (i == REPORT_ID_CONSUMER) {
-            size = sizeof(USB_ConsumerControl_Data_t);
-            CONSUMER_MASK;
-            radio.write(&mask, size + 1);
-        }
-#endif
-#ifdef TICK_NKRO
-        // report size + packet id
-        if (i == REPORT_ID_NKRO) {
-            size = sizeof(USB_NKRO_Data_t);
-            KEYBOARD_MASK;
-            radio.write(&mask, size + 1);
-        }
-#endif
-    }
-#else
-    memset(&mask, 0, sizeof(mask));
-    if (consoleType == XBOXONE) {
-        size = sizeof(XBOX_ONE_REPORT);
-        XBOX_ONE_MASK;
-        mask.mask[0] = GIP_INPUT_REPORT;
-    } else if (consoleType == WINDOWS_XBOX360) {
-        size = sizeof(XINPUT_REPORT);
-        XINPUT_MASK;
-    } else {
-        size = sizeof(PS3_REPORT);
-        PS3_MASK;
-    }
-    // report size + packet id
-    radio.write(&mask, size + 1);
-// GHL XB1 guitars have two seperate reports, so we need to send masks for both.
-#if DEVICE_TYPE_IS_LIVE_GUITAR
-    if (consoleType == XBOXONE) {
-        memset(&mask, 0, sizeof(mask));
-        size = sizeof(XboxOneGHLGuitar_Data_t);
-        PS3_MASK;
-        RfMaskPacketGHL_t ghl_mask;
-        memcpy(ghl_mask.mask, mask.mask, sizeof(PS3GHLGuitar_Data_t));
-        ghl_mask.header.command = GHL_HID_REPORT;
-        radio.write(&mask, size + 1);
-    }
-#endif
-#endif
-}
-#endif
-#ifdef RF_RX
-void parse_mask(uint8_t size, uint8_t pipe) {
-    RfMaskPacket_t *mask = (RfMaskPacket_t *)rf_data;
-#if CONSOLE_TYPE == KEYBOARD_MOUSE
-    uint8_t report_id = mask->mask[0];
-    mask->mask[0] = 0xFF;
-    memcpy(keyboard_masks[mask->radio_id][report_id], mask->mask, size - 1);
-#else
-    if (consoleType == XBOXONE) {
-        size = sizeof(XBOX_ONE_REPORT);
-        if (mask->mask[0] == GIP_INPUT_REPORT) {
-            mask->mask[0] = 0xFF;
-            memcpy(standard_mask[pipe - 1], mask->mask, size - 1);
-        } else if (mask->mask[0] == GHL_HID_REPORT) {
-            mask->mask[0] = 0xFF;
-            RfMaskPacketGHL_t *mask_ghl = (RfMaskPacketGHL_t *)rf_data;
-            memcpy(ghl_mask[pipe - 1], mask_ghl->mask, size - 2);
-        }
-    } else if (consoleType == WINDOWS_XBOX360) {
-        size = sizeof(XINPUT_REPORT);
-        memcpy(standard_mask[pipe - 1], mask->mask, size - 1);
-    } else {
-        size = sizeof(PS3_REPORT);
-        memcpy(standard_mask[pipe - 1], mask->mask, size - 1);
-    }
-#endif
-}
-#endif
-void tick(void) {
-    uint8_t size = 0;
-#ifdef RF_TX
-    uint8_t pipe;
-    if (radio.available(&pipe)) {
-        rf_connected = true;
-        radio.read(rf_data, sizeof(rf_data));
-        switch (rf_data[0]) {
-            case AckConsoleType:
-                consoleType = rf_data[1];
-                send_mask();
-                break;
-            case AckAuthLed:
-                handle_auth_led();
-                break;
-            case AckPlayerLed:
-                handle_player_leds(rf_data[1]);
-                break;
-            case AckRumble:
-                handle_rumble(rf_data[1], rf_data[2]);
-                break;
-            case AckKeyboardLed:
-                handle_keyboard_leds(rf_data[1]);
-                break;
-        }
-    }
-
-#endif
-#ifndef RF_ONLY
-    // If we have something pending to send to the xbox one controller, send it
-    if (data_from_console_size) {
-        send_report_to_controller(data_from_console, data_from_console_size);
-        data_from_console_size = 0;
-    }
-    bool ready = ready_for_next_packet();
-    bool bluetooth_ready = BLUETOOTH && check_bluetooth_ready();
-    if (consoleType == XBOXONE && xbox_one_state != Ready) {
-        if (!ready) {
-            return;
-        }
-        size = tick_xbox_one();
-        send_report_to_pc(&combined_report, size);
-        return;
-    }
-#else
-    bool ready = true;
-    bool bluetooth_ready = BLUETOOTH;
-#endif
-    // Tick the guitar every 5ms if usb is not ready
-    if (ready || bluetooth_ready || millis() - lastSentPacket > 5) {
-        lastSentPacket = millis();
-#ifdef RF_RX
-        uint8_t pipe;
-        if (radio.available(&pipe)) {
-            rf_connected = true;
-            radio.read(rf_data, sizeof(rf_data));
-            size = radio.getDynamicPayloadSize();
-            if (rf_data[0] == Input) {
-                RfInputPacket_t *input = (RfInputPacket_t *)rf_data;
-
-#if CONSOLE_TYPE == KEYBOARD_MOUSE
-                uint8_t report_id = mask->mask[0];
-                uint8_t *mask = keyboard_masks[input->radio_id][report_id];
-#else
-                uint8_t *mask = standard_mask[pipe - 1];
-                if (consoleType == XBOXONE) {
-                    // GHL Guitars use a different mask
-                    GipHeader_t *header = (GipHeader_t *)&combined_report;
-                    if (header->command == GHL_HID_REPORT) {
-                        mask = ghl_mask[pipe - 1];
-                    }
-                }
-#endif
-
-                for (int i = 1; i < size; i++) {
-                    // Fliter out the masked bits from the current report
-                    combined_report.raw[i - 1] &= ~mask[i - 1];
-                    // And then write in the new bits
-                    combined_report.raw[i - 1] |= input->data[i];
-                }
-            }
-            if (rf_data[0] == Mask) {
-                parse_mask(size, pipe);
-                return;
-            }
-            if (consoleType == XBOXONE) {
-                // Put together a new header, as the old one will be masked away and have the wrong sequence ids
-                XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)&combined_report;
-                GipHeader_t *header = (GipHeader_t *)&combined_report;
-                if (header->command == GIP_INPUT_REPORT) {
-                    GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number++);
-                } else {
-                    GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number++);
-                }
-            }
-        }
-#else
-        size = tick_inputs((uint8_t *)&combined_report);
-
-#endif
-
-#ifdef RF_TX
-        if (!usb_connected()) {
-            if (size > 0) {
-                memcpy(rf_report.data, &combined_report, size);
-                rf_connected = radio.write(&rf_report, size + 1);
-            } else {
-                rf_connected = radio.write(&rf_heartbeat, sizeof(rf_heartbeat));
-            }
-            return;
-        }
-#endif
-
-#ifndef RF_ONLY
-        if (size && ready) {
-            send_report_to_pc(&combined_report, size);
-        }
-#endif
-    }
+void set_console_type(uint8_t new_console_type) {
+    if (consoleType == new_console_type) return;
+    consoleType = new_console_type;
+    reset_usb();
 }

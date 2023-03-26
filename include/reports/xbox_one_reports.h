@@ -79,18 +79,18 @@ typedef struct
     uint8_t whammy;
     uint8_t pickup;
 
-    bool upperGreen : 1;
-    bool upperRed : 1;
-    bool upperYellow : 1;
-    bool upperBlue : 1;
-    bool upperOrange : 1;
+    bool green : 1;
+    bool red : 1;
+    bool yellow : 1;
+    bool blue : 1;
+    bool orange : 1;
     uint8_t : 3;
 
-    bool lowerGreen : 1;
-    bool lowerRed : 1;
-    bool lowerYellow : 1;
-    bool lowerBlue : 1;
-    bool lowerOrange : 1;
+    bool soloGreen : 1;
+    bool soloRed : 1;
+    bool soloYellow : 1;
+    bool soloBlue : 1;
+    bool soloOrange : 1;
     uint8_t : 3;
 
     uint8_t unknown[3];

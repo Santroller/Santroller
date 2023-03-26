@@ -52,8 +52,8 @@ typedef struct {
     bool l2 : 1;             // l2
     bool r2 : 1;             // r2
 
-    bool back : 1;  // select
-    bool start : 1;
+    bool back : 1;  // share
+    bool start : 1; // options
     bool leftThumbClick : 1;   // l3
     bool rightThumbClick : 1;  // r3
 
@@ -94,19 +94,23 @@ typedef struct
         };
         uint8_t dpad : 4;
     };
-    bool x : 1;  // square, white1
-    bool a : 1;  // cross, black1
-    bool b : 1;  // circle, black2
-    bool y : 1;  // triangle, black3
+    bool white1 : 1;  // square, white1
+    bool black1 : 1;  // cross, black1
+    bool black2 : 1;  // circle, black2
+    bool black3 : 1;  // triangle, black3
 
-    bool leftShoulder : 1;   // white2, l1
-    bool rightShoulder : 1;  // white3, r1
-    bool l2 : 1;             // ghtv, l2
-    bool : 1;
-    bool select : 1;  // select
-    bool : 1;
-    bool leftThumbClick : 1;   // pause, l3
-    bool rightThumbClick : 1;  // heroPower, r3
+    bool white2 : 1;  // white2, l1
+    bool white3 : 1;  // white3, r1
+    bool : 1;             // l2
+    bool : 1;             // r2
+
+    bool : 1;  // share
+    bool start : 1; // pause, options
+    bool leftThumbClick : 1;   // l3, ghtv
+    bool back : 1;  // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
+
+    bool guide : 1;    // ps
+    bool capture : 1;  // touchpad click
 
     uint8_t unused2[57];
 } __attribute__((packed)) PS4GHLGuitar_Data_t;

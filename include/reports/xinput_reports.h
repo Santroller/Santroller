@@ -75,10 +75,10 @@ typedef struct
     bool start : 1;
     bool back : 1;
     bool leftThumbClick : 1; //pedal2
-    bool rightThumbClick : 1; //padFlag
+    bool padFlag : 1; //right thumb click
 
     bool leftShoulder : 1; // pedal1
-    bool rightShoulder : 1; // cymbalFlag
+    bool cymbalFlag : 1; // right shoulder click
     bool guide : 1;
     bool : 1;
 

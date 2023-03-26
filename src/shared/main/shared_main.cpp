@@ -313,6 +313,8 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
+// TODO: PS3 RB top frets (maybe we additionally stuff both sets of frets into one of the pressure bytes, and then zero it for non RF or BT)
+// TODO: same for RB drums and cymbal velocity
 #if defined(RF_RX) || BLUETOOTH
 // When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
@@ -535,13 +537,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->dpadLeft |= left;
         out->dpadRight |= right;
 
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-
         out->back |= report->back;
         out->start |= report->start;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
 
         out->guide |= report->guide;
 #if SUPPORTS_CONTROLLER
@@ -563,6 +560,11 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->rightTrigger) {
             out->rightTrigger = report->rightTrigger;
         }
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
         if (report->yellowVelocity) {
             out->yellowVelocity = report->yellowVelocity;
@@ -595,6 +597,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->blueVelocity) {
             out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
         }
+        out->padFlag = report->padFlag;
+        out->cymbalFlag = report->cymbalFlag;
 #elif DEVICE_TYPE_IS_LIVE_GUITAR
         if (report->tilt_pc != PS3_STICK_CENTER) {
             out->tilt = (report->tilt_pc - 128) << 8;
@@ -639,6 +643,12 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->crossfader != PS3_ACCEL_CENTER) {
             out->crossfader = (report->crossfader - 128) << 8;
         }
+        out->leftBlue |= report->leftBlue;
+        out->leftRed |= report->leftRed;
+        out->leftGreen |= report->leftGreen;
+        out->rightBlue |= report->rightBlue;
+        out->rightRed |= report->rightRed;
+        out->rightGreen |= report->rightGreen;
 #endif
     }
     if (universal_report) {
@@ -648,15 +658,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->b |= report->b;
         out->y |= report->y;
 
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-        out->l2 |= report->l2;
-        out->r2 |= report->r2;
-
         out->back |= report->back;
         out->start |= report->start;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
 
         out->guide = report->guide;
         out->capture = report->capture;
@@ -712,6 +715,12 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->pressureSquare) {
             out->pressureSquare = report->pressureSquare;
         }
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
         if (report->yellowVelocity) {
             out->yellowVelocity = report->yellowVelocity;
@@ -731,6 +740,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->orangeVelocity) {
             out->orangeVelocity = report->orangeVelocity;
         }
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
         if (report->yellowVelocity) {
             out->yellowVelocity = report->yellowVelocity;
@@ -744,6 +755,10 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->blueVelocity) {
             out->blueVelocity = report->blueVelocity;
         }
+        out->padFlag = report->padFlag;
+        out->cymbalFlag = report->cymbalFlag;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 #elif DEVICE_TYPE_IS_LIVE_GUITAR
         if (report->tilt_pc != PS3_STICK_CENTER) {
             if (output_console_type == PS3 || output_console_type == REAL_PS3) {
@@ -758,6 +773,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->strumBar != PS3_STICK_CENTER) {
             out->strumBar = report->strumBar;
         }
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
         if (report->tilt_pc != PS3_STICK_CENTER) {
             if (output_console_type == PS3 || output_console_type == REAL_PS3) {
@@ -772,6 +789,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->slider != PS3_STICK_CENTER) {
             out->slider = report->slider;
         }
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
         if (report->tilt_pc != PS3_STICK_CENTER) {
             // TODO: what are we actually setting tilt_pc to these days?
@@ -787,6 +806,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->pickup != PS3_STICK_CENTER) {
             out->pickup = report->pickup;
         }
+        out->leftShoulder |= report->leftShoulder;
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 
         if (report->leftTableVelocity != PS3_STICK_CENTER) {
@@ -801,12 +821,19 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->crossfader != PS3_ACCEL_CENTER) {
             out->crossfader = report->crossfader;
         }
+        out->leftBlue |= report->leftBlue;
+        out->leftRed |= report->leftRed;
+        out->leftGreen |= report->leftGreen;
+        out->rightBlue |= report->rightBlue;
+        out->rightRed |= report->rightRed;
+        out->rightGreen |= report->rightGreen;
+        out->tableNeutral |= report->tableNeutral;
 #endif
     }
 }
 #endif
 #ifndef RF_RX
-uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
     // Tick Inputs
 #ifdef INPUT_DJ_TURNTABLE
@@ -977,6 +1004,7 @@ uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t ou
         }
     }
 #else
+    bool rf_or_bluetooth = buf == &last_bt_report || buf == &last_report_rf.lastControllerReport;
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
     bool updateSequence = false;
@@ -1126,7 +1154,7 @@ uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t ou
     return size;
 }
 #else
-uint8_t tick_inputs(uint8_t *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t rf_size;
     uint8_t size;
     uint8_t pipe;
@@ -1440,9 +1468,8 @@ void tick_rf_tx(void) {
                 break;
         }
     }
-    size = tick_inputs((uint8_t *)&combined_report, &last_report_rf, UNIVERSAL);
+    size = tick_inputs(&rf_report.lastControllerReport, &last_report_rf, UNIVERSAL);
     if (size > 0) {
-        memcpy(rf_report.data, &combined_report, size);
         rf_connected = radio.write(&rf_report, size + 1);
     } else {
         rf_connected = radio.write(&rf_heartbeat, sizeof(rf_heartbeat));
@@ -1452,7 +1479,7 @@ void tick_rf_tx(void) {
 #endif
 #if BLUETOOTH
 bool tick_bluetooth(void) {
-    uint8_t size = tick_inputs((uint8_t *)&bt_report, &last_report_bt, UNIVERSAL);
+    uint8_t size = tick_inputs&bt_report, &last_report_bt, UNIVERSAL);
     if (size) {
         send_report(size, (uint8_t *)&bt_report);
     }
@@ -1473,7 +1500,7 @@ bool tick_usb(void) {
         size = tick_xbox_one();
     }
     if (!size) {
-        size = tick_inputs((uint8_t *)&combined_report, &last_report_usb, consoleType);
+        size = tick_inputs(&combined_report, &last_report_usb, consoleType);
     }
     send_report_to_pc(&combined_report, size);
     return size;

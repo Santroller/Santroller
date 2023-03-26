@@ -206,8 +206,8 @@ typedef struct
 
     bool back : 1;  // select
     bool start : 1;
-    bool leftThumbClick : 1;   // pad, l3
-    bool rightThumbClick : 1;  // cymbal, r3
+    bool padFlag : 1;     // left stick click, l3
+    bool cymbalFlag : 1;  // right stick click, r3
 
     bool guide : 1;    // ps
     bool capture : 1;  // switch capture button
@@ -230,8 +230,11 @@ typedef struct
     uint8_t redVelocity;
     uint8_t greenVelocity;
     uint8_t blueVelocity;
+    uint8_t blueCymbalVelocity;
+    uint8_t yellowCymbalVelocity;
+    uint8_t greenCymbalVelocity;
+    uint8_t : 8;
 
-    uint8_t unused2[4];
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandDrums_Data_t;
 
@@ -372,7 +375,20 @@ typedef struct
     uint8_t whammy;
     uint8_t pickup;
 
-    uint8_t unused2[12];
+    bool green : 1;
+    bool red : 1;
+    bool yellow : 1;
+    bool blue : 1;
+    bool orange : 1;
+    uint8_t : 3;
+    bool soloGreen : 1;
+    bool soloRed : 1;
+    bool soloYellow : 1;
+    bool soloBlue : 1;
+    bool soloOrange : 1;
+    uint8_t : 3;
+    
+    uint8_t unused2[10];
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
 
@@ -438,19 +454,19 @@ typedef struct
 
 typedef struct
 {
-    bool x : 1;  // square, white1
-    bool a : 1;  // cross, black1
-    bool b : 1;  // circle, black2
-    bool y : 1;  // triangle, black3
+    bool white1 : 1;  // square, white1
+    bool black1 : 1;  // cross, black1
+    bool black2 : 1;  // circle, black2
+    bool black3 : 1;  // triangle, black3
 
-    bool leftShoulder : 1;   // white2, l1
-    bool rightShoulder : 1;  // white3, r1
+    bool white2 : 1;  // white2, l1
+    bool white3 : 1;  // white3, r1
     bool : 1;
     bool : 1;
 
-    bool back : 1;            // heroPower
-    bool start : 1;           // pause
-    bool leftThumbClick : 1;  // ghtv
+    bool heroPower : 1;  // back, heroPower
+    bool pause : 1;      // start, pause
+    bool ghtv : 1;       // leftThumbClick, ghtv
     bool : 1;
 
     bool guide : 1;    // ps

@@ -160,9 +160,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
     (void)rhport;
     (void)max_len;
     printf("Host\r\n");
-    uint16_t host_vid = 0;
-    uint16_t host_pid = 0;
-    tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     // Support standard HID devices
     if (TUSB_CLASS_HID == desc_itf->bInterfaceClass) {
         TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
@@ -200,12 +197,8 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
-        // Specifically handle PS4 controllers for auth reasons
-        if (host_vid == PS4_VID && (host_pid == PS4_DS_PID_1 || host_pid == PS4_DS_PID_2 || host_pid == PS4_DS_PID_3)) {
-            p_xinput->type = PS4;
-        } else {
-            p_xinput->type = UNKNOWN;
-        }
+
+        p_xinput->type = UNKNOWN;
         _xinputh_dev->inst_count++;
         return true;
     }

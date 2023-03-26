@@ -210,7 +210,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
-#if SUPPORTS_KEYBOARD
+#if DEVICE_TYPE_KEYBOARD
         wDescriptorLength : sizeof(keyboard_mouse_descriptor)
 #else
         wDescriptorLength : sizeof(ps3_instrument_descriptor)
@@ -463,7 +463,6 @@ const PROGMEM uint8_t ps4_init_0xf3[] = {
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
     if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
@@ -547,6 +546,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
+    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
             reboot();
@@ -607,8 +607,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return transfer_with_usb_controller(WINDOWS_XBOX360, requestType, request, wValue, wIndex, wLength, requestBuffer);
     }
 #endif
-// So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
-// But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
+    // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
+    // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if ((consoleType == UNIVERSAL || consoleType == REAL_PS3) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
             if (consoleType == UNIVERSAL) {
@@ -627,10 +627,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             switch (wValue) {
                 case 0x0303:
                     memcpy_P(requestBuffer, ps4_init_0x03, sizeof(ps4_init_0x03));
-                    return sizeof(ps3_init);
+                    return sizeof(ps4_init_0x03);
                 case 0x03F1:
                 case 0x03F2:
                     return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
+
                 case 0x03F3:
                     memcpy_P(requestBuffer, ps4_init_0xf3, sizeof(ps4_init_0xf3));
                     return sizeof(ps4_init_0xf3);
@@ -782,8 +783,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
                 if (consoleType == PS4) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
+                    desc->EndpointOutHID.wMaxPacketSize = 64;
+                    desc->EndpointInHID.wMaxPacketSize = 64;
                 }
-#if !(SUPPORTS_INSTRUMENT)
+#if !(DEVICE_TYPE_IS_INSTRUMENT)
                 if (consoleType == PS3) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
                 }
@@ -801,7 +804,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
         }
         case HID_DESCRIPTOR_REPORT: {
             const void *address;
-#if SUPPORTS_KEYBOARD
+#if DEVICE_TYPE_KEYBOARD
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
 #else
@@ -809,7 +812,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
             } else if (consoleType != UNIVERSAL) {
-#if SUPPORTS_INSTRUMENT
+#if DEVICE_TYPE_IS_INSTRUMENT
                 address = ps3_instrument_descriptor;
                 size = sizeof(ps3_instrument_descriptor);
 #else

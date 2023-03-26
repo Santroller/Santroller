@@ -29,36 +29,37 @@ typedef struct {
     uint8_t leftStickY;
     uint8_t rightStickX;
     uint8_t rightStickY;
+    uint8_t dpad : 4;
+}  __attribute__((packed)) PS4Dpad_Data_t;
 
-    // 4 bits for the d-pad.
-    union {
-        struct {
-            bool dpadUp : 1;
-            bool dpadDown : 1;
-            bool dpadLeft : 1;
-            bool dpadRight : 1;
-        };
-        uint8_t dpad : 4;
-    };
-
+typedef struct {
+    uint8_t report_id;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint32_t dpadUp : 1;
+    uint32_t dpadDown : 1;
+    uint32_t dpadLeft : 1;
+    uint32_t dpadRight : 1;
     // 14 bits for buttons.
-    bool x : 1;  // square
-    bool a : 1;  // cross
-    bool b : 1;  // circle
-    bool y : 1;  // triangle
+    uint32_t x : 1;  // square
+    uint32_t a : 1;  // cross
+    uint32_t b : 1;  // circle
+    uint32_t y : 1;  // triangle
 
-    bool leftShoulder : 1;   // l1
-    bool rightShoulder : 1;  // r1
-    bool l2 : 1;             // l2
-    bool r2 : 1;             // r2
+    uint32_t leftShoulder : 1;   // l1
+    uint32_t rightShoulder : 1;  // r1
+    uint32_t l2 : 1;             // l2
+    uint32_t r2 : 1;             // r2
 
-    bool back : 1;  // share
-    bool start : 1; // options
-    bool leftThumbClick : 1;   // l3
-    bool rightThumbClick : 1;  // r3
+    uint32_t back : 1;             // share
+    uint32_t start : 1;            // options
+    uint32_t leftThumbClick : 1;   // l3
+    uint32_t rightThumbClick : 1;  // r3
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // touchpad click
+    uint32_t guide : 1;    // ps
+    uint32_t capture : 1;  // touchpad click
     // 6 bit report counter.
     uint32_t reportCounter : 6;
 
@@ -101,13 +102,13 @@ typedef struct
 
     bool white2 : 1;  // white2, l1
     bool white3 : 1;  // white3, r1
-    bool : 1;             // l2
-    bool : 1;             // r2
+    bool : 1;         // l2
+    bool : 1;         // r2
 
-    bool : 1;  // share
-    bool start : 1; // pause, options
-    bool leftThumbClick : 1;   // l3, ghtv
-    bool back : 1;  // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
+    bool : 1;                 // share
+    bool start : 1;           // pause, options
+    bool leftThumbClick : 1;  // l3, ghtv
+    bool back : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
 
     bool guide : 1;    // ps
     bool capture : 1;  // touchpad click

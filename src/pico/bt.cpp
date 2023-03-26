@@ -80,7 +80,7 @@ static void le_keyboard_setup(void) {
     // setup device information service
     device_information_service_server_init();
     device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, 0x0110);
-#if SUPPORTS_KEYBOARD
+#if DEVICE_TYPE_KEYBOARD
     hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else
     // setup HID Device service

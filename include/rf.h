@@ -22,7 +22,7 @@ typedef struct {
     RFPacket_t id;
 } RfHeartbeatPacket_t;
 
-#if SUPPORTS_KEYBOARD
+#if DEVICE_TYPE_KEYBOARD
 typedef struct {
     RFPacket_t packet_id;
     union {

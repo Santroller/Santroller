@@ -324,9 +324,9 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     bool left = dpad & LEFT;
     bool right = dpad & RIGHT;
     bool universal_report = output_console_type == UNIVERSAL || output_console_type == REAL_PS3;
-#if SUPPORTS_INSTRUMENT
+#if DEVICE_TYPE_IS_INSTRUMENT
     universal_report |= output_console_type == PS3;
-#elif SUPPORTS_CONTROLLER
+#elif DEVICE_TYPE_IS_GAMEPAD
     if (consoleType == PS3) {
         PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
         if (report->leftStickX != PS3_STICK_CENTER) {
@@ -431,7 +431,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->strumBar != PS3_STICK_CENTER) {
             out->strumBar = report->strumBar;
         }
-#elif SUPPORTS_CONTROLLER
+#elif DEVICE_TYPE_IS_GAMEPAD
         if (report->leftStickX != PS3_STICK_CENTER) {
             out->leftStickX = report->leftStickX;
         }
@@ -472,7 +472,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->rightThumbClick |= report->rightThumbClick;
 
         out->guide |= report->guide;
-#if SUPPORTS_CONTROLLER
+#if DEVICE_TYPE_IS_GAMEPAD
         if (report->leftStickX != PS3_STICK_CENTER) {
             out->leftStickX = (report->leftStickX - 128) << 8;
         }
@@ -541,7 +541,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->start |= report->start;
 
         out->guide |= report->guide;
-#if SUPPORTS_CONTROLLER
+#if DEVICE_TYPE_IS_GAMEPAD
         if (report->leftStickX != PS3_STICK_CENTER) {
             out->leftStickX = (report->leftStickX - 128) << 8;
         }
@@ -666,7 +666,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->dpad) {
             out->dpad = report->dpad;
         }
-#if SUPPORTS_CONTROLLER
+#if DEVICE_TYPE_IS_GAMEPAD
         if (report->leftStickX != PS3_STICK_CENTER) {
             out->leftStickX = report->leftStickX;
         }
@@ -1009,7 +1009,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
-    if (consoleType == XBOXONE) {
+    if (output_console_type == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
         // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
@@ -1044,7 +1044,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             updateHIDSequence = true;
         }
     }
-    if (consoleType == WINDOWS_XBOX360 || consoleType == STAGE_KIT) {
+    if (output_console_type == WINDOWS_XBOX360 || output_console_type == STAGE_KIT) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
@@ -1059,27 +1059,25 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
 #if SUPPORTS_PS4
-    if (consoleType == PS4) {
+    if (output_console_type == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
-        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
+        memset(report, 0, sizeof(PS4_REPORT));
+        PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
         gamepad->report_id = 0x01;
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-#if !DEVICE_TYPE_IS_LIVE_GUITAR
-        gamepad->reportCounter = ps4_sequence_number;
-#endif
         TICK_PS4;
-        report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
     }
 #endif
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
 // This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
 // However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
-#if !(SUPPORTS_INSTRUMENT)
-    if (consoleType == PS3) {
+#if !(DEVICE_TYPE_IS_INSTRUMENT)
+    if (output_console_type == PS3) {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
         report->reportId = 1;
@@ -1094,10 +1092,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
-    if (consoleType != WINDOWS_XBOX360 && consoleType != PS3 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
+    if (output_console_type != WINDOWS_XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
 #else
     // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
-    if (consoleType != WINDOWS_XBOX360 && consoleType != PS4 && consoleType != STAGE_KIT && !updateHIDSequence) {
+    if (output_console_type != WINDOWS_XBOX360 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
 #endif
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
@@ -1118,7 +1116,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
-        if (consoleType == SWITCH) {
+        if (output_console_type == SWITCH) {
             bool a = report->a;
             bool b = report->b;
             report->b = a;
@@ -1127,6 +1125,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = size = sizeof(PS3_REPORT);
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
+    // PS4 controllers always update
     if (last_report) {
         uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
         if (cmp == 0) {
@@ -1134,9 +1133,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         memcpy(&last_report->lastControllerReport, report_data, report_size);
     }
+// Standard PS4 controllers need a report counter, but we don't want to include that when ticking
+#if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType == PS4) {
-        ps4_sequence_number++;
+        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
+        gamepad->reportCounter = ps4_sequence_number++;
     }
+#endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;
@@ -1179,7 +1182,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 }
                 break;
         }
-#if SUPPORTS_KEYBOARD
+#if DEVICE_TYPE_KEYBOARD
         if (!updated) {
             size = sizeof(USB_NKRO_Data_t);
             memcpy(&last_report->lastNKROReport, buf, size);
@@ -1370,7 +1373,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
 // This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
 // However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
-#if !(SUPPORTS_INSTRUMENT)
+#if !(DEVICE_TYPE_IS_INSTRUMENT)
         if (consoleType == PS3) {
             PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
 
@@ -1493,7 +1496,7 @@ bool tick_usb(void) {
     bool ready = ready_for_next_packet();
     if (!ready) return 0;
     if (data_from_console_size) {
-        send_report_to_controller(data_from_console, data_from_console_size);
+        send_report_to_controller(XBOXONE, data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
@@ -1564,8 +1567,20 @@ void xone_controller_connected(void) {
     GipPowerMode_t *powerMode = (GipPowerMode_t *)data_from_console;
     GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
     powerMode->subcommand = 0x00;
-    send_report_to_controller(data_from_console, sizeof(GipPowerMode_t));
+    send_report_to_controller(XBOXONE, data_from_console, sizeof(GipPowerMode_t));
 }
+
+void ps4_controller_connected(void) {
+    ps4_output_report report = {
+        report_id : 0x05,
+        valid_flag0 : 0xFF,
+        lightbar_red : 0x00,
+        lightbar_green : 0x00,
+        lightbar_blue : 0xFF
+    };
+    send_report_to_controller(PS4, (uint8_t *)&report, sizeof(report));
+}
+
 void controller_disconnected(void) {
 }
 

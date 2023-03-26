@@ -31,8 +31,8 @@ enum endpoints_t {
 #define NINTENDO_VID 0x057E
 #define SWITCH_PID 0x2009
 #define SONY_VID 0x12ba
-#define PS4_VID 0x1532
-#define PS4_PID 0x0401
+#define PS4_VID 0x03EB
+#define PS4_PID 0x2043
 #define SONY_DS_VID 0x054c
 #define PS3_PID 0x0268
 #define PS4_DS_PID_1 0x05c4

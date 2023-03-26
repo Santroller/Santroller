@@ -18,5 +18,6 @@ void xone_controller_connected(void);
 void ps4_controller_connected(void);
 void controller_disconnected(void);
 void send_rf_console_type(void);
+void on_connect(void);
 void set_console_type(uint8_t new_console_type);
 extern PS3_REPORT last_bt_report;

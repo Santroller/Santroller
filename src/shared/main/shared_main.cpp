@@ -48,6 +48,8 @@ USB_LastReport_Data_t last_report_bt;
 USB_LastReport_Data_t last_report_rf;
 long initialWt[5] = {0};
 uint8_t rawWt;
+bool auth_ps4_controller_found = false;
+bool seen_ps4_console = false;
 #ifdef RF_TX
 RfInputPacket_t rf_report = {Input};
 RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
@@ -945,7 +947,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     if (!buf) return 0;
     // Handle button combos for detection logic
-    if (millis() < 1000 && consoleType == UNIVERSAL) {
+    if (millis() < 2000 && consoleType == UNIVERSAL) {
         TICK_DETECTION;
     }
     // Tick all three reports, and then go for the first one that has changes
@@ -1060,6 +1062,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
 #if SUPPORTS_PS4
     if (output_console_type == PS4) {
+        if (millis() > 450000 && !auth_ps4_controller_found) {
+            reset_usb();
+        }
         PS4_REPORT *report = (PS4_REPORT *)report_data;
         memset(report, 0, sizeof(PS4_REPORT));
         PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
@@ -1068,6 +1073,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+        // PS4 does not start using the controller until it sees a PS button press.
+        if (!seen_ps4_console) {
+            report->guide = true;
+        }
         TICK_PS4;
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
@@ -1126,7 +1135,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     // PS4 controllers always update
-    if (last_report) {
+    if (consoleType != PS4 && last_report) {
         uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
         if (cmp == 0) {
             return 0;
@@ -1506,6 +1515,7 @@ bool tick_usb(void) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);
     }
     send_report_to_pc(&combined_report, size);
+    seen_ps4_console = true;
     return size;
 }
 #endif
@@ -1579,9 +1589,11 @@ void ps4_controller_connected(void) {
         lightbar_blue : 0xFF
     };
     send_report_to_controller(PS4, (uint8_t *)&report, sizeof(report));
+    auth_ps4_controller_found = true;
 }
 
 void controller_disconnected(void) {
+    auth_ps4_controller_found = false;
 }
 
 void set_console_type(uint8_t new_console_type) {

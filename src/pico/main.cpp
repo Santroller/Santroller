@@ -134,7 +134,11 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 ps4_dev_addr = 0;
                 return;
             }
+            //TODO:  Only set led for actual DS4
             ps4_controller_connected();
+            sleep_ms(1);
+            transfer_with_usb_controller_async(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, GET_AUTH_PAGE_SIZE, 0, sizeof(AuthPageSizeReport), buf);
+            
         }
     }
 }
@@ -171,6 +175,32 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     receive_report_from_controller(report, len);
+}
+void cb(tuh_xfer_t *xfer) {
+    ps4RequestDone(xfer->setup->bmRequestType, xfer->setup->bRequest, xfer->setup->wValue, xfer->setup->wIndex, xfer->setup->wLength, xfer->actual_len, xfer->buffer);
+}
+void transfer_with_usb_controller_async(const uint8_t device, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
+    tusb_control_request_t setup = {
+        bmRequestType : requestType,
+        bRequest : request,
+        wValue : wValue,
+        wIndex : wIndex,
+        wLength : wLength
+    };
+    tuh_xfer_t xfer = {};
+    if (device == WINDOWS_XBOX360) {
+        xfer.daddr = x360_dev_addr;
+    } else if (device == PS4) {
+        xfer.daddr = ps4_dev_addr;
+    } else if (device == XBOXONE) {
+        xfer.daddr = xone_dev_addr;
+    }
+    xfer.ep_addr = 0;
+    xfer.setup = &setup;
+    xfer.buffer = buffer;
+    xfer.complete_cb = &cb;
+    xfer.user_data = 0;
+    tuh_control_xfer(&xfer);
 }
 
 uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {

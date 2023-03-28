@@ -1580,15 +1580,17 @@ void xone_controller_connected(void) {
     send_report_to_controller(XBOXONE, data_from_console, sizeof(GipPowerMode_t));
 }
 
-void ps4_controller_connected(void) {
-    ps4_output_report report = {
-        report_id : 0x05,
-        valid_flag0 : 0xFF,
-        lightbar_red : 0x00,
-        lightbar_green : 0x00,
-        lightbar_blue : 0xFF
-    };
-    send_report_to_controller(PS4, (uint8_t *)&report, sizeof(report));
+void ps4_controller_connected(uint16_t vid, uint16_t pid) {
+    if (vid == SONY_DS_VID && (pid == PS4_DS_PID_1 || pid == PS4_DS_PID_2 || pid == PS4_DS_PID_3)) {
+        ps4_output_report report = {
+            report_id : 0x05,
+            valid_flag0 : 0xFF,
+            lightbar_red : 0x00,
+            lightbar_green : 0x00,
+            lightbar_blue : 0xFF
+        };
+        send_report_to_controller(PS4, (uint8_t *)&report, sizeof(report));
+    }
     auth_ps4_controller_found = true;
 }
 

@@ -553,100 +553,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
-static const uint32_t crc32_table_4b[] = {
-    0x00000000,
-    0x1db71064,
-    0x3b6e20c8,
-    0x26d930ac,
-    0x76dc4190,
-    0x6b6b51f4,
-    0x4db26158,
-    0x5005713c,
-    0xedb88320,
-    0xf00f9344,
-    0xd6d6a3e8,
-    0xcb61b38c,
-    0x9b64c2b0,
-    0x86d3d2d4,
-    0xa00ae278,
-    0xbdbdf21c,
-};
-
-uint32_t crc32(void *buf, size_t len) {
-    uint32_t result = 0xfffffffful;
-    for (size_t i = 0; i < len; i++) {
-        result ^= ((uint8_t *)buf)[i];
-        result = crc32_table_4b[result & 0xf] ^ (result >> 4);
-        result = crc32_table_4b[result & 0xf] ^ (result >> 4);
-    }
-    return result ^ 0xfffffffful;
-}
-uint8_t challenge_page_size;
-uint8_t response_page_size;
-uint8_t seq;
-uint8_t pages_challange;
-uint8_t pages_response;
-BackendAuthState state = NO_TRANSACTION;
-AuthReport response;
-void ps4RequestDone(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, const uint16_t realLength, uint8_t *requestBuffer) {
-    switch (wValue) {
-        case SET_CHALLENGE: {
-            state = BUSY;
-            AuthReport *auth = (AuthReport *)requestBuffer;
-            // printf("PS4 Set Challenge! %02x %02x, %02x %02x\r\n", auth->type, auth->page, auth->seq, auth->sbz);
-            // for (int i = 0; i < realLength; i++) {
-            //     printf("%02x, ", requestBuffer[i]);
-            // }
-            // printf("\r\n");
-            seq = auth->seq;
-            if (auth->page == pages_challange) {
-                printf("All challenge pages sent to controller, grabbing status\r\n");
-                transfer_with_usb_controller_async(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_GET_REPORT, GET_AUTH_STATUS, wIndex, sizeof(AuthStatusReport), requestBuffer);
-            }
-            return;
-        }
-
-        case GET_RESPONSE: {
-            AuthReport *auth = (AuthReport *)requestBuffer;
-            printf("Repsonse recieved from controller, sending to console %02x %d\r\n", auth->page, auth->crc32);
-            // for (int i = 0; i < realLength; i++) {
-            //     printf("%02x, ", requestBuffer[i]);
-            // }
-            // printf("\r\n");
-            auth->crc32 = crc32(requestBuffer, sizeof(AuthReport) - sizeof(auth->crc32));
-            state = OK;
-            if (auth->page == pages_response) {
-                printf("Done\r\n");
-                state = NO_TRANSACTION;
-            }
-            return;
-        }
-
-        case GET_AUTH_STATUS: {
-            AuthStatusReport *auth = (AuthStatusReport *)requestBuffer;
-            if (auth->status == 0x00) {
-                printf("Controller done\r\n");
-                transfer_with_usb_controller_async(PS4, requestType, request, GET_RESPONSE, wIndex, sizeof(AuthReport), (uint8_t *)&response);
-            } else {
-                // printf("Controller still calculating, retrying\r\n");
-                transfer_with_usb_controller_async(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
-            }
-            return;
-        }
-
-        case GET_AUTH_PAGE_SIZE: {
-            state = NO_TRANSACTION;
-            AuthPageSizeReport *report = (AuthPageSizeReport *)requestBuffer;
-            challenge_page_size = report->size_challenge;
-            response_page_size = report->size_response;
-            pages_challange = CHALLENGE_SIZE / report->size_challenge;
-            pages_response = RESPONSE_SIZE / report->size_response;
-            ps4_pagesize_report.size_challenge = report->size_challenge;
-            ps4_pagesize_report.size_response = report->size_response;
-            printf("Setting up, page size: %02x %02x\r\n", pages_challange, pages_response);
-        }
-    }
-}
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
@@ -733,28 +639,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
                     return sizeof(ps4_feature_config);
                 case GET_RESPONSE: {
-                    memcpy(requestBuffer, &response, sizeof(response));
-                    if (response.page < pages_response) {
-                        transfer_with_usb_controller_async(PS4, requestType, request, wValue, wIndex, wLength, (uint8_t *)&response);
-                    }
-                    return sizeof(response);
+                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_STATUS: {
-                    AuthStatusReport *status = (AuthStatusReport *)requestBuffer;
-                    memset(requestBuffer, 0, sizeof(AuthStatusReport));
-                    if (state == OK) {
-                        status->status = 0x00;
-                    } else {
-                        status->status = 0x10;
-                    }
-                    status->seq = seq;
-                    status->type = 0xf2;
-                    status->crc32 = crc32(requestBuffer, sizeof(AuthStatusReport) - sizeof(status->crc32));
-                    return sizeof(AuthStatusReport);
+                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_PAGE_SIZE: {
-                    memcpy(requestBuffer, &ps4_pagesize_report, sizeof(AuthPageSizeReport));
-                    return sizeof(AuthPageSizeReport);
+                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
             }
         }
@@ -768,8 +659,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return size;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        transfer_with_usb_controller_async(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
-        return 1;
+        return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {

@@ -106,4 +106,3 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void* descriptorBuffer);
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength);
-void ps4RequestDone(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, const uint16_t realLength, uint8_t *requestBuffer);

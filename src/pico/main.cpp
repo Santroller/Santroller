@@ -134,11 +134,10 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 ps4_dev_addr = 0;
                 return;
             }
-            //TODO:  Only set led for actual DS4
+            // TODO:  Only set led for actual DS4
             ps4_controller_connected();
             sleep_ms(1);
             transfer_with_usb_controller_async(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, GET_AUTH_PAGE_SIZE, 0, sizeof(AuthPageSizeReport), buf);
-            
         }
     }
 }
@@ -257,11 +256,13 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                 uint16_t len = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
                 tud_control_xfer(rhport, request, buf, len);
             }
-        } else if (stage == CONTROL_STAGE_SETUP) {
-            tud_control_xfer(rhport, request, buf, request->wLength);
-        }
-        if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-            controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
+        } else {
+            if (stage == CONTROL_STAGE_SETUP) {
+                tud_control_xfer(rhport, request, buf, request->wLength);
+            }
+            if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
+                controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
+            }
         }
     }
 

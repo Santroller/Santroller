@@ -586,19 +586,21 @@ uint8_t response_page_size;
 uint8_t seq;
 uint8_t pages_challange;
 uint8_t pages_response;
-BackendAuthState state = BUSY;
-AuthReport challenge;
+BackendAuthState state = NO_TRANSACTION;
 AuthReport response;
 void ps4RequestDone(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, const uint16_t realLength, uint8_t *requestBuffer) {
     switch (wValue) {
         case SET_CHALLENGE: {
             state = BUSY;
             AuthReport *auth = (AuthReport *)requestBuffer;
+            // printf("PS4 Set Challenge! %02x %02x, %02x %02x\r\n", auth->type, auth->page, auth->seq, auth->sbz);
+            // for (int i = 0; i < realLength; i++) {
+            //     printf("%02x, ", requestBuffer[i]);
+            // }
+            // printf("\r\n");
             seq = auth->seq;
-            printf("PS4 Set Challenge! %02x %02x, %02x %02x\r\n", auth->type, auth->page, auth->seq, auth->sbz);
             if (auth->page == pages_challange) {
                 printf("All challenge pages sent to controller, grabbing status\r\n");
-                auth->page = 0;
                 transfer_with_usb_controller_async(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_GET_REPORT, GET_AUTH_STATUS, wIndex, sizeof(AuthStatusReport), requestBuffer);
             }
             return;
@@ -606,9 +608,17 @@ void ps4RequestDone(const uint8_t requestType, const uint8_t request, const uint
 
         case GET_RESPONSE: {
             AuthReport *auth = (AuthReport *)requestBuffer;
-            printf("Repsonse recieved from controller, sending to console %02x\r\n", auth->page);
-            memcpy(&response, requestBuffer, sizeof(response));
+            printf("Repsonse recieved from controller, sending to console %02x %d\r\n", auth->page, auth->crc32);
+            // for (int i = 0; i < realLength; i++) {
+            //     printf("%02x, ", requestBuffer[i]);
+            // }
+            // printf("\r\n");
+            auth->crc32 = crc32(requestBuffer, sizeof(AuthReport) - sizeof(auth->crc32));
             state = OK;
+            if (auth->page == pages_response) {
+                printf("Done\r\n");
+                state = NO_TRANSACTION;
+            }
             return;
         }
 
@@ -616,7 +626,7 @@ void ps4RequestDone(const uint8_t requestType, const uint8_t request, const uint
             AuthStatusReport *auth = (AuthStatusReport *)requestBuffer;
             if (auth->status == 0x00) {
                 printf("Controller done\r\n");
-                transfer_with_usb_controller_async(PS4, requestType, request, GET_RESPONSE, wIndex, sizeof(AuthReport), requestBuffer);
+                transfer_with_usb_controller_async(PS4, requestType, request, GET_RESPONSE, wIndex, sizeof(AuthReport), (uint8_t *)&response);
             } else {
                 // printf("Controller still calculating, retrying\r\n");
                 transfer_with_usb_controller_async(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);

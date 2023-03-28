@@ -1006,7 +1006,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
 #else
-    bool rf_or_bluetooth = buf == &last_bt_report || buf == &last_report_rf.lastControllerReport;
+    bool rf_or_bluetooth = false;
+    #ifdef RF_RX
+        rf_or_bluetooth = buf == &last_report_rf.lastControllerReport;
+    #endif
+    #if BLUETOOTH
+        rf_or_bluetooth = buf == &last_bt_report;
+    #endif
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
     bool updateSequence = false;

@@ -1140,8 +1140,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = size = sizeof(PS3_REPORT);
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
-    // PS4 controllers always update
-    if (consoleType != PS4 && last_report) {
+    if (last_report) {
         uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
         if (cmp == 0) {
             return 0;

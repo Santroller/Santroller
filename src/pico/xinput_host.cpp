@@ -159,7 +159,6 @@ void xinputh_close(uint8_t dev_addr) {
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
-    printf("Host\r\n");
     // Support standard HID devices
     if (TUSB_CLASS_HID == desc_itf->bInterfaceClass) {
         TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);

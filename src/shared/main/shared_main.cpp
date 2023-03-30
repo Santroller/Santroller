@@ -1147,7 +1147,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         memcpy(&last_report->lastControllerReport, report_data, report_size);
     }
-// Standard PS4 controllers need a report counter, but we don't want to include that when ticking
+// Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
 #if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType == PS4) {
         PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
@@ -1505,7 +1505,6 @@ bool tick_bluetooth(void) {
 #endif
 #ifndef RF_ONLY
 bool tick_usb(void) {
-    // If we have something pending to send to the xbox one controller, send it
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
     if (!ready) return 0;
@@ -1513,6 +1512,7 @@ bool tick_usb(void) {
         send_report_to_controller(XBOXONE, data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
+    // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
     }

@@ -693,7 +693,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = WINDOWS_XBOX360;
             printf("Xbox 360! (windows fallback)\n");
             reset_usb();
-        } else {
+        } else if (consoleType != UNIVERSAL) {
             return 0;
         }
         return DevCompatIDs.TotalLength;

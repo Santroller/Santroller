@@ -129,11 +129,17 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         // Look for a PS4 controller, just attempt to retrieve auth data from it and if that succeeds then its a ps4 controller.
         if (!ps4_dev_addr) {
             ps4_dev_addr = dev_addr;
-            uint8_t ret = transfer_with_usb_controller(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, 0x0303, 0, 48, buf);
-            if (ret != 0x30) {
-                ps4_dev_addr = 0;
-                return;
+            if (!(host_vid == SONY_DS_VID && (host_pid == PS4_DS_PID_1 || host_pid == PS4_DS_PID_2 || host_pid == PS4_DS_PID_3))) {
+                printf("Checking for PS4 controller\r\n");
+                uint8_t ret = transfer_with_usb_controller(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, 0x0303, 0, 48, buf);
+                printf("Ret: %02x\r\n", ret);
+                if (ret != 0x30) {
+                    printf("Did not find PS4 controller\r\n");
+                    ps4_dev_addr = 0;
+                    return;
+                }
             }
+            printf("Found PS4 controller\r\n");
             ps4_controller_connected(host_vid, host_pid);
         }
     }
@@ -173,7 +179,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
     receive_report_from_controller(report, len);
 }
 
-
 uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
     tusb_control_request_t setup = {
         bmRequestType : requestType,
@@ -189,6 +194,10 @@ uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t request
         xfer.daddr = ps4_dev_addr;
     } else if (device == XBOXONE) {
         xfer.daddr = xone_dev_addr;
+    }
+    if (!xfer.daddr) {
+        // Device is not connected yet!
+        return 0;
     }
     xfer.ep_addr = 0;
     xfer.setup = &setup;

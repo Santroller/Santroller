@@ -1114,7 +1114,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
-        PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
+        PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report;
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;

@@ -81,20 +81,11 @@ typedef struct
     uint8_t whammy;
     uint8_t tilt;
 
-    //      0
-    //   7     1
-    // 6    15   2
-    //   5     3
-    //      4
-    union {
-        struct {
-            bool dpadUp : 1;
-            bool dpadDown : 1;
-            bool dpadLeft : 1;
-            bool dpadRight : 1;
-        };
-        uint8_t dpad : 4;
-    };
+    // To make things easier we use bitfields here and them map to dpad later
+    uint32_t dpadUp : 1;
+    uint32_t dpadDown : 1;
+    uint32_t dpadLeft : 1;
+    uint32_t dpadRight : 1;
     bool white1 : 1;  // square, white1
     bool black1 : 1;  // cross, black1
     bool black2 : 1;  // circle, black2

@@ -448,7 +448,7 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->y, report->y)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
             } else {
-                PS3GuitarHeroGuitar_Data_t *host_gamepad = (PS3GuitarHeroGuitar_Data_t *)data;
+                PS3GuitarHeroDrums_Data_t *host_gamepad = (PS3GuitarHeroDrums_Data_t *)data;
                 // Turn dpad back to bits so we can use them below
                 PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)dpad;
                 dpad->dpad = dpad->dpad > RIGHT ? 0 : dpad_bindings_reverse[dpad->dpad];
@@ -464,7 +464,16 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->b, report->b)
                 COPY_BUTTON(host_gamepad->y, report->y)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
-                // TODO: velocity
+                COPY_DRUM_VELOCITY_GREEN(host_gamepad->greenVelocity);
+                COPY_DRUM_VELOCITY_RED(host_gamepad->redVelocity);
+                COPY_DRUM_VELOCITY_YELLOW(host_gamepad->yellowVelocity);
+                COPY_DRUM_VELOCITY_BLUE(host_gamepad->blueVelocity);
+#if RHYTHM_TYPE == GUITAR_HERO
+                if (device_type.rhythm_type == GUITAR_HERO) {
+                    COPY_DRUM_VELOCITY_ORANGE(host_gamepad->orangeVelocity);
+                    COPY_DRUM_VELOCITY_KICK(host_gamepad->kickVelocity);
+                }
+#endif
             }
             break;
         }
@@ -501,7 +510,23 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->b, report->b)
             COPY_BUTTON(host_gamepad->y, report->y)
             COPY_BUTTON(host_gamepad->guide, report->guide)
-            // TODO: velocity
+            if (device_type.rhythm_type == GUITAR_HERO) {
+#if RHYTHM_TYPE == GUITAR_HERO
+                COPY_DRUM_VELOCITY_GREEN(host_gamepad->greenVelocity);
+                COPY_DRUM_VELOCITY_RED(host_gamepad->redVelocity);
+                COPY_DRUM_VELOCITY_YELLOW(host_gamepad->yellowVelocity);
+                COPY_DRUM_VELOCITY_BLUE(host_gamepad->blueVelocity);
+                COPY_DRUM_VELOCITY_ORANGE(host_gamepad->orangeVelocity);
+                COPY_DRUM_VELOCITY_KICK(host_gamepad->kickVelocity);
+#endif
+            } else {
+                XInputRockBandDrums_Data_t *host_gamepad2 = (XInputRockBandDrums_Data_t *)data;
+
+                COPY_DRUM_VELOCITY_GREEN((-(0x7fff - host_gamepad2->greenVelocity)) >> 8);
+                COPY_DRUM_VELOCITY_YELLOW(-(0x7fff - host_gamepad2->yellowVelocity) >> 8);
+                COPY_DRUM_VELOCITY_RED((0x7fff - host_gamepad2->redVelocity) >> 8);
+                COPY_DRUM_VELOCITY_BLUE((0x7fff - host_gamepad2->blueVelocity) >> 8);
+            }
             break;
         }
         case XBOXONE: {
@@ -518,7 +543,13 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->b, report->b)
             COPY_BUTTON(host_gamepad->y, report->y)
             COPY_BUTTON(host_gamepad->guide, report->guide)
-            // TODO: velocity
+            COPY_DRUM_VELOCITY_GREEN(host_gamepad->greenVelocity);
+            COPY_DRUM_VELOCITY_YELLOW(host_gamepad->yellowVelocity);
+            COPY_DRUM_VELOCITY_RED(host_gamepad->redVelocity);
+            COPY_DRUM_VELOCITY_BLUE(host_gamepad->blueVelocity);
+            COPY_DRUM_VELOCITY_GREEN_CYMBAL(host_gamepad->greenCymbalVelocity);
+            COPY_DRUM_VELOCITY_YELLOW_CYMBAL(host_gamepad->yellowCymbalVelocity);
+            COPY_DRUM_VELOCITY_BLUE_CYMBAL(host_gamepad->blueCymbalVelocity);
             break;
         }
     }

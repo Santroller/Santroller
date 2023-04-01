@@ -954,6 +954,16 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #define COPY_TILT(tilt_in) \
     if (tilt_in) report->tilt = tilt_in;
 #endif
+#if DEVICE_TYPE == DRUMS
+// xb1, drum is 4bit, so 8bit -> 4bit
+#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in >> 4;
+#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in >> 4;
+#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in >> 4;
+#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in >> 4;
+#define COPY_DRUM_VELOCITY_GREEN_CYMBAL(velocity_in) report->greenCymbalVelocity = velocity_in >> 4;
+#define COPY_DRUM_VELOCITY_YELLOW_CYMBAL(velocity_in) report->yellowCymbalVelocity = velocity_in >> 4;
+#define COPY_DRUM_VELOCITY_BLUE_CYMBAL(velocity_in) report->blueCymbalVelocity = velocity_in >> 4;
+#endif
 #if !DEVICE_TYPE_IS_LIVE_GUITAR
 // Map from int16_t to xb1 (so keep it the same)
 #define COPY_AXIS_NORMAL(in, out) \
@@ -965,6 +975,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef COPY_TILT
+#undef COPY_DRUM_VELOCITY_GREEN
+#undef COPY_DRUM_VELOCITY_YELLOW
+#undef COPY_DRUM_VELOCITY_RED
+#undef COPY_DRUM_VELOCITY_BLUE
+#undef COPY_DRUM_VELOCITY_GREEN_CYMBAL
+#undef COPY_DRUM_VELOCITY_YELLOW_CYMBAL
+#undef COPY_DRUM_VELOCITY_BLUE_CYMBAL
 #endif
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
@@ -1006,6 +1023,26 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #define COPY_TILT(tilt_in) \
     if (tilt_in) report->tilt = (tilt_in - 128) << 8;
 #endif
+
+// xb360 is stupid
+#if DEVICE_TYPE == DRUMS
+#if RHYTHM_TYPE == ROCK_BAND
+#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = -((0x7fff - (velocity_in << 8)));
+#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = -((0x7fff - (velocity_in << 8)));
+#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = ((0x7fff - (velocity_in << 8)));
+#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = ((0x7fff - (velocity_in << 8)));
+#else
+#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_ORANGE(velocity_in) report->orangeVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_KICK(velocity_in) report->kickVelocity = velocity_in;
+#endif
+#define COPY_DRUM_VELOCITY_GREEN_CYMBAL(velocity_in)
+#define COPY_DRUM_VELOCITY_YELLOW_CYMBAL(velocity_in)
+#define COPY_DRUM_VELOCITY_BLUE_CYMBAL(velocity_in)
+#endif
 // Map from int16_t to xb360
 #define COPY_AXIS_NORMAL(in, out) \
     if (in) out = in;
@@ -1016,6 +1053,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef COPY_TILT
+#undef COPY_DRUM_VELOCITY_GREEN
+#undef COPY_DRUM_VELOCITY_YELLOW
+#undef COPY_DRUM_VELOCITY_RED
+#undef COPY_DRUM_VELOCITY_BLUE
+#undef COPY_DRUM_VELOCITY_ORANGE
+#undef COPY_DRUM_VELOCITY_KICK
+#undef COPY_DRUM_VELOCITY_GREEN_CYMBAL
+#undef COPY_DRUM_VELOCITY_YELLOW_CYMBAL
+#undef COPY_DRUM_VELOCITY_BLUE_CYMBAL
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1106,6 +1152,24 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+#if DEVICE_TYPE == DRUMS
+#if RHYTHM_TYPE == ROCK_BAND
+#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity =velocity_in;
+#else
+#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_ORANGE(velocity_in) report->orangeVelocity = velocity_in;
+#define COPY_DRUM_VELOCITY_KICK(velocity_in) report->kickVelocity = velocity_in;
+#endif
+#define COPY_DRUM_VELOCITY_GREEN_CYMBAL(velocity_in)
+#define COPY_DRUM_VELOCITY_YELLOW_CYMBAL(velocity_in)
+#define COPY_DRUM_VELOCITY_BLUE_CYMBAL(velocity_in)
+#endif
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
 // TODO: what do we want to use as our condition for tilt
 #define COPY_TILT(tilt_in)                      \
@@ -1116,10 +1180,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
 #if (DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO) || DEVICE_TYPE == LIVE_GUITAR
-#define COPY_TILT(tilt_in)                    \
-    if (consoleType == UNIVERSAL) {           \
-        report->tilt_pc = tilt_in;            \
-    } else if (tilt_in) {                     \
+#define COPY_TILT(tilt_in)                   \
+    if (consoleType == UNIVERSAL) {          \
+        report->tilt_pc = tilt_in;           \
+    } else if (tilt_in) {                    \
         report->tilt = (tilt_in + 128) << 2; \
     }
 #endif
@@ -1136,6 +1200,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #undef COPY_AXIS_TRIGGER
 #undef HAS_L2_R2_BUTTON
 #undef COPY_TILT
+#undef COPY_DRUM_VELOCITY_GREEN
+#undef COPY_DRUM_VELOCITY_YELLOW
+#undef COPY_DRUM_VELOCITY_RED
+#undef COPY_DRUM_VELOCITY_BLUE
+#undef COPY_DRUM_VELOCITY_ORANGE
+#undef COPY_DRUM_VELOCITY_KICK
+#undef COPY_DRUM_VELOCITY_GREEN_CYMBAL
+#undef COPY_DRUM_VELOCITY_YELLOW_CYMBAL
+#undef COPY_DRUM_VELOCITY_BLUE_CYMBAL
         TICK_PS3;
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {

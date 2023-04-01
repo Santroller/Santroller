@@ -344,6 +344,21 @@ for (int i = 0; i < device_count; i++) {
                     COPY_BUTTON(host_gamepad->x, report->y)
                 } else {
                     COPY_BUTTON(host_gamepad->solo, report->solo)
+#ifdef XB1_SOLO
+                    if (host_gamepad->solo) {
+                        COPY_BUTTON(host_gamepad->a, report->soloGreen)
+                        COPY_BUTTON(host_gamepad->b, report->soloRed)
+                        COPY_BUTTON(host_gamepad->x, report->soloYellow)
+                        COPY_BUTTON(host_gamepad->y, report->soloBlue)
+                        COPY_BUTTON(host_gamepad->leftShoulder, report->soloOrange)
+                    } else {
+                        COPY_BUTTON(host_gamepad->a, report->green)
+                        COPY_BUTTON(host_gamepad->b, report->red)
+                        COPY_BUTTON(host_gamepad->x, report->yellow)
+                        COPY_BUTTON(host_gamepad->y, report->blue)
+                        COPY_BUTTON(host_gamepad->leftShoulder, report->orange)
+                    }
+#endif
                 }
                 COPY_NORMAL_PS3(host_gamepad->pickup, report->pickup)
 #else
@@ -400,6 +415,21 @@ for (int i = 0; i < device_count; i++) {
 #if RHYTHM_TYPE == ROCK_BAND
             COPY_NORMAL_PS3(host_gamepad->pickup, report->pickup)
             COPY_BUTTON(host_gamepad->solo, report->solo)
+#ifdef XB1_SOLO
+            if (host_gamepad->solo) {
+                COPY_BUTTON(host_gamepad->a, report->soloGreen)
+                COPY_BUTTON(host_gamepad->b, report->soloRed)
+                COPY_BUTTON(host_gamepad->x, report->soloYellow)
+                COPY_BUTTON(host_gamepad->y, report->soloBlue)
+                COPY_BUTTON(host_gamepad->leftShoulder, report->soloOrange)
+            } else {
+                COPY_BUTTON(host_gamepad->a, report->green)
+                COPY_BUTTON(host_gamepad->b, report->red)
+                COPY_BUTTON(host_gamepad->x, report->yellow)
+                COPY_BUTTON(host_gamepad->y, report->blue)
+                COPY_BUTTON(host_gamepad->leftShoulder, report->orange)
+            }
+#endif
 #else
             COPY_NORMAL_PS3(host_gamepad->pickup, report->slider)
 #endif
@@ -419,6 +449,18 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->b, report->b)
             COPY_BUTTON(host_gamepad->y, report->y)
             COPY_BUTTON(host_gamepad->guide, report->guide)
+#ifdef XB1_SOLO
+            COPY_BUTTON(host_gamepad->green, report->green)
+            COPY_BUTTON(host_gamepad->red, report->red)
+            COPY_BUTTON(host_gamepad->yellow, report->yellow)
+            COPY_BUTTON(host_gamepad->blue, report->blue)
+            COPY_BUTTON(host_gamepad->orange, report->orange)
+            COPY_BUTTON(host_gamepad->soloGreen, report->soloGreen)
+            COPY_BUTTON(host_gamepad->soloRed, report->soloRed)
+            COPY_BUTTON(host_gamepad->soloYellow, report->soloYellow)
+            COPY_BUTTON(host_gamepad->soloBlue, report->soloBlue)
+            COPY_BUTTON(host_gamepad->soloOrange, report->soloOrange)
+#endif
             COPY_AXIS_NORMAL(host_gamepad->pickup, report->whammy)
             COPY_TILT(host_gamepad->tilt)
 #if RHYTHM_TYPE == ROCK_BAND

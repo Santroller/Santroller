@@ -951,6 +951,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TICK_XBOX_ONE;
 
 #if DEVICE_TYPE == GUITAR
+#define XB1_SOLO
 #define COPY_TILT(tilt_in) \
     if (tilt_in) report->tilt = tilt_in;
 #endif
@@ -975,6 +976,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef COPY_TILT
+#undef XB1_SOLO
 #undef COPY_DRUM_VELOCITY_GREEN
 #undef COPY_DRUM_VELOCITY_YELLOW
 #undef COPY_DRUM_VELOCITY_RED

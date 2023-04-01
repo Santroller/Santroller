@@ -43,7 +43,6 @@ uint8_t total_usb_host_devices = 0;
 typedef struct {
     USB_Device_Type_t type;
     USB_LastReport_Data_t report;
-    bool received_new = false;
     uint8_t report_length;
 } Usb_Host_Device_t;
 
@@ -77,10 +76,6 @@ void loop() {
     tick();
     tud_task();
 #if USB_HOST_STACK
-    // If a plugged in xbox one controller is trying to send us data, and we are authenticating, receive it
-    if (xbox_one_state != Ready && xone_dev_addr && tuh_xinput_ready(xone_dev_addr, 0)) {
-        tuh_xinput_receive_report(xone_dev_addr, 0);
-    }
     tuh_task();
 #endif
 }
@@ -133,7 +128,6 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
 }
 
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
-    usb_host_devices[id].received_new = false;
     memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);
 }
 
@@ -179,8 +173,10 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         }
         if (type.console_type) {
             usb_host_devices[total_usb_host_devices].type = type;
+            total_usb_host_devices++;
         }
     }
+    printf("Total devices: %d\r\n", total_usb_host_devices);
 #endif
 }
 
@@ -222,7 +218,16 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return NULL;
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
-    receive_report_from_controller(report, len);
+    if (dev_addr == xone_dev_addr) {
+        receive_report_from_controller(report, len);
+    }
+    for (int i = 0; i < total_usb_host_devices; i++) {
+        if (usb_host_devices[i].type.dev_addr == dev_addr) {
+            memcpy(&usb_host_devices[i].report, report, len);
+            usb_host_devices[i].report_length = len;
+            return;
+        }
+    }
 }
 
 uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {

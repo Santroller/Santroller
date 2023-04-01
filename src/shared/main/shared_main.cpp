@@ -949,6 +949,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             memset(buf, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
             TICK_XBOX_ONE;
+
+#if DEVICE_TYPE == GUITAR
+#define COPY_TILT(tilt_in) \
+    if (tilt_in) report->tilt = tilt_in;
+#endif
 #if !DEVICE_TYPE_IS_LIVE_GUITAR
 // Map from int16_t to xb1 (so keep it the same)
 #define COPY_AXIS_NORMAL(in, out) \
@@ -959,6 +964,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
+#undef COPY_TILT
 #endif
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
@@ -995,6 +1001,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         TICK_XINPUT;
 
+#if DEVICE_TYPE_IS_GUITAR
+        // tilt_in is uint8, report->tilt is int16_t
+#define COPY_TILT(tilt_in) \
+    if (tilt_in) report->tilt = (tilt_in - 128) << 8;
+#endif
 // Map from int16_t to xb360
 #define COPY_AXIS_NORMAL(in, out) \
     if (in) out = in;
@@ -1004,6 +1015,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
+#undef COPY_TILT
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1025,7 +1037,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (!seen_ps4_console) {
             report->guide = true;
         }
-
+#if DEVICE_TYPE == LIVE_GUITAR
+        // tilt_in is uint8, report->tilt is int16_t
+#define COPY_TILT(tilt_in) \
+    if (tilt_in) report->tilt = tilt_in;
+#endif
 // Map from int16_t to ps4 (uint8_t)
 #define COPY_AXIS_NORMAL(in, out) \
     if (in) out = (in >> 8) + 128;
@@ -1037,6 +1053,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef HAS_L2_R2_BUTTON
+#undef COPY_TILT
         TICK_PS4;
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
@@ -1089,6 +1106,23 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+// TODO: what do we want to use as our condition for tilt
+#define COPY_TILT(tilt_in)                      \
+    if (consoleType == UNIVERSAL) {             \
+        if (tilt_in) report->tilt_pc = tilt_in; \
+    } else if (tilt_in > 128) {                 \
+        report->tilt = true;                    \
+    }
+#endif
+#if (DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO) || DEVICE_TYPE == LIVE_GUITAR
+#define COPY_TILT(tilt_in)                    \
+    if (consoleType == UNIVERSAL) {           \
+        report->tilt_pc = tilt_in;            \
+    } else if (tilt_in) {                     \
+        report->tilt = (tilt_in + 128) << 2; \
+    }
+#endif
 
 // Map from int16_t to ps3 (uint8_t)
 #define COPY_AXIS_NORMAL(in, out) \
@@ -1101,6 +1135,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef HAS_L2_R2_BUTTON
+#undef COPY_TILT
         TICK_PS3;
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {

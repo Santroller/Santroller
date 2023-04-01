@@ -188,7 +188,6 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->leftThumbClick, report->ghtv)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
                 COPY_AXIS_NORMAL(host_gamepad->rightStickY, report->whammy)
-                // TODO: tilt
             } else {
                 PS3GHLGuitar_Data_t *host_gamepad = (PS3GHLGuitar_Data_t *)data;
                 // Turn dpad back to bits so we can use them below
@@ -208,7 +207,7 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->ghtv, report->ghtv)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
                 COPY_AXIS_NORMAL(host_gamepad->whammy, report->whammy)
-                // TODO: tilt
+                COPY_TILT((host_gamepad->tilt >> 2) - 128)
             }
             break;
         }
@@ -231,6 +230,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->ghtv, report->ghtv)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_NORMAL_PS3(host_gamepad->whammy, report->whammy)
+            COPY_TILT(host_gamepad->tilt)
             // TODO: tilt
             break;
         }
@@ -250,6 +250,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->ghtv, report->ghtv)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_AXIS_NORMAL(host_gamepad->whammy, report->whammy)
+            COPY_TILT((host_gamepad->tilt >> 8) + 128)
             // TODO: tilt
             break;
         }
@@ -270,7 +271,6 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->leftThumbClick, report->ghtv)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_AXIS_NORMAL(host_gamepad->rightStickY, report->whammy)
-            // TODO: tilt
             break;
         }
     }
@@ -301,7 +301,6 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->guide, report->guide)
                 COPY_NORMAL_PS3(host_gamepad->rightStickX, report->whammy)
 #if RHYTHM_TYPE == ROCK_BAND
-                // TODO solo
                 if (device_type.rhythm_type == GUITAR_HERO) {
                     COPY_BUTTON(host_gamepad->y, report->x)
                     COPY_BUTTON(host_gamepad->x, report->y)
@@ -315,7 +314,7 @@ for (int i = 0; i < device_count; i++) {
                 COPY_NORMAL_PS3(host_gamepad->rightStickY, report->slider)
 #endif
             } else {
-                PS3GuitarHeroGuitar_Data_t *host_gamepad = (PS3GuitarHeroGuitar_Data_t *)data;
+                PS3RockBandGuitar_Data_t *host_gamepad = (PS3RockBandGuitar_Data_t *)data;
                 // Turn dpad back to bits so we can use them below
                 PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)dpad;
                 dpad->dpad = dpad->dpad > RIGHT ? 0 : dpad_bindings_reverse[dpad->dpad];
@@ -332,21 +331,27 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->y, report->y)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
                 COPY_NORMAL_PS3(host_gamepad->whammy, report->whammy)
+                if (device_type.rhythm_type == GUITAR_HERO) {
+                    PS3GuitarHeroGuitar_Data_t *host_gamepad2 = (PS3GuitarHeroGuitar_Data_t *)data;
+                    COPY_TILT((host_gamepad2->tilt >> 2) - 128)
+                } else {
+                    COPY_TILT(host_gamepad->tilt ? 255 : 128)
+                }
                 // On ps3, rb and gh guitars swap their blue and yellow
-                // TODO tilt
 #if RHYTHM_TYPE == ROCK_BAND
-                // TODO solo
                 if (device_type.rhythm_type == GUITAR_HERO) {
                     COPY_BUTTON(host_gamepad->y, report->x)
                     COPY_BUTTON(host_gamepad->x, report->y)
+                } else {
+                    COPY_BUTTON(host_gamepad->solo, report->solo)
                 }
-                COPY_NORMAL_PS3(host_gamepad->slider, report->pickup)
+                COPY_NORMAL_PS3(host_gamepad->pickup, report->pickup)
 #else
                 if (device_type.rhythm_type == ROCK_BAND) {
                     COPY_BUTTON(host_gamepad->y, report->x)
                     COPY_BUTTON(host_gamepad->x, report->y)
                 }
-                COPY_NORMAL_PS3(host_gamepad->slider, report->slider)
+                COPY_NORMAL_PS3(host_gamepad->pickup, report->slider)
 #endif
             }
             break;
@@ -369,7 +374,6 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->y, report->y)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_NORMAL_PS3(host_gamepad->rightStickX, report->whammy)
-// TODO:  tilt, solo
 #if RHYTHM_TYPE == ROCK_BAND
             COPY_NORMAL_PS3(host_gamepad->rightStickY, report->pickup)
 #else
@@ -378,7 +382,7 @@ for (int i = 0; i < device_count; i++) {
             break;
         }
         case WINDOWS_XBOX360: {
-            XInputGuitarHeroGuitar_Data_t *host_gamepad = (XInputGuitarHeroGuitar_Data_t *)data;
+            XInputRockBandGuitar_Data_t *host_gamepad = (XInputRockBandGuitar_Data_t *)data;
             COPY_BUTTON(host_gamepad->back, report->back)
             COPY_BUTTON(host_gamepad->start, report->start)
             COPY_BUTTON(host_gamepad->dpadUp, report->dpadUp)
@@ -392,11 +396,12 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->y, report->y)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_AXIS_NORMAL(host_gamepad->whammy, report->whammy)
-// TODO:  tilt, solo
+            COPY_TILT((host_gamepad->tilt >> 8) + 128)
 #if RHYTHM_TYPE == ROCK_BAND
-            COPY_NORMAL_PS3(host_gamepad->slider, report->pickup)
+            COPY_NORMAL_PS3(host_gamepad->pickup, report->pickup)
+            COPY_BUTTON(host_gamepad->solo, report->solo)
 #else
-            COPY_NORMAL_PS3(host_gamepad->slider, report->slider)
+            COPY_NORMAL_PS3(host_gamepad->pickup, report->slider)
 #endif
             break;
         }
@@ -415,7 +420,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->y, report->y)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_AXIS_NORMAL(host_gamepad->pickup, report->whammy)
-// TODO:  tilt, solo
+            COPY_TILT(host_gamepad->tilt)
 #if RHYTHM_TYPE == ROCK_BAND
             COPY_NORMAL_PS3(host_gamepad->pickup, report->pickup)
 #else

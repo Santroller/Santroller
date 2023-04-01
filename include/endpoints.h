@@ -30,11 +30,11 @@ enum endpoints_t {
 #define HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID 0x0092
 #define NINTENDO_VID 0x057E
 #define SWITCH_PID 0x2009
-#define SONY_VID 0x12ba
+#define REDOCTANE_VID 0x12ba
 #define PS4_VID 0x03EB
 #define PS4_PID 0x2043
-#define SONY_DS_VID 0x054c
-#define PS3_PID 0x0268
+#define SONY_VID 0x054c
+#define SONY_DS3_PID 0x0268
 #define PS4_DS_PID_1 0x05c4
 #define PS4_DS_PID_2 0x09cc
 #define PS4_DS_PID_3 0x0ba0
@@ -48,9 +48,8 @@ enum endpoints_t {
 #define WII_RB_VID 0x1bad
 #define WII_RB_GUITAR_PID 0x0004
 #define WII_RB_DRUM_PID 0x074b
-#define XBOX_ONE_RB_DRUM_VID 0x0738
+#define XBOX_ONE_RB_VID 0x0738
 #define XBOX_ONE_RB_DRUM_PID 0x4262
-#define XBOX_ONE_RB_GUITAR_VID 0x0738
 #define XBOX_ONE_RB_GUITAR_PID 0x4161
 #define XBOX_ONE_GHLIVE_DONGLE_VID 0x1430
 #define XBOX_ONE_GHLIVE_DONGLE_PID 0x079B

@@ -39,7 +39,7 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bMaxPacketSize0 : ENDPOINT_SIZE,
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-    bcdDevice : USB_VERSION_BCD(VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION),
+    bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, RHYTHM_TYPE, 0),
     iManufacturer : 0x01,
     iProduct : 0x02,
     iSerialNumber : 0x03,
@@ -519,7 +519,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_READ_BOARD:
             case COMMAND_READ_DIGITAL:
             case COMMAND_READ_SERIAL:
-            case COMMAND_READ_VERSION:
             case COMMAND_READ_ANALOG:
             case COMMAND_READ_PS2:
             case COMMAND_READ_WII:
@@ -614,7 +613,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x84:
         case 0x83:
         case 0x86:
-            return transfer_with_usb_controller(WINDOWS_XBOX360, requestType, request, wValue, wIndex, wLength, requestBuffer);
+            return transfer_with_usb_controller(get_device_address_for(WINDOWS_XBOX360), requestType, request, wValue, wIndex, wLength, requestBuffer);
     }
 #endif
     // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
@@ -643,15 +642,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
                     return sizeof(ps4_feature_config);
                 case GET_RESPONSE: {
-                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
+                    return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_STATUS: {
-                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
+                    return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_PAGE_SIZE: {
                     memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
                     return sizeof(ps4_pagesize_report);
-                    // return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
             }
         }
@@ -665,7 +663,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return size;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
+        return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
@@ -748,7 +746,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = xbox_360_pid;
             } else if (consoleType == PS4) {
 #if DEVICE_TYPE_IS_LIVE_GUITAR
-                dev->idVendor = SONY_VID;
+                dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS4_GHLIVE_DONGLE_PID;
 #else
                 dev->idVendor = PS4_VID;
@@ -763,13 +761,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #endif
 #ifdef PS3_TYPE
             else if (consoleType == PS3) {
-                dev->idVendor = SONY_VID;
+                dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS3_TYPE;
             }
 #else
             else if (consoleType == PS3) {
-                dev->idVendor = SONY_DS_VID;
-                dev->idProduct = PS3_PID;
+                dev->idVendor = SONY_VID;
+                dev->idProduct = SONY_DS3_PID;
             }
 #endif
 #ifdef XBOX_ONE_VID

@@ -202,20 +202,20 @@ typedef struct
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
-    bool start : 1; // pause
-    bool back : 1; // heroPower
-    bool leftThumbClick : 1; // ghtv
+    bool pause : 1; // start
+    bool heroPower : 1; // back
+    bool ghtv : 1; // leftThumbClick
     bool : 1;
 
-    bool leftShoulder : 1; // white2
-    bool rightShoulder : 1; // white3
+    bool white2 : 1; // leftShoulder
+    bool white3 : 1; // rightShoulder
     bool guide : 1;
     bool : 1;
 
-    bool a : 1; //black1
-    bool b : 1; //black2
-    bool x : 1; //white1
-    bool y : 1; //black3
+    bool black1 : 1; //a
+    bool black2 : 1; //b
+    bool white1 : 1; //x
+    bool black3 : 1; //y
 
     uint8_t unused1[2];
     int16_t unused2;

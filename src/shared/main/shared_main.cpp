@@ -12,6 +12,7 @@
 #include "pins.h"
 #include "ps2.h"
 #include "rf.h"
+#include "usbhid.h"
 #include "util.h"
 #include "wii.h"
 #define DJLEFT_ADDR 0x0E
@@ -24,8 +25,10 @@ PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastSentPacket = 0;
+long lastSentGHLPoke = 0;
 long lastTap;
 long lastTapShift;
+uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
 uint8_t lastSuccessfulPS2Packet[BUFFER_SIZE];
@@ -46,10 +49,24 @@ uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
 USB_LastReport_Data_t last_report_rf;
+USB_LastReport_Data_t temp_report_usb_host;
 long initialWt[5] = {0};
 uint8_t rawWt;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
+
+/* Magic data taken from GHLtarUtility:
+ * https://github.com/ghlre/GHLtarUtility/blob/master/PS3Guitar.cs
+ * Note: The Wii U and PS3 dongles happen to share the same!
+ */
+const PROGMEM uint8_t ghl_ps3wiiu_magic_data[] = {
+    0x02, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+/* Magic data for the PS4 dongles sniffed with a USB protocol
+ * analyzer.
+ */
+const PROGMEM uint8_t ghl_ps4_magic_data[] = {
+    0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 #ifdef RF_TX
 RfInputPacket_t rf_report = {Input};
 RfHeartbeatPacket_t rf_heartbeat = {Heartbeat};
@@ -315,8 +332,6 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
-// TODO: PS3 RB top frets (maybe we additionally stuff both sets of frets into one of the pressure bytes, and then zero it for non RF or BT)
-// TODO: same for RB drums and cymbal velocity
 #if defined(RF_RX) || BLUETOOTH
 // When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
@@ -834,115 +849,18 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     }
 }
 #endif
+#define COPY_BUTTON(in_button, out_button) \
+    if (in_button) out_button = true;
 #ifndef RF_RX
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
-    // Tick Inputs
-#ifdef INPUT_DJ_TURNTABLE
-    uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
-    uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
-    bool djLeftValid = twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketLeft), dj_left);
-    bool djRightValid = twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketRight), dj_right);
-    lastTurntableWasSuccessfulLeft = djLeftValid;
-    lastTurntableWasSuccessfulRight = djRightValid;
-#endif
-#ifdef INPUT_GH5_NECK
-    uint8_t *fivetar_buttons = lastSuccessfulGH5Packet;
-    bool gh5Valid = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(lastSuccessfulGH5Packet), lastSuccessfulGH5Packet);
-    lastGH5WasSuccessful = gh5Valid;
-#endif
-#ifdef INPUT_PS2
-    uint8_t *ps2Data = tickPS2();
-    bool ps2Valid = ps2Data != NULL;
-    lastPS2WasSuccessful = ps2Valid;
-    if (ps2Valid) {
-        memcpy(lastSuccessfulPS2Packet, ps2Data, sizeof(lastSuccessfulPS2Packet));
-    }
-#endif
-#ifdef INPUT_WII
-    uint8_t *wiiData;
-    // If we didn't send the last packet, then we need to wait some time as the wii controllers do not like being polled quickly
-    if (micros() - lastTick > 800) {
-        lastTick = micros();
-        wiiData = tickWii();
-    } else {
-        wiiData = lastSuccessfulWiiPacket;
-    }
-    bool wiiValid = wiiData != NULL;
-    lastWiiWasSuccessful = wiiValid;
-    uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which, lastTapWiiGh5, lastTapWii = 0;
-    uint16_t accX, accY, accZ = 0;
-    if (wiiValid) {
-        memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
-        wiiButtonsLow = ~wiiData[4];
-        wiiButtonsHigh = ~wiiData[5];
-        if (hiRes) {
-            wiiButtonsLow = ~wiiData[6];
-            wiiButtonsHigh = ~wiiData[7];
-        }
-#ifdef INPUT_WII_TAP
-        lastTapWii = (wiiData[2] & 0x1f);
-        // GH3 guitars set this bit, while WT and GH5 guitars do not
-        if ((wiiData[0] & (1 << 7)) != 0) {
-            lastTapWii = 0;
-        }
-        if (lastTapWii == 0x0f) {
-            lastTapWiiGh5 = 0;
-        } else if (lastTapWii == 0x04) {
-            lastTapWiiGh5 = 0x95;
-        } else if (lastTapWii == 0x07) {
-            lastTapWiiGh5 = 0xB0;
-        } else if (lastTapWii == 0x0A) {
-            lastTapWiiGh5 = 0xCD;
-        } else if (lastTapWii == 0x0C || lastTapWii == 0x0D) {
-            lastTapWiiGh5 = 0xE6;
-        } else if (lastTapWii == 0x12 || lastTapWii == 0x13) {
-            lastTapWiiGh5 = 0x1A;
-        } else if (lastTapWii == 0x14 || lastTapWii == 0x15) {
-            lastTapWiiGh5 = 0x2F;
-        } else if (lastTapWii == 0x17 || lastTapWii == 0x18) {
-            lastTapWiiGh5 = 0x49;
-        } else if (lastTapWii == 0x1A) {
-            lastTapWiiGh5 = 0x66;
-        } else if (lastTapWii == 0x1F) {
-            lastTapWiiGh5 = 0x7F;
-        }
-
-#endif
-#ifdef INPUT_WII_DRUM
-        vel = (7 - (wiiData[3] >> 5)) << 5;
-        which = (wiiData[2] & 0b01111100) >> 1;
-        switch (which) {
-            case 0x1B:
-                drumVelocity[DRUM_KICK] = vel;
-                break;
-            case 0x12:
-                drumVelocity[DRUM_GREEN] = vel;
-                break;
-            case 0x19:
-                drumVelocity[DRUM_RED] = vel;
-                break;
-            case 0x11:
-                drumVelocity[DRUM_YELLOW] = vel;
-                break;
-            case 0x0F:
-                drumVelocity[DRUM_BLUE] = vel;
-                break;
-            case 0x0E:
-                drumVelocity[DRUM_ORANGE] = vel;
-                break;
-        }
-#endif
-#ifdef INPUT_WII_NUNCHUK
-        accX = ((wiiData[2] << 2) | ((wiiData[5] & 0xC0) >> 6)) - 511;
-        accY = ((wiiData[3] << 2) | ((wiiData[5] & 0x30) >> 4)) - 511;
-        accZ = ((wiiData[4] << 2) | ((wiiData[5] & 0xC) >> 2)) - 511;
-#endif
-    }
-#endif
-#ifdef INPUT_WT_NECK
-    rawWt = checkWt(4) | (checkWt(3) << 1) | (checkWt(2) << 2) | (checkWt(0) << 3) | (checkWt(1) << 4);
-#endif
+// Tick Inputs
+#include "inputs/gh5_neck.h"
+#include "inputs/ps2.h"
+#include "inputs/turntable.h"
+#include "inputs/usb_host_shared.h"
+#include "inputs/wii.h"
+#include "inputs/wt_neck.h"
     TICK_SHARED;
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     if (!buf) return 0;
@@ -1007,16 +925,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #else
     bool rf_or_bluetooth = false;
-    #ifdef RF_RX
-        rf_or_bluetooth = buf == &last_report_rf.lastControllerReport;
-    #endif
-    #if BLUETOOTH
-        rf_or_bluetooth = buf == &last_bt_report;
-    #endif
+#ifdef RF_RX
+    rf_or_bluetooth = buf == &last_report_rf.lastControllerReport;
+#endif
+#if BLUETOOTH
+    rf_or_bluetooth = buf == &last_bt_report;
+#endif
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
+    // GUITAR_HERO + XB1 + DRUMS or GUITAR is an invalid state that wont compile, same with turntable
+#if DEVICE_TYPE != DJ_HERO_TURNTABLE && ((DEVICE_TYPE != DRUMS && DEVICE_TYPE != GUITAR) || RHYTHM_TYPE == ROCK_BAND)
     if (output_console_type == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
@@ -1029,6 +949,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             memset(buf, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
             TICK_XBOX_ONE;
+#if !DEVICE_TYPE_IS_LIVE_GUITAR
+// Map from int16_t to xb1 (so keep it the same)
+#define COPY_AXIS_NORMAL(in, out) \
+    if (in) out = in;
+// Map from uint16_t to xb1 (so keep it the same)
+#define COPY_AXIS_TRIGGER(in, out) \
+    if (in) out = in;
+#include "inputs/usb_host.h"
+#undef COPY_AXIS_NORMAL
+#undef COPY_AXIS_TRIGGER
+#endif
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
@@ -1052,6 +983,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             updateHIDSequence = true;
         }
     }
+#endif
     if (output_console_type == WINDOWS_XBOX360 || output_console_type == STAGE_KIT) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
@@ -1062,6 +994,16 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->whammy = INT16_MIN;
 #endif
         TICK_XINPUT;
+
+// Map from int16_t to xb360
+#define COPY_AXIS_NORMAL(in, out) \
+    if (in) out = in;
+// Map from uint16_t to xb360 (to shift to get to uint8_t)
+#define COPY_AXIS_TRIGGER(in, out) \
+    if (in) out = in >> 8;
+#include "inputs/usb_host.h"
+#undef COPY_AXIS_NORMAL
+#undef COPY_AXIS_TRIGGER
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1083,6 +1025,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (!seen_ps4_console) {
             report->guide = true;
         }
+
+// Map from int16_t to ps4 (uint8_t)
+#define COPY_AXIS_NORMAL(in, out) \
+    if (in) out = (in >> 8) + 128;
+// Map from uint16_t to ps4 (uint8_t)
+#define COPY_AXIS_TRIGGER(in, out) \
+    if (in) out = in >> 8;
+#define HAS_L2_R2_BUTTON
+#include "inputs/usb_host.h"
+#undef COPY_AXIS_NORMAL
+#undef COPY_AXIS_TRIGGER
+#undef HAS_L2_R2_BUTTON
         TICK_PS4;
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
@@ -1104,6 +1058,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->leftStickY = PS3_STICK_CENTER;
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
+
+// Map from int16_t to ps3 (uint8_t)
+#define COPY_AXIS_NORMAL(in, out) \
+    if (in) out = (in >> 8) + 128;
+// Map from uint16_t to ps3 (uint8_t)
+#define COPY_AXIS_TRIGGER(in, out) \
+    if (in) out = in >> 8;
+#define HAS_L2_R2_BUTTON
+#include "inputs/usb_host.h"
+#undef HAS_L2_R2_BUTTON
+#undef COPY_AXIS_NORMAL
+#undef COPY_AXIS_TRIGGER
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
@@ -1123,6 +1089,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+
+// Map from int16_t to ps3 (uint8_t)
+#define COPY_AXIS_NORMAL(in, out) \
+    if (in) out = (in >> 8) + 128;
+// Map from uint16_t to ps3 (uint8_t)
+#define COPY_AXIS_TRIGGER(in, out) \
+    if (in) out = in >> 8;
+#define HAS_L2_R2_BUTTON
+#include "inputs/usb_host.h"
+#undef COPY_AXIS_NORMAL
+#undef COPY_AXIS_TRIGGER
+#undef HAS_L2_R2_BUTTON
         TICK_PS3;
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
@@ -1132,10 +1110,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
-            bool a = report->a;
-            bool b = report->b;
-            report->b = a;
-            report->a = b;
+            bool a = gamepad->a;
+            bool b = gamepad->b;
+            gamepad->b = a;
+            gamepad->a = b;
         }
         report_size = size = sizeof(PS3_REPORT);
     }
@@ -1509,7 +1487,7 @@ bool tick_usb(void) {
     bool ready = ready_for_next_packet();
     if (!ready) return 0;
     if (data_from_console_size) {
-        send_report_to_controller(XBOXONE, data_from_console, data_from_console_size);
+        send_report_to_controller(get_device_address_for(XBOXONE), data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
     // If we have something pending to send to the xbox one controller, send it
@@ -1576,17 +1554,15 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid, uint8_t subtype) {
     xbox_360_pid = pid;
 }
 
-void xone_controller_connected(void) {
-    if (xbox_one_state == Ready) return;
-
+void xone_controller_connected(uint8_t dev_addr) {
     GipPowerMode_t *powerMode = (GipPowerMode_t *)data_from_console;
     GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
     powerMode->subcommand = 0x00;
-    send_report_to_controller(XBOXONE, data_from_console, sizeof(GipPowerMode_t));
+    send_report_to_controller(dev_addr, data_from_console, sizeof(GipPowerMode_t));
 }
 
-void ps4_controller_connected(uint16_t vid, uint16_t pid) {
-    if (vid == SONY_DS_VID && (pid == PS4_DS_PID_1 || pid == PS4_DS_PID_2 || pid == PS4_DS_PID_3)) {
+void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
+    if (vid == SONY_VID && (pid == PS4_DS_PID_1 || pid == PS4_DS_PID_2 || pid == PS4_DS_PID_3)) {
         ps4_output_report report = {
             report_id : 0x05,
             valid_flag0 : 0xFF,
@@ -1594,12 +1570,12 @@ void ps4_controller_connected(uint16_t vid, uint16_t pid) {
             lightbar_green : 0x00,
             lightbar_blue : 0xFF
         };
-        send_report_to_controller(PS4, (uint8_t *)&report, sizeof(report));
+        send_report_to_controller(dev_addr, (uint8_t *)&report, sizeof(report));
     }
     auth_ps4_controller_found = true;
 }
 
-void controller_disconnected(void) {
+void ps4_controller_disconnected(void) {
     auth_ps4_controller_found = false;
 }
 
@@ -1608,3 +1584,83 @@ void set_console_type(uint8_t new_console_type) {
     consoleType = new_console_type;
     reset_usb();
 }
+
+#ifdef USB_HOST_STACK
+USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
+    USB_Device_Type_t type = {0, GAMEPAD};
+    switch (vid) {
+        case SONY_VID:
+            switch (pid) {
+                case SONY_DS3_PID:
+                    type.console_type = PS3;
+                    break;
+                case PS4_DS_PID_1:
+                case PS4_DS_PID_2:
+                case PS4_DS_PID_3:
+                    type.console_type = PS3;
+                    break;
+            }
+            break;
+        case REDOCTANE_VID:
+            switch (pid) {
+                case PS3_GH_GUITAR_PID:
+                    type.console_type = PS3;
+                    type.sub_type = GUITAR;
+                    type.rhythm_type = GUITAR_HERO;
+                    break;
+                case PS3_GH_DRUM_PID:
+                    type.console_type = PS3;
+                    type.sub_type = DRUMS;
+                    type.rhythm_type = GUITAR_HERO;
+                    break;
+                case PS3_RB_GUITAR_PID:
+                    type.console_type = PS3;
+                    type.sub_type = GUITAR;
+                    type.rhythm_type = ROCK_BAND;
+                    break;
+                case PS3_RB_DRUM_PID:
+                    type.console_type = PS3;
+                    type.sub_type = DRUMS;
+                    type.rhythm_type = ROCK_BAND;
+                    break;
+                case PS3_DJ_TURNTABLE_PID:
+                    type.console_type = PS3;
+                    type.sub_type = DJ_HERO_TURNTABLE;
+                    break;
+                case PS3WIIU_GHLIVE_DONGLE_PID:
+                    type.console_type = PS3;
+                    type.sub_type = LIVE_GUITAR;
+                    break;
+            }
+
+        case WII_RB_VID:
+            // Polled the same as PS3, so treat them as PS3 instruments
+            if (pid == WII_RB_GUITAR_PID) {
+                type.console_type = PS3;
+                type.sub_type = GUITAR;
+            } else if (pid == WII_RB_DRUM_PID) {
+                type.console_type = PS3;
+                type.sub_type = DRUMS;
+            }
+            break;
+
+        case XBOX_ONE_RB_VID:
+            if (pid == XBOX_ONE_RB_GUITAR_PID) {
+                type.console_type = XBOXONE;
+                type.sub_type = GUITAR;
+            } else if (pid == XBOX_ONE_RB_DRUM_PID) {
+                type.console_type = XBOXONE;
+                type.sub_type = DRUMS;
+            }
+            break;
+
+        case XBOX_ONE_GHLIVE_DONGLE_VID:
+            if (pid == XBOX_ONE_GHLIVE_DONGLE_PID) {
+                type.console_type = XBOXONE;
+                type.sub_type = LIVE_GUITAR;
+            }
+            break;
+    }
+    return type;
+}
+#endif

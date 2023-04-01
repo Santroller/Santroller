@@ -497,21 +497,15 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            bool dpadUp : 1;
-            bool dpadDown : 1;
-            bool dpadLeft : 1;
-            bool dpadRight : 1;
-        };
-        uint8_t dpad : 4;
-    };
+    bool dpadUp : 1;
+    bool dpadDown : 1;
+    bool dpadLeft : 1;
+    bool dpadRight : 1;
     uint8_t : 4;
-
-    uint8_t tilt_pc;
-    uint8_t strumBar;
-    uint8_t unused2;
-    uint8_t whammy;
+    uint8_t tilt_pc; // leftStickX
+    uint8_t strumBar; // leftStickY
+    uint8_t unused2; // rightStickX
+    uint8_t whammy; // rightStickY
 
     uint8_t unused3[12];
 

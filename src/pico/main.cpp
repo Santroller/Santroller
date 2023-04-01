@@ -24,7 +24,6 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
@@ -39,6 +38,17 @@ uint8_t x360_dev_addr = 0;
 uint8_t ps4_dev_addr = 0;
 bool connected = false;
 
+#ifdef INPUT_USB_HOST
+uint8_t total_usb_host_devices = 0;
+typedef struct {
+    USB_Device_Type_t type;
+    USB_LastReport_Data_t report;
+    bool received_new = false;
+    uint8_t report_length;
+} Usb_Host_Device_t;
+
+Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
+#endif
 typedef struct {
     uint8_t pin_dp;
     uint8_t pio_tx_num;
@@ -91,17 +101,19 @@ void setup() {
     btstack_main();
 #endif
 }
-void send_report_to_controller(uint8_t deviceType, uint8_t *report, uint8_t len) {
-    uint8_t dev_addr = 0;
+uint8_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == XBOXONE) {
-        dev_addr = xone_dev_addr;
+        return xone_dev_addr;
     }
     if (deviceType == WINDOWS_XBOX360) {
-        dev_addr = x360_dev_addr;
+        return x360_dev_addr;
     }
     if (deviceType == PS4) {
-        dev_addr = ps4_dev_addr;
+        return ps4_dev_addr;
     }
+    return 0;
+}
+void send_report_to_controller(uint8_t dev_addr, uint8_t *report, uint8_t len) {
     if (dev_addr && tuh_xinput_mounted(dev_addr, 0)) {
         tuh_xinput_send_report(dev_addr, 0, report, len);
     }
@@ -110,43 +122,80 @@ void tud_mount_cb(void) {
     device_reset();
     connected = true;
 }
+#ifdef INPUT_USB_HOST
+uint8_t get_usb_host_device_count() {
+    return total_usb_host_devices;
+}
+#endif
+
+USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
+    return usb_host_devices[id].type;
+}
+
+void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
+    usb_host_devices[id].received_new = false;
+    memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);
+}
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType, uint8_t subtype) {
-    printf("Detected controller: %d\r\n", controllerType);
+#ifdef USB_HOST_STACK
+    printf("Detected controller: %d (%d) on %d\r\n", controllerType, subtype, dev_addr);
+    uint16_t host_vid = 0;
+    uint16_t host_pid = 0;
+    tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
+    USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
+    type.dev_addr = dev_addr;
     if (controllerType == WINDOWS_XBOX360) {
-        x360_dev_addr = dev_addr;
-        uint16_t host_vid = 0;
-        uint16_t host_pid = 0;
-        tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
-        xinput_controller_connected(host_vid, host_pid, subtype);
+        if (subtype) {
+            type.console_type = controllerType;
+            type.sub_type = subtype;
+            x360_dev_addr = dev_addr;
+            xinput_controller_connected(host_vid, host_pid, subtype);
+            usb_host_devices[total_usb_host_devices].type = type;
+            total_usb_host_devices++;
+        }
     } else if (controllerType == XBOXONE) {
         xone_dev_addr = dev_addr;
-        xone_controller_connected();
+        xone_controller_connected(dev_addr);
+        usb_host_devices[total_usb_host_devices].type = type;
+        total_usb_host_devices++;
+
     } else if (controllerType == UNKNOWN) {
-        uint16_t host_vid = 0;
-        uint16_t host_pid = 0;
-        tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
         // Look for a PS4 controller, just attempt to retrieve auth data from it and if that succeeds then its a ps4 controller.
-        if (!ps4_dev_addr) {
-            ps4_dev_addr = dev_addr;
-            if (!(host_vid == SONY_DS_VID && (host_pid == PS4_DS_PID_1 || host_pid == PS4_DS_PID_2 || host_pid == PS4_DS_PID_3))) {
-                uint8_t ret = transfer_with_usb_controller(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, 0x0303, 0, 48, buf);
-                if (ret != 0x30) {
-                    ps4_dev_addr = 0;
-                    return;
-                }
+        if (type.console_type == 0) {
+            uint8_t ret = transfer_with_usb_controller(get_device_address_for(PS4), (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, 0x0303, 0, 48, buf);
+            if (ret != 0x30) {
+                ps4_dev_addr = 0;
+                return;
             }
+            type.console_type = PS4;
+        }
+
+        if (type.console_type == PS4 && !ps4_dev_addr) {
+            ps4_dev_addr = dev_addr;
+
             printf("Found PS4 controller\r\n");
-            ps4_controller_connected(host_vid, host_pid);
+            ps4_controller_connected(dev_addr, host_vid, host_pid);
+        }
+        if (type.console_type) {
+            usb_host_devices[total_usb_host_devices].type = type;
         }
     }
+#endif
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
-    xone_dev_addr = 0;
-    x360_dev_addr = 0;
-    ps4_dev_addr = 0;
-    controller_disconnected();
+    if (xone_dev_addr == dev_addr) {
+        xone_dev_addr = 0;
+    }
+    if (x360_dev_addr == dev_addr) {
+        x360_dev_addr = 0;
+    }
+    if (ps4_dev_addr == dev_addr) {
+        ps4_dev_addr = 0;
+        ps4_controller_disconnected();
+    }
+    total_usb_host_devices = 0;
 }
 
 uint8_t const *tud_descriptor_device_cb(void) {
@@ -176,7 +225,11 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
     receive_report_from_controller(report, len);
 }
 
-uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
+uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
+    if (!dev_addr) {
+        // Device is not connected yet!
+        return 0;
+    }
     tusb_control_request_t setup = {
         bmRequestType : requestType,
         bRequest : request,
@@ -185,17 +238,7 @@ uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t request
         wLength : wLength
     };
     tuh_xfer_t xfer = {};
-    if (device == WINDOWS_XBOX360) {
-        xfer.daddr = x360_dev_addr;
-    } else if (device == PS4) {
-        xfer.daddr = ps4_dev_addr;
-    } else if (device == XBOXONE) {
-        xfer.daddr = xone_dev_addr;
-    }
-    if (!xfer.daddr) {
-        // Device is not connected yet!
-        return 0;
-    }
+    xfer.daddr = dev_addr;
     xfer.ep_addr = 0;
     xfer.setup = &setup;
     xfer.buffer = buffer;

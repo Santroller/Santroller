@@ -7,6 +7,7 @@
 #define GIP_CMD_RUMBLE 0x09
 #define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
+#define GHL_HID_OUTPUT 0x22
 #define GIP_VKEY_LEFT_WIN 0x5b
 typedef struct
 {
@@ -135,6 +136,13 @@ typedef struct
     GipHeader_t Header;
     PS3GHLGuitar_Data_t report;
 } __attribute__((packed)) XboxOneGHLGuitar_Data_t;
+
+typedef struct
+{
+    GipHeader_t Header;
+    uint8_t sub_command;
+    uint8_t data[7];
+} __attribute__((packed)) XboxOneGHLGuitar_Output_t;
 
 typedef struct
 {

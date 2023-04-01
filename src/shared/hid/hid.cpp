@@ -16,7 +16,6 @@
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
-const PROGMEM uint8_t version[] = {VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION};
 uint8_t xbox_players[] = {
     0,  // 0x00	 All off
     0,  // 0x01	 All blinking
@@ -122,7 +121,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE == LIVE_GUITAR
                 if (id == 0x22) {
                     uint8_t sub_id = data[1];
-                    if (sub_id == PS3_LED_ID) {
+                    if (sub_id == PS3_LED_RUMBLE_ID) {
                         uint8_t player = (data[3] >> 2);
                         handle_player_leds(player);
                     } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
@@ -194,10 +193,6 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_BOARD:
             memcpy_P(response_buffer, board, sizeof(board));
             return sizeof(board);
-        case COMMAND_READ_VERSION: {
-            memcpy_P(response_buffer, version, sizeof(version));
-            return sizeof(version);
-        }
         case COMMAND_READ_F_CPU:
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);

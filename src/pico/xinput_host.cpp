@@ -205,7 +205,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         return true;
     }
 
-
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
     if (desc_itf->bInterfaceSubClass == 0x5D &&
         (desc_itf->bInterfaceProtocol == 0x01 ||
@@ -234,7 +233,9 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = WINDOWS_XBOX360;
-        p_xinput->subtype = x_desc->subtype;
+        if (desc_itf->bInterfaceProtocol == 0x01) {
+            p_xinput->subtype = x_desc->subtype;
+        }
         _xinputh_dev->inst_count++;
         return true;
 

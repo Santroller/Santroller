@@ -627,6 +627,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }
+        // Fakemote sends this, so we know to jump to PS3 mode
         if (consoleType == UNIVERSAL && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
             consoleType = PS3;
             reset_usb();
@@ -667,6 +668,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+        // pademu sends this, so we know to jump to PS3 mode
+        if (consoleType == UNIVERSAL && wLength == 0x04) {
+            consoleType = PS3;
+            reset_usb();
+        }
         return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {

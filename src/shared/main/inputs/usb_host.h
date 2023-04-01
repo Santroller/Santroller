@@ -1,5 +1,5 @@
-// TODO: before calling COPY_AXIS_NORMAL, change the value to uint16_t
-// TODO: before calling COPY_AXIS_TRIGGER, change the value to int16_t
+// Manually map every instrument
+// By defining a bunch of macros, we can reuse this for each console output type
 #define COPY_NORMAL_PS3(in, out) COPY_AXIS_NORMAL(((in + 128) << 8), out)
 #define COPY_TRIGGER_PS3_XINPUT(in, out) COPY_AXIS_TRIGGER(in << 8, out)
 #ifdef INPUT_USB_HOST

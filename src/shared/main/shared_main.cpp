@@ -50,6 +50,8 @@ USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
 USB_LastReport_Data_t last_report_rf;
 USB_LastReport_Data_t temp_report_usb_host;
+uint8_t receive_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"};
+uint8_t transmit_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"};
 long initialWt[5] = {0};
 uint8_t rawWt;
 bool auth_ps4_controller_found = false;
@@ -85,7 +87,6 @@ RF24 radio(RADIO_CE, RADIO_CSN);
 uint8_t rf_data[32];
 #endif
 #ifdef RF_RX
-uint64_t addresses[RF_COUNT] = RF_ADDRESSES;
 RfInputPacket_t last_rf_inputs[RF_COUNT];
 #endif
 typedef struct {
@@ -160,24 +161,24 @@ void init_main(void) {
 #endif
 #ifdef RF
     rf_initialised = radio.begin();
-    radio.setPALevel(RF24_PA_LOW);
+    radio.setPALevel(RF_POWER_LEVEL);
     radio.enableDynamicPayloads();
     radio.enableAckPayload();
 #endif
 #ifdef RF_TX
-    radio.openWritingPipe((uint64_t)TRANSMIT_RADIO_ID);  // always uses pipe 0
+    radio.openWritingPipe(receive_addresses[RF_RECEIVER_ID]);  // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
-    radio.openReadingPipe(1, (uint64_t)DEST_RADIO_ID);
+    radio.openReadingPipe(1, transmit_addresses[RF_CHANNEL]);
     radio.stopListening();
     send_rf_console_type();
 #endif
 #ifdef RF_RX
-    radio.openWritingPipe((uint64_t)DEST_RADIO_ID);  // always uses pipe 0
+    radio.openWritingPipe(transmit_addresses[RF_CHANNEL]);  // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
     for (int i = 0; i < RF_COUNT; i++) {
-        radio.openReadingPipe(i + 1, addresses[i]);
+        radio.openReadingPipe(i + 1, receive_addresses[i]);
     }
     radio.startListening();
 #endif

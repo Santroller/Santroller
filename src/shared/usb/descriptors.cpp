@@ -628,6 +628,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }
+        if (consoleType == UNIVERSAL && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
+            consoleType = PS3;
+            reset_usb();
+        }
         if (consoleType == PS3 && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
             consoleType = REAL_PS3;
             reset_usb();
@@ -645,7 +649,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_PAGE_SIZE: {
-                    return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
+                    memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
+                    return sizeof(ps4_pagesize_report);
+                    // return transfer_with_usb_controller(PS4, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
             }
         }
@@ -741,9 +747,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = xbox_360_vid;
                 dev->idProduct = xbox_360_pid;
             } else if (consoleType == PS4) {
-                // Even for gamepads, the GHL ids work just fine!
+#if DEVICE_TYPE_IS_LIVE_GUITAR
                 dev->idVendor = SONY_VID;
                 dev->idProduct = PS4_GHLIVE_DONGLE_PID;
+#else
+                dev->idVendor = PS4_VID;
+                dev->idProduct = PS4_PID;
+#endif
             }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {
@@ -753,7 +763,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #endif
 #ifdef PS3_TYPE
             else if (consoleType == PS3) {
-                dev->idVendor = SONY_DS_VID;
+                dev->idVendor = SONY_VID;
                 dev->idProduct = PS3_TYPE;
             }
 #else

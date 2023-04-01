@@ -130,11 +130,8 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         if (!ps4_dev_addr) {
             ps4_dev_addr = dev_addr;
             if (!(host_vid == SONY_DS_VID && (host_pid == PS4_DS_PID_1 || host_pid == PS4_DS_PID_2 || host_pid == PS4_DS_PID_3))) {
-                printf("Checking for PS4 controller\r\n");
                 uint8_t ret = transfer_with_usb_controller(PS4, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, 0x0303, 0, 48, buf);
-                printf("Ret: %02x\r\n", ret);
                 if (ret != 0x30) {
-                    printf("Did not find PS4 controller\r\n");
                     ps4_dev_addr = 0;
                     return;
                 }

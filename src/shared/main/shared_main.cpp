@@ -883,7 +883,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef INPUT_WII_TAP
         lastTapWii = (wiiData[2] & 0x1f);
         // GH3 guitars set this bit, while WT and GH5 guitars do not
-        if (wiiData[0] & (1 << 7) == 0) {
+        if ((wiiData[0] & (1 << 7)) != 0) {
             lastTapWii = 0;
         }
         if (lastTapWii == 0x0f) {

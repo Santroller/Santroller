@@ -159,19 +159,22 @@ void xinputh_close(uint8_t dev_addr) {
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
+
+    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
+    xinputh_interface_t *p_xinput = NULL;
+    for (uint8_t i = 0; i < CFG_TUH_XINPUT; i++) {
+        xinputh_interface_t *hid_itf = get_instance(dev_addr, i);
+        if (hid_itf->ep_in == 0 && hid_itf->ep_out == 0) {
+            p_xinput = hid_itf;
+            break;
+        }
+    }
+    TU_VERIFY(p_xinput, 0);
+    uint16_t drv_len = sizeof(tusb_desc_interface_t) +
+                       (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
     // Support standard HID devices
     if (TUSB_CLASS_HID == desc_itf->bInterfaceClass) {
         TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
-        uint16_t drv_len = sizeof(tusb_desc_interface_t) +
-                           (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
-        xinputh_interface_t *p_xinput = NULL;
-        for (uint8_t i = 0; i < CFG_TUH_XINPUT; i++) {
-            if (_xinputh_dev->instances[i].ep_in == 0 && _xinputh_dev->instances[i].ep_out == 0) {
-                p_xinput = &_xinputh_dev->instances[i];
-                break;
-            }
-        }
-        TU_VERIFY(p_xinput, 0);
 
         uint8_t const *p_desc = (uint8_t const *)desc_itf;
         // Xinput reserved endpoint
@@ -201,19 +204,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         _xinputh_dev->inst_count++;
         return true;
     }
-    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, 0);
-    uint16_t drv_len = sizeof(tusb_desc_interface_t) +
-                       (desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
 
-    // Find available interface
-    xinputh_interface_t *p_xinput = NULL;
-    for (uint8_t i = 0; i < CFG_TUH_XINPUT; i++) {
-        if (_xinputh_dev->instances[i].ep_in == 0 && _xinputh_dev->instances[i].ep_out == 0) {
-            p_xinput = &_xinputh_dev->instances[i];
-            break;
-        }
-    }
-    TU_VERIFY(p_xinput, 0);
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
     if (desc_itf->bInterfaceSubClass == 0x5D &&
@@ -307,7 +298,6 @@ bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num) {
 
 static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance) {
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
-
     // enumeration is complete
     tuh_xinput_mount_cb(dev_addr, instance, hid_itf->type, hid_itf->subtype);
 

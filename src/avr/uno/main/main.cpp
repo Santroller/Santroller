@@ -98,9 +98,6 @@ void loop() {
             // 8u2/16u2 wants to know the console type, so return that
             dt->data[0] = consoleType;
             header->len = 1;
-#ifdef RF_RX
-            send_rf_console_type();
-#endif
             break;
         default:
             // unknown packet, do nothing

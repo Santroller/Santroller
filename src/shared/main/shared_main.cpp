@@ -336,7 +336,8 @@ uint8_t keyboard_report = 0;
 #if defined(RF_RX) || BLUETOOTH
 // When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
-    uint8_t dpad = report->dpad > RIGHT ? 0 : dpad_bindings_reverse[report->dpad];
+    PS3Dpad_Data_t* dpad_report=(PS3Dpad_Data_t*)report;
+    uint8_t dpad = dpad_report->dpad > sizeof(dpad_bindings_reverse) ? 0 : dpad_bindings_reverse[dpad_report->dpad];
     bool up = dpad & UP;
     bool down = dpad & DOWN;
     bool left = dpad & LEFT;
@@ -436,8 +437,9 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 
         out->guide |= report->guide;
         out->capture |= report->capture;
-        if (report->dpad) {
-            out->dpad = report->dpad;
+        if (dpad) {
+            PS4Dpad_Data_t* out_dpad_report = (PS4Dpad_Data_t*)buf;
+            out_dpad_report->dpad = dpad_report->dpad;
         }
 #if DEVICE_TYPE_IS_LIVE_GUITAR
         if (report->tilt_pc != PS3_STICK_CENTER) {
@@ -681,8 +683,10 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 
         out->guide = report->guide;
         out->capture = report->capture;
-        if (report->dpad) {
-            out->dpad = report->dpad;
+        
+        if (dpad) {
+            PS3Dpad_Data_t* out_dpad_report = (PS3Dpad_Data_t*)buf;
+            out_dpad_report->dpad = dpad_report->dpad;
         }
 #if DEVICE_TYPE_IS_GAMEPAD
         if (report->leftStickX != PS3_STICK_CENTER) {
@@ -1416,7 +1420,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
                 if (updated) {
                     for (int dev = 0; dev < RF_COUNT; dev++) {
-                        convert_ps3_to_type(buf, &last_rf_inputs[dev].lastControllerReport, consoleType);
+                        convert_ps3_to_type((uint8_t*)buf, &last_rf_inputs[dev].lastControllerReport, consoleType);
                     }
                 }
                 if (report->guide != lastXboxOneGuide) {

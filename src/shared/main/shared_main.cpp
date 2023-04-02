@@ -50,8 +50,8 @@ USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
 USB_LastReport_Data_t last_report_rf;
 USB_LastReport_Data_t temp_report_usb_host;
-uint8_t receive_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"};
-uint8_t transmit_addresses[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"};
+uint8_t address_tx_to_rx[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"};
+uint8_t address_rx_to_tx[][6] = {"1Tode", "2Tode", "3Tode", "4Tode", "5Tode", "6Tode"};
 long initialWt[5] = {0};
 uint8_t rawWt;
 bool auth_ps4_controller_found = false;
@@ -166,19 +166,20 @@ void init_main(void) {
     radio.enableAckPayload();
 #endif
 #ifdef RF_TX
-    radio.openWritingPipe(receive_addresses[RF_DEVICE_ID]);  // always uses pipe 0
+    // TX Writes to the 
+    radio.openWritingPipe(address_tx_to_rx[RF_DEVICE_ID - 1]);  // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
-    radio.openReadingPipe(1, transmit_addresses[RF_CHANNEL]);
+    radio.openReadingPipe(1, address_rx_to_tx[RF_CHANNEL - 1]);
     radio.stopListening();
     send_rf_console_type();
 #endif
 #ifdef RF_RX
-    radio.openWritingPipe(transmit_addresses[RF_CHANNEL]);  // always uses pipe 0
+    radio.openWritingPipe(address_rx_to_tx[RF_CHANNEL - 1]);  // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
     for (int i = 0; i < RF_COUNT; i++) {
-        radio.openReadingPipe(i + 1, receive_addresses[i]);
+        radio.openReadingPipe(i + 1, address_tx_to_rx[i]);
     }
     radio.startListening();
 #endif

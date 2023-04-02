@@ -23,7 +23,7 @@ import os
 
 REBOOT = 48
 BOOTLOADER = 49
-BOOTLOADER_SERIAL = 50
+BOOTLOADER_SERIAL = 68
 
 
 def launch_dfu():

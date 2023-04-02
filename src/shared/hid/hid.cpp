@@ -54,7 +54,6 @@ void handle_player_leds(uint8_t player) {
     radio.writeAckPayload(1, &packet, sizeof(packet));
 }
 void handle_lightbar_leds(uint8_t r, uint8_t g, uint8_t b) {
-
     RfPlayerLed_t packet = {
         AckPlayerLed,
         r};
@@ -135,12 +134,12 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 }
             }
         } else {
-            #if DEVICE_TYPE == STAGE_KIT
-                if (passthrough_stage_kit) {
-                    data_from_console_size = len;
-                    memcpy(data_from_console, data, len);
-                }
-            #endif
+#if DEVICE_TYPE == STAGE_KIT
+            if (passthrough_stage_kit) {
+                data_from_console_size = len;
+                memcpy(data_from_console, data, len);
+            }
+#endif
             while (len) {
                 uint8_t size = data[1];
                 len -= size;
@@ -172,7 +171,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             uint8_t euphoria_on = data[2] * 0xFF;
             handle_rumble(euphoria_on, euphoria_on);
 #endif
-        } 
+        }
     }
 }
 long millis_since_command = 0;
@@ -196,14 +195,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_F_CPU:
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);
-        
-        case COMMAND_READ_RF_INIT:
-            memcpy(response_buffer, &rf_initialised, sizeof(rf_initialised));
-            return sizeof(rf_initialised);
-        
-        case COMMAND_READ_RF_CONNECTED:
-            memcpy(response_buffer, &rf_connected, sizeof(rf_connected));
-            return sizeof(rf_connected);
+
+        case COMMAND_READ_RF:
+            response_buffer[0] = rf_connected;
+            response_buffer[1] = rf_initialised;
+            return 2;
 
         case COMMAND_GET_EXTENSION_WII:
             if (!lastWiiWasSuccessful) {

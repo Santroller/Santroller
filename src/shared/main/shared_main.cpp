@@ -166,7 +166,7 @@ void init_main(void) {
     radio.enableAckPayload();
 #endif
 #ifdef RF_TX
-    radio.openWritingPipe(receive_addresses[RF_RECEIVER_ID]);  // always uses pipe 0
+    radio.openWritingPipe(receive_addresses[RF_DEVICE_ID]);  // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
     radio.openReadingPipe(1, transmit_addresses[RF_CHANNEL]);

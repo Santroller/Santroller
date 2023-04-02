@@ -1687,9 +1687,16 @@ void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
         ps4_output_report report = {
             report_id : 0x05,
             valid_flag0 : 0xFF,
+            valid_flag1 : 0x00,
+            reserved1 : 0x00,
+            motor_right : 0x00,
+            motor_left : 0x00,
             lightbar_red : 0x00,
             lightbar_green : 0x00,
-            lightbar_blue : 0xFF
+            lightbar_blue : 0xFF,
+            lightbar_blink_on : 0,
+            lightbar_blink_off : 0,
+            reserved: {0}
         };
         send_report_to_controller(dev_addr, (uint8_t *)&report, sizeof(report));
     }

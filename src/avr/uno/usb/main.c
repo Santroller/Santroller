@@ -10,7 +10,6 @@
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include "progmem.h"
 #include <avr/power.h>
 #include <avr/wdt.h>
 
@@ -18,6 +17,7 @@
 #include "defines.h"
 #include "endpoints.h"
 #include "packets.h"
+#include "progmem.h"
 #include "serial_descriptors.h"
 #include "serial_macros.h"
 #define JUMP 0xDE00
@@ -159,6 +159,11 @@ int main(void) {
         // We don't want to jump again after the bootloader returns control flow to
         // us
         bootloaderState = 0;
+        asm volatile("jmp 0x1000");
+    }
+    if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO_USB_THEN_SERIAL)) {
+        // When the bootloader returns control flow to us, we then want to jump to serial mode
+        bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);
         asm volatile("jmp 0x1000");
     } else if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO)) {
         serial = true;

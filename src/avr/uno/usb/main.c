@@ -445,7 +445,7 @@ void EVENT_USB_Device_ControlRequest(void) {
     // Handle control requests for controller mode
     // We uses a few control requests to jump between different modes on the uno, so handle that here
     if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-        if (USB_ControlRequest.bRequest >= COMMAND_REBOOT && USB_ControlRequest.bRequest <= COMMAND_JUMP_BOOTLOADER_UNO) {
+        if (USB_ControlRequest.bRequest >= COMMAND_REBOOT && USB_ControlRequest.bRequest <= COMMAND_JUMP_BOOTLOADER_UNO_USB_THEN_SERIAL) {
             Endpoint_ClearSETUP();
             Endpoint_ClearStatusStage();
             // We cheat a little and use the commands for jumping as flags for when to jump to different modes

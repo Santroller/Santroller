@@ -29,6 +29,7 @@
 #if (CFG_TUH_ENABLED && CFG_TUH_XINPUT)
 #include "defines.h"
 #include "descriptors.h"
+#include "hid.h"
 #include "host/usbh.h"
 #include "host/usbh_classdriver.h"
 #include "xinput_host.h"
@@ -57,7 +58,6 @@ typedef struct
     uint8_t inst_count;
     xinputh_interface_t instances[CFG_TUH_XINPUT];
 } xinputh_device_t;
-
 static xinputh_device_t _xinputh_dev[CFG_TUH_DEVICE_MAX];
 
 //------------- Internal prototypes -------------//
@@ -160,7 +160,6 @@ void xinputh_close(uint8_t dev_addr) {
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
-
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
     xinputh_interface_t *p_xinput = NULL;
     for (uint8_t i = 0; i < CFG_TUH_XINPUT; i++) {
@@ -202,6 +201,35 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
 
         p_xinput->type = UNKNOWN;
+        uint8_t temp_buf[512];
+        uint8_t *current = temp_buf;
+        uint8_t len = x_desc->wDescriptorLength;
+        uint8_t last_id = 0;
+        tuh_descriptor_get_hid_report(dev_addr, p_xinput->itf_num, x_desc->bDescrType, 0, temp_buf, x_desc->wDescriptorLength, NULL, (uintptr_t)temp_buf);
+        // Seems that sometimes we miss the first byte?
+        if (!temp_buf[0]) {
+            temp_buf[0] = 0x05;
+        }
+        // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
+        while (len) {
+            // Size is first two bits
+            uint8_t size = (current[0] & 0b11) + 1;
+            uint8_t type = current[0] >> 2 & 0b11;
+            uint8_t tag = current[0] >> 4;
+            if (type == HID_REPORT_TYPE_GLOBAL && tag == HID_REPORT_TAG_GLOBAL_REPORT_ID) {
+                last_id = current[1];
+            }
+            // PS4 controllers define a feature request of 0x0303
+            // .... except the offical ones or knockoffs of it, but we can just do a vid pid lookup for those anyways
+            if (type == HID_REPORT_TYPE_MAIN && tag == HID_REPORT_TAG_MAIN_FEATURE && last_id == 0x03) {
+                p_xinput->type = PS4;
+            }
+            len -= size;
+            current += size;
+            if (!size) {
+                break;
+            }
+        }
         _xinputh_dev->inst_count++;
         return true;
     }

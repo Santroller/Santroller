@@ -17,6 +17,10 @@
 #else
 #define MOUSE_SIZE 0
 #endif
+#define HID_REPORT_TYPE_MAIN 0
+#define HID_REPORT_TYPE_GLOBAL 1
+#define HID_REPORT_TAG_GLOBAL_REPORT_ID 8
+#define HID_REPORT_TAG_MAIN_FEATURE 11
 
 // HID "Report IDs" used by xinput for 360 rumble and led
 #define XBOX_LED_ID 0x01

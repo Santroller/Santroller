@@ -14,6 +14,7 @@
 #include "device/usbd_pvt.h"
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
+#include "hidescriptorparser.h"
 #include "host/usbh_classdriver.h"
 #include "pico/bootrom.h"
 #include "pico/cyw43_arch.h"
@@ -115,11 +116,9 @@ void tud_mount_cb(void) {
     device_reset();
     connected = true;
 }
-#ifdef INPUT_USB_HOST
 uint8_t get_usb_host_device_count() {
     return total_usb_host_devices;
 }
-#endif
 
 USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
     return usb_host_devices[id].type;
@@ -153,25 +152,19 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         total_usb_host_devices++;
 
     } else if (controllerType == UNKNOWN) {
-        // Look for a PS4 controller, just attempt to retrieve auth data from it and if that succeeds then its a ps4 controller.
-        if (type.console_type == 0) {
-            uint8_t ret = transfer_with_usb_controller(get_device_address_for(PS4), (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), 1, 0x0303, 0, 48, buf);
-            if (ret != 0x30) {
-                ps4_dev_addr = 0;
-                return;
-            }
-            type.console_type = PS4;
+        if (type.console_type) {
+            usb_host_devices[total_usb_host_devices].type = type;
+            total_usb_host_devices++;
         }
-
-        if (type.console_type == PS4 && !ps4_dev_addr) {
+    } else if (controllerType == PS4) {
+        type.console_type = PS4;
+        usb_host_devices[total_usb_host_devices].type = type;
+        total_usb_host_devices++;
+        if (!ps4_dev_addr) {
             ps4_dev_addr = dev_addr;
 
             printf("Found PS4 controller\r\n");
             ps4_controller_connected(dev_addr, host_vid, host_pid);
-        }
-        if (type.console_type) {
-            usb_host_devices[total_usb_host_devices].type = type;
-            total_usb_host_devices++;
         }
     }
     printf("Total devices: %d\r\n", total_usb_host_devices);

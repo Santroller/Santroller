@@ -1145,6 +1145,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     if (output_console_type != WINDOWS_XBOX360 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
 #endif
         PS3_REPORT *report = (PS3_REPORT *)report_data;
+        if (output_console_type == UNIVERSAL) {
+            PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
+            report = (PS3_REPORT *)(universal_report->report);
+            universal_report->report_id = 1;
+        }
         memset(report, 0, sizeof(PS3_REPORT));
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report;
         gamepad->accelX = PS3_ACCEL_CENTER;
@@ -1160,7 +1165,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity =velocity_in;
+#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in;
 #else
 #define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
@@ -1227,6 +1232,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->a = b;
         }
         report_size = size = sizeof(PS3_REPORT);
+
+        if (output_console_type == UNIVERSAL) {
+            report_size += 1;
+            size += 1;
+        }
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report) {

@@ -73,6 +73,7 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
     0x09, 0x05,        // Usage (Game Pad)
     0xA1, 0x01,        // Collection (Application)
+    0x85, 0x01,        //   Report ID (1)
     0x15, 0x00,        //   Logical Minimum (0)
     0x25, 0x01,        //   Logical Maximum (1)
     0x35, 0x00,        //   Physical Minimum (0)
@@ -140,6 +141,10 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x75, 0x10,        //   Report Size (16)
     0x95, 0x04,        //   Report Count (4)
     0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x85, 0x03,        //   Report ID (3)
+    0x0A, 0x21, 0x27,  //   Usage (0x2721)
+    0x95, 0x2F,        //   Report Count (47)
+    0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0xC0,              // End Collection
 };
 

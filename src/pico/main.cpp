@@ -38,7 +38,6 @@ uint8_t x360_dev_addr = 0;
 uint8_t ps4_dev_addr = 0;
 bool connected = false;
 
-#ifdef INPUT_USB_HOST
 uint8_t total_usb_host_devices = 0;
 typedef struct {
     USB_Device_Type_t type;
@@ -47,7 +46,6 @@ typedef struct {
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
-#endif
 typedef struct {
     uint8_t pin_dp;
     uint8_t pio_tx_num;

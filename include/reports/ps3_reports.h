@@ -502,10 +502,10 @@ typedef struct
     bool dpadLeft : 1;
     bool dpadRight : 1;
     uint8_t : 4;
-    uint8_t tilt_pc; // leftStickX
-    uint8_t strumBar; // leftStickY
-    uint8_t unused2; // rightStickX
-    uint8_t whammy; // rightStickY
+    uint8_t tilt_pc;   // leftStickX
+    uint8_t strumBar;  // leftStickY
+    uint8_t unused2;   // rightStickX
+    uint8_t whammy;    // rightStickY
 
     uint8_t unused3[12];
 
@@ -514,3 +514,8 @@ typedef struct
 
     uint16_t unused4[3];
 } __attribute__((packed)) PS3GHLGuitar_Data_t;
+
+typedef struct {
+    uint8_t report_id;
+    uint8_t report[];
+} __attribute__((packed)) PS3Universal_Data_t;

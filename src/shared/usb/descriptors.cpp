@@ -509,6 +509,9 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_GET_INTERFACE) {
         return true;
     }
+    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_GET_STATUS) {
+        return true;
+    }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_SET_INTERFACE) {
         return true;
     }
@@ -636,25 +639,37 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = REAL_PS3;
             reset_usb();
         }
-#if USB_HOST_STACK
+        if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
+#if DEVICE_TYPE_IS_INSTRUMENT && DEVICE_TYPE != LIVE_GUITAR
+            consoleType = PS3;
+            printf("PS4 (PS3 fallback)\r\n");
+            reset_usb();
+#else
+            consoleType = PS4;
+            printf("PS4\r\n");
+            reset_usb();
+#endif
+        }
         if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             switch (wValue) {
                 case 0x0303:
                     memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
                     return sizeof(ps4_feature_config);
+
+#if USB_HOST_STACK
                 case GET_RESPONSE: {
                     return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_STATUS: {
                     return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
+#endif
                 case GET_AUTH_PAGE_SIZE: {
                     memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
                     return sizeof(ps4_pagesize_report);
                 }
             }
         }
-#endif
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
             return tick_inputs(requestBuffer, NULL, consoleType);
         }

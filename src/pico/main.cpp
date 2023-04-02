@@ -107,6 +107,7 @@ uint8_t get_device_address_for(uint8_t deviceType) {
     }
     return 0;
 }
+
 void send_report_to_controller(uint8_t dev_addr, uint8_t *report, uint8_t len) {
     if (dev_addr && tuh_xinput_mounted(dev_addr, 0)) {
         tuh_xinput_send_report(dev_addr, 0, report, len);

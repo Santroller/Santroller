@@ -211,6 +211,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             temp_buf[0] = 0x05;
         }
         // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
+        // TODO: if at some point we want to support hid controllers, we can parse out the report more here, and actually work out a mapping
         while (len) {
             // Size is first two bits
             uint8_t size = (current[0] & 0b11) + 1;
@@ -220,7 +221,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
                 last_id = current[1];
             }
             // PS4 controllers define a feature request of 0x0303
-            // .... except the offical ones or knockoffs of it, but we can just do a vid pid lookup for those anyways
+            // .... except the DS4 or knockoffs of it, but we end up doing a vid pid lookup for those anyways
             if (type == HID_REPORT_TYPE_MAIN && tag == HID_REPORT_TAG_MAIN_FEATURE && last_id == 0x03) {
                 p_xinput->type = PS4;
             }

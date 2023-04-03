@@ -162,8 +162,7 @@ void init_main(void) {
     rf_initialised = radio.begin();
     radio.setChannel(RF_CHANNEL);
     radio.setPALevel(RF_POWER_LEVEL);
-    // TODO: probably make this configurable
-    radio.setDataRate(RF24_2MBPS);
+    radio.setDataRate(RF_DATA_RATE);
     radio.enableAckPayload();
 #endif
 #ifdef RF_TX

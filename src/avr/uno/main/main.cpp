@@ -49,7 +49,7 @@ void setup() {
     init_main();
 }
 bool ready_for_next_packet() {
-    return true;
+    return ready;
 }
 void send_report_to_pc(const void* report, uint8_t len) {
     // Write the controller input data
@@ -58,7 +58,11 @@ void send_report_to_pc(const void* report, uint8_t len) {
 }
 void loop() {
     // Wait for a packet from the 8u2/16u2.
-    if (!ready) return;
+    // If we didnt get one, then tick anyways so that we do the ocassional tick every 5ms
+    if (!ready) {
+        tick();
+        return;
+    }
     ready = false;
     // Now handle the packet
     switch (header->id) {

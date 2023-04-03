@@ -14,9 +14,9 @@
 #include <avr/wdt.h>
 
 void setup() {
-    init_main();
     Serial.begin(57600);
     sei();
+    init_main();
     Serial.println("Santroller");
 }
 uint8_t buffer[200];

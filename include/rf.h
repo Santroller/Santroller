@@ -19,12 +19,12 @@ typedef enum {
 } TransmissionMode_t;
 
 typedef struct {
-    RFPacket_t id;
+    uint8_t packet_id;
 } RfHeartbeatPacket_t;
 
 #if DEVICE_TYPE_KEYBOARD
 typedef struct {
-    RFPacket_t packet_id;
+    uint8_t packet_id;
     union {
 #ifdef TICK_NKRO
         USB_NKRO_Data_t lastNKROReport;
@@ -36,33 +36,34 @@ typedef struct {
         USB_ConsumerControl_Data_t lastMouseReport;
 #endif
     }
-} RfInputPacket_t;
+} __attribute__((packed)) RfInputPacket_t;
 #else
 typedef struct {
-    RFPacket_t packet_id;
+    uint8_t packet_id;
+    uint8_t transmitter;
     PS3_REPORT lastControllerReport;
-} RfInputPacket_t;
+} __attribute__((packed)) RfInputPacket_t;
 #endif
 typedef struct {
-    RFPacket_t packet_id;
+    uint8_t packet_id;
     uint8_t consoleType;
-} RfConsoleTypePacket_t;
+} __attribute__((packed)) RfConsoleTypePacket_t;
 
 typedef struct {
-    RFPacket_t packet_id;
-} RfAuthLedPacket_t;
+    uint8_t packet_id;
+} __attribute__((packed)) RfAuthLedPacket_t;
 
 typedef struct {
-    RFPacket_t packet_id;
+    uint8_t packet_id;
     uint8_t player;
-} RfPlayerLed_t;
+} __attribute__((packed)) RfPlayerLed_t;
 typedef struct {
-    RFPacket_t packet_id;
+    uint8_t packet_id;
     uint8_t led;
-} RfKeyboardLed_t;
+} __attribute__((packed)) RfKeyboardLed_t;
 
 typedef struct {
-    RFPacket_t packet_id;
+    uint8_t packet_id;
     uint8_t left;
     uint8_t right;
-} RfRumbleLed_t;
+} __attribute__((packed)) RfRumbleLed_t;

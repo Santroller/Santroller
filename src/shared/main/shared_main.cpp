@@ -166,7 +166,7 @@ void init_main(void) {
     radio.enableAckPayload();
 #endif
 #ifdef RF_TX
-    // TX Writes to the 
+    // TX Writes to the
     radio.openWritingPipe(address_tx_to_rx[RF_DEVICE_ID]);  // always uses pipe 0
 
     // set the RX address of the TX node into a RX pipe
@@ -337,7 +337,7 @@ uint8_t keyboard_report = 0;
 #if defined(RF_RX) || BLUETOOTH
 // When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
-    PS3Dpad_Data_t* dpad_report=(PS3Dpad_Data_t*)report;
+    PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
     uint8_t dpad = dpad_report->dpad > sizeof(dpad_bindings_reverse) ? 0 : dpad_bindings_reverse[dpad_report->dpad];
     bool up = dpad & UP;
     bool down = dpad & DOWN;
@@ -439,7 +439,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->guide |= report->guide;
         out->capture |= report->capture;
         if (dpad) {
-            PS4Dpad_Data_t* out_dpad_report = (PS4Dpad_Data_t*)buf;
+            PS4Dpad_Data_t *out_dpad_report = (PS4Dpad_Data_t *)buf;
             out_dpad_report->dpad = dpad_report->dpad;
         }
 #if DEVICE_TYPE_IS_LIVE_GUITAR
@@ -684,9 +684,9 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 
         out->guide = report->guide;
         out->capture = report->capture;
-        
+
         if (dpad) {
-            PS3Dpad_Data_t* out_dpad_report = (PS3Dpad_Data_t*)buf;
+            PS3Dpad_Data_t *out_dpad_report = (PS3Dpad_Data_t *)buf;
             out_dpad_report->dpad = dpad_report->dpad;
         }
 #if DEVICE_TYPE_IS_GAMEPAD
@@ -1421,7 +1421,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
                 if (updated) {
                     for (int dev = 0; dev < RF_COUNT; dev++) {
-                        convert_ps3_to_type((uint8_t*)buf, &last_rf_inputs[dev].lastControllerReport, consoleType);
+                        convert_ps3_to_type((uint8_t *)buf, &last_rf_inputs[dev].lastControllerReport, consoleType);
                     }
                 }
                 if (report->guide != lastXboxOneGuide) {
@@ -1701,7 +1701,7 @@ void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
             lightbar_blue : 0xFF,
             lightbar_blink_on : 0,
             lightbar_blink_off : 0,
-            reserved: {0}
+            reserved : {0}
         };
         send_report_to_controller(dev_addr, (uint8_t *)&report, sizeof(report));
     }

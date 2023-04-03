@@ -11,6 +11,7 @@
 #include "packets.h"
 #include "rf.h"
 #include "shared_main.h"
+#include <avr/wdt.h>
 
 void setup() {
     init_main();
@@ -35,4 +36,10 @@ void loop() {
         }
     }
     tick();
+}
+void reset_usb() {
+    cli();
+    wdt_enable(WDTO_15MS);
+    for (;;) {
+    }
 }

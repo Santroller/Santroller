@@ -6,8 +6,7 @@ usb-ideas.md
 devices.md
 modules.md
 .pio
-include/config_data.h
-include/config_data_wii.h
+include/config_data*.h
 .idea
 include/kv.h
 check_ps4_auth.py

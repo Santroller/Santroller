@@ -21,6 +21,7 @@ enum SerialCommands {
     COMMAND_SET_DETECT,
     COMMAND_READ_SERIAL,
     COMMAND_READ_RF,
+    COMMAND_READ_USB_HOST,
     MAX
 };
 

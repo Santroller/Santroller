@@ -31,6 +31,7 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid);
 uint8_t get_device_address_for(uint8_t deviceType);
 #endif
 #ifdef INPUT_USB_HOST
+uint8_t read_usb_host_devices(uint8_t *buf);
 uint8_t get_usb_host_device_count();
 USB_Device_Type_t get_usb_host_device_type(uint8_t id);
 void get_usb_host_device_data(uint8_t id, uint8_t *buf);

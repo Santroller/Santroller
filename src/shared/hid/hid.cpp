@@ -13,6 +13,7 @@
 #include "rf.h"
 #include "stdint.h"
 #include "util.h"
+#include "shared_main.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -268,6 +269,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             overrideR2 = wValue > 0;
             overriddenR2 = wValue;
         }
+#ifdef INPUT_USB_HOST
+        case COMMAND_READ_USB_HOST: {
+            return read_usb_host_devices(response_buffer);
+        }
+#endif
     }
     *success = false;
     return 0;

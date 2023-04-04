@@ -105,39 +105,11 @@ static const uint8_t dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RI
 
 #ifdef INPUT_WT_NECK
 uint8_t gh5_mapping[] = {
-    0x00,
-    0x95,
-    0xCD,
-    0xB0,
-    0x1A,
-    0x19,
-    0xE6,
-    0xE5,
-    0x49,
-    0x47,
-    0x48,
-    0x46,
-    0x2F,
-    0x2D,
-    0x2E,
-    0x2C,
-    0x7F,
-    0x7B,
-    0x7D,
-    0x79,
-    0x7E,
-    0x7A,
-    0x7C,
-    0x78,
-    0x66,
-    0x62,
-    0x64,
-    0x60,
-    0x65,
-    0x61,
-    0x63,
-    0x5F,
-};
+    0x00, 0x95, 0xCD, 0xB0, 0x1A, 0x19, 0xE6,
+    0xE5, 0x49, 0x47, 0x48, 0x46, 0x2F, 0x2D,
+    0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
+    0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
+    0x65, 0x61, 0x63, 0x5F};
 bool checkWt(int pin) {
     return readWt(pin) > initialWt[pin];
 }
@@ -844,19 +816,19 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     // If we are in the "universal_report" mode, we can just copy the report and return
     if (universal_report) {
         memcpy(buf, report, sizeof(report));
-        #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
-            if (output_console_type == PS3) {
-                PS3_REPORT* report = (PS3_REPORT*)buf;
-                report->tilt = report->tilt_pc << 2;
-            }
-        #endif
-        #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-            if (output_console_type == PS3) {
-                PS3_REPORT* report = (PS3_REPORT*)buf;
-                // TODO: like the usb conversion, what do we want to use for tilt here
-                report->tilt = report->tilt_pc > 128;
-            }
-        #endif
+#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+        if (output_console_type == PS3) {
+            PS3_REPORT *report = (PS3_REPORT *)buf;
+            report->tilt = report->tilt_pc << 2;
+        }
+#endif
+#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+        if (output_console_type == PS3) {
+            PS3_REPORT *report = (PS3_REPORT *)buf;
+            // TODO: like the usb conversion, what do we want to use for tilt here
+            report->tilt = report->tilt_pc > 128;
+        }
+#endif
     }
 }
 #endif

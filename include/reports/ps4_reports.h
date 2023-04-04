@@ -97,9 +97,9 @@ typedef struct
     bool : 1;         // r2
 
     bool : 1;                 // share
-    bool pause : 1;           // pause, options
-    bool ghtv : 1;  // l3, ghtv
-    bool heroPower : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
+    bool start : 1;           // pause, options
+    bool leftThumbClick : 1;  // l3, ghtv
+    bool back : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
 
     bool guide : 1;    // ps
     bool capture : 1;  // touchpad click

@@ -487,9 +487,9 @@ typedef struct
     bool : 1;
     bool : 1;
 
-    bool heroPower : 1;  // back, heroPower
-    bool pause : 1;      // start, pause
-    bool ghtv : 1;       // leftThumbClick, ghtv
+    bool back : 1;  // back, heroPower
+    bool start : 1;      // start, pause
+    bool leftThumbClick : 1;       // leftThumbClick, ghtv
     bool : 1;
 
     bool guide : 1;    // ps

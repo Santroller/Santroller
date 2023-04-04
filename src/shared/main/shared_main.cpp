@@ -334,519 +334,530 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     bool down = dpad & DOWN;
     bool left = dpad & LEFT;
     bool right = dpad & RIGHT;
-    bool universal_report = output_console_type == UNIVERSAL || output_console_type == REAL_PS3;
-    PS3_REPORT *out = (PS3_REPORT *)buf;
-    out->whammy = report->whammy;
-    // TODO: this is all just wrong, fix it
-    // #if DEVICE_TYPE_IS_INSTRUMENT
-    //     universal_report |= output_console_type == PS3;
-    // #elif DEVICE_TYPE_IS_GAMEPAD
-    //     if (consoleType == PS3) {
-    //         PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
-    //         if (report->leftStickX != PS3_STICK_CENTER) {
-    //             out->leftStickX = report->leftStickX;
-    //         }
-    //         if (report->leftStickY != PS3_STICK_CENTER) {
-    //             out->leftStickY = report->leftStickY;
-    //         }
-    //         if (report->rightStickX != PS3_STICK_CENTER) {
-    //             out->rightStickX = report->rightStickX;
-    //         }
-    //         if (report->rightStickY != PS3_STICK_CENTER) {
-    //             out->rightStickY = report->rightStickY;
-    //         }
-    //         if (report->leftTrigger) {
-    //             out->leftTrigger = report->leftTrigger;
-    //         }
-    //         if (report->rightTrigger) {
-    //             out->rightTrigger = report->rightTrigger;
-    //         }
-    //         if (report->pressureDpadUp) {
-    //             out->pressureDpadUp = report->pressureDpadUp;
-    //         }
-    //         if (report->pressureDpadRight) {
-    //             out->pressureDpadRight = report->pressureDpadRight;
-    //         }
-    //         if (report->pressureDpadDown) {
-    //             out->pressureDpadDown = report->pressureDpadDown;
-    //         }
-    //         if (report->pressureDpadLeft) {
-    //             out->pressureDpadLeft = report->pressureDpadLeft;
-    //         }
-    //         if (report->pressureL1) {
-    //             out->pressureL1 = report->pressureL1;
-    //         }
-    //         if (report->pressureR1) {
-    //             out->pressureR1 = report->pressureR1;
-    //         }
-    //         if (report->pressureTriangle) {
-    //             out->pressureTriangle = report->pressureTriangle;
-    //         }
-    //         if (report->pressureCircle) {
-    //             out->pressureCircle = report->pressureCircle;
-    //         }
-    //         if (report->pressureCross) {
-    //             out->pressureCross = report->pressureCross;
-    //         }
-    //         if (report->pressureSquare) {
-    //             out->pressureSquare = report->pressureSquare;
-    //         }
-    //         out->dpadUp |= up;
-    //         out->dpadDown |= down;
-    //         out->dpadLeft |= left;
-    //         out->dpadRight |= right;
-    //         out->x |= report->x;
-    //         out->a |= report->a;
-    //         out->b |= report->b;
-    //         out->y |= report->y;
+    bool universal_report = output_console_type == UNIVERSAL || output_console_type == REAL_PS3 || output_console_type == PS3;
+#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
 
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    //         out->l2 |= report->l2;
-    //         out->r2 |= report->r2;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
 
-    //         out->back |= report->back;
-    //         out->start |= report->start;
-    //         out->leftThumbClick |= report->leftThumbClick;
-    //         out->rightThumbClick |= report->rightThumbClick;
+        out->back |= report->back;
+        out->start |= report->start;
 
-    //         out->guide |= report->guide;
-    //     }
-    // #endif
-    //     if (consoleType == PS4) {
-    //         PS4_REPORT *out = (PS4_REPORT *)buf;
-    //         out->x |= report->x;
-    //         out->a |= report->a;
-    //         out->b |= report->b;
-    //         out->y |= report->y;
+        out->guide |= report->guide;
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = report->tilt_pc;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+    }
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
 
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    //         out->l2 |= report->l2;
-    //         out->r2 |= report->r2;
+        out->back |= report->back;
+        out->start |= report->start;
 
-    //         out->back |= report->back;
-    //         out->start |= report->start;
-    //         out->leftThumbClick |= report->leftThumbClick;
-    //         out->rightThumbClick |= report->rightThumbClick;
+        out->guide |= report->guide;
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->slider != PS3_STICK_CENTER) {
+            out->slider = (report->slider) << 8;
+        }
+    }
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
 
-    //         out->guide |= report->guide;
-    //         out->capture |= report->capture;
-    //         if (dpad) {
-    //             PS4Dpad_Data_t *out_dpad_report = (PS4Dpad_Data_t *)buf;
-    //             out_dpad_report->dpad = dpad_report->dpad;
-    //         }
-    // #if DEVICE_TYPE_IS_LIVE_GUITAR
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             out->tilt = report->tilt_pc;
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = report->whammy;
-    //         }
-    //         if (report->strumBar != PS3_STICK_CENTER) {
-    //             out->strumBar = report->strumBar;
-    //         }
-    // #elif DEVICE_TYPE_IS_GAMEPAD
-    //         if (report->leftStickX != PS3_STICK_CENTER) {
-    //             out->leftStickX = report->leftStickX;
-    //         }
-    //         if (report->leftStickY != PS3_STICK_CENTER) {
-    //             out->leftStickY = report->leftStickY;
-    //         }
-    //         if (report->rightStickX != PS3_STICK_CENTER) {
-    //             out->rightStickX = report->rightStickX;
-    //         }
-    //         if (report->rightStickY != PS3_STICK_CENTER) {
-    //             out->rightStickY = report->rightStickY;
-    //         }
-    //         if (report->leftTrigger) {
-    //             out->leftTrigger = report->leftTrigger;
-    //         }
-    //         if (report->rightTrigger) {
-    //             out->rightTrigger = report->rightTrigger;
-    //         }
-    // #endif
-    //     }
-    //     if (consoleType == XBOXONE) {
-    //         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
-    //         out->x |= report->x;
-    //         out->a |= report->a;
-    //         out->b |= report->b;
-    //         out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
 
-    //         out->dpadUp |= up;
-    //         out->dpadDown |= down;
-    //         out->dpadLeft |= left;
-    //         out->dpadRight |= right;
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
+        out->back |= report->back;
+        out->start |= report->start;
 
-    //         out->back |= report->back;
-    //         out->start |= report->start;
-    //         out->leftThumbClick |= report->leftThumbClick;
-    //         out->rightThumbClick |= report->rightThumbClick;
+        out->guide |= report->guide;
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = report->tilt_pc;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->pickup != PS3_STICK_CENTER) {
+            out->pickup = report->pickup;
+        }
+    }
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
 
-    //         out->guide |= report->guide;
-    // #if DEVICE_TYPE_IS_GAMEPAD
-    //         if (report->leftStickX != PS3_STICK_CENTER) {
-    //             out->leftStickX = (report->leftStickX - 128) << 8;
-    //         }
-    //         if (report->leftStickY != PS3_STICK_CENTER) {
-    //             out->leftStickY = (report->leftStickY - 128) << 8;
-    //         }
-    //         if (report->rightStickX != PS3_STICK_CENTER) {
-    //             out->rightStickX = (report->rightStickX - 128) << 8;
-    //         }
-    //         if (report->rightStickY != PS3_STICK_CENTER) {
-    //             out->rightStickY = (report->rightStickY - 128) << 8;
-    //         }
-    //         if (report->leftTrigger) {
-    //             out->leftTrigger = (report->leftTrigger) << 8;
-    //         }
-    //         if (report->rightTrigger) {
-    //             out->rightTrigger = (report->rightTrigger) << 8;
-    //         }
-    // #elif DEVICE_TYPE_IS_LIVE_GUITAR
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             out->tilt = report->tilt_pc;
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = report->whammy;
-    //         }
-    //         if (report->strumBar != PS3_STICK_CENTER) {
-    //             out->strumBar = report->strumBar;
-    //         }
-    // #elif DEVICE_TYPE_IS_GUITAR
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             out->tilt = report->tilt_pc;
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = report->whammy;
-    //         }
-    //         if (report->pickup != PS3_STICK_CENTER) {
-    //             out->pickup = report->pickup;
-    //         }
-    // #elif DEVICE_TYPE_IS_DRUM
-    //         if (report->yellowVelocity) {
-    //             out->yellowVelocity = report->yellowVelocity >> 4;
-    //         }
-    //         if (report->redVelocity) {
-    //             out->redVelocity = report->redVelocity >> 4;
-    //         }
-    //         if (report->greenVelocity) {
-    //             out->greenVelocity = report->greenVelocity >> 4;
-    //         }
-    //         if (report->blueVelocity) {
-    //             out->blueVelocity = report->blueVelocity >> 4;
-    //         }
-    // #endif
-    //     }
-    //     if (consoleType == WINDOWS_XBOX360) {
-    //         XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
-    //         out->x |= report->x;
-    //         out->a |= report->a;
-    //         out->b |= report->b;
-    //         out->y |= report->y;
-    //         out->dpadUp |= up;
-    //         out->dpadDown |= down;
-    //         out->dpadLeft |= left;
-    //         out->dpadRight |= right;
+        out->back |= report->back;
+        out->start |= report->start;
 
-    //         out->back |= report->back;
-    //         out->start |= report->start;
+        out->guide |= report->guide;
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->slider != PS3_STICK_CENTER) {
+            out->slider = (report->slider) << 8;
+        }
+    }
+#elif DEVICE_TYPE == LIVE_GUITAR
+    if (output_console_type == PS4) {
+    }
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->a |= report->black1;
+        out->b |= report->black2;
+        out->y |= report->black3;
+        out->x |= report->white1;
+        out->leftShoulder = report->white2;
+        out->rightShoulder = report->white3;
 
-    //         out->guide |= report->guide;
-    // #if DEVICE_TYPE_IS_GAMEPAD
-    //         if (report->leftStickX != PS3_STICK_CENTER) {
-    //             out->leftStickX = (report->leftStickX - 128) << 8;
-    //         }
-    //         if (report->leftStickY != PS3_STICK_CENTER) {
-    //             out->leftStickY = (report->leftStickY - 128) << 8;
-    //         }
-    //         if (report->rightStickX != PS3_STICK_CENTER) {
-    //             out->rightStickX = (report->rightStickX - 128) << 8;
-    //         }
-    //         if (report->rightStickY != PS3_STICK_CENTER) {
-    //             out->rightStickY = (report->rightStickY - 128) << 8;
-    //         }
-    //         if (report->leftTrigger) {
-    //             out->leftTrigger = report->leftTrigger;
-    //         }
-    //         if (report->rightTrigger) {
-    //             out->rightTrigger = report->rightTrigger;
-    //         }
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
 
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    //         out->leftThumbClick |= report->leftThumbClick;
-    //         out->rightThumbClick |= report->rightThumbClick;
-    // #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
-    //         if (report->yellowVelocity) {
-    //             out->yellowVelocity = report->yellowVelocity;
-    //         }
-    //         if (report->redVelocity) {
-    //             out->redVelocity = report->redVelocity;
-    //         }
-    //         if (report->greenVelocity) {
-    //             out->greenVelocity = report->greenVelocity;
-    //         }
-    //         if (report->blueVelocity) {
-    //             out->blueVelocity = report->blueVelocity;
-    //         }
-    //         if (report->kickVelocity) {
-    //             out->kickVelocity = report->kickVelocity;
-    //         }
-    //         if (report->orangeVelocity) {
-    //             out->orangeVelocity = report->orangeVelocity;
-    //         }
-    // #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
-    //         if (report->yellowVelocity) {
-    //             out->yellowVelocity = -(0x7FFF - (report->yellowVelocity << 7));
-    //         }
-    //         if (report->redVelocity) {
-    //             out->redVelocity = (0x7FFF - (report->redVelocity << 7));
-    //         }
-    //         if (report->greenVelocity) {
-    //             out->greenVelocity = -(0x7FFF - (report->greenVelocity << 7));
-    //         }
-    //         if (report->blueVelocity) {
-    //             out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
-    //         }
-    //         out->padFlag = report->padFlag;
-    //         out->cymbalFlag = report->cymbalFlag;
-    // #elif DEVICE_TYPE_IS_LIVE_GUITAR
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             out->tilt = (report->tilt_pc - 128) << 8;
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = (report->whammy - 128) << 8;
-    //         }
-    //         if (report->strumBar != PS3_STICK_CENTER) {
-    //             out->strumBar = (report->strumBar - 128) << 8;
-    //         }
-    // #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             out->tilt = (report->tilt_pc - 128) << 8;
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = (report->whammy - 128) << 8;
-    //         }
-    //         if (report->slider != PS3_STICK_CENTER) {
-    //             out->slider = (report->slider) << 8;
-    //         }
-    // #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             out->tilt = (report->tilt_pc - 128) << 8;
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = (report->whammy - 128) << 8;
-    //         }
-    //         if (report->pickup != PS3_STICK_CENTER) {
-    //             out->pickup = report->pickup;
-    //         }
-    // #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+        out->back |= report->back;
+        out->start |= report->start;
 
-    //         if (report->leftTableVelocity != PS3_STICK_CENTER) {
-    //             out->leftTableVelocity = (report->leftTableVelocity - 128) << 8;
-    //         }
-    //         if (report->rightTableVelocity != PS3_STICK_CENTER) {
-    //             out->rightTableVelocity = (report->rightTableVelocity - 128) << 8;
-    //         }
-    //         if (report->effectsKnob != PS3_ACCEL_CENTER) {
-    //             out->effectsKnob = (report->effectsKnob - 128) << 8;
-    //         }
-    //         if (report->crossfader != PS3_ACCEL_CENTER) {
-    //             out->crossfader = (report->crossfader - 128) << 8;
-    //         }
-    //         out->leftBlue |= report->leftBlue;
-    //         out->leftRed |= report->leftRed;
-    //         out->leftGreen |= report->leftGreen;
-    //         out->rightBlue |= report->rightBlue;
-    //         out->rightRed |= report->rightRed;
-    //         out->rightGreen |= report->rightGreen;
-    // #endif
-    //     }
-    //     if (universal_report) {
-    //         PS3_REPORT *out = (PS3_REPORT *)buf;
-    //         out->x |= report->x;
-    //         out->a |= report->a;
-    //         out->b |= report->b;
-    //         out->y |= report->y;
+        out->guide |= report->guide;
+    }
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->black1 |= report->black1;
+        out->black2 |= report->black2;
+        out->black3 |= report->black3;
+        out->white1 |= report->white1;
+        out->white2 |= report->white2;
+        out->white3 |= report->white3;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
 
-    //         out->back |= report->back;
-    //         out->start |= report->start;
+        out->back |= report->back;
+        out->start |= report->start;
 
-    //         out->guide = report->guide;
-    //         out->capture = report->capture;
+        out->guide |= report->guide;
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->strumBar != PS3_STICK_CENTER) {
+            out->strumBar = (report->strumBar - 128) << 8;
+        }
+    }
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
 
-    //         if (dpad) {
-    //             PS3Dpad_Data_t *out_dpad_report = (PS3Dpad_Data_t *)buf;
-    //             out_dpad_report->dpad = dpad_report->dpad;
-    //         }
-    // #if DEVICE_TYPE_IS_GAMEPAD
-    //         if (report->leftStickX != PS3_STICK_CENTER) {
-    //             out->leftStickX = report->leftStickX;
-    //         }
-    //         if (report->leftStickY != PS3_STICK_CENTER) {
-    //             out->leftStickY = report->leftStickY;
-    //         }
-    //         if (report->rightStickX != PS3_STICK_CENTER) {
-    //             out->rightStickX = report->rightStickX;
-    //         }
-    //         if (report->rightStickY != PS3_STICK_CENTER) {
-    //             out->rightStickY = report->rightStickY;
-    //         }
-    //         if (report->leftTrigger) {
-    //             out->leftTrigger = report->leftTrigger;
-    //         }
-    //         if (report->rightTrigger) {
-    //             out->rightTrigger = report->rightTrigger;
-    //         }
-    //         if (report->pressureDpadUp) {
-    //             out->pressureDpadUp = report->pressureDpadUp;
-    //         }
-    //         if (report->pressureDpadRight) {
-    //             out->pressureDpadRight = report->pressureDpadRight;
-    //         }
-    //         if (report->pressureDpadDown) {
-    //             out->pressureDpadDown = report->pressureDpadDown;
-    //         }
-    //         if (report->pressureDpadLeft) {
-    //             out->pressureDpadLeft = report->pressureDpadLeft;
-    //         }
-    //         if (report->pressureL1) {
-    //             out->pressureL1 = report->pressureL1;
-    //         }
-    //         if (report->pressureR1) {
-    //             out->pressureR1 = report->pressureR1;
-    //         }
-    //         if (report->pressureTriangle) {
-    //             out->pressureTriangle = report->pressureTriangle;
-    //         }
-    //         if (report->pressureCircle) {
-    //             out->pressureCircle = report->pressureCircle;
-    //         }
-    //         if (report->pressureCross) {
-    //             out->pressureCross = report->pressureCross;
-    //         }
-    //         if (report->pressureSquare) {
-    //             out->pressureSquare = report->pressureSquare;
-    //         }
-    //         out->l2 |= report->l2;
-    //         out->r2 |= report->r2;
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    //         out->leftThumbClick |= report->leftThumbClick;
-    //         out->rightThumbClick |= report->rightThumbClick;
-    // #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
-    //         if (report->yellowVelocity) {
-    //             out->yellowVelocity = report->yellowVelocity;
-    //         }
-    //         if (report->redVelocity) {
-    //             out->redVelocity = report->redVelocity;
-    //         }
-    //         if (report->greenVelocity) {
-    //             out->greenVelocity = report->greenVelocity;
-    //         }
-    //         if (report->blueVelocity) {
-    //             out->blueVelocity = report->blueVelocity;
-    //         }
-    //         if (report->kickVelocity) {
-    //             out->kickVelocity = report->kickVelocity;
-    //         }
-    //         if (report->orangeVelocity) {
-    //             out->orangeVelocity = report->orangeVelocity;
-    //         }
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    // #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
-    //         if (report->yellowVelocity) {
-    //             out->yellowVelocity = report->yellowVelocity;
-    //         }
-    //         if (report->redVelocity) {
-    //             out->redVelocity = report->redVelocity;
-    //         }
-    //         if (report->greenVelocity) {
-    //             out->greenVelocity = report->greenVelocity;
-    //         }
-    //         if (report->blueVelocity) {
-    //             out->blueVelocity = report->blueVelocity;
-    //         }
-    //         out->padFlag = report->padFlag;
-    //         out->cymbalFlag = report->cymbalFlag;
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    // #elif DEVICE_TYPE_IS_LIVE_GUITAR
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             if (output_console_type == PS3 || output_console_type == REAL_PS3) {
-    //                 out->tilt = (PS3_ACCEL_CENTER + (report->tilt_pc - 128) - GUITAR_ONE_G);
-    //             } else {
-    //                 out->tilt_pc = report->tilt_pc;
-    //             }
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = report->whammy;
-    //         }
-    //         if (report->strumBar != PS3_STICK_CENTER) {
-    //             out->strumBar = report->strumBar;
-    //         }
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    // #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             if (output_console_type == PS3 || output_console_type == REAL_PS3) {
-    //                 out->tilt = (PS3_ACCEL_CENTER + (report->tilt_pc - 128) - GUITAR_ONE_G);
-    //             } else {
-    //                 out->tilt_pc = report->tilt_pc;
-    //             }
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = report->whammy;
-    //         }
-    //         if (report->slider != PS3_STICK_CENTER) {
-    //             out->slider = report->slider;
-    //         }
-    //         out->leftShoulder |= report->leftShoulder;
-    //         out->rightShoulder |= report->rightShoulder;
-    // #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-    //         if (report->tilt_pc != PS3_STICK_CENTER) {
-    //             // TODO: what are we actually setting tilt_pc to these days?
-    //             if (output_console_type == PS3 || output_console_type == REAL_PS3) {
-    //                 out->tilt = report->tilt_pc > 128;
-    //             } else {
-    //                 out->tilt_pc = report->tilt_pc;
-    //             }
-    //         }
-    //         if (report->whammy != PS3_STICK_CENTER) {
-    //             out->whammy = report->whammy;
-    //         }
-    //         if (report->pickup != PS3_STICK_CENTER) {
-    //             out->pickup = report->pickup;
-    //         }
-    //         out->leftShoulder |= report->leftShoulder;
-    // #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
 
-    //         if (report->leftTableVelocity != PS3_STICK_CENTER) {
-    //             out->leftTableVelocity = report->leftTableVelocity;
-    //         }
-    //         if (report->rightTableVelocity != PS3_STICK_CENTER) {
-    //             out->rightTableVelocity = report->rightTableVelocity;
-    //         }
-    //         if (report->effectsKnob != PS3_ACCEL_CENTER) {
-    //             out->effectsKnob = report->effectsKnob;
-    //         }
-    //         if (report->crossfader != PS3_ACCEL_CENTER) {
-    //             out->crossfader = report->crossfader;
-    //         }
-    //         out->leftBlue |= report->leftBlue;
-    //         out->leftRed |= report->leftRed;
-    //         out->leftGreen |= report->leftGreen;
-    //         out->rightBlue |= report->rightBlue;
-    //         out->rightRed |= report->rightRed;
-    //         out->rightGreen |= report->rightGreen;
-    //         out->tableNeutral |= report->tableNeutral;
-    // #endif
-    //     }
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity >> 4;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity >> 4;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity >> 4;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity >> 4;
+        }
+    }
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity;
+        }
+        if (report->kickVelocity) {
+            out->kickVelocity = report->kickVelocity;
+        }
+        if (report->orangeVelocity) {
+            out->orangeVelocity = report->orangeVelocity;
+        }
+    }
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity >> 4;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity >> 4;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity >> 4;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity >> 4;
+        }
+    }
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->padFlag = report->padFlag;
+        out->cymbalFlag = report->cymbalFlag;
+
+        out->guide |= report->guide;
+        if (report->yellowVelocity) {
+            out->yellowVelocity = -(0x7FFF - (report->yellowVelocity << 7));
+        }
+        if (report->redVelocity) {
+            out->redVelocity = (0x7FFF - (report->redVelocity << 7));
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = -(0x7FFF - (report->greenVelocity << 7));
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
+        }
+    }
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        if (report->leftTableVelocity != PS3_STICK_CENTER) {
+            out->leftTableVelocity = (report->leftTableVelocity - 128) << 8;
+        }
+        if (report->rightTableVelocity != PS3_STICK_CENTER) {
+            out->rightTableVelocity = (report->rightTableVelocity - 128) << 8;
+        }
+        if (report->effectsKnob != PS3_ACCEL_CENTER) {
+            out->effectsKnob = (report->effectsKnob - 128) << 8;
+        }
+        if (report->crossfader != PS3_ACCEL_CENTER) {
+            out->crossfader = (report->crossfader - 128) << 8;
+        }
+        out->leftBlue |= report->leftBlue;
+        out->leftRed |= report->leftRed;
+        out->leftGreen |= report->leftGreen;
+        out->rightBlue |= report->rightBlue;
+        out->rightRed |= report->rightRed;
+        out->rightGreen |= report->rightGreen;
+    }
+#else  // Gamepad or devices that use the same mapping as a gamepad
+    if (output_console_type == PS3) {
+        universal_report = false;
+        PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = report->leftStickX;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = report->leftStickY;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = report->rightStickX;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = report->rightStickY;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+        if (report->pressureDpadUp) {
+            out->pressureDpadUp = report->pressureDpadUp;
+        }
+        if (report->pressureDpadRight) {
+            out->pressureDpadRight = report->pressureDpadRight;
+        }
+        if (report->pressureDpadDown) {
+            out->pressureDpadDown = report->pressureDpadDown;
+        }
+        if (report->pressureDpadLeft) {
+            out->pressureDpadLeft = report->pressureDpadLeft;
+        }
+        if (report->pressureL1) {
+            out->pressureL1 = report->pressureL1;
+        }
+        if (report->pressureR1) {
+            out->pressureR1 = report->pressureR1;
+        }
+        if (report->pressureTriangle) {
+            out->pressureTriangle = report->pressureTriangle;
+        }
+        if (report->pressureCircle) {
+            out->pressureCircle = report->pressureCircle;
+        }
+        if (report->pressureCross) {
+            out->pressureCross = report->pressureCross;
+        }
+        if (report->pressureSquare) {
+            out->pressureSquare = report->pressureSquare;
+        }
+    }
+    if (output_console_type == PS4) {
+        PS4_REPORT *out = (PS4_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+        out->capture |= report->capture;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = report->leftStickX;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = report->leftStickY;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = report->rightStickX;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = report->rightStickY;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+    }
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = (report->leftStickX - 128) << 8;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = (report->leftStickY - 128) << 8;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = (report->rightStickX - 128) << 8;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = (report->rightStickY - 128) << 8;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = (report->leftTrigger) << 8;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = (report->rightTrigger) << 8;
+        }
+    }
+    if (output_console_type == WINDOWS_XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = (report->leftStickX - 128) << 8;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = (report->leftStickY - 128) << 8;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = (report->rightStickX - 128) << 8;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = (report->rightStickY - 128) << 8;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+    }
+#endif
+    // If we are in the "universal_report" mode, we can just copy the report and return
+    if (universal_report) {
+        memcpy(buf, report, sizeof(report));
+        #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+            if (output_console_type == PS3) {
+                PS3_REPORT* report = (PS3_REPORT*)buf;
+                report->tilt = report->tilt_pc << 2;
+            }
+        #endif
+        #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+            if (output_console_type == PS3) {
+                PS3_REPORT* report = (PS3_REPORT*)buf;
+                // TODO: like the usb conversion, what do we want to use for tilt here
+                report->tilt = report->tilt_pc > 128;
+            }
+        #endif
+    }
 }
 #endif
 #define COPY_BUTTON(in_button, out_button) \

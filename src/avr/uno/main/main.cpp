@@ -36,6 +36,9 @@ void reset_usb(void) {
     should_reload_usb = true;
 }
 
+// If we have been ticked by usb for new data, then this will be true
+bool received_controller_tick = false;
+
 void setup() {
     // Configure the UART for controller mode
     UBRR0 = SERIAL_2X_UBBRVAL(BAUD);
@@ -49,7 +52,7 @@ void setup() {
     init_main();
 }
 bool ready_for_next_packet() {
-    return ready;
+    return received_controller_tick;
 }
 void send_report_to_pc(const void* report, uint8_t len) {
     // Write the controller input data
@@ -72,8 +75,10 @@ void loop() {
             header->len = 0;
             break;
         case CONTROLLER_DATA_REQUEST_ID: {
+            received_controller_tick = true;
             header->len = 0;
             tick();
+            received_controller_tick = false;
             break;
         }
         case DESCRIPTOR_ID: {

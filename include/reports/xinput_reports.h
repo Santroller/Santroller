@@ -202,9 +202,9 @@ typedef struct
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
-    bool pause : 1; // start
-    bool heroPower : 1; // back
-    bool ghtv : 1; // leftThumbClick
+    bool start : 1; // start, pause
+    bool back : 1; // back, heroPower
+    bool leftThumbClick : 1; // leftThumbClick, ghtv
     bool : 1;
 
     bool white2 : 1; // leftShoulder

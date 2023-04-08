@@ -8,11 +8,12 @@ for (int i = 0; i < device_count; i++) {
     USB_Device_Type_t device_type = get_usb_host_device_type(i);
     get_usb_host_device_data(i, (uint8_t *)&temp_report_usb_host);
     void *data = &temp_report_usb_host;
-    if (device_type.console_type == XBOXONE) {
+    uint8_t console_type = device_type.console_type;
+    if (console_type == XBOXONE) {
         GipHeader_t *header = (GipHeader_t *)data;
         if (device_type.sub_type == LIVE_GUITAR && header->command == GHL_HID_REPORT) {
             // Xbox one GHL guitars actually end up using PS3 reports if you poke them.
-            device_type.console_type = PS3;
+            console_type = PS3;
             data = &((XboxOneGHLGuitar_Data_t *)data)->report;
         } else if (header->command != GIP_INPUT_REPORT) {
             // Not input data, continue
@@ -20,7 +21,7 @@ for (int i = 0; i < device_count; i++) {
         }
     }
 #if !DEVICE_TYPE_IS_INSTRUMENT
-    switch (device_type.console_type) {
+    switch (console_type) {
         case PS3: {
             if (device_type.sub_type == GAMEPAD) {
                 PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;
@@ -169,7 +170,7 @@ for (int i = 0; i < device_count; i++) {
     }
 
 #elif DEVICE_TYPE_IS_LIVE_GUITAR
-    switch (device_type.console_type) {
+    switch (console_type) {
         case PS3: {
             if (device_type.sub_type == GAMEPAD) {
                 PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;
@@ -282,7 +283,7 @@ for (int i = 0; i < device_count; i++) {
     }
     COPY_AXIS_NORMAL(strumBar, report->strumBar)
 #elif DEVICE_TYPE == GUITAR
-    switch (device_type.console_type) {
+    switch (console_type) {
         case PS3: {
             if (device_type.sub_type == GAMEPAD) {
                 PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;
@@ -472,7 +473,7 @@ for (int i = 0; i < device_count; i++) {
         }
     }
 #elif DEVICE_TYPE == DRUMS
-    switch (device_type.console_type) {
+    switch (console_type) {
         case PS3: {
             if (device_type.sub_type == GAMEPAD) {
                 PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;
@@ -597,7 +598,7 @@ for (int i = 0; i < device_count; i++) {
     }
 
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
-    switch (device_type.console_type) {
+    switch (console_type) {
         case PS3: {
             if (device_type.sub_type == GAMEPAD) {
                 PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;

@@ -91,12 +91,6 @@ void handle_keyboard_leds(uint8_t leds) {
 }
 #endif
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
-
-    // printf("Received: %d\r\n", report_id);
-    // for (int i = 0; i < len; i++) {
-    //     printf("%02x, ", data[i]);
-    // }
-    // printf("\r\n");
     if (consoleType == WINDOWS_XBOXONE && report_id == INTERRUPT_ID) {
         if (data[0] == XBOX_LED_ID) {
             consoleType = WINDOWS_XBOX360;

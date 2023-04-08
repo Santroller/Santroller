@@ -162,7 +162,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 case XINPUT_STAGE_KIT:
                     type.sub_type = STAGE_KIT;
                     break;
-                
+
                 case XINPUT_TURNTABLE:
                     type.sub_type = DJ_HERO_TURNTABLE;
                     break;
@@ -171,7 +171,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                     type.sub_type = GAMEPAD;
                     break;
             }
-            
+
             x360_dev_addr = dev_addr;
             xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
@@ -179,6 +179,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         }
     } else if (controllerType == XBOXONE) {
         xone_dev_addr = dev_addr;
+        type.console_type = XBOXONE;
         xone_controller_connected(dev_addr);
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
@@ -213,6 +214,7 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
         ps4_dev_addr = 0;
         ps4_controller_disconnected();
     }
+    // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
 }
 
@@ -245,6 +247,12 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
     }
     for (int i = 0; i < total_usb_host_devices; i++) {
         if (usb_host_devices[i].type.dev_addr == dev_addr) {
+            if (usb_host_devices[i].type.console_type == XBOXONE) {
+                GipHeader_t *header = (GipHeader_t *)report;
+                if (header->command != GHL_HID_REPORT && header->command != GIP_INPUT_REPORT) {
+                    return;
+                }
+            }
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
             return;

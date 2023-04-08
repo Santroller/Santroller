@@ -13,10 +13,10 @@ typedef struct
 {
     uint8_t command;
     uint8_t client : 4;
-    bool needsAck : 1;
-    bool internal : 1;
-    bool chunkStart : 1;
-    bool chunked : 1;
+    uint8_t needsAck : 1;
+    uint8_t internal : 1;
+    uint8_t chunkStart : 1;
+    uint8_t chunked : 1;
     uint8_t sequence;
     uint8_t length;
 } __attribute__((packed)) GipHeader_t;

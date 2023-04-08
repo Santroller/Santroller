@@ -45,7 +45,6 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     iSerialNumber : 0x03,
     bNumConfigurations : 1
 };
-
 const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
@@ -58,6 +57,171 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
             (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500)
     },
+    Interface1 : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_Device,
+        bAlternateSetting : 0x00,
+        bNumEndpoints : 2,
+        bInterfaceClass : 0xFF,
+        bInterfaceSubClass : 0x5D,
+        bInterfaceProtocol : 0x01,
+        iInterface : NO_DESCRIPTOR
+    },
+    Interface1ID : {
+        bLength : sizeof(XBOX_ID_DESCRIPTOR),
+        bDescriptorType : 0x21,
+        reserved : {XINPUT_FLAGS, 0x01},
+        subtype : SUB_TYPE,
+        reserved2 : 0x25,
+        bEndpointAddressIn : DEVICE_EPADDR_IN,
+        bMaxDataSizeIn : 0x14,
+        reserved3 : {0x03, 0x03, 0x03, 0x04, 0x13},
+        bEndpointAddressOut : DEVICE_EPADDR_OUT,
+        bMaxDataSizeOut : 0x08,
+        reserved4 : {0x03, 0x03},
+    },
+    ReportINEndpoint11 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : DEVICE_EPADDR_IN,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 1,
+    },
+    ReportOUTEndpoint12 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : DEVICE_EPADDR_OUT,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 1,
+    },
+
+    Interface2 : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_Padding,
+        bAlternateSetting : 0x00,
+        bNumEndpoints : 4,
+        bInterfaceClass : 0xFF,
+        bInterfaceSubClass : 0x5D,
+        bInterfaceProtocol : 0x03,
+        iInterface : 0
+    },
+    UnkownDescriptor2 : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_EXTRA_1, 0x40, 0x01, XINPUT_EXTRA_2,
+                         0x20, 0x16, XINPUT_EXTRA_3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
+                         XINPUT_EXTRA_4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+    ReportINEndpoint21 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_EXTRA_1,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 2,
+    },
+    ReportOUTEndpoint22 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_EXTRA_2,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 4,
+    },
+    ReportINEndpoint23 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_EXTRA_3,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 0x40,
+    },
+    ReportOUTEndpoint24 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_EXTRA_4,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 0x10,
+    },
+    Interface3 : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_Config,
+        bAlternateSetting : 0x00,
+        bNumEndpoints : 1,
+        bInterfaceClass : 0xFF,
+        bInterfaceSubClass : 0x5D,
+        bInterfaceProtocol : 0x02,
+        iInterface : 0
+    },
+    UnkownDescriptor3 : {
+        0x09, 0x21, 0x00, 0x01, 0x01, 0x22, XINPUT_EXTRA_5, 0x07, 0x00},
+    ReportINEndpoint31 : {
+        bLength : sizeof(XBOX360ConfigurationDescriptor.ReportINEndpoint31),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_EXTRA_5,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 16,
+    },
+    InterfaceSecurity : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_XBOX_Security,
+        bAlternateSetting : 0x00,
+        bNumEndpoints : 0,
+        bInterfaceClass : 0xFF,
+        bInterfaceSubClass : 0xFD,
+        bInterfaceProtocol : 0x13,
+        iInterface : 4
+    },
+    UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
+};
+const PROGMEM XBOX_360_XONE_CONFIGURATION_DESCRIPTOR XBOX360OneConfigurationDescriptor = {
+    Config : {
+        bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_CONFIGURATION,
+        wTotalLength : sizeof(XBOX_360_XONE_CONFIGURATION_DESCRIPTOR),
+        bNumInterfaces : 5,
+        bConfigurationValue : 1,
+        iConfiguration : NO_DESCRIPTOR,
+        bmAttributes :
+            (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
+        bMaxPower : USB_CONFIG_POWER_MA(500)
+    },
+    // Xbox one descriptor (must be first)
+    Interface : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_Xone_Device,
+        bAlternateSetting : 0,
+        bNumEndpoints : 2,
+        bInterfaceClass : 0xff,
+        bInterfaceSubClass : 0x47,
+        bInterfaceProtocol : 0xd0,
+        iInterface : NO_DESCRIPTOR
+    },
+    EndpointIn : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_XONE_IN,
+        bmAttributes :
+            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x40,
+        bInterval : 1
+    },
+    EndpointOut : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_XONE_OUT,
+        bmAttributes :
+            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x40,
+        bInterval : 1
+    },
+    // Xbox 360 descriptor
+    
     Interface1 : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
@@ -257,7 +421,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         iInterface : NO_DESCRIPTOR,
     },
     InterfaceSecurity : {
-        bLength : sizeof(XBOX360ConfigurationDescriptor.InterfaceSecurity),
+        bLength : sizeof(UniversalConfigurationDescriptor.InterfaceSecurity),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
         bInterfaceNumber : INTERFACE_ID_XBOX_Security,
         bAlternateSetting : 0x00,
@@ -695,7 +859,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
             return sizeof(capabilities1);
         } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
-            printf("ExtendedIDs\n");
             memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
             return ExtendedIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
@@ -707,17 +870,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-        if (consoleType == XBOXONE) {
-            memcpy_P(requestBuffer, &DevCompatIDsOne, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-            return DevCompatIDsOne.TotalLength;
-        } else if (consoleType == WINDOWS_XBOX360) {
+        if (consoleType == WINDOWS_XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
         } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
-            consoleType = WINDOWS_XBOX360;
-            printf("Xbox 360! (windows fallback)\n");
+            consoleType = WINDOWS_XBOXONE;
+            printf("Xbox 360 or XONE! (windows fallback)\n");
             reset_usb();
         } else if (consoleType != UNIVERSAL) {
             return 0;
@@ -793,7 +953,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
 #ifdef XBOX_ONE_VID
-            else if (consoleType == XBOXONE) {
+            else if (consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
                 dev->idVendor = XBOX_ONE_VID;
                 dev->idProduct = XBOX_ONE_PID;
             }
@@ -812,6 +972,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == WINDOWS_XBOX360 || consoleType == STAGE_KIT) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
+            } else if (consoleType == WINDOWS_XBOXONE) {
+                size = sizeof(XBOX_360_XONE_CONFIGURATION_DESCRIPTOR);
+                memcpy_P(descriptorBuffer, &XBOX360OneConfigurationDescriptor, size);
             } else if (consoleType == MIDI) {
                 size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);

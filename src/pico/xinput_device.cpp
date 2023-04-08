@@ -133,13 +133,19 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
             TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
             drv_len += x_desc->bLength;
             p_desc = tu_desc_next(p_desc);
-            p_xinput->ep_out = 0xFF;
             TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints,
                                           TUSB_XFER_INTERRUPT, &p_xinput->ep_out,
                                           &p_xinput->ep_in),
                       0);
 
             p_xinput->itf_num = itf_desc->bInterfaceNumber;
+            printf("Xinput %d\r\n", p_xinput->itf_num);
+            if (p_xinput->ep_out) {
+                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf))) {
+                    TU_LOG_FAILED();
+                    TU_BREAKPOINT();
+                }
+            }
         } else if (itf_desc->bInterfaceSubClass == 0xfD &&
                    itf_desc->bInterfaceProtocol == 0x13) {
             // Xinput reserved endpoint
@@ -150,6 +156,7 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
             TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
             drv_len += x_desc->bLength;
             p_desc = tu_desc_next(p_desc);
+            printf("Xinput (skip)\r\n");
         } else if (itf_desc->bInterfaceSubClass == 0x47 &&
                    itf_desc->bInterfaceProtocol == 0xD0) {
             p_desc = tu_desc_next(p_desc);
@@ -164,6 +171,7 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                     TU_BREAKPOINT();
                 }
             }
+            printf("xone %d\r\n", p_xinput->itf_num);
         }
     } else {
         TU_VERIFY(TUSB_CLASS_HID == itf_desc->bInterfaceClass, 0);

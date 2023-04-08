@@ -2,7 +2,7 @@
 
 #include "reports/ps3_reports.h"
 #define GIP_POWER_MODE_DEVICE_CONFIG 0x05
-#define GIP_ARRIVAL 0x03
+#define GIP_DEVICE_DESCRIPTOR 0x04
 #define GIP_VIRTUAL_KEYCODE 0x07
 #define GIP_CMD_RUMBLE 0x09
 #define GIP_INPUT_REPORT 0x20

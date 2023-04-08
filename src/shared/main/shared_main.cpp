@@ -1598,6 +1598,10 @@ bool tick_usb(void) {
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
     }
+    if (consoleType == WINDOWS_XBOXONE && xbox_one_state == Announce) {
+        size = tick_xbox_one();
+        xbox_one_state = Waiting1;
+    }
     if (!size) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);
     }

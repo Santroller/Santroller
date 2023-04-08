@@ -15,10 +15,10 @@
 #define CFG_TUD_MSC 0
 #define CFG_TUD_MIDI 0
 #define CFG_TUD_VENDOR 0
-#define CFG_TUD_XINPUT 4
+#define CFG_TUD_XINPUT 8
 #define CFG_TUH_XINPUT 8
 // #define CFG_TUSB_DEBUG 1
-#define CFG_TUSB_DEBUG 0
+#define CFG_TUSB_DEBUG 1
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
 #define CFG_TUD_VENDOR_EP_BUFSIZE VENDOR_EPSIZE

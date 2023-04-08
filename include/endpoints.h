@@ -14,6 +14,8 @@ enum endpoints_t {
     XINPUT_EXTRA_3 = ENDPOINT_IN | 7,
     XINPUT_EXTRA_4 = ENDPOINT_OUT | 8,
     XINPUT_EXTRA_5 = ENDPOINT_IN | 9,
+    XINPUT_XONE_OUT = ENDPOINT_OUT | 10,
+    XINPUT_XONE_IN = ENDPOINT_IN | 11,
 };
 
 #define SERIAL_TX_SIZE 32
@@ -82,6 +84,7 @@ enum interfaces_t {
     INTERFACE_ID_Padding = 1,
     INTERFACE_ID_Config = 2, /**< Config interface descriptor ID */
     INTERFACE_ID_XBOX_Security = 3,
+    INTERFACE_ID_Xone_Device = 4,
     INTERFACE_ID_ControlStream =
         0, /**< MIDI Control Stream interface descriptor ID */
     INTERFACE_ID_AudioStream =

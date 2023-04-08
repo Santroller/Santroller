@@ -35,6 +35,28 @@
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
+    USB_INTERFACE_DESCRIPTOR Interface;
+    USB_ENDPOINT_DESCRIPTOR EndpointIn;
+    USB_ENDPOINT_DESCRIPTOR EndpointOut;
+    USB_INTERFACE_DESCRIPTOR Interface1;
+    XBOX_ID_DESCRIPTOR Interface1ID;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
+    USB_INTERFACE_DESCRIPTOR Interface2;
+    uint8_t UnkownDescriptor2[0x1B];
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint21;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint22;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint23;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint24;
+    USB_INTERFACE_DESCRIPTOR Interface3;
+    uint8_t UnkownDescriptor3[0x09];
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint31;
+    USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
+    uint8_t UnkownDescriptor4[0x06];
+} __attribute__((packed)) XBOX_360_XONE_CONFIGURATION_DESCRIPTOR;
+
+typedef struct {
+    USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR Interface1;
     XBOX_ID_DESCRIPTOR Interface1ID;
     USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
@@ -98,6 +120,7 @@ typedef struct {
 extern const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor;
 extern const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescriptor;
 extern const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor;
+extern const PROGMEM XBOX_360_XONE_CONFIGURATION_DESCRIPTOR XBOX360OneConfigurationDescriptor;
 extern const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor;
 extern const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor;
 extern const PROGMEM OS_DESCRIPTOR OSDescriptorString;

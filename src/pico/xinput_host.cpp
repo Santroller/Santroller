@@ -303,6 +303,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = XBOXONE;
         _xinputh_dev->inst_count++;
+        usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
         return true;
     }
     return false;

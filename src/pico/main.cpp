@@ -130,18 +130,16 @@ void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
 }
 
 uint8_t read_usb_host_devices(uint8_t *buf) {
-    buf[0] = total_usb_host_devices;
     for (int i = 0; i < total_usb_host_devices; i++) {
-        USB_Device_Type_t *type = &usb_host_devices[id].type;
-        buf[(i * 3) + 1] = type->console_type;
-        buf[(i * 3) + 2] = type->sub_type;
-        buf[(i * 3) + 3] = type->rhythm_type;
+        USB_Device_Type_t *type = &usb_host_devices[i].type;
+        buf[(i * 3)] = type->console_type;
+        buf[(i * 3) + 1] = type->sub_type;
+        buf[(i * 3) + 2] = type->rhythm_type;
     }
-    return total_usb_host_devices * 3 + 1;
+    return total_usb_host_devices * 3;
 }
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType, uint8_t subtype) {
-#ifdef USB_HOST_STACK
     printf("Detected controller: %d (%d) on %d\r\n", controllerType, subtype, dev_addr);
     uint16_t host_vid = 0;
     uint16_t host_pid = 0;
@@ -151,7 +149,29 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     if (controllerType == WINDOWS_XBOX360) {
         if (subtype) {
             type.console_type = controllerType;
-            type.sub_type = subtype;
+            switch (subtype) {
+                case XINPUT_GUITAR:
+                case XINPUT_GUITAR_ALTERNATE:
+                    type.sub_type = GUITAR;
+                    break;
+
+                case XINPUT_DRUMS:
+                    type.sub_type = DRUMS;
+                    break;
+
+                case XINPUT_STAGE_KIT:
+                    type.sub_type = STAGE_KIT;
+                    break;
+                
+                case XINPUT_TURNTABLE:
+                    type.sub_type = DJ_HERO_TURNTABLE;
+                    break;
+
+                default:
+                    type.sub_type = GAMEPAD;
+                    break;
+            }
+            
             x360_dev_addr = dev_addr;
             xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
@@ -180,7 +200,6 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         }
     }
     printf("Total devices: %d\r\n", total_usb_host_devices);
-#endif
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {

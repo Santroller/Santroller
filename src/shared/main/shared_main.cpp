@@ -848,7 +848,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     if (!buf) return 0;
     // Handle button combos for detection logic
-    if (millis() < 2000 && output_console_type == UNIVERSAL) {
+    if (millis() < 2000 && output_console_type == UNIVERSAL || output_console_type == WINDOWS_XBOX360) {
         TICK_DETECTION;
     }
     // Tick all three reports, and then go for the first one that has changes

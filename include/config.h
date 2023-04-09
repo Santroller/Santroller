@@ -154,10 +154,8 @@ extern const uint8_t identify_5[8];
 #define SUPPORTS_PS4 DEVICE_TYPE != GUITAR&& DEVICE_TYPE != DRUMS&& DEVICE_TYPE != TURNTABLES
 #define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
 #define SUPPORTS_AVR defined(__AVR__)
-#define SUPPORTS_TEENSY defined(__arm__) && defined(CORE_TEENSY)
-#ifndef BLUETOOTH
-#define BLUETOOTH false
-#endif
+#define SUPPORTS_TEENSY (defined(__arm__) && defined(CORE_TEENSY))
+#define BLUETOOTH (defined(BLUETOOTH_TX) || defined(BLUETOOTH_RX))
 enum hid_reports_t {
     REPORT_ID_NONE,
 #ifdef TICK_NKRO

@@ -36,4 +36,4 @@ uint8_t get_usb_host_device_count();
 USB_Device_Type_t get_usb_host_device_type(uint8_t id);
 void get_usb_host_device_data(uint8_t id, uint8_t *buf);
 #endif
-extern PS3_REPORT last_bt_report;
+extern USB_LastReport_Data_t last_report_bt;

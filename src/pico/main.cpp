@@ -91,7 +91,7 @@ void setup() {
     }
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
-#if BLUETOOTH
+#ifdef BLUETOOTH
     btstack_main();
 #endif
 }

@@ -1,4 +1,5 @@
-#if BLUETOOTH
+#include "config.h"
+#ifdef BLUETOOTH_TX
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>

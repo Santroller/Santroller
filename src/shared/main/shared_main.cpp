@@ -297,7 +297,7 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
-#if defined(RF_RX) || BLUETOOTH
+#if defined(RF_RX) || defined(BLUETOOTH_RX)
 // When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
     PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
@@ -911,8 +911,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef RF_TX
     rf_or_bluetooth = buf == &last_report_rf.lastControllerReport;
 #endif
-#if BLUETOOTH
-    rf_or_bluetooth = buf == &last_bt_report;
+#ifdef BLUETOOTH_TX
+    rf_or_bluetooth = buf == &last_report_bt;
 #endif
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
@@ -1576,9 +1576,9 @@ void tick_rf_tx(void) {
     return;
 }
 #endif
-#if BLUETOOTH
+#ifdef BLUETOOTH_TX
 bool tick_bluetooth(void) {
-    uint8_t size = tick_inputs&bt_report, &last_report_bt, UNIVERSAL);
+    uint8_t size = tick_inputs(&bt_report, &last_report_bt, UNIVERSAL);
     if (size) {
         send_report(size, (uint8_t *)&bt_report);
     }
@@ -1620,10 +1620,10 @@ void tick(void) {
 #ifdef RF_TX
     tick_rf_tx();
 #endif
-#if BLUETOOTH
+#ifdef BLUETOOTH_TX
     tick_bluetooth();
 #endif
-#if !defined(RF_TX) && !BLUETOOTH
+#if !defined(RF_TX) && !defined(BLUETOOTH_TX)
     // Tick the controller every 5ms if this device is usb only, and usb is not ready
     if (!ready && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();

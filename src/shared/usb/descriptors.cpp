@@ -696,6 +696,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             case COMMAND_GET_EXTENSION_WII:
             case COMMAND_GET_EXTENSION_PS2:
             case COMMAND_READ_RF:
+            case COMMAND_READ_USB_HOST:
             case HID_REQUEST_GET_PROTOCOL:
             case HID_REQUEST_GET_IDLE:
             case HID_REQUEST_GET_REPORT:

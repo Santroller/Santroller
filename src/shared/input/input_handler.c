@@ -23,8 +23,7 @@ bool ghDrum = false;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
-Pin_t *startPin;
-Pin_t *selectPin;
+int dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) | _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
 void initInputs(Configuration_t *config) {
 
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
@@ -36,6 +35,7 @@ void initInputs(Configuration_t *config) {
     initWiiExtensions(config);
     tick_function = tickWiiExtInput;
     read_button_function = readWiiButton;
+    dpad_bits = 0xFF;
     break;
   case DIRECT:
     read_button_function = digitalReadPin;
@@ -44,6 +44,7 @@ void initInputs(Configuration_t *config) {
     initPS2CtrlInput(config);
     read_button_function = readPS2Button;
     tick_function = tickPS2CtrlInput;
+    dpad_bits = 0xFF;
     break;
   }
 
@@ -51,7 +52,8 @@ void initInputs(Configuration_t *config) {
     spi_begin(MIN(F_CPU / 2, 12000000), true, true, false);
   }
   if (typeIsDJ || config->main.inputType == WII ||
-      config->main.tiltType == MPU_6050 || config->neck.gh5Neck || config->neck.gh5NeckBar) {
+      config->main.tiltType == MPU_6050 || config->neck.gh5Neck ||
+      config->neck.gh5NeckBar) {
     // Start off by configuring things for the slower speed when using wii
     // extensions twi_init(config->main.inputType == WII);
     twi_init(config->neck.gh5Neck || config->neck.gh5NeckBar, typeIsDJ);
@@ -69,12 +71,19 @@ void initInputs(Configuration_t *config) {
       if (i != validPins - 1) { pinData[i] = pinData[validPins - 1]; }
       validPins--;
     }
+    // If we have a pin mapped, then we don't want to be clearing it when map joystick to dpad is in use
+    if (pin->offset == XBOX_DPAD_UP) { dpad_bits |= (_BV(XBOX_DPAD_UP)); }
+    if (pin->offset == XBOX_DPAD_DOWN) { dpad_bits |= (_BV(XBOX_DPAD_DOWN)); }
+    if (pin->offset == XBOX_DPAD_LEFT) { dpad_bits |= (_BV(XBOX_DPAD_LEFT)); }
+    if (pin->offset == XBOX_DPAD_RIGHT) {
+      dpad_bits |= (_BV(XBOX_DPAD_RIGHT));
+    }
     if (pin->offset == XBOX_DPAD_DOWN && mergedStrum) { downStrumPin = pin; }
-    if (pin->offset == XBOX_START && mapStartSelectHome) { startPin = pin; }
-    if (pin->offset == XBOX_BACK && mapStartSelectHome) { selectPin = pin; }
   }
   ghDrum = config->main.subType == XINPUT_GUITAR_HERO_DRUMS;
 }
+bool start = false;
+bool select = false;
 void tickInputs(Controller_t *controller) {
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
@@ -89,14 +98,11 @@ void tickInputs(Controller_t *controller) {
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(pin);
       if (mapStartSelectHome) {
-        if (pin->offset == XBOX_START || pin->offset == XBOX_BACK) {
-          if (read_button_function(startPin) &&
-              read_button_function(selectPin)) {
-            val = false;
-            bit_set(controller->buttons, XBOX_HOME);
-          } else {
-            bit_clear(controller->buttons, XBOX_HOME);
-          }
+        if (pin->offset == XBOX_START) {
+          start = val;
+        }
+        if (pin->offset == XBOX_BACK) {
+          select = val;
         }
       }
       // With DJ controllers, euphoria and y are going to different pins but are
@@ -110,16 +116,24 @@ void tickInputs(Controller_t *controller) {
       }
     }
   }
+  if (mapStartSelectHome) {
+    if (start && select) {  
+      bit_set(controller->buttons, XBOX_HOME);
+      bit_clear(controller->buttons, XBOX_START);
+      bit_clear(controller->buttons, XBOX_BACK);
+    }
+  } else {
+      bit_clear(controller->buttons, XBOX_HOME);
+  }
   if (mapJoyLeftDpad) {
-    controller->buttons &= ~(_BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
+    // Reset any bits that were not touched above (aka any unbound directions)
+    controller->buttons &= dpad_bits;
     CHECK_JOY(l_x, XBOX_DPAD_LEFT, XBOX_DPAD_RIGHT);
     CHECK_JOY(l_y, XBOX_DPAD_DOWN, XBOX_DPAD_UP);
   }
   tickGuitar(controller);
   tickDJ(controller);
-  if (ghDrum) {
-    controller->buttons |= _BV(XBOX_LEFT_STICK);
-  }
+  if (ghDrum) { controller->buttons |= _BV(XBOX_LEFT_STICK); }
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {

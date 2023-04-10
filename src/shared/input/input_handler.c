@@ -23,7 +23,8 @@ bool ghDrum = false;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
-int dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) | _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
+int dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) |
+                  _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
 void initInputs(Configuration_t *config) {
 
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
@@ -71,13 +72,12 @@ void initInputs(Configuration_t *config) {
       if (i != validPins - 1) { pinData[i] = pinData[validPins - 1]; }
       validPins--;
     }
-    // If we have a pin mapped, then we don't want to be clearing it when map joystick to dpad is in use
+    // If we have a pin mapped, then we don't want to be clearing it when map
+    // joystick to dpad is in use
     if (pin->offset == XBOX_DPAD_UP) { dpad_bits |= (_BV(XBOX_DPAD_UP)); }
     if (pin->offset == XBOX_DPAD_DOWN) { dpad_bits |= (_BV(XBOX_DPAD_DOWN)); }
     if (pin->offset == XBOX_DPAD_LEFT) { dpad_bits |= (_BV(XBOX_DPAD_LEFT)); }
-    if (pin->offset == XBOX_DPAD_RIGHT) {
-      dpad_bits |= (_BV(XBOX_DPAD_RIGHT));
-    }
+    if (pin->offset == XBOX_DPAD_RIGHT) { dpad_bits |= (_BV(XBOX_DPAD_RIGHT)); }
     if (pin->offset == XBOX_DPAD_DOWN && mergedStrum) { downStrumPin = pin; }
   }
   ghDrum = config->main.subType == XINPUT_GUITAR_HERO_DRUMS;
@@ -98,12 +98,8 @@ void tickInputs(Controller_t *controller) {
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(pin);
       if (mapStartSelectHome) {
-        if (pin->offset == XBOX_START) {
-          start = val;
-        }
-        if (pin->offset == XBOX_BACK) {
-          select = val;
-        }
+        if (pin->offset == XBOX_START) { start = val; }
+        if (pin->offset == XBOX_BACK) { select = val; }
       }
       // With DJ controllers, euphoria and y are going to different pins but are
       // the same output.
@@ -117,13 +113,13 @@ void tickInputs(Controller_t *controller) {
     }
   }
   if (mapStartSelectHome) {
-    if (start && select) {  
+    if (start && select) {
       bit_set(controller->buttons, XBOX_HOME);
       bit_clear(controller->buttons, XBOX_START);
       bit_clear(controller->buttons, XBOX_BACK);
     }
   } else {
-      bit_clear(controller->buttons, XBOX_HOME);
+    bit_clear(controller->buttons, XBOX_HOME);
   }
   if (mapJoyLeftDpad) {
     // Reset any bits that were not touched above (aka any unbound directions)

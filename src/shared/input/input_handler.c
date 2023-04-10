@@ -117,9 +117,9 @@ void tickInputs(Controller_t *controller) {
       bit_set(controller->buttons, XBOX_HOME);
       bit_clear(controller->buttons, XBOX_START);
       bit_clear(controller->buttons, XBOX_BACK);
+    } else {
+      bit_clear(controller->buttons, XBOX_HOME);
     }
-  } else {
-    bit_clear(controller->buttons, XBOX_HOME);
   }
   if (mapJoyLeftDpad) {
     // Reset any bits that were not touched above (aka any unbound directions)

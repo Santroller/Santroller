@@ -23,7 +23,7 @@ bool ghDrum = false;
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
-int dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) |
+uint16_t dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) |
                   _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
 void initInputs(Configuration_t *config) {
 
@@ -36,7 +36,7 @@ void initInputs(Configuration_t *config) {
     initWiiExtensions(config);
     tick_function = tickWiiExtInput;
     read_button_function = readWiiButton;
-    dpad_bits = 0xFF;
+    dpad_bits = 0xFFFF;
     break;
   case DIRECT:
     read_button_function = digitalReadPin;
@@ -45,7 +45,7 @@ void initInputs(Configuration_t *config) {
     initPS2CtrlInput(config);
     read_button_function = readPS2Button;
     tick_function = tickPS2CtrlInput;
-    dpad_bits = 0xFF;
+    dpad_bits = 0xFFFF;
     break;
   }
 

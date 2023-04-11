@@ -216,6 +216,8 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         }
     }
     printf("Total devices: %d\r\n", total_usb_host_devices);
+    
+    host_controller_connected();
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {

@@ -28,6 +28,7 @@ long lastSentPacket = 0;
 long lastSentGHLPoke = 0;
 long lastTap;
 long lastTapShift;
+long input_start = 0;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
@@ -354,8 +355,14 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = (report->whammy - 128) << 8;
         }
-        if (report->slider != PS3_STICK_CENTER) {
-            out->slider = (report->slider) << 8;
+        // There is a specific mechanism for converting from the ps3 to the xbox 360 slider
+        if (report->slider) {
+            out->slider = report->slider;
+            if (report->slider > 0x80) {
+                out->slider |= (report->slider - 1) << 8;
+            } else {
+                out->slider |= (report->slider) << 8;
+            }
         }
     }
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
@@ -848,7 +855,105 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     TICK_SHARED;
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     if (!buf) return 0;
-    // Handle button combos for detection logic
+        // Handle button combos for detection logic
+
+#ifdef INPUT_USB_HOST
+    // give the user 2 seconds after plugging in the host controller (if its already plugged in then this will act like 2 seconds on plug in)
+    if ((input_start - millis()) < 2000 && output_console_type == UNIVERSAL) {
+        for (int i = 0; i < device_count; i++) {
+            USB_Device_Type_t device_type = get_usb_host_device_type(i);
+            uint8_t console_type = device_type.console_type;
+            get_usb_host_device_data(i, (uint8_t *)&temp_report_usb_host);
+            void *data = &temp_report_usb_host;
+            if (console_type == XBOXONE) {
+                GipHeader_t *header = (GipHeader_t *)data;
+                if (device_type.sub_type == LIVE_GUITAR && header->command == GHL_HID_REPORT) {
+                    // Xbox one GHL guitars actually end up using PS3 reports if you poke them.
+                    console_type = PS3;
+                    data = &((XboxOneGHLGuitar_Data_t *)data)->report;
+                } else if (header->command != GIP_INPUT_REPORT) {
+                    // Not input data, continue
+                    continue;
+                }
+            }
+            bool a, b, x, y, start, back;
+            switch (console_type) {
+                case PS3: {
+                    if (device_type.sub_type == GAMEPAD) {
+                        PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;
+                        a = host_gamepad->a;
+                        b = host_gamepad->b;
+                        x = host_gamepad->x;
+                        y = host_gamepad->y;
+                        start = host_gamepad->start;
+                        back = host_gamepad->back;
+                    } else {
+                        PCGamepad_Data_t *host_gamepad = (PCGamepad_Data_t *)data;
+                        a = host_gamepad->a;
+                        b = host_gamepad->b;
+                        x = host_gamepad->x;
+                        y = host_gamepad->y;
+                        start = host_gamepad->start;
+                        back = host_gamepad->back;
+                    }
+                    break;
+                }
+                case PS4: {
+                    PS4Gamepad_Data_t *host_gamepad = (PS4Gamepad_Data_t *)data;
+                    a = host_gamepad->a;
+                    b = host_gamepad->b;
+                    x = host_gamepad->x;
+                    y = host_gamepad->y;
+                    start = host_gamepad->start;
+                    back = host_gamepad->back;
+                    break;
+                }
+                case WINDOWS_XBOX360: {
+                    XInputGamepad_Data_t *host_gamepad = (XInputGamepad_Data_t *)data;
+                    a = host_gamepad->a;
+                    b = host_gamepad->b;
+                    x = host_gamepad->x;
+                    y = host_gamepad->y;
+                    start = host_gamepad->start;
+                    back = host_gamepad->back;
+                    break;
+                }
+                case XBOXONE: {
+                    XboxOneGamepad_Data_t *host_gamepad = (XboxOneGamepad_Data_t *)data;
+                    a = host_gamepad->a;
+                    b = host_gamepad->b;
+                    x = host_gamepad->x;
+                    y = host_gamepad->y;
+                    start = host_gamepad->start;
+                    back = host_gamepad->back;
+                    break;
+                }
+            }
+
+#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
+            if (a) {
+                set_console_type(WII_RB);
+            }
+#endif
+            if (b) {
+                set_console_type(SWITCH);
+            }
+            if (x) {
+                set_console_type(PS3);
+            }
+            if (y) {
+                set_console_type(PS4);
+            }
+            if (start) {
+                set_console_type(WINDOWS_XBOX360);
+            }
+            if (back) {
+                set_console_type(XBOXONE);
+            }
+        }
+    }
+#endif
+    // give the user 2 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 2000 && output_console_type == UNIVERSAL) {
         TICK_DETECTION;
     }
@@ -1867,6 +1972,13 @@ void xone_controller_connected(uint8_t dev_addr) {
     GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
     powerMode->subcommand = 0x00;
     send_report_to_controller(dev_addr, data_from_console, sizeof(GipPowerMode_t));
+}
+
+void host_controller_connected() {
+    // With input_usb_host, we need to run detection for a little bit after the input is detected
+#ifdef INPUT_USB_HOST
+    input_start = millis();
+#endif
 }
 
 void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {

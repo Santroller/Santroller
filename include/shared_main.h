@@ -17,6 +17,7 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid, uint8_t subtype);
 void xone_controller_connected(uint8_t dev_addr);
 void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid);
 void ps4_controller_disconnected(void);
+void host_controller_connected(void);
 void send_rf_console_type(void);
 void on_connect(void);
 void set_console_type(uint8_t new_console_type);

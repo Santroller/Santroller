@@ -15,6 +15,7 @@
 #include "endpoints.h"
 #include "hid.h"
 #include "shared_main.h"
+#include "descriptors.h"
 
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -80,7 +81,7 @@ static void le_keyboard_setup(void) {
 
     // setup device information service
     device_information_service_server_init();
-    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, 0x0110);
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, USB_VERSION_BCD(DEVICE_TYPE, RHYTHM_TYPE, consoleType));
 #if DEVICE_TYPE_KEYBOARD
     hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else

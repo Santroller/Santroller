@@ -158,6 +158,9 @@ extern const uint8_t identify_5[8];
 #define BLUETOOTH (defined(BLUETOOTH_TX) || defined(BLUETOOTH_RX))
 enum hid_reports_t {
     REPORT_ID_NONE,
+#if DEVICE_TYPE_IS_GAMEPAD
+    REPORT_ID_CONTROLLER,
+#endif
 #ifdef TICK_NKRO
     REPORT_ID_NKRO,
 #endif
@@ -167,7 +170,8 @@ enum hid_reports_t {
 #ifdef TICK_MOUSE
     REPORT_ID_MOUSE,
 #endif
-    REPORT_ID_END
+    REPORT_ID_END,
+    REPORT_ID_CONSOLE_MODE
 };
 
 typedef struct {

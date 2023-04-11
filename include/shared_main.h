@@ -37,3 +37,9 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id);
 void get_usb_host_device_data(uint8_t id, uint8_t *buf);
 #endif
 extern USB_LastReport_Data_t last_report_bt;
+
+#ifdef BLUETOOTH_RX
+bool bluetooth_report_available(void);
+void bluetooth_report_read(void* buf);
+void bluetooth_report_set(const void* buf);
+#endif

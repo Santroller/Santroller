@@ -49,6 +49,7 @@
 #define XBOXONE 9
 #define REAL_PS3 10
 #define WINDOWS_XBOXONE 11
+// NOTE: if the above ids ever go past 15, bluetooth will need to encode the consoleType differently.
 #define UNKNOWN 0xFF
 
 #define PINMODE_PULLUP 0

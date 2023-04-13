@@ -221,7 +221,7 @@ const PROGMEM XBOX_360_XONE_CONFIGURATION_DESCRIPTOR XBOX360OneConfigurationDesc
         bInterval : 1
     },
     // Xbox 360 descriptor
-    
+
     Interface1 : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
@@ -953,8 +953,14 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = SONY_DS3_PID;
             }
 #endif
+            // When differenciating between xbone and windows, do NOT use the controller vid and pid
+            // otherwise, windows will treat this as a xb1 controller and not xinput
+            else if (consoleType == WINDOWS_XBOXONE) {
+                dev->idVendor = XBOX_ONE_RB_VID;
+                dev->idProduct = XBOX_ONE_RB_GUITAR_PID;
+            }
 #ifdef XBOX_ONE_VID
-            else if (consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
+            else if (consoleType == XBOXONE) {
                 dev->idVendor = XBOX_ONE_VID;
                 dev->idProduct = XBOX_ONE_PID;
             }

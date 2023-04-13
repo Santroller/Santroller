@@ -17,6 +17,7 @@
 #include "gap.h"
 #include "hid.h"
 #include "shared_main.h"
+#include "Arduino.h"
 
 // TAG to store remote device address and type in TLV
 #define TLV_TAG_HOGD ((((uint32_t)'H') << 24) | (((uint32_t)'O') << 16) | (((uint32_t)'G') << 8) | 'D')
@@ -207,6 +208,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
         case GATTSERVICE_SUBEVENT_HID_REPORT:
+            printf("%d\r\n", millis());
             bluetooth_report_set(gattservice_subevent_hid_report_get_report(packet));
             break;
 
@@ -247,7 +249,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         uint8_t data_type = ad_iterator_get_data_type(&context);
                         uint8_t size = ad_iterator_get_data_len(&context);
                         const uint8_t *data = ad_iterator_get_data(&context);
-                        if (data_type == BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME && memcmp(data, santroller_name, sizeof(santroller_name))) {
+                        if (data_type == BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME && memcmp(data, santroller_name, sizeof(santroller_name)-1) == 0) {
                             found = true;
                         }
                     }
@@ -396,7 +398,7 @@ int btstack_main(void) {
     sm_init();
     gatt_client_init();
     // There must be some way to configure multiple packets per interval, as it does seem like we are limited to one per interval right now?
-    gap_set_connection_parameters(0x0060, 0x0030, 0x06, 0x06, 0, 0x0048, 2, 0x0030);
+    // gap_set_connection_parameters(0x0060, 0x0030, 0x06, 0x06, 0, 0x0048, 2, 0x0030);
 
     hids_client_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
 

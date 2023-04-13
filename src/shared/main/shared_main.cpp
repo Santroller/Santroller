@@ -420,6 +420,31 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     }
 #elif DEVICE_TYPE == LIVE_GUITAR
     if (output_console_type == PS4) {
+        PS4_REPORT *out = (PS4_REPORT *)buf;
+        out->black1 |= report->black1;
+        out->black2 |= report->black2;
+        out->black3 |= report->black3;
+        out->white1 |= report->white1;
+        out->white2 |= report->white2;
+        out->white3 |= report->white3;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->tilt_pc != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt_pc - 128) << 8;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - 128) << 8;
+        }
+        if (report->strumBar != PS3_STICK_CENTER) {
+            out->strumBar = (report->strumBar - 128) << 8;
+        }
     }
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
@@ -823,7 +848,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 #endif
     // If we are in the "universal_report" mode, we can just copy the report and return
     if (universal_report) {
-        memcpy(buf, report, sizeof(report));
+        memcpy(buf, report, sizeof(*report));
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
         if (output_console_type == PS3) {
             PS3_REPORT *report = (PS3_REPORT *)buf;
@@ -1893,6 +1918,19 @@ bool tick_bluetooth(void) {
 bool tick_usb(void) {
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
+    // Wii and Wii u both just stop talking to the device if they don't recognise it.
+    // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
+    // modes depending on what device we are emulating
+    // Note that the usb_connected means this won't trigger if this is plugged into a device that is only providing power
+#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_connected()) {
+        set_console_type(WII_RB);
+    }
+#elif DEVICE_TYPE_IS_LIVE_GUITAR
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_connected()) {
+        set_console_type(PS3);
+    }
+#endif
     if (!ready) return 0;
     if (data_from_console_size) {
         send_report_to_controller(get_device_address_for(XBOXONE), data_from_console, data_from_console_size);

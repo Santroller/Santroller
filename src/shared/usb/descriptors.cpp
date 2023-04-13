@@ -1005,6 +1005,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case HID_DESCRIPTOR_REPORT: {
+            seen_non_wii_packet = true;
             const void *address;
 #if DEVICE_TYPE_KEYBOARD
             address = keyboard_mouse_descriptor;

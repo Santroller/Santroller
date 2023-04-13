@@ -2,11 +2,14 @@
 Console detection happens in multiple passes, depending on the console in question
 
 # PS3
-PS3 sends out a hid feature request with report id 0x00, and we can catch this and jump to a PS3 compat mode
+PS3 sends out a hid feature request with report id 0x00, and we can catch this and jump to a PS3 compat mode.
+Interestingly, for controllers the PS3 requires a bit of extra auth BUT it doesn't actually require this for a standard hid device, and the PS3 works just fine with a normal hid device too, so for gamepad mode we actually jump to a seperate PS3 specific PS3 compat mode, that neither PADEMU or fakemote use.
 
 # Wii (fakemote) + PS2 (PADEMU)
 Since i wrote the implementations for both of these, i know they send out feature report for 0xF0 and 0xF2, and we catch that and jump to a ps3 compat mode.
 
+# Wii (RockBand) + Wii U (GHL)
+The wii and wii u both just stop talking to the device if they don't recognise it. This means we can just run a timer, and if nothing attempts to read the hid report descriptor within 2 seconds we can assume we are on a wii or a wii u.
 # PS4
 If you include a feature report of 0x03 in your hid report, then the PS4 will ask for this and we jump to a ps4 compat mode. Note that for Guitars and Drums, this actually falls back to the PS3 versions.
 
@@ -22,5 +25,5 @@ We do a similar thing to the windows method, but during that detection state, we
 # Switch
 The switch clears both the in and out endpoint, and we detect this to jump to a switch compat mode
 
-# Mac / linux
+# Mac / linux / android
 We stay in a "Universal" mode if none of the above stuff is detected, which will just use standard HID

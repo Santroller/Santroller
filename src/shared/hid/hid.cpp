@@ -14,6 +14,7 @@
 #include "stdint.h"
 #include "util.h"
 #include "shared_main.h"
+#include "bt.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -277,10 +278,30 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_SET_DETECT: {
             overrideR2 = wValue > 0;
             overriddenR2 = wValue;
+            return 0;
         }
 #ifdef INPUT_USB_HOST
         case COMMAND_READ_USB_HOST: {
             return read_usb_host_devices(response_buffer);
+        }
+#endif
+#ifdef BLUETOOTH_RX
+        case COMMAND_START_BT_SCAN: {
+            hog_start_scan();
+            return 0;
+        }
+        case COMMAND_STOP_BT_SCAN: {
+            hog_stop_scan();
+            return 0;
+        }
+        case COMMAND_GET_BT_DEVICES: {
+            return hog_get_scan_results(response_buffer);
+        }
+#endif
+#if BLUETOOTH
+        case COMMAND_GET_BT_STATE: {
+            response_buffer[0] = check_bluetooth_ready();
+            return 1;
         }
 #endif
     }

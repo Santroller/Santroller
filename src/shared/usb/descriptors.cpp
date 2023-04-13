@@ -661,13 +661,14 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
 #endif
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         switch (request) {
-            case COMMAND_REBOOT:
-            case COMMAND_JUMP_BOOTLOADER:
-            case COMMAND_SET_DETECT:
             case HID_REQUEST_SET_PROTOCOL:
             case HID_REQUEST_SET_IDLE:
             case HID_REQUEST_SET_REPORT:
                 return true;
+        }
+
+        if (request >= COMMAND_REBOOT && request < MAX) {
+            return true;
         }
     }
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_GET_INTERFACE) {
@@ -681,26 +682,13 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         switch (request) {
-            case COMMAND_READ_CONFIG:
-            case COMMAND_READ_F_CPU:
-            case COMMAND_READ_BOARD:
-            case COMMAND_READ_DIGITAL:
-            case COMMAND_READ_SERIAL:
-            case COMMAND_READ_ANALOG:
-            case COMMAND_READ_PS2:
-            case COMMAND_READ_WII:
-            case COMMAND_READ_DJ_LEFT:
-            case COMMAND_READ_DJ_RIGHT:
-            case COMMAND_READ_GH5:
-            case COMMAND_READ_GHWT:
-            case COMMAND_GET_EXTENSION_WII:
-            case COMMAND_GET_EXTENSION_PS2:
-            case COMMAND_READ_RF:
-            case COMMAND_READ_USB_HOST:
             case HID_REQUEST_GET_PROTOCOL:
             case HID_REQUEST_GET_IDLE:
             case HID_REQUEST_GET_REPORT:
                 return true;
+        }
+        if (request >= COMMAND_REBOOT && request < MAX) {
+            return true;
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
@@ -731,6 +719,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
         if (request == COMMAND_JUMP_BOOTLOADER) {
             bootloader();
+        }
+        if (request >= COMMAND_REBOOT && request < MAX) {
+            bool success;
+            return handle_serial_command(request, wValue, requestBuffer, &success);
         }
     }
 

@@ -7,8 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Arduino.h"
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
+#include "bt.h"
 #include "bt_profile.h"
 #include "btstack.h"
 #include "btstack_config.h"
@@ -17,7 +19,6 @@
 #include "gap.h"
 #include "hid.h"
 #include "shared_main.h"
-#include "Arduino.h"
 
 // TAG to store remote device address and type in TLV
 #define TLV_TAG_HOGD ((((uint32_t)'H') << 24) | (((uint32_t)'O') << 16) | (((uint32_t)'G') << 8) | 'D')
@@ -51,6 +52,7 @@ static uint8_t hid_descriptor_storage[500];
 
 // used to implement connection timeout and reconnect timer
 static btstack_timer_source_t connection_timer;
+static btstack_timer_source_t scan_timer;
 
 // register for events from HCI/GAP and SM
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -60,6 +62,7 @@ static btstack_packet_callback_registration_t sm_event_callback_registration;
 static const btstack_tlv_t *btstack_tlv_singleton_impl;
 static void *btstack_tlv_singleton_context;
 
+static void hog_connect(void);
 /**
  * @section Test if advertisement contains HID UUID
  * @param packet
@@ -72,15 +75,44 @@ static bool adv_event_contains_hid_service(const uint8_t *packet) {
     return ad_data_contains_uuid16(ad_len, ad_data, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE);
 }
 
+static uint8_t scan_buffer[MAX_DEVICES_TO_SCAN * SIZE_OF_BD_ADDRESS];
+static uint8_t devices_found;
+
+bool check_bluetooth_ready() {
+    return app_state == READY;
+}
+
+void hog_stop_scan() {
+    gap_stop_scan();
+}
+
+static void hog_stop_scan_timer(btstack_timer_source_t *ts) {
+    UNUSED(ts);
+    printf("stop scan\r\n");
+    gap_stop_scan();
+}
 /**
  * Start scanning
  */
-static void hog_start_scan(void) {
+void hog_start_scan() {
     printf("Scanning for LE HID devices...\n");
-    app_state = W4_HID_DEVICE_FOUND;
+    devices_found = 0;
+    #ifdef BT_ADDR
+        devices_found = 1;
+        memcpy(scan_buffer, bt_addr, sizeof(bt_addr));
+    #endif
     // Passive scanning, 100% (scan interval = scan window)
     gap_set_scan_parameters(0, 48, 48);
     gap_start_scan();
+    // Auto stop scanning after 10 seconds
+    btstack_run_loop_set_timer(&scan_timer, 10000);
+    btstack_run_loop_set_timer_handler(&scan_timer, &hog_stop_scan_timer);
+    btstack_run_loop_add_timer(&scan_timer);
+}
+
+int hog_get_scan_results(uint8_t *buf) {
+    memcpy(buf, scan_buffer, devices_found * SIZE_OF_BD_ADDRESS);
+    return devices_found * SIZE_OF_BD_ADDRESS;
 }
 
 /**
@@ -91,7 +123,7 @@ static void hog_connection_timeout(btstack_timer_source_t *ts) {
     UNUSED(ts);
     printf("Timeout - abort connection\n");
     gap_connect_cancel();
-    hog_start_scan();
+    hog_connect();
 }
 
 /**
@@ -112,34 +144,23 @@ static void hog_connect(void) {
  */
 static void hog_reconnect_timeout(btstack_timer_source_t *ts) {
     UNUSED(ts);
-    switch (app_state) {
-        case W4_TIMEOUT_THEN_RECONNECT:
-            hog_connect();
-            break;
-        case W4_TIMEOUT_THEN_SCAN:
-            hog_start_scan();
-            break;
-        default:
-            break;
-    }
+    hog_connect();
+}
+
+static void hog_start_reconnect_timer() {
+    btstack_run_loop_set_timer(&connection_timer, 100);
+    btstack_run_loop_set_timer_handler(&connection_timer, &hog_reconnect_timeout);
+    btstack_run_loop_add_timer(&connection_timer);
 }
 
 /**
  * Start connecting after boot up: connect to last used device if possible, start scan otherwise
  */
 static void hog_start_connect(void) {
-    // check if we have a bonded device
-    btstack_tlv_get_instance(&btstack_tlv_singleton_impl, &btstack_tlv_singleton_context);
-    if (btstack_tlv_singleton_impl) {
-        int len = btstack_tlv_singleton_impl->get_tag(btstack_tlv_singleton_context, TLV_TAG_HOGD, (uint8_t *)&remote_device, sizeof(remote_device));
-        if (len == sizeof(remote_device)) {
-            printf("Bonded, connect to device with %s address %s ...\n", remote_device.addr_type == 0 ? "public" : "random", bd_addr_to_str(remote_device.addr));
-            hog_connect();
-            return;
-        }
-    }
-    // otherwise, scan for HID devices
-    hog_start_scan();
+    // Only try to connect if we have "paired" a device
+#ifdef BT_ADDR
+   hog_connect();
+#endif
 }
 
 /**
@@ -148,7 +169,7 @@ static void hog_start_connect(void) {
 static void handle_outgoing_connection_error(void) {
     printf("Error occurred, disconnect and start over\n");
     gap_disconnect(connection_handle);
-    hog_start_scan();
+    hog_start_reconnect_timer();
 }
 
 /**
@@ -208,7 +229,6 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
         case GATTSERVICE_SUBEVENT_HID_REPORT:
-            printf("%d\r\n", millis());
             bluetooth_report_set(gattservice_subevent_hid_report_get_report(packet));
             break;
 
@@ -235,29 +255,32 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     hog_start_connect();
                     break;
                 case GAP_EVENT_ADVERTISING_REPORT: {
-                    if (app_state != W4_HID_DEVICE_FOUND) break;
                     if (adv_event_contains_hid_service(packet) == false) break;
-                    // stop scan
-                    gap_stop_scan();
                     // store remote device address and type
-                    gap_event_advertising_report_get_address(packet, remote_device.addr);
+                    bd_addr_t address;
+                    gap_event_advertising_report_get_address(packet, address);
                     const uint8_t *adv_data = gap_event_advertising_report_get_data(packet);
                     uint8_t adv_size = gap_event_advertising_report_get_data_length(packet);
                     ad_context_t context;
-                    bool found = false;
+                    // Scan for devices, and if they are santrollers then store their mac addresses.
                     for (ad_iterator_init(&context, adv_size, adv_data); ad_iterator_has_more(&context); ad_iterator_next(&context)) {
                         uint8_t data_type = ad_iterator_get_data_type(&context);
                         uint8_t size = ad_iterator_get_data_len(&context);
                         const uint8_t *data = ad_iterator_get_data(&context);
-                        if (data_type == BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME && memcmp(data, santroller_name, sizeof(santroller_name)-1) == 0) {
-                            found = true;
+                        if (data_type == BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME && memcmp(data, santroller_name, sizeof(santroller_name) - 1) == 0) {
+                            char *address_string = bd_addr_to_str(address);
+                            bool found = false;
+                            for (int i = 0; i < devices_found; i++) {
+                                if (memcmp(address_string, scan_buffer + (i * SIZE_OF_BD_ADDRESS), SIZE_OF_BD_ADDRESS) == 0) {
+                                    found = true;
+                                }
+                            }
+                            if (!found) {
+                                printf("Found, device address %s ...\n", bd_addr_to_str(address));
+                                memcpy(address_string, scan_buffer + (devices_found * SIZE_OF_BD_ADDRESS), SIZE_OF_BD_ADDRESS);
+                                devices_found++;
+                            }
                         }
-                    }
-                    if (found) {
-                        remote_device.addr_type = (bd_addr_type_t)gap_event_advertising_report_get_address_type(packet);
-                        // connect
-                        printf("Found, connect to device with %s address %s ...\n", remote_device.addr_type == 0 ? "public" : "random", bd_addr_to_str(remote_device.addr));
-                        hog_connect();
                     }
                     break;
                 }
@@ -275,10 +298,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             app_state = W4_TIMEOUT_THEN_SCAN;
                             break;
                     }
-                    // set timer
-                    btstack_run_loop_set_timer(&connection_timer, 100);
-                    btstack_run_loop_set_timer_handler(&connection_timer, &hog_reconnect_timeout);
-                    btstack_run_loop_add_timer(&connection_timer);
+                    hog_start_reconnect_timer();
                     break;
 
                 case HCI_EVENT_LE_META:
@@ -360,15 +380,15 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                     break;
                 case ERROR_CODE_CONNECTION_TIMEOUT:
                     printf("Pairing failed, timeout\n");
-                    hog_start_scan();
+                    hog_start_reconnect_timer();
                     break;
                 case ERROR_CODE_REMOTE_USER_TERMINATED_CONNECTION:
                     printf("Pairing failed, disconnected\n");
-                    hog_start_scan();
+                    hog_start_reconnect_timer();
                     break;
                 case ERROR_CODE_AUTHENTICATION_FAILURE:
                     printf("Pairing failed, reason = %u\n", sm_event_pairing_complete_get_reason(packet));
-                    hog_start_scan();
+                    hog_start_reconnect_timer();
                     break;
                 default:
                     break;
@@ -382,7 +402,10 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
 
 int btstack_main(void) {
     printf("Bt init\r\n");
-    sscanf_bd_addr(bt_addr, bt_addr_recv);
+#ifdef BT_ADDR
+    sscanf_bd_addr(bt_addr, remote_device.addr);
+    remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+#endif
     /* LISTING_START(HogBootHostSetup): HID-over-GATT Host Setup */
 
     // register for events from HCI

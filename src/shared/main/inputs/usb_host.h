@@ -184,9 +184,9 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->b, report->black2)
                 COPY_BUTTON(host_gamepad->y, report->black3)
                 COPY_BUTTON(host_gamepad->leftShoulder, report->white2)
-                COPY_BUTTON(host_gamepad->rightShoulder, report->heroPower)
-                COPY_BUTTON(host_gamepad->start, report->pause)
-                COPY_BUTTON(host_gamepad->leftThumbClick, report->ghtv)
+                COPY_BUTTON(host_gamepad->rightShoulder, report->back)
+                COPY_BUTTON(host_gamepad->start, report->start)
+                COPY_BUTTON(host_gamepad->leftThumbClick, report->leftThumbClick)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
                 COPY_AXIS_NORMAL(host_gamepad->rightStickY, report->whammy)
             } else {
@@ -203,9 +203,9 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->black2, report->black2)
                 COPY_BUTTON(host_gamepad->black3, report->black3)
                 COPY_BUTTON(host_gamepad->white2, report->white2)
-                COPY_BUTTON(host_gamepad->heroPower, report->heroPower)
-                COPY_BUTTON(host_gamepad->pause, report->pause)
-                COPY_BUTTON(host_gamepad->ghtv, report->ghtv)
+                COPY_BUTTON(host_gamepad->back, report->back)
+                COPY_BUTTON(host_gamepad->start, report->start)
+                COPY_BUTTON(host_gamepad->leftThumbClick, report->leftThumbClick)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
                 COPY_AXIS_NORMAL(host_gamepad->whammy, report->whammy)
                 COPY_TILT((host_gamepad->tilt >> 2) - 128)
@@ -226,9 +226,9 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->black2, report->black2)
             COPY_BUTTON(host_gamepad->black3, report->black3)
             COPY_BUTTON(host_gamepad->white2, report->white2)
-            COPY_BUTTON(host_gamepad->heroPower, report->heroPower)
-            COPY_BUTTON(host_gamepad->pause, report->pause)
-            COPY_BUTTON(host_gamepad->ghtv, report->ghtv)
+            COPY_BUTTON(host_gamepad->back, report->back)
+            COPY_BUTTON(host_gamepad->start, report->start)
+            COPY_BUTTON(host_gamepad->leftThumbClick, report->leftThumbClick)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_NORMAL_PS3(host_gamepad->whammy, report->whammy)
             COPY_TILT(host_gamepad->tilt)
@@ -245,15 +245,17 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->black2, report->black2)
             COPY_BUTTON(host_gamepad->black3, report->black3)
             COPY_BUTTON(host_gamepad->white2, report->white2)
-            COPY_BUTTON(host_gamepad->heroPower, report->heroPower)
-            COPY_BUTTON(host_gamepad->pause, report->pause)
-            COPY_BUTTON(host_gamepad->ghtv, report->ghtv)
+            COPY_BUTTON(host_gamepad->back, report->back)
+            COPY_BUTTON(host_gamepad->start, report->start)
+            COPY_BUTTON(host_gamepad->leftThumbClick, report->leftThumbClick)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_AXIS_NORMAL(host_gamepad->whammy, report->whammy)
             COPY_TILT((host_gamepad->tilt >> 8) + 128)
             break;
         }
         case XBOXONE: {
+            // If we hit xb1 here, then the controller is in xb1 controller or is in xb1 compat mode
+            // an actual guitar will instead take the PS3 path
             XboxOneGamepad_Data_t *host_gamepad = (XboxOneGamepad_Data_t *)data;
 
             COPY_BUTTON(host_gamepad->dpadUp, report->dpadUp)
@@ -265,9 +267,10 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->b, report->black2)
             COPY_BUTTON(host_gamepad->y, report->black3)
             COPY_BUTTON(host_gamepad->leftShoulder, report->white2)
-            COPY_BUTTON(host_gamepad->rightShoulder, report->heroPower)
-            COPY_BUTTON(host_gamepad->start, report->pause)
-            COPY_BUTTON(host_gamepad->leftThumbClick, report->ghtv)
+            COPY_BUTTON(host_gamepad->rightShoulder, report->white3)
+            COPY_BUTTON(host_gamepad->back, report->back)
+            COPY_BUTTON(host_gamepad->start, report->start)
+            COPY_BUTTON(host_gamepad->leftThumbClick, report->leftThumbClick)
             COPY_BUTTON(host_gamepad->guide, report->guide)
             COPY_AXIS_NORMAL(host_gamepad->rightStickY, report->whammy)
             break;
@@ -646,7 +649,8 @@ for (int i = 0; i < device_count; i++) {
                 COPY_BUTTON(host_gamepad->rightGreen, report->rightGreen)
                 COPY_BUTTON(host_gamepad->rightRed, report->rightRed)
                 COPY_BUTTON(host_gamepad->guide, report->guide)
-                // TODO: effectsKnob + crossFader
+                COPY_AXIS_DJ(host_gamepad->effectsKnob, report->effectsKnob)
+                COPY_AXIS_DJ(host_gamepad->crossfader, report->crossfader)
             }
             break;
         }
@@ -672,7 +676,6 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->a, report->rightGreen)
             COPY_BUTTON(host_gamepad->b, report->rightRed)
             COPY_BUTTON(host_gamepad->guide, report->guide)
-            // TODO: effectsKnob + crossFader
             break;
         }
         case WINDOWS_XBOX360: {
@@ -694,7 +697,8 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->rightGreen, report->rightGreen)
             COPY_BUTTON(host_gamepad->rightRed, report->rightRed)
             COPY_BUTTON(host_gamepad->guide, report->guide)
-            // TODO: effectsKnob + crossFader
+            COPY_AXIS_DJ(host_gamepad->effectsKnob, report->effectsKnob)
+            COPY_AXIS_DJ(host_gamepad->crossfader, report->crossfader)
             break;
         }
         case XBOXONE: {
@@ -716,7 +720,6 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->a, report->rightGreen)
             COPY_BUTTON(host_gamepad->b, report->rightRed)
             COPY_BUTTON(host_gamepad->guide, report->guide)
-            // TODO: effectsKnob + crossFader
             break;
         }
     }

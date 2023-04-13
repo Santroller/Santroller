@@ -461,8 +461,8 @@ typedef struct
     uint8_t unused2[6];
 
     // Reminder that these values are 10-bit in range
-    int16_t effectsKnob;
-    int16_t crossfader;
+    uint16_t effectsKnob;
+    uint16_t crossfader;
     uint16_t : 6;
     uint16_t tableNeutral : 1;
     uint16_t : 3;

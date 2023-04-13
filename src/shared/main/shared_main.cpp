@@ -425,8 +425,9 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->black2 |= report->black2;
         out->black3 |= report->black3;
         out->white1 |= report->white1;
-        out->white2 |= report->white2;
-        out->white3 |= report->white3;
+        out->white2 = report->white2;
+        out->white3 = report->white3;
+
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;
@@ -434,17 +435,9 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 
         out->back |= report->back;
         out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
 
         out->guide |= report->guide;
-        if (report->tilt_pc != PS3_STICK_CENTER) {
-            out->tilt = (report->tilt_pc - 128) << 8;
-        }
-        if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = (report->whammy - 128) << 8;
-        }
-        if (report->strumBar != PS3_STICK_CENTER) {
-            out->strumBar = (report->strumBar - 128) << 8;
-        }
     }
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
@@ -882,7 +875,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     if (!buf) return 0;
         // Handle button combos for detection logic
 
-#ifdef INPUT_USB_HOST
+#ifdef INPUT_USB_HOST_DETECTION
     // give the user 2 seconds after plugging in the host controller (if its already plugged in then this will act like 2 seconds on plug in)
     if ((input_start - millis()) < 2000 && output_console_type == UNIVERSAL) {
         for (int i = 0; i < device_count; i++) {
@@ -1165,10 +1158,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Map from uint16_t to xb360 (to shift to get to uint8_t)
 #define COPY_AXIS_TRIGGER(in, out) \
     if (in) out = in >> 8;
+// Map from 10 bit int to xb360
+#define COPY_AXIS_DJ(in, out) \
+    if (in != PS3_ACCEL_CENTER) out = (in - PS3_ACCEL_CENTER) >> 6;
 #include "inputs/usb_host.h"
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef COPY_TILT
+#undef COPY_AXIS_DJ
 #undef COPY_DRUM_VELOCITY_GREEN
 #undef COPY_DRUM_VELOCITY_YELLOW
 #undef COPY_DRUM_VELOCITY_RED
@@ -1210,6 +1207,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Map from uint16_t to ps4 (uint8_t)
 #define COPY_AXIS_TRIGGER(in, out) \
     if (in) out = in >> 8;
+
 #define HAS_L2_R2_BUTTON
 #include "inputs/usb_host.h"
 #undef COPY_AXIS_NORMAL
@@ -1244,10 +1242,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Map from uint16_t to ps3 (uint8_t)
 #define COPY_AXIS_TRIGGER(in, out) \
     if (in) out = in >> 8;
+
+#define COPY_AXIS_DJ(in, out) \
+    if (in != PS3_ACCEL_CENTER) out = in
 #define HAS_L2_R2_BUTTON
 #include "inputs/usb_host.h"
 #undef HAS_L2_R2_BUTTON
 #undef COPY_AXIS_NORMAL
+#undef COPY_AXIS_DJ
 #undef COPY_AXIS_TRIGGER
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
@@ -1315,12 +1317,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Map from uint16_t to ps3 (uint8_t)
 #define COPY_AXIS_TRIGGER(in, out) \
     if (in) out = in >> 8;
+#define COPY_AXIS_DJ(in, out) \
+    if (in != PS3_ACCEL_CENTER) out = in;
 #define HAS_L2_R2_BUTTON
 #include "inputs/usb_host.h"
 #undef COPY_AXIS_NORMAL
 #undef COPY_AXIS_TRIGGER
 #undef HAS_L2_R2_BUTTON
 #undef COPY_TILT
+#undef COPY_AXIS_DJ
 #undef COPY_DRUM_VELOCITY_GREEN
 #undef COPY_DRUM_VELOCITY_YELLOW
 #undef COPY_DRUM_VELOCITY_RED
@@ -1833,6 +1838,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->tableNeutral = true;
         }
 #endif
+#if DEVICE_TYPE != LIVE_GUITAR
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
             bool a = report->a;
@@ -1840,6 +1846,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->b = a;
             report->a = b;
         }
+#endif
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report) {

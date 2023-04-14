@@ -399,10 +399,10 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
             }
             case PS3: {
                 ps3_turntable_output_report_t report = {
-                    outputType: DJ_LED_ID,
-                    unknown1: 0x01,
-                    enable: rumble_left != 0,
-                    padding: {0}
+                    outputType : DJ_LED_ID,
+                    unknown1 : 0x01,
+                    enable : rumble_left != 0,
+                    padding : {0}
                 };
                 transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0200, 0x00, sizeof(report), (uint8_t *)&report);
                 return;
@@ -456,8 +456,8 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 if (id == 0x22) {
                     uint8_t sub_id = data[1];
                     if (sub_id == PS3_LED_RUMBLE_ID) {
-                        uint8_t player = (data[3] >> 2);
-                        handle_player_leds(player);
+                        uint8_t player = (data[3] & 0x0F);
+                        handle_player_leds(player) + 1;
                     } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
                         last_ghl_poke_time = millis();
                     }
@@ -489,19 +489,30 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         if (id == PS4_LED_RUMBLE_ID) {
             ps4_output_report *report = (ps4_output_report *)data;
             handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
-
             handle_rumble(report->motor_left, report->motor_right);
-        } else if (id == PS3_LED_RUMBLE_ID) {
+        }
+#if DEVICE_TYPE_IS_INSTRUMENT
+        else if (id == PS3_LED_RUMBLE_ID) {
+            uint8_t player = (data[2] & 0x0F);
+            handle_player_leds(player + 1);
+        }
+        else if (id == SANTROLLER_LED_ID) {
+            handle_rumble(data[2], data[3]);
+        }
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        else if (id == DJ_LED_ID) {
+            uint8_t euphoria_on = data[2] * 0xFF;
+            handle_rumble(euphoria_on, euphoria_on);
+        }
+#endif
+#else
+        else if (id == PS3_LED_RUMBLE_ID) {
             ps3_output_report *report = (ps3_output_report *)data;
             uint8_t player = report->leds_bitmap;
             handle_player_leds(player);
             handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        } else if (id == DJ_LED_ID) {
-            uint8_t euphoria_on = data[2] * 0xFF;
-            handle_rumble(euphoria_on, euphoria_on);
-#endif
         }
+#endif
     }
 }
 long millis_since_command = 0;

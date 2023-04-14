@@ -22,7 +22,7 @@ typedef struct {
 
   uint8_t axis[12];
   // Accel values are 10 bits with padding.
-  int16_t accel[4];
+  uint16_t accel[4];
 
 } ATTR_PACKED USB_PS3Report_Data_t;
 

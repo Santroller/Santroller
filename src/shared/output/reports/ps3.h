@@ -1,6 +1,6 @@
 #pragma once
-#include <stdint.h>
 #include "controller/controller.h"
+#include <stdint.h>
 // #include <avr/pgmspace.h>
 #include "eeprom/eeprom.h"
 #include "output/controller_structs.h"
@@ -74,7 +74,7 @@ void initPS3(void) {
   }
 }
 void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
-                       Controller_t *controller) {
+                   Controller_t *controller) {
   *ReportSize = sizeof(USB_PS3Report_Data_t);
   USB_PS3Report_Data_t *JoystickReport = (USB_PS3Report_Data_t *)ReportData;
   JoystickReport->rid = REPORT_ID_GAMEPAD;
@@ -84,7 +84,8 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     if (button == 0xff) continue;
     bool bit_set = bit_check(controller->buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
-    // TODO: is the below even necessary? Bring it back when we migrate to the new codebase as we will have room for it
+    // TODO: is the below even necessary? Bring it back when we migrate to the
+    // new codebase as we will have room for it
     // TODO: and in that case, we can even support it on normal controllers.
     // if (i < currentAxisBindingsLen) {
     //   if (fullDeviceType == PS3_GUITAR_HERO_GUITAR &&
@@ -101,28 +102,26 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
   JoystickReport->hat = button > 0x0a ? 0x08 : hat_bindings[button];
 
   // Tilt / whammy
-  bool tilt = controller->r_y == 32767;
-  if (fullDeviceType == PS3_GUITAR_HERO_GUITAR || fullDeviceType == PS3_LIVE_GUITAR || fullDeviceType == WII_LIVE_GUITAR) {
-    // TODO: check this stuff, tilt is wrong
-    // TODO: also, could we map tilt to l_x as well as the tilt bit? then PCs can use this.
-    // Whammy
+  if (fullDeviceType == PS3_GUITAR_HERO_GUITAR ||
+      fullDeviceType == PS3_LIVE_GUITAR || fullDeviceType == WII_LIVE_GUITAR) {
     JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
     // GH PS3 guitars have a tilt axis
-    // Since the PS3 tilt is based on an accelerometer, we need to subtract 40 as they start at a value of 1G, which works out to be around 40.
-    JoystickReport->accel[0] = (controller->r_y >> 6) - 40;
+    // Since the PS3 tilt is based on an accelerometer, we need to subtract 40
+    // as they start at a value of 1G, which works out to be around 40.
+    JoystickReport->accel[0] = (controller->r_y >> 6) + 512 - 40;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
   } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||
              fullDeviceType == WII_ROCK_BAND_GUITAR) {
     JoystickReport->r_x = 128 + (controller->r_x >> 8);
     // RB PS3 guitars use R for a tilt bit
+    bool tilt = controller->r_y == 32767;
     bit_write(tilt, JoystickReport->buttons, SWITCH_R);
     // r_y is the tone switch. Since lt isnt used, but r_y gets used by tilt, we
     // map rx to lt, and then fix it here
     JoystickReport->r_y = controller->lt;
   }
-  if (fullDeviceType == PS3_GAMEPAD ||
-      fullDeviceType == SWITCH_GAMEPAD) {
+  if (fullDeviceType == PS3_GAMEPAD || fullDeviceType == SWITCH_GAMEPAD) {
     bit_write(controller->lt > 50, JoystickReport->buttons, SWITCH_L);
     bit_write(controller->rt > 50, JoystickReport->buttons, SWITCH_R);
     JoystickReport->axis[4] = controller->lt;
@@ -143,7 +142,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     JoystickReport->accel[1] = controller->l_y;
   }
   if (fullDeviceType == SWITCH_GAMEPAD) {
-    JoystickReport->l_y = 255-JoystickReport->l_y;
-    JoystickReport->r_y = 255-JoystickReport->r_y;
+    JoystickReport->l_y = 255 - JoystickReport->l_y;
+    JoystickReport->r_y = 255 - JoystickReport->r_y;
   }
 }

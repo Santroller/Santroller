@@ -15,8 +15,8 @@ volatile bool spi_acknowledged = false;
 void spi_begin() {
 #ifdef SPI_0_MOSI
     spi_init(spi0, SPI_0_CLOCK);
-    spi_set_format(spi0, 8, SPI_0_CPOL,
-                   SPI_0_CPHA, SPI_MSB_FIRST);
+    spi_set_format(spi0, 8, (spi_cpol_t)SPI_0_CPOL,
+                  (spi_cpha_t)SPI_0_CPHA, SPI_MSB_FIRST);
     gpio_set_function(SPI_0_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(SPI_0_SCK, GPIO_FUNC_SPI);
 #ifdef SPI_0_MISO
@@ -26,8 +26,8 @@ void spi_begin() {
 #endif
 #ifdef SPI_1_MOSI
     spi_init(spi1, SPI_1_CLOCK);
-    spi_set_format(spi1, 8, SPI_1_CPOL,
-                   SPI_1_CPHA, SPI_MSB_FIRST);
+    spi_set_format(spi1, 8, (spi_cpol_t)SPI_1_CPOL,
+                   (spi_cpha_t)SPI_1_CPHA, SPI_MSB_FIRST);
     gpio_set_function(SPI_1_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(SPI_1_SCK, GPIO_FUNC_SPI);
 #ifdef SPI_1_MISO

@@ -42,7 +42,7 @@
 #define MIDI 2
 #define STAGE_KIT 3
 
-#define WINDOWS_XBOX360 4
+#define XBOX360 4
 #define PS3 5
 #define WII_RB 6
 #define SWITCH 7
@@ -50,6 +50,7 @@
 #define XBOXONE 9
 #define REAL_PS3 10
 #define WINDOWS_XBOXONE 11
+#define WINDOWS 12
 // NOTE: if the above ids ever go past 15, bluetooth will need to encode the consoleType differently.
 #define UNKNOWN 0xFF
 

@@ -262,7 +262,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
-        p_xinput->type = WINDOWS_XBOX360;
+        p_xinput->type = XBOX360;
         if (desc_itf->bInterfaceProtocol == 0x01) {
             p_xinput->subtype = x_desc->subtype;
             usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
@@ -280,7 +280,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
-        p_xinput->type = WINDOWS_XBOX360;
+        p_xinput->type = XBOX360;
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         _xinputh_dev->inst_count++;
         return true;

@@ -114,7 +114,7 @@ uint8_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == XBOXONE) {
         return xone_dev_addr;
     }
-    if (deviceType == WINDOWS_XBOX360) {
+    if (deviceType == XBOX360) {
         return x360_dev_addr;
     }
     if (deviceType == PS4) {
@@ -161,7 +161,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
     type.dev_addr = dev_addr;
-    if (controllerType == WINDOWS_XBOX360) {
+    if (controllerType == XBOX360) {
         if (subtype) {
             type.console_type = controllerType;
             switch (subtype) {

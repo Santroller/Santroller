@@ -296,7 +296,7 @@ void handle_player_leds(uint8_t player) {
                 }
                 return;
             }
-            case WINDOWS_XBOX360: {
+            case XBOX360: {
                 XInputLEDReport_t report = {
                     rid : XBOX_LED_ID,
                     rsize : sizeof(XInputLEDReport_t),
@@ -340,7 +340,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                 transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
                 return;
             }
-            case WINDOWS_XBOX360: {
+            case XBOX360: {
                 XInputRumbleReport_t report = {
                     rid : XBOX_RUMBLE_ID,
                     rsize : sizeof(XInputRumbleReport_t),
@@ -387,7 +387,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
         type = get_usb_host_device_type(i);
         if (type.sub_type != DJ_HERO_TURNTABLE) continue;
         switch (type.console_type) {
-            case WINDOWS_XBOX360: {
+            case XBOX360: {
                 XInputRumbleReport_t report = {
                     rid : XBOX_RUMBLE_ID,
                     rsize : sizeof(XInputRumbleReport_t),
@@ -418,7 +418,7 @@ void handle_keyboard_leds(uint8_t leds) {
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
     if (consoleType == WINDOWS_XBOXONE && report_id == INTERRUPT_ID) {
         if (data[0] == XBOX_LED_ID) {
-            consoleType = WINDOWS_XBOX360;
+            consoleType = WINDOWS;
             reset_usb();
         } else if (data[0] == GIP_DEVICE_DESCRIPTOR) {
             consoleType = XBOXONE;
@@ -457,7 +457,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                     uint8_t sub_id = data[1];
                     if (sub_id == PS3_LED_RUMBLE_ID) {
                         uint8_t player = (data[3] & 0x0F);
-                        handle_player_leds(player) + 1;
+                        handle_player_leds(player + 1);
                     } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
                         last_ghl_poke_time = millis();
                     }

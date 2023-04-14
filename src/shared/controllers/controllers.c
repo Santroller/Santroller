@@ -20,6 +20,7 @@ uint8_t ps4_sequence_number;
 bool passthrough_stage_kit = false;
 bool rf_initialised = false;
 bool rf_connected = false;
+bool windows = false;
 #ifdef __cplusplus
 }
 #endif

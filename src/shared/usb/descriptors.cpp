@@ -637,10 +637,10 @@ AuthPageSizeReport ps4_pagesize_report = {
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
-    if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
-    if (consoleType == WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
+    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
         if (xbox_360_state == Auth1) {
             xbox_360_state = Auth2;
         } else if (xbox_360_state == Auth2) {
@@ -700,7 +700,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         return true;
-    } else if (consoleType == WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+    } else if (consoleType == WINDOWS || consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
         return true;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == HID_REQUEST_GET_REPORT && wIndex == 0x00 && wValue == 0x0000) {
         return true;
@@ -733,8 +733,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_SET_INTERFACE) {
         return 0;
     }
-    if (consoleType != WINDOWS_XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
-        consoleType = WINDOWS_XBOX360;
+    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        consoleType = XBOX360;
         printf("Xbox 360!\n");
         reset_usb();
         return 0;
@@ -774,7 +774,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x84:
         case 0x83:
         case 0x86:
-            return transfer_with_usb_controller(get_device_address_for(WINDOWS_XBOX360), requestType, request, wValue, wIndex, wLength, requestBuffer);
+            return transfer_with_usb_controller(get_device_address_for(XBOX360), requestType, request, wValue, wIndex, wLength, requestBuffer);
     }
 #endif
     // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
@@ -857,13 +857,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
             memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
-        } else if (consoleType == WINDOWS_XBOX360 && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
+        } else if (consoleType == WINDOWS || consoleType == XBOX360 && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
             memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
             return sizeof(XBOX_ID);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-        if (consoleType == WINDOWS_XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
+        if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
@@ -916,7 +916,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
-            } else if (consoleType == WINDOWS_XBOX360) {
+            } else if (consoleType == XBOX360) {
                 dev->idVendor = xbox_360_vid;
                 dev->idProduct = xbox_360_pid;
             } else if (consoleType == PS4) {
@@ -968,7 +968,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
-            } else if (consoleType == WINDOWS_XBOX360 || consoleType == STAGE_KIT) {
+            } else if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == STAGE_KIT) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
             } else if (consoleType == WINDOWS_XBOXONE) {

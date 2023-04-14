@@ -37,3 +37,6 @@ extern bool auth_ps4_controller_found;
 
 // Used for detecting wii
 extern bool seen_non_wii_packet;
+
+// Use for configuring commands that are pc specific
+extern bool windows;

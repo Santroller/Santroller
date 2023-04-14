@@ -117,7 +117,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_TRIGGER_PS3_XINPUT(host_gamepad->rightTrigger, report->rightTrigger)
             break;
         }
-        case WINDOWS_XBOX360: {
+        case XBOX360: {
             XInputGamepad_Data_t *host_gamepad = (XInputGamepad_Data_t *)data;
             COPY_BUTTON(host_gamepad->back, report->back)
             COPY_BUTTON(host_gamepad->start, report->start)
@@ -234,7 +234,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_TILT(host_gamepad->tilt)
             break;
         }
-        case WINDOWS_XBOX360: {
+        case XBOX360: {
             XInputGHLGuitar_Data_t *host_gamepad = (XInputGHLGuitar_Data_t *)data;
             COPY_BUTTON(host_gamepad->dpadUp, report->dpadUp)
             COPY_BUTTON(host_gamepad->dpadDown, report->dpadDown)
@@ -398,7 +398,7 @@ for (int i = 0; i < device_count; i++) {
 #endif
             break;
         }
-        case WINDOWS_XBOX360: {
+        case XBOX360: {
             XInputRockBandGuitar_Data_t *host_gamepad = (XInputRockBandGuitar_Data_t *)data;
             COPY_BUTTON(host_gamepad->back, report->back)
             COPY_BUTTON(host_gamepad->start, report->start)
@@ -542,7 +542,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->guide, report->guide)
             break;
         }
-        case WINDOWS_XBOX360: {
+        case XBOX360: {
             XInputGuitarHeroDrums_Data_t *host_gamepad = (XInputGuitarHeroDrums_Data_t *)data;
             COPY_BUTTON(host_gamepad->back, report->back)
             COPY_BUTTON(host_gamepad->start, report->start)
@@ -678,7 +678,7 @@ for (int i = 0; i < device_count; i++) {
             COPY_BUTTON(host_gamepad->guide, report->guide)
             break;
         }
-        case WINDOWS_XBOX360: {
+        case XBOX360: {
             XInputTurntable_Data_t *host_gamepad = (XInputTurntable_Data_t *)data;
             COPY_BUTTON(host_gamepad->back, report->back)
             COPY_BUTTON(host_gamepad->start, report->start)

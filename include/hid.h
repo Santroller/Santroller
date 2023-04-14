@@ -31,7 +31,7 @@
 #define PS3_LED_RUMBLE_ID 0x01
 #define XBOX_ONE_GHL_POKE_ID 0x02
 #define XONE_IDENTIFY_ID 0x04
-#define PS4_LED_RUMBLE_ID 0x04
+#define PS4_LED_RUMBLE_ID 0x05
 #define DJ_LED_ID 0x91
 
 // For turntables, both left and right are set to the same thing

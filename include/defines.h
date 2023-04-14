@@ -32,6 +32,7 @@
 #define LIVE_GUITAR 8
 #define DRUMS 9
 #define DJ_HERO_TURNTABLE 10
+#define STAGE_KIT_TYPE 11
 
 #define GUITAR_HERO 0
 #define ROCK_BAND 1

@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "Usb.h"
+#include "bt.h"
 #include "commands.h"
 #include "config.h"
 #include "controllers.h"
@@ -11,10 +13,10 @@
 #include "pins.h"
 #include "ps3_wii_switch.h"
 #include "rf.h"
-#include "stdint.h"
-#include "util.h"
 #include "shared_main.h"
-#include "bt.h"
+#include "stdint.h"
+#include "usbhid.h"
+#include "util.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -34,6 +36,13 @@ uint8_t xbox_players[] = {
     0,  // 0x0C	 Slow blinking*
     0,  // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
+
+static const int ps4_colors[4][3] = {
+    {0x00, 0x00, 0x40}, /* Blue */
+    {0x40, 0x00, 0x00}, /* Red */
+    {0x00, 0x40, 0x00}, /* Green */
+    {0x20, 0x00, 0x20}  /* Pink */
+};
 uint8_t stage_kit_millis[] = {
     150,  // Slow
     125,  // Medium
@@ -43,6 +52,191 @@ uint8_t stage_kit_millis[] = {
 uint8_t strobe_delay = 0;
 bool strobing = false;
 long last_strobe = 0;
+#ifdef INPUT_USB_HOST
+
+uint8_t xone_sequences[8] = {1, 1, 1, 1, 1, 1, 1, 1};
+// Support up to 8 connected ps3 controllers (no idea why someone would do that but hey)
+ps4_output_report ps4_output_reports[8] = {
+    {
+        report_id : PS4_LED_RUMBLE_ID,
+        valid_flag0 : 0xFF,
+        valid_flag1 : 0x00,
+        reserved1 : 0x00,
+        motor_right : 0x00,
+        motor_left : 0x00,
+        lightbar_red : 0x00,
+        lightbar_green : 0x00,
+        lightbar_blue : 0x00,
+        lightbar_blink_on : 0,
+        lightbar_blink_off : 0,
+        reserved : {0}
+
+    }};
+ps3_output_report ps3_output_reports[8] = {
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    },
+    {
+        report_id : PS3_LED_RUMBLE_ID,
+        rumble : {
+            padding : 0x01,
+            right_duration : 0xFF,
+            right_motor_on : 0x00,
+            left_duration : 0xFF,
+            left_motor_force : 0x00,
+        },
+        padding : {0x00, 0x00, 0x00, 0x00},
+        leds_bitmap : 0x00,
+        led : {
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+            {time_enabled : 0xFF, duty_length : 0x27, enabled : 0x10, duty_off : 0x00, duty_on : 0x32},
+        },
+        _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
+    }};
+#endif
+const uint8_t PS3_REPORT_BUFFER[PS3_REPORT_BUFFER_SIZE] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0x27, 0x10, 0x00, 0x32,
+    0xff, 0x27, 0x10, 0x00, 0x32,
+    0xff, 0x27, 0x10, 0x00, 0x32,
+    0xff, 0x27, 0x10, 0x00, 0x32,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 #ifdef RF_RX
 void handle_auth_led(void) {
     RfAuthLedPacket_t packet = {
@@ -80,12 +274,142 @@ void handle_auth_led(void) {
 }
 void handle_player_leds(uint8_t player) {
     HANDLE_PLAYER_LED;
+#ifdef INPUT_USB_HOST
+    USB_Device_Type_t type;
+    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+        type = get_usb_host_device_type(i);
+        switch (type.console_type) {
+            case PS3: {
+                ps3_output_report *report = &ps3_output_reports[i];
+                report->leds_bitmap |= _BV(player);
+                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report);
+                return;
+            }
+            case PS4: {
+                // Only actual ds4s support the lightbar
+                if (type.sub_type == GAMEPAD) {
+                    ps4_output_report *report = &ps4_output_reports[i];
+                    report->lightbar_red = ps4_colors[player - 1][0];
+                    report->lightbar_green = ps4_colors[player - 1][1];
+                    report->lightbar_blue = ps4_colors[player - 1][2];
+                    transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
+                }
+                return;
+            }
+            case WINDOWS_XBOX360: {
+                XInputLEDReport_t report = {
+                    rid : XBOX_LED_ID,
+                    rsize : sizeof(XInputLEDReport_t),
+                    led : (xinput_led_t)(player + ONE - 1)
+                };
+                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                return;
+            }
+        }
+    }
+#endif
 }
 void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
     HANDLE_LIGHTBAR_LED;
+    // We know the default lightbar colours that sony uses so we can extract a player number from that.
+    for (int i = 0; i < 4; i++) {
+        if (red == ps4_colors[i][0] && green == ps4_colors[i][1] && blue == ps4_colors[i][2]) {
+            handle_player_leds(i + 1);
+        }
+    }
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     HANDLE_RUMBLE;
+#if defined(INPUT_USB_HOST) && CONSOLE_TYPE == UNIVERSAL && DEVICE_TYPE == GAMEPAD
+    USB_Device_Type_t type;
+    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+        type = get_usb_host_device_type(i);
+        if (type.sub_type != GAMEPAD) continue;
+        switch (type.console_type) {
+            case PS3: {
+                ps3_output_report *report = &ps3_output_reports[i];
+                report->rumble.left_motor_force = rumble_left;
+                report->rumble.right_motor_on = rumble_right != 0;
+                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report);
+                return;
+            }
+            case PS4: {
+                ps4_output_report *report = &ps4_output_reports[i];
+                report->motor_left = rumble_left;
+                report->motor_right = rumble_right;
+                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
+                return;
+            }
+            case WINDOWS_XBOX360: {
+                XInputRumbleReport_t report = {
+                    rid : XBOX_RUMBLE_ID,
+                    rsize : sizeof(XInputRumbleReport_t),
+                    leftRumble : rumble_left,
+                    rightRumble : rumble_right
+                };
+                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                return;
+            }
+            case XBOXONE: {
+                GipRumble_t report;
+                GipRumble_t *packet = &report;
+                GIP_HEADER(packet, GIP_CMD_RUMBLE, true, xone_sequences[i]++);
+                report.leftMotor = rumble_left;
+                report.rightMotor = rumble_right;
+                if (xone_sequences[i] == 0) {
+                    xone_sequences[i] = 1;
+                }
+                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+            }
+        }
+    }
+#endif
+#if defined(INPUT_USB_HOST) && CONSOLE_TYPE == STAGE_KIT
+    USB_Device_Type_t type;
+    // Only xinput has stage kit
+    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+        type = get_usb_host_device_type(i);
+        if (type.sub_type != STAGE_KIT_TYPE) continue;
+        XInputRumbleReport_t report = {
+            rid : XBOX_RUMBLE_ID,
+            rsize : sizeof(XInputRumbleReport_t),
+            leftRumble : rumble_left,
+            rightRumble : rumble_right
+        };
+        send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+        return;
+    }
+#endif
+#if defined(INPUT_USB_HOST) && DEVICE_TYPE == DJ_HERO_TURNTABLE
+    USB_Device_Type_t type;
+    // Only ps3 and xinput have dj turntables
+    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+        type = get_usb_host_device_type(i);
+        if (type.sub_type != DJ_HERO_TURNTABLE) continue;
+        switch (type.console_type) {
+            case WINDOWS_XBOX360: {
+                XInputRumbleReport_t report = {
+                    rid : XBOX_RUMBLE_ID,
+                    rsize : sizeof(XInputRumbleReport_t),
+                    leftRumble : rumble_left,
+                    rightRumble : rumble_right
+                };
+                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                return;
+            }
+            case PS3: {
+                ps3_turntable_output_report_t report = {
+                    outputType: DJ_LED_ID,
+                    unknown1: 0x01,
+                    enable: rumble_left != 0,
+                    padding: {0}
+                };
+                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0200, 0x00, sizeof(report), (uint8_t *)&report);
+                return;
+            }
+        }
+    }
+#endif
 }
 void handle_keyboard_leds(uint8_t leds) {
     HANDLE_KEYBOARD_LED;
@@ -145,12 +469,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 }
             }
         } else {
-#if DEVICE_TYPE == STAGE_KIT
-            if (passthrough_stage_kit) {
-                data_from_console_size = len;
-                memcpy(data_from_console, data, len);
-            }
-#endif
             while (len) {
                 uint8_t size = data[1];
                 len -= size;
@@ -171,6 +489,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         if (id == PS4_LED_RUMBLE_ID) {
             ps4_output_report *report = (ps4_output_report *)data;
             handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
+
             handle_rumble(report->motor_left, report->motor_right);
         } else if (id == PS3_LED_RUMBLE_ID) {
             ps3_output_report *report = (ps3_output_report *)data;
@@ -302,6 +621,9 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_GET_BT_STATE: {
             response_buffer[0] = check_bluetooth_ready();
             return 1;
+        }
+        case COMMAND_GET_BT_ADDRESS: {
+            return get_bt_address(response_buffer);
         }
 #endif
     }

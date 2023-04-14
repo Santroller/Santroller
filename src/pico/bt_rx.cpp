@@ -78,6 +78,13 @@ static bool adv_event_contains_hid_service(const uint8_t *packet) {
 static uint8_t scan_buffer[MAX_DEVICES_TO_SCAN * SIZE_OF_BD_ADDRESS];
 static uint8_t devices_found;
 
+int get_bt_address(uint8_t *addr) {
+    bd_addr_t local_addr;
+    gap_local_bd_addr(local_addr);
+    memcpy(addr, bd_addr_to_str(local_addr), SIZE_OF_BD_ADDRESS);
+    return SIZE_OF_BD_ADDRESS;
+}
+
 bool check_bluetooth_ready() {
     return app_state == READY;
 }
@@ -97,10 +104,10 @@ static void hog_stop_scan_timer(btstack_timer_source_t *ts) {
 void hog_start_scan() {
     printf("Scanning for LE HID devices...\n");
     devices_found = 0;
-    #ifdef BT_ADDR
-        devices_found = 1;
-        memcpy(scan_buffer, bt_addr, sizeof(bt_addr));
-    #endif
+#ifdef BT_ADDR
+    devices_found = 1;
+    memcpy(scan_buffer, bt_addr, sizeof(bt_addr));
+#endif
     // Passive scanning, 100% (scan interval = scan window)
     gap_set_scan_parameters(0, 48, 48);
     gap_start_scan();
@@ -159,7 +166,7 @@ static void hog_start_reconnect_timer() {
 static void hog_start_connect(void) {
     // Only try to connect if we have "paired" a device
 #ifdef BT_ADDR
-   hog_connect();
+    hog_connect();
 #endif
 }
 

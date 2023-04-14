@@ -28,6 +28,7 @@ long lastSentPacket = 0;
 long lastSentGHLPoke = 0;
 long lastTap;
 long lastTapShift;
+long lastTick = 0;
 long input_start = 0;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
@@ -2029,7 +2030,7 @@ void host_controller_connected() {
 void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
     if (vid == SONY_VID && (pid == PS4_DS_PID_1 || pid == PS4_DS_PID_2 || pid == PS4_DS_PID_3)) {
         ps4_output_report report = {
-            report_id : 0x05,
+            report_id : PS4_LED_RUMBLE_ID,
             valid_flag0 : 0xFF,
             valid_flag1 : 0x00,
             reserved1 : 0x00,
@@ -2056,7 +2057,6 @@ void set_console_type(uint8_t new_console_type) {
     consoleType = new_console_type;
     reset_usb();
 }
-
 #ifdef USB_HOST_STACK
 USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
     USB_Device_Type_t type = {0, GAMEPAD};

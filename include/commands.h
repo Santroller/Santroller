@@ -26,6 +26,7 @@ enum SerialCommands {
     COMMAND_STOP_BT_SCAN,
     COMMAND_GET_BT_DEVICES,
     COMMAND_GET_BT_STATE,
+    COMMAND_GET_BT_ADDRESS,
     MAX
 };
 

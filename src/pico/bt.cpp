@@ -60,6 +60,12 @@ const uint8_t adv_data[] = {
 bool check_bluetooth_ready() {
     return con_handle != HCI_CON_HANDLE_INVALID;
 }
+int get_bt_address(uint8_t *addr) {
+    bd_addr_t local_addr;
+    gap_local_bd_addr(local_addr);
+    memcpy(addr, bd_addr_to_str(local_addr), SIZE_OF_BD_ADDRESS);
+    return SIZE_OF_BD_ADDRESS;
+}
 void send_report(uint8_t size, uint8_t* report) {
     hids_device_send_input_report(con_handle, report, size);
 }

@@ -3,6 +3,7 @@
 
 #define PS3_STICK_CENTER 0x80
 #define PS3_ACCEL_CENTER 0x0200
+#define PS3_REPORT_BUFFER_SIZE  48
 
 typedef struct {
     uint8_t padding;
@@ -28,6 +29,13 @@ typedef struct {
     ps3_led_t led[4];    /* LEDx at (4 - x) */
     ps3_led_t _reserved; /* LED5, not actually soldered */
 } __attribute__((packed)) ps3_output_report;
+
+typedef struct {
+    uint8_t outputType;
+    uint8_t unknown1;
+    uint8_t enable; // 1 to enable, 0 to disable
+    uint8_t padding[5];
+} ps3_turntable_output_report_t;
 
 typedef struct {
     bool x : 1;  // square

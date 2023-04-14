@@ -28,7 +28,6 @@ long lastSentPacket = 0;
 long lastSentGHLPoke = 0;
 long lastTap;
 long lastTapShift;
-long lastTick = 0;
 long input_start = 0;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;

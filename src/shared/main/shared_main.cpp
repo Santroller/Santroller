@@ -1937,6 +1937,18 @@ bool tick_usb(void) {
     if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_connected()) {
         set_console_type(PS3);
     }
+#else
+    // Go for ps3 gamepad mode on wii / wii u if we arent emulating an instrument
+    // Pademu will get triggered here too.
+    if (millis() > 2000 && consoleType == UNIVERSAL && descriptor_requested) {
+        set_console_type(PS3);
+    }
+#endif
+#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == LIVE_GUITAR
+    // PADEMU will request the descriptor but never configure the device
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && !usb_connected() && descriptor_requested) {
+        set_console_type(PS3);
+    }
 #endif
     if (!ready) return 0;
     if (data_from_console_size) {

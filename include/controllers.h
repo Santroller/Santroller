@@ -38,5 +38,8 @@ extern bool auth_ps4_controller_found;
 // Used for detecting wii
 extern bool seen_non_wii_packet;
 
+// Used for detecting pademu
+extern bool descriptor_requested;
+
 // Use for configuring commands that are pc specific
 extern bool windows;

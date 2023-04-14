@@ -906,6 +906,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
+    descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
         case USB_DESCRIPTOR_DEVICE: {

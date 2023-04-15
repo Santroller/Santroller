@@ -16,13 +16,13 @@ const XInputVibrationCapabilities_t PROGMEM capabilities1 = {
 const XInputInputCapabilities_t PROGMEM capabilities2 = {
     rid : 0x00,
     rsize : sizeof(XInputInputCapabilities_t),
-    buttons : 0x3ff7,
+    buttons : 0xf73f,
     leftTrigger : 0xff,
     rightTrigger : 0xff,
     leftThumbX : 0x1209,
     leftThumbY : 0x2882,
-    rightThumbX : 0xc0ff,
-    rightThumbY : 0xc0ff,
+    rightThumbX : 0xffc0,
+    rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},
     flags : 0x0000
 };

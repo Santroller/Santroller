@@ -858,9 +858,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, &capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
         }
-    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && (consoleType == WINDOWS || consoleType == XBOX360) && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == SERIAL_NUMBER_WVALUE) {
-        // TODO: return an actual serial number here
-        read_serial(requestBuffer, 4);
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && (consoleType == WINDOWS || consoleType == XBOX360) && request == HID_REQUEST_GET_REPORT && wIndex == 0x0000 && wValue == SERIAL_NUMBER_WVALUE) {
+        read_serial(requestBuffer, sizeof(XInputSerialNumber_t));
         return sizeof(XInputSerialNumber_t);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));

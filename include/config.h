@@ -69,7 +69,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
 #define PS4_REPORT PS3GuitarHeroGuitar_Data_t
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-#define SUB_TYPE XINPUT_GUITAR_ALTERNATE
+#define SUB_TYPE XINPUT_GUITAR
 #define PS3_TYPE PS3_RB_GUITAR_PID
 #define WII_TYPE WII_RB_GUITAR_PID
 #define XINPUT_FLAGS 0x10

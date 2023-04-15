@@ -1,16 +1,31 @@
 #include "xbox.h"
 
-#include "progmem.h"
-
 #include "endpoints.h"
+#include "progmem.h"
+#include "reports/xinput_reports.h"
 #include "stdint.h"
 #include "wcid.h"
-const uint8_t PROGMEM XBOX_ID[] = {0x00, 0x82, 0xf8, 0x23};
-const uint8_t PROGMEM capabilities1[] = {0x00, 0x08, 0x00, 0x00,
-                                         0x00, 0x00, 0x00, 0x00};
-const uint8_t PROGMEM capabilities2[] = {0x00, 0x14, 0x3f, 0xf7, 0xff, 0xff, 0x00,
-                                         0x00, 0x00, 0x00, 0xc0, 0xff, 0xc0, 0xff,
-                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const XInputVibrationCapabilities_t PROGMEM capabilities1 = {
+    rid : 0x00,
+    rsize : sizeof(XInputVibrationCapabilities_t),
+    padding : 0x00,
+    left_motor : 0xFF,
+    right_motor : 0xFF,
+    padding_2 : {0x00, 0x00, 0x00}
+};
+const XInputInputCapabilities_t PROGMEM capabilities2 = {
+    rid : 0x00,
+    rsize : sizeof(XInputInputCapabilities_t),
+    buttons : 0x3ff7,
+    leftTrigger : 0xff,
+    rightTrigger : 0xff,
+    leftThumbX : 0x1209,
+    leftThumbY : 0x2882,
+    rightThumbX : 0xc0ff,
+    rightThumbY : 0xc0ff,
+    reserved : {0x00, 0x00, 0x00, 0x00},
+    flags : 0x0000
+};
 
 const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {
     TotalLength : sizeof(OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR),

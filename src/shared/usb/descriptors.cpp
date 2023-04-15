@@ -848,19 +848,20 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
         return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
-        if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
-            memcpy_P(requestBuffer, capabilities1, sizeof(capabilities1));
+        if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == VIBRATION_CAPABILITIES_WVALUE) {
+            memcpy_P(requestBuffer, &capabilities1, sizeof(capabilities1));
             return sizeof(capabilities1);
         } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR && wValue == INTERFACE_ID_Config) {
             memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
             return ExtendedIDs.TotalLength;
-        } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0100) {
-            memcpy_P(requestBuffer, capabilities2, sizeof(capabilities2));
+        } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == INPUT_CAPABILITIES_WVALUE) {
+            memcpy_P(requestBuffer, &capabilities2, sizeof(capabilities2));
             return sizeof(capabilities2);
-        } else if (consoleType == WINDOWS || consoleType == XBOX360 && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == 0x0000) {
-            memcpy_P(requestBuffer, XBOX_ID, sizeof(XBOX_ID));
-            return sizeof(XBOX_ID);
         }
+    } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && (consoleType == WINDOWS || consoleType == XBOX360) && request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == SERIAL_NUMBER_WVALUE) {
+        // TODO: return an actual serial number here
+        read_serial(requestBuffer, 4);
+        return sizeof(XInputSerialNumber_t);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
         if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {

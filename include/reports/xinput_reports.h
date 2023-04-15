@@ -1,4 +1,10 @@
+#pragma once
 #include <stdint.h>
+#include <stdbool.h>
+
+#define SERIAL_NUMBER_WVALUE 0x0000
+#define INPUT_CAPABILITIES_WVALUE 0x0100
+#define VIBRATION_CAPABILITIES_WVALUE 0x0000
 
 typedef enum {
     OFF,
@@ -31,6 +37,33 @@ typedef struct {
     uint8_t rightRumble;
     uint8_t unused2[3];
 } __attribute__((packed)) XInputRumbleReport_t;
+
+typedef struct {
+    uint8_t rid;
+    uint8_t rsize;
+    uint8_t padding;
+    uint8_t left_motor;
+    uint8_t right_motor;
+    uint8_t padding_2[3];
+} __attribute__((packed)) XInputVibrationCapabilities_t;
+
+typedef struct {
+    uint8_t rid;
+    uint8_t rsize;
+    uint16_t buttons;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
+    uint16_t leftThumbX;
+    uint16_t leftThumbY;
+    uint16_t rightThumbX;
+    uint16_t rightThumbY;
+    uint8_t reserved[4];
+    uint8_t flags;
+} __attribute__((packed)) XInputInputCapabilities_t;
+
+typedef struct {
+    uint32_t serial;
+} __attribute__((packed)) XInputSerialNumber_t;
 
 typedef struct {
     uint8_t rid;

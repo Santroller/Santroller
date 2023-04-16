@@ -1,6 +1,6 @@
 #pragma once
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define SERIAL_NUMBER_WVALUE 0x0000
 #define INPUT_CAPABILITIES_WVALUE 0x0100
@@ -94,8 +94,8 @@ typedef struct {
     int16_t leftStickY;
     int16_t rightStickX;
     int16_t rightStickY;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGamepad_Data_t;
-
 typedef struct
 {
     uint8_t rid;
@@ -107,24 +107,25 @@ typedef struct
 
     bool start : 1;
     bool back : 1;
-    bool leftThumbClick : 1; //pedal2
-    bool padFlag : 1; //right thumb click
+    bool leftThumbClick : 1;  // pedal2
+    bool padFlag : 1;         // right thumb click
 
-    bool leftShoulder : 1; // pedal1
-    bool cymbalFlag : 1; // right shoulder click
+    bool leftShoulder : 1;  // pedal1
+    bool cymbalFlag : 1;    // right shoulder click
     bool guide : 1;
     bool : 1;
 
-    bool a : 1; //green
-    bool b : 1; //red
-    bool x : 1; //blue
-    bool y : 1; //yellow
+    bool a : 1;  // green
+    bool b : 1;  // red
+    bool x : 1;  // blue
+    bool y : 1;  // yellow
 
     uint8_t unused[2];
     int16_t redVelocity;
     int16_t yellowVelocity;
     int16_t blueVelocity;
     int16_t greenVelocity;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputRockBandDrums_Data_t;
 
 typedef struct
@@ -138,18 +139,18 @@ typedef struct
 
     bool start : 1;
     bool back : 1;
-    bool leftThumbClick : 1; //isGuitarHero
+    bool leftThumbClick : 1;  // isGuitarHero
     bool : 1;
 
-    bool leftShoulder : 1; // kick
-    bool rightShoulder : 1; // orange
+    bool leftShoulder : 1;   // kick
+    bool rightShoulder : 1;  // orange
     bool guide : 1;
     bool : 1;
 
-    bool a : 1; //green
-    bool b : 1; //red
-    bool x : 1; //blue
-    bool y : 1; //yellow
+    bool a : 1;  // green
+    bool b : 1;  // red
+    bool x : 1;  // blue
+    bool y : 1;  // yellow
 
     // TODO: The hi-hat pedal data is probably here somewhere
     uint8_t unused1[2];
@@ -160,14 +161,15 @@ typedef struct
     uint8_t blueVelocity;
     uint8_t orangeVelocity;
     uint8_t kickVelocity;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGuitarHeroDrums_Data_t;
 
 typedef struct
 {
     uint8_t rid;
     uint8_t rsize;
-    bool dpadUp : 1; // dpadStrumUp
-    bool dpadDown : 1; // dpadStrumDown
+    bool dpadUp : 1;    // dpadStrumUp
+    bool dpadDown : 1;  // dpadStrumDown
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
@@ -176,15 +178,15 @@ typedef struct
     bool : 1;
     bool : 1;
 
-    bool leftShoulder : 1; // orange
-    bool rightShoulder : 1; // pedal
+    bool leftShoulder : 1;   // orange
+    bool rightShoulder : 1;  // pedal
     bool guide : 1;
     bool : 1;
 
-    bool a : 1; //green
-    bool b : 1; //red
-    bool x : 1; //blue
-    bool y : 1; //yellow
+    bool a : 1;  // green
+    bool b : 1;  // red
+    bool x : 1;  // blue
+    bool y : 1;  // yellow
 
     uint8_t accelZ;
     uint8_t accelX;
@@ -192,31 +194,32 @@ typedef struct
     int16_t unused;
     int16_t whammy;
     int16_t tilt;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGuitarHeroGuitar_Data_t;
 
 typedef struct
 {
     uint8_t rid;
     uint8_t rsize;
-    bool dpadUp : 1; // dpadStrumUp
-    bool dpadDown : 1; // dpadStrumDown
+    bool dpadUp : 1;    // dpadStrumUp
+    bool dpadDown : 1;  // dpadStrumDown
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
     bool start : 1;
     bool back : 1;
-    bool solo : 1; // leftThumbClick
+    bool solo : 1;  // leftThumbClick
     bool : 1;
 
-    bool leftShoulder : 1; // orange
+    bool leftShoulder : 1;  // orange
     bool : 1;
     bool guide : 1;
     bool : 1;
 
-    bool a : 1; //green
-    bool b : 1; //red
-    bool x : 1; //blue
-    bool y : 1; //yellow
+    bool a : 1;  // green
+    bool b : 1;  // red
+    bool x : 1;  // blue
+    bool y : 1;  // yellow
 
     uint8_t pickup;
     uint8_t unused1;
@@ -224,6 +227,7 @@ typedef struct
     int16_t unused2;
     int16_t whammy;
     int16_t tilt;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputRockBandGuitar_Data_t;
 
 typedef struct
@@ -235,20 +239,20 @@ typedef struct
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
-    bool start : 1; // start, pause
-    bool back : 1; // back, heroPower
-    bool leftThumbClick : 1; // leftThumbClick, ghtv
+    bool start : 1;           // start, pause
+    bool back : 1;            // back, heroPower
+    bool leftThumbClick : 1;  // leftThumbClick, ghtv
     bool : 1;
 
-    bool white2 : 1; // leftShoulder
-    bool white3 : 1; // rightShoulder
+    bool white2 : 1;  // leftShoulder
+    bool white3 : 1;  // rightShoulder
     bool guide : 1;
     bool : 1;
 
-    bool black1 : 1; //a
-    bool black2 : 1; //b
-    bool white1 : 1; //x
-    bool black3 : 1; //y
+    bool black1 : 1;  // a
+    bool black2 : 1;  // b
+    bool white1 : 1;  // x
+    bool black3 : 1;  // y
 
     uint8_t unused1[2];
     int16_t unused2;
@@ -256,6 +260,7 @@ typedef struct
     int16_t strumBar;
     int16_t tilt;
     int16_t whammy;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGHLGuitar_Data_t;
 
 typedef struct
@@ -280,7 +285,7 @@ typedef struct
     bool a : 1;
     bool b : 1;
     bool x : 1;
-    bool y : 1; // euphoria
+    bool y : 1;  // euphoria
 
     bool leftGreen : 1;
     bool leftRed : 1;
@@ -297,4 +302,5 @@ typedef struct
 
     int16_t effectsKnob;  // Whether or not this is signed doesn't really matter, as either way it's gonna loop over when it reaches min/max
     int16_t crossfader;
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputTurntable_Data_t;

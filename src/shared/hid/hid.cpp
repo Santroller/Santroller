@@ -469,20 +469,15 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 }
             }
         } else {
-            while (len) {
-                uint8_t size = data[1];
-                len -= size;
-                if (id == XBOX_LED_ID) {
-                    uint8_t led = data[2];
-                    uint8_t player = xbox_players[led];
-                    handle_player_leds(player);
-                } else if (id == XBOX_RUMBLE_ID) {
-                    uint8_t rumble_left = data[3];
-                    uint8_t rumble_right = data[4];
-                    handle_rumble(rumble_left, rumble_right);
-                }
+            if (id == XBOX_LED_ID) {
+                uint8_t led = data[2];
+                uint8_t player = xbox_players[led];
+                handle_player_leds(player);
+            } else if (id == XBOX_RUMBLE_ID) {
+                uint8_t rumble_left = data[3];
+                uint8_t rumble_right = data[4];
+                handle_rumble(rumble_left, rumble_right);
             }
-            data += len;
         }
     } else {
         uint8_t *data = (uint8_t *)data;
@@ -495,8 +490,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         else if (id == PS3_LED_RUMBLE_ID) {
             uint8_t player = (data[2] & 0x0F);
             handle_player_leds(player + 1);
-        }
-        else if (id == SANTROLLER_LED_ID) {
+        } else if (id == SANTROLLER_LED_ID) {
             handle_rumble(data[2], data[3]);
         }
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE

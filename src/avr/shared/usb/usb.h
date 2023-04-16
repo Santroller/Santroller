@@ -41,7 +41,7 @@ void deviceControlRequest(void) {
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
              USB_ControlRequest.wIndex == 0x00 &&
              USB_ControlRequest.wValue == 0x0000) {
-    uint32_t serialNumber = millis();
+    uint32_t serialNumber = micros();
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(&serialNumber, sizeof(serialNumber));
     Endpoint_ClearStatusStage();

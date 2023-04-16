@@ -73,7 +73,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
              request->wIndex == 0x00 && request->wValue == 0x0000) {
 
     if (stage == CONTROL_STAGE_SETUP) {
-      uint32_t serial = rand();
+      uint32_t serial = micros();
       tud_control_xfer(rhport, request, &serial, sizeof(serial));
     }
   } else if (request->bRequest == HID_REQ_GetReport &&

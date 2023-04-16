@@ -733,7 +733,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_SET_INTERFACE) {
         return 0;
     }
-    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
         printf("Xbox 360!\n");
         reset_usb();

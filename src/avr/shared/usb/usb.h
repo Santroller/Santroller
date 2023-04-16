@@ -1,8 +1,9 @@
 #include "config/defines.h"
+#include "eeprom/eeprom.h"
 #include "output/control_requests.h"
 #include "output/descriptors.h"
 #include "output/serial_handler.h"
-#include "eeprom/eeprom.h"
+#include <stdlib.h>
 void deviceControlRequest(void) {
   if (!(Endpoint_IsSETUPReceived())) return;
   const void *buffer = NULL;
@@ -41,8 +42,10 @@ void deviceControlRequest(void) {
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
              USB_ControlRequest.wIndex == 0x00 &&
              USB_ControlRequest.wValue == 0x0000) {
-    len = sizeof(ID);
-    buffer = &ID;
+    uint32_t serialNumber = rand();
+    Endpoint_ClearSETUP();
+    Endpoint_Write_Control_Stream_LE(&serialNumber, sizeof(serialNumber));
+    Endpoint_ClearStatusStage();
   } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
              (USB_ControlRequest.bmRequestType ==
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_INTERFACE)) &&
@@ -52,7 +55,8 @@ void deviceControlRequest(void) {
     buffer = &capabilities2;
   } else if ((USB_ControlRequest.bmRequestType &
               (CONTROL_REQTYPE_RECIPIENT | CONTROL_REQTYPE_TYPE)) ==
-                 (REQTYPE_CLASS | REQREC_INTERFACE) && USB_ControlRequest.bRequest != HID_REQ_SetIdle) {
+                 (REQTYPE_CLASS | REQREC_INTERFACE) &&
+             USB_ControlRequest.bRequest != HID_REQ_SetIdle) {
     Endpoint_ClearSETUP();
     Endpoint_ClearStatusStage();
   }

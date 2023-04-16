@@ -3,7 +3,6 @@
 #include "output/control_requests.h"
 #include "output/descriptors.h"
 #include "output/serial_handler.h"
-#include <stdlib.h>
 void deviceControlRequest(void) {
   if (!(Endpoint_IsSETUPReceived())) return;
   const void *buffer = NULL;
@@ -42,7 +41,7 @@ void deviceControlRequest(void) {
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
              USB_ControlRequest.wIndex == 0x00 &&
              USB_ControlRequest.wValue == 0x0000) {
-    uint32_t serialNumber = rand();
+    uint32_t serialNumber = millis();
     Endpoint_ClearSETUP();
     Endpoint_Write_Control_Stream_LE(&serialNumber, sizeof(serialNumber));
     Endpoint_ClearStatusStage();

@@ -9,11 +9,6 @@
 #include "xbox.h"
 #include "string_descriptors.h"
 
-#define USB_VERSION_BCD(Major, Minor, Revision) \
-    (((Major & 0xFF) << 8) |                    \
-     ((Minor & 0x0F) << 4) |                    \
-     (Revision & 0x0F))
-
 #define USB_CONFIG_POWER_MA(mA) ((mA) >> 1)
 
 #define NO_DESCRIPTOR 0

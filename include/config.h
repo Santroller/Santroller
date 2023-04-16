@@ -184,6 +184,12 @@ typedef struct {
 #ifdef TICK_CONSUMER
     USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
+#define USB_VERSION_BCD(Major, Minor, Revision) \
+    (((Major & 0xFF) << 8) |                    \
+     ((Minor & 0x0F) << 4) |                    \
+     (Revision & 0x0F))
+
+
 #if DEVICE_TYPE_IS_GAMEPAD
     union {
         PS4_REPORT ps4;

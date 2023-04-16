@@ -1141,6 +1141,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = ((0x7fff - (velocity_in << 8)));
 #define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = ((0x7fff - (velocity_in << 8)));
 #else
+report->leftThumbClick = true;
 #define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;

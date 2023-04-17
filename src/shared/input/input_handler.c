@@ -85,6 +85,9 @@ void initInputs(Configuration_t *config) {
 bool start = false;
 bool select = false;
 void tickInputs(Controller_t *controller) {
+  if (typeIsGuitar) {
+    controller->r_y = 0;
+  }
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t *pin;

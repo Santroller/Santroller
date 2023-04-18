@@ -13,7 +13,8 @@ jobs:
       - name: Build artifacts
         run: |
           cd ..
-          tar cfJ firmware.tar.xz Ardwiino
+          mv Ardwiino firmware
+          tar cfJ firmware.tar.xz firmware
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

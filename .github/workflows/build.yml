@@ -10,10 +10,10 @@ jobs:
         with:
           persist-credentials: false
           submodules: true
+          path: firmware
       - name: Build artifacts
         run: |
           cd ..
-          mv Ardwiino firmware
           tar cfJ firmware.tar.xz firmware
       - name: Release
         uses: softprops/action-gh-release@v1

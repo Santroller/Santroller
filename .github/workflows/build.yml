@@ -12,6 +12,8 @@ jobs:
           submodules: true
       - name: Build artifacts
         run: |
+          rm ardwiino_script_post.py
+          mv ardwiino_script_post_tool.py ardwiino_script_post.py
           cd ..
           tar cfJ firmware.tar.xz Ardwiino
       - name: Release

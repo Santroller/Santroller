@@ -1,0 +1,22 @@
+name: Build
+on: [push]
+jobs:
+  release:
+    name: Release Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Build artifacts
+        run: |
+          cd ..
+          tar cfJ firmware.tar.xz Ardwiino
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "firmware.tar.xz"
+          tag_name: latest
+          target_commitish: main

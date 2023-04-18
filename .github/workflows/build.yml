@@ -19,4 +19,4 @@ jobs:
         with:
           files: "firmware.tar.xz"
           tag_name: latest
-          target_commitish: main
+          target_commitish: master

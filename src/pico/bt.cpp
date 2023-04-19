@@ -13,6 +13,7 @@
 #include "btstack.h"
 #include "config.h"
 #include "endpoints.h"
+#include "bt.h"
 #include "hid.h"
 #include "shared_main.h"
 #include "descriptors.h"

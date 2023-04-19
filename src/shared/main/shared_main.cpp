@@ -58,6 +58,10 @@ uint8_t rawWt;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
 
+#if POLL_RATE
+long last_poll = 0;
+#endif
+
 /* Magic data taken from GHLtarUtility:
  * https://github.com/ghlre/GHLtarUtility/blob/master/PS3Guitar.cs
  * Note: The Wii U and PS3 dongles happen to share the same!
@@ -1141,7 +1145,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = ((0x7fff - (velocity_in << 8)));
 #define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = ((0x7fff - (velocity_in << 8)));
 #else
-report->leftThumbClick = true;
+        report->leftThumbClick = true;
 #define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
 #define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
@@ -1924,6 +1928,12 @@ bool tick_bluetooth(void) {
 #endif
 #ifndef RF_ONLY
 bool tick_usb(void) {
+#if POLL_RATE
+    if ((millis() - last_poll) < POLL_RATE) {
+        return;
+    }
+    last_poll = millis();
+#endif
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
     // Wii and Wii u both just stop talking to the device if they don't recognise it.

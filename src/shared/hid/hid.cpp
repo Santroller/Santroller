@@ -491,7 +491,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             uint8_t player = (data[2] & 0x0F);
             handle_player_leds(player + 1);
         } else if (id == SANTROLLER_LED_ID) {
-            handle_rumble(data[2], data[3]);
+            handle_rumble(data[1], data[2]);
         }
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         else if (id == DJ_LED_ID) {

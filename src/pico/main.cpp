@@ -175,7 +175,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                     break;
 
                 case XINPUT_STAGE_KIT:
-                    type.sub_type = STAGE_KIT_TYPE;
+                    type.sub_type = STAGE_KIT;
                     break;
 
                 case XINPUT_TURNTABLE:

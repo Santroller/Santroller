@@ -1120,7 +1120,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
 #endif
-    if (output_console_type == WINDOWS || output_console_type == XBOX360 || output_console_type == STAGE_KIT) {
+    if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
@@ -1259,10 +1259,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
 #else
     // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateSequence) {
 #endif
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         if (output_console_type == UNIVERSAL) {
@@ -1554,7 +1554,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 updateHIDSequence = true;
             }
         }
-        if (output_console_type == WINDOWS || output_console_type == XBOX360 || output_console_type == STAGE_KIT) {
+        if (output_console_type == WINDOWS || output_console_type == XBOX360) {
             XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
             memset(report_data, 0, sizeof(XINPUT_REPORT));
             report->rid = 0;
@@ -1611,10 +1611,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
             report_size = size = sizeof(PS3Gamepad_Data_t);
         }
-        if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
+        if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateHIDSequence) {
 #else
         // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
-        if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
+        if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateHIDSequence) {
 #endif
             report_size = size = sizeof(PS3_REPORT);
             if (output_console_type == UNIVERSAL) {
@@ -1764,7 +1764,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             updateHIDSequence = true;
         }
     }
-    if (output_console_type == WINDOWS || output_console_type == XBOX360 || output_console_type == STAGE_KIT) {
+    if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
@@ -1814,10 +1814,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         convert_ps3_to_type((uint8_t *)report_data, &input, output_console_type);
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateHIDSequence) {
 #else
     // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != STAGE_KIT && !updateHIDSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateHIDSequence) {
 #endif
         report_size = size = sizeof(PS3_REPORT);
         if (output_console_type == UNIVERSAL) {

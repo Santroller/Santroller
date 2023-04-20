@@ -911,7 +911,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-#if CONSOLE_TYPE != KEYBOARD_MOUSE && CONSOLE_TYPE != MIDI && CONSOLE_TYPE != STAGE_KIT
+#if CONSOLE_TYPE != KEYBOARD_MOUSE && CONSOLE_TYPE != MIDI
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
@@ -967,7 +967,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
-            } else if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == STAGE_KIT) {
+            } else if (consoleType == WINDOWS || consoleType == XBOX360) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
             } else if (consoleType == WINDOWS_XBOXONE) {

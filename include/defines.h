@@ -32,7 +32,7 @@
 #define LIVE_GUITAR 8
 #define DRUMS 9
 #define DJ_HERO_TURNTABLE 10
-#define STAGE_KIT_TYPE 11
+#define STAGE_KIT 11
 
 #define GUITAR_HERO 0
 #define ROCK_BAND 1
@@ -40,7 +40,6 @@
 #define UNIVERSAL 0
 #define KEYBOARD_MOUSE 1
 #define MIDI 2
-#define STAGE_KIT 3
 
 #define XBOX360 4
 #define PS3 5

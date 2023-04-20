@@ -45,7 +45,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #else
 #define PS3_ID 0x07
 #endif
-#if CONSOLE_TYPE == STAGE_KIT
+#if DEVICE_TYPE == STAGE_KIT
 #define SUB_TYPE XINPUT_STAGE_KIT
 #define XINPUT_FLAGS 0x00
 #define XINPUT_REPORT XInputGamepad_Data_t

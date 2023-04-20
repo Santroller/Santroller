@@ -364,12 +364,12 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
         }
     }
 #endif
-#if defined(INPUT_USB_HOST) && CONSOLE_TYPE == STAGE_KIT
+#if defined(INPUT_USB_HOST) && DEVICE_TYPE == STAGE_KIT
     USB_Device_Type_t type;
     // Only xinput has stage kit
     for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
         type = get_usb_host_device_type(i);
-        if (type.sub_type != STAGE_KIT_TYPE) continue;
+        if (type.sub_type != STAGE_KIT) continue;
         XInputRumbleReport_t report = {
             rid : XBOX_RUMBLE_ID,
             rsize : sizeof(XInputRumbleReport_t),

@@ -34,6 +34,7 @@
 #define PS4_LED_RUMBLE_ID 0x05
 #define SANTROLLER_LED_ID 0x5A
 #define DJ_LED_ID 0x91
+#define STAR_POWER_GAUGE_ID 0x08
 
 // For turntables, both left and right are set to the same thing
 // For these, left is set to 0, and right to these values

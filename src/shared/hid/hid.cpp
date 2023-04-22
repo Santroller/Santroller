@@ -50,6 +50,8 @@ uint8_t stage_kit_millis[] = {
     75,   // Fastest
 };
 uint8_t strobe_delay = 0;
+uint8_t last_star_power = 0;
+bool star_power_active = false;
 bool strobing = false;
 long last_strobe = 0;
 #ifdef INPUT_USB_HOST
@@ -320,6 +322,13 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     HANDLE_RUMBLE;
+    #ifdef HANDLE_LED_RUMBLE_OFF
+        if ((rumble_left == 0x00 rumble_right == 0xFF)) {
+            HANDLE_LED_RUMBLE_OFF;
+        }
+    #endif
+    
+   
 #if defined(INPUT_USB_HOST) && CONSOLE_TYPE == UNIVERSAL && DEVICE_TYPE == GAMEPAD
     USB_Device_Type_t type;
     for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {

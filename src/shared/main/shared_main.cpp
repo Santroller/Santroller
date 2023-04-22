@@ -1951,7 +1951,7 @@ bool tick_usb(void) {
 #else
     // Go for ps3 gamepad mode on wii / wii u if we arent emulating an instrument
     // Pademu will get triggered here too.
-    if (millis() > 2000 && consoleType == UNIVERSAL && descriptor_requested) {
+    if (millis() > 2000 && consoleType == UNIVERSAL && !descriptor_requested) {
         set_console_type(PS3);
     }
 #endif

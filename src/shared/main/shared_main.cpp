@@ -869,7 +869,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wt_neck.h"
     TICK_SHARED;
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
-    if (!buf) return 0;
+    if (!buf) {
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+        if (debounce[i]) {
+            debounce[i]--;
+        }
+    }
+        return 0;
+    }
         // Handle button combos for detection logic
 
 #ifdef INPUT_USB_HOST_DETECTION

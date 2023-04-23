@@ -94,13 +94,6 @@ uint8_t rf_data[32];
 #ifdef RF_RX
 RfInputPacket_t last_rf_inputs[RF_COUNT];
 #endif
-typedef struct {
-    // If this bit is set, then an led effect (like star power) has overridden the leds
-    uint8_t select;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-} Led_t;
 Led_t ledState[LED_COUNT];
 #define UP 1 << 0
 #define DOWN 1 << 1

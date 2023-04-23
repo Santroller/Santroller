@@ -1,5 +1,6 @@
 #include "pins.h"
 #include "reports/controller_reports.h"
+#include "config.h"
 
 void init_main(void);
 
@@ -21,6 +22,15 @@ void host_controller_connected(void);
 void send_rf_console_type(void);
 void on_connect(void);
 void set_console_type(uint8_t new_console_type);
+
+typedef struct {
+    // If this bit is set, then an led effect (like star power) has overridden the leds
+    uint8_t select;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} Led_t;
+extern Led_t ledState[LED_COUNT];
 #ifdef USB_HOST_STACK
 typedef struct {
     uint8_t console_type;

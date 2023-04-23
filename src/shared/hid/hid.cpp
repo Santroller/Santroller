@@ -322,13 +322,12 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     HANDLE_RUMBLE;
-    #ifdef HANDLE_LED_RUMBLE_OFF
-        if (rumble_left == 0x00 && rumble_right == 0xFF) {
-            HANDLE_LED_RUMBLE_OFF;
-        }
-    #endif
-    
-   
+#ifdef HANDLE_LED_RUMBLE_OFF
+    if (rumble_left == 0x00 && rumble_right == 0xFF) {
+        HANDLE_LED_RUMBLE_OFF;
+    }
+#endif
+
 #if defined(INPUT_USB_HOST) && CONSOLE_TYPE == UNIVERSAL && DEVICE_TYPE == GAMEPAD
     USB_Device_Type_t type;
     for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
@@ -613,6 +612,16 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             overriddenR2 = wValue;
             return 0;
         }
+#if LED_COUNT
+        case COMMAND_SET_LEDS: {
+            uint8_t led = response_buffer[0];
+            if (led >= LED_COUNT) return 0;
+            ledState[led].r = response_buffer[1];
+            ledState[led].g = response_buffer[2];
+            ledState[led].b = response_buffer[3];
+            return 0;
+        }
+#endif
 #ifdef INPUT_USB_HOST
         case COMMAND_READ_USB_HOST: {
             return read_usb_host_devices(response_buffer);

@@ -871,13 +871,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     if (!buf) {
         for (int i = 0; i < DIGITAL_COUNT; i++) {
-        if (debounce[i]) {
-            debounce[i]--;
+            if (debounce[i]) {
+                debounce[i]--;
+            }
         }
-    }
         return 0;
     }
-        // Handle button combos for detection logic
+    // Handle button combos for detection logic
 
 #ifdef INPUT_USB_HOST_DETECTION
     // give the user 2 seconds after plugging in the host controller (if its already plugged in then this will act like 2 seconds on plug in)

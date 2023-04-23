@@ -523,7 +523,3 @@ typedef struct
     uint16_t unused4[3];
 } __attribute__((packed)) PS3GHLGuitar_Data_t;
 
-typedef struct {
-    uint8_t report_id;
-    uint8_t report[];
-} __attribute__((packed)) PS3Universal_Data_t;

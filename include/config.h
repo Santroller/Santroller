@@ -175,6 +175,10 @@ enum hid_reports_t {
 };
 
 typedef struct {
+    uint8_t report_id;
+    PS3_REPORT report;
+} __attribute__((packed)) PS3Universal_Data_t;
+typedef struct {
 #ifdef TICK_NKRO
     USB_NKRO_Data_t lastNKROReport;
 #endif
@@ -189,9 +193,9 @@ typedef struct {
      ((Minor & 0x0F) << 4) |                    \
      (Revision & 0x0F))
 
-
 #if DEVICE_TYPE_IS_GAMEPAD
     union {
+        PS3Universal_Data_t universal;
         PS4_REPORT ps4;
         PS3_REPORT ps3;
         XINPUT_REPORT xinput;

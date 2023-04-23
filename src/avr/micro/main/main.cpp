@@ -28,20 +28,17 @@ volatile uint16_t test2 __attribute__((section(".noinit")));
 void SetupHardware(void);
 
 bool connected = false;
-void EVENT_USB_Device_Connect(void)
-{
-	connected = true;
+void EVENT_USB_Device_Connect(void) {
+    connected = true;
 }
 
-void EVENT_USB_Device_Disconnect(void)
-{
-	connected = false;
+void EVENT_USB_Device_Disconnect(void) {
+    connected = false;
 }
 
 bool usb_connected() {
     return connected;
 }
-
 
 void setup() {
     init_main();

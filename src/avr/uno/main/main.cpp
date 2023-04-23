@@ -29,15 +29,21 @@ descriptor_request_t* desc = (descriptor_request_t*)buf;
 control_request_t* ctr = (control_request_t*)buf;
 data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
 
+
+// If we have been ticked by usb for new data, then this will be true
+bool received_controller_tick = false;
 // reset_usb is called by other parts of the code if we need to trigger a usb reload
 // we just trigger a flag here, as we can send it on our next usb transfer
 bool should_reload_usb = false;
+bool usb_ready = false;
+
 void reset_usb(void) {
     should_reload_usb = true;
 }
 
-// If we have been ticked by usb for new data, then this will be true
-bool received_controller_tick = false;
+bool usb_connected(void) {
+    return usb_ready;
+}
 
 void setup() {
     // Configure the UART for controller mode
@@ -69,6 +75,9 @@ void loop() {
     ready = false;
     // Now handle the packet
     switch (header->id) {
+        case USB_READY:
+            usb_ready = dt->data[0];
+            return;
         case CONTROLLER_DATA_TRANSMIT_ID:
             // We received a hid out request, we need to process it
             hid_set_report(dt->data, header->len - sizeof(packet_header_t), INTERRUPT_ID, INTERRUPT_ID);

@@ -336,6 +336,23 @@ int main(void) {
     }
 }
 
+void write_ready(bool ready) {
+    uint16_t tmp;
+    INIT_TMP_USB_TO_SERIAL(tmp);
+    packet_header_t control_request_packet = {VALID_PACKET, USB_READY, sizeof(usb_ready_t)};
+    WRITE_ARRAY_TO_BUF(tmp, &control_request_packet, sizeof(packet_header_t));
+    WRITE_ARRAY_TO_BUF(tmp, &ready, 1);
+    FINISH_WRITE(tmp);
+}
+
+void EVENT_USB_Device_Connect(void) {
+    write_ready(true);
+}
+
+void EVENT_USB_Device_Disconnect(void) {
+    write_ready(false);
+}
+
 void EVENT_USB_Device_ControlRequest(void) {
     if (!(Endpoint_IsSETUPReceived())) return;
     // Standard requests NEED to shortcut this system!

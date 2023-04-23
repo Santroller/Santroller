@@ -33,6 +33,10 @@ typedef struct {
     uint8_t id;
     uint8_t len;
 } __attribute__((packed)) packet_header_t;
+typedef struct {
+    packet_header_t header;
+    uint8_t state;
+} __attribute__((packed)) usb_ready_t;
 
 typedef struct {
     packet_header_t header;

@@ -616,6 +616,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_SET_LEDS: {
             uint8_t led = response_buffer[0];
             if (led >= LED_COUNT) return 0;
+            if (response_buffer[1] == 0 && response_buffer[2] == 0 && response_buffer[3] == 0) {
+                ledState[led].select = 0;
+                return 0;
+            }
+            ledState[led].select = 1;
             ledState[led].r = response_buffer[1];
             ledState[led].g = response_buffer[2];
             ledState[led].b = response_buffer[3];

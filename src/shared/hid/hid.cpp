@@ -438,64 +438,66 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #endif
     uint8_t id = data[0];
     // Handle Xbox 360 LEDs and rumble
-    if (report_id == INTERRUPT_ID) {
-        // Handle XBOX One Auth
-        if (consoleType == XBOXONE) {
-            if (xbox_one_state == Waiting1) {
-                xbox_one_state = Ident1;
-            } else if (xbox_one_state == Waiting2) {
-                xbox_one_state = Ident2;
-            } else if (xbox_one_state == Waiting5) {
-                xbox_one_state = Ident5;
-            } else if (xbox_one_state == Auth) {
-                if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
-                    handle_auth_led();
-                    printf("Ready!\r\n");
-                    xbox_one_state = Ready;
-                    data_from_console_size = len;
-                    memcpy(data_from_console, data, len);
-                } else {
-                    data_from_console_size = len;
-                    memcpy(data_from_console, data, len);
-                }
-            } else if (xbox_one_state == Ready) {
-                // Live guitar is a bit special, so handle it here
+    // Handle XBOX One Auth
+    if (consoleType == XBOXONE) {
+        if (xbox_one_state == Waiting1) {
+            xbox_one_state = Ident1;
+        } else if (xbox_one_state == Waiting2) {
+            xbox_one_state = Ident2;
+        } else if (xbox_one_state == Waiting5) {
+            xbox_one_state = Ident5;
+        } else if (xbox_one_state == Auth) {
+            if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
+                handle_auth_led();
+                printf("Ready!\r\n");
+                xbox_one_state = Ready;
+                data_from_console_size = len;
+                memcpy(data_from_console, data, len);
+            } else {
+                data_from_console_size = len;
+                memcpy(data_from_console, data, len);
+            }
+        } else if (xbox_one_state == Ready) {
+            // Live guitar is a bit special, so handle it here
 #if DEVICE_TYPE == LIVE_GUITAR
-                if (id == 0x22) {
-                    uint8_t sub_id = data[1];
-                    if (sub_id == PS3_LED_RUMBLE_ID) {
-                        uint8_t player = (data[3] & 0x0F);
-                        handle_player_leds(player + 1);
-                    } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
-                        last_ghl_poke_time = millis();
-                    }
-                }
-#endif
-                if (id == GIP_CMD_RUMBLE) {
-                    GipRumble_t *rumble = (GipRumble_t *)data;
-                    handle_rumble(rumble->leftMotor, rumble->rightMotor);
+            if (id == 0x22) {
+                uint8_t sub_id = data[1];
+                if (sub_id == PS3_LED_RUMBLE_ID) {
+                    uint8_t player = (data[3] & 0x0F);
+                    handle_player_leds(player + 1);
+                } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
+                    last_ghl_poke_time = millis();
                 }
             }
-        } else {
-            if (id == XBOX_LED_ID) {
-                uint8_t led = data[2];
-                uint8_t player = xbox_players[led];
-                handle_player_leds(player);
-            } else if (id == XBOX_RUMBLE_ID) {
-                uint8_t rumble_left = data[3];
-                uint8_t rumble_right = data[4];
-                handle_rumble(rumble_left, rumble_right);
+#endif
+            if (id == GIP_CMD_RUMBLE) {
+                GipRumble_t *rumble = (GipRumble_t *)data;
+                handle_rumble(rumble->leftMotor, rumble->rightMotor);
             }
         }
+    } else if (consoleType == XBOX360 || consoleType == WINDOWS) {
+        if (id == XBOX_LED_ID) {
+            uint8_t led = data[2];
+            uint8_t player = xbox_players[led];
+            handle_player_leds(player);
+        } else if (id == XBOX_RUMBLE_ID) {
+            uint8_t rumble_left = data[3];
+            uint8_t rumble_right = data[4];
+            handle_rumble(rumble_left, rumble_right);
+        }
     } else {
-        uint8_t *data = (uint8_t *)data;
         if (id == PS4_LED_RUMBLE_ID) {
             ps4_output_report *report = (ps4_output_report *)data;
             handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
             handle_rumble(report->motor_left, report->motor_right);
         }
 #if DEVICE_TYPE_IS_INSTRUMENT
-        else if (id == PS3_LED_RUMBLE_ID) {
+        else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
+            handle_rumble(data[2], data[3]);
+        } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {
+            uint8_t player = (data[2] & 0x0F);
+            handle_player_leds(player + 1);
+        } else if (id == PS3_LED_RUMBLE_ID) {
             uint8_t player = (data[2] & 0x0F);
             handle_player_leds(player + 1);
         } else if (id == SANTROLLER_LED_ID) {
@@ -511,8 +513,18 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         else if (id == PS3_LED_RUMBLE_ID) {
             ps3_output_report *report = (ps3_output_report *)data;
             uint8_t player = report->leds_bitmap;
-            handle_player_leds(player);
-            handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
+            if (player & _BV(1)) {
+                handle_player_leds(1);
+            }
+            if (player & _BV(2)) {
+                handle_player_leds(2);
+            }
+            if (player & _BV(3)) {
+                handle_player_leds(3);
+            }
+            if (player & _BV(4)) {
+                handle_player_leds(4);
+            }
         }
 #endif
     }

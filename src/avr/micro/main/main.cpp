@@ -54,8 +54,11 @@ void loop() {
     tick();
     Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
     if (Endpoint_IsOUTReceived()) {
-        uint8_t size = Endpoint_Read_Stream_LE(buf, 0x08, NULL);
-        hid_set_report(buf, size, INTERRUPT_ID, INTERRUPT_ID);
+        if (Endpoint_IsReadWriteAllowed()) {
+            Endpoint_Read_Stream_LE(buf, sizeof(ps4_output_report), NULL);
+            hid_set_report(buf, sizeof(ps4_output_report), INTERRUPT_ID, INTERRUPT_ID);
+        }
+        Endpoint_ClearOUT();
     }
 }
 bool ready_for_next_packet() {

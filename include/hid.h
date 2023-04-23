@@ -24,6 +24,7 @@
 
 // HID "Report IDs" used by xinput for 360 rumble and led
 #define XBOX_LED_ID 0x01
+#define PS3_REPORT_ID 0x01
 #define XBOX_RUMBLE_ID 0x00
 #define INTERRUPT_ID 0x16
 

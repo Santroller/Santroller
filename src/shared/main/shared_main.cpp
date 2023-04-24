@@ -1166,7 +1166,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Map from int16_t to xb360
 #define COPY_AXIS_NORMAL(in, out) \
     if (in) out = in;
-// Map from uint16_t to xb360 (to shift to get to uint8_t)
+// Map from uint16_t to xb360 (shift to get to uint8_t)
 #define COPY_AXIS_TRIGGER(in, out) \
     if (in) out = in >> 8;
 // Map from 10 bit int to xb360

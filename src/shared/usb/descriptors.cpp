@@ -1016,12 +1016,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 address = ps3_instrument_descriptor;
                 size = sizeof(ps3_instrument_descriptor);
 #else
-                if (consoleType == REAL_PS3) {
-                    address = ps3_instrument_descriptor;
-                    size = sizeof(ps3_instrument_descriptor);
-                } else {
+                if (consoleType == PS3) {
                     address = ps3_descriptor;
                     size = sizeof(ps3_descriptor);
+                } else {
+                    address = ps3_instrument_descriptor;
+                    size = sizeof(ps3_instrument_descriptor);
                 }
 #endif
             } else {

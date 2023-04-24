@@ -57,7 +57,6 @@ typedef struct {
     bool capture : 1;  // switch capture button
     uint8_t : 2;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
     uint8_t dpad : 4;
     uint8_t : 4;
 

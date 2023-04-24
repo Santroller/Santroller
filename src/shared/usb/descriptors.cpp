@@ -732,7 +732,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
     if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
-        // printf("Xbox 360!\n");
         reset_usb();
         return 0;
     }
@@ -797,11 +796,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
 #if DEVICE_TYPE_IS_INSTRUMENT && DEVICE_TYPE != LIVE_GUITAR
             consoleType = PS3;
-            // printf("PS4 (PS3 fallback)\r\n");
             reset_usb();
 #else
             consoleType = PS4;
-            // printf("PS4\r\n");
             reset_usb();
 #endif
         }
@@ -865,14 +862,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return DevCompatIDsOneDetect.TotalLength;
         }
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-        if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
+        if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
         } else if (consoleType == UNIVERSAL && WINDOWS_USES_XINPUT) {
             consoleType = WINDOWS_XBOXONE;
-            // printf("Xbox 360 or XONE! (windows fallback)\n");
             reset_usb();
         } else if (consoleType != UNIVERSAL) {
             return 0;
@@ -890,7 +886,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         cleared_output |= wIndex == DEVICE_EPADDR_OUT;
         if (cleared_input && cleared_output) {
             consoleType = SWITCH;
-            // printf("Switch!\n");
             reset_usb();
             return 0;
         }

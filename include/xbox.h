@@ -20,4 +20,5 @@ extern const XInputInputCapabilities_t capabilities2;
 extern const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR ExtendedIDs;
 extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs; 
 extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs360;
-extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDsOne; 
+extern const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsOne; 
+extern const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsOneDetect;

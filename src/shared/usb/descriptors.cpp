@@ -860,6 +860,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         memcpy(requestBuffer, &serial, sizeof(serial));
         return sizeof(XInputSerialNumber_t);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
+        if (consoleType == WINDOWS_XBOXONE) {
+            memcpy_P(requestBuffer, &DevCompatIDsOneDetect, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE));
+            return DevCompatIDsOneDetect.TotalLength;
+        }
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
         if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;

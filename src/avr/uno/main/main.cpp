@@ -92,6 +92,7 @@ void loop() {
         }
         case DESCRIPTOR_ID: {
             // 8u2/16u2 wants a descriptor, so return it
+            // Wlength will be overwritten in descriptorRequest so cache it
             uint16_t wLength = desc->wLength;
             uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, dt->data);
             if (len > wLength) len = wLength;
@@ -106,9 +107,11 @@ void loop() {
             break;
         }
         case CONTROL_REQUEST_ID: {
+            // Wlength will be overwritten in descriptorRequest so cache it
+            uint16_t wLength = ctr->wLength;
             // 8u2/16u2 wants us to handle a control request.
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, dt->data);
-            if (len > ctr->wLength) len = ctr->wLength;
+            if (len > wLength) len = wLength;
             header->len = len;
             break;
         }

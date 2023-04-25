@@ -140,6 +140,11 @@ void handleControllerData() {
                 FINISH_READ(tmp);
                 return;
             }
+            if (type == CONTROLLER_DATA_RESTART_USB_ID) {
+                // The 328p  wants to restart the usb layer, so just reboot the microcontroller
+                bootloaderState = (JUMP | COMMAND_SKIP_WAIT);
+                reboot();
+            }
             break;
         }
     }
@@ -287,8 +292,8 @@ int main(void) {
     // Controller mode, construct packets that we will need to send later
     packet_header_t requestData = {
         VALID_PACKET, CONTROLLER_DATA_REQUEST_ID, sizeof(packet_header_t)};
-    data_transmit_packet_t packet = {
-        {VALID_PACKET, CONTROLLER_DATA_TRANSMIT_ID, 0}};
+    packet_header_t tx_header = {
+        VALID_PACKET, CONTROLLER_DATA_TRANSMIT_ID, sizeof(packet_header_t)};
 
     // Loop for handling controller mode
     while (true) {
@@ -307,7 +312,6 @@ int main(void) {
             handleControllerData();
             // Acknowledge the packet
             Endpoint_ClearIN();
-            continue;
         }
 
         // Check if the host has sent us a controller packet (for example, LEDs or other controller info)
@@ -316,11 +320,11 @@ int main(void) {
             // It has, send the packet to the 328p for processing
             uint16_t tmp;
             INIT_TMP_USB_TO_SERIAL(tmp);
-            packet.header.len = sizeof(data_transmit_packet_t) + Endpoint_BytesInEndpoint();
-            WRITE_ARRAY_TO_BUF(tmp, &packet, sizeof(data_transmit_packet_t));
+            uint8_t count = Endpoint_BytesInEndpoint();
+            tx_header.len = sizeof(packet_header_t) + count;
+            WRITE_ARRAY_TO_BUF(tmp, &tx_header, sizeof(packet_header_t));
             // Check if the packet is empty or has data
             if (Endpoint_IsReadWriteAllowed()) {
-                uint8_t count = Endpoint_BytesInEndpoint();
                 while (count--) {
                     register uint8_t data = Endpoint_Read_8();
                     WRITE_BYTE_TO_BUF(data, tmp);
@@ -530,14 +534,19 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     // Now that we have the console type, we can configure the endpoints accordingly
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
-    if (consoleType == WINDOWS || consoleType == XBOX360) {
+    uint8_t epsizeOut = 0x08;
+    if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
         epsize = 0x18;
+    }
+    if (consoleType == XBOXONE) {
+        epsize = 0x40;
+        epsizeOut = 0x40;
     }
     if (consoleType == MIDI) {
         type = EP_TYPE_BULK;
     }
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, epsizeOut, 2);
     return;
 }
 

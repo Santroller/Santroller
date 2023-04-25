@@ -4,6 +4,10 @@ import subprocess
 import sys
 from os.path import join
 try:
+    import usb
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyusb"])
+try:
     import libusb_package
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])

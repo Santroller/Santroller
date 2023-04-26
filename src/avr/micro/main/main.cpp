@@ -101,14 +101,19 @@ void EVENT_USB_Device_ControlRequest(void) {
 void EVENT_USB_Device_ConfigurationChanged(void) {
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
+    uint8_t epsizeOut = 0x08;
+    if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
+        epsize = 0x18;
+    }
+    if (consoleType == XBOXONE) {
+        epsize = 0x40;
+        epsizeOut = 0x40;
+    }
     if (consoleType == MIDI) {
         type = EP_TYPE_BULK;
     }
-    if (consoleType == WINDOWS || consoleType == XBOX360) {
-        epsize = 0x18;
-    }
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 1);
-    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, 0x08, 2);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);
+    Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, epsizeOut, 2);
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

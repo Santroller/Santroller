@@ -55,8 +55,9 @@ void loop() {
     Endpoint_SelectEndpoint(DEVICE_EPADDR_OUT);
     if (Endpoint_IsOUTReceived()) {
         if (Endpoint_IsReadWriteAllowed()) {
-            Endpoint_Read_Stream_LE(buf, sizeof(ps4_output_report), NULL);
-            hid_set_report(buf, sizeof(ps4_output_report), INTERRUPT_ID, INTERRUPT_ID);
+            uint8_t size = Endpoint_BytesInEndpoint();
+            Endpoint_Read_Stream_LE(buf, size, NULL);
+            hid_set_report(buf, size, INTERRUPT_ID, INTERRUPT_ID);
         }
         Endpoint_ClearOUT();
     }
@@ -102,7 +103,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
     uint8_t epsizeOut = 0x08;
-    if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == XBOXONE || consoleType == WINDOWS_XBOXONE) {
+    if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == WINDOWS_XBOXONE) {
         epsize = 0x18;
     }
     if (consoleType == XBOXONE) {

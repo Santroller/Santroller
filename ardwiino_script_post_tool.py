@@ -55,8 +55,6 @@ class Context:
 
 
 def post_upload(source, target, env):
-    print(str(source[0]))
-    print(env)
     if "/arduino_uno/" in str(source[0]):
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
     if "_usb" in str(source[0]):
@@ -101,6 +99,8 @@ def post_upload(source, target, env):
         print(f"Calling {new_env}")
         subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
         os.chdir(cwd)
+        env.AutodetectUploadPort()
+        env.TouchSerialPort("$UPLOAD_PORT", 2400)
 
 
 env.AddPostAction("upload", post_upload)

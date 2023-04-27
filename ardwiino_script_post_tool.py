@@ -55,6 +55,8 @@ class Context:
 
 
 def post_upload(source, target, env):
+    print(str(source[0]))
+    print(env)
     if "/arduino_uno/" in str(source[0]):
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
     if "_usb" in str(source[0]):

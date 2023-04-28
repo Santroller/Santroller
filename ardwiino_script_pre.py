@@ -58,6 +58,7 @@ if "upload" in BUILD_TARGETS:
         print("Uploading script to detect speed")
         print(env.subst("$UPLOAD_PORT"))
         env.TouchSerialPort("$UPLOAD_PORT", 1200)
+        sleep(1)
         env.AutodetectUploadPort()
         print("after")
         print(env.subst("$UPLOAD_PORT"))

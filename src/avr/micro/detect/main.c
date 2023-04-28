@@ -65,11 +65,9 @@ void setup()
     while (waiting) {
     }
     timeSinceWDT = millis() - timeSinceWDT;
+	realFreq = 16;
     // And now compare to what we expect
-    if (F_CPU == 8000000 && timeSinceWDT > 20) {
-        // if the user is running at 16mhz, then it will run twice as fast, thus it will take longer than 15ms
-        realFreq = 16;
-    } else if (F_CPU == 16000000 && timeSinceWDT < 8) {
+    if (F_CPU == 16000000 && timeSinceWDT < 10) {
         // if the user is running at 8mhz, then it will run at half speed, thus it will take less than 15ms
         realFreq = 8;
     }

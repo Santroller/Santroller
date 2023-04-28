@@ -56,8 +56,11 @@ if "upload" in BUILD_TARGETS:
         env["BOARD_F_CPU"] = rate
     if "detect_frequency" in upload_options and upload_options["detect_frequency"] == "true":
         print("Uploading script to detect speed")
+        print(env.subst("$UPLOAD_PORT"))
         env.TouchSerialPort("$UPLOAD_PORT", 1200)
         env.AutodetectUploadPort()
+        print("after")
+        print(env.subst("$UPLOAD_PORT"))
         subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"])
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])

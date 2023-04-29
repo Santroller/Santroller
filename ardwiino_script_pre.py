@@ -65,6 +65,7 @@ if "upload" in BUILD_TARGETS:
         while not dev:
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2886)
             pass
+        sleep(2)
         rate = dev.product.split('\x00',1)[0].split(" - ")[2]
         rate = f"{rate}L"
         env["BOARD_F_CPU"] = rate

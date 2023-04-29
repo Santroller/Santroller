@@ -72,8 +72,13 @@ if "upload" in BUILD_TARGETS:
         rate = dev.product.split('\x00',1)[0].split(" - ")[2]
         rate = f"{rate}L"
         env["BOARD_F_CPU"] = rate
+        print("Found rate: "+rate)
+        print("Returning to bootloader")
         try:
-            dev.ctrl_transfer(0x21, 0x09, BOOTLOADER)
+            dev.ctrl_transfer(0x21, BOOTLOADER)
         except:
             pass
+        dev = None
+        print("Waiting for bootloader device")
+        sleep(2)
         subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"])

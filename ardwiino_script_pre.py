@@ -76,3 +76,6 @@ if "upload" in BUILD_TARGETS:
         # rate = usb.util.get_string(dev, dev.iProduct, 0x0409).split("\x00")[0].rpartition(" - ")[2]
         rate = f"{rate}L"
         env["BOARD_F_CPU"] = rate
+        # There will be a new port, so we need to make sure to look for it.
+        del env["UPLOAD_PORT"]
+        

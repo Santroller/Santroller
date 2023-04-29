@@ -17,6 +17,9 @@ from serial import Serial, SerialException
 import os
 from time import sleep
 
+REBOOT=48
+BOOTLOADER=49
+BOOTLOADER_SERIAL=50
 class Context:
     def __init__(self):
         self.meta = ""

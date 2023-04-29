@@ -16,6 +16,7 @@
 #include <avr/power.h>
 #include <avr/wdt.h>
 #include <string.h>
+#include "commands.h"
 
 #include "bootloader.h"
 #include "descriptors_detect.h"
@@ -102,5 +103,13 @@ void EVENT_USB_Device_ControlRequest(void) {
         Endpoint_ClearSETUP();
         Endpoint_Write_Control_Stream_LE(&DevCompatIDs, sizeof(DevCompatIDs));
         Endpoint_ClearStatusStage();
+    }
+    if (USB_ControlRequest.bmRequestType == 0x21) {
+        if (USB_ControlRequest.bRequest == COMMAND_REBOOT) {
+            reboot();
+        }
+        if (USB_ControlRequest.bRequest == COMMAND_JUMP_BOOTLOADER) {
+            bootloader();
+        }
     }
 }

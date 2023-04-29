@@ -6,54 +6,43 @@
  * Include LUFA.h after LUFAConfig.h
  */
 
-#include <avr/io.h>
-#include <avr/wdt.h>
-#include <avr/power.h>
-#include <avr/interrupt.h>
-#include <string.h>
-
-#include "descriptors_detect.h"
-#include "bootloader.h"
-
 #include <LUFA.h>
 #include <LUFA/LUFA/Drivers/Board/LEDs.h>
-#include <LUFA/LUFA/Drivers/USB/USB.h>
 #include <LUFA/LUFA/Drivers/USB/Class/CDCClass.h>
+#include <LUFA/LUFA/Drivers/USB/USB.h>
 #include <LUFA/LUFA/Platform/Platform.h>
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <avr/power.h>
+#include <avr/wdt.h>
+#include <string.h>
 
-USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
-	{
-		.Config =
-			{
-				.ControlInterfaceNumber   = INTERFACE_ID_Device,
-				.DataINEndpoint           =
-					{
-						.Address          = DEVICE_EPADDR_IN,
-						.Size             = ENDPOINT_SIZE,
-						.Banks            = 1,
-					},
-				.DataOUTEndpoint =
-					{
-						.Address          = DEVICE_EPADDR_IN,
-						.Size             = ENDPOINT_SIZE,
-						.Banks            = 1,
-					},
-				.NotificationEndpoint =
-					{
-						.Address          = CDC_NOTIFICATION,
-						.Size             = ENDPOINT_SIZE,
-						.Banks            = 1,
-					},
-			},
-	};
+#include "bootloader.h"
+#include "descriptors_detect.h"
+#include "wcid.h"
 
 void SetupHardware(void);
 char freqString[10];
 volatile bool waiting = true;
-void setup()
-{
-	GlobalInterruptEnable(); // enable global interrupts
-	wdt_reset();
+
+const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDs = {
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
+    Version : 0x0100,
+    Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
+    TotalSections : 1,
+    Reserved : {0},
+    CompatID : {
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Device,
+            Reserved : 0x04,
+            CompatibleID : "WINUSB",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        }}
+};
+void setup() {
+    GlobalInterruptEnable();  // enable global interrupts
+    wdt_reset();
     // Enable the watchdog timer, as it runs from an internal clock so it will not be affected by the crystal
     MCUSR &= ~_BV(WDRF);
     /* Start the WDT Config change sequence. */
@@ -61,11 +50,11 @@ void setup()
     /* Configure the prescaler and the WDT for interrupt mode only*/
     WDTCSR = _BV(WDIE) | WDTO_15MS;
     sei();
-	long timeSinceWDT = millis();
+    long timeSinceWDT = millis();
     while (waiting) {
     }
     timeSinceWDT = millis() - timeSinceWDT;
-	realFreq = 16;
+    realFreq = 16;
     // And now compare to what we expect
     if (F_CPU == 16000000 && timeSinceWDT < 10) {
         // if the user is running at 8mhz, then it will run at half speed, thus it will take less than 15ms
@@ -77,30 +66,25 @@ void setup()
     } else if (realFreq == 16) {
         PLLCSR = ((1 << PINDIV) | (1 << PLLE));
     }
-	itoa(realFreq, freqString, 10);
-	freqString[strlen(freqString)] = '\n';
-	SetupHardware(); // ask LUFA to setup the hardware
+    itoa(realFreq, freqString, 10);
+    freqString[strlen(freqString)] = '\n';
+    SetupHardware();  // ask LUFA to setup the hardware
 }
 
-void loop()
-{
-	CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
-	CDC_Device_SendString(&VirtualSerial_CDC_Interface, freqString);
+void loop() {
 }
 
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
-void SetupHardware(void)
-{
-	/* Disable watchdog if enabled by bootloader/fuses */
-	MCUSR &= ~(1 << WDRF);
-	wdt_disable();
+void SetupHardware(void) {
+    /* Disable watchdog if enabled by bootloader/fuses */
+    MCUSR &= ~(1 << WDRF);
+    wdt_disable();
 
-	/* Disable clock division */
-	clock_prescale_set(clock_div_1);
+    /* Disable clock division */
+    clock_prescale_set(clock_div_1);
 
-	/* Hardware Initialization */
-	USB_Init();
-
+    /* Hardware Initialization */
+    USB_Init();
 }
 
 ISR(WDT_vect) {
@@ -109,31 +93,14 @@ ISR(WDT_vect) {
 }
 
 /** Event handler for the library USB Configuration Changed event. */
-void EVENT_USB_Device_ConfigurationChanged(void)
-{
-	bool ConfigSuccess = true;
-
-	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
+void EVENT_USB_Device_ConfigurationChanged(void) {
 }
 
 /** Event handler for the library USB Control Request reception event. */
-void EVENT_USB_Device_ControlRequest(void)
-{
-	CDC_Device_ProcessControlRequest(&VirtualSerial_CDC_Interface);
-}
-
-void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
-{
-	if (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 1200) {
-		bootloader();
-	}
-}
-
-/** CDC class driver callback function the processing of changes to the virtual
- *  control lines sent from the host..
- *
- *  \param[in] CDCInterfaceInfo  Pointer to the CDC class interface configuration structure being referenced
- */
-void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo)
-{
+void EVENT_USB_Device_ControlRequest(void) {
+    if (USB_ControlRequest.bmRequestType == 0xC0 && USB_ControlRequest.bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && USB_ControlRequest.wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
+        Endpoint_ClearSETUP();
+        Endpoint_Write_Control_Stream_LE(&DevCompatIDs, sizeof(DevCompatIDs));
+        Endpoint_ClearStatusStage();
+    }
 }

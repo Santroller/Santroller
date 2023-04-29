@@ -36,15 +36,23 @@
  */
 
 #include "descriptors_detect.h"
+
 #include "progmem.h"
+#include "wcid.h"
 
 uint8_t realFreq = 16;
-
+const OS_DESCRIPTOR OSDescriptorString = {
+    bLength : sizeof(OS_DESCRIPTOR),
+    bDescriptorType : DTYPE_String,
+    Signature : {'M', 'S', 'F', 'T', '1', '0', '0'},
+    VendorCode : REQ_GET_OS_FEATURE_DESCRIPTOR,
+    Reserved : 0
+};
 const USB_Descriptor_Device_t DeviceDescriptor =
     {
         .Header = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
-        .USBSpecification = VERSION_BCD(1, 1, 0),
+        .USBSpecification = VERSION_BCD(2, 0, 0),
         .Class = 0x02,
         .SubClass = 0x00,
         .Protocol = 0x00,
@@ -53,7 +61,7 @@ const USB_Descriptor_Device_t DeviceDescriptor =
 
         .VendorID = 0x1209,
 
-        .ProductID = 0x2883,
+        .ProductID = 0x2886,
         .ReleaseNumber = 0x0001,
 
         .ManufacturerStrIndex = STRING_ID_Manufacturer,
@@ -69,7 +77,7 @@ const USB_Descriptor_Configuration_t ConfigurationDescriptor =
                 .Header = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
 
                 .TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
-                .TotalInterfaces = 2,
+                .TotalInterfaces = 1,
 
                 .ConfigurationNumber = 1,
                 .ConfigurationStrIndex = NO_DESCRIPTOR,
@@ -77,88 +85,18 @@ const USB_Descriptor_Configuration_t ConfigurationDescriptor =
                 .ConfigAttributes = 0,
 
                 .MaxPowerConsumption = USB_CONFIG_POWER_MA(100)},
-
-        .CDC_CCI_Interface =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
-
-                .InterfaceNumber = 0,
-                .AlternateSetting = 0,
-
-                .TotalEndpoints = 1,
-
-                .Class = 0x02,
-                .SubClass = 0x02,
-                .Protocol = 0x01,
-
-                .InterfaceStrIndex = NO_DESCRIPTOR},
-
-        .CDC_Functional_Header =
-            {
-                .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalHeader_t), .Type = CDC_DTYPE_CSInterface},
-                .Subtype = CDC_DSUBTYPE_CSInterface_Header,
-
-                .CDCSpecification = VERSION_BCD(1, 1, 0),
-            },
-
-        .CDC_Functional_ACM =
-            {
-                .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalACM_t), .Type = CDC_DTYPE_CSInterface},
-                .Subtype = CDC_DSUBTYPE_CSInterface_ACM,
-
-                .Capabilities = 0x06,
-            },
-
-        .CDC_Functional_Union =
-            {
-                .Header = {.Size = sizeof(USB_CDC_Descriptor_FunctionalUnion_t), .Type = CDC_DTYPE_CSInterface},
-                .Subtype = CDC_DSUBTYPE_CSInterface_Union,
-
-                .MasterInterfaceNumber = 0,
-                .SlaveInterfaceNumber = 1,
-            },
-
-        .CDC_NotificationEndpoint =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
-
-                .EndpointAddress = CDC_NOTIFICATION,
-                .Attributes = (EP_TYPE_INTERRUPT | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = ENDPOINT_SIZE,
-                .PollingIntervalMS = 0xFF},
-
-        .CDC_DCI_Interface =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
-
-                .InterfaceNumber = 1,
-                .AlternateSetting = 0,
-
-                .TotalEndpoints = 2,
-
-                .Class = 0x0A,
-                .SubClass = 0x00,
-                .Protocol = 0x00,
-
-                .InterfaceStrIndex = NO_DESCRIPTOR},
-
-        .CDC_DataOutEndpoint =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
-
-                .EndpointAddress = DEVICE_EPADDR_OUT,
-                .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = ENDPOINT_SIZE,
-                .PollingIntervalMS = 0x01},
-
-        .CDC_DataInEndpoint =
-            {
-                .Header = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
-
-                .EndpointAddress = DEVICE_EPADDR_IN,
-                .Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-                .EndpointSize = ENDPOINT_SIZE,
-                .PollingIntervalMS = 0x01}};
+        .Interface = {
+            Header :
+                {Size : sizeof(USB_Descriptor_Interface_t), Type : DTYPE_Interface},
+            InterfaceNumber : INTERFACE_ID_Device,
+            AlternateSetting : 0,
+            TotalEndpoints : 0,
+            Class : 0xFF,
+            SubClass : 0xFF,
+            Protocol : 0xFF,
+            InterfaceStrIndex : NO_DESCRIPTOR
+        },
+};
 
 /** Language descriptor structure. This descriptor, located in FLASH memory, is returned when the host requests
  *  the string descriptor with index 0 (the first index). It is actually an array of 16-bit integers, which indicate
@@ -238,6 +176,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                         Address = &ProductString8;
                         Size = ProductString8.Header.Size;
                     }
+                    break;
+                case 0xEE:
+                    Address = &OSDescriptorString;
+                    Size = OSDescriptorString.bLength;
                     break;
             }
 

@@ -63,19 +63,8 @@ if "upload" in BUILD_TARGETS:
         print("Uploaded, waiting for device to show up")
         dev = None
         while not dev:
-            dev = libusb_package.find(idVendor=0x1209, idProduct=0x2883)
+            dev = libusb_package.find(idVendor=0x1209, idProduct=0x2886)
             pass
-        sleep(1)
-        # There will be a new port, so we need to make sure to look for it.
-        del env["UPLOAD_PORT"]
-        env.AutodetectUploadPort()
-        port = env.subst("$UPLOAD_PORT")
-        s = Serial(port=port, baudrate=115200)
-        rate = f"{s.readline().decode('utf-8').strip()}000000"
-        print(rate)
-        # rate = usb.util.get_string(dev, dev.iProduct, 0x0409).split("\x00")[0].rpartition(" - ")[2]
+        rate = dev.product.split('\x00',1)[0].split(" - ")[2]
         rate = f"{rate}L"
         env["BOARD_F_CPU"] = rate
-        # There will be a new port, so we need to make sure to look for it.
-        del env["UPLOAD_PORT"]
-        

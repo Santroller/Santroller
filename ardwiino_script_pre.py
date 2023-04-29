@@ -60,13 +60,14 @@ if "upload" in BUILD_TARGETS:
         os.chdir(env["PROJECT_DIR"])
         subprocess.run([sys.executable, "-m", "platformio", "run", "--target", "upload", "--environment", "microdetect", "--upload-port", env.subst("$UPLOAD_PORT")], stderr=subprocess.STDOUT)
         os.chdir(cwd)
+        print("Uploaded, waiting for device to show up")
         dev = None
         while not dev:
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2883)
             pass
-        sleep(2)
         env.AutodetectUploadPort()
         port = env.subst("$UPLOAD_PORT")
+        print("Found device at "+port+", reading speed")
         s = Serial(port=port, baudrate=115200)
         rate = f"{s.readline().decode('utf-8').strip()}000000"
         print(rate)

@@ -82,4 +82,4 @@ if "upload" in BUILD_TARGETS:
         dev = None
         print("Waiting for bootloader device")
         sleep(2)
-        subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"])
+        subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)

@@ -1,11 +1,11 @@
 #include <avr/io.h>
-#include "progmem.h"
 #include <inttypes.h>
 #include <stdint.h>
 
 #include "Arduino.h"
 #include "config.h"
 #include "io_define.h"
+#include "progmem.h"
 #include "util.h"
 
 uint16_t adcReading[ADC_COUNT];
@@ -39,6 +39,11 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
 }
 
 uint16_t adc_read(uint8_t pin, uint8_t mask) {
+#if ADC_COUNT != 0
+    cbi(ADCSRA, ADIE);
+    while (bit_is_set(ADCSRA, ADSC))
+        ;
+#endif
     bool reset = false;
     // When we are not doing pin detection, we don't want to be fiddling with the ports
     if (pin & (1 << 7)) {
@@ -59,8 +64,6 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
         *ddr &= ~mask;
         SREG = oldSREG;
     }
-    while (bit_is_set(ADCSRA, ADSC))
-        ;
     first = true;
 #if defined(ADCSRB) && defined(MUX5)
     // the MUX5 bit of ADCSRB selects whether we're reading from channels
@@ -90,15 +93,18 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
         *ddr &= prevDdr;
         SREG = oldSREG;
     }
+#if ADC_COUNT != 0
+    sbi(ADCSRA, ADIE);
+#endif
     return data;
 }
 void initPins(void) {
     PIN_INIT;
+#if ADC_COUNT != 0
     sbi(ADCSRA, ADPS2);
     cbi(ADCSRA, ADPS1);
     cbi(ADCSRA, ADPS0);
     sbi(ADCSRA, ADIE);
-#if ADC_COUNT != 0
     uint8_t pin = analogPins[currentAnalog];
 
 #if defined(ADCSRB) && defined(MUX5)

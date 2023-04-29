@@ -68,7 +68,8 @@ if "upload" in BUILD_TARGETS:
         while not dev:
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2886)
             pass
-        sleep(5)
+        sleep(2)
+        dev = libusb_package.find(idVendor=0x1209, idProduct=0x2886)
         rate = dev.product.split('\x00',1)[0].split(" - ")[2]
         rate = f"{rate}L"
         env["BOARD_F_CPU"] = rate
@@ -80,5 +81,5 @@ if "upload" in BUILD_TARGETS:
             pass
         dev = None
         print("Waiting for bootloader device")
-        sleep(5)
+        sleep(2)
         subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"])

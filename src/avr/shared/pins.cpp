@@ -8,15 +8,13 @@
 #include "progmem.h"
 #include "util.h"
 
-uint16_t adcReading[ADC_COUNT];
+volatile uint16_t adcReading[ADC_COUNT];
 const uint8_t analogPins[ADC_COUNT] = ADC_PINS;
+const uint16_t PROGMEM ports[PORT_COUNT] = PORTS;
 bool first = true;
 uint16_t adc(uint8_t pin) {
     return adcReading[pin];
 }
-
-const uint16_t PROGMEM ports[PORT_COUNT] = PORTS;
-int currentAnalog = 0;
 
 uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port_num)));
@@ -80,11 +78,7 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     sbi(ADCSRA, ADSC);
     while (bit_is_set(ADCSRA, ADSC))
         ;
-    uint8_t low, high;
-    low = ADCL;
-    high = ADCH;
-    uint16_t data = (high << 8) | low;
-    data = data << 6;
+    uint16_t data = ADC << 6;
     if (reset) {
         // Revert the settings we changed
         uint8_t oldSREG = SREG;
@@ -95,17 +89,17 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     }
 #if ADC_COUNT != 0
     sbi(ADCSRA, ADIE);
+    sbi(ADCSRA, ADSC);
 #endif
     return data;
 }
 void initPins(void) {
     PIN_INIT;
-#if ADC_COUNT != 0
     sbi(ADCSRA, ADPS2);
     cbi(ADCSRA, ADPS1);
     cbi(ADCSRA, ADPS0);
-    sbi(ADCSRA, ADIE);
-    uint8_t pin = analogPins[currentAnalog];
+#if ADC_COUNT != 0
+    uint8_t pin = analogPins[0];
 
 #if defined(ADCSRB) && defined(MUX5)
     // the MUX5 bit of ADCSRB selects whether we're reading from channels
@@ -119,17 +113,14 @@ void initPins(void) {
 
     ADMUX = (1 << 6) | (pin & 0x07);
 
+    sbi(ADCSRA, ADIE);
     sbi(ADCSRA, ADSC);
 #endif
 }
-
+int currentAnalog = 0;
 #if ADC_COUNT != 0
 ISR(ADC_vect) {
-    uint8_t low, high;
-    low = ADCL;
-    high = ADCH;
-    uint16_t data = (high << 8) | low;
-    adcReading[currentAnalog] = data << 6;
+    adcReading[currentAnalog] = ADC << 6;
     currentAnalog++;
     if (currentAnalog == ADC_COUNT) {
         currentAnalog = 0;

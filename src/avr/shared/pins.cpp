@@ -11,14 +11,12 @@
 volatile uint16_t adcReading[ADC_COUNT];
 const uint8_t analogPins[ADC_COUNT] = ADC_PINS;
 const uint16_t PROGMEM ports[PORT_COUNT] = PORTS;
-bool first = true;
 uint16_t adc(uint8_t pin) {
     return adcReading[pin];
 }
 
 uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port_num)));
-    // ddr is one memory address above port
     volatile uint8_t* ddr = port - 1;
     volatile uint8_t* pin = port - 2;
     uint8_t prevPort = *port;
@@ -42,27 +40,24 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     while (bit_is_set(ADCSRA, ADSC))
         ;
 #endif
-    bool reset = false;
-    // When we are not doing pin detection, we don't want to be fiddling with the ports
-    if (pin & (1 << 7)) {
-        pin = pin & ~(1 << 7);
-        reset = true;
-    }
+    // bit 7 is used as a flag for pin detection mode
+    bool detection = pin & (1 << 7);
+    pin &= ~(1 << 7);
 
+    // When we are not doing pin detection, we don't want to be fiddling with the ports
     volatile uint8_t* port = ANALOG_PORT(pin);
-    // ddr is one memory address above port
     volatile uint8_t* ddr = port - 1;
     uint8_t prevPort = *port;
     uint8_t prevDdr = *ddr;
-    if (reset) {
+    if (detection) {
         uint8_t oldSREG = SREG;
         cli();
-        *port |= mask;
-        // And write it inverted to ddr (ones set pullup)
+        // Clear DDRx (input)
         *ddr &= ~mask;
+        // Set PORTx (pull_up)
+        *port |= mask;
         SREG = oldSREG;
     }
-    first = true;
 #if defined(ADCSRB) && defined(MUX5)
     // the MUX5 bit of ADCSRB selects whether we're reading from channels
     // 0 to 7 (MUX5 low) or 8 to 15 (MUX5 high).
@@ -74,17 +69,19 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     // to 0 (the default).
 
     ADMUX = (1 << 6) | (pin & 0x07);
-
+    
+    // Give things time to settle
+    delayMicroseconds(10);
     sbi(ADCSRA, ADSC);
     while (bit_is_set(ADCSRA, ADSC))
         ;
     uint16_t data = ADC << 6;
-    if (reset) {
+    if (detection) {
         // Revert the settings we changed
         uint8_t oldSREG = SREG;
         cli();
         *port = prevPort;
-        *ddr &= prevDdr;
+        *ddr = prevDdr;
         SREG = oldSREG;
     }
 #if ADC_COUNT != 0

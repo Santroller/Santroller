@@ -77,7 +77,8 @@ if "upload" in BUILD_TARGETS:
         print("Returning to bootloader")
         try:
             dev.ctrl_transfer(0x21, BOOTLOADER)
-        except:
+        except Exception as e:
+            print(e)
             pass
         dev = None
         print("Waiting for bootloader device")

@@ -52,13 +52,6 @@ def before_upload(source, target, env):
     elif "ardwiino_bootloader" in upload_options and upload_options["ardwiino_bootloader"] == "true":
         b_request = BOOTLOADER
         wait_for_serial = True
-    if "/arduino_uno_mega_usb" in str(source[0]):
-        id_vendor = 0x03eb
-        id_product = None
-        b_request = BOOTLOADER
-        if (libusb_package.find(idVendor=0x1209, idProduct=0x2883)):
-            env.AutodetectUploadPort()
-            env.TouchSerialPort("$UPLOAD_PORT", 1200)
     if "/arduino_uno/" in str(source[0]):
         if libusb_package.find(idVendor=0x1209, idProduct=0x2882):
             b_request = BOOTLOADER_SERIAL
@@ -85,8 +78,6 @@ def before_upload(source, target, env):
         
         while not libusb_package.find(**args):
             pass
-        if not exists and id_product == 0x2883:
-            wait_for_serial = True
     if wait_for_serial:
         env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
 

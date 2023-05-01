@@ -5,16 +5,7 @@ import subprocess
 import sys
 import re
 import traceback
-
-try:
-    import usb
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyusb"])
-try:
-    import libusb_package
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])
-
+from platformio.util import get_serial_ports
 import libusb_package
 
 import usb.core
@@ -34,9 +25,8 @@ class Context:
 
 
 def post_upload(source, target, env):
-    if "/arduino_uno/" in str(source[0]) or "/arduino_mega/" in str(source[0]) or "/arduino_mega_2560/" in str(source[0]) or "/arduino_mega_adk/" in str(source[0]):
-        env.TouchSerialPort("$UPLOAD_PORT", 2400)
     if "arduino_uno_usb" in str(source[0]) or "arduino_mega_2560_usb" in str(source[0]) or "arduino_mega_adk_usb" in str(source[0]):
+        before_ports = get_serial_ports()
         print("searching for uno")
         new_env = None
         while not new_env:
@@ -68,10 +58,11 @@ def post_upload(source, target, env):
                     pass
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
-        print(f"Calling {new_env}")
-        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
+        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
+        port = env.subst("$UPLOAD_PORT")
+        print(f"Calling {new_env} ({port})")
+        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)
         os.chdir(cwd)
-        env.AutodetectUploadPort()
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
 
 

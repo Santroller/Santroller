@@ -2118,11 +2118,14 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                     type.sub_type = DRUMS;
                     type.rhythm_type = GUITAR_HERO;
                     break;
+                case PS3_MPA_MUSTANG_PID:
+                case PS3_MPA_SQUIRE_PID:
                 case PS3_RB_GUITAR_PID:
                     type.console_type = PS3;
                     type.sub_type = GUITAR;
                     type.rhythm_type = ROCK_BAND;
                     break;
+                case PS3_MPA_DRUMS_PID:
                 case PS3_RB_DRUM_PID:
                     type.console_type = PS3;
                     type.sub_type = DRUMS;
@@ -2140,12 +2143,19 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
 
         case WII_RB_VID:
             // Polled the same as PS3, so treat them as PS3 instruments
-            if (pid == WII_RB_GUITAR_PID) {
-                type.console_type = PS3;
-                type.sub_type = GUITAR;
-            } else if (pid == WII_RB_DRUM_PID) {
-                type.console_type = PS3;
-                type.sub_type = DRUMS;
+            switch (pid) {
+                case WII_MPA_MUSTANG_PID:
+                case WII_MPA_SQUIRE_PID:
+                case WII_RB_GUITAR_PID:
+                    type.console_type = PS3;
+                    type.sub_type = GUITAR;
+                    break;
+
+                case WII_MPA_DRUMS_PID:
+                case WII_RB_DRUM_PID:
+                    type.console_type = PS3;
+                    type.sub_type = DRUMS;
+                    break;
             }
             break;
 

@@ -1,4 +1,4 @@
-SRC += ${PROJECT_ROOT}/src/avr/lib/timer/timer.c ${PROJECT_ROOT}/src/shared/output/serial_handler.c
+SRC += ${PROJECT_ROOT}/src/shared/output/serial_handler.c
 SRC += ${PROJECT_ROOT}/src/shared/output/reports.c 
 SRC += ${PROJECT_ROOT}/lib/mpu6050/inv_mpu_dmp_motion_driver.c ${PROJECT_ROOT}/lib/mpu6050/inv_mpu.c ${PROJECT_ROOT}/lib/mpu6050/mpu_math.c
 SRC += ${PROJECT_ROOT}/src/avr/lib/spi/spi.c ${PROJECT_ROOT}/src/avr/lib/i2c/i2c.c ${PROJECT_ROOT}/src/avr/lib/pins/pins.c ${PROJECT_ROOT}/src/shared/leds/leds.c

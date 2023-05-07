@@ -2140,6 +2140,7 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                     type.sub_type = LIVE_GUITAR;
                     break;
             }
+            break;
 
         case WII_RB_VID:
             // Polled the same as PS3, so treat them as PS3 instruments

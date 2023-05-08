@@ -2148,12 +2148,14 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                 case WII_MPA_MUSTANG_PID:
                 case WII_MPA_SQUIRE_PID:
                 case WII_RB_GUITAR_PID:
+                case WII_RB_GUITAR_2_PID:
                     type.console_type = PS3;
                     type.sub_type = GUITAR;
                     break;
 
                 case WII_MPA_DRUMS_PID:
                 case WII_RB_DRUM_PID:
+                case WII_RB_DRUM_2_PID:
                     type.console_type = PS3;
                     type.sub_type = DRUMS;
                     break;

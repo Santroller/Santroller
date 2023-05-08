@@ -50,7 +50,6 @@ typedef struct {
 } EepromConfig_t;
 
 EepromConfig_t EEMEM config;
-uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
@@ -128,7 +127,6 @@ int main(void) {
   PORTD |= (1 << 2);
 
   USB_Init();
-
   // Read the device type from eeprom. ARDWIINO_DEVICE_TYPE is used as a
   // signature to make sure that the data in eeprom is valid
   if (eeprom_read_dword(&config.id) != ARDWIINO_DEVICE_TYPE) {

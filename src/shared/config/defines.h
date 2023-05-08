@@ -38,8 +38,7 @@ enum SubType {
   PS3_LIVE_GUITAR,
   WII_ROCK_BAND_GUITAR,
   WII_ROCK_BAND_DRUMS,
-  WII_LIVE_GUITAR,
-  MOUSE,
+  MOUSE = 41,
   MIDI_GAMEPAD,
   MIDI_GUITAR_HERO_GUITAR,
   MIDI_ROCK_BAND_GUITAR,
@@ -49,9 +48,7 @@ enum SubType {
 };
 
 // Orientations for gyros
-enum GyroOrientation {
-  X, Y, Z
-};
+enum GyroOrientation { X, Y, Z };
 
 enum GyroOrientationOld {
   POSITIVE_Z,
@@ -94,14 +91,18 @@ enum WiiExtType {
   WII_NOT_INITIALISED = 0xFFFF
 };
 enum PsxControllerType {
-  PSPROTO_UNKNOWN = 0,		//!< No idea
-	PSPROTO_DIGITAL,			//!< Original controller (SCPH-1010) protocol (8 digital buttons + START + SELECT)
-	PSPROTO_DUALSHOCK,			//!< DualShock (has analog axes)
-	PSPROTO_DUALSHOCK2,			//!< DualShock 2 (has analog axes and buttons)
-	PSPROTO_FLIGHTSTICK,		//!< Green-mode (like DualShock but missing SELECT, L3 and R3)
-	PSPROTO_NEGCON,				//!< Namco neGcon (has 1 analog X axis and analog Square, Circle and L1 buttons)
-	PSPROTO_JOGCON,				//!< Namco Jogcon (Wheel is mapped to analog X axis, half a rotation in each direction)
-	PSPROTO_GUNCON,
+  PSPROTO_UNKNOWN = 0, //!< No idea
+  PSPROTO_DIGITAL,     //!< Original controller (SCPH-1010) protocol (8 digital
+                       //!< buttons + START + SELECT)
+  PSPROTO_DUALSHOCK,   //!< DualShock (has analog axes)
+  PSPROTO_DUALSHOCK2,  //!< DualShock 2 (has analog axes and buttons)
+  PSPROTO_FLIGHTSTICK, //!< Green-mode (like DualShock but missing SELECT, L3
+                       //!< and R3)
+  PSPROTO_NEGCON,      //!< Namco neGcon (has 1 analog X axis and analog Square,
+                       //!< Circle and L1 buttons)
+  PSPROTO_JOGCON, //!< Namco Jogcon (Wheel is mapped to analog X axis, half a
+                  //!< rotation in each direction)
+  PSPROTO_GUNCON,
   PSPROTO_GUITAR,
   PSPROTO_MOUSE,
   PSPROTO_NO_DEVICE

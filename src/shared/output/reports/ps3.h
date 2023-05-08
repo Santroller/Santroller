@@ -103,7 +103,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
 
   // Tilt / whammy
   if (fullDeviceType == PS3_GUITAR_HERO_GUITAR ||
-      fullDeviceType == PS3_LIVE_GUITAR || fullDeviceType == WII_LIVE_GUITAR) {
+      fullDeviceType == PS3_LIVE_GUITAR) {
     JoystickReport->r_x = (controller->r_x >> 9) + 128 + 64;
     // GH PS3 guitars have a tilt axis
     // Since the PS3 tilt is based on an accelerometer, we need to subtract 40

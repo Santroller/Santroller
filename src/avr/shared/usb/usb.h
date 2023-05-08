@@ -9,24 +9,25 @@ void write_endpoint_mods(const void *const Buffer, uint16_t Length,
   Endpoint_ClearSETUP();
   bool LastPacketFull = false;
   uint8_t current = 0;
+  uint8_t current_mod = 0;
 
-  while (true) {
+  if (Length > USB_ControlRequest.wLength)
+    Length = USB_ControlRequest.wLength;
+
+  while (!Endpoint_IsOUTReceived()) {
     if (Endpoint_IsSETUPReceived())
       return;
-    else if (Endpoint_IsOUTReceived())
-      break;
     if (Length || LastPacketFull) {
       if (Endpoint_IsINReady()) {
         uint16_t BytesInEndpoint = Endpoint_BytesInEndpoint();
 
         while (Length && (BytesInEndpoint < USB_Device_ControlEndpointSize)) {
           uint8_t bytes = 1;
-          for (uint8_t i = 0; i < modCount; i += 3) {
-            if (current == mods[i]) {
-              bytes = 2;
-              Endpoint_Write_8(mods[i + 1]);
-              Endpoint_Write_8(mods[i + 2]);
-            }
+          if (current < modCount && current == mods[current_mod]) {
+            bytes = 2;
+            Endpoint_Write_8(mods[current_mod + 1]);
+            Endpoint_Write_8(mods[current_mod + 2]);
+            current_mod+=3;
           }
           if (bytes == 1) { Endpoint_Write_8(pgm_read_byte(Buffer + current)); }
           // We need to skip over 2 bytes if we find a block to modify, as each
@@ -83,7 +84,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     mods[2] = 0x25;
     write_endpoint_mods(address, size, mods, 3);
     return NO_DESCRIPTOR;
-    break;
   case HID_DTYPE_Report:
     if (deviceType <= KEYBOARD_ROCK_BAND_DRUMS) {
       address = kbd_report_descriptor;

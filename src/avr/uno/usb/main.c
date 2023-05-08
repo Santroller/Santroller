@@ -57,7 +57,8 @@ uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
 // Yes this isnt a true micros function. For what this gets used for, that
 // doesn't matter.
-unsigned long ticks = 0;
+// This ONLY gets used for provding a unique serial number to the 360 console on startup
+uint16_t ticks = 0;
 unsigned long micros() { return ticks; }
 
 void writeData(const uint8_t *buf, uint8_t len) {

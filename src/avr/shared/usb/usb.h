@@ -42,9 +42,20 @@ void deviceControlRequest(void) {
               (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE)) &&
              USB_ControlRequest.wIndex == 0x00 &&
              USB_ControlRequest.wValue == 0x0000) {
-    uint32_t serialNumber = micros();
+    union {
+      uint32_t Value;
+      uint8_t Bytes[4];
+    } Data;
+    Data.Value = micros();
     Endpoint_ClearSETUP();
-    Endpoint_Write_Control_Stream_LE(&serialNumber, sizeof(serialNumber));
+    while (!Endpoint_IsINReady()) {
+
+    }
+    Endpoint_Write_8(Data.Bytes[0]);
+    Endpoint_Write_8(Data.Bytes[1]);
+    Endpoint_Write_8(Data.Bytes[2]);
+    Endpoint_Write_8(Data.Bytes[3]);
+    Endpoint_ClearIN();
     Endpoint_ClearStatusStage();
   } else if (USB_ControlRequest.bRequest == HID_REQ_GetReport &&
              (USB_ControlRequest.bmRequestType ==
@@ -74,17 +85,9 @@ void write_endpoint_mods(const void *const Buffer, uint16_t Length,
 
   if (Length > USB_ControlRequest.wLength)
     Length = USB_ControlRequest.wLength;
-  else if (!(Length))
-    Endpoint_ClearIN();
 
   while (true) {
-    uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-    if (USB_DeviceState_LCL == DEVICE_STATE_Unattached)
-      return;
-    else if (USB_DeviceState_LCL == DEVICE_STATE_Suspended)
-      return;
-    else if (Endpoint_IsSETUPReceived())
+    if (Endpoint_IsSETUPReceived())
       return;
     else if (Endpoint_IsOUTReceived())
       break;
@@ -114,7 +117,7 @@ void write_endpoint_mods(const void *const Buffer, uint16_t Length,
       }
     }
   }
-  Endpoint_ClearOUT();
+  Endpoint_ClearStatusStage();
 }
 /** This function is called by the library when in device mode, and must be
  * overridden (see library "USB Descriptors" documentation) by the application

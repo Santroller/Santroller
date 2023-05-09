@@ -82,8 +82,8 @@ void initInputs(Configuration_t *config) {
   }
   ghDrum = config->main.subType == XINPUT_GUITAR_HERO_DRUMS;
 }
-bool start = false;
-bool select = false;
+bool start_val = false;
+bool select_val = false;
 void tickInputs(Controller_t *controller) {
   if (typeIsGuitar) {
     controller->r_y = 0;
@@ -101,8 +101,8 @@ void tickInputs(Controller_t *controller) {
     if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
       bool val = read_button_function(pin);
       if (mapStartSelectHome) {
-        if (pin->offset == XBOX_START) { start = val; }
-        if (pin->offset == XBOX_BACK) { select = val; }
+        if (pin->offset == XBOX_START) { start_val = val; }
+        if (pin->offset == XBOX_BACK) { select_val = val; }
       }
       // With DJ controllers, euphoria and y are going to different pins but are
       // the same output.
@@ -116,7 +116,7 @@ void tickInputs(Controller_t *controller) {
     }
   }
   if (mapStartSelectHome) {
-    if (start && select) {
+    if (start_val && select_val) {
       bit_set(controller->buttons, XBOX_HOME);
       bit_clear(controller->buttons, XBOX_START);
       bit_clear(controller->buttons, XBOX_BACK);

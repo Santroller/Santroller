@@ -35,7 +35,10 @@ uint8_t defaultConfig[] = {0xa2, 0xd4, 0x15, 0x00, DEVICE_TYPE};
 // if jmpToBootloader is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
 uint32_t jmpToBootloader __attribute__((section(".noinit")));
-
+uint16_t ticks;
+unsigned long micros() {
+  return ticks;
+}
 int main(void) {
   // jump to the bootloader at address 0x1000 if jmpToBootloader is set to JUMP
   if (jmpToBootloader == JUMP) {
@@ -76,7 +79,7 @@ int main(void) {
   AVR_RESET_LINE_DDR |= AVR_RESET_LINE_MASK;
   AVR_RESET_LINE_PORT |= AVR_RESET_LINE_MASK;
   while (true) {
-
+    ticks++;
     //================================================================================
     // USARTtoUSB
     //================================================================================

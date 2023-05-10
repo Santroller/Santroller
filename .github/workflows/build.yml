@@ -16,9 +16,18 @@ jobs:
           mv ardwiino_script_post_tool.py ardwiino_script_post.py
           cd ..
           tar cfJ firmware.tar.xz Ardwiino
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        with:
+          delete_release: true
+          tag_name: preview
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: preview
+          prerelease: true
+          name: "Preview Build"
           files: "../firmware.tar.xz"
-          tag_name: latest
-          target_commitish: master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

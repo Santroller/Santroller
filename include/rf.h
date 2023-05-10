@@ -35,7 +35,7 @@ typedef struct {
 #ifdef TICK_CONSUMER
         USB_ConsumerControl_Data_t lastMouseReport;
 #endif
-    }
+    };
 } __attribute__((packed)) RfInputPacket_t;
 #else
 typedef struct {

@@ -38,19 +38,19 @@
 #define ROCK_BAND 1
 
 #define UNIVERSAL 0
-#define KEYBOARD_MOUSE 1
-#define MIDI 2
-
-#define XBOX360 4
-#define PS3 5
-#define WII_RB 6
-#define SWITCH 7
-#define PS4 8
-#define XBOXONE 9
-#define REAL_PS3 10
-#define WINDOWS_XBOXONE 11
-#define WINDOWS 12
-// NOTE: if the above ids ever go past 15, bluetooth will need to encode the consoleType differently.
+#define XBOX360 1
+#define PS3 2
+#define WII_RB 3
+#define SWITCH 4
+#define PS4 5
+#define XBOXONE 6
+#define REAL_PS3 7
+#define WINDOWS_XBOXONE 8
+#define WINDOWS 9
+// NOTE: if the above ids ever go past 9, bluetooth will need to encode the consoleType differently.
+// The below ones are fine as bluetooth will never encode them.
+#define KEYBOARD_MOUSE 10
+#define MIDI 11
 #define UNKNOWN 0xFF
 
 #define PINMODE_PULLUP 0

@@ -19,15 +19,15 @@ jobs:
       - uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           delete_release: true
-          tag_name: preview
+          tag_name: latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: preview
+          tag_name: latest
           prerelease: true
-          name: "Preview Build"
+          name: "Latest Build"
           files: "../firmware.tar.xz"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

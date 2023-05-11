@@ -860,6 +860,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 #if !defined(RF_RX) && !defined(BLUETOOTH_RX)
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
+    uint8_t led_tmp;
 // Tick Inputs
 #include "inputs/gh5_neck.h"
 #include "inputs/ps2.h"
@@ -1834,7 +1835,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (output_console_type == UNIVERSAL) {
             PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
             universal_report->report_id = 1;
-            report_data = (USB_Report_Data_t *)(universal_report->report);
+            report_data = (USB_Report_Data_t *)(&universal_report->report);
             size++;
         }
         PS3_REPORT *report = (PS3_REPORT *)report_data;

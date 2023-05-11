@@ -245,7 +245,6 @@ typedef struct {
     uint16_t gyro;    // Left/right instantaneous rotation (yaw)
 
 } __attribute__((packed)) PCGamepad_Data_t;
-
 typedef struct
 {
     bool x : 1;  // square, blue

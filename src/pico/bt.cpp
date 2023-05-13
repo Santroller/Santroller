@@ -9,14 +9,14 @@
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
 #include "ble/gatt-service/hids_device.h"
+#include "bt.h"
 #include "bt_profile.h"
 #include "btstack.h"
 #include "config.h"
+#include "descriptors.h"
 #include "endpoints.h"
-#include "bt.h"
 #include "hid.h"
 #include "shared_main.h"
-#include "descriptors.h"
 
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -67,7 +67,7 @@ int get_bt_address(uint8_t *addr) {
     memcpy(addr, bd_addr_to_str(local_addr), SIZE_OF_BD_ADDRESS);
     return SIZE_OF_BD_ADDRESS;
 }
-void send_report(uint8_t size, uint8_t* report) {
+void send_report(uint8_t size, uint8_t *report) {
     hids_device_send_input_report(con_handle, report, size);
 }
 const uint8_t adv_data_len = sizeof(adv_data);
@@ -158,10 +158,33 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
             }
             break;
+        case HCI_EVENT_LE_META:
+            switch (hci_event_le_meta_get_subevent_code(packet)) {
+                case HCI_SUBEVENT_LE_CONNECTION_COMPLETE: {
+                    // print connection parameters (without using float operations)
+                    uint16_t conn_interval = hci_subevent_le_connection_complete_get_conn_interval(packet);
+                    printf("LE Connection Complete:\n");
+                    printf("- Connection Interval: %u.%02u ms\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
+                    printf("- Connection Latency: %u\n", hci_subevent_le_connection_complete_get_conn_latency(packet));
+                    break;
+                }
+                case HCI_SUBEVENT_LE_CONNECTION_UPDATE_COMPLETE: {
+                    // print connection parameters (without using float operations)
+                    uint16_t conn_interval = hci_subevent_le_connection_update_complete_get_conn_interval(packet);
+                    printf("LE Connection Update:\n");
+                    printf("- Connection Interval: %u.%02u ms\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
+                    printf("- Connection Latency: %u\n", hci_subevent_le_connection_update_complete_get_conn_latency(packet));
+                    break;
+                }
+                default:
+                    break;
+            }
+            break;
         case HCI_EVENT_HIDS_META:
             switch (hci_event_hids_meta_get_subevent_code(packet)) {
                 case HIDS_SUBEVENT_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_input_report_enable_get_con_handle(packet);
+                    gap_request_connection_parameter_update(con_handle, 6, 6, 0, 100);
                     printf("Report Characteristic Subscribed %u\n", hids_subevent_input_report_enable_get_enable(packet));
                     break;
                 case HIDS_SUBEVENT_BOOT_KEYBOARD_INPUT_REPORT_ENABLE:

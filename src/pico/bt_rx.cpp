@@ -427,7 +427,6 @@ int btstack_main(void) {
     l2cap_init();
     sm_init();
     gatt_client_init();
-    gap_set_connection_parameters(0x0060, 0x0030, 0x06, 0x06, 0, 0x0048, 2, 0x0030);
 
     hids_client_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
 

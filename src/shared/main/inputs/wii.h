@@ -21,11 +21,15 @@
         }
 #ifdef INPUT_WII_TAP
         lastTapWii = (wiiData[2] & 0x1f);
+        
         // GH3 guitars set this bit, while WT and GH5 guitars do not
-        if ((wiiData[0] & (1 << 7)) != 0) {
+        if (!hasTapBar) {
+            if (lastTapWii == 0x0F) {
+                hasTapBar = true;
+            }
             lastTapWii = 0;
-        }
-        if (lastTapWii == 0x0f) {
+            lastTapWiiGh5 = 0;
+        } else if (lastTapWii == 0x0f) {
             lastTapWiiGh5 = 0;
         } else if (lastTapWii == 0x04) {
             lastTapWiiGh5 = 0x95;

@@ -518,8 +518,8 @@ for (int i = 0; i < device_count; i++) {
                         COPY_DRUM_VELOCITY_ORANGE(host_gamepad->orangeVelocity);
                         COPY_DRUM_VELOCITY_KICK(host_gamepad->kickVelocity);
                     }
-                }
 #endif
+                }
             }
             break;
         }

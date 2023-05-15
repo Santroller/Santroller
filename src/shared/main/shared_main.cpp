@@ -53,6 +53,9 @@ USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
 USB_LastReport_Data_t last_report_rf;
 USB_LastReport_Data_t temp_report_usb_host;
+#ifdef INPUT_USB_HOST
+USB_Host_Data_t usb_host_data;
+#endif
 const uint8_t rf_address[] = "1Node";
 long initialWt[5] = {0};
 uint8_t rawWt;
@@ -866,9 +869,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/gh5_neck.h"
 #include "inputs/ps2.h"
 #include "inputs/turntable.h"
-#include "inputs/usb_host_shared.h"
+#include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+
+
     TICK_SHARED;
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     if (!buf) {
@@ -879,104 +884,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         return 0;
     }
-    // Handle button combos for detection logic
-
-#ifdef INPUT_USB_HOST_DETECTION
-    // give the user 2 seconds after plugging in the host controller (if its already plugged in then this will act like 2 seconds on plug in)
-    if ((input_start - millis()) < 2000 && output_console_type == UNIVERSAL) {
-        for (int i = 0; i < device_count; i++) {
-            USB_Device_Type_t device_type = get_usb_host_device_type(i);
-            uint8_t console_type = device_type.console_type;
-            get_usb_host_device_data(i, (uint8_t *)&temp_report_usb_host);
-            void *data = &temp_report_usb_host;
-            if (console_type == XBOXONE) {
-                GipHeader_t *header = (GipHeader_t *)data;
-                if (device_type.sub_type == LIVE_GUITAR && header->command == GHL_HID_REPORT) {
-                    // Xbox one GHL guitars actually end up using PS3 reports if you poke them.
-                    console_type = PS3;
-                    data = &((XboxOneGHLGuitar_Data_t *)data)->report;
-                } else if (header->command != GIP_INPUT_REPORT) {
-                    // Not input data, continue
-                    continue;
-                }
-            }
-            bool a, b, x, y, start, back;
-            switch (console_type) {
-                case PS3: {
-                    if (device_type.sub_type == GAMEPAD) {
-                        PS3Gamepad_Data_t *host_gamepad = (PS3Gamepad_Data_t *)data;
-                        a = host_gamepad->a;
-                        b = host_gamepad->b;
-                        x = host_gamepad->x;
-                        y = host_gamepad->y;
-                        start = host_gamepad->start;
-                        back = host_gamepad->back;
-                    } else {
-                        PCGamepad_Data_t *host_gamepad = (PCGamepad_Data_t *)data;
-                        a = host_gamepad->a;
-                        b = host_gamepad->b;
-                        x = host_gamepad->x;
-                        y = host_gamepad->y;
-                        start = host_gamepad->start;
-                        back = host_gamepad->back;
-                    }
-                    break;
-                }
-                case PS4: {
-                    PS4Gamepad_Data_t *host_gamepad = (PS4Gamepad_Data_t *)data;
-                    a = host_gamepad->a;
-                    b = host_gamepad->b;
-                    x = host_gamepad->x;
-                    y = host_gamepad->y;
-                    start = host_gamepad->start;
-                    back = host_gamepad->back;
-                    break;
-                }
-                case XBOX360: {
-                    XInputGamepad_Data_t *host_gamepad = (XInputGamepad_Data_t *)data;
-                    a = host_gamepad->a;
-                    b = host_gamepad->b;
-                    x = host_gamepad->x;
-                    y = host_gamepad->y;
-                    start = host_gamepad->start;
-                    back = host_gamepad->back;
-                    break;
-                }
-                case XBOXONE: {
-                    XboxOneGamepad_Data_t *host_gamepad = (XboxOneGamepad_Data_t *)data;
-                    a = host_gamepad->a;
-                    b = host_gamepad->b;
-                    x = host_gamepad->x;
-                    y = host_gamepad->y;
-                    start = host_gamepad->start;
-                    back = host_gamepad->back;
-                    break;
-                }
-            }
-
-#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
-            if (a) {
-                set_console_type(WII_RB);
-            }
-#endif
-            if (b) {
-                set_console_type(SWITCH);
-            }
-            if (x) {
-                set_console_type(PS3);
-            }
-            if (y) {
-                set_console_type(PS4);
-            }
-            if (start) {
-                set_console_type(XBOX360);
-            }
-            if (back) {
-                set_console_type(XBOXONE);
-            }
-        }
-    }
-#endif
     // give the user 2 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 2000 && output_console_type == UNIVERSAL) {
         TICK_DETECTION;
@@ -1069,41 +976,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
             TICK_XBOX_ONE;
 
-#if DEVICE_TYPE == GUITAR
-#define XB1_SOLO
-#define COPY_TILT(tilt_in) \
-    if (tilt_in) report->tilt = tilt_in;
-#endif
-#if DEVICE_TYPE == DRUMS
-// xb1, drum is 4bit, so 8bit -> 4bit
-#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in >> 4;
-#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in >> 4;
-#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in >> 4;
-#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in >> 4;
-#define COPY_DRUM_VELOCITY_GREEN_CYMBAL(velocity_in) report->greenCymbalVelocity = velocity_in >> 4;
-#define COPY_DRUM_VELOCITY_YELLOW_CYMBAL(velocity_in) report->yellowCymbalVelocity = velocity_in >> 4;
-#define COPY_DRUM_VELOCITY_BLUE_CYMBAL(velocity_in) report->blueCymbalVelocity = velocity_in >> 4;
-#endif
-#if !DEVICE_TYPE_IS_LIVE_GUITAR
-// Map from int16_t to xb1 (so keep it the same)
-#define COPY_AXIS_NORMAL(in, out) \
-    if (in) out = in;
-// Map from uint16_t to xb1 (so keep it the same)
-#define COPY_AXIS_TRIGGER(in, out) \
-    if (in) out = in;
-#include "inputs/usb_host.h"
-#undef COPY_AXIS_NORMAL
-#undef COPY_AXIS_TRIGGER
-#undef COPY_TILT
-#undef XB1_SOLO
-#undef COPY_DRUM_VELOCITY_GREEN
-#undef COPY_DRUM_VELOCITY_YELLOW
-#undef COPY_DRUM_VELOCITY_RED
-#undef COPY_DRUM_VELOCITY_BLUE
-#undef COPY_DRUM_VELOCITY_GREEN_CYMBAL
-#undef COPY_DRUM_VELOCITY_YELLOW_CYMBAL
-#undef COPY_DRUM_VELOCITY_BLUE_CYMBAL
-#endif
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
@@ -1146,48 +1018,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 // xb360 is stupid
-#if DEVICE_TYPE == DRUMS
-#if RHYTHM_TYPE == ROCK_BAND
-#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = -((0x7fff - (velocity_in << 8)));
-#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = -((0x7fff - (velocity_in << 8)));
-#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = ((0x7fff - (velocity_in << 8)));
-#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = ((0x7fff - (velocity_in << 8)));
-#else
+#if DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
         report->leftThumbClick = true;
-#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_ORANGE(velocity_in) report->orangeVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_KICK(velocity_in) report->kickVelocity = velocity_in;
 #endif
-#define COPY_DRUM_VELOCITY_GREEN_CYMBAL(velocity_in)
-#define COPY_DRUM_VELOCITY_YELLOW_CYMBAL(velocity_in)
-#define COPY_DRUM_VELOCITY_BLUE_CYMBAL(velocity_in)
-#endif
-// Map from int16_t to xb360
-#define COPY_AXIS_NORMAL(in, out) \
-    if (in) out = in;
-// Map from uint16_t to xb360 (shift to get to uint8_t)
-#define COPY_AXIS_TRIGGER(in, out) \
-    if (in) out = in >> 8;
-// Map from 10 bit int to xb360
-#define COPY_AXIS_DJ(in, out) \
-    if (in != PS3_ACCEL_CENTER) out = (in - PS3_ACCEL_CENTER) >> 6;
-#include "inputs/usb_host.h"
-#undef COPY_AXIS_NORMAL
-#undef COPY_AXIS_TRIGGER
-#undef COPY_TILT
-#undef COPY_AXIS_DJ
-#undef COPY_DRUM_VELOCITY_GREEN
-#undef COPY_DRUM_VELOCITY_YELLOW
-#undef COPY_DRUM_VELOCITY_RED
-#undef COPY_DRUM_VELOCITY_BLUE
-#undef COPY_DRUM_VELOCITY_ORANGE
-#undef COPY_DRUM_VELOCITY_KICK
-#undef COPY_DRUM_VELOCITY_GREEN_CYMBAL
-#undef COPY_DRUM_VELOCITY_YELLOW_CYMBAL
-#undef COPY_DRUM_VELOCITY_BLUE_CYMBAL
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1209,24 +1042,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (!seen_ps4_console) {
             report->guide = true;
         }
-#if DEVICE_TYPE == LIVE_GUITAR
-        // tilt_in is uint8, report->tilt is int16_t
-#define COPY_TILT(tilt_in) \
-    if (tilt_in) report->tilt = tilt_in;
-#endif
-// Map from int16_t to ps4 (uint8_t)
-#define COPY_AXIS_NORMAL(in, out) \
-    if (in) out = (in >> 8) + 128;
-// Map from uint16_t to ps4 (uint8_t)
-#define COPY_AXIS_TRIGGER(in, out) \
-    if (in) out = in >> 8;
-
-#define HAS_L2_R2_BUTTON
-#include "inputs/usb_host.h"
-#undef COPY_AXIS_NORMAL
-#undef COPY_AXIS_TRIGGER
-#undef HAS_L2_R2_BUTTON
-#undef COPY_TILT
         TICK_PS4;
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
@@ -1249,21 +1064,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
 
-// Map from int16_t to ps3 (uint8_t)
-#define COPY_AXIS_NORMAL(in, out) \
-    if (in) out = (in >> 8) + 128;
-// Map from uint16_t to ps3 (uint8_t)
-#define COPY_AXIS_TRIGGER(in, out) \
-    if (in) out = in >> 8;
-
-#define COPY_AXIS_DJ(in, out) \
-    if (in != PS3_ACCEL_CENTER) out = in
-#define HAS_L2_R2_BUTTON
-#include "inputs/usb_host.h"
-#undef HAS_L2_R2_BUTTON
-#undef COPY_AXIS_NORMAL
-#undef COPY_AXIS_DJ
-#undef COPY_AXIS_TRIGGER
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
@@ -1288,66 +1088,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-#if DEVICE_TYPE == DRUMS
-#if RHYTHM_TYPE == ROCK_BAND
-#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in;
-#else
-#define COPY_DRUM_VELOCITY_GREEN(velocity_in) report->greenVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_YELLOW(velocity_in) report->yellowVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_RED(velocity_in) report->redVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_BLUE(velocity_in) report->blueVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_ORANGE(velocity_in) report->orangeVelocity = velocity_in;
-#define COPY_DRUM_VELOCITY_KICK(velocity_in) report->kickVelocity = velocity_in;
-#endif
-#define COPY_DRUM_VELOCITY_GREEN_CYMBAL(velocity_in)
-#define COPY_DRUM_VELOCITY_YELLOW_CYMBAL(velocity_in)
-#define COPY_DRUM_VELOCITY_BLUE_CYMBAL(velocity_in)
-#endif
-#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-// TODO: what do we want to use as our condition for tilt
-#define COPY_TILT(tilt_in)                      \
-    if (output_console_type == UNIVERSAL) {     \
-        if (tilt_in) report->tilt_pc = tilt_in; \
-    } else if (tilt_in > 128) {                 \
-        report->tilt = true;                    \
-    }
-#endif
-#if (DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO) || DEVICE_TYPE == LIVE_GUITAR
-#define COPY_TILT(tilt_in)                   \
-    if (output_console_type == UNIVERSAL) {  \
-        report->tilt_pc = tilt_in;           \
-    } else if (tilt_in) {                    \
-        report->tilt = (tilt_in + 128) << 2; \
-    }
-#endif
 
-// Map from int16_t to ps3 (uint8_t)
-#define COPY_AXIS_NORMAL(in, out) \
-    if (in) out = (in >> 8) + 128;
-// Map from uint16_t to ps3 (uint8_t)
-#define COPY_AXIS_TRIGGER(in, out) \
-    if (in) out = in >> 8;
-#define COPY_AXIS_DJ(in, out) \
-    if (in != PS3_ACCEL_CENTER) out = in;
-#define HAS_L2_R2_BUTTON
-#include "inputs/usb_host.h"
-#undef COPY_AXIS_NORMAL
-#undef COPY_AXIS_TRIGGER
-#undef HAS_L2_R2_BUTTON
-#undef COPY_TILT
-#undef COPY_AXIS_DJ
-#undef COPY_DRUM_VELOCITY_GREEN
-#undef COPY_DRUM_VELOCITY_YELLOW
-#undef COPY_DRUM_VELOCITY_RED
-#undef COPY_DRUM_VELOCITY_BLUE
-#undef COPY_DRUM_VELOCITY_ORANGE
-#undef COPY_DRUM_VELOCITY_KICK
-#undef COPY_DRUM_VELOCITY_GREEN_CYMBAL
-#undef COPY_DRUM_VELOCITY_YELLOW_CYMBAL
-#undef COPY_DRUM_VELOCITY_BLUE_CYMBAL
         TICK_PS3;
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {

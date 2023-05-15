@@ -86,13 +86,13 @@ typedef struct
     uint32_t dpadDown : 1;
     uint32_t dpadLeft : 1;
     uint32_t dpadRight : 1;
-    bool white1 : 1;  // square, white1
-    bool black1 : 1;  // cross, black1
-    bool black2 : 1;  // circle, black2
-    bool black3 : 1;  // triangle, black3
+    bool x : 1;  // square, white1
+    bool a : 1;  // cross, black1
+    bool b : 1;  // circle, black2
+    bool y : 1;  // triangle, black3
 
-    bool white2 : 1;  // white2, l1
-    bool white3 : 1;  // white3, r1
+    bool leftShoulder : 1;  // white2, l1
+    bool rightShoulder : 1;  // white3, r1
     bool : 1;         // l2
     bool : 1;         // r2
 

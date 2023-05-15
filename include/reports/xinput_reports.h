@@ -244,15 +244,15 @@ typedef struct
     bool leftThumbClick : 1;  // leftThumbClick, ghtv
     bool : 1;
 
-    bool white2 : 1;  // leftShoulder
-    bool white3 : 1;  // rightShoulder
+    bool leftShoulder : 1;  // white2 leftShoulder
+    bool rightShoulder : 1;  // white3 rightShoulder
     bool guide : 1;
     bool : 1;
 
-    bool black1 : 1;  // a
-    bool black2 : 1;  // b
-    bool white1 : 1;  // x
-    bool black3 : 1;  // y
+    bool a : 1;  // black1 a
+    bool b : 1;  // black2 b
+    bool x : 1;  // white1 x
+    bool y : 1;  // black3 y
 
     uint8_t unused1[2];
     int16_t unused2;

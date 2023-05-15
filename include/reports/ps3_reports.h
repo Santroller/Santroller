@@ -152,10 +152,10 @@ typedef struct {
     bool l2 : 1;             // l2
     bool r2 : 1;             // r2
 
-    bool x : 1;  // square, white1
-    bool a : 1;  // cross, black1
-    bool b : 1;  // circle, black2
-    bool y : 1;  // triangle, black3
+    bool x : 1;  // square
+    bool a : 1;  // cross
+    bool b : 1;  // circle
+    bool y : 1;  // triangle
 
     bool guide : 1;
     uint8_t : 7;
@@ -483,13 +483,13 @@ typedef struct
 
 typedef struct
 {
-    bool white1 : 1;  // square, white1
-    bool black1 : 1;  // cross, black1
-    bool black2 : 1;  // circle, black2
-    bool black3 : 1;  // triangle, black3
+    bool x : 1;  // square, white1
+    bool a : 1;  // cross, black1
+    bool b : 1;  // circle, black2
+    bool y : 1;  // triangle, black3
 
-    bool white2 : 1;  // white2, l1
-    bool white3 : 1;  // white3, r1
+    bool leftShoulder : 1;  // white2, l1
+    bool rightShoulder : 1;  // white3, r1
     bool : 1;
     bool : 1;
 

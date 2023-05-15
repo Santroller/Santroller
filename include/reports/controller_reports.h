@@ -171,3 +171,93 @@ typedef union {
     uint8_t raw[64];
     USB_Mouse_Data_t mouse;
 } USB_Report_Data_t;
+
+typedef struct {
+    bool x : 1;  // square
+    bool a : 1;  // cross
+    bool b : 1;  // circle
+    bool y : 1;  // triangle
+
+    bool leftShoulder : 1;   // l1
+    bool rightShoulder : 1;  // r1
+    bool kick1 : 1;
+    bool kick2 : 1;
+
+    bool back : 1;  // select
+    bool start : 1;
+    bool leftThumbClick : 1;   // l3
+    bool rightThumbClick : 1;  // r3
+
+    bool guide : 1;    // ps
+    bool capture : 1;  // switch capture button
+    bool solo : 1;
+    bool leftBlue : 1;
+
+    bool leftRed : 1;
+    bool leftGreen : 1;
+    bool rightBlue : 1;
+    bool rightRed : 1;
+
+    bool rightGreen : 1;
+    bool tableNeutral : 1;
+    bool soloGreen : 1;
+    bool soloRed : 1;
+
+    bool soloYellow : 1;
+    bool soloBlue : 1;
+    bool soloOrange : 1;
+    bool green : 1;
+
+    bool red : 1;
+    bool yellow : 1;
+    bool blue : 1;
+    bool orange : 1;
+
+    bool yellowCymbal : 1;
+    bool blueCymbal : 1;
+    bool greenCymbal : 1;
+
+    bool dpadUp : 1;
+    bool dpadDown : 1;
+    bool dpadLeft : 1;
+    bool dpadRight : 1;
+
+    uint16_t leftTrigger;
+    uint16_t rightTrigger;
+
+    int16_t leftStickX;
+    int16_t leftStickY;
+    int16_t rightStickX;
+    int16_t rightStickY;
+    uint8_t pressureDpadUp;
+    uint8_t pressureDpadRight;
+    uint8_t pressureDpadLeft;
+    uint8_t pressureDpadDown;
+    uint8_t pressureL1;
+    uint8_t pressureR1;
+    uint8_t pressureTriangle;
+    uint8_t pressureCircle;
+    uint8_t pressureCross;
+    uint8_t pressureSquare;
+    uint8_t redVelocity;
+    uint8_t yellowVelocity;
+    uint8_t blueVelocity;
+    uint8_t greenVelocity;
+    uint8_t orangeVelocity;
+    uint8_t blueCymbalVelocity;
+    uint8_t yellowCymbalVelocity;
+    uint8_t greenCymbalVelocity;
+    uint8_t kickVelocity;
+    int16_t whammy;
+    int16_t tilt;
+    int16_t pickup;
+    int16_t slider;
+    int16_t leftTableVelocity;
+    int16_t rightTableVelocity;
+    int16_t effectsKnob;
+    int16_t crossfader;
+    uint16_t accelX;
+    uint16_t accelZ;
+    uint16_t accelY;
+    uint16_t gyro;
+} USB_Host_Data_t;

@@ -34,7 +34,6 @@ bool typeIsDJ;
 uint8_t deviceType;
 uint8_t fullDeviceType;
 uint8_t inputType;
-uint8_t pollRate;
 __attribute__((section(".rfrecv"))) uint32_t rftxID = 0xDEADBEEF;
 __attribute__((section(".rfrecv"))) uint32_t rfrxID = 0xDEADBEEF;
 void initialise(void) {
@@ -43,7 +42,6 @@ void initialise(void) {
   config.rf.rfInEnabled = false;
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
-  pollRate = config.main.pollRate;
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
@@ -84,7 +82,7 @@ int main(void) {
       sei();       // guarantees next instruction executed
       sleep_cpu(); // sleep within 3 clock cycles of above
     }
-    if (millis() - lastPoll > pollRate) {
+    if (tickInputs(&controller) || millis() - lastPoll > 100) {
       tickInputs(&controller);
       // Since we receive data via acks, we need to make sure data is always
       // being sent, so we send data every 100ms regardless.

@@ -30,7 +30,6 @@ Controller_t controller;
 Controller_t prevCtrl;
 long lastPoll = 0;
 int validAnalog = 0;
-uint8_t pollRate;
 uint8_t inputType;
 bool typeIsGuitar;
 bool typeIsDrum;
@@ -45,7 +44,6 @@ void initialise(void) {
   config.rf.rfInEnabled = false;
   fullDeviceType = fullDeviceType;
   deviceType = fullDeviceType;
-  pollRate = config.main.pollRate;
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
@@ -63,8 +61,7 @@ int main(void) {
       sleep_run_from_xosc();
       sleep_goto_dormant_until_edge_high(PIN_WAKEUP);
     }
-    if (millis() - lastPoll > pollRate) {
-      tickInputs(&controller);
+    if (tickInputs(&controller) || millis() - lastPoll > 100) {
       tickLEDs(&controller);
       // Since we receive data via acks, we need to make sure data is always
       // being sent, so we send data every 100ms regardless.

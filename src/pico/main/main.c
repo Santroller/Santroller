@@ -36,7 +36,6 @@ bool typeIsGuitar;
 bool typeIsDrum;
 bool typeIsDJ;
 uint8_t inputType;
-uint8_t pollRate;
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[64];
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
@@ -231,7 +230,6 @@ void initialise(void) {
   loadConfig(&config);
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
-  pollRate = config.main.pollRate;
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);

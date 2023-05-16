@@ -162,7 +162,7 @@ bool tickInputs(Controller_t *controller) {
         (controller->buttons & 0xFF) | queue[queueTail - queueDiff] << 8;
     queueDiff--;
   }
-  lastPollBuf = millis();
+  lastPollBuf = micros();
   return true;
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {

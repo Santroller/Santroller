@@ -3,8 +3,12 @@
 
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6
+// Arduinos don't have the ram for a queue depth of 1024
+#ifdef __AVR__
 #define BUFFER_SIZE_QUEUE 512
-
+#else
+#define BUFFER_SIZE_QUEUE 1024
+#endif
 extern uint16_t wiiExtensionID;
 extern uint8_t ps2CtrlType;
 typedef struct {

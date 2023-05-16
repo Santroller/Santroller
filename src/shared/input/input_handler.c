@@ -29,8 +29,8 @@ uint8_t queue[BUFFER_SIZE_QUEUE];
 uint16_t queueDiff = 0;
 uint16_t queueTail = 0;
 #else
-uint8_t queueHead;
-uint8_t queueTail;
+uint8_t queueDiff = 0;
+uint8_t queueTail = 0;
 #endif
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
@@ -100,32 +100,37 @@ void initInputs(Configuration_t *config) {
 }
 bool start_val = false;
 bool select_val = false;
+uint8_t queueButtons;
 bool tickInputs(Controller_t *controller) {
   if (typeIsGuitar) { controller->r_y = 0; }
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t *pin;
-  Pin_t *pin2;
   for (uint8_t i = 0; i < validPins; i++) {
     pin = &pinData[i];
-    pin2 = &pinData[i];
+    bool val = read_button_function(pin);
+    uint8_t offset = pin->offset;
     // If strum is merged, then we want to grab debounce data from the same
     // button for both
-    if (mergedStrum && pin->offset == XBOX_DPAD_UP) { pin2 = downStrumPin; }
-    if (millis() - pin2->lastMillis > pin2->milliDeBounce) {
-      bool val = read_button_function(pin);
+    if (mergedStrum && offset == XBOX_DPAD_UP) { pin = downStrumPin; }
+    if (millis() - pin->lastMillis > pin->milliDeBounce) {
       if (mapStartSelectHome) {
-        if (pin->offset == XBOX_START) { start_val = val; }
-        if (pin->offset == XBOX_BACK) { select_val = val; }
+        if (offset == XBOX_START) { start_val = val; }
+        if (offset == XBOX_BACK) { select_val = val; }
       }
       // With DJ controllers, euphoria and y are going to different pins but are
       // the same output.
-      if (typeIsDJ && pin->offset == XBOX_Y) {
+      if (typeIsDJ && offset == XBOX_Y) {
         val |= read_button_function(&euphoriaPin);
       }
-      if (val != (bit_check(controller->buttons, pin->offset))) {
-        pin2->lastMillis = millis();
-        bit_write(val, controller->buttons, pin->offset);
+      if (val != (bit_check(controller->buttons, offset))) {
+        pin->lastMillis = millis();
+        bit_write(val, controller->buttons, offset);
+        if (queueEnabled) {
+          if (offset >= 8) {
+            bit_write(val, queueButtons, (offset - 8));
+          }
+        }
       }
     }
   }
@@ -148,9 +153,9 @@ bool tickInputs(Controller_t *controller) {
   tickDJ(controller);
   if (ghDrum) { controller->buttons |= _BV(XBOX_LEFT_STICK); }
   if (queueEnabled) {
-    if (lastQueue != (controller->buttons >> 8)) {
-      lastQueue = controller->buttons >> 8;
-      queue[queueTail++] = lastQueue;
+    if (lastQueue != queueButtons) {
+      lastQueue = queueButtons;
+      queue[queueTail++] = queueButtons;
       queueTail &= (BUFFER_SIZE_QUEUE - 1);
       queueDiff++;
     }
@@ -159,7 +164,7 @@ bool tickInputs(Controller_t *controller) {
   if (micros() - lastPollBuf < pollRate) { return false; }
   if (queueEnabled && queueDiff) {
     controller->buttons =
-        (controller->buttons & 0xFF) | queue[queueTail - queueDiff] << 8;
+        (controller->buttons & 0xFF) | (queue[queueTail - queueDiff] << 8);
     queueDiff--;
   }
   lastPollBuf = micros();

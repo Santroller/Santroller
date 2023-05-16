@@ -20,16 +20,30 @@ bool mapJoyLeftDpad;
 bool mapStartSelectHome;
 bool mergedStrum;
 bool ghDrum = false;
+bool queueEnabled;
+long lastPoll = 0;
+uint8_t lastQueue;
+uint32_t pollRate;
+uint8_t queue[BUFFER_SIZE_QUEUE];
+#if BUFFER_SIZE_QUEUE > 255
+uint16_t queueDiff = 0;
+uint16_t queueTail = 0;
+#else
+uint8_t queueHead;
+uint8_t queueTail;
+#endif
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
 uint16_t dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) |
-                  _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
+                       _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
 void initInputs(Configuration_t *config) {
 
+  pollRate = config->main.pollRate * 1000;
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
   mergedStrum = typeIsGuitar && config->debounce.combinedStrum;
+  queueEnabled = config->deque;
   setupADC();
   switch (config->main.inputType) {
   case WII:
@@ -75,19 +89,19 @@ void initInputs(Configuration_t *config) {
     // If we have a pin mapped, then we don't want to be clearing it when map
     // joystick to dpad is in use
     if (pin->offset == XBOX_DPAD_UP) { dpad_bits |= (_BV(XBOX_DPAD_UP)); }
-    if (pin->offset == XBOX_DPAD_DOWN) { dpad_bits |= (_BV(XBOX_DPAD_DOWN)); }
+    if (pin->offset == XBOX_DPAD_DOWN) {
+      dpad_bits |= (_BV(XBOX_DPAD_DOWN));
+      if (mergedStrum) { downStrumPin = pin; }
+    }
     if (pin->offset == XBOX_DPAD_LEFT) { dpad_bits |= (_BV(XBOX_DPAD_LEFT)); }
     if (pin->offset == XBOX_DPAD_RIGHT) { dpad_bits |= (_BV(XBOX_DPAD_RIGHT)); }
-    if (pin->offset == XBOX_DPAD_DOWN && mergedStrum) { downStrumPin = pin; }
   }
   ghDrum = config->main.subType == XINPUT_GUITAR_HERO_DRUMS;
 }
 bool start_val = false;
 bool select_val = false;
-void tickInputs(Controller_t *controller) {
-  if (typeIsGuitar) {
-    controller->r_y = 0;
-  }
+bool tickInputs(Controller_t *controller) {
+  if (typeIsGuitar) { controller->r_y = 0; }
   if (tick_function) { tick_function(controller); }
   tickDirectInput(controller);
   Pin_t *pin;
@@ -133,6 +147,23 @@ void tickInputs(Controller_t *controller) {
   tickGuitar(controller);
   tickDJ(controller);
   if (ghDrum) { controller->buttons |= _BV(XBOX_LEFT_STICK); }
+  if (queueEnabled) {
+    if (lastQueue != (controller->buttons >> 8)) {
+      lastQueue = controller->buttons >> 8;
+      queue[queueTail++] = lastQueue;
+      queueTail &= (BUFFER_SIZE_QUEUE - 1);
+      queueDiff++;
+    }
+  }
+
+  if (micros() - lastPoll < pollRate) { return false; }
+  if (queueEnabled && queueDiff) {
+    controller->buttons =
+        (controller->buttons & 0xFF) | queue[queueTail - queueDiff] << 8;
+    queueDiff--;
+  }
+  lastPoll = millis();
+  return true;
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {
   if (offset < XBOX_BTN_COUNT) {

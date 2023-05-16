@@ -39,7 +39,6 @@ bool typeIsGuitar;
 bool typeIsDrum;
 bool typeIsDJ;
 uint8_t inputType;
-uint8_t pollRate;
 static inline void Serial_InitInterrupt(const uint32_t BaudRate,
                                         const bool DoubleSpeed) {
   UBRR0 =
@@ -62,7 +61,6 @@ void initialise(void) {
   loadConfig(&config);
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
-  pollRate = config.main.pollRate;
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
@@ -192,11 +190,13 @@ int main(void) {
       }
       // With RF, this stuff gets handled on the transmitter side, not the
       // receiver.
-    } else if (millis() - lastPoll > pollRate || isRF) {
+    } else {
       if (isRF) {
         tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
       } else {
-        tickInputs(&controller);
+        if (!tickInputs(&controller)) {
+          continue;
+        }
         tickLEDs(&controller);
       }
       uint8_t size;

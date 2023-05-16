@@ -13,31 +13,13 @@ void loadConfig(Configuration_t *config) {
   if (config->main.version < 8) {
     eeprom_read_block(config, &test, sizeof(Configuration_t));
   }
-  // Check versions, if they aren't the same, a breaking change has happened
   // Check signatures, that way we know if the EEPROM has a valid config
-  // If the signatures don't match, then the EEPROM has garbage data
+  // If the signatures don't match, then the EEPROM has garbage data, so we just load defaults and return
   if (config->main.signature != ARDWIINO_DEVICE_TYPE) {
     memcpy_P(config, &default_config, sizeof(Configuration_t));
-    config->main.version = 0;
+    writeConfigBlock(0, (uint8_t *)config, sizeof(Configuration_t));
+    return;
   }
-  // version 2 adds leds and midi.
-  if (config->main.version < 2) {
-    memcpy_P(&config->midi, &default_config.midi, sizeof(default_config.midi));
-  }
-  // Old configs had the subtype for guitars directly, new configs have
-  // additional subtypes that get mapped to the guitar subtype
-  if (config->main.subType == REAL_GUITAR_SUBTYPE) {
-    config->main.subType = XINPUT_GUITAR_HERO_GUITAR;
-  }
-  // Old configs had the subtype for drums directly, new configs have additional
-  // subtypes that get mapped to the drum subtype
-  if (config->main.subType == REAL_DRUM_SUBTYPE) {
-    config->main.subType = XINPUT_GUITAR_HERO_DRUMS;
-  }
-  if (config->main.version < 4) {
-    memcpy_P(&config->leds, &default_config.leds, sizeof(default_config.leds));
-  }
-  if (config->main.version < 6) { config->main.pollRate = POLL_RATE; }
   if (config->main.version < 7) { config->rf.rfInEnabled = false; }
   // We made a change to simplify the guitar config, but as a result whammy is
   // now flipped
@@ -79,6 +61,10 @@ void loadConfig(Configuration_t *config) {
     if (config->main.subType > PS3_GAMEPAD) {
       config->main.subType += 1; 
     }
+  }
+
+  if (config->main.version < 18) {
+    config->deque = false;
   }
   
   if (config->main.version < CONFIG_VERSION) {

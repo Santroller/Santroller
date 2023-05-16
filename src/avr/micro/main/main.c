@@ -28,15 +28,12 @@ bool isRF = false;
 bool typeIsGuitar;
 bool typeIsDrum;
 bool typeIsDJ;
-long lastPoll = 0;
 uint8_t inputType;
-uint8_t pollRate;
 void initialise(void) {
   Configuration_t config;
   loadConfig(&config);
   fullDeviceType = config.main.subType;
   deviceType = fullDeviceType;
-  pollRate = config.main.pollRate;
   inputType = config.main.inputType;
   typeIsDrum = isDrum(fullDeviceType);
   typeIsGuitar = isGuitar(fullDeviceType);
@@ -59,6 +56,12 @@ void initialise(void) {
   USB_Init();
   sei();
 }
+const uint8_t endpoints[] PROGMEM = {[REPORT_ID_CONTROL] = ENDPOINT_CONTROLEP,
+                                     [REPORT_ID_XINPUT] = XINPUT_EPADDR_IN,
+                                     [REPORT_ID_GAMEPAD] = HID_EPADDR_IN,
+                                     [REPORT_ID_KBD] = HID_EPADDR_IN,
+                                     [REPORT_ID_MOUSE] = HID_EPADDR_IN,
+                                     [REPORT_ID_MIDI] = MIDI_EPADDR_IN};
 int main(void) {
   initialise();
   uint8_t cSize = sizeof(XInput_Data_t);
@@ -67,39 +70,19 @@ int main(void) {
     if (isRF) {
       tickRFInput((uint8_t *)&controller, cSize);
     } else {
-      tickInputs(&controller);
+      if (!tickInputs(&controller)) { continue; }
       tickLEDs(&controller);
-      if (millis() - lastPoll < pollRate) { continue; }
     }
     if (memcmp(&controller, &prevController, cSize) != 0 &&
         Endpoint_IsINReady()) {
       fillReport(&currentReport, &size, &controller);
       if (size) {
-        lastPoll = millis();
         uint8_t *data = (uint8_t *)&currentReport;
         uint8_t rid = *data;
-        switch (rid) {
-        case REPORT_ID_XINPUT:
-          Endpoint_SelectEndpoint(XINPUT_EPADDR_IN);
-          break;
-        case REPORT_ID_MIDI:
-          Endpoint_SelectEndpoint(MIDI_EPADDR_IN);
-          // The "reportid" is actually not a real thing on midi, so we need to
-          // strip it before we send data.
+        Endpoint_SelectEndpoint(pgm_read_byte(endpoints + rid));
+        if (rid == REPORT_ID_MIDI || rid == REPORT_ID_GAMEPAD) {
           data++;
           size--;
-          break;
-        case REPORT_ID_GAMEPAD:
-          // The wii does not support multiple report ids. So we also strip it
-          // here
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          data++;
-          size--;
-          break;
-        case REPORT_ID_KBD:
-        case REPORT_ID_MOUSE:
-          Endpoint_SelectEndpoint(HID_EPADDR_IN);
-          break;
         }
         memcpy(&prevController, &controller, cSize);
         Endpoint_Write_Stream_LE(data, size, NULL);
@@ -108,6 +91,8 @@ int main(void) {
     }
   }
 }
+/// @brief
+/// @param
 void EVENT_USB_Device_ConfigurationChanged(void) {
   Endpoint_ConfigureEndpoint(XINPUT_EPADDR_IN, EP_TYPE_INTERRUPT, HID_EPSIZE,
                              1);
@@ -138,16 +123,6 @@ void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len) {
   }
 }
 void EVENT_USB_Device_ControlRequest(void) { deviceControlRequest(); }
-void EVENT_CDC_Device_ControLineStateChanged(
-    USB_ClassInfo_CDC_Device_t *const CDCInterfaceInfo) {
-  // Jump to the bootloader on a 1200bps touch, this is how the arduino ide
-  // signals for a 32u4 to jump into bootloader mode.
-  bool HostReady = (CDCInterfaceInfo->State.ControlLineStates.HostToDevice &
-                    CDC_CONTROL_LINE_OUT_DTR) == 0;
-  if (HostReady && CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 1200) {
-    bootloader();
-  }
-}
 void writeToUSB(const void *const Buffer, uint8_t Length, uint8_t report,
                 const void *request) {
   Endpoint_ClearSETUP();

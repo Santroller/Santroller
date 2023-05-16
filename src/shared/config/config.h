@@ -142,5 +142,6 @@ typedef struct {
   AxisScaleConfig_t axisScale;
   DebounceConfig_t debounce;
   NeckConfig_t neck; 
+  bool deque;
 } Configuration_t;
 #pragma pack(pop)

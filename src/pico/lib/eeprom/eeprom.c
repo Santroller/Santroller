@@ -13,7 +13,8 @@ void loadConfig(Configuration_t* config) {
   memcpy(config, flash_target_contents, sizeof(Configuration_t));
   if (config->main.signature != ARDWIINO_DEVICE_TYPE) {
     memcpy(config, &default_config, sizeof(Configuration_t));
-    config->main.version = 0;
+    writeConfigBlock(0, (uint8_t *)config, sizeof(Configuration_t));
+    return;
   }
   // We made a change to simplify the guitar config, but as a result whammy is
   // now flipped
@@ -63,6 +64,9 @@ void loadConfig(Configuration_t* config) {
     if (config->main.subType > WII_ROCK_BAND_DRUMS) {
       config->main.subType += 1; 
     }
+  }
+  if (config->main.version < 18) {
+    config->deque = false;
   }
   if (config->main.version < CONFIG_VERSION) {
     config->main.version = CONFIG_VERSION;

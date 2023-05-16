@@ -179,9 +179,10 @@ void hid_task(void) {
   if (isRF) {
     tickRFInput((uint8_t *)&controller, sizeof(XInput_Data_t));
   } else {
-    tickInputs(&controller);
+    if (!tickInputs(&controller)) {
+      return;
+    }
     tickLEDs(&controller);
-    if (millis() - start_ms < pollRate) return;
   }
   fillReport(&currentReport, &size, &controller);
   if (memcmp(&currentReport, &previousReport, size) != 0) {

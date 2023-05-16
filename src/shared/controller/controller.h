@@ -3,6 +3,7 @@
 
 #define XBOX_BTN_COUNT 16
 #define XBOX_AXIS_COUNT 6
+#define BUFFER_SIZE_QUEUE 512
 
 extern uint16_t wiiExtensionID;
 extern uint8_t ps2CtrlType;

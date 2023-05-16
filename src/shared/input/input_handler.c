@@ -21,7 +21,7 @@ bool mapStartSelectHome;
 bool mergedStrum;
 bool ghDrum = false;
 bool queueEnabled;
-long lastPoll = 0;
+long lastPollBuf = 0;
 uint8_t lastQueue;
 uint32_t pollRate;
 uint8_t queue[BUFFER_SIZE_QUEUE];
@@ -156,13 +156,13 @@ bool tickInputs(Controller_t *controller) {
     }
   }
 
-  if (micros() - lastPoll < pollRate) { return false; }
+  if (micros() - lastPollBuf < pollRate) { return false; }
   if (queueEnabled && queueDiff) {
     controller->buttons =
         (controller->buttons & 0xFF) | queue[queueTail - queueDiff] << 8;
     queueDiff--;
   }
-  lastPoll = millis();
+  lastPollBuf = millis();
   return true;
 }
 uint8_t getVelocity(Controller_t *controller, uint8_t offset) {

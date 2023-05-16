@@ -156,7 +156,9 @@ bool tickInputs(Controller_t *controller) {
     if (lastQueue != queueButtons) {
       lastQueue = queueButtons;
       queue[queueTail++] = queueButtons;
-      queueTail &= (BUFFER_SIZE_QUEUE - 1);
+      if (queueTail >= BUFFER_SIZE_QUEUE) {
+        queueTail = 0;
+      }
       queueDiff++;
     }
   }

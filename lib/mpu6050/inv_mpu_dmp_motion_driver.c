@@ -1292,21 +1292,6 @@ int8_t dmp_read_fifo(short *gyro, short *accel, long *quat,
 #endif
   }
 
-  if (dmp.feature_mask & DMP_FEATURE_SEND_RAW_ACCEL) {
-    accel[0] = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
-    accel[1] = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
-    accel[2] = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
-    ii += 6;
-    sensors[0] |= INV_XYZ_ACCEL;
-  }
-
-  if (dmp.feature_mask & DMP_FEATURE_SEND_ANY_GYRO) {
-    gyro[0] = ((short)fifo_data[ii + 0] << 8) | fifo_data[ii + 1];
-    gyro[1] = ((short)fifo_data[ii + 2] << 8) | fifo_data[ii + 3];
-    gyro[2] = ((short)fifo_data[ii + 4] << 8) | fifo_data[ii + 5];
-    ii += 6;
-    sensors[0] |= INV_XYZ_GYRO;
-  }
 #ifdef MPU_EXTRAS
 
   /* Gesture data is at the end of the DMP packet. Parse it and call

@@ -2,6 +2,7 @@
 #include "controller/guitar_includes.h"
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#include "controller/controller.h"
 static uint8_t EEMEM test = 0;
 static Configuration_t EEMEM config_pointer = DEFAULT_CONFIG;
 const Configuration_t PROGMEM default_config = DEFAULT_CONFIG;
@@ -65,6 +66,9 @@ void loadConfig(Configuration_t *config) {
 
   if (config->main.version < 18) {
     config->deque = false;
+    config->debounce.buttons *= 10;
+    config->debounce.strum *= 10;
+
   }
   
   if (config->main.version < CONFIG_VERSION) {

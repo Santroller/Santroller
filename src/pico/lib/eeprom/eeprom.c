@@ -67,6 +67,8 @@ void loadConfig(Configuration_t* config) {
   }
   if (config->main.version < 18) {
     config->deque = false;
+    config->debounce.buttons *= 10;
+    config->debounce.strum *= 10;
   }
   if (config->main.version < CONFIG_VERSION) {
     config->main.version = CONFIG_VERSION;

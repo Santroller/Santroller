@@ -43,7 +43,7 @@ void initInputs(Configuration_t *config) {
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
   mergedStrum = typeIsGuitar && config->debounce.combinedStrum;
-  queueEnabled = config->deque;
+  queueEnabled = true;
   setupADC();
   switch (config->main.inputType) {
   case WII:
@@ -113,7 +113,7 @@ bool tickInputs(Controller_t *controller) {
     // If strum is merged, then we want to grab debounce data from the same
     // button for both
     if (mergedStrum && offset == XBOX_DPAD_UP) { pin = downStrumPin; }
-    if (millis() - pin->lastMillis > pin->milliDeBounce) {
+    if (micros() - pin->lastMillis > (pin->milliDeBounce * 100)) {
       if (mapStartSelectHome) {
         if (offset == XBOX_START) { start_val = val; }
         if (offset == XBOX_BACK) { select_val = val; }
@@ -124,7 +124,7 @@ bool tickInputs(Controller_t *controller) {
         val |= read_button_function(&euphoriaPin);
       }
       if (val != (bit_check(controller->buttons, offset))) {
-        pin->lastMillis = millis();
+        pin->lastMillis = micros();
         bit_write(val, controller->buttons, offset);
         if (queueEnabled) {
           if (offset >= 8) {

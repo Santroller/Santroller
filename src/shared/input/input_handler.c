@@ -33,12 +33,19 @@ Pin_t *downStrumPin;
 uint16_t dpad_bits = ~(_BV(XBOX_DPAD_UP) | _BV(XBOX_DPAD_DOWN) |
                        _BV(XBOX_DPAD_LEFT) | _BV(XBOX_DPAD_RIGHT));
 void initInputs(Configuration_t *config) {
-
   pollRate = config->main.pollRate * 1000;
   mapJoyLeftDpad = config->main.mapLeftJoystickToDPad;
   mapStartSelectHome = config->main.mapStartSelectToHome;
   mergedStrum = typeIsGuitar && config->debounce.combinedStrum;
-  queueEnabled = true;
+  queueEnabled = config->deque;
+  if (queueEnabled) {
+    if (pollRate < 1000) {
+      pollRate = 1000;
+    }
+    if (config->debounce.buttons < 5) {
+      config->debounce.buttons = 5;
+    }
+  }
   setupADC();
   switch (config->main.inputType) {
   case WII:

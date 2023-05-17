@@ -25,13 +25,8 @@ long lastPollBuf = 0;
 uint8_t lastQueue;
 uint32_t pollRate;
 uint8_t queue[BUFFER_SIZE_QUEUE];
-#if BUFFER_SIZE_QUEUE > 255
-uint16_t queueDiff = 0;
-uint16_t queueTail = 0;
-#else
-uint8_t queueDiff = 0;
+uint8_t queueSize = 0;
 uint8_t queueTail = 0;
-#endif
 Pin_t pinData[XBOX_BTN_COUNT] = {};
 Pin_t euphoriaPin;
 Pin_t *downStrumPin;
@@ -155,19 +150,19 @@ bool tickInputs(Controller_t *controller) {
   if (queueEnabled) {
     if (lastQueue != queueButtons) {
       lastQueue = queueButtons;
-      queue[queueTail++] = queueButtons;
-      if (queueTail >= BUFFER_SIZE_QUEUE) {
-        queueTail = 0;
+      queue[queueTail] = queueButtons;
+      if (queueSize < BUFFER_SIZE_QUEUE) {
+        queueSize++;
+        queueTail++;
       }
-      queueDiff++;
     }
   }
 
   if (micros() - lastPollBuf < pollRate) { return false; }
-  if (queueEnabled && queueDiff) {
+  if (queueEnabled && queueSize) {
     controller->buttons =
-        (controller->buttons & 0xFF) | (queue[queueTail - queueDiff] << 8);
-    queueDiff--;
+        (controller->buttons & 0xFF) | (queue[queueTail - queueSize] << 8);
+    queueSize--;
   }
   lastPollBuf = micros();
   return true;

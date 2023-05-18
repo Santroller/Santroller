@@ -20,6 +20,14 @@
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
+#define BUFFER_SIZE_QUEUE 255
+#ifdef INPUT_QUEUE
+Buffer_Report_t last_queue_report;
+long last_queue = 0;
+uint8_t queue_size = 0;
+uint8_t queue_tail = 0;
+Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
+#endif
 USB_Report_Data_t combined_report;
 PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
@@ -865,6 +873,9 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
     uint8_t led_tmp;
+#ifdef INPUT_QUEUE
+    Buffer_Report_t current_queue_report;
+#endif
 // Tick Inputs
 #include "inputs/gh5_neck.h"
 #include "inputs/ps2.h"
@@ -873,17 +884,34 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
 
-
     TICK_SHARED;
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
+    // if input queues are enabled, then we just tick as often as possible
     if (!buf) {
-        for (int i = 0; i < DIGITAL_COUNT; i++) {
-            if (debounce[i]) {
-                debounce[i]--;
+#ifdef INPUT_QUEUE
+        if (micros() - last_queue > 100) {
+            last_queue = micros();
+#endif
+            for (int i = 0; i < DIGITAL_COUNT; i++) {
+                if (debounce[i]) {
+                    debounce[i]--;
+                }
+            }
+#ifdef INPUT_QUEUE
+        }
+        if (current_queue_report.val != last_queue_report.val) {
+            queue[queue_tail] = current_queue_report;
+            last_queue_report = current_queue_report;
+            if (queue_size < BUFFER_SIZE_QUEUE) {
+                queue_size++;
+                queue_tail++;
             }
         }
+#endif
         return 0;
     }
+    current_queue_report = queue[queue_tail - queue_size];
+    queue_size--;
     // give the user 2 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 2000 && output_console_type == UNIVERSAL) {
         TICK_DETECTION;
@@ -1683,10 +1711,10 @@ bool tick_bluetooth(void) {
 #ifndef RF_ONLY
 bool tick_usb(void) {
 #if POLL_RATE
-    if ((millis() - last_poll) < POLL_RATE) {
+    if ((micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
-    last_poll = millis();
+    last_poll = micros();
 #endif
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
@@ -1750,7 +1778,12 @@ void tick(void) {
 #ifdef BLUETOOTH_TX
     tick_bluetooth();
 #endif
-#if !defined(RF_TX) && !defined(BLUETOOTH_TX)
+// Input queuing is enabled, tick as often as possible
+#ifdef INPUT_QUEUE
+    if (!ready) {
+        tick_inputs(NULL, NULL, consoleType);
+    }
+#elif !defined(RF_TX) && !defined(BLUETOOTH_TX)
     // Tick the controller every 5ms if this device is usb only, and usb is not ready
     if (!ready && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();

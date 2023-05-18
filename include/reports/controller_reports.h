@@ -172,6 +172,19 @@ typedef union {
     USB_Mouse_Data_t mouse;
 } USB_Report_Data_t;
 
+typedef union {
+    struct {
+        bool x : 1;  // square
+        bool a : 1;  // cross
+        bool b : 1;  // circle
+        bool y : 1;  // triangle
+
+        bool leftShoulder : 1;   // l1
+        bool rightShoulder : 1;  // r1
+    };
+    uint8_t val;
+} Buffer_Report_t;
+
 typedef struct {
     bool x : 1;  // square
     bool a : 1;  // cross

@@ -874,7 +874,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t size = 0;
     uint8_t led_tmp;
 #ifdef INPUT_QUEUE
-    Buffer_Report_t current_queue_report;
+    Buffer_Report_t current_queue_report = {val : 0};
 #endif
 // Tick Inputs
 #include "inputs/gh5_neck.h"
@@ -910,8 +910,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         return 0;
     }
-    current_queue_report = queue[queue_tail - queue_size];
-    queue_size--;
+
+#ifdef INPUT_QUEUE
+    if (queue_size) {
+        current_queue_report = queue[queue_tail - queue_size];
+        queue_size--;
+    }
+#endif
     // give the user 2 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 2000 && output_console_type == UNIVERSAL) {
         TICK_DETECTION;

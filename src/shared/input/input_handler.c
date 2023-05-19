@@ -42,6 +42,9 @@ void initInputs(Configuration_t *config) {
     if (pollRate < 1000) {
       pollRate = 1000;
     }
+    if (pollRate > 10000) {
+      pollRate = 10000;
+    }
     if (config->debounce.buttons < 5) {
       config->debounce.buttons = 5;
     }

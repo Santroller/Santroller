@@ -918,7 +918,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
     // give the user 2 seconds to jump between modes (aka, hold on plug in)
-    if (millis() < 2000 && output_console_type == UNIVERSAL) {
+    if (millis() < 2000 && output_console_type == UNIVERSAL || output_console_type == WINDOWS) {
         TICK_DETECTION;
     }
     // Tick all three reports, and then go for the first one that has changes

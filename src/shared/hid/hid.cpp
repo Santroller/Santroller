@@ -643,6 +643,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_USB_HOST: {
             return read_usb_host_devices(response_buffer);
         }
+        case COMMAND_READ_USB_HOST_INPUTS: {
+            memcpy(response_buffer, &usb_host_data, sizeof(usb_host_data));
+            return sizeof(usb_host_data);
+        }
 #endif
 #ifdef BLUETOOTH_RX
         case COMMAND_START_BT_SCAN: {

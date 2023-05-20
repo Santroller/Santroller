@@ -110,7 +110,7 @@
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
                             if (report->tilt) {
-                                usb_host_data.tilt = INT16_MAX;
+                                usb_host_data.tilt = UINT8_MAX;
                             }
                             if (report->solo) {
                                 usb_host_data.soloGreen |= report->a;
@@ -120,10 +120,10 @@
                                 usb_host_data.soloOrange |= report->leftShoulder;
                             }
                             if (report->whammy) {
-                                usb_host_data.whammy = (report->whammy - 0x80) << 8;
+                                usb_host_data.whammy = report->whammy;
                             }
                             if (report->pickup) {
-                                usb_host_data.pickup = (report->pickup - 0x80) << 8;
+                                usb_host_data.pickup = report->pickup;
                             }
                         } else {
                             PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)data;
@@ -141,13 +141,13 @@
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
                             if (report->tilt) {
-                                usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
+                                usb_host_data.tilt = report->tilt >> 2;
                             }
                             if (report->whammy) {
-                                usb_host_data.whammy = (report->whammy - 0x80) << 8;
+                                usb_host_data.whammy = report->whammy;
                             }
                             if (report->slider) {
-                                usb_host_data.slider = (report->slider - 0x80) << 8;
+                                usb_host_data.slider = report->slider;
                             }
                         }
                         break;
@@ -239,10 +239,10 @@
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;
                         if (report->tilt) {
-                            usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
+                            usb_host_data.tilt = report->tilt >> 2;
                         }
                         if (report->whammy) {
-                            usb_host_data.whammy = (report->whammy - 0x80) << 8;
+                            usb_host_data.whammy = report->whammy << 8;
                         }
                         break;
                     }
@@ -331,10 +331,10 @@
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;
                         if (report->tilt) {
-                            usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
+                            usb_host_data.tilt = report->tilt;
                         }
                         if (report->whammy) {
-                            usb_host_data.whammy = (report->whammy - 0x80) << 8;
+                            usb_host_data.whammy = report->whammy;
                         }
                         break;
                     }
@@ -429,7 +429,11 @@
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
                             if (report->tilt) {
-                                usb_host_data.tilt = report->tilt;
+                                if (report->tilt < 0) {
+                                    usb_host_data.tilt = -report->tilt;
+                                } else {
+                                    usb_host_data.tilt = report->tilt;
+                                }
                             }
                             if (report->whammy) {
                                 usb_host_data.whammy = report->whammy;

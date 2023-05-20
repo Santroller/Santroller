@@ -229,6 +229,7 @@ typedef struct {
     bool yellowCymbal : 1;
     bool blueCymbal : 1;
     bool greenCymbal : 1;
+    bool unused : 1;
 
     bool dpadUp : 1;
     bool dpadDown : 1;
@@ -261,10 +262,10 @@ typedef struct {
     uint8_t yellowCymbalVelocity;
     uint8_t greenCymbalVelocity;
     uint8_t kickVelocity;
-    int16_t whammy;
-    int16_t tilt;
-    int16_t pickup;
-    int16_t slider;
+    uint8_t whammy;
+    uint8_t pickup;
+    uint8_t tilt;
+    uint8_t slider;
     int16_t leftTableVelocity;
     int16_t rightTableVelocity;
     int16_t effectsKnob;

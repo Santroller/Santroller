@@ -1133,8 +1133,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
             bool b = gamepad->b;
+            bool x = gamepad->x;
+            bool y = gamepad->y;
             gamepad->b = a;
             gamepad->a = b;
+            gamepad->x = y;
+            gamepad->y = x;
         }
         report_size = size = sizeof(PS3_REPORT);
 

@@ -46,7 +46,7 @@ uint8_t read_usb_host_devices(uint8_t *buf);
 uint8_t get_usb_host_device_count();
 USB_Device_Type_t get_usb_host_device_type(uint8_t id);
 void get_usb_host_device_data(uint8_t id, uint8_t *buf);
-USB_Host_Data_t usb_host_data;
+extern USB_Host_Data_t usb_host_data;
 #endif
 extern USB_LastReport_Data_t last_report_bt;
 

@@ -171,6 +171,9 @@
                             usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
                             usb_host_data.blueCymbal |= report->x && report->cymbalFlag && (dpad_binding & UP);
                             usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && (dpad_binding & DOWN);
+                            if (usb_host_data.kick1 || usb_host_data.kick2) {
+                                usb_host_data.kickVelocity = 0xFF;
+                            }
                             if (report->greenVelocity) {
                                 if (usb_host_data.greenCymbal) {
                                     usb_host_data.greenCymbalVelocity = report->greenVelocity;
@@ -463,6 +466,9 @@
                             usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
                             usb_host_data.blueCymbal |= report->x && report->cymbalFlag && report->dpadUp;
                             usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && report->dpadDown;
+                            if (usb_host_data.kick1 || usb_host_data.kick2) {
+                                usb_host_data.kickVelocity = 0xFF;
+                            }
                             if (report->greenVelocity) {
                                 if (usb_host_data.greenCymbal) {
                                     usb_host_data.greenCymbalVelocity = (0x7FFF - report->greenVelocity) >> 7;

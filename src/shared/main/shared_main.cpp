@@ -1506,9 +1506,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         return 0;
     }
 
-#else
-    if (!bluetooth_report_available()) {
-        if (!last_report) {
+#elseyou if (!last_report) {
             memcpy(buf, &last_report_usb.lastControllerReport, last_usb_report_size);
             return last_usb_report_size;
         }
@@ -1721,7 +1719,7 @@ bool tick_bluetooth(void) {
 bool tick_usb(void) {
 #if POLL_RATE
     if ((micros() - last_poll) < (POLL_RATE * 1000)) {
-        return;
+        return 0;
     }
     last_poll = micros();
 #endif

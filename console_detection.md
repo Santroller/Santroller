@@ -2,7 +2,8 @@
 Console detection happens in multiple passes, depending on the console in question
 
 # PS3
-PS3 sends out a hid feature request with report id 0x00, and we can catch this and jump to a PS3 compat mode.
+PS3 sends out a hid feature request with report id 0x00, and we can catch this and jump to a PS3 compat mode. Note though that it only does this if your report does not contain any report IDs.
+This means we actually have to include a second hid device with an extremely cut down report descriptor, just for PS3 detection.
 Interestingly, for controllers the PS3 requires a bit of extra auth BUT it doesn't actually require this for a standard hid device, and the PS3 works just fine with a normal hid device too, so for gamepad mode we actually jump to a seperate PS3 specific PS3 compat mode, that neither PADEMU or fakemote use.
 
 # Wii (fakemote)

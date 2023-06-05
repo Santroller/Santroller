@@ -349,7 +349,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_CONFIGURATION,
         wTotalLength : sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR),
-        bNumInterfaces : 4,
+        bNumInterfaces : 5,
         bConfigurationValue : 1,
         iConfiguration : NO_DESCRIPTOR,
         bmAttributes :
@@ -432,6 +432,44 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         iInterface : 4
     },
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
+    InterfaceHID2 : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_PS3_Test,
+        bAlternateSetting : 0,
+        bNumEndpoints : 2,
+        bInterfaceClass : HID_INTF,
+        bInterfaceSubClass : USB_HID_PROTOCOL_NONE,
+        bInterfaceProtocol : USB_HID_PROTOCOL_NONE,
+        iInterface : NO_DESCRIPTOR
+    },
+    HIDDescriptor2 : {
+        bLength : sizeof(USB_HID_DESCRIPTOR),
+        bDescriptorType : HID_DESCRIPTOR_HID,
+        bcdHID : USB_VERSION_BCD(1, 0, 1),
+        bCountryCode : 0x00,
+        bNumDescriptors : 1,
+        bDescrType : HID_DESCRIPTOR_REPORT,
+        wDescriptorLength : sizeof(ps3_detection_descriptor)
+    },
+    EndpointInHID2 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : DEVICE_TEST_EPADDR_IN,
+        bmAttributes :
+            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x20,
+        bInterval : 1
+    },
+    EndpointOutHID2 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : DEVICE_TEST_EPADDR_OUT,
+        bmAttributes :
+            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x08,
+        bInterval : 1
+    },
 };
 
 const PROGMEM XBOX_ONE_CONFIGURATION_DESCRIPTOR XBOXOneConfigurationDescriptor = {
@@ -709,7 +747,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
             reboot();
@@ -784,6 +822,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }
+        // if (consoleType == UNIVERSAL && wValue == 0x0300 && wIndex == INTERFACE_ID_PS3_Test && request == HID_REQUEST_GET_REPORT && wLength == 0x00) {
+        //     consoleType = REAL_PS3;
+        //     reset_usb();
+        // }
         // Fakemote sends this, so we know to jump to PS3 mode
         if (consoleType == UNIVERSAL && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
             consoleType = PS3;
@@ -903,6 +945,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
+    // printf("Descriptor: %02x %02x %02x\r\n", descriptorType, descriptorNumber, wIndex);
     descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
@@ -1001,33 +1044,38 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case HID_DESCRIPTOR_REPORT: {
-            seen_non_wii_packet = true;
             const void *address;
+            if (wIndex == INTERFACE_ID_PS3_Test) {
+                address = ps3_detection_descriptor;
+                size = sizeof(ps3_detection_descriptor);
+            } else {
+                seen_non_wii_packet = true;
 #if DEVICE_TYPE_KEYBOARD
-            address = keyboard_mouse_descriptor;
-            size = sizeof(keyboard_mouse_descriptor);
+                address = keyboard_mouse_descriptor;
+                size = sizeof(keyboard_mouse_descriptor);
 #else
-            if (consoleType == PS4) {
-                address = ps4_descriptor;
-                size = sizeof(ps4_descriptor);
-            } else if (consoleType != UNIVERSAL) {
+                if (consoleType == PS4) {
+                    address = ps4_descriptor;
+                    size = sizeof(ps4_descriptor);
+                } else if (consoleType != UNIVERSAL) {
 #if DEVICE_TYPE_IS_INSTRUMENT
-                address = ps3_instrument_descriptor;
-                size = sizeof(ps3_instrument_descriptor);
-#else
-                if (consoleType == PS3) {
-                    address = ps3_descriptor;
-                    size = sizeof(ps3_descriptor);
-                } else {
                     address = ps3_instrument_descriptor;
                     size = sizeof(ps3_instrument_descriptor);
+#else
+                    if (consoleType == PS3) {
+                        address = ps3_descriptor;
+                        size = sizeof(ps3_descriptor);
+                    } else {
+                        address = ps3_instrument_descriptor;
+                        size = sizeof(ps3_instrument_descriptor);
+                    }
+#endif
+                } else {
+                    address = pc_descriptor;
+                    size = sizeof(pc_descriptor);
                 }
 #endif
-            } else {
-                address = pc_descriptor;
-                size = sizeof(pc_descriptor);
             }
-#endif
             memcpy_P(descriptorBuffer, address, size);
             break;
         }

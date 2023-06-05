@@ -240,12 +240,12 @@ uint8_t const *tud_descriptor_device_cb(void) {
     return buf;
 }
 uint8_t const *tud_hid_custom_descriptor_report_cb(uint8_t instance) {
-    descriptorRequest(HID_DESCRIPTOR_REPORT << 8, 0, buf);
+    descriptorRequest(HID_DESCRIPTOR_REPORT << 8, instance, buf);
     return buf;
 }
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;  // for multiple configurations
-    descriptorRequest(USB_DESCRIPTOR_CONFIGURATION << 8, 0, buf);
+    descriptorRequest(USB_DESCRIPTOR_CONFIGURATION << 8, index, buf);
     return buf;
 }
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
@@ -311,11 +311,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             // uint8_t const desc_index = tu_u16_low (request->wValue);
 
             if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESCRIPTOR_HID) {
-                uint16_t len = descriptorRequest(HID_DESCRIPTOR_HID << 8, 0, buf);
+                uint16_t len = descriptorRequest(HID_DESCRIPTOR_HID << 8, request->wIndex, buf);
                 TU_VERIFY(tud_control_xfer(rhport, request, buf, len));
                 return true;
             } else if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESCRIPTOR_REPORT) {
-                uint16_t len = descriptorRequest(HID_DESCRIPTOR_REPORT << 8, 0, buf);
+                uint16_t len = descriptorRequest(HID_DESCRIPTOR_REPORT << 8, request->wIndex, buf);
                 TU_VERIFY(tud_control_xfer(rhport, request, buf, len));
                 return true;
             } else {

@@ -68,27 +68,6 @@ const uint8_t PROGMEM ps3_instrument_descriptor[] = {
     0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0xC0,              // End Collection
 };
-const uint8_t PROGMEM ps3_detection_descriptor[] = {
-    0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
-    0x09, 0x05,        // Usage (Game Pad)
-    0xA1, 0x01,        // Collection (Application)
-    0x06, 0x00, 0xFF,  //   Usage Page (Vendor Defined 0xFF00)
-    0x0A, 0x21, 0x26,  //   Usage (0x2621)
-    0x95, 0x20,        //   Report Count (32)
-    0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
-    0x0A, 0x21, 0x26,  //   Usage (0x2621)
-    0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
-    0x26, 0xFF, 0x03,  //   Logical Maximum (1023)
-    0x46, 0xFF, 0x03,  //   Physical Maximum (1023)
-    0x09, 0x2C,        //   Usage (0x2C)
-    0x09, 0x2D,        //   Usage (0x2D)
-    0x09, 0x2E,        //   Usage (0x2E)
-    0x09, 0x2F,        //   Usage (0x2F)
-    0x75, 0x10,        //   Report Size (16)
-    0x95, 0x04,        //   Report Count (4)
-    0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-    0xC0,              // End Collection
-};
 
 const uint8_t PROGMEM pc_descriptor[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
@@ -160,11 +139,11 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x95, 0x04,        //   Report Count (4)
     0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0x85, 0x03,        //   Report ID (3)
-    0x0A, 0x21, 0x26,  //   Usage (0x2621)
-    0x95, 0x2F,        //   Report Count (47)
-    0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0x0A, 0x21, 0x27,  //   Usage (0x2721)
     0x95, 0x2F,        //   Report Count (47)
+    0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+    0x0A, 0x21, 0x26,  //   Usage (0x2621)
+    0x95, 0x20,        //   Report Count (32)
     0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0xC0,              // End Collection
 };

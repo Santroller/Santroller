@@ -35,6 +35,9 @@ extern bool rf_connected;
 // Used for ps4 auth
 extern bool auth_ps4_controller_found;
 
+// Used for differenciating ps3 and ps4
+extern bool seen_ps4;
+
 // Used for detecting wii
 extern bool seen_non_wii_packet;
 

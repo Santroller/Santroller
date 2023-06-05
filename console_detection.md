@@ -1,9 +1,11 @@
 # Console Detection
 Console detection happens in multiple passes, depending on the console in question
 
+# PS3 and PS4
+We include the required usages below on the same report, as for some reason the PS3 will only request the feature if we do that.
+This means we need to do a seperate step to differenciate PS3 and PS4. The easiest way to do this, is to jump to PS4 mode, and then jump to PS3 if we dont see it requesting the feature report again.
 # PS3
-PS3 sends out a hid feature request with report id 0x00, and we can catch this and jump to a PS3 compat mode. Note though that it only does this if your report does not contain any report IDs.
-This means we actually have to include a second hid device with an extremely cut down report descriptor, just for PS3 detection.
+If you include a feature report in your hid report descriptor, with usage 0x2621, then the ps3 will ask for this and you can catch that and jump to a PS3 compat mode.
 Interestingly, for controllers the PS3 requires a bit of extra auth BUT it doesn't actually require this for a standard hid device, and the PS3 works just fine with a normal hid device too, so for gamepad mode we actually jump to a seperate PS3 specific PS3 compat mode, that neither PADEMU or fakemote use.
 
 # Wii (fakemote)
@@ -15,7 +17,7 @@ The wii and wii u both just stop talking to the device if they don't recognise i
 # PADEMU
 Similar to the Wii / Wii U above but the device never actually gets configured, only its descriptors are read. Same method works except we can test if the device was configured or not.
 # PS4
-If you include a feature report of 0x03 in your hid report, then the PS4 will ask for this and we jump to a ps4 compat mode. Note that for Guitars and Drums, this actually falls back to the PS3 versions.
+If you include a feature report of 0x03 in your hid report, with a usage of 0x2721, then the PS4 will ask for this and we jump to a ps4 compat mode. Note that for Guitars and Drums, this actually falls back to the PS3 versions.
 
 # xb360
 If you include a interface that looks like the xbox 360 security interface, the xb360 will try to do auth, and this can be caught and we then jump to a xb360 mode

@@ -48,6 +48,7 @@
 // The below ones are fine as bluetooth will never encode them.
 #define KEYBOARD_MOUSE 10
 #define MIDI 11
+#define PS3_PS4 12
 #define UNKNOWN 0xFF
 
 #define PINMODE_PULLUP 0

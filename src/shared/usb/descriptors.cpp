@@ -349,7 +349,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_CONFIGURATION,
         wTotalLength : sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR),
-        bNumInterfaces : 5,
+        bNumInterfaces : 4,
         bConfigurationValue : 1,
         iConfiguration : NO_DESCRIPTOR,
         bmAttributes :
@@ -432,44 +432,6 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         iInterface : 4
     },
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
-    InterfaceHID2 : {
-        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
-        bInterfaceNumber : INTERFACE_ID_PS3_Test,
-        bAlternateSetting : 0,
-        bNumEndpoints : 2,
-        bInterfaceClass : HID_INTF,
-        bInterfaceSubClass : USB_HID_PROTOCOL_NONE,
-        bInterfaceProtocol : USB_HID_PROTOCOL_NONE,
-        iInterface : NO_DESCRIPTOR
-    },
-    HIDDescriptor2 : {
-        bLength : sizeof(USB_HID_DESCRIPTOR),
-        bDescriptorType : HID_DESCRIPTOR_HID,
-        bcdHID : USB_VERSION_BCD(1, 0, 1),
-        bCountryCode : 0x00,
-        bNumDescriptors : 1,
-        bDescrType : HID_DESCRIPTOR_REPORT,
-        wDescriptorLength : sizeof(ps3_detection_descriptor)
-    },
-    EndpointInHID2 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : DEVICE_TEST_EPADDR_IN,
-        bmAttributes :
-            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 1
-    },
-    EndpointOutHID2 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : DEVICE_TEST_EPADDR_OUT,
-        bmAttributes :
-            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x08,
-        bInterval : 1
-    },
 };
 
 const PROGMEM XBOX_ONE_CONFIGURATION_DESCRIPTOR XBOXOneConfigurationDescriptor = {
@@ -814,18 +776,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
     // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-        if ((consoleType == UNIVERSAL || consoleType == REAL_PS3) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
-            if (consoleType == UNIVERSAL) {
-                consoleType = REAL_PS3;
-                reset_usb();
-            }
+        // PS3s request this as some form of controller id
+        if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }
-        // if (consoleType == UNIVERSAL && wValue == 0x0300 && wIndex == INTERFACE_ID_PS3_Test && request == HID_REQUEST_GET_REPORT && wLength == 0x00) {
-        //     consoleType = REAL_PS3;
-        //     reset_usb();
-        // }
         // Fakemote sends this, so we know to jump to PS3 mode
         if (consoleType == UNIVERSAL && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
             consoleType = PS3;
@@ -835,11 +790,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = REAL_PS3;
             reset_usb();
         }
+        // PS3 and PS4 send this
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
+            // PS3 Drums and Guitars get used on both consoles, so we can jump straight to PS3 mode
 #if DEVICE_TYPE_IS_INSTRUMENT && DEVICE_TYPE != LIVE_GUITAR
-            consoleType = PS3;
+            consoleType = REAL_PS3;
             reset_usb();
 #else
+            // the PS3 and PS4 will end up here. PS4 mode will jump back to PS3 mode on a PS3 later.
             consoleType = PS4;
             reset_usb();
 #endif
@@ -847,6 +805,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             switch (wValue) {
                 case 0x0303:
+                    seen_ps4 = true;
                     memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
                     return sizeof(ps4_feature_config);
 
@@ -1045,37 +1004,32 @@ uint16_t descriptorRequest(const uint16_t wValue,
         }
         case HID_DESCRIPTOR_REPORT: {
             const void *address;
-            if (wIndex == INTERFACE_ID_PS3_Test) {
-                address = ps3_detection_descriptor;
-                size = sizeof(ps3_detection_descriptor);
-            } else {
-                seen_non_wii_packet = true;
+            seen_non_wii_packet = true;
 #if DEVICE_TYPE_KEYBOARD
-                address = keyboard_mouse_descriptor;
-                size = sizeof(keyboard_mouse_descriptor);
+            address = keyboard_mouse_descriptor;
+            size = sizeof(keyboard_mouse_descriptor);
 #else
-                if (consoleType == PS4) {
-                    address = ps4_descriptor;
-                    size = sizeof(ps4_descriptor);
-                } else if (consoleType != UNIVERSAL) {
+            if (consoleType == PS4) {
+                address = ps4_descriptor;
+                size = sizeof(ps4_descriptor);
+            } else if (consoleType != UNIVERSAL) {
 #if DEVICE_TYPE_IS_INSTRUMENT
+                address = ps3_instrument_descriptor;
+                size = sizeof(ps3_instrument_descriptor);
+#else
+                if (consoleType == PS3) {
+                    address = ps3_descriptor;
+                    size = sizeof(ps3_descriptor);
+                } else {
                     address = ps3_instrument_descriptor;
                     size = sizeof(ps3_instrument_descriptor);
-#else
-                    if (consoleType == PS3) {
-                        address = ps3_descriptor;
-                        size = sizeof(ps3_descriptor);
-                    } else {
-                        address = ps3_instrument_descriptor;
-                        size = sizeof(ps3_instrument_descriptor);
-                    }
-#endif
-                } else {
-                    address = pc_descriptor;
-                    size = sizeof(pc_descriptor);
                 }
 #endif
+            } else {
+                address = pc_descriptor;
+                size = sizeof(pc_descriptor);
             }
+#endif
             memcpy_P(descriptorBuffer, address, size);
             break;
         }

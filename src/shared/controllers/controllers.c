@@ -5,6 +5,7 @@ extern "C" {
 #endif
 long last_ghl_poke_time = 0;
 bool seen_non_wii_packet = false;
+bool seen_ps4 = false;
 bool descriptor_requested = false;
 Xbox_One_State_t xbox_one_state = Announce;
 uint16_t xbox_360_vid = ARDWIINO_VID;

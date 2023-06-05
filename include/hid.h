@@ -79,7 +79,6 @@ extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
 extern const uint8_t pc_descriptor[161];
-extern const uint8_t ps3_detection_descriptor[53];
 
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);

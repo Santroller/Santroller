@@ -264,7 +264,7 @@ typedef struct {
     uint8_t kickVelocity;
     uint8_t whammy;
     uint8_t pickup;
-    uint8_t tilt;
+    int16_t tilt;
     uint8_t slider;
     int16_t leftTableVelocity;
     int16_t rightTableVelocity;

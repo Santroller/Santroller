@@ -110,7 +110,7 @@
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
                             if (report->tilt) {
-                                usb_host_data.tilt = UINT8_MAX;
+                                usb_host_data.tilt = INT16_MAX;
                             }
                             if (report->solo) {
                                 usb_host_data.soloGreen |= report->a;
@@ -140,8 +140,8 @@
                             usb_host_data.back |= report->back;
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
-                            if (report->tilt) {
-                                usb_host_data.tilt = report->tilt >> 2;
+                            if (report->tilt) {                                
+                                usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                             }
                             if (report->whammy) {
                                 usb_host_data.whammy = report->whammy;
@@ -242,7 +242,7 @@
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;
                         if (report->tilt) {
-                            usb_host_data.tilt = report->tilt >> 2;
+                            usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                         }
                         if (report->whammy) {
                             usb_host_data.whammy = report->whammy << 8;
@@ -334,7 +334,7 @@
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;
                         if (report->tilt) {
-                            usb_host_data.tilt = report->tilt;
+                            usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                         }
                         if (report->whammy) {
                             usb_host_data.whammy = report->whammy;
@@ -401,7 +401,7 @@
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
                             if (report->tilt) {
-                                usb_host_data.tilt = report->tilt;
+                                usb_host_data.tilt = INT16_MAX;
                             }
                             if (report->solo) {
                                 usb_host_data.soloGreen |= report->a;
@@ -432,11 +432,7 @@
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
                             if (report->tilt) {
-                                if (report->tilt < 0) {
-                                    usb_host_data.tilt = -report->tilt;
-                                } else {
-                                    usb_host_data.tilt = report->tilt;
-                                }
+                                usb_host_data.tilt = report->tilt;
                             }
                             if (report->whammy) {
                                 usb_host_data.whammy = report->whammy;
@@ -645,7 +641,7 @@
                         usb_host_data.soloBlue |= report->soloBlue;
                         usb_host_data.soloOrange |= report->soloOrange;
                         if (report->tilt) {
-                            usb_host_data.tilt = report->tilt;
+                            usb_host_data.tilt = report->tilt << 8;
                         }
                         if (report->whammy) {
                             usb_host_data.whammy = report->whammy;

@@ -222,6 +222,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             }
             // PS4 controllers define a feature request of 0x0303
             // .... except the DS4 or knockoffs of it, but we end up doing a vid pid lookup for those anyways
+            // We can go one step further here: look for usage 0x2621 and 0x2721, which will let us detect PS4 or PS3 controllers.
             if (type == HID_REPORT_TYPE_MAIN && tag == HID_REPORT_TAG_MAIN_FEATURE && last_id == 0x03) {
                 p_xinput->type = PS4;
             }

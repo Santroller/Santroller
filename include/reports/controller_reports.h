@@ -186,55 +186,55 @@ typedef union {
 } Buffer_Report_t;
 
 typedef struct {
-    bool x : 1;  // square
-    bool a : 1;  // cross
-    bool b : 1;  // circle
-    bool y : 1;  // triangle
+    uint32_t x : 1;  // square
+    uint32_t a : 1;  // cross
+    uint32_t b : 1;  // circle
+    uint32_t y : 1;  // triangle
 
-    bool leftShoulder : 1;   // l1
-    bool rightShoulder : 1;  // r1
-    bool kick1 : 1;
-    bool kick2 : 1;
+    uint32_t leftShoulder : 1;   // l1
+    uint32_t rightShoulder : 1;  // r1
+    uint32_t kick1 : 1;
+    uint32_t kick2 : 1;
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool leftThumbClick : 1;   // l3
-    bool rightThumbClick : 1;  // r3
+    uint32_t back : 1;  // select
+    uint32_t start : 1;
+    uint32_t leftThumbClick : 1;   // l3
+    uint32_t rightThumbClick : 1;  // r3
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
-    bool solo : 1;
-    bool leftBlue : 1;
+    uint32_t guide : 1;    // ps
+    uint32_t capture : 1;  // switch capture button
+    uint32_t solo : 1;
+    uint32_t leftBlue : 1;
 
-    bool leftRed : 1;
-    bool leftGreen : 1;
-    bool rightBlue : 1;
-    bool rightRed : 1;
+    uint32_t leftRed : 1;
+    uint32_t leftGreen : 1;
+    uint32_t rightBlue : 1;
+    uint32_t rightRed : 1;
 
-    bool rightGreen : 1;
-    bool tableNeutral : 1;
-    bool soloGreen : 1;
-    bool soloRed : 1;
+    uint32_t rightGreen : 1;
+    uint32_t tableNeutral : 1;
+    uint32_t soloGreen : 1;
+    uint32_t soloRed : 1;
 
-    bool soloYellow : 1;
-    bool soloBlue : 1;
-    bool soloOrange : 1;
-    bool green : 1;
+    uint32_t soloYellow : 1;
+    uint32_t soloBlue : 1;
+    uint32_t soloOrange : 1;
+    uint32_t green : 1;
 
-    bool red : 1;
-    bool yellow : 1;
-    bool blue : 1;
-    bool orange : 1;
+    uint32_t red : 1;
+    uint32_t yellow : 1;
+    uint32_t blue : 1;
+    uint32_t orange : 1;
 
-    bool yellowCymbal : 1;
-    bool blueCymbal : 1;
-    bool greenCymbal : 1;
-    bool unused : 1;
+    uint8_t yellowCymbal : 1;
+    uint8_t blueCymbal : 1;
+    uint8_t greenCymbal : 1;
+    uint8_t unused : 1;
 
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;

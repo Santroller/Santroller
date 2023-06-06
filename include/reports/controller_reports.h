@@ -274,4 +274,4 @@ typedef struct {
     uint16_t accelZ;
     uint16_t accelY;
     uint16_t gyro;
-} USB_Host_Data_t;
+} __attribute__((packed)) USB_Host_Data_t;

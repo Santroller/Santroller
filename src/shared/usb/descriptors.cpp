@@ -935,7 +935,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
 #ifdef PS3_TYPE
-            else if (consoleType == PS3) {
+            else if (consoleType == REAL_PS3 || consoleType == PS3) {
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS3_TYPE;
             }

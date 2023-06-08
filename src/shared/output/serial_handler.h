@@ -4,6 +4,7 @@
 #include "controller_structs.h"
 #include <stdbool.h>
 extern Controller_t controller;
+extern bool isPs3;
 void processHIDWriteFeatureReport(uint8_t cmd, uint8_t data_len, const uint8_t *data);
 void processHIDWriteFeatureReportControl(uint8_t cmd, uint8_t data_len);
 void processHIDReadFeatureReport(uint8_t cmd, uint8_t report, const void* request);

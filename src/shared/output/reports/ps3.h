@@ -51,6 +51,7 @@ static const uint8_t PROGMEM ghAxisBindings2[] = {0xff, XBOX_LB, XBOX_Y,
 static const uint8_t hat_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07,
                                        0x05, 0x08, 0x02, 0x01, 0x03};
 uint8_t currentAxisBindingsLen = 0;
+bool isPs3 = false;
 void initPS3(void) {
   if (fullDeviceType > SWITCH_GAMEPAD) {
     if (fullDeviceType > PS3_GAMEPAD) {
@@ -84,17 +85,6 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     if (button == 0xff) continue;
     bool bit_set = bit_check(controller->buttons, button);
     bit_write(bit_set, JoystickReport->buttons, i);
-    // TODO: is the below even necessary? Bring it back when we migrate to the
-    // new codebase as we will have room for it
-    // TODO: and in that case, we can even support it on normal controllers.
-    // if (i < currentAxisBindingsLen) {
-    //   if (fullDeviceType == PS3_GUITAR_HERO_GUITAR &&
-    //       i < sizeof(ghAxisBindings2)) {
-    //     button = ghAxisBindings2[i];
-    //     bit_set = bit_check(controller->buttons, button);
-    //   }
-    //   JoystickReport->axis[i] = bit_set ? 0xFF : 0x00;
-    // }
   }
 
   // Hat Switch
@@ -108,7 +98,7 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     // GH PS3 guitars have a tilt axis
     // Since the PS3 tilt is based on an accelerometer, we need to subtract 40
     // as they start at a value of 1G, which works out to be around 40.
-    JoystickReport->accel[0] = ((controller->r_y >> 6) + 512) - 40;
+    JoystickReport->accel[0] = (-(controller->r_y >> 7) + 512) - 40;
     // r_y is tap, so lets disable it.
     JoystickReport->r_y = 0x7d;
   } else if (fullDeviceType == PS3_ROCK_BAND_GUITAR ||
@@ -132,8 +122,13 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     JoystickReport->r_y = (controller->r_y >> 8) + 128;
   } else {
     // l_x and l_y are unused on guitars and drums. Center them.
-    JoystickReport->l_x = 0x80;
     JoystickReport->l_y = 0x80;
+    if (isPs3) {
+      JoystickReport->l_x = 0x80;
+    } else {
+      // On a non ps3 device, also mirror tilt to l_x so it can be used in games without accel
+      JoystickReport->l_x = 128 + (controller->r_y >> 8);
+    }
   }
   if (fullDeviceType == PS3_TURNTABLE) {
     JoystickReport->r_x = (controller->l_x >> 8) + 128;

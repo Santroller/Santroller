@@ -116,14 +116,15 @@ void processHIDReadFeatureReport(uint8_t cmd, uint8_t report,
     size = 2;
     dbuf[1] = detectedPin;
     stopSearching();
-  } else {
+  } else if (cmd == 0) {
+    isPs3 = true;
     size = sizeof(id) + 1;
     memcpy_P(dbuf + 1, id, sizeof(id));
-    if (fullDeviceType <= PS3_ROCK_BAND_DRUMS) {
-      dbuf[4] = 0x00;
-    } else if (fullDeviceType <= PS3_GUITAR_HERO_DRUMS) {
+    if (fullDeviceType == PS3_GUITAR_HERO_DRUMS || fullDeviceType == PS3_GUITAR_HERO_GUITAR) {
       dbuf[4] = 0x06;
-    }
+    } else if (fullDeviceType == PS3_ROCK_BAND_DRUMS || fullDeviceType == PS3_ROCK_BAND_GUITAR) {
+      dbuf[4] = 0x00;
+    } 
   }
   writeToUSB(dbuf, size, report, request);
 }

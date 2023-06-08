@@ -28,13 +28,15 @@ uint8_t queue_size = 0;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #endif
-#ifdef INPUT_DJ_TURNTABLE
 #define TURNTABLE_BUFFER_SIZE 16
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
+int32_t dj_sum_left = 0;
 int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
-int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
-int16_t dj_sum_left = 0;
-int16_t dj_sum_right = 0;
 int8_t dj_next_left = 0;
+#endif
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
+int32_t dj_sum_right = 0;
+int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
 USB_Report_Data_t combined_report;

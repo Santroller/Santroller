@@ -28,6 +28,15 @@ uint8_t queue_size = 0;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #endif
+#ifdef INPUT_DJ_TURNTABLE
+#define TURNTABLE_BUFFER_SIZE 16
+int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
+int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
+int16_t dj_sum_left = 0;
+int16_t dj_sum_right = 0;
+int8_t dj_next_left = 0;
+int8_t dj_next_right = 0;
+#endif
 USB_Report_Data_t combined_report;
 PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
@@ -883,7 +892,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
-
     TICK_SHARED;
     // give the user 5 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 5000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {

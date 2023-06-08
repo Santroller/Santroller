@@ -30,12 +30,12 @@ Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #endif
 #define TURNTABLE_BUFFER_SIZE 16
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
-int32_t dj_sum_left = 0;
+int16_t dj_sum_left = 0;
 int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_left = 0;
 #endif
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
-int32_t dj_sum_right = 0;
+int16_t dj_sum_right = 0;
 int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
@@ -264,7 +264,8 @@ uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int1
 uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
 #if DEVICE_TYPE == GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
-    int16_t ret = (handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8) - GUITAR_ONE_G;
+    // Also, the game is looking for the value going negative, not positive
+    int16_t ret = (-(handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 7)) - GUITAR_ONE_G;
 #else
     int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
 #endif

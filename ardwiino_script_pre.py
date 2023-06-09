@@ -99,7 +99,7 @@ for type in ["arduino_mega_2560", "arduino_mega_adk", "arduino_uno"]:
         env.AddCustomTarget(
             name=f"{type}_{proc}_clean",
             dependencies=None,
-            actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb_{proc}.hex"'],
+            actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb_{proc}.hex:i"'],
             title=None,
             description=None
         )

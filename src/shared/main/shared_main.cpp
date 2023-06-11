@@ -156,7 +156,7 @@ void init_main(void) {
     rf_initialised = radio.begin();
     radio.setChannel(RF_CHANNEL);
     radio.setPALevel(RF_POWER_LEVEL);
-    radio.setDataRate(RF_DATA_RATE);
+    radio.setDataRate((rf24_datarate_e)RF_DATA_RATE);
     radio.enableAckPayload();
 #endif
 #ifdef RF_TX
@@ -1422,7 +1422,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             if (output_console_type == UNIVERSAL) {
                 PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
                 universal_report->report_id = 1;
-                report_data = (USB_Report_Data_t *)(universal_report->report);
+                report_data = (USB_Report_Data_t *)(&universal_report->report);
                 size++;
             }
             PS3_REPORT *report = (PS3_REPORT *)report_data;

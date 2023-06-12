@@ -1202,6 +1202,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 }
 #elif defined(RF_RX)
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+    output_console_type = consoleType;
     uint8_t rf_size;
     uint8_t size;
     if (radio.available()) {
@@ -1323,6 +1324,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
         }
 #else
+        if (input->transmitter >= RF_COUNT) return 0;
         memcpy(&last_rf_inputs[input->transmitter].lastControllerReport, &input->lastControllerReport, sizeof(input->lastControllerReport));
         USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
         uint8_t report_size;
@@ -1460,14 +1462,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->b = a;
                 report->a = b;
             }
-        }
-        // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
-        if (last_report) {
-            uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
-            if (cmp == 0) {
-                return 0;
-            }
-            memcpy(&last_report->lastControllerReport, report_data, report_size);
         }
         if (output_console_type == PS4) {
             ps4_sequence_number++;

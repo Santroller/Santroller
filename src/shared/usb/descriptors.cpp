@@ -832,7 +832,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return size;
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+#if USB_HOST_STACK
         return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
+#else
+        return 0;
+#endif
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F2 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         return 1;
     } else if (request == HID_REQUEST_SET_REPORT && wValue == 0x03F4 && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {

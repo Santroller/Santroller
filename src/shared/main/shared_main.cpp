@@ -109,7 +109,9 @@ void send_rf_console_type() {
 }
 #endif
 #ifdef RF
+#ifdef RADIO_MOSI
 #include "SPI.h"
+#endif
 #include "rf.h"
 RF24 radio(RADIO_CE, RADIO_CSN);
 uint8_t rf_data[32];
@@ -154,19 +156,23 @@ void init_main(void) {
 #endif
 #ifdef RF
     rf_initialised = radio.begin();
-    radio.setChannel(RF_CHANNEL);
-    radio.setPALevel(RF_POWER_LEVEL);
-    radio.setDataRate((rf24_datarate_e)RF_DATA_RATE);
-    radio.enableAckPayload();
+    if (rf_initialised) {
+        radio.setChannel(RF_CHANNEL);
+        radio.setPALevel(RF_POWER_LEVEL);
+        radio.setDataRate((rf24_datarate_e)RF_DATA_RATE);
+        radio.enableAckPayload();
 #endif
 #ifdef RF_TX
-    radio.openWritingPipe(rf_address);
-    send_rf_console_type();
+        radio.openWritingPipe(rf_address);
+        send_rf_console_type();
 #endif
 #ifdef RF_RX
-    radio.enableDynamicPayloads();
-    radio.openReadingPipe(1, rf_address);
-    radio.startListening();
+        radio.enableDynamicPayloads();
+        radio.openReadingPipe(1, rf_address);
+        radio.startListening();
+#endif
+#ifdef RF
+    }
 #endif
 #ifdef INPUT_WT_NECK
     memset(initialWt, 0, sizeof(initialWt));
@@ -1212,6 +1218,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             case Heartbeat:
                 return 0;
         }
+        if (!buf) {
+            return 0;
+        }
 
 #if DEVICE_TYPE_KEYBOARD
             // if (!updated) {
@@ -1409,7 +1418,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             memset(report, 0, sizeof(PS3_REPORT));
             report->reportId = 1;
             for (int dev = 0; dev < RF_COUNT; dev++) {
-                convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, output_console_type);
+                convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, PS3);
             }
             report_size = size = sizeof(PS3Gamepad_Data_t);
         }
@@ -1766,10 +1775,12 @@ bool tick_usb(void) {
         set_console_type(REAL_PS3);
     }
     if (!ready) return 0;
+#if USB_HOST_STACK
     if (data_from_console_size) {
         send_report_to_controller(get_device_address_for(XBOXONE), data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
+#endif
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
@@ -1888,7 +1899,7 @@ void set_console_type(uint8_t new_console_type) {
     consoleType = new_console_type;
     reset_usb();
 }
-#ifdef USB_HOST_STACK
+#if USB_HOST_STACK
 USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
     USB_Device_Type_t type = {0, GAMEPAD};
     switch (vid) {

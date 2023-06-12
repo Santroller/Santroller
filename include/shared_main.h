@@ -31,7 +31,7 @@ typedef struct {
     uint8_t b;
 } Led_t;
 extern Led_t ledState[LED_COUNT];
-#ifdef USB_HOST_STACK
+#if USB_HOST_STACK
 typedef struct {
     uint8_t console_type;
     uint8_t sub_type;

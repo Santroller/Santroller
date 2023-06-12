@@ -1202,7 +1202,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 }
 #elif defined(RF_RX)
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
-    output_console_type = consoleType;
     uint8_t rf_size;
     uint8_t size;
     if (radio.available()) {

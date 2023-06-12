@@ -1526,7 +1526,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         return 0;
     }
 
-#elseyou if (!last_report) {
+#else if (!last_report) {
     memcpy(buf, &last_report_usb.lastControllerReport, last_usb_report_size);
     return last_usb_report_size;
 }

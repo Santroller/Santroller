@@ -85,11 +85,23 @@ if "upload" in BUILD_TARGETS:
         sleep(3)
         subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
+def mytarget_callback(*args, **kwargs):
+    env.TouchSerialPort("$UPLOAD_PORT", 1200)
+    env["UPLOAD_PORT"] = None
+    env.AutodetectUploadPort()
 
 env.AddCustomTarget(
     name="micro_clean",
     dependencies=None,
     actions=['"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
+    title=None,
+    description=None
+)
+
+env.AddCustomTarget(
+    name="micro_clean_jump",
+    dependencies=None,
+    actions=[mytarget_callback,'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
     title=None,
     description=None
 )

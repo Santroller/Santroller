@@ -146,6 +146,12 @@ void init_main(void) {
     twi_init();
     spi_begin();
     memset(ledState, 0, sizeof(ledState));
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
+    memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
+#endif
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
+    memset(dj_last_readings_right, 0, sizeof(dj_last_readings_right));
+#endif
 #ifdef INPUT_PS2
     init_ack();
 #endif
@@ -1223,11 +1229,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 
 #if DEVICE_TYPE_KEYBOARD
-            // if (!updated) {
-            //     size = sizeof(USB_NKRO_Data_t);
-            //     memcpy(buf, &last_report->lastNKROReport, size);
-            //     return size;
-            // }
+        // if (!updated) {
+        //     size = sizeof(USB_NKRO_Data_t);
+        //     memcpy(buf, &last_report->lastNKROReport, size);
+        //     return size;
+        // }
 #ifdef TICK_NKRO
         if (input->lastNKROReport.rid == REPORT_ID_NKRO) {
             memcpy(&last_rf_inputs[input->transmitter].lastNKROReport, &input->lastNKROReport, sizeof(input->lastNKROReport));
@@ -1680,7 +1686,7 @@ if (updateSequence) {
 }
 #endif
 #endif
-return size;
+    return size;
 }
 #endif
 

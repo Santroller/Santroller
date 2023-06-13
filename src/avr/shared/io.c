@@ -76,7 +76,7 @@ uint8_t spi_transfer(SPI_BLOCK block, uint8_t data) {
 }
 void spi_high(SPI_BLOCK block) {}
 void twi_init() {
-#ifdef GC_TWI_FREQ
+#ifdef GC_TWI_CLOCK
     twi_state = TWI_READY;
     twi_sendStop = true;  // default value
     twi_inRepStart = false;
@@ -99,8 +99,8 @@ void twi_init() {
     cbi(TWSR, TWPS0);
     cbi(TWSR, TWPS1);
 // note: TWBR should be 10 or higher for master mode
-#if ((F_CPU / GC_TWI_FREQ) - 16) / 2 > 10
-    TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
+#if ((F_CPU / GC_TWI_CLOCK) - 16) / 2 > 10
+    TWBR = ((F_CPU / GC_TWI_CLOCK) - 16) / 2;
 #else
     TWBR = 10;
 #endif

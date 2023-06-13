@@ -10,6 +10,7 @@
 #include <util/delay.h>
 #include <util/twi.h>
 #include <avr/boot.h>
+#include "util.h"
 
 #include "config.h"
 #ifndef TWI_BUFFER_LENGTH
@@ -26,6 +27,18 @@
 #define TWI_SRX 3
 #define TWI_STX 4
 volatile bool spi_acknowledged = false;
+
+
+static volatile uint8_t twi_state;
+static volatile uint8_t twi_slarw;
+static volatile uint8_t twi_sendStop;    // should the transaction end with a stop
+static volatile uint8_t twi_inRepStart;  // in the middle of a repeated start
+
+static uint8_t twi_masterBuffer[TWI_BUFFER_LENGTH];
+static volatile uint8_t twi_masterBufferIndex;
+static volatile uint8_t twi_masterBufferLength;
+
+static volatile uint8_t twi_error;
 void spi_begin() {
 #ifdef GC_SPI_CLOCK
     pinMode(MOSI, OUTPUT);
@@ -120,17 +133,6 @@ void init_ack() {
     sei();
 }
 #endif
-
-static volatile uint8_t twi_state;
-static volatile uint8_t twi_slarw;
-static volatile uint8_t twi_sendStop;    // should the transaction end with a stop
-static volatile uint8_t twi_inRepStart;  // in the middle of a repeated start
-
-static uint8_t twi_masterBuffer[TWI_BUFFER_LENGTH];
-static volatile uint8_t twi_masterBufferIndex;
-static volatile uint8_t twi_masterBufferLength;
-
-static volatile uint8_t twi_error;
 
 // === MODIFIED ===
 static uint16_t TIMEOUT = 32767;

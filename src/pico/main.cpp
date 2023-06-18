@@ -38,7 +38,7 @@ uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 uint8_t ps4_dev_addr = 0;
 bool connected = false;
-
+#if USB_HOST_STACK
 uint8_t total_usb_host_devices = 0;
 typedef struct {
     USB_Device_Type_t type;
@@ -47,6 +47,7 @@ typedef struct {
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
+#endif
 PS3_REPORT ble_rx_report;
 volatile bool ble_rx_report_received = false;
 typedef struct {
@@ -132,10 +133,10 @@ void tud_mount_cb(void) {
     device_reset();
     connected = true;
 }
+#if USB_HOST_STACK
 uint8_t get_usb_host_device_count() {
     return total_usb_host_devices;
 }
-
 USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
     return usb_host_devices[id].type;
 }
@@ -234,6 +235,41 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
 }
+void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
+    if (dev_addr == xone_dev_addr) {
+        receive_report_from_controller(report, len);
+    }
+    for (int i = 0; i < total_usb_host_devices; i++) {
+        if (usb_host_devices[i].type.dev_addr == dev_addr) {
+            if (usb_host_devices[i].type.console_type == XBOXONE) {
+                GipHeader_t *header = (GipHeader_t *)report;
+                if (header->command != GHL_HID_REPORT && header->command != GIP_INPUT_REPORT) {
+                    return;
+                }
+            }
+            memcpy(&usb_host_devices[i].report, report, len);
+            usb_host_devices[i].report_length = len;
+            return;
+        }
+    }
+}
+
+usbh_class_driver_t driver_host[] = {
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "XInput_Host_HID",
+#endif
+        .init = xinputh_init,
+        .open = xinputh_open,
+        .set_config = xinputh_set_config,
+        .xfer_cb = xinputh_xfer_cb,
+        .close = xinputh_close}};
+
+usbh_class_driver_t const *usbh_app_driver_get_cb(uint8_t *driver_count) {
+    *driver_count = 1;
+    return driver_host;
+}
+#endif
 
 uint8_t const *tud_descriptor_device_cb(void) {
     descriptorRequest(USB_DESCRIPTOR_DEVICE << 8, 0, buf);
@@ -258,24 +294,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     }
     return NULL;
 }
-void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
-    if (dev_addr == xone_dev_addr) {
-        receive_report_from_controller(report, len);
-    }
-    for (int i = 0; i < total_usb_host_devices; i++) {
-        if (usb_host_devices[i].type.dev_addr == dev_addr) {
-            if (usb_host_devices[i].type.console_type == XBOXONE) {
-                GipHeader_t *header = (GipHeader_t *)report;
-                if (header->command != GHL_HID_REPORT && header->command != GIP_INPUT_REPORT) {
-                    return;
-                }
-            }
-            memcpy(&usb_host_devices[i].report, report, len);
-            usb_host_devices[i].report_length = len;
-            return;
-        }
-    }
-}
+
 
 uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
     if (!dev_addr) {
@@ -359,21 +378,6 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count) {
     return driver;
 }
 
-usbh_class_driver_t driver_host[] = {
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "XInput_Host_HID",
-#endif
-        .init = xinputh_init,
-        .open = xinputh_open,
-        .set_config = xinputh_set_config,
-        .xfer_cb = xinputh_xfer_cb,
-        .close = xinputh_close}};
-
-usbh_class_driver_t const *usbh_app_driver_get_cb(uint8_t *driver_count) {
-    *driver_count = 1;
-    return driver_host;
-}
 void reboot(void) {
     watchdog_enable(1, false);
     for (;;) {

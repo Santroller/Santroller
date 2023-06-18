@@ -3,7 +3,7 @@
 
 #define PS3_STICK_CENTER 0x80
 #define PS3_ACCEL_CENTER 0x0200
-#define PS3_REPORT_BUFFER_SIZE  48
+#define PS3_REPORT_BUFFER_SIZE 48
 #define GUITAR_ONE_G 40
 
 typedef struct {
@@ -34,7 +34,7 @@ typedef struct {
 typedef struct {
     uint8_t outputType;
     uint8_t unknown1;
-    uint8_t enable; // 1 to enable, 0 to disable
+    uint8_t enable;  // 1 to enable, 0 to disable
     uint8_t padding[5];
 } ps3_turntable_output_report_t;
 
@@ -470,18 +470,16 @@ typedef struct
     // Reminder that these values are 10-bit in range
     uint16_t effectsKnob;
     uint16_t crossfader;
-    uint16_t : 6;
-    uint16_t tableNeutral : 1;
-    uint16_t : 3;
-    uint16_t leftBlue : 1;
-    uint16_t leftRed : 1;
-    uint16_t leftGreen : 1;
-    uint16_t rightBlue : 1;
-    uint16_t rightRed : 1;
     uint16_t rightGreen : 1;
+    uint16_t rightRed : 1;
+    uint16_t rightBlue : 1;
+    uint16_t : 1;
+    uint16_t leftGreen : 1;
+    uint16_t leftRed : 1;
+    uint16_t leftBlue : 1;
+    uint16_t : 9;
     uint16_t unused3;
 } __attribute__((packed)) PS3Turntable_Data_t;
-
 typedef struct
 {
     bool x : 1;  // square, white1
@@ -489,14 +487,14 @@ typedef struct
     bool b : 1;  // circle, black2
     bool y : 1;  // triangle, black3
 
-    bool leftShoulder : 1;  // white2, l1
+    bool leftShoulder : 1;   // white2, l1
     bool rightShoulder : 1;  // white3, r1
     bool : 1;
     bool : 1;
 
-    bool back : 1;  // back, heroPower
-    bool start : 1;      // start, pause
-    bool leftThumbClick : 1;       // leftThumbClick, ghtv
+    bool back : 1;            // back, heroPower
+    bool start : 1;           // start, pause
+    bool leftThumbClick : 1;  // leftThumbClick, ghtv
     bool : 1;
 
     bool guide : 1;    // ps

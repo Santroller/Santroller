@@ -4,6 +4,7 @@
 #define PS3_STICK_CENTER 0x80
 #define PS3_ACCEL_CENTER 0x0200
 #define PS3_REPORT_BUFFER_SIZE  48
+#define GUITAR_ONE_G 40
 
 typedef struct {
     uint8_t padding;
@@ -38,23 +39,23 @@ typedef struct {
 } ps3_turntable_output_report_t;
 
 typedef struct {
-    bool x : 1;  // square
-    bool a : 1;  // cross
-    bool b : 1;  // circle
-    bool y : 1;  // triangle
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
 
-    bool leftShoulder : 1;   // l1
-    bool rightShoulder : 1;  // r1
-    bool l2 : 1;             // l2
-    bool r2 : 1;             // r2
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t l2 : 1;             // l2
+    uint8_t r2 : 1;             // r2
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool leftThumbClick : 1;   // l3
-    bool rightThumbClick : 1;  // r3
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     uint8_t dpad : 4;
@@ -94,30 +95,30 @@ typedef struct {
 
 typedef struct {
     // Button bits
-    bool x : 1;
-    bool b : 1;
-    bool a : 1;
-    bool y : 1;
+    uint8_t x : 1;
+    uint8_t b : 1;
+    uint8_t a : 1;
+    uint8_t y : 1;
 
-    bool leftShoulder : 1;   // l1
-    bool rightShoulder : 1;  // r1
-    bool l2 : 1;             // l2
-    bool r2 : 1;             // r2
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t l2 : 1;             // l2
+    uint8_t r2 : 1;             // r2
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool leftThumbClick : 1;   // l3
-    bool rightThumbClick : 1;  // r3
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     // Stick axes
@@ -137,27 +138,27 @@ typedef struct {
 typedef struct {
     uint8_t reportId;
     uint8_t : 8;
-    bool back : 1;  // select
-    bool start : 1;
-    bool leftThumbClick : 1;   // l3
-    bool rightThumbClick : 1;  // r3
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
 
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
 
-    bool leftShoulder : 1;   // l1
-    bool rightShoulder : 1;  // r1
-    bool l2 : 1;             // l2
-    bool r2 : 1;             // r2
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t l2 : 1;             // l2
+    uint8_t r2 : 1;             // r2
 
-    bool x : 1;  // square
-    bool a : 1;  // cross
-    bool b : 1;  // circle
-    bool y : 1;  // triangle
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
 
-    bool guide : 1;
+    uint8_t guide : 1;
     uint8_t : 7;
     uint8_t : 8;
     uint8_t leftStickX;
@@ -187,30 +188,30 @@ typedef struct {
 } __attribute__((packed)) PS3Gamepad_Data_t;
 typedef struct {
     // Button bits
-    bool x : 1;  // square
-    bool a : 1;  // cross
-    bool b : 1;  // circle
-    bool y : 1;  // triangle
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
 
-    bool leftShoulder : 1;   // l1
-    bool rightShoulder : 1;  // r1
-    bool l2 : 1;             // l2
-    bool r2 : 1;             // r2
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t l2 : 1;             // l2
+    uint8_t r2 : 1;             // r2
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool leftThumbClick : 1;   // l3
-    bool rightThumbClick : 1;  // r3
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     // Stick axes
@@ -247,23 +248,23 @@ typedef struct {
 } __attribute__((packed)) PCGamepad_Data_t;
 typedef struct
 {
-    bool x : 1;  // square, blue
-    bool a : 1;  // cross, green
-    bool b : 1;  // cirlce, red
-    bool y : 1;  // triangle, yellow
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // cirlce, red
+    uint8_t y : 1;  // triangle, yellow
 
-    bool leftShoulder : 1;   // kick1, l1
-    bool rightShoulder : 1;  // kick2, r1
-    bool : 1;
-    bool : 1;
+    uint8_t leftShoulder : 1;   // kick1, l1
+    uint8_t rightShoulder : 1;  // kick2, r1
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool padFlag : 1;     // left stick click, l3
-    bool cymbalFlag : 1;  // right stick click, r3
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t padFlag : 1;     // left stick click, l3
+    uint8_t cymbalFlag : 1;  // right stick click, r3
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
@@ -289,30 +290,30 @@ typedef struct
 
 typedef struct
 {
-    bool x : 1;  // square, blue
-    bool a : 1;  // cross, green
-    bool b : 1;  // circle, red
-    bool y : 1;  // triangle, yellow
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
 
-    bool leftShoulder : 1;   // kick, l1
-    bool rightShoulder : 1;  // orange, r1
-    bool : 1;
-    bool : 1;
+    uint8_t leftShoulder : 1;   // kick, l1
+    uint8_t rightShoulder : 1;  // orange, r1
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool : 1;
-    bool : 1;
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     uint8_t unused1[8];
@@ -330,30 +331,30 @@ typedef struct
 
 typedef struct
 {
-    bool y : 1;  // triangle, yellow
-    bool a : 1;  // cross, green
-    bool b : 1;  // circle, red
-    bool x : 1;  // square, blue
+    uint8_t y : 1;  // triangle, yellow
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t x : 1;  // square, blue
 
-    bool leftShoulder : 1;   // orange, l1
-    bool rightShoulder : 1;  // spPedal, r1
-    bool : 1;
-    bool : 1;
+    uint8_t leftShoulder : 1;   // orange, l1
+    uint8_t rightShoulder : 1;  // spPedal, r1
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool : 1;
-    bool : 1;
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     uint8_t tilt_pc;
@@ -398,10 +399,10 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     uint8_t tilt_pc;
@@ -448,10 +449,10 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     uint8_t unused1[2];
@@ -503,10 +504,10 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
     uint8_t tilt_pc;   // leftStickX
     uint8_t strumBar;  // leftStickY

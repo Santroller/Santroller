@@ -874,7 +874,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 #endif
     // If we are in the "universal_report" mode, we can just copy the report and return
     if (universal_report) {
-        memcpy(buf, report, sizeof(*report));
+        memcpy(buf, report, sizeof(PS3_REPORT));
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
         if (output_console_type == PS3) {
             PS3_REPORT *report = (PS3_REPORT *)buf;
@@ -1146,11 +1146,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 
         TICK_PS3;
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
-            report->tableNeutral = true;
-        }
-#endif
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
@@ -1175,6 +1170,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             debounce[i]--;
         }
     }
+    #if DEVICE_TYPE != DJ_HERO_TURNTABLE
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report) {
         uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
@@ -1183,6 +1179,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         memcpy(&last_report->lastControllerReport, report_data, report_size);
     }
+    #endif
 // Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
 #if DEVICE_TYPE_IS_GAMEPAD
     if (output_console_type == PS4) {

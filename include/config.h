@@ -42,6 +42,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif RHYTHM_TYPE == ROCK_BAND
 #define PS3_ID 0x00
 #endif
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+#define PS3_ID 0x06
 #else
 #define PS3_ID 0x07
 #endif

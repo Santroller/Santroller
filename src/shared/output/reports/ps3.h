@@ -23,10 +23,10 @@ static const uint8_t PROGMEM psRBButonBindings[] = {
     XBOX_START, XBOX_LEFT_STICK, XBOX_RIGHT_STICK,
     XBOX_HOME,  XBOX_UNUSED};
 
-static const uint8_t PROGMEM ps3DrumButtonBindings[] = {XBOX_Y,
+static const uint8_t PROGMEM ps3DrumButtonBindings[] = {XBOX_X,
                                                         XBOX_A,
                                                         XBOX_B,
-                                                        XBOX_X,
+                                                        XBOX_Y,
                                                         XBOX_RB,
                                                         XBOX_LB,
                                                         0xFF,

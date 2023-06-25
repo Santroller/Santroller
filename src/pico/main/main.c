@@ -287,7 +287,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
     } else if (fullDeviceType == PS3_ROCK_BAND_DRUMS || fullDeviceType == PS3_ROCK_BAND_GUITAR) {
       id[3] = 0x00;
     }
-    buffer = id;
+    memcpy(buffer, id, sizeof(id));
     return sizeof(id);
   }
   return 0;

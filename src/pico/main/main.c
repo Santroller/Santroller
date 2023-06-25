@@ -279,6 +279,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
                                hid_report_type_t report_type, uint8_t *buffer,
                                uint16_t reqlen) {
   if (report_type == HID_REPORT_TYPE_FEATURE) {
+    isPs3 = true;
     //  When requested, return the ps3 report ids so that we have console
     //  compatibility
     if (fullDeviceType == PS3_GUITAR_HERO_DRUMS || fullDeviceType == PS3_GUITAR_HERO_GUITAR) {

@@ -281,10 +281,10 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
   if (report_type == HID_REPORT_TYPE_FEATURE) {
     //  When requested, return the ps3 report ids so that we have console
     //  compatibility
-    if (fullDeviceType <= PS3_ROCK_BAND_DRUMS) {
-      id[3] = 0x00;
-    } else if (fullDeviceType <= PS3_GUITAR_HERO_DRUMS) {
+    if (fullDeviceType == PS3_GUITAR_HERO_DRUMS || fullDeviceType == PS3_GUITAR_HERO_GUITAR) {
       id[3] = 0x06;
+    } else if (fullDeviceType == PS3_ROCK_BAND_DRUMS || fullDeviceType == PS3_ROCK_BAND_GUITAR) {
+      id[3] = 0x00;
     }
     buffer = id;
     return sizeof(id);

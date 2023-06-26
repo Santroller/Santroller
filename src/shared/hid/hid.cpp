@@ -17,6 +17,7 @@
 #include "stdint.h"
 #include "usbhid.h"
 #include "util.h"
+#include "wii.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -386,6 +387,11 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
         };
         send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
         return;
+    }
+#endif
+#if defined(INPUT_WII) && DEVICE_TYPE == DJ_HERO_TURNTABLE
+    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
+        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, rumble_left != 0);
     }
 #endif
 #if defined(INPUT_USB_HOST) && DEVICE_TYPE == DJ_HERO_TURNTABLE

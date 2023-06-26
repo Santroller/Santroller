@@ -5,6 +5,7 @@ extern "C" {
 #define WII_ADDR 0x52
 #define WII_READ_ID 0xFA
 #define WII_ID_LEN 6
+#define WII_DJ_EUPHORIA 0xFB
 #define WII_SET_RES_MODE 0xFE
 #define WII_LOWRES_MODE 0x03
 #define WII_HIGHRES_MODE 0x03

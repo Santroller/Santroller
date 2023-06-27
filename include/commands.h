@@ -1,4 +1,7 @@
 #include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 enum SerialCommands {
     COMMAND_REBOOT=0x30,
     COMMAND_JUMP_BOOTLOADER,
@@ -48,3 +51,7 @@ extern uint16_t wiiControllerType;
 extern uint8_t ps2ControllerType;
 extern bool overrideR2;
 extern uint8_t overriddenR2;
+
+#ifdef __cplusplus
+}
+#endif

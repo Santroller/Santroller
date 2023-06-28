@@ -140,4 +140,12 @@ void fillPS3Report(void *ReportData, uint8_t *const ReportSize,
     JoystickReport->l_y = 255 - JoystickReport->l_y;
     JoystickReport->r_y = 255 - JoystickReport->r_y;
   }
+  if (fullDeviceType == PS3_GUITAR_HERO_DRUMS) {
+    JoystickReport->axis[9] = drumVelocity[XBOX_Y - 8];
+    JoystickReport->axis[10] = drumVelocity[XBOX_B - 8];
+    JoystickReport->axis[11] = drumVelocity[XBOX_A - 8];
+    JoystickReport->axis[12] = drumVelocity[XBOX_X - 8];
+    JoystickReport->axis[13] = drumVelocity[XBOX_LB - 8];
+    JoystickReport->axis[14] = drumVelocity[XBOX_RB - 8];
+  }
 }

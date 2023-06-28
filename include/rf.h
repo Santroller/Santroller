@@ -4,7 +4,6 @@
 #include "RF24.h"
 extern RF24 radio;
 typedef enum {
-    Heartbeat,
     Input,
     ConsoleType,
     AckAuthLed,
@@ -17,10 +16,6 @@ typedef enum {
     Wired,
     Wireless
 } TransmissionMode_t;
-
-typedef struct {
-    uint8_t packet_id;
-} RfHeartbeatPacket_t;
 
 #if DEVICE_TYPE_KEYBOARD
 typedef struct {

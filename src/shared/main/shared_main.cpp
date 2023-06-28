@@ -99,7 +99,6 @@ const PROGMEM uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 #ifdef RF_TX
 RfInputPacket_t rf_report = {packet_id : Input, transmitter : RF_DEVICE_ID};
-RfHeartbeatPacket_t rf_heartbeat = {packet_id : Heartbeat};
 void send_rf_console_type() {
     if (rf_initialised) {
         RfConsoleTypePacket_t packet = {
@@ -1206,10 +1205,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     return size;
 }
 #elif defined(RF_RX)
+uint32_t last_received = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t rf_size;
     uint8_t size;
     if (radio.available()) {
+        last_received = millis();
         rf_connected = true;
         radio.read(rf_data, sizeof(rf_data));
         rf_size = radio.getDynamicPayloadSize();
@@ -1220,8 +1221,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 return 0;
             case Input:
                 break;
-            case Heartbeat:
-                return 0;
         }
         if (!buf) {
             return 0;
@@ -1484,7 +1483,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
 #endif
-    } else {
+    } else if (millis() - last_received > 1000) {
         rf_connected = false;
     }
     return size;
@@ -1696,8 +1695,7 @@ void tick_rf_tx(void) {
     if (size > 0) {
         size += 2;
     } else {
-        buf = &rf_heartbeat;
-        size = sizeof(rf_heartbeat);
+        return;
     }
     if (radio.write(buf, size)) {
         rf_connected = true;

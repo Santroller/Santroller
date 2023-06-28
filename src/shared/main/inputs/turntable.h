@@ -14,7 +14,7 @@ if (djLeftValid) {
     dj_last_readings_left[dj_next_left] = (int8_t)dj_left[2];
     dj_sum_left += dj_last_readings_left[dj_next_left];
     dj_next_left++;
-    if (dj_next_left > TURNTABLE_BUFFER_SIZE) {
+    if (dj_next_left >= TURNTABLE_BUFFER_SIZE) {
         dj_next_left = 0;
     }
     dj_turntable_left = (dj_sum_left / TURNTABLE_BUFFER_SIZE);
@@ -28,7 +28,7 @@ if (djRightValid) {
     dj_last_readings_right[dj_next_right] = (int8_t)dj_right[2];
     dj_sum_right += dj_last_readings_right[dj_next_right];
     dj_next_right++;
-    if (dj_next_right > TURNTABLE_BUFFER_SIZE) {
+    if (dj_next_right >= TURNTABLE_BUFFER_SIZE) {
         dj_next_right = 0;
     }
     dj_turntable_right = (dj_sum_right / TURNTABLE_BUFFER_SIZE);

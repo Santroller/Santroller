@@ -179,7 +179,7 @@ void init_main(void) {
 #ifdef RF_RX
         radio.enableDynamicPayloads();
         for (int i = 0; i < RF_COUNT; i++) {
-            radio.openReadingPipe(1, address[i]);
+            radio.openReadingPipe(i, address[i]);
         }
         radio.startListening();
 #endif

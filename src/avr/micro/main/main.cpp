@@ -103,7 +103,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
     uint8_t epsizeOut = 0x08;
-    if (consoleType == WINDOWS || consoleType == XBOX360 || consoleType == WINDOWS_XBOXONE) {
+    if (consoleType == WINDOWS || consoleType == XBOX360) {
         epsize = 0x18;
     }
     if (consoleType == XBOXONE) {

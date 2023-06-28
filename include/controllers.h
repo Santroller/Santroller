@@ -46,3 +46,4 @@ extern bool descriptor_requested;
 
 // Use for configuring commands that are pc specific
 extern bool windows;
+extern bool read_manufacturer_string;

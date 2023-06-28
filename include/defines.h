@@ -42,7 +42,6 @@
 #define PS4 5
 #define XBOXONE 6
 #define REAL_PS3 7
-#define WINDOWS_XBOXONE 8
 #define WINDOWS 9
 // NOTE: if the above ids ever go past 9, bluetooth will need to encode the consoleType differently.
 // The below ones are fine as bluetooth will never encode them.

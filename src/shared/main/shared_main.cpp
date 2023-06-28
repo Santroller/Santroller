@@ -290,10 +290,12 @@ uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t m
 }
 
 uint8_t tick_xbox_one() {
+    uint32_t serial = micros();
     switch (xbox_one_state) {
         case Announce:
             xbox_one_state = Waiting1;
             memcpy(&combined_report, announce, sizeof(announce));
+            memcpy(&combined_report.raw[4], &serial, sizeof(serial));
             return sizeof(announce);
         case Ident1:
             xbox_one_state = Waiting2;
@@ -1170,7 +1172,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             debounce[i]--;
         }
     }
-    #if DEVICE_TYPE != DJ_HERO_TURNTABLE
+#if DEVICE_TYPE != DJ_HERO_TURNTABLE
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report) {
         uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
@@ -1179,7 +1181,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         memcpy(&last_report->lastControllerReport, report_data, report_size);
     }
-    #endif
+#endif
 // Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
 #if DEVICE_TYPE_IS_GAMEPAD
     if (output_console_type == PS4) {
@@ -1741,6 +1743,18 @@ bool tick_usb(void) {
 #endif
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
+    
+    if (millis() > 2000 && windows && consoleType == UNIVERSAL) {
+        if (read_manufacturer_string) {
+            if (WINDOWS_USES_XINPUT) {
+                consoleType = WINDOWS;
+                reset_usb();
+            }
+        } else {
+            consoleType = XBOXONE;
+            reset_usb();
+        }
+    }
     // Wii and Wii u both just stop talking to the device if they don't recognise it.
     // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
     // modes depending on what device we are emulating
@@ -1780,10 +1794,6 @@ bool tick_usb(void) {
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
-    }
-    if (consoleType == WINDOWS_XBOXONE && xbox_one_state == Announce) {
-        size = tick_xbox_one();
-        xbox_one_state = Waiting1;
     }
     if (!size) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);

@@ -430,15 +430,6 @@ void handle_keyboard_leds(uint8_t leds) {
 }
 #endif
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
-    if (consoleType == WINDOWS_XBOXONE && report_id == INTERRUPT_ID) {
-        if (data[0] == XBOX_LED_ID) {
-            consoleType = WINDOWS;
-            reset_usb();
-        } else if (data[0] == GIP_DEVICE_DESCRIPTOR) {
-            consoleType = XBOXONE;
-            reset_usb();
-        }
-    }
 #if CONSOLE_TYPE == KEYBOARD_MOUSE
     handle_keyboard_leds(data[0]);
 #endif
@@ -446,6 +437,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
     if (consoleType == XBOXONE) {
+        printf("State: %02d\r\n", xbox_one_state);
         if (xbox_one_state == Waiting1) {
             xbox_one_state = Ident1;
         } else if (xbox_one_state == Waiting2) {
@@ -455,7 +447,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         } else if (xbox_one_state == Auth) {
             if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                 handle_auth_led();
-                // printf("Ready!\r\n");
+                printf("Ready!\r\n");
                 xbox_one_state = Ready;
                 data_from_console_size = len;
                 memcpy(data_from_console, data, len);

@@ -68,21 +68,7 @@ const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
             Reserved2 : {0}
         }}
 };
-const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE PROGMEM DevCompatIDsOneDetect = {
-    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
-    Version : 0x0100,
-    Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 1,
-    Reserved : {0},
-    CompatID : {
-        {
-            FirstInterfaceNumber : INTERFACE_ID_Device,
-            Reserved : 0x04,
-            CompatibleID : "XUSB10",
-            SubCompatibleID : {0},
-            Reserved2 : {0}
-        }}
-};
+
 const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE PROGMEM DevCompatIDsOne = {
     TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
     Version : 0x0100,
@@ -91,8 +77,7 @@ const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE PROGMEM DevCompatIDsOne = {
     Reserved : {0},
     CompatID : {
         {
-            FirstInterfaceNumber : INTERFACE_ID_Device,
-            Reserved : 0x04,
+            Reserved : 0x01,
             CompatibleID : "XGIP10",
             SubCompatibleID : {0},
             Reserved2 : {0}

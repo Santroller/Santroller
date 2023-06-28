@@ -75,7 +75,12 @@ USB_LastReport_Data_t temp_report_usb_host;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 #endif
-const uint8_t rf_address[] = "1Node";
+uint64_t address[6] = { 0x7878787878LL,
+                        0xB3B4B5B6F1LL,
+                        0xB3B4B5B6CDLL,
+                        0xB3B4B5B6A3LL,
+                        0xB3B4B5B60FLL,
+                        0xB3B4B5B605LL };
 long initialWt[5] = {0};
 uint8_t rawWt;
 bool auth_ps4_controller_found = false;
@@ -168,12 +173,14 @@ void init_main(void) {
         radio.enableAckPayload();
 #endif
 #ifdef RF_TX
-        radio.openWritingPipe(rf_address);
+        radio.openWritingPipe(address[RF_DEVICE_ID]);
         send_rf_console_type();
 #endif
 #ifdef RF_RX
         radio.enableDynamicPayloads();
-        radio.openReadingPipe(1, rf_address);
+        for (int i = 0; i < RF_COUNT; i++) {
+            radio.openReadingPipe(1, address[i]);
+        }
         radio.startListening();
 #endif
 #ifdef RF

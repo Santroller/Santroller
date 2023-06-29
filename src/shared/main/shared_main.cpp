@@ -11,7 +11,6 @@
 #include "io_define.h"
 #include "pins.h"
 #include "ps2.h"
-#include "rf.h"
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
@@ -70,7 +69,6 @@ bool lastXboxOneGuide = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
-USB_LastReport_Data_t last_report_rf;
 USB_LastReport_Data_t temp_report_usb_host;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
@@ -102,27 +100,7 @@ const PROGMEM uint8_t ghl_ps3wiiu_magic_data[] = {
  */
 const PROGMEM uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
-#ifdef RF_TX
-RfInputPacket_t rf_report = {packet_id : Input, transmitter : RF_DEVICE_ID};
-void send_rf_console_type() {
-    if (rf_initialised) {
-        RfConsoleTypePacket_t packet = {
-            ConsoleType, consoleType};
-        radio.write(&packet, sizeof(packet));
-    }
-}
-#endif
-#ifdef RF
-#ifdef RADIO_MOSI
-#include "SPI.h"
-#endif
-#include "rf.h"
-RF24 radio(RADIO_CE, RADIO_CSN);
-uint8_t rf_data[32];
-#endif
-#ifdef RF_RX
-RfInputPacket_t last_rf_inputs[RF_COUNT];
-#endif
+
 Led_t ledState[LED_COUNT];
 #define UP 1 << 0
 #define DOWN 1 << 1
@@ -158,33 +136,6 @@ void init_main(void) {
 #endif
 #ifdef INPUT_PS2
     init_ack();
-#endif
-#ifdef RADIO_MOSI
-    SPI.setTX(RADIO_MOSI);
-    SPI.setRX(RADIO_MISO);
-    SPI.setSCK(RADIO_SCK);
-#endif
-#ifdef RF
-    rf_initialised = radio.begin();
-    if (rf_initialised) {
-        radio.setChannel(RF_CHANNEL);
-        radio.setPALevel(RF_POWER_LEVEL);
-        radio.setDataRate((rf24_datarate_e)RF_DATA_RATE);
-        radio.enableAckPayload();
-#endif
-#ifdef RF_TX
-        radio.openWritingPipe(address[RF_DEVICE_ID]);
-        send_rf_console_type();
-#endif
-#ifdef RF_RX
-        radio.enableDynamicPayloads();
-        for (int i = 0; i < RF_COUNT; i++) {
-            radio.openReadingPipe(i, address[i]);
-        }
-        radio.startListening();
-#endif
-#ifdef RF
-    }
 #endif
 #ifdef INPUT_WT_NECK
     memset(initialWt, 0, sizeof(initialWt));
@@ -340,8 +291,8 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
-#if defined(RF_RX) || defined(BLUETOOTH_RX)
-// When we do RF and Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
+#if defined(BLUETOOTH_RX)
+// When we do Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
     PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
     uint8_t dpad = dpad_report->dpad > sizeof(dpad_bindings_reverse) ? 0 : dpad_bindings_reverse[dpad_report->dpad];
@@ -901,7 +852,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 #endif
 #define COPY_BUTTON(in_button, out_button) \
     if (in_button) out_button = true;
-#if !defined(RF_RX) && !defined(BLUETOOTH_RX)
+#if !defined(BLUETOOTH_RX)
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
     uint8_t led_tmp;
@@ -1014,12 +965,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
 #else
-    bool rf_or_bluetooth = false;
-#ifdef RF_TX
-    rf_or_bluetooth = buf == &last_report_rf.lastControllerReport;
-#endif
+    bool bluetooth = false;
+
 #ifdef BLUETOOTH_TX
-    rf_or_bluetooth = buf == &last_report_bt;
+    bluetooth = buf == &last_report_bt;
 #endif
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
@@ -1209,290 +1158,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
 #endif
-    return size;
-}
-#elif defined(RF_RX)
-uint32_t last_received = 0;
-uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
-    uint8_t rf_size;
-    uint8_t size;
-    if (radio.available()) {
-        last_received = millis();
-        rf_connected = true;
-        radio.read(rf_data, sizeof(rf_data));
-        rf_size = radio.getDynamicPayloadSize();
-        RfInputPacket_t *input = (RfInputPacket_t *)rf_data;
-        switch (input->packet_id) {
-            case ConsoleType:
-                set_console_type(rf_data[1]);
-                return 0;
-            case Input:
-                break;
-        }
-        if (!buf) {
-            return 0;
-        }
-
-#if DEVICE_TYPE_KEYBOARD
-        // if (!updated) {
-        //     size = sizeof(USB_NKRO_Data_t);
-        //     memcpy(buf, &last_report->lastNKROReport, size);
-        //     return size;
-        // }
-#ifdef TICK_NKRO
-        if (input->lastNKROReport.rid == REPORT_ID_NKRO) {
-            memcpy(&last_rf_inputs[input->transmitter].lastNKROReport, &input->lastNKROReport, sizeof(input->lastNKROReport));
-        }
-#endif
-#ifdef TICK_MOUSE
-        if (input->lastMouseReport.rid == REPORT_ID_MOUSE) {
-            memcpy(&last_rf_inputs[input->transmitter].lastMouseReport, &input->lastMouseReport, sizeof(input->lastMouseReport));
-        }
-#endif
-#ifdef TICK_CONSUMER
-        if (input->lastConsumerReport.rid == REPORT_ID_CONSUMER) {
-            memcpy(&last_rf_inputs[input->transmitter].lastConsumerReport, &input->lastConsumerReport, sizeof(input->lastConsumerReport));
-        }
-#endif
-        void *lastReportToCheck;
-        for (int i = 1; i < REPORT_ID_END; i++) {
-            for (int dev = 0; dev < RF_COUNT; dev++) {
-#ifdef TICK_MOUSE
-                if (i == REPORT_ID_MOUSE) {
-                    USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
-                    size = sizeof(USB_Mouse_Data_t);
-                    if (dev == 0) {
-                        memset(buf, 0, size);
-                    }
-                    report->rid = REPORT_ID_MOUSE;
-                    // Since the mouse report has analog inputs we need to handle it manually
-                    USB_Mouse_Data_t *report_from_rf = &last_rf_inputs[input->transmitter].lastMouseReport;
-                    report->left |= report_from_rf->left;
-                    report->right |= report_from_rf->right;
-                    report->middle |= report_from_rf->middle;
-                    if (report_from_rf->X) {
-                        report->X = report_from_rf->X;
-                    }
-                    if (report_from_rf->Y) {
-                        report->Y = report_from_rf->Y;
-                    }
-                    if (report_from_rf->ScrollX) {
-                        report->ScrollX = report_from_rf->ScrollX;
-                    }
-                    if (report_from_rf->ScrollY) {
-                        report->ScrollY = report_from_rf->ScrollY;
-                    }
-                    if (last_report) {
-                        lastReportToCheck = &last_report->lastMouseReport;
-                    }
-                }
-#endif
-#ifdef TICK_CONSUMER
-                if (i == REPORT_ID_CONSUMER) {
-                    size = sizeof(USB_ConsumerControl_Data_t);
-                    if (dev == 0) {
-                        memset(buf, 0, size);
-                    }
-                    // Consumer is easy, as we are only dealing with bits per button, so ORing is fine
-                    uint8_t *current_report = (uint8_t *)&last_rf_inputs[input->transmitter];
-                    for (size_t j = 0; j < size; j++) {
-                        buf[j] |= current_report[j];
-                    }
-                    if (last_report) {
-                        lastReportToCheck = &last_report->lastConsumerReport;
-                    }
-                }
-#endif
-#ifdef TICK_NKRO
-                if (i == REPORT_ID_NKRO) {
-                    size = sizeof(USB_NKRO_Data_t);
-                    if (dev == 0) {
-                        memset(buf, 0, size);
-                    }
-                    // NKRO is easy, as we are only dealing with bits per button, so ORing is fine
-                    uint8_t *current_report = (uint8_t *)&last_rf_inputs[input->transmitter];
-                    for (size_t j = 0; j < size; j++) {
-                        buf[j] |= current_report[j];
-                    }
-                    if (last_report) {
-                        lastReportToCheck = &last_report->lastNKROReport;
-                    }
-                }
-#endif
-            }
-            // If we are directly asked for a HID report, always just reply with the NKRO one
-            if (lastReportToCheck) {
-                uint8_t cmp = memcmp(lastReportToCheck, buf, size);
-                if (cmp == 0) {
-                    size = 0;
-                    continue;
-                }
-                memcpy(lastReportToCheck, buf, size);
-                break;
-            } else {
-                break;
-            }
-        }
-#else
-        if (input->transmitter >= RF_COUNT) return 0;
-        memcpy(&last_rf_inputs[input->transmitter].lastControllerReport, &input->lastControllerReport, sizeof(input->lastControllerReport));
-        USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
-        uint8_t report_size;
-        bool updateSequence = false;
-        bool updateHIDSequence = false;
-        if (output_console_type == XBOXONE) {
-            // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
-            // To switch modes, a poke command is sent every 8 seconds
-            // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
-
-            if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
-                XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
-                size = sizeof(XBOX_ONE_REPORT);
-                report_size = size - sizeof(GipHeader_t);
-                memset(buf, 0, size);
-                GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-                for (int dev = 0; dev < RF_COUNT; dev++) {
-                    convert_ps3_to_type((uint8_t *)buf, &last_rf_inputs[dev].lastControllerReport, output_console_type);
-                }
-                if (report->guide != lastXboxOneGuide) {
-                    lastXboxOneGuide = report->guide;
-                    GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
-                    GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystroke_sequence_number++);
-                    keystroke->pressed = report->guide;
-                    keystroke->keycode = GIP_VKEY_LEFT_WIN;
-                    return sizeof(GipKeystroke_t);
-                }
-                // We use an unused bit as a flag for sending the guide key code, so flip it back
-                report->guide = false;
-                GipPacket_t *packet = (GipPacket_t *)buf;
-                report_data = (USB_Report_Data_t *)packet->data;
-                updateSequence = true;
-            } else {
-                XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)buf;
-                size = sizeof(XboxOneGHLGuitar_Data_t);
-                report_size = sizeof(PS3_REPORT);
-                memset(buf, 0, sizeof(XboxOneGHLGuitar_Data_t));
-                GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
-                report_data = (USB_Report_Data_t *)&report->report;
-                updateHIDSequence = true;
-            }
-        }
-        if (output_console_type == WINDOWS || output_console_type == XBOX360) {
-            XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
-            memset(report_data, 0, sizeof(XINPUT_REPORT));
-            report->rid = 0;
-            report->rsize = sizeof(XINPUT_REPORT);
-// Whammy on the xbox guitars goes from min to max, so it needs to default to min
-#if DEVICE_TYPE_IS_GUITAR
-            report->whammy = INT16_MIN;
-#endif
-            for (int dev = 0; dev < RF_COUNT; dev++) {
-                convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, XBOX360);
-            }
-            report_size = size = sizeof(XINPUT_REPORT);
-        }
-// Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
-// DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
-#if SUPPORTS_PS4
-        if (output_console_type == PS4) {
-            PS4_REPORT *report = (PS4_REPORT *)report_data;
-            PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
-            gamepad->report_id = 0x01;
-            gamepad->leftStickX = PS3_STICK_CENTER;
-            gamepad->leftStickY = PS3_STICK_CENTER;
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
-#if !DEVICE_TYPE_IS_LIVE_GUITAR
-            gamepad->reportCounter = ps4_sequence_number;
-#endif
-
-            for (int dev = 0; dev < RF_COUNT; dev++) {
-                convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, output_console_type);
-            }
-            report_size = size = sizeof(PS4_REPORT);
-        }
-#endif
-// If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
-// This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
-// However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
-#if !(DEVICE_TYPE_IS_INSTRUMENT)
-        if (output_console_type == PS3) {
-            PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
-
-            report->accelX = PS3_ACCEL_CENTER;
-            report->accelY = PS3_ACCEL_CENTER;
-            report->accelZ = PS3_ACCEL_CENTER;
-            report->gyro = PS3_ACCEL_CENTER;
-            report->leftStickX = PS3_STICK_CENTER;
-            report->leftStickY = PS3_STICK_CENTER;
-            report->rightStickX = PS3_STICK_CENTER;
-            report->rightStickY = PS3_STICK_CENTER;
-            memset(report, 0, sizeof(PS3_REPORT));
-            report->reportId = 1;
-            for (int dev = 0; dev < RF_COUNT; dev++) {
-                convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, PS3);
-            }
-            report_size = size = sizeof(PS3Gamepad_Data_t);
-        }
-        if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateHIDSequence) {
-#else
-        // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
-        if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateHIDSequence) {
-#endif
-            report_size = size = sizeof(PS3_REPORT);
-            if (output_console_type == UNIVERSAL) {
-                PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
-                universal_report->report_id = 1;
-                report_data = (USB_Report_Data_t *)(&universal_report->report);
-                size++;
-            }
-            PS3_REPORT *report = (PS3_REPORT *)report_data;
-            memset(report, 0, sizeof(PS3_REPORT));
-            PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
-            gamepad->accelX = PS3_ACCEL_CENTER;
-            gamepad->accelY = PS3_ACCEL_CENTER;
-            gamepad->accelZ = PS3_ACCEL_CENTER;
-            gamepad->gyro = PS3_ACCEL_CENTER;
-            gamepad->leftStickX = PS3_STICK_CENTER;
-            gamepad->leftStickY = PS3_STICK_CENTER;
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
-            for (int dev = 0; dev < RF_COUNT; dev++) {
-                convert_ps3_to_type((uint8_t *)report_data, &last_rf_inputs[dev].lastControllerReport, REAL_PS3);
-            }
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
-                report->tableNeutral = true;
-            }
-#endif
-            // Switch swaps a and b
-            if (output_console_type == SWITCH) {
-                bool a = report->a;
-                bool b = report->b;
-                report->b = a;
-                report->a = b;
-            }
-        }
-        if (output_console_type == PS4) {
-            ps4_sequence_number++;
-        }
-#if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
-        if (updateSequence) {
-            report_sequence_number++;
-            if (report_sequence_number == 0) {
-                report_sequence_number = 1;
-            }
-        } else if (updateHIDSequence) {
-            hid_sequence_number++;
-            if (hid_sequence_number == 0) {
-                hid_sequence_number = 1;
-            }
-        }
-#endif
-#endif
-    } else if (millis() - last_received > 1000) {
-        rf_connected = false;
-    }
     return size;
 }
 #else
@@ -1695,40 +1360,6 @@ if (updateSequence) {
 }
 #endif
 
-#ifdef RF_TX
-void tick_rf_tx(void) {
-    uint8_t size = tick_inputs(&rf_report.lastControllerReport, &last_report_rf, REAL_PS3);
-    void *buf = &rf_report;
-    if (size > 0) {
-        size += 2;
-    } else {
-        return;
-    }
-    if (radio.write(buf, size)) {
-        rf_connected = true;
-        if (radio.isAckPayloadAvailable()) {
-            radio.read(rf_data, sizeof(rf_data));
-            switch (rf_data[0]) {
-                case AckAuthLed:
-                    handle_auth_led();
-                    break;
-                case AckPlayerLed:
-                    handle_player_leds(rf_data[1]);
-                    break;
-                case AckRumble:
-                    handle_rumble(rf_data[1], rf_data[2]);
-                    break;
-                case AckKeyboardLed:
-                    handle_keyboard_leds(rf_data[1]);
-                    break;
-            }
-        }
-    } else {
-        rf_connected = false;
-    }
-    return;
-}
-#endif
 #ifdef BLUETOOTH_TX
 bool tick_bluetooth(void) {
     uint8_t size = tick_inputs(&bt_report, &last_report_bt, REAL_PS3);
@@ -1738,7 +1369,7 @@ bool tick_bluetooth(void) {
     return size;
 }
 #endif
-#ifndef RF_ONLY
+
 bool tick_usb(void) {
 #if POLL_RATE
     if ((micros() - last_poll) < (POLL_RATE * 1000)) {
@@ -1808,17 +1439,12 @@ bool tick_usb(void) {
     seen_ps4_console = true;
     return size;
 }
-#endif
 void tick(void) {
 #ifdef TICK_LED
     TICK_LED;
 #endif
-#ifndef RF_ONLY
     bool ready = tick_usb();
-#endif
-#ifdef RF_TX
-    tick_rf_tx();
-#endif
+
 #ifdef BLUETOOTH_TX
     tick_bluetooth();
 #endif
@@ -1827,7 +1453,7 @@ void tick(void) {
     if (!ready) {
         tick_inputs(NULL, NULL, consoleType);
     }
-#elif !defined(RF_TX) && !defined(BLUETOOTH_TX)
+#elif !defined(BLUETOOTH_TX)
     // Tick the controller every 5ms if this device is usb only, and usb is not ready
     if (!ready && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();

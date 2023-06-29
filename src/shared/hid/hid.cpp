@@ -12,7 +12,6 @@
 #include "keyboard_mouse.h"
 #include "pins.h"
 #include "ps3_wii_switch.h"
-#include "rf.h"
 #include "shared_main.h"
 #include "stdint.h"
 #include "usbhid.h"
@@ -240,38 +239,6 @@ const uint8_t PS3_REPORT_BUFFER[PS3_REPORT_BUFFER_SIZE] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-#ifdef RF_RX
-void handle_auth_led(void) {
-    RfAuthLedPacket_t packet = {
-        AckAuthLed};
-    radio.writeAckPayload(1, &packet, sizeof(packet));
-}
-void handle_player_leds(uint8_t player) {
-    RfPlayerLed_t packet = {
-        AckPlayerLed,
-        player};
-    radio.writeAckPayload(1, &packet, sizeof(packet));
-}
-void handle_lightbar_leds(uint8_t r, uint8_t g, uint8_t b) {
-    RfPlayerLed_t packet = {
-        AckPlayerLed,
-        r};
-    radio.writeAckPayload(1, &packet, sizeof(packet));
-}
-void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
-    RfRumbleLed_t packet = {
-        AckRumble,
-        rumble_left,
-        rumble_right};
-    radio.writeAckPayload(1, &packet, sizeof(packet));
-}
-void handle_keyboard_leds(uint8_t leds) {
-    RfRumbleLed_t packet = {
-        AckKeyboardLed,
-        leds};
-    radio.writeAckPayload(1, &packet, sizeof(packet));
-}
-#else
 void handle_auth_led(void) {
     HANDLE_AUTH_LED;
 }
@@ -428,7 +395,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
 void handle_keyboard_leds(uint8_t leds) {
     HANDLE_KEYBOARD_LED;
 }
-#endif
+
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
 #if CONSOLE_TYPE == KEYBOARD_MOUSE
     handle_keyboard_leds(data[0]);
@@ -548,11 +515,6 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_F_CPU:
             memcpy_P(response_buffer, f_cpu_descriptor_str, sizeof(f_cpu_descriptor_str));
             return sizeof(f_cpu_descriptor_str);
-
-        case COMMAND_READ_RF:
-            response_buffer[0] = rf_connected;
-            response_buffer[1] = rf_initialised;
-            return 2;
 
         case COMMAND_GET_EXTENSION_WII:
             if (!lastWiiWasSuccessful) {

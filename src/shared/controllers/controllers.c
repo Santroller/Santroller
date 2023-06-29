@@ -20,8 +20,6 @@ uint8_t report_sequence_number;
 uint8_t hid_sequence_number;
 uint8_t ps4_sequence_number;
 bool passthrough_stage_kit = false;
-bool rf_initialised = false;
-bool rf_connected = false;
 bool windows = false;
 bool read_manufacturer_string = false;
 #ifdef __cplusplus

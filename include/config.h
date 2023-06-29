@@ -133,9 +133,6 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XBOX_ONE_PID XBOX_ONE_CONTROLLER_PID
 #define IDENTIFY_4_SIZE 46
 #endif
-#if defined(RF_RX) || defined(RF_TX)
-#define RF
-#endif
 typedef union {
     PS3_REPORT ps3;
     XINPUT_REPORT xinput;

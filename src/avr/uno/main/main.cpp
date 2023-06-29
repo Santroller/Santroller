@@ -10,7 +10,6 @@
 #include "descriptors.h"
 #include "hid.h"
 #include "packets.h"
-#include "rf.h"
 #include "shared_main.h"
 
 // Set up some arrays for storing received data / data to transmit

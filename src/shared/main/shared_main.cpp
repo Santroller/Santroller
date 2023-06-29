@@ -42,6 +42,7 @@ USB_Report_Data_t combined_report;
 PS3_REPORT bt_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
+long lastDj = 0;
 long lastSentPacket = 0;
 long lastSentGHLPoke = 0;
 long lastTap;

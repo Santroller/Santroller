@@ -471,7 +471,8 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         else if (id == DJ_LED_ID) {
             uint8_t euphoria_on = data[2] * 0xFF;
-            handle_rumble(euphoria_on, euphoria_on);
+            // left and right need to be different for xb compatibility reasons
+            handle_rumble(euphoria_on, 255-euphoria_on);
         }
 #endif
 #else

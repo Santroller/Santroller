@@ -1407,7 +1407,7 @@ bool tick_usb(void) {
         set_console_type(PS3);
     }
 #endif
-#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == LIVE_GUITAR
+#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DJ_HERO_TURNTABLE
     // PADEMU will request the descriptor but never configure the device
     if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && !usb_connected() && descriptor_requested) {
         set_console_type(PS3);

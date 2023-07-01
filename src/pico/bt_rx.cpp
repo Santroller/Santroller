@@ -40,7 +40,9 @@ static enum {
 } app_state;
 
 static const uint8_t santroller_name[] = "SantrollerBT";
+#ifdef BT_ADDR
 static const char bt_addr[] = BT_ADDR;
+#endif
 static bd_addr_t bt_addr_recv;
 static le_device_addr_t remote_device;
 static hci_con_handle_t connection_handle;

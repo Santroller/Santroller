@@ -285,8 +285,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                                 }
                             }
                             if (!found) {
-                                printf("Found, device address %s ...\n", bd_addr_to_str(address));
-                                memcpy(address_string, scan_buffer + (devices_found * SIZE_OF_BD_ADDRESS), SIZE_OF_BD_ADDRESS);
+                                printf("Found, device address %s ...\n", address_string);
+                                memcpy(scan_buffer + (devices_found * SIZE_OF_BD_ADDRESS), address_string, SIZE_OF_BD_ADDRESS);
                                 devices_found++;
                             }
                         }

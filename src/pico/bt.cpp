@@ -57,6 +57,9 @@ const uint8_t adv_data[] = {
     BLUETOOTH_DATA_TYPE_APPEARANCE,
     0xC4,
     0x03,
+    0x10, 
+    0xff,
+    0x03,
 };
 bool check_bluetooth_ready() {
     return con_handle != HCI_CON_HANDLE_INVALID;
@@ -76,9 +79,7 @@ static void le_keyboard_setup(void) {
     l2cap_init();
 
     sm_init();
-    sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
-    sm_use_fixed_passkey_in_display_role(1111);
 
     // setup ATT server
     att_server_init(profile_data, NULL, NULL);

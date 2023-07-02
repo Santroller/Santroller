@@ -1359,7 +1359,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #ifdef BLUETOOTH_TX
 bool tick_bluetooth(void) {
-    uint8_t size = tick_inputs(&bt_report, &last_report_bt, UNIVERSAL);
+    uint8_t size = tick_inputs(&bt_report, &last_report_bt, REAL_PS3);
     if (size) {
         send_report(size, (uint8_t *)&bt_report);
     }

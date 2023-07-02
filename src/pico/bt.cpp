@@ -57,9 +57,6 @@ const uint8_t adv_data[] = {
     BLUETOOTH_DATA_TYPE_APPEARANCE,
     0xC4,
     0x03,
-    0x10, 
-    0xff,
-    0x03,
 };
 bool check_bluetooth_ready() {
     return con_handle != HCI_CON_HANDLE_INVALID;
@@ -71,7 +68,10 @@ int get_bt_address(uint8_t *addr) {
     return SIZE_OF_BD_ADDRESS;
 }
 void send_report(uint8_t size, uint8_t *report) {
-    hids_device_send_input_report(con_handle, report, size);
+    if (con_handle != HCI_CON_HANDLE_INVALID) {
+        hids_device_send_input_report(con_handle, report, size);
+        hids_device_request_can_send_now_event(con_handle);
+    }
 }
 const uint8_t adv_data_len = sizeof(adv_data);
 

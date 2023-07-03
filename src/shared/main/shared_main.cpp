@@ -1388,6 +1388,7 @@ bool tick_usb(void) {
             reset_usb();
         }
     }
+
     // Wii and Wii u both just stop talking to the device if they don't recognise it.
     // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
     // modes depending on what device we are emulating

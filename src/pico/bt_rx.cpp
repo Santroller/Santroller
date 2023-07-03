@@ -224,16 +224,6 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     break;
             }
             break;
-        case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_PNP_ID: {
-            // We encode the console type into the product version, so pull that back here.
-            uint16_t version = gattservice_subevent_device_information_pnp_id_get_product_version(packet);
-            uint8_t newConsoleType = version & 0x0f;
-            if (newConsoleType != consoleType) {
-                consoleType = newConsoleType;
-                reset_usb();
-            }
-            break;
-        }
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;

@@ -295,7 +295,6 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     bool down = dpad & DOWN;
     bool left = dpad & LEFT;
     bool right = dpad & RIGHT;
-    bool universal_report = output_console_type == UNIVERSAL || output_console_type == REAL_PS3 || output_console_type == PS3;
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
@@ -826,23 +825,6 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->rightThumbClick |= report->rightThumbClick;
     }
 #endif
-    // If we are in the "universal_report" mode, we can just copy the report and return
-    if (universal_report) {
-        memcpy(buf, report, sizeof(PS3_REPORT));
-#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
-        if (output_console_type == PS3) {
-            PS3_REPORT *report = (PS3_REPORT *)buf;
-            report->tilt = report->tilt_pc << 2;
-        }
-#endif
-#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-        if (output_console_type == PS3) {
-            PS3_REPORT *report = (PS3_REPORT *)buf;
-            // TODO: like the usb conversion, what do we want to use for tilt here
-            report->tilt = report->tilt_pc > 128;
-        }
-#endif
-    }
 }
 #endif
 #define COPY_BUTTON(in_button, out_button) \
@@ -1356,26 +1338,11 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         report_size = size = sizeof(PS3_REPORT);
         if (output_console_type == UNIVERSAL) {
-            size++;
             memcpy(report_data, buf, size);
+            size++;
         } else {
             PS3_REPORT *report = (PS3_REPORT *)report_data;
-            memset(report, 0, sizeof(PS3_REPORT));
-            PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
-            gamepad->accelX = PS3_ACCEL_CENTER;
-            gamepad->accelY = PS3_ACCEL_CENTER;
-            gamepad->accelZ = PS3_ACCEL_CENTER;
-            gamepad->gyro = PS3_ACCEL_CENTER;
-            gamepad->leftStickX = PS3_STICK_CENTER;
-            gamepad->leftStickY = PS3_STICK_CENTER;
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
-            convert_ps3_to_type((uint8_t *)report_data, input, output_console_type);
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
-                report->tableNeutral = true;
-            }
-#endif
+            memcpy(report_data, ((uint8_t *)buf) + 1, size);
 #if DEVICE_TYPE != LIVE_GUITAR
             // Switch swaps a and b
             if (output_console_type == SWITCH) {

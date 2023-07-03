@@ -286,14 +286,13 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
-bool testUp = false;
 #if defined(BLUETOOTH_RX)
 // When we do Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
     PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
     bool up = dpad_report->dpad == 7 || dpad_report->dpad == 0 || dpad_report->dpad == 1;
-    bool down = dpad_report->dpad == 1 || dpad_report->dpad == 2 || dpad_report->dpad == 3;
-    bool left = dpad_report->dpad == 3 || dpad_report->dpad == 4 || dpad_report->dpad == 5;
+    bool left = dpad_report->dpad == 1 || dpad_report->dpad == 2 || dpad_report->dpad == 3;
+    bool down = dpad_report->dpad == 3 || dpad_report->dpad == 4 || dpad_report->dpad == 5;
     bool right = dpad_report->dpad == 5 || dpad_report->dpad == 6 || dpad_report->dpad == 7;
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
     if (output_console_type == XBOXONE) {

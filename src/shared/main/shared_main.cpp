@@ -633,7 +633,6 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     }
 #else  // Gamepad or devices that use the same mapping as a gamepad
     if (output_console_type == PS3) {
-        universal_report = false;
         PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
         out->dpadUp |= up;
         out->dpadDown |= down;

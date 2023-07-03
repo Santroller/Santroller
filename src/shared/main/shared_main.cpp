@@ -1259,7 +1259,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
 #else
-    PS3_REPORT *input = (PS3_REPORT *)(((uint8_t*)buf)+1);
+    PS3_REPORT *input = (PS3_REPORT *)(((uint8_t *)buf) + 1);
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
@@ -1356,37 +1356,36 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         report_size = size = sizeof(PS3_REPORT);
         if (output_console_type == UNIVERSAL) {
-            PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
-            universal_report->report_id = 1;
-            report_data = (USB_Report_Data_t *)(&universal_report->report);
             size++;
-        }
-        PS3_REPORT *report = (PS3_REPORT *)report_data;
-        memset(report, 0, sizeof(PS3_REPORT));
-        PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
-        gamepad->accelX = PS3_ACCEL_CENTER;
-        gamepad->accelY = PS3_ACCEL_CENTER;
-        gamepad->accelZ = PS3_ACCEL_CENTER;
-        gamepad->gyro = PS3_ACCEL_CENTER;
-        gamepad->leftStickX = PS3_STICK_CENTER;
-        gamepad->leftStickY = PS3_STICK_CENTER;
-        gamepad->rightStickX = PS3_STICK_CENTER;
-        gamepad->rightStickY = PS3_STICK_CENTER;
-        convert_ps3_to_type((uint8_t *)report_data, input, output_console_type);
+            memcpy(report_data, buf, size);
+        } else {
+            PS3_REPORT *report = (PS3_REPORT *)report_data;
+            memset(report, 0, sizeof(PS3_REPORT));
+            PCGamepad_Data_t *gamepad = (PCGamepad_Data_t *)report;
+            gamepad->accelX = PS3_ACCEL_CENTER;
+            gamepad->accelY = PS3_ACCEL_CENTER;
+            gamepad->accelZ = PS3_ACCEL_CENTER;
+            gamepad->gyro = PS3_ACCEL_CENTER;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+            convert_ps3_to_type((uint8_t *)report_data, input, output_console_type);
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
-            report->tableNeutral = true;
-        }
+            if (!report->leftBlue && !report->leftRed && !report->leftGreen && !report->rightBlue && !report->rightRed && !report->rightGreen) {
+                report->tableNeutral = true;
+            }
 #endif
 #if DEVICE_TYPE != LIVE_GUITAR
-        // Switch swaps a and b
-        if (output_console_type == SWITCH) {
-            bool a = report->a;
-            bool b = report->b;
-            report->b = a;
-            report->a = b;
-        }
+            // Switch swaps a and b
+            if (output_console_type == SWITCH) {
+                bool a = report->a;
+                bool b = report->b;
+                report->b = a;
+                report->a = b;
+            }
 #endif
+        }
     }
     if (output_console_type == PS4) {
         ps4_sequence_number++;

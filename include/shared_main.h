@@ -50,7 +50,5 @@ extern USB_Host_Data_t usb_host_data;
 extern USB_LastReport_Data_t last_report_bt;
 
 #ifdef BLUETOOTH_RX
-bool bluetooth_report_available(void);
-void bluetooth_report_read(void* buf);
-void bluetooth_report_set(const void* buf);
+void tick_bluetooth(const void* buf);
 #endif

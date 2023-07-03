@@ -49,7 +49,6 @@ typedef struct {
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
 #endif
 PS3_REPORT ble_rx_report;
-volatile bool ble_rx_report_received = false;
 typedef struct {
     uint8_t pin_dp;
     uint8_t pio_tx_num;
@@ -81,19 +80,6 @@ void loop() {
     tuh_task();
 #endif
 }
-#ifdef BLUETOOTH_RX
-bool bluetooth_report_available(void) {
-    return ble_rx_report_received;
-}
-void bluetooth_report_read(void* buf) {
-    ble_rx_report_received = false;
-    memcpy(buf, &ble_rx_report, sizeof(ble_rx_report));
-}
-void bluetooth_report_set(const void* buf) {
-    ble_rx_report_received = true;
-    memcpy(&ble_rx_report, ((uint8_t*)buf)+1, sizeof(ble_rx_report));
-}
-#endif
 void setup() {
     generateSerialString(&serialstring);
 #if USB_HOST_STACK

@@ -286,15 +286,15 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
+bool testUp = false;
 #if defined(BLUETOOTH_RX)
 // When we do Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
 void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
     PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
-    uint8_t dpad = dpad_report->dpad > sizeof(dpad_bindings_reverse) ? 0 : dpad_bindings_reverse[dpad_report->dpad];
-    bool up = dpad & UP;
-    bool down = dpad & DOWN;
-    bool left = dpad & LEFT;
-    bool right = dpad & RIGHT;
+    bool up = dpad_report->dpad == 7 || dpad_report->dpad == 0 || dpad_report->dpad == 1;
+    bool down = dpad_report->dpad == 1 || dpad_report->dpad == 2 || dpad_report->dpad == 3;
+    bool left = dpad_report->dpad == 3 || dpad_report->dpad == 4 || dpad_report->dpad == 5;
+    bool right = dpad_report->dpad == 5 || dpad_report->dpad == 6 || dpad_report->dpad == 7;
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
@@ -330,6 +330,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->dpadDown |= down;
         out->dpadLeft |= left;
         out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 
         out->back |= report->back;
         out->start |= report->start;
@@ -364,6 +366,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->dpadLeft |= left;
         out->dpadRight |= right;
         out->leftShoulder |= report->leftShoulder;
+        out->solo |= report->solo;
 
         out->back |= report->back;
         out->start |= report->start;
@@ -385,6 +388,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->a |= report->a;
         out->b |= report->b;
         out->y |= report->y;
+        out->leftShoulder |= report->leftShoulder;
+        out->solo |= report->solo;
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;
@@ -425,25 +430,6 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 
         out->guide |= report->guide;
     }
-    if (output_console_type == XBOXONE) {
-        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
-        out->a |= report->black1;
-        out->b |= report->black2;
-        out->y |= report->black3;
-        out->x |= report->white1;
-        out->leftShoulder = report->white2;
-        out->rightShoulder = report->white3;
-
-        out->dpadUp |= up;
-        out->dpadDown |= down;
-        out->dpadLeft |= left;
-        out->dpadRight |= right;
-
-        out->back |= report->back;
-        out->start |= report->start;
-
-        out->guide |= report->guide;
-    }
     if (output_console_type == XBOX360) {
         XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
         out->black1 |= report->black1;
@@ -461,6 +447,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->start |= report->start;
 
         out->guide |= report->guide;
+        out->leftThumbClick |= report->leftThumbClick;
         if (report->tilt_pc != PS3_STICK_CENTER) {
             out->tilt = (report->tilt_pc - 128) << 8;
         }

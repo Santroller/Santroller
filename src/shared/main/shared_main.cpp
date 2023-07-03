@@ -412,12 +412,12 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 #elif DEVICE_TYPE == LIVE_GUITAR
     if (output_console_type == PS4) {
         PS4_REPORT *out = (PS4_REPORT *)buf;
-        out->black1 |= report->black1;
-        out->black2 |= report->black2;
-        out->black3 |= report->black3;
-        out->white1 |= report->white1;
-        out->white2 = report->white2;
-        out->white3 = report->white3;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->leftShoulder = report->leftShoulder;
+        out->rightShoulder = report->rightShoulder;
 
         out->dpadUp |= up;
         out->dpadDown |= down;
@@ -432,12 +432,12 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
     }
     if (output_console_type == XBOX360) {
         XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
-        out->black1 |= report->black1;
-        out->black2 |= report->black2;
-        out->black3 |= report->black3;
-        out->white1 |= report->white1;
-        out->white2 |= report->white2;
-        out->white3 |= report->white3;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->leftShoulder = report->leftShoulder;
+        out->rightShoulder = report->rightShoulder;
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;

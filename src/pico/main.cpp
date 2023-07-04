@@ -81,16 +81,17 @@ void loop() {
 #endif
 }
 void setup() {
+    if (persistedConsoleTypeValid == 0x3A2F) {
+        consoleType = persistedConsoleType;
+    }
     generateSerialString(&serialstring);
+    serialstring.UnicodeString[SERIAL_LEN-2] = consoleType;
 #if USB_HOST_STACK
     pio_usb_configuration_t config = {
         USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1};
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
 #endif
     tusb_init();
-    if (persistedConsoleTypeValid == 0x3A2F) {
-        consoleType = persistedConsoleType;
-    }
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
 #if BLUETOOTH

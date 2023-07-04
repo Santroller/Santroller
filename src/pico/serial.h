@@ -1,7 +1,7 @@
 #include <pico/unique_id.h>
 #include <stdint.h>
 #include <Usb.h>
-#define SERIAL_LEN (PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2)
+#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1) * 2)
 
 
 typedef struct

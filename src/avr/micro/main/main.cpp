@@ -117,10 +117,42 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, epsizeOut, 2);
 }
 
+static void USB_Device_GetInternalSerialDescriptor(void) {
+    SignatureDescriptor_t* desc = (SignatureDescriptor_t*)buf;
+USB_Descriptor_Header_t
+    desc->Header.Type = DTYPE_String;
+    desc->Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 1);
+
+    uint_reg_t CurrentGlobalInt = GetGlobalInterruptMask();
+    GlobalInterruptDisable();
+
+    uint8_t SigReadAddress = INTERNAL_SERIAL_START_ADDRESS;
+
+    for (uint8_t SerialCharNum = 0; SerialCharNum < (INTERNAL_SERIAL_LENGTH_BITS / 4); SerialCharNum++) {
+        uint8_t SerialByte = boot_signature_byte_get(SigReadAddress);
+
+        if (SerialCharNum & 0x01) {
+            SerialByte >>= 4;
+            SigReadAddress++;
+        }
+
+        SerialByte &= 0x0F;
+
+        desc->UnicodeString[SerialCharNum] = cpu_to_le16((SerialByte >= 10) ? (('A' - 10) + SerialByte) : ('0' + SerialByte));
+    }
+
+    SetGlobalInterruptMask(CurrentGlobalInt);
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
+}
+
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const uint16_t wIndex,
                                     const void** const descriptorAddress) {
     *descriptorAddress = buf;
+    if (wValue == ((DTYPE_String << 8) | 3)) {
+        USB_Device_GetInternalSerialDescriptor();
+        return sizeof(SignatureDescriptor_t);
+    }
     return descriptorRequest(wValue, wIndex, buf);
 }
 void reset_usb(void) {

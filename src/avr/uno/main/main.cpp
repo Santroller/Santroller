@@ -5,13 +5,30 @@
 
 #include "Usb.h"
 #include "config.h"
-#include "reports/controller_reports.h"
 #include "defines.h"
 #include "descriptors.h"
 #include "hid.h"
 #include "packets.h"
+#include "reports/controller_reports.h"
 #include "shared_main.h"
+#include <avr/boot.h>
+#define INTERNAL_SERIAL_START_ADDRESS 0x0E
+#define USB_STRING_LEN(UnicodeChars)      (sizeof(USB_Descriptor_Header_t) + ((UnicodeChars) << 1))
+#define INTERNAL_SERIAL_LENGTH_BITS 80
+typedef struct
+{
+    uint8_t Size; /**< Size of the descriptor, in bytes. */
+    uint8_t Type; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
+                   *   given by the specific class.
+                   */
+} __attribute__ ((packed)) USB_Descriptor_Header_t;
+typedef struct
+{
+    USB_Descriptor_Header_t Header;
+    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1];
+} __attribute__ ((packed)) SignatureDescriptor_t;
 
+SignatureDescriptor_t signature;
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
 
@@ -28,7 +45,6 @@ descriptor_request_t* desc = (descriptor_request_t*)buf;
 control_request_t* ctr = (control_request_t*)buf;
 data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
 
-
 // If we have been ticked by usb for new data, then this will be true
 bool received_controller_tick = false;
 // reset_usb is called by other parts of the code if we need to trigger a usb reload
@@ -44,6 +60,32 @@ bool usb_connected(void) {
     return usb_ready;
 }
 
+static void USB_Device_GetInternalSerialDescriptor(void) {
+    signature.Header.Type = 0x03;
+    signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 1);
+
+    uint8_t CurrentGlobalInt = SREG;
+    cli();
+
+    uint8_t SigReadAddress = INTERNAL_SERIAL_START_ADDRESS;
+
+    for (uint8_t SerialCharNum = 0; SerialCharNum < (INTERNAL_SERIAL_LENGTH_BITS / 4); SerialCharNum++) {
+        uint8_t SerialByte = boot_signature_byte_get(SigReadAddress);
+
+        if (SerialCharNum & 0x01) {
+            SerialByte >>= 4;
+            SigReadAddress++;
+        }
+
+        SerialByte &= 0x0F;
+
+        signature.UnicodeString[SerialCharNum] = (SerialByte >= 10) ? (('A' - 10) + SerialByte) : ('0' + SerialByte);
+    }
+
+    SREG = CurrentGlobalInt;
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
+}
+
 void setup() {
     // Configure the UART for controller mode
     UBRR0 = SERIAL_2X_UBBRVAL(BAUD);
@@ -55,6 +97,7 @@ void setup() {
     // Let the 8u2/16u2 know we are ready to receive data
     UDR0 = READY;
     init_main();
+    USB_Device_GetInternalSerialDescriptor();
 }
 bool ready_for_next_packet() {
     return received_controller_tick;
@@ -92,6 +135,11 @@ void loop() {
         case DESCRIPTOR_ID: {
             // 8u2/16u2 wants a descriptor, so return it
             // Wlength will be overwritten in descriptorRequest so cache it
+            if (desc->wValue == ((0x03 << 8) | 3)) {
+                memcpy(dt->data, &signature, sizeof(SignatureDescriptor_t));
+                header->len = sizeof(SignatureDescriptor_t);
+                break;
+            }
             uint16_t wLength = desc->wLength;
             uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, dt->data);
             if (len > wLength) len = wLength;

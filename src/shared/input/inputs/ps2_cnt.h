@@ -299,7 +299,7 @@ uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
         ret = inputBuffer;
       } else if (len + left <= BUFFER_SIZE) {
         // Part of reply is still missing and we have space for it
-        shiftDataInOut(NULL, inputBuffer + len, left);
+        shiftDataInOut(NULL, inputBuffer + len + 1, left);
         ret = inputBuffer;
       } else {
         // Reply incomplete but not enough space provided
@@ -338,11 +338,7 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
 uint16_t buttonWord;
 bool read(uint8_t port, Controller_t *controller) {
   uint8_t *in;
-  if (ps2CtrlType == PSPROTO_GUITAR) {
-    in = autoShiftData(port, commandExitConfig, sizeof(commandExitConfig));
-  } else {
-    in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
-  }
+  in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
   if (in != NULL) {
 
     if (isConfigReply(in)) {
@@ -460,7 +456,10 @@ long last = 0;
 uint8_t invalidCount = 0;
 void tickPS2CtrlInput(Controller_t *controller) {
   // PS2 guitars die if you poll them too fast
-  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 5000 && !invalidCount) { return; }
+  if (ps2CtrlType == PSPROTO_GUITAR && micros() - last < 5000 &&
+      !invalidCount) {
+    return;
+  }
   last = micros();
   // If this is changed to a different port, you can talk to different devices
   // on a multitap. Not sure how useful this is unless we make a ps2 variant
@@ -529,8 +528,9 @@ void tickPS2CtrlInput(Controller_t *controller) {
     initialised = true;
     invalidCount = 0;
   }
-  // Ocassionally, the controller returns a bad packet because it isn't ready. We should ignore that instead of reinitialisng, and 
-  // We only want to reinit if we recevied several bad packets in a row.
+  // Ocassionally, the controller returns a bad packet because it isn't ready.
+  // We should ignore that instead of reinitialisng, and We only want to reinit
+  // if we recevied several bad packets in a row.
   if (initialised) {
     if (read(port, controller)) {
       invalidCount = 0;

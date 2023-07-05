@@ -52,12 +52,11 @@
         }
         switch (console_type) {
             case PS3: {
-                PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t *)data;
-                uint8_t dpad_binding = dpad->dpad < 8 ? dpad_bindings_reverse[dpad->dpad] : 0;
-                usb_host_data.dpadLeft |= dpad_binding & LEFT;
-                usb_host_data.dpadRight |= dpad_binding & RIGHT;
-                usb_host_data.dpadUp |= dpad_binding & UP;
-                usb_host_data.dpadDown |= dpad_binding & DOWN;
+                uint8_t dpad = report[2];
+                bool up = dpad == 7 || dpad == 0 || dpad == 1;
+                bool left = dpad == 1 || dpad == 2 || dpad == 3;
+                bool down = dpad == 3 || dpad == 4 || dpad == 5;
+                bool right = dpad == 5 || dpad == 6 || dpad == 7;
                 switch (device_type.sub_type) {
                     case GAMEPAD: {
                         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;
@@ -72,6 +71,10 @@
                         usb_host_data.guide |= report->guide;
                         usb_host_data.leftThumbClick |= report->leftThumbClick;
                         usb_host_data.rightThumbClick |= report->rightThumbClick;
+                        usb_host_data.dpadLeft |= report->dpadLeft;
+                        usb_host_data.dpadRight |= report->dpadRight;
+                        usb_host_data.dpadUp |= report->dpadUp;
+                        usb_host_data.dpadDown |= report->dpadDown;
                         if (report->leftTrigger) {
                             usb_host_data.leftTrigger = report->leftTrigger << 8;
                         }
@@ -109,6 +112,10 @@
                             usb_host_data.back |= report->back;
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
+                            usb_host_data.dpadLeft |= left;
+                            usb_host_data.dpadRight |= right;
+                            usb_host_data.dpadUp |= up;
+                            usb_host_data.dpadDown |= down;
                             if (report->tilt) {
                                 usb_host_data.tilt = INT16_MAX;
                             }
@@ -140,6 +147,10 @@
                             usb_host_data.back |= report->back;
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
+                            usb_host_data.dpadLeft |= left;
+                            usb_host_data.dpadRight |= right;
+                            usb_host_data.dpadUp |= up;
+                            usb_host_data.dpadDown |= down;
                             if (report->tilt) {                                
                                 usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                             }
@@ -169,8 +180,12 @@
                             usb_host_data.yellow |= report->y && report->padFlag;
                             usb_host_data.blue |= report->x && report->padFlag;
                             usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
-                            usb_host_data.blueCymbal |= report->x && report->cymbalFlag && (dpad_binding & UP);
-                            usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && (dpad_binding & DOWN);
+                            usb_host_data.blueCymbal |= report->x && report->cymbalFlag && up;
+                            usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && down;
+                            usb_host_data.dpadLeft |= left;
+                            usb_host_data.dpadRight |= right;
+                            usb_host_data.dpadUp |= up;
+                            usb_host_data.dpadDown |= down;
                             if (usb_host_data.kick1 || usb_host_data.kick2) {
                                 usb_host_data.kickVelocity = 0xFF;
                             }
@@ -208,6 +223,10 @@
                             usb_host_data.back |= report->back;
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
+                            usb_host_data.dpadLeft |= left;
+                            usb_host_data.dpadRight |= right;
+                            usb_host_data.dpadUp |= up;
+                            usb_host_data.dpadDown |= down;
                             if (report->greenVelocity) {
                                 usb_host_data.greenVelocity = report->greenVelocity;
                             }
@@ -236,6 +255,10 @@
                         usb_host_data.b |= report->b;
                         usb_host_data.x |= report->x;
                         usb_host_data.y |= report->y;
+                        usb_host_data.dpadLeft |= left;
+                        usb_host_data.dpadRight |= right;
+                        usb_host_data.dpadUp |= up;
+                        usb_host_data.dpadDown |= down;
                         usb_host_data.leftShoulder |= report->leftShoulder;
                         usb_host_data.leftThumbClick |= report->leftThumbClick;
                         usb_host_data.back |= report->back;
@@ -255,6 +278,10 @@
                         usb_host_data.b |= report->b;
                         usb_host_data.x |= report->x;
                         usb_host_data.y |= report->y;
+                        usb_host_data.dpadLeft |= left;
+                        usb_host_data.dpadRight |= right;
+                        usb_host_data.dpadUp |= up;
+                        usb_host_data.dpadDown |= down;
                         usb_host_data.back |= report->back;
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;

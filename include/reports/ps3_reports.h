@@ -268,10 +268,10 @@ typedef struct
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     uint8_t : 4;
 
     uint8_t unused1[8];

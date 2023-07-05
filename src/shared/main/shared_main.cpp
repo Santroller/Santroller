@@ -812,8 +812,6 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 #endif
 }
 #endif
-#define COPY_BUTTON(in_button, out_button) \
-    if (in_button) out_button = true;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
     uint8_t led_tmp;
@@ -1067,7 +1065,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 
         TICK_PS3;
-        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+        gamepad->dpad = dpad_bindings[((uint8_t*)report)[2]];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;

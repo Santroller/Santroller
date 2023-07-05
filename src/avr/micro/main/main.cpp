@@ -23,6 +23,11 @@
 #include "hid.h"
 #include "shared_main.h"
 
+typedef struct
+{
+    USB_Descriptor_Header_t Header;
+    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1];
+} __attribute__ ((packed)) SignatureDescriptor_t;
 volatile uint16_t test __attribute__((section(".noinit")));
 volatile uint16_t test2 __attribute__((section(".noinit")));
 void SetupHardware(void);

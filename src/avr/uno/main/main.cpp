@@ -134,12 +134,13 @@ void loop() {
         }
         case DESCRIPTOR_ID: {
             // 8u2/16u2 wants a descriptor, so return it
-            // Wlength will be overwritten in descriptorRequest so cache it
+            // Serial number string descriptor, return one we prepared earlier
             if (desc->wValue == ((0x03 << 8) | 3)) {
                 memcpy(dt->data, &signature, sizeof(SignatureDescriptor_t));
                 header->len = sizeof(SignatureDescriptor_t);
                 break;
             }
+            // Wlength will be overwritten in descriptorRequest so cache it
             uint16_t wLength = desc->wLength;
             uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, dt->data);
             if (len > wLength) len = wLength;

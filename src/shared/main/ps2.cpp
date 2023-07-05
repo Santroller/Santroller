@@ -139,7 +139,7 @@ uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
                 ret = inputBuffer;
             } else if (len + left <= BUFFER_SIZE) {
                 // Part of reply is still missing and we have space for it
-                shiftDataInOut(NULL, inputBuffer + len, left);
+                shiftDataInOut(NULL, inputBuffer + len + 1, left);
                 ret = inputBuffer;
             } else {
                 // Reply incomplete but not enough space provided
@@ -252,14 +252,13 @@ uint8_t *tickPS2() {
     }
     // Ocassionally, the controller returns a bad packet because it isn't ready. We should ignore that instead of reinitialisng, and
     // We only want to reinit if we recevied several bad packets in a row.
-    if (initialised) {
-        // For some weird reason, PS2 guitars seem to just not report whammy if you use the standard poll command?
-        if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER) {
-            in = autoShiftData(port, commandExitConfig, sizeof(commandExitConfig));
-        } else {
-            in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
-        }
-
+    if (initialised) {    
+        printf("PS2: ");
+        in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
+        for (int i = 0; i < sizeof(inputBuffer); i++) {
+            printf("%02x, ", inputBuffer[i]);
+        }                   
+        printf("\r\n");
         if (in != NULL) {
             invalidCount = 0;
             if (isConfigReply(in)) {

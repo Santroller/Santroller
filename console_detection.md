@@ -14,7 +14,7 @@ Since i wrote the implementations for both of these, i know they send out featur
 # Wii (RockBand) + Wii U (GHL)
 The wii and wii u both just stop talking to the device if they don't recognise it, but they do this after configuring it. This means we can just run a timer, and if nothing attempts to read the hid report descriptor within 2 seconds we can assume we are on a wii or a wii u.
 
-# PADEMU
+# PS2
 Similar to the Wii / Wii U above but the device never actually gets configured, only its descriptors are read. Same method works except we can test if the device was configured or not.
 # PS4
 If you include a feature report of 0x03 in your hid report, with a usage of 0x2721, then the PS4 will ask for this and we jump to a ps4 compat mode. Note that for Guitars and Drums, this actually falls back to the PS3 versions.

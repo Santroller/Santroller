@@ -1046,11 +1046,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateSequence) {
 #endif
+        report_size = size = sizeof(PS3_REPORT);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         if (output_console_type == UNIVERSAL) {
             PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
             report = &universal_report->report;
             universal_report->report_id = 1;
+            report_size += 1;
+            size += 1;
         }
         memset(report, 0, sizeof(PS3_REPORT));
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report;
@@ -1076,12 +1079,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->x = y;
             gamepad->y = x;
         }
-        report_size = size = sizeof(PS3_REPORT);
-
-        if (output_console_type == UNIVERSAL) {
-            report_size += 1;
-            size += 1;
-        }
     }
     for (int i = 0; i < DIGITAL_COUNT; i++) {
         if (debounce[i]) {
@@ -1091,11 +1088,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE != DJ_HERO_TURNTABLE
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report) {
-        uint8_t cmp = memcmp(&last_report->lastControllerReport, report_data, report_size);
+        uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;
         }
-        memcpy(&last_report->lastControllerReport, report_data, report_size);
+        memcpy(last_report, report_data, report_size);
     }
 #endif
 // Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here

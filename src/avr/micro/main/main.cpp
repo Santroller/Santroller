@@ -104,7 +104,6 @@ void EVENT_USB_Device_ControlRequest(void) {
     }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
-    connected = true;
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
     uint8_t epsizeOut = 0x08;
@@ -120,6 +119,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     }
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_OUT, type, epsizeOut, 2);
+    connected = true;
 }
 
 static void USB_Device_GetInternalSerialDescriptor(void) {

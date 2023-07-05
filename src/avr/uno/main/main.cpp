@@ -164,6 +164,7 @@ void loop() {
             break;
         }
         case DEVICE_ID:
+            usb_ready = true;
             // 8u2/16u2 wants to know the console type, so return that
             dt->data[0] = consoleType;
             header->len = 1;

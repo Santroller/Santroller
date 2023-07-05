@@ -350,7 +350,6 @@ void write_ready(bool ready) {
 }
 
 void EVENT_USB_Device_Connect(void) {
-    write_ready(true);
 }
 
 void EVENT_USB_Device_Disconnect(void) {

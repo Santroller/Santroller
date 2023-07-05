@@ -252,13 +252,8 @@ uint8_t *tickPS2() {
     }
     // Ocassionally, the controller returns a bad packet because it isn't ready. We should ignore that instead of reinitialisng, and
     // We only want to reinit if we recevied several bad packets in a row.
-    if (initialised) {    
-        printf("PS2: ");
+    if (initialised) {
         in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
-        for (int i = 0; i < sizeof(inputBuffer); i++) {
-            printf("%02x, ", inputBuffer[i]);
-        }                   
-        printf("\r\n");
         if (in != NULL) {
             invalidCount = 0;
             if (isConfigReply(in)) {
@@ -266,15 +261,15 @@ uint8_t *tickPS2() {
                 sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
             }
             memcpy(inputBuffer2, inputBuffer, sizeof(inputBuffer));
+            last = micros();
         } else {
             invalidCount++;
-            if (invalidCount > 4) {
+            if (invalidCount > 10) {
                 initialised = false;
             }
             in = inputBuffer2;
         }
     }
-    last = micros();
     return in;
 }
 #endif

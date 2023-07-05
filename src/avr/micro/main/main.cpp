@@ -34,7 +34,6 @@ void SetupHardware(void);
 
 bool connected = false;
 void EVENT_USB_Device_Connect(void) {
-    connected = true;
 }
 
 void EVENT_USB_Device_Disconnect(void) {
@@ -105,6 +104,7 @@ void EVENT_USB_Device_ControlRequest(void) {
     }
 }
 void EVENT_USB_Device_ConfigurationChanged(void) {
+    connected = true;
     uint8_t type = EP_TYPE_INTERRUPT;
     uint8_t epsize = 0x20;
     uint8_t epsizeOut = 0x08;

@@ -124,7 +124,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 
 static void USB_Device_GetInternalSerialDescriptor(void) {
     SignatureDescriptor_t* desc = (SignatureDescriptor_t*)buf;
-USB_Descriptor_Header_t
     desc->Header.Type = DTYPE_String;
     desc->Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 1);
 

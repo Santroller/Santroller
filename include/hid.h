@@ -78,8 +78,11 @@ extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE
 extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
-extern const uint8_t pc_descriptor[161];
-
+#if DEVICE_TYPE == DRUMS
+extern const uint8_t pc_descriptor[152];
+#else
+extern const uint8_t pc_descriptor[167];
+#endif
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right);

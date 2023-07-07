@@ -946,8 +946,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
-    // GUITAR_HERO + XB1 + DRUMS or GUITAR is an invalid state that wont compile, same with turntable
-#if DEVICE_TYPE != DJ_HERO_TURNTABLE && ((DEVICE_TYPE != DRUMS && DEVICE_TYPE != GUITAR) || RHYTHM_TYPE == ROCK_BAND)
+#if RHYTHM_TYPE == ROCK_BAND
     if (output_console_type == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds

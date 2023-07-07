@@ -28,6 +28,11 @@ uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #endif
 #define TURNTABLE_BUFFER_SIZE 16
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
+int16_t dj_sum = 0;
+int8_t dj_last_readings[TURNTABLE_BUFFER_SIZE];
+int8_t dj_next = 0;
+#endif
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
 int16_t dj_sum_left = 0;
 int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
@@ -128,6 +133,9 @@ void init_main(void) {
 #endif
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
     memset(dj_last_readings_right, 0, sizeof(dj_last_readings_right));
+#endif
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
+    memset(dj_last_readings, 0, sizeof(dj_last_readings));
 #endif
 #ifdef INPUT_PS2
     init_ack();

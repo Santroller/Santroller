@@ -80,8 +80,10 @@ extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
 #if DEVICE_TYPE == DRUMS
 extern const uint8_t pc_descriptor[152];
+#elif DEVICE_TYPE_IS_INSTRUMENT
+extern const uint8_t pc_descriptor[152];
 #else
-extern const uint8_t pc_descriptor[167];
+extern const uint8_t pc_descriptor[161];
 #endif
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);

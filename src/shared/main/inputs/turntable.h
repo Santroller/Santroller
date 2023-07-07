@@ -7,12 +7,38 @@ bool djLeftValid = true;
 bool djRightValid = true;
 bool elapsed = (micros() - lastDj) > INPUT_DJ_TURNTABLE_POLL_RATE;
 if (elapsed) {
-    lastTap = micros();
+    lastDj = micros();
     djLeftValid = twi_readFromPointer(DJ_TWI_PORT, DJLEFT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketLeft), dj_left);
     djRightValid = twi_readFromPointer(DJ_TWI_PORT, DJRIGHT_ADDR, DJ_BUTTONS_PTR, sizeof(lastSuccessfulTurntablePacketRight), dj_right);
     lastTurntableWasSuccessfulLeft = djLeftValid;
     lastTurntableWasSuccessfulRight = djRightValid;
 }
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
+if (djLeftValid) {
+    if (elapsed) {
+        dj_sum -= dj_last_readings[dj_next];
+        dj_last_readings[dj_next] = (int8_t)dj_left[2];
+        dj_sum += dj_last_readings[dj_next];
+        dj_next++;
+        if (dj_next >= TURNTABLE_BUFFER_SIZE) {
+            dj_next = 0;
+        }
+    }
+    dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
+}
+if (djRightValid) {
+    if (elapsed) {
+        dj_sum -= dj_last_readings[dj_next];
+        dj_last_readings[dj_next] = (int8_t)dj_right[2];
+        dj_sum += dj_last_readings[dj_next];
+        dj_next++;
+        if (dj_next >= TURNTABLE_BUFFER_SIZE) {
+            dj_next = 0;
+        }
+    }
+    dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
+}
+#else
 // DJ Hero turntables are pretty noisy, so smooth that out with a moving average
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
 if (djLeftValid) {
@@ -45,5 +71,6 @@ if (djRightValid) {
 }
 #else
 dj_turntable_right = (int8_t)dj_right[2];
+#endif
 #endif
 #endif

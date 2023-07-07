@@ -1065,7 +1065,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 
         TICK_PS3;
-        gamepad->dpad = dpad_bindings[((uint8_t*)report)[2]];
+        gamepad->dpad = dpad_bindings[((uint8_t *)report)[2]];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
@@ -1126,7 +1126,7 @@ bool tick_bluetooth(void) {
     return size;
 }
 #endif
-
+bool windows_in_hid = false;
 bool tick_usb(void) {
 #if POLL_RATE
     if ((micros() - last_poll) < (POLL_RATE * 1000)) {
@@ -1136,18 +1136,29 @@ bool tick_usb(void) {
 #endif
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
-
-    if (millis() > 2000 && windows && consoleType == UNIVERSAL) {
-        if (read_manufacturer_string) {
-            if (WINDOWS_USES_XINPUT) {
+    // Only picos support XB1, so for other microcontrollers we want to skip that logic
+#if SUPPORTS_PICO
+    if (!windows_in_hid) {
+        if (millis() > 2000 && windows && consoleType == UNIVERSAL) {
+            if (read_manufacturer_string) {
+#if WINDOWS_USES_XINPUT
                 consoleType = WINDOWS;
                 reset_usb();
+#else
+                windows_in_hid = true;
+#endif
+            } else {
+                consoleType = XBOXONE;
+                reset_usb();
             }
-        } else {
-            consoleType = XBOXONE;
-            reset_usb();
         }
     }
+#elif WINDOWS_USES_XINPUT
+    if (windows) {
+        consoleType = WINDOWS;
+        reset_usb();
+    }
+#endif
 
     // Wii and Wii u both just stop talking to the device if they don't recognise it.
     // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console

@@ -11,6 +11,8 @@ Interestingly, for controllers the PS3 requires a bit of extra auth BUT it doesn
 # Wii (fakemote)
 Since i wrote the implementations for both of these, i know they send out feature report for 0xF0 and 0xF2, and we catch that and jump to a ps3 compat mode.
 
+# RPCS3
+I wrote a control transfer into RPCS3 that just tells the controller to jump to PS3 mode.
 # Wii (RockBand) + Wii U (GHL)
 The wii and wii u both just stop talking to the device if they don't recognise it, but they do this after configuring it. This means we can just run a timer, and if nothing attempts to read the hid report descriptor within 2 seconds we can assume we are on a wii or a wii u.
 

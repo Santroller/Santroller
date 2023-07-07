@@ -357,7 +357,7 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t tilt_pc;
+    uint8_t tilt_bluetooth;
     uint8_t unused1;
     uint8_t whammy;
     uint8_t slider;
@@ -405,7 +405,7 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t tilt_pc;
+    uint8_t tilt_bluetooth;
     uint8_t unused1;
     uint8_t whammy;
     uint8_t pickup;
@@ -507,7 +507,7 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t : 4;
-    uint8_t tilt_pc;   // leftStickX
+    uint8_t tilt_bluetooth;   // leftStickX
     uint8_t strumBar;  // leftStickY
     uint8_t unused2;   // rightStickX
     uint8_t whammy;    // rightStickY

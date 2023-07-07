@@ -54,7 +54,7 @@
 #endif
 #ifdef INPUT_WII_DRUM
         vel = (7 - (wiiData[3] >> 5)) << 5;
-        which = (wiiData[2] & 0b01111100) >> 1;
+        which = (wiiData[2] & 0b00111110) >> 1;
         switch (which) {
             case 0x1B:
                 drumVelocity[DRUM_KICK] = vel;
@@ -74,6 +74,25 @@
             case 0x0E:
                 drumVelocity[DRUM_ORANGE] = vel;
                 break;
+        }
+        // We only get velocity on events above, so zero them when the digital input is off
+        if (!((wiiButtonsHigh) & (1 << 4))) {
+            drumVelocity[DRUM_GREEN] = 0;
+        }
+        if (!((wiiButtonsHigh) & (1 << 6))) {
+            drumVelocity[DRUM_RED] = 0;
+        }
+        if (!((wiiButtonsHigh) & (1 << 5))) {
+            drumVelocity[DRUM_YELLOW] = 0;
+        }
+        if (!((wiiButtonsHigh) & (1 << 3))) {
+            drumVelocity[DRUM_BLUE] = 0;
+        }
+        if (!((wiiButtonsHigh) & (1 << 7))) {
+            drumVelocity[DRUM_ORANGE] = 0;
+        }
+        if (!((wiiButtonsHigh) & (1 << 2))) {
+            drumVelocity[DRUM_KICK] = 0;
         }
 #endif
 #ifdef INPUT_WII_NUNCHUK

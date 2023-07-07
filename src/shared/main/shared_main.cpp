@@ -226,7 +226,7 @@ uint16_t handle_calibration_xbox_one_trigger(uint16_t orig_val, uint16_t min, in
 }
 uint8_t handle_calibration_ps3(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
     int8_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8;
-    return (uint8_t)(ret - PS3_STICK_CENTER);
+    return (uint8_t)(ret + PS3_STICK_CENTER);
 }
 
 uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
@@ -245,8 +245,13 @@ uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_
 }
 
 uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+#if RHYTHM_TYPE == GUITAR_HERO
+    int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 9;
+    return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
+#else
     int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
-    return (uint8_t)(ret - PS3_STICK_CENTER);
+    return (uint8_t)(ret + PS3_STICK_CENTER);
+#endif
 }
 
 uint8_t tick_xbox_one() {

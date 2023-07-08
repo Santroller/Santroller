@@ -110,7 +110,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS3_TYPE PS3_DJ_TURNTABLE_PID
 #define XINPUT_FLAGS 0x00
 #define XINPUT_REPORT XInputTurntable_Data_t
-#define XBOX_ONE_REPORT XInputTurntable_Data_t
+#define XBOX_ONE_REPORT XboxOneTurntable_Data_t
 #define PS3_REPORT PS3Turntable_Data_t
 #define PS4_REPORT PS3Turntable_Data_t
 #endif

@@ -131,6 +131,48 @@ typedef struct
     uint8_t greenCymbalVelocity : 4;
 } __attribute__((packed)) XboxOneRockBandDrums_Data_t;
 
+// This isnt actually real but by doing this we can get some sane gamepad mappings in turntable mode
+typedef struct
+{
+    GipHeader_t Header;
+    bool sync : 1;
+    bool guide : 1;
+    bool start : 1;  // menu
+    bool back : 1;   // view
+
+    bool a : 1;
+    bool b : 1;
+    bool x : 1;
+    bool y : 1;
+
+    bool dpadUp : 1;
+    bool dpadDown : 1;
+    bool dpadLeft : 1;
+    bool dpadRight : 1;
+
+    bool : 1;
+    bool : 1;
+    bool : 1;
+    bool : 1;
+
+    uint16_t leftTrigger;
+    uint16_t rightTrigger;
+    uint16_t leftGreen : 1;
+    uint16_t leftRed : 1;
+    uint16_t leftBlue : 1;
+    uint16_t : 13;
+
+    uint16_t rightGreen : 1;
+    uint16_t rightRed : 1;
+    uint16_t rightBlue : 1;
+    uint16_t : 13;
+
+    int16_t leftTableVelocity;
+    int16_t rightTableVelocity;
+    int16_t effectsKnob;
+    int16_t crossfader;
+} __attribute__((packed)) XboxOneTurntable_Data_t;
+
 typedef struct
 {
     GipHeader_t Header;

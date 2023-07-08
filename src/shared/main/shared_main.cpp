@@ -946,7 +946,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
-#if RHYTHM_TYPE == ROCK_BAND
     if (output_console_type == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
@@ -983,7 +982,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             updateHIDSequence = true;
         }
     }
-#endif
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));

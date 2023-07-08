@@ -1075,6 +1075,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+        gamepad->dpad = 0x08;
 
         TICK_PS3;
         gamepad->dpad = dpad_bindings[((uint8_t *)report)[2]];

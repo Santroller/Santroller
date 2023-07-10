@@ -25,10 +25,10 @@ If you include a feature report of 0x03 in your hid report, with a usage of 0x27
 If you include a interface that looks like the xbox 360 security interface, the xb360 will try to do auth, and this can be caught and we then jump to a xb360 mode
 
 # Windows
-With windows, we catch the WCID report query and jump to a windows + xbone mode. We set the WCID query for XB360 mode, and then windows will send us a hid interrupt request to set up controller LEDs, and we catch this and jump to xb360 mode
+With windows, we catch the WCID report query. Windows will request for the manufacturer strings, XB1 does not.
 
 # Xbox one
-We do a similar thing to the windows method, but during that detection state, we also send out a xbone Announce packet. The xbone responds to this, and we pick that up and jump to a proper xbone compat mode. The xbone does not actually appear to check WCID which seems reasonable since it doesn't need to support anything besides xbone controllers.
+Same as windows, but we can note that no manufacturer string is read and jump to XB1 mode.
 
 # Switch
 The switch clears both the in and out endpoint, and we detect this to jump to a switch compat mode

@@ -21,6 +21,7 @@ enum DrumType {
 extern bool hiRes;
 extern uint16_t wiiControllerType;
 uint8_t* tickWii();
+bool wiiDataValid();
 #ifdef __cplusplus
 }
 #endif

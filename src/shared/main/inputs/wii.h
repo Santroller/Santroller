@@ -7,7 +7,7 @@
     } else {
         wiiData = lastSuccessfulWiiPacket;
     }
-    bool wiiValid = wiiData != NULL;
+    bool wiiValid = wiiDataValid();
     lastWiiWasSuccessful = wiiValid;
     uint8_t wiiButtonsLow, wiiButtonsHigh, vel, which, lastTapWiiGh5, lastTapWii = 0;
     uint16_t accX, accY, accZ = 0;

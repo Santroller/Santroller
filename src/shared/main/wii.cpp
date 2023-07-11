@@ -83,6 +83,9 @@ void initWiiExt(void) {
         wiiBytes = 1;
     } 
 }
+bool wiiDataValid() {
+    return wiiControllerType != WII_NOT_INITIALISED && wiiControllerType != WII_NO_EXTENSION;
+}
 uint8_t* tickWii() {
     static uint8_t data[8];
     memset(data, 0, sizeof(data));

@@ -40,7 +40,7 @@ void EVENT_USB_Device_Disconnect(void) {
     connected = false;
 }
 
-bool usb_connected() {
+bool usb_configured() {
     return connected;
 }
 

@@ -12,7 +12,7 @@ uint8_t transfer_with_usb_controller(const uint8_t device, const uint8_t request
 void send_report_to_controller(uint8_t deviceType, uint8_t *report, uint8_t len);
 void send_report_to_pc(const void *report, uint8_t len);
 bool ready_for_next_packet(void);
-bool usb_connected(void);
+bool usb_configured(void);
 void receive_report_from_controller(uint8_t const *report, uint16_t len);
 void xinput_controller_connected(uint8_t vid, uint8_t pid, uint8_t subtype);
 void xone_controller_connected(uint8_t dev_addr);

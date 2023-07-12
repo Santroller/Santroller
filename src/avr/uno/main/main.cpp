@@ -56,7 +56,7 @@ void reset_usb(void) {
     should_reload_usb = true;
 }
 
-bool usb_connected(void) {
+bool usb_configured(void) {
     return usb_ready;
 }
 

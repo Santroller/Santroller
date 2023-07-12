@@ -66,7 +66,7 @@ bool ready_for_next_packet() {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
 }
 
-bool usb_connected() {
+bool usb_configured() {
     return connected;
 }
 

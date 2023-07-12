@@ -1151,7 +1151,7 @@ bool tick_usb(void) {
 #if SUPPORTS_PICO
     if (!windows_in_hid) {
         if (millis() > 2000 && windows && consoleType == UNIVERSAL) {
-            if (read_manufacturer_string) {
+            if (read_manufacturer_string || millis() > 5000) {
 #if WINDOWS_USES_XINPUT
                 consoleType = WINDOWS;
                 reset_usb();
@@ -1173,13 +1173,13 @@ bool tick_usb(void) {
     // Wii and Wii u both just stop talking to the device if they don't recognise it.
     // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
     // modes depending on what device we are emulating
-    // Note that the usb_connected means this won't trigger if this is plugged into a device that is only providing power
+    // Note that the usb_configured means this won't trigger if this is plugged into a device that is only providing power
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_connected()) {
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_configured() && !read_any_string) {
         set_console_type(WII_RB);
     }
 #elif DEVICE_TYPE_IS_LIVE_GUITAR
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_connected()) {
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_configured()) {
         set_console_type(PS3);
     }
 #else
@@ -1191,7 +1191,7 @@ bool tick_usb(void) {
 #endif
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DJ_HERO_TURNTABLE
     // PADEMU will request the descriptor but never configure the device
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && !usb_connected() && descriptor_requested) {
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && !usb_configured() && descriptor_requested && !read_any_string) {
         set_console_type(PS3);
     }
 #endif

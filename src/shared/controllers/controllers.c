@@ -22,6 +22,7 @@ uint8_t ps4_sequence_number;
 bool passthrough_stage_kit = false;
 bool windows = false;
 bool read_manufacturer_string = false;
+bool read_any_string = false;
 #ifdef __cplusplus
 }
 #endif

@@ -26,6 +26,7 @@ If you include a interface that looks like the xbox 360 security interface, the 
 
 # Windows
 With windows, we catch the WCID report query. Windows will request for the manufacturer strings, XB1 does not.
+Windows is stupid though. It has some sort of 5 second timeout that triggers if you use more than one controller BUT you can get around this by forcing a reset on startup
 
 # Xbox one
 Same as windows, but we can note that no manufacturer string is read and jump to XB1 mode.

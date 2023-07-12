@@ -1073,10 +1073,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-        gamepad->dpad = 0x08;
+        gamepad->dpad = 0x00;
 
         TICK_PS3;
-        gamepad->dpad = dpad_bindings[((uint8_t *)report)[2]];
+        gamepad->dpad = dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
@@ -1169,8 +1169,7 @@ bool tick_usb(void) {
         consoleType = WINDOWS;
         reset_usb();
     }
-#endif
-
+#endif    
     // Wii and Wii u both just stop talking to the device if they don't recognise it.
     // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
     // modes depending on what device we are emulating

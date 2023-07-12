@@ -34,7 +34,7 @@
 #define GUITAR_HERO 0
 #define ROCK_BAND 1
 
-#define UNIVERSAL 0
+#define INIT_ENUMERATION 0
 #define XBOX360 1
 #define PS3 2
 #define WII_RB 3
@@ -42,6 +42,7 @@
 #define PS4 5
 #define XBOXONE 6
 #define REAL_PS3 7
+#define UNIVERSAL 8
 #define WINDOWS 9
 // NOTE: if the above ids ever go past 9, bluetooth will need to encode the consoleType differently.
 // The below ones are fine as bluetooth will never encode them.

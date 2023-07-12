@@ -23,11 +23,12 @@ typedef struct
 } __attribute__((packed)) __attribute__((aligned (16))) STRING_DESCRIPTOR_PICO;
 
 
-static inline uint16_t generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeString) {
-    char id[SERIAL_LEN];
-    pico_get_unique_board_id_string(id, SERIAL_LEN);
-    for (int i = 0; i < SERIAL_LEN; i++) {
+static inline void generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeString, uint8_t consoleType) {
+    char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
+    pico_get_unique_board_id_string(id, sizeof(id));
+    for (int i = 0; i < sizeof(id); i++) {
         UnicodeString->UnicodeString[i] = id[i];
     }
-    return sizeof(id);
+
+    UnicodeString->UnicodeString[sizeof(id)] = '0' + consoleType;
 }

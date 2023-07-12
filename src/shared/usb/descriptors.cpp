@@ -702,7 +702,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return sizeof(XInputSerialNumber_t);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-         if (consoleType == XBOXONE) {
+        if (consoleType == XBOXONE) {
             memcpy_P(requestBuffer, &DevCompatIDsOne, sizeof(DevCompatIDsOne));
             return sizeof(DevCompatIDsOne);
         } else if (consoleType == WINDOWS || consoleType == XBOX360) {
@@ -865,6 +865,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_STRING: {
+            // Windows is stupid. It needs an extra restart to avoid a weird 5 second timeout that it does
+            if (consoleType == INIT_ENUMERATION) {
+                set_console_type(UNIVERSAL);
+            }
             const uint8_t *str;
             if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;

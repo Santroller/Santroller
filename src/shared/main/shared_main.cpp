@@ -1169,7 +1169,7 @@ bool tick_usb(void) {
         consoleType = WINDOWS;
         reset_usb();
     }
-#endif    
+#endif
     // Wii and Wii u both just stop talking to the device if they don't recognise it.
     // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
     // modes depending on what device we are emulating
@@ -1242,7 +1242,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
 #else
-    PS3_REPORT *input = (PS3_REPORT *)(((uint8_t *)buf) + 1);
+    PS3_REPORT *input = (PS3_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
@@ -1339,11 +1339,14 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         report_size = size = sizeof(PS3_REPORT);
         if (output_console_type == UNIVERSAL) {
-            memcpy(report_data, buf, size);
-            size++;
+            PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
+            memcpy(&universal_report->report, buf, size);
+            universal_report->report_id = 1;
+            report_size += 1;
+            size += 1;
         } else {
             PS3_REPORT *report = (PS3_REPORT *)report_data;
-            memcpy(report_data, ((uint8_t *)buf) + 1, size);
+            memcpy(report_data, buf, size);
 #if DEVICE_TYPE != LIVE_GUITAR
             // Switch swaps a and b
             if (output_console_type == SWITCH) {

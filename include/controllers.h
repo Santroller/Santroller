@@ -35,7 +35,7 @@ extern bool auth_ps4_controller_found;
 extern bool seen_ps4;
 
 // Used for detecting wii
-extern bool seen_non_wii_packet;
+extern bool seen_hid_descriptor_read;
 
 // Used for detecting pademu
 extern bool descriptor_requested;

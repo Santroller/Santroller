@@ -14,10 +14,10 @@ Since i wrote the implementations for both of these, i know they send out featur
 # RPCS3
 I wrote a control transfer into RPCS3 that just tells the controller to jump to PS3 mode.
 # Wii (RockBand) + Wii U (GHL)
-The wii and wii u both just stop talking to the device if they don't recognise it, but they do this after configuring it. This means we can just run a timer, and if nothing attempts to read the hid report descriptor within 2 seconds we can assume we are on a wii or a wii u.
+The wii and wii u both just stop talking to the device if they don't recognise it, but they do this after configuring it. This means we can just run a timer, and if nothing attempts to read the hid report descriptor within 2 seconds we can assume we are on a wii or a wii u. String descriptors are not read.
 
 # PS2
-Similar to the Wii / Wii U above but the device never actually gets configured, only its descriptors are read. Same method works except we can test if the device was configured or not.
+Similar to the Wii / Wii U above but the device never actually gets configured, only its descriptors are read, string descriptors are not however. Same method works except we can test if the device was configured or not.
 # PS4
 If you include a feature report of 0x03 in your hid report, with a usage of 0x2721, then the PS4 will ask for this and we jump to a ps4 compat mode. Note that for Guitars and Drums, this actually falls back to the PS3 versions.
 
@@ -26,7 +26,8 @@ If you include a interface that looks like the xbox 360 security interface, the 
 
 # Windows
 With windows, we catch the WCID report query. Windows will request for the manufacturer strings, XB1 does not.
-Windows is stupid though. It has some sort of 5 second timeout that triggers if you use more than one controller BUT you can get around this by forcing a reset on startup
+Windows is stupid though. If you have more than one device with the same vid and pid, then windows will just add a 5 second delay to enumeration.
+Windows WILL read string descriptors though, so we can use that as a way to differenciate PS2 / Wii from windows in this state.
 
 # Xbox one
 Same as windows, but we can note that no manufacturer string is read and jump to XB1 mode.

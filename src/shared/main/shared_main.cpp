@@ -1170,31 +1170,17 @@ bool tick_usb(void) {
         reset_usb();
     }
 #endif
-    // Wii and Wii u both just stop talking to the device if they don't recognise it.
-    // Since GHL was only on the wii u, and GH was only on the wii, we can differenciate the console
-    // modes depending on what device we are emulating
-    // Note that the usb_configured means this won't trigger if this is plugged into a device that is only providing power
+    // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string) {
+        // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_configured() && !read_any_string) {
-        set_console_type(WII_RB);
-    }
-#elif DEVICE_TYPE_IS_LIVE_GUITAR
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && usb_configured()) {
-        set_console_type(PS3);
-    }
-#else
-    // Go for ps3 gamepad mode on wii / wii u if we arent emulating an instrument
-    // Pademu will get triggered here too.
-    if (millis() > 2000 && consoleType == UNIVERSAL && !descriptor_requested) {
-        set_console_type(PS3);
-    }
+        if (usb_configured()) {
+            set_console_type(WII_RB);
+        }
 #endif
-#if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE == DJ_HERO_TURNTABLE
-    // PADEMU will request the descriptor but never configure the device
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_non_wii_packet && !usb_configured() && descriptor_requested && !read_any_string) {
+        // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
         set_console_type(PS3);
     }
-#endif
     // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
     if (millis() > 2000 && consoleType == PS4 && !seen_ps4) {
         set_console_type(REAL_PS3);

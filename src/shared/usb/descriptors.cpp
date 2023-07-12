@@ -748,6 +748,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
     descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
+        case USB_DESCRIPTOR_DEVICE_QUALIFIER: {
+            // Windows is stupid. It needs an extra restart to avoid a weird 5 second timeout that it does
+            if (consoleType == INIT_ENUMERATION) {
+                set_console_type(UNIVERSAL);
+            }
+        }
         case USB_DESCRIPTOR_DEVICE: {
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
@@ -865,10 +871,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_STRING: {
-            // Windows is stupid. It needs an extra restart to avoid a weird 5 second timeout that it does
-            if (consoleType == INIT_ENUMERATION) {
-                set_console_type(UNIVERSAL);
-            }
             const uint8_t *str;
             if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;

@@ -1148,10 +1148,11 @@ bool tick_usb(void) {
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
     // Only picos support XB1, so for other microcontrollers we want to skip that logic
+    // We need to start counting from when we see the WCID request, as windows will somtimes delay all requests by 5 seconds
 #if SUPPORTS_PICO
     if (!windows_in_hid) {
-        if (millis() > 2000 && windows && consoleType == UNIVERSAL) {
-            if (read_manufacturer_string || millis() > 5000) {
+        if ((millis() - windows_timer) > 2000 && windows_timer && consoleType == UNIVERSAL) {
+            if (read_manufacturer_string) {
 #if WINDOWS_USES_XINPUT
                 consoleType = WINDOWS;
                 reset_usb();
@@ -1165,7 +1166,7 @@ bool tick_usb(void) {
         }
     }
 #elif WINDOWS_USES_XINPUT
-    if (windows) {
+    if (windows_timer) {
         consoleType = WINDOWS;
         reset_usb();
     }

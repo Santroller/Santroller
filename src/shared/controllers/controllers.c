@@ -20,7 +20,7 @@ uint8_t report_sequence_number;
 uint8_t hid_sequence_number;
 uint8_t ps4_sequence_number;
 bool passthrough_stage_kit = false;
-bool windows = false;
+long windows_timer = 0;
 bool read_manufacturer_string = false;
 bool read_any_string = false;
 #ifdef __cplusplus

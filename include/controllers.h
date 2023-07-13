@@ -41,6 +41,6 @@ extern bool seen_hid_descriptor_read;
 extern bool descriptor_requested;
 
 // Use for configuring commands that are pc specific
-extern bool windows;
+extern long windows_timer;
 extern bool read_manufacturer_string;
 extern bool read_any_string;

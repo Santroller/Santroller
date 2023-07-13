@@ -31,7 +31,7 @@
             }
         }
         get_usb_host_device_data(i, (uint8_t *)&temp_report_usb_host);
-        void *data = &temp_report_usb_host;
+        uint8_t *data = &temp_report_usb_host;
         uint8_t console_type = device_type.console_type;
         if (console_type == XBOXONE) {
             GipHeader_t *header = (GipHeader_t *)data;
@@ -52,11 +52,13 @@
         }
         switch (console_type) {
             case PS3: {
-                uint8_t dpad = report[2];
-                bool up = dpad == 7 || dpad == 0 || dpad == 1;
-                bool left = dpad == 1 || dpad == 2 || dpad == 3;
-                bool down = dpad == 3 || dpad == 4 || dpad == 5;
-                bool right = dpad == 5 || dpad == 6 || dpad == 7;
+                PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;
+                PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t*)data;
+                uint8_t dpad_binding = dpad->dpad < 8 ? dpad_bindings_reverse[dpad->dpad] : 0;
+                bool up = dpad_binding & UP;
+                bool left =  dpad_binding & LEFT;
+                bool down = dpad_binding & DOWN;
+                bool right = dpad_binding & RIGHT;
                 switch (device_type.sub_type) {
                     case GAMEPAD: {
                         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;

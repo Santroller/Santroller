@@ -1172,7 +1172,7 @@ bool tick_usb(void) {
     }
 #endif
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string) {
+    if (millis() > 2000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !windows_timer) {
         // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
         if (usb_configured()) {

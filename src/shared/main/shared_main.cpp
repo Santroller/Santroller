@@ -1094,16 +1094,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             debounce[i]--;
         }
     }
-#if DEVICE_TYPE != DJ_HERO_TURNTABLE
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
-    if (last_report) {
+    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS3) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;
         }
         memcpy(last_report, report_data, report_size);
     }
-#endif
 // Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
 #if DEVICE_TYPE_IS_GAMEPAD
     if (output_console_type == PS4) {

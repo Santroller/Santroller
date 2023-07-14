@@ -63,6 +63,11 @@ typedef struct {
 } pio_usb_configuration_t;
 
 bool ready_for_next_packet() {
+    #if BLUETOOTH_TX
+    if (check_bluetooth_ready()) {
+        return bluetooth_can_send() && tud_xinput_n_ready(0) && tud_ready_for_packet();
+    }
+    #endif
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
 }
 

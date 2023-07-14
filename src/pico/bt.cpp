@@ -58,8 +58,12 @@ const uint8_t adv_data[] = {
     0xC4,
     0x03,
 };
+static bool can_send = false;
 bool check_bluetooth_ready() {
     return con_handle != HCI_CON_HANDLE_INVALID;
+}
+bool bluetooth_can_send() {
+    return can_send;
 }
 int get_bt_address(uint8_t *addr) {
     bd_addr_t local_addr;
@@ -69,6 +73,7 @@ int get_bt_address(uint8_t *addr) {
 }
 void send_report(uint8_t size, uint8_t *report) {
     if (con_handle != HCI_CON_HANDLE_INVALID) {
+        can_send = false;
         hids_device_send_input_report(con_handle, report, size);
         hids_device_request_can_send_now_event(con_handle);
     }
@@ -197,6 +202,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     printf("Protocol Mode: %s mode\n", hids_subevent_protocol_mode_get_protocol_mode(packet) ? "Report" : "Boot");
                     break;
                 case HIDS_SUBEVENT_CAN_SEND_NOW:
+                    can_send = true;
                     break;
                 default:
                     break;

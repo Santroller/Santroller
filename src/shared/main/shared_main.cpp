@@ -1106,7 +1106,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memcpy(last_report, report_data, report_size);
     }
 // Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
-#if DEVICE_TYPE_IS_GAMEPAD
+#if SUPPORTS_PS4
     if (output_console_type == PS4) {
         PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
         gamepad->reportCounter = ps4_sequence_number++;
@@ -1351,9 +1351,11 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         }
     }
+    #if SUPPORTS_PS4
     if (output_console_type == PS4) {
         ps4_sequence_number++;
     }
+    #endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;

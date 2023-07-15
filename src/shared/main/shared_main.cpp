@@ -325,8 +325,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt_bluetooth != PS3_STICK_CENTER) {
-            out->tilt = report->tilt_bluetooth;
+        if (report->tilt != PS3_ACCEL_CENTER) {
+            out->tilt = report->tilt >> 2;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = report->whammy;
@@ -349,8 +349,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt_bluetooth != PS3_STICK_CENTER) {
-            out->tilt = (report->tilt_bluetooth - 128) << 8;
+        if (report->tilt != PS3_ACCEL_CENTER) {
+            out->tilt = (report->tilt - 512) << 6;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = (report->whammy - 128) << 8;
@@ -384,8 +384,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt_bluetooth != PS3_STICK_CENTER) {
-            out->tilt = report->tilt_bluetooth;
+        if (report->tilt != PS3_ACCEL_CENTER) {
+            out->tilt = report->tilt >> 2;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = report->whammy;
@@ -411,8 +411,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt_bluetooth != PS3_STICK_CENTER) {
-            out->tilt = (report->tilt_bluetooth - 128) << 8;
+        if (report->tilt != PS3_ACCEL_CENTER) {
+            out->tilt = (report->tilt - 512) << 6;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = (report->whammy - 128) << 8;
@@ -460,8 +460,8 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 
         out->guide |= report->guide;
         out->leftThumbClick |= report->leftThumbClick;
-        if (report->tilt_bluetooth != PS3_STICK_CENTER) {
-            out->tilt = (report->tilt_bluetooth - 128) << 8;
+        if (report->tilt != PS3_ACCEL_CENTER) {
+            out->tilt = (report->tilt - 512) << 6;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = (report->whammy - 128) << 8;

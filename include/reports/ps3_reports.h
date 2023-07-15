@@ -509,7 +509,7 @@ typedef struct
     uint8_t : 4;
     uint8_t unused1;   // leftStickX
     uint8_t strumBar;  // leftStickY
-    uint8_t unused2;   // rightStickX
+    uint8_t tilt2;     // rightStickX
     uint8_t whammy;    // rightStickY
 
     uint8_t unused3[12];

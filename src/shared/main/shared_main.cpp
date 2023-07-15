@@ -1351,11 +1351,11 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         }
     }
-    #if SUPPORTS_PS4
+#if SUPPORTS_PS4
     if (output_console_type == PS4) {
         ps4_sequence_number++;
     }
-    #endif
+#endif
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;

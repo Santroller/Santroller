@@ -23,6 +23,7 @@ bool passthrough_stage_kit = false;
 long windows_timer = 0;
 bool read_manufacturer_string = false;
 bool read_any_string = false;
+bool read_device_desc = false;
 #ifdef __cplusplus
 }
 #endif

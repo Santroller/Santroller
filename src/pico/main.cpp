@@ -63,11 +63,11 @@ typedef struct {
 } pio_usb_configuration_t;
 
 bool ready_for_next_packet() {
-    #ifdef BLUETOOTH_TX
+#ifdef BLUETOOTH_TX
     if (check_bluetooth_ready()) {
         return bluetooth_can_send() && tud_xinput_n_ready(0) && tud_ready_for_packet();
     }
-    #endif
+#endif
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
 }
 
@@ -208,7 +208,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         }
     }
     printf("Total devices: %d\r\n", total_usb_host_devices);
-    
+
     host_controller_connected();
 }
 
@@ -285,7 +285,6 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     }
     return NULL;
 }
-
 
 uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
     if (!dev_addr) {

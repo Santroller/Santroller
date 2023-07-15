@@ -749,6 +749,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
         case USB_DESCRIPTOR_DEVICE: {
+            read_device_desc = true;
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;

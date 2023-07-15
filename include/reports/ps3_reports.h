@@ -357,8 +357,7 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t tilt_bluetooth;
-    uint8_t unused1;
+    uint8_t unused1[2];
     uint8_t whammy;
     uint8_t slider;
 
@@ -385,7 +384,7 @@ typedef struct
     bool y : 1;  // triangle, yellow
 
     bool leftShoulder : 1;  // orange, l1
-    bool tilt : 1;          // tilt, r1
+    bool tiltDigital : 1;          // tilt, r1
     bool solo : 1;          // l2
     bool : 1;               // r2
 
@@ -405,8 +404,7 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t tilt_bluetooth;
-    uint8_t unused1;
+    uint8_t unused[2];
     uint8_t whammy;
     uint8_t pickup;
 
@@ -424,6 +422,8 @@ typedef struct
     uint8_t : 3;
 
     uint8_t unused2[10];
+
+    uint16_t tilt;  // accelX
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
 
@@ -507,7 +507,7 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t : 4;
-    uint8_t tilt_bluetooth;   // leftStickX
+    uint8_t unused1;   // leftStickX
     uint8_t strumBar;  // leftStickY
     uint8_t unused2;   // rightStickX
     uint8_t whammy;    // rightStickY

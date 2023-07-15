@@ -937,11 +937,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
 #else
-    bool bluetooth = false;
-
-#ifdef BLUETOOTH_TX
-    bluetooth = buf == &last_report_bt;
-#endif
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
     bool updateSequence = false;
@@ -1076,6 +1071,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->dpad = 0x00;
 
         TICK_PS3;
+        // We map tilt to the tilt bytes normally.
+        // On an actual console, we need to center it as rock band
+        // expects it to be digital.
+        #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+            if (output_console_type == REAL_PS3 || output_console_type == PS3) {
+                gamepad->accelX = PS3_ACCEL_CENTER;
+            }
+        #endif
         gamepad->dpad = dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
@@ -1128,7 +1131,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #ifdef BLUETOOTH_TX
 bool tick_bluetooth(void) {
-    uint8_t size = tick_inputs(&bt_report, &last_report_bt, REAL_PS3);
+    uint8_t size = tick_inputs(&bt_report, &last_report_bt, BLUETOOTH_REPORT);
     if (size) {
         send_report(size, (uint8_t *)&bt_report);
     }

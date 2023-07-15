@@ -47,6 +47,7 @@
 // The below ones are fine as bluetooth will never encode them.
 #define KEYBOARD_MOUSE 10
 #define MIDI 11
+#define BLUETOOTH_REPORT 12
 #define UNKNOWN 0xFF
 
 #define PINMODE_PULLUP 0

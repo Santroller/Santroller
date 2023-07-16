@@ -31,14 +31,14 @@
             }
         }
         get_usb_host_device_data(i, (uint8_t *)&temp_report_usb_host);
-        uint8_t *data = &temp_report_usb_host;
+        uint8_t *data = (uint8_t*)&temp_report_usb_host;
         uint8_t console_type = device_type.console_type;
         if (console_type == XBOXONE) {
             GipHeader_t *header = (GipHeader_t *)data;
             if (device_type.sub_type == LIVE_GUITAR && header->command == GHL_HID_REPORT) {
                 // Xbox one GHL guitars actually end up using PS3 reports if you poke them.
                 console_type = PS3;
-                data = &((XboxOneGHLGuitar_Data_t *)data)->report;
+                data = (uint8_t*)&((XboxOneGHLGuitar_Data_t *)data)->report;
             } else if (header->command == GIP_VIRTUAL_KEYCODE) {
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)data;
                 if (keystroke->keycode == GIP_VKEY_LEFT_WIN) {

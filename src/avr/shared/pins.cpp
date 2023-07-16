@@ -27,6 +27,7 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     *ddr &= ~mask;
     // Enable pullup
     *port |= mask;
+    delay(10);
     uint8_t data = *pin;
     // Revert the settings we changed
     *port = prevPort;
@@ -70,7 +71,7 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     // to 0 (the default).
 
     ADMUX = (1 << 6) | (pin & 0x07);
-    
+
     // Give things time to settle
     delayMicroseconds(10);
     sbi(ADCSRA, ADSC);

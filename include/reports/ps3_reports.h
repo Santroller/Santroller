@@ -72,10 +72,10 @@ typedef struct {
 
     // Pressure axes for buttons
     // Neutral state is 0x00, max is 0xFF
-    uint8_t pressureDpadUp;
-    uint8_t pressureDpadRight;
-    uint8_t pressureDpadLeft;
-    uint8_t pressureDpadDown;
+    uint8_t pressureDPadUp;
+    uint8_t pressureDPadRight;
+    uint8_t pressureDPadLeft;
+    uint8_t pressureDPadDown;
     uint8_t leftTrigger;   // pressure_l2
     uint8_t rightTrigger;  // pressure_r2
     uint8_t pressureL1;
@@ -166,10 +166,10 @@ typedef struct {
     uint8_t rightStickX;
     uint8_t rightStickY;
     uint8_t padding_3[4];
-    uint8_t pressureDpadUp;
-    uint8_t pressureDpadRight;
-    uint8_t pressureDpadDown;
-    uint8_t pressureDpadLeft;
+    uint8_t pressureDPadUp;
+    uint8_t pressureDPadRight;
+    uint8_t pressureDPadDown;
+    uint8_t pressureDPadLeft;
     uint8_t leftTrigger;   // pressure_l2
     uint8_t rightTrigger;  // pressure_r2
     uint8_t pressureL1;
@@ -225,10 +225,10 @@ typedef struct {
 
     // Pressure axes for buttons
     // Neutral state is 0x00, max is 0xFF
-    uint8_t pressureDpadUp;
-    uint8_t pressureDpadRight;
-    uint8_t pressureDpadLeft;
-    uint8_t pressureDpadDown;
+    uint8_t pressureDPadUp;
+    uint8_t pressureDPadRight;
+    uint8_t pressureDPadLeft;
+    uint8_t pressureDPadDown;
     uint8_t leftTrigger;   // pressure_l2
     uint8_t rightTrigger;  // pressure_r2
     uint8_t pressureL1;

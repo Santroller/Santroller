@@ -671,17 +671,17 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
         if (report->rightTrigger) {
             out->rightTrigger = report->rightTrigger;
         }
-        if (report->pressureDpadUp) {
-            out->pressureDpadUp = report->pressureDpadUp;
+        if (report->pressureDPadUp) {
+            out->pressureDPadUp = report->pressureDPadUp;
         }
-        if (report->pressureDpadRight) {
-            out->pressureDpadRight = report->pressureDpadRight;
+        if (report->pressureDPadRight) {
+            out->pressureDPadRight = report->pressureDPadRight;
         }
-        if (report->pressureDpadDown) {
-            out->pressureDpadDown = report->pressureDpadDown;
+        if (report->pressureDPadDown) {
+            out->pressureDPadDown = report->pressureDPadDown;
         }
-        if (report->pressureDpadLeft) {
-            out->pressureDpadLeft = report->pressureDpadLeft;
+        if (report->pressureDPadLeft) {
+            out->pressureDPadLeft = report->pressureDPadLeft;
         }
         if (report->pressureL1) {
             out->pressureL1 = report->pressureL1;

@@ -243,10 +243,10 @@ typedef struct {
     int16_t leftStickY;
     int16_t rightStickX;
     int16_t rightStickY;
-    uint8_t pressureDpadUp;
-    uint8_t pressureDpadRight;
-    uint8_t pressureDpadLeft;
-    uint8_t pressureDpadDown;
+    uint8_t pressureDPadUp;
+    uint8_t pressureDPadRight;
+    uint8_t pressureDPadLeft;
+    uint8_t pressureDPadDown;
     uint8_t pressureL1;
     uint8_t pressureR1;
     uint8_t pressureTriangle;

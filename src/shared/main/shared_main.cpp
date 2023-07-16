@@ -826,6 +826,7 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 }
 #endif
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+    bool bluetooth = output_console_type == BLUETOOTH_REPORT;
     uint8_t size = 0;
     uint8_t led_tmp;
 #ifdef INPUT_QUEUE

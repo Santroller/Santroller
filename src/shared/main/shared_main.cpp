@@ -1052,7 +1052,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         report_size = size = sizeof(PS3_REPORT);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
-        if (output_console_type == UNIVERSAL) {
+        if (output_console_type == UNIVERSAL || output_console_type == BLUETOOTH_REPORT) {
             PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
             report = &universal_report->report;
             universal_report->report_id = 1;

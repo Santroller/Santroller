@@ -23,13 +23,14 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     uint8_t prevDdr = *ddr;
     uint8_t oldSREG = SREG;
     cli();
-    *port |= mask;
-    // And write it inverted to ddr (ones set pullup)
+    // Set direction to input
     *ddr &= ~mask;
+    // Enable pullup
+    *port |= mask;
     uint8_t data = *pin;
     // Revert the settings we changed
     *port = prevPort;
-    *ddr &= prevDdr;
+    *ddr = prevDdr;
     SREG = oldSREG;
     return data;
 }

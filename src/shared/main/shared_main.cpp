@@ -1139,6 +1139,7 @@ bool tick_bluetooth(void) {
 }
 #endif
 bool windows_in_hid = false;
+long millis_at_boot = 0;
 bool tick_usb(void) {
 #if POLL_RATE
     if ((micros() - last_poll) < (POLL_RATE * 1000)) {
@@ -1172,8 +1173,11 @@ bool tick_usb(void) {
         reset_usb();
     }
 #endif
+    if (millis_at_boot == 0) {
+        millis_at_boot = millis();
+    }
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if (millis() > 2000 && consoleType == UNIVERSAL && read_device_desc && !seen_hid_descriptor_read && !read_any_string && !windows_timer) {
+    if ((millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && read_device_desc && !seen_hid_descriptor_read && !read_any_string && !windows_timer) {
         // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
         if (usb_configured()) {
@@ -1184,7 +1188,7 @@ bool tick_usb(void) {
         set_console_type(PS3);
     }
     // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
-    if (millis() > 2000 && consoleType == PS4 && !seen_ps4) {
+    if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
         set_console_type(REAL_PS3);
     }
     if (!ready) return 0;

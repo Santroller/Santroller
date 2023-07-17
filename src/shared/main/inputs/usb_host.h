@@ -628,11 +628,12 @@
                         usb_host_data.dpadRight = report->dpadRight;
                         usb_host_data.dpadUp = report->dpadUp;
                         usb_host_data.dpadDown = report->dpadDown;
+                        // XB1 reports range from 0 - 1024
                         if (report->leftTrigger) {
-                            usb_host_data.leftTrigger = report->leftTrigger;
+                            usb_host_data.leftTrigger = report->leftTrigger << 6;
                         }
                         if (report->rightTrigger) {
-                            usb_host_data.rightTrigger = report->rightTrigger;
+                            usb_host_data.rightTrigger = report->rightTrigger << 6;
                         }
                         if (report->leftStickX) {
                             usb_host_data.leftStickX = report->leftStickX;

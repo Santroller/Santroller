@@ -81,11 +81,11 @@ void send_report_to_pc(const void *report, uint8_t len) {
 void loop() {
     tick();
     tud_task();
-    if (millis() > 3000) {
 #if USB_HOST_STACK
+    if (millis() > 3000 || (consoleType != UNIVERSAL && consoleType != WINDOWS)) {
         tuh_task();
-#endif
     }
+#endif
 }
 void setup() {
     if (persistedConsoleTypeValid == 0x3A2F) {

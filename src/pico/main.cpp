@@ -82,9 +82,7 @@ void loop() {
     tick();
     tud_task();
 #if USB_HOST_STACK
-    if (millis() > 3000 || (consoleType != UNIVERSAL && consoleType != WINDOWS)) {
-        tuh_task();
-    }
+    tuh_task();
 #endif
 }
 void setup() {
@@ -244,7 +242,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     return;
                 }
             }
-            printf("Got report of length %d\r\n", len);
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
             return;

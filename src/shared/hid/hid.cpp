@@ -211,7 +211,7 @@ ps3_output_report ps3_output_reports[8] = {
     {
         report_id : PS3_LED_RUMBLE_ID,
         rumble : {
-            padding : 0x01,
+            padding : 0x00,
             right_duration : 0xFF,
             right_motor_on : 0x00,
             left_duration : 0xFF,
@@ -255,6 +255,7 @@ void handle_player_leds(uint8_t player) {
                     ps3_output_report *report = &ps3_output_reports[i];
                     report->leds_bitmap |= _BV(player);
                     transfer_with_usb_controller(type.dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report);
+                    // send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(report));
                 }
                 return;
             }

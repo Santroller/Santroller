@@ -132,7 +132,6 @@ bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, ui
     uint8_t const dir = tu_edpt_dir(ep_addr);
     uint8_t const instance = get_instance_id_by_epaddr(dev_addr, ep_addr);
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
-
     if (dir == TUSB_DIR_IN) {
         tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
         usbh_edpt_xfer(dev_addr, hid_itf->ep_in, hid_itf->epin_buf, hid_itf->epin_size);
@@ -193,6 +192,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             if (desc_ep->bEndpointAddress & 0x80) {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             } else {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));

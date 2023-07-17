@@ -53,12 +53,10 @@
         switch (console_type) {
             case PS3: {
                 PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;
-                PS3Dpad_Data_t *dpad = (PS3Dpad_Data_t*)data;
-                uint8_t dpad_binding = dpad->dpad < 8 ? dpad_bindings_reverse[dpad->dpad] : 0;
-                bool up = dpad_binding & UP;
-                bool left =  dpad_binding & LEFT;
-                bool down = dpad_binding & DOWN;
-                bool right = dpad_binding & RIGHT;
+                bool up = report->dpadUp;
+                bool left =  report->dpadLeft;
+                bool down = report->dpadDown;
+                bool right = report->dpadRight;
                 switch (device_type.sub_type) {
                     case GAMEPAD: {
                         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;
@@ -83,16 +81,16 @@
                         if (report->rightTrigger) {
                             usb_host_data.rightTrigger = report->rightTrigger << 8;
                         }
-                        if (report->leftStickX) {
+                        if (report->leftStickX != PS3_STICK_CENTER) {
                             usb_host_data.leftStickX = (report->leftStickX - 0x80) << 8;
                         }
-                        if (report->leftStickY) {
+                        if (report->leftStickY != PS3_STICK_CENTER) {
                             usb_host_data.leftStickY = (report->leftStickY - 0x80) << 8;
                         }
-                        if (report->rightStickX) {
+                        if (report->rightStickX != PS3_STICK_CENTER) {
                             usb_host_data.rightStickX = (report->rightStickX - 0x80) << 8;
                         }
-                        if (report->rightStickY) {
+                        if (report->rightStickY != PS3_STICK_CENTER) {
                             usb_host_data.rightStickY = (report->rightStickY - 0x80) << 8;
                         }
                         break;

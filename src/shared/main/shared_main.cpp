@@ -1235,7 +1235,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
 #else
-    PS3_REPORT *input = (PS3_REPORT *)(buf);
+    PS3Universal_Data_t *input = (PS3Universal_Data_t *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
@@ -1251,7 +1251,7 @@ int tick_bluetooth_inputs(const void *buf) {
             report_size = size - sizeof(GipHeader_t);
             memset(report_data, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-            convert_ps3_to_type((uint8_t *)report_data, input, output_console_type);
+            convert_ps3_to_type((uint8_t *)report_data, &input->report, output_console_type);
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)report_data;
@@ -1284,7 +1284,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #if DEVICE_TYPE_IS_GUITAR
         report->whammy = INT16_MIN;
 #endif
-        convert_ps3_to_type((uint8_t *)report_data, input, XBOX360);
+        convert_ps3_to_type((uint8_t *)report_data, &input->report, XBOX360);
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1302,7 +1302,7 @@ int tick_bluetooth_inputs(const void *buf) {
         gamepad->reportCounter = ps4_sequence_number;
 #endif
 
-        convert_ps3_to_type((uint8_t *)report_data, input, output_console_type);
+        convert_ps3_to_type((uint8_t *)report_data, &input->report, output_console_type);
         report_size = size = sizeof(PS4_REPORT);
     }
 #endif
@@ -1330,26 +1330,27 @@ int tick_bluetooth_inputs(const void *buf) {
     // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateHIDSequence) {
 #endif
-        report_size = size = sizeof(PS3_REPORT);
         if (output_console_type == UNIVERSAL) {
-            PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
-            memcpy(&universal_report->report, buf, size);
-            universal_report->report_id = 1;
-            report_size += 1;
-            size += 1;
-        } else {
-            PS3_REPORT *report = (PS3_REPORT *)report_data;
+            report_size = size = sizeof(PS3Universal_Data_t);
             memcpy(report_data, buf, size);
+        } else {
+            PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
+            report_size = size = sizeof(PS3_REPORT);
+            PS3_REPORT *report = (PS3_REPORT *)report_data;
+            memcpy(report_data, &input->report, size);
             // Switch swaps a and b
             if (output_console_type == SWITCH) {
-                bool a = report->a;
-                bool b = report->b;
-                report->b = a;
-                report->a = b;
+                bool a = gamepad->a;
+                bool b = gamepad->b;
+                bool x = gamepad->x;
+                bool y = gamepad->y;
+                gamepad->b = a;
+                gamepad->a = b;
+                gamepad->x = y;
+                gamepad->y = x;
             }
 
 #if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-            PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report;
             if (output_console_type == REAL_PS3 || output_console_type == PS3) {
                 gamepad->accelX = PS3_ACCEL_CENTER;
             }

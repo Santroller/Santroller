@@ -250,9 +250,14 @@ void handle_player_leds(uint8_t player) {
         type = get_usb_host_device_type(i);
         switch (type.console_type) {
             case PS3: {
-                ps3_output_report *report = &ps3_output_reports[i];
-                report->leds_bitmap |= _BV(player);
-                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report);
+                // Only actual ds3s support the lightbar
+                printf("Type %d\r\n", type.sub_type);
+                if (type.sub_type == GAMEPAD) {
+                    printf("sending player leds to %d\r\n", type.dev_addr);
+                    ps3_output_report *report = &ps3_output_reports[i];
+                    report->leds_bitmap |= _BV(player);
+                    transfer_with_usb_controller(type.dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report);
+                }
                 return;
             }
             case PS4: {
@@ -262,7 +267,7 @@ void handle_player_leds(uint8_t player) {
                     report->lightbar_red = ps4_colors[player - 1][0];
                     report->lightbar_green = ps4_colors[player - 1][1];
                     report->lightbar_blue = ps4_colors[player - 1][2];
-                    transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
+                    transfer_with_usb_controller(type.dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
                 }
                 return;
             }
@@ -472,7 +477,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         else if (id == DJ_LED_ID) {
             uint8_t euphoria_on = data[2] * 0xFF;
             // left and right need to be different for xb compatibility reasons
-            handle_rumble(euphoria_on, 255-euphoria_on);
+            handle_rumble(euphoria_on, 255 - euphoria_on);
         }
 #endif
 #else

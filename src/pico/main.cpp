@@ -81,9 +81,11 @@ void send_report_to_pc(const void *report, uint8_t len) {
 void loop() {
     tick();
     tud_task();
+    if (millis() > 3000) {
 #if USB_HOST_STACK
-    tuh_task();
+        tuh_task();
 #endif
+    }
 }
 void setup() {
     if (persistedConsoleTypeValid == 0x3A2F) {
@@ -195,6 +197,10 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         if (type.console_type) {
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
+            if (type.console_type == PS3) {
+                printf("Found PS3 controller\r\n");
+                ps3_controller_connected(dev_addr, host_vid, host_pid);
+            }
         }
     } else if (controllerType == PS4) {
         type.console_type = PS4;
@@ -238,6 +244,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     return;
                 }
             }
+            printf("Got report of length %d\r\n", len);
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
             return;

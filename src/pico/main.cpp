@@ -60,6 +60,7 @@ typedef struct {
     void *alarm_pool;
     int8_t debug_pin_rx;
     int8_t debug_pin_eop;
+    bool skip_alarm_pool;
 } pio_usb_configuration_t;
 
 bool ready_for_next_packet() {
@@ -81,21 +82,24 @@ void send_report_to_pc(const void *report, uint8_t len) {
 void loop() {
     tick();
     tud_task();
-#if USB_HOST_STACK
-    tuh_task();
-#endif
 }
+#if USB_HOST_STACK
+void setup1() {
+    pio_usb_configuration_t config = {
+        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
+    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    tuh_init(TUH_OPT_RHPORT);
+}
+void loop1() {
+    tuh_task();
+}
+#endif
 void setup() {
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
     }
     generateSerialString(&serialstring, consoleType);
-#if USB_HOST_STACK
-    pio_usb_configuration_t config = {
-        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1};
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-#endif
-    tusb_init();
+    tud_init(TUD_OPT_RHPORT);
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
 #if BLUETOOTH

@@ -144,14 +144,14 @@ typedef struct {
     uint8_t rightThumbClick : 1;  // r3
 
     uint8_t dpadUp : 1;
+    uint8_t dpadRight : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
 
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
+    uint8_t l1 : 1;   // l1
+    uint8_t r1 : 1;  // r1
+    uint8_t leftShoulder : 1;             // l2
+    uint8_t rightShoulder : 1;             // r2
 
     uint8_t x : 1;  // square
     uint8_t a : 1;  // cross

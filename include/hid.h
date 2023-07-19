@@ -78,12 +78,20 @@ extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE
 extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
-#if DEVICE_TYPE == DRUMS
-extern const uint8_t pc_descriptor[152];
-#elif DEVICE_TYPE_IS_INSTRUMENT
-extern const uint8_t pc_descriptor[152];
+#if DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
+extern const uint8_t pc_descriptor[82];
+#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
+extern const uint8_t pc_descriptor[82];
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+extern const uint8_t pc_descriptor[88];
+#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+extern const uint8_t pc_descriptor[88];
+#elif DEVICE_TYPE == LIVE_GUITAR
+extern const uint8_t pc_descriptor[88];
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+extern const uint8_t pc_descriptor[88];
 #else
-extern const uint8_t pc_descriptor[161];
+extern const uint8_t pc_descriptor[99];
 #endif
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);

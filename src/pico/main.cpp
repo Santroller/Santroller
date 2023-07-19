@@ -25,6 +25,7 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
+#include "btstack_run_loop.h"
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {

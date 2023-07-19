@@ -99,7 +99,7 @@ static void le_keyboard_setup(void) {
     hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else
     // setup HID Device service
-    hids_device_init(0, pc_descriptor, sizeof(pc_descriptor));
+    hids_device_init(0, bt_descriptor, sizeof(bt_descriptor));
 #endif
 
     // setup advertisements
@@ -190,8 +190,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             switch (hci_event_hids_meta_get_subevent_code(packet)) {
                 case HIDS_SUBEVENT_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_input_report_enable_get_con_handle(packet);
-                    gap_request_connection_parameter_update(con_handle, 6, 6, 0, 100);
+                    // gap_request_connection_parameter_update(con_handle, 6, 6, 0, 100);
                     printf("Report Characteristic Subscribed %u\n", hids_subevent_input_report_enable_get_enable(packet));
+                    hids_device_request_can_send_now_event(con_handle);
                     break;
                 case HIDS_SUBEVENT_BOOT_KEYBOARD_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_boot_keyboard_input_report_enable_get_con_handle(packet);
@@ -201,9 +202,16 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     protocol_mode = hids_subevent_protocol_mode_get_protocol_mode(packet);
                     printf("Protocol Mode: %s mode\n", hids_subevent_protocol_mode_get_protocol_mode(packet) ? "Report" : "Boot");
                     break;
-                case HIDS_SUBEVENT_CAN_SEND_NOW:
+                case HIDS_SUBEVENT_CAN_SEND_NOW: {
                     can_send = true;
+                    // uint8_t report[28];
+                    // uint8_t size = tick_inputs(report, &last_report_bt, BLUETOOTH_REPORT);
+                    // // report[0] = 1;
+                    // // report[2] = rand();
+                    // hids_device_send_input_report(con_handle, report, 20);
+                    // hids_device_request_can_send_now_event(con_handle);
                     break;
+                }
                 default:
                     break;
             }

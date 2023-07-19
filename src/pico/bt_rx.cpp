@@ -59,7 +59,9 @@ static btstack_timer_source_t scan_timer;
 // register for events from HCI/GAP and SM
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
-
+static gatt_client_service_t hid_service;
+static gatt_client_characteristic_t hid_characteristic;
+static gatt_client_notification_t notification_listener;
 // used to store remote device in TLV
 static const btstack_tlv_t *btstack_tlv_singleton_impl;
 static void *btstack_tlv_singleton_context;
@@ -180,7 +182,8 @@ static void handle_outgoing_connection_error(void) {
     gap_disconnect(connection_handle);
     hog_start_reconnect_timer();
 }
-
+bool got_service = false;
+bool got_char = false;
 /**
  * Handle GATT Client Events dependent on current state
  *
@@ -195,44 +198,49 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
     UNUSED(size);
 
     uint8_t status;
+    switch (hci_event_packet_get_type(packet)) {
+        case GATT_EVENT_SERVICE_QUERY_RESULT:
+            printf("Got service\r\n");
+            gatt_event_service_query_result_get_service(packet, &hid_service);
+            break;
+        case GATT_EVENT_QUERY_COMPLETE:
+            if (!got_service) {
+                got_service = true;
+                gatt_client_discover_characteristics_for_service_by_uuid16(handle_gatt_client_event, connection_handle, &hid_service, ORG_BLUETOOTH_CHARACTERISTIC_REPORT);
+            } else if (!got_char) {
+                got_char = true;
+                printf("listening for updates\r\n");
+                gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,
+                                                                      &hid_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+                gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, &hid_characteristic);
+            }
+            break;
+        case GATT_EVENT_CHARACTERISTIC_QUERY_RESULT:
+            gatt_client_characteristic_t test;
+            gatt_event_characteristic_query_result_get_characteristic(packet, &test);
+            if (test.value_handle == ATT_CHARACTERISTIC_ORG_BLUETOOTH_CHARACTERISTIC_REPORT_01_VALUE_HANDLE) {
+                gatt_event_characteristic_query_result_get_characteristic(packet, &hid_characteristic);
+            }
+            printf("got characteristic %02x\r\n", hid_characteristic.value_handle);
+            break;
+
+        case GATT_EVENT_NOTIFICATION:
+            // printf("%02d\r\n", millis());
+            tick_bluetooth(gatt_event_notification_get_value(packet));
+            break;
+
+        case HCI_EVENT_GATTSERVICE_META:
+            switch (hci_event_gattservice_meta_get_subevent_code(packet)) {
+                case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
+                    // hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
+                    printf("device info done\r\n");
+                    gatt_client_discover_primary_services_by_uuid16(handle_gatt_client_event, connection_handle, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE);
+                    break;
+            }
+    }
 
     if (hci_event_packet_get_type(packet) != HCI_EVENT_GATTSERVICE_META) {
         return;
-    }
-
-    switch (hci_event_gattservice_meta_get_subevent_code(packet)) {
-        case GATTSERVICE_SUBEVENT_HID_SERVICE_CONNECTED:
-            status = gattservice_subevent_hid_service_connected_get_status(packet);
-            switch (status) {
-                case ERROR_CODE_SUCCESS:
-                    printf("HID service client connected, found %d services\n",
-                           gattservice_subevent_hid_service_connected_get_num_instances(packet));
-
-                    // store device as bonded
-                    if (btstack_tlv_singleton_impl) {
-                        btstack_tlv_singleton_impl->store_tag(btstack_tlv_singleton_context, TLV_TAG_HOGD, (const uint8_t *)&remote_device, sizeof(remote_device));
-                    }
-
-                    hids_client_get_hid_information(hids_cid, 0);
-                    // done
-                    printf("Ready - receiving data\n");
-                    app_state = READY;
-                    break;
-                default:
-                    printf("HID service client connection failed, err 0x%02x.\n", status);
-                    handle_outgoing_connection_error();
-                    break;
-            }
-            break;
-        case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
-            hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
-            break;
-        case GATTSERVICE_SUBEVENT_HID_REPORT:
-            tick_bluetooth(gattservice_subevent_hid_report_get_report(packet));
-            break;
-
-        default:
-            break;
     }
 }
 
@@ -285,7 +293,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
                 case HCI_EVENT_DISCONNECTION_COMPLETE:
                     if (app_state != READY) break;
-                    hids_client_disconnect(hids_cid);
+                    // hids_client_disconnect(hids_cid);
                     connection_handle = HCI_CON_HANDLE_INVALID;
                     switch (app_state) {
                         case READY:
@@ -420,7 +428,7 @@ int btstack_main(void) {
     sm_init();
     gatt_client_init();
 
-    hids_client_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
+    // hids_client_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
 
     app_state = W4_WORKING;
 

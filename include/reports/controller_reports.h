@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "reports/pc_reports.h"
 #include "reports/ps3_reports.h"
 #include "reports/ps4_reports.h"
 #include "reports/xbox_one_reports.h"

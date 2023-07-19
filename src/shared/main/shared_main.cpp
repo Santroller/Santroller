@@ -301,7 +301,7 @@ long lastTick;
 uint8_t keyboard_report = 0;
 #if defined(BLUETOOTH_RX)
 // When we do Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
-void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_console_type) {
+void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_console_type) {
     PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
     bool up = dpad_report->dpad == 7 || dpad_report->dpad == 0 || dpad_report->dpad == 1;
     bool left = dpad_report->dpad == 1 || dpad_report->dpad == 2 || dpad_report->dpad == 3;
@@ -826,7 +826,6 @@ void convert_ps3_to_type(uint8_t *buf, PS3_REPORT *report, uint8_t output_consol
 }
 #endif
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
-    bool bluetooth = output_console_type == BLUETOOTH_REPORT;
     uint8_t size = 0;
     uint8_t led_tmp;
 #ifdef INPUT_QUEUE
@@ -1025,10 +1024,19 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = size = sizeof(PS4_REPORT);
     }
 #endif
+    if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
+        report_size = size = sizeof(PS3_REPORT);
+        PC_REPORT *report = (PC_REPORT *)report_data;
+        memset(report, 0, sizeof(PC_REPORT));
+        report->reportId = 1;
+        TICK_PC;
+
+        report->dpad = dpad_bindings[report->dpad];
+    }
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
 // This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
 // However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
-#if !(DEVICE_TYPE_IS_INSTRUMENT)
+#if DEVICE_TYPE == GAMEPAD
     if (output_console_type == PS3) {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
@@ -1045,20 +1053,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS3;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4 && !updateSequence) {
 #else
     // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && !updateSequence) {
 #endif
         report_size = size = sizeof(PS3_REPORT);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
-        if (output_console_type == UNIVERSAL || output_console_type == BLUETOOTH_REPORT) {
-            PS3Universal_Data_t *universal_report = (PS3Universal_Data_t *)report_data;
-            report = &universal_report->report;
-            universal_report->report_id = 1;
-            report_size += 1;
-            size += 1;
-        }
         memset(report, 0, sizeof(PS3_REPORT));
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report;
         gamepad->accelX = PS3_ACCEL_CENTER;
@@ -1072,14 +1073,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->dpad = 0x00;
 
         TICK_PS3;
-// We map tilt to the tilt bytes normally.
-// On an actual console, we need to center it as rock band
-// expects it to be digital.
-#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-        if (output_console_type == REAL_PS3 || output_console_type == PS3) {
-            gamepad->accelX = PS3_ACCEL_CENTER;
-        }
-#endif
+
         gamepad->dpad = dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
@@ -1150,6 +1144,11 @@ bool tick_usb(void) {
 #endif
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
+#ifdef BLUETOOTH_TX
+    if (!ready) {
+        return false;
+    }
+#endif
     // Only picos support XB1, so for other microcontrollers we want to skip that logic
     // We need to start counting from when we see the WCID request, as windows will somtimes delay all requests by 5 seconds
 #if SUPPORTS_PICO
@@ -1235,7 +1234,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
 #else
-    PS3Universal_Data_t *input = (PS3Universal_Data_t *)(buf);
+    PC_REPORT *input = (PC_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
     uint8_t report_size;
     bool updateSequence = false;
@@ -1251,7 +1250,7 @@ int tick_bluetooth_inputs(const void *buf) {
             report_size = size - sizeof(GipHeader_t);
             memset(report_data, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-            convert_ps3_to_type((uint8_t *)report_data, &input->report, output_console_type);
+            convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)report_data;
@@ -1284,7 +1283,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #if DEVICE_TYPE_IS_GUITAR
         report->whammy = INT16_MIN;
 #endif
-        convert_ps3_to_type((uint8_t *)report_data, &input->report, XBOX360);
+        convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1302,7 +1301,7 @@ int tick_bluetooth_inputs(const void *buf) {
         gamepad->reportCounter = ps4_sequence_number;
 #endif
 
-        convert_ps3_to_type((uint8_t *)report_data, &input->report, output_console_type);
+        convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
         report_size = size = sizeof(PS4_REPORT);
     }
 #endif
@@ -1322,7 +1321,7 @@ int tick_bluetooth_inputs(const void *buf) {
         report->rightStickY = PS3_STICK_CENTER;
         memset(report, 0, sizeof(PS3_REPORT));
         report->reportId = 1;
-        convert_ps3_to_type((uint8_t *)report_data, input, output_console_type);
+        convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateHIDSequence) {
@@ -1331,14 +1330,22 @@ int tick_bluetooth_inputs(const void *buf) {
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateHIDSequence) {
 #endif
         if (output_console_type == UNIVERSAL) {
-            report_size = size = sizeof(PS3Universal_Data_t);
+            report_size = size = sizeof(PC_REPORT);
             memcpy(report_data, buf, size);
         } else {
             PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
             report_size = size = sizeof(PS3_REPORT);
             PS3_REPORT *report = (PS3_REPORT *)report_data;
-            memcpy(report_data, &input->report, size);
-            // Switch swaps a and b
+            gamepad->accelX = PS3_ACCEL_CENTER;
+            gamepad->accelY = PS3_ACCEL_CENTER;
+            gamepad->accelZ = PS3_ACCEL_CENTER;
+            gamepad->gyro = PS3_ACCEL_CENTER;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+            convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+            // Switch swaps a and b and x and y
             if (output_console_type == SWITCH) {
                 bool a = gamepad->a;
                 bool b = gamepad->b;
@@ -1349,12 +1356,6 @@ int tick_bluetooth_inputs(const void *buf) {
                 gamepad->x = y;
                 gamepad->y = x;
             }
-
-#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
-            if (output_console_type == REAL_PS3 || output_console_type == PS3) {
-                gamepad->accelX = PS3_ACCEL_CENTER;
-            }
-#endif
         }
     }
 #if SUPPORTS_PS4

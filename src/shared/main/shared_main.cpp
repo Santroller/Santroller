@@ -1286,7 +1286,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
-    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS3) {
+    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;

@@ -93,6 +93,36 @@
                         if (report->rightStickY != PS3_STICK_CENTER) {
                             usb_host_data.rightStickY = (report->rightStickY - 0x80) << 8;
                         }
+                        if (report->pressureDPadUp) {
+                            usb_host_data.pressureDPadUp = report->pressureDPadUp;
+                        }
+                        if (report->pressureDPadRight) {
+                            usb_host_data.pressureDPadRight = report->pressureDPadRight;
+                        }
+                        if (report->pressureDPadDown) {
+                            usb_host_data.pressureDPadDown = report->pressureDPadDown;
+                        }
+                        if (report->pressureDPadLeft) {
+                            usb_host_data.pressureDPadLeft = report->pressureDPadLeft;
+                        }
+                        if (report->pressureL1) {
+                            usb_host_data.pressureL1 = report->pressureL1;
+                        }
+                        if (report->pressureR1) {
+                            usb_host_data.pressureR1 = report->pressureR1;
+                        }
+                        if (report->pressureTriangle) {
+                            usb_host_data.pressureTriangle = report->pressureTriangle;
+                        }
+                        if (report->pressureCircle) {
+                            usb_host_data.pressureCircle = report->pressureCircle;
+                        }
+                        if (report->pressureCross) {
+                            usb_host_data.pressureCross = report->pressureCross;
+                        }
+                        if (report->pressureSquare) {
+                            usb_host_data.pressureSquare = report->pressureSquare;
+                        }
                         break;
                     }
                     case GUITAR: {

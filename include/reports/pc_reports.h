@@ -283,8 +283,6 @@ typedef struct
         uint8_t dpad;
     };
 
-    uint8_t strumBar;
     uint8_t whammy;
-
     uint8_t tilt;
 } __attribute__((packed)) PCGHLGuitar_Data_t;

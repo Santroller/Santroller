@@ -134,7 +134,6 @@ typedef struct
     uint8_t blueVelocity;
     uint8_t kickVelocity;
     uint8_t orangeVelocity;
-    uint8_t unused;
 } __attribute__((packed)) PCGuitarHeroDrums_Data_t;
 
 typedef struct
@@ -228,11 +227,13 @@ typedef struct
     uint8_t start : 1;
     uint8_t guide : 1;  // ps
     uint8_t rightGreen : 1;
+
     uint8_t rightRed : 1;
     uint8_t rightBlue : 1;
     uint8_t leftGreen : 1;
     uint8_t leftRed : 1;
     uint8_t leftBlue : 1;
+    uint8_t : 3;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
     union {
@@ -249,9 +250,8 @@ typedef struct
     uint8_t leftTableVelocity;
     uint8_t rightTableVelocity;
 
-    // Reminder that these values are 10-bit in range
-    uint16_t effectsKnob;
-    uint16_t crossfader;
+    uint8_t effectsKnob;
+    uint8_t crossfader;
 } __attribute__((packed)) PCTurntable_Data_t;
 
 typedef struct

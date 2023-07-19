@@ -79,9 +79,9 @@ extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
 #if DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
-extern const uint8_t pc_descriptor[82];
+extern const uint8_t pc_descriptor[84];
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
-extern const uint8_t pc_descriptor[82];
+extern const uint8_t pc_descriptor[84];
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
 extern const uint8_t pc_descriptor[88];
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND

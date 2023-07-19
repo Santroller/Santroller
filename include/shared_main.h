@@ -52,4 +52,5 @@ extern USB_LastReport_Data_t last_report_bt;
 
 #ifdef BLUETOOTH_RX
 void tick_bluetooth(const void* buf);
+int tick_bluetooth_inputs(const void *buf);
 #endif

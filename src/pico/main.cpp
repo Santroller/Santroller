@@ -6,6 +6,7 @@
 #include <tusb.h>
 
 #include "bt.h"
+#include "btstack_run_loop.h"
 #include "commands.h"
 #include "common/tusb_types.h"
 #include "config.h"
@@ -25,7 +26,6 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#include "btstack_run_loop.h"
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
@@ -80,6 +80,13 @@ bool usb_configured() {
 void send_report_to_pc(const void *report, uint8_t len) {
     tud_xinput_n_report(0, 0, report, len);
 }
+#ifdef BLUETOOTH_RX
+void tick_bluetooth(const void *buf) {
+    tud_task();
+    tick();
+    tick_bluetooth_inputs(buf);
+}
+#endif
 void loop() {
     tick();
     tud_task();

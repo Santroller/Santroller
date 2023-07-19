@@ -225,6 +225,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             }
             break;
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
+            gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
         case GATTSERVICE_SUBEVENT_HID_REPORT: {

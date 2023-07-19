@@ -1025,7 +1025,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
     if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
-        report_size = size = sizeof(PS3_REPORT);
+        report_size = size = sizeof(PC_REPORT);
         PC_REPORT *report = (PC_REPORT *)report_data;
         memset(report, 0, sizeof(PC_REPORT));
         report->reportId = 1;

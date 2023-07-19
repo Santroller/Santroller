@@ -55,13 +55,21 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
-#elif DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == ARCADE_STICK || DEVICE_TYPE == FLIGHT_STICK || DEVICE_TYPE == DANCE_PAD || DEVICE_TYPE == ARCADE_PAD
+#elif DEVICE_TYPE == GAMEPAD
 #define SUB_TYPE XINPUT_GAMEPAD
 #define XINPUT_FLAGS 0x10
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PC_REPORT PCGamepad_Data_t
 #define PS3_REPORT PS3Gamepad_Data_t
+#define PS4_REPORT PS4Gamepad_Data_t
+#elif DEVICE_TYPE == ARCADE_STICK || DEVICE_TYPE == FLIGHT_STICK || DEVICE_TYPE == DANCE_PAD || DEVICE_TYPE == ARCADE_PAD
+#define SUB_TYPE XINPUT_GAMEPAD
+#define XINPUT_FLAGS 0x10
+#define XINPUT_REPORT XInputGamepad_Data_t
+#define XBOX_ONE_REPORT XboxOneGamepad_Data_t
+#define PC_REPORT PCGamepad_Data_t
+#define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE

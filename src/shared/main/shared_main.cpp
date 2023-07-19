@@ -325,8 +325,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt != PS3_ACCEL_CENTER) {
-            out->tilt = report->tilt >> 2;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = report->tilt;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = report->whammy;
@@ -349,11 +349,11 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt != PS3_ACCEL_CENTER) {
-            out->tilt = (report->tilt - 512) << 6;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt - PS3_STICK_CENTER) << 8;
         }
         if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = (report->whammy - 128) << 8;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
         }
         // There is a specific mechanism for converting from the ps3 to the xbox 360 slider
         if (report->slider) {
@@ -363,6 +363,33 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             } else {
                 out->slider |= (report->slider) << 8;
             }
+        }
+    }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = report->tilt;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->slider) {
+            out->slider = report->slider;
         }
     }
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
@@ -384,8 +411,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt != PS3_ACCEL_CENTER) {
-            out->tilt = report->tilt >> 2;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = report->tilt;
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = report->whammy;
@@ -411,14 +438,41 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
 
         out->guide |= report->guide;
-        if (report->tilt != PS3_ACCEL_CENTER) {
-            out->tilt = (report->tilt - 512) << 6;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt - PS3_STICK_CENTER) << 8;
         }
         if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = (report->whammy - 128) << 8;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
         }
         if (report->pickup != PS3_STICK_CENTER) {
             out->pickup = (report->pickup) << 8;
+        }
+    }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->leftShoulder |= report->leftShoulder;
+        out->solo |= report->solo;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = report->tilt << 2;
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = report->whammy;
+        }
+        if (report->pickup != PS3_STICK_CENTER) {
+            out->pickup = report->pickup;
         }
     }
 #elif DEVICE_TYPE == LIVE_GUITAR
@@ -460,11 +514,49 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 
         out->guide |= report->guide;
         out->leftThumbClick |= report->leftThumbClick;
-        if (report->tilt != PS3_ACCEL_CENTER) {
-            out->tilt = (report->tilt - 512) << 6;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = (report->tilt - PS3_STICK_CENTER) << 8;
         }
         if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = (report->whammy - 128) << 8;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
+        }
+        if (up) {
+            out->strumBar = INT16_MIN;
+        } else if (down) {
+            out->strumBar = INT16_MAX;
+        } else {
+            out->strumBar = 0;
+        }
+    }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->leftShoulder = report->leftShoulder;
+        out->rightShoulder = report->rightShoulder;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        out->leftThumbClick |= report->leftThumbClick;
+        if (report->tilt != PS3_STICK_CENTER) {
+            out->tilt = report->tilt << 2;
+            if (report->tilt >= 0xF0) {
+                out->tilt2 = 0xFF;
+            }
+            if (report->tilt <= 0x10) {
+                out->tilt2 = 0x00;
+            }
+        }
+        if (report->whammy != PS3_STICK_CENTER) {
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
         }
         if (up) {
             out->strumBar = 0x00;
@@ -507,6 +599,40 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
     }
     if (output_console_type == XBOX360) {
         XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity;
+        }
+        if (report->kickVelocity) {
+            out->kickVelocity = report->kickVelocity;
+        }
+        if (report->orangeVelocity) {
+            out->orangeVelocity = report->orangeVelocity;
+        }
+    }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
         out->b |= report->b;
@@ -600,6 +726,36 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
         }
     }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->padFlag = report->padFlag;
+        out->cymbalFlag = report->cymbalFlag;
+
+        out->guide |= report->guide;
+        if (report->yellowVelocity) {
+            out->yellowVelocity = report->yellowVelocity;
+        }
+        if (report->redVelocity) {
+            out->redVelocity = report->redVelocity;
+        }
+        if (report->greenVelocity) {
+            out->greenVelocity = report->greenVelocity;
+        }
+        if (report->blueVelocity) {
+            out->blueVelocity = report->blueVelocity;
+        }
+    }
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
     if (output_console_type == XBOX360) {
         XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
@@ -616,16 +772,49 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
 
         if (report->leftTableVelocity != PS3_STICK_CENTER) {
-            out->leftTableVelocity = (report->leftTableVelocity - 128) << 8;
+            out->leftTableVelocity = (report->leftTableVelocity - PS3_STICK_CENTER) << 8;
         }
         if (report->rightTableVelocity != PS3_STICK_CENTER) {
-            out->rightTableVelocity = (report->rightTableVelocity - 128) << 8;
+            out->rightTableVelocity = (report->rightTableVelocity - PS3_STICK_CENTER) << 8;
         }
-        if (report->effectsKnob != PS3_ACCEL_CENTER) {
-            out->effectsKnob = (report->effectsKnob - 128) << 8;
+        if (report->effectsKnob != PS3_STICK_CENTER) {
+            out->effectsKnob = (report->effectsKnob - PS3_STICK_CENTER) << 8;
         }
-        if (report->crossfader != PS3_ACCEL_CENTER) {
-            out->crossfader = (report->crossfader - 128) << 8;
+        if (report->crossfader != PS3_STICK_CENTER) {
+            out->crossfader = (report->crossfader - PS3_STICK_CENTER) << 8;
+        }
+        out->leftBlue |= report->leftBlue;
+        out->leftRed |= report->leftRed;
+        out->leftGreen |= report->leftGreen;
+        out->rightBlue |= report->rightBlue;
+        out->rightRed |= report->rightRed;
+        out->rightGreen |= report->rightGreen;
+    }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        if (report->leftTableVelocity != PS3_STICK_CENTER) {
+            out->leftTableVelocity = report->leftTableVelocity;
+        }
+        if (report->rightTableVelocity != PS3_STICK_CENTER) {
+            out->rightTableVelocity = report->rightTableVelocity;
+        }
+        if (report->effectsKnob != PS3_STICK_CENTER) {
+            out->effectsKnob = report->effectsKnob << 2;
+        }
+        if (report->crossfader != PS3_STICK_CENTER) {
+            out->crossfader = report->crossfader << 2;
         }
         out->leftBlue |= report->leftBlue;
         out->leftRed |= report->leftRed;
@@ -636,7 +825,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
     }
 #else  // Gamepad or devices that use the same mapping as a gamepad
     if (output_console_type == PS3) {
-        PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
+        PS3_REPORT *out = (PS3_REPORT *)buf;
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;
@@ -1059,7 +1248,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4 && !updateSequence) {
 #else
-    // For instruments, we instead use the below block, as our universal and PS3 descriptors use the same report format in that case
+    // For instruments, we instead use the below block, as all other console types use the below format
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && !updateSequence) {
 #endif
         report_size = size = sizeof(PS3_REPORT);

@@ -99,7 +99,7 @@ static void le_keyboard_setup(void) {
     hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
 #else
     // setup HID Device service
-    hids_device_init(0, bt_descriptor, sizeof(bt_descriptor));
+    hids_device_init(0, pc_descriptor, sizeof(pc_descriptor));
 #endif
 
     // setup advertisements
@@ -204,12 +204,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 case HIDS_SUBEVENT_CAN_SEND_NOW: {
                     can_send = true;
-                    // uint8_t report[28];
-                    // uint8_t size = tick_inputs(report, &last_report_bt, BLUETOOTH_REPORT);
-                    // // report[0] = 1;
-                    // // report[2] = rand();
-                    // hids_device_send_input_report(con_handle, report, 20);
-                    // hids_device_request_can_send_now_event(con_handle);
                     break;
                 }
                 default:

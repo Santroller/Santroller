@@ -81,9 +81,9 @@ void send_report_to_pc(const void *report, uint8_t len) {
     tud_xinput_n_report(0, 0, report, len);
 }
 #ifdef BLUETOOTH_RX
-// Bluetooth polls so quickly that it actually ends up becoming the main loop
 void tick_bluetooth(const void *buf) {
     tud_task();
+    tuh_task();
     tick();
     tick_bluetooth_inputs(buf);
 }
@@ -91,18 +91,10 @@ void tick_bluetooth(const void *buf) {
 void loop() {
     tick();
     tud_task();
-}
 #if USB_HOST_STACK
-void setup1() {
-    pio_usb_configuration_t config = {
-        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-    tuh_init(TUH_OPT_RHPORT);
-}
-void loop1() {
     tuh_task();
-}
 #endif
+}
 void setup() {
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
@@ -113,6 +105,12 @@ void setup() {
     init_main();
 #if BLUETOOTH
     btstack_main();
+#endif
+#if USB_HOST_STACK
+    pio_usb_configuration_t config = {
+        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
+    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    tuh_init(TUH_OPT_RHPORT);
 #endif
 }
 uint8_t get_device_address_for(uint8_t deviceType) {

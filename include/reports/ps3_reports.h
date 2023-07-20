@@ -153,10 +153,10 @@ typedef struct {
     uint8_t leftShoulder : 1;             // l1
     uint8_t rightShoulder : 1;             // r1
 
-    uint8_t x : 1;  // square
+    uint8_t y : 1;  // triangle
     uint8_t a : 1;  // cross
     uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle
+    uint8_t x : 1;  // square
 
     uint8_t guide : 1;
     uint8_t : 7;

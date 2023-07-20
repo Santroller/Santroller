@@ -123,7 +123,7 @@ int hog_get_scan_results(uint8_t *buf) {
     memcpy(buf, scan_buffer, devices_found * SIZE_OF_BD_ADDRESS);
     return devices_found * SIZE_OF_BD_ADDRESS;
 }
-
+static void hog_start_reconnect_timer();
 /**
  * Handle timeout for outgoing connection
  * @param ts
@@ -132,7 +132,7 @@ static void hog_connection_timeout(btstack_timer_source_t *ts) {
     UNUSED(ts);
     printf("Timeout - abort connection\n");
     gap_connect_cancel();
-    hog_connect();
+    hog_start_reconnect_timer();
 }
 
 /**

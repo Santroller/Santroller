@@ -32,8 +32,9 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + SERIAL_LEN),
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
-
+#define PERSISTED_CONSOLE_TYPE_VALID 0x3A2F
 static uint32_t __uninitialized_ram(persistedConsoleType);
+static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
@@ -80,10 +81,27 @@ bool usb_configured() {
 void send_report_to_pc(const void *report, uint8_t len) {
     tud_xinput_n_report(0, 0, report, len);
 }
-inline void tick_usb() {
+static void tick_usb() {
     tud_task();
 #if USB_HOST_STACK
     tuh_task();
+    if (windows_in_hid != PERSISTED_CONSOLE_TYPE_VALID && consoleType == UNIVERSAL && seen_windows_xb1) {
+        consoleType = WINDOWS;
+        reset_usb();
+    }
+    if (consoleType == WINDOWS) {
+#if !WINDOWS_USES_XINPUT
+        if (seen_xb360) {
+            windows_in_hid = PERSISTED_CONSOLE_TYPE_VALID;
+            consoleType = UNIVERSAL;
+            reset_usb();
+        }
+#endif
+        if (!seen_xb360 && millis() > 2000) {
+            consoleType = XBOXONE;
+            reset_usb();
+        }
+    }
 #endif
     tick();
 }
@@ -97,8 +115,11 @@ void loop() {
     tick_usb();
 }
 void setup() {
-    if (persistedConsoleTypeValid == 0x3A2F) {
+    if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
+    } else {
+        windows_in_hid = false;
+        consoleType = CONSOLE_TYPE;
     }
     generateSerialString(&serialstring, consoleType);
     tud_init(TUD_OPT_RHPORT);
@@ -395,6 +416,6 @@ void bootloader(void) {
 }
 void reset_usb(void) {
     persistedConsoleType = consoleType;
-    persistedConsoleTypeValid = 0x3A2F;
+    persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
     reboot();
 }

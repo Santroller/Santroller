@@ -41,8 +41,8 @@ extern bool seen_hid_descriptor_read;
 extern bool descriptor_requested;
 
 // Use for configuring commands that are pc specific
-extern long windows_timer;
-extern bool read_manufacturer_string;
+extern bool seen_windows_xb1;
+extern bool seen_xb360;
 extern bool read_any_string;
 
 // Used for detecting any connection at all

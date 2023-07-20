@@ -713,7 +713,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (consoleType != UNIVERSAL) {
             return 0;
         }
-        windows_timer = millis();
+        seen_windows_xb1 = millis();
         return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE);
     } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         protocol_mode = (uint8_t)wValue;
@@ -872,9 +872,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 str = (uint8_t *)&xboxString;
             } else if (descriptorNumber < 4) {
                 str = (uint8_t *)pgm_read_pointer(descriptorStrings + descriptorNumber);
-                if (descriptorNumber == 1) {
-                    read_manufacturer_string = true;
-                }
             } else if (descriptorNumber == 0xEE) {
                 str = (uint8_t *)&OSDescriptorString;
             } else {

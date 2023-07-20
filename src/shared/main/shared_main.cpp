@@ -1342,35 +1342,18 @@ bool tick_usb(void) {
         return false;
     }
 #endif
-    // Only picos support XB1, so for other microcontrollers we want to skip that logic
-    // We need to start counting from when we see the WCID request, as windows will somtimes delay all requests by 5 seconds
-#if SUPPORTS_PICO
-    if (!windows_in_hid) {
-        if ((millis() - windows_timer) > 2000 && windows_timer && consoleType == UNIVERSAL) {
-            if (read_manufacturer_string) {
-#if WINDOWS_USES_XINPUT
-                consoleType = WINDOWS;
-                reset_usb();
-#else
-                windows_in_hid = true;
-#endif
-            } else {
-                consoleType = XBOXONE;
-                reset_usb();
-            }
-        }
+    if (millis_at_boot == 0) {
+        millis_at_boot = millis();
     }
-#elif WINDOWS_USES_XINPUT
-    if (windows_timer) {
+    // If usb host is supported, we handle that in the pico main, as only the pico supports that
+#if WINDOWS_USES_XINPUT && !USB_HOST_STACK
+    if (seen_windows_xb1) {
         consoleType = WINDOWS;
         reset_usb();
     }
 #endif
-    if (millis_at_boot == 0) {
-        millis_at_boot = millis();
-    }
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if ((millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && read_device_desc && !seen_hid_descriptor_read && !read_any_string && !windows_timer) {
+    if ((millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && read_device_desc && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
         if (usb_configured()) {

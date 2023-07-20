@@ -138,7 +138,6 @@
                             usb_host_data.yellow |= report->y;
                             usb_host_data.blue |= report->x;
                             usb_host_data.orange |= report->leftShoulder;
-                            usb_host_data.solo |= report->solo;
                             usb_host_data.back |= report->back;
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
@@ -453,7 +452,6 @@
                             usb_host_data.yellow |= report->y;
                             usb_host_data.blue |= report->x;
                             usb_host_data.orange |= report->leftShoulder;
-                            usb_host_data.solo |= report->solo;
                             usb_host_data.back |= report->back;
                             usb_host_data.start |= report->start;
                             usb_host_data.guide |= report->guide;
@@ -684,7 +682,6 @@
                         usb_host_data.x |= report->x;
                         usb_host_data.y |= report->y;
                         usb_host_data.leftShoulder |= report->leftShoulder;
-                        usb_host_data.solo |= report->solo;
                         usb_host_data.back |= report->back;
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;

@@ -54,6 +54,7 @@ static uint8_t hid_descriptor_storage[500];
 
 // used to implement connection timeout and reconnect timer
 static btstack_timer_source_t connection_timer;
+static btstack_timer_source_t reconnect_timer;
 static btstack_timer_source_t scan_timer;
 
 // register for events from HCI/GAP and SM
@@ -123,16 +124,27 @@ int hog_get_scan_results(uint8_t *buf) {
     memcpy(buf, scan_buffer, devices_found * SIZE_OF_BD_ADDRESS);
     return devices_found * SIZE_OF_BD_ADDRESS;
 }
-static void hog_start_reconnect_timer();
+
+/**
+ * Handle timer event to trigger reconnect
+ * @param ts
+ */
+static void hog_reconnect_timeout(btstack_timer_source_t *ts) {
+    UNUSED(ts);
+    hog_connect();
+}
 /**
  * Handle timeout for outgoing connection
  * @param ts
  */
 static void hog_connection_timeout(btstack_timer_source_t *ts) {
     UNUSED(ts);
-    printf("Timeout - restarting connection attempt\n");
+    printf("Timeout - abort connection\n");
     gap_connect_cancel();
-    hog_start_reconnect_timer();
+    
+    btstack_run_loop_set_timer(&reconnect_timer, 100);
+    btstack_run_loop_set_timer_handler(&reconnect_timer, &hog_reconnect_timeout);
+    btstack_run_loop_add_timer(&reconnect_timer);
 }
 
 /**
@@ -145,15 +157,6 @@ static void hog_connect(void) {
     btstack_run_loop_add_timer(&connection_timer);
     app_state = W4_CONNECTED;
     gap_connect(remote_device.addr, remote_device.addr_type);
-}
-
-/**
- * Handle timer event to trigger reconnect
- * @param ts
- */
-static void hog_reconnect_timeout(btstack_timer_source_t *ts) {
-    UNUSED(ts);
-    hog_connect();
 }
 
 static void hog_start_reconnect_timer() {

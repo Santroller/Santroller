@@ -123,26 +123,12 @@ int hog_get_scan_results(uint8_t *buf) {
     memcpy(buf, scan_buffer, devices_found * SIZE_OF_BD_ADDRESS);
     return devices_found * SIZE_OF_BD_ADDRESS;
 }
-static void hog_start_reconnect_timer();
-/**
- * Handle timeout for outgoing connection
- * @param ts
- */
-static void hog_connection_timeout(btstack_timer_source_t *ts) {
-    UNUSED(ts);
-    printf("Timeout - abort connection\n");
-    gap_connect_cancel();
-    hog_start_reconnect_timer();
-}
 
 /**
  * Connect to remote device but set timer for timeout
  */
 static void hog_connect(void) {
     // set timer
-    btstack_run_loop_set_timer(&connection_timer, 10000);
-    btstack_run_loop_set_timer_handler(&connection_timer, &hog_connection_timeout);
-    btstack_run_loop_add_timer(&connection_timer);
     app_state = W4_CONNECTED;
     gap_connect(remote_device.addr, remote_device.addr_type);
 }

@@ -81,6 +81,7 @@ void send_report_to_pc(const void *report, uint8_t len) {
     tud_xinput_n_report(0, 0, report, len);
 }
 #ifdef BLUETOOTH_RX
+// Bluetooth polls so quickly that it actually ends up becoming the main loop
 void tick_bluetooth(const void *buf) {
     tud_task();
     tick();

@@ -139,9 +139,9 @@ typedef struct {
     uint8_t reportId;
     uint8_t : 8;
     uint8_t back : 1;  // select
-    uint8_t start : 1;
     uint8_t leftThumbClick : 1;   // l3
     uint8_t rightThumbClick : 1;  // r3
+    uint8_t start : 1;
 
     uint8_t dpadUp : 1;
     uint8_t dpadRight : 1;

@@ -220,14 +220,14 @@ typedef struct {
     uint8_t yellow : 1;
     uint8_t blue : 1;
     uint8_t orange : 1;
-    uint8_t yellowCymbal : 1;
-    uint8_t blueCymbal : 1;
-
-    uint8_t greenCymbal : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
+    
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
+    uint8_t yellowCymbal : 1;
+    uint8_t blueCymbal : 1;
+    uint8_t greenCymbal : 1;
     uint8_t : 3;
 
     uint16_t leftTrigger;

@@ -80,27 +80,22 @@ bool usb_configured() {
 void send_report_to_pc(const void *report, uint8_t len) {
     tud_xinput_n_report(0, 0, report, len);
 }
+inline void tick_usb() {
+    tud_task();
+#if USB_HOST_STACK
+    tuh_task();
+#endif
+    tick();
+}
 #ifdef BLUETOOTH_RX
 void tick_bluetooth(const void *buf) {
-    tud_task();
-    tuh_task();
-    tick();
+    tick_usb();
     tick_bluetooth_inputs(buf);
 }
 #endif
 void loop() {
-    tud_task();
-    tuh_task();
-    tick();
+    tick_usb();
 }
-#if USB_HOST_STACK
-void setup1() {
-    pio_usb_configuration_t config = {
-        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-    tuh_init(TUH_OPT_RHPORT);
-}
-#endif
 void setup() {
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
@@ -109,6 +104,13 @@ void setup() {
     tud_init(TUD_OPT_RHPORT);
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
+
+#if USB_HOST_STACK
+    pio_usb_configuration_t config = {
+        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
+    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    tuh_init(TUH_OPT_RHPORT);
+#endif
 #if BLUETOOTH
     btstack_main();
 #endif

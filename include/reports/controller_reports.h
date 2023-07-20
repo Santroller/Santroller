@@ -187,55 +187,48 @@ typedef union {
 } Buffer_Report_t;
 
 typedef struct {
-    uint32_t x : 1;  // square
-    uint32_t a : 1;  // cross
-    uint32_t b : 1;  // circle
-    uint32_t y : 1;  // triangle
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t kick1 : 1;
+    uint8_t kick2 : 1;
 
-    uint32_t leftShoulder : 1;   // l1
-    uint32_t rightShoulder : 1;  // r1
-    uint32_t kick1 : 1;
-    uint32_t kick2 : 1;
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+    uint8_t leftBlue : 1;
+    uint8_t leftRed : 1;
 
-    uint32_t back : 1;  // select
-    uint32_t start : 1;
-    uint32_t leftThumbClick : 1;   // l3
-    uint32_t rightThumbClick : 1;  // r3
+    uint8_t leftGreen : 1;
+    uint8_t rightBlue : 1;
+    uint8_t rightRed : 1;
+    uint8_t rightGreen : 1;
+    uint8_t soloGreen : 1;
+    uint8_t soloRed : 1;
+    uint8_t soloYellow : 1;
+    uint8_t soloBlue : 1;
 
-    uint32_t guide : 1;    // ps
-    uint32_t capture : 1;  // switch capture button
-    uint32_t solo : 1;
-    uint32_t leftBlue : 1;
-
-    uint32_t leftRed : 1;
-    uint32_t leftGreen : 1;
-    uint32_t rightBlue : 1;
-    uint32_t rightRed : 1;
-
-    uint32_t rightGreen : 1;
-    uint32_t tableNeutral : 1;
-    uint32_t soloGreen : 1;
-    uint32_t soloRed : 1;
-
-    uint32_t soloYellow : 1;
-    uint32_t soloBlue : 1;
-    uint32_t soloOrange : 1;
-    uint32_t green : 1;
-
-    uint32_t red : 1;
-    uint32_t yellow : 1;
-    uint32_t blue : 1;
-    uint32_t orange : 1;
-
+    uint8_t soloOrange : 1;
+    uint8_t green : 1;
+    uint8_t red : 1;
+    uint8_t yellow : 1;
+    uint8_t blue : 1;
+    uint8_t orange : 1;
     uint8_t yellowCymbal : 1;
     uint8_t blueCymbal : 1;
-    uint8_t greenCymbal : 1;
-    uint8_t unused : 1;
 
+    uint8_t greenCymbal : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
+    uint8_t : 3;
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;

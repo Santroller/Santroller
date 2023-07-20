@@ -17,7 +17,15 @@
 #include "endpoints.h"
 #include "hid.h"
 #include "shared_main.h"
-
+#if DEVICE_TYPE_KEYBOARD
+    // Appearance HID - Keyboard (Category 15, Sub-Category 1)
+    #define REPORT keyboard_mouse_descriptor
+    #define APPEARANCE 0xC1
+#else
+    // Appearance HID - Gamepad (Category 15, Sub-Category 4)
+    #define REPORT pc_descriptor
+    #define APPEARANCE 0xC4
+#endif
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
@@ -52,10 +60,9 @@ const uint8_t adv_data[] = {
     BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
     ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
     ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
-    // Appearance HID - Gamepad (Category 15, Sub-Category 4)
     0x03,
     BLUETOOTH_DATA_TYPE_APPEARANCE,
-    0xC4,
+    APPEARANCE,
     0x03,
 };
 static bool can_send = false;
@@ -95,12 +102,8 @@ static void le_keyboard_setup(void) {
     // setup device information service
     device_information_service_server_init();
     device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, USB_VERSION_BCD(DEVICE_TYPE, RHYTHM_TYPE, 0));
-#if DEVICE_TYPE_KEYBOARD
-    hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
-#else
-    // setup HID Device service
-    hids_device_init(0, pc_descriptor, sizeof(pc_descriptor));
-#endif
+
+    hids_device_init(0, REPORT, sizeof(REPORT));
 
     // setup advertisements
     uint16_t adv_int_min = 0x0030;

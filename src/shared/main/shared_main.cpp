@@ -1229,10 +1229,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
 // This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
 // However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
+// This also has the bonus that it will keep switch support working as well
 #if DEVICE_TYPE == GAMEPAD
     if (output_console_type == PS3) {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
-        memset(report, 0, sizeof(PS3_REPORT));
+        memset(report, 0, sizeof(PS3Gamepad_Data_t));
         report->reportId = 1;
         report->accelX = PS3_ACCEL_CENTER;
         report->accelY = PS3_ACCEL_CENTER;
@@ -1286,7 +1287,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
-    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT) {
+    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;

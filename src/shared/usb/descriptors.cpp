@@ -818,9 +818,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
                 }
-#if !(DEVICE_TYPE_IS_INSTRUMENT)
+#if DEVICE_TYPE_IS_INSTRUMENT
+                desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
+#else
                 if (consoleType == PS3) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
+                } else {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }
 #endif
                 if (consoleType == UNIVERSAL) {

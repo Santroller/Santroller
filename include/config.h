@@ -81,6 +81,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
 #define PS4_REPORT PS3GuitarHeroGuitar_Data_t
+#define HID_BUTTON_COUNT 9
+#define HID_AXIS_COUNT 3
 #elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
 #define SUB_TYPE XINPUT_GUITAR
 #define PS3_TYPE PS3_RB_GUITAR_PID
@@ -91,6 +93,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCRockBandGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
 #define PS4_REPORT PS3RockBandGuitar_Data_t
+#define HID_BUTTON_COUNT 19
+#define HID_AXIS_COUNT 3
 #elif DEVICE_TYPE == LIVE_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3WIIU_GHLIVE_DONGLE_PID
@@ -100,6 +104,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGHLGuitar_Data_t
 #define PS3_REPORT PS3GHLGuitar_Data_t
 #define PS4_REPORT PS4GHLGuitar_Data_t
+#define HID_BUTTON_COUNT 10
+#define HID_AXIS_COUNT 2
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID
@@ -110,6 +116,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGuitarHeroDrums_Data_t
 #define PS3_REPORT PS3GuitarHeroDrums_Data_t
 #define PS4_REPORT PS3GuitarHeroDrums_Data_t
+#define HID_BUTTON_COUNT 9
+#define HID_AXIS_COUNT 6
 #elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_RB_DRUM_PID
@@ -120,6 +128,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCRockBandDrums_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t
 #define PS4_REPORT PS3RockBandDrums_Data_t
+#define HID_BUTTON_COUNT 11
+#define HID_AXIS_COUNT 7
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUB_TYPE XINPUT_TURNTABLE
 #define PS3_TYPE PS3_DJ_TURNTABLE_PID
@@ -129,7 +139,15 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCTurntable_Data_t
 #define PS3_REPORT PS3Turntable_Data_t
 #define PS4_REPORT PS3Turntable_Data_t
+#define HID_BUTTON_COUNT 13
+#define HID_AXIS_COUNT 4
 #endif
+#ifndef HID_BUTTON_COUNT
+#define HID_BUTTON_COUNT 14
+// exclude pressure
+#define HID_AXIS_COUNT 6
+#endif
+#define HID_BUTTON_PADDING ((HID_BUTTON_COUNT % 8) ? (8 - (HID_BUTTON_COUNT % 8)) : 0)
 // Xbox One Controller config
 #define TEMP 0xFF
 #if DEVICE_TYPE == GUITAR

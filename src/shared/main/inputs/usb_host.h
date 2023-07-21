@@ -93,17 +93,17 @@
                         if (report->rightStickY != PS3_STICK_CENTER) {
                             usb_host_data.rightStickY = (report->rightStickY - 0x80) << 8;
                         }
-                        if (report->pressureDPadUp) {
-                            usb_host_data.pressureDPadUp = report->pressureDPadUp;
+                        if (report->pressureDpadUp) {
+                            usb_host_data.pressureDpadUp = report->pressureDpadUp;
                         }
-                        if (report->pressureDPadRight) {
-                            usb_host_data.pressureDPadRight = report->pressureDPadRight;
+                        if (report->pressureDpadRight) {
+                            usb_host_data.pressureDpadRight = report->pressureDpadRight;
                         }
-                        if (report->pressureDPadDown) {
-                            usb_host_data.pressureDPadDown = report->pressureDPadDown;
+                        if (report->pressureDpadDown) {
+                            usb_host_data.pressureDpadDown = report->pressureDpadDown;
                         }
-                        if (report->pressureDPadLeft) {
-                            usb_host_data.pressureDPadLeft = report->pressureDPadLeft;
+                        if (report->pressureDpadLeft) {
+                            usb_host_data.pressureDpadLeft = report->pressureDpadLeft;
                         }
                         if (report->pressureL1) {
                             usb_host_data.pressureL1 = report->pressureL1;

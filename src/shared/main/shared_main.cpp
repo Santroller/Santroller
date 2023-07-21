@@ -864,17 +864,17 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         if (report->rightTrigger) {
             out->rightTrigger = report->rightTrigger;
         }
-        if (report->pressureDPadUp) {
-            out->pressureDPadUp = report->pressureDPadUp;
+        if (report->pressureDpadUp) {
+            out->pressureDpadUp = report->pressureDpadUp;
         }
-        if (report->pressureDPadRight) {
-            out->pressureDPadRight = report->pressureDPadRight;
+        if (report->pressureDpadRight) {
+            out->pressureDpadRight = report->pressureDpadRight;
         }
-        if (report->pressureDPadDown) {
-            out->pressureDPadDown = report->pressureDPadDown;
+        if (report->pressureDpadDown) {
+            out->pressureDpadDown = report->pressureDpadDown;
         }
-        if (report->pressureDPadLeft) {
-            out->pressureDPadLeft = report->pressureDPadLeft;
+        if (report->pressureDpadLeft) {
+            out->pressureDpadLeft = report->pressureDpadLeft;
         }
         if (report->pressureL1) {
             out->pressureL1 = report->pressureL1;

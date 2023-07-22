@@ -126,16 +126,18 @@ void setup() {
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
 
-#if USB_HOST_STACK
-    pio_usb_configuration_t config = {
-        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-    tuh_init(TUH_OPT_RHPORT);
-#endif
 #if BLUETOOTH
     btstack_main();
 #endif
 }
+#if USB_HOST_STACK
+void setup1() {
+    pio_usb_configuration_t config = {
+        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
+    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    tuh_init(TUH_OPT_RHPORT);
+}
+#endif
 uint8_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == XBOXONE) {
         return xone_dev_addr;

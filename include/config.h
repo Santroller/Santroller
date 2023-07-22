@@ -72,7 +72,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCRockBandGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
 #define PS4_REPORT PS3RockBandGuitar_Data_t
-#define HID_BUTTON_COUNT 19
+#define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #elif DEVICE_TYPE == LIVE_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE

@@ -233,22 +233,7 @@ uint8_t *tickPS2() {
                 if (bit_check(buttonWord, PSB_PAD_LEFT)) {
                     ps2ControllerType = PSX_GUITAR_HERO_CONTROLLER;
                 }
-            } else if (ps2ControllerType == PSX_FLIGHTSTICK ||
-                       ps2ControllerType == PSX_GUNCON ||
-                       ps2ControllerType == PSX_JOGCON ||
-                       ps2ControllerType == PSX_NEGCON) {
-                sendCommand(port, commandSetPressuresSticksOnly,
-                            sizeof(commandSetPressuresSticksOnly));
-            } else if (ps2ControllerType == PSX_MOUSE) {
-                // Mouse is its own thing for speed
-                sendCommand(port, commandSetPressuresMouse,
-                            sizeof(commandSetPressuresMouse));
-            } else if (ps2ControllerType == PSX_DUALSHOCK_2_CONTROLLER) {
-                // Dualshock 2 is its own thing, it has analog buttons that we want to
-                // disable, but we still want triggers
-                sendCommand(port, commandSetPressuresDS2,
-                            sizeof(commandSetPressuresDS2));
-            }
+            } 
             sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
         }
         initialised = true;

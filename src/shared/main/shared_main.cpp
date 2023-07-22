@@ -709,8 +709,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 
         out->back |= report->back;
         out->start |= report->start;
-        out->padFlag = report->padFlag;
-        out->cymbalFlag = report->cymbalFlag;
+        out->padFlag = report->green || report->red || report->yellow || report->blue;
+        out->cymbalFlag = report->greenCymbal || report->yellowCymbal || report->blueCymbal;
 
         out->guide |= report->guide;
         if (report->yellowVelocity) {
@@ -739,8 +739,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 
         out->back |= report->back;
         out->start |= report->start;
-        out->padFlag = report->padFlag;
-        out->cymbalFlag = report->cymbalFlag;
+        out->padFlag = report->green || report->red || report->yellow || report->blue;
+        out->cymbalFlag = report->greenCymbal || report->yellowCymbal || report->blueCymbal;
 
         out->guide |= report->guide;
         if (report->yellowVelocity) {

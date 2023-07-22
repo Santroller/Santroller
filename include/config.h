@@ -128,7 +128,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCRockBandDrums_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t
 #define PS4_REPORT PS3RockBandDrums_Data_t
-#define HID_BUTTON_COUNT 11
+#define HID_BUTTON_COUNT 16
 #define HID_AXIS_COUNT 7
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUB_TYPE XINPUT_TURNTABLE

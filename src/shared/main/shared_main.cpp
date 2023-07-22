@@ -307,7 +307,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
     bool left = dpad_report->dpad == 1 || dpad_report->dpad == 2 || dpad_report->dpad == 3;
     bool down = dpad_report->dpad == 3 || dpad_report->dpad == 4 || dpad_report->dpad == 5;
     bool right = dpad_report->dpad == 5 || dpad_report->dpad == 6 || dpad_report->dpad == 7;
-#if DEVICE_TYPE == GUITAR && RHYTHM_TYPE == GUITAR_HERO
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
         out->x |= report->x;
@@ -392,7 +392,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->slider = report->slider;
         }
     }
-#elif DEVICE_TYPE == GUITAR && RHYTHM_TYPE == ROCK_BAND
+#elif DEVICE_TYPE == ROCK_BAND_GUITAR
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
         out->x |= report->x;
@@ -566,7 +566,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->strumBar = PS3_STICK_CENTER;
         }
     }
-#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
+#elif DEVICE_TYPE == GUITAR_HERO_DRUMS
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
         out->x |= report->x;
@@ -665,7 +665,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->orangeVelocity = report->orangeVelocity;
         }
     }
-#elif DEVICE_TYPE == DRUMS && RHYTHM_TYPE == ROCK_BAND
+#elif DEVICE_TYPE == ROCK_BAND_DRUMS
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
         out->x |= report->x;
@@ -1176,12 +1176,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->rid = 0;
         report->rsize = sizeof(XINPUT_REPORT);
 // Whammy on the xbox guitars goes from min to max, so it needs to default to min
-#if DEVICE_TYPE_IS_GUITAR
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
         TICK_XINPUT;
 
-#if DEVICE_TYPE_IS_GUITAR
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         // tilt_in is uint8, report->tilt is int16_t
 #define COPY_TILT(tilt_in) \
     if (tilt_in) report->tilt = (tilt_in - 128) << 8;
@@ -1458,7 +1458,7 @@ int tick_bluetooth_inputs(const void *buf) {
         report->rid = 0;
         report->rsize = sizeof(XINPUT_REPORT);
 // Whammy on the xbox guitars goes from min to max, so it needs to default to min
-#if DEVICE_TYPE_IS_GUITAR
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
         convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
@@ -1668,26 +1668,22 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
             switch (pid) {
                 case PS3_GH_GUITAR_PID:
                     type.console_type = PS3;
-                    type.sub_type = GUITAR;
-                    type.rhythm_type = GUITAR_HERO;
+                    type.sub_type = GUITAR_HERO_GUITAR;
                     break;
                 case PS3_GH_DRUM_PID:
                     type.console_type = PS3;
-                    type.sub_type = DRUMS;
-                    type.rhythm_type = GUITAR_HERO;
+                    type.sub_type = GUITAR_HERO_DRUMS;
                     break;
                 case PS3_MPA_MUSTANG_PID:
                 case PS3_MPA_SQUIRE_PID:
                 case PS3_RB_GUITAR_PID:
                     type.console_type = PS3;
-                    type.sub_type = GUITAR;
-                    type.rhythm_type = ROCK_BAND;
+                    type.sub_type = ROCK_BAND_GUITAR;
                     break;
                 case PS3_MPA_DRUMS_PID:
                 case PS3_RB_DRUM_PID:
                     type.console_type = PS3;
-                    type.sub_type = DRUMS;
-                    type.rhythm_type = ROCK_BAND;
+                    type.sub_type = ROCK_BAND_DRUMS;
                     break;
                 case PS3_DJ_TURNTABLE_PID:
                     type.console_type = PS3;
@@ -1708,14 +1704,14 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                 case WII_RB_GUITAR_PID:
                 case WII_RB_GUITAR_2_PID:
                     type.console_type = PS3;
-                    type.sub_type = GUITAR;
+                    type.sub_type = ROCK_BAND_GUITAR;
                     break;
 
                 case WII_MPA_DRUMS_PID:
                 case WII_RB_DRUM_PID:
                 case WII_RB_DRUM_2_PID:
                     type.console_type = PS3;
-                    type.sub_type = DRUMS;
+                    type.sub_type = ROCK_BAND_DRUMS;
                     break;
             }
             break;
@@ -1723,10 +1719,10 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
         case XBOX_ONE_RB_VID:
             if (pid == XBOX_ONE_RB_GUITAR_PID) {
                 type.console_type = XBOXONE;
-                type.sub_type = GUITAR;
+                type.sub_type = ROCK_BAND_GUITAR;
             } else if (pid == XBOX_ONE_RB_DRUM_PID) {
                 type.console_type = XBOXONE;
-                type.sub_type = DRUMS;
+                type.sub_type = ROCK_BAND_DRUMS;
             }
             break;
 

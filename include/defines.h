@@ -18,21 +18,17 @@
 #define XINPUT_STAGE_KIT 9
 #define XINPUT_ARCADE_PAD 19
 #define XINPUT_TURNTABLE 23
+// Not real, but its easier for us to match this way
+#define XINPUT_GUITAR_HERO_LIVE 24
 
 #define GAMEPAD 1
-#define WHEEL 2
-#define ARCADE_STICK 3
-#define FLIGHT_STICK 4
-#define DANCE_PAD 5
-#define ARCADE_PAD 6
-#define GUITAR 7
-#define LIVE_GUITAR 8
-#define DRUMS 9
-#define DJ_HERO_TURNTABLE 10
-#define STAGE_KIT 11
-
-#define GUITAR_HERO 0
-#define ROCK_BAND 1
+#define GUITAR_HERO_GUITAR 2
+#define ROCK_BAND_GUITAR 3
+#define GUITAR_HERO_DRUMS 4
+#define ROCK_BAND_DRUMS 5
+#define LIVE_GUITAR 6
+#define DJ_HERO_TURNTABLE 7
+#define STAGE_KIT 8
 
 #define UNIVERSAL 0
 #define XBOX360 1
@@ -57,7 +53,6 @@
 
 #define LEDS_DISABLED 0 
 #define LEDS_APA102 1
-#define LEDS_WS2812 2
 
 #define MIDI_TYPE_NOTE 0
 #define MIDI_TYPE_CONTROL_COMMAND 1

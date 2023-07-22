@@ -39,7 +39,7 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bMaxPacketSize0 : ENDPOINT_SIZE,
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-    bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, RHYTHM_TYPE, 0),
+    bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
     iManufacturer : 0x01,
     iProduct : 0x02,
     iSerialNumber : 0x03,
@@ -71,7 +71,8 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     Interface1ID : {
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
-        reserved : {XINPUT_FLAGS, 0x01},
+        flags: XINPUT_FLAGS,
+        reserved : 0x01,
         subtype : SUB_TYPE,
         reserved2 : 0x25,
         bEndpointAddressIn : DEVICE_EPADDR_IN,

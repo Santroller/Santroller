@@ -125,158 +125,154 @@
                         }
                         break;
                     }
-                    case GUITAR: {
-                        if (device_type.rhythm_type == ROCK_BAND) {
-                            PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.leftShoulder |= report->leftShoulder;
-                            usb_host_data.green |= report->a;
-                            usb_host_data.red |= report->b;
-                            usb_host_data.yellow |= report->y;
-                            usb_host_data.blue |= report->x;
-                            usb_host_data.orange |= report->leftShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            usb_host_data.dpadLeft |= left;
-                            usb_host_data.dpadRight |= right;
-                            usb_host_data.dpadUp |= up;
-                            usb_host_data.dpadDown |= down;
-                            if (report->tilt) {
-                                usb_host_data.tilt = INT16_MAX;
-                            }
-                            if (report->solo) {
-                                usb_host_data.soloGreen |= report->a;
-                                usb_host_data.soloRed |= report->b;
-                                usb_host_data.soloYellow |= report->y;
-                                usb_host_data.soloBlue |= report->x;
-                                usb_host_data.soloOrange |= report->leftShoulder;
-                            }
-                            if (report->whammy) {
-                                usb_host_data.whammy = report->whammy;
-                            }
-                            if (report->pickup) {
-                                usb_host_data.pickup = report->pickup;
-                            }
-                        } else {
-                            PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.leftShoulder |= report->leftShoulder;
-                            usb_host_data.green |= report->a;
-                            usb_host_data.red |= report->b;
-                            usb_host_data.yellow |= report->y;
-                            usb_host_data.blue |= report->x;
-                            usb_host_data.orange |= report->leftShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            usb_host_data.dpadLeft |= left;
-                            usb_host_data.dpadRight |= right;
-                            usb_host_data.dpadUp |= up;
-                            usb_host_data.dpadDown |= down;
-                            if (report->tilt) {                                
-                                usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
-                            }
-                            if (report->whammy) {
-                                usb_host_data.whammy = report->whammy;
-                            }
-                            if (report->slider) {
-                                usb_host_data.slider = report->slider;
-                            }
+                    case ROCK_BAND_GUITAR: {
+                        PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)data;
+                        usb_host_data.a |= report->a;
+                        usb_host_data.b |= report->b;
+                        usb_host_data.x |= report->x;
+                        usb_host_data.y |= report->y;
+                        usb_host_data.leftShoulder |= report->leftShoulder;
+                        usb_host_data.green |= report->a;
+                        usb_host_data.red |= report->b;
+                        usb_host_data.yellow |= report->y;
+                        usb_host_data.blue |= report->x;
+                        usb_host_data.orange |= report->leftShoulder;
+                        usb_host_data.back |= report->back;
+                        usb_host_data.start |= report->start;
+                        usb_host_data.guide |= report->guide;
+                        usb_host_data.dpadLeft |= left;
+                        usb_host_data.dpadRight |= right;
+                        usb_host_data.dpadUp |= up;
+                        usb_host_data.dpadDown |= down;
+                        if (report->tilt) {
+                            usb_host_data.tilt = INT16_MAX;
                         }
-                        break;
+                        if (report->solo) {
+                            usb_host_data.soloGreen |= report->a;
+                            usb_host_data.soloRed |= report->b;
+                            usb_host_data.soloYellow |= report->y;
+                            usb_host_data.soloBlue |= report->x;
+                            usb_host_data.soloOrange |= report->leftShoulder;
+                        }
+                        if (report->whammy) {
+                            usb_host_data.whammy = report->whammy;
+                        }
+                        if (report->pickup) {
+                            usb_host_data.pickup = report->pickup;
+                        }
                     }
-                    case DRUMS: {
-                        if (device_type.rhythm_type == ROCK_BAND) {
-                            PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.kick1 |= report->leftShoulder;
-                            usb_host_data.kick2 |= report->rightShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            usb_host_data.green |= report->a && report->padFlag;
-                            usb_host_data.red |= report->b && report->padFlag;
-                            usb_host_data.yellow |= report->y && report->padFlag;
-                            usb_host_data.blue |= report->x && report->padFlag;
-                            usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
-                            usb_host_data.blueCymbal |= report->x && report->cymbalFlag && up;
-                            usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && down;
-                            usb_host_data.dpadLeft |= left;
-                            usb_host_data.dpadRight |= right;
-                            usb_host_data.dpadUp |= up;
-                            usb_host_data.dpadDown |= down;
-                            if (usb_host_data.kick1 || usb_host_data.kick2) {
-                                usb_host_data.kickVelocity = 0xFF;
-                            }
-                            if (report->greenVelocity) {
-                                if (usb_host_data.greenCymbal) {
-                                    usb_host_data.greenCymbalVelocity = report->greenVelocity;
-                                } else {
-                                    usb_host_data.greenVelocity = report->greenVelocity;
-                                }
-                            }
-                            if (report->redVelocity) {
-                                usb_host_data.redVelocity = report->redVelocity;
-                            }
-                            if (report->yellowVelocity) {
-                                if (usb_host_data.yellowCymbal) {
-                                    usb_host_data.yellowCymbalVelocity = report->yellowVelocity;
-                                } else {
-                                    usb_host_data.yellowVelocity = report->yellowVelocity;
-                                }
-                            }
-                            if (report->blueVelocity) {
-                                if (usb_host_data.blueCymbal) {
-                                    usb_host_data.blueCymbalVelocity = report->blueVelocity;
-                                } else {
-                                    usb_host_data.blueVelocity = report->blueVelocity;
-                                }
-                            }
-                        } else {
-                            PS3GuitarHeroDrums_Data_t *report = (PS3GuitarHeroDrums_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.leftShoulder |= report->leftShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            usb_host_data.dpadLeft |= left;
-                            usb_host_data.dpadRight |= right;
-                            usb_host_data.dpadUp |= up;
-                            usb_host_data.dpadDown |= down;
-                            if (report->greenVelocity) {
+                    case GUITAR_HERO_GUITAR: {
+                        PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)data;
+                        usb_host_data.a |= report->a;
+                        usb_host_data.b |= report->b;
+                        usb_host_data.x |= report->x;
+                        usb_host_data.y |= report->y;
+                        usb_host_data.leftShoulder |= report->leftShoulder;
+                        usb_host_data.green |= report->a;
+                        usb_host_data.red |= report->b;
+                        usb_host_data.yellow |= report->y;
+                        usb_host_data.blue |= report->x;
+                        usb_host_data.orange |= report->leftShoulder;
+                        usb_host_data.back |= report->back;
+                        usb_host_data.start |= report->start;
+                        usb_host_data.guide |= report->guide;
+                        usb_host_data.dpadLeft |= left;
+                        usb_host_data.dpadRight |= right;
+                        usb_host_data.dpadUp |= up;
+                        usb_host_data.dpadDown |= down;
+                        if (report->tilt) {                                
+                            usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
+                        }
+                        if (report->whammy) {
+                            usb_host_data.whammy = report->whammy;
+                        }
+                        if (report->slider) {
+                            usb_host_data.slider = report->slider;
+                        }
+                    }
+                    case ROCK_BAND_DRUMS: {
+                        PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
+                        usb_host_data.a |= report->a;
+                        usb_host_data.b |= report->b;
+                        usb_host_data.x |= report->x;
+                        usb_host_data.y |= report->y;
+                        usb_host_data.kick1 |= report->leftShoulder;
+                        usb_host_data.kick2 |= report->rightShoulder;
+                        usb_host_data.back |= report->back;
+                        usb_host_data.start |= report->start;
+                        usb_host_data.guide |= report->guide;
+                        usb_host_data.green |= report->a && report->padFlag;
+                        usb_host_data.red |= report->b && report->padFlag;
+                        usb_host_data.yellow |= report->y && report->padFlag;
+                        usb_host_data.blue |= report->x && report->padFlag;
+                        usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
+                        usb_host_data.blueCymbal |= report->x && report->cymbalFlag && up;
+                        usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && down;
+                        usb_host_data.dpadLeft |= left;
+                        usb_host_data.dpadRight |= right;
+                        usb_host_data.dpadUp |= up;
+                        usb_host_data.dpadDown |= down;
+                        if (usb_host_data.kick1 || usb_host_data.kick2) {
+                            usb_host_data.kickVelocity = 0xFF;
+                        }
+                        if (report->greenVelocity) {
+                            if (usb_host_data.greenCymbal) {
+                                usb_host_data.greenCymbalVelocity = report->greenVelocity;
+                            } else {
                                 usb_host_data.greenVelocity = report->greenVelocity;
                             }
-                            if (report->redVelocity) {
-                                usb_host_data.redVelocity = report->redVelocity;
-                            }
-                            if (report->yellowVelocity) {
+                        }
+                        if (report->redVelocity) {
+                            usb_host_data.redVelocity = report->redVelocity;
+                        }
+                        if (report->yellowVelocity) {
+                            if (usb_host_data.yellowCymbal) {
+                                usb_host_data.yellowCymbalVelocity = report->yellowVelocity;
+                            } else {
                                 usb_host_data.yellowVelocity = report->yellowVelocity;
                             }
-                            if (report->blueVelocity) {
+                        }
+                        if (report->blueVelocity) {
+                            if (usb_host_data.blueCymbal) {
+                                usb_host_data.blueCymbalVelocity = report->blueVelocity;
+                            } else {
                                 usb_host_data.blueVelocity = report->blueVelocity;
                             }
-                            if (report->orangeVelocity) {
-                                usb_host_data.orangeVelocity = report->orangeVelocity;
-                            }
-                            if (report->kickVelocity) {
-                                usb_host_data.kickVelocity = report->kickVelocity;
-                                usb_host_data.kick1 = true;
-                            }
                         }
-                        break;
+                    }
+                    case GUITAR_HERO_DRUMS: {
+                        PS3GuitarHeroDrums_Data_t *report = (PS3GuitarHeroDrums_Data_t *)data;
+                        usb_host_data.a |= report->a;
+                        usb_host_data.b |= report->b;
+                        usb_host_data.x |= report->x;
+                        usb_host_data.y |= report->y;
+                        usb_host_data.leftShoulder |= report->leftShoulder;
+                        usb_host_data.back |= report->back;
+                        usb_host_data.start |= report->start;
+                        usb_host_data.guide |= report->guide;
+                        usb_host_data.dpadLeft |= left;
+                        usb_host_data.dpadRight |= right;
+                        usb_host_data.dpadUp |= up;
+                        usb_host_data.dpadDown |= down;
+                        if (report->greenVelocity) {
+                            usb_host_data.greenVelocity = report->greenVelocity;
+                        }
+                        if (report->redVelocity) {
+                            usb_host_data.redVelocity = report->redVelocity;
+                        }
+                        if (report->yellowVelocity) {
+                            usb_host_data.yellowVelocity = report->yellowVelocity;
+                        }
+                        if (report->blueVelocity) {
+                            usb_host_data.blueVelocity = report->blueVelocity;
+                        }
+                        if (report->orangeVelocity) {
+                            usb_host_data.orangeVelocity = report->orangeVelocity;
+                        }
+                        if (report->kickVelocity) {
+                            usb_host_data.kickVelocity = report->kickVelocity;
+                            usb_host_data.kick1 = true;
+                        }
                     }
                     case LIVE_GUITAR: {
                         PS3GHLGuitar_Data_t *report = (PS3GHLGuitar_Data_t *)data;
@@ -402,7 +398,7 @@
             }
             case XBOX360: {
                 switch (device_type.sub_type) {
-                    case GAMEPAD: {
+                    case XINPUT_GAMEPAD: {
                         XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)data;
                         usb_host_data.a |= report->a;
                         usb_host_data.b |= report->b;
@@ -439,67 +435,98 @@
                         }
                         break;
                     }
-                    case GUITAR: {
-                        if (device_type.rhythm_type == ROCK_BAND) {
-                            XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.leftShoulder |= report->leftShoulder;
-                            usb_host_data.green |= report->a;
-                            usb_host_data.red |= report->b;
-                            usb_host_data.yellow |= report->y;
-                            usb_host_data.blue |= report->x;
-                            usb_host_data.orange |= report->leftShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            if (report->tilt) {
-                                usb_host_data.tilt = INT16_MAX;
-                            }
-                            if (report->solo) {
-                                usb_host_data.soloGreen |= report->a;
-                                usb_host_data.soloRed |= report->b;
-                                usb_host_data.soloYellow |= report->y;
-                                usb_host_data.soloBlue |= report->x;
-                                usb_host_data.soloOrange |= report->leftShoulder;
-                            }
-                            if (report->whammy) {
-                                usb_host_data.whammy = report->whammy;
-                            }
-                            if (report->pickup) {
-                                usb_host_data.pickup = report->pickup;
-                            }
-                        } else {
-                            XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.leftShoulder |= report->leftShoulder;
-                            usb_host_data.green |= report->a;
-                            usb_host_data.red |= report->b;
-                            usb_host_data.yellow |= report->y;
-                            usb_host_data.blue |= report->x;
-                            usb_host_data.orange |= report->leftShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            if (report->tilt) {
-                                usb_host_data.tilt = report->tilt;
-                            }
-                            if (report->whammy) {
-                                usb_host_data.whammy = report->whammy;
-                            }
-                            if (report->slider) {
-                                usb_host_data.slider = report->slider;
-                            }
+                    case XINPUT_GUITAR: {
+                        XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)data;
+                        usb_host_data.a |= report->a;
+                        usb_host_data.b |= report->b;
+                        usb_host_data.x |= report->x;
+                        usb_host_data.y |= report->y;
+                        usb_host_data.leftShoulder |= report->leftShoulder;
+                        usb_host_data.green |= report->a;
+                        usb_host_data.red |= report->b;
+                        usb_host_data.yellow |= report->y;
+                        usb_host_data.blue |= report->x;
+                        usb_host_data.orange |= report->leftShoulder;
+                        usb_host_data.back |= report->back;
+                        usb_host_data.start |= report->start;
+                        usb_host_data.guide |= report->guide;
+                        if (report->tilt) {
+                            usb_host_data.tilt = INT16_MAX;
+                        }
+                        if (report->solo) {
+                            usb_host_data.soloGreen |= report->a;
+                            usb_host_data.soloRed |= report->b;
+                            usb_host_data.soloYellow |= report->y;
+                            usb_host_data.soloBlue |= report->x;
+                            usb_host_data.soloOrange |= report->leftShoulder;
+                        }
+                        if (report->whammy) {
+                            usb_host_data.whammy = report->whammy;
+                        }
+                        if (report->pickup) {
+                            usb_host_data.pickup = report->pickup;
                         }
                         break;
                     }
-                    case DRUMS: {
-                        if (device_type.rhythm_type == ROCK_BAND) {
+                    case XINPUT_GUITAR_ALTERNATE: {
+                        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)data;
+                        usb_host_data.a |= report->a;
+                        usb_host_data.b |= report->b;
+                        usb_host_data.x |= report->x;
+                        usb_host_data.y |= report->y;
+                        usb_host_data.leftShoulder |= report->leftShoulder;
+                        usb_host_data.green |= report->a;
+                        usb_host_data.red |= report->b;
+                        usb_host_data.yellow |= report->y;
+                        usb_host_data.blue |= report->x;
+                        usb_host_data.orange |= report->leftShoulder;
+                        usb_host_data.back |= report->back;
+                        usb_host_data.start |= report->start;
+                        usb_host_data.guide |= report->guide;
+                        if (report->tilt) {
+                            usb_host_data.tilt = report->tilt;
+                        }
+                        if (report->whammy) {
+                            usb_host_data.whammy = report->whammy;
+                        }
+                        if (report->slider) {
+                            usb_host_data.slider = report->slider;
+                        }
+                        break;
+                    }
+                    case XINPUT_DRUMS: {
+                        XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)data;
+                        // leftThumbClick is true for guitar hero, false for rockband
+                        if (gamepad->leftThumbClick) {
+                            XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)data;
+                            usb_host_data.a |= report->a;
+                            usb_host_data.b |= report->b;
+                            usb_host_data.x |= report->x;
+                            usb_host_data.y |= report->y;
+                            usb_host_data.leftShoulder |= report->leftShoulder;
+                            usb_host_data.back |= report->back;
+                            usb_host_data.start |= report->start;
+                            usb_host_data.guide |= report->guide;
+                            if (report->greenVelocity) {
+                                usb_host_data.greenVelocity = report->greenVelocity;
+                            }
+                            if (report->redVelocity) {
+                                usb_host_data.redVelocity = report->redVelocity;
+                            }
+                            if (report->yellowVelocity) {
+                                usb_host_data.yellowVelocity = report->yellowVelocity;
+                            }
+                            if (report->blueVelocity) {
+                                usb_host_data.blueVelocity = report->blueVelocity;
+                            }
+                            if (report->orangeVelocity) {
+                                usb_host_data.orangeVelocity = report->orangeVelocity;
+                            }
+                            if (report->kickVelocity) {
+                                usb_host_data.kickVelocity = report->kickVelocity;
+                                usb_host_data.kick1 = true;
+                            }
+                        } else {
                             XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)data;
                             usb_host_data.a |= report->a;
                             usb_host_data.b |= report->b;
@@ -544,39 +571,10 @@
                                     usb_host_data.blueVelocity = (0x7FFF - report->blueVelocity) >> 7;
                                 }
                             }
-                        } else {
-                            XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)data;
-                            usb_host_data.a |= report->a;
-                            usb_host_data.b |= report->b;
-                            usb_host_data.x |= report->x;
-                            usb_host_data.y |= report->y;
-                            usb_host_data.leftShoulder |= report->leftShoulder;
-                            usb_host_data.back |= report->back;
-                            usb_host_data.start |= report->start;
-                            usb_host_data.guide |= report->guide;
-                            if (report->greenVelocity) {
-                                usb_host_data.greenVelocity = report->greenVelocity;
-                            }
-                            if (report->redVelocity) {
-                                usb_host_data.redVelocity = report->redVelocity;
-                            }
-                            if (report->yellowVelocity) {
-                                usb_host_data.yellowVelocity = report->yellowVelocity;
-                            }
-                            if (report->blueVelocity) {
-                                usb_host_data.blueVelocity = report->blueVelocity;
-                            }
-                            if (report->orangeVelocity) {
-                                usb_host_data.orangeVelocity = report->orangeVelocity;
-                            }
-                            if (report->kickVelocity) {
-                                usb_host_data.kickVelocity = report->kickVelocity;
-                                usb_host_data.kick1 = true;
-                            }
                         }
                         break;
                     }
-                    case LIVE_GUITAR: {
+                    case XINPUT_GUITAR_HERO_LIVE: {
                         XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)data;
                         usb_host_data.a |= report->a;
                         usb_host_data.b |= report->b;
@@ -599,7 +597,7 @@
                         }
                         break;
                     }
-                    case DJ_HERO_TURNTABLE: {
+                    case XINPUT_TURNTABLE: {
                         XInputTurntable_Data_t *report = (XInputTurntable_Data_t *)data;
                         usb_host_data.a |= report->a;
                         usb_host_data.b |= report->b;
@@ -675,7 +673,7 @@
                         }
                         break;
                     }
-                    case GUITAR: {
+                    case ROCK_BAND_GUITAR: {
                         XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)data;
                         usb_host_data.a |= report->a;
                         usb_host_data.b |= report->b;
@@ -706,7 +704,7 @@
                         }
                         break;
                     }
-                    case DRUMS: {
+                    case ROCK_BAND_DRUMS: {
                         XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)data;
                         usb_host_data.a |= report->a;
                         usb_host_data.b |= report->b;

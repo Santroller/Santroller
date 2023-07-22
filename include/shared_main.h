@@ -35,7 +35,6 @@ extern Led_t ledState[LED_COUNT];
 typedef struct {
     uint8_t console_type;
     uint8_t sub_type;
-    uint8_t rhythm_type;
     uint8_t dev_addr;
 } USB_Device_Type_t;
 USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid);

@@ -266,6 +266,10 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->type = XBOX360;
         if (desc_itf->bInterfaceProtocol == 0x01) {
             p_xinput->subtype = x_desc->subtype;
+            // There isnt a seperate GHL subtype, but we make one to simplify things
+            if (p_xinput->subtype == XINPUT_GUITAR_ALTERNATE && x_desc->flags == 0x00) {
+                p_xinput->subtype = XINPUT_GUITAR_HERO_LIVE;
+            }
             usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
         }
         _xinputh_dev->inst_count++;

@@ -176,7 +176,7 @@ uint8_t read_usb_host_devices(uint8_t *buf) {
         buf[(i * 2)] = type->console_type;
         buf[(i * 2) + 1] = type->sub_type;
     }
-    return total_usb_host_devices * 3;
+    return total_usb_host_devices * 2;
 }
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType, uint8_t subtype) {

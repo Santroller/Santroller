@@ -300,7 +300,7 @@ uint8_t tick_xbox_one() {
 long lastTick;
 uint8_t keyboard_report = 0;
 #if defined(BLUETOOTH_RX)
-// When we do Bluetooth, the reports are ALWAYS in PS3 Instrument format, so we need to convert
+// When we do Bluetooth, the reports are in universal format, so we need to convert
 void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_console_type) {
     PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
     bool up = dpad_report->dpad == 7 || dpad_report->dpad == 0 || dpad_report->dpad == 1;
@@ -405,7 +405,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->dpadLeft |= left;
         out->dpadRight |= right;
         out->leftShoulder |= report->leftShoulder;
-        out->solo |= report->solo;
+        out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
 
         out->back |= report->back;
         out->start |= report->start;
@@ -428,7 +428,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->b |= report->b;
         out->y |= report->y;
         out->leftShoulder |= report->leftShoulder;
-        out->solo |= report->solo;
+        out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;
@@ -455,7 +455,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->b |= report->b;
         out->y |= report->y;
         out->leftShoulder |= report->leftShoulder;
-        out->solo |= report->solo;
+        out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;

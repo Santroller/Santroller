@@ -101,7 +101,7 @@ static void le_keyboard_setup(void) {
 
     // setup device information service
     device_information_service_server_init();
-    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, USB_VERSION_BCD(DEVICE_TYPE, RHYTHM_TYPE, 0));
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, USB_VERSION_BCD(DEVICE_TYPE, 0, 0));
 
     hids_device_init(0, REPORT, sizeof(REPORT));
 

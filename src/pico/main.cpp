@@ -97,7 +97,7 @@ static void tick_usb() {
             reset_usb();
         }
 #endif
-        if (!seen_xb360 && millis() > 2000) {
+        if (!seen_xb360 && millis() > 5000) {
             consoleType = XBOXONE;
             reset_usb();
         }

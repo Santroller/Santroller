@@ -95,10 +95,10 @@ typedef struct {
 
 typedef struct {
     // Button bits
-    uint8_t x : 1;
+    uint8_t y : 1;
     uint8_t b : 1;
     uint8_t a : 1;
-    uint8_t y : 1;
+    uint8_t x : 1;
 
     uint8_t leftShoulder : 1;   // l1
     uint8_t rightShoulder : 1;  // r1

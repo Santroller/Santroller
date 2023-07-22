@@ -395,16 +395,28 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #elif DEVICE_TYPE == ROCK_BAND_GUITAR
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
+        out->a |= report->a || report->soloGreen;
+        out->b |= report->b || report->soloRed;
+        out->y |= report->y || report->soloYellow;
+        out->x |= report->x || report->soloBlue;
+        out->leftShoulder |= report->leftShoulder || report->soloOrange;
+
+        out->soloGreen |= report->soloGreen;
+        out->soloRed |= report->soloRed;
+        out->soloYellow |= report->soloYellow;
+        out->soloBlue |= report->soloBlue;
+        out->soloOrange |= report->soloOrange;
+
+        out->green |= report->a;
+        out->red |= report->b;
+        out->yellow |= report->y;
+        out->blue |= report->x;
+        out->orange |= report->leftShoulder;
 
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;
         out->dpadRight |= right;
-        out->leftShoulder |= report->leftShoulder;
         out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
 
         out->back |= report->back;

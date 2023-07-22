@@ -177,6 +177,7 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
+    
     uint8_t a : 1;  // cross, green
     uint8_t b : 1;  // circle, red
     uint8_t y : 1;  // triangle, yellow
@@ -187,19 +188,13 @@ typedef struct
     uint8_t start : 1;
     uint8_t guide : 1;  // ps
 
-    uint8_t green : 1;
-    uint8_t red : 1;
-    uint8_t yellow : 1;
-    uint8_t blue : 1;
-
-    uint8_t orange : 1;
     uint8_t soloGreen : 1;
     uint8_t soloRed : 1;
     uint8_t soloYellow : 1;
-
     uint8_t soloBlue : 1;
+
     uint8_t soloOrange : 1;
-    uint8_t : 6;
+    uint8_t : 3;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
     union {

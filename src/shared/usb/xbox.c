@@ -22,7 +22,7 @@ const XInputInputCapabilities_t PROGMEM capabilities2 = {
     rightTrigger : 0xff,
     leftThumbX : 0x1209,
     leftThumbY : 0x2882,
-    rightThumbX : DEVICE_TYPE,
+    rightThumbX : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
     rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},
     flags : 0x0000

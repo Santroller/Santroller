@@ -234,7 +234,7 @@ uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int1
 }
 
 uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
-#if DEVICE_TYPE == GUITAR
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
     // Also, the game is looking for the value going negative, not positive
     int16_t ret = (-(handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 7)) - GUITAR_ONE_G;

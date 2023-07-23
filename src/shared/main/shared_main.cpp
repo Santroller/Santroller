@@ -1193,12 +1193,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         TICK_XINPUT;
 
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-        // tilt_in is uint8, report->tilt is int16_t
-#define COPY_TILT(tilt_in) \
-    if (tilt_in) report->tilt = (tilt_in - 128) << 8;
-#endif
-
 // xb360 is stupid
 #if DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
         report->leftThumbClick = true;
@@ -1225,6 +1219,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->guide = true;
         }
         TICK_PS4;
+        asm volatile("" ::: "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
     }
@@ -1235,7 +1230,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(report, 0, sizeof(PC_REPORT));
         report->reportId = 1;
         TICK_PC;
-
+        asm volatile("" ::: "memory");
         report->dpad = dpad_bindings[report->dpad];
     }
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
@@ -1255,10 +1250,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->leftStickY = PS3_STICK_CENTER;
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
-
         TICK_PS3;
-        report->l2 = report->leftTrigger > 0xE0;
-        report->r2 = report->rightTrigger > 0xE0;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4 && !updateSequence) {
@@ -1269,7 +1261,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = size = sizeof(PS3_REPORT);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
-        PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report;
+        PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -1279,9 +1271,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         gamepad->dpad = 0x00;
-
         TICK_PS3;
-
+        asm volatile("" ::: "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
         // Switch swaps a and b
         if (output_console_type == SWITCH) {
@@ -1294,10 +1285,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->x = y;
             gamepad->y = x;
         }
-#if DEVICE_TYPE == GAMEPAD
-        gamepad->l2 = gamepad->leftTrigger > 0xE0;
-        gamepad->r2 = gamepad->rightTrigger > 0xE0;
-#endif
     }
     for (int i = 0; i < DIGITAL_COUNT; i++) {
         if (debounce[i]) {

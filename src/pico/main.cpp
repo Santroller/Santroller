@@ -231,6 +231,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
+    printf("Unplugged %d\r\n", dev_addr);
     if (xone_dev_addr == dev_addr) {
         xone_dev_addr = 0;
     }

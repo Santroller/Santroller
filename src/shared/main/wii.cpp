@@ -1,14 +1,16 @@
 
-#include "io.h"
-#include "config.h"
 #include "wii.h"
-#include "Arduino.h"
+
 #include <string.h>
+
+#include "Arduino.h"
+#include "config.h"
+#include "io.h"
 uint8_t wiiBytes;
 #ifdef INPUT_WII
 uint8_t wiiPointer = 0;
 bool hiRes = false;
-bool verifyData(const uint8_t *dataIn, uint8_t dataSize) {
+bool verifyData(const uint8_t* dataIn, uint8_t dataSize) {
     uint8_t orCheck = 0x00;   // Check if data is zeroed (bad connection)
     uint8_t andCheck = 0xFF;  // Check if data is maxed (bad init)
 
@@ -81,10 +83,11 @@ void initWiiExt(void) {
         // get read back are constant. Hence we start at 0x5 instead of 0x0.
         wiiPointer = 5;
         wiiBytes = 1;
-    } 
+    }
 }
+bool initialised = false;
 bool wiiDataValid() {
-    return wiiControllerType != WII_NOT_INITIALISED && wiiControllerType != WII_NO_EXTENSION;
+    return initialised;
 }
 uint8_t* tickWii() {
     static uint8_t data[8];
@@ -93,9 +96,11 @@ uint8_t* tickWii() {
         wiiControllerType == WII_NO_EXTENSION ||
         !twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, wiiBytes, data) ||
         !verifyData(data, wiiBytes)) {
+        initialised = false;
         initWiiExt();
         return NULL;
     }
+    initialised = true;
     return data;
 }
 #endif

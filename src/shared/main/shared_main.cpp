@@ -1257,6 +1257,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->rightStickY = PS3_STICK_CENTER;
 
         TICK_PS3;
+        report->l2 = report->leftTrigger > 0xE0;
+        report->r2 = report->rightTrigger > 0xE0;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4 && !updateSequence) {
@@ -1291,9 +1293,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->a = b;
             gamepad->x = y;
             gamepad->y = x;
-            gamepad->l2 = gamepad->leftTrigger > 0xE0;
-            gamepad->r2 = gamepad->rightTrigger > 0xE0;
         }
+#if DEVICE_TYPE == GAMEPAD
+        gamepad->l2 = gamepad->leftTrigger > 0xE0;
+        gamepad->r2 = gamepad->rightTrigger > 0xE0;
+#endif
     }
     for (int i = 0; i < DIGITAL_COUNT; i++) {
         if (debounce[i]) {

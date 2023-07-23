@@ -1219,7 +1219,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->guide = true;
         }
         TICK_PS4;
-        asm volatile("" ::: "memory");
+        asm volatile("" ::
+                         : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = size = sizeof(PS4_REPORT);
     }
@@ -1230,7 +1231,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(report, 0, sizeof(PC_REPORT));
         report->reportId = 1;
         TICK_PC;
-        asm volatile("" ::: "memory");
+        asm volatile("" ::
+                         : "memory");
         report->dpad = dpad_bindings[report->dpad];
     }
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
@@ -1272,9 +1274,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
         gamepad->dpad = 0x00;
         TICK_PS3;
-        asm volatile("" ::: "memory");
+        asm volatile("" ::
+                         : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
-        // Switch swaps a and b
+#ifdef SWAP_SWITCH_FACE_BUTTONS
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
             bool b = gamepad->b;
@@ -1285,6 +1288,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->x = y;
             gamepad->y = x;
         }
+#endif
     }
     for (int i = 0; i < DIGITAL_COUNT; i++) {
         if (debounce[i]) {

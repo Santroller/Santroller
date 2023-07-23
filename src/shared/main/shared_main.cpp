@@ -1291,6 +1291,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->a = b;
             gamepad->x = y;
             gamepad->y = x;
+            gamepad->l2 = gamepad->leftTrigger > 0xE0;
+            gamepad->r2 = gamepad->rightTrigger > 0xE0;
         }
     }
     for (int i = 0; i < DIGITAL_COUNT; i++) {

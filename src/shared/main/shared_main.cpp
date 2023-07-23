@@ -1277,7 +1277,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
-#ifdef SWAP_SWITCH_FACE_BUTTONS
+#if SWAP_SWITCH_FACE_BUTTONS
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
             bool b = gamepad->b;

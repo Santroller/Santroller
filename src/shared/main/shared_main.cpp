@@ -246,14 +246,21 @@ uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_
 #endif
     return PS3_ACCEL_CENTER + ret;
 }
-
+long last_zero = 0;
 uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
-#if RHYTHM_TYPE == GUITAR_HERO
+#if DEVICE_TYPE == ROCK_BAND_GUITAR
+    int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
+    if (ret < -120) {
+        if (last_zero - millis() > 1000) {
+            return PS3_STICK_CENTER;
+        }
+    } else {
+        last_zero = millis() + 1000;
+    }
+    return (uint8_t)(ret + PS3_STICK_CENTER);
+#else
     int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 9;
     return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
-#else
-    int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
-    return (uint8_t)(ret + PS3_STICK_CENTER);
 #endif
 }
 
@@ -1197,7 +1204,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_XINPUT;
 
 // xb360 is stupid
-#if DEVICE_TYPE == DRUMS && RHYTHM_TYPE == GUITAR_HERO
+#if DEVICE_TYPE == GUITAR_HERO_DRUMS
         report->leftThumbClick = true;
 #endif
         report_size = size = sizeof(XINPUT_REPORT);
@@ -1492,6 +1499,9 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
         convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+        asm volatile("" ::
+                         : "memory");
+        gamepad->dpad = dpad_bindings[gamepad->dpad];
         size = sizeof(PS4_REPORT);
     }
 #endif
@@ -1530,6 +1540,9 @@ int tick_bluetooth_inputs(const void *buf) {
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+        asm volatile("" ::
+                         : "memory");
+        gamepad->dpad = dpad_bindings[gamepad->dpad];
         // Switch swaps a and b and x and y
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;

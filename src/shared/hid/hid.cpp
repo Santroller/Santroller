@@ -409,6 +409,10 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     // Handle XBOX One Auth
     if (consoleType == XBOXONE) {
         printf("State: %02d\r\n", xbox_one_state);
+        for (int i = 0; i < len; i++) {
+            printf("%02x, ", data[i]);
+        }
+        printf("\r\n");
         if (xbox_one_state == Waiting1) {
             xbox_one_state = Ident1;
         } else if (xbox_one_state == Waiting2) {

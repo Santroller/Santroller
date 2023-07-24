@@ -83,6 +83,7 @@ long initialWt[5] = {0};
 uint8_t rawWt;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
+GipPowerMode_t powerMode;
 
 #if POLL_RATE
 long last_poll = 0;
@@ -127,6 +128,8 @@ void init_main(void) {
     initPins();
     twi_init();
     spi_begin();
+    GIP_HEADER((&powerMode), GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
+    powerMode.subcommand = 0x00;
     memset(ledState, 0, sizeof(ledState));
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
@@ -1609,7 +1612,7 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
     }
 }
 
-void xinput_controller_connected(uint8_t vid, uint8_t pid, uint8_t subtype) {
+void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
     if (subtype == XINPUT_STAGE_KIT) {
         passthrough_stage_kit = true;
     }
@@ -1619,10 +1622,7 @@ void xinput_controller_connected(uint8_t vid, uint8_t pid, uint8_t subtype) {
 }
 
 void xone_controller_connected(uint8_t dev_addr) {
-    GipPowerMode_t *powerMode = (GipPowerMode_t *)data_from_console;
-    GIP_HEADER(powerMode, GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
-    powerMode->subcommand = 0x00;
-    send_report_to_controller(dev_addr, data_from_console, sizeof(GipPowerMode_t));
+    send_report_to_controller(dev_addr, (uint8_t*)&powerMode, sizeof(GipPowerMode_t));
 }
 
 void host_controller_connected() {

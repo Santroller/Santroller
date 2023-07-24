@@ -57,7 +57,7 @@ bool tud_xusb_n_report(uint8_t itf, void const *report, uint8_t len) {
     TU_VERIFY(usbd_edpt_claim(rhport, p_xinput->ep_in));
 
     memcpy(p_xinput->epin_buf, report, len);
-
+    sending = true;
     return usbd_edpt_xfer(TUD_OPT_RHPORT, p_xinput->ep_in, p_xinput->epin_buf, len);
 }
 

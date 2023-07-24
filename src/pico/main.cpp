@@ -79,9 +79,16 @@ bool usb_configured() {
 }
 
 void send_report_to_pc(const void *report, uint8_t len) {
-    tud_xinput_n_report(0, 0, report, len);
+    tud_xusb_n_report(0, report, len);
 }
+bool foundXB = false;
 static void tick_usb() {
+#if USB_HOST_STACK
+    if ((consoleType == XBOX360 || consoleType == XBOXONE) && !foundXB) {
+        tuh_task();
+        return;
+    }
+#endif
     tud_task();
 #if USB_HOST_STACK
     tuh_task();
@@ -125,19 +132,17 @@ void setup() {
     tud_init(TUD_OPT_RHPORT);
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
+#if USB_HOST_STACK
+    pio_usb_configuration_t config = {
+        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
+    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    tuh_init(TUH_OPT_RHPORT);
+#endif
 
 #if BLUETOOTH
     btstack_main();
 #endif
 }
-#if USB_HOST_STACK
-void setup1() {
-    pio_usb_configuration_t config = {
-        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-    tuh_init(TUH_OPT_RHPORT);
-}
-#endif
 uint8_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == XBOXONE) {
         return xone_dev_addr;
@@ -152,6 +157,7 @@ uint8_t get_device_address_for(uint8_t deviceType) {
 }
 
 void send_report_to_controller(uint8_t dev_addr, uint8_t *report, uint8_t len) {
+    printf("Sending report to controller %d %02x\r\n", len, report[0]);
     if (dev_addr && tuh_xinput_mounted(dev_addr, 0)) {
         tuh_xinput_send_report(dev_addr, 0, report, len);
     }
@@ -197,6 +203,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
+            foundXB = true;
         }
     } else if (controllerType == XBOXONE) {
         xone_dev_addr = dev_addr;
@@ -204,6 +211,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         xone_controller_connected(dev_addr);
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
+        foundXB = true;
 
     } else if (controllerType == UNKNOWN) {
         if (type.console_type) {
@@ -244,9 +252,11 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     }
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
+    foundXB = false;
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (dev_addr == xone_dev_addr) {
+        printf("Got report from controller %d %02x\r\n", len, report[0]);
         receive_report_from_controller(report, len);
     }
     for (int i = 0; i < total_usb_host_devices; i++) {

@@ -312,11 +312,11 @@ uint8_t keyboard_report = 0;
 #if defined(BLUETOOTH_RX)
 // When we do Bluetooth, the reports are in universal format, so we need to convert
 void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_console_type) {
-    PS3Dpad_Data_t *dpad_report = (PS3Dpad_Data_t *)report;
-    bool up = dpad_report->dpad == 7 || dpad_report->dpad == 0 || dpad_report->dpad == 1;
-    bool left = dpad_report->dpad == 1 || dpad_report->dpad == 2 || dpad_report->dpad == 3;
-    bool down = dpad_report->dpad == 3 || dpad_report->dpad == 4 || dpad_report->dpad == 5;
-    bool right = dpad_report->dpad == 5 || dpad_report->dpad == 6 || dpad_report->dpad == 7;
+    uint8_t dpad = dpad_bindings_reverse[report->dpad];
+    bool up = dpad & UP;
+    bool left = dpad & LEFT;
+    bool down = dpad & DOWN;
+    bool right = dpad & RIGHT;
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;

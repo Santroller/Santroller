@@ -106,31 +106,30 @@ typedef struct
     uint8_t tilt;
 
     // To make things easier we use bitfields here and them map to dpad later
-    uint32_t dpadUp : 1;
-    uint32_t dpadDown : 1;
-    uint32_t dpadLeft : 1;
-    uint32_t dpadRight : 1;
-    bool x : 1;  // square, white1
-    bool a : 1;  // cross, black1
-    bool b : 1;  // circle, black2
-    bool y : 1;  // triangle, black3
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t x : 1;  // square, white1
+    uint8_t a : 1;  // cross, black1
+    uint8_t b : 1;  // circle, black2
+    uint8_t y : 1;  // triangle, black3
 
-    bool leftShoulder : 1;   // white2, l1
-    bool rightShoulder : 1;  // white3, r1
-    bool : 1;                // l2
-    bool : 1;                // r2
+    uint8_t leftShoulder : 1;   // white2, l1
+    uint8_t rightShoulder : 1;  // white3, r1
+    uint8_t : 1;                // l2
+    uint8_t : 1;                // r2
 
-    bool : 1;                 // share
-    bool start : 1;           // pause, options
-    bool leftThumbClick : 1;  // l3, ghtv
-    bool back : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
+    uint8_t : 1;                 // share
+    uint8_t start : 1;           // pause, options
+    uint8_t leftThumbClick : 1;  // l3, ghtv
+    uint8_t back : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // touchpad click
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // touchpad click
 
-    uint8_t unused2[57];
+    uint8_t unused2[56];
 } __attribute__((packed)) PS4GHLGuitar_Data_t;
-
 typedef struct {
     uint8_t type;
     uint8_t u1;

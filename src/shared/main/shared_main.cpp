@@ -1488,7 +1488,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #if SUPPORTS_PS4
     if (output_console_type == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
-        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report;
+        PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
         gamepad->report_id = 0x01;
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;

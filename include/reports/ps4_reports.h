@@ -26,6 +26,34 @@ typedef struct {
     uint8_t rightStickX;
     uint8_t rightStickY;
     uint8_t dpad : 4;
+    // 14 bits for buttons.
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
+
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t l2 : 1;             // l2
+    uint8_t r2 : 1;             // r2
+
+    uint8_t back : 1;             // share
+    uint8_t start : 1;            // options
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // touchpad click
+    // 6 bit report counter.
+    uint8_t reportCounter : 6;
+
+    uint8_t leftTrigger : 8;
+    uint8_t rightTrigger : 8;
+
+    uint32_t padding : 24;
+    uint8_t mystery[22];
+    uint8_t touchpadData[8];
+    uint8_t mystery_2[21];
 } __attribute__((packed)) PS4Dpad_Data_t;
 
 typedef struct {
@@ -34,33 +62,33 @@ typedef struct {
     uint8_t leftStickY;
     uint8_t rightStickX;
     uint8_t rightStickY;
-    uint32_t dpadUp : 1;
-    uint32_t dpadDown : 1;
-    uint32_t dpadLeft : 1;
-    uint32_t dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
     // 14 bits for buttons.
-    uint32_t x : 1;  // square
-    uint32_t a : 1;  // cross
-    uint32_t b : 1;  // circle
-    uint32_t y : 1;  // triangle
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
 
-    uint32_t leftShoulder : 1;   // l1
-    uint32_t rightShoulder : 1;  // r1
-    uint32_t l2 : 1;             // l2
-    uint32_t r2 : 1;             // r2
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t l2 : 1;             // l2
+    uint8_t r2 : 1;             // r2
 
-    uint32_t back : 1;             // share
-    uint32_t start : 1;            // options
-    uint32_t leftThumbClick : 1;   // l3
-    uint32_t rightThumbClick : 1;  // r3
+    uint8_t back : 1;             // share
+    uint8_t start : 1;            // options
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
 
-    uint32_t guide : 1;    // ps
-    uint32_t capture : 1;  // touchpad click
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // touchpad click
     // 6 bit report counter.
-    uint32_t reportCounter : 6;
+    uint8_t reportCounter : 6;
 
-    uint32_t leftTrigger : 8;
-    uint32_t rightTrigger : 8;
+    uint8_t leftTrigger : 8;
+    uint8_t rightTrigger : 8;
 
     uint32_t padding : 24;
     uint8_t mystery[22];
@@ -87,10 +115,10 @@ typedef struct
     bool b : 1;  // circle, black2
     bool y : 1;  // triangle, black3
 
-    bool leftShoulder : 1;  // white2, l1
+    bool leftShoulder : 1;   // white2, l1
     bool rightShoulder : 1;  // white3, r1
-    bool : 1;         // l2
-    bool : 1;         // r2
+    bool : 1;                // l2
+    bool : 1;                // r2
 
     bool : 1;                 // share
     bool start : 1;           // pause, options

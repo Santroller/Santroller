@@ -79,12 +79,6 @@ bool usb_configured() {
 }
 
 void send_report_to_pc(const void *report, uint8_t len) {
-    const uint8_t *report2 = (const uint8_t *)report;
-    printf("sending to pc (%d) (%d): ", len, xbox_one_state);
-    for (int i = 0; i < len; i++) {
-        printf("%02x, ", report2[i]);
-    }
-    printf("\r\n");
     tud_xusb_n_report(0, report, len);
 }
 bool foundXB = false;
@@ -163,7 +157,6 @@ uint8_t get_device_address_for(uint8_t deviceType) {
 }
 
 void send_report_to_controller(uint8_t dev_addr, uint8_t *report, uint8_t len) {
-    printf("Sending report to controller %d %02x\r\n", len, report[0]);
     if (dev_addr && tuh_xinput_mounted(dev_addr, 0)) {
         tuh_xinput_send_report(dev_addr, 0, report, len);
     }
@@ -262,7 +255,6 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (dev_addr == xone_dev_addr) {
-        printf("Got report from controller %d %02x\r\n", len, report[0]);
         receive_report_from_controller(report, len);
     }
     for (int i = 0; i < total_usb_host_devices; i++) {

@@ -1367,7 +1367,7 @@ bool tick_usb(void) {
     }
     // If usb host is supported, we handle that in the pico main, as only the pico supports that
 #if WINDOWS_USES_XINPUT && !USB_HOST_STACK
-    if (seen_windows_xb1) {
+    if (seen_windows_xb1 && consoleType == UNIVERSAL) {
         consoleType = WINDOWS;
         reset_usb();
     }

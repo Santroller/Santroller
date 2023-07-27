@@ -79,6 +79,12 @@ bool usb_configured() {
 }
 
 void send_report_to_pc(const void *report, uint8_t len) {
+    const uint8_t *report2 = (const uint8_t *)report;
+    printf("sending to pc (%d) (%d): ", len, xbox_one_state);
+    for (int i = 0; i < len; i++) {
+        printf("%02x, ", report2[i]);
+    }
+    printf("\r\n");
     tud_xusb_n_report(0, report, len);
 }
 bool foundXB = false;
@@ -129,9 +135,9 @@ void setup() {
         consoleType = CONSOLE_TYPE;
     }
     generateSerialString(&serialstring, consoleType);
-    tud_init(TUD_OPT_RHPORT);
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
+    tud_init(TUD_OPT_RHPORT);
 #if USB_HOST_STACK
     pio_usb_configuration_t config = {
         USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
@@ -408,5 +414,8 @@ void bootloader(void) {
 void reset_usb(void) {
     persistedConsoleType = consoleType;
     persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
+#if USB_HOST_STACK
+    xone_disconnect();
+#endif
     reboot();
 }

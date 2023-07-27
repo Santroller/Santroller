@@ -144,7 +144,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #else
 #define XBOX_ONE_VID XBOX_ONE_CONTROLLER_VID
 #define XBOX_ONE_PID XBOX_ONE_CONTROLLER_PID
-#define IDENTIFY_4_SIZE 46
+#define IDENTIFY_4_SIZE 20
 #endif
 typedef union {
     PS3_REPORT ps3;

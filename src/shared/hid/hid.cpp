@@ -408,7 +408,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
     if (consoleType == XBOXONE) {
-        printf("State: %02d\r\n", xbox_one_state);
+        printf("Received from console (%d) (%d): ", len, xbox_one_state);
         for (int i = 0; i < len; i++) {
             printf("%02x, ", data[i]);
         }
@@ -426,7 +426,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 xbox_one_state = Ready;
                 data_from_console_size = len;
                 memcpy(data_from_console, data, len);
-            } else {
+            } else if (data[0] != 5 && data[0] != 2 && data[0] != 4){
                 data_from_console_size = len;
                 memcpy(data_from_console, data, len);
             }

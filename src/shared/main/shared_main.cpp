@@ -1397,6 +1397,9 @@ bool tick_usb(void) {
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
+        if (!size) {
+            return 0;
+        }
     }
 #ifndef BLUETOOTH_RX
     if (!size) {
@@ -1613,16 +1616,30 @@ void device_reset(void) {
     last_ghl_poke_time = 0;
 }
 
-uint8_t last_len = false;
+uint8_t last_len = 0;
 void receive_report_from_controller(uint8_t const *report, uint16_t len) {
+    if (report[0] == GIP_INPUT_REPORT) {
+        report_sequence_number = report[2] + 1;
+    }
+    printf("Got from controller: ");
+    for (int i = 0; i < len; i++) {
+        printf("%02x, ", report[i]);
+    }
+    printf("\r\n");
+    const GipHeader_t *header = (const GipHeader_t *)report;
+    printf("Got report with id: %d\r\n", header->command);
+    if (header->command == 0x02) {
+        // printf("Requesting desc\r\n");
+        // last_len = 0;
+        // uint8_t request_desc[] = {0x04, 0x20, 0x01, 0x00};
+        // send_report_to_controller(get_device_address_for(XBOXONE), request_desc, sizeof(request_desc));
+        return;
+    }
     if (xbox_one_state != Auth) {
         return;
     }
     data_from_controller_size = len;
     memcpy(data_from_controller, report, len);
-    if (report[0] == GIP_INPUT_REPORT) {
-        report_sequence_number = report[2] + 1;
-    }
 }
 
 void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
@@ -1635,7 +1652,15 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
 }
 
 void xone_controller_connected(uint8_t dev_addr) {
-    send_report_to_controller(dev_addr, (uint8_t*)&powerMode, sizeof(GipPowerMode_t));
+    if (consoleType == XBOXONE) {
+        xbox_one_state = Announce;
+    }
+    send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
+}
+
+void xone_disconnect() {
+    powerMode.subcommand = 0x04;
+    send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
 }
 
 void host_controller_connected() {

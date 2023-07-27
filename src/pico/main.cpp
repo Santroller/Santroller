@@ -98,13 +98,13 @@ static void tick_usb() {
     }
     if (consoleType == WINDOWS) {
 #if !WINDOWS_USES_XINPUT
-        if (seen_xb360) {
+        if (seen_windows) {
             windows_in_hid = PERSISTED_CONSOLE_TYPE_VALID;
             consoleType = UNIVERSAL;
             reset_usb();
         }
 #endif
-        if (!seen_xb360 && millis() > 5000) {
+        if (!seen_windows && seen_windows_xb1 && (millis() - seen_windows_xb1) > 100) {
             consoleType = XBOXONE;
             reset_usb();
         }

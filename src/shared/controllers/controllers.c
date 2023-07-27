@@ -20,8 +20,8 @@ uint8_t report_sequence_number;
 uint8_t hid_sequence_number;
 uint8_t ps4_sequence_number;
 bool passthrough_stage_kit = false;
-bool seen_windows_xb1 = false;
-bool seen_xb360 = false;
+uint32_t seen_windows_xb1 = 0;
+bool seen_windows = false;
 bool read_any_string = false;
 bool read_device_desc = false;
 #ifdef __cplusplus

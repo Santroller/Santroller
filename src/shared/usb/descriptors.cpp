@@ -71,7 +71,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     Interface1ID : {
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
-        flags: XINPUT_FLAGS,
+        flags : XINPUT_FLAGS,
         reserved : 0x01,
         subtype : SUB_TYPE,
         reserved2 : 0x25,
@@ -546,6 +546,9 @@ bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
+        seen_windows = true;
+    }
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         if (request == COMMAND_REBOOT) {
             reboot();
@@ -702,6 +705,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         memcpy(requestBuffer, &serial, sizeof(serial));
         return sizeof(XInputSerialNumber_t);
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
+        seen_windows_xb1 = millis();
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
         if (consoleType == XBOXONE) {
             memcpy_P(requestBuffer, &DevCompatIDsOne, sizeof(DevCompatIDsOne));
@@ -714,7 +718,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (consoleType != UNIVERSAL) {
             return 0;
         }
-        seen_windows_xb1 = millis();
         return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE);
     } else if (request == HID_REQUEST_SET_PROTOCOL && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         protocol_mode = (uint8_t)wValue;

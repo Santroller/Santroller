@@ -448,13 +448,11 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             uint8_t led = data[2];
             uint8_t player = xbox_players[led];
             handle_player_leds(player);
-            seen_xb360 = true;
 
         } else if (id == XBOX_RUMBLE_ID) {
             uint8_t rumble_left = data[3];
             uint8_t rumble_right = data[4];
             handle_rumble(rumble_left, rumble_right);
-            seen_xb360 = true;
         }
     } else {
         if (id == PS4_LED_RUMBLE_ID) {

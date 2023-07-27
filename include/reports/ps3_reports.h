@@ -159,8 +159,7 @@ typedef struct {
     uint8_t x : 1;  // square
 
     uint8_t guide : 1;
-    uint8_t capture : 1;
-    uint8_t : 6;
+    uint8_t : 7;
     uint8_t : 8;
     uint8_t leftStickX;
     uint8_t leftStickY;

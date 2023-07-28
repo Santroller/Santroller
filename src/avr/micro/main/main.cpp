@@ -26,7 +26,7 @@
 typedef struct
 {
     USB_Descriptor_Header_t Header;
-    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1];
+    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2];
 } __attribute__ ((packed)) SignatureDescriptor_t;
 volatile uint16_t test __attribute__((section(".noinit")));
 volatile uint16_t test2 __attribute__((section(".noinit")));
@@ -125,7 +125,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 static void USB_Device_GetInternalSerialDescriptor(void) {
     SignatureDescriptor_t* desc = (SignatureDescriptor_t*)buf;
     desc->Header.Type = DTYPE_String;
-    desc->Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 1);
+    desc->Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 2);
 
     uint_reg_t CurrentGlobalInt = GetGlobalInterruptMask();
     GlobalInterruptDisable();
@@ -147,6 +147,7 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 
     SetGlobalInterruptMask(CurrentGlobalInt);
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = DEVICE_TYPE + '0';
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

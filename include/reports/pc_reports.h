@@ -60,6 +60,32 @@ typedef struct {
     uint8_t pressureSquare;
 
 } __attribute__((packed)) PCGamepad_Data_t;
+typedef struct {
+    uint8_t reportId;
+    // Button bits
+    uint8_t x : 1;  // square
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t y : 1;  // triangle
+
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    union {
+        struct {
+            uint8_t dpadUp : 1;
+            uint8_t dpadDown : 1;
+            uint8_t dpadLeft : 1;
+            uint8_t dpadRight : 1;
+            uint8_t : 4;
+        };
+        uint8_t dpad;
+    };
+
+} __attribute__((packed)) PCStageKit_Data_t;
 
 typedef struct
 {

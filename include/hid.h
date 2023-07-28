@@ -84,6 +84,8 @@ extern const uint8_t pc_descriptor[91];
 #else
 extern const uint8_t pc_descriptor[87];
 #endif
+#elif DEVICE_TYPE == STAGE_KIT
+extern const uint8_t pc_descriptor[68];
 #else
 extern const uint8_t pc_descriptor[99];
 #endif

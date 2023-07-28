@@ -338,8 +338,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         if (report->tilt != PS3_STICK_CENTER) {
             out->tilt = report->tilt;
         }
-        if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = report->whammy;
+        if (report->whammy) {
+            out->whammy = PS3_STICK_CENTER + (report->whammy >> 1);
         }
     }
     if (output_console_type == XBOX360) {
@@ -490,8 +490,11 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         if (report->tilt != PS3_STICK_CENTER) {
             out->tilt = report->tilt << 2;
         }
-        if (report->whammy != PS3_STICK_CENTER) {
+        if (report->whammy) {
+            last_zero = millis() + 1000;
             out->whammy = report->whammy;
+        } else if (last_zero - millis() > 1000) {
+            out->whammy = PS3_STICK_CENTER;
         }
         if (report->pickup != PS3_STICK_CENTER) {
             out->pickup = report->pickup;
@@ -844,6 +847,73 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->rightBlue |= report->rightBlue;
         out->rightRed |= report->rightRed;
         out->rightGreen |= report->rightGreen;
+    }
+#elif DEVICE_TYPE == STAGE_KIT
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        out->capture |= report->capture;
+    }
+    if (output_console_type == PS4) {
+        PS4_REPORT *out = (PS4_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        out->capture |= report->capture;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+    }
+    if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+    }
+    if (output_console_type == XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
     }
 #else  // Gamepad or devices that use the same mapping as a gamepad
     if (output_console_type == PS3) {
@@ -1511,7 +1581,7 @@ int tick_bluetooth_inputs(const void *buf) {
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
 // This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
 // However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
-#if !(DEVICE_TYPE_IS_INSTRUMENT)
+#if (DEVICE_TYPE == GAMEPAD)
     if (output_console_type == PS3) {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
         report->accelX = PS3_ACCEL_CENTER;

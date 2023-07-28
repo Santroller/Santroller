@@ -52,14 +52,6 @@ bool received_controller_tick = false;
 bool should_reload_usb = false;
 bool usb_ready = false;
 
-void reset_usb(void) {
-    should_reload_usb = true;
-}
-
-bool usb_configured(void) {
-    return usb_ready;
-}
-
 static void USB_Device_GetInternalSerialDescriptor(void) {
     signature.Header.Type = 0x03;
     signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 2);
@@ -85,6 +77,15 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     SREG = CurrentGlobalInt;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = DEVICE_TYPE + '0';
+}
+
+void reset_usb(void) {
+    should_reload_usb = true;
+    USB_Device_GetInternalSerialDescriptor();
+}
+
+bool usb_configured(void) {
+    return usb_ready;
 }
 
 void setup() {

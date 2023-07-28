@@ -28,8 +28,8 @@ typedef struct
     USB_Descriptor_Header_t Header;
     uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2];
 } __attribute__ ((packed)) SignatureDescriptor_t;
-volatile uint16_t test __attribute__((section(".noinit")));
-volatile uint16_t test2 __attribute__((section(".noinit")));
+volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
+volatile uint16_t persistedConsoleTypeValid __attribute__((section(".noinit")));
 void SetupHardware(void);
 
 bool connected = false;
@@ -46,8 +46,8 @@ bool usb_configured() {
 
 void setup() {
     init_main();
-    if (test2 == 0x3A2F) {
-        consoleType = test;
+    if (persistedConsoleTypeValid == 0x3A2F) {
+        consoleType = persistedConsoleType;
     }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
@@ -161,7 +161,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
     return descriptorRequest(wValue, wIndex, buf);
 }
 void reset_usb(void) {
-    test = consoleType;
-    test2 = 0x3A2F;
+    persistedConsoleType = consoleType;
+    persistedConsoleTypeValid = 0x3A2F;
     reboot();
 }

@@ -147,7 +147,7 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 
     SetGlobalInterruptMask(CurrentGlobalInt);
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = DEVICE_TYPE + '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = DEVICE_TYPE + '0';
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

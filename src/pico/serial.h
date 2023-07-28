@@ -30,6 +30,6 @@ static inline void generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeStr
         UnicodeString->UnicodeString[i] = id[i];
     }
 
-    UnicodeString->UnicodeString[sizeof(id)] = '0' + consoleType;
-    UnicodeString->UnicodeString[sizeof(id)+2] = '0' + DEVICE_TYPE;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES] = '0' + consoleType;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1] = '0' + DEVICE_TYPE;
 }

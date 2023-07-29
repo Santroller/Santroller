@@ -742,13 +742,29 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
     return 0;
 }
-
+bool seen_windows_desc = false;
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
     // printf("Descriptor: %02x %02x %02x\r\n", descriptorType, descriptorNumber, wIndex);
+#if USB_HOST_STACK
+    if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
+        seen_windows_desc = true;
+    }
+    if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
+        if (seen_windows_desc) {
+            set_console_type(WINDOWS);
+        } else {
+            set_console_type(XBOXONE);
+        }
+    }
+#elif WINDOWS_USES_XINPUT
+    if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
+        set_console_type(WINDOWS);
+    }
+#endif
     descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {

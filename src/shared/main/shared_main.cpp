@@ -76,6 +76,7 @@ uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
 USB_LastReport_Data_t temp_report_usb_host;
+USB_LastReport_Data_t temp_report_usb_host_xb1;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 #endif
@@ -1435,13 +1436,7 @@ bool tick_usb(void) {
     if (millis_at_boot == 0) {
         millis_at_boot = millis();
     }
-    // If usb host is supported, we handle that in the pico main, as only the pico supports that
-#if WINDOWS_USES_XINPUT && !USB_HOST_STACK
-    if (seen_windows_xb1 && consoleType == UNIVERSAL) {
-        consoleType = WINDOWS;
-        reset_usb();
-    }
-#endif
+    // If we ended up here, then someone probably changed back to hid mode so we should jump back
 #if !WINDOWS_USES_XINPUT && !USB_HOST_STACK
     if (seen_windows_xb1 && consoleType == WINDOWS) {
         consoleType = UNIVERSAL;

@@ -92,23 +92,6 @@ static void tick_usb() {
     tud_task();
 #if USB_HOST_STACK
     tuh_task();
-    if (windows_in_hid != PERSISTED_CONSOLE_TYPE_VALID && consoleType == UNIVERSAL && seen_windows_xb1) {
-        consoleType = WINDOWS;
-        reset_usb();
-    }
-    if (consoleType == WINDOWS) {
-#if !WINDOWS_USES_XINPUT
-        if (seen_windows) {
-            windows_in_hid = PERSISTED_CONSOLE_TYPE_VALID;
-            consoleType = UNIVERSAL;
-            reset_usb();
-        }
-#endif
-        if (!seen_windows && seen_windows_xb1 && (millis() - seen_windows_xb1) > 100) {
-            consoleType = XBOXONE;
-            reset_usb();
-        }
-    }
 #endif
     tick();
 }

@@ -1713,10 +1713,9 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
 }
 
 void xone_controller_connected(uint8_t dev_addr) {
-    if (consoleType == XBOXONE) {
-        xbox_one_state = Announce;
+    if (consoleType != XBOXONE) {
+        send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
     }
-    send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
 }
 #if USB_HOST_STACK
 void xone_disconnect() {

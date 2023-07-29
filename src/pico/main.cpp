@@ -390,7 +390,9 @@ void reset_usb(void) {
     persistedConsoleType = consoleType;
     persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
 #if USB_HOST_STACK
-    xone_disconnect();
+    if (xone_dev_addr != 0) {
+        // xone_disconnect();
+    }
 #endif
     reboot();
 }

@@ -1717,12 +1717,6 @@ void xone_controller_connected(uint8_t dev_addr) {
         send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
     }
 }
-#if USB_HOST_STACK
-void xone_disconnect() {
-    // powerMode.subcommand = 0x04;
-    // send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
-}
-#endif
 
 void host_controller_connected() {
     // With input_usb_host, we need to run detection for a little bit after the input is detected

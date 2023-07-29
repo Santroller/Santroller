@@ -1720,8 +1720,8 @@ void xone_controller_connected(uint8_t dev_addr) {
 }
 #if USB_HOST_STACK
 void xone_disconnect() {
-    powerMode.subcommand = 0x04;
-    send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
+    // powerMode.subcommand = 0x04;
+    // send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
 }
 #endif
 

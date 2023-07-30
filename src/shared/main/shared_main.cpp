@@ -271,7 +271,11 @@ uint8_t tick_xbox_one() {
         case Announce:
             xbox_one_state = Waiting1;
             memcpy(&combined_report, announce, sizeof(announce));
-            memcpy(&combined_report.raw[4], &serial, sizeof(serial));
+            memcpy(&combined_report.raw[7], &serial, 3);
+            for (int i = 0; i < sizeof(announce); i++) {
+                printf("%02x, ",combined_report.raw[i]);
+            }
+            printf("\r\n");
             return sizeof(announce);
         case Ident1:
             xbox_one_state = Waiting2;
@@ -1713,9 +1717,7 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
 }
 
 void xone_controller_connected(uint8_t dev_addr) {
-    if (consoleType != XBOXONE) {
-        send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
-    }
+    send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
 }
 
 void host_controller_connected() {

@@ -272,10 +272,6 @@ uint8_t tick_xbox_one() {
             xbox_one_state = Waiting1;
             memcpy(&combined_report, announce, sizeof(announce));
             memcpy(&combined_report.raw[7], &serial, 3);
-            for (int i = 0; i < sizeof(announce); i++) {
-                printf("%02x, ",combined_report.raw[i]);
-            }
-            printf("\r\n");
             return sizeof(announce);
         case Ident1:
             xbox_one_state = Waiting2;

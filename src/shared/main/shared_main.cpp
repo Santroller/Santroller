@@ -1124,6 +1124,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t size = 0;
     uint8_t led_tmp;
+    int16_t dj_temp;
 #ifdef INPUT_QUEUE
     Buffer_Report_t current_queue_report = {val : 0};
 #endif

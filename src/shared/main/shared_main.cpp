@@ -160,7 +160,7 @@ int16_t adc_i(uint8_t pin) {
     int32_t ret = adc(pin);
     return ret - 32767;
 }
-int16_t handle_calibration_xbox(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
+int16_t handle_calibration_xbox(int16_t previous, int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
     int32_t val = orig_val;
     int16_t val_deadzone = orig_val - offset;
     if (val_deadzone < deadzone && val_deadzone > -deadzone) {
@@ -180,10 +180,22 @@ int16_t handle_calibration_xbox(int16_t orig_val, int16_t offset, int16_t min, i
     if (val < INT16_MIN) {
         val = INT16_MIN;
     }
-    return val;
+    if (previous < 0) {
+        previous = -previous;
+    }
+    if (val < 0) {
+        if ((-val) > previous) {
+            return val;
+        }
+    } else {
+        if (val > previous) {
+            return val;
+        }
+    }
+    return previous;
 }
 
-int16_t handle_calibration_xbox_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+int16_t handle_calibration_xbox_whammy(int16_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -204,9 +216,12 @@ int16_t handle_calibration_xbox_whammy(uint16_t orig_val, uint16_t min, int16_t 
     if (val < INT16_MIN) {
         val = INT16_MIN;
     }
-    return val;
+    if (val > previous) {
+        return val;
+    }
+    return previous;
 }
-uint16_t handle_calibration_xbox_one_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_xbox_one_trigger(uint16_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -226,31 +241,35 @@ uint16_t handle_calibration_xbox_one_trigger(uint16_t orig_val, uint16_t min, in
     if (val < 0) {
         val = 0;
     }
-    return val >> 6;
+    val = val >> 6;
+    if (val > previous) {
+        return val;
+    }
+    return previous;
 }
-uint8_t handle_calibration_ps3(int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
-    int8_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 8;
+uint8_t handle_calibration_ps3(uint8_t previous, int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
+    int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, offset, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret + PS3_STICK_CENTER);
 }
 
-uint8_t handle_calibration_ps3_360_trigger(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
-    return handle_calibration_xbox_one_trigger(orig_val, min, multiplier, deadzone) >> 2;
+uint8_t handle_calibration_ps3_360_trigger(uint8_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+    return handle_calibration_xbox_one_trigger(previous << 2, orig_val, min, multiplier, deadzone) >> 2;
 }
 
-uint16_t handle_calibration_ps3_accel(uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_ps3_accel(uint16_t previous, uint16_t orig_val, int16_t offset, uint16_t min, int16_t multiplier, uint16_t deadzone) {
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
     // Also, the game is looking for the value going negative, not positive
-    int16_t ret = (-(handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 7)) - GUITAR_ONE_G;
+    int16_t ret = (-(handle_calibration_xbox((-(previous + GUITAR_ONE_G)) << 7, orig_val, offset, min, multiplier, deadzone) >> 7)) - GUITAR_ONE_G;
 #else
-    int16_t ret = handle_calibration_xbox(orig_val, offset, min, multiplier, deadzone) >> 6;
+    int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, offset, min, multiplier, deadzone) >> 6;
 #endif
     return PS3_ACCEL_CENTER + ret;
 }
 long last_zero = 0;
-uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
-    int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 8;
+    int8_t ret = handle_calibration_xbox_whammy((previous - PS3_STICK_CENTER) << 8, orig_val, min, multiplier, deadzone) >> 8;
     if (ret < -120) {
         if (last_zero - millis() > 1000) {
             return PS3_STICK_CENTER;
@@ -260,7 +279,7 @@ uint8_t handle_calibration_ps3_whammy(uint16_t orig_val, uint16_t min, int16_t m
     }
     return (uint8_t)(ret + PS3_STICK_CENTER);
 #else
-    int8_t ret = handle_calibration_xbox_whammy(orig_val, min, multiplier, deadzone) >> 9;
+    int8_t ret = handle_calibration_xbox_whammy((ret - (PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1))) << 9, orig_val, min, multiplier, deadzone) >> 9;
     return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
 #endif
 }
@@ -1238,6 +1257,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report_size = size - sizeof(GipHeader_t);
             memset(buf, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
+            int16_t temp;
+            uint16_t temp_trigger;
             TICK_XBOX_ONE;
 
             if (report->guide != lastXboxOneGuide) {

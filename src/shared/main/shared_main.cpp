@@ -180,17 +180,8 @@ int16_t handle_calibration_xbox(int16_t previous, int16_t orig_val, int16_t offs
     if (val < INT16_MIN) {
         val = INT16_MIN;
     }
-    if (previous < 0) {
-        previous = -previous;
-    }
-    if (val < 0) {
-        if ((-val) > previous) {
-            return val;
-        }
-    } else {
-        if (val > previous) {
-            return val;
-        }
+    if (abs(val) > abs(previous)) {
+        return val;
     }
     return previous;
 }

@@ -25,7 +25,7 @@ typedef struct
 typedef struct
 {
     USB_Descriptor_Header_t Header;
-    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2];
+    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3];
 } __attribute__ ((packed)) SignatureDescriptor_t;
 
 SignatureDescriptor_t signature;
@@ -54,7 +54,7 @@ bool usb_ready = false;
 
 static void USB_Device_GetInternalSerialDescriptor(void) {
     signature.Header.Type = 0x03;
-    signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 2);
+    signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 3);
 
     uint8_t CurrentGlobalInt = SREG;
     cli();
@@ -77,6 +77,7 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     SREG = CurrentGlobalInt;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = DEVICE_TYPE + '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = WINDOWS_USES_XINPUT + '0';
 }
 
 void reset_usb(void) {

@@ -1,7 +1,7 @@
 #include <pico/unique_id.h>
 #include <stdint.h>
 #include <Usb.h>
-#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2) * 2)
+#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3) * 2)
 
 
 typedef struct
@@ -32,4 +32,5 @@ static inline void generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeStr
 
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES] = '0' + consoleType;
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1] = '0' + DEVICE_TYPE;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+2] = '0' + WINDOWS_USES_XINPUT;
 }

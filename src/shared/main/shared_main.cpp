@@ -1443,6 +1443,12 @@ bool tick_usb(void) {
         reset_usb();
     }
 #endif
+#if !WINDOWS_USES_XINPUT && USB_HOST_STACK
+    if (consoleType == WINDOWS) {
+        consoleType = UNIVERSAL;
+        reset_usb();
+    }
+#endif
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if ((millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && read_device_desc && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating

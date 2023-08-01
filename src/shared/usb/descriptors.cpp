@@ -755,7 +755,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
     }
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
         if (seen_windows_desc) {
+#if WINDOWS_USES_XINPUT
             set_console_type(WINDOWS);
+#endif
         } else {
             set_console_type(XBOXONE);
         }

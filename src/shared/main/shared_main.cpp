@@ -1437,13 +1437,7 @@ bool tick_usb(void) {
         millis_at_boot = millis();
     }
     // If we ended up here, then someone probably changed back to hid mode so we should jump back
-#if !WINDOWS_USES_XINPUT && !USB_HOST_STACK
-    if (seen_windows_xb1 && consoleType == WINDOWS) {
-        consoleType = UNIVERSAL;
-        reset_usb();
-    }
-#endif
-#if !WINDOWS_USES_XINPUT && USB_HOST_STACK
+#if !WINDOWS_USES_XINPUT
     if (consoleType == WINDOWS) {
         consoleType = UNIVERSAL;
         reset_usb();

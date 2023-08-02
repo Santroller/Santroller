@@ -53,6 +53,7 @@ long lastSentGHLPoke = 0;
 long lastTap;
 long lastTapShift;
 long input_start = 0;
+long lastDebounce = 0;
 bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
@@ -1146,20 +1147,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef INPUT_QUEUE
         if (micros() - last_queue > 100) {
             last_queue = micros();
-#endif
             for (int i = 0; i < DIGITAL_COUNT; i++) {
                 if (debounce[i]) {
                     debounce[i]--;
                 }
             }
-#ifdef INPUT_QUEUE
-        }
-        if (current_queue_report.val != last_queue_report.val) {
-            queue[queue_tail] = current_queue_report;
-            last_queue_report = current_queue_report;
-            if (queue_size < BUFFER_SIZE_QUEUE) {
-                queue_size++;
-                queue_tail++;
+            if (current_queue_report.val != last_queue_report.val) {
+                queue[queue_tail] = current_queue_report;
+                last_queue_report = current_queue_report;
+                if (queue_size < BUFFER_SIZE_QUEUE) {
+                    queue_size++;
+                    queue_tail++;
+                }
             }
         }
 #endif
@@ -1215,11 +1214,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
 
-        for (int i = 0; i < DIGITAL_COUNT; i++) {
-            if (debounce[i]) {
-                debounce[i]--;
-            }
-        }
         // If we are directly asked for a HID report, always just reply with the NKRO one
         if (lastReportToCheck) {
             uint8_t cmp = memcmp(lastReportToCheck, buf, size);
@@ -1383,11 +1377,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->y = x;
         }
 #endif
-    }
-    for (int i = 0; i < DIGITAL_COUNT; i++) {
-        if (debounce[i]) {
-            debounce[i]--;
-        }
     }
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT) {
@@ -1687,6 +1676,16 @@ void tick(void) {
     if (!ready && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
         tick_inputs(NULL, NULL, consoleType);
+    }
+#endif
+#ifndef INPUT_QUEUE
+    if (micros() - lastDebounce > 1000) {
+        lastDebounce = micros();
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                debounce[i]--;
+            }
+        }
     }
 #endif
 }

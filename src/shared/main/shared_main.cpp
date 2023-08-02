@@ -351,7 +351,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->tilt = report->tilt;
         }
         if (report->whammy) {
-            out->whammy = PS3_STICK_CENTER + (report->whammy >> 1);
+            out->whammy = report->whammy;
         }
     }
     if (output_console_type == XBOX360) {

@@ -1152,13 +1152,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     debounce[i]--;
                 }
             }
-            if (current_queue_report.val != last_queue_report.val) {
-                queue[queue_tail] = current_queue_report;
-                last_queue_report = current_queue_report;
-                if (queue_size < BUFFER_SIZE_QUEUE) {
-                    queue_size++;
-                    queue_tail++;
-                }
+        }
+        if (current_queue_report.val != last_queue_report.val) {
+            queue[queue_tail] = current_queue_report;
+            last_queue_report = current_queue_report;
+            if (queue_size < BUFFER_SIZE_QUEUE) {
+                queue_size++;
+                queue_tail++;
             }
         }
 #endif
@@ -1691,6 +1691,15 @@ void tick(void) {
 }
 
 void device_reset(void) {
+#if USB_HOST_STACK
+    if (consoleType == XBOXONE) {
+        if (xbox_one_state != Announce && xbox_one_state != Waiting1) {
+            powerMode.subcommand = 0x07;
+            send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
+            powerMode.subcommand = 0x00;
+        }
+    }
+#endif
     xbox_one_state = Announce;
     data_from_controller_size = 0;
     data_from_console_size = 0;

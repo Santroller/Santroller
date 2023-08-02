@@ -324,7 +324,7 @@ uint8_t keyboard_report = 0;
 #if defined(BLUETOOTH_RX)
 // When we do Bluetooth, the reports are in universal format, so we need to convert
 void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_console_type) {
-    uint8_t dpad = dpad_bindings_reverse[report->dpad];
+    uint8_t dpad = report->dpad >= 0x08 ? 0: dpad_bindings_reverse[report->dpad];
     bool up = dpad & UP;
     bool left = dpad & LEFT;
     bool down = dpad & DOWN;
@@ -1373,7 +1373,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-        gamepad->dpad = 0x00;
         TICK_PS3;
         asm volatile("" ::
                          : "memory");

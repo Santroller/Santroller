@@ -244,7 +244,7 @@ typedef struct
     bool leftThumbClick : 1;  // leftThumbClick, ghtv
     bool : 1;
 
-    bool leftShoulder : 1;  // white2 leftShoulder
+    bool leftShoulder : 1;   // white2 leftShoulder
     bool rightShoulder : 1;  // white3 rightShoulder
     bool guide : 1;
     bool : 1;

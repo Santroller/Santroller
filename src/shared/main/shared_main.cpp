@@ -1317,6 +1317,19 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = size = sizeof(PC_REPORT);
         PC_REPORT *report = (PC_REPORT *)report_data;
         memset(report, 0, sizeof(PC_REPORT));
+#if DEVICE_TYPE == GAMEPAD
+        report->leftStickX = PS3_STICK_CENTER;
+        report->leftStickY = PS3_STICK_CENTER;
+        report->rightStickX = PS3_STICK_CENTER;
+        report->rightStickY = PS3_STICK_CENTER;
+#endif
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
+    report->tilt = PS3_STICK_CENTER;
+#endif
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    report->leftTableVelocity = PS3_STICK_CENTER;
+    report->rightTableVelocity = PS3_STICK_CENTER;
+#endif
         report->reportId = 1;
         TICK_PC;
         asm volatile("" ::
@@ -1765,7 +1778,7 @@ void ps4_controller_disconnected(void) {
 }
 
 void set_console_type(uint8_t new_console_type) {
-    if (consoleType == new_console_type) return;
+    if (consoleType == new_console_type && new_console_type != UNIVERSAL) return;
     consoleType = new_console_type;
     reset_usb();
 }

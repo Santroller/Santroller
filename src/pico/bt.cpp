@@ -81,7 +81,7 @@ int get_bt_address(uint8_t *addr) {
 void send_report(uint8_t size, uint8_t *report) {
     if (con_handle != HCI_CON_HANDLE_INVALID) {
         can_send = false;
-        hids_device_send_input_report(con_handle, report, size);
+        hids_device_send_input_report(con_handle, report+1, size);
         hids_device_request_can_send_now_event(con_handle);
     }
 }

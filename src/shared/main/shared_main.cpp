@@ -1435,7 +1435,7 @@ bool tick_usb(void) {
         return false;
     }
 #endif
-    if (millis_at_boot == 0) {
+    if (millis_at_boot == 0 && read_device_desc) {
         millis_at_boot = millis();
     }
     // If we ended up here, then someone probably changed back to hid mode so we should jump back
@@ -1446,7 +1446,7 @@ bool tick_usb(void) {
     }
 #endif
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if ((millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && read_device_desc && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
+    if (millis_at_boot && (millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == GUITAR || DEVICE_TYPE == DRUMS
         if (usb_configured()) {

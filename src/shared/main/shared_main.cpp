@@ -275,35 +275,38 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint1
     return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
 #endif
 }
-
+uint16_t descriptor_index = 0;
 uint8_t tick_xbox_one() {
     uint32_t serial = micros();
     switch (xbox_one_state) {
         case Announce:
-            xbox_one_state = Waiting1;
+            descriptor_index = 0;
+            xbox_one_state = WaitingDesc1;
             memcpy(&combined_report, announce, sizeof(announce));
             memcpy(&combined_report.raw[7], &serial, 3);
             return sizeof(announce);
-        case Ident1:
-            xbox_one_state = Waiting2;
-            memcpy(&combined_report, identify_1, sizeof(identify_1));
-            return sizeof(identify_1);
-        case Ident2:
-            xbox_one_state = Ident3;
-            memcpy(&combined_report, identify_2, sizeof(identify_2));
-            return sizeof(identify_2);
-        case Ident3:
-            xbox_one_state = Ident4;
-            memcpy(&combined_report, identify_3, sizeof(identify_3));
-            return sizeof(identify_3);
-        case Ident4:
-            xbox_one_state = Waiting5;
-            memcpy(&combined_report, identify_4, sizeof(identify_4));
-            return sizeof(identify_4);
-        case Ident5:
+        case IdentDesc1:
+            xbox_one_state = WaitingDesc;
+            descriptor_index += 64;
+            memcpy(&combined_report, xb1_descriptor, 64);
+            return 64;
+        case IdentDesc: {
+            uint16_t len = sizeof(xb1_descriptor) - descriptor_index;
+            if (len > 64) {
+                len = 64;
+            } else {
+                xbox_one_state = WaitingDescEnd;
+            }
+            printf("%d %d\r\n", len, descriptor_index);
+            memcpy(&combined_report, xb1_descriptor + descriptor_index, len);
+            descriptor_index += len;
+            return len;
+        }
+        case IdentDescEnd: {
             xbox_one_state = Auth;
-            memcpy(&combined_report, identify_5, sizeof(identify_5));
-            return sizeof(identify_5);
+            memcpy(&combined_report, xb1_descriptor_end, sizeof(xb1_descriptor_end));
+            return sizeof(xb1_descriptor_end);
+        }
         case Auth:
             if (data_from_controller_size) {
                 uint8_t size = data_from_controller_size;
@@ -1705,7 +1708,7 @@ void tick(void) {
 void device_reset(void) {
 #if USB_HOST_STACK
     if (consoleType == XBOXONE) {
-        if (xbox_one_state != Announce && xbox_one_state != Waiting1) {
+        if (xbox_one_state != Announce && xbox_one_state != WaitingDesc1) {
             powerMode.subcommand = 0x07;
             send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
             powerMode.subcommand = 0x00;

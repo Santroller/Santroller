@@ -140,19 +140,19 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #if DEVICE_TYPE_IS_GUITAR
 #define XBOX_ONE_VID XBOX_ONE_RB_VID
 #define XBOX_ONE_PID XBOX_ONE_RB_GUITAR_PID
-#define IDENTIFY_4_SIZE 64
+#define XBOX_ONE_DESCRIPTOR_SIZE 256
 #elif DEVICE_TYPE_IS_DRUMS
 #define XBOX_ONE_VID XBOX_ONE_RB_VID
 #define XBOX_ONE_PID XBOX_ONE_RB_DRUM_PID
-#define IDENTIFY_4_SIZE 64
+#define XBOX_ONE_DESCRIPTOR_SIZE 224
 #elif DEVICE_TYPE == LIVE_GUITAR
 #define XBOX_ONE_VID XBOX_ONE_GHLIVE_DONGLE_VID
 #define XBOX_ONE_PID XBOX_ONE_GHLIVE_DONGLE_PID
-#define IDENTIFY_4_SIZE 64
+#define XBOX_ONE_DESCRIPTOR_SIZE 329
 #else
 #define XBOX_ONE_VID XBOX_ONE_CONTROLLER_VID
 #define XBOX_ONE_PID XBOX_ONE_CONTROLLER_PID
-#define IDENTIFY_4_SIZE 52
+#define XBOX_ONE_DESCRIPTOR_SIZE 244
 #endif
 typedef union {
     PS3_REPORT ps3;
@@ -163,11 +163,8 @@ typedef union {
     USB_Mouse_Data_t mouse;
 } combined_report_t;
 extern const uint8_t announce[32];
-extern const uint8_t identify_1[64];
-extern const uint8_t identify_2[64];
-extern const uint8_t identify_3[64];
-extern const uint8_t identify_4[IDENTIFY_4_SIZE];
-extern const uint8_t identify_5[8];
+extern const uint8_t xb1_descriptor[XBOX_ONE_DESCRIPTOR_SIZE];
+extern const uint8_t xb1_descriptor_end[6];
 #define SUPPORTS_LEDS LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
 #define SUPPORTS_MIDI CONSOLE_TYPE == MIDI
 #define SUPPORTS_HID CONSOLE_TYPE != MIDI

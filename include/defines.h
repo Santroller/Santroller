@@ -74,14 +74,12 @@ typedef enum {
 } WiiExtType_t;
 typedef enum {
     Announce,
-    Waiting1,
-    Ident1,
-    Waiting2,
-    Ident2,
-    Ident3,
-    Ident4,
-    Waiting5,
-    Ident5,
+    WaitingDesc1,
+    IdentDesc1,
+    WaitingDesc,
+    IdentDesc,
+    WaitingDescEnd,
+    IdentDescEnd,
     Auth,
     Ready
 } Xbox_One_State_t;

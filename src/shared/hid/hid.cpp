@@ -408,12 +408,12 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
     if (consoleType == XBOXONE) {
-        if (xbox_one_state == Waiting1) {
-            xbox_one_state = Ident1;
-        } else if (xbox_one_state == Waiting2) {
-            xbox_one_state = Ident2;
-        } else if (xbox_one_state == Waiting5) {
-            xbox_one_state = Ident5;
+        if (xbox_one_state == WaitingDesc1) {
+            xbox_one_state = IdentDesc1;
+        } else if (xbox_one_state == WaitingDesc) {
+            xbox_one_state = IdentDesc;
+        } else if (xbox_one_state == WaitingDescEnd) {
+            xbox_one_state = IdentDescEnd;
         } else if (xbox_one_state == Auth) {
             delay(1);
             if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {

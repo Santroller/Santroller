@@ -133,6 +133,7 @@ void init_main(void) {
     GIP_HEADER((&powerMode), GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
     powerMode.subcommand = 0x00;
     memset(ledState, 0, sizeof(ledState));
+    LED_INIT;
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
 #endif

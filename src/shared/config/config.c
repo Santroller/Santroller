@@ -7,7 +7,7 @@ uint8_t consoleType = CONSOLE_TYPE;
 const uint8_t __attribute__((section(".santroller_config"))) config[CONFIGURATION_LEN] = CONFIGURATION;
 #ifdef CONFIGURABLE_BLOBS
 const uint16_t __attribute__((section(".santroller_config_blobs"))) config_blobs[CONFIGURABLE_BLOBS_LEN] = CONFIGURABLE_BLOBS;
-const char __attribute__((used,section(".santroller_config_variant"))) variant[] = VARIANT;
+const char __attribute__((section(".santroller_config_variant"))) variant[] = VARIANT;
 #endif
 #else
 const uint8_t PROGMEM config[CONFIGURATION_LEN] = CONFIGURATION;

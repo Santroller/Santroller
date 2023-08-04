@@ -60,6 +60,11 @@ for (int i = 0; i < device_count; i++) {
             switch (device_type.sub_type) {
                 case GAMEPAD: {
                     PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
                     usb_host_data.a |= report->a;
                     usb_host_data.b |= report->b;
                     usb_host_data.x |= report->x;
@@ -348,6 +353,11 @@ for (int i = 0; i < device_count; i++) {
             switch (device_type.sub_type) {
                 case GAMEPAD: {
                     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)data;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
                     usb_host_data.a |= report->a;
                     usb_host_data.b |= report->b;
                     usb_host_data.x |= report->x;
@@ -406,6 +416,11 @@ for (int i = 0; i < device_count; i++) {
             switch (device_type.sub_type) {
                 case XINPUT_GAMEPAD: {
                     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)data;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
                     usb_host_data.a |= report->a;
                     usb_host_data.b |= report->b;
                     usb_host_data.x |= report->x;
@@ -649,6 +664,11 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.x |= report->x;
                     usb_host_data.y |= report->y;
                     usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
                     usb_host_data.rightShoulder |= report->rightShoulder;
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;

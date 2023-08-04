@@ -42,13 +42,14 @@ for (int i = 0; i < device_count; i++) {
         } else if (header->command == GIP_VIRTUAL_KEYCODE) {
             GipKeystroke_t *keystroke = (GipKeystroke_t *)data;
             if (keystroke->keycode == GIP_VKEY_LEFT_WIN) {
-                usb_host_data.guide = keystroke->pressed;
+                usbHostXboxOneGuide = keystroke->pressed;
             }
             continue;
         } else if (header->command != GIP_INPUT_REPORT) {
             // Not input data, continue
             continue;
         }
+        usb_host_data.guide |= usbHostXboxOneGuide;
     }
     switch (console_type) {
         case PS3: {

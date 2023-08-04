@@ -1,4 +1,5 @@
 #include "string_descriptors.h"
+#include "config.h"
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the
@@ -11,12 +12,20 @@ const PROGMEM STRING_DESCRIPTOR languageString = USB_DESCRIPTOR_STRING_ARRAY(LAN
  * by the host when the appropriate string ID is requested, listed in the Device
  *  Descriptor.
  */
+#ifdef DEVICE_VENDOR
+const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_ARRAY(DEVICE_VENDOR);
+#else
 const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
+#endif
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
+#ifdef DEVICE_PRODUCT
+const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY(DEVICE_PRODUCT);
+#else
 const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY('S', 'a', 'n', 't', 'r', 'o', 'l', 'l', 'e', 'r');
+#endif
 
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication

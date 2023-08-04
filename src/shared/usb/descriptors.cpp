@@ -755,15 +755,15 @@ uint16_t descriptorRequest(const uint16_t wValue,
     }
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
         if (seen_windows_desc) {
-#if WINDOWS_USES_XINPUT
-            set_console_type(WINDOWS);
-#endif
+            if (WINDOWS_USES_XINPUT) {
+                set_console_type(WINDOWS);
+            }
         } else {
             set_console_type(XBOXONE);
         }
     }
-#elif WINDOWS_USES_XINPUT
-    if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
+#else 
+    if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         set_console_type(WINDOWS);
     }
 #endif

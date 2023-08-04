@@ -20,13 +20,11 @@
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
-#ifdef INPUT_QUEUE
 Buffer_Report_t last_queue_report;
 long last_queue = 0;
 uint8_t queue_size = 0;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
-#endif
 #define TURNTABLE_BUFFER_SIZE 16
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
 int16_t dj_sum = 0;
@@ -329,7 +327,7 @@ uint8_t keyboard_report = 0;
 #if defined(BLUETOOTH_RX)
 // When we do Bluetooth, the reports are in universal format, so we need to convert
 void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_console_type) {
-    uint8_t dpad = report->dpad >= 0x08 ? 0: dpad_bindings_reverse[report->dpad];
+    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
     bool up = dpad & UP;
     bool left = dpad & LEFT;
     bool down = dpad & DOWN;
@@ -1131,9 +1129,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t size = 0;
     uint8_t led_tmp;
     int16_t dj_temp;
-#ifdef INPUT_QUEUE
     Buffer_Report_t current_queue_report = {val : 0};
-#endif
 // Tick Inputs
 #include "inputs/gh5_neck.h"
 #include "inputs/ps2.h"
@@ -1149,33 +1145,31 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     // if input queues are enabled, then we just tick as often as possible
     if (!buf) {
-#ifdef INPUT_QUEUE
-        if (micros() - last_queue > 100) {
-            last_queue = micros();
-            for (int i = 0; i < DIGITAL_COUNT; i++) {
-                if (debounce[i]) {
-                    debounce[i]--;
+        if (INPUT_QUEUE) {
+            if (micros() - last_queue > 100) {
+                last_queue = micros();
+                for (int i = 0; i < DIGITAL_COUNT; i++) {
+                    if (debounce[i]) {
+                        debounce[i]--;
+                    }
+                }
+            }
+            if (current_queue_report.val != last_queue_report.val) {
+                queue[queue_tail] = current_queue_report;
+                last_queue_report = current_queue_report;
+                if (queue_size < BUFFER_SIZE_QUEUE) {
+                    queue_size++;
+                    queue_tail++;
                 }
             }
         }
-        if (current_queue_report.val != last_queue_report.val) {
-            queue[queue_tail] = current_queue_report;
-            last_queue_report = current_queue_report;
-            if (queue_size < BUFFER_SIZE_QUEUE) {
-                queue_size++;
-                queue_tail++;
-            }
-        }
-#endif
         return 0;
     }
 
-#ifdef INPUT_QUEUE
-    if (queue_size) {
+    if (INPUT_QUEUE && queue_size) {
         current_queue_report = queue[queue_tail - queue_size];
         queue_size--;
     }
-#endif
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
     // Then mouse, as it is an axis so it is more likley to have changes
@@ -1329,11 +1323,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->rightStickY = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-    report->tilt = PS3_STICK_CENTER;
+        report->tilt = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    report->leftTableVelocity = PS3_STICK_CENTER;
-    report->rightTableVelocity = PS3_STICK_CENTER;
+        report->leftTableVelocity = PS3_STICK_CENTER;
+        report->rightTableVelocity = PS3_STICK_CENTER;
 #endif
         report->reportId = 1;
         TICK_PC;
@@ -1456,12 +1450,10 @@ bool tick_usb(void) {
         millis_at_boot = millis();
     }
     // If we ended up here, then someone probably changed back to hid mode so we should jump back
-#if !WINDOWS_USES_XINPUT
-    if (consoleType == WINDOWS) {
+    if (consoleType == WINDOWS && WINDOWS_USES_XINPUT) {
         consoleType = UNIVERSAL;
         reset_usb();
     }
-#endif
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if (millis_at_boot && (millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
@@ -1683,20 +1675,18 @@ void tick(void) {
 #ifdef BLUETOOTH_TX
     tick_bluetooth();
 #endif
-// Input queuing is enabled, tick as often as possible
-#ifdef INPUT_QUEUE
-    if (!ready) {
+    // Input queuing is enabled, tick as often as possible
+    if (INPUT_QUEUE && !ready) {
         tick_inputs(NULL, NULL, consoleType);
     }
-#elif !defined(BLUETOOTH_TX)
+#if !defined(BLUETOOTH_TX)
     // Tick the controller every 5ms if this device is usb only, and usb is not ready
-    if (!ready && millis() - lastSentPacket > 5) {
+    if (!INPUT_QUEUE && !ready && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
         tick_inputs(NULL, NULL, consoleType);
     }
 #endif
-#ifndef INPUT_QUEUE
-    if (micros() - lastDebounce > 1000) {
+    if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         lastDebounce = micros();
         for (int i = 0; i < DIGITAL_COUNT; i++) {
             if (debounce[i]) {
@@ -1704,7 +1694,6 @@ void tick(void) {
             }
         }
     }
-#endif
 }
 
 void device_reset(void) {

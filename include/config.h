@@ -14,7 +14,7 @@ extern "C" {
 extern uint8_t consoleType;
 #ifdef CONFIGURABLE_BLOBS
 extern const uint8_t* config;
-extern const uint16_t config_blobs[CONFIGURABLE_BLOBS_LEN];
+extern const uint16_t* config_blobs;
 #else
 extern const uint8_t config[CONFIGURATION_LEN];
 #endif

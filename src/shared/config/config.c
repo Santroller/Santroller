@@ -3,9 +3,12 @@
 #include "defines.h"
 #include "progmem.h"
 uint8_t consoleType = CONSOLE_TYPE;
+// We don't know these array lengths at compile time.
+// It doesn't really matter how big config_blobs is since nothing ever references its length
+// But configs length is put into the first index of config_blobs
 #ifdef CONFIGURABLE_BLOBS
+const uint16_t* config_blobs = (uint16_t*)0x10282000;
 const uint8_t* config = (uint8_t*)0x10283000;
-const uint16_t __attribute__((section(".santroller_config_blobs"))) config_blobs[CONFIGURABLE_BLOBS_LEN] = CONFIGURABLE_BLOBS;
 #else
 const uint8_t PROGMEM config[CONFIGURATION_LEN] = CONFIGURATION;
 #endif

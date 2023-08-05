@@ -3,11 +3,9 @@
 #include "defines.h"
 #include "progmem.h"
 uint8_t consoleType = CONSOLE_TYPE;
-#if SUPPORTS_PICO
-const uint8_t __attribute__((section(".santroller_config"))) config[CONFIGURATION_LEN] = CONFIGURATION;
 #ifdef CONFIGURABLE_BLOBS
+const uint8_t* config = (uint8_t*)0x10283000;
 const uint16_t __attribute__((section(".santroller_config_blobs"))) config_blobs[CONFIGURABLE_BLOBS_LEN] = CONFIGURABLE_BLOBS;
-#endif
 #else
 const uint8_t PROGMEM config[CONFIGURATION_LEN] = CONFIGURATION;
 #endif

@@ -12,9 +12,11 @@ extern "C" {
 
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
-extern const uint8_t config[CONFIGURATION_LEN];
 #ifdef CONFIGURABLE_BLOBS
+extern const uint8_t* config;
 extern const uint16_t config_blobs[CONFIGURABLE_BLOBS_LEN];
+#else
+extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #ifdef __cplusplus
 }

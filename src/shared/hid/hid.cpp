@@ -504,10 +504,10 @@ long millis_since_command = 0;
 uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success) {
     switch (request) {
         case COMMAND_READ_CONFIG: {
-            if (wValue > sizeof(config)) {
+            if (wValue > CONFIGURATION_LEN) {
                 return 0;
             }
-            uint16_t size = sizeof(config) - wValue;
+            uint16_t size = CONFIGURATION_LEN - wValue;
             if (size > 64) size = 64;
             memcpy_P(response_buffer, config + wValue, size);
             return size;

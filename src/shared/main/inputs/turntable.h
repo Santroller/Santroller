@@ -13,7 +13,65 @@ if (elapsed) {
     lastTurntableWasSuccessfulLeft = djLeftValid;
     lastTurntableWasSuccessfulRight = djRightValid;
 }
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
+#ifdef CONFIGURABLE_BLOBS
+
+if (djLeftValid) {
+    if (INPUT_DJ_TURNTABLE_SMOOTHING_DUAL) {
+        if (elapsed) {
+            dj_sum -= dj_last_readings[dj_next];
+            dj_last_readings[dj_next] = (int8_t)dj_left[2];
+            dj_sum += dj_last_readings[dj_next];
+            dj_next++;
+            if (dj_next >= TURNTABLE_BUFFER_SIZE) {
+                dj_next = 0;
+            }
+        }
+        dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
+    } else if (INPUT_DJ_TURNTABLE_SMOOTHING) {
+        if (elapsed) {
+            dj_sum_left -= dj_last_readings_left[dj_next_left];
+            dj_last_readings_left[dj_next_left] = (int8_t)dj_left[2];
+            dj_sum_left += dj_last_readings_left[dj_next_left];
+            dj_next_left++;
+            if (dj_next_left >= TURNTABLE_BUFFER_SIZE) {
+                dj_next_left = 0;
+            }
+        }
+        dj_turntable_left = (dj_sum_left / TURNTABLE_BUFFER_SIZE);
+    } else {
+        dj_turntable_left = (int8_t)dj_left[2];
+    }
+}
+if (djRightValid) {
+    if (INPUT_DJ_TURNTABLE_SMOOTHING_DUAL) {
+        if (elapsed) {
+            dj_sum -= dj_last_readings[dj_next];
+            dj_last_readings[dj_next] = (int8_t)dj_right[2];
+            dj_sum += dj_last_readings[dj_next];
+            dj_next++;
+            if (dj_next >= TURNTABLE_BUFFER_SIZE) {
+                dj_next = 0;
+            }
+        }
+        dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
+    } else if (INPUT_DJ_TURNTABLE_SMOOTHING) {
+        if (elapsed) {
+            dj_sum_right -= dj_last_readings_right[dj_next_right];
+            dj_last_readings_right[dj_next_right] = (int8_t)dj_right[2];
+            dj_sum_right += dj_last_readings_right[dj_next_right];
+            dj_next_right++;
+            if (dj_next_right >= TURNTABLE_BUFFER_SIZE) {
+                dj_next_right = 0;
+            }
+        }
+    } else {
+        dj_turntable_right = (int8_t)dj_right[2];
+    }
+}
+
+#else
+
+#if INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
 if (djLeftValid) {
     if (elapsed) {
         dj_sum -= dj_last_readings[dj_next];
@@ -40,7 +98,7 @@ if (djRightValid) {
 }
 #else
 // DJ Hero turntables are pretty noisy, so smooth that out with a moving average
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
+#if INPUT_DJ_TURNTABLE_SMOOTHING
 if (djLeftValid) {
     if (elapsed) {
         dj_sum_left -= dj_last_readings_left[dj_next_left];
@@ -56,7 +114,7 @@ if (djLeftValid) {
 #else
 dj_turntable_left = (int8_t)dj_left[2];
 #endif
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
+#if INPUT_DJ_TURNTABLE_SMOOTHING
 if (djRightValid) {
     if (elapsed) {
         dj_sum_right -= dj_last_readings_right[dj_next_right];
@@ -73,4 +131,7 @@ if (djRightValid) {
 dj_turntable_right = (int8_t)dj_right[2];
 #endif
 #endif
+
+#endif
+
 #endif

@@ -80,7 +80,7 @@ extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING
-extern const uint8_t pc_descriptor[96];
+extern const uint8_t pc_descriptor[91];
 extern const uint8_t bt_descriptor[87 + 2*HID_AXIS_COUNT];
 #else
 extern const uint8_t pc_descriptor[87];

@@ -31,12 +31,10 @@ int16_t dj_sum = 0;
 int8_t dj_last_readings[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next = 0;
 #endif
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING
 int16_t dj_sum_left = 0;
 int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_left = 0;
-#endif
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
 int16_t dj_sum_right = 0;
 int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;

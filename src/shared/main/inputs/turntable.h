@@ -1,3 +1,4 @@
+#include "config.h"
 #ifdef INPUT_DJ_TURNTABLE
 uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
 uint8_t *dj_right = lastSuccessfulTurntablePacketRight;

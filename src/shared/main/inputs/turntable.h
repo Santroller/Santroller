@@ -112,10 +112,6 @@ if (djLeftValid) {
     }
     dj_turntable_left = (dj_sum_left / TURNTABLE_BUFFER_SIZE);
 }
-#else
-dj_turntable_left = (int8_t)dj_left[2];
-#endif
-#if INPUT_DJ_TURNTABLE_SMOOTHING
 if (djRightValid) {
     if (elapsed) {
         dj_sum_right -= dj_last_readings_right[dj_next_right];
@@ -129,6 +125,7 @@ if (djRightValid) {
     dj_turntable_right = (dj_sum_right / TURNTABLE_BUFFER_SIZE);
 }
 #else
+dj_turntable_left = (int8_t)dj_left[2];
 dj_turntable_right = (int8_t)dj_right[2];
 #endif
 #endif

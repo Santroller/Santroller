@@ -40,8 +40,10 @@ static enum {
 } app_state;
 
 static const uint8_t santroller_name[] = "SantrollerBT";
+#ifndef CONFIGURABLE_BLOBS
 #ifdef BT_ADDR
 static const char bt_addr[] = BT_ADDR;
+#endif
 #endif
 static bd_addr_t bt_addr_recv;
 static le_device_addr_t remote_device;
@@ -109,7 +111,11 @@ void hog_start_scan() {
     devices_found = 0;
 #ifdef BT_ADDR
     devices_found = 1;
+#ifdef CONFIGURABLE_BLOBS
+    memcpy(scan_buffer, &BT_ADDR, SIZE_OF_BD_ADDRESS);
+#else
     memcpy(scan_buffer, bt_addr, sizeof(bt_addr));
+#endif
 #endif
     // Passive scanning, 100% (scan interval = scan window)
     gap_set_scan_parameters(0, 48, 48);
@@ -141,7 +147,7 @@ static void hog_connection_timeout(btstack_timer_source_t *ts) {
     UNUSED(ts);
     printf("Timeout - abort connection\n");
     gap_connect_cancel();
-    
+
     btstack_run_loop_set_timer(&reconnect_timer, 100);
     btstack_run_loop_set_timer_handler(&reconnect_timer, &hog_reconnect_timeout);
     btstack_run_loop_add_timer(&reconnect_timer);
@@ -407,8 +413,13 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
 int btstack_main(void) {
     printf("Bt init\r\n");
 #ifdef BT_ADDR
+#ifdef CONFIGURABLE_BLOBS
+    sscanf_bd_addr((const char *)&BT_ADDR, remote_device.addr);
+    remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+#else
     sscanf_bd_addr(bt_addr, remote_device.addr);
     remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+#endif
 #endif
     /* LISTING_START(HogBootHostSetup): HID-over-GATT Host Setup */
 

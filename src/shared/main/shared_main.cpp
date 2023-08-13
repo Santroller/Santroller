@@ -83,8 +83,9 @@ uint8_t rawWt;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
 GipPowerMode_t powerMode;
-
-#if POLL_RATE
+#if defined(CONFIGURABLE_BLOBS)
+long last_poll = 0;
+#elif POLL_RATE
 long last_poll = 0;
 #endif
 
@@ -1377,7 +1378,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
-#if SWAP_SWITCH_FACE_BUTTONS
+#ifdef CONFIGURABLE_BLOBS
+        if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
+            bool a = gamepad->a;
+            bool b = gamepad->b;
+            bool x = gamepad->x;
+            bool y = gamepad->y;
+            gamepad->b = a;
+            gamepad->a = b;
+            gamepad->x = y;
+            gamepad->y = x;
+        }
+#elif SWAP_SWITCH_FACE_BUTTONS
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
             bool b = gamepad->b;
@@ -1434,7 +1446,12 @@ bool tick_bluetooth(void) {
 bool windows_in_hid = false;
 long millis_at_boot = 0;
 bool tick_usb(void) {
-#if POLL_RATE
+#ifdef CONFIGURABLE_BLOBS
+    if (POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
+        return 0;
+    }
+    last_poll = micros();
+#elif POLL_RATE
     if ((micros() - last_poll) < (POLL_RATE * 1000)) {
         return 0;
     }

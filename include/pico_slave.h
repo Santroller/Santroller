@@ -1,0 +1,15 @@
+#define SLAVE_ADDR 0x75
+#define SLAVE_COMMAND_SET_PINMODE     0x01
+#define SLAVE_COMMAND_SET_PIN         0x02
+#define SLAVE_COMMAND_INIT_SPI        0x03
+#define SLAVE_COMMAND_WRITE_SPI       0x04
+#define SLAVE_COMMAND_GET_DIGITAL     0x05
+#define SLAVE_COMMAND_GET_ANALOG      0x06
+
+#define PIN_MODE_INPUT_PULLUP   0
+#define PIN_MODE_INPUT_PULLDOWN 1
+#define PIN_MODE_INPUT_BUSKEEP  2
+#define PIN_MODE_INPUT          3
+#define PIN_MODE_OUTPUT         4
+#define PIN_MODE_ANALOG         5
+#define PIN_MODE_SPI            6

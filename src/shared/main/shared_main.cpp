@@ -296,7 +296,6 @@ uint8_t tick_xbox_one() {
             } else {
                 xbox_one_state = WaitingDescEnd;
             }
-            printf("%d %d\r\n", len, descriptor_index);
             memcpy(&combined_report, xb1_descriptor + descriptor_index, len);
             descriptor_index += len;
             return len;
@@ -1758,6 +1757,7 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
 }
 
 void xone_controller_connected(uint8_t dev_addr) {
+    printf("Sending to controller %d\r\n", dev_addr);
     send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
 }
 

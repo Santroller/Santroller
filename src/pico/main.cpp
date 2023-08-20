@@ -16,7 +16,7 @@
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
 #include "hidescriptorparser.h"
-#include "host/usbh_classdriver.h"
+#include "host/usbh_pvt.h"
 #include "pico/bootrom.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
@@ -185,7 +185,9 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
-            foundXB = true;
+            if (consoleType == XBOX360) {
+                foundXB = true;
+            }
         }
     } else if (controllerType == XBOXONE) {
         xone_dev_addr = dev_addr;
@@ -193,7 +195,9 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         xone_controller_connected(dev_addr);
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
-        foundXB = true;
+        if (consoleType == XBOXONE) {
+            foundXB = true;
+        }
 
     } else if (controllerType == UNKNOWN) {
         if (type.console_type) {
@@ -234,7 +238,6 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     }
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
-    foundXB = false;
 }
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (dev_addr == xone_dev_addr) {

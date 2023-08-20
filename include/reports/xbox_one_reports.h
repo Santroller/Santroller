@@ -24,6 +24,20 @@ typedef struct
 typedef struct
 {
     GipHeader_t Header;
+    uint8_t unk1;
+    uint8_t innerCommand;
+    uint8_t innerClient : 4;
+    uint8_t innerNeedsAck : 1;
+    uint8_t innerInternal : 1;
+    uint8_t innerChunkStart : 1;
+    uint8_t innerChunked : 1;
+    uint16_t bytesReceived;
+    uint16_t unk2;
+    uint16_t remainingBuffer;
+} __attribute__((packed)) Gip_Ack_t;
+typedef struct
+{
+    GipHeader_t Header;
     bool sync : 1;
     bool guide : 1;
     bool start : 1;  // menu
@@ -61,19 +75,19 @@ typedef struct
     bool start : 1;  // menu
     bool back : 1;   // view
 
-    bool a : 1; // green
-    bool b : 1; // red
-    bool x : 1; // blue
-    bool y : 1; // yellow
+    bool a : 1;  // green
+    bool b : 1;  // red
+    bool x : 1;  // blue
+    bool y : 1;  // yellow
 
-    bool dpadUp : 1; // dpadStrumUp
-    bool dpadDown : 1; // dpadStrumDown
+    bool dpadUp : 1;    // dpadStrumUp
+    bool dpadDown : 1;  // dpadStrumDown
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
-    bool leftShoulder : 1; // orange
+    bool leftShoulder : 1;  // orange
     bool : 1;
-    bool solo : 1; // leftThumbClick
+    bool solo : 1;  // leftThumbClick
     bool : 1;
 
     uint8_t tilt;
@@ -105,18 +119,18 @@ typedef struct
     bool start : 1;  // menu
     bool back : 1;   // view
 
-    bool a : 1; // green
-    bool b : 1; // red
-    bool x : 1; // blue
-    bool y : 1; // yellow
+    bool a : 1;  // green
+    bool b : 1;  // red
+    bool x : 1;  // blue
+    bool y : 1;  // yellow
 
     bool dpadUp : 1;
     bool dpadDown : 1;
     bool dpadLeft : 1;
     bool dpadRight : 1;
 
-    bool leftShoulder : 1; // kick1
-    bool rightShoulder : 1; // kick2
+    bool leftShoulder : 1;   // kick1
+    bool rightShoulder : 1;  // kick2
     bool : 1;
     bool : 1;
 
@@ -208,15 +222,15 @@ typedef struct
 
 typedef struct {
     GipHeader_t Header;
-    uint8_t subCommand; // Assumed based on the descriptor reporting a larger max length than what this uses
+    uint8_t subCommand;  // Assumed based on the descriptor reporting a larger max length than what this uses
     uint8_t flags;
     uint8_t leftTrigger;
     uint8_t rightTrigger;
     uint8_t leftMotor;
     uint8_t rightMotor;
-    uint8_t duration; // in deciseconds?
-    uint8_t delay; // in deciseconds?
-    uint8_t repeat; // in deciseconds?
+    uint8_t duration;  // in deciseconds?
+    uint8_t delay;     // in deciseconds?
+    uint8_t repeat;    // in deciseconds?
 } __attribute__((packed)) GipRumble_t;
 
 #define GIP_HEADER(packet, cmd, isInternal, seq) \

@@ -14,6 +14,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
+#include "pico_slave.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -154,6 +155,9 @@ void init_main(void) {
             }
         }
     }
+#endif
+#ifdef INPUT_WT_SLAVE_NECK
+    slaveInitWt(WT_PIN_INPUT, WT_PIN_S0, WT_PIN_S1, WT_PIN_S2);
 #endif
 }
 int16_t adc_i(uint8_t pin) {
@@ -1134,6 +1138,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+    #ifdef SLAVE_TWI_PORT
+        uint32_t slave_digital = slaveReadDigital();
+    #endif
     TICK_SHARED;
     // give the user 5 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 5000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {

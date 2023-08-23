@@ -6,6 +6,18 @@
 #include "io.h"
 #include "pico_slave.h"
 volatile uint8_t command;
+volatile uint8_t wtInputPin = 0;
+volatile uint8_t wtS0Pin = 0;
+volatile uint8_t wtS1Pin = 0;
+volatile uint8_t wtS2Pin = 0;
+uint8_t gh5_mapping[] = {
+    0x00, 0x95, 0xCD, 0xB0, 0x1A, 0x19, 0xE6,
+    0xE5, 0x49, 0x47, 0x48, 0x46, 0x2F, 0x2D,
+    0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
+    0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
+    0x65, 0x61, 0x63, 0x5F};
+uint8_t rawWt;
+long initialWt[5] = {0};
 spi_inst_t* hardware;
 void recv(int len) {
     command = Wire1.read();
@@ -67,6 +79,12 @@ void recv(int len) {
         case SLAVE_COMMAND_GET_ANALOG:
             adc_select_input(Wire1.read());
             break;
+        case SLAVE_COMMAND_INIT_WT:
+            wtInputPin = Wire1.read();
+            wtS0Pin = Wire1.read();
+            wtS1Pin = Wire1.read();
+            wtS2Pin = Wire1.read();
+            break;
     }
 }
 
@@ -83,9 +101,38 @@ void req() {
             Wire1.write((uint8_t*)&pins, sizeof(pins));
             break;
         }
+        case SLAVE_COMMAND_GET_WT_GH5: {
+            Wire1.write(gh5_mapping + rawWt, 1);
+            break;
+        }
+        case SLAVE_COMMAND_GET_WT_RAW: {
+            Wire1.write(&rawWt, sizeof(rawWt));
+            break;
+        }
     }
 }
+long readWt(int pin) {
+    digitalWrite(wtS0Pin, pin & 0b001);
+    digitalWrite(wtS1Pin, pin & 0b010);
+    digitalWrite(wtS2Pin, pin & 0b100);
+    long m = 0;
+    for (int i = 0; i < 8; i++) {
+        pinMode(wtInputPin, INPUT_PULLUP);
+        delayMicroseconds(10);
+        pinMode(wtInputPin, INPUT);
+        m += analogRead(wtInputPin);
+    }
+    return m;
+}
+bool checkWt(int pin) {
+    return readWt(pin) > initialWt[pin];
+}
+long lastWtTick = 0;
 void loop() {
+    if (wtS2Pin && (millis() - lastWtTick) > 1) {
+        lastWtTick = millis();
+        rawWt = checkWt(4) | (checkWt(3) << 1) | (checkWt(2) << 2) | (checkWt(0) << 3) | (checkWt(1) << 4);
+    }
 }
 void setup() {
     Wire1.setSDA(2);

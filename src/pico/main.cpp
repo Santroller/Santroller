@@ -116,6 +116,7 @@ void setup() {
     init_main();
     tud_init(TUD_OPT_RHPORT);
 #if USB_HOST_STACK
+    set_sys_clock_khz(120000, true);
     pio_usb_configuration_t config = {
         USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);

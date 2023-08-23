@@ -11,6 +11,7 @@
 #include "hardware/spi.h"
 #include "pico/bootrom.h"
 #include "pico/stdlib.h"
+#include "pico_slave.h"
 volatile bool spi_acknowledged = false;
 void spi_begin() {
 #ifdef SPI_0_MOSI
@@ -34,6 +35,16 @@ void spi_begin() {
     gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
     gpio_set_pulls(SPI_1_MISO, true, false);
 #endif
+#endif
+#ifdef SPI_SLAVE_0_MOSI
+    slaveInitLED(0);
+    slavePinMode(SPI_SLAVE_0_MOSI, PIN_MODE_SPI);
+    slavePinMode(SPI_SLAVE_0_SCK, PIN_MODE_SPI);
+#endif
+#ifdef SPI_SLAVE_1_MOSI
+    slaveInitLED(1);
+    slavePinMode(SPI_SLAVE_1_MOSI, PIN_MODE_SPI);
+    slavePinMode(SPI_SLAVE_1_SCK, PIN_MODE_SPI);
 #endif
 }
 static uint8_t revbits(uint8_t b) {

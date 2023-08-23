@@ -454,6 +454,8 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 };
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
+                                
+// It appears for ps5 arcade stick compat, we can set byte 5 to 0x07
 const PROGMEM uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x4f, 0x00, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,

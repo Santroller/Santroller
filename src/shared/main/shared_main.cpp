@@ -9,12 +9,12 @@
 #include "hid.h"
 #include "io.h"
 #include "io_define.h"
+#include "pico_slave.h"
 #include "pins.h"
 #include "ps2.h"
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
-#include "pico_slave.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -1138,9 +1138,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
-    #ifdef SLAVE_TWI_PORT
-        uint32_t slave_digital = slaveReadDigital();
-    #endif
+#ifdef SLAVE_TWI_PORT
+    uint32_t slave_digital = slaveReadDigital();
+#endif
     TICK_SHARED;
     // give the user 5 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 5000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
@@ -1598,6 +1598,8 @@ int tick_bluetooth_inputs(const void *buf) {
     if (output_console_type == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
         PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
+        size = sizeof(PS4_REPORT);
+        memset(report_data, 0, size);
         gamepad->report_id = 0x01;
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;
@@ -1611,7 +1613,6 @@ int tick_bluetooth_inputs(const void *buf) {
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
-        size = sizeof(PS4_REPORT);
     }
 #endif
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
@@ -1639,6 +1640,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
         size = sizeof(PS3_REPORT);
+        memset(report_data, 0, size);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
@@ -1652,7 +1654,18 @@ int tick_bluetooth_inputs(const void *buf) {
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
-        // Switch swaps a and b and x and y
+#ifdef CONFIGURABLE_BLOBS
+        if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
+            bool a = gamepad->a;
+            bool b = gamepad->b;
+            bool x = gamepad->x;
+            bool y = gamepad->y;
+            gamepad->b = a;
+            gamepad->a = b;
+            gamepad->x = y;
+            gamepad->y = x;
+        }
+#elif SWAP_SWITCH_FACE_BUTTONS
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
             bool b = gamepad->b;
@@ -1663,6 +1676,7 @@ int tick_bluetooth_inputs(const void *buf) {
             gamepad->x = y;
             gamepad->y = x;
         }
+#endif
     }
 #if SUPPORTS_PS4
     if (output_console_type == PS4) {

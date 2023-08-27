@@ -5,11 +5,17 @@
 
 #include "io.h"
 #include "pico_slave.h"
+#ifdef TWI_1_SDA
+#define WIRE Wire1
+#else
+#define WIRE Wire
+#endif
 volatile uint8_t command;
 volatile uint8_t wtInputPin = 0;
 volatile uint8_t wtS0Pin = 0;
 volatile uint8_t wtS1Pin = 0;
 volatile uint8_t wtS2Pin = 0;
+volatile uint8_t wt_sensitivity = 0;
 uint8_t gh5_mapping[] = {
     0x00, 0x95, 0xCD, 0xB0, 0x1A, 0x19, 0xE6,
     0xE5, 0x49, 0x47, 0x48, 0x46, 0x2F, 0x2D,
@@ -18,13 +24,15 @@ uint8_t gh5_mapping[] = {
     0x65, 0x61, 0x63, 0x5F};
 uint8_t rawWt;
 long initialWt[5] = {0};
+bool hasInitWt = false;
+bool initted = false;
 spi_inst_t* hardware;
 void recv(int len) {
-    command = Wire1.read();
+    command = WIRE.read();
     switch (command) {
         case SLAVE_COMMAND_SET_PINMODE: {
-            uint8_t mode = Wire1.read();
-            uint8_t pin = Wire1.read();
+            uint8_t pin = WIRE.read();
+            uint8_t mode = WIRE.read();
             switch (mode) {
                 case PIN_MODE_INPUT_PULLDOWN:
                     gpio_init(pin);
@@ -59,10 +67,10 @@ void recv(int len) {
             break;
         }
         case SLAVE_COMMAND_SET_PIN:
-            digitalWrite(Wire1.read(), Wire1.read());
+            digitalWrite(WIRE.read(), WIRE.read());
             break;
         case SLAVE_COMMAND_INIT_SPI:
-            if (Wire1.read()) {
+            if (WIRE.read()) {
                 hardware = spi1;
             } else {
                 hardware = spi0;
@@ -71,19 +79,20 @@ void recv(int len) {
             spi_set_format(hardware, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
             break;
         case SLAVE_COMMAND_WRITE_SPI: {
-            uint8_t data = Wire1.read();
+            uint8_t data = WIRE.read();
             uint8_t resp;
             spi_write_read_blocking(hardware, &data, &resp, 1);
             break;
         }
         case SLAVE_COMMAND_GET_ANALOG:
-            adc_select_input(Wire1.read());
+            adc_select_input(WIRE.read());
             break;
         case SLAVE_COMMAND_INIT_WT:
-            wtInputPin = Wire1.read();
-            wtS0Pin = Wire1.read();
-            wtS1Pin = Wire1.read();
-            wtS2Pin = Wire1.read();
+            wtInputPin = WIRE.read();
+            wtS0Pin = WIRE.read();
+            wtS1Pin = WIRE.read();
+            wtS2Pin = WIRE.read();
+            wt_sensitivity = WIRE.read();
             break;
     }
 }
@@ -93,25 +102,30 @@ void req() {
     switch (command) {
         case SLAVE_COMMAND_GET_DIGITAL: {
             uint32_t pins = sio_hw->gpio_in;
-            Wire1.write((uint8_t*)&pins, sizeof(pins));
+            WIRE.write((uint8_t*)&pins, sizeof(pins));
             break;
         }
         case SLAVE_COMMAND_GET_ANALOG: {
             uint16_t pins = adc_read() << 4;
-            Wire1.write((uint8_t*)&pins, sizeof(pins));
+            WIRE.write((uint8_t*)&pins, sizeof(pins));
             break;
         }
         case SLAVE_COMMAND_GET_WT_GH5: {
-            Wire1.write(gh5_mapping + rawWt, 1);
+            WIRE.write(gh5_mapping + rawWt, 1);
             break;
         }
         case SLAVE_COMMAND_GET_WT_RAW: {
-            Wire1.write(&rawWt, sizeof(rawWt));
+            WIRE.write(&rawWt, sizeof(rawWt));
+            break;
+        }
+        case SLAVE_COMMAND_INITIALISE: {
+            uint8_t ret = SLAVE_COMMAND_INITIALISE;
+            WIRE.write(&ret, sizeof(ret));
             break;
         }
     }
 }
-long readWt(int pin) {
+long readWtSlave(int pin) {
     digitalWrite(wtS0Pin, pin & 0b001);
     digitalWrite(wtS1Pin, pin & 0b010);
     digitalWrite(wtS2Pin, pin & 0b100);
@@ -124,20 +138,38 @@ long readWt(int pin) {
     }
     return m;
 }
-bool checkWt(int pin) {
-    return readWt(pin) > initialWt[pin];
+bool checkWtSlave(int pin) {
+    return readWtSlave(pin) > initialWt[pin];
 }
 long lastWtTick = 0;
 void loop() {
-    if (wtS2Pin && (millis() - lastWtTick) > 1) {
+    if (wtS2Pin && !hasInitWt) {
+        hasInitWt = true;
+        memset(initialWt, 0, sizeof(initialWt));
+        for (int j = 0; j < 50; j++) {
+            for (int i = 0; i < 5; i++) {
+                long reading = readWtSlave(i) + wt_sensitivity;
+                if (reading > initialWt[i]) {
+                    initialWt[i] = reading;
+                }
+            }
+        }
+    }
+    if (hasInitWt && (millis() - lastWtTick) > 1) {
         lastWtTick = millis();
-        rawWt = checkWt(4) | (checkWt(3) << 1) | (checkWt(2) << 2) | (checkWt(0) << 3) | (checkWt(1) << 4);
+        rawWt = checkWtSlave(4) | (checkWtSlave(3) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(0) << 3) | (checkWtSlave(1) << 4);
     }
 }
 void setup() {
-    Wire1.setSDA(2);
-    Wire1.setSCL(3);
-    Wire1.begin(SLAVE_ADDR);
-    Wire1.onReceive(recv);
-    Wire1.onRequest(req);
+#ifdef TWI_1_SDA
+    WIRE.setSDA(TWI_1_SDA);
+    WIRE.setSCL(TWI_1_SCL);
+#else
+    WIRE.setSDA(TWI_0_SDA);
+    WIRE.setSCL(TWI_0_SCL);
+#endif
+    WIRE.begin(SLAVE_ADDR);
+    WIRE.onReceive(recv);
+    WIRE.onRequest(req);
+    Serial.begin();
 }

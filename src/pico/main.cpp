@@ -20,7 +20,7 @@
 #include "pico/bootrom.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
-#include "pins.h"
+#include "pin_funcs.h"
 #include "reports/controller_reports.h"
 #include "serial.h"
 #include "shared_main.h"

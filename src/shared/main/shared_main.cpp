@@ -7,10 +7,11 @@
 #include "endpoints.h"
 #include "fxpt_math.h"
 #include "hid.h"
+#include "inputs/slave.h"
 #include "io.h"
 #include "io_define.h"
 #include "pico_slave.h"
-#include "pins.h"
+#include "pin_funcs.h"
 #include "ps2.h"
 #include "usbhid.h"
 #include "util.h"
@@ -156,10 +157,23 @@ void init_main(void) {
         }
     }
 #endif
+}
+#ifdef SLAVE_TWI_PORT
+bool slave_initted = false;
+void tick_slave() {
+    if (slave_initted) {
+        return;
+    }
+    if (!slaveInit()) {
+        return;
+    }
+    slave_initted = true;
+    PIN_INIT;
 #ifdef INPUT_WT_SLAVE_NECK
-    slaveInitWt(WT_PIN_INPUT, WT_PIN_S0, WT_PIN_S1, WT_PIN_S2);
+    slaveInitWt();
 #endif
 }
+#endif
 int16_t adc_i(uint8_t pin) {
     int32_t ret = adc(pin);
     return ret - 32767;
@@ -1705,6 +1719,9 @@ int tick_bluetooth_inputs(const void *buf) {
 }
 #endif
 void tick(void) {
+#ifdef SLAVE_TWI_PORT
+    tick_slave();
+#endif
 #ifdef TICK_LED
     TICK_LED;
 #endif

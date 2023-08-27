@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "Arduino.h"
+#include "pin_funcs.h"
 #include "config.h"
 #include "io_define.h"
 #include "util.h"

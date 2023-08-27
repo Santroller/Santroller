@@ -9,6 +9,8 @@
 void slavePinMode(uint8_t pin, uint8_t pinMode) {
     uint8_t payload[] = {pin, pinMode};
     twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_SET_PINMODE, sizeof(payload), payload);
+    // Give pins some time to configure themselves
+    delayMicroseconds(100);
 }
 
 uint32_t slaveReadDigital() {
@@ -61,8 +63,13 @@ uint8_t slaveReadWtGh5() {
     twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_WT_GH5, sizeof(data), &data);
     return data;
 }
-uint16_t slaveInitWt(uint8_t pin, uint8_t s0, uint8_t s1, uint8_t s2) {
-    uint8_t payload[] = {pin, s0, s1, s2};
-    twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_SET_PIN, sizeof(payload), payload);
+bool slaveInit() {
+    uint8_t data;
+    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_INITIALISE, sizeof(data), &data);
+    return data == SLAVE_COMMAND_INITIALISE;
+}
+void slaveInitWt() {
+    uint8_t payload[] = {WT_PIN_INPUT, WT_PIN_S0, WT_PIN_S1, WT_PIN_S2, WT_SENSITIVITY};
+    twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_INIT_WT, sizeof(payload), payload);
 }
 #endif

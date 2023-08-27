@@ -1,4 +1,4 @@
-#include "pins.h"
+#include "pin_funcs.h"
 #include "reports/controller_reports.h"
 #include "config.h"
 

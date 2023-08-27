@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "config.h"
+#include "pico_slave.h"
 void initPins(void);
 void initDetectionDigital(void);
 void initDetectionAnalog(void);

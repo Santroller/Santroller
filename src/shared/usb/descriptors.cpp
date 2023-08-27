@@ -6,7 +6,7 @@
 #include "controllers.h"
 #include "hid.h"
 #include "io.h"
-#include "pins.h"
+#include "pin_funcs.h"
 #include "shared_main.h"
 #include "usbhid.h"
 #include "util.h"

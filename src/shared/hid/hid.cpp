@@ -10,7 +10,7 @@
 #include "controllers.h"
 #include "io.h"
 #include "keyboard_mouse.h"
-#include "pins.h"
+#include "pin_funcs.h"
 #include "ps3_wii_switch.h"
 #include "shared_main.h"
 #include "stdint.h"

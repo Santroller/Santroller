@@ -1,15 +1,18 @@
 #include "config.h"
 #define SLAVE_ADDR 0x75
-#define SLAVE_COMMAND_SET_PINMODE     0x01
-#define SLAVE_COMMAND_SET_PIN         0x02
-#define SLAVE_COMMAND_INIT_SPI        0x03
-#define SLAVE_COMMAND_WRITE_SPI       0x04
-#define SLAVE_COMMAND_GET_DIGITAL     0x05
-#define SLAVE_COMMAND_GET_ANALOG      0x06
-#define SLAVE_COMMAND_INIT_WT         0x07
-#define SLAVE_COMMAND_GET_WT_RAW      0x08
-#define SLAVE_COMMAND_GET_WT_GH5      0x09
-#define SLAVE_COMMAND_INITIALISE      0x0A
+#define SLAVE_COMMAND_SET_PINMODE         0x01
+#define SLAVE_COMMAND_SET_PIN             0x02
+#define SLAVE_COMMAND_INIT_SPI            0x03
+#define SLAVE_COMMAND_WRITE_SPI           0x04
+#define SLAVE_COMMAND_GET_DIGITAL         0x05
+#define SLAVE_COMMAND_GET_ANALOG          0x06
+#define SLAVE_COMMAND_GET_ANALOG_PIN      0x07
+#define SLAVE_COMMAND_GET_DIGITAL_PIN_2   0x08
+#define SLAVE_COMMAND_GET_ANALOG_PIN_2    0x09
+#define SLAVE_COMMAND_INIT_WT             0x0A
+#define SLAVE_COMMAND_GET_WT_RAW          0x0B
+#define SLAVE_COMMAND_GET_WT_GH5          0x0C
+#define SLAVE_COMMAND_INITIALISE          0x0D
 
 #define PIN_MODE_INPUT_PULLUP   0
 #define PIN_MODE_INPUT          1
@@ -25,6 +28,11 @@ void slavePinMode(uint8_t pin, uint8_t pinMode);
 uint32_t slaveReadDigital(void);
 
 uint16_t slaveReadAnalog(uint8_t pin);
+
+
+uint8_t slaveReadDigital(uint8_t port, uint8_t mask);
+
+uint16_t slaveReadAnalog(uint8_t pin, uint8_t mask);
 
 void slaveWriteDigital(uint8_t pin, bool output);
 

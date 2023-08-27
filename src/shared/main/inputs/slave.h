@@ -20,8 +20,30 @@ uint32_t slaveReadDigital() {
 }
 
 uint16_t slaveReadAnalog(uint8_t pin) {
+    uint8_t payload2[] = {pin};
+    twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG_PIN, sizeof(payload2), payload2);
     uint16_t payload;
     twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG, sizeof(payload), (uint8_t*)&payload);
+    return payload;
+}
+
+uint8_t slaveReadDigital(uint8_t port, uint8_t mask) {
+    uint8_t payload2[] = {port, mask};
+    twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_DIGITAL_PIN_2, sizeof(payload2), payload2);
+    uint32_t payload;
+    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_DIGITAL, sizeof(payload), (uint8_t*)&payload);
+    PIN_INIT;
+    return ((payload >> port) & 0xff);
+}
+
+uint16_t slaveReadAnalog(uint8_t pin, uint8_t mask) {
+    twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG_PIN_2, sizeof(pin), &pin);
+    uint16_t payload;
+    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG, sizeof(payload), (uint8_t*)&payload);
+    bool detecting = pin & (1 << 7);
+    if (detecting) {
+        PIN_INIT;
+    }
     return payload;
 }
 

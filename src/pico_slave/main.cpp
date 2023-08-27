@@ -69,6 +69,33 @@ void recv(int len) {
         case SLAVE_COMMAND_SET_PIN:
             digitalWrite(WIRE.read(), WIRE.read());
             break;
+        case SLAVE_COMMAND_GET_ANALOG_PIN: {
+            adc_select_input(WIRE.read());
+            break;
+        }
+        case SLAVE_COMMAND_GET_DIGITAL_PIN_2: {
+            uint8_t port = WIRE.read() * 8;
+            uint32_t mask32 = WIRE.read() << port;
+            for (uint i = 0; i < NUM_BANK0_GPIOS; i++) {
+                if (mask32 & (1 << i)) {
+                    gpio_init(i);
+                    gpio_set_pulls(i, true, false);
+                }
+            }
+            break;
+        }
+        case SLAVE_COMMAND_GET_ANALOG_PIN_2: {
+            uint8_t pin = WIRE.read();
+            bool detecting = pin & (1 << 7);
+            if (detecting) {
+                pin = pin & ~(1 << 7);
+                gpio_init(pin + PIN_A0);
+                gpio_set_pulls(pin + PIN_A0, true, false);
+                gpio_set_input_enabled(pin + PIN_A0, false);
+            }
+            adc_select_input(pin);
+            break;
+        }
         case SLAVE_COMMAND_INIT_SPI:
             if (WIRE.read()) {
                 hardware = spi1;
@@ -84,9 +111,6 @@ void recv(int len) {
             spi_write_read_blocking(hardware, &data, &resp, 1);
             break;
         }
-        case SLAVE_COMMAND_GET_ANALOG:
-            adc_select_input(WIRE.read());
-            break;
         case SLAVE_COMMAND_INIT_WT:
             wtInputPin = WIRE.read();
             wtS0Pin = WIRE.read();
@@ -171,5 +195,4 @@ void setup() {
     WIRE.begin(SLAVE_ADDR);
     WIRE.onReceive(recv);
     WIRE.onRequest(req);
-    Serial.begin();
 }

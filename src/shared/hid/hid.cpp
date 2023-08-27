@@ -11,6 +11,7 @@
 #include "io.h"
 #include "keyboard_mouse.h"
 #include "pin_funcs.h"
+#include "pico_slave.h"
 #include "ps3_wii_switch.h"
 #include "shared_main.h"
 #include "stdint.h"
@@ -590,6 +591,22 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             overriddenR2 = wValue;
             return 0;
         }
+#ifdef SLAVE_TWI_PORT
+        case COMMAND_READ_PERIPHERAL_ANALOG: {
+            uint8_t pin = wValue & 0xff;
+            uint8_t mask = (wValue >> 8);
+            uint16_t response = slaveReadAnalog(pin, mask);
+            memcpy(response_buffer, &response, sizeof(response));
+            return sizeof(response);
+        }
+        case COMMAND_READ_PERIPHERAL_DIGITAL: {
+            uint8_t port = wValue & 0xff;
+            uint8_t mask = (wValue >> 8);
+            uint8_t response = slaveReadDigital(port, mask);
+            memcpy(response_buffer, &response, sizeof(response));
+            return sizeof(response);
+        }
+#endif
 #if LED_COUNT
         case COMMAND_SET_LEDS: {
             uint8_t led = response_buffer[0];

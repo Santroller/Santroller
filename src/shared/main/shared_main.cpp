@@ -370,7 +370,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->tilt = report->tilt;
         }
         if (report->whammy) {
-            out->whammy = report->whammy;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 1;;
         }
     }
     if (output_console_type == XBOX360) {
@@ -406,7 +406,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             }
         }
     }
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -501,7 +501,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->pickup = (report->pickup) << 8;
         }
     }
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -574,7 +574,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->tilt = (report->tilt - PS3_STICK_CENTER) << 8;
         }
         if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
         }
         if (up) {
             out->strumBar = INT16_MIN;
@@ -584,7 +584,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->strumBar = 0;
         }
     }
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -612,7 +612,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             }
         }
         if (report->whammy != PS3_STICK_CENTER) {
-            out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
         }
         if (up) {
             out->strumBar = 0x00;
@@ -687,7 +687,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->orangeVelocity = report->orangeVelocity;
         }
     }
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -782,7 +782,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
         }
     }
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -846,7 +846,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->rightRed |= report->rightRed;
         out->rightGreen |= report->rightGreen;
     }
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -880,7 +880,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->rightGreen |= report->rightGreen;
     }
 #elif DEVICE_TYPE == STAGE_KIT
-    if (output_console_type == PS3) {
+    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->dpadUp |= up;
         out->dpadDown |= down;
@@ -949,6 +949,77 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #else  // Gamepad or devices that use the same mapping as a gamepad
     if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
+        out->l2 |= report->l2;
+        out->r2 |= report->r2;
+
+        out->back |= report->back;
+        out->start |= report->start;
+        out->leftThumbClick |= report->leftThumbClick;
+        out->rightThumbClick |= report->rightThumbClick;
+
+        out->guide |= report->guide;
+        if (report->leftStickX != PS3_STICK_CENTER) {
+            out->leftStickX = report->leftStickX;
+        }
+        if (report->leftStickY != PS3_STICK_CENTER) {
+            out->leftStickY = report->leftStickY;
+        }
+        if (report->rightStickX != PS3_STICK_CENTER) {
+            out->rightStickX = report->rightStickX;
+        }
+        if (report->rightStickY != PS3_STICK_CENTER) {
+            out->rightStickY = report->rightStickY;
+        }
+        if (report->leftTrigger) {
+            out->leftTrigger = report->leftTrigger;
+        }
+        if (report->rightTrigger) {
+            out->rightTrigger = report->rightTrigger;
+        }
+        if (report->pressureDpadUp) {
+            out->pressureDpadUp = report->pressureDpadUp;
+        }
+        if (report->pressureDpadRight) {
+            out->pressureDpadRight = report->pressureDpadRight;
+        }
+        if (report->pressureDpadDown) {
+            out->pressureDpadDown = report->pressureDpadDown;
+        }
+        if (report->pressureDpadLeft) {
+            out->pressureDpadLeft = report->pressureDpadLeft;
+        }
+        if (report->pressureL1) {
+            out->pressureL1 = report->pressureL1;
+        }
+        if (report->pressureR1) {
+            out->pressureR1 = report->pressureR1;
+        }
+        if (report->pressureTriangle) {
+            out->pressureTriangle = report->pressureTriangle;
+        }
+        if (report->pressureCircle) {
+            out->pressureCircle = report->pressureCircle;
+        }
+        if (report->pressureCross) {
+            out->pressureCross = report->pressureCross;
+        }
+        if (report->pressureSquare) {
+            out->pressureSquare = report->pressureSquare;
+        }
+    }
+    if (output_console_type == REAL_PS3) {
+        PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
         out->dpadUp |= up;
         out->dpadDown |= down;
         out->dpadLeft |= left;

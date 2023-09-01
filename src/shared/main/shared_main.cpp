@@ -406,7 +406,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             }
         }
     }
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -501,7 +501,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->pickup = (report->pickup) << 8;
         }
     }
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -584,7 +584,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->strumBar = 0;
         }
     }
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -687,7 +687,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->orangeVelocity = report->orangeVelocity;
         }
     }
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -782,7 +782,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->blueVelocity = (0x7FFF - (report->blueVelocity << 7));
         }
     }
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -846,7 +846,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->rightRed |= report->rightRed;
         out->rightGreen |= report->rightGreen;
     }
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->x |= report->x;
         out->a |= report->a;
@@ -880,7 +880,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->rightGreen |= report->rightGreen;
     }
 #elif DEVICE_TYPE == STAGE_KIT
-    if (output_console_type == PS3 || output_console_type == REAL_PS3) {
+    if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
         out->dpadUp |= up;
         out->dpadDown |= down;
@@ -1735,7 +1735,7 @@ int tick_bluetooth_inputs(const void *buf) {
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-        convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+        convert_universal_to_type((uint8_t *)report_data, input, PS3);
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];

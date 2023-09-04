@@ -16,7 +16,7 @@
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
 #include "hidescriptorparser.h"
-#include "host/usbh_pvt.h"
+#include "host/usbh_classdriver.h"
 #include "pico/bootrom.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"

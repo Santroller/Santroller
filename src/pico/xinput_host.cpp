@@ -31,7 +31,7 @@
 #include "descriptors.h"
 #include "hid.h"
 #include "host/usbh.h"
-#include "host/usbh_pvt.h"
+#include "host/usbh_classdriver.h"
 #include "xinput_host.h"
 
 //--------------------------------------------------------------------+

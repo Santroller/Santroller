@@ -476,10 +476,10 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
     }
     if (output_console_type == XBOX360) {
         XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
+        out->a |= report->a || report->soloGreen;
+        out->b |= report->b || report->soloRed;
+        out->y |= report->y || report->soloYellow;
+        out->x |= report->x || report->soloBlue;
         out->leftShoulder |= report->leftShoulder;
         out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
         out->dpadUp |= up;
@@ -503,10 +503,10 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
     }
     if (output_console_type == PS3) {
         PS3_REPORT *out = (PS3_REPORT *)buf;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
+        out->a |= report->a || report->soloGreen;
+        out->b |= report->b || report->soloRed;
+        out->y |= report->y || report->soloYellow;
+        out->x |= report->x || report->soloBlue;
         out->leftShoulder |= report->leftShoulder;
         out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
         out->dpadUp |= up;
@@ -520,6 +520,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->guide |= report->guide;
         if (report->tilt != PS3_STICK_CENTER) {
             out->tilt = report->tilt << 2;
+            // TODO: this
+            out->tiltDigital = true;
         }
         if (report->whammy) {
             last_zero = millis() + 1000;

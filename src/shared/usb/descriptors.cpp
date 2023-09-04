@@ -584,7 +584,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             xsm3_set_serial(serial);
             xsm3_initialise_state();
             xsm3_set_identification_data(xsm3_id_data_ms_controller);
-            xsm3_import_kv_keys(kv_key_1, kv_key_2);  // you must fetch these from your own console!
             memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
             return sizeof(xsm3_id_data_ms_controller);
         case 0x82:

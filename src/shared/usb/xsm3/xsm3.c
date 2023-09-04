@@ -51,6 +51,15 @@ static const uint8_t xsm3_key_0x1E[0x10] = {
     0x8F, 0x29, 0x08, 0x38, 0x0B, 0x5B, 0xFE, 0x68,
     0x7C, 0x26, 0x46, 0x2A, 0x51, 0xF2, 0xBC, 0x19};
 
+static const uint8_t xsm3_root_key_0x23[0x10] = {
+    0xB9, 0xE0, 0x9E, 0x68, 0x04, 0x83, 0x91, 0xB3,
+    0x32, 0x45, 0x7A, 0xDA, 0x43, 0x6B, 0x80, 0xAD
+};
+static const uint8_t xsm3_root_key_0x24[0x10] = {
+    0x92, 0x5D, 0x29, 0x6E, 0xB0, 0x61, 0x0B, 0xF1,
+    0xD6, 0x29, 0x3B, 0xC8, 0xC7, 0xD9, 0x32, 0xBC
+};
+
 // response to give to the given challenge command
 uint8_t xsm3_challenge_response[0x30];
 // console id fetched from challenge init packet
@@ -88,6 +97,30 @@ void xsm3_initialise_state() {
     memset(xsm3_random_console_data_swap_enc, 0, sizeof(xsm3_random_console_data_swap_enc));
     memset(xsm3_random_controller_data, 0, sizeof(xsm3_random_controller_data));
     memset(xsm3_challenge_init_hash, 0, sizeof(xsm3_challenge_init_hash));
+}
+
+static void xsm3_generate_kv_keys() {
+    // make a sha-1 hash of the console id
+    uint8_t console_id_hash[0x14];
+    ExCryptSha(xsm3_console_id, 0x8, NULL, 0, NULL, 0, console_id_hash, 0x14);
+    // encrypt it with the root keys for 1st party controllers
+    uint64_t des_parity[3];
+    uint64_t des_key[3];
+    uint64_t feed = 0;
+    EXCRYPT_DES3_STATE state = {0};
+    // calculate the 0x23 key
+    memcpy(&des_parity, xsm3_root_key_0x23, sizeof(xsm3_root_key_0x23));
+    des_parity[2] = des_parity[0];
+    ExCryptDesParity((uint8_t*)des_parity, 0x18, (uint8_t*)des_key);
+    ExCryptDes3Key(&state, des_key);
+    ExCryptDes3Cbc(&state, console_id_hash, 0x10, xsm3_kv_2des_key_1, (uint8_t*)&feed, 1);
+    // calculate the 0x24 key
+    feed = 0;
+    memcpy(&des_parity, xsm3_root_key_0x24, sizeof(xsm3_root_key_0x24));
+    des_parity[2] = des_parity[0];
+    ExCryptDesParity((uint8_t*)des_parity, 0x18, (uint8_t*)des_key);
+    ExCryptDes3Key(&state, des_key);
+    ExCryptDes3Cbc(&state, console_id_hash + 0x4, 0x10, xsm3_kv_2des_key_2, (uint8_t*)&feed, 1);
 }
 
 static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
@@ -173,6 +206,7 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     if (memcmp(incoming_packet_mac + 4, challenge_packet + 0x5 + 0x18, 0x4) != 0) {
         XSM3_printf("[ MAC failed when validating challenge init! ]\n");
     }
+    xsm3_generate_kv_keys();
 
     // TODO: somehow..derive the kv keys from the console certificate
 

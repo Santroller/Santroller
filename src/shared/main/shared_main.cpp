@@ -85,7 +85,7 @@ uint8_t rawWt;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
 GipPowerMode_t powerMode;
-#if defined(CONFIGURABLE_BLOBS)
+#ifdef CONFIGURABLE_BLOBS
 long last_poll = 0;
 #elif POLL_RATE
 long last_poll = 0;

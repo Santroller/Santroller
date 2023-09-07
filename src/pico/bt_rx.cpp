@@ -40,7 +40,9 @@ static enum {
 } app_state;
 
 static const uint8_t santroller_name[] = "SantrollerBT";
-#ifndef CONFIGURABLE_BLOBS
+#ifdef CONFIGURABLE_BLOBS
+static const char *bt_addr = (const char *)&BT_ADDR;
+#else
 #ifdef BT_ADDR
 static const char bt_addr[] = BT_ADDR;
 #endif
@@ -48,6 +50,7 @@ static const char bt_addr[] = BT_ADDR;
 static bd_addr_t bt_addr_recv;
 static le_device_addr_t remote_device;
 static hci_con_handle_t connection_handle;
+static bool has_address = false;
 static uint16_t hids_cid;
 static hid_protocol_mode_t protocol_mode = HID_PROTOCOL_MODE_REPORT;
 
@@ -110,12 +113,10 @@ void hog_start_scan() {
     printf("Scanning for LE HID devices...\n");
     devices_found = 0;
 #ifdef BT_ADDR
-    devices_found = 1;
-#ifdef CONFIGURABLE_BLOBS
-    memcpy(scan_buffer, &BT_ADDR, SIZE_OF_BD_ADDRESS);
-#else
-    memcpy(scan_buffer, bt_addr, sizeof(bt_addr));
-#endif
+    if (has_address) {
+        memcpy(scan_buffer, bt_addr, SIZE_OF_BD_ADDRESS);
+        devices_found = 1;
+    }
 #endif
     // Passive scanning, 100% (scan interval = scan window)
     gap_set_scan_parameters(0, 48, 48);
@@ -175,8 +176,16 @@ static void hog_start_reconnect_timer() {
  * Start connecting after boot up: connect to last used device if possible, start scan otherwise
  */
 static void hog_start_connect(void) {
+    if (has_address) {
+    }
     // Only try to connect if we have "paired" a device
 #ifdef BT_ADDR
+#ifdef CONFIGURABLE_BLOBS
+    // If the address starts with a null byte, then it is not actually set and should be ignored.
+    if (scan_buffer[0]) {
+        return;
+    }
+#endif
     hog_connect();
 #endif
 }
@@ -414,12 +423,14 @@ int btstack_main(void) {
     printf("Bt init\r\n");
 #ifdef BT_ADDR
 #ifdef CONFIGURABLE_BLOBS
-    sscanf_bd_addr((const char *)&BT_ADDR, remote_device.addr);
-    remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+    has_address = bt_addr[0];
 #else
-    sscanf_bd_addr(bt_addr, remote_device.addr);
-    remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+    has_address = true;
 #endif
+    if (has_address) {
+        sscanf_bd_addr(bt_addr, remote_device.addr);
+        remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+    }
 #endif
     /* LISTING_START(HogBootHostSetup): HID-over-GATT Host Setup */
 

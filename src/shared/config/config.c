@@ -7,7 +7,7 @@ uint8_t consoleType = CONSOLE_TYPE;
 // It doesn't really matter how big config_blobs is since nothing ever references its length
 // But configs length is put into the first index of config_blobs
 #ifdef CONFIGURABLE_BLOBS
-const uint8_t* config_blobs = (uint16_t*)0x100A2000;
+const uint8_t* config_blobs = (uint8_t*)0x100A2000;
 const uint8_t* config = (uint8_t*)0x100A3000;
 #else
 const uint8_t PROGMEM config[CONFIGURATION_LEN] = CONFIGURATION;

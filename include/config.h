@@ -14,7 +14,7 @@ extern "C" {
 extern uint8_t consoleType;
 #ifdef CONFIGURABLE_BLOBS
 extern const uint8_t* config;
-extern const uint16_t* config_blobs;
+extern const uint8_t* config_blobs;
 #else
 extern const uint8_t config[CONFIGURATION_LEN];
 #endif
@@ -222,3 +222,12 @@ typedef struct {
     } lastControllerReport;
 #endif
 } USB_LastReport_Data_t;
+
+#ifdef CONFIGURABLE_BLOBS
+inline int16_t read_int16(uint8_t idx) {
+    return *((int16_t*)&config_blobs[idx]);
+}
+inline uint16_t read_uint16(uint8_t idx) {
+    return *((uint16_t*)&config_blobs[idx]);
+}
+#endif

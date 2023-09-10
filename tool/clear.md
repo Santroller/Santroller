@@ -1,3 +1,6 @@
+---
+sort: 3
+---
 # Resetting using the Santroller Configurator
 
 ## Resetting to Pre-Configuration

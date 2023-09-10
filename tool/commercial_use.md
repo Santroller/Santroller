@@ -1,3 +1,6 @@
+---
+sort: 4
+---
 # Commercial use of the Santroller platform
 The standard tool does not license you to use it for profit. 
 However, there is a commercial version of it that can be obtained by subscribing to the projects [GitHub Sponsers](https://github.com/sponsors/sanjay900).

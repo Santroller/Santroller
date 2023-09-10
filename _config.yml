@@ -13,8 +13,8 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Ardwiino Guitar Configuration Tool
-description: A simple tool for converting Arduinos into different types of controllers
+title: Santroller
+description: A platform for building highly configurable rhythm game controllers
 remote_theme: rundocs/jekyll-rtd-theme
 fluid: true
 lang: en

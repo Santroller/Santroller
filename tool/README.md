@@ -1,4 +1,4 @@
 ---
 sort: 2
 ---
-# Troubleshooting Microcontrollers (How to Reset)
+# Using the tool

@@ -27,8 +27,7 @@ If you are unfamiliar with microcontrollers, you may also be unfamiliar with PCB
 
 ## Supplies
 * One of the following Microcontrollers:
-  * Pi Pico (I recommend this the most, as it is the easiest to get started with and for most people it will be easier to purchase, and it runs at 3.3v so it works for everything.)
-    * Note that in a future version, there will be some Pi pico only features, such as support for the WT Tap bar, and support for controller authentication passthrough, for XB1, retail XB360 and PS4.
+  * Pi Pico (Some features are Pi Pico ONLY, so this is the recommendation)
   * Arduino Pro Micro (3.3v)
   * Arduino Pro Micro (5v)
   * Arduino Leonardo
@@ -42,9 +41,7 @@ If you are unfamiliar with microcontrollers, you may also be unfamiliar with PCB
   * Do NOT get a MPU-6050 as these no longer work.
   * It is recommended to use two, as this can help avoid accidental activations (this is what is done in some offical guitars)  
   * I know some people use the SW-520D (which is a ball tilt switch), I myself just use some mercury tilt sensors that my local electronics shop sells.
-  * Make sure that you get a basic tilt sensor and not one with additional electronics, for example, this type of sensor is correct 
-    
-    [![Basic](../assets/images/s-l500.jpg){: width="250" }](../assets/images/s-l500.jpg)
+
 ```danger
   You do not want to get this type of sensor, as it does not work. If you do accidentally get one of these you *might* have luck just cutting the sensor from the top of the board and using it, but your mileage may vary doing that, as I have seen it work for some people and not for others.
     
@@ -72,10 +69,6 @@ Avoid pins 0 and 1 on the Arduino UNO, as these get used for sending controller 
 ```
 
 ```danger
-Be careful when programming an Arduino that has multiple variants. If you pick the wrong voltage, your device won't show up and you will need to follow the [![rescuing](https://sanjay900.github.io/guitar-configurator/tool/rescuing.html){: width="250" }](https://sanjay900.github.io/guitar-configurator/tool/rescuing.html) instructions to make it show up again!
-```
-
-```danger
 If you want to add APA102 LEDs to your guitar, avoid the MISO, MOSI and SCK pins on your Arduino.
    * For an Arduino Pro Micro (3.3v), Leonardo or Micro, the SCK pin is pin 15, the MOSI pin is pin 16 and the MISO pin is pin 14.
    * For an Arduino Uno, pin 11 is MOSI, pin 12 is MISO and pin 13 is SCK.
@@ -84,7 +77,7 @@ If you want to add APA102 LEDs to your guitar, avoid the MISO, MOSI and SCK pins
 ```
 
 ```note
-Besides the above, it doesn't matter which pins you choose when wiring up your guitar, as the Config Tool will be configured later with the pins you use.
+Besides the above, it doesn't matter which pins you choose when wiring up your guitar, as you pick pins later when programming the microcontroller.
 ```
 
 ## Wiring Steps
@@ -107,6 +100,7 @@ Once you have successfully modded one guitar (or even during your first) you wil
 
 ```note
 To wire an xplorer start/select board you will have to solder directly to the contacts and cut the traces that connect to each contact. It is not reccomended you try to mod an xplorer as your first project because this can be difficult.
+Note that with the Pi Pico, you can instead just hook these inputs up over USB, and avoid soldering them.
 ```
 
 ## Whammy

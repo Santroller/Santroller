@@ -1,4 +1,4 @@
-# Resetting using the Guitar Configurator
+# Resetting using the Santroller Configurator
 
 ## Resetting to Pre-Configuration
 1. Open the Config Tool and find your device, then click continue.

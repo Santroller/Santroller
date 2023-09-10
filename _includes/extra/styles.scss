@@ -37,3 +37,9 @@ html {
 :root {
     color-scheme: dark;
 }
+.toasts.note .title {
+    background: #2f93d5 !important;
+}
+.toasts.danger .title {
+    background: #f24f3f !important;
+  }

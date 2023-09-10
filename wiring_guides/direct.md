@@ -45,7 +45,7 @@ If you are unfamiliar with microcontrollers, you may also be unfamiliar with PCB
 ```danger
   You do not want to get this type of sensor, as it does not work. If you do accidentally get one of these you *might* have luck just cutting the sensor from the top of the board and using it, but your mileage may vary doing that, as I have seen it work for some people and not for others.
     
-    [![Basic](../assets/images/s-l500.png){: width="250" }](../assets/images/s-l500.png)
+  [![Basic](../assets/images/s-l500.png){: width="250" }](../assets/images/s-l500.png)
 ```
 ```danger
 For anyone wanting to use tilt, the only supported methods are digital tilt and analog tilt sensors. Support for the MPU-6050 is removed. It causes a lot of issues for porting this code between various microcontrollers, and take up too much space in the firmware. It also has issues with lag, as it takes some time to be polled, and it is just in general not as responsive as a standard digital tilt sensor.

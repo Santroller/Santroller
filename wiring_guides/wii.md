@@ -16,7 +16,7 @@
   * I know some people use the SW-520D (which is a ball tilt switch), I myself just use some mercury tilt sensors that my local electronics shop sells.
   * Make sure that you get a basic tilt sensor and not one with additional electronics, for example, this type of sensor is correct 
     
-    [![Basic](../assets/images/s-l500.jpg){: width="250" }](../assets/images/s-l500.jpg)
+  [![Basic](../assets/images/s-l500-basic.jpg){: width="250" }](../assets/images/s-l500.jpg)
 
 ```danger
   You do not want to get this type of sensor, as it does not work.

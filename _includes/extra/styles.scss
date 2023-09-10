@@ -42,4 +42,10 @@ html {
 }
 .toasts.danger .title {
     background: #f24f3f !important;
-  }
+}
+.markdown-body code, .markdown-body tt {
+    font-size: 12px;
+    border: 1px #414142 solid;
+    color: #e74c3c;
+    background-color: #1d1d1e;
+}

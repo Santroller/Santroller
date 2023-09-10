@@ -5,7 +5,7 @@
     background: #1c2124 !important;
     color: white !important;
 }
-.breadcrumb-item-selected {
+.breadcrumb-item-selected, .breadcrumb-item[aria-current]:not([aria-current="false"]) {
     color: white !important;
 }
 .sidebar {

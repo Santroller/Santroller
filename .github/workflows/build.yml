@@ -21,5 +21,7 @@ jobs:
           mv ardwiino_script_post_tool.py ardwiino_script_post.py
           cd ..
           tar cfJ firmware.tar.xz Santroller
+          git rev-parse HEAD > firmware.version
           mkdir -p ~/artifacts/firmware
           mv firmware.tar.xz ~/artifacts/firmware
+          mv firmware.version ~/artifacts/firmware

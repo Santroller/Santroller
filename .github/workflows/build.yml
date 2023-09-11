@@ -12,6 +12,7 @@ jobs:
           submodules: true
       - name: Build artifacts
         run: |
+          git rev-parse HEAD > firmware.version
           rm ardwiino_script_post.py
           rm -rf .git
           rm *.md
@@ -21,7 +22,6 @@ jobs:
           mv ardwiino_script_post_tool.py ardwiino_script_post.py
           cd ..
           tar cfJ firmware.tar.xz Santroller
-          git rev-parse HEAD > firmware.version
           mkdir -p ~/artifacts/firmware
           mv firmware.tar.xz ~/artifacts/firmware
           mv firmware.version ~/artifacts/firmware

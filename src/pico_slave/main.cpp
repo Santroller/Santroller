@@ -16,14 +16,9 @@ volatile uint8_t wtS0Pin = 0;
 volatile uint8_t wtS1Pin = 0;
 volatile uint8_t wtS2Pin = 0;
 volatile uint8_t wt_sensitivity = 0;
-uint8_t gh5_mapping[] = {
-    0x00, 0x95, 0xCD, 0xB0, 0x1A, 0x19, 0xE6,
-    0xE5, 0x49, 0x47, 0x48, 0x46, 0x2F, 0x2D,
-    0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
-    0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
-    0x65, 0x61, 0x63, 0x5F};
 uint8_t rawWt;
-long initialWt[5] = {0};
+uint32_t initialWt[5] = {0};
+uint32_t lastWt[5] = {0};
 bool hasInitWt = false;
 bool initted = false;
 spi_inst_t* hardware;
@@ -117,6 +112,7 @@ void recv(int len) {
             wtS1Pin = WIRE.read();
             wtS2Pin = WIRE.read();
             wt_sensitivity = WIRE.read();
+            hasInitWt = false;
             break;
     }
 }
@@ -134,12 +130,12 @@ void req() {
             WIRE.write((uint8_t*)&pins, sizeof(pins));
             break;
         }
-        case SLAVE_COMMAND_GET_WT_GH5: {
-            WIRE.write(gh5_mapping + rawWt, 1);
+        case SLAVE_COMMAND_GET_WT: {
+            WIRE.write(&rawWt, sizeof(rawWt));
             break;
         }
         case SLAVE_COMMAND_GET_WT_RAW: {
-            WIRE.write(&rawWt, sizeof(rawWt));
+            WIRE.write((uint8_t*)lastWt, sizeof(lastWt));
             break;
         }
         case SLAVE_COMMAND_INITIALISE: {
@@ -149,30 +145,31 @@ void req() {
         }
     }
 }
-long readWtSlave(int pin) {
+uint32_t readWtSlave(int pin) {
     digitalWrite(wtS0Pin, pin & 0b001);
     digitalWrite(wtS1Pin, pin & 0b010);
     digitalWrite(wtS2Pin, pin & 0b100);
-    long m = 0;
+    uint32_t m = 0;
     for (int i = 0; i < 8; i++) {
+        pinMode(wtInputPin, OUTPUT);
         pinMode(wtInputPin, INPUT_PULLUP);
-        delayMicroseconds(10);
-        pinMode(wtInputPin, INPUT);
         m += analogRead(wtInputPin);
     }
     return m;
 }
 bool checkWtSlave(int pin) {
-    return readWtSlave(pin) > initialWt[pin];
+    uint32_t val = readWtSlave(pin);
+    lastWt[pin] = val;
+    return val > initialWt[pin];
 }
-long lastWtTick = 0;
+uint32_t lastWtTick = 0;
 void loop() {
     if (wtS2Pin && !hasInitWt) {
         hasInitWt = true;
-        memset(initialWt, 0, sizeof(initialWt));
+        memset(initialWt, 0xFF, sizeof(initialWt));
         for (int j = 0; j < 50; j++) {
             for (int i = 0; i < 5; i++) {
-                long reading = readWtSlave(i) + wt_sensitivity;
+                uint32_t reading = readWtSlave(i) - wt_sensitivity;
                 if (reading > initialWt[i]) {
                     initialWt[i] = reading;
                 }
@@ -181,7 +178,7 @@ void loop() {
     }
     if (hasInitWt && (millis() - lastWtTick) > 1) {
         lastWtTick = millis();
-        rawWt = checkWtSlave(4) | (checkWtSlave(3) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(0) << 3) | (checkWtSlave(1) << 4);
+        rawWt = checkWtSlave(1) | (checkWtSlave(0) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(3) << 3) | (checkWtSlave(4) << 4);
     }
 }
 void setup() {

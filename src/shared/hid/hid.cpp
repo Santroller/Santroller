@@ -10,8 +10,8 @@
 #include "controllers.h"
 #include "io.h"
 #include "keyboard_mouse.h"
-#include "pin_funcs.h"
 #include "pico_slave.h"
+#include "pin_funcs.h"
 #include "ps3_wii_switch.h"
 #include "shared_main.h"
 #include "stdint.h"
@@ -565,13 +565,15 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             }
             memcpy(response_buffer, &lastSuccessfulGH5Packet, sizeof(lastSuccessfulGH5Packet));
             return sizeof(lastSuccessfulGH5Packet);
-
+#ifdef INPUT_WT_NECK
         case COMMAND_READ_GHWT:
-            if (!lastGHWTWasSuccessful) {
-                return 0;
+            uint32_t rawWtValues[5];
+            for (int i = 0; i < 5; i++) {
+                rawWtValues[i] = readWt(i);
             }
-            memcpy(response_buffer, &lastTap, sizeof(lastTap));
-            return sizeof(lastTap);
+            memcpy(response_buffer, rawWtValues, sizeof(rawWtValues));
+            return sizeof(rawWtValues);
+#endif
         case COMMAND_READ_ANALOG: {
             uint8_t pin = wValue & 0xff;
             uint8_t mask = (wValue >> 8);
@@ -592,6 +594,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             return 0;
         }
 #ifdef SLAVE_TWI_PORT
+#ifdef INPUT_WT_SLAVE_NECK
+        case COMMAND_READ_PERIPHERAL_GHWT:
+            return slaveReadWtRaw(response_buffer);
+#endif
         case COMMAND_READ_PERIPHERAL_ANALOG: {
             uint8_t pin = wValue & 0xff;
             uint8_t mask = (wValue >> 8);

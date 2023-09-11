@@ -75,15 +75,14 @@ void slaveWriteLED(uint8_t data) {
     twi_writeSingleToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_WRITE_SPI, data);
 }
 
-uint8_t slaveReadWtRaw() {
+uint8_t slaveReadWt() {
     uint8_t data;
-    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_WT_RAW, sizeof(data), &data);
+    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_WT, sizeof(data), &data);
     return data;
 }
-uint8_t slaveReadWtGh5() {
-    uint8_t data;
-    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_WT_GH5, sizeof(data), &data);
-    return data;
+uint8_t slaveReadWtRaw(uint8_t* output) {
+    twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_WT_RAW, 5 * sizeof(uint32_t), output);
+    return 5 * sizeof(uint32_t);
 }
 bool slaveInit() {
     uint8_t data;

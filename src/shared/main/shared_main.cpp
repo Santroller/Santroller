@@ -48,8 +48,6 @@ uint8_t drumVelocity[8];
 long lastDj = 0;
 long lastSentPacket = 0;
 long lastSentGHLPoke = 0;
-long lastTap;
-long lastTapShift;
 long input_start = 0;
 long lastDebounce = 0;
 bool hasTapBar = false;
@@ -63,7 +61,6 @@ uint8_t lastSuccessfulTurntablePacketLeft[3];
 uint8_t lastSuccessfulTurntablePacketRight[3];
 uint8_t last_usb_report_size = 0;
 long lastSuccessfulGHWTPacket;
-bool lastGHWTWasSuccessful = false;
 bool lastGH5WasSuccessful = false;
 bool lastTurntableWasSuccessfulLeft = false;
 bool lastTurntableWasSuccessfulRight = false;
@@ -80,8 +77,9 @@ USB_LastReport_Data_t temp_report_usb_host_xb1;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 #endif
-long initialWt[5] = {0};
+uint32_t initialWt[5] = {0};
 uint8_t rawWt;
+uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
 GipPowerMode_t powerMode;
@@ -120,7 +118,7 @@ uint8_t gh5_mapping[] = {
     0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
     0x65, 0x61, 0x63, 0x5F};
 bool checkWt(int pin) {
-    return readWt(pin) > initialWt[pin];
+    return readWt(pin) < initialWt[pin];
 }
 uint8_t readWtAnalog() {
     return gh5_mapping[rawWt];
@@ -147,11 +145,11 @@ void init_main(void) {
     init_ack();
 #endif
 #ifdef INPUT_WT_NECK
-    memset(initialWt, 0, sizeof(initialWt));
+    memset(initialWt, INT32_MAX, sizeof(initialWt));
     for (int j = 0; j < 50; j++) {
         for (int i = 0; i < 5; i++) {
-            long reading = readWt(i) + WT_SENSITIVITY;
-            if (reading > initialWt[i]) {
+            uint32_t reading = readWt(i) - WT_SENSITIVITY;
+            if (reading < initialWt[i]) {
                 initialWt[i] = reading;
             }
         }

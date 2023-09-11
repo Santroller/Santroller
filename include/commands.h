@@ -33,6 +33,7 @@ enum SerialCommands {
     COMMAND_READ_USB_HOST_INPUTS,
     COMMAND_READ_PERIPHERAL_DIGITAL,
     COMMAND_READ_PERIPHERAL_ANALOG,
+    COMMAND_READ_PERIPHERAL_GHWT,
     MAX
 };
 
@@ -42,8 +43,8 @@ extern uint8_t lastSuccessfulTurntablePacketLeft[3];
 extern uint8_t lastSuccessfulTurntablePacketRight[3];
 extern uint8_t lastSuccessfulGH5Packet[2];
 extern uint8_t wiiBytes;
-extern long lastTap;
-extern bool lastGHWTWasSuccessful;
+extern uint8_t rawWt;
+extern uint8_t rawWtPeripheral;
 extern bool lastGH5WasSuccessful;
 extern bool lastTurntableWasSuccessfulLeft;
 extern bool lastTurntableWasSuccessfulRight;

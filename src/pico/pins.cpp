@@ -3,9 +3,9 @@
 #include <stdint.h>
 
 #include "Arduino.h"
-#include "pin_funcs.h"
 #include "config.h"
 #include "io_define.h"
+#include "pin_funcs.h"
 #include "util.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
@@ -56,15 +56,15 @@ uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits) {
 }
 
 #ifdef INPUT_WT_NECK
-long readWt(int pin) {
+uint32_t readWt(int pin) {
     digitalWrite(WT_PIN_S0, pin & 0b001);
     digitalWrite(WT_PIN_S1, pin & 0b010);
     digitalWrite(WT_PIN_S2, pin & 0b100);
-    long m = 0;
+    delayMicroseconds(10);
+    uint32_t m = 0;
     for (int i = 0; i < 8; i++) {
+        pinMode(WT_PIN_INPUT, OUTPUT);
         pinMode(WT_PIN_INPUT, INPUT_PULLUP);
-        delayMicroseconds(10);
-        pinMode(WT_PIN_INPUT, INPUT);
         m += analogRead(WT_PIN_INPUT);
     }
     return m;

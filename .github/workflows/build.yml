@@ -12,7 +12,7 @@ jobs:
           submodules: true
       - name: Build artifacts
         run: |
-          git rev-parse HEAD > firmware.version
+          git rev-parse HEAD > ../firmware.version
           rm ardwiino_script_post.py
           rm -rf .git
           rm *.md

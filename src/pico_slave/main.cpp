@@ -149,6 +149,9 @@ uint32_t readWtSlave(int pin) {
     digitalWrite(wtS0Pin, pin & 0b001);
     digitalWrite(wtS1Pin, pin & 0b010);
     digitalWrite(wtS2Pin, pin & 0b100);
+    // Sink the pin to a default state using the pullup
+    pinMode(wtInputPin, INPUT_PULLUP);
+    delayMicroseconds(10);
     uint32_t m = 0;
     for (int i = 0; i < 8; i++) {
         pinMode(wtInputPin, OUTPUT);

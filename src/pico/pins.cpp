@@ -60,6 +60,8 @@ uint32_t readWt(int pin) {
     digitalWrite(WT_PIN_S0, pin & 0b001);
     digitalWrite(WT_PIN_S1, pin & 0b010);
     digitalWrite(WT_PIN_S2, pin & 0b100);
+    // Sink the pin to a default state using the pullup
+    pinMode(WT_PIN_INPUT, INPUT_PULLUP);
     delayMicroseconds(10);
     uint32_t m = 0;
     for (int i = 0; i < 8; i++) {

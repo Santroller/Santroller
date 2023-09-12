@@ -90,7 +90,9 @@ bool slaveInit() {
     return data == SLAVE_COMMAND_INITIALISE;
 }
 void slaveInitWt() {
+#ifdef INPUT_WT_SLAVE_NECK
     uint8_t payload[] = {WT_PIN_INPUT, WT_PIN_S0, WT_PIN_S1, WT_PIN_S2, WT_SENSITIVITY};
     twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_INIT_WT, sizeof(payload), payload);
+#endif
 }
 #endif

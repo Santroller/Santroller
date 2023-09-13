@@ -13,6 +13,7 @@
 #define SLAVE_COMMAND_GET_WT              0x0B
 #define SLAVE_COMMAND_GET_WT_RAW          0x0C
 #define SLAVE_COMMAND_INITIALISE          0x0D
+#define SLAVE_COMMAND_SET_WT_COUNTER      0x0E
 
 #define PIN_MODE_INPUT_PULLUP   0
 #define PIN_MODE_INPUT          1
@@ -43,6 +44,7 @@ uint8_t slaveReadWt(void);
 uint8_t slaveReadWtRaw(uint8_t* dest);
 bool slaveInit(void);
 void slaveInitWt(void);
+void slaveSetWtCounter(uint16_t counter);
 void slaveInitLED(uint8_t instance);
 void slaveWriteLED(uint8_t data);
 void slaveWriteAnalog(uint8_t pin, uint8_t val);

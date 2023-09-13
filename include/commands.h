@@ -35,6 +35,8 @@ enum SerialCommands {
     COMMAND_READ_PERIPHERAL_ANALOG,
     COMMAND_READ_PERIPHERAL_GHWT,
     COMMAND_READ_PERIPHERAL_VALID,
+    COMMAND_SET_PERIPHERAL_WT_COUNTER,
+    COMMAND_SET_WT_COUNTER,
     MAX
 };
 
@@ -45,7 +47,8 @@ extern uint8_t lastSuccessfulTurntablePacketRight[3];
 extern uint8_t lastSuccessfulGH5Packet[2];
 extern uint8_t wiiBytes;
 extern volatile uint32_t lastWt[5];
-extern uint8_t rawWt;
+extern volatile uint8_t rawWt;
+extern volatile uint16_t wt_counter;
 extern uint8_t rawWtPeripheral;
 extern bool lastGH5WasSuccessful;
 extern bool lastTurntableWasSuccessfulLeft;

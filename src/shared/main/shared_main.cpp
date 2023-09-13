@@ -77,8 +77,7 @@ USB_LastReport_Data_t temp_report_usb_host_xb1;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 #endif
-volatile uint32_t lastWt[5] = {0};
-uint8_t rawWt;
+volatile uint8_t rawWt;
 uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
@@ -116,11 +115,6 @@ uint8_t gh5_mapping[] = {
     0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
     0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
     0x65, 0x61, 0x63, 0x5F};
-#ifdef INPUT_WT_NECK
-uint8_t readWtAnalog() {
-    return gh5_mapping[rawWt];
-}
-#endif
 void init_main(void) {
     initPins();
     twi_init();

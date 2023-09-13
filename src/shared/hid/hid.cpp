@@ -573,6 +573,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             }
             return sizeof(lastWt);
         }
+        case COMMAND_SET_PERIPHERAL_WT_COUNTER: {
+            uint16_t counter;
+            memcpy(&counter, response_buffer, sizeof(counter));
+            wt_counter = counter;
+        }
 #endif
         case COMMAND_READ_ANALOG: {
             uint8_t pin = wValue & 0xff;
@@ -597,6 +602,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
 #ifdef INPUT_WT_SLAVE_NECK
         case COMMAND_READ_PERIPHERAL_GHWT:
             return slaveReadWtRaw(response_buffer);
+        case COMMAND_SET_PERIPHERAL_WT_COUNTER: {
+            uint16_t counter;
+            memcpy(&counter, response_buffer, sizeof(counter));
+            slaveSetWtCounter(counter);
+        }
 #endif
         case COMMAND_READ_PERIPHERAL_VALID:
             response_buffer[0] = slave_initted;

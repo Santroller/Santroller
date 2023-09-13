@@ -34,6 +34,7 @@ enum SerialCommands {
     COMMAND_READ_PERIPHERAL_DIGITAL,
     COMMAND_READ_PERIPHERAL_ANALOG,
     COMMAND_READ_PERIPHERAL_GHWT,
+    COMMAND_READ_PERIPHERAL_VALID,
     MAX
 };
 
@@ -54,6 +55,7 @@ extern bool lastPS2WasSuccessful;
 extern uint16_t wiiControllerType;
 extern uint8_t ps2ControllerType;
 extern bool overrideR2;
+extern bool slave_initted;
 extern uint8_t overriddenR2;
 
 #ifdef __cplusplus

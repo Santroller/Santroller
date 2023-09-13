@@ -598,6 +598,9 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_PERIPHERAL_GHWT:
             return slaveReadWtRaw(response_buffer);
 #endif
+        case COMMAND_READ_PERIPHERAL_VALID:
+            response_buffer[0] = slave_initted;
+            return 1;
         case COMMAND_READ_PERIPHERAL_ANALOG: {
             uint8_t pin = wValue & 0xff;
             uint8_t mask = (wValue >> 8);

@@ -77,7 +77,7 @@ USB_LastReport_Data_t temp_report_usb_host_xb1;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 #endif
-uint32_t initialWt[5] = {0};
+volatile uint32_t lastWt[5] = {0};
 uint8_t rawWt;
 uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
@@ -117,9 +117,6 @@ uint8_t gh5_mapping[] = {
     0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
     0x65, 0x61, 0x63, 0x5F};
 #ifdef INPUT_WT_NECK
-bool checkWt(int pin) {
-    return readWt(pin) < initialWt[pin];
-}
 uint8_t readWtAnalog() {
     return gh5_mapping[rawWt];
 }
@@ -143,17 +140,6 @@ void init_main(void) {
 #endif
 #ifdef INPUT_PS2
     init_ack();
-#endif
-#ifdef INPUT_WT_NECK
-    memset(initialWt, INT32_MAX, sizeof(initialWt));
-    for (int j = 0; j < 50; j++) {
-        for (int i = 0; i < 5; i++) {
-            uint32_t reading = readWt(i) - WT_SENSITIVITY;
-            if (reading < initialWt[i]) {
-                initialWt[i] = reading;
-            }
-        }
-    }
 #endif
 }
 #ifdef SLAVE_TWI_PORT

@@ -12,15 +12,15 @@
 #endif
 volatile uint8_t command;
 volatile uint8_t wtInputPin = 0;
+volatile uint32_t mask = 0;
 volatile uint8_t wtS0Pin = 0;
 volatile uint8_t wtS1Pin = 0;
 volatile uint8_t wtS2Pin = 0;
-volatile uint8_t wt_sensitivity = 0;
+volatile uint16_t wt_sensitivity = 0;
 uint8_t rawWt;
 uint32_t initialWt[5] = {0};
-uint32_t lastWt[5] = {0};
-bool hasInitWt = false;
-bool initted = false;
+volatile uint32_t lastWt[5] = {0};
+volatile bool hasInitWt = false;
 spi_inst_t* hardware;
 void recv(int len) {
     command = WIRE.read();
@@ -111,8 +111,12 @@ void recv(int len) {
             wtS0Pin = WIRE.read();
             wtS1Pin = WIRE.read();
             wtS2Pin = WIRE.read();
-            wt_sensitivity = WIRE.read();
+            mask = (1 << wtS0Pin) | (1 << wtS1Pin) | (1 << wtS2Pin);
+            wt_sensitivity = WIRE.read() << 8 | WIRE.read();
             hasInitWt = false;
+            gpio_set_pulls(wtInputPin, true, false);
+            gpio_set_slew_rate(wtInputPin, GPIO_SLEW_RATE_FAST);
+            gpio_set_drive_strength(wtInputPin, GPIO_DRIVE_STRENGTH_12MA);
             break;
     }
 }
@@ -135,7 +139,10 @@ void req() {
             break;
         }
         case SLAVE_COMMAND_GET_WT_RAW: {
-            WIRE.write((uint8_t*)lastWt, sizeof(lastWt));
+            volatile uint8_t* data = (volatile uint8_t*)lastWt;
+            for (uint8_t i = 0; i < sizeof(lastWt); i++) {
+                WIRE.write(data[i]);
+            }
             break;
         }
         case SLAVE_COMMAND_INITIALISE: {
@@ -145,42 +152,38 @@ void req() {
         }
     }
 }
+void loop() {
+}
 uint32_t readWtSlave(int pin) {
-    digitalWrite(wtS0Pin, pin & 0b001);
-    digitalWrite(wtS1Pin, pin & 0b010);
-    digitalWrite(wtS2Pin, pin & 0b100);
-    // Sink the pin to a default state using the pullup
-    pinMode(wtInputPin, INPUT_PULLUP);
-    delayMicroseconds(10);
-    uint32_t m = 0;
-    for (int i = 0; i < 8; i++) {
-        pinMode(wtInputPin, OUTPUT);
-        pinMode(wtInputPin, INPUT_PULLUP);
-        m += analogRead(wtInputPin);
+    gpio_put_masked(mask, ((pin & (1 << 0)) << wtS0Pin - 0) | ((pin & (1 << 1)) << (wtS1Pin - 1)) | ((pin & (1 << 2)) << (wtS2Pin - 2)));
+    uint32_t m = time_us_32();
+    for (int i = 0; i < 90; i++) {
+        gpio_set_dir(wtInputPin, true);
+        gpio_set_dir(wtInputPin, false);
+        while (!gpio_get(wtInputPin)) {
+        }
     }
+    m = time_us_32() - m;
+    lastWt[pin] = m;
     return m;
 }
 bool checkWtSlave(int pin) {
-    uint32_t val = readWtSlave(pin);
-    lastWt[pin] = val;
-    return val > initialWt[pin];
+    return readWtSlave(pin) > initialWt[pin];
 }
-uint32_t lastWtTick = 0;
-void loop() {
+void loop1() {
     if (wtS2Pin && !hasInitWt) {
         hasInitWt = true;
-        memset(initialWt, 0xFF, sizeof(initialWt));
+        memset(initialWt, 0, sizeof(initialWt));
         for (int j = 0; j < 50; j++) {
             for (int i = 0; i < 5; i++) {
-                uint32_t reading = readWtSlave(i) - wt_sensitivity;
+                uint32_t reading = readWtSlave(i) + wt_sensitivity;
                 if (reading > initialWt[i]) {
                     initialWt[i] = reading;
                 }
             }
         }
     }
-    if (hasInitWt && (millis() - lastWtTick) > 1) {
-        lastWtTick = millis();
+    if (hasInitWt) {
         rawWt = checkWtSlave(1) | (checkWtSlave(0) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(3) << 3) | (checkWtSlave(4) << 4);
     }
 }

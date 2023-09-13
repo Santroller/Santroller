@@ -40,6 +40,7 @@ uint8_t xone_dev_addr = 0;
 uint8_t x360_dev_addr = 0;
 uint8_t ps4_dev_addr = 0;
 bool connected = false;
+volatile uint8_t lastRawWt = 0;
 #if USB_HOST_STACK
 uint8_t total_usb_host_devices = 0;
 typedef struct {
@@ -92,6 +93,9 @@ static void tick_usb() {
     tud_task();
 #if USB_HOST_STACK
     tuh_task();
+#endif
+#ifdef INPUT_WT_NECK
+    rawWt = lastRawWt;
 #endif
     tick();
 }
@@ -395,3 +399,40 @@ void reset_usb(void) {
     persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
     reboot();
 }
+
+#ifdef INPUT_WT_NECK
+uint32_t initialWt[5] = {0};
+uint32_t readWt(int pin) {
+    gpio_put_masked((1 << WT_PIN_S0) | (1 << WT_PIN_S1) | (1 << WT_PIN_S2), ((pin & (1 << 0)) << WT_PIN_S0 - 0) | ((pin & (1 << 1)) << (WT_PIN_S1 - 1)) | ((pin & (1 << 2)) << (WT_PIN_S2 - 2)));
+    uint32_t m = time_us_32();
+    for (int i = 0; i < 90; i++) {
+        gpio_set_dir(WT_PIN_INPUT, true);
+        gpio_set_dir(WT_PIN_INPUT, false);
+        while (!gpio_get(WT_PIN_INPUT)) {
+        }
+    }
+    m = time_us_32() - m;
+    lastWt[pin] = m;
+    return m;
+}
+void setup1(void) {
+    gpio_set_pulls(WT_PIN_INPUT, true, false);
+    gpio_set_slew_rate(WT_PIN_INPUT, GPIO_SLEW_RATE_FAST);
+    gpio_set_drive_strength(WT_PIN_INPUT, GPIO_DRIVE_STRENGTH_12MA);
+    memset(initialWt, 0, sizeof(initialWt));
+    for (int j = 0; j < 50; j++) {
+        for (int i = 0; i < 5; i++) {
+            uint32_t reading = readWt(i) + WT_SENSITIVITY;
+            if (reading > initialWt[i]) {
+                initialWt[i] = reading;
+            }
+        }
+    }
+}
+bool checkWt(int pin) {
+    return readWt(pin) > initialWt[pin];
+}
+void loop1() {
+    lastRawWt = checkWt(1) | (checkWt(0) << 1) | (checkWt(2) << 2) | (checkWt(3) << 3) | (checkWt(4) << 4);
+}
+#endif

@@ -54,21 +54,3 @@ uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits) {
     adc_select_input(pin);
     return adc_read() << 4;
 }
-
-#ifdef INPUT_WT_NECK
-uint32_t readWt(int pin) {
-    digitalWrite(WT_PIN_S0, pin & 0b001);
-    digitalWrite(WT_PIN_S1, pin & 0b010);
-    digitalWrite(WT_PIN_S2, pin & 0b100);
-    // Sink the pin to a default state using the pullup
-    pinMode(WT_PIN_INPUT, INPUT_PULLUP);
-    delayMicroseconds(10);
-    uint32_t m = 0;
-    for (int i = 0; i < 8; i++) {
-        pinMode(WT_PIN_INPUT, OUTPUT);
-        pinMode(WT_PIN_INPUT, INPUT_PULLUP);
-        m += analogRead(WT_PIN_INPUT);
-    }
-    return m;
-}
-#endif

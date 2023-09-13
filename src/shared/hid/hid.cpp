@@ -566,13 +566,13 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &lastSuccessfulGH5Packet, sizeof(lastSuccessfulGH5Packet));
             return sizeof(lastSuccessfulGH5Packet);
 #ifdef INPUT_WT_NECK
-        case COMMAND_READ_GHWT:
-            uint32_t rawWtValues[5];
-            for (int i = 0; i < 5; i++) {
-                rawWtValues[i] = readWt(i);
+        case COMMAND_READ_GHWT: {
+            volatile uint8_t *data = (volatile uint8_t *)lastWt;
+            for (int i = 0; i < sizeof(lastWt); i++) {
+                response_buffer[i] = data[i];
             }
-            memcpy(response_buffer, rawWtValues, sizeof(rawWtValues));
-            return sizeof(rawWtValues);
+            return sizeof(lastWt);
+        }
 #endif
         case COMMAND_READ_ANALOG: {
             uint8_t pin = wValue & 0xff;

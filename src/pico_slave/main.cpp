@@ -17,9 +17,7 @@ volatile uint8_t wtS0Pin = 0;
 volatile uint8_t wtS1Pin = 0;
 volatile uint8_t wtS2Pin = 0;
 volatile uint16_t wt_sensitivity = 0;
-volatile uint16_t wt_counter = 0;
-uint8_t rawWt;
-uint32_t initialWt[5] = {0};
+volatile uint8_t rawWt;
 volatile uint32_t lastWt[5] = {0};
 volatile bool hasInitWt = false;
 spi_inst_t* hardware;
@@ -114,14 +112,7 @@ void recv(int len) {
             wtS2Pin = WIRE.read();
             mask = (1 << wtS0Pin) | (1 << wtS1Pin) | (1 << wtS2Pin);
             wt_sensitivity = WIRE.read() << 8 | WIRE.read();
-            wt_counter = WIRE.read() << 8 | WIRE.read();
             hasInitWt = false;
-            gpio_set_pulls(wtInputPin, true, false);
-            gpio_set_slew_rate(wtInputPin, GPIO_SLEW_RATE_FAST);
-            gpio_set_drive_strength(wtInputPin, GPIO_DRIVE_STRENGTH_12MA);
-            break;
-        case SLAVE_COMMAND_SET_WT_COUNTER:
-            wt_counter = WIRE.read() << 8 | WIRE.read();
             break;
     }
 }
@@ -140,7 +131,7 @@ void req() {
             break;
         }
         case SLAVE_COMMAND_GET_WT: {
-            WIRE.write(&rawWt, sizeof(rawWt));
+            WIRE.write((uint8_t*)&rawWt, sizeof(rawWt));
             break;
         }
         case SLAVE_COMMAND_GET_WT_RAW: {
@@ -157,31 +148,56 @@ void req() {
         }
     }
 }
-void loop() {
-}
-uint16_t counter = wt_counter;
+#define WT_BUFFER 16
+uint32_t lastWtSum[5] = {0};
+uint32_t lastWtAvg[5][WT_BUFFER] = {0};
+uint8_t nextWt[5] = {0};
+uint32_t initialWt[5] = {0};
 uint32_t readWtSlave(int pin) {
     gpio_put_masked(mask, ((pin & (1 << 0)) << wtS0Pin - 0) | ((pin & (1 << 1)) << (wtS1Pin - 1)) | ((pin & (1 << 2)) << (wtS2Pin - 2)));
-    uint32_t m = time_us_32();
-    for (int i = 0; i < counter; i++) {
-        gpio_set_dir(wtInputPin, true);
-        gpio_set_dir(wtInputPin, false);
-        gpio_set_pulls(wtInputPin, true, false);
-        while (!gpio_get(wtInputPin)) {
-        }
+    gpio_set_dir(wtInputPin, true);
+    gpio_put(wtInputPin, 0);
+    gpio_set_dir(wtInputPin, false);
+    gpio_set_pulls(wtInputPin, true, false);
+    uint32_t m = rp2040.getCycleCount();
+    while (!gpio_get(wtInputPin)) {
     }
-    m = time_us_32() - m;
-    lastWt[pin] = m;
+    m = rp2040.getCycleCount() - m;
+    if (pin < 6) {
+        if (m > 1000) {
+            m = initialWt[pin] - wt_sensitivity;
+        }
+        lastWtSum[pin] -= lastWtAvg[pin][nextWt[pin]];
+        lastWtAvg[pin][nextWt[pin]] = m;
+        lastWtSum[pin] += m;
+        nextWt[pin]++;
+        if (nextWt[pin] >= WT_BUFFER) {
+            nextWt[pin] = 0;
+        }
+        m = lastWtSum[pin] / WT_BUFFER;
+        lastWt[pin] = m;
+    }
     return m;
 }
 bool checkWtSlave(int pin) {
     return readWtSlave(pin) > initialWt[pin];
 }
-void loop1() {
+
+void loop() {
     if (wtS2Pin && !hasInitWt) {
         hasInitWt = true;
         memset(initialWt, 0, sizeof(initialWt));
-        for (int j = 0; j < wt_counter; j++) {
+        memset(lastWtAvg, 0, sizeof(lastWtAvg));
+        memset(lastWtSum, 0, sizeof(lastWtSum));
+        memset(nextWt, 0, sizeof(nextWt));
+        for (int j = 0; j < 100; j++) {
+            readWtSlave(6);
+            for (int i = 0; i < 5; i++) {
+                readWtSlave(i);
+            }
+        }
+        for (int j = 0; j < 50; j++) {
+            readWtSlave(6);
             for (int i = 0; i < 5; i++) {
                 uint32_t reading = readWtSlave(i) + wt_sensitivity;
                 if (reading > initialWt[i]) {
@@ -191,7 +207,6 @@ void loop1() {
         }
     }
     if (hasInitWt) {
-        counter = wt_counter;
         rawWt = checkWtSlave(1) | (checkWtSlave(0) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(3) << 3) | (checkWtSlave(4) << 4);
     }
 }

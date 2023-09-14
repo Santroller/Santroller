@@ -82,6 +82,7 @@ void send_report_to_pc(const void *report, uint8_t len) {
     tud_xusb_n_report(0, report, len);
 }
 bool foundXB = false;
+
 static void tick_usb() {
 #if USB_HOST_STACK
     if ((consoleType == XBOX360 || consoleType == XBOXONE) && !foundXB) {
@@ -93,6 +94,7 @@ static void tick_usb() {
 #if USB_HOST_STACK
     tuh_task();
 #endif
+
     tick();
 }
 #ifdef BLUETOOTH_RX
@@ -127,6 +129,7 @@ void setup() {
     btstack_main();
 #endif
 }
+
 uint8_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == XBOXONE) {
         return xone_dev_addr;
@@ -395,53 +398,3 @@ void reset_usb(void) {
     persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
     reboot();
 }
-
-#ifdef INPUT_WT_NECK
-volatile uint32_t lastWt[5] = {0};
-volatile uint16_t wt_counter = WT_COUNTER;
-uint16_t counter = wt_counter;
-uint32_t initialWt[5] = {0};
-uint32_t readWt(int pin) {
-    gpio_put_masked((1 << WT_PIN_S0) | (1 << WT_PIN_S1) | (1 << WT_PIN_S2), ((pin & (1 << 0)) << WT_PIN_S0 - 0) | ((pin & (1 << 1)) << (WT_PIN_S1 - 1)) | ((pin & (1 << 2)) << (WT_PIN_S2 - 2)));
-    uint32_t m = time_us_32();
-    for (int i = 0; i < counter; i++) {
-        gpio_set_dir(WT_PIN_INPUT, true);
-        gpio_set_dir(WT_PIN_INPUT, false);
-        gpio_set_pulls(WT_PIN_INPUT, true, false);
-        while (!gpio_get(WT_PIN_INPUT)) {
-        }
-    }
-    m = time_us_32() - m;
-    lastWt[pin] = m;
-    return m;
-}
-void setup1(void) {
-    gpio_init(WT_PIN_INPUT);
-    gpio_set_dir(WT_PIN_INPUT, false);
-    gpio_set_pulls(WT_PIN_INPUT, true, false);
-    gpio_init(WT_PIN_S0);
-    gpio_set_dir(WT_PIN_S0, true);
-    gpio_init(WT_PIN_S1);
-    gpio_set_dir(WT_PIN_S1, true);
-    gpio_init(WT_PIN_S2);
-    gpio_set_dir(WT_PIN_S2, true);
-    gpio_set_slew_rate(WT_PIN_INPUT, GPIO_SLEW_RATE_FAST);
-    gpio_set_drive_strength(WT_PIN_INPUT, GPIO_DRIVE_STRENGTH_12MA);
-    memset(initialWt, 0, sizeof(initialWt));
-    for (int j = 0; j < 50; j++) {
-        for (int i = 0; i < 5; i++) {
-            uint32_t reading = readWt(i) + WT_SENSITIVITY;
-            if (reading > initialWt[i]) {
-                initialWt[i] = reading;
-            }
-        }
-    }
-}
-bool checkWt(int pin) {
-    return readWt(pin) > initialWt[pin];
-}
-void loop1() {
-    counter = wt_counter;
-    rawWt = checkWt(1) | (checkWt(0) << 1) | (checkWt(2) << 2) | (checkWt(3) << 3) | (checkWt(4) << 4);
-}
-#endif

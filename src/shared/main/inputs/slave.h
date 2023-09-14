@@ -92,13 +92,8 @@ bool slaveInit() {
 }
 void slaveInitWt() {
 #ifdef INPUT_WT_SLAVE_NECK
-    uint8_t payload[] = {WT_PIN_INPUT, WT_PIN_S0, WT_PIN_S1, WT_PIN_S2, WT_SENSITIVITY >> 8, WT_SENSITIVITY & 0xFF, WT_COUNTER >> 8, WT_COUNTER & 0xFF};
+    uint8_t payload[] = {WT_PIN_INPUT, WT_PIN_S0, WT_PIN_S1, WT_PIN_S2, WT_SENSITIVITY >> 8, WT_SENSITIVITY & 0xFF};
     slave_initted = twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_INIT_WT, sizeof(payload), payload);
-#endif
-}
-void slaveSetWtCounter(uint16_t counter) {
-#ifdef INPUT_WT_SLAVE_NECK
-    slave_initted = twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_SET_WT_COUNTER, sizeof(counter), &counter);
 #endif
 }
 #endif

@@ -13,9 +13,6 @@
 #define TWI_SRX 3
 #define TWI_STX 4
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 void read_serial(uint8_t* out, uint8_t len);
 void twi_init();
 bool twi_readFrom(TWI_BLOCK, uint8_t, uint8_t *, uint8_t, uint8_t);
@@ -34,6 +31,7 @@ void spi_high(SPI_BLOCK block);
 void init_ack();
 void read_serial(uint8_t* id, uint8_t len);
 extern volatile bool spi_acknowledged;
-#ifdef __cplusplus
-}
+#ifdef INPUT_WT_NECK
+void initWt();
+uint8_t tickWt();
 #endif

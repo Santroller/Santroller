@@ -77,7 +77,7 @@ USB_LastReport_Data_t temp_report_usb_host_xb1;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 #endif
-volatile uint8_t rawWt;
+uint8_t rawWt;
 uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;

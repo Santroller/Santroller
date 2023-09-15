@@ -7,7 +7,7 @@ layout: default
 The Santroller platform provides the ability to program micro controllers that emulate various rhythm game controllers for computers and various consoles.
 This is done using the Santroller Configurator, which can program various microcontrollers to emulate different controllers.
 
-[![main screen](assets/images/main-screen-graphical.png)](assets/images/main-screen-graphical.png)
+[![main screen](assets/images/main-screen-graphical.png)]{: width="250" }(assets/images/main-screen-graphical.png)
 
 # Features
 * Support for various consoles, including PS2/3/4/5, Wii, Switch, Xbox 360 and Xbox One / Series

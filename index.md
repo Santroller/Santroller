@@ -7,10 +7,16 @@ layout: default
 The Santroller platform provides the ability to program micro controllers that emulate various rhythm game controllers for computers and various consoles.
 This is done using the Santroller Configurator, which can program various microcontrollers to emulate different controllers.
 
-[![home screen](assets/images/screenshots/home.png){: height="315" }](assets/images/screenshots/home.png) 
-[![main screen](assets/images/screenshots/main.png){: height="315" }](assets/images/screenshots/main.png)
-[![main screen with everything](assets/images/screenshots/combined.png){: height="315" }](assets/images/screenshots/combined.png)
 
+# Gallery
+
+[![home screen](assets/images/screenshots/home.png){: height="215" }](assets/images/screenshots/home.png) 
+[![main screen](assets/images/screenshots/main.png){: height="215" }](assets/images/screenshots/main.png)
+[![main screen with everything](assets/images/screenshots/combined.png){: height="215" }](assets/images/screenshots/combined.png)
+[![alt text](assets/images/adaptor.jpg){: height="215" }](assets/images/adaptor.jpg)
+[![alt text](assets/images/adaptor-ps2.jpg){: height="215" }](assets/images/adaptor-ps2.jpg)
+[![alt text](assets/images/direct.jpg){: height="215" }](assets/images/direct.jpg)
+[![alt text](assets/images/inline-led.jpg){: height="215" }](assets/images/inline-led.jpg)
 # Features
 * Support for various consoles, including PS2/3/4/5, Wii, Switch, Xbox 360 and Xbox One / Series
   * PS2 requires a [nightly build of OPL](https://santroller.tangentmc.net/console_guides/wii.html) for most games, some of the later games do support PS3 instruments nativly though.
@@ -71,13 +77,6 @@ Click [Here](https://github.com/sanjay900/SantrollerConfigurator/releases/latest
 # Using this tool commercially
 If you would look to sell devices running the Santroller firmware, click the [following link](https://santroller.tangentmc.net/tool/commercial_use.html) to learn more about the commercial version of this platform.
 The standard version of this tool can NOT be used commercially, and the commercial version of this platform has extra features that are designed specifically for users who are selling products running on this platform.
-
-# Gallery
-{% include youtube.html id=H73McH5abes %}
-[![alt text](assets/images/adaptor.jpg){: height="315" }](assets/images/adaptor.jpg)
-[![alt text](assets/images/adaptor-ps2.jpg){: height="315" }](assets/images/adaptor-ps2.jpg)
-[![alt text](assets/images/direct.jpg){: height="315" }](assets/images/direct.jpg)
-[![alt text](assets/images/inline-led.jpg){: height="315" }](assets/images/inline-led.jpg)
 
 
 # Donate Link

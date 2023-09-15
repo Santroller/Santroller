@@ -9,7 +9,7 @@ This is done using the Santroller Configurator, which can program various microc
 
 [![home screen](assets/images/screenshots/home.png){: width="250" }](assets/images/screenshots/home.png) 
 [![main screen](assets/images/screenshots/main.png){: width="250" }]{: width="250" }(assets/images/screenshots/main.png)
-[![main screen with everything](assets/images/screenshots/combined.png){: width="250" }](assets/images/screenshots/combined.png)
+[![main screen with everything](assets/images/screenshots/combined.png{: width="250" })](assets/images/screenshots/combined.png)
 
 # Features
 * Support for various consoles, including PS2/3/4/5, Wii, Switch, Xbox 360 and Xbox One / Series

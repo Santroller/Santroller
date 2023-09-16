@@ -19,7 +19,7 @@ This is done using the Santroller Configurator, which can program various microc
 [![alt text](assets/images/inline-led.jpg){: height="215" }](assets/images/inline-led.jpg)
 # Features
 * Support for various consoles, including PS2/3/4/5, Wii, Switch, Xbox 360 and Xbox One / Series
-  * PS2 requires a [nightly build of OPL](https://santroller.tangentmc.net/console_guides/wii.html) for most games, some of the later games do support PS3 instruments nativly though.
+  * PS2 requires a [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) for most games, some of the later games do support PS3 instruments nativly though.
   * PS3 works nativly with no additional requirements
   * PS4 and PS5 will use PS3 mode and work with no additional requirements, except for gamepad mode which requires an authentication controller
   * Xbox 360 either requires the use of an authentication controller, or to use [UsbdSecPatch](https://santroller.tangentmc.net/console_guides/xbox360.html) to bypass authentication on a RGHed console.

@@ -565,6 +565,12 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             }
             memcpy(response_buffer, &lastSuccessfulGH5Packet, sizeof(lastSuccessfulGH5Packet));
             return sizeof(lastSuccessfulGH5Packet);
+        case COMMAND_READ_CLONE:
+            if (!lastCloneWasSuccessful) {
+                return 0;
+            }
+            memcpy(response_buffer, &lastSuccessfulClonePacket, sizeof(lastSuccessfulClonePacket));
+            return sizeof(lastSuccessfulClonePacket);
 #ifdef INPUT_WT_NECK
         case COMMAND_READ_GHWT: {
             volatile uint8_t *data = (volatile uint8_t *)lastWt;

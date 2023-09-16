@@ -85,7 +85,7 @@ The world tour slider bar originally used a single wire to connect between the b
    * For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
 
 ## Crazy guitar neck
-1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
+1. Hook up VCC, GND, SCL and SDA pins to your microcontroller.
    * For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
    * For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
    * For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.

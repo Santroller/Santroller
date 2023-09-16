@@ -1,3 +1,6 @@
+---
+sort: 9
+---
 # Wiring USB Inputs
 
 ## Before you start:

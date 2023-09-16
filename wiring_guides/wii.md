@@ -1,3 +1,6 @@
+---
+sort: 5
+---
 # Building an Adaptor for a Wii Controller
 ## You will need
 * A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)

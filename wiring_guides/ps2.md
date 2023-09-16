@@ -1,3 +1,6 @@
+---
+sort: 6
+---
 # Building an Adaptor for a PS2 Controller
 ## You will need
 * A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)

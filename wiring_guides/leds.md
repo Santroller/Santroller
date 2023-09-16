@@ -1,3 +1,6 @@
+---
+sort: 7
+---
 # Adding RGB LEDs to controllers
 You can add LEDs that will light up when a button or analogue input is pressed. For people playing Clone Hero, you can also make the frets light up based on in-game events such as Star Power.
 ## You will need

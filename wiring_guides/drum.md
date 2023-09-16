@@ -1,3 +1,6 @@
+---
+sort: 3
+---
 # Wiring a Drum Kit
 ## Before you start:
 If you are new to this, read the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html) for an overview on everything you need to know for modifying a controller.

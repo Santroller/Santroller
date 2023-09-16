@@ -1,5 +1,5 @@
 ---
-sort: 4
+sort: 5
 ---
 # Commercial use of the Santroller platform
 The standard tool does not license you to use it for profit. 

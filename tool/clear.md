@@ -3,9 +3,9 @@ sort: 3
 ---
 # Resetting using the Santroller Configurator
 
-## Resetting to Pre-Configuration
+## Resetting to defaults
 1. Open the Config Tool and find your device, then click continue.
-2. Click on the `Reset device config` button. This will restore the config back to how it was when you first programmed the Arduino with the Config Tool.
+2. Click on the `Reset settings` button. Then click `Load Defaults`. This will restore the config back to how it was when you first programmed the Arduino with the Config Tool.
 
 ## Resetting to Arduino Defaults
 1. Open the Config Tool and find your device, then click continue.

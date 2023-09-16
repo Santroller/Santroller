@@ -27,7 +27,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 5. Wire up the Crossfader / Turntable connection board. 
     1. There is a three wire ribbon cable going to this board, and this is for the Crossfader. This is also a potentiometer, so the middle pin needs to go to an analog pin on your microcontroller, and one of the outer pins needs to go to VCC, and the other goes to ground.
     2. The board has connectors that go to little boards that connect to the Turntable platters. These are labeled V C D and G. 
-        1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
+        1. Hook up V to VCC and G to GND, and then hook up the C to SCL and D to SDA.
         * For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
         * For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
         * For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.

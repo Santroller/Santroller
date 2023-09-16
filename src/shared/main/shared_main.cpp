@@ -20,6 +20,7 @@
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
+#define CLONE_ADDR 0x10
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
 Buffer_Report_t last_queue_report;
@@ -57,11 +58,13 @@ uint8_t ps2ControllerType = PSX_NO_DEVICE;
 uint8_t lastSuccessfulPS2Packet[BUFFER_SIZE];
 uint8_t lastSuccessfulWiiPacket[8];
 uint8_t lastSuccessfulGH5Packet[2];
+uint8_t lastSuccessfulClonePacket[4];
 uint8_t lastSuccessfulTurntablePacketLeft[3];
 uint8_t lastSuccessfulTurntablePacketRight[3];
 uint8_t last_usb_report_size = 0;
 long lastSuccessfulGHWTPacket;
 bool lastGH5WasSuccessful = false;
+bool lastCloneWasSuccessful = false;
 bool lastTurntableWasSuccessfulLeft = false;
 bool lastTurntableWasSuccessfulRight = false;
 bool lastWiiWasSuccessful = false;
@@ -100,6 +103,8 @@ const PROGMEM uint8_t ghl_ps3wiiu_magic_data[] = {
  */
 const PROGMEM uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+const uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
 
 Led_t ledState[LED_COUNT];
 #define UP 1 << 0
@@ -1198,6 +1203,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
 #include "inputs/gh5_neck.h"
+#include "inputs/clone_neck.h"
 #include "inputs/ps2.h"
 #include "inputs/turntable.h"
 #include "inputs/usb_host.h"

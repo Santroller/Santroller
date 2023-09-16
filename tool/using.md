@@ -27,23 +27,23 @@ The Santroller Configurator is a tool that can program any micro controller with
 
   [![Main Screen](../assets/images/screenshots/main.png){: width="250" }](../assets/images/screenshots/main.png)
 7. There are two main areas of this screen, the sidebar and the options list. In the sidebar you have several buttons:
-    1. Mode
+    - Mode
         - You can change the mode between `Simple` and `Advanced`, which allows for configuring some options that most people won't need, such as setting individual debounce for each input, and configuring if a pin is a `pull-up`, `pull-down` or is `floating`.
-    2. Controller View Type
+    - Controller View Type
         - This will change the legends and icons for various buttons, to allow for seeing how things are bound in the context of different controllers. For example, the `Guide` button will be the `Guide` button in Xbox mode, the `PS` button in Playstation mode, and the `Home` button in switch mode.
-    3. Add Setting
+    - Add Setting
         - This button is the heart of the program, and it allows for adding new options to the options list.
-    4. Save Settings
+    - Save Settings
         - If your configuration is valid, this will allow you to save your configuration to the connected microcontroller.
-    5. Reset Settings
+    - Reset Settings
         - When this button is clicked, it will give you the ability to either clear all options from the options list, or reset the options to the default list.
-    6. Import / Export Settings
+    - Import / Export Settings
         - This will allow for saving the configuration from your controller to a file, and then allow you to load it back.
-    7. Configure all inputs
+    - Configure all inputs
         - This will give you an interface that will go through each input in the options list, and allow you to press a button or move an axis to bind. This can be a faster way to bind multiple inputs at once.
-    8. Revert device to Arduino
+    - Revert device to Arduino
         - This will revert the microcontroller back to a form that is recognised by the Arduino IDE.
-    9. Back to main menu
+    - Back to main menu
         - This will take you back to the main menu, and allow you to pick another device to program.
 8. The options list gives you the ability to change pretty much any setting you should ever want to change. Click on an option to expand it and see its individual settings.
 9. Click on `Controller Settings`. From here, you can change the `Emulation Type`, which allows for emulating controllers, keyboards, bluetooth controllers or bluetooth keyboards.

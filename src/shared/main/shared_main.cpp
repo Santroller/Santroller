@@ -21,7 +21,7 @@
 #define DJ_BUTTONS_PTR 0x12
 #define GH5NECK_ADDR 0x0D
 #define CLONE_ADDR 0x10
-#define CLONE_VALID_PACKET 0x55
+#define CLONE_VALID_PACKET 0x52
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
 Buffer_Report_t last_queue_report;

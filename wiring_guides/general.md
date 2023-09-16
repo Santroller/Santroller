@@ -1,4 +1,7 @@
-# Wiring a controller
+---
+sort: 1
+---
+# Getting started
 ## Before you start:
 This guide assumes that you know how to solder, if you do not stop now and go practice soldering.
 

@@ -11,11 +11,11 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
     * I recommend using two tilt sensors in series, as this can help with accidental activations
   * The tool also supports using analog tilt switches
 
-```danger
+  ```danger
   You do not want to get this type of sensor, as it does not work. If you do accidentally get one of these you *might* have luck just cutting the sensor from the top of the board and using it, but your mileage may vary doing that, as I have seen it work for some people and not for others.
-    
+        
   [![Basic](../assets/images/s-l500.png){: width="250" }](../assets/images/s-l500.png)
-```
+  ```
 * Some Wire
 * Soldering Iron
 * Multimeter (it will be used mainly in continuity mode, where it beeps when the two contacts are shorted together)
@@ -68,11 +68,13 @@ If you are working on a controller with only "2" pins as shown below, you will n
 ## World tour slider bar (Pi Pico only)
 The world tour slider bar originally used a single wire to connect between the bar and the main PCB. This caused a lot of problems, as the format of data being sent over this wire is not optimal for speed, and it limits the combinations of frets we can read from the slider bar. To combat this, we bypass the chip generating this data, and opt to build it outselves from the raw slider pads. This does use more pins though, so you may find that it is difficult to reuse the original neck connector. If you have problems doing this, you can use the [peripheral feature](https://santroller.tangentmc.net/tool/peripheral.html) to put a second Pi Pico in the neck, which will allow for putting all neck inputs over a couple of wires, saving pins.
 1. Connect the following pins using the image below as a guide
+
    [![World tour slider pins](../assets/images/wt_pins.png){: height="250" }](../assets/images/wt_pins.png)
    1. Connect S0, S1 and S2 to seperate digital pins on the Pi Pico. You will need to solder directly to the chip on the PCB.
    2. Connect the analog pin to a analog pin on the Pi Pico.  You will need to solder directly to the chip on the PCB.
    3. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
 2. Cut the traces indicated with red lines in the following image.
+
    [![World tour slider traces](../assets/images/wt_traces.png){: height="250" }](../assets/images/wt_traces.png) 
 
 ## GH5 guitar neck

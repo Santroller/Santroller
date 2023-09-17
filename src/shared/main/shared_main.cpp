@@ -464,7 +464,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->b |= report->b || report->soloRed;
         out->y |= report->y || report->soloYellow;
         out->x |= report->x || report->soloBlue;
-        out->leftShoulder |= report->leftShoulder;
+        out->leftShoulder |= report->leftShoulder || report->soloOrange;
         out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
         out->dpadUp |= up;
         out->dpadDown |= down;
@@ -491,7 +491,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->b |= report->b || report->soloRed;
         out->y |= report->y || report->soloYellow;
         out->x |= report->x || report->soloBlue;
-        out->leftShoulder |= report->leftShoulder;
+        out->leftShoulder |= report->leftShoulder || report->soloOrange;
         out->solo |= report->soloGreen || report->soloRed || report->soloYellow || report->soloBlue || report->soloOrange;
         out->dpadUp |= up;
         out->dpadDown |= down;

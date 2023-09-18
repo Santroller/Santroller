@@ -7,7 +7,7 @@ Santroller configurator allows using the Pico W to create wireless guitars. You 
 ## Programming a Bluetooth Transmitter
 1. Follow the [standard guide](using.html) to set up your inputs.
 1. Expand `Controller Settings`, and set the `Emulation Type` to `Bluetooth Controller`    
-  [![Bluetooth Settings](../assets/images/bluetooth-transmitter.png){: max-width="250" }](../assets/images/bluetooth-transmitter.png)
+  [![Bluetooth Settings](../assets/images/bluetooth-transmitter.png)](../assets/images/bluetooth-transmitter.png)
 2. Hit Save Settings
 
 ## Programming a Bluetooth Receiver

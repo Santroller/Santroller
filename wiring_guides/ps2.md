@@ -14,12 +14,12 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
 ```
 
 ## The finished product (When using a 3.3v Pro Micro and dupont wires)
-[![Finished adaptor](../assets/images/adaptor-ps2.jpg){: width="250" }](../assets/images/adaptor-ps2.jpg)
+[![Finished adaptor](../assets/images/adaptor-ps2.jpg)](../assets/images/adaptor-ps2.jpg)
 
 ## Steps
 Refer to the following image for the pinout of a PS2 controller.
 
-[![Finished adaptor](../assets/images/ps2-pinout.jpg){: width="250" }](../assets/images/ps2-pinout.png)
+[![Finished adaptor](../assets/images/ps2-pinout.jpg)](../assets/images/ps2-pinout.png)
 
 1. Connect Attention, Acknowledge to Acknowledge, Command to MOSI, Data to MISO and Clock to SCK. Note that for anything that isn't the 3.3v pro micro or pi pico, you will need to connect these pins using a level shifter.
    

@@ -10,36 +10,36 @@ sort: 5
   * I know some people use the SW-520D (which is a ball tilt switch), I myself just use some mercury tilt sensors that my local electronics shop sells.
   * Make sure that you get a basic tilt sensor and not one with additional electronics, for example, this type of sensor is correct 
     
-  [![Basic](../assets/images/s-l500-basic.jpg){: width="250" }](../assets/images/s-l500.jpg)
+  [![Basic](../assets/images/s-l500-basic.jpg)](../assets/images/s-l500.jpg)
 
 ```danger
   You do not want to get this type of sensor, as it does not work.
     
-  [![Basic](../assets/images/s-l500.png){: width="250" }](../assets/images/s-l500.png)
+  [![Basic](../assets/images/s-l500.png)](../assets/images/s-l500.png)
 ```
 ```danger
 For anyone wanting to use tilt, the only supported method is using digital tilt switches. Support for the MPU-6050 and analog tilt sensors is now deprecated and will be removed from the firmware in a future update. They are causing a lot of issues for porting this code between various microcontrollers, and take up too much space in the firmware.
 ```
-* A Wii extension breakout board or an extension cable, such as [![this](https://www.adafruit.com/product/4836){: width="250" }](https://www.adafruit.com/product/4836). You can also choose to cut the end of the extension and solder your own cables on as well if you perfer.
+* A Wii extension breakout board or an extension cable, such as [![this](https://www.adafruit.com/product/4836)](https://www.adafruit.com/product/4836). You can also choose to cut the end of the extension and solder your own cables on as well if you perfer.
 * If your wii extension breakout does not support 3.3v input, and you are using a 5v pro micro, you will need a 3.3v voltage regulator. The breakout listed above does however support either voltage so this is not required for that breakout.
 * Some Wire
 * A Soldering Iron
 
 ```note
-If you are unsure what microcontroller you want to use, click [![here](https://sanjay900.github.io/guitar-configurator/guides/micro-controller-comparison.html){: width="250" }](https://sanjay900.github.io/guitar-configurator/guides/micro-controller-comparison.html) for a list of pros and cons about each microcontroller.
+If you are unsure what microcontroller you want to use, click [![here](https://sanjay900.github.io/guitar-configurator/guides/micro-controller-comparison.html)](https://sanjay900.github.io/guitar-configurator/guides/micro-controller-comparison.html) for a list of pros and cons about each microcontroller.
 ```
 ```danger
 Be careful that you don't ever provide 5v power to the power pin of a Wii Extension, as they are not designed for this. The data pins however are tolerant of 5v, so you can hook these up directly to pins on your microcontroller.
 ```
 
 ## The finished product
-[![Finished adaptor](../assets/images/adaptor.jpg){: width="250" }](../assets/images/adaptor.jpg)
+[![Finished adaptor](../assets/images/adaptor.jpg)](../assets/images/adaptor.jpg)
 
 ## Steps
 1. Connect wires between the SDA and SCL pins on your breakout board / wii extension cable. 
 Refer to the following image for the pinout of a Wii Extension connector. For a Pi Pico, you can pick pins but only specific ones work, so open the configuration tool and choose pins that way.
 
-    [![Finished adaptor](../assets/images/wii-ext.jpg){: width="250" }](../assets/images/wii-ext.jpg)
+    [![Finished adaptor](../assets/images/wii-ext.jpg)](../assets/images/wii-ext.jpg)
    
    | Microcontroller | SDA | SCL |
    | --- | --- | --- |

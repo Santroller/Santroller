@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-![Santroller](assets/images/logo.png){: width="250" }
+![Santroller](assets/images/logo.png)
 
 
 The Santroller platform provides the ability to program micro controllers that emulate various rhythm game controllers for computers and various consoles.
@@ -10,13 +10,13 @@ This is done using the Santroller Configurator, which can program various microc
 
 # Gallery
 
-[![home screen](assets/images/screenshots/home.png){: max-height="215" }](assets/images/screenshots/home.png) 
-[![main screen](assets/images/screenshots/main.png){: max-height="215" }](assets/images/screenshots/main.png)
-[![main screen with everything](assets/images/screenshots/combined.png){: height="215" }](assets/images/screenshots/combined.png)
-[![alt text](assets/images/adaptor.jpg){: max-height="215" }](assets/images/adaptor.jpg)
-[![alt text](assets/images/adaptor-ps2.jpg){: max-height="215" }](assets/images/adaptor-ps2.jpg)
-[![alt text](assets/images/direct.jpg){: max-height="215" }](assets/images/direct.jpg)
-[![alt text](assets/images/inline-led.jpg){: max-height="215" }](assets/images/inline-led.jpg)
+[![home screen](assets/images/screenshots/home.png)](assets/images/screenshots/home.png) 
+[![main screen](assets/images/screenshots/main.png)](assets/images/screenshots/main.png)
+[![main screen with everything](assets/images/screenshots/combined.png)](assets/images/screenshots/combined.png)
+[![alt text](assets/images/adaptor.jpg)](assets/images/adaptor.jpg)
+[![alt text](assets/images/adaptor-ps2.jpg)](assets/images/adaptor-ps2.jpg)
+[![alt text](assets/images/direct.jpg)](assets/images/direct.jpg)
+[![alt text](assets/images/inline-led.jpg)](assets/images/inline-led.jpg)
 # Features
 * Support for various consoles, including PS2/3/4/5, Wii, Switch, Xbox 360 and Xbox One / Series
   * PS2 requires a [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) for most games, some of the later games do support PS3 instruments nativly though.

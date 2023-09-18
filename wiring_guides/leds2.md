@@ -9,10 +9,10 @@ If you want to avoid the trouble of using APA102s, and just want to hook up norm
 * a 500 ohm resistor for each led
 
 ## The finished product
-[![Finished adaptor](../assets/images/inline-led.jpg){: width="250" }](../assets/images/inline-led.jpg)
+[![Finished adaptor](../assets/images/inline-led.jpg)](../assets/images/inline-led.jpg)
 
 ## Schematic
-[![Schematic](../assets/images/led.png){: width="250" }](../assets/images/led.png)
+[![Schematic](../assets/images/led.png)](../assets/images/led.png)
 
 Note that you can use whatever pins you want as your digital pins, this is just for example
 

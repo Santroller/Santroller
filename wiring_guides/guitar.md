@@ -72,13 +72,13 @@ If you are working on a controller with only "2" pins as shown below, you will n
 The world tour slider bar originally used a single wire to connect between the bar and the main PCB. This caused a lot of problems, as the format of data being sent over this wire is not optimal for speed, and it limits the combinations of frets we can read from the slider bar. To combat this, we bypass the chip generating this data, and opt to build it outselves from the raw slider pads. This does use more pins though, so you may find that it is difficult to reuse the original neck connector. If you have problems doing this, you can use the [peripheral feature](https://santroller.tangentmc.net/tool/peripheral.html) to put a second Pi Pico in the neck, which will allow for putting all neck inputs over a couple of wires, saving pins.
 1. Connect the following pins using the image below as a guide
 
-   [![World tour slider pins](../assets/images/wt_pins.png){: height="250" }](../assets/images/wt_pins.png)
+   [![World tour slider pins](../assets/images/wt_pins.png){: max-height="250" }](../assets/images/wt_pins.png)
    1. Connect S0, S1 and S2 to seperate digital pins on the Pi Pico. You will need to solder directly to the chip on the PCB.
    2. Connect the analog pin to a analog pin on the Pi Pico.  You will need to solder directly to the chip on the PCB.
    3. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
 2. Cut the traces indicated with red lines in the following image.
 
-   [![World tour slider traces](../assets/images/wt_traces.png){: height="250" }](../assets/images/wt_traces.png) 
+   [![World tour slider traces](../assets/images/wt_traces.png){: max-height="250" }](../assets/images/wt_traces.png) 
 
 ## GH5 guitar neck
 1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.

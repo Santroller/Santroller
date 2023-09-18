@@ -9,7 +9,7 @@ Some consoles require controller authentication, such as the Xbox 360 and the Xb
 ## UsbdSecPatch
 You can use [UsbdSecPatch](https://github.com/InvoxiPlayGames/UsbdSecPatch/releases) to patch out the authentication checks on an RGH modded console.
 
-## Instructions:
+### Instructions:
 1. Mod your console and install dashlaunch
 2. Copy the xex file from above to your console
 3. Add it as a plugin to dashlaunch

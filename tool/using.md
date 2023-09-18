@@ -109,6 +109,8 @@ The icon for the button will light up when the input is activated, which gives y
 If you use an analog input here, then you can dictate a threshold that needs to be reached before that input is considered activated.
 If you have APA102 LEDs enabled, you will be able to pick the colour used when the input is triggered, or when it is not triggered. You can also select which leds in the chain will be updated by this input.
 
+[![Button](../assets/images/screenshots/digital.png){: height="250" }](../assets/images/screenshots/digital.png)
+
 #### Axis
 For axis, you can pick the input type, in order to map an input from any supported device to this output.
 You will then be able to see the raw and calibrated values from your analog input live.
@@ -116,6 +118,8 @@ You can then hit the `Calibrate` button to calibrate your input. Follow the inst
 You can also manually change the sliders to fine tune your calibration manually.
 If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
 If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
+
+[![Axis](../assets/images/screenshots/axis.png){: height="250" }](../assets/images/screenshots/axis.png)
 
 #### Wii Extension Inputs
 This setting will map a bunch of sensible bindings for various Wii extensions, such as the guitar, drums and nunchuk. Note that when this is added, you will not see any data from it until you hit save.

@@ -14,7 +14,8 @@
 }
 .markdown-body img {
     background-color: #1c2124 !important;
-    max-height: 300px;
+    height: 300px;
+    object-fit: cover;
 }
 .content {
     background: #1c2124 !important;

@@ -24,17 +24,21 @@ The Santroller Configurator is a tool that can program any micro controller with
 4. Hit `Configure`
 5. Wait for the initial configuration, and then hit `Configure` again.
 6. You will now be at the main screen of the tool. From here, you can configure every option of your controller.
+
 ## The main screen
 After your device is running the Santroller firmware, configuring will land you at the following screen. There is a sidebar to the left, which contains buttons for interacting with the tool, and allows for changing settings that affect all inputs.
+
 [![Main Screen](../assets/images/screenshots/main.png){: width="250" }](../assets/images/screenshots/main.png)
 
 ## The Sidebar
 ### Mode
 You can change the mode between `Standard` and `Advanced`. For most people, the standard mode will be sufficient, but the advanced mode allows for configuring debounce on a per input level, and allows for configuring the pin mode of individual inputs, which allows for changing the direction pins are pulled.
+
 [![Main Screen](../assets/images/screenshots/mode.png){: width="250" }](../assets/images/screenshots/mode.png)
 
 ### Controller view type
 As this tool can be used to configure controllers that work on a variety of consoles, you may want to view your inputs for a specific console. This setting allows for this, and allows for picking between `Xbox`, `PlayStation` and `Switch`.
+
 [![Main Screen](../assets/images/screenshots/view-xbox.png){: width="250" }](../assets/images/screenshots/view-xbox.png)
 [![Main Screen](../assets/images/screenshots/view-ps.png){: width="250" }](../assets/images/screenshots/view-ps.png)
 [![Main Screen](../assets/images/screenshots/view-switch.png){: width="250" }](../assets/images/screenshots/view-switch.png)
@@ -65,13 +69,15 @@ Settings are the heart of this configuration tool. There are various settings th
 
 ### Adding a setting
 If you click the `Add setting` button in the sidebar, you will be presented with a dropdown, that lets you pick the setting you want to configure.
+
 [![Main Screen](../assets/images/screenshots/unset-setting.png){: width="250" }](../assets/images/screenshots/unset-setting.png)
 
 ### Types of settings
 
 #### Controller settings
+
 [![Main Screen](../assets/images/screenshots/controller-settings.png){: width="250" }](../assets/images/screenshots/controller-settings.png)
-The controller setting allows for configuring various aspects of your controller.
+The controller settings allow for configuring various aspects of your controller.
 ##### Emulation Type
 The `Emulation Type` allows for stating what type of device is being emulated, and this allows for changing between controller emulation, keyboard emulation, bluetooth controller emulation (on the Pi Pico W) and bluetooth keyboard emulation (on the Pi Pico W).
 
@@ -154,21 +160,22 @@ This will allow you to set an input, and then if that input is held on startup, 
  When you specify an input here, the controller will reset itself. This can help if something goes wrong with authentication.
 #### Bluetooth Inputs (Pi Pico W only)
 Follow the [bluetooth](https://santroller.tangentmc.net/tool/bluetooth.html) guide for more information about this setting.
-### Types of input
-#### Digital Pins
+## Types of inputs
+### Digital Pins
 A digital pin input is a input that is only on or off, like a button, which is wired directly to a pin on your microcontroller.
-#### Analog Pin
+### Analog Pin
 An analog pin input is a input that can have a varied voltage, like a joystick, and is wired directly to a pin on your microcontroller.
-#### Macros
+### Macros
 A macro input allows for combining multiple inputs. This allows for doing things like mapping the home button to having both the start and select button pressed.
-#### Multiplexer Input
+### Multiplexer Input
 A multiplexer allows for putting multiple analog inputs on a single analog pin on your microcontroller. This is mostly useful for the Pi Pico, which only has three analog pins.
 We currently support 4051 and 4067 based multiplexers. These are 8 and 16 channel multiplexers, which combine 8 or 16 analog inputs to a single analog pin.
 For a multiplexer, the microcontroller has 3 outputs (or 4 for the 4067) which are driven either high or low to select which channel is being read.
 These are the inputs S0, S1, S2 and S3 (for the 4067). In some datasheets, these pins will be labelled A, B, C and D instead.
 The other pins are then your inputs, and the channel you select in your input is the input that will be read.
+
 [![4051](../assets/images/screenshots/cd4051.png){: width="250" }](../assets/images/screenshots/cd4051.png)
 [![4067](../assets/images/screenshots/cd4067.png){: width="250" }](../assets/images/screenshots/cd4067.png)
 
-#### Device Inputs
+### Device Inputs
 Note that Wii Extension, PS2 Controllers, USB Host, GHWT Necks, GH5 Necks and Crazy Guitar necks also appear in the input type list. This allows for creating custom mappings utilising these controllers.

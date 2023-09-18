@@ -14,6 +14,7 @@
 }
 .markdown-body img {
     background-color: #1c2124 !important;
+    max-height: 300px;
 }
 .content {
     background: #1c2124 !important;
@@ -56,4 +57,7 @@ html {
 }
 .sidebar-wrap .sidebar > :last-child {
     margin-bottom: 10em;
+}
+.big-image {
+    max-height: "400"
 }

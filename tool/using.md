@@ -70,13 +70,14 @@ Settings are the heart of this configuration tool. There are various settings th
 ### Adding a setting
 If you click the `Add setting` button in the sidebar, you will be presented with a dropdown, that lets you pick the setting you want to configure.
 
-[![Main Screen](../assets/images/screenshots/unset-setting.png){: width="250" }](../assets/images/screenshots/unset-setting.png)
+[![Main Screen](../assets/images/screenshots/unset-setting.png){: height="250" }](../assets/images/screenshots/unset-setting.png)
 
 ### Types of settings
 
 #### Controller settings
 
-[![Main Screen](../assets/images/screenshots/controller-settings.png){: width="250" }](../assets/images/screenshots/controller-settings.png)
+[![Main Screen](../assets/images/screenshots/controller-settings.png){: height="250" }](../assets/images/screenshots/controller-settings.png)
+
 The controller settings allow for configuring various aspects of your controller.
 ##### Emulation Type
 The `Emulation Type` allows for stating what type of device is being emulated, and this allows for changing between controller emulation, keyboard emulation, bluetooth controller emulation (on the Pi Pico W) and bluetooth keyboard emulation (on the Pi Pico W).

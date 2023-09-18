@@ -98,17 +98,17 @@ bool twi_readFromPointerSlow(TWI_BLOCK block, uint8_t address, uint8_t pointer, 
 bool twi_readFrom(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length,
                   uint8_t sendStop) {
     int ret =
-        i2c_read_timeout_us(block, address, data, length, !sendStop, 1000);
+        i2c_read_timeout_us(block, address, data, length, !sendStop, 5000);
     return ret > 0 ? ret : 0;
 }
 
 bool twi_writeTo(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
     int ret =
-        i2c_write_timeout_us(block, address, data, length, !sendStop, 1000);
+        i2c_write_timeout_us(block, address, data, length, !sendStop, 5000);
     if (ret < 0)
         ret = i2c_write_timeout_us(block, address, data, length, !sendStop,
-                                   1000);
+                                   5000);
     return ret > 0;
 }
 

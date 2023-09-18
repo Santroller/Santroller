@@ -62,4 +62,4 @@ These are in the same situation as the UNO, however the main micro controller ha
 This is the newest entrant to the Arduino UNO line, and it is a totally different microcontroller and hence it is not supported.
 
 ### Arduino Mini or Nano or Pro Mini or Pro Nano
-These do NOT work for USB guitar controllers, as they are essentially UNOs that lack the second micro controller that makes this all work.
+These do NOT work, as they are essentially UNOs that lack the second micro controller that allow for custom USB device emulation.

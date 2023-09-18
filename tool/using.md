@@ -174,8 +174,8 @@ For a multiplexer, the microcontroller has 3 outputs (or 4 for the 4067) which a
 These are the inputs S0, S1, S2 and S3 (for the 4067). In some datasheets, these pins will be labelled A, B, C and D instead.
 The other pins are then your inputs, and the channel you select in your input is the input that will be read.
 
-[![4051](../assets/images/screenshots/cd4051.png){: width="250" }](../assets/images/screenshots/cd4051.png)
-[![4067](../assets/images/screenshots/cd4067.png){: width="250" }](../assets/images/screenshots/cd4067.png)
+[![4051](../assets/images/cd4051.png){: width="250" }](../assets/images/cd4051.png)
+[![4067](../assets/images/cd4067.png){: width="250" }](../assets/images/cd4067.png)
 
 ### Device Inputs
 Note that Wii Extension, PS2 Controllers, USB Host, GHWT Necks, GH5 Necks and Crazy Guitar necks also appear in the input type list. This allows for creating custom mappings utilising these controllers.

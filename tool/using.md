@@ -26,7 +26,7 @@ The Santroller Configurator is a tool that can program any micro controller with
 6. You will now be at the main screen of the tool. From here, you can configure every option of your controller.
 
 ## The main screen
-After your device is running the Santroller firmware, configuring will land you at the following screen. There is a sidebar to the left, which contains buttons for interacting with the tool, and allows for changing settings that affect all inputs.
+After your device is running the Santroller firmware, configuring will land you at the following screen. There is a sidebar to the left, and your settings to the right.
 
 [![Main Screen](../assets/images/screenshots/main.png){: width="250" }](../assets/images/screenshots/main.png)
 

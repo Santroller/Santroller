@@ -19,7 +19,7 @@ The Santroller Configurator is a tool that can program any micro controller with
     - Bluetooth Receiver
         - Choose this if you are following the [Bluetooth receiver](https://santroller.tangentmc.net/tool/bluetooth.html) guide.
     - Peripheral Device
-        - Choose this if you are building a [Peripheral](#peripheral-settings-pi-pico-only).
+        - Choose this if you are building a [Peripheral](https://santroller.tangentmc.net/wiring_guides/peripheral.html).
         - You will need to set your SCL and SDA pins on the peripheral that are connected to the main controller. This is the pins being used on the peripheral end, not the main controller end.
 4. Hit `Configure`
 5. Wait for the initial configuration, and then hit `Configure` again.
@@ -152,6 +152,14 @@ You can also pick if you want the Slider to map to standard frets, or if you wan
 The Crazy Guitar is a 3rd party guitar hero guitar, which has a similar neck pinout to the GH5 necks.
 For the Pi Pico, you can select your SCL and SDA pins here.
 You can also pick if you want the Slider to map to standard frets, or if you want to disable the normal frets because you have hardwired them. You can also disable the slider outright here as well.
+
+#### DJ Hero Turntable Inputs
+The platter from the DJ Hero Turntable is its own device, and this allows for configuring inputs from it. Note that when this is added, you will not see any data from it until you hit save.
+For the Pi Pico, you can pick your SDA and SCL pins here.
+The `Turntable Poll Rate` is important, as the turntable works like a mouse, and sends a difference between the current position and the position during the last poll. By default, the console uses a poll rate of 10ms, as this gives you a bigger range of values. A fast poll rate will respond quick, but it won't have much range, which means the console won't be able to differenciate multiple speeds, as there won't be a difference in values between a slow spin and a fast spin. A slower poll rate meanwhile will give you a higher range of values, as the controller will actually see a difference in rotation between subsequent polls.
+Note that this poll rate also affects the buttons however, but if you want to poll them at a different rate, you can use the [Peripheral](#peripheral-settings-pi-pico-only) feature to do this.
+You can disable an input here if you don't want it to function. This can be used to disable buttons that you do not want to use, for example if you have disconnected the joystick on a wiitar, you can disable it here so that it doesn't send phantom inputs.
+
 #### LED Binding
 This allows you to pick an event (such as a player led) and bind a digital output or an APA102 LED to it.
 #### Rumble Binding
@@ -181,6 +189,9 @@ The other pins are then your inputs, and the channel you select in your input is
 
 [![4051](../assets/images/cd4051.png)](../assets/images/cd4051.png)
 [![4067](../assets/images/cd4067.png)](../assets/images/cd4067.png)
+
+### Constant Input
+Sometimes, you may want the console to always see a specific value when it polls your controller. This can be useful for things like the effects potentiometer on Rock Band guitars, where you may want the console to always use a specific effect, even if you don't actually have a effects pot wired up.
 
 ### Device Inputs
 Note that Wii Extension, PS2 Controllers, USB Host, GHWT Necks, GH5 Necks and Crazy Guitar necks also appear in the input type list. This allows for creating custom mappings utilising these controllers.

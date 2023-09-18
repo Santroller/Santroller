@@ -1,5 +1,5 @@
 ---
-sort: 8
+sort: 9
 ---
 # Adding Standard LEDs inline on a controller
 If you want to avoid the trouble of using APA102s, and just want to hook up normal LEDs from buttons, you can follow the following guide.

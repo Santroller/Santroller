@@ -19,7 +19,7 @@ The Santroller Configurator is a tool that can program any micro controller with
     - Bluetooth Receiver
         - Choose this if you are following the [Bluetooth receiver](https://santroller.tangentmc.net/tool/bluetooth.html) guide.
     - Peripheral Device
-        - Choose this if you are following the [Peripheral](https://santroller.tangentmc.net/tool/peripheral.html) guide.
+        - Choose this if you are building a [Peripheral](#peripheral-settings-pi-pico-only).
         - You will need to set your SCL and SDA pins on the peripheral that are connected to the main controller. This is the pins being used on the peripheral end, not the main controller end.
 4. Hit `Configure`
 5. Wait for the initial configuration, and then hit `Configure` again.

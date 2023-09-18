@@ -1,3 +1,17 @@
+:root {
+    --toc-1: #1c2124;
+    --toc-2: #1c2124;
+    --toc-3: #1c2124;
+    --toc-4: #1c2124;
+    --toc-5: #1c2124;
+    --toc-6: #1c2124;
+    --toc-7: #1c2124;
+    --toc-8: #1c2124;
+    --toc-9: #1c2124;
+    --toc-10: #1c2124;
+    --toc-11: #1c2124;
+    --toc-12: #1c2124;
+}
 .markdown-body img {
     background-color: #1c2124 !important;
 }
@@ -9,22 +23,18 @@
     color: white !important;
 }
 .sidebar {
-    background: #1c2124 !important;
     color: white !important;
 }
 .toctree > ul .toc.current a {
     color: white !important;
 }
 .toctree > ul .toc.current a.current {
-    background: #1c2124 !important;
     color: white !important;
 }
 .toc.level-1.current > a {
-    background: #2d3539 !important;
     color: white !important;
 }
 .toc.level-1.current > ul {
-    background: #2d3539 !important;
     color: white !important;
 }
 .markdown-body table tr {

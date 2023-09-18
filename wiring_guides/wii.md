@@ -55,3 +55,5 @@ If you are using a wii extension cable do NOT rely on the colours, the manufactu
    * If you are using the microcontroller uno, use the 3.3v pin on your microcontroller as VCC
    * If you are using the breakout linked ![above](https://www.adafruit.com/product/4836), the `vin` pin is used for both 3.3v input and 5v input. The 3v pin is actually an output and is not needed for this project.
 2. Connect the gnd pin on the wii breakout / extension cable to the gnd on your microcontroller.
+
+Now that you have wired your adapter, go [configure it](https://santroller.tangentmc.net/tool/using.html).

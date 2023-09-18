@@ -22,3 +22,4 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
    | Uno, Pro Mini | 13 | 11 |
    | Mega | 52 | 51 | 
 
+Now that you have wired your LEDs, go [configure them](https://santroller.tangentmc.net/tool/using.html).

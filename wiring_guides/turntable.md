@@ -32,3 +32,5 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
         * For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
         * For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
         * For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
+
+Now that you have wired your turntable, go [configure it](https://santroller.tangentmc.net/tool/using.html).

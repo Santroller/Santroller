@@ -33,3 +33,5 @@ Refer to the following image for the pinout of a PS2 controller.
 4. Connect a 1kΩ resistor between Acknowledge and 3.3v.
 5. Connect the 3.3v pin on the ps2 controller to the 3.3v pin on your microcontroller. For microcontrollers that can output 3.3v natively, you can hook this straight up to 3.3v, but for a 5v only board like the pro micro 5v you will need to use a 3.3v voltage regulator to get a stable 3.3v voltage.
 6. Connect the gnd pin on the wii breakout / extension cable to the gnd on your microcontroller.
+
+Now that you have wired your adapter, go [configure it](https://santroller.tangentmc.net/tool/using.html).

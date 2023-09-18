@@ -133,3 +133,5 @@ Note that you can also choose to replace the original PCB with a 3D printed stru
 When the strums are part of the main board you will need to cut the traces or you will have phantom inputs as your signal will still be traveling through the motherboard. (this is when your strum switches constantly input and you likely cannot autobind inputs in the configurator) You will need to take a knife and cut any traces that connect to the strum switches. In the picture below, the person did not cut many traces as they knew which ones were causing phantom inputs. Cutting extra traces is not going to affect your arduino guitar, as none of the traces are used except the one that connects the two grounds of the switches together. Even if you accidentally cut that trace, you will be able to connect the grounds again with a little extra wire.
 
 [![Trace Cuts on PCB](../assets/images/trace%20cuts.jpg){: width="250" }](../assets/images/trace%20cuts.jpg)
+
+Now that you have wired your guitar, go [configure it](https://santroller.tangentmc.net/tool/using.html).

@@ -16,3 +16,5 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 3. Hook up the V- (Black) to ground on your Pi Pico
 4. Hook up D+ (Green) to a unused digital pin.
 5. Hook up D- (White) to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
+
+Now that you have wired your adapter, go [configure it](https://santroller.tangentmc.net/tool/using.html).

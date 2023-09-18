@@ -21,3 +21,5 @@ Note that you can use whatever pins you want as your digital pins, this is just 
 2. Hook up the cathodes of the LEDs to one side of each fret
 3. Hook the other side of the fret up to a digital pin on your microcontroller
 4. Hook up a 500 ohm resistor in parallel between each digital pin and ground. You should have two connections to each digital pin, one going to the fret, and one going to a resistor that then goes to ground.
+
+Now that you have wired your LEDs, go [configure them](https://santroller.tangentmc.net/tool/using.html).

@@ -5,7 +5,7 @@ sort: 1
 ## Before you start:
 This guide assumes that you know how to solder, if you do not stop now and go practice soldering.
 
-If you have no idea what a microcontroller is, start here. If you are familiar with microcontrollers and pcbs skip this guide, and go straight to the guide specific to your situation. 
+If you have no idea what a microcontroller is, start here. If you are familiar with microcontrollers and pcbs skip to [choosing a microcontroller](#choosing-a-microcontroller).
 
 A microcontroller is a small board that can be programmed to perform various functions. In this guide you will be using the microcontroller to replace the main board of the guitar. Around the edge of the microcontroller, you will see various solder through holes called pins. These are labelled with a pinout (which you can find by googling {your microcontroller} pinout) and sometimes on the microcontroller itself. The pins have various functions, but for this controller mod you will need to be familiar with 4 kinds:
   * GND (ground) - the common connection that all electrical components must connect to in one way or another in order to complete the circuit. Every set of functions for the guitar will feature a GND pin.

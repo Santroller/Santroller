@@ -241,6 +241,7 @@ const uint8_t PS3_REPORT_BUFFER[PS3_REPORT_BUFFER_SIZE] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 void handle_auth_led(void) {
+    authentication_successful();
     HANDLE_AUTH_LED;
 }
 void handle_player_leds(uint8_t player) {

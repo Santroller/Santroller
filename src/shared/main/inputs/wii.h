@@ -1,7 +1,7 @@
 #ifdef INPUT_WII
     uint8_t *wiiData;
     // If we didn't send the last packet, then we need to wait some time as the wii controllers do not like being polled quickly
-    if (micros() - lastTick > 800) {
+    if (micros() - lastTick > 600) {
         lastTick = micros();
         wiiData = tickWii();
     } else {

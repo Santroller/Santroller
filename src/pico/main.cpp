@@ -82,6 +82,8 @@ void send_report_to_pc(const void *report, uint8_t len) {
     tud_xusb_n_report(0, report, len);
 }
 bool foundXB = false;
+bool authReady = false;
+bool authDone = false;
 
 static void tick_usb() {
 #if USB_HOST_STACK
@@ -96,6 +98,17 @@ static void tick_usb() {
 #endif
 
     tick();
+#if BLUETOOTH
+    if (!authDone) {
+        if (consoleType != XBOX360 && consoleType != XBOXONE) {
+            authReady = millis() > 1000;
+        }
+        if (authReady) {
+            btstack_main();
+            authDone = true;
+        }
+    }
+#endif
 }
 #ifdef BLUETOOTH_RX
 void tick_bluetooth(const void *buf) {
@@ -124,10 +137,10 @@ void setup() {
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     tuh_init(TUH_OPT_RHPORT);
 #endif
-
-#if BLUETOOTH
-    btstack_main();
-#endif
+}
+void authentication_successful() {
+    printf("Auth done\r\n");
+    authReady = true;
 }
 
 uint8_t get_device_address_for(uint8_t deviceType) {

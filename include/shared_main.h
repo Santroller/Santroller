@@ -22,6 +22,7 @@ void ps4_controller_disconnected(void);
 void host_controller_connected(void);
 void on_connect(void);
 void set_console_type(uint8_t new_console_type);
+void authentication_successful(void);
 
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds

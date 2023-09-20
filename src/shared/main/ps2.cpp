@@ -179,9 +179,10 @@ uint8_t *tickPS2() {
         return inputBuffer;
     }
     // And every psx controller will get confused if polled too quick
-    if (micros() - last < 800) {
-        return inputBuffer;
-    }
+    // TODO: this
+    // if (micros() - last < 400) {
+    //     return inputBuffer;
+    // }
     // If this is changed to a different port, you can talk to different devices
     // on a multitap. Not sure how useful this is unless we make a ps2 variant
     // that works with the multitap, and offers four devices

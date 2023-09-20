@@ -1901,7 +1901,7 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                 case PS4_DS_PID_1:
                 case PS4_DS_PID_2:
                 case PS4_DS_PID_3:
-                    type.console_type = PS3;
+                    type.console_type = PS4;
                     break;
             }
             break;

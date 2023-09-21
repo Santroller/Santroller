@@ -20,13 +20,6 @@ uint32_t slaveReadDigital() {
     return payload;
 }
 
-uint16_t slaveReadAnalog(uint8_t pin) {
-    uint8_t payload2[] = {pin};
-    slave_initted = twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG_PIN, sizeof(payload2), payload2);
-    uint16_t payload;
-    slave_initted = twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG, sizeof(payload), (uint8_t*)&payload);
-    return payload;
-}
 
 uint8_t slaveReadDigital(uint8_t port, uint8_t mask) {
     uint8_t payload2[2] = {port, mask};
@@ -37,35 +30,9 @@ uint8_t slaveReadDigital(uint8_t port, uint8_t mask) {
     return (payload >> (port * 8)) & 0xFF;
 }
 
-uint16_t slaveReadAnalog(uint8_t pin, uint8_t mask) {
-    slave_initted = twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG_PIN_2, sizeof(pin), &pin);
-    uint16_t payload;
-    slave_initted = twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_ANALOG, sizeof(payload), (uint8_t*)&payload);
-    bool detecting = pin & (1 << 7);
-    if (detecting) {
-        PIN_INIT;
-    }
-    return payload;
-}
-
 void slaveWriteDigital(uint8_t pin, bool output) {
     uint8_t payload[] = {pin, output};
     twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_SET_PIN, sizeof(payload), payload);
-}
-
-uint16_t slaveReadMultiplexer(uint8_t pin, uint8_t channel, uint8_t s0, uint8_t s1, uint8_t s2) {
-    slaveWriteDigital(s0, ((channel & (1 << 0)) != 0));
-    slaveWriteDigital(s1, ((channel & (1 << 1)) != 0));
-    slaveWriteDigital(s2, ((channel & (1 << 2)) != 0));
-    return slaveReadAnalog(pin);
-}
-
-uint16_t slaveReadMultiplexer(uint8_t pin, uint8_t channel, uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3) {
-    slaveWriteDigital(s0, ((channel & (1 << 0)) != 0));
-    slaveWriteDigital(s1, ((channel & (1 << 1)) != 0));
-    slaveWriteDigital(s2, ((channel & (1 << 2)) != 0));
-    slaveWriteDigital(s3, ((channel & (1 << 3)) != 0));
-    return slaveReadAnalog(pin);
 }
 
 void slaveInitLED(uint8_t instance) {

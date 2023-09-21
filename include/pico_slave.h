@@ -5,10 +5,7 @@
 #define SLAVE_COMMAND_INIT_SPI            0x03
 #define SLAVE_COMMAND_WRITE_SPI           0x04
 #define SLAVE_COMMAND_GET_DIGITAL         0x05
-#define SLAVE_COMMAND_GET_ANALOG          0x06
-#define SLAVE_COMMAND_GET_ANALOG_PIN      0x07
 #define SLAVE_COMMAND_GET_DIGITAL_PIN_2   0x08
-#define SLAVE_COMMAND_GET_ANALOG_PIN_2    0x09
 #define SLAVE_COMMAND_INIT_WT             0x0A
 #define SLAVE_COMMAND_GET_WT              0x0B
 #define SLAVE_COMMAND_GET_WT_RAW          0x0C
@@ -27,18 +24,10 @@ void slavePinMode(uint8_t pin, uint8_t pinMode);
 
 uint32_t slaveReadDigital(void);
 
-uint16_t slaveReadAnalog(uint8_t pin);
-
 
 uint8_t slaveReadDigital(uint8_t port, uint8_t mask);
 
-uint16_t slaveReadAnalog(uint8_t pin, uint8_t mask);
-
 void slaveWriteDigital(uint8_t pin, bool output);
-
-uint16_t slaveReadMultiplexer(uint8_t pin, uint8_t channel, uint8_t s0, uint8_t s1, uint8_t s2);
-
-uint16_t slaveReadMultiplexer(uint8_t pin, uint8_t channel, uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3);
 uint8_t slaveReadWt(void);
 uint8_t slaveReadWtRaw(uint8_t* dest);
 bool slaveInit(void);

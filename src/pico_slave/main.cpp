@@ -63,10 +63,6 @@ void recv(int len) {
         case SLAVE_COMMAND_SET_PIN:
             digitalWrite(WIRE.read(), WIRE.read());
             break;
-        case SLAVE_COMMAND_GET_ANALOG_PIN: {
-            adc_select_input(WIRE.read());
-            break;
-        }
         case SLAVE_COMMAND_GET_DIGITAL_PIN_2: {
             uint8_t port = WIRE.read() * 8;
             uint32_t mask32 = WIRE.read() << port;
@@ -86,20 +82,6 @@ void recv(int len) {
                     gpio_set_pulls(i, true, false);
                 }
             }
-            break;
-        }
-        case SLAVE_COMMAND_GET_ANALOG_PIN_2: {
-            uint8_t pin = WIRE.read();
-#ifdef TWI_1_SDA
-            if (pin == TWI_1_SDA || pin == TWI_1_SCL) {
-                break;
-            }
-#endif
-            pin = pin & ~(1 << 7);
-            gpio_init(pin + PIN_A0);
-            gpio_set_pulls(pin + PIN_A0, true, false);
-            gpio_set_input_enabled(pin + PIN_A0, false);
-            adc_select_input(pin);
             break;
         }
         case SLAVE_COMMAND_INIT_SPI:
@@ -134,11 +116,6 @@ void req() {
     switch (command) {
         case SLAVE_COMMAND_GET_DIGITAL: {
             uint32_t pins = sio_hw->gpio_in;
-            WIRE.write((uint8_t*)&pins, sizeof(pins));
-            break;
-        }
-        case SLAVE_COMMAND_GET_ANALOG: {
-            uint16_t pins = adc_read() << 4;
             WIRE.write((uint8_t*)&pins, sizeof(pins));
             break;
         }

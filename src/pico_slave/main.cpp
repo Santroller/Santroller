@@ -71,6 +71,16 @@ void recv(int len) {
             uint8_t port = WIRE.read() * 8;
             uint32_t mask32 = WIRE.read() << port;
             for (uint i = 0; i < NUM_BANK0_GPIOS; i++) {
+#ifdef TWI_1_SDA
+                if (i == TWI_1_SDA || i == TWI_1_SCL) {
+                    continue;
+                }
+#endif
+#ifdef TWI_0_SDA
+                if (i == TWI_0_SDA || i == TWI_0_SCL) {
+                    continue;
+                }
+#endif
                 if (mask32 & (1 << i)) {
                     gpio_init(i);
                     gpio_set_pulls(i, true, false);
@@ -80,13 +90,15 @@ void recv(int len) {
         }
         case SLAVE_COMMAND_GET_ANALOG_PIN_2: {
             uint8_t pin = WIRE.read();
-            bool detecting = pin & (1 << 7);
-            if (detecting) {
-                pin = pin & ~(1 << 7);
-                gpio_init(pin + PIN_A0);
-                gpio_set_pulls(pin + PIN_A0, true, false);
-                gpio_set_input_enabled(pin + PIN_A0, false);
+#ifdef TWI_1_SDA
+            if (pin == TWI_1_SDA || pin == TWI_1_SCL) {
+                break;
             }
+#endif
+            pin = pin & ~(1 << 7);
+            gpio_init(pin + PIN_A0);
+            gpio_set_pulls(pin + PIN_A0, true, false);
+            gpio_set_input_enabled(pin + PIN_A0, false);
             adc_select_input(pin);
             break;
         }
@@ -214,9 +226,19 @@ void setup() {
 #ifdef TWI_1_SDA
     WIRE.setSDA(TWI_1_SDA);
     WIRE.setSCL(TWI_1_SCL);
+    gpio_pull_up(TWI_1_SDA);
+    gpio_pull_up(TWI_1_SCL);
+    i2c1->hw->enable = 0;
+    hw_set_bits(&i2c1->hw->con, I2C_IC_CON_RX_FIFO_FULL_HLD_CTRL_BITS);
+    i2c1->hw->enable = 1;
 #else
     WIRE.setSDA(TWI_0_SDA);
     WIRE.setSCL(TWI_0_SCL);
+    gpio_pull_up(TWI_0_SDA);
+    gpio_pull_up(TWI_0_SCL);
+    i2c0->hw->enable = 0;
+    hw_set_bits(&i2c0->hw->con, I2C_IC_CON_RX_FIFO_FULL_HLD_CTRL_BITS);
+    i2c0->hw->enable = 1;
 #endif
     WIRE.begin(SLAVE_ADDR);
     WIRE.onReceive(recv);

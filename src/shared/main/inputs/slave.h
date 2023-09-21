@@ -29,12 +29,12 @@ uint16_t slaveReadAnalog(uint8_t pin) {
 }
 
 uint8_t slaveReadDigital(uint8_t port, uint8_t mask) {
-    uint8_t payload2[] = {port, mask};
+    uint8_t payload2[2] = {port, mask};
     slave_initted = twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_DIGITAL_PIN_2, sizeof(payload2), payload2);
     uint32_t payload;
     slave_initted = twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_DIGITAL, sizeof(payload), (uint8_t*)&payload);
     PIN_INIT;
-    return ((payload >> port) & 0xff);
+    return (payload >> (port * 8)) & 0xFF;
 }
 
 uint16_t slaveReadAnalog(uint8_t pin, uint8_t mask) {

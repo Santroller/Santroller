@@ -24,6 +24,10 @@
 #define CLONE_VALID_PACKET 0x52
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
+long clone_guitar_timer = 0;
+long clone_guitar_ready_timer = 0;
+bool clone_ready = false;
+bool reading = false;
 Buffer_Report_t last_queue_report;
 long last_queue = 0;
 uint8_t queue_size = 0;
@@ -105,7 +109,7 @@ const PROGMEM uint8_t ghl_ps3wiiu_magic_data[] = {
 const PROGMEM uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-const uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
+uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
 
 Led_t ledState[LED_COUNT];
 #define UP 1 << 0

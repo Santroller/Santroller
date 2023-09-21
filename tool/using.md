@@ -99,7 +99,7 @@ If you have followed the [RGB LED](https://santroller.tangentmc.net/wiring_guide
 
 #### Peripheral Settings (Pi Pico only)
 This firmware allows using a secondary Pi Pico as a peripheral. This means you can connect two picos together using 4 wires, and forward inputs and LED information between them. This can be used to add LEDs or faster inputs when using connections with very few pins, for example this can be used to add LEDs to a GH5 guitar hero guitar neck, or LEDs to a DJ Hero turntable.
-Once this option is switched on, you will see peripheral versions of various inputs in the input type list for digital and analog inputs.
+Once this option is switched on, you will see peripheral versions of the digital and wt neck inputs.
 Set the SCL and SDA pins you have connected to the peripheral controller. Here you pick the pins being used on the main Pico, not the peripheral one.
 
 #### Buttons

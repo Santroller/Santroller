@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <SPI.h>
+#include <avr/boot.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -11,9 +12,8 @@
 #include "packets.h"
 #include "reports/controller_reports.h"
 #include "shared_main.h"
-#include <avr/boot.h>
 #define INTERNAL_SERIAL_START_ADDRESS 0x0E
-#define USB_STRING_LEN(UnicodeChars)      (sizeof(USB_Descriptor_Header_t) + ((UnicodeChars) << 1))
+#define USB_STRING_LEN(UnicodeChars) (sizeof(USB_Descriptor_Header_t) + ((UnicodeChars) << 1))
 #define INTERNAL_SERIAL_LENGTH_BITS 80
 typedef struct
 {
@@ -21,16 +21,17 @@ typedef struct
     uint8_t Type; /**< Type of the descriptor, either a value in \ref USB_DescriptorTypes_t or a value
                    *   given by the specific class.
                    */
-} __attribute__ ((packed)) USB_Descriptor_Header_t;
+} __attribute__((packed)) USB_Descriptor_Header_t;
 typedef struct
 {
     USB_Descriptor_Header_t Header;
     uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3];
-} __attribute__ ((packed)) SignatureDescriptor_t;
+} __attribute__((packed)) SignatureDescriptor_t;
 
 SignatureDescriptor_t signature;
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
+uint8_t buf2[255];
 
 // Flag for if we have received a packet that needs to be processed
 volatile bool ready = false;
@@ -46,7 +47,8 @@ control_request_t* ctr = (control_request_t*)buf;
 data_transmit_packet_t* dt = (data_transmit_packet_t*)buf;
 
 // If we have been ticked by usb for new data, then this will be true
-bool received_controller_tick = false;
+bool has_previous_data = false;
+uint8_t previous_data_len = 0;
 // reset_usb is called by other parts of the code if we need to trigger a usb reload
 // we just trigger a flag here, as we can send it on our next usb transfer
 bool should_reload_usb = false;
@@ -76,8 +78,8 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 
     SREG = CurrentGlobalInt;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = DEVICE_TYPE + '0';
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = WINDOWS_USES_XINPUT + '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
 }
 
 void reset_usb(void) {
@@ -103,18 +105,18 @@ void setup() {
     USB_Device_GetInternalSerialDescriptor();
 }
 bool ready_for_next_packet() {
-    return received_controller_tick;
+    return !has_previous_data;
 }
 void send_report_to_pc(const void* report, uint8_t len) {
     // Write the controller input data
-    memcpy(buf + sizeof(packet_header_t), report, len);
-    header->len += len;
+    memcpy(buf2, report, len);
+    previous_data_len = len;
+    has_previous_data = true;
 }
 void loop() {
+    tick();
     // Wait for a packet from the 8u2/16u2.
-    // If we didnt get one, then tick anyways so that we do the ocassional tick every 5ms
     if (!ready) {
-        tick();
         return;
     }
     ready = false;
@@ -129,10 +131,12 @@ void loop() {
             header->len = 0;
             break;
         case CONTROLLER_DATA_REQUEST_ID: {
-            received_controller_tick = true;
             header->len = 0;
-            tick();
-            received_controller_tick = false;
+            if (has_previous_data) {
+                has_previous_data = false;
+                memcpy(buf + sizeof(packet_header_t), buf2, previous_data_len);
+                header->len = previous_data_len;
+            }
             break;
         }
         case DESCRIPTOR_ID: {

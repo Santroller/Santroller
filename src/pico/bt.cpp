@@ -23,7 +23,7 @@
     #define APPEARANCE 0xC1
 #else
     // Appearance HID - Gamepad (Category 15, Sub-Category 4)
-    #define REPORT bt_descriptor
+    #define REPORT pc_descriptor
     #define APPEARANCE 0xC4
 #endif
 // static btstack_timer_source_t heartbeat;

@@ -9,7 +9,7 @@ if (millis() - clone_guitar_ready_timer > 350) {
 }
 if (clone_ready) {
     // The crazy guitar necks don't like being polled too quickly, this seems to work though.
-    if (micros() - clone_guitar_timer > 3000) {
+    if (micros() - clone_guitar_timer > 4000) {
         if (!reading) {
             twi_writeTo(CLONE_TWI_PORT, CLONE_ADDR, clone_data, sizeof(clone_data), true, true);
             reading = true;

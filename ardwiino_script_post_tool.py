@@ -42,20 +42,6 @@ def post_upload(source, target, env):
             if dev:
                 new_env = "arduino_mega_adk"
                 break
-            dev = libusb_package.find(idVendor=0x1209, idProduct=0x2882)
-            if not dev:
-                dev = libusb_package.find(idVendor=0x1209, idProduct=0x2884)
-            if dev:
-                try:
-                    dev.detach_kernel_driver(0)
-                except:
-                    pass
-                try:
-                    dev.ctrl_transfer(0x21, BOOTLOADER_SERIAL)
-                    dev.ctrl_transfer(0x21, 0x09, BOOTLOADER_SERIAL)
-                except Exception as e:
-                    print(e)
-                    pass
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
         env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))

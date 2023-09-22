@@ -276,7 +276,7 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint1
     }
     return (uint8_t)(ret + PS3_STICK_CENTER);
 #else
-    int8_t ret = handle_calibration_xbox_whammy((ret - (PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1))) << 9, orig_val, min, multiplier, deadzone) >> 9;
+    int8_t ret = handle_calibration_xbox_whammy((previous - (PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1))) << 9, orig_val, min, multiplier, deadzone) >> 9;
     return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
 #endif
 }

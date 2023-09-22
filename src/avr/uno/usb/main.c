@@ -138,6 +138,13 @@ void handleControllerData() {
             // If the packet was host to device, than we are done here as the data was written already
             if (type == CONTROLLER_DATA_TRANSMIT_ID) {
                 FINISH_READ(tmp);
+                // Acknowledge the packet
+                Endpoint_ClearOUT();
+                return;
+            }
+            // If the packet is empty, stop
+            if (type == CONTROLLER_DATA_REQUEST_ID && !txcount) {
+                FINISH_READ(tmp);
                 return;
             }
             if (type == CONTROLLER_DATA_RESTART_USB_ID) {
@@ -156,6 +163,8 @@ void handleControllerData() {
         Endpoint_Write_8(data);
     }
     FINISH_READ(tmp);
+    // Acknowledge the packet
+    Endpoint_ClearIN();
 }
 int main(void) {
     bool skip_wait = false;
@@ -310,8 +319,6 @@ int main(void) {
             // Now wait for and process the response from the 328p
             FINISH_WRITE(tmp);
             handleControllerData();
-            // Acknowledge the packet
-            Endpoint_ClearIN();
         }
 
         // Check if the host has sent us a controller packet (for example, LEDs or other controller info)
@@ -334,8 +341,6 @@ int main(void) {
             // Now wait for and process the response from the 328p
             FINISH_WRITE(tmp);
             handleControllerData();
-            // Acknowledge the packet
-            Endpoint_ClearOUT();
         }
     }
 }

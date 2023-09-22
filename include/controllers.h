@@ -41,7 +41,7 @@ extern bool seen_hid_descriptor_read;
 extern bool descriptor_requested;
 
 // Use for configuring commands that are pc specific
-extern uint32_t seen_windows_xb1;
+extern bool seen_windows_xb1;
 extern bool seen_windows;
 extern bool read_any_string;
 

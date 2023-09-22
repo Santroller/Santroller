@@ -11,6 +11,7 @@ import libusb_package
 import usb.core
 import usb.util
 import os
+import psutil
 
 REBOOT = 48
 BOOTLOADER = 49
@@ -18,6 +19,7 @@ BOOTLOADER_SERIAL = 50
 
 Import("env")
 
+me = psutil.Process(os.getpid())
 
 class Context:
     def __init__(self):
@@ -30,6 +32,8 @@ def post_upload(source, target, env):
         print("searching for uno")
         new_env = None
         while not new_env:
+            if me.parent is None:
+                exit(1)
             dev = libusb_package.find(idVendor=0x03eb, idProduct=0x0001)
             if dev:
                 new_env = "arduino_uno"

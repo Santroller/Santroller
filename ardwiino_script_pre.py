@@ -3,18 +3,10 @@ from pprint import pp
 import subprocess
 import sys
 from os.path import join
-try:
-    import usb
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyusb"])
-try:
-    import libusb_package
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])
-
 import libusb_package
 from serial import Serial, SerialException
 import os
+import psutil
 from time import sleep
 
 REBOOT=48
@@ -24,6 +16,7 @@ class Context:
     def __init__(self):
         self.meta = ""
 
+me = psutil.Process(os.getpid())
 Import("env")
 if "upload" in BUILD_TARGETS:
     upload_options = env.BoardConfig().get("upload", {})
@@ -35,6 +28,8 @@ if "upload" in BUILD_TARGETS:
         print("Detecting microcontroller type")
         dev = None
         while not dev:
+            if me.parent is None:
+                exit(1)
             dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2FF7)
             if dev:
                 env["BOARD_MCU"] = "at90usb82"
@@ -66,6 +61,8 @@ if "upload" in BUILD_TARGETS:
         print("Uploaded, waiting for device to show up")
         dev = None
         while not dev:
+            if me.parent is None:
+                exit(1)
             dev = libusb_package.find(idVendor=0x1209, idProduct=0x2886)
             pass
         sleep(5)

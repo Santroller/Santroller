@@ -98,7 +98,7 @@ static void tick_usb() {
     tuh_task();
 #endif
 #ifdef BLUETOOTH_RX
-// if connected to the transmitter, then run the bt based tick, otherwise run the usb based tick.
+    // if connected to the transmitter, then run the bt based tick, otherwise run the usb based tick.
     if (check_bluetooth_ready()) {
         tick_bluetooth_inputs(prev_bt_report);
     } else {

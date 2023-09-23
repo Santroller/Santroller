@@ -64,6 +64,7 @@ typedef struct {
     int8_t debug_pin_eop;
     bool skip_alarm_pool;
 } pio_usb_configuration_t;
+uint8_t prev_bt_report[32];
 
 bool ready_for_next_packet() {
 #ifdef BLUETOOTH_TX
@@ -96,8 +97,16 @@ static void tick_usb() {
 #if USB_HOST_STACK
     tuh_task();
 #endif
-
+#ifdef BLUETOOTH_RX
+// if connected to the transmitter, then run the bt based tick, otherwise run the usb based tick.
+    if (check_bluetooth_ready()) {
+        tick_bluetooth_inputs(prev_bt_report);
+    } else {
+        tick();
+    }
+#else
     tick();
+#endif
 #if BLUETOOTH
     if (!authDone) {
         if (consoleType != XBOX360 && consoleType != XBOXONE) {
@@ -111,9 +120,9 @@ static void tick_usb() {
 #endif
 }
 #ifdef BLUETOOTH_RX
-void tick_bluetooth(const void *buf) {
+void tick_bluetooth(const void *buf, uint8_t len) {
+    memcpy(prev_bt_report, buf, len);
     tick_usb();
-    tick_bluetooth_inputs(buf);
 }
 #endif
 void loop() {

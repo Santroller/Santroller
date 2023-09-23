@@ -52,6 +52,6 @@ extern USB_Host_Data_t usb_host_data;
 extern USB_LastReport_Data_t last_report_bt;
 
 #ifdef BLUETOOTH_RX
-void tick_bluetooth(const void* buf);
+void tick_bluetooth(const void* buf, uint8_t len);
 int tick_bluetooth_inputs(const void *buf);
 #endif

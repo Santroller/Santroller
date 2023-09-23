@@ -247,7 +247,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
         case GATTSERVICE_SUBEVENT_HID_REPORT: {
-            tick_bluetooth(gattservice_subevent_hid_report_get_report(packet));
+            tick_bluetooth(gattservice_subevent_hid_report_get_report(packet), gattservice_subevent_hid_report_get_report_len(packet));
             break;
         }
 

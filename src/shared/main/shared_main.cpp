@@ -100,13 +100,13 @@ long last_poll = 0;
  * https://github.com/ghlre/GHLtarUtility/blob/master/PS3Guitar.cs
  * Note: The Wii U and PS3 dongles happen to share the same!
  */
-const PROGMEM uint8_t ghl_ps3wiiu_magic_data[] = {
+uint8_t ghl_ps3wiiu_magic_data[] = {
     0x02, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /* Magic data for the PS4 dongles sniffed with a USB protocol
  * analyzer.
  */
-const PROGMEM uint8_t ghl_ps4_magic_data[] = {
+uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
@@ -358,7 +358,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->tilt = report->tilt;
         }
         if (report->whammy) {
-            out->whammy = (report->whammy - PS3_STICK_CENTER) << 1;;
+            out->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
+            ;
         }
     }
     if (output_console_type == XBOX360) {
@@ -1207,16 +1208,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t led_tmp;
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
-#include "inputs/gh5_neck.h"
 #include "inputs/clone_neck.h"
+#include "inputs/gh5_neck.h"
 #include "inputs/ps2.h"
+#include "inputs/slave_tick.h"
 #include "inputs/turntable.h"
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
-#ifdef SLAVE_TWI_PORT
-    uint32_t slave_digital = slaveReadDigital();
-#endif
     TICK_SHARED;
     // give the user 5 seconds to jump between modes (aka, hold on plug in)
     if (millis() < 5000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
@@ -1600,18 +1599,31 @@ int tick_bluetooth_inputs(const void *buf) {
     uint8_t size = 0;
     uint8_t report_size = 0;
     uint8_t output_console_type = consoleType;
+    // Tick Inputs
+#include "inputs/clone_neck.h"
+#include "inputs/gh5_neck.h"
+#include "inputs/ps2.h"
+#include "inputs/slave_tick.h"
+#include "inputs/turntable.h"
+#include "inputs/usb_host.h"
+#include "inputs/wii.h"
+#include "inputs/wt_neck.h"
+    TICK_SHARED;
 #if DEVICE_TYPE_KEYBOARD
 #ifdef TICK_NKRO
     if (buf[0] == REPORT_ID_NKRO) {
         memcpy(&last_report_usb->lastNKROReport, buf, sizeof(last_report_usb->lastNKROReport));
+        TICK_NKRO;
     }
 #elif defined(TICK_CONSUMER)
     if (buf[0] == REPORT_ID_CONSUMER) {
         memcpy(&last_report_usb->lastConsumerReport, buf, sizeof(last_report_usb->lastConsumerReport));
+        TICK_CONSUMER;
     }
 #elif defined(TICK_MOUSE)
     if (buf[0] == REPORT_ID_MOUSE) {
         memcpy(&last_report_usb->lastMouseReport, buf, sizeof(last_report_usb->lastMouseReport));
+        TICK_MOUSE;
     }
 #endif
 
@@ -1621,6 +1633,12 @@ int tick_bluetooth_inputs(const void *buf) {
     if (output_console_type == UNIVERSAL) {
         report_size = size = sizeof(PC_REPORT);
         memcpy(report_data, buf, size);
+        PC_REPORT *report = (PC_REPORT *)report_data;
+        report->dpad = input->dpad >= 0x08 ? 0 : dpad_bindings_reverse[input->dpad];
+        TICK_PC;
+        asm volatile("" ::
+                         : "memory");
+        report->dpad = dpad_bindings[report->dpad];
     }
     bool updateSequence = false;
     bool updateHIDSequence = false;
@@ -1636,8 +1654,9 @@ int tick_bluetooth_inputs(const void *buf) {
             memset(report_data, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
             convert_universal_to_type((uint8_t *)report_data, input, XBOXONE);
+            TICK_XBOX_ONE;
             asm volatile("" ::
-                            : "memory");
+                             : "memory");
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)report_data;
@@ -1658,7 +1677,7 @@ int tick_bluetooth_inputs(const void *buf) {
             memset(report_data, 0, sizeof(XboxOneGHLGuitar_Data_t));
             GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
             asm volatile("" ::
-                            : "memory");
+                             : "memory");
             report_data = (USB_Report_Data_t *)&report->report;
             updateHIDSequence = true;
         }
@@ -1673,6 +1692,7 @@ int tick_bluetooth_inputs(const void *buf) {
         report->whammy = INT16_MIN;
 #endif
         convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
+        TICK_XINPUT;
         report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -1693,6 +1713,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
         convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+        TICK_PS4;
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];
@@ -1715,6 +1736,7 @@ int tick_bluetooth_inputs(const void *buf) {
         memset(report, 0, sizeof(PS3_REPORT));
         report->reportId = 1;
         convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+        TICK_PS3_WITHOUT_CAPTURE;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
@@ -1734,6 +1756,7 @@ int tick_bluetooth_inputs(const void *buf) {
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         convert_universal_to_type((uint8_t *)report_data, input, PS3);
+        TICK_PS3;
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = dpad_bindings[gamepad->dpad];

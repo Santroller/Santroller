@@ -1635,8 +1635,6 @@ int tick_bluetooth_inputs(const void *buf) {
             report_size = size - sizeof(GipHeader_t);
             memset(report_data, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-            asm volatile("" ::
-                            : "memory");
             convert_universal_to_type((uint8_t *)report_data, input, XBOXONE);
             asm volatile("" ::
                             : "memory");

@@ -38,25 +38,25 @@ typedef struct
 typedef struct
 {
     GipHeader_t Header;
-    bool sync : 1;
-    bool guide : 1;
-    bool start : 1;  // menu
-    bool back : 1;   // view
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
 
-    bool a : 1;
-    bool b : 1;
-    bool x : 1;
-    bool y : 1;
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t x : 1;
+    uint8_t y : 1;
 
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
 
-    bool leftShoulder : 1;
-    bool rightShoulder : 1;
-    bool leftThumbClick : 1;
-    bool rightThumbClick : 1;
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;

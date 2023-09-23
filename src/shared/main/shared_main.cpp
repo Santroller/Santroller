@@ -1598,6 +1598,7 @@ bool tick_usb(void) {
 #ifdef BLUETOOTH_RX
 int tick_bluetooth_inputs(const void *buf) {
     uint8_t size = 0;
+    uint8_t report_size = 0;
     uint8_t output_console_type = consoleType;
 #if DEVICE_TYPE_KEYBOARD
 #ifdef TICK_NKRO
@@ -1618,7 +1619,7 @@ int tick_bluetooth_inputs(const void *buf) {
     PC_REPORT *input = (PC_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
     if (output_console_type == UNIVERSAL) {
-        size = sizeof(PC_REPORT);
+        report_size = size = sizeof(PC_REPORT);
         memcpy(report_data, buf, size);
     }
     bool updateSequence = false;
@@ -1631,9 +1632,14 @@ int tick_bluetooth_inputs(const void *buf) {
         if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
             XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)report_data;
             size = sizeof(XBOX_ONE_REPORT);
+            report_size = size - sizeof(GipHeader_t);
             memset(report_data, 0, size);
             GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-            convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
+            asm volatile("" ::
+                            : "memory");
+            convert_universal_to_type((uint8_t *)report_data, input, XBOXONE);
+            asm volatile("" ::
+                            : "memory");
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;
                 GipKeystroke_t *keystroke = (GipKeystroke_t *)report_data;
@@ -1650,8 +1656,11 @@ int tick_bluetooth_inputs(const void *buf) {
         } else {
             XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)report_data;
             size = sizeof(XboxOneGHLGuitar_Data_t);
+            report_size = sizeof(PS3_REPORT);
             memset(report_data, 0, sizeof(XboxOneGHLGuitar_Data_t));
             GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
+            asm volatile("" ::
+                            : "memory");
             report_data = (USB_Report_Data_t *)&report->report;
             updateHIDSequence = true;
         }
@@ -1666,7 +1675,7 @@ int tick_bluetooth_inputs(const void *buf) {
         report->whammy = INT16_MIN;
 #endif
         convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
-        size = sizeof(XINPUT_REPORT);
+        report_size = size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
@@ -1674,7 +1683,7 @@ int tick_bluetooth_inputs(const void *buf) {
     if (output_console_type == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
         PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
-        size = sizeof(PS4_REPORT);
+        report_size = size = sizeof(PS4_REPORT);
         memset(report_data, 0, size);
         gamepad->report_id = 0x01;
         gamepad->leftStickX = PS3_STICK_CENTER;
@@ -1708,14 +1717,14 @@ int tick_bluetooth_inputs(const void *buf) {
         memset(report, 0, sizeof(PS3_REPORT));
         report->reportId = 1;
         convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
-        size = sizeof(PS3Gamepad_Data_t);
+        report_size = size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateHIDSequence) {
+    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
 #else
-    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateHIDSequence) {
+    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateSequence) {
 #endif
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
-        size = sizeof(PS3_REPORT);
+        report_size = size = sizeof(PS3_REPORT);
         memset(report_data, 0, size);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         gamepad->accelX = PS3_ACCEL_CENTER;
@@ -1773,7 +1782,13 @@ int tick_bluetooth_inputs(const void *buf) {
     }
 #endif
 #endif
-
+    if (output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3) {
+        uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
+        if (cmp == 0) {
+            return 0;
+        }
+        memcpy(&last_report_bt, report_data, report_size);
+    }
     if (size) {
         send_report_to_pc(&combined_report, size);
     }

@@ -1803,6 +1803,15 @@ int tick_bluetooth_inputs(const void *buf) {
     }
 #endif
 #endif
+
+    if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
+        lastDebounce = micros();
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                debounce[i]--;
+            }
+        }
+    }
     if (output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3) {
         uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
         if (cmp == 0) {

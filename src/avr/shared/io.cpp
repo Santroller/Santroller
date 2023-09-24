@@ -1,6 +1,7 @@
 #include "io.h"
 
 #include <Arduino.h>
+#include <avr/boot.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/power.h>
@@ -9,10 +10,9 @@
 #include <string.h>
 #include <util/delay.h>
 #include <util/twi.h>
-#include <avr/boot.h>
-#include "util.h"
 
 #include "config.h"
+#include "util.h"
 #ifndef TWI_BUFFER_LENGTH
 #include "string.h"
 #define TWI_BUFFER_LENGTH 32
@@ -27,7 +27,6 @@
 #define TWI_SRX 3
 #define TWI_STX 4
 volatile bool spi_acknowledged = false;
-
 
 static volatile uint8_t twi_state;
 static volatile uint8_t twi_slarw;
@@ -111,11 +110,21 @@ void twi_init() {
     // initialize twi prescaler and bit rate
     cbi(TWSR, TWPS0);
     cbi(TWSR, TWPS1);
+// No idea why, but the wii stuff just isnt stable at higher speeds than 15 on the 5v devices
+#if F_CPU == 16000000UL
+// note: TWBR should be 10 or higher for master mode
+#if ((F_CPU / GC_TWI_CLOCK) - 16) / 2 > 15
+    TWBR = ((F_CPU / GC_TWI_CLOCK) - 16) / 2;
+#else
+    TWBR = 15;
+#endif
+#else
 // note: TWBR should be 10 or higher for master mode
 #if ((F_CPU / GC_TWI_CLOCK) - 16) / 2 > 10
     TWBR = ((F_CPU / GC_TWI_CLOCK) - 16) / 2;
 #else
     TWBR = 10;
+#endif
 #endif
     // enable twi module, acks, and twi interrupt
     TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);

@@ -111,8 +111,8 @@ void twi_init() {
     cbi(TWSR, TWPS0);
     cbi(TWSR, TWPS1);
 // No idea why, but the wii stuff just isnt stable at higher speeds than 15 on the 5v devices
+// That does still end up being ~363636hz, which is pretty close to the 400000hz target
 #if F_CPU == 16000000UL
-// note: TWBR should be 10 or higher for master mode
 #if ((F_CPU / GC_TWI_CLOCK) - 16) / 2 > 15
     TWBR = ((F_CPU / GC_TWI_CLOCK) - 16) / 2;
 #else

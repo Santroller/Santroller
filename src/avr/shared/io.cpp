@@ -18,8 +18,6 @@
 #define TWI_BUFFER_LENGTH 32
 #endif
 
-#define INTERRUPT_PS2_ACK_EICRA _BV(ISC00) | _BV(ISC01)
-#define INTERRUPT_PS2_ACK_VECT INTERRUPT_PS2_ACK##_vect
 
 #define TWI_READY 0
 #define TWI_MRX 1
@@ -113,10 +111,10 @@ void twi_init() {
 // No idea why, but the wii stuff just isnt stable at higher speeds than 15 on the 5v devices
 // That does still end up being ~363636hz, which is pretty close to the 400000hz target
 #if F_CPU == 16000000UL
-#if ((F_CPU / GC_TWI_CLOCK) - 16) / 2 > 15
+#if ((F_CPU / GC_TWI_CLOCK) - 16) / 2 > 16
     TWBR = ((F_CPU / GC_TWI_CLOCK) - 16) / 2;
 #else
-    TWBR = 15;
+    TWBR = 16;
 #endif
 #else
 // note: TWBR should be 10 or higher for master mode

@@ -178,11 +178,6 @@ uint8_t *tickPS2() {
     if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 3000 && !invalidCount) {
         return inputBuffer;
     }
-    // And every psx controller will get confused if polled too quick
-    // TODO: this
-    // if (micros() - last < 400) {
-    //     return inputBuffer;
-    // }
     // If this is changed to a different port, you can talk to different devices
     // on a multitap. Not sure how useful this is unless we make a ps2 variant
     // that works with the multitap, and offers four devices

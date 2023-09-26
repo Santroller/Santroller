@@ -3,7 +3,7 @@
 | Metric          | Value                  |
 | --------------- | ---------------------- |
 | firmware        | old                    |
-| microcontroller | pro micro 3.3v         |
+| microcontroller | Pro Micro 3.3v         |
 | controller      | Wii Classic Controller |
 | poll rate       | 1ms                    |
 | min             | 1.47                   |

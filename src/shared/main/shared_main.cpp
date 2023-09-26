@@ -1847,6 +1847,7 @@ void tick(void) {
         tick_inputs(NULL, NULL, consoleType);
     }
 #endif
+    TICK_RESET
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         lastDebounce = micros();
         for (int i = 0; i < DIGITAL_COUNT; i++) {

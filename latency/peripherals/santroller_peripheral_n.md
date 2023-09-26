@@ -1,4 +1,4 @@
-# Pi Pico used as Peripheral connected to Pi Pico
+# Peripheral
 
 | Metric           | Value                      |
 | ---------------- | -------------------------- |

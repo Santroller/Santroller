@@ -1,4 +1,4 @@
-# DJ Hero Turntable set to 10ms poll connected to a Pi Pico
+# DJ Hero Turntable (10ms)
 
 | Metric              | Value                     |
 | ------------------- | ------------------------- |

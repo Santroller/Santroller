@@ -1,4 +1,4 @@
-# PS1 controller via bluetooth between two Pi Picos
+# PS1 controller
 
 | Metric          | Value          |
 | --------------- | -------------- |

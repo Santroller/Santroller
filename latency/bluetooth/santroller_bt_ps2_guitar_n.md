@@ -1,4 +1,4 @@
-# PS2 SG via bluetooth between two Pi Picos
+# PS2 SG
 
 | Metric          | Value     |
 | --------------- | --------- |

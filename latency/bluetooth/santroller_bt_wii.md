@@ -1,4 +1,4 @@
-# Wii Classic Controller via bluetooth between two Pi Picos
+# Wii Classic Controller
 
 | Metric          | Value                  |
 | --------------- | ---------------------- |

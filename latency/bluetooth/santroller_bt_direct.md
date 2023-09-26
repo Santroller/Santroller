@@ -1,4 +1,4 @@
-# Direct input via bluetooth between two Pi Picos
+# Direct inputs
 
 | Metric          | Value     |
 | --------------- | --------- |

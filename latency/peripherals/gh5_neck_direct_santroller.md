@@ -1,4 +1,4 @@
-# GH5 Neck connected to a Pi Pico via I2C running the new firmware
+# GH5 Neck
 
 | Metric          | Value           |
 | --------------- | --------------- |

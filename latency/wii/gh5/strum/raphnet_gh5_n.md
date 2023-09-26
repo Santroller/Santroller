@@ -1,4 +1,7 @@
-# Wii GH5 Guitar Strum on Raphnet
+---
+sort: 3
+---
+# Raphnet
 
 | Metric     | Value                |
 | ---------- | -------------------- |

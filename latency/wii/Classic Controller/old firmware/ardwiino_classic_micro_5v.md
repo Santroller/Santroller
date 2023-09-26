@@ -1,9 +1,9 @@
-# Wii Classic Controller on a 5v Pro Micro running the old firmware
+# Sparkfun Pro Micro 5V
 
 | Metric          | Value                  |
 | --------------- | ---------------------- |
 | firmware        | old                    |
-| microcontroller | Sparkfun Pro Micro 5V           |
+| microcontroller | Sparkfun Pro Micro 5V  |
 | controller      | Wii Classic Controller |
 | poll rate       | 1 ms                   |
 | min             | 0.92 ms                |

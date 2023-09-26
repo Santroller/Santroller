@@ -1,4 +1,4 @@
-# Wii Classic Controller on an Arduino Uno running the old firmware
+# Arduino Uno
 
 | Metric          | Value                  |
 | --------------- | ---------------------- |

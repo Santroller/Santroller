@@ -1,4 +1,7 @@
-# GH5 Guitar connected to a Pi Pico running the old firmware
+---
+sort: 2
+---
+# Old firmware
 
 | Metric          | Value                  |
 | --------------- | ---------------------- |

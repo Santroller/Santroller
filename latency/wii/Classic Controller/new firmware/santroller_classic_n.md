@@ -1,4 +1,4 @@
-# Wii Classic Controller on a Pi Pico running the new firmware
+# Pi Pico
 
 | Metric          | Value                  |
 | --------------- | ---------------------- |

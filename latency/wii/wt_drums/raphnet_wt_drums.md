@@ -1,4 +1,7 @@
-# Wii GHWT Drum Kit on Raphnet
+---
+sort: 3
+---
+# Raphnet
 
 | Metric     | Value             |
 | ---------- | ----------------- |

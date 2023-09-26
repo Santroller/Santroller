@@ -1,4 +1,7 @@
-# Wii GHWT Drum Kit connected to a Pi Pico running the new firmware
+---
+sort: 1
+---
+# New firmware
 
 | Metric          | Value             |
 | --------------- | ----------------- |

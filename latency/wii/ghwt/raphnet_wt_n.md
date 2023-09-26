@@ -1,4 +1,7 @@
-# Wii GHWT Guitar on Raphnet
+---
+sort: 3
+---
+# Raphnet
 
 | Metric     | Value            |
 | ---------- | ---------------- |

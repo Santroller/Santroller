@@ -13,4 +13,4 @@
 | %2f skip   | 60%            |
 | %3f skip   | 1219%          |
 
-[![Graph](../../assets/images/results/ps3_strat_n.png){: class="big-image" }](../../assets/images/results/ps3_strat_n.png)
+[![Graph](/assets/images/results/ps3_strat_n.png){: class="big-image" }](/assets/images/results/ps3_strat_n.png)

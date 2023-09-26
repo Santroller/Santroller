@@ -18,4 +18,4 @@ sort: 2
 | %2f skip        | 0%                |
 | %3f skip        | 0%                |
 
-[![Graph](../../assets/images/results/ardwiino_wt_drums.png){: class="big-image" }](../../assets/images/results/ardwiino_wt_drums.png)
+[![Graph](/assets/images/results/ardwiino_wt_drums.png){: class="big-image" }](/assets/images/results/ardwiino_wt_drums.png)

@@ -16,4 +16,4 @@
 | %2f skip        | 2%        |
 | %3f skip        | 0%        |
 
-[![Graph](../../assets/images/results/santroller_bt_ps2_guitar_n.png){: class="big-image" }](../../assets/images/results/santroller_bt_ps2_guitar_n.png)
+[![Graph](/assets/images/results/santroller_bt_ps2_guitar_n.png){: class="big-image" }](/assets/images/results/santroller_bt_ps2_guitar_n.png)

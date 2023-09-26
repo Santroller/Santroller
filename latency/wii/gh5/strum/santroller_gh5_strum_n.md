@@ -18,4 +18,4 @@ sort: 1
 | %2f skip        | 0%                     |
 | %3f skip        | 0%                     |
 
-[![Graph](../../assets/images/results/santroller_gh5_strum_n.png){: class="big-image" }](../../assets/images/results/santroller_gh5_strum_n.png)
+[![Graph](/assets/images/results/santroller_gh5_strum_n.png){: class="big-image" }](/assets/images/results/santroller_gh5_strum_n.png)

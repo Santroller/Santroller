@@ -16,4 +16,4 @@
 | %2f skip            | 42%                       |
 | %3f skip            | 4642%                     |
 
-[![Graph](../../assets/images/results/santroller_dj_10.png){: class="big-image" }](../../assets/images/results/santroller_dj_10.png)
+[![Graph](/assets/images/results/santroller_dj_10.png){: class="big-image" }](/assets/images/results/santroller_dj_10.png)

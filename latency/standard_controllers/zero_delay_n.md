@@ -13,4 +13,4 @@
 | %2f skip   | 13%                                 |
 | %3f skip   | 0%                                  |
 
-[![Graph](../../assets/images/results/zero_delay_n.png){: class="big-image" }](../../assets/images/results/zero_delay_n.png)
+[![Graph](/assets/images/results/zero_delay_n.png){: class="big-image" }](/assets/images/results/zero_delay_n.png)

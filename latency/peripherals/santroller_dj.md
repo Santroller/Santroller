@@ -16,4 +16,4 @@
 | %2f skip            | 56%                       |
 | %3f skip            | 0%                        |
 
-[![Graph](../../assets/images/results/santroller_dj.png){: class="big-image" }](../../assets/images/results/santroller_dj.png)
+[![Graph](/assets/images/results/santroller_dj.png){: class="big-image" }](/assets/images/results/santroller_dj.png)

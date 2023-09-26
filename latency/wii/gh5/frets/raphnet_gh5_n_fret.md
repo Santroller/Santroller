@@ -17,4 +17,4 @@ sort: 3
 | %2f skip   | 0%                   |
 | %3f skip   | 0%                   |
 
-[![Graph](../../assets/images/results/raphnet_gh5_n_fret.png){: class="big-image" }](../../assets/images/results/raphnet_gh5_n_fret.png)
+[![Graph](/assets/images/results/raphnet_gh5_n_fret.png){: class="big-image" }](/assets/images/results/raphnet_gh5_n_fret.png)

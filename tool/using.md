@@ -28,20 +28,20 @@ The Santroller Configurator is a tool that can program any micro controller with
 ## The main screen
 After your device is running the Santroller firmware, configuring will land you at the following screen. There is a sidebar to the left, and your settings to the right.
 
-[![Main Screen](../assets/images/screenshots/main.png)](../assets/images/screenshots/main.png)
+[![Main Screen](/assets/images/screenshots/main.png)](/assets/images/screenshots/main.png)
 
 ## The Sidebar
 ### Mode
 You can change the mode between `Standard` and `Advanced`. For most people, the standard mode will be sufficient, but the advanced mode allows for configuring debounce on a per input level, and allows for configuring the pin mode of individual inputs, which allows for changing the direction pins are pulled.
 
-[![Main Screen](../assets/images/screenshots/mode.png)](../assets/images/screenshots/mode.png)
+[![Main Screen](/assets/images/screenshots/mode.png)](/assets/images/screenshots/mode.png)
 
 ### Controller view type
 As this tool can be used to configure controllers that work on a variety of consoles, you may want to view your inputs for a specific console. This setting allows for this, and allows for picking between `Xbox`, `PlayStation` and `Switch`.
 
-[![Main Screen](../assets/images/screenshots/view-xbox.png)](../assets/images/screenshots/view-xbox.png)
-[![Main Screen](../assets/images/screenshots/view-ps.png)](../assets/images/screenshots/view-ps.png)
-[![Main Screen](../assets/images/screenshots/view-switch.png)](../assets/images/screenshots/view-switch.png)
+[![Main Screen](/assets/images/screenshots/view-xbox.png)](/assets/images/screenshots/view-xbox.png)
+[![Main Screen](/assets/images/screenshots/view-ps.png)](/assets/images/screenshots/view-ps.png)
+[![Main Screen](/assets/images/screenshots/view-switch.png)](/assets/images/screenshots/view-switch.png)
 
 ### Add setting
 This allows for adding a setting, such as a input to emulate, or a LED. Settings will be explained [further down in the guide](#settings).
@@ -70,13 +70,13 @@ Settings are the heart of this configuration tool. There are various settings th
 ### Adding a setting
 If you click the `Add setting` button in the sidebar, you will be presented with a dropdown, that lets you pick the setting you want to configure.
 
-[![Main Screen](../assets/images/screenshots/unset-setting.png)](../assets/images/screenshots/unset-setting.png)
+[![Main Screen](/assets/images/screenshots/unset-setting.png)](/assets/images/screenshots/unset-setting.png)
 
 ### Types of settings
 
 #### Controller settings
 
-[![Main Screen](../assets/images/screenshots/controller-settings.png)](../assets/images/screenshots/controller-settings.png)
+[![Main Screen](/assets/images/screenshots/controller-settings.png)](/assets/images/screenshots/controller-settings.png)
 
 The controller settings allow for configuring various aspects of your controller.
 ##### Emulation Type
@@ -109,7 +109,7 @@ The icon for the button will light up when the input is activated, which gives y
 If you use an analog input here, then you can dictate a threshold that needs to be reached before that input is considered activated.
 If you have APA102 LEDs enabled, you will be able to pick the colour used when the input is triggered, or when it is not triggered. You can also select which leds in the chain will be updated by this input.
 
-[![Button](../assets/images/screenshots/digital.png)](../assets/images/screenshots/digital.png)
+[![Button](/assets/images/screenshots/digital.png)](/assets/images/screenshots/digital.png)
 
 #### Axis
 For axis, you can pick the input type, in order to map an input from any supported device to this output.
@@ -119,7 +119,7 @@ You can also manually change the sliders to fine tune your calibration manually.
 If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
 If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
 
-[![Axis](../assets/images/screenshots/axis.png)](../assets/images/screenshots/axis.png)
+[![Axis](/assets/images/screenshots/axis.png)](/assets/images/screenshots/axis.png)
 
 #### Wii Extension Inputs
 This setting will map a bunch of sensible bindings for various Wii extensions, such as the guitar, drums and nunchuk. Note that when this is added, you will not see any data from it until you hit save.
@@ -187,8 +187,8 @@ For a multiplexer, the microcontroller has 3 outputs (or 4 for the 4067) which a
 These are the inputs S0, S1, S2 and S3 (for the 4067). In some datasheets, these pins will be labelled A, B, C and D instead.
 The other pins are then your inputs, and the channel you select in your input is the input that will be read.
 
-[![4051](../assets/images/cd4051.png)](../assets/images/cd4051.png)
-[![4067](../assets/images/cd4067.png)](../assets/images/cd4067.png)
+[![4051](/assets/images/cd4051.png)](/assets/images/cd4051.png)
+[![4067](/assets/images/cd4067.png)](/assets/images/cd4067.png)
 
 ### Constant Input
 Sometimes, you may want the console to always see a specific value when it polls your controller. This can be useful for things like the effects potentiometer on Rock Band guitars, where you may want the console to always use a specific effect, even if you don't actually have a effects pot wired up.

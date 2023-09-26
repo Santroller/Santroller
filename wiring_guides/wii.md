@@ -10,12 +10,12 @@ sort: 5
   * I know some people use the SW-520D (which is a ball tilt switch), I myself just use some mercury tilt sensors that my local electronics shop sells.
   * Make sure that you get a basic tilt sensor and not one with additional electronics, for example, this type of sensor is correct 
     
-  [![Basic](../assets/images/s-l500-basic.jpg)](../assets/images/s-l500.jpg)
+  [![Basic](/assets/images/s-l500-basic.jpg)](/assets/images/s-l500.jpg)
 
 ```danger
   You do not want to get this type of sensor, as it does not work.
     
-  [![Basic](../assets/images/s-l500.png)](../assets/images/s-l500.png)
+  [![Basic](/assets/images/s-l500.png)](/assets/images/s-l500.png)
 ```
 ```danger
 For anyone wanting to use tilt, the only supported method is using digital tilt switches. Support for the MPU-6050 and analog tilt sensors is now deprecated and will be removed from the firmware in a future update. They are causing a lot of issues for porting this code between various microcontrollers, and take up too much space in the firmware.
@@ -33,13 +33,13 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
 ```
 
 ## The finished product
-[![Finished adaptor](../assets/images/adaptor.jpg)](../assets/images/adaptor.jpg)
+[![Finished adaptor](/assets/images/adaptor.jpg)](/assets/images/adaptor.jpg)
 
 ## Steps
 1. Connect wires between the SDA and SCL pins on your breakout board / wii extension cable. 
 Refer to the following image for the pinout of a Wii Extension connector. For a Pi Pico, you can pick pins but only specific ones work, so open the configuration tool and choose pins that way.
 
-    [![Finished adaptor](../assets/images/wii-ext.jpg)](../assets/images/wii-ext.jpg)
+    [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
    
    | Microcontroller | SDA | SCL |
    | --- | --- | --- |

@@ -15,4 +15,4 @@
 | %2f skip        | 0%           |
 | %3f skip        | 0%           |
 
-[![Graph](../../assets/images/results/ardwiino_direct_micro_5v.png){: class="big-image" }](../../assets/images/results/ardwiino_direct_micro_5v.png)
+[![Graph](/assets/images/results/ardwiino_direct_micro_5v.png){: class="big-image" }](/assets/images/results/ardwiino_direct_micro_5v.png)

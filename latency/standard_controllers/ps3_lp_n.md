@@ -13,4 +13,4 @@
 | %2f skip   | 18%      |
 | %3f skip   | 4%       |
 
-[![Graph](../../assets/images/results/ps3_lp_n.png){: class="big-image" }](../../assets/images/results/ps3_lp_n.png)
+[![Graph](/assets/images/results/ps3_lp_n.png){: class="big-image" }](/assets/images/results/ps3_lp_n.png)

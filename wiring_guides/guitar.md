@@ -17,7 +17,7 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
   ```danger
   You do not want to get this type of sensor, as it does not work. If you do accidentally get one of these you *might* have luck just cutting the sensor from the top of the board and using it, but your mileage may vary doing that, as I have seen it work for some people and not for others.
         
-  [![Basic](../assets/images/s-l500.png)](../assets/images/s-l500.png)
+  [![Basic](/assets/images/s-l500.png)](/assets/images/s-l500.png)
   ```
 * Some Wire
 * Soldering Iron
@@ -27,7 +27,7 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
 * Heatshrink
 
 ## The finished product
-[![Finished adaptor](../assets/images/direct.jpg)](../assets/images/direct.jpg)
+[![Finished adaptor](/assets/images/direct.jpg)](/assets/images/direct.jpg)
 
 ## Wiring Steps
 For every function of the guitar, you will follow these same 3 basic steps. More details for specific functions will be given below.
@@ -39,9 +39,9 @@ Once you have successfully modded one guitar (or even during your first) you wil
 
 ## Start and Select
 
-[![360startselect](../assets/images/360startselect.jpg)](../assets/images/360startselect.jpg)
+[![360startselect](/assets/images/360startselect.jpg)](/assets/images/360startselect.jpg)
 
-[![wiilpstartselect](../assets/images/wiiLPstartselect.jpg)](../assets/images/wiiLPstartselect.jpg)
+[![wiilpstartselect](/assets/images/wiiLPstartselect.jpg)](/assets/images/wiiLPstartselect.jpg)
 
 1. If it is not labeled on the motherboard, you need to figure out which pin (or pins) is GND. If you remove the membrane, you will be able to see which pin connects to both start and select by following the traces - that pin is GND. (if there are multiple "grounds" they may be labeled as col, or column) Marking GND with a sharpie or using a differently colored wire is reccomended. If you are still unsure, the multimeter can help you confirm if you have the wires correct, as it will beep when you hit a button and have the correct wires. There are examples of the 360 WT and WiiLP above.
 2. Connect the common ground to a GND on the microcontroller. If there are two ground wires, you can twist them together and put them in one ground pin on the microcontroller. This will sometimes be necessary when using a microcontroller that has a smaller number of pins.
@@ -60,7 +60,7 @@ Note that with the Pi Pico, you can instead just hook these inputs up over USB, 
 
 If you are working on a controller with only "2" pins as shown below, you will need to desolder the bridged pins and run 3 wires yourself as noted above for the whammy to work best with the configurator.
 
-[![2pinwhammy](../assets/images/2wirewhammy.jpg)](../assets/images/2wirewhammy.jpg)
+[![2pinwhammy](/assets/images/2wirewhammy.jpg)](/assets/images/2wirewhammy.jpg)
 
 ## Digital Tilt
 1. Connect one pin of the first tilt sensor to ground
@@ -72,13 +72,13 @@ If you are working on a controller with only "2" pins as shown below, you will n
 The world tour slider bar originally used a single wire to connect between the bar and the main PCB. This caused a lot of problems, as the format of data being sent over this wire is not optimal for speed, and it limits the combinations of frets we can read from the slider bar. To combat this, we bypass the chip generating this data, and opt to build it outselves from the raw slider pads. This does use more pins though, so you may find that it is difficult to reuse the original neck connector. If you have problems doing this, you can use the [peripheral feature](https://santroller.tangentmc.net/wiring_guides/peripheral.html) to put a second Pi Pico in the neck, which will allow for putting all neck inputs over a couple of wires, saving pins.
 1. Connect the following pins using the image below as a guide
 
-   [![World tour slider pins](../assets/images/wt_pins.png)](../assets/images/wt_pins.png)
+   [![World tour slider pins](/assets/images/wt_pins.png)](/assets/images/wt_pins.png)
    1. Connect S0, S1 and S2 to seperate digital pins on the Pi Pico. You will need to solder directly to the chip on the PCB.
    2. Connect the analog pin to a analog pin on the Pi Pico.  You will need to solder directly to the chip on the PCB.
    3. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
 2. Cut the traces indicated with red lines in the following image.
 
-   [![World tour slider traces](../assets/images/wt_traces.png)](../assets/images/wt_traces.png) 
+   [![World tour slider traces](/assets/images/wt_traces.png)](/assets/images/wt_traces.png) 
 
 ## GH5 guitar neck
 1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
@@ -88,7 +88,7 @@ The world tour slider bar originally used a single wire to connect between the b
    * For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
 
 ## Crazy guitar neck
-[![crazy guitar](../assets/images/crazy-guitar.png)](../assets/images/crazy-guitar.png)
+[![crazy guitar](/assets/images/crazy-guitar.png)](/assets/images/crazy-guitar.png)
 1. Hook up VCC, GND, SCL and SDA pins to your microcontroller. Note that this is one of the few I2C devices that works perfectly fine on 5v.
    * For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
    * For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
@@ -98,11 +98,11 @@ The world tour slider bar originally used a single wire to connect between the b
 ## Joystick (or DPad)
 For d-pads that are integrated with the main board it is advised you skip wiring the dpad as you have to solder directly to the contacts and run wires accross the board. You will either be able to use your keyboard for these buttons, or they really won't really be needed as the games were designed to be controlled with the guitar alone. Below is an example of what this can look like, and why it is advisable to skip.
 
-[![curseddpad](../assets/images/curseddpad.jpg)](../assets/images/curseddpad.jpg)
+[![curseddpad](/assets/images/curseddpad.jpg)](/assets/images/curseddpad.jpg)
 
 For guitars with a DPad that is seperate, it will be much easier to wire as you can follow the traces and wire it to the pins like you would for start/select. 
 
-[![wtdpad](../assets/images/wtdpad.jpg)](../assets/images/wtdpad.jpg)
+[![wtdpad](/assets/images/wtdpad.jpg)](/assets/images/wtdpad.jpg)
 
    1. Find ground. There will be a single common ground and a pin for each direction or multiple "grounds" depending on the model. (some may once again be labeled as col or column) Just like for start and select, you will need to follow the traces to figure out which pin is GND. Mark GND, then connect it to a GND pin on the microcontroller. If there are more than one ground wires, you can twist them together and combine them again.
    2. Up and down on the dpad MUST be connected to the same pins you will be using for strum. You will want to twist those wires together and solder them to the same pin. You may want to wait until you are working on the strum to connect these pins.
@@ -125,7 +125,7 @@ The Strum switches are similar to the start and select buttons, they will be thr
 
 On others, the Strum switches are a part of the main PCB, and you will need to solder directly to the strum switches, which should poke out the back of the main PCB. For example, on a wiitar, you will see the following: 
 
-[![Wii Strum PCB](../assets/images/wii-strum.jpg)](../assets/images/wii-strum.jpg)
+[![Wii Strum PCB](/assets/images/wii-strum.jpg)](/assets/images/wii-strum.jpg)
 
 In this case, there are two grounds that will be shorted together, so with the multimeter, you should be able to work out which pins are ground, by testing a pin from each switch, and working out which ones are shorted together by it beeping.
 
@@ -133,6 +133,6 @@ Note that you can also choose to replace the original PCB with a 3D printed stru
 
 When the strums are part of the main board you will need to cut the traces or you will have phantom inputs as your signal will still be traveling through the motherboard. (this is when your strum switches constantly input and you likely cannot autobind inputs in the configurator) You will need to take a knife and cut any traces that connect to the strum switches. In the picture below, the person did not cut many traces as they knew which ones were causing phantom inputs. Cutting extra traces is not going to affect your arduino guitar, as none of the traces are used except the one that connects the two grounds of the switches together. Even if you accidentally cut that trace, you will be able to connect the grounds again with a little extra wire.
 
-[![Trace Cuts on PCB](../assets/images/trace%20cuts.jpg)](../assets/images/trace%20cuts.jpg)
+[![Trace Cuts on PCB](/assets/images/trace%20cuts.jpg)](/assets/images/trace%20cuts.jpg)
 
 Now that you have wired your guitar, go [configure it](https://santroller.tangentmc.net/tool/using.html).

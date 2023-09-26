@@ -13,4 +13,4 @@
 | %2f skip   | 0%             |
 | %3f skip   | 0%             |
 
-[![Graph](../../assets/images/results/xplorer_n.png){: class="big-image" }](../../assets/images/results/xplorer_n.png)
+[![Graph](/assets/images/results/xplorer_n.png){: class="big-image" }](/assets/images/results/xplorer_n.png)

@@ -15,4 +15,4 @@
 | %2f skip        | 0%              |
 | %3f skip        | 0%              |
 
-[![Graph](../../assets/images/results/gh5_neck_direct_santroller.png){: class="big-image" }](../../assets/images/results/gh5_neck_direct_santroller.png)
+[![Graph](/assets/images/results/gh5_neck_direct_santroller.png){: class="big-image" }](/assets/images/results/gh5_neck_direct_santroller.png)

@@ -1,4 +1,7 @@
-# GH5 Guitar connected to a Pi Pico running the new firmware
+---
+sort: 1
+---
+# New firmware
 
 | Metric          | Value                  |
 | --------------- | ---------------------- |
@@ -15,4 +18,4 @@
 | %2f skip        | 0%                     |
 | %3f skip        | 0%                     |
 
-[![Graph](../../assets/images/results/santroller_gh5_fret_n.png){: class="big-image" }](../../assets/images/results/santroller_gh5_fret_n.png)
+[![Graph](/assets/images/results/santroller_gh5_fret_n.png){: class="big-image" }](/assets/images/results/santroller_gh5_fret_n.png)

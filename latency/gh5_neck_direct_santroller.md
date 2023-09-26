@@ -3,15 +3,15 @@
 
     | Metric   | Value     |
     | -------- | --------- |
-    | poll rate | 1ms      |
-    | min      | 0.79     |
-    | max      | 6.41     |
-    | avg      | 3.55     |
-    | stddev   | 1.28  |
-    | %on time | 79 |
-    | %1f skip | 21  |
-    | %2f skip | 0  |
-    | %3f skip | 0  |
+    | poll rate | 1 ms      |
+    | min      | 0.79 ms     |
+    | max      | 6.41 ms     |
+    | avg      | 3.55 ms     |
+    | stddev   | 1.28 ms  |
+    | %on time | 79% |
+    | %1f skip | 21%  |
+    | %2f skip | 0%  |
+    | %3f skip | 0%  |
 
     [![Graph](../../assets/images/results/gh5_neck_direct_santroller.png){: class="big-image" }](../../assets/images/results/gh5_neck_direct_santroller.png)
 

@@ -3,15 +3,15 @@
 
     | Metric   | Value     |
     | -------- | --------- |
-    | poll rate | 1ms      |
-    | min      | 3.53     |
-    | max      | 12.42     |
-    | avg      | 8.06     |
-    | stddev   | 2.23  |
-    | %on time | 52 |
-    | %1f skip | 48  |
-    | %2f skip | 0  |
-    | %3f skip | 0  |
+    | poll rate | 1 ms      |
+    | min      | 3.53 ms     |
+    | max      | 12.42 ms     |
+    | avg      | 8.06 ms     |
+    | stddev   | 2.23 ms  |
+    | %on time | 52% |
+    | %1f skip | 48%  |
+    | %2f skip | 0%  |
+    | %3f skip | 0%  |
 
     [![Graph](../../assets/images/results/santroller_bt_direct.png){: class="big-image" }](../../assets/images/results/santroller_bt_direct.png)
 

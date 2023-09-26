@@ -5,11 +5,11 @@
 | firmware        | old                    |
 | microcontroller | Pro Micro 3.3v         |
 | controller      | Wii Classic Controller |
-| poll rate       | 1ms                    |
-| min             | 1.47                   |
-| max             | 8.72                   |
-| avg             | 3.8                    |
-| stddev          | 1.68                   |
+| poll rate       | 1 ms                   |
+| min             | 1.47 ms                |
+| max             | 8.72 ms                |
+| avg             | 3.8 ms                 |
+| stddev          | 1.68 ms                |
 | %on time        | 78                     |
 | %1f skip        | 22                     |
 | %2f skip        | 0                      |

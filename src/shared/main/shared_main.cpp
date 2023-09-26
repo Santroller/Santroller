@@ -1482,6 +1482,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
     }
+
+    TICK_RESET
     // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
     if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
@@ -1803,6 +1805,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 #endif
 
+    TICK_RESET
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         lastDebounce = micros();
         for (int i = 0; i < DIGITAL_COUNT; i++) {
@@ -1847,7 +1850,6 @@ void tick(void) {
         tick_inputs(NULL, NULL, consoleType);
     }
 #endif
-    TICK_RESET
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         lastDebounce = micros();
         for (int i = 0; i < DIGITAL_COUNT; i++) {

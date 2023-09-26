@@ -35,6 +35,13 @@ typedef struct
     uint16_t unk2;
     uint16_t remainingBuffer;
 } __attribute__((packed)) Gip_Ack_t;
+typedef struct {
+    GipHeader_t Header;
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
+} __attribute__((packed)) XboxOneInputHeader_Data_t;
 typedef struct
 {
     GipHeader_t Header;

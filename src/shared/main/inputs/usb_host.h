@@ -37,17 +37,10 @@ for (int i = 0; i < device_count; i++) {
             // Xbox one GHL guitars actually end up using PS3 reports if you poke them.
             console_type = PS3;
             data = (uint8_t *)&((XboxOneGHLGuitar_Data_t *)data)->report;
-        } else if (header->command == GIP_VIRTUAL_KEYCODE) {
-            GipKeystroke_t *keystroke = (GipKeystroke_t *)data;
-            if (keystroke->keycode == GIP_VKEY_LEFT_WIN) {
-                usbHostXboxOneGuide = keystroke->pressed;
-            }
-            continue;
         } else if (header->command != GIP_INPUT_REPORT) {
             // Not input data, continue
             continue;
         }
-        usb_host_data.guide |= usbHostXboxOneGuide;
     }
     switch (console_type) {
         case PS3: {
@@ -740,6 +733,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.kick2 |= report->rightShoulder;
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
                     if (report->greenVelocity) {
                         usb_host_data.green = true;
                         usb_host_data.greenVelocity = report->greenVelocity << 4;

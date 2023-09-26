@@ -265,6 +265,7 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
 }
+bool wasXb1Input = false;
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (dev_addr == xone_dev_addr) {
         receive_report_from_controller(report, len);
@@ -273,9 +274,18 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
         if (usb_host_devices[i].type.dev_addr == dev_addr) {
             if (usb_host_devices[i].type.console_type == XBOXONE) {
                 GipHeader_t *header = (GipHeader_t *)report;
+                if (header->command == GIP_VIRTUAL_KEYCODE) {
+                    GipKeystroke_t *keystroke = (GipKeystroke_t *)report;
+                    if (wasXb1Input) {
+                        XboxOneInputHeader_Data_t *gamepad = (XboxOneInputHeader_Data_t *)(&(usb_host_devices[i].report));
+                        gamepad->guide = keystroke->pressed;
+                    }
+                    return;
+                }
                 if (header->command != GHL_HID_REPORT && header->command != GIP_INPUT_REPORT) {
                     return;
                 }
+                wasXb1Input = header->command == GIP_INPUT_REPORT;
             }
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;

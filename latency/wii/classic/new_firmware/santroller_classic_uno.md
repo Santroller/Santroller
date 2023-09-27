@@ -6,12 +6,12 @@
 | microcontroller | Arduino Uno            |
 | controller      | Wii Classic Controller |
 | poll rate       | 1 ms                   |
-| min             | 0.48 ms                |
-| max             | 3.53 ms                |
-| avg             | 1.5 ms                 |
-| stddev          | 0.58 ms                |
-| %on time        | 92%                    |
-| %1f skip        | 8%                     |
+| min             | 1.26 ms                |
+| max             | 2.58 ms                |
+| avg             | 1.81 ms                |
+| stddev          | 0.27 ms                |
+| %on time        | 90%                    |
+| %1f skip        | 10%                    |
 | %2f skip        | 0%                     |
 | %3f skip        | 0%                     |
 

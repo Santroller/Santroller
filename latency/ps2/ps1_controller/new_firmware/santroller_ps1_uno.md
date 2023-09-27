@@ -6,12 +6,12 @@
 | microcontroller | Arduino Uno    |
 | controller      | PS1 Controller |
 | poll rate       | 1 ms           |
-| min             | 2.87 ms        |
-| max             | 4.98 ms        |
-| avg             | 3.41 ms        |
-| stddev          | 0.44 ms        |
-| %on time        | 80%            |
-| %1f skip        | 20%            |
+| min             | 1.93 ms        |
+| max             | 3.07 ms        |
+| avg             | 2.43 ms        |
+| stddev          | 0.34 ms        |
+| %on time        | 86%            |
+| %1f skip        | 14%            |
 | %2f skip        | 0%             |
 | %3f skip        | 0%             |
 

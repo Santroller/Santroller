@@ -1,6 +1,7 @@
 ---
 sort: 1
 ---
+
 # New firmware
 
 | Metric          | Value                 |
@@ -9,10 +10,10 @@ sort: 1
 | microcontroller | Pi Pico               |
 | controller      | Wii World Tour Guitar |
 | poll rate       | 1 ms                  |
-| min             | 0.54 ms               |
-| max             | 3.16 ms               |
-| avg             | 1.48 ms               |
-| stddev          | 0.45 ms               |
+| min             | 0.58 ms               |
+| max             | 2.57 ms               |
+| avg             | 1.43 ms               |
+| stddev          | 0.39 ms               |
 | %on time        | 92%                   |
 | %1f skip        | 8%                    |
 | %2f skip        | 0%                    |

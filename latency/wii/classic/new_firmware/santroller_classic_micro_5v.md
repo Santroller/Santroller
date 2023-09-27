@@ -6,10 +6,10 @@
 | microcontroller | Sparkfun Pro Micro 5V  |
 | controller      | Wii Classic Controller |
 | poll rate       | 1 ms                   |
-| min             | 0.48 ms                |
-| max             | 3.22 ms                |
-| avg             | 1.41 ms                |
-| stddev          | 0.55 ms                |
+| min             | 0.53 ms                |
+| max             | 2.94 ms                |
+| avg             | 1.5 ms                 |
+| stddev          | 0.5 ms                 |
 | %on time        | 92%                    |
 | %1f skip        | 8%                     |
 | %2f skip        | 0%                     |

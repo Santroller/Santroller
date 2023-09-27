@@ -2,16 +2,15 @@
 
 | Metric          | Value       |
 | --------------- | ----------- |
-| firmware        | old         |
+| firmware        | new         |
 | microcontroller | Arduino Uno |
 | controller      | direct      |
-| poll rate       | 1 ms        |
-| min             | 0.53 ms     |
-| max             | 2.49 ms     |
-| avg             | 1.16 ms     |
-| stddev          | 0.49 ms     |
-| %on time        | 94%         |
-| %1f skip        | 6%          |
+| min             | 0.48 ms     |
+| max             | 1.3 ms      |
+| avg             | 0.8 ms      |
+| stddev          | 0.25 ms     |
+| %on time        | 96%         |
+| %1f skip        | 4%          |
 | %2f skip        | 0%          |
 | %3f skip        | 0%          |
 

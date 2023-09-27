@@ -2,7 +2,7 @@
 
 | Metric          | Value   |
 | --------------- | ------- |
-| firmware        | old     |
+| firmware        | new     |
 | microcontroller | Pi Pico |
 | controller      | direct  |
 | poll rate       | 1 ms    |

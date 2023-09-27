@@ -113,10 +113,10 @@ void send_report_to_pc(const void* report, uint8_t len) {
     previous_data_len = len;
     has_previous_data = true;
 }
+long lastUnoTick = 0;
 void loop() {
     // Wait for a packet from the 8u2/16u2.
     if (!ready) {
-        tick();
         return;
     }
     ready = false;
@@ -167,6 +167,7 @@ void loop() {
             uint16_t wLength = ctr->wLength;
             // 8u2/16u2 wants us to handle a control request.
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, dt->data);
+            tick();
             if (len > wLength) len = wLength;
             header->len = len;
             break;

@@ -39,7 +39,9 @@ void initWiiExt(void) {
     wiiControllerType = readExtID();
     if (wiiControllerType == WII_NOT_INITIALISED) {
         // Send packets needed to initialise a controller
-        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xF0, 0x55);
+        if (!twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xF0, 0x55)) {
+            return;
+        }
         delayMicroseconds(10);
         twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xFB, 0x00);
         delayMicroseconds(10);

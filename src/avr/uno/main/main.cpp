@@ -114,9 +114,9 @@ void send_report_to_pc(const void* report, uint8_t len) {
     has_previous_data = true;
 }
 void loop() {
-    tick();
     // Wait for a packet from the 8u2/16u2.
     if (!ready) {
+        tick();
         return;
     }
     ready = false;
@@ -132,6 +132,7 @@ void loop() {
             break;
         case CONTROLLER_DATA_REQUEST_ID: {
             header->len = 0;
+            tick();
             if (has_previous_data) {
                 has_previous_data = false;
                 memcpy(buf + sizeof(packet_header_t), buf2, previous_data_len);

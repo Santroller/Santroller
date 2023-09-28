@@ -25,6 +25,21 @@ class Context:
     def __init__(self):
         self.meta = ""
 
+def launch_dfu():
+    dev = libusb_package.find(idVendor=0x03eb)
+    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+    command = [0x04, 0x03, 0x00]
+    dev.ctrl_transfer(0x21, 1, 0, 0, command)
+def launch_dfu_no_reset():
+    dev = libusb_package.find(idVendor=0x03eb)
+    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+    command = [0x04, 0x03, 0x01, 0x00, 0x00]
+    dev.ctrl_transfer(0x21, 1, 0, 0, command)
+    # Since the device disconnects after this, it is expected this request will fail
+    try:
+        dev.ctrl_transfer(0x21, 1, 0, 0)
+    except:
+        pass
 
 def post_upload(source, target, env):
     if "arduino_uno_usb" in str(source[0]) or "arduino_mega_2560_usb" in str(source[0]) or "arduino_mega_adk_usb" in str(source[0]):
@@ -46,6 +61,7 @@ def post_upload(source, target, env):
             if dev:
                 new_env = "arduino_mega_adk"
                 break
+        launch_dfu_no_reset()
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
         env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
@@ -53,7 +69,7 @@ def post_upload(source, target, env):
         print(f"Calling {new_env} ({port})")
         subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)
         os.chdir(cwd)
-        env.TouchSerialPort("$UPLOAD_PORT", 2400)
+        # env.TouchSerialPort("$UPLOAD_PORT", 2400)
 
 
 env.AddPostAction("upload", post_upload)

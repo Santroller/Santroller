@@ -4,10 +4,10 @@ sort: 4
 
 # Wii GH5 Guitar
 
-| Metric          | Value   | Value            | Value   |
+| Metric          |         |                  |         |
 | --------------- | ------- | ---------------- | ------- |
-| firmware        | new     |                  | old     |
 | microcontroller | Pi Pico | raphnet wusbmote | Pi Pico |
+| firmware        | new     |                  | old     |
 | controller      | Strum   | Strum            | Strum   |
 | poll rate       | 1 ms    | 1 ms             | 1 ms    |
 | min             | 0.83 ms | 0.76 ms          | 0.54 ms |
@@ -21,8 +21,8 @@ sort: 4
 
 | Metric          | Value    | Value            | Value   |
 | --------------- | -------- | ---------------- | ------- |
-| firmware        | new      |                  | old     |
 | microcontroller | Pi Pico  | raphnet wusbmote | Pi Pico |
+| firmware        | new      |                  | old     |
 | controller      | Frets    | Frets            | Frets   |
 | poll rate       | 1 ms     | 1 ms             | 1 ms    |
 | min             | 2.6 ms   | 2.77 ms          | 3.49 ms |

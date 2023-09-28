@@ -6,8 +6,8 @@ sort: 2
 
 | Metric          | Value          | Value            | Value          |
 | --------------- | -------------- | ---------------- | -------------- |
-| firmware        | new            |                  | old            |
 | microcontroller | Pi Pico        | raphnet wusbmote | Pi Pico        |
+| firmware        | new            |                  | old            |
 | poll rate       | 1 ms           | 1 ms             | 1 ms           |
 | min             | 0.48 ms        | 0.51 ms          | 0.55 ms        |
 | max             | 2.17 ms        | 2.41 ms          | 3.38 ms        |

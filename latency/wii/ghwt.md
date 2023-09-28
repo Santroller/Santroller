@@ -4,10 +4,10 @@ sort: 3
 
 # Wii GHWT Guitar
 
-| Metric          | Value   | Value            | Value   |
+| Metric          |         |                  |         |
 | --------------- | ------- | ---------------- | ------- |
-| firmware        | new     |                  | old     |
 | microcontroller | Pi Pico | raphnet wusbmote | Pi Pico |
+| firmware        | new     |                  | old     |
 | poll rate       | 1 ms    | 1 ms             | 1 ms    |
 | min             | 0.58 ms | 0.76 ms          | 0.8 ms  |
 | max             | 2.57 ms | 2.71 ms          | 3.82 ms |

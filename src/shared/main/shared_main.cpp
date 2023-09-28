@@ -1309,7 +1309,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
-#ifdef INPUT_USB_HOST
+#if USB_HOST_STACK
     if (output_console_type == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
@@ -1501,6 +1501,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->reportCounter = ps4_sequence_number++;
     }
 #endif
+#if USB_HOST_STACK
 #if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
     if (updateSequence) {
         report_sequence_number++;
@@ -1513,6 +1514,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             hid_sequence_number = 1;
         }
     }
+#endif
 #endif
 #endif
     return size;
@@ -1579,7 +1581,7 @@ bool tick_usb(void) {
     }
 #endif
 
-#ifdef INPUT_USB_HOST
+#if USB_HOST_STACK
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();

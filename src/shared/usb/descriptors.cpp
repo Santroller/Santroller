@@ -454,7 +454,7 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 };
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
-                                
+
 // It appears for ps5 arcade stick compat, we can set byte 5 to 0x07
 const PROGMEM uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x4f, 0x00, 0x2c, 0x56,
@@ -708,10 +708,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         seen_windows_xb1 = true;
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
+#if USB_HOST_STACK
         if (consoleType == XBOXONE) {
             memcpy_P(requestBuffer, &DevCompatIDsOne, sizeof(DevCompatIDsOne));
             return sizeof(DevCompatIDsOne);
-        } else if (consoleType == WINDOWS || consoleType == XBOX360) {
+        } else
+#endif
+            if (consoleType == WINDOWS || consoleType == XBOX360) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
@@ -763,7 +766,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             set_console_type(XBOXONE);
         }
     }
-#else 
+#else
     if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         set_console_type(WINDOWS);
     }
@@ -783,13 +786,17 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == XBOX360) {
                 dev->idVendor = xbox_360_vid;
                 dev->idProduct = xbox_360_pid;
-            } else if (consoleType == XBOXONE) {
+            }
+#if USB_HOST_STACK
+            else if (consoleType == XBOXONE) {
                 dev->idVendor = XBOX_ONE_CONTROLLER_VID;
                 dev->idProduct = XBOX_ONE_CONTROLLER_PID;
                 dev->bDeviceClass = 0xff;
                 dev->bDeviceSubClass = 0x47;
                 dev->bDeviceProtocol = 0xd0;
-            } else if (consoleType == PS4) {
+            }
+#endif
+            else if (consoleType == PS4) {
 #if DEVICE_TYPE_IS_LIVE_GUITAR
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS4_GHLIVE_DONGLE_PID;
@@ -823,10 +830,14 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else
+
+#if USB_HOST_STACK
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
-            } else if (consoleType == WINDOWS || consoleType == XBOX360) {
+            } else
+#endif
+                if (consoleType == WINDOWS || consoleType == XBOX360) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
             } else if (consoleType == MIDI) {

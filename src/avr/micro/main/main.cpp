@@ -110,10 +110,6 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     if (consoleType == WINDOWS || consoleType == XBOX360) {
         epsize = 0x18;
     }
-    if (consoleType == XBOXONE) {
-        epsize = 0x40;
-        epsizeOut = 0x40;
-    }
     if (consoleType == MIDI) {
         type = EP_TYPE_BULK;
     }

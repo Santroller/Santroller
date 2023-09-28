@@ -1,29 +1,32 @@
 <div>
     <canvas id="myChart"></canvas>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="chart" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('myChart');
+    var script = document.querySelector('#chart');
+    script.addEventListener('load', function () {
+        const ctx = document.getElementById('myChart');
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [{
-                fill: 'origin',
-                label: '# of Votes',
-                data: [{x: 1, y: 2}, {x: 6, y: 2}],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                },
-                x: {
-                    beginAtZero: true
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    fill: 'origin',
+                    label: '# of Votes',
+                    data: [{ x: 1, y: 2 }, { x: 6, y: 2 }],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
+        });
     });
 </script>

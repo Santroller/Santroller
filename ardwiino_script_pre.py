@@ -115,14 +115,14 @@ for type in ["arduino_mega_2560", "arduino_mega_adk", "arduino_uno"]:
 env.AddCustomTarget(
     name=f"arduino_uno_clean",
     dependencies=None,
-    actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega328p -c arduino -e'],
+    actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega328p -P $UPLOAD_PORT -c arduino -e'],
     title=None,
     description=None
 )
 env.AddCustomTarget(
     name=f"arduino_mega_clean",
     dependencies=None,
-    actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega2560 -c arduino -e'],
+    actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega2560 -P $UPLOAD_PORT -c arduino -e'],
     title=None,
     description=None
 )

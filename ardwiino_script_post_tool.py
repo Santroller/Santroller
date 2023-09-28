@@ -45,6 +45,7 @@ def post_upload(source, target, env):
     if "arduino_uno_usb" in str(source[0]) or "arduino_mega_2560_usb" in str(source[0]) or "arduino_mega_adk_usb" in str(source[0]):
         before_ports = get_serial_ports()
         print("searching for uno")
+        launch_dfu_no_reset()
         new_env = None
         while not new_env:
             if me.parent is None:
@@ -61,7 +62,6 @@ def post_upload(source, target, env):
             if dev:
                 new_env = "arduino_mega_adk"
                 break
-        launch_dfu_no_reset()
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
         env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))

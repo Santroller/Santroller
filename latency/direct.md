@@ -4,8 +4,8 @@ sort: 1
 
 # Direct
 
-| Metric          |    |                  |                    |        |    |                  |                    |        |
-| --------------- | ------- | --------------------- | ----------------------- | ----------- | ------- | --------------------- | ----------------------- | ----------- |
+| Results         |         |                       |                         |             |         |                       |                         |             |
+| :-------------- | ------- | --------------------- | ----------------------- | ----------- | ------- | --------------------- | ----------------------- | ----------- |
 | firmware        | new     | new                   | new                     | new         | old     | old                   | old                     | old         |
 | microcontroller | Pi Pico | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno | Pi Pico | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno |
 | controller      | direct  | direct                | direct                  | direct      | direct  | direct                | direct                  | direct      |

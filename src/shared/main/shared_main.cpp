@@ -1579,9 +1579,6 @@ bool tick_usb(void) {
         send_report_to_controller(get_device_address_for(XBOXONE), data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
-#endif
-
-#if USB_HOST_STACK
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();

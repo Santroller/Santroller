@@ -1,0 +1,21 @@
+---
+sort: 2
+---
+
+# Wii GH3 Guitar
+
+| Metric          | Value          | Value            | Value          |
+| --------------- | -------------- | ---------------- | -------------- |
+| firmware        | new            |                  | old            |
+| microcontroller | Pi Pico        | raphnet wusbmote | Pi Pico        |
+| poll rate       | 1 ms           | 1 ms             | 1 ms           |
+| min             | 0.48 ms        | 0.51 ms          | 0.55 ms        |
+| max             | 2.17 ms        | 2.41 ms          | 3.38 ms        |
+| avg             | 1.1 ms         | 1.41 ms          | 2.06 ms        |
+| stddev          | 0.38 ms        | 0.43 ms          | 0.66 ms        |
+| %on time        | 94%            | 92%              | 88%            |
+| %1f skip        | 6%             | 8%               | 12%            |
+| %2f skip        | 0%             | 0%               | 0%             |
+| %3f skip        | 0%             | 0%               | 0%             |
+
+{% include gh3.html %}

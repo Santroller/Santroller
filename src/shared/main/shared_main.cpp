@@ -1309,6 +1309,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
+#ifdef INPUT_USB_HOST
     if (output_console_type == XBOXONE) {
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
@@ -1348,6 +1349,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             updateHIDSequence = true;
         }
     }
+#endif
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         int16_t dj_temp;
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
@@ -1526,7 +1528,7 @@ bool tick_bluetooth(void) {
 }
 #endif
 bool windows_in_hid = false;
-long millis_at_boot = 0;
+unsigned long millis_at_boot = 0;
 bool tick_usb(void) {
 #ifdef CONFIGURABLE_BLOBS
     if (POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
@@ -1576,6 +1578,8 @@ bool tick_usb(void) {
         data_from_console_size = 0;
     }
 #endif
+
+#ifdef INPUT_USB_HOST
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
@@ -1583,6 +1587,7 @@ bool tick_usb(void) {
             return 0;
         }
     }
+#endif
 #ifndef BLUETOOTH_RX
     if (!size) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);

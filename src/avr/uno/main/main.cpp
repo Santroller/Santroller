@@ -5,6 +5,7 @@
 #include <util/delay.h>
 
 #include "Usb.h"
+#include "commands.h"
 #include "config.h"
 #include "defines.h"
 #include "descriptors.h"
@@ -164,9 +165,12 @@ void loop() {
         case CONTROL_REQUEST_ID: {
             // Wlength will be overwritten in descriptorRequest so cache it
             uint16_t wLength = ctr->wLength;
+            // Some of our commands really need up to date data, so do another poll.
+            if (ctr->request >= COMMAND_REBOOT && ctr->request < MAX) {
+                tick();
+            }
             // 8u2/16u2 wants us to handle a control request.
             uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, dt->data);
-            tick();
             if (len > wLength) len = wLength;
             header->len = len;
             break;

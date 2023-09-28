@@ -407,6 +407,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     handle_keyboard_leds(data[0]);
 #endif
     uint8_t id = data[0];
+#ifdef INPUT_USB_HOST
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
     if (consoleType == XBOXONE) {
@@ -446,7 +447,9 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 handle_rumble(rumble->leftMotor, rumble->rightMotor);
             }
         }
-    } else if (consoleType == XBOX360 || consoleType == WINDOWS) {
+    } else
+#endif
+        if (consoleType == XBOX360 || consoleType == WINDOWS) {
         if (id == XBOX_LED_ID) {
             uint8_t led = data[2];
             uint8_t player = xbox_players[led];

@@ -31,15 +31,26 @@ def launch_dfu():
     command = [0x04, 0x03, 0x00]
     dev.ctrl_transfer(0x21, 1, 0, 0, command)
 def launch_dfu_no_reset():
-    dev = libusb_package.find(idVendor=0x03eb)
-    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
-    command = [0x04, 0x03, 0x01, 0x00, 0x00]
-    dev.ctrl_transfer(0x21, 1, 0, 0, command)
-    # Since the device disconnects after this, it is expected this request will fail
-    try:
-        dev.ctrl_transfer(0x21, 1, 0, 0)
-    except:
-        pass
+    print(f"Jumping out of dfu")
+    if os.name == 'nt':
+        target = "atmega16u2"
+        dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
+        if dev:
+            target = "at90usb82"
+        cwd = os.getcwd()
+        os.chdir(env["PROJECT_CORE_DIR"])
+        subprocess.run(["dfu-programmer", target, "launch", "--no-reset"], stderr=subprocess.STDOUT)
+        os.chdir(cwd)
+    else:
+        dev = libusb_package.find(idVendor=0x03eb)
+        dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+        command = [0x04, 0x03, 0x01, 0x00, 0x00]
+        dev.ctrl_transfer(0x21, 1, 0, 0, command)
+        # Since the device disconnects after this, it is expected this request will fail
+        try:
+            dev.ctrl_transfer(0x21, 1, 0, 0)
+        except:
+            pass
 
 def post_upload(source, target, env):
     if "arduino_uno_usb" in str(source[0]) or "arduino_mega_2560_usb" in str(source[0]) or "arduino_mega_adk_usb" in str(source[0]):

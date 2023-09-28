@@ -19,4 +19,5 @@ sort: 1
 | %2f skip        | 0%      | 0%                    | 0%                      | 0%          | 0%      | 0%                    | 0%                      | 0%          |
 | %3f skip        | 0%      | 0%                    | 0%                      | 0%          | 0%      | 0%                    | 0%                      | 0%          |
 
-[![Graph](/assets/images/results/direct.png)](/assets/images/results/direct.png)
+<!-- [![Graph](/assets/images/results/direct.png)](/assets/images/results/direct.png) -->
+{% include direct.html %}

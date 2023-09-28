@@ -26,10 +26,20 @@ class Context:
         self.meta = ""
 
 def launch_dfu():
-    dev = libusb_package.find(idVendor=0x03eb)
-    dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
-    command = [0x04, 0x03, 0x00]
-    dev.ctrl_transfer(0x21, 1, 0, 0, command)
+    if os.name == 'nt':
+        target = "atmega16u2"
+        dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
+        if dev:
+            target = "at90usb82"
+        cwd = os.getcwd()
+        os.chdir(env["PROJECT_CORE_DIR"])
+        subprocess.run(["dfu-programmer", target, "launch"], stderr=subprocess.STDOUT)
+        os.chdir(cwd)
+    else:
+        dev = libusb_package.find(idVendor=0x03eb)
+        dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
+        command = [0x04, 0x03, 0x00]
+        dev.ctrl_transfer(0x21, 1, 0, 0, command)
 def launch_dfu_no_reset():
     print(f"Jumping out of dfu")
     if os.name == 'nt':
@@ -73,6 +83,12 @@ def post_upload(source, target, env):
             if dev:
                 new_env = "arduino_mega_adk"
                 break
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
+            if dev:
+                launch_dfu()
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2fef)
+            if dev:
+                launch_dfu()
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
         env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))

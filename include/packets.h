@@ -16,7 +16,7 @@
 #define DEVICE_ID 0x79
 
 // Baudrate used for communication between 8u2/16u2 and the 328p/mega2560 when in controller mode
-#define BAUD 2000000
+#define BAUD 1000000
 #define SERIAL_2X_UBBRVAL(Baud) ((((F_CPU / 8) + (Baud / 2)) / (Baud)) - 1)
 
 // States used for the 8u2/16u2 packet receive state machines

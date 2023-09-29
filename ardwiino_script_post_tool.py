@@ -28,6 +28,7 @@ class Context:
 
 def post_upload(source, target, env):
     if env["PIOENV"] in ("arduino_uno", "arduino_mega_2560", "arduino_mega_adk") and env["ENV"].get("PROCEED_WITH_USB",""):
+        print("searching for uno")
         env.TouchSerialPort("$UPLOAD_PORT", 1200)
         while True:
             if me.parent is None:

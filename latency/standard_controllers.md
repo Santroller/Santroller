@@ -3,12 +3,13 @@ sort: 2
 ---
 
 # Commercial Controllers
-Latency of various commercial controllers. 
 
-Measured by connecting the controller to a target device over USB, having that target device toggle a digital input on the controller, and timing how long it takes to receive that input over USB. 
+Latency of various commercial controllers.
 
-| Metric       | Value          | Value              | Value              | Value                | Value                               |
-| ------------ | -------------- | ------------------ | ------------------ | -------------------- | ----------------------------------- |
+Measured by connecting the controller to a target device over USB, having that target device toggle a digital input on the controller, and timing how long it takes to receive that input over USB.
+
+| Results      |                |                    |                    |                      |                                     |
+| :----------- | -------------- | ------------------ | ------------------ | -------------------- | ----------------------------------- |
 | controller   | Xplorer Guitar | Les Paul Guitar    | Rock Band 1 Guitar | Rock Band 1 Drum Kit | Generic "zero-delay" joystick board |
 | connectivity | usb            | wireless (adapter) | wireless (adapter) | usb                  | usb                                 |
 | console      | Xbox 360       | PS3                | PS3                | PS3                  | Generic                             |

@@ -1,13 +1,15 @@
 ---
 sort: 3
 ---
+
 # Bluetooth (between Pi Picos)
-Latency of [bluetooth mode](https://santroller.tangentmc.net/tool/bluetooth.html). 
+
+Latency of [bluetooth mode](https://santroller.tangentmc.net/tool/bluetooth.html).
 
 Measured by building a transmitter and receiver pair, toggling inputs on the transmitter, and timing how long it takes to receive that input over usb via the receiver.
 
-| Metric          | Value     | Value                  | Value          | Value     |
-| --------------- | --------- | ---------------------- | -------------- | --------- |
+| Results         |           |                        |                |           |
+| :-------------- | --------- | ---------------------- | -------------- | --------- |
 | firmware        | new       | new                    | new            | new       |
 | microcontroller | Pi Pico   | Pi Pico                | Pi Pico        | Pi Pico   |
 | communication   | Bluetooth | Bluetooth              | Bluetooth      | Bluetooth |

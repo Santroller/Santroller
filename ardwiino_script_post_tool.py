@@ -63,7 +63,8 @@ def post_upload(source, target, env):
                 break
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
-        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort())
+        env["UPLOAD_PORT"] = None
+        env.AutodetectUploadPort()
         port = env.subst("$UPLOAD_PORT")
         print(f"Calling {new_env} ({port})")
         subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)

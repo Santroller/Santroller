@@ -62,3 +62,8 @@ html {
 .big-image {
     max-height: "400"
 }
+.chart-container {
+    max-width: calc(min(100%, 1400px));
+    max-height: 100%;
+    aspect-ratio: 16/9;
+}

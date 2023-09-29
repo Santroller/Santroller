@@ -12,6 +12,7 @@ import usb.core
 import usb.util
 import os
 import psutil
+import time
 
 REBOOT = 48
 BOOTLOADER = 49
@@ -25,48 +26,24 @@ class Context:
     def __init__(self):
         self.meta = ""
 
-def launch_dfu():
-    if os.name == 'nt':
-        target = "atmega16u2"
-        dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
-        if dev:
-            target = "at90usb82"
-        cwd = os.getcwd()
-        os.chdir(env["PROJECT_CORE_DIR"])
-        subprocess.run(["dfu-programmer", target, "launch"], stderr=subprocess.STDOUT)
-        os.chdir(cwd)
-    else:
-        dev = libusb_package.find(idVendor=0x03eb)
-        dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
-        command = [0x04, 0x03, 0x00]
-        dev.ctrl_transfer(0x21, 1, 0, 0, command)
-def launch_dfu_no_reset():
-    print(f"Jumping out of dfu")
-    if os.name == 'nt':
-        target = "atmega16u2"
-        dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
-        if dev:
-            target = "at90usb82"
-        cwd = os.getcwd()
-        os.chdir(env["PROJECT_CORE_DIR"])
-        subprocess.run(["dfu-programmer", target, "launch", "--no-reset"], stderr=subprocess.STDOUT)
-        os.chdir(cwd)
-    else:
-        dev = libusb_package.find(idVendor=0x03eb)
-        dev.ctrl_transfer(0xA1, 3, 0, 0, 8)
-        command = [0x04, 0x03, 0x01, 0x00, 0x00]
-        dev.ctrl_transfer(0x21, 1, 0, 0, command)
-        # Since the device disconnects after this, it is expected this request will fail
-        try:
-            dev.ctrl_transfer(0x21, 1, 0, 0)
-        except:
-            pass
-
 def post_upload(source, target, env):
-    if "arduino_uno_usb" in str(source[0]) or "arduino_mega_2560_usb" in str(source[0]) or "arduino_mega_adk_usb" in str(source[0]):
-        before_ports = get_serial_ports()
+    if env["PIOENV"] in ("arduino_uno", "arduino_mega_2560", "arduino_mega_adk") and env["ENV"].get("PROCEED_WITH_USB",""):
+        env.TouchSerialPort("$UPLOAD_PORT", 1200)
+        while True:
+            if me.parent is None:
+                exit(1)
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2fef)
+            if dev:
+                break
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
+            if dev:
+                break
+        time.sleep(1)
+        new_env = f'{env["PIOENV"]}_usb'
+        print(f"Calling {new_env}")
+        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
+    if env["PIOENV"] in ("arduino_uno_usb", "arduino_mega_2560_usb", "arduino_mega_adk_usb") and env["ENV"].get("PROCEED_WITH_SERIAL",""):
         print("searching for uno")
-        launch_dfu_no_reset()
         new_env = None
         while not new_env:
             if me.parent is None:
@@ -83,20 +60,14 @@ def post_upload(source, target, env):
             if dev:
                 new_env = "arduino_mega_adk"
                 break
-            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
-            if dev:
-                launch_dfu()
-            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2fef)
-            if dev:
-                launch_dfu()
         cwd = os.getcwd()
         os.chdir(env["PROJECT_DIR"])
-        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
+        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort())
         port = env.subst("$UPLOAD_PORT")
         print(f"Calling {new_env} ({port})")
         subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)
         os.chdir(cwd)
-        # env.TouchSerialPort("$UPLOAD_PORT", 2400)
+        env.TouchSerialPort("$UPLOAD_PORT", 2400)
 
 
 env.AddPostAction("upload", post_upload)

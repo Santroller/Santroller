@@ -1,3 +1,6 @@
+---
+sort: 11
+---
 # DJ Hero Turntable
 
 | Metric              | Value    | Value    |

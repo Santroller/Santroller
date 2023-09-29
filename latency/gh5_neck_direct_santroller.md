@@ -1,3 +1,6 @@
+---
+sort: 13
+---
 # GH5 Neck
 
 | Metric          | Value           |

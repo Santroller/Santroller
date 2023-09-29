@@ -1,5 +1,5 @@
 ---
-sort: 1
+sort: 8
 ---
 
 # PS1 Controller

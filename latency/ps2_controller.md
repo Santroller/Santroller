@@ -1,5 +1,5 @@
 ---
-sort: 2
+sort: 9
 ---
 
 # PS2 DualShock 2 Controller

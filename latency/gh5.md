@@ -9,9 +9,8 @@ This is why there are two seperate sets of data here. Note that the Fret inputs 
 
 Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the Green Fret or Strum Up inputs, and timing how long it takes that signal to reach a target device over USB.
 
-| Results         |         |                  |         |
-| :-------------- | ------- | ---------------- | ------- |
 | microcontroller | Pi Pico | raphnet wusbmote | Pi Pico |
+| :-------------- | :------ | :--------------- | :------ |
 | firmware        | new     |                  | old     |
 | controller      | Strum   | Strum            | Strum   |
 | poll rate       | 1 ms    | 1 ms             | 1 ms    |
@@ -24,9 +23,8 @@ Measured by connecting it to the microcontroller in question, and then sending a
 | %2f skip        | 0%      | 0%               | 0%      |
 | %3f skip        | 0%      | 0%               | 0%      |
 
-| Results         |          |                  |         |
-| :-------------- | -------- | ---------------- | ------- |
 | microcontroller | Pi Pico  | raphnet wusbmote | Pi Pico |
+| :-------------- | :------- | :--------------- | :------ |
 | firmware        | new      |                  | old     |
 | controller      | Frets    | Frets            | Frets   |
 | poll rate       | 1 ms     | 1 ms             | 1 ms    |

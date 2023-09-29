@@ -8,9 +8,8 @@ Latency of an input from a Wii Classic Controller
 
 Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the "A" button, and timing how long it takes that signal to reach a target device over USB.
 
-| Results         |         |                       |                         |             |                  |         |                       |                         |             |
-| :-------------- | ------- | --------------------- | ----------------------- | ----------- | ---------------- | ------- | --------------------- | ----------------------- | ----------- |
 | microcontroller | Pi Pico | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno | raphnet wusbmote | Pi Pico | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno |
+| :-------------- | :------ | :-------------------- | :---------------------- | :---------- | :--------------- | :------ | :-------------------- | :---------------------- | :---------- |
 | firmware        | new     | new                   | new                     | new         |                  | old     | old                   | old                     | old         |
 | poll rate       | 1 ms    | 1 ms                  | 1 ms                    | 1 ms        | 1 ms             | 1 ms    | 1 ms                  | 1 ms                    | 1 ms        |
 | min             | 0.62 ms | 0.53 ms               | 0.62 ms                 | 1.26 ms     | 0.51 ms          | 0.54 ms | 0.92 ms               | 1.47 ms                 | 1.4 ms      |

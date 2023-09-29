@@ -8,12 +8,11 @@ Latency of [bluetooth mode](https://santroller.tangentmc.net/tool/bluetooth.html
 
 Measured by building a transmitter and receiver pair, toggling inputs on the transmitter, and timing how long it takes to receive that input over usb via the receiver.
 
-| Results         |           |                        |                |           |
-| :-------------- | --------- | ---------------------- | -------------- | --------- |
+| controller      | Direct    | Wii Classic Controller | PS1 Controller | PS2 SG    |
+| :-------------- | :-------- | :--------------------- | :------------- | :-------- |
 | firmware        | new       | new                    | new            | new       |
 | microcontroller | Pi Pico   | Pi Pico                | Pi Pico        | Pi Pico   |
 | communication   | Bluetooth | Bluetooth              | Bluetooth      | Bluetooth |
-| controller      | Direct    | Wii Classic Controller | PS1 Controller | PS2 SG    |
 | poll rate       | 1 ms      | 1 ms                   | 1 ms           | 1 ms      |
 | min             | 3.53 ms   | 0.92 ms                | 3.96 ms        | 7.56 ms   |
 | max             | 12.42 ms  | 13.87 ms               | 16.95 ms       | 20.96 ms  |

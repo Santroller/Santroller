@@ -8,10 +8,9 @@ Latency of an input from a GH5 Guitar Neck. Note that this is connected directly
 
 Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the Green Fret, and timing how long it takes that signal to reach a target device over USB.
 
-| Results         |                 |
-| :-------------- | --------------- |
-| firmware        | new             |
 | microcontroller | Pi Pico         |
+| :-------------- | :-------------- |
+| firmware        | new             |
 | controller      | GH5 Guitar Neck |
 | poll rate       | 1 ms            |
 | min             | 0.79 ms         |

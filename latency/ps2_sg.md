@@ -9,10 +9,9 @@ Latency of an input from a PS1 Controller.
 Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the strum up input, and timing how long it takes that signal to reach a target device over USB.
 Note that the console only polls this controller every 10ms or so. The developers of the controller took this into account, and the controller will lock up if it is polled too quickly.
 
-| Results         |          |                       |                         |             |          |                       |                         |             |
-| :-------------- | -------- | --------------------- | ----------------------- | ----------- | -------- | --------------------- | ----------------------- | ----------- |
-| firmware        | new      | new                   | new                     | new         | old      | old                   | old                     | old         |
 | microcontroller | Pi Pico  | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno | Pi Pico  | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno |
+| :-------------- | :------- | :-------------------- | :---------------------- | :---------- | :------- | :-------------------- | :---------------------- | :---------- |
+| firmware        | new      | new                   | new                     | new         | old      | old                   | old                     | old         |
 | controller      | PS2 SG   | PS2 SG                | PS2 SG                  | PS2 SG      | PS2 SG   | PS2 SG                | PS2 SG                  | PS2 SG      |
 | poll rate       | 1 ms     | 1 ms                  | 1 ms                    | 1 ms        | 1 ms     | 1 ms                  | 1 ms                    | 1 ms        |
 | min             | 3.54 ms  | 4.02 ms               | 4.14 ms                 | 6.04 ms     | 3.92 ms  | 4.82 ms               | 5.2 ms                  | 1.77 ms     |

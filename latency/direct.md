@@ -7,9 +7,8 @@ Latency of directly hooking an input to a digital pin on a microcontroller
 
 Measured by toggling a pin on the microcontroller in question, and then timing how long it takes for that signal to reach a target over USB.
 
-| Results         |         |                       |                         |             |         |                       |                         |             |
-| :-------------- | ------- | --------------------- | ----------------------- | ----------- | ------- | --------------------- | ----------------------- | ----------- |
 | Microcontroller | Pi Pico | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno | Pi Pico | Sparkfun Pro Micro 5V | Sparkfun Pro Micro 3.3V | Arduino Uno |
+| :-------------- | ------- | --------------------- | ----------------------- | ----------- | ------- | --------------------- | ----------------------- | ----------- |
 | Firmware        | new     | new                   | new                     | new         | old     | old                   | old                     | old         |
 | Usb Poll Rate   | 1 ms    | 1 ms                  | 1 ms                    | 1 ms        | 1 ms    | 1 ms                  | 1ms                     | 1 ms        |
 | Minimum         | 0.53 ms | 0.53 ms               | 0.53 ms                 | 0.48 ms     | 1.32 ms | 0.54 ms               | 0.73 ms                 | 0.92 ms     |

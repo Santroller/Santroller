@@ -9,10 +9,9 @@ Note that you can control how quickly you want the turntable polled. However, th
 
 Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the green fret input, and timing how long it takes that signal to reach a target device over USB.
 
-| Results             |          |          |
-| :------------------ | -------- | -------- |
-| firmware            | new      | new      |
 | microcontroller     | Pi Pico  | Pi Pico  |
+| :------------------ | :------- | :------- |
+| firmware            | new      | new      |
 | turntable poll rate | 10 ms    | 1 ms     |
 | poll rate           | 1 ms     | 1 ms     |
 | min                 | 21.03 ms | 20.32 ms |

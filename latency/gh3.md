@@ -1,5 +1,5 @@
 ---
-sort: 2
+sort: 5
 ---
 
 # Wii GH3 Guitar

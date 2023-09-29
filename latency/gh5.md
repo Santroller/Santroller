@@ -1,5 +1,5 @@
 ---
-sort: 4
+sort: 7
 ---
 
 # Wii GH5 Guitar

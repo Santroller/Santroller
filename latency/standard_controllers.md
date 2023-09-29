@@ -3,6 +3,9 @@ sort: 2
 ---
 
 # Commercial Controllers
+Latency of various commercial controllers. 
+
+Measured by connecting the controller to a target device over USB, having that target device toggle a digital input on the controller, and timing how long it takes to receive that input over USB. 
 
 | Metric       | Value          | Value              | Value              | Value                | Value                               |
 | ------------ | -------------- | ------------------ | ------------------ | -------------------- | ----------------------------------- |

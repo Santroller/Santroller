@@ -2,6 +2,9 @@
 sort: 13
 ---
 # GH5 Neck
+Latency of an input from a GH5 Guitar Neck. Note that this is connected directly to the microcontroller, not via the original mainboard.
+
+Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the Green Fret, and timing how long it takes that signal to reach a target device over USB.
 
 | Metric          | Value           |
 | --------------- | --------------- |

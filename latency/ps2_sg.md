@@ -3,6 +3,10 @@ sort: 10
 ---
 
 # PS2 SG
+Latency of an input from a PS1 Controller.
+
+Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the strum up input, and timing how long it takes that signal to reach a target device over USB.
+Note that the console only polls this controller every 10ms or so. The developers of the controller took this into account, and the controller will lock up if it is polled too quickly.
 
 | Metric          | Value    | Value                 | Value                   | Value       | Value    | Value                 | Value                   | Value       |
 | --------------- | -------- | --------------------- | ----------------------- | ----------- | -------- | --------------------- | ----------------------- | ----------- |

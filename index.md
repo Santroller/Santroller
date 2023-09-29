@@ -75,7 +75,7 @@ Pick a guide from the left to learn how to build a controller or adaptor.
 Join the discord, and someone should be able to help you with your problem.
 
 # Download link
-Click [Here](https://github.com/Santroller/SantrollerConfigurator/releases/latest) to download the configuration tool.
+Click [Here](https://github.com/Santroller/Santroller/releases/latest) to download the configuration tool.
 
 # Using this tool commercially
 If you would look to sell devices running the Santroller firmware, click the [following link](https://santroller.tangentmc.net/tool/commercial_use.html) to learn more about the commercial version of this platform.

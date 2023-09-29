@@ -2,6 +2,10 @@
 sort: 12
 ---
 # Peripheral
+Latency of a digital input sent from another Pi Pico in [peripheral mode](https://santroller.tangentmc.net/wiring_guides/peripheral.html). 
+
+Measured by connecting the peripheral to the main Pi Pico, toggling a digital pin on the peripheral, and timing how long it takes that signal to reach a target device over USB from the main Pi Pico.
+
 
 | Metric           | Value                      |
 | ---------------- | -------------------------- |

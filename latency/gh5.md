@@ -3,6 +3,10 @@ sort: 7
 ---
 
 # Wii GH5 Guitar
+Latency of an input from a Wii GH5 Guitar. Note that the GH5 guitars have seperate microcontrollers for handling the neck inputs and other inputs.
+This is why there are two seperate sets of data here. Note that the Fret inputs below are measured going via the main PCB, you can go [here](https://santroller.tangentmc.net/latency/gh5_neck_direct_santroller.html) to get the latency information when the main board is bypassed.
+
+Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the Green Fret or Strum Up inputs, and timing how long it takes that signal to reach a target device over USB.
 
 | Metric          |         |                  |         |
 | --------------- | ------- | ---------------- | ------- |

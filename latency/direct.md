@@ -3,6 +3,9 @@ sort: 1
 ---
 
 # Direct
+Latency of directly hooking an input to a digital pin on a microcontroller
+
+Measured by toggling a pin on the microcontroller in question, and then timing how long it takes for that signal to reach a target over USB.
 
 | Results         |         |                       |                         |             |         |                       |                         |             |
 | :-------------- | ------- | --------------------- | ----------------------- | ----------- | ------- | --------------------- | ----------------------- | ----------- |

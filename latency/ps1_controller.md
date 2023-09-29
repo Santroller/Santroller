@@ -3,6 +3,9 @@ sort: 8
 ---
 
 # PS1 Controller
+Latency of an input from a PS1 Controller.
+
+Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the right trigger input, and timing how long it takes that signal to reach a target device over USB.
 
 | Metric          | Value          | Value                 | Value                   | Value          | Value          | Value                 | Value                   | Value          |
 | --------------- | -------------- | --------------------- | ----------------------- | -------------- | -------------- | --------------------- | ----------------------- | -------------- |

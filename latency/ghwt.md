@@ -3,6 +3,9 @@ sort: 6
 ---
 
 # Wii GHWT Guitar
+Latency of an input from a Wii GHWT Guitar.
+
+Measured by connecting it to the microcontroller in question, and then sending a signal to toggle the Strum Up input, and timing how long it takes that signal to reach a target device over USB.
 
 | Metric          |         |                  |         |
 | --------------- | ------- | ---------------- | ------- |

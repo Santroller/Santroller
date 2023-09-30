@@ -70,6 +70,47 @@ def post_upload(source, target, env):
         subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)
         os.chdir(cwd)
         env.TouchSerialPort("$UPLOAD_PORT", 2400)
+    if env["PIOENV"] in ("arduino_uno_usb_serial", "arduino_mega_2560_usb_serial", "arduino_mega_adk_usb_serial"):
+        print("searching for uno")
+        new_env = None
+        while not new_env:
+            if me.parent is None:
+                exit(1)
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x0001)
+            if dev:
+                new_env = "arduino_uno"
+                break
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x0010)
+            if dev:
+                new_env = "arduino_mega_2560"
+                break
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x003f)
+            if dev:
+                new_env = "arduino_mega_adk"
+                break
+        cwd = os.getcwd()
+        os.chdir(env["PROJECT_DIR"])
+        env["UPLOAD_PORT"] = None
+        env.AutodetectUploadPort()
+        port = env.subst("$UPLOAD_PORT")
+        print(f"Calling {new_env} ({port})")
+        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)
+        os.chdir(cwd)
+        print("Looking for device in DFU mode")
+        env.TouchSerialPort("$UPLOAD_PORT", 1200)
+        while True:
+            if me.parent is None:
+                exit(1)
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2fef)
+            if dev:
+                break
+            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
+            if dev:
+                break
+        time.sleep(1)
+        new_env = f'{env["PIOENV"]}_usb'
+        print(f"Calling {new_env}")
+        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
 
 
 env.AddPostAction("upload", post_upload)

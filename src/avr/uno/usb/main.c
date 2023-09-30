@@ -168,7 +168,6 @@ void handleControllerData() {
 }
 int main(void) {
     bool skip_wait = false;
-#ifndef SERIAL_ONLY
     // Handle jumping to different states depending on bootloaderState (which is preserved on a reboot)
     if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER)) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -176,6 +175,8 @@ int main(void) {
         bootloaderState = 0;
         asm volatile("jmp 0x1000");
     }
+
+#ifndef SERIAL_ONLY
     if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO_USB_THEN_SERIAL)) {
         // When the bootloader returns control flow to us, we then want to jump to serial mode
         bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);

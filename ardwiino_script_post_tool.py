@@ -96,21 +96,6 @@ def post_upload(source, target, env):
         print(f"Calling {new_env} ({port})")
         subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env, "--upload-port", port], stderr=subprocess.STDOUT)
         os.chdir(cwd)
-        print("Looking for device in DFU mode")
-        env.TouchSerialPort("$UPLOAD_PORT", 1200)
-        while True:
-            if me.parent is None:
-                exit(1)
-            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2fef)
-            if dev:
-                break
-            dev = libusb_package.find(idVendor=0x03eb, idProduct=0x2ff7)
-            if dev:
-                break
-        time.sleep(1)
-        new_env = f'{env["PIOENV"]}_usb'
-        print(f"Calling {new_env}")
-        subprocess.run([sys.executable,"-m","platformio", "run", "--target", "upload", "--environment", new_env], stderr=subprocess.STDOUT)
 
 
 env.AddPostAction("upload", post_upload)

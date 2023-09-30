@@ -29,6 +29,8 @@ typedef struct
     uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3];
 } __attribute__((packed)) SignatureDescriptor_t;
 
+volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
+volatile uint16_t persistedConsoleTypeValid __attribute__((section(".noinit")));
 SignatureDescriptor_t signature;
 // Set up some arrays for storing received data / data to transmit
 uint8_t buf[255];
@@ -84,6 +86,8 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 }
 
 void reset_usb(void) {
+    persistedConsoleType = consoleType;
+    persistedConsoleTypeValid = 0x3A2F;
     should_reload_usb = true;
     USB_Device_GetInternalSerialDescriptor();
 }
@@ -103,6 +107,9 @@ void setup() {
     // Let the 8u2/16u2 know we are ready to receive data
     UDR0 = READY;
     init_main();
+    if (persistedConsoleTypeValid == 0x3A2F) {
+        consoleType = persistedConsoleType;
+    }
     USB_Device_GetInternalSerialDescriptor();
 }
 bool ready_for_next_packet() {

@@ -34,7 +34,6 @@ static CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
 // if bootloaderState is set to JUMP, then the arduino will jump to bootloader
 // mode after the next watchdog reset
 volatile uint16_t bootloaderState __attribute__((section(".noinit")));
-#define COMMAND_SKIP_WAIT 0x24
 // Are we in usbserial mode or controller mode
 bool serial = false;
 
@@ -62,7 +61,7 @@ int handleControlRequest() {
             }
             if (type == CONTROLLER_DATA_RESTART_USB_ID) {
                 // The 328p  wants to restart the usb layer, so just reboot the microcontroller
-                bootloaderState = (JUMP | COMMAND_SKIP_WAIT);
+                bootloaderState = 0;
                 reboot();
             }
             // For host to device requests, we don't have any more data to read as the host was writing the data
@@ -148,8 +147,6 @@ void handleControllerData() {
                 return;
             }
             if (type == CONTROLLER_DATA_RESTART_USB_ID) {
-                // The 328p  wants to restart the usb layer, so just reboot the microcontroller
-                bootloaderState = (JUMP | COMMAND_SKIP_WAIT);
                 reboot();
             }
             break;
@@ -167,7 +164,6 @@ void handleControllerData() {
     Endpoint_ClearIN();
 }
 int main(void) {
-    bool skip_wait = false;
     // Handle jumping to different states depending on bootloaderState (which is preserved on a reboot)
     if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER)) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -183,12 +179,9 @@ int main(void) {
         asm volatile("jmp 0x1000");
     } else if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO)) {
         serial = true;
-    } else if (bootloaderState == (JUMP | COMMAND_SKIP_WAIT)) {
-        skip_wait = true;
-    }
+    } 
 #else
     serial = true;
-    skip_wait = false;
 #endif
     // We don't want to jump again after the bootloader returns control flow to
     // us

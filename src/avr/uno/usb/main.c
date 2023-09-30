@@ -168,6 +168,7 @@ void handleControllerData() {
 }
 int main(void) {
     bool skip_wait = false;
+#ifndef SERIAL_ONLY
     // Handle jumping to different states depending on bootloaderState (which is preserved on a reboot)
     if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER)) {
         // We don't want to jump again after the bootloader returns control flow to
@@ -184,6 +185,10 @@ int main(void) {
     } else if (bootloaderState == (JUMP | COMMAND_SKIP_WAIT)) {
         skip_wait = true;
     }
+#else
+    serial = true;
+    skip_wait = true;
+#endif
     // We don't want to jump again after the bootloader returns control flow to
     // us
     bootloaderState = 0;

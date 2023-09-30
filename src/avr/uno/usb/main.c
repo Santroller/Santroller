@@ -187,7 +187,7 @@ int main(void) {
     }
 #else
     serial = true;
-    skip_wait = true;
+    skip_wait = false;
 #endif
     // We don't want to jump again after the bootloader returns control flow to
     // us

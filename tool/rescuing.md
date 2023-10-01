@@ -23,4 +23,5 @@ Short the following pins to enter DFU mode. The tool will recognise the Uno and 
 
 ## Arduino Mega
 Short the following pins to enter DFU mode. The tool will recognise the Mega and allow you to program it again.
-[![Arduino Mega DFU Pins](/assets/images/ArduinoMegaDFU.svg)](/assets/images/ArduinoMegaDFU.svg)
+
+[![Arduino Mega DFU Pins](/assets/images/ArduinoMegaDFU.png)](/assets/images/ArduinoMegaDFU.png)

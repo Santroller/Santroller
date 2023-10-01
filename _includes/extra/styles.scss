@@ -15,7 +15,7 @@
 .markdown-body img {
     background-color: #1c2124 !important;
     height: 300px;
-    object-fit: scale-down;
+    object-fit: contain;
 }
 .content {
     background: #1c2124 !important;
@@ -58,9 +58,6 @@ html {
 }
 .sidebar-wrap .sidebar > :last-child {
     margin-bottom: 10em;
-}
-.big-image {
-    max-height: "400"
 }
 .chart-container {
     max-width: 1400px;

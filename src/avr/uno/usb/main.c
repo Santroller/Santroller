@@ -172,16 +172,12 @@ int main(void) {
         asm volatile("jmp 0x1000");
     }
 
-#ifndef SERIAL_ONLY
-    if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO_USB_THEN_SERIAL)) {
-        // When the bootloader returns control flow to us, we then want to jump to serial mode
-        bootloaderState = (JUMP | COMMAND_JUMP_BOOTLOADER_UNO);
-        asm volatile("jmp 0x1000");
-    } else if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO)) {
+#ifdef SERIAL_ONLY
+    serial = true;
+#else
+    if (bootloaderState == (JUMP | COMMAND_JUMP_BOOTLOADER_UNO)) {
         serial = true;
     }
-#else
-    serial = true;
 #endif
     // We don't want to jump again after the bootloader returns control flow to
     // us

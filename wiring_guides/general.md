@@ -49,7 +49,7 @@ If you want to build an adapter for a Wii or PS2 guitar, then this will be easie
 ### Arduino Micro
 This is essentially the same thing as a 5v pro micro, however these are officially made by Arduino. These are often a bit more expensive as they aren't really cloned.
 
-## Arduino Leonardo
+### Arduino Leonardo
 This is essentially a 5v pro micro with the layout of a Arduino UNO, so you get more pins but it is also much larger. You can get clones of these, but they are still more expensive than pro micros or picos.
 
 ### Arduino UNO (r1/r2/r3)

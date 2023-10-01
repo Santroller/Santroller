@@ -8,7 +8,7 @@ The tool has the ability to detect devices in firmware update mode, and offer to
 # Arduino Uno 
 You need to short the following reset pins to get into firmware update mode:
 
-[![Arduino UNO DFU Pins](/assets/images/ArduinoUnoDFU.svg){: class="big-image" }](/assets/images/ArduinoUnoDFU.svg)
+[![Arduino Uno DFU Pins](/assets/images/ArduinoUnoDFU.svg){: class="big-image" }](/assets/images/ArduinoUnoDFU.svg)
 
 # Pi Pico
 Press the BOOTSEL button and hold it while you connect the other end of the micro USB cable to your computer:

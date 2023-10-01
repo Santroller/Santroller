@@ -2,32 +2,24 @@
 sort: 5
 ---
 # Building an Adaptor for a Wii Controller
-## You will need
+## Supplies
 * A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)
 
-* A basic tilt switch (if you want tilt) (sometimes called a Mercury switch or ball tilt switch). 
-  * It is recommended to use two, as this can help avoid accidental activations (this is what is done in some offical guitars)  
-  * I know some people use the SW-520D (which is a ball tilt switch), I myself just use some mercury tilt sensors that my local electronics shop sells.
-  * Make sure that you get a basic tilt sensor and not one with additional electronics, for example, this type of sensor is correct 
-    
-  [![Basic](/assets/images/s-l500-basic.jpg)](/assets/images/s-l500.jpg)
+* A Tilt Switch, if you want tilt
+  * The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
+    * I recommend using two tilt sensors in series, as this can help with accidental activations
+  * The tool also supports using analog tilt switches
 
-```danger
-  You do not want to get this type of sensor, as it does not work.
-    
+  ```danger
+  You do not want to get this type of sensor, as it does not work. If you do accidentally get one of these you *might* have luck just cutting the sensor from the top of the board and using it, but your mileage may vary doing that, as I have seen it work for some people and not for others.
+        
   [![Basic](/assets/images/s-l500.png)](/assets/images/s-l500.png)
-```
-```danger
-For anyone wanting to use tilt, the only supported method is using digital tilt switches. Support for the MPU-6050 and analog tilt sensors is now deprecated and will be removed from the firmware in a future update. They are causing a lot of issues for porting this code between various microcontrollers, and take up too much space in the firmware.
-```
+  ```
 * A Wii extension breakout board or an extension cable, such as [![this](https://www.adafruit.com/product/4836)](https://www.adafruit.com/product/4836). You can also choose to cut the end of the extension and solder your own cables on as well if you perfer.
 * If your wii extension breakout does not support 3.3v input, and you are using a 5v pro micro, you will need a 3.3v voltage regulator. The breakout listed above does however support either voltage so this is not required for that breakout.
 * Some Wire
 * A Soldering Iron
 
-```note
-If you are unsure what microcontroller you want to use, click [![here](https://sanjay900.github.io/guitar-configurator/guides/micro-controller-comparison.html)](https://sanjay900.github.io/guitar-configurator/guides/micro-controller-comparison.html) for a list of pros and cons about each microcontroller.
-```
 ```danger
 Be careful that you don't ever provide 5v power to the power pin of a Wii Extension, as they are not designed for this. The data pins however are tolerant of 5v, so you can hook these up directly to pins on your microcontroller.
 ```

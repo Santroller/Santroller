@@ -8,7 +8,7 @@ This firmware has a concept of a peripheral controller. This allows you to conne
 LEDs require 5 volts, but most I2C devices run on 3.3 volts. This means if you intend to share pins with a DJ Hero Turntable Platter, or a GH5 guitar neck, you will need to redirect power for that device to the peripheral's 3.3v output, as we need a 5 volt signal sent to the peripheral. 
 ```
 
-## You will need
+## Supplies
 * A device modded using one of the other guides, with a Pi Pico
 * Another Pi Pico
 

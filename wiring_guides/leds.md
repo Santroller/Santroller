@@ -3,7 +3,7 @@ sort: 8
 ---
 # Adding RGB LEDs to controllers
 You can add LEDs that will light up when a button or analogue input is pressed. For people playing Clone Hero, you can also make the frets light up based on in-game events such as Star Power.
-## You will need
+## Supplies
 * A guitar modded using the [following guide](https://santroller.tangentmc.net/wiring_guides/guitar.html)
 * Some APA102s (or Dotstar or SK9822 or APA107 or HD107s as these are all compatible / clones of the APA102)
   * Note that if your using JLCPCB, the SK9822 is often available when the APA102 is not.

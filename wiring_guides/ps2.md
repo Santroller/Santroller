@@ -2,7 +2,7 @@
 sort: 6
 ---
 # Building an Adaptor for a PS2 Controller
-## You will need
+## Supplies
 * A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)
 * For any 3.3v microcontrollers, you will need a 3.3v voltage regulator.
 * PS2 Controller socket or some male dupont wires

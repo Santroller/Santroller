@@ -21,7 +21,7 @@ Refer to the following image for the pinout of a PS2 controller.
 
 [![Finished adaptor](/assets/images/ps2-pinout.jpg)](/assets/images/ps2-pinout.png)
 
-1. Connect Attention, Acknowledge to Acknowledge, Command to MOSI, Data to MISO and Clock to SCK. Note that for anything that isn't the 3.3v pro micro or pi pico, you will need to connect these pins using a level shifter.
+1. Connect Attention, Acknowledge to Acknowledge, Command to MOSI, Data to MISO and Clock to SCK. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
    
    | Microcontroller | SCK | MOSI | MISO | Acknowledge | Attention |
    | --- | --- | --- | --- | --- | --- |
@@ -31,7 +31,7 @@ Refer to the following image for the pinout of a PS2 controller.
    | Mega | 52 | 51 | 50 | 2 | 10 |
 3. Connect a 1kΩ resistor between MISO and 3.3v.
 4. Connect a 1kΩ resistor between Acknowledge and 3.3v.
-5. Connect the 3.3v pin on the ps2 controller to the 3.3v pin on your microcontroller. For microcontrollers that can output 3.3v natively, you can hook this straight up to 3.3v, but for a 5v only board like the pro micro 5v you will need to use a 3.3v voltage regulator to get a stable 3.3v voltage.
+5. Connect the 3.3v pin on the ps2 controller to the 3.3v pin on your microcontroller. For microcontrollers that can output 3.3v natively, you can hook this straight up to 3.3v, but for a 5v only board like the Pro Micro 5v you will need to use a 3.3v voltage regulator to get a stable 3.3v voltage.
 6. Connect the gnd pin on the wii breakout / extension cable to the gnd on your microcontroller.
 
 Now that you have wired your adapter, go [configure it](https://santroller.tangentmc.net/tool/using.html).

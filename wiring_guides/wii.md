@@ -16,7 +16,7 @@ sort: 5
   [![Basic](/assets/images/s-l500.png)](/assets/images/s-l500.png)
   ```
 * A Wii extension breakout board or an extension cable, such as [![this](https://www.adafruit.com/product/4836)](https://www.adafruit.com/product/4836). You can also choose to cut the end of the extension and solder your own cables on as well if you perfer.
-* If your wii extension breakout does not support 3.3v input, and you are using a 5v pro micro, you will need a 3.3v voltage regulator. The breakout listed above does however support either voltage so this is not required for that breakout.
+* If your wii extension breakout does not support 3.3v input, and you are using a 5v Pro Micro, you will need a 3.3v voltage regulator. The breakout listed above does however support either voltage so this is not required for that breakout.
 * Some Wire
 * A Soldering Iron
 
@@ -43,7 +43,7 @@ Refer to the following image for the pinout of a Wii Extension connector. For a 
 If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as VCC before, you just can't rely on the colours at all unfortunately.
 ```
 1. Connect the vcc on the microcontroller to the vcc on the breakout
-   * If you are using a 5v pro micro, and your breakout does not support 5v input, then you will need to hook up VCC from the microcontroller to a 3.3v regulator, and then hook up the output of the regulator to the breakout
+   * If you are using a 5v Pro Micro, and your breakout does not support 5v input, then you will need to hook up VCC from the microcontroller to a 3.3v regulator, and then hook up the output of the regulator to the breakout
    * If you are using the microcontroller uno, use the 3.3v pin on your microcontroller as VCC
    * If you are using the breakout linked ![above](https://www.adafruit.com/product/4836), the `vin` pin is used for both 3.3v input and 5v input. The 3v pin is actually an output and is not needed for this project.
 2. Connect the gnd pin on the wii breakout / extension cable to the gnd on your microcontroller.

@@ -116,6 +116,7 @@ For axis, you can pick the input type, in order to map an input from any support
 You will then be able to see the raw and calibrated values from your analog input live.
 You can then hit the `Calibrate` button to calibrate your input. Follow the instructions and this will allow you to calibrate the raw values.
 You can also manually change the sliders to fine tune your calibration manually.
+For triggers, there is also a `Digital Threshold`. Some controllers represent triggers as digital values, so this is the value that your analog axis needs to cross before the digital signal is sent to the console.
 If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
 If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
 

@@ -224,10 +224,10 @@ typedef struct {
 } USB_LastReport_Data_t;
 
 #ifdef CONFIGURABLE_BLOBS
-inline int16_t read_int16(uint8_t idx) {
+inline int16_t read_int16(uint16_t idx) {
     return *((int16_t*)&config_blobs[idx]);
 }
-inline uint16_t read_uint16(uint8_t idx) {
+inline uint16_t read_uint16(uint16_t idx) {
     return *((uint16_t*)&config_blobs[idx]);
 }
 #endif

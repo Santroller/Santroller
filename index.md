@@ -85,3 +85,6 @@ The standard version of this tool can NOT be used commercially, and the commerci
 # Donate Link
 I have put several years of development time into this project, if you like it feel free to support this project by clicking the below link:
 {% include sponser.html %}
+
+# Current Sponsors
+<!-- sponsors --><!-- sponsors -->

@@ -1,12 +1,13 @@
 name: Generate Sponsors README
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-        contents: write
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -16,5 +17,5 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           file: "index.md"
-      
+
       - uses: stefanzweifel/git-auto-commit-action@v5

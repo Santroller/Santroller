@@ -13,5 +13,7 @@ jobs:
         uses: JamesIves/github-sponsors-readme-action@v1
         with:
           token: ${{ secrets.PAT }}
-          file: 'index.md'
+          file: "index.md"
           minimum: 30000
+      
+      - uses: stefanzweifel/git-auto-commit-action@v5

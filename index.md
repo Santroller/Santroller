@@ -22,13 +22,13 @@ This is done using the Santroller Configurator, which can program various microc
 [![alt text](assets/images/inline-led.jpg)](assets/images/inline-led.jpg)
 # Features
 * Support for various consoles, including PS2/3/4/5, Wii, Switch, Xbox 360 and Xbox One / Series
-  * PS2 requires a [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) for most games, some of the later games do support PS3 instruments nativly though.
-  * PS3 works nativly with no additional requirements
+  * PS2 requires a [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) for most games, some of the later games do support PS3 instruments natively though.
+  * PS3 works natively with no additional requirements
   * PS4 and PS5 will use PS3 mode and work with no additional requirements, except for gamepad and guitar hero live guitar mode which requires an [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) controller
   * Xbox 360 either requires the use of an [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) controller, or to use [UsbdSecPatch](https://santroller.tangentmc.net/console_guides/authentication.html#usbdsecpatch) to bypass authentication on a RGHed console.
   * Xbox one requires an [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) controller
-  * Switch works nativly with no additional requirements
-  * Rock Band for wii supports usb instruments nativly with no extra requirements
+  * Switch works natively with no additional requirements
+  * Rock Band for wii supports usb instruments natively with no extra requirements
   * Guitar Hero for wii requires the use of [fakemote](https://santroller.tangentmc.net/console_guides/wii.html), with a modded console, as these expect wii extensions not usb instruments.
 * Support for all major operating systems (Windows, macOS, linux)
 * Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.

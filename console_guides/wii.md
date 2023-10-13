@@ -9,7 +9,7 @@ For this reason, an unmodified console will not be able to support a USB guitar,
 Fakemote is still in development, and it can ocassionally freeze your wii, but you can always hold the power button to turn it off and on again.
 ```
 ### Wii instructions
-1. Download `sd_wii.zip` from https://github.com/sanjay900/fakemote/releases/tag/v0.5.0
+1. Download `sd_wii.zip` from https://github.com/sanjay900/fakemote/releases/latest
 2. Extract it to the root of your wii's SD card
 3. Open the `Homebrew Channel`
 4. Launch `d2x cIOS installer (sanjay900)`
@@ -26,7 +26,7 @@ Fakemote is still in development, and it can ocassionally freeze your wii, but y
 ```danger
 I haven't actually got a Wii U, so I am only assuming that this works as I cannot test it myself. If it works let me know and ill remove this disclaimer.
 ```
-1. Download `sd_vwii.zip` from https://github.com/sanjay900/fakemote/releases/tag/v0.5.0
+1. Download `sd_vwii.zip` from https://github.com/sanjay900/fakemote/releases/latest
 2. Extract it to the root of your wii's SD card
 3. Open the `Homebrew Channel`
 4. Launch `d2x cIOS installer (sanjay900)`

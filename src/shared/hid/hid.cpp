@@ -473,7 +473,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             uint8_t player = (data[2] & 0x0F);
             handle_player_leds(player + 1);
         } else if (id == PS3_LED_RUMBLE_ID) {
-            uint8_t player = (data[2] & 0x0F);
+            uint8_t player = data[2];
             if (player & _BV(1)) {
                 handle_player_leds(1);
             }

@@ -5,13 +5,29 @@ For this reason, an unmodified console will not be able to support a USB guitar,
 # Setting up fakemote
 
 ## Installing fakemote
-This is still a beta tool, but it can be set up using the following instructions:
+Do note that this mode is still in beta and may crash in some situations.
+
+### Wii instructions
 1. Download `sd_wii.zip` from https://github.com/sanjay900/fakemote/releases/tag/v0.5.0
 2. Extract it to the root of your wii's SD card
 3. Open the `Homebrew Channel`
 4. Launch `d2x cIOS installer (sanjay900)`
 5. Press any button to continue when prompted
 6. For `Select cIOS` select the last option `v10 sanjay900-53 d2x-v10-sanjay900-53`
+7. For `Select cIOS base` make sure it is set to `57`
+8. For `Select cIOS slot` make sure it is set to `245`
+9. For `Select cIOS revision` make sure it is set to `65535`
+10. Press `A`
+11. Press `A` again at the next screen
+12. Once it has finished installing, hit `B` to return to the homebrew channel.s.
+
+### Wii U instructions
+1. Download `sd_wii.zip` from https://github.com/sanjay900/fakemote/releases/tag/v0.5.0
+2. Extract it to the root of your wii's SD card
+3. Open the `Homebrew Channel`
+4. Launch `d2x cIOS installer (sanjay900)`
+5. Press any button to continue when prompted
+6. For `Select cIOS` select the last option `d2x-v11-beta1-vWii-sanjay900`
 7. For `Select cIOS base` make sure it is set to `57`
 8. For `Select cIOS slot` make sure it is set to `245`
 9. For `Select cIOS revision` make sure it is set to `65535`

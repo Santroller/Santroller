@@ -22,4 +22,6 @@ Measured by connecting the controller to a target device over USB, having that t
 | %2f skip     | 0%             | 18%                | 60%                | 1%                   | 13%                                 |
 | %3f skip     | 0%             | 4%                 | 12%                | 0%                   | 0%                                  |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include standard_controllers.html %}

@@ -20,4 +20,6 @@ Measured by toggling a pin on the microcontroller in question, and then timing h
 | %2f skip        | 0%      | 0%                    | 0%                      | 0%          | 0%      | 0%                    | 0%                      | 0%          |
 | %3f skip        | 0%      | 0%                    | 0%                      | 0%          | 0%      | 0%                    | 0%                      | 0%          |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include direct.html %}

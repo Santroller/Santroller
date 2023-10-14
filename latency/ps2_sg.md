@@ -23,4 +23,6 @@ Note that the console only polls this controller every 10ms or so. The developer
 | %2f skip        | 0%       | 0%                    | 0%                      | 0%          | 0%       | 0%                    | 0%                      | 0%          |
 | %3f skip        | 0%       | 0%                    | 0%                      | 0%          | 0%       | 0%                    | 0%                      | 0%          |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include ps2_sg.html %}

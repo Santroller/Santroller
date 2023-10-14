@@ -23,4 +23,6 @@ Measured by connecting it to the microcontroller in question, and then sending a
 | %2f skip            | 42%      | 56%      |
 | %3f skip            | 47%      | 0%       |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include turntable.html %}

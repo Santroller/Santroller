@@ -23,4 +23,6 @@ Measured by connecting the peripheral to the main Pi Pico, toggling a digital pi
 | %2f skip         | 0%                         |
 | %3f skip         | 0%                         |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include peripheral.html %}

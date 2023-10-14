@@ -22,4 +22,6 @@ Note that the PS2 controllers send a LOT more data over the controller bus, due 
 | %2f skip        | 0%       | 13%      |
 | %3f skip        | 0%       | 87%      |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include ps2.html %}

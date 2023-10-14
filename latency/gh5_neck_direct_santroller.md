@@ -22,4 +22,6 @@ Measured by connecting it to the microcontroller in question, and then sending a
 | %2f skip        | 0%              |
 | %3f skip        | 0%              |
 
+Note that in the below graph, you can click on legends to show and hide different controllers when comparing.
+
 {% include gh5_neck.html %}

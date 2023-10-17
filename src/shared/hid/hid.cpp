@@ -288,6 +288,29 @@ void handle_player_leds(uint8_t player) {
     }
 #endif
 }
+void handle_player_leds_ps3(uint8_t player_mask) {
+    if (player_mask & _BV(0)) {
+        handle_player_leds(1);
+    }
+    if (player_mask & _BV(1)) {
+        handle_player_leds(2);
+    }
+    if (player_mask & _BV(2)) {
+        handle_player_leds(3);
+    }
+    if (player_mask & _BV(3)) {
+        handle_player_leds(4);
+    }
+    if (player_mask & _BV(4)) {
+        handle_player_leds(5);
+    }
+    if (player_mask & _BV(5)) {
+        handle_player_leds(6);
+    }
+    if (player_mask & _BV(6)) {
+        handle_player_leds(7);
+    }
+}
 void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
     HANDLE_LIGHTBAR_LED;
     // We know the default lightbar colours that sony uses so we can extract a player number from that.
@@ -474,32 +497,10 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             handle_rumble(data[2], data[3]);
         } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {
             uint8_t player = data[3];
-            if (player & _BV(0)) {
-                handle_player_leds(1);
-            }
-            if (player & _BV(1)) {
-                handle_player_leds(2);
-            }
-            if (player & _BV(2)) {
-                handle_player_leds(3);
-            }
-            if (player & _BV(3)) {
-                handle_player_leds(4);
-            }
+            handle_player_leds_ps3(player);
         } else if (id == PS3_LED_RUMBLE_ID) {
             uint8_t player = data[2];
-            if (player & _BV(0)) {
-                handle_player_leds(1);
-            }
-            if (player & _BV(1)) {
-                handle_player_leds(2);
-            }
-            if (player & _BV(2)) {
-                handle_player_leds(3);
-            }
-            if (player & _BV(3)) {
-                handle_player_leds(4);
-            }
+            handle_player_leds_ps3(player);
         } else if (id == SANTROLLER_LED_ID) {
             handle_rumble(data[1], data[2]);
         }
@@ -514,18 +515,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         else if (id == PS3_LED_RUMBLE_ID) {
             ps3_output_report *report = (ps3_output_report *)data;
             uint8_t player = report->leds_bitmap;
-            if (player & _BV(0)) {
-                handle_player_leds(1);
-            }
-            if (player & _BV(1)) {
-                handle_player_leds(2);
-            }
-            if (player & _BV(2)) {
-                handle_player_leds(3);
-            }
-            if (player & _BV(3)) {
-                handle_player_leds(4);
-            }
+            handle_player_leds_ps3(player);
         }
 #endif
     }

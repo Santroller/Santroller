@@ -50,6 +50,7 @@ uint8_t stage_kit_millis[] = {
     100,  // Fast
     75,   // Fastest
 };
+uint8_t current_player = 0;
 uint8_t strobe_delay = 0;
 uint8_t last_star_power = 0;
 bool star_power_active = false;
@@ -245,6 +246,8 @@ void handle_auth_led(void) {
     HANDLE_AUTH_LED;
 }
 void handle_player_leds(uint8_t player) {
+    if (player == current_player) return;
+    current_player = player;
     HANDLE_PLAYER_LED;
 #ifdef INPUT_USB_HOST
     USB_Device_Type_t type;
@@ -471,30 +474,30 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             handle_rumble(data[2], data[3]);
         } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {
             uint8_t player = data[3];
-            if (player & _BV(1)) {
+            if (player & _BV(0)) {
                 handle_player_leds(1);
             }
-            if (player & _BV(2)) {
+            if (player & _BV(1)) {
                 handle_player_leds(2);
             }
-            if (player & _BV(3)) {
+            if (player & _BV(2)) {
                 handle_player_leds(3);
             }
-            if (player & _BV(4)) {
+            if (player & _BV(3)) {
                 handle_player_leds(4);
             }
         } else if (id == PS3_LED_RUMBLE_ID) {
             uint8_t player = data[2];
-            if (player & _BV(1)) {
+            if (player & _BV(0)) {
                 handle_player_leds(1);
             }
-            if (player & _BV(2)) {
+            if (player & _BV(1)) {
                 handle_player_leds(2);
             }
-            if (player & _BV(3)) {
+            if (player & _BV(2)) {
                 handle_player_leds(3);
             }
-            if (player & _BV(4)) {
+            if (player & _BV(3)) {
                 handle_player_leds(4);
             }
         } else if (id == SANTROLLER_LED_ID) {
@@ -511,16 +514,16 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         else if (id == PS3_LED_RUMBLE_ID) {
             ps3_output_report *report = (ps3_output_report *)data;
             uint8_t player = report->leds_bitmap;
-            if (player & _BV(1)) {
+            if (player & _BV(0)) {
                 handle_player_leds(1);
             }
-            if (player & _BV(2)) {
+            if (player & _BV(1)) {
                 handle_player_leds(2);
             }
-            if (player & _BV(3)) {
+            if (player & _BV(2)) {
                 handle_player_leds(3);
             }
-            if (player & _BV(4)) {
+            if (player & _BV(3)) {
                 handle_player_leds(4);
             }
         }

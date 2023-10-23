@@ -37,10 +37,10 @@ If you would like your frets to contain LEDs, or want your frets to poll at a di
 
 Note: If using peripheral mode, here are the wire color codes:
 
-YELLOW: DATA (D)
-BLUE: GND (G)
-GREEN: CLK (C)
-RED: 3V3 (V)
-WHITE: SENSE PIN (ID)
+* YELLOW: DATA (D)
+* BLUE: GND (G)
+* GREEN: CLK (C)
+* RED: 3V3 (V)
+* WHITE: SENSE PIN (ID)
 
 Now that you have wired your turntable, go [configure it](https://santroller.tangentmc.net/tool/using.html).

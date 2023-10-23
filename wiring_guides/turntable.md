@@ -35,7 +35,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 ## Wiring Steps (Peripheral, Pi Pico only)
 If you would like your frets to contain LEDs, or want your frets to poll at a different rate to the rest of the turntable, you can use the [Peripheral feature](https://santroller.tangentmc.net/wiring_guides/peripheral.html).
 
-Note: If using peripheral mode, here are the wire color codes:
+Note: If using peripheral mode, here are the wire color codes and pinouts:
 
 * YELLOW: DATA (D)
 * BLUE: GND (G)

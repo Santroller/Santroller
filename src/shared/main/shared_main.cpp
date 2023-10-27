@@ -738,8 +738,14 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         if (report->greenVelocity) {
             out->greenVelocity = report->greenVelocity >> 4;
         }
-        if (report->blueVelocity) {
-            out->blueVelocity = report->blueVelocity >> 4;
+        if (report->blueCymbalVelocity) {
+            out->blueCymbalVelocity = report->blueCymbalVelocity >> 4;
+        }
+        if (report->yellowCymbalVelocity) {
+            out->yellowCymbalVelocity = report->yellowCymbalVelocity >> 4;
+        }
+        if (report->greenCymbalVelocity) {
+            out->greenCymbalVelocity = report->greenCymbalVelocity >> 4;
         }
     }
     if (output_console_type == XBOX360) {
@@ -755,8 +761,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 
         out->back |= report->back;
         out->start |= report->start;
-        out->padFlag = report->green || report->red || report->yellow || report->blue;
-        out->cymbalFlag = report->greenCymbal || report->yellowCymbal || report->blueCymbal;
+        out->padFlag = report->padFlag;
+        out->cymbalFlag = report->cymbalFlag;
 
         out->guide |= report->guide;
         if (report->yellowVelocity) {
@@ -785,8 +791,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 
         out->back |= report->back;
         out->start |= report->start;
-        out->padFlag = report->green || report->red || report->yellow || report->blue;
-        out->cymbalFlag = report->greenCymbal || report->yellowCymbal || report->blueCymbal;
+        out->padFlag = report->padFlag;
+        out->cymbalFlag = report->cymbalFlag;
 
         out->guide |= report->guide;
         if (report->yellowVelocity) {

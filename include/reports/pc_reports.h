@@ -90,25 +90,21 @@ typedef struct {
 typedef struct
 {
     uint8_t reportId;
+
     uint8_t a : 1;  // cross
     uint8_t b : 1;  // circle
     uint8_t x : 1;  // square
     uint8_t y : 1;  // triangle
 
-    uint8_t green : 1;
-    uint8_t red : 1;
-    uint8_t yellow : 1;
-    uint8_t blue : 1;
+    uint8_t padFlag : 1; 
+    uint8_t cymbalFlag : 1;
+    uint8_t leftShoulder : 1; // kick 1
+    uint8_t rightShoulder : 1; // kick 2
 
-    uint8_t greenCymbal : 1;
-    uint8_t yellowCymbal : 1;
-    uint8_t blueCymbal : 1;
-    uint8_t leftShoulder : 1;
-
-    uint8_t rightShoulder : 1;
     uint8_t back : 1;
     uint8_t start : 1;
     uint8_t guide : 1;
+    uint8_t : 5;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
     union {
@@ -203,7 +199,7 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    
+
     uint8_t a : 1;  // cross, green
     uint8_t b : 1;  // circle, red
     uint8_t y : 1;  // triangle, yellow
@@ -242,11 +238,11 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    
-    uint8_t a : 1;     // cross
-    uint8_t b : 1;     // circle
-    uint8_t x : 1;     // square
-    uint8_t y : 1;     // triangle, euphoria
+
+    uint8_t a : 1;  // cross
+    uint8_t b : 1;  // circle
+    uint8_t x : 1;  // square
+    uint8_t y : 1;  // triangle, euphoria
 
     uint8_t back : 1;  // select
     uint8_t start : 1;
@@ -287,7 +283,7 @@ typedef struct
     bool b : 1;  // circle, black2
     bool y : 1;  // triangle, black3
 
-    bool x : 1;  // square, white1
+    bool x : 1;              // square, white1
     bool leftShoulder : 1;   // white2, l1
     bool rightShoulder : 1;  // white3, r1
     bool back : 1;           // back, heroPower

@@ -15,11 +15,12 @@ However, there is a commercial version of it that can be obtained by subscribing
 * Simplified tool for the end user, that takes up much less space and programs their devices much quicker.
   * The tool also allows for easy factory resetting as well, which can give you an easy method to revert a customers configuration when providing support.
 * Paying for this tool also goes towards providing continual improvements to the tool.  
+* Subscribing grants access to discord channels for support and requests.
 
 # Using the commercial tool
 When you are subscribed to the tool, you will gain access to the [commercial tool releases](https://github.com/Santroller/SantrollerConfiguratorBinaries/releases)
 From here, you can download the `SantrollerConfiguratorBuilder` for your operating system.
-Once you launch this tool, you will be presented with a screen for configuring a custom tool with your branding and devices.
+Once you launch this tool, you will need to sign in to GitHub. Once you have done this, you will be presented with a screen for configuring a custom tool with your branding and devices.
 
 ## Creating a tool
 This tool allows for managing multiple different branded tools. Click on `Create Tool` to create a tool.

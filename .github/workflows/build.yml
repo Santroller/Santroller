@@ -1,7 +1,6 @@
 name: Generate Sponsors README
 on:
-  schedule:
-    - cron: "*/15 * * * *"
+  workflow_dispatch:
 
 jobs:
   deploy:

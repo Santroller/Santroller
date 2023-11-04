@@ -1,6 +1,5 @@
 name: Generate Sponsors README
-on:
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   deploy:

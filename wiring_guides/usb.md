@@ -1,7 +1,7 @@
 ---
 sort: 9
 ---
-# Wiring USB Inputs
+# Wiring USB Inputs (Pi Pico Only)
 ## Supplies
 * A Pi Pico
 * A USB Extension cable, or a USB breakout

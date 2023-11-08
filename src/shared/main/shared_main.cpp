@@ -243,6 +243,31 @@ uint16_t handle_calibration_xbox_one_trigger(uint16_t previous, uint16_t orig_va
     }
     return previous;
 }
+uint16_t handle_calibration_drum(uint16_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+    int32_t val = orig_val;
+    if (multiplier > 0) {
+        if ((val - min) < deadzone) {
+            return 0;
+        }
+    } else {
+        if (val > min) {
+            return 0;
+        }
+    }
+    val -= min;
+    val *= multiplier;
+    val /= 512;
+    if (val > UINT16_MAX) {
+        val = UINT16_MAX;
+    }
+    if (val < 0) {
+        val = 0;
+    }
+    if (val > previous) {
+        return val;
+    }
+    return previous;
+}
 uint8_t handle_calibration_ps3(uint8_t previous, int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
     int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, offset, min, multiplier, deadzone) >> 8;
     return (uint8_t)(ret + PS3_STICK_CENTER);

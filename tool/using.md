@@ -120,6 +120,16 @@ For triggers, there is also a `Digital Threshold`. Some controllers represent tr
 If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
 If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
 
+
+#### Drums
+For drums, you can pick the input type, in order to map an input from any supported device to this output.
+You will then be able to see the raw and calibrated values from your drum pad live.
+If you are using an analog input for the drum, look at the calibrated value of the drum. if you hit the drum pad, and other pads change, then bump up the minimum value until only the correct pad shows values.
+Essentially, you want to adjust the minimum value so that your drum isn't so sensitive that it triggers when you don't want it to, but you also don't want it so high that it drops light taps.
+Then, you can set the maximum so that a hard drum hit has the calibrated value go to the end of the bar.
+If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
+If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
+
 [![Axis](/assets/images/screenshots/axis.png)](/assets/images/screenshots/axis.png)
 
 #### Wii Extension Inputs

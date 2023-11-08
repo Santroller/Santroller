@@ -120,6 +120,8 @@ For triggers, there is also a `Digital Threshold`. Some controllers represent tr
 If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
 If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
 
+[![Axis](/assets/images/screenshots/axis.png)](/assets/images/screenshots/axis.png)
+
 
 #### Drums
 For drums, you can pick the input type, in order to map an input from any supported device to this output.
@@ -129,6 +131,7 @@ Essentially, you want to adjust the minimum value so that your drum isn't so sen
 Then, you can set the maximum so that a hard drum hit has the calibrated value go to the end of the bar.
 If you map a digital input here, you can instead just specify what value that digtal input will represent when triggered.
 If you have APA102 LEDs enabled, you will be able to pick a active and inactive colour. The controller will smoothly transition from inactive to active depending on the state of the analog input. You can also select which leds in the chain will be updated by this input.
+It is recommended that you enable debounce, as the drums use this for debouncing both the analog and digital values, and drums will bounce a lot.
 
 [![Axis](/assets/images/screenshots/axis.png)](/assets/images/screenshots/axis.png)
 

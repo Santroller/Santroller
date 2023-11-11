@@ -96,7 +96,7 @@ void slaveWriteLED(uint8_t data) {
 
 uint8_t slaveReadWt() {
     if (!slave_initted) {
-        return;
+        return 0;
     }
     for (int i = 0; i < RETRY_COUNT; i++) {
         uint8_t data = 0;
@@ -110,7 +110,7 @@ uint8_t slaveReadWt() {
 }
 uint8_t slaveReadWtRaw(uint8_t* output) {
     if (!slave_initted) {
-        return;
+        return 0;
     }
     for (int i = 0; i < RETRY_COUNT; i++) {
         slave_initted = twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_WT_RAW, 5 * sizeof(uint32_t), output);

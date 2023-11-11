@@ -117,8 +117,8 @@ uint8_t slaveReadWtRaw(uint8_t* output) {
         if (slave_initted) {
             return 5 * sizeof(uint32_t);
         }
-        return 0;
     }
+    return 0;
 }
 bool slaveInit() {
     uint8_t data;

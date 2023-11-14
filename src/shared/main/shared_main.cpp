@@ -157,6 +157,16 @@ void tick_slave() {
     }
     slave_initted = true;
     PIN_INIT;
+    #ifdef SPI_SLAVE_0_MOSI
+    slaveInitLED(0);
+    slavePinMode(SPI_SLAVE_0_MOSI, PIN_MODE_SPI);
+    slavePinMode(SPI_SLAVE_0_SCK, PIN_MODE_SPI);
+#endif
+#ifdef SPI_SLAVE_1_MOSI
+    slaveInitLED(1);
+    slavePinMode(SPI_SLAVE_1_MOSI, PIN_MODE_SPI);
+    slavePinMode(SPI_SLAVE_1_SCK, PIN_MODE_SPI);
+#endif
 #ifdef INPUT_WT_SLAVE_NECK
     slaveInitWt();
 #endif

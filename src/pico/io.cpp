@@ -37,16 +37,6 @@ void spi_begin() {
     gpio_set_pulls(SPI_1_MISO, true, false);
 #endif
 #endif
-#ifdef SPI_SLAVE_0_MOSI
-    slaveInitLED(0);
-    slavePinMode(SPI_SLAVE_0_MOSI, PIN_MODE_SPI);
-    slavePinMode(SPI_SLAVE_0_SCK, PIN_MODE_SPI);
-#endif
-#ifdef SPI_SLAVE_1_MOSI
-    slaveInitLED(1);
-    slavePinMode(SPI_SLAVE_1_MOSI, PIN_MODE_SPI);
-    slavePinMode(SPI_SLAVE_1_SCK, PIN_MODE_SPI);
-#endif
 }
 static uint8_t revbits(uint8_t b) {
     b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;

@@ -47,6 +47,10 @@ This is done using the Santroller Configurator, which can program various microc
 * Support for bluetooth
   * For PC, this works directly, and you can connect to a bluetooth configured controller
   * For consoles, you can build a bluetooth receiver that connects to a bluetooth configured controller, and allows for wireless play
+* Shortcuts
+  * Replaces the previous hardcoded start + select to home feature, and allows for defining any combination of inputs and mapping that to an output.
+* Custom input mappings
+  * You can map inputs from *any* controller to *any* output. This means you can do things like mapping a button press on a Wii guitar to tilt.
 * Support for inputs from another pi pico
   * This can be used to put LEDs in a DJ Hero turntable, or to bypass the GH5 neck's microcontroller but keep it removable.
 * Ability to emulate the following controllers
@@ -59,8 +63,6 @@ This is done using the Santroller Configurator, which can program various microc
   * DJ Hero Turntables
   * Rock Band Stage Kit
   * Standard Gamepad
-* Button combos
-  * This allows for features like emulating a home button by pressing start + select
 * Various LED options, including seperate states for pressed and released, and reaction to game events when possible.
 * Reactive configuration tool, to make calibration as easy as possible.
 

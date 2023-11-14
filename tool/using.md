@@ -192,8 +192,8 @@ Follow the [bluetooth](https://santroller.tangentmc.net/tool/bluetooth.html) gui
 A digital pin input is a input that is only on or off, like a button, which is wired directly to a pin on your microcontroller.
 ### Analog Pin
 An analog pin input is a input that can have a varied voltage, like a joystick, and is wired directly to a pin on your microcontroller.
-### Macros
-A macro input allows for combining multiple inputs. This allows for doing things like mapping the home button to having both the start and select button pressed.
+### Shortcuts
+A shortcut allows for combining multiple inputs. This allows for doing things like mapping a combination of start and select to the home button. Shortcuts will automatically override standard inputs, so you can still have a normal start and select input.
 ### Multiplexer Input
 A multiplexer allows for putting multiple analog inputs on a single analog pin on your microcontroller. This is mostly useful for the Pi Pico, which only has three analog pins.
 We currently support 4051 and 4067 based multiplexers. These are 8 and 16 channel multiplexers, which combine 8 or 16 analog inputs to a single analog pin.

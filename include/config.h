@@ -170,7 +170,6 @@ typedef union {
 extern const uint8_t announce[32];
 extern const uint8_t xb1_descriptor[XBOX_ONE_DESCRIPTOR_SIZE];
 extern const uint8_t xb1_descriptor_end[6];
-#define SUPPORTS_LEDS LED_TYPE == LEDS_APA102 || LED_TYPE == LEDS_WS2812
 #define SUPPORTS_MIDI CONSOLE_TYPE == MIDI
 #define SUPPORTS_HID CONSOLE_TYPE != MIDI
 #define SUPPORTS_PS4 (DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == LIVE_GUITAR)

@@ -1878,11 +1878,11 @@ int tick_bluetooth_inputs(const void *buf) {
 void tick(void) {
 #ifdef SLAVE_TWI_PORT
     tick_slave();
-#ifdef TICK_LED
+#endif
+#if defined(SPI_SLAVE_0_MOSI) || defined(SPI_SLAVE_1_MOSI)
     if (!slave_initted) {
         memset(lastLedState, 0, sizeof(lastLedState));
     }
-#endif
 #endif
 #ifdef TICK_LED
     if (memcmp(lastLedState, ledState, sizeof(ledState)) != 0) {

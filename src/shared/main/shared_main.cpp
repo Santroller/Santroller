@@ -1880,6 +1880,8 @@ void tick(void) {
     tick_slave();
 #endif
 #if defined(SPI_SLAVE_0_MOSI) || defined(SPI_SLAVE_1_MOSI)
+    // If we are controlling peripheral leds, then we need to send the latest state when
+    // we detect the device is plugged in
     if (!slave_initted) {
         memset(lastLedState, 0, sizeof(lastLedState));
     }

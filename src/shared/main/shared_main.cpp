@@ -54,6 +54,7 @@ uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastDj = 0;
 long lastSentPacket = 0;
+long lastLed = 0;
 long lastSentGHLPoke = 0;
 long input_start = 0;
 long lastDebounce = 0;
@@ -1878,7 +1879,10 @@ void tick(void) {
     tick_slave();
 #endif
 #ifdef TICK_LED
+if (micros() - lastLed > 1000) {
+    lastLed = micros();
     TICK_LED;
+}
 #endif
     bool ready = tick_usb();
 

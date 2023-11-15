@@ -95,8 +95,7 @@ void recv(int len) {
             break;
         case SLAVE_COMMAND_WRITE_SPI: {
             uint8_t data = WIRE.read();
-            uint8_t resp;
-            spi_write_read_blocking(hardware, &data, &resp, 1);
+            spi_write_blocking(hardware, &data, 1);
             break;
         }
         case SLAVE_COMMAND_INIT_WT:

@@ -18,8 +18,6 @@ void slavePinMode(uint8_t pin, uint8_t pinMode) {
             break;
         }
     }
-    // Give pins some time to configure themselves
-    delayMicroseconds(100);
 }
 
 uint32_t slaveReadDigital() {
@@ -51,7 +49,7 @@ uint8_t slaveReadDigital(uint8_t port, uint8_t mask) {
         if (!slave_initted) {
             continue;
         }
-        PIN_INIT;
+        PIN_INIT_PERIPHERAL;
         return (payload >> (port * 8)) & 0xFF;
     }
     return 0;

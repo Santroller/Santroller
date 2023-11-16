@@ -114,7 +114,7 @@ uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
 
 Led_t ledState[LED_COUNT];
 Led_t lastLedState[LED_COUNT];
-Led_t ledStatePeripheral[LED_COUNT];
+Led_t ledStatePeripheral[LED_COUNT_PERIPHERAL];
 Led_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL];
 #define UP 1 << 0
 #define DOWN 1 << 1

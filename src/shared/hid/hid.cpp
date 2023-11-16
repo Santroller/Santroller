@@ -649,6 +649,21 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             return 0;
         }
 #endif
+#if LED_COUNT_PERIPHERAL
+        case COMMAND_SET_LEDS_PERIPHERAL: {
+            uint8_t led = response_buffer[0];
+            if (led >= LED_COUNT_PERIPHERAL) return 0;
+            if (response_buffer[1] == 0 && response_buffer[2] == 0 && response_buffer[3] == 0) {
+                ledStatePeripheral[led].select = 0;
+                return 0;
+            }
+            ledStatePeripheral[led].select = 1;
+            ledStatePeripheral[led].r = response_buffer[1];
+            ledStatePeripheral[led].g = response_buffer[2];
+            ledStatePeripheral[led].b = response_buffer[3];
+            return 0;
+        }
+#endif
 #ifdef INPUT_USB_HOST
         case COMMAND_READ_USB_HOST: {
             return read_usb_host_devices(response_buffer);

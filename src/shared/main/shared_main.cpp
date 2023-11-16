@@ -1361,7 +1361,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
         if (!DEVICE_TYPE_IS_LIVE_GUITAR || millis() - last_ghl_poke_time < 8000) {
             XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
-            int16_t dj_temp;
             size = sizeof(XBOX_ONE_REPORT);
             report_size = size - sizeof(GipHeader_t);
             memset(buf, 0, size);
@@ -1395,7 +1394,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
-        int16_t dj_temp;
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
         report->rid = 0;
@@ -1454,9 +1452,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         report->leftTableVelocity = PS3_STICK_CENTER;
         report->rightTableVelocity = PS3_STICK_CENTER;
+        report->crossfader = PS3_STICK_CENTER;
+        report->effectsKnob = PS3_STICK_CENTER;
 #endif
         report->reportId = 1;
-        uint8_t dj_temp;
         TICK_PC;
         asm volatile("" ::
                          : "memory");
@@ -1487,7 +1486,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // For instruments, we instead use the below block, as all other console types use the below format
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && !updateSequence) {
 #endif
-        uint8_t dj_temp;
         report_size = size = sizeof(PS3_REPORT);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));

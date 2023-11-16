@@ -114,6 +114,8 @@ uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
 
 Led_t ledState[LED_COUNT];
 Led_t lastLedState[LED_COUNT];
+Led_t ledStatePeripheral[LED_COUNT];
+Led_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL];
 #define UP 1 << 0
 #define DOWN 1 << 1
 #define LEFT 1 << 2
@@ -134,6 +136,7 @@ void init_main(void) {
     GIP_HEADER((&powerMode), GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
     powerMode.subcommand = 0x00;
     memset(ledState, 0, sizeof(ledState));
+    memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
     LED_INIT;
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
@@ -1877,11 +1880,16 @@ void tick(void) {
 #ifdef SLAVE_TWI_PORT
     tick_slave();
 #endif
-#if defined(SPI_SLAVE_0_MOSI) || defined(SPI_SLAVE_1_MOSI)
+#ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when
-    // we detect the device is plugged in
-    if (!slave_initted) {
-        memset(lastLedState, 0, sizeof(lastLedState));
+    // the device is plugged in again
+    if (slave_initted) {
+        if (memcmp(lastLedStatePeripheral, ledStatePeripheral, sizeof(ledStatePeripheral)) != 0) {
+            memcpy(lastLedStatePeripheral, ledStatePeripheral, sizeof(ledStatePeripheral));
+            TICK_LED_PERIPHERAL;
+        }
+    } else {
+        memset(lastLedStatePeripheral, 0, sizeof(lastLedStatePeripheral));
     }
 #endif
 #ifdef TICK_LED

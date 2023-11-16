@@ -1880,6 +1880,9 @@ void tick(void) {
 #ifdef SLAVE_TWI_PORT
     tick_slave();
 #endif
+#ifdef TICK_LED_STROBE
+    TICK_LED_STROBE;
+#endif
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when
     // the device is plugged in again

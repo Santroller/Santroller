@@ -111,11 +111,20 @@ uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
-
+#if LED_COUNT_STP
+uint8_t ledState[ROUND_UP(LED_COUNT_STP, 8) / 8];
+uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
+#else
 Led_t ledState[LED_COUNT];
 Led_t lastLedState[LED_COUNT];
+#endif
+#if LED_COUNT_PERIPHERAL_STP
+uint8_t ledStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
+uint8_t lastLedStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
+#else
 Led_t ledStatePeripheral[LED_COUNT_PERIPHERAL];
 Led_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL];
+#endif
 #define UP 1 << 0
 #define DOWN 1 << 1
 #define LEFT 1 << 2
@@ -1901,6 +1910,7 @@ void tick(void) {
         TICK_LED;
     }
 #endif
+
     bool ready = tick_usb();
 
 #ifdef BLUETOOTH_TX

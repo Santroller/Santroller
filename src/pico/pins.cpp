@@ -37,7 +37,7 @@ void digital_write(uint8_t port, uint8_t mask, uint8_t activeMask) {
     port = port * 8;
     uint32_t mask32 = mask << port;
     uint32_t activeMask32 = activeMask << port;
-    gpio_put_masked(mask32, activeMask);
+    gpio_put_masked(mask32, activeMask32);
 }
 
 uint16_t adc_read(uint8_t pin, uint8_t mask) {

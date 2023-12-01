@@ -330,29 +330,42 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint1
 #endif
 }
 
-uint8_t handle_calibration_turntable_ps3_i2c(int8_t orig_val, uint8_t multiplier) {
+uint8_t handle_calibration_turntable_ps3_i2c(uint8_t previous, int8_t orig_val, uint8_t multiplier) {
     uint16_t val = (orig_val * multiplier) + PS3_STICK_CENTER;
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }
-    return (uint8_t)(val);
+    if (val > previous) {
+        return (uint8_t)(val);
+    }
+    return previous;
 }
-int16_t handle_calibration_turntable_360_i2c(int8_t orig_val, uint8_t multiplier) {
-    return orig_val * multiplier;
+int16_t handle_calibration_turntable_360_i2c(int16_t previous, int8_t orig_val, uint8_t multiplier) {
+    int16_t val = orig_val * multiplier;
+    if (val > previous) {
+        return val;
+    }
+    return previous;
 }
-uint8_t handle_calibration_turntable_ps3(uint16_t orig_val, uint8_t multiplier) {
+uint8_t handle_calibration_turntable_ps3(uint8_t previous, uint16_t orig_val, uint8_t multiplier) {
     uint16_t val = (orig_val >> 8) * multiplier;
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }
-    return (uint8_t)(val);
+    if (val > previous) {
+        return (uint8_t)(val);
+    }
+    return previous;
 }
-int16_t handle_calibration_turntable_360(int16_t orig_val, uint8_t multiplier) {
+int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uint8_t multiplier) {
     int32_t val = (orig_val * multiplier);
     if (val > INT16_MAX) {
         val = INT16_MAX;
     }
-    return (int16_t)(val);
+    if (val > previous) {
+        return (int16_t)val;
+    }
+    return previous;
 }
 uint16_t descriptor_index = 0;
 uint8_t tick_xbox_one() {

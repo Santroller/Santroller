@@ -614,11 +614,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &response, sizeof(response));
             return sizeof(response);
         }
-        case COMMAND_WRITE_DIGITAL: {
+        case COMMAND_WRITE_ANALOG: {
             uint8_t port = response_buffer[0];
-            uint8_t mask = response_buffer[1];
-            uint8_t activeMask = response_buffer[2];
-            digital_write(port, mask, activeMask);
+            uint8_t value = response_buffer[1];
+            analogWrite(port, value);
             return 0;
         }
         case COMMAND_SET_DETECT: {
@@ -640,13 +639,6 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             uint8_t response = slaveReadDigital(port, mask);
             memcpy(response_buffer, &response, sizeof(response));
             return sizeof(response);
-        }
-        case COMMAND_WRITE_PERIPHERAL_DIGITAL: {
-            uint8_t pin = response_buffer[0];
-            uint8_t val = response_buffer[1];
-            slavePinMode(pin, PIN_MODE_OUTPUT);
-            slaveWriteDigital(pin, val);
-            return 0;
         }
 #endif
 #if LED_COUNT

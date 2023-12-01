@@ -623,7 +623,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_WRITE_DIGITAL: {
             uint8_t port = response_buffer[0];
             uint8_t mask = response_buffer[1];
-            uint8_t activeMask = response_buffer[1];
+            uint8_t activeMask = response_buffer[2];
             digital_write(port, mask, activeMask);
             return 0;
         }

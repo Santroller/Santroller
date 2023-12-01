@@ -12,8 +12,8 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
 {% include youtube.html id=H73McH5abes %}
 
 ## Steps
-1. Connect the VCC and GND pins on all LEDs that are being used to the Arduino.
-2. Connect the SCK (CI) and MOSI (DI) on the first LED to the SCK and MOSI pins on your Arduino. Then chain the SCK (CO) and MOSI (DO) outputs to the inputs on the next LED, until all LEDs are connected.
+1. Connect the VCC and GND pins on all LEDs that are being used to the microcontroller. It is recommended to use the 5V pin for this, as this is what the LEDs expect to be connecfted to. For the Pi Pico, this is the VBUS pin.
+2. Connect the SCK (CI) and MOSI (DI) on the first LED to the SCK and MOSI pins on your microcontroller. Then chain the SCK (CO) and MOSI (DO) outputs to the inputs on the next LED, until all LEDs are connected.
    If you are using a pi pico, you can choose pins using the configuration tool, as only specific groups of pins work.
       
    | Microcontroller | SCK (CI) | MOSI (DI) |

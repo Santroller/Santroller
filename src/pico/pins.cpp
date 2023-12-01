@@ -30,6 +30,7 @@ uint8_t digital_read(uint8_t port, uint8_t mask) {
     }
     uint32_t ret = sio_hw->gpio_in;
     PIN_INIT;
+    LED_INIT;
     return ((ret >> port) & 0xff);
 }
 
@@ -45,6 +46,7 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
     uint16_t data = adc_read() << 4;
     if (detecting) {
         PIN_INIT;
+        LED_INIT;
     }
     return data;
 }

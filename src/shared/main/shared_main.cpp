@@ -112,8 +112,8 @@ uint8_t ghl_ps4_magic_data[] = {
 
 uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
 #if LED_COUNT_STP
-uint8_t ledState[ROUND_UP(LED_COUNT_STP, 8) / 8];
-uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
+uint8_t ledState[ROUND_UP(LED_COUNT_STP * 2, 8) / 8];
+uint8_t lastLedState[ROUND_UP(LED_COUNT_STP * 2, 8) / 8];
 #else
 Led_t ledState[LED_COUNT];
 Led_t lastLedState[LED_COUNT];

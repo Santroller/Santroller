@@ -335,14 +335,14 @@ uint8_t handle_calibration_turntable_ps3_i2c(uint8_t previous, int8_t orig_val, 
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }
-    if (val > previous) {
+    if (abs(val - PS3_STICK_CENTER) > abs(previous - PS3_STICK_CENTER)) {
         return (uint8_t)(val);
     }
     return previous;
 }
 int16_t handle_calibration_turntable_360_i2c(int16_t previous, int8_t orig_val, uint8_t multiplier) {
     int16_t val = orig_val * multiplier;
-    if (val > previous) {
+    if (abs(val) > abs(previous)) {
         return val;
     }
     return previous;
@@ -352,7 +352,7 @@ uint8_t handle_calibration_turntable_ps3(uint8_t previous, uint16_t orig_val, ui
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }
-    if (val > previous) {
+    if (abs(val - PS3_STICK_CENTER) > abs(previous - PS3_STICK_CENTER)) {
         return (uint8_t)(val);
     }
     return previous;
@@ -362,7 +362,7 @@ int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uin
     if (val > INT16_MAX) {
         val = INT16_MAX;
     }
-    if (val > previous) {
+    if (abs(val) > abs(previous)) {
         return (int16_t)val;
     }
     return previous;

@@ -35,15 +35,17 @@ typedef struct {
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
 // for STP, two bits per led, select and on
 #if LED_COUNT_STP
-extern uint8_t ledState[ROUND_UP(LED_COUNT_STP * 2, 8) / 8];
-extern uint8_t lastLedState[ROUND_UP(LED_COUNT_STP * 2, 8) / 8];
+extern uint8_t ledState[ROUND_UP(LED_COUNT_STP, 8) / 8];
+extern uint8_t ledStateSelect[ROUND_UP(LED_COUNT_STP, 8) / 8];
+extern uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
 #else
 extern Led_t ledState[LED_COUNT];
 extern Led_t lastLedState[LED_COUNT];
 #endif
 #if LED_COUNT_PERIPHERAL_STP
-extern uint8_t ledStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP * 2, 8) / 8];
-extern uint8_t lastLedStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP * 2, 8) / 8];
+extern uint8_t ledStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
+extern uint8_t ledStatePeripheralSelect[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
+extern uint8_t lastLedStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 #else
 extern Led_t ledStatePeripheral[LED_COUNT_PERIPHERAL];
 extern Led_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL];

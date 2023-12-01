@@ -7,6 +7,7 @@
 //--------------------------------------------------------------------+
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
+#include "config.h"
 #include "descriptors.h"
 #include "device/usbd_pvt.h"
 #include "hid.h"
@@ -230,8 +231,20 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 
     if (ep_addr == p_xinput->ep_out) {
         hid_set_report(p_xinput->epout_buf, xferred_bytes, 0x00, INTERRUPT_ID);
-        TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
-                                 sizeof(p_xinput->epout_buf)));
+        if (consoleType == XBOX360 || consoleType == WINDOWS) {
+            TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
+                                     0x40));
+
+#if USB_HOST_STACK
+        } else if (consoleType == XBOXONE) {
+            TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
+                                     0x20));
+#endif
+        } else {
+            TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
+                                     0x08));
+        }
+
     } else if (ep_addr == p_xinput->ep_in) {
         sending = false;
     }

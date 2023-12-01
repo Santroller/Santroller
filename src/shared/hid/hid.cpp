@@ -493,7 +493,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
             handle_rumble(report->motor_left, report->motor_right);
         }
-#if DEVICE_TYPE_IS_INSTRUMENT
+#if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE==STAGE_KIT
         else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
             handle_rumble(data[2], data[3]);
         } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {

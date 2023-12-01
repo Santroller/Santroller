@@ -34,6 +34,15 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 
 ## Wiring Steps (Peripheral, Pi Pico only)
 If you would like your frets to contain LEDs, or want your frets to poll at a different rate to the rest of the turntable, you can use the [Peripheral feature](https://santroller.tangentmc.net/wiring_guides/peripheral.html).
+1. Program a second Pi Pico as a peripheral
+2. Open up the platter on your turntable
+3. Desolder the CLK and DATA from your platter, and solder them to the peripheral pins that you have chosen.
+4. Desolder the 3V3 line from the platter and solder it to VBUS on your peripheral. Do the same on the main pico, you should end up with VBUS connected to VBUS via the slip ring and platter connector.
+5. Connect CLK and DATA to pins that support I2C on your peripheral Pico.
+6. Connect 3V3 out to the 3V3 pin on your platter
+7. Disconnect the buttons from the platter, and connect them to digital pins your peripheral Pico.
+8. Connect ground on the peripheral to ground on the platter. This should also still be connected to ground on the main Pico.
+9. You can then hook up RGB Leds with the [following guide](https://santroller.tangentmc.net/wiring_guides/leds.html) if desired. These can be connected to the peripheral pico to allow putting LEDs in the platter.
 
 Note: If using peripheral mode, here are the wire color codes and pinouts:
 

@@ -170,9 +170,11 @@ You can also pick if you want the Slider to map to standard frets, or if you wan
 #### DJ Hero Turntable Inputs
 The platter from the DJ Hero Turntable is its own device, and this allows for configuring inputs from it. Note that when this is added, you will not see any data from it until you hit save.
 For the Pi Pico, you can pick your SDA and SCL pins here.
+You can disable an input here if you don't want it to function. This can be used to disable buttons that you do not want to use, for example if you have disconnected the joystick on a wiitar, you can disable it here so that it doesn't send phantom inputs.
+
+##### Turntable Poll Rate
 The `Turntable Poll Rate` is important, as the turntable works like a mouse, and sends a difference between the current position and the position during the last poll. By default, the console uses a poll rate of 10ms, as this gives you a bigger range of values. A fast poll rate will respond quick, but it won't have much range, which means the console won't be able to differenciate multiple speeds, as there won't be a difference in values between a slow spin and a fast spin. A slower poll rate meanwhile will give you a higher range of values, as the controller will actually see a difference in rotation between subsequent polls.
 Note that this poll rate also affects the buttons however, but if you want to poll them at a different rate, you can use the [Peripheral](#peripheral-settings-pi-pico-only) feature to do this.
-You can disable an input here if you don't want it to function. This can be used to disable buttons that you do not want to use, for example if you have disconnected the joystick on a wiitar, you can disable it here so that it doesn't send phantom inputs.
 
 ##### Turntable Smoothing
 The turntable smoothing option exists as the DJ Hero turntable is very noisy, and in some instances this may not be desireable. Anything that expects a real turntable however, such as DJ Hero itself is designed to filter this out, and thus it will actually misbehave if smoothing is enabled, so this is best left disabled unless you have a reason to enable it.

@@ -335,7 +335,7 @@ uint8_t handle_calibration_turntable_ps3_i2c(uint8_t previous, int8_t orig_val, 
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }
-    if (abs(val - PS3_STICK_CENTER) > abs(previous - PS3_STICK_CENTER)) {
+    if (abs((int)val - PS3_STICK_CENTER) > abs((int)previous - PS3_STICK_CENTER)) {
         return (uint8_t)(val);
     }
     return previous;
@@ -352,7 +352,7 @@ uint8_t handle_calibration_turntable_ps3(uint8_t previous, uint16_t orig_val, ui
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }
-    if (abs(val - PS3_STICK_CENTER) > abs(previous - PS3_STICK_CENTER)) {
+    if (abs((int)val - PS3_STICK_CENTER) > abs((int)previous - PS3_STICK_CENTER)) {
         return (uint8_t)(val);
     }
     return previous;

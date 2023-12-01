@@ -36,6 +36,19 @@ uint8_t digital_read(uint8_t port_num, uint8_t mask) {
     return data;
 }
 
+void digital_write(uint8_t port_num, uint8_t mask, uint8_t activeMask) {
+    volatile uint8_t* port = ((volatile uint8_t*)(pgm_read_word(ports + port_num)));
+    volatile uint8_t* ddr = port - 1;
+    volatile uint8_t* pin = port - 2;
+    uint8_t oldSREG = SREG;
+    cli();
+    // set pins in mask to output
+    *ddr |= mask;
+    // And then drive them high / low as necessary
+    *port |= activeMask;
+    SREG = oldSREG;
+}
+
 uint16_t adc_read(uint8_t pin, uint8_t mask) {
 #if ADC_COUNT != 0
     cbi(ADCSRA, ADIE);

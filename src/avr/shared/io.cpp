@@ -38,6 +38,7 @@ static volatile uint8_t twi_masterBufferLength;
 static volatile uint8_t twi_error;
 void spi_begin() {
 #ifdef GC_SPI_CLOCK
+    // TODO: probably replace this with direct writes to avoid needing pinMode or digitalWrite
     pinMode(MOSI, OUTPUT);
     pinMode(MISO, INPUT_PULLUP);
     pinMode(SCK, OUTPUT);

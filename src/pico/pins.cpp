@@ -34,6 +34,13 @@ uint8_t digital_read(uint8_t port, uint8_t mask) {
     return ((ret >> port) & 0xff);
 }
 
+void digital_write(uint8_t port, uint8_t mask, uint8_t activeMask) {
+    port = port * 8;
+    uint32_t mask32 = mask << port;
+    uint32_t activeMask32 = activeMask << port;
+    gpio_put_masked(mask32, activeMask);
+}
+
 uint16_t adc_read(uint8_t pin, uint8_t mask) {
     bool detecting = pin & (1 << 7);
     if (detecting) {

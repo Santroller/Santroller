@@ -174,7 +174,9 @@ The `Turntable Poll Rate` is important, as the turntable works like a mouse, and
 Note that this poll rate also affects the buttons however, but if you want to poll them at a different rate, you can use the [Peripheral](#peripheral-settings-pi-pico-only) feature to do this.
 You can disable an input here if you don't want it to function. This can be used to disable buttons that you do not want to use, for example if you have disconnected the joystick on a wiitar, you can disable it here so that it doesn't send phantom inputs.
 It is recommended to disable `Turntable Smoothing`. It attempts to smooth out the noisy values coming from the turntable, but the DJ Hero expecting the values to be noisy, so it will not act correctly if `Turntable Smoothing` is enabled. Other games may act better however with this enabled however.
-`Dual Turntable Smoothing` attempts to combine values from both turntables, to allow playing the game with two turntables at once.
+
+##### Dual Turntables
+The tool is flexible enough that you can design custom controllers such as dual turntables that combine the inputs from a left and right turntable. Instead of using the combined turntable inputs, you can add each input manually. If you then map both sets of inputs to the left turntable, both sets of inputs will be accepted by the game as the left turntable, and you can play in a "dual turntable" mode.
 
 #### LED Binding
 This allows you to pick an event (such as a player led) and bind a digital output or an APA102 LED to it.

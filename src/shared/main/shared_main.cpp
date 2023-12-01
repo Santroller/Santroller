@@ -329,6 +329,31 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint1
     return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
 #endif
 }
+
+uint8_t handle_calibration_turntable_ps3_i2c(int8_t orig_val, uint8_t multiplier) {
+    uint16_t val = (orig_val * multiplier) + PS3_STICK_CENTER;
+    if (val > UINT8_MAX) {
+        val = UINT8_MAX;
+    }
+    return (uint8_t)(val);
+}
+int16_t handle_calibration_turntable_360_i2c(int8_t orig_val, uint8_t multiplier) {
+    return orig_val * multiplier;
+}
+uint8_t handle_calibration_turntable_ps3(uint16_t orig_val, uint8_t multiplier) {
+    uint16_t val = (orig_val >> 8) * multiplier;
+    if (val > UINT8_MAX) {
+        val = UINT8_MAX;
+    }
+    return (uint8_t)(val);
+}
+int16_t handle_calibration_turntable_360(int16_t orig_val, uint8_t multiplier) {
+    int32_t val = (orig_val * multiplier);
+    if (val > INT16_MAX) {
+        val = INT16_MAX;
+    }
+    return (int16_t)(val);
+}
 uint16_t descriptor_index = 0;
 uint8_t tick_xbox_one() {
     uint32_t serial = micros();

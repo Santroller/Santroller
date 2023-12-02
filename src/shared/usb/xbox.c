@@ -46,6 +46,22 @@ const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {
              'D', '7', '0', '0', 'A', '3', '1', '3', 'D', '7', '9', '}', '\0'}
     }
 };
+const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE PROGMEM DevCompatIDsPS3 = {
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
+    Version : 0x0100,
+    Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
+    TotalSections : 1,
+    Reserved : {0},
+    CompatID : {
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Device,
+            Reserved : 0x01,
+            CompatibleID : "WINUSB",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        }}
+};
+
 const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
     TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
     Version : 0x0100,

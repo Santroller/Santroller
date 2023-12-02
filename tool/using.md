@@ -95,7 +95,14 @@ The `Windows Controller Mode` option is used when a controller is plugged into a
 This setting allows you to change your debounce settings, and your poll rate. You can also enable `Queue based inputs` here too. This setting will poll your inputs as fast as possible, and then it will put them in a queue and send them to your device at the dictated rate. This means that the console or PC you are connected too no longer has to poll your device at max speed, as you can now enter inputs and they will be queued until the next queue period.
 
 #### LED Settings
+##### RGB LEDs (APA102)
 If you have followed the [RGB LED](https://santroller.tangentmc.net/wiring_guides/led.html) guide, then set your LED Type to APA102 here. Note that different manufactuers have their APA102s work with colours in different orders, so if you find that colours you pick in the tool are totally different to what you see on your LEDs, then you have probably picked the wrong colour order. On the Pi Pico, you can also assign the pins for your LEDs here as well.
+You can set how many LEDs you have connected here, and then when configuring buttons, axis' or LED commands later, you can pick which LEDs to bind them to, and which colours these actions should drive the LEDs with.
+
+##### LEDs with Driver (STP16CPC26)
+If you have followed the [LEDs with driver](https://santroller.tangentmc.net/wiring_guides/led3.html) guide, then set your LED Type to STP16CPC26 here.
+You can then assign the pins being used by your LED drivers here.
+You can set how many LEDs you have connected here, and then when configuring buttons, axis' or LED commands later, you can pick which LEDs to bind them to.
 
 #### Peripheral Settings (Pi Pico only)
 This firmware allows using a secondary Pi Pico as a peripheral. This means you can connect two picos together using 4 wires, and forward inputs and LED information between them. This can be used to add LEDs or faster inputs when using connections with very few pins, for example this can be used to add LEDs to a GH5 guitar hero guitar neck, or LEDs to a DJ Hero turntable.

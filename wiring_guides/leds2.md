@@ -4,7 +4,7 @@ sort: 9
 # Adding Standard LEDs inline on a controller
 If you don't want to use APA102s, and just want to hook up normal LEDs from buttons, you can follow the following guide.
 ## Supplies
-* A guitar modded using the [following guide](https://santroller.tangentmc.net/wiring_guides/guitar.html)
+* A controller modded using any of the guides
 * Some LEDs
 * a 500 ohm resistor for each LED (note that some LEDs may require a different resistance, it is dependant on their forward voltage.)
 

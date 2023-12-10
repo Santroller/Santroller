@@ -48,7 +48,9 @@ int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
 USB_Report_Data_t combined_report;
+#if DEVICE_TYPE_IS_GAMEPAD
 PS3_REPORT bt_report;
+#endif
 uint8_t debounce[DIGITAL_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
@@ -1347,7 +1349,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
     // Then mouse, as it is an axis so it is more likley to have changes
-#if CONSOLE_TYPE == KEYBOARD_MOUSE
+#if DEVICE_TYPE_KEYBOARD
     void *lastReportToCheck;
     for (int i = 1; i < REPORT_ID_END; i++) {
 #ifdef TICK_MOUSE

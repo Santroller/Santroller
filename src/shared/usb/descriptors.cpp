@@ -45,6 +45,7 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     iSerialNumber : 0x03,
     bNumConfigurations : 1
 };
+#if DEVICE_TYPE_IS_GAMEPAD
 const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
@@ -179,6 +180,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     },
     UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
+#endif
 
 const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescriptor = {
     Config : {
@@ -828,7 +830,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-#if CONSOLE_TYPE == KEYBOARD_MOUSE || CONSOLE_TYPE == MIDI
+#if DEVICE_TYPE_KEYBOARD || CONSOLE_TYPE == MIDI
             size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else

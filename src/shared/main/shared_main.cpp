@@ -50,6 +50,8 @@ int8_t dj_next_right = 0;
 USB_Report_Data_t combined_report;
 #if DEVICE_TYPE_IS_GAMEPAD
 PS3_REPORT bt_report;
+#else
+USB_Report_Data_t bt_report;
 #endif
 uint8_t debounce[DIGITAL_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];

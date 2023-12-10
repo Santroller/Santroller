@@ -31,6 +31,8 @@ This is done using the Santroller Configurator, which can program various microc
   * Rock Band for wii supports usb instruments natively with no extra requirements
   * Guitar Hero for wii requires the use of [fakemote](https://santroller.tangentmc.net/console_guides/wii.html), with a modded console, as these expect wii extensions not usb instruments.
 * Bindings for Fortnite Festival
+  * Device emulates a keyboard which will press the default bindings
+  * There is also a mode that requires struming
 * Support for all major operating systems (Windows, macOS, linux)
 * Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.
 * Support for various microcontrollers

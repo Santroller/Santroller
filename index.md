@@ -33,6 +33,9 @@ This is done using the Santroller Configurator, which can program various microc
 * Bindings for Fortnite Festival
   * Device emulates a keyboard which will press the default bindings
   * There is also a mode that requires struming
+* Support for presets
+  * Store several configuration presets and easily swap between them
+  * Export and import configurations as files for easy sharing of configurations
 * Support for all major operating systems (Windows, macOS, linux)
 * Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.
 * Support for various microcontrollers

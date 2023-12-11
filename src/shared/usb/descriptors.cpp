@@ -756,7 +756,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
-    // printf("Descriptor: %02x %02x %02x\r\n", descriptorType, descriptorNumber, wIndex);
+// printf("Descriptor: %02x %02x %02x\r\n", descriptorType, descriptorNumber, wIndex);
+#if DEVICE_TYPE_IS_GAMEPAD
 #if USB_HOST_STACK
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         seen_windows_desc = true;
@@ -775,6 +776,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
         set_console_type(WINDOWS);
     }
 #endif
+#endif
     descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
@@ -783,7 +785,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-#if CONSOLE_TYPE != KEYBOARD_MOUSE && CONSOLE_TYPE != MIDI
+#if DEVICE_TYPE_IS_GAMEPAD
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;

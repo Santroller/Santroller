@@ -144,7 +144,11 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     SetGlobalInterruptMask(CurrentGlobalInt);
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = DEVICE_TYPE + '0';
+    #if DEVICE_TYPE_IS_GAMEPAD
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = WINDOWS_USES_XINPUT + '0';
+    #else
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = '0';
+    #endif
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

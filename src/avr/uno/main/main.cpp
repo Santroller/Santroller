@@ -82,7 +82,12 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     SREG = CurrentGlobalInt;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
+
+    #if DEVICE_TYPE_IS_GAMEPAD
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
+    #else
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+    #endif
 }
 
 void reset_usb(void) {

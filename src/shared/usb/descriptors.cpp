@@ -39,7 +39,11 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bMaxPacketSize0 : ENDPOINT_SIZE,
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
+    #if DEVICE_TYPE_IS_GAMEPAD
     bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
+    #else
+    bcdDevice : USB_VERSION_BCD(0, 0, 0),
+    #endif
     iManufacturer : 0x01,
     iProduct : 0x02,
     iSerialNumber : 0x03,

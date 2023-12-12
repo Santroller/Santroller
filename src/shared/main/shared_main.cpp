@@ -1651,11 +1651,14 @@ bool tick_usb(void) {
     if (millis_at_boot == 0 && read_device_desc) {
         millis_at_boot = millis();
     }
-    // If we ended up here, then someone probably changed back to hid mode so we should jump back
-    if (consoleType == WINDOWS && !WINDOWS_USES_XINPUT) {
-        consoleType = UNIVERSAL;
-        reset_usb();
-    }
+    #if !WINDOWS_USES_XINPUT || DEVICE_TYPE_KEYBOARD
+        // If we ended up here, then someone probably changed back to hid mode so we should jump back
+        if (consoleType == WINDOWS) {
+            consoleType = UNIVERSAL;
+            reset_usb();
+        }
+    #endif
+    #if DEVICE_TYPE_IS_GAMEPAD
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
@@ -1671,6 +1674,7 @@ bool tick_usb(void) {
     if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
         set_console_type(REAL_PS3);
     }
+    #endif
     if (!ready) return 0;
 #if USB_HOST_STACK
     if (data_from_console_size) {

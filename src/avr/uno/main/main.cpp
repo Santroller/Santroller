@@ -86,7 +86,7 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
     #else
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K' + DEVICE_TYPE;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
     #endif
 }

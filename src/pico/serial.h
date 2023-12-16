@@ -36,7 +36,7 @@ static inline void generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeStr
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1] = '0' + DEVICE_TYPE;
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+2] = '0' + WINDOWS_USES_XINPUT;
     #else
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1] = 'K';
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1] = 'K' + DEVICE_TYPE;
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES+2] = '0';
     #endif
 }

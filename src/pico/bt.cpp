@@ -65,12 +65,8 @@ const uint8_t adv_data[] = {
     APPEARANCE,
     0x03,
 };
-static bool can_send = false;
 bool check_bluetooth_ready() {
     return con_handle != HCI_CON_HANDLE_INVALID;
-}
-bool bluetooth_can_send() {
-    return can_send;
 }
 int get_bt_address(uint8_t *addr) {
     bd_addr_t local_addr;
@@ -80,9 +76,8 @@ int get_bt_address(uint8_t *addr) {
 }
 void send_report(uint8_t size, uint8_t *report) {
     if (con_handle != HCI_CON_HANDLE_INVALID) {
-        can_send = false;
         hids_device_send_input_report(con_handle, report+1, size-1);
-        hids_device_request_can_send_now_event(con_handle);
+        // hids_device_request_can_send_now_event(con_handle);
     }
 }
 const uint8_t adv_data_len = sizeof(adv_data);
@@ -193,9 +188,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             switch (hci_event_hids_meta_get_subevent_code(packet)) {
                 case HIDS_SUBEVENT_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_input_report_enable_get_con_handle(packet);
-                    // gap_request_connection_parameter_update(con_handle, 6, 6, 0, 100);
+                    gap_request_connection_parameter_update(con_handle, 6, 7, 0, 100);
                     printf("Report Characteristic Subscribed %u\n", hids_subevent_input_report_enable_get_enable(packet));
-                    hids_device_request_can_send_now_event(con_handle);
                     break;
                 case HIDS_SUBEVENT_BOOT_KEYBOARD_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_boot_keyboard_input_report_enable_get_con_handle(packet);
@@ -205,10 +199,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     protocol_mode = hids_subevent_protocol_mode_get_protocol_mode(packet);
                     printf("Protocol Mode: %s mode\n", hids_subevent_protocol_mode_get_protocol_mode(packet) ? "Report" : "Boot");
                     break;
-                case HIDS_SUBEVENT_CAN_SEND_NOW: {
-                    can_send = true;
-                    break;
-                }
                 default:
                     break;
             }

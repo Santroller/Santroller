@@ -198,7 +198,6 @@ static void handle_outgoing_connection_error(void) {
     gap_disconnect(connection_handle);
     hog_start_reconnect_timer();
 }
-
 /**
  * Handle GATT Client Events dependent on current state
  *

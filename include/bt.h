@@ -4,7 +4,6 @@
 int btstack_main();
 void send_report(uint8_t size, uint8_t* report);
 bool check_bluetooth_ready(void);
-bool bluetooth_can_send(void);
 
 void hog_start_scan();
 int hog_get_scan_results(uint8_t* buffer);

@@ -24,6 +24,7 @@
 #define CLONE_VALID_PACKET 0x52
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
+uint8_t tmp = 0;
 long clone_guitar_timer = 0;
 long clone_guitar_ready_timer = 0;
 bool clone_ready = false;
@@ -1584,8 +1585,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 
     TICK_RESET
-    // If we are being asked for a HID report (aka via HID_GET_REPORT), then just send whatever inputs we have, do not compare
-    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3) {
+    // Some hosts want packets sent every frame
+    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;
@@ -1621,9 +1622,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef BLUETOOTH_TX
 bool tick_bluetooth(void) {
     uint8_t size = tick_inputs(&bt_report, &last_report_bt, BLUETOOTH_REPORT);
-    if (size) {
-        send_report(size, (uint8_t *)&bt_report);
-    }
+    send_report(size, (uint8_t *)&bt_report);
     return size;
 }
 #endif
@@ -1651,14 +1650,14 @@ bool tick_usb(void) {
     if (millis_at_boot == 0 && read_device_desc) {
         millis_at_boot = millis();
     }
-    #if !WINDOWS_USES_XINPUT || DEVICE_TYPE_KEYBOARD
-        // If we ended up here, then someone probably changed back to hid mode so we should jump back
-        if (consoleType == WINDOWS) {
-            consoleType = UNIVERSAL;
-            reset_usb();
-        }
-    #endif
-    #if DEVICE_TYPE_IS_GAMEPAD
+#if !WINDOWS_USES_XINPUT || DEVICE_TYPE_KEYBOARD
+    // If we ended up here, then someone probably changed back to hid mode so we should jump back
+    if (consoleType == WINDOWS) {
+        consoleType = UNIVERSAL;
+        reset_usb();
+    }
+#endif
+#if DEVICE_TYPE_IS_GAMEPAD
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
@@ -1674,7 +1673,7 @@ bool tick_usb(void) {
     if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
         set_console_type(REAL_PS3);
     }
-    #endif
+#endif
     if (!ready) return 0;
 #if USB_HOST_STACK
     if (data_from_console_size) {
@@ -1961,9 +1960,6 @@ void tick(void) {
 
     bool ready = tick_usb();
 
-#ifdef BLUETOOTH_TX
-    tick_bluetooth();
-#endif
     // Input queuing is enabled, tick as often as possible
     if (INPUT_QUEUE && !ready) {
         tick_inputs(NULL, NULL, consoleType);
@@ -1976,6 +1972,10 @@ void tick(void) {
     }
 #endif
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
+        // No benefit to ticking bluetooth faster than this!
+#ifdef BLUETOOTH_TX
+        tick_bluetooth();
+#endif
         lastDebounce = micros();
         for (int i = 0; i < DIGITAL_COUNT; i++) {
             if (debounce[i]) {

@@ -69,11 +69,6 @@ typedef struct {
 uint8_t prev_bt_report[32];
 
 bool ready_for_next_packet() {
-#ifdef BLUETOOTH_TX
-    if (check_bluetooth_ready()) {
-        return bluetooth_can_send() && tud_xinput_n_ready(0) && tud_ready_for_packet();
-    }
-#endif
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
 }
 
@@ -95,15 +90,15 @@ static void tick_usb() {
         return;
     }
 #endif
+#if !BLUETOOTH
     tud_task();
+#endif
 #if USB_HOST_STACK
     tuh_task();
 #endif
 #ifdef BLUETOOTH_RX
     // if connected to the transmitter, then run the bt based tick, otherwise run the usb based tick.
-    if (check_bluetooth_ready()) {
-        tick_bluetooth_inputs(prev_bt_report);
-    } else {
+    if (!check_bluetooth_ready()) {
         tick();
     }
 #else
@@ -123,8 +118,12 @@ static void tick_usb() {
 }
 #ifdef BLUETOOTH_RX
 void tick_bluetooth(const void *buf, uint8_t len) {
-    memcpy(prev_bt_report, buf, len);
-    tick_usb();
+    tick_bluetooth_inputs(buf);
+}
+#endif
+#if BLUETOOTH
+void loop1() {
+    tud_task();
 }
 #endif
 void loop() {

@@ -86,6 +86,7 @@ def mytarget_callback(*args, **kwargs):
     env.TouchSerialPort("$UPLOAD_PORT", 1200)
     env["UPLOAD_PORT"] = None
     env.AutodetectUploadPort()
+    print("PORT: "+env.subst("$UPLOAD_PORT"))
 
 def mytarget_callback2(*args, **kwargs):
     print("Waiting for bootloader device")

@@ -32,7 +32,7 @@ After your device is running the Santroller firmware, configuring will land you 
 
 ## The Sidebar
 ### Mode
-You can change the mode between `Standard` and `Advanced`. For most people, the standard mode will be sufficient, but the advanced mode allows for configuring debounce on a per input level, and allows for configuring the pin mode of individual inputs, which allows for changing the direction pins are pulled.
+You can change the mode between `Standard` and `Advanced`. For most people, the standard mode will be sufficient, but the advanced mode allows for configuring debounce on a per input level, and allows for configuring the pin mode of individual inputs, which allows for changing the direction pins are pulled. Note though that with advanced mode enabled, queued inputs won't be available, as individual polling and queued inputs aren't compatible with each other.
 
 [![Main Screen](/assets/images/screenshots/mode.png)](/assets/images/screenshots/mode.png)
 

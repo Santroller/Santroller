@@ -32,7 +32,10 @@ This is done using the Santroller Configurator, which can program various microc
   * Guitar Hero for wii requires the use of [fakemote](https://santroller.tangentmc.net/console_guides/wii.html), with a modded console, as these expect wii extensions not usb instruments.
 * Bindings for Fortnite Festival
   * Device emulates a keyboard which will press the default bindings
-  * There is also a mode that requires struming
+  * There is also a mode that emulates strumming by requiring strum inputs when using frets
+* Proper keyboard support
+  * Both NKRO and 6KRO
+  * NKRO is recommended but some consoles (such as PS4 and PS5) only support 6KRO
 * Support for presets
   * Store several configuration presets and easily swap between them
   * Export and import configurations as files for easy sharing of configurations

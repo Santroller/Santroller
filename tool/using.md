@@ -85,6 +85,10 @@ The `Emulation Type` allows for stating what type of device is being emulated, a
 ##### Controller Type 
 The `Controller Type` allows for specifying the type of controller you want to emulate. This is how you tell the tool if you are emulating a Guitar, Drum Kit, or various other types of peripherals.
 
+##### Rollover Type 
+Keyboards can work in multiple different modes. 6KRO is the standard, and this allows for pushing up to 6 keys at once. This report is smaller due to it only allowing 6 buttons simultaneously, and so it is more compatible with some consoles.
+NKRO mode allows pressing any combination of buttons at once, and works a lot like a game controller with a lot of buttons. This makes it quicker to process but it does not work on the PS4 or PS5.
+
 ##### Swap Switch Face Buttons
 The `Swap Switch Face Buttons` option is only used when your controller is plugged into a nintendo switch. This dictates if the switch mappings are based on the face button legends, or the face button position, when compared to an xbox or playstation controller. When this setting is off, buttons are laid out by position, so the A and B buttons, and the X and Y buttons are swapped around so that the mappings make sense from a xbox controller perspective. If you would rather this was not the case, turning this setting on will instead map the buttons so that the legends are aligned instead of the button position.
 

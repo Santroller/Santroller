@@ -91,6 +91,7 @@ def mytarget_callback2(*args, **kwargs):
     print("Waiting for bootloader device")
     env["UPLOAD_PORT"] = None
     env.AutodetectUploadPort()
+    print("PORT: "+env.subst("$UPLOAD_PORT"))
 
 env.AddCustomTarget(
     name="micro_clean",

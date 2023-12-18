@@ -96,7 +96,7 @@ The `Swap Switch Face Buttons` option is only used when your controller is plugg
 The `Windows Controller Mode` option is used when a controller is plugged into a Windows PC. When set to `XInput`, the controller will present itself as a XInput device, but when set to `HID`, it will present it self as a HID device. Note that this is only applicable for USB, Bluetooth will always use HID mode.
 
 #### Controller Poll Settings
-This setting allows you to change your debounce settings, and your poll rate. You can also enable `Queue based inputs` here too. This setting will poll your inputs as fast as possible, and then it will put them in a queue and send them to your device at the dictated rate. This means that the console or PC you are connected too no longer has to poll your device at max speed, as you can now enter inputs and they will be queued until the next queue period.
+This setting allows you to change your debounce settings, and your poll rate. You can also enable `Queue based inputs` here too. This setting will poll your inputs as fast as possible, and then it will put them in a queue and send them to your device at the dictated rate. This means that the console or PC you are connected too no longer has to poll your device at max speed, as you can now enter inputs and they will be queued until the next queue period. This feature however is only available for controller based guitars, however it is not available for fortnite festival guitars as those internally work like keyboards, and keyboards work differently enough that queued inputs are harder to implement.
 
 #### LED Settings
 ##### RGB LEDs (APA102)

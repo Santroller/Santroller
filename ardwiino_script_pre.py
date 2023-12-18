@@ -4,6 +4,7 @@ import subprocess
 import sys
 from os.path import join
 import libusb_package
+from platformio.util import get_serial_ports
 from serial import Serial, SerialException
 import os
 import psutil

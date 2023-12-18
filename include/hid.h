@@ -7,6 +7,11 @@
 #else
 #define NKRO_SIZE 0
 #endif
+#ifdef TICK_SIXKRO
+#define SIXKRO_SIZE 66
+#else
+#define SIXKRO_SIZE 0
+#endif
 #ifdef TICK_CONSUMER
 #define CONSUMER_SIZE 53
 #else
@@ -74,7 +79,7 @@
 // set left to the star power value, and right to these values for our commands
 #define RUMBLE_SANTROLLER_STAR_POWER_FILL 0x13
 #define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x14
-extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
+extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + SIXKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
 extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];

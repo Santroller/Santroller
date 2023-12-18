@@ -166,8 +166,27 @@ typedef struct {
 
 } __attribute__((packed)) USB_NKRO_Data_t;
 
+typedef struct {
+    uint8_t rid;
+    bool leftCtrl : 1;
+    bool leftShift : 1;
+    bool leftAlt : 1;
+    bool lWin : 1;
+    bool rightCtrl : 1;
+    bool rightShift : 1;
+    bool rightAlt : 1;
+    bool rWin : 1;
+    uint8_t Reserved;                   /**< Reserved for OEM use, always set to 0. */
+    uint8_t KeyCode[SIMULTANEOUS_KEYS]; /**< Key codes of the currently pressed
+                                           keys. */
+} __attribute__((packed)) USB_6KRO_Data_t;
+
 typedef union {
+    #ifdef TICK_SIXKRO
+    USB_6KRO_Data_t keyboard;
+    #else
     USB_NKRO_Data_t keyboard;
+    #endif
     USB_MIDI_Data_t midi;
     uint8_t raw[64];
     USB_Mouse_Data_t mouse;
@@ -187,10 +206,10 @@ typedef union {
 } Buffer_Report_t;
 
 typedef struct {
-    uint8_t x : 1;  // square
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle
+    uint8_t x : 1;              // square
+    uint8_t a : 1;              // cross
+    uint8_t b : 1;              // circle
+    uint8_t y : 1;              // triangle
     uint8_t leftShoulder : 1;   // l1
     uint8_t rightShoulder : 1;  // r1
     uint8_t kick1 : 1;
@@ -200,8 +219,8 @@ typedef struct {
     uint8_t start : 1;
     uint8_t leftThumbClick : 1;   // l3
     uint8_t rightThumbClick : 1;  // r3
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // switch capture button
+    uint8_t guide : 1;            // ps
+    uint8_t capture : 1;          // switch capture button
     uint8_t leftBlue : 1;
     uint8_t leftRed : 1;
 
@@ -222,7 +241,7 @@ typedef struct {
     uint8_t orange : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
-    
+
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t yellowCymbal : 1;

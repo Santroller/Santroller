@@ -183,8 +183,7 @@ enum hid_reports_t {
     REPORT_ID_NONE,
 #if DEVICE_TYPE_IS_GAMEPAD
     REPORT_ID_CONTROLLER,
-#endif
-#ifdef TICK_NKRO
+#else
     REPORT_ID_NKRO,
 #endif
 #ifdef TICK_CONSUMER
@@ -198,6 +197,9 @@ enum hid_reports_t {
 };
 
 typedef struct {
+#ifdef TICK_SIXKRO
+    USB_6KRO_Data_t last6KROReport;
+#endif
 #ifdef TICK_NKRO
     USB_NKRO_Data_t lastNKROReport;
 #endif

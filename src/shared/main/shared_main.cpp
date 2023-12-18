@@ -24,6 +24,7 @@
 #define CLONE_VALID_PACKET 0x52
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
+#define KEY_ERR_OVF 0x01
 uint8_t tmp = 0;
 long clone_guitar_timer = 0;
 long clone_guitar_ready_timer = 0;
@@ -55,6 +56,8 @@ PS3_REPORT bt_report;
 USB_Report_Data_t bt_report;
 #endif
 uint8_t debounce[DIGITAL_COUNT];
+uint8_t keyIndex[DIGITAL_COUNT];
+uint8_t usedKeys[6];
 uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastDj = 0;
@@ -145,6 +148,32 @@ uint8_t gh5_mapping[] = {
     0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
     0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
     0x65, 0x61, 0x63, 0x5F};
+void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t* report, bool state) {
+    if (state) {
+        if (keyIndex[id]) {
+            report->KeyCode[keyIndex[id]] = key;
+            return;
+        }
+        for (size_t i = 0; i < sizeof(usedKeys); i++) {
+            if (report->KeyCode[i] == key) {
+                return;
+            }
+            if (!report->KeyCode[i]) {
+                keyIndex[id] = i;
+                report->KeyCode[i] = key;
+                return;
+            }
+        }
+        // Too many buttons - flag the overflow condition and clear all key indexes
+        memset(report->KeyCode, KEY_ERR_OVF, sizeof(report->KeyCode));
+        memset(keyIndex, 0, sizeof(keyIndex));
+        return;
+    }
+    if (!keyIndex[id]) {
+        return;
+    }
+    keyIndex[id] = 0;
+}
 void init_main(void) {
     initPins();
     twi_init();
@@ -153,6 +182,8 @@ void init_main(void) {
     powerMode.subcommand = 0x00;
     memset(ledState, 0, sizeof(ledState));
     memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
+    memset(usedKeys, 0, sizeof(usedKeys));
+    memset(keyIndex, 0, sizeof(keyIndex));
     LED_INIT;
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
@@ -1388,6 +1419,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TICK_NKRO;
             if (last_report) {
                 lastReportToCheck = &last_report->lastNKROReport;
+            }
+        }
+#endif
+#ifdef TICK_SIXKRO
+        if (i == REPORT_ID_NKRO) {
+            size = sizeof(USB_6KRO_Data_t);
+            memset(buf, 0, size);
+            USB_6KRO_Data_t *report = (USB_6KRO_Data_t *)buf;
+            report->rid = REPORT_ID_NKRO;
+            TICK_SIXKRO;
+            if (last_report) {
+                lastReportToCheck = &last_report->last6KROReport;
             }
         }
 #endif

@@ -87,10 +87,23 @@ def mytarget_callback(*args, **kwargs):
     env["UPLOAD_PORT"] = None
     env.AutodetectUploadPort()
 
+def mytarget_callback2(*args, **kwargs):
+    print("Waiting for bootloader device")
+    env["UPLOAD_PORT"] = None
+    env.AutodetectUploadPort()
+
 env.AddCustomTarget(
     name="micro_clean",
     dependencies=None,
     actions=['"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
+    title=None,
+    description=None
+)
+
+env.AddCustomTarget(
+    name="micro_clean_existing",
+    dependencies=None,
+    actions=[mytarget_callback2,'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
     title=None,
     description=None
 )

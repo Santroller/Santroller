@@ -89,9 +89,10 @@ def mytarget_callback(*args, **kwargs):
     print("PORT: "+env.subst("$UPLOAD_PORT"))
 
 def mytarget_callback2(*args, **kwargs):
-    print("Waiting for bootloader device")
     env["UPLOAD_PORT"] = None
-    env.AutodetectUploadPort()
+    before_ports = get_serial_ports()
+    print("Waiting for bootloader device")
+    env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
     print("PORT: "+env.subst("$UPLOAD_PORT"))
 
 env.AddCustomTarget(

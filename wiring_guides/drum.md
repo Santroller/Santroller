@@ -7,7 +7,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 ## Supplies
 * A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)
 
-* A CD4051 or CD4067 based analog multiplexer (Pi Pico only)
+* A 4051 or 4067 based analog multiplexer (Pi Pico only)
 
 * Some Wire
 * Soldering Iron

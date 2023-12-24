@@ -83,7 +83,7 @@ Avoid using USB 2.0 hubs when using these controllers, they poll so quickly that
 Pick a guide from the left to learn how to build a controller or adaptor.
 
 # Need Help? Something not working?
-Join the discord, and someone should be able to help you with your problem.
+Click [Here](https://discord.gg/SsveKZmkWE) to join the discord, and someone should be able to help you with your problem.
 
 # Download link
 Click [Here](https://github.com/Santroller/Santroller/releases/latest) to download the configuration tool.

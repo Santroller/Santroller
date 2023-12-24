@@ -1,0 +1,69 @@
+name: Issue
+description: Raise an issue
+title: "[Issue]: "
+labels: ["issue"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Please describe your issue.
+      placeholder: describe issue here
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: Is your configurator up to date?
+      options:
+        - "yes"
+        - "no"
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: What operating system are you using?
+      options:
+        - Windows 10
+        - Windows 11
+        - Linux
+        - Mac OS
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: osother
+    attributes:
+      label: os-other
+      description: If you are using a different operating system, what is it?
+      placeholder: ex. Windows 7
+    validations:
+      required: false
+  - type: dropdown
+    id: microcontroller-type
+    attributes:
+      label: What microcontroller are you using?
+      options:
+        - pi pico
+        - arduino pro micro 3.3V
+        - arduino pro micro 5V
+        - arduino micro 5V
+        - arduino leonardo 3.3V
+        - arduino leonardo 5V
+        - arduino uno
+        - arduino mega 2560
+        - arduino mega ADK
+    validations:
+      required: true
+  - type: dropdown
+    id: controller-type
+    attributes:
+      label: How is your controller programmed?
+      options:
+        - Direct
+        - Wii
+        - PS2
+        - other issue not controller related or I have not gotten this far
+    validations:
+      required: true

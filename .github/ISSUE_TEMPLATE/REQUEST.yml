@@ -1,0 +1,60 @@
+name: Request
+description: Request for a new feature
+title: "[Request]: "
+labels: ["request"]
+body:
+  - type: textarea
+    id: what-feature
+    attributes:
+      label: Please describe your request.
+      placeholder: describe request here
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: What operating system are you using?
+      options:
+        - Windows 10
+        - Windows 11
+        - Linux
+        - Mac OS
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: osother
+    attributes:
+      label: os-other
+      description: If you are using a different operating system, what is it?
+      placeholder: ex. Windows 7
+    validations:
+      required: false
+  - type: dropdown
+    id: microcontroller-type
+    attributes:
+      label: What microcontroller are you making a request for?
+      options:
+        - pi pico
+        - arduino pro micro 3.3V
+        - arduino pro micro 5V
+        - arduino micro 5V
+        - arduino leonardo 3.3V
+        - arduino leonardo 5V
+        - arduino uno
+        - arduino mega 2560
+        - arduino mega ADK
+        - N/A
+    validations:
+      required: true
+  - type: dropdown
+    id: controller-type
+    attributes:
+      label: How will the microcontroller be programed for this request?
+      options:
+        - Direct
+        - Wii
+        - PS2
+        - N/A
+    validations:
+      required: true

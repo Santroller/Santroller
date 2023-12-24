@@ -321,7 +321,7 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
     }
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
-    printf("%d %d\r\n", rumble_left, rumble_right);
+    // printf("%d %d\r\n", rumble_left, rumble_right);
     HANDLE_RUMBLE;
 #ifdef HANDLE_LED_RUMBLE_OFF
     if (rumble_left == 0x00 && rumble_right == 0xFF) {

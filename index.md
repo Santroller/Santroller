@@ -72,6 +72,7 @@ This is done using the Santroller Configurator, which can program various microc
   * DJ Hero Turntables
   * Rock Band Stage Kit
   * Standard Gamepad
+  * Guitar Praise Guitar
 * Various LED options, including seperate states for pressed and released, and reaction to game events when possible.
 * Reactive configuration tool, to make calibration as easy as possible.
 

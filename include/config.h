@@ -40,7 +40,9 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #else
 #define PS3_ID 0x07
 #endif
-#if DEVICE_TYPE == DANCE_PAD
+#if DEVICE_TYPE == GUITAR_PRAISE_GUITAR
+#define PC_REPORT GuitarPraise_Data_t
+#elif DEVICE_TYPE == DANCE_PAD
 #define SUB_TYPE XINPUT_DANCE_PAD
 #define XINPUT_FLAGS 0x00
 #define XINPUT_REPORT XInputGamepad_Data_t

@@ -453,7 +453,7 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
-#if defined(BLUETOOTH_RX)
+#if defined(BLUETOOTH_RX) && DEVICE_TYPE_IS_NORMAL_GAMEPAD
 // When we do Bluetooth, the reports are in universal format, so we need to convert
 void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_console_type) {
     uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
@@ -1796,6 +1796,25 @@ int tick_bluetooth_inputs(const void *buf) {
     }
 #endif
 
+#elif DEVICE_TYPE == GUITAR_PRAISE_GUITAR
+    PC_REPORT *input = (PC_REPORT *)(buf);
+    USB_Report_Data_t *report_data = &combined_report;
+    report_size = size = sizeof(PC_REPORT);
+    memcpy(report_data, buf, size);
+    PC_REPORT *report = (PC_REPORT *)report_data;
+    report->dpad = 0x08;
+    report->reportId = 1;
+    TICK_PC;
+    asm volatile("" ::
+                     : "memory");
+    if (report->dpadUp && report->dpadDown) {
+        report->dpadUp = report->dpadDown = false;
+    } else if (report->dpadUp) {
+        report->dpadUp2 = report->dpadUp;
+        report->dpad = 0x00;
+    } else if (report->dpadDown) {
+        report->dpad = 0x04;
+    }
 #else
     PC_REPORT *input = (PC_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
@@ -1809,6 +1828,7 @@ int tick_bluetooth_inputs(const void *buf) {
                          : "memory");
         report->dpad = dpad_bindings[report->dpad];
     }
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     bool updateSequence = false;
     bool updateHIDSequence = false;
     if (output_console_type == XBOXONE) {
@@ -1972,7 +1992,7 @@ int tick_bluetooth_inputs(const void *buf) {
     }
 #endif
 #endif
-
+#endif
     TICK_RESET
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         lastDebounce = micros();

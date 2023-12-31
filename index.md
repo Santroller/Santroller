@@ -90,7 +90,7 @@ Click [Here](http://discord.gg/CmdYpXKcEU) to join the discord, and someone shou
 Click [Here](https://github.com/Santroller/Santroller/releases/latest) to download the configuration tool.
 
 # Using this tool commercially
-If you would look to sell devices running the Santroller firmware, click the [following link](https://santroller.tangentmc.net/tool/commercial_use.html) to learn more about the commercial version of this platform.
+If you would like to sell devices running the Santroller firmware, click the [following link](https://santroller.tangentmc.net/tool/commercial_use.html) to learn more about the commercial version of this platform.
 The standard version of this tool can NOT be used commercially, and the commercial version of this platform has extra features that are designed specifically for users who are selling products running on this platform.
 
 

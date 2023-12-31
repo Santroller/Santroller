@@ -67,13 +67,13 @@ typedef struct {
 
     uint8_t dpad : 4;
 
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t y : 1;  // yellow
+    uint8_t x : 1;  // blue
 
-    uint8_t leftShoulder : 1;   // orange, l1
-    uint8_t tilt : 1;
+    uint8_t leftShoulder : 1;   // orange
+    uint8_t guide : 1; // tilt, just using this to make things easier
     uint8_t start : 1;
     uint8_t back : 1;  // select
     uint8_t padding : 4;

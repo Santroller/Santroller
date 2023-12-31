@@ -73,7 +73,7 @@ typedef struct {
     uint8_t x : 1;  // blue
 
     uint8_t leftShoulder : 1;   // orange
-    uint8_t guide : 1; // tilt, just using this to make things easier
+    uint8_t leftThumbClick : 1; // tilt, just using this to make things easier
     uint8_t start : 1;
     uint8_t back : 1;  // select
     uint8_t padding : 4;

@@ -62,6 +62,31 @@ typedef struct {
 } __attribute__((packed)) PCGamepad_Data_t;
 typedef struct {
     uint8_t reportId;
+    uint8_t unused[3];
+    uint8_t whammy;
+
+    uint8_t dpad : 4;
+
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
+    uint8_t x : 1;  // square, blue
+
+    uint8_t leftShoulder : 1;   // orange, l1
+    uint8_t tilt : 1;
+    uint8_t start : 1;
+    uint8_t back : 1;  // select
+    uint8_t padding : 4;
+    
+    uint8_t dpadUp2 : 1;
+    uint8_t padding2 : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadUp : 1;
+    uint8_t padding3 : 4;
+} __attribute__((packed)) GuitarPraise_Data_t;
+
+typedef struct {
+    uint8_t reportId;
     // Button bits
     uint8_t x : 1;  // square
     uint8_t a : 1;  // cross
@@ -96,10 +121,10 @@ typedef struct
     uint8_t x : 1;  // square
     uint8_t y : 1;  // triangle
 
-    uint8_t padFlag : 1; 
+    uint8_t padFlag : 1;
     uint8_t cymbalFlag : 1;
-    uint8_t leftShoulder : 1; // kick 1
-    uint8_t rightShoulder : 1; // kick 2
+    uint8_t leftShoulder : 1;   // kick 1
+    uint8_t rightShoulder : 1;  // kick 2
 
     uint8_t back : 1;
     uint8_t start : 1;

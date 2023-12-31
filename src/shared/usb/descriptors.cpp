@@ -37,19 +37,24 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bDeviceSubClass : USB_CLASS_USE_CLASS_INFO,
     bDeviceProtocol : USB_CLASS_USE_CLASS_INFO,
     bMaxPacketSize0 : ENDPOINT_SIZE,
+#if DEVICE_TYPE == GUITAR_PRAISE_GUITAR
+    idVendor : GUITAR_PRAISE_VID,
+    idProduct : GUITAR_PRAISE_PID,
+#else
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-    #if DEVICE_TYPE_IS_GAMEPAD
+#endif
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
-    #else
+#else
     bcdDevice : USB_VERSION_BCD(0, 0, 0),
-    #endif
+#endif
     iManufacturer : 0x01,
     iProduct : 0x02,
     iSerialNumber : 0x03,
     bNumConfigurations : 1
 };
-#if DEVICE_TYPE_IS_GAMEPAD
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
 const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
@@ -216,7 +221,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
-#if DEVICE_TYPE_KEYBOARD
+#if DEVICE_TYPE_IS_KEYBOARD
         wDescriptorLength : sizeof(keyboard_mouse_descriptor)
 #else
         wDescriptorLength : sizeof(ps3_instrument_descriptor)
@@ -761,7 +766,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
 // printf("Descriptor: %02x %02x %02x\r\n", descriptorType, descriptorNumber, wIndex);
-#if DEVICE_TYPE_IS_GAMEPAD
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
 #if USB_HOST_STACK
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         seen_windows_desc = true;
@@ -789,7 +794,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-#if DEVICE_TYPE_IS_GAMEPAD
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
@@ -836,7 +841,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-#if DEVICE_TYPE_KEYBOARD || CONSOLE_TYPE == MIDI
+#if DEVICE_TYPE_IS_KEYBOARD || CONSOLE_TYPE == MIDI
+            size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
+            memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
+
+#elif DEVICE_TYPE == GUITAR_PRAISE_GUITAR
             size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else
@@ -862,6 +871,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
                 }
+
 #if DEVICE_TYPE_IS_INSTRUMENT
                 desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
 #else
@@ -885,10 +895,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case HID_DESCRIPTOR_REPORT: {
             const void *address;
             seen_hid_descriptor_read = true;
-#if DEVICE_TYPE_KEYBOARD
+#if DEVICE_TYPE_IS_KEYBOARD
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
-#else
+#elif DEVICE_TYPE_IS_NORMAL_GAMEPAD
             if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
@@ -909,6 +919,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 address = pc_descriptor;
                 size = sizeof(pc_descriptor);
             }
+#else
+            address = ps3_instrument_descriptor;
+            size = sizeof(ps3_instrument_descriptor);
 #endif
             memcpy_P(descriptorBuffer, address, size);
             break;

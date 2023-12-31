@@ -71,6 +71,16 @@ def before_upload(source, target, env):
             dev.ctrl_transfer(0x21, 0x09, b_request)
         except:
             pass
+        dev = libusb_package.find(idVendor=0x0314, idProduct=0x0830)
+        try:
+            dev.detach_kernel_driver(0)
+        except:
+            pass
+        try:
+            dev.ctrl_transfer(0x21, b_request)
+            dev.ctrl_transfer(0x21, 0x09, b_request)
+        except:
+            pass
     if id_vendor:
         args = {"idVendor": id_vendor}
         if id_product:

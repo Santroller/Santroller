@@ -50,9 +50,6 @@ typedef struct {
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
 #endif
-#if DEVICE_TYPE_IS_GAMEPAD
-PS3_REPORT ble_rx_report;
-#endif
 typedef struct {
     uint8_t pin_dp;
     uint8_t pio_tx_num;

@@ -430,7 +430,7 @@ void handle_keyboard_leds(uint8_t leds) {
 }
 
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
-#if DEVICE_TYPE_KEYBOARD
+#if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif
     uint8_t id = data[0];

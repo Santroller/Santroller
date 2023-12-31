@@ -50,7 +50,7 @@ int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
 USB_Report_Data_t combined_report;
-#if DEVICE_TYPE_IS_GAMEPAD
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
 PS3_REPORT bt_report;
 #else
 USB_Report_Data_t bt_report;
@@ -148,7 +148,7 @@ uint8_t gh5_mapping[] = {
     0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
     0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
     0x65, 0x61, 0x63, 0x5F};
-void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t* report, bool state) {
+void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
     if (state) {
         if (keyIndex[id]) {
             report->KeyCode[keyIndex[id]] = key;
@@ -1383,7 +1383,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
     // Then mouse, as it is an axis so it is more likley to have changes
-#if DEVICE_TYPE_KEYBOARD
+#if DEVICE_TYPE_IS_KEYBOARD
     void *lastReportToCheck;
     for (int i = 1; i < REPORT_ID_END; i++) {
 #ifdef TICK_MOUSE
@@ -1493,6 +1493,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
 #endif
+#if DEVICE_TYPE != GUITAR_PRAISE_GUITAR
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
@@ -1626,6 +1627,25 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
     }
+#else
+    report_size = size = sizeof(GuitarPraise_Data_t);
+    GuitarPraise_Data_t *report = (GuitarPraise_Data_t *)report_data;
+    memset(report, 0, sizeof(GuitarPraise_Data_t));
+    memset(report->unused, 0x80, sizeof(report->unused));
+    report->dpad = 0x08;
+    report->reportId = 1;
+    TICK_PC;
+    asm volatile("" ::
+                     : "memory");
+    if (report->dpadUp && report->dpadDown) {
+        report->dpadUp = report->dpadDown = false;
+    } else if (report->dpadUp) {
+        report->dpadUp2 = report->dpadUp;
+        report->dpad = 0x00;
+    } else if (report->dpadDown) {
+        report->dpad = 0x04;
+    }
+#endif
 
     TICK_RESET
     // Some hosts want packets sent every frame
@@ -1693,14 +1713,14 @@ bool tick_usb(void) {
     if (millis_at_boot == 0 && read_device_desc) {
         millis_at_boot = millis();
     }
-#if !WINDOWS_USES_XINPUT || DEVICE_TYPE_KEYBOARD
+#if !WINDOWS_USES_XINPUT || DEVICE_TYPE_IS_KEYBOARD
     // If we ended up here, then someone probably changed back to hid mode so we should jump back
     if (consoleType == WINDOWS) {
         consoleType = UNIVERSAL;
         reset_usb();
     }
 #endif
-#if DEVICE_TYPE_IS_GAMEPAD
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
@@ -1758,7 +1778,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
     TICK_SHARED;
-#if DEVICE_TYPE_KEYBOARD
+#if DEVICE_TYPE_IS_KEYBOARD
 #ifdef TICK_NKRO
     if (buf[0] == REPORT_ID_NKRO) {
         memcpy(&last_report_usb->lastNKROReport, buf, sizeof(last_report_usb->lastNKROReport));

@@ -17,7 +17,7 @@
 #include "endpoints.h"
 #include "hid.h"
 #include "shared_main.h"
-#if DEVICE_TYPE_KEYBOARD
+#if DEVICE_TYPE_IS_KEYBOARD
     // Appearance HID - Keyboard (Category 15, Sub-Category 1)
     #define REPORT keyboard_mouse_descriptor
     #define APPEARANCE 0xC1

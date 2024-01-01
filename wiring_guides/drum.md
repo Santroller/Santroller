@@ -23,4 +23,9 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 4. The other wires for each pad are the signal pins, and these need to go to seperate analog pins on your microcontroller.
 5. If you would like to also hook up face buttons, you will need to follow the traces on the main PCB and work out the signal pins for each button, and hook those up to digital pins on your microcontroller.
 
+## Calibration
+Drum calibration is a bit different to most other controllers. A drum axis has a `minimum` and a `maximum`. The minimum is the smallest value that will be considered a hit by the drum kit. Increase this value if your drum is registering hits that it shouldn't. The maximum specifies the hardest hit you want the drum to register. This gets used for games that rely on hitting the drum hard to do different actions, and the actual resulting analog value will be scaled between the min and max.
+
+You will also need to adjust the debounce. The debounce for a drum hit dictates how long the drum signal will stay active, so you want to increase this a lot for a drum kit, otherwise you will find that your drum hits will immediately turn off which is not what the games expect.
+
 Now that you have wired your drum, go [configure it](https://santroller.tangentmc.net/tool/using.html).

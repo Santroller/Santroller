@@ -74,6 +74,7 @@ This is done using the Santroller Configurator, which can program various microc
   * Standard Gamepad
   * Guitar Praise Guitar
 * Various LED options, including seperate states for pressed and released, and reaction to game events when possible.
+  * Support for various LED effects is in the current nightly build of YARG
 * Reactive configuration tool, to make calibration as easy as possible.
 
 ```note

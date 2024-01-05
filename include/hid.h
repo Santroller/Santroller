@@ -89,14 +89,14 @@ extern const uint8_t ps3_instrument_descriptor[104];
 extern const uint8_t ps4_descriptor[160];
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING
-extern const uint8_t pc_descriptor[87 + 2*HID_AXIS_COUNT];
+extern const uint8_t pc_descriptor[94 + 2*HID_AXIS_COUNT];
 #else
-extern const uint8_t pc_descriptor[83 + 2*HID_AXIS_COUNT];
+extern const uint8_t pc_descriptor[90 + 2*HID_AXIS_COUNT];
 #endif
 #elif DEVICE_TYPE == STAGE_KIT
-extern const uint8_t pc_descriptor[70];
+extern const uint8_t pc_descriptor[77];
 #else
-extern const uint8_t pc_descriptor[127];
+extern const uint8_t pc_descriptor[134];
 #endif
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);

@@ -16,6 +16,19 @@
 #define INTERNAL_SERIAL_START_ADDRESS 0x0E
 #define USB_STRING_LEN(UnicodeChars) (sizeof(USB_Descriptor_Header_t) + ((UnicodeChars) << 1))
 #define INTERNAL_SERIAL_LENGTH_BITS 80
+/** \name Control Request Data Direction Masks */
+/**@{*/
+/** Request data direction mask, indicating that the request data will flow from host to device.
+ *
+ *  \see \ref CONTROL_REQTYPE_DIRECTION macro.
+ */
+#define REQDIR_HOSTTODEVICE (0 << 7)
+
+/** Request data direction mask, indicating that the request data will flow from device to host.
+ *
+ *  \see \ref CONTROL_REQTYPE_DIRECTION macro.
+ */
+#define REQDIR_DEVICETOHOST (1 << 7)
 typedef struct
 {
     uint8_t Size; /**< Size of the descriptor, in bytes. */
@@ -82,13 +95,13 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     SREG = CurrentGlobalInt;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
 
-    #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
-    #else
+#else
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K' + DEVICE_TYPE;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
-    #endif
+#endif
 }
 
 void reset_usb(void) {
@@ -182,8 +195,12 @@ void loop() {
             if (ctr->request >= COMMAND_REBOOT && ctr->request < MAX) {
                 tick();
             }
+            uint8_t* buf = dt->data;
+            if ((ctr->bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
+                buf = ctr->data;
+            }
             // 8u2/16u2 wants us to handle a control request.
-            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, dt->data);
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, buf);
             if (len > wLength) len = wLength;
             header->len = len;
             break;

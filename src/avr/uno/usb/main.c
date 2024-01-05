@@ -492,11 +492,20 @@ void EVENT_USB_Device_ControlRequest(void) {
     // For host to device requests, send the data from the host
     if ((USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST) == REQDIR_HOSTTODEVICE) {
         Endpoint_ClearSETUP();
-        uint8_t len = USB_ControlRequest.wLength;
-        while (len) {
-            register uint8_t data = Endpoint_Read_8();
-            WRITE_BYTE_TO_BUF(data, tmp);
-            len--;
+        uint8_t Length = USB_ControlRequest.wLength;
+        if (!(Length))
+            Endpoint_ClearOUT();
+
+        while (Length) {
+            if (Endpoint_IsOUTReceived()) {
+                while (Length && Endpoint_BytesInEndpoint()) {
+                    register uint8_t data = Endpoint_Read_8();
+                    WRITE_BYTE_TO_BUF(data, tmp);
+                    Length--;
+                }
+
+                Endpoint_ClearOUT();
+            }
         }
         Endpoint_ClearStatusStage();
     }

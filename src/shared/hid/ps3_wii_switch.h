@@ -166,6 +166,7 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0x85, 0x03,        //   Report ID (3)
     0x0A, 0x21, 0x27,  //   Usage (0x2721)
+    0x75, 0x08,        //   Report Size (8)
     0x95, 0x2F,        //   Report Count (47)
     0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0x0A, 0x21, 0x26,  //   Usage (0x2621)

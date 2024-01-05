@@ -94,7 +94,7 @@ extern const uint8_t pc_descriptor[94 + 2*HID_AXIS_COUNT];
 extern const uint8_t pc_descriptor[90 + 2*HID_AXIS_COUNT];
 #endif
 #elif DEVICE_TYPE == STAGE_KIT
-extern const uint8_t pc_descriptor[77];
+extern const uint8_t pc_descriptor[79];
 #else
 extern const uint8_t pc_descriptor[134];
 #endif

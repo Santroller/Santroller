@@ -88,9 +88,9 @@ typedef struct {
 typedef struct {
     uint8_t reportId;
     // Button bits
-    uint8_t x : 1;  // square
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
+    uint8_t a : 1;  // square
+    uint8_t b : 1;  // cross
+    uint8_t x : 1;  // circle
     uint8_t y : 1;  // triangle
 
     uint8_t back : 1;  // select

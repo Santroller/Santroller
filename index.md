@@ -106,7 +106,7 @@ This is done using the Santroller Configurator, which can program various microc
   - This can be used to put LEDs in a DJ Hero turntable, or to bypass the GH5 neck's microcontroller but keep it removable.
 - Overhauled LED support
   - Player LED support
-    - PS3 and Xbox 360
+    - PS3/4/5 and Xbox 360
   - LED indicator for console authentication
   - Rumble (in gamepad mode)
   - PS4 LED support

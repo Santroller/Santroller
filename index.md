@@ -43,21 +43,24 @@ This is done using the Santroller Configurator, which can program various microc
   - Rock Band Stage Kit
   - Standard Gamepad
   - Guitar Praise Guitar
+- Inputs update live while configuring, to make calibration and testing as easy as possible.
 - Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.
-  - This means you no longer need to set your controller up for a specific console
-  - For emulators, you can define button combinations that will force the device into a specific mode
-  - For RPCS3, starting a game will jump the controller to PS3 mode, and then you can restart the game to actually detect the controller, as RPCS3 does not have hotplug support. This will also automatically enable WinUSB for windows as well.
+  - This means you no longer need to set your controller up for a specific console.
+  - For emulators, you can define button combinations that will force the device into a specific mode.
+  - For RPCS3, starting a game will jump the controller to PS3 mode, and then you can restart the game to actually detect the controller, as RPCS3 does not have hotplug support. This will also automatically enable WinUSB on windows as well.
 - Bindings for Fortnite Festival
   - Device emulates a keyboard which will press the default bindings
   - There is also a mode that emulates strumming by requiring strum inputs when using frets
   - Works on consoles too, set the keyboard mode to 6KRO for PS4 and PS5.
 - Keyboard Emulation
-  - Both NKRO and 6KRO
+  - You can bind to any amount of keys using any inputs
+  - Both NKRO and 6KRO modes are implemented
 - Support for presets
   - Store several configuration presets and easily swap between them
   - Export and import configurations as files for easy sharing of configurations
-- Support for all major operating systems (Windows, macOS, linux)
-  - Setting a guitar to XInput mode will only use XInput mode on windows, meaning you can leave a guitar in XInput mode and not have issues on macOS or Linux.
+- Support for all major operating systems
+  - Setting a guitar to XInput mode will only use XInput mode on windows
+  - Using HID mode by default means the controller should work on any device, as HID devices are supported by most operating systems and non console devices.
 - Support for various microcontrollers
   - Pi Pico _Recommended, as there are several features that are Pi Pico only, and it's easier for beginners_
   - Arduino Pro Micro (3.3v)
@@ -82,6 +85,7 @@ This is done using the Santroller Configurator, which can program various microc
 - Shortcuts
   - Replaces the previous hardcoded start + select to home feature, and allows for defining any combination of inputs and mapping that to an output.
   - The inputs do need to be of the same type however, so this means you can do things like requiring multiple digital inputs, but not an analog + a digital input
+  - You can even use this feature for Tap bar frets or the Selector switch. This can be useful if your are using a selector switch for your pickup selector, instead of a potentiometer.
 - Custom input mappings
   - You can map inputs from _any_ controller to _any_ output. This means you can do things like mapping a button press on a Wii guitar to tilt.
   - This also lets you do things like mapping a button press to a tap bar fret or the pickup selector on a Rock Band guitar
@@ -89,8 +93,8 @@ This is done using the Santroller Configurator, which can program various microc
   - Use a second Pi Pico for inputs or LEDs, and then connect only a few wires between the two microcontrollers.
   - This can be used to put LEDs in a DJ Hero turntable, or to bypass the GH5 neck's microcontroller but keep it removable.
 - Various LED options, including seperate states for pressed and released, and reaction to game events when possible.
-  - Support for various LED effects is in the latest nightly build of YARG
-- Reactive configuration tool, to make calibration as easy as possible.
+  - Currently, the only supported game is the latest YARG nightly.
+  - CH support isn't planned, as there is not an easy way to hook into it. Older tools used hacks to inject themselves into the game, but this method is prone to failure and wouldn't work for ScoreSpy.
 
 ```note
 Avoid using USB 2.0 hubs when using these controllers, they poll so quickly that multiple guitars on a single hub will be slowed down, and some hubs will even cause issues with the controller being detected. However, USB 3.0 hubs are okay, and I have previously used multiple guitars on a single USB 3.0 hub with no issues.

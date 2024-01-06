@@ -108,6 +108,7 @@ This is done using the Santroller Configurator, which can program various microc
   - Player LED support
     - PS3 and Xbox 360
   - LED indicator for console authentication
+  - Rumble (in gamepad mode)
   - PS4 LED support
   - Stage Kit LED and Fog machine support
   - LEDs that react to game events

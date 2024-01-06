@@ -2,7 +2,7 @@
 sort: 7
 ---
 # Peripheral controllers (Pi Pico Only)
-This firmware has a concept of a peripheral controller. This allows you to connect four wires between two Pi Picos, which can allow for connecting inputs or RGB Leds over connectors with limited pins. This is useful for Guitars and Turntables, as it allows for wiring frets in a responsive way over a limited number of pins. Note that the peripheral feature uses I2C, so it can actually share pins with a DJ Hero Turntable Platter, or a GH5 Guitar neck.
+This firmware has a concept of a peripheral controller. This allows for using a second Pi Pico as a secondary controller which can then be connected to LEDs or inputs. This is useful for Guitars and Turntables, as it allows for wiring frets in a responsive way over a limited number of pins. Note that the peripheral feature uses I2C, so it can actually share pins with a DJ Hero Turntable Platter, or a GH5 Guitar neck.
 
 ```danger
 LEDs require 5 volts, but most I2C devices run on 3.3 volts. This means if you intend to share pins with a DJ Hero Turntable Platter, or a GH5 guitar neck, you will need to redirect power for that device to the peripheral's 3.3v output, as we need a 5 volt signal sent to the peripheral. 

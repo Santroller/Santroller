@@ -106,11 +106,11 @@ Pick a guide from the left to learn how to build a controller or adaptor.
 
 # Need Help? Something not working?
 
-Click [Here](http://discord.gg/CmdYpXKcEU) to join the discord, and someone should be able to help you with your problem.
+Click [here](http://discord.gg/CmdYpXKcEU) to join the discord, and someone should be able to help you with your problem.
 
 # Download link
 
-Click [Here](https://github.com/Santroller/Santroller/releases/latest) to download the configuration tool.
+Click [here](https://github.com/Santroller/Santroller/releases/latest) to download the configuration tool.
 
 # Using this tool commercially
 

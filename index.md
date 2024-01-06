@@ -43,6 +43,7 @@ This is done using the Santroller Configurator, which can program various microc
   - Rock Band Stage Kit
   - Standard Gamepad
   - Guitar Praise Guitar
+- Improved latency over the older Guitar Configurator firmware
 - Inputs update live while configuring, to make calibration and testing as easy as possible.
 - Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.
   - This means you no longer need to set your controller up for a specific console.

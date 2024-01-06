@@ -23,6 +23,12 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 4. The other wires for each pad are the signal pins, and these need to go to seperate analog pins on your microcontroller.
 5. If you would like to also hook up face buttons, you will need to follow the traces on the main PCB and work out the signal pins for each button, and hook those up to digital pins on your microcontroller.
 
+## Wiring the multiplexer
+1. Wire COM on the multiplexer to an analog pin on your Pi Pico
+2. Wire A, B and C (Or S0, S1, S2, S3) to seperate digital pins on your Pi Pico
+3. Wire each drum pad to a different channel on the multiplexer.
+4. When configuring, specify all these pins, and then specify the correct channel for a given pad.
+
 Now that you have wired your drum, go [configure it](https://santroller.tangentmc.net/tool/using.html).
 
 ## Drum Specific Configuration

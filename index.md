@@ -94,7 +94,7 @@ This is done using the Santroller Configurator, which can program various microc
   - This can be used to put LEDs in a DJ Hero turntable, or to bypass the GH5 neck's microcontroller but keep it removable.
 - Various LED options, including seperate states for pressed and released, and reaction to game events when possible.
   - Currently, the only supported game is the latest YARG nightly.
-  - CH support isn't planned, as there is not an easy way to hook into it. Older tools used hacks to inject themselves into the game, but this method is prone to failure and wouldn't work for ScoreSpy.
+  - CH support isn't planned, as there is not an easy way to hook into it. Older tools used hacks to inject themselves into the game, but this method was not stable and wouldn't work for ScoreSpy.
 
 ```note
 Avoid using USB 2.0 hubs when using these controllers, they poll so quickly that multiple guitars on a single hub will be slowed down, and some hubs will even cause issues with the controller being detected. However, USB 3.0 hubs are okay, and I have previously used multiple guitars on a single USB 3.0 hub with no issues.

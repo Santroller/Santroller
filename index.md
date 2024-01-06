@@ -87,7 +87,7 @@ This is done using the Santroller Configurator, which can program various microc
 - Shortcuts
   - Replaces the previous hardcoded start + select to home feature, and allows for defining any combination of inputs and mapping that to an output.
   - The inputs do need to be of the same type however, so this means you can do things like requiring multiple digital inputs, but not an analog + a digital input
-  - You can even use this feature for Tap bar frets or the Selector switch. This can be useful if your are using a selector switch for your pickup selector, instead of a potentiometer.
+  - You can even use this feature for tap bar frets or the pickup selector. This can be useful if your are using an actual selector switch for your pickup selector, instead of a potentiometer.
 - Custom input mappings
   - You can map inputs from _any_ controller to _any_ output. This means you can do things like mapping a button press on a Wii guitar to tilt.
   - This also lets you do things like mapping a button press to a tap bar fret or the pickup selector on a Rock Band guitar

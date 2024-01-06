@@ -104,9 +104,15 @@ This is done using the Santroller Configurator, which can program various microc
 - Peripheral Mode (Pi Pico only)
   - Use a second Pi Pico for inputs or LEDs, and then connect only a few wires between the two microcontrollers.
   - This can be used to put LEDs in a DJ Hero turntable, or to bypass the GH5 neck's microcontroller but keep it removable.
-- Various LED options, including seperate states for pressed and released, and reaction to game events when possible.
-  - Currently, the only supported game is the latest YARG nightly.
-  - CH support isn't planned, as there is not an easy way to hook into it. Older tools used hacks to inject themselves into the game, but this method was not stable and wouldn't work for ScoreSpy.
+- Overhauled LED support
+  - Player LED support
+    - PS3 and Xbox 360
+  - LED indicator for console authentication
+  - PS4 LED support
+  - Stage Kit LED and Fog machine support
+  - LEDs that react to game events
+    - Currently, the only supported game for this is the latest YARG nightly.
+    - CH support isn't planned, as there is not an easy way to hook into it. Older tools used hacks to inject themselves into the game, but this method was not stable and wouldn't work for ScoreSpy.
 
 ```note
 Avoid using USB 2.0 hubs when using these controllers, they poll so quickly that multiple guitars on a single hub will be slowed down, and some hubs will even cause issues with the controller being detected. However, USB 3.0 hubs are okay, and I have previously used multiple guitars on a single USB 3.0 hub with no issues.

@@ -32,7 +32,7 @@ This is done using the Santroller Configurator, which can program various microc
   | DJ Hero Turntable                      | DJ Hero                 | Works natively                                                                            | Works natively |                                                                                                |                                                                                                | Requires [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) or [UsbdSecPatch](https://santroller.tangentmc.net/console_guides/authentication.html#usbdsecpatch) |                                                                                                | Requires [fakemote](https://santroller.tangentmc.net/console_guides/wii.html) |                                                                                             |
   | Rock Band Stage Kit                    | Rock Band (All Games)   |                                                                                           |                |                                                                                                |                                                                                                | Requires [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) or [UsbdSecPatch](https://santroller.tangentmc.net/console_guides/authentication.html#usbdsecpatch) |                                                                                                |                                                                               |                                                                                             |
 
-- Ability to emulate the following controllers
+- Ability to emulate the following devices
   - Guitar Hero Guitars
   - Rock Band Guitars
   - Guitar Hero Drums
@@ -43,19 +43,21 @@ This is done using the Santroller Configurator, which can program various microc
   - Rock Band Stage Kit
   - Standard Gamepad
   - Guitar Praise Guitar
-- Improved latency over the older Guitar Configurator firmware
+  - Keyboard
+    - NKRO (N-key Rollover)
+      - No ghosting, works on most devices
+    - 6KRO (6-Key Rollover)
+      - Only 6 keys can be used simultaneously, required for PS4 and PS5
+  - Fortnite Festival
+    - Uses Keyboard mode under the hood, but simplifies the binding process
+    - Supports a emulated strum mode that requires both fret inputs and strum inputs to register an input
+    - Works on console, use 6KRO mode for the PS4 and PS5
+- Lower latency in comparison to the older Guitar Configurator firmware
 - Inputs update live while configuring, to make calibration and testing as easy as possible.
 - Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.
   - This means you no longer need to set your controller up for a specific console.
   - For emulators, you can define button combinations that will force the device into a specific mode.
   - For RPCS3, starting a game will jump the controller to PS3 mode, and then you can restart the game to actually detect the controller, as RPCS3 does not have hotplug support. This will also automatically enable WinUSB on windows as well.
-- Bindings for Fortnite Festival
-  - Device emulates a keyboard which will press the default bindings
-  - There is also a mode that emulates strumming by requiring strum inputs when using frets
-  - Works on consoles too, set the keyboard mode to 6KRO for PS4 and PS5.
-- Keyboard Emulation
-  - You can bind to any amount of keys using any inputs
-  - Both NKRO and 6KRO modes are implemented
 - Support for presets
   - Store several configuration presets and easily swap between them
   - Export and import configurations as files for easy sharing of configurations
@@ -74,24 +76,31 @@ This is done using the Santroller Configurator, which can program various microc
   - Arduino Mega
 - Support for inputs from various input sources
   - Wii extensions (such as wii guitars, classic controllers or drum kits)
-  - USB devices (Pi Pico only)
-    - This is also how authentication works, it gets passed through to an offical USB controller
-  - Direct wiring to digital or analog sources
+  - PS2 controllers
   - Instrument peripherals
     - WT Tap bar
     - GH5 Guitar neck
     - DJ Hero Turntable platter
     - Digital and analog tilt sensors
+    - Crazy Guitar neck
+  - Secondary Peripheral inputs (Pi Pico only)
+    - This allows for receiving inputs from a secondary Pi Pico, to make wiring things like GH5 guitar necks or DJ hero turntables easier
+    - LEDs can also be controlled over this interface
+  - USB devices (Pi Pico only)
+    - This is also how authentication works, it gets passed through to an offical USB controller
+  - Direct wiring to digital or analog sources
 - Support for bluetooth (Pi Pico W required)
   - Supports both conecting to a bluetooth receiver directly, or building a bluetooth receiver from a second Pico W
   - Using a second Pico W allows for using the receiver on a device that doesn't support bluetooth gamepads directly, such as a console
+- Custom input mappings
+  - You can map inputs from _any_ controller to _any_ output. This means you can do things like mapping a button press on a Wii guitar to tilt.
+  - This also lets you do things like mapping a button press to a tap bar fret or the pickup selector on a Rock Band guitar
 - Shortcuts
   - Replaces the previous hardcoded start + select to home feature, and allows for defining any combination of inputs and mapping that to an output.
   - The inputs do need to be of the same type however, so this means you can do things like requiring multiple digital inputs, but not an analog + a digital input
   - You can even use this feature for tap bar frets or the pickup selector. This can be useful if your are using an actual selector switch for your pickup selector, instead of a potentiometer.
-- Custom input mappings
-  - You can map inputs from _any_ controller to _any_ output. This means you can do things like mapping a button press on a Wii guitar to tilt.
-  - This also lets you do things like mapping a button press to a tap bar fret or the pickup selector on a Rock Band guitar
+- Constant inputs
+  - This can be used to force an output to always be set to a specific value, such as forcing a specific pickup selector value if you don't have a pickup selector attached
 - Peripheral Mode (Pi Pico only)
   - Use a second Pi Pico for inputs or LEDs, and then connect only a few wires between the two microcontrollers.
   - This can be used to put LEDs in a DJ Hero turntable, or to bypass the GH5 neck's microcontroller but keep it removable.

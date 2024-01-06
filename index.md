@@ -3,13 +3,8 @@ layout: default
 ---
 ![Santroller](assets/images/logo.png)
 
- ```danger
-This documentation is for an unreleased tool, please refer to [Ardwiino](https://sanjay900.github.io/guitar-configurator/) for the current, released tool.
-```
-
 The Santroller platform provides the ability to program micro controllers that emulate various rhythm game controllers for computers and various consoles.
 This is done using the Santroller Configurator, which can program various microcontrollers to emulate different controllers.
-
 
 # Gallery
 

@@ -6,7 +6,7 @@ If you don't want to use APA102s, and just want to hook up normal LEDs from butt
 ## Supplies
 * A controller modded using any of the guides
 * Some LEDs
-* a 500 ohm resistor for each LED (note that some LEDs may require a different resistance, it is dependant on their forward voltage.)
+* The correct current limiting resistor for your specific LEDs
 
 ## The finished product
 [![Finished adaptor](/assets/images/inline-led.jpg)](/assets/images/inline-led.jpg)
@@ -15,6 +15,8 @@ If you don't want to use APA102s, and just want to hook up normal LEDs from butt
 [![Schematic](/assets/images/led.png)](/assets/images/led.png)
 
 Note that you can use whatever pins you want as your digital pins, this is just for example
+And node that the 220ohm resistor value is also for demonstration, you will need to calculate the correct resistor for your specific LEDs.
+Usually LEDs will have a recommended resistor in their datasheets, but there are also calculators online.
 
 ## Steps
 1. Hook all the anodes of the LEDs to the 5V pin on your microcontroller (note that for the pi pico, this is VBUS).

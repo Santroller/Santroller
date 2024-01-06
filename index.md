@@ -62,7 +62,9 @@ This is done using the Santroller Configurator, which can program various microc
   - Setting a guitar to XInput mode will only use XInput mode on windows
   - Using HID mode by default means the controller should work on any device, as HID devices are supported by most operating systems and non console devices.
 - Support for various microcontrollers
-  - Pi Pico _Recommended, as there are several features that are Pi Pico only, and it's easier for beginners_
+  - Pi Pico **Recommended**
+    - Some features such as USB inputs and peripheral are Pi Pico only
+    - The Pico also has a much more robust programming method, so there is less that can go wrong when programming
   - Arduino Pro Micro (3.3v)
   - Arduino Pro Micro (5v)
   - Arduino Leonardo

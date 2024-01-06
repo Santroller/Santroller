@@ -82,7 +82,7 @@ This is done using the Santroller Configurator, which can program various microc
     - DJ Hero Turntable platter
     - Digital and analog tilt sensors
 - Support for bluetooth (Pi Pico W required)
-  - Supports both conecting to a bluetooth receiver direclty, or building a bluetooth receiver from a second Pico W
+  - Supports both conecting to a bluetooth receiver directly, or building a bluetooth receiver from a second Pico W
   - Using a second Pico W allows for using the receiver on a device that doesn't support bluetooth gamepads directly, such as a console
 - Shortcuts
   - Replaces the previous hardcoded start + select to home feature, and allows for defining any combination of inputs and mapping that to an output.

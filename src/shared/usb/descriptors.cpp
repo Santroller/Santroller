@@ -841,7 +841,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-#if DEVICE_TYPE_IS_KEYBOARD || CONSOLE_TYPE == MIDI
+#if DEVICE_TYPE_IS_KEYBOARD
             size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 

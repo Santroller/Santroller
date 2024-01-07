@@ -1664,7 +1664,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
 #if USB_HOST_STACK
-#if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (updateSequence) {
         report_sequence_number++;
         if (report_sequence_number == 0) {
@@ -1980,7 +1980,7 @@ int tick_bluetooth_inputs(const void *buf) {
         ps4_sequence_number++;
     }
 #endif
-#if CONSOLE_TYPE == UNIVERSAL || CONSOLE_TYPE == XBOXONE
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (updateSequence) {
         report_sequence_number++;
         if (report_sequence_number == 0) {

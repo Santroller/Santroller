@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "progmem.h"
-uint8_t consoleType = CONSOLE_TYPE;
+uint8_t consoleType = UNIVERSAL;
 // We don't know these array lengths at compile time.
 // It doesn't really matter how big config_blobs is since nothing ever references its length
 // But configs length is put into the first index of config_blobs

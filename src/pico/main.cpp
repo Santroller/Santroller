@@ -131,7 +131,7 @@ void setup() {
         consoleType = persistedConsoleType;
     } else {
         windows_in_hid = false;
-        consoleType = CONSOLE_TYPE;
+        consoleType = UNIVERSAL;
     }
     generateSerialString(&serialstring, consoleType);
     printf("ConsoleType: %d\r\n", consoleType);

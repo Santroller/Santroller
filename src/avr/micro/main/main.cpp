@@ -27,7 +27,7 @@ typedef struct
 {
     USB_Descriptor_Header_t Header;
     uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3];
-} __attribute__ ((packed)) SignatureDescriptor_t;
+} __attribute__((packed)) SignatureDescriptor_t;
 volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
 volatile uint16_t persistedConsoleTypeValid __attribute__((section(".noinit")));
 void SetupHardware(void);
@@ -143,13 +143,16 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 
     SetGlobalInterruptMask(CurrentGlobalInt);
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
-    #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = DEVICE_TYPE + '0';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = WINDOWS_USES_XINPUT + '0';
-    #else
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+1] = 'K' + DEVICE_TYPE;
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)+2] = '0';
-    #endif
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
+#elif EMULATION_TYPE == EMULATION_TYPE_KEYBOARD_MOUSE
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+#else
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K' + DEVICE_TYPE;
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+#endif
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,

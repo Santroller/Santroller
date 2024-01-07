@@ -1713,11 +1713,13 @@ bool tick_usb(void) {
     if (millis_at_boot == 0 && read_device_desc) {
         millis_at_boot = millis();
     }
-#if !WINDOWS_USES_XINPUT || DEVICE_TYPE_IS_KEYBOARD
-    // If we ended up here, then someone probably changed back to hid mode so we should jump back
-    if (consoleType == WINDOWS) {
-        consoleType = UNIVERSAL;
-        reset_usb();
+#if !DEVICE_TYPE_IS_KEYBOARD
+    if (WINDOWS_USES_XINPUT) {
+        // If we ended up here, then someone probably changed back to hid mode so we should jump back
+        if (consoleType == WINDOWS) {
+            consoleType = UNIVERSAL;
+            reset_usb();
+        }
     }
 #endif
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD

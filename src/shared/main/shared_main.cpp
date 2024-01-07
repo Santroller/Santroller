@@ -1714,7 +1714,7 @@ bool tick_usb(void) {
         millis_at_boot = millis();
     }
 #if !DEVICE_TYPE_IS_KEYBOARD
-    if (WINDOWS_USES_XINPUT) {
+    if (!WINDOWS_USES_XINPUT) {
         // If we ended up here, then someone probably changed back to hid mode so we should jump back
         if (consoleType == WINDOWS) {
             consoleType = UNIVERSAL;

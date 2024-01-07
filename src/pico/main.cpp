@@ -82,7 +82,7 @@ bool authDone = false;
 
 static void tick_usb() {
 #if USB_HOST_STACK
-    if ((consoleType == XBOX360 || consoleType == XBOXONE) && !foundXB) {
+    if ((consoleType == XBOX360 || consoleType == XBOXONE) && !foundXB && XINPUT_AUTH) {
         tuh_task();
         return;
     }

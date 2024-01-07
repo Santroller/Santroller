@@ -628,7 +628,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         // PS3s request this as some form of controller id
-        if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x20) {
+        if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
         }

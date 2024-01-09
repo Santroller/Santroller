@@ -397,7 +397,7 @@ int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uin
         val = INT16_MAX;
     }
     if (abs(val) > abs(previous)) {
-        return (int16_t)val;
+        return (int16_t)val >> 9;
     }
     return previous;
 }

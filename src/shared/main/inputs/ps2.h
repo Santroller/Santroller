@@ -24,7 +24,7 @@
             lastTapPS2GH5 = 0x49;
         } else if (lastTapPS2 > 0xD0 && lastTapPS2 < 0xDF) {
             lastTapPS2GH5 = 0x66;
-        } else if (lastTapWii == 0xFF) {
+        } else if (lastTapPS2 == 0xFF) {
             lastTapPS2GH5 = 0x7F;
         }
     }

@@ -99,11 +99,7 @@ uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
 bool seen_ps4_console = false;
 GipPowerMode_t powerMode;
-#ifdef CONFIGURABLE_BLOBS
 long last_poll = 0;
-#elif POLL_RATE
-long last_poll = 0;
-#endif
 
 /* Magic data taken from GHLtarUtility:
  * https://github.com/ghlre/GHLtarUtility/blob/master/PS3Guitar.cs
@@ -1649,7 +1645,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
     TICK_RESET
     // Some hosts want packets sent every frame
-    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT) {
+    if (last_report && output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;
@@ -1692,17 +1688,6 @@ bool tick_bluetooth(void) {
 bool windows_in_hid = false;
 unsigned long millis_at_boot = 0;
 bool tick_usb(void) {
-#ifdef CONFIGURABLE_BLOBS
-    if (POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
-        return 0;
-    }
-    last_poll = micros();
-#elif POLL_RATE
-    if ((micros() - last_poll) < (POLL_RATE * 1000)) {
-        return 0;
-    }
-    last_poll = micros();
-#endif
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
 #ifdef BLUETOOTH_TX
@@ -2043,19 +2028,6 @@ void tick(void) {
     }
 #endif
 
-    bool ready = tick_usb();
-
-    // Input queuing is enabled, tick as often as possible
-    if (INPUT_QUEUE && !ready) {
-        tick_inputs(NULL, NULL, consoleType);
-    }
-#if !defined(BLUETOOTH_TX)
-    // Tick the controller every 5ms if this device is usb only, and usb is not ready
-    if (!INPUT_QUEUE && !ready && millis() - lastSentPacket > 5) {
-        lastSentPacket = millis();
-        tick_inputs(NULL, NULL, consoleType);
-    }
-#endif
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         // No benefit to ticking bluetooth faster than this!
 #ifdef BLUETOOTH_TX
@@ -2068,6 +2040,26 @@ void tick(void) {
             }
         }
     }
+    
+    if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
+        return;
+    }
+
+    bool ready = tick_usb();
+
+    // Input queuing is enabled, tick as often as possible
+    if (INPUT_QUEUE && !ready) {
+        tick_inputs(NULL, NULL, consoleType);
+    }
+    
+    last_poll = micros();
+#if !defined(BLUETOOTH_TX)
+    // Tick the controller every 5ms if this device is usb only, and usb is not ready
+    if (!INPUT_QUEUE && !ready && millis() - lastSentPacket > 5) {
+        lastSentPacket = millis();
+        tick_inputs(NULL, NULL, consoleType);
+    }
+#endif
 }
 
 void device_reset(void) {

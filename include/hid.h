@@ -84,7 +84,7 @@ extern const uint8_t ps3_descriptor[148];
 #if DEVICE_TYPE != GUITAR_PRAISE_GUITAR
 extern const uint8_t ps3_instrument_descriptor[137];
 #else
-extern const uint8_t ps3_instrument_descriptor[89];
+extern const uint8_t ps3_instrument_descriptor[81];
 #endif
 extern const uint8_t ps4_descriptor[160];
 #if DEVICE_TYPE_IS_INSTRUMENT

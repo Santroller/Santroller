@@ -38,12 +38,6 @@ static volatile uint8_t twi_masterBufferLength;
 static volatile uint8_t twi_error;
 void spi_begin() {
 #ifdef GC_SPI_CLOCK
-    // TODO: probably replace this with direct writes to avoid needing pinMode or digitalWrite
-    pinMode(MOSI, OUTPUT);
-    pinMode(MISO, INPUT_PULLUP);
-    pinMode(SCK, OUTPUT);
-    digitalWrite(SS, 1);
-    pinMode(SS, OUTPUT);
     uint8_t clockDiv;
     if (GC_SPI_CLOCK >= F_CPU / 2) {
         clockDiv = 0;

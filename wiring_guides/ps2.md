@@ -31,7 +31,7 @@ Refer to the following image for the pinout of a PS2 controller.
    | -------------------------- | --- | ---- | ---- | ----------- | --------- |
    | Pi Pico                    | GP6 | GP3  | GP4  | GP7         | GP10      |
    | Pro Micro, Leonardo, Micro | 15  | 16   | 14   | 7           | 10        |
-   | Uno, Pro Mini              | 13  | 11   | 12   | 2           | 10        |
+   | Uno                        | 13  | 11   | 12   | 2           | 10        |
    | Mega                       | 52  | 51   | 50   | 2           | 10        |
 
 2. Connect a 1kΩ resistor between MISO and 3.3v.

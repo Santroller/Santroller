@@ -22,7 +22,7 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
    | Microcontroller            | SCK (CI) |
    | -------------------------- | -------- |
    | Pro Micro, Leonardo, Micro | 15       |
-   | Uno, Pro Mini              | 13       |
+   | Uno                        | 13       |
    | Mega                       | 52       |
 
 4. Connect the MOSI (SDI) on the first driver to the MOSI pin on your microcontroller. Then chain the MOSI (SDO) outputs to the MOSI (SDI) on the next driver, until all drivers are connected.
@@ -31,7 +31,7 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
    | Microcontroller            | MOSI (DI) |
    | -------------------------- | --------- |
    | Pro Micro, Leonardo, Micro | 16        |
-   | Uno, Pro Mini              | 11        |
+   | Uno                        | 11        |
    | Mega                       | 51        |
 
 5. Connect your LEDs to the OUTn pins. The cathode of each LED connects to an OUTn pin, while the anodes are all connected together and connect to the voltage supply for your LEDs. Depending on how many LEDs you are using, it may make sense to use an external supply here, which would need to have its VCC connected to the anodes of the LEDs, and its GND connected to GND on the drivers.

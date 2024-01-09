@@ -19,7 +19,7 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
    | Microcontroller | SCK (CI) | MOSI (DI) |
    | --- | --- | --- | --- | --- |
    | Pro Micro, Leonardo, Micro | 15 | 16 |
-   | Uno, Pro Mini | 13 | 11 |
+   | Uno | 13 | 11 |
    | Mega | 52 | 51 | 
 
 Now that you have wired your LEDs, go [configure them](https://santroller.tangentmc.net/tool/using.html).

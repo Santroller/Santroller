@@ -2,7 +2,7 @@
     uint8_t *ps2Data = tickPS2();
     bool ps2Valid = ps2Data != NULL;
     lastPS2WasSuccessful = ps2Valid;
-    uint8_t lastTapPS2, lastTapPS2Gh5 = 0x80;
+    uint8_t lastTapPS2, lastTapPS2GH5 = 0x80;
     if (ps2Valid) {
         memcpy(lastSuccessfulPS2Packet, ps2Data, sizeof(lastSuccessfulPS2Packet));
         lastTapPS2 = (ps2Data[7] - 128) << 8;

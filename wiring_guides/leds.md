@@ -7,6 +7,7 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
 * A controller modded using any of the guides
 * Some APA102s (or Dotstar or SK9822 or APA107 or HD107s as these are all compatible / clones of the APA102)
   * Note that if your using JLCPCB, the SK9822 is often available when the APA102 is not.
+  * Even though its a clone, the SK9822 is actually a better LED than the APA102. The APA102s will flicker at low brightness, the SK9822 will not.
 
 ## The finished product
 {% include youtube.html id=H73McH5abes %}

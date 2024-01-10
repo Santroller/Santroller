@@ -10,14 +10,11 @@ body:
       placeholder: describe issue here
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: version
     attributes:
       label: Version
-      description: Is your configurator up to date?
-      options:
-        - "yes"
-        - "no"
+      description: What version of the tool are you using?
     validations:
       required: true
   - type: dropdown

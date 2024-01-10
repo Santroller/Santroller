@@ -1,5 +1,9 @@
 # Authentication controllers
-Some consoles require controller authentication, such as the Xbox 360 and the Xbox One / Series. For these consoles, you will either need to mod the authentication checks away, or follow the [USB](https://santroller.tangentmc.net/wiring_guides/usb.html) guide, and then plug in an offical controller for authentication.
+Some consoles check if a controller is a `genuine` controller. Our controllers are unoffical, so we need to trick the console into seeing out controller as genuinie.
+
+There are currently two ways to trick the console
+1. Pass the check to an offical controller, by plugging a genuine controller into your Pi Pico. (This method only works on the Pi Pico)
+2. Mod the console. There is a patch for the Xbox 360 that removes the authentication check.
 
 ## Consoles needing authentication
 - Xbox 360, though this can be patched away using [UsbdSecPatch](#usbdsecpatch)

@@ -1,5 +1,5 @@
 # Authentication controllers
-Some consoles check if a controller is a genuine controller. Our controllers are unoffical, so we need to trick the console into seeing out controller as genuinie.
+Some consoles check if a controller is a genuine controller. Our controllers are unoffical, so we need to trick the console into thinking our controller is genuine.
 
 There are currently two ways to trick the console
 1. Pass the check to an offical controller, by plugging a genuine controller into your Pi Pico. (This method only works on the Pi Pico)

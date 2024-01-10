@@ -3,6 +3,11 @@ sort: 4
 ---
 # Bluetooth and Wireless Support
 Santroller configurator allows using the Pico W to create wireless guitars. You can use a single Pico W with a PC or phone, or you can use a second Pico W as a bluetooth receiver to get console compatibility.
+Note that once this is done, USB still works, so you can still use a guitar over USB if the battery dies or you want the better latency that wired provides.
+
+```danger
+Programming and configuring only works over USB. If you are designing a controller around this, make sure that the USB port is still accessible.
+```
 
 ## Programming a Bluetooth Transmitter
 1. Follow the [standard guide](using.html) to set up your inputs.

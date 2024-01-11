@@ -210,11 +210,7 @@ typedef struct {
 #ifdef TICK_CONSUMER
     USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
-#define USB_VERSION_BCD(Major, Minor, Revision) \
-    (((Major & 0xFF) << 8) |                    \
-     ((Minor & 0x0F) << 4) |                    \
-     (Revision & 0x0F))
-
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     union {
         PC_REPORT universal;
         PS4_REPORT ps4;
@@ -223,7 +219,13 @@ typedef struct {
         XBOX_ONE_REPORT xone;
         uint8_t data[64];
     } lastControllerReport;
+#endif
 } USB_LastReport_Data_t;
+
+#define USB_VERSION_BCD(Major, Minor, Revision) \
+    (((Major & 0xFF) << 8) |                    \
+     ((Minor & 0x0F) << 4) |                    \
+     (Revision & 0x0F))
 
 #ifdef CONFIGURABLE_BLOBS
 inline int16_t read_int16(uint16_t idx) {

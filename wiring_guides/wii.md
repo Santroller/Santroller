@@ -36,7 +36,9 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
 ## Steps
 
 1.  Connect wires between the SDA and SCL pins on your breakout board / wii extension cable.
-    Refer to the following image for the pinout of a Wii Extension connector. For a Pi Pico, you can pick pins but only specific ones work, so open the configuration tool and choose pins that way.
+    Refer to the following image for the pinout of a Wii Extension connector. 
+
+    Note that the Pi Pico has multiple sets of pins that you can choose from. For this reason, its easier to program first, as the tool will automatically filter out valid pins and let you know if your pin choices are valid.
 
         [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
 

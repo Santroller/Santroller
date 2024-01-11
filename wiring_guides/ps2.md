@@ -27,12 +27,13 @@ Refer to the following image for the pinout of a PS2 controller.
 
 1. Connect Attention, Acknowledge to Acknowledge, Command to MOSI, Data to MISO and Clock to SCK. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
 
-   | Microcontroller            | SCK | MOSI | MISO | Acknowledge | Attention |
-   | -------------------------- | --- | ---- | ---- | ----------- | --------- |
-   | Pi Pico                    | GP6 | GP3  | GP4  | GP7         | GP10      |
-   | Pro Micro, Leonardo, Micro | 15  | 16   | 14   | 7           | 10        |
-   | Uno                        | 13  | 11   | 12   | 2           | 10        |
-   | Mega                       | 52  | 51   | 50   | 2           | 10        |
+   Note that the Pi Pico has multiple sets of pins that you can choose from. For this reason, its easier to program first, as the tool will automatically filter out valid pins and let you know if your pin choices are valid.
+
+   | Microcontroller            | SCK | MOSI | MISO | Acknowledge            | Attention |
+   | -------------------------- | --- | ---- | ---- | ---------------------- | --------- |
+   | Pro Micro, Leonardo, Micro | 15  | 16   | 14   | 0, 1, 2, 3 or 7        | Any       |
+   | Uno                        | 13  | 11   | 12   | 2 or 3                 | 10        |
+   | Mega                       | 52  | 51   | 50   | 2, 3, 18, 19, 20 or 21 | 10        |
 
 2. Connect a 1kΩ resistor between MISO and 3.3v.
 3. Connect a 1kΩ resistor between Acknowledge and 3.3v.

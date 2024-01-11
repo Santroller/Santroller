@@ -81,11 +81,7 @@
 #define RUMBLE_SANTROLLER_STAR_POWER_ACTIVE 0x14
 extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + SIXKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
 extern const uint8_t ps3_descriptor[148];
-#if DEVICE_TYPE != GUITAR_PRAISE_GUITAR
 extern const uint8_t ps3_instrument_descriptor[137];
-#else
-extern const uint8_t ps3_instrument_descriptor[81];
-#endif
 extern const uint8_t ps4_descriptor[160];
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING

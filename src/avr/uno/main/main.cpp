@@ -39,7 +39,7 @@ typedef struct
 typedef struct
 {
     USB_Descriptor_Header_t Header;
-    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3];
+    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 4];
 } __attribute__((packed)) SignatureDescriptor_t;
 
 volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
@@ -72,7 +72,7 @@ bool usb_ready = false;
 
 static void USB_Device_GetInternalSerialDescriptor(void) {
     signature.Header.Type = 0x03;
-    signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 3);
+    signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 4);
 
     uint8_t CurrentGlobalInt = SREG;
     cli();
@@ -93,17 +93,18 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     }
 
     SREG = CurrentGlobalInt;
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = 'N';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = consoleType + '0';
 
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = DEVICE_TYPE + '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
 #elif EMULATION_TYPE == EMULATION_TYPE_KEYBOARD_MOUSE
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K';
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #else
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K' + DEVICE_TYPE;
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K' + DEVICE_TYPE;
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #endif
 }
 

@@ -1493,7 +1493,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
     }
 #endif
-#if DEVICE_TYPE != GUITAR_PRAISE_GUITAR
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
@@ -1627,25 +1626,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
     }
-#else
-    report_size = size = sizeof(GuitarPraise_Data_t);
-    GuitarPraise_Data_t *report = (GuitarPraise_Data_t *)report_data;
-    memset(report, 0, sizeof(GuitarPraise_Data_t));
-    memset(report->unused, 0x80, sizeof(report->unused));
-    report->dpad = 0x08;
-    report->reportId = 1;
-    TICK_PC;
-    asm volatile("" ::
-                     : "memory");
-    if (report->dpadUp && report->dpadDown) {
-        report->dpadUp = report->dpadDown = false;
-    } else if (report->dpadUp) {
-        report->dpadUp2 = report->dpadUp;
-        report->dpad = 0x00;
-    } else if (report->dpadDown) {
-        report->dpad = 0x04;
-    }
-#endif
 
     TICK_RESET
     // Some hosts want packets sent every frame
@@ -1787,25 +1767,6 @@ int tick_bluetooth_inputs(const void *buf) {
     }
 #endif
 
-#elif DEVICE_TYPE == GUITAR_PRAISE_GUITAR
-    PC_REPORT *input = (PC_REPORT *)(buf);
-    USB_Report_Data_t *report_data = &combined_report;
-    report_size = size = sizeof(PC_REPORT);
-    memcpy(report_data, buf, size);
-    PC_REPORT *report = (PC_REPORT *)report_data;
-    report->dpad = 0x08;
-    report->reportId = 1;
-    TICK_PC;
-    asm volatile("" ::
-                     : "memory");
-    if (report->dpadUp && report->dpadDown) {
-        report->dpadUp = report->dpadDown = false;
-    } else if (report->dpadUp) {
-        report->dpadUp2 = report->dpadUp;
-        report->dpad = 0x00;
-    } else if (report->dpadDown) {
-        report->dpad = 0x04;
-    }
 #else
     PC_REPORT *input = (PC_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
@@ -2044,7 +2005,7 @@ void tick(void) {
             }
         }
     }
-    
+
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
@@ -2055,7 +2016,7 @@ void tick(void) {
     if (INPUT_QUEUE && !ready) {
         tick_inputs(NULL, NULL, consoleType);
     }
-    
+
     last_poll = micros();
 #if !defined(BLUETOOTH_TX)
     // Tick the controller every 5ms if this device is usb only, and usb is not ready

@@ -24,12 +24,12 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #include "defines.h"
 #include "reports/controller_reports.h"
 #define DEVICE_TYPE_IS_LIVE_GUITAR (DEVICE_TYPE == LIVE_GUITAR)
-#define DEVICE_TYPE_IS_GUITAR (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR || DEVICE_TYPE == GUITAR_PRAISE_GUITAR))
+#define DEVICE_TYPE_IS_GUITAR (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR))
 #define DEVICE_TYPE_IS_DRUM (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE == ROCK_BAND_DRUMS || DEVICE_TYPE == GUITAR_HERO_DRUMS))
 #define DEVICE_TYPE_IS_INSTRUMENT (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE_IS_DRUM || DEVICE_TYPE == DJ_HERO_TURNTABLE))
 #define DEVICE_TYPE_IS_KEYBOARD (EMULATION_TYPE == EMULATION_TYPE_KEYBOARD_MOUSE || DEVICE_TYPE == FORTNITE_GUITAR || DEVICE_TYPE == FORTNITE_GUITAR_STRUM || DEVICE_TYPE == FORTNITE_DRUMS)
 #define DEVICE_TYPE_IS_GAMEPAD (!(DEVICE_TYPE_IS_KEYBOARD))
-#define DEVICE_TYPE_IS_NORMAL_GAMEPAD (DEVICE_TYPE_IS_GAMEPAD && DEVICE_TYPE != GUITAR_PRAISE_GUITAR)
+#define DEVICE_TYPE_IS_NORMAL_GAMEPAD (DEVICE_TYPE_IS_GAMEPAD)
 
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR || DEVICE_TYPE == GUITAR_HERO_DRUMS
 #define PS3_ID 0x06
@@ -40,9 +40,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #else
 #define PS3_ID 0x07
 #endif
-#if DEVICE_TYPE == GUITAR_PRAISE_GUITAR
-#define PC_REPORT GuitarPraise_Data_t
-#elif DEVICE_TYPE == DANCE_PAD
+#if DEVICE_TYPE == DANCE_PAD
 #define SUB_TYPE XINPUT_DANCE_PAD
 #define XINPUT_FLAGS 0x00
 #define XINPUT_REPORT XInputGamepad_Data_t
@@ -168,9 +166,6 @@ typedef union {
     XINPUT_REPORT xinput;
     XBOX_ONE_REPORT xone;
     #endif
-    #if DEVICE_TYPE == GUITAR_PRAISE_GUITAR
-    GuitarPraise_Data_t report;
-    #endif
     USB_NKRO_Data_t keyboard;
     USB_MIDI_Data_t midi;
     USB_Mouse_Data_t mouse;
@@ -220,7 +215,6 @@ typedef struct {
      ((Minor & 0x0F) << 4) |                    \
      (Revision & 0x0F))
 
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     union {
         PC_REPORT universal;
         PS4_REPORT ps4;
@@ -229,9 +223,6 @@ typedef struct {
         XBOX_ONE_REPORT xone;
         uint8_t data[64];
     } lastControllerReport;
-#else
-    GuitarPraise_Data_t lastControllerReport;
-#endif
 } USB_LastReport_Data_t;
 
 #ifdef CONFIGURABLE_BLOBS

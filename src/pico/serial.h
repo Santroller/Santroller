@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "config.h"
-#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3) * 2)
+#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 4) * 2)
 
 typedef struct
 {
@@ -29,16 +29,17 @@ static inline void generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeStr
     for (int i = 0; i < sizeof(id); i++) {
         UnicodeString->UnicodeString[i] = id[i];
     }
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES] = 'N';
 
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES] = '0' + consoleType;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = '0' + consoleType;
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = '0' + DEVICE_TYPE;
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = '0' + WINDOWS_USES_XINPUT;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = '0' + DEVICE_TYPE;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3] = '0' + WINDOWS_USES_XINPUT;
 #elif EMULATION_TYPE == EMULATION_TYPE_KEYBOARD_MOUSE
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = 'K';
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = '0';
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = 'K';
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3] = '0';
 #else
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = 'K' + DEVICE_TYPE;
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = '0';
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = 'K' + DEVICE_TYPE;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3] = '0';
 #endif
 }

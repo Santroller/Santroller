@@ -26,7 +26,7 @@
 typedef struct
 {
     USB_Descriptor_Header_t Header;
-    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3];
+    uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 4];
 } __attribute__((packed)) SignatureDescriptor_t;
 volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
 volatile uint16_t persistedConsoleTypeValid __attribute__((section(".noinit")));
@@ -121,7 +121,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
 static void USB_Device_GetInternalSerialDescriptor(void) {
     SignatureDescriptor_t* desc = (SignatureDescriptor_t*)buf;
     desc->Header.Type = DTYPE_String;
-    desc->Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 3);
+    desc->Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 4);
 
     uint_reg_t CurrentGlobalInt = GetGlobalInterruptMask();
     GlobalInterruptDisable();
@@ -142,16 +142,18 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     }
 
     SetGlobalInterruptMask(CurrentGlobalInt);
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = consoleType + '0';
+
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = 'N';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = consoleType + '0';
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = DEVICE_TYPE + '0';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = WINDOWS_USES_XINPUT + '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = DEVICE_TYPE + '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
 #elif EMULATION_TYPE == EMULATION_TYPE_KEYBOARD_MOUSE
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #else
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = 'K' + DEVICE_TYPE;
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = '0';
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K' + DEVICE_TYPE;
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #endif
 }
 

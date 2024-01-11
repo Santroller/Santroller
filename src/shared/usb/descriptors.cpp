@@ -37,13 +37,8 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bDeviceSubClass : USB_CLASS_USE_CLASS_INFO,
     bDeviceProtocol : USB_CLASS_USE_CLASS_INFO,
     bMaxPacketSize0 : ENDPOINT_SIZE,
-#if DEVICE_TYPE == GUITAR_PRAISE_GUITAR
-    idVendor : GUITAR_PRAISE_VID,
-    idProduct : GUITAR_PRAISE_PID,
-#else
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-#endif
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
 #else
@@ -841,10 +836,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
 #if DEVICE_TYPE_IS_KEYBOARD
-            size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
-            memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
-
-#elif DEVICE_TYPE == GUITAR_PRAISE_GUITAR
             size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else

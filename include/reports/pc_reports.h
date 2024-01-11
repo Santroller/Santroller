@@ -60,30 +60,6 @@ typedef struct {
     uint8_t pressureSquare;
 
 } __attribute__((packed)) PCGamepad_Data_t;
-typedef struct {
-    uint8_t reportId;
-    uint8_t unused[3];
-    uint8_t whammy;
-
-    uint8_t dpad : 4;
-
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t y : 1;  // yellow
-    uint8_t x : 1;  // blue
-
-    uint8_t leftShoulder : 1;   // orange
-    uint8_t leftThumbClick : 1; // tilt, just using this to make things easier
-    uint8_t start : 1;
-    uint8_t back : 1;  // select
-    uint8_t padding : 4;
-    
-    uint8_t dpadUp2 : 1;
-    uint8_t padding2 : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadUp : 1;
-    uint8_t padding3 : 4;
-} __attribute__((packed)) GuitarPraise_Data_t;
 
 typedef struct {
     uint8_t reportId;

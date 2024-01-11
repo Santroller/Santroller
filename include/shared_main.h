@@ -73,3 +73,4 @@ extern USB_LastReport_Data_t last_report_bt;
 void tick_bluetooth(const void* buf, uint8_t len);
 int tick_bluetooth_inputs(const void *buf);
 #endif
+extern uint8_t brightness;

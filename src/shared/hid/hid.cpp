@@ -626,6 +626,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             digital_write(port, mask, activeMask);
             return 0;
         }
+        case COMMAND_LED_BRIGHTNESS: {
+            brightness = response_buffer[0];
+            return 0;
+        }
         case COMMAND_SET_DETECT: {
             overrideR2 = wValue > 0;
             overriddenR2 = wValue;

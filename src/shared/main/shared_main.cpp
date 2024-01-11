@@ -32,6 +32,7 @@ bool clone_ready = false;
 bool reading = false;
 Buffer_Report_t last_queue_report;
 long last_queue = 0;
+uint8_t brightness = LED_BRIGHTNESS;
 uint8_t queue_size = 0;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];

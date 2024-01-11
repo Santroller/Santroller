@@ -25,11 +25,11 @@ Refer to the following image for the pinout of a PS2 controller.
 
 [![Adapter pinout](/assets/images/ps2-pinout.jpg)](/assets/images/ps2-pinout.png)
 
-1. Connect Attention, Acknowledge to Acknowledge, Command to MOSI, Data to MISO and Clock to SCK. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
+1. Connect pins according to the below table. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
 
    Note that the Pi Pico has multiple sets of pins that you can choose from. For this reason, its easier to program first, as the tool will automatically filter out valid pins and let you know if your pin choices are valid.
 
-   | Microcontroller            | SCK | MOSI | MISO | Acknowledge            | Attention |
+   | Microcontroller            | SCK / Clock | MOSI / Command | MISO / Data | Acknowledge            | Attention |
    | -------------------------- | --- | ---- | ---- | ---------------------- | --------- |
    | Pro Micro, Leonardo, Micro | 15  | 16   | 14   | 0, 1, 2, 3 or 7        | Any       |
    | Uno                        | 13  | 11   | 12   | 2 or 3                 | 10        |

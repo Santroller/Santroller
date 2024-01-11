@@ -204,7 +204,12 @@ uint8_t *tickPS2() {
         if (isDualShock2Reply(in)) {
             ps2ControllerType = PSX_DUALSHOCK_2_CONTROLLER;
         } else if (isDualShockReply(in)) {
-            ps2ControllerType = PSX_DUALSHOCK_1_CONTROLLER;
+            uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
+            if (bit_check(buttonWord, PSB_PAD_LEFT)) {
+                ps2ControllerType = PSX_GUITAR_HERO_CONTROLLER;
+            } else {
+                ps2ControllerType = PSX_DUALSHOCK_1_CONTROLLER;
+            }
         } else if (isFlightStickReply(in)) {
             ps2ControllerType = PSX_FLIGHTSTICK;
         } else if (isNegconReply(in)) {
@@ -217,15 +222,6 @@ uint8_t *tickPS2() {
             ps2ControllerType = PSX_MOUSE;
         } else if (isDigitalReply(in)) {
             ps2ControllerType = PSX_DIGITAL;
-        }
-        if (sendCommand(port, commandEnterConfig, sizeof(commandEnterConfig))) {
-            if (ps2ControllerType == PSX_DUALSHOCK_1_CONTROLLER) {
-                uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
-                if (bit_check(buttonWord, PSB_PAD_LEFT)) {
-                    ps2ControllerType = PSX_GUITAR_HERO_CONTROLLER;
-                }
-            } 
-            sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
         }
         initialised = true;
         invalidCount = 0;

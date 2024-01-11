@@ -765,7 +765,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
-// printf("Descriptor: %02x %02x %02x\r\n", descriptorType, descriptorNumber, wIndex);
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
 #if USB_HOST_STACK
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {

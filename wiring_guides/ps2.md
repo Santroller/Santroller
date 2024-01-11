@@ -29,7 +29,7 @@ Refer to the following image for the pinout of a PS2 controller.
 
    Note that the Pi Pico has multiple sets of pins that you can choose from. For this reason, its easier to program first, as the tool will automatically filter out valid pins and let you know if your pin choices are valid.
 
-   | Microcontroller            | SCK / Clock | MOSI / Command | MISO / Data | Acknowledge            | Attention |
+   | Microcontroller            | SCK / Clock / Blue | MOSI / Command / Orange | MISO / Data / Brown | Acknowledge / Green         | Attention / Yellow |
    | -------------------------- | --- | ---- | ---- | ---------------------- | --------- |
    | Pro Micro, Leonardo, Micro | 15  | 16   | 14   | 0, 1, 2, 3 or 7        | Any       |
    | Uno                        | 13  | 11   | 12   | 2 or 3                 | 10        |

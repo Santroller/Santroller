@@ -192,15 +192,15 @@ uint8_t *tickPS2() {
             sendCommand(port, commandSetMode, sizeof(commandSetMode));
             // Enable analog buttons
 
-            // Enable pressure sensitive buttons, enable them all as we want to test
-            // specifically the analog buttons, as that is how you differenciate
-            // dualshock one from dualshock 2
-            sendCommand(port, commandSetPressures, sizeof(commandSetPressures));
+            // Enable pressure sensitive buttons
+            // Some PS2 controllers are stupid and *really* need to be told to enable pressure sensitivity
+            for (int i = 0; i < 20; i++) {
+                sendCommand(port, commandSetPressures, sizeof(commandSetPressures));
+            }
             sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
         }
         uint8_t *in =
             autoShiftData(port, commandPollInput, sizeof(commandPollInput));
-
         if (isDualShock2Reply(in)) {
             ps2ControllerType = PSX_DUALSHOCK_2_CONTROLLER;
         } else if (isDualShockReply(in)) {
@@ -230,6 +230,7 @@ uint8_t *tickPS2() {
     // We only want to reinit if we recevied several bad packets in a row.
     if (initialised) {
         in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
+
         if (in != NULL) {
             invalidCount = 0;
             if (isConfigReply(in)) {

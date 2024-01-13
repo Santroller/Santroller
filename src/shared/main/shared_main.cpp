@@ -385,8 +385,7 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint1
     return (uint8_t)(ret + PS3_STICK_CENTER + (PS3_STICK_CENTER >> 1));
 #endif
 }
-ous;
-}
+
 uint8_t handle_calibration_turntable_ps3(uint8_t previous, int16_t orig_val, uint8_t multiplier) {
     uint32_t val = ((orig_val * multiplier) >> 8) + PS3_STICK_CENTER;
     if (val > UINT8_MAX) {

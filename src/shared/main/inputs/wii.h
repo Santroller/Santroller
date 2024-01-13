@@ -52,6 +52,7 @@
         }
 
 #endif
+        // Turntable bits are all split up, so we slice them back up
         ltt_t.ltt5  = (wiiData[4] & 1);
         ltt_t.ltt40 = (wiiData[3] & 0x1F);
         rtt_t.rtt0  = (wiiData[2] & 0x80) >> 7;

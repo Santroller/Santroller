@@ -25,6 +25,27 @@
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
 #define KEY_ERR_OVF 0x01
+
+struct {
+    union {
+        signed int ltt : 6;
+        struct {
+            unsigned int ltt40 : 5;
+            unsigned int ltt5 : 1;
+        };
+    };
+} ltt_t;
+struct {
+    union {
+        signed int rtt : 6;
+        struct {
+            signed int rtt0 : 1;
+            signed int rtt21 : 2;
+            signed int rtt43 : 2;
+            signed int rtt5 : 1;
+        };
+    };
+} rtt_t;
 uint8_t tmp = 0;
 long clone_guitar_timer = 0;
 long clone_guitar_ready_timer = 0;
@@ -382,8 +403,8 @@ int16_t handle_calibration_turntable_360_i2c(int16_t previous, int8_t orig_val, 
     }
     return previous;
 }
-uint8_t handle_calibration_turntable_ps3(uint8_t previous, uint16_t orig_val, uint8_t multiplier) {
-    uint16_t val = (orig_val >> 8) * multiplier;
+uint8_t handle_calibration_turntable_ps3(uint8_t previous, int16_t orig_val, uint8_t multiplier) {
+    uint32_t val = ((orig_val * multiplier) >> 8) + PS3_STICK_CENTER;
     if (val > UINT8_MAX) {
         val = UINT8_MAX;
     }

@@ -7,7 +7,7 @@ sort: 6
 ## Supplies
 
 - A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)
-- For any 3.3v microcontrollers, you will need a 3.3v voltage regulator.
+- For any 5v microcontrollers, you will need a 3.3v voltage regulator.
 - PS2 Controller socket
 - 2x 1kΩ Resistor
 - Some Wire

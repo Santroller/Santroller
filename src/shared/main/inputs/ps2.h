@@ -5,7 +5,7 @@
     uint8_t lastTapPS2, lastTapPS2GH5 = 0x80;
     if (ps2Valid) {
         memcpy(lastSuccessfulPS2Packet, ps2Data, sizeof(lastSuccessfulPS2Packet));
-        lastTapPS2 = (ps2Data[7] - 128) << 8;
+        lastTapPS2 = ps2Data[7];
         if (lastTapPS2 == 0x80) {
             lastTapPS2GH5 = 0;
         } else if (lastTapPS2 > 0x10 && lastTapPS2 < 0x1F) {

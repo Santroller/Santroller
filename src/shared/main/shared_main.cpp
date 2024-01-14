@@ -198,10 +198,8 @@ void init_main(void) {
     memset(usedKeys, 0, sizeof(usedKeys));
     memset(keyIndex, 0, sizeof(keyIndex));
     LED_INIT;
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_LEFT
+#ifdef INPUT_DJ_TURNTABLE_SMOOTHING
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
-#endif
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING_RIGHT
     memset(dj_last_readings_right, 0, sizeof(dj_last_readings_right));
 #endif
 #ifdef INPUT_PS2

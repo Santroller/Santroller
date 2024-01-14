@@ -17,18 +17,7 @@ if (elapsed) {
 #ifdef CONFIGURABLE_BLOBS
 
 if (djLeftValid) {
-    if (INPUT_DJ_TURNTABLE_SMOOTHING_DUAL) {
-        if (elapsed) {
-            dj_sum -= dj_last_readings[dj_next];
-            dj_last_readings[dj_next] = (int8_t)dj_left[2];
-            dj_sum += dj_last_readings[dj_next];
-            dj_next++;
-            if (dj_next >= TURNTABLE_BUFFER_SIZE) {
-                dj_next = 0;
-            }
-        }
-        dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
-    } else if (INPUT_DJ_TURNTABLE_SMOOTHING) {
+    if (INPUT_DJ_TURNTABLE_SMOOTHING) {
         if (elapsed) {
             dj_sum_left -= dj_last_readings_left[dj_next_left];
             dj_last_readings_left[dj_next_left] = (int8_t)dj_left[2];
@@ -44,18 +33,7 @@ if (djLeftValid) {
     }
 }
 if (djRightValid) {
-    if (INPUT_DJ_TURNTABLE_SMOOTHING_DUAL) {
-        if (elapsed) {
-            dj_sum -= dj_last_readings[dj_next];
-            dj_last_readings[dj_next] = (int8_t)dj_right[2];
-            dj_sum += dj_last_readings[dj_next];
-            dj_next++;
-            if (dj_next >= TURNTABLE_BUFFER_SIZE) {
-                dj_next = 0;
-            }
-        }
-        dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
-    } else if (INPUT_DJ_TURNTABLE_SMOOTHING) {
+    if (INPUT_DJ_TURNTABLE_SMOOTHING) {
         if (elapsed) {
             dj_sum_right -= dj_last_readings_right[dj_next_right];
             dj_last_readings_right[dj_next_right] = (int8_t)dj_right[2];
@@ -70,33 +48,6 @@ if (djRightValid) {
     }
 }
 
-#else
-
-#if INPUT_DJ_TURNTABLE_SMOOTHING_DUAL
-if (djLeftValid) {
-    if (elapsed) {
-        dj_sum -= dj_last_readings[dj_next];
-        dj_last_readings[dj_next] = (int8_t)dj_left[2];
-        dj_sum += dj_last_readings[dj_next];
-        dj_next++;
-        if (dj_next >= TURNTABLE_BUFFER_SIZE) {
-            dj_next = 0;
-        }
-    }
-    dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
-}
-if (djRightValid) {
-    if (elapsed) {
-        dj_sum -= dj_last_readings[dj_next];
-        dj_last_readings[dj_next] = (int8_t)dj_right[2];
-        dj_sum += dj_last_readings[dj_next];
-        dj_next++;
-        if (dj_next >= TURNTABLE_BUFFER_SIZE) {
-            dj_next = 0;
-        }
-    }
-    dj_turntable_left = (dj_sum / TURNTABLE_BUFFER_SIZE);
-}
 #else
 // DJ Hero turntables are pretty noisy, so smooth that out with a moving average
 #if INPUT_DJ_TURNTABLE_SMOOTHING
@@ -130,5 +81,4 @@ dj_turntable_right = (int8_t)dj_right[2];
 #endif
 #endif
 
-#endif
 #endif

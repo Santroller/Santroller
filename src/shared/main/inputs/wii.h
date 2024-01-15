@@ -35,7 +35,7 @@
             lastTapWiiGh5 = 0x95;
         } else if (lastTapWii < 0x0B) {
             lastTapWiiGh5 = 0xB0;
-        } else if (lastTapWii < 0x0F>) {
+        } else if (lastTapWii < 0x0F) {
             lastTapWiiGh5 = 0xCD;
         } else if (lastTapWii < 0x12) {
             lastTapWiiGh5 = 0xE6;

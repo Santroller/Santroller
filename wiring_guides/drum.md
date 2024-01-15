@@ -37,6 +37,7 @@ Set the device type to one of the various drum modes, depending on the type of k
 ### Calibration
 Drum calibration is a bit different to most other controllers, as an automated calibration method does not really work here. A drum axis has a `minimum` and a `maximum`. The minimum is the smallest value that will be considered a hit by the drum kit. Increase this value if your drum is registering hits that it shouldn't. The maximum specifies the hardest hit you want the drum to register. This gets used for games that rely on hitting the drum hard to do different actions, and the actual resulting analog value will be scaled between the min and max.
 If your drum is triggering when you aren't hitting the pad, then you need to increase the minimum, if it isn't reacting on light hits then the minimum needs to be decreased.
+If your drum reacts when you hit other pads, this is also a indication that you need to increase the minimum.
 
 ### Debounce
 You will also need to adjust the debounce. The debounce for a drum hit dictates how long the drum signal will stay active, so you want to increase this a lot for a drum kit, otherwise you will find that your drum hits will immediately turn off which is not what the games expect.

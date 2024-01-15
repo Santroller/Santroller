@@ -33,9 +33,9 @@
             lastTapWiiGh5 = 0;
         } else if (lastTapWii < 0x05) {
             lastTapWiiGh5 = 0x95;
-        } else if (lastTapWii < 0x0B) {
+        } else if (lastTapWii < 0x0A) {
             lastTapWiiGh5 = 0xB0;
-        } else if (lastTapWii < 0x0F) {
+        } else if (lastTapWii < 0x0C) {
             lastTapWiiGh5 = 0xCD;
         } else if (lastTapWii < 0x12) {
             lastTapWiiGh5 = 0xE6;
@@ -50,7 +50,6 @@
         } else {
             lastTapWiiGh5 = 0x7F;
         }
-
 #endif
         // Turntable bits are all split up, so we slice them back up
         ltt_t.ltt5  = (wiiData[4] & 1);

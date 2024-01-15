@@ -2060,6 +2060,7 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
     memcpy(data_from_controller, report, len);
 }
 
+
 void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
     if (subtype == XINPUT_STAGE_KIT) {
         passthrough_stage_kit = true;

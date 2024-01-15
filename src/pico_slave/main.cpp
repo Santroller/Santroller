@@ -143,6 +143,7 @@ uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
 uint32_t readWtSlave(int pin) {
     gpio_put_masked(mask, ((pin & (1 << 0)) << wtS0Pin - 0) | ((pin & (1 << 1)) << (wtS1Pin - 1)) | ((pin & (1 << 2)) << (wtS2Pin - 2)));
+    sleep_us(10);
     gpio_set_dir(wtInputPin, true);
     gpio_put(wtInputPin, 0);
     gpio_set_dir(wtInputPin, false);

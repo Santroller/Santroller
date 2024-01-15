@@ -58,6 +58,7 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
 
 uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits) {
     gpio_put_masked(mask, bits);
+    sleep_us(10);
     adc_select_input(pin);
     return adc_read() << 4;
 }

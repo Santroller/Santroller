@@ -125,6 +125,7 @@ uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
 uint32_t readWt(int pin) {
     gpio_put_masked((1 << WT_PIN_S0) | (1 << WT_PIN_S1) | (1 << WT_PIN_S2), ((pin & (1 << 0)) << WT_PIN_S0 - 0) | ((pin & (1 << 1)) << (WT_PIN_S1 - 1)) | ((pin & (1 << 2)) << (WT_PIN_S2 - 2)));
+    sleep_us(10);
     gpio_set_dir(WT_PIN_INPUT, true);
     gpio_put(WT_PIN_INPUT, 0);
     gpio_set_dir(WT_PIN_INPUT, false);

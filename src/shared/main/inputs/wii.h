@@ -31,23 +31,23 @@
             lastTapWiiGh5 = 0;
         } else if (lastTapWii == 0x0f) {
             lastTapWiiGh5 = 0;
-        } else if (lastTapWii == 0x04) {
+        } else if (lastTapWii < 0x05) {
             lastTapWiiGh5 = 0x95;
-        } else if (lastTapWii == 0x07) {
+        } else if (lastTapWii < 0x0B) {
             lastTapWiiGh5 = 0xB0;
-        } else if (lastTapWii == 0x0A) {
+        } else if (lastTapWii < 0x0F>) {
             lastTapWiiGh5 = 0xCD;
-        } else if (lastTapWii == 0x0C || lastTapWii == 0x0D) {
+        } else if (lastTapWii < 0x12) {
             lastTapWiiGh5 = 0xE6;
-        } else if (lastTapWii == 0x12 || lastTapWii == 0x13) {
+        } else if (lastTapWii < 0x14>) {
             lastTapWiiGh5 = 0x1A;
-        } else if (lastTapWii == 0x14 || lastTapWii == 0x15) {
+        } else if (lastTapWii < 0x17) {
             lastTapWiiGh5 = 0x2F;
-        } else if (lastTapWii == 0x17 || lastTapWii == 0x18) {
+        } else if (lastTapWii < 1A) {
             lastTapWiiGh5 = 0x49;
-        } else if (lastTapWii == 0x1A) {
+        } else if (lastTapWii < 0x1F) {
             lastTapWiiGh5 = 0x66;
-        } else if (lastTapWii == 0x1F) {
+        } else {
             lastTapWiiGh5 = 0x7F;
         }
 

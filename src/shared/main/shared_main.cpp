@@ -1467,6 +1467,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             int16_t temp;
             uint16_t temp_trigger;
             TICK_XBOX_ONE;
+            #if DEVICE_TYPE_IS_GUITAR
+            if (report->tilt < 0x70) {
+                report->tilt = 0;
+            }
+            #endif
 
             if (report->guide != lastXboxOneGuide) {
                 lastXboxOneGuide = report->guide;

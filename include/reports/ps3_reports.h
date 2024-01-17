@@ -409,19 +409,6 @@ typedef struct
     uint8_t whammy;
     uint8_t pickup;
 
-    uint8_t green : 1;
-    uint8_t red : 1;
-    uint8_t yellow : 1;
-    uint8_t blue : 1;
-    uint8_t orange : 1;
-    uint8_t : 3;
-    uint8_t soloGreen : 1;
-    uint8_t soloRed : 1;
-    uint8_t soloYellow : 1;
-    uint8_t soloBlue : 1;
-    uint8_t soloOrange : 1;
-    uint8_t : 3;
-
     uint8_t unused2[12];
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;

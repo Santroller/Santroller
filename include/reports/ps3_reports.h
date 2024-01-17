@@ -385,7 +385,7 @@ typedef struct
     bool y : 1;  // triangle, yellow
 
     bool leftShoulder : 1;  // orange, l1
-    bool tiltDigital : 1;          // tilt, r1
+    bool tilt : 1;          // tilt, r1
     bool solo : 1;          // l2
     bool : 1;               // r2
 
@@ -422,9 +422,7 @@ typedef struct
     uint8_t soloOrange : 1;
     uint8_t : 3;
 
-    uint8_t unused2[10];
-
-    uint16_t tilt;  // accelX
+    uint8_t unused2[12];
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
 

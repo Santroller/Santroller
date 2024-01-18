@@ -107,7 +107,7 @@ static void tick_usb() {
 #endif
 #if BLUETOOTH
     if (!authDone) {
-        if (consoleType != XBOX360 && consoleType != XBOXONE) {
+        if (consoleType != XBOXONE && (consoleType != XBOX360 || !XINPUT_AUTH)) {
             authReady = millis() > 1000;
         }
         if (authReady) {

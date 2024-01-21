@@ -344,6 +344,10 @@ uint8_t handle_calibration_ps3(uint8_t previous, int16_t orig_val, int16_t offse
     return (uint8_t)(ret + PS3_STICK_CENTER);
 }
 
+int8_t handle_calibration_mouse(int8_t previous, int16_t orig_val, int16_t offset, int16_t min, int16_t multiplier, int16_t deadzone) {
+    return handle_calibration_xbox(previous << 8, orig_val, offset, min, multiplier, deadzone) >> 8;
+}
+
 uint8_t handle_calibration_ps3_360_trigger(uint8_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
     return handle_calibration_xbox_one_trigger(previous << 2, orig_val, min, multiplier, deadzone) >> 2;
 }

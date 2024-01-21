@@ -632,10 +632,12 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = PS3;
             reset_usb();
         }
-        if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT) {
+        // RPCS3 sends this. Only jump turntables to PS3 mode, since other instruments don't actually work
+        if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT && DEVICE_TYPE == DJ_HERO_TURNTABLE) {
             consoleType = PS3;
             reset_usb();
         }
+        // I dont remember what sends this
         if (consoleType == PS3 && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
             consoleType = REAL_PS3;
             reset_usb();
@@ -725,7 +727,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
-        } else if ((consoleType == PS3 || consoleType == REAL_PS3) && DEVICE_TYPE == DJ_HERO_TURNTABLE) {
+        } else if (consoleType == PS3 || consoleType == REAL_PS3) {
             memcpy_P(requestBuffer, &DevCompatIDsPS3, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE));
         } else if (consoleType != UNIVERSAL) {
             return 0;

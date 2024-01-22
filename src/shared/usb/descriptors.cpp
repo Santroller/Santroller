@@ -632,8 +632,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = PS3;
             reset_usb();
         }
-        // RPCS3 sends this. Only jump turntables to PS3 mode, since other instruments don't actually work
-        if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT && DEVICE_TYPE == DJ_HERO_TURNTABLE) {
+        // RPCS3 sends this. Jump any devices with RPCS3 compat enabled
+        if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT && RPCS3_COMPAT) {
             consoleType = PS3;
             reset_usb();
         }

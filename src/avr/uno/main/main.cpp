@@ -93,7 +93,7 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     }
 
     SREG = CurrentGlobalInt;
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = 'N';
+    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = '3';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = consoleType + '0';
 
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD

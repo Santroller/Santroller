@@ -188,6 +188,9 @@ void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
     keyIndex[id] = 0;
 }
 void init_main(void) {
+    #if !DEVICE_TYPE_IS_NORMAL_GAMEPAD
+        consoleType = UNIVERSAL;
+    #endif
     initPins();
     twi_init();
     spi_begin();

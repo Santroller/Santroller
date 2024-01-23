@@ -16,12 +16,21 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 * Wire Cutters
 * Heatshrink
 
-## Wiring Steps
+### Supplies for a custom kit
+* 1MOhm resistor per drum pad
+* Piezo sensor
+
+## Wiring Steps (Existing kit)
 1. Open your drum kit.
 2. Find the mainboard. Then, find the wires going to the various pads.
 3. Use your multimeter to figure out which wires on the various pads are joined together. This will be your common ground, and you can connect one of these to the ground pin on your microcontroller.
 4. The other wires for each pad are the signal pins, and these need to go to seperate analog pins on your microcontroller.
 5. If you would like to also hook up face buttons, you will need to follow the traces on the main PCB and work out the signal pins for each button, and hook those up to digital pins on your microcontroller.
+
+## Wiring Steps (Custom kit)
+1. Wire the red wire from each piezo to an analog pin on your microcontroller
+2. Wire the black wires to ground on the microcontroller
+3. Place a 1MOhm resistor between the black and red pins on each piezo 
 
 ## Wiring the multiplexer
 1. Wire COM on the multiplexer to an analog pin on your Pi Pico

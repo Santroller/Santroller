@@ -44,11 +44,12 @@ for (int i = 0; i < device_count; i++) {
     }
     switch (console_type) {
         case PS3: {
-            PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;
-            bool up = report->dpadUp;
-            bool left = report->dpadLeft;
-            bool down = report->dpadDown;
-            bool right = report->dpadRight;
+            PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)data;
+            uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+            bool up = dpad & UP;
+            bool left = dpad & LEFT;
+            bool down = dpad & DOWN;
+            bool right = dpad & RIGHT;
             switch (device_type.sub_type) {
                 case GAMEPAD: {
                     PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)data;

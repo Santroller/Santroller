@@ -187,6 +187,10 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
 uint8_t get_usb_host_device_tap_bar_type(uint8_t id) {
     return usb_host_devices[id].tap_bar_type;
 }
+void set_usb_host_device_tap_bar_type(uint8_t id, uint8_t type) {
+    usb_host_devices[id].tap_bar_type = type;
+}
+
 
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
     memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);

@@ -189,9 +189,9 @@ for (int i = 0; i < device_count; i++) {
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (!tap_type) {
                         if (!report->slider) {
-                            tap_type = TAP_BAR_GH5;
+                            set_usb_host_device_tap_bar_type(i, TAP_BAR_GH5);
                         } else if (report->slider >= 0x7B && report->slider <= 0x7D) {
-                            tap_type = TAP_BAR_WT;
+                            set_usb_host_device_tap_bar_type(i, TAP_BAR_WT);
                         }
                     } else if (tap_type == TAP_BAR_WT) {
                         // Its WT, convert to GH5
@@ -540,9 +540,9 @@ for (int i = 0; i < device_count; i++) {
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (tap_type) {
                         if (!slider) {
-                            tap_type = TAP_BAR_GH5;
+                            set_usb_host_device_tap_bar_type(i, TAP_BAR_GH5);
                         } else if (slider >= 0x7B && slider <= 0x7D) {
-                            tap_type = TAP_BAR_WT;
+                            set_usb_host_device_tap_bar_type(i, TAP_BAR_WT);
                         }
                     } else if (tap_type == TAP_BAR_WT) {
                         // Its WT, convert to GH5

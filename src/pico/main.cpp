@@ -46,6 +46,7 @@ typedef struct {
     USB_Device_Type_t type;
     USB_LastReport_Data_t report;
     uint8_t report_length;
+    uint8_t tap_bar_type;
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
@@ -182,6 +183,9 @@ uint8_t get_usb_host_device_count() {
 }
 USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
     return usb_host_devices[id].type;
+}
+uint8_t get_usb_host_device_tap_bar_type(uint8_t id) {
+    return usb_host_devices[id].tap_bar_type;
 }
 
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {

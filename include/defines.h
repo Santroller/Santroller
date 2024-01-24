@@ -65,6 +65,10 @@
 #define MIDI_TYPE_NOTE 0
 #define MIDI_TYPE_CONTROL_COMMAND 1
 
+#define TAP_BAR_UNKNOWN 0
+#define TAP_BAR_WT 1
+#define TAP_BAR_GH5 2
+
 typedef enum {
     WII_NUNCHUK = 0x0000,
     WII_CLASSIC_CONTROLLER = 0x0001,

@@ -9,6 +9,7 @@ if (millis() - lastSentGHLPoke > 8000) {
 memset(&usb_host_data, 0, sizeof(usb_host_data));
 for (int i = 0; i < device_count; i++) {
     USB_Device_Type_t device_type = get_usb_host_device_type(i);
+    uint8_t tap_type = get_usb_host_device_tap_bar_type(i);
     // Poke any GHL guitars to keep em alive
     if (poke_ghl && device_type.sub_type == LIVE_GUITAR) {
         if (device_type.console_type == PS3) {
@@ -183,9 +184,39 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {
-                        usb_host_data.whammy = report->whammy;
+                        usb_host_data.whammy = report->slider;
                     }
-                    if (report->slider) {
+                    // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
+                    if (!tap_type) {
+                        if (!report->slider) {
+                            tap_type = TAP_BAR_GH5;
+                        } else if (report->slider >= 0x7B && report->slider <= 0x7D) {
+                            tap_type = TAP_BAR_WT;
+                        }
+                    } else if (tap_type == TAP_BAR_WT) {
+                        // Its WT, convert to GH5
+                        if (report->slider > 0x75  && report->slider < 0x85) {
+                            usb_host_data.slider = 0;
+                        } else if (report->slider < 0x1F) {
+                            usb_host_data.slider = 0x95;
+                        } else if (report->slider < 0x3F) {
+                            usb_host_data.slider = 0xB0;
+                        } else if (report->slider < 0x5F) {
+                            usb_host_data.slider = 0xCD;
+                        } else if (report->slider < 0x6F) {
+                            usb_host_data.slider = 0xE6;
+                        } else if (report->slider < 0x9F) {
+                            usb_host_data.slider = 0x1A;
+                        } else if (report->slider < 0xAF) {
+                            usb_host_data.slider = 0x2F;
+                        } else if (report->slider < 0xCF) {
+                            usb_host_data.slider = 0x49;
+                        } else if (report->slider < 0xEF) {
+                            usb_host_data.slider = 0x66;
+                        } else {
+                            usb_host_data.slider = 0x7F;
+                        }
+                    } else {
                         usb_host_data.slider = report->slider;
                     }
                     break;
@@ -503,8 +534,41 @@ for (int i = 0; i < device_count; i++) {
                     if (report->whammy) {
                         usb_host_data.whammy = report->whammy;
                     }
-                    if (report->slider) {
-                        usb_host_data.slider = report->slider;
+
+                    uint8_t slider = report->slider & 0xFF;
+
+                    // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
+                    if (tap_type) {
+                        if (!slider) {
+                            tap_type = TAP_BAR_GH5;
+                        } else if (slider >= 0x7B && slider <= 0x7D) {
+                            tap_type = TAP_BAR_WT;
+                        }
+                    } else if (tap_type == TAP_BAR_WT) {
+                        // Its WT, convert to GH5
+                        if (slider > 0x75  && slider < 0x85) {
+                            usb_host_data.slider = 0;
+                        } else if (slider < 0x1F) {
+                            usb_host_data.slider = 0x95;
+                        } else if (slider < 0x3F) {
+                            usb_host_data.slider = 0xB0;
+                        } else if (slider < 0x5F) {
+                            usb_host_data.slider = 0xCD;
+                        } else if (slider < 0x6F) {
+                            usb_host_data.slider = 0xE6;
+                        } else if (slider < 0x9F) {
+                            usb_host_data.slider = 0x1A;
+                        } else if (slider < 0xAF) {
+                            usb_host_data.slider = 0x2F;
+                        } else if (slider < 0xCF) {
+                            usb_host_data.slider = 0x49;
+                        } else if (slider < 0xEF) {
+                            usb_host_data.slider = 0x66;
+                        } else {
+                            usb_host_data.slider = 0x7F;
+                        }
+                    } else {
+                        usb_host_data.slider = slider;
                     }
                     break;
                 }

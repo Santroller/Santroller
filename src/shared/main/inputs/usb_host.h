@@ -184,7 +184,7 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {
-                        usb_host_data.whammy = report->slider;
+                        usb_host_data.whammy = report->whammy;
                     }
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (!tap_type) {

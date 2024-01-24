@@ -188,16 +188,16 @@ for (int i = 0; i < device_count; i++) {
                     }
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (!tap_type) {
-                        if (!report->slider) {
+                        if (!report->slider && report->tilt) {
                             set_usb_host_device_tap_bar_type(i, TAP_BAR_GH5);
-                        } else if (report->slider >= 0x7B && report->slider <= 0x7D) {
+                        } else if (report->slider > 0x75  && report->slider < 0x85) {
                             set_usb_host_device_tap_bar_type(i, TAP_BAR_WT);
                         }
                     } else if (tap_type == TAP_BAR_WT) {
                         // Its WT, convert to GH5
                         if (report->slider > 0x75  && report->slider < 0x85) {
                             usb_host_data.slider = 0;
-                        } else if (report->slider < 0x1F) {
+                        } else if (report->slider < 0x2F) {
                             usb_host_data.slider = 0x95;
                         } else if (report->slider < 0x3F) {
                             usb_host_data.slider = 0xB0;
@@ -539,7 +539,7 @@ for (int i = 0; i < device_count; i++) {
 
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (tap_type) {
-                        if (!slider) {
+                        if (!slider && report->tilt) {
                             set_usb_host_device_tap_bar_type(i, TAP_BAR_GH5);
                         } else if (slider >= 0x7B && slider <= 0x7D) {
                             set_usb_host_device_tap_bar_type(i, TAP_BAR_WT);
@@ -550,7 +550,7 @@ for (int i = 0; i < device_count; i++) {
                             usb_host_data.slider = 0;
                         } else if (slider < 0x1F) {
                             usb_host_data.slider = 0x95;
-                        } else if (slider < 0x3F) {
+                        } else if (slider < 0x2F) {
                             usb_host_data.slider = 0xB0;
                         } else if (slider < 0x5F) {
                             usb_host_data.slider = 0xCD;

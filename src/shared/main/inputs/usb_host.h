@@ -529,31 +529,30 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.whammy = report->whammy;
                     }
 
-                    uint8_t slider = (report->slider ^ 0x80) & 0xFF;
+                    // uint8_t slider = (report->slider >> 8) ^ 0x80;
 
-                    // Realistically, only kiosks are wired and there aren't many of those around, so just assume wt
                     // TODO: eventually if we implement wireless receiver support then this might be worth it
-                    if (slider < 0x2F) {
-                        usb_host_data.slider = 0x95;
-                    } else if (slider <= 0x3F) {
-                        usb_host_data.slider = 0xB0;
-                    } else if (slider <= 0x5F) {
-                        usb_host_data.slider = 0xCD;
-                    } else if (slider <= 0x6F) {
-                        usb_host_data.slider = 0xE6;
-                    } else if (slider <= 0x8F) {
-                        usb_host_data.slider = 0;
-                    } else if (slider <= 0x9F) {
-                        usb_host_data.slider = 0x1A;
-                    } else if (slider <= 0xAF) {
-                        usb_host_data.slider = 0x2F;
-                    } else if (slider <= 0xCF) {
-                        usb_host_data.slider = 0x49;
-                    } else if (slider <= 0xEF) {
-                        usb_host_data.slider = 0x66;
-                    } else {
-                        usb_host_data.slider = 0x7F;
-                    }
+                    // if (slider < 0x2F) {
+                    //     usb_host_data.slider = 0x95;
+                    // } else if (slider <= 0x3F) {
+                    //     usb_host_data.slider = 0xB0;
+                    // } else if (slider <= 0x5F) {
+                    //     usb_host_data.slider = 0xCD;
+                    // } else if (slider <= 0x6F) {
+                    //     usb_host_data.slider = 0xE6;
+                    // } else if (slider <= 0x8F) {
+                    //     usb_host_data.slider = 0;
+                    // } else if (slider <= 0x9F) {
+                    //     usb_host_data.slider = 0x1A;
+                    // } else if (slider <= 0xAF) {
+                    //     usb_host_data.slider = 0x2F;
+                    // } else if (slider <= 0xCF) {
+                    //     usb_host_data.slider = 0x49;
+                    // } else if (slider <= 0xEF) {
+                    //     usb_host_data.slider = 0x66;
+                    // } else {
+                    //     usb_host_data.slider = 0x7F;
+                    // }
                     break;
                 }
                 case XINPUT_DRUMS: {

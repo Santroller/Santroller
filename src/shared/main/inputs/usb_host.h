@@ -189,23 +189,23 @@ for (int i = 0; i < device_count; i++) {
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (device_type.sub_type == GUITAR_HERO_GUITAR_WT) {
                         // Its WT, convert to GH5
-                        if (report->slider > 0x75  && report->slider < 0x85) {
-                            usb_host_data.slider = 0;
-                        } else if (report->slider < 0x2F) {
+                        if (report->slider <= 0x2F) {
                             usb_host_data.slider = 0x95;
-                        } else if (report->slider < 0x3F) {
+                        } else if (report->slider <= 0x3F) {
                             usb_host_data.slider = 0xB0;
-                        } else if (report->slider < 0x5F) {
+                        } else if (report->slider <= 0x5F) {
                             usb_host_data.slider = 0xCD;
-                        } else if (report->slider < 0x6F) {
+                        } else if (report->slider <= 0x6F) {
                             usb_host_data.slider = 0xE6;
-                        } else if (report->slider < 0x9F) {
+                        } else if (report->slider <= 0x8F) {
+                            usb_host_data.slider = 0;
+                        } else if (report->slider <= 0x9F) {
                             usb_host_data.slider = 0x1A;
-                        } else if (report->slider < 0xAF) {
+                        } else if (report->slider <= 0xAF) {
                             usb_host_data.slider = 0x2F;
-                        } else if (report->slider < 0xCF) {
+                        } else if (report->slider <= 0xCF) {
                             usb_host_data.slider = 0x49;
-                        } else if (report->slider < 0xEF) {
+                        } else if (report->slider <= 0xEF) {
                             usb_host_data.slider = 0x66;
                         } else {
                             usb_host_data.slider = 0x7F;
@@ -529,26 +529,27 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.whammy = report->whammy;
                     }
 
-                    uint8_t slider = (report->slider & 0xFF) + 0x80;
+                    uint8_t slider = (report->slider ^ 0x80) & 0xFF;
 
                     // Realistically, only kiosks are wired and there aren't many of those around, so just assume wt
-                    if (slider == 0x80) {
-                        usb_host_data.slider = 0;
-                    } else if (slider < 0x1F) {
+                    // TODO: eventually if we implement wireless receiver support then this might be worth it
+                    if (slider < 0x2F) {
                         usb_host_data.slider = 0x95;
-                    } else if (slider < 0x2F) {
+                    } else if (slider <= 0x3F) {
                         usb_host_data.slider = 0xB0;
-                    } else if (slider < 0x5F) {
+                    } else if (slider <= 0x5F) {
                         usb_host_data.slider = 0xCD;
-                    } else if (slider < 0x6F) {
+                    } else if (slider <= 0x6F) {
                         usb_host_data.slider = 0xE6;
-                    } else if (slider < 0x9F) {
+                    } else if (slider <= 0x8F) {
+                        usb_host_data.slider = 0;
+                    } else if (slider <= 0x9F) {
                         usb_host_data.slider = 0x1A;
-                    } else if (slider < 0xAF) {
+                    } else if (slider <= 0xAF) {
                         usb_host_data.slider = 0x2F;
-                    } else if (slider < 0xCF) {
+                    } else if (slider <= 0xCF) {
                         usb_host_data.slider = 0x49;
-                    } else if (slider < 0xEF) {
+                    } else if (slider <= 0xEF) {
                         usb_host_data.slider = 0x66;
                     } else {
                         usb_host_data.slider = 0x7F;

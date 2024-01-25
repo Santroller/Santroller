@@ -6,9 +6,7 @@
     if (ps2Valid) {
         memcpy(lastSuccessfulPS2Packet, ps2Data, sizeof(lastSuccessfulPS2Packet));
         lastTapPS2 = ps2Data[7];
-        if (lastTapPS2 > 0x75  && lastTapPS2 < 0x85) {
-            lastTapPS2GH5 = 0;
-        } else if (lastTapPS2 < 0x2F) {
+        if (lastTapPS2 < 0x2F) {
             lastTapPS2GH5 = 0x95;
         } else if (lastTapPS2 < 0x3F) {
             lastTapPS2GH5 = 0xB0;
@@ -16,6 +14,8 @@
             lastTapPS2GH5 = 0xCD;
         } else if (lastTapPS2 < 0x6F) {
             lastTapPS2GH5 = 0xE6;
+        } else if (lastTapPS2 < 0x8F>) {
+            lastTapPS2GH5 = 0;
         } else if (lastTapPS2 < 0x9F) {
             lastTapPS2GH5 = 0x1A;
         } else if (lastTapPS2 < 0xAF) {

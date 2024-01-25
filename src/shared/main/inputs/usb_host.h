@@ -188,7 +188,7 @@ for (int i = 0; i < device_count; i++) {
                     }
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (!tap_type) {
-                        if (!report->slider && report->tilt) {
+                        if (report->slider==0x80) {
                             set_usb_host_device_tap_bar_type(i, TAP_BAR_GH5);
                         } else if (report->slider > 0x75  && report->slider < 0x85) {
                             set_usb_host_device_tap_bar_type(i, TAP_BAR_WT);
@@ -217,7 +217,7 @@ for (int i = 0; i < device_count; i++) {
                             usb_host_data.slider = 0x7F;
                         }
                     } else {
-                        usb_host_data.slider = report->slider;
+                        usb_host_data.slider = report->slider + 0x80;
                     }
                     break;
                 }

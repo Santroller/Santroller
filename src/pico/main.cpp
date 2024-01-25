@@ -46,7 +46,6 @@ typedef struct {
     USB_Device_Type_t type;
     USB_LastReport_Data_t report;
     uint8_t report_length;
-    uint8_t tap_bar_type;
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
@@ -80,7 +79,7 @@ void send_report_to_pc(const void *report, uint8_t len) {
 bool foundXB = false;
 bool authReady = false;
 bool authDone = false;
-
+long test3 = 0;
 static void tick_usb() {
 #if USB_HOST_STACK
     if (consoleType == XBOX360 && !foundXB && XINPUT_AUTH) {
@@ -184,13 +183,6 @@ uint8_t get_usb_host_device_count() {
 USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
     return usb_host_devices[id].type;
 }
-uint8_t get_usb_host_device_tap_bar_type(uint8_t id) {
-    return usb_host_devices[id].tap_bar_type;
-}
-void set_usb_host_device_tap_bar_type(uint8_t id, uint8_t type) {
-    usb_host_devices[id].tap_bar_type = type;
-}
-
 
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
     memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);
@@ -237,10 +229,20 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
 
     } else if (controllerType == UNKNOWN) {
         if (type.console_type) {
+            if (type.console_type == PS3) {
+                // GHWT and GH5 guitars have the same vid and pid, but different tap bar functions. We can read the device name to actually determine what it is
+                if (type.sub_type == GUITAR_HERO_GUITAR && XFER_RESULT_SUCCESS == tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf))) {
+                    uint16_t wtProduct[] = {'G','u','i','t','a','r',' ','H','e','r','o','4'};
+                    if (memcmp(wtProduct, buf, sizeof(wtProduct)) || memcmp(wtProduct, buf+1, sizeof(wtProduct))) {
+                        type.sub_type = GUITAR_HERO_GUITAR_WT;
+                    }
+                }
+            }
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
             if (type.console_type == PS3) {
                 printf("Found PS3 controller\r\n");
+                printf("Sub type: %d\r\n", type.sub_type);
                 ps3_controller_connected(dev_addr, host_vid, host_pid);
             }
         }

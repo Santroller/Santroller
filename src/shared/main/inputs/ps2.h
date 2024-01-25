@@ -8,7 +8,7 @@
         lastTapPS2 = ps2Data[7];
         if (lastTapPS2 > 0x75  && lastTapPS2 < 0x85) {
             lastTapPS2GH5 = 0;
-        } else if (lastTapPS2 < 0x1F) {
+        } else if (lastTapPS2 < 0x2F) {
             lastTapPS2GH5 = 0x95;
         } else if (lastTapPS2 < 0x3F) {
             lastTapPS2GH5 = 0xB0;

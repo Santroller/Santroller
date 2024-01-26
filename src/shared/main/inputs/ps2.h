@@ -14,7 +14,7 @@
             lastTapPS2GH5 = 0xCD;
         } else if (lastTapPS2 < 0x6F) {
             lastTapPS2GH5 = 0xE6;
-        } else if (lastTapPS2 < 0x8F>) {
+        } else if (lastTapPS2 < 0x8F) {
             lastTapPS2GH5 = 0;
         } else if (lastTapPS2 < 0x9F) {
             lastTapPS2GH5 = 0x1A;

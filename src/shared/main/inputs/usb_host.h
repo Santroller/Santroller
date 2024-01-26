@@ -532,6 +532,7 @@ for (int i = 0; i < device_count; i++) {
                     // uint8_t slider = (report->slider >> 8) ^ 0x80;
 
                     // TODO: eventually if we implement wireless receiver support then this might be worth it
+                    // We would then just check the vid and pid and do it that way
                     // if (slider < 0x2F) {
                     //     usb_host_data.slider = 0x95;
                     // } else if (slider <= 0x3F) {

@@ -363,11 +363,10 @@ for (int i = 0; i < device_count; i++) {
         }
         case PS4: {
             PS4Dpad_Data_t *dpad = (PS4Dpad_Data_t *)data;
-            uint8_t dpad_binding = dpad->dpad < 8 ? dpad_bindings_reverse[dpad->dpad] : 0;
-            usb_host_data.dpadLeft = dpad_binding & LEFT;
-            usb_host_data.dpadRight = dpad_binding & RIGHT;
-            usb_host_data.dpadUp = dpad_binding & UP;
-            usb_host_data.dpadDown = dpad_binding & DOWN;
+            usb_host_data.dpadLeft = dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
+            usb_host_data.dpadRight = dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
+            usb_host_data.dpadUp = dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
+            usb_host_data.dpadDown = dpad->dpad == 5 || dpad->dpad == 4 || dpad->dpad == 3;
             switch (device_type.sub_type) {
                 case GAMEPAD: {
                     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)data;

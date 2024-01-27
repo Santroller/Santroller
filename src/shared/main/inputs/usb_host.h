@@ -394,16 +394,16 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.rightTrigger = report->rightTrigger << 8;
                     }
                     if (report->leftStickX != PS3_STICK_CENTER) {
-                        usb_host_data.leftStickX = (report->leftStickX - 0x80) << 8;
+                        usb_host_data.leftStickX = (report->leftStickX - PS3_STICK_CENTER) << 8;
                     }
                     if (report->leftStickY != PS3_STICK_CENTER) {
-                        usb_host_data.leftStickY = (report->leftStickY - 0x80) << 8;
+                        usb_host_data.leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
                     }
                     if (report->rightStickX != PS3_STICK_CENTER) {
-                        usb_host_data.rightStickX = (report->rightStickX - 0x80) << 8;
+                        usb_host_data.rightStickX = (report->rightStickX - PS3_STICK_CENTER) << 8;
                     }
                     if (report->rightStickY != PS3_STICK_CENTER) {
-                        usb_host_data.rightStickY = (report->rightStickY - 0x80) << 8;
+                        usb_host_data.rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
                     }
                     break;
                 }

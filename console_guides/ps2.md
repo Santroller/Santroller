@@ -18,4 +18,4 @@ Guitar Hero World Tour introduced compatibility with PS3 instruments and thus fo
 ## PADEMU
 
 If a PS2 game is expecting a standard controller you usually would not be able to use a USB controller. However, OpenPS2Loader comes with PADEMU, which lets you emulate a PS2 gamepad from a usb device.
-The firmware is designed to go into PS3 mode when it detects it is plugged into a PS2, which PADEMU will recognise. Note that for guitars, you need to use a [development relase of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z), as I added support for guitar emulation myself as it originally was not part of PADEMU.
+The firmware is designed to go into PS3 mode when it detects it is plugged into a PS2, and PADEMU has support for both PS3 gamepads and PS3 guitars. Note that for guitars, you need to use a [development relase of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z), as I added support for guitar emulation myself as it originally was not part of PADEMU.

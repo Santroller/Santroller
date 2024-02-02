@@ -637,7 +637,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = PS3;
             reset_usb();
         }
-        // I dont remember what sends this
+        // PS3 sends this for a gamepad
         if (consoleType == PS3 && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
             consoleType = REAL_PS3;
             reset_usb();

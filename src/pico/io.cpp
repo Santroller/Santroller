@@ -117,11 +117,7 @@ void read_serial(uint8_t *id, uint8_t len) {
 
 #ifdef INPUT_WT_NECK
 
-#define WT_BUFFER 16
 uint32_t lastWt[5] = {0};
-uint32_t lastWtSum[5] = {0};
-uint32_t lastWtAvg[5][WT_BUFFER] = {0};
-uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
 uint32_t readWt(int pin) {
     gpio_put_masked((1 << WT_PIN_S0) | (1 << WT_PIN_S1) | (1 << WT_PIN_S2), ((pin & (1 << 0)) << WT_PIN_S0 - 0) | ((pin & (1 << 1)) << (WT_PIN_S1 - 1)) | ((pin & (1 << 2)) << (WT_PIN_S2 - 2)));
@@ -137,26 +133,15 @@ uint32_t readWt(int pin) {
         if (m > 1000) {
             m = initialWt[pin] - WT_SENSITIVITY;
         }
-        lastWtSum[pin] -= lastWtAvg[pin][nextWt[pin]];
-        lastWtAvg[pin][nextWt[pin]] = m;
-        lastWtSum[pin] += m;
-        nextWt[pin]++;
-        if (nextWt[pin] >= WT_BUFFER) {
-            nextWt[pin] = 0;
-        }
-        m = lastWtSum[pin] / WT_BUFFER;
         lastWt[pin] = m;
     }
     return m;
 }
 bool checkWt(int pin) {
-    return readWt(pin) > initialWt[pin] + WT_SENSITIVITY;
+    return readWt(pin) > initialWt[pin];
 }
 void initWt() {
     memset(initialWt, 0, sizeof(initialWt));
-    memset(lastWtAvg, 0, sizeof(lastWtAvg));
-    memset(lastWtSum, 0, sizeof(lastWtSum));
-    memset(nextWt, 0, sizeof(nextWt));
     for (int j = 0; j < 100; j++) {
         readWt(6);
         for (int i = 0; i < 5; i++) {
@@ -167,10 +152,11 @@ void initWt() {
         readWt(6);
         for (int i = 0; i < 5; i++) {
             uint32_t reading = readWt(i) + WT_SENSITIVITY;
-            if (reading > initialWt[i]) {
-                initialWt[i] = reading;
-            }
+            initialWt[i] += reading;
         }
+    }
+    for (int i = 0; i < 5; i++) {
+        initialWt[i] /= 50;
     }
 }
 static bool wtInit = false;

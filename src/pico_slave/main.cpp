@@ -136,10 +136,6 @@ void req() {
         }
     }
 }
-#define WT_BUFFER 16
-uint32_t lastWtSum[5] = {0};
-uint32_t lastWtAvg[5][WT_BUFFER] = {0};
-uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
 uint32_t readWtSlave(int pin) {
     gpio_put_masked(mask, ((pin & (1 << 0)) << wtS0Pin - 0) | ((pin & (1 << 1)) << (wtS1Pin - 1)) | ((pin & (1 << 2)) << (wtS2Pin - 2)));
@@ -153,16 +149,8 @@ uint32_t readWtSlave(int pin) {
     m = rp2040.getCycleCount() - m;
     if (pin < 6) {
         if (m > 1000) {
-            m = initialWt[pin] - wt_sensitivity;
+            m = initialWt[pin] - wt_sensitivity;;
         }
-        lastWtSum[pin] -= lastWtAvg[pin][nextWt[pin]];
-        lastWtAvg[pin][nextWt[pin]] = m;
-        lastWtSum[pin] += m;
-        nextWt[pin]++;
-        if (nextWt[pin] >= WT_BUFFER) {
-            nextWt[pin] = 0;
-        }
-        m = lastWtSum[pin] / WT_BUFFER;
         lastWt[pin] = m;
     }
     return m;
@@ -175,9 +163,6 @@ void loop() {
     if (wtS2Pin && !hasInitWt) {
         hasInitWt = true;
         memset(initialWt, 0, sizeof(initialWt));
-        memset(lastWtAvg, 0, sizeof(lastWtAvg));
-        memset(lastWtSum, 0, sizeof(lastWtSum));
-        memset(nextWt, 0, sizeof(nextWt));
         for (int j = 0; j < 100; j++) {
             readWtSlave(6);
             for (int i = 0; i < 5; i++) {

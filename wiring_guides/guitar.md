@@ -74,7 +74,8 @@ The world tour slider bar originally used a single wire to connect between the b
    [![World tour slider pins](/assets/images/wt_pins.png)](/assets/images/wt_pins.png)
    1. Connect S0, S1 and S2 to seperate digital pins on the Pi Pico. You will need to solder directly to the chip on the PCB.
    2. Connect the signal pin to a digital pin on the Pi Pico. You will need to solder directly to the chip on the PCB.
-   3. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
+   3. connect a 1Mohm resistor between the signal pin and ground
+   4. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
 2. Cut the traces indicated with red lines in the following image.
 
    [![World tour slider traces](/assets/images/wt_traces.png)](/assets/images/wt_traces.png) 

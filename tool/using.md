@@ -168,11 +168,12 @@ You can disable an input here if you don't want it to function. This can be used
 This allows for configuring GH5 Neck Inputs. Note that if this setting has just been added, you won't see any data coming from it until you hit `Save Settings`.
 For the Pi Pico, you can select your SCL and SDA pins here.
 You can also pick if you want the Slider to map to standard frets, or if you want to disable the normal frets because you have hardwired them. You can also disable the slider outright here as well.
+
 #### GHWT Neck Inputs (Pi Pico only)
 This allows for configuring GHWT Neck Inputs. Note that if this setting has just been added, you won't see any data coming from it until you hit `Save Settings`.
 You can select your Analog Input, S0, S1 and S2 Pins.
-The slider bar works based on capacatance, so the sensitivity allows for tuning how sensitive you want your frets to be. If you make this too high a value, then the fret will flicker as it won't always detect your finger, but if you make it too low a value, then the frets will mistrigger as they will pick up random capacatance fluctuations, or pressing nearby frets will activate inputs due to the capacatance changes.
-You can also pick if you want the Slider to map to standard frets, or if you want to disable the normal frets because you have hardwired them. You can also disable the slider outright here as well.
+The resistance option allows for setting how reactive the slider bar pads are. If the resistance is too low, the pads will either activate on their own, or react when you touch nearby pads. If it is too high, then the pads won't react at all. The resistance is live updating, so you don't need to hit save when tuning it, only when you actually want to save it.
+
 #### Crazy Guitar Neck Inputs
 The Crazy Guitar is a 3rd party guitar hero guitar, which has a similar neck pinout to the GH5 necks.
 For the Pi Pico, you can select your SCL and SDA pins here.

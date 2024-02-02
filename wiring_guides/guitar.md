@@ -79,6 +79,9 @@ The world tour slider bar originally used a single wire to connect between the b
 
    [![World tour slider traces](/assets/images/wt_traces.png)](/assets/images/wt_traces.png) 
 
+3. When configuring, you set the S0, S1, S2 and analog pin on the slider input.
+4. The `Resistance` option allows for adjusting how much of a change is required before the slider detects an input. This is because the value the slider returns is actually analog, and each pad detects any nearby object. If the resistance is too low, the pads will randomly activate or they will activate when nearby pads are touched, but if the resistance is too high you won't get a resposne at all. When adjusting in the tool, the resistance updates live, so you can tune it without constantly hitting write.
+
 ## GH5 guitar neck
 1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
    * For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.

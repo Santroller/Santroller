@@ -171,7 +171,7 @@ You can also pick if you want the Slider to map to standard frets, or if you wan
 
 #### GHWT Neck Inputs (Pi Pico only)
 This allows for configuring GHWT Neck Inputs. Note that if this setting has just been added, you won't see any data coming from it until you hit `Save Settings`.
-You can select your Analog Input, S0, S1 and S2 Pins.
+You can select your Signal, S0, S1 and S2 Pins.
 The resistance option allows for setting how reactive the slider bar pads are. If the resistance is too low, the pads will either activate on their own, or react when you touch nearby pads. If it is too high, then the pads won't react at all. The resistance is live updating, so you don't need to hit save when tuning it, only when you actually want to save it.
 
 #### Crazy Guitar Neck Inputs

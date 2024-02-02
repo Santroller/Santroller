@@ -73,14 +73,14 @@ The world tour slider bar originally used a single wire to connect between the b
 
    [![World tour slider pins](/assets/images/wt_pins.png)](/assets/images/wt_pins.png)
    1. Connect S0, S1 and S2 to seperate digital pins on the Pi Pico. You will need to solder directly to the chip on the PCB.
-   2. Connect the analog pin to a analog pin on the Pi Pico.  You will need to solder directly to the chip on the PCB.
+   2. Connect the signal pin to a digital pin on the Pi Pico. You will need to solder directly to the chip on the PCB.
    3. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
 2. Cut the traces indicated with red lines in the following image.
 
    [![World tour slider traces](/assets/images/wt_traces.png)](/assets/images/wt_traces.png) 
 
-3. When configuring, you set the S0, S1, S2 and analog pin on the slider input.
-4. The `Resistance` option allows for adjusting how much of a change is required before the slider detects an input. This is because the value the slider returns is actually analog, and each pad detects any nearby object. If the resistance is too low, the pads will randomly activate or they will activate when nearby pads are touched, but if the resistance is too high you won't get a resposne at all. When adjusting in the tool, the resistance updates live, so you can tune it without constantly hitting write.
+3. When configuring, you set the S0, S1, S2 and signal pin on the slider input.
+4. The `Resistance` option allows for adjusting how much of a change is required before the slider detects an input. This is because the value the slider returns is actually analog, and each pad detects any nearby object. If the resistance is too low, the pads will randomly activate or they will activate when nearby pads are touched, but if the resistance is too high you won't get a resposne at all. When adjusting in the tool, the resistance updates live, so you can tune it without constantly hitting write. On my guitar a resistance of 250 seemed right, but this will change depending on the guitar.
 
 ## GH5 guitar neck
 1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.

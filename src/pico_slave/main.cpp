@@ -148,6 +148,9 @@ uint32_t readWtSlave(int pin) {
         gpio_set_pulls(wtInputPin, false, false);
         while (gpio_get(wtInputPin)) {
             m++;
+            if (m > 10000) {
+                break;
+            }
         }
     }
     if (pin < 6) {

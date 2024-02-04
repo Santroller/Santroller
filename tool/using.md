@@ -171,8 +171,8 @@ You can also pick if you want the Slider to map to standard frets, or if you wan
 
 #### GHWT Neck Inputs (Pi Pico only)
 This allows for configuring GHWT Neck Inputs. Note that if this setting has just been added, you won't see any data coming from it until you hit `Save Settings`.
-You can select your Signal, S0, S1 and S2 Pins.
-The resistance option allows for setting how reactive the slider bar pads are. If the resistance is too low, the pads will either activate on their own, or react when you touch nearby pads. If it is too high, then the pads won't react at all. The resistance is live updating, so you don't need to hit save when tuning it, only when you actually want to save it.
+You can select your Input, S0, S1 and S2 Pins.
+Once you have the pins set correctly, you will see the raw value from each pad. The threshold dictates how much the raw value needs to increase before its detected as a press. If you set it too low, the pads will react when nearby pads are pressed, and if its set too high then there won't be a reaction at all. A good starting value is to just subtract the value when pressed from the value when not pressed. Then if the input flickers or doesn't trigger you can adjust it more to get it to the right value. You can work out a reasonable threshold by just getting the difference between one of the pads at rest, and when it is touched.
 
 #### Crazy Guitar Neck Inputs
 The Crazy Guitar is a 3rd party guitar hero guitar, which has a similar neck pinout to the GH5 necks.

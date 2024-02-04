@@ -11,8 +11,10 @@ Programming and configuring only works over USB. If you are designing a controll
 
 ## Wiring a battery
 The simplest way to safely add a second power source to Pico is to feed it into VSYS via a Schottky diode.
-This is necessary as it means the USB voltage won't feed back into the AA batteries. 
+This is necessary as it means the USB voltage won't feed back into your batteries, since the batteries and USB run on different voltages. 
 Internally, there is another Schottky diode on the pico to prevent the batteries from feeding back into the USB pins.
+
+If you intend to use a rechargable battery and have the USB port charge it, there are various products out there that can add battery charging support to the pico, that come with the necessary electronics required to support both charging and data over a USB cable.
 
 ## Programming a Bluetooth Transmitter
 1. Follow the [standard guide](using.html) to set up your inputs.

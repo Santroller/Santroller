@@ -130,6 +130,9 @@ uint32_t readWt(int pin) {
         gpio_set_pulls(WT_PIN_INPUT, false, false);
         while (gpio_get(WT_PIN_INPUT)) {
             m++;
+            if (m > 10000) {
+                break;
+            }
         }
     }
     if (pin < 6) {

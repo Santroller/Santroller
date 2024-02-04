@@ -9,6 +9,11 @@ Note that once this is done, USB still works, so you can still use a guitar over
 Programming and configuring only works over USB. If you are designing a controller around this, make sure that the USB port is still accessible.
 ```
 
+## Wiring a battery
+The simplest way to safely add a second power source to Pico is to feed it into VSYS via a Schottky diode.
+This is necessary as it means the USB voltage won't feed back into the AA batteries. 
+Internally, there is another Schottky diode on the pico to prevent the batteries from feeding back into the USB pins.
+
 ## Programming a Bluetooth Transmitter
 1. Follow the [standard guide](using.html) to set up your inputs.
 1. Expand `Controller Settings`, and set the `Emulation Type` to `Bluetooth Controller`    

@@ -136,26 +136,38 @@ void req() {
         }
     }
 }
+#define WT_BUFFER 8
+uint32_t lastWt[5] = {0};
+uint32_t lastWtSum[5] = {0};
+uint32_t lastWtAvg[5][WT_BUFFER] = {0};
+uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
 uint32_t readWtSlave(int pin) {
     gpio_put_masked(mask, ((pin & (1 << 0)) << wtS0Pin - 0) | ((pin & (1 << 1)) << (wtS1Pin - 1)) | ((pin & (1 << 2)) << (wtS2Pin - 2)));
-    uint32_t m = 0;
-    for (int i = 0; i < 10; i++) {
-        gpio_put(wtInputPin, 1);
-        gpio_set_dir(wtInputPin, true);
-        sleep_us(10);
-        gpio_set_dir(wtInputPin, false);
-        gpio_set_pulls(wtInputPin, false, false);
-        while (gpio_get(wtInputPin)) {
-            m++;
-            if (m > 10000) {
-                break;
-            }
+    uint32_t m = rp2040.getCycleCount();
+    gpio_put(wtInputPin, 1);
+    gpio_set_dir(wtInputPin, true);
+    sleep_us(10);
+    gpio_set_dir(wtInputPin, false);
+    gpio_set_pulls(wtInputPin, false, false);
+    while (gpio_get(wtInputPin)) {
+        m++;
+        if (m > 10000) {
+            break;
         }
     }
-    if (pin < 6) {
-        lastWt[pin] = m;
+    if (pin >= 6) {
+        return m;
     }
+    lastWtSum[pin] -= lastWtAvg[pin][nextWt[pin]];
+    lastWtAvg[pin][nextWt[pin]] = m;
+    lastWtSum[pin] += m;
+    nextWt[pin]++;
+    if (nextWt[pin] >= WT_BUFFER) {
+        nextWt[pin] = 0;
+    }
+    m = lastWtSum[pin] / WT_BUFFER;
+    lastWt[pin] = m;
     return m;
 }
 bool checkWtSlave(int pin) {

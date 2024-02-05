@@ -117,27 +117,37 @@ void read_serial(uint8_t *id, uint8_t len) {
 
 #ifdef INPUT_WT_NECK
 
+#define WT_BUFFER 8
 uint32_t lastWt[5] = {0};
+uint32_t lastWtSum[5] = {0};
+uint32_t lastWtAvg[5][WT_BUFFER] = {0};
+uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
 uint32_t readWt(int pin) {
     gpio_put_masked((1 << WT_PIN_S0) | (1 << WT_PIN_S1) | (1 << WT_PIN_S2), ((pin & (1 << 0)) << WT_PIN_S0 - 0) | ((pin & (1 << 1)) << (WT_PIN_S1 - 1)) | ((pin & (1 << 2)) << (WT_PIN_S2 - 2)));
-    uint32_t m = 0;
-    for (int i = 0; i < 10; i++) {
-        gpio_put(WT_PIN_INPUT, 1);
-        gpio_set_dir(WT_PIN_INPUT, true);
-        sleep_us(10);
-        gpio_set_dir(WT_PIN_INPUT, false);
-        gpio_set_pulls(WT_PIN_INPUT, false, false);
-        while (gpio_get(WT_PIN_INPUT)) {
-            m++;
-            if (m > 10000) {
-                break;
-            }
+    uint32_t m = rp2040.getCycleCount();
+    gpio_put(WT_PIN_INPUT, 1);
+    gpio_set_dir(WT_PIN_INPUT, true);
+    gpio_set_dir(WT_PIN_INPUT, false);
+    gpio_set_pulls(WT_PIN_INPUT, false, false);
+    while (gpio_get(WT_PIN_INPUT)) {
+        if (rp2040.getCycleCount() - m > 10000) {
+            break;
         }
     }
-    if (pin < 6) {
-        lastWt[pin] = m;
+    m = rp2040.getCycleCount() - m;
+    if (pin >= 6) {
+        return m;
     }
+    lastWtSum[pin] -= lastWtAvg[pin][nextWt[pin]];
+    lastWtAvg[pin][nextWt[pin]] = m;
+    lastWtSum[pin] += m;
+    nextWt[pin]++;
+    if (nextWt[pin] >= WT_BUFFER) {
+        nextWt[pin] = 0;
+    }
+    m = lastWtSum[pin] / WT_BUFFER;
+    lastWt[pin] = m;
     return m;
 }
 bool checkWt(int pin) {
@@ -161,7 +171,11 @@ uint8_t tickWt() {
         wtInit = true;
         initWt();
     }
-    checkWt(6);
-    return checkWt(1) | (checkWt(0) << 1) | (checkWt(2) << 2) | (checkWt(3) << 3) | (checkWt(4) << 4);
+    long m = micros();
+    readWt(6);
+    uint8_t ret= checkWt(1) | (checkWt(0) << 1) | (checkWt(2) << 2) | (checkWt(3) << 3) | (checkWt(4) << 4);
+    m = micros() - m;
+    printf("%d\r\n", m);
+    return ret;
 }
 #endif

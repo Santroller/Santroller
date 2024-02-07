@@ -33,7 +33,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 3. Place a 1MOhm resistor between the black and red pins on each piezo 
 
 ## Wiring the multiplexer
-1. Wire COM on the multiplexer to an analog pin on your Pi Pico
+1. Wire the analog output on the multiplexer to an analog pin on your Pi Pico
 2. Wire A, B and C (Or S0, S1, S2, S3) to seperate digital pins on your Pi Pico
 3. Wire each drum pad to a different channel on the multiplexer.
 4. When configuring, specify all these pins, and then specify the correct channel for a given pad.

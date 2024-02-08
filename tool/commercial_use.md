@@ -35,6 +35,9 @@ The Logo is displayed when the app is opened. The Logo needs to be a PNG.
 ## Icon
 The Icon is used for the application icon. The icon needs to be a PNG and must be square.
 
+## Types
+A type is an overarching category that contains several variants. This lets you group variants. For example, you could have a Wii adapters type which then contains a Guitar, Drum and Fortnite Festival preset, and then you could have other adapters or variants under their own types.
+
 ## Variants
 A variant describes a configuration for a device. For example, if you are selling multiple adapters, you would create a variant for each adapter. For Wii adapters, you may even want to create different variants for different configurations, such as one for Guitars, one for Gamepads and one for Drums.
 Hit the `Create Variant` button to create a device variant. The `Variant Name` is the name the actual device will use when it is plugged into a computer. the `Variant Device Vendor` is the vendor name that is used when plugged into a computer.

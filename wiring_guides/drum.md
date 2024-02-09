@@ -30,8 +30,8 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 
 ## Wiring Steps (Custom kit or wiring directly and bypassing the original PCB)
 1. Wire the red wire from each piezo to an analog pin on your microcontroller or a multiplexer.
-2. Wire the black wires to ground on the microcontroller.
-3. Place a 1MOhm resistor between the black and red pins on each piezo.
+2. Wire the black wires to ground on the microcontroller or multiplexer.
+3. Place a 1MOhm resistor between the black and red wires on each piezo.
 
 ## Wiring the multiplexer
 1. Wire the analog output on the multiplexer to an analog pin on your Pi Pico

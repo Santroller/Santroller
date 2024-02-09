@@ -23,7 +23,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 ## Wiring Steps (Reusing the original PCB from an existing kit)
 1. Open your drum kit.
 2. Find the mainboard. Then, find the wires going to the various pads.
-3. Use your multimeter to figure out which wires on the various pads are joined together. This will be your common ground, and you can connect one of these to the ground pin on your microcontroller.
+3. Grab a multimeter in contunity mode, and test contunity between the wires going to the different pads. You should find that there is a common connection to each pad, which is your ground connection. Connect this to the ground on your microcontroller.
 4. The other wires for each pad are the signal pins, and these need to go to seperate analog pins on your microcontroller or multiplexer.
 5. If you would like to also hook up face buttons, you will need to follow the traces on the main PCB and work out the signal pins for each button, and hook those up to digital pins on your microcontroller.
 6. Cut any traces going to the original microcontroller on the old drum brain.

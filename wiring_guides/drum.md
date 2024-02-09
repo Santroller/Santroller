@@ -20,7 +20,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 * 1MOhm resistor per drum pad
 * Piezo sensor
 
-## Wiring Steps (Existing kit, reusing the original PCB)
+## Wiring Steps (Reusing the original PCB from an existing kit)
 1. Open your drum kit.
 2. Find the mainboard. Then, find the wires going to the various pads.
 3. Use your multimeter to figure out which wires on the various pads are joined together. This will be your common ground, and you can connect one of these to the ground pin on your microcontroller.
@@ -28,7 +28,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 5. If you would like to also hook up face buttons, you will need to follow the traces on the main PCB and work out the signal pins for each button, and hook those up to digital pins on your microcontroller.
 6. Cut any traces going to the original microcontroller on the old drum brain.
 
-## Wiring Steps (Custom kit / completly custom wiring without the original PCB)
+## Wiring Steps (Custom kit or wiring directly and bypassing the original PCB)
 1. Wire the red wire from each piezo to an analog pin on your microcontroller
 2. Wire the black wires to ground on the microcontroller
 3. Place a 1MOhm resistor between the black and red pins on each piezo 

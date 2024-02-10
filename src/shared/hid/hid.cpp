@@ -46,10 +46,10 @@ static const int ps4_colors[4][3] = {
 };
 uint8_t stage_kit_millis[] = {
     0,
-    150,  // Slow
-    125,  // Medium
+    75,   // Fastest
     100,  // Fast
-    75   // Fastest
+    125,  // Medium
+    150,  // Slow
 };
 uint8_t current_player = 0;
 uint8_t strobe_delay = 0;

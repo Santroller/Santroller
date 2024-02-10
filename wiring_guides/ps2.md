@@ -19,7 +19,7 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
 
 Refer to the following image for the pinout of a PS2 controller.
 
-[![Adapter pinout](/assets/images/ps2-pinout.jpg)](/assets/images/ps2-pinout.png)
+[![Adapter pinout](/assets/images/ps2-pinout.png)](/assets/images/ps2-pinout.png)
 
 1. Connect pins according to the below table. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
 

@@ -235,3 +235,5 @@ inline uint16_t read_uint16(uint16_t idx) {
     return *((uint16_t*)&config_blobs[idx]);
 }
 #endif
+
+extern bool disable_multiplexer;

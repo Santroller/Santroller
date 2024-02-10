@@ -37,6 +37,12 @@ void digital_write(uint8_t port, uint8_t mask, uint8_t activeMask) {
     port = port * 8;
     uint32_t mask32 = mask << port;
     uint32_t activeMask32 = activeMask << port;
+    for (uint i = 0; i < NUM_BANK0_GPIOS; i++) {
+        if (mask32 & (1 << i)) {
+            gpio_init(i);
+            gpio_set_dir(i, true);
+        }
+    }
     gpio_put_masked(mask32, activeMask32);
 }
 

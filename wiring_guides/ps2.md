@@ -31,7 +31,7 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
    | Uno (Recommended)                        | 13                 | 11                      | 12                   | 2                      | 10                 |
    | Mega (Recommended)                       | 52                 | 51                      | 50                   | 2                      | 10                 |
    | Pi Pico (Advanced, Channel 0)            | GP2, GP6, GP18     | GP3, GP7, GP19          | GP0, GP4, GP16, GP20 | Any                    | Any                |
-   | Pi Pico (Advanced, Channel 1)            | GP10, GP14         | GP11, GP15              | GP8, GP12, GP28      | Any                    | Any                |
+   | Pi Pico (Advanced, Channel 1)            | GP10, GP14, GP26   | GP11, GP15, GP27        | GP8, GP12, GP28      | Any                    | Any                |
    | Pro Micro, Leonardo, Micro (Advanced)    | 15                 | 16                      | 14                   | 0, 1, 2, 3 or 7        | Any                |
    | Uno (Advanced)                           | 13                 | 11                      | 12                   | 2 or 3                 | Any                |
    | Mega (Advanced)                          | 52                 | 51                      | 50                   | 2, 3, 18, 19, 20 or 21 | Any                |

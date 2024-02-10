@@ -31,6 +31,7 @@ void spi_high(SPI_BLOCK block);
 void init_ack();
 void read_serial(uint8_t* id, uint8_t len);
 extern volatile bool spi_acknowledged;
+extern bool disable_multiplexer;
 #ifdef INPUT_WT_NECK
 void initWt();
 uint8_t tickWt();

@@ -103,6 +103,7 @@ bool lastWiiWasSuccessful = false;
 bool lastPS2WasSuccessful = false;
 bool overrideR2 = false;
 bool lastXboxOneGuide = false;
+bool disable_multiplexer = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;

@@ -23,13 +23,22 @@ Refer to the following image for the pinout of a PS2 controller.
 
 1. Connect pins according to the below table. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
 
-   Note that the Pi Pico has multiple sets of pins that you can choose from. For this reason, its easier to program first, as the tool will automatically filter out valid pins and let you know if your pin choices are valid.
+   For beginners we provide a recommended pinout below for each microcontroller. These pinouts are the same pinouts that are used on the old Ardwiino firmware, so if you have an old device, this is the pinout it will be using.
+   If these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK, MOSI and MISO need to be from the same channel.
 
-   | Microcontroller            | SCK / Clock / Blue | MOSI / Command / Orange | MISO / Data / Brown | Acknowledge / Green         | Attention / Yellow |
-   | -------------------------- | --- | ---- | ---- | ---------------------- | --------- |
-   | Pro Micro, Leonardo, Micro | 15  | 16   | 14   | 0, 1, 2, 3 or 7        | Any       |
-   | Uno                        | 13  | 11   | 12   | 2 or 3                 | 10        |
-   | Mega                       | 52  | 51   | 50   | 2, 3, 18, 19, 20 or 21 | 10        |
+   [![pinout](/assets/images/ps2.png)](/assets/images/ps2.png)
+
+   | Microcontroller                          | SCK / Clock / Blue | MOSI / Command / Orange | MISO / Data / Brown | Acknowledge / Green    | Attention / Yellow |
+   | ---------------------------------------- | ------------------ | ----------------------- | ------------------- | ---------------------- | ------------------ |
+   | Pi Pico (Recommended)                    | GP6                | GP3                     | GP4                 | GP7                    | GP10               |
+   | Pro Micro, Leonardo, Micro (Recommended) | 15                 | 16                      | 14                  | 7                      | 10                 |
+   | Uno (Recommended)                        | 13                 | 11                      | 12                  | 2                      | 10                 |
+   | Mega (Recommended)                       | 52                 | 51                      | 50                  | 2                      | 10                 |
+   | Pi Pico (Advanced, Channel 0)            | GP2, GP6, GP18     | GP3, GP7, GP19          | GP0, GP4, GP16      | Any                    | Any                |
+   | Pi Pico (Advanced, Channel 1)            | GP10, GP14         | GP11, GP15              | GP8, GP12           | Any                    | Any                |
+   | Pro Micro, Leonardo, Micro (Advanced)    | 15                 | 16                      | 14                  | 0, 1, 2, 3 or 7        | Any                |
+   | Uno (Advanced)                           | 13                 | 11                      | 12                  | 2 or 3                 | Any                |
+   | Mega (Advanced)                          | 52                 | 51                      | 50                  | 2, 3, 18, 19, 20 or 21 | Any                |
 
 2. Connect a 1kΩ resistor between MISO and 3.3v.
 3. Connect a 1kΩ resistor between Acknowledge and 3.3v.

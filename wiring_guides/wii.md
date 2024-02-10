@@ -36,17 +36,22 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
 ## Steps
 
 1.  Connect wires between the SDA and SCL pins on your breakout board / wii extension cable.
-    Refer to the following image for the pinout of a Wii Extension connector. 
+    Refer to the following image for the pinout of a Wii Extension connector.
 
-    Note that the Pi Pico has multiple sets of pins that you can choose from. For this reason, its easier to program first, as the tool will automatically filter out valid pins and let you know if your pin choices are valid.
+    The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below, and this pinout is the same as the old Ardwiino firmware. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
 
-        [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
+    [![pinout](/assets/images/wii.png)](/assets/images/wii.png)
 
-    | Microcontroller            | SDA | SCL |
-    | -------------------------- | --- | --- |
-    | Pro Micro, Leonardo, Micro | 2   | 3   |
-    | Uno                        | A4  | A5  |
-    | Mega                       | 20  | 21  |
+    | Microcontroller               | SDA                              | SCL                              |
+    | ----------------------------- | -------------------------------- | -------------------------------- |
+    | Pi Pico (Recommended)         | GP18                             | GP19                             |
+    | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
+    | Uno                           | A4                               | A5                               |
+    | Mega                          | 20                               | 21                               |
+    | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+    | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
+
+[![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
 
 ```danger
 If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as VCC before, you just can't rely on the colours at all unfortunately.

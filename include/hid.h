@@ -83,6 +83,9 @@ extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + SIXKRO_SIZE + CONSUME
 extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
+extern long last_strobe;
+extern uint8_t stage_kit_millis[];
+extern uint8_t strobe_delay;
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING
 extern const uint8_t pc_descriptor[94 + 2*HID_AXIS_COUNT];

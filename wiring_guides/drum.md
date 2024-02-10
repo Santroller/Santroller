@@ -38,7 +38,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 2. Wire Vss to GND on your Pico 
 3. If your multiplexer has a Vee, also wire that to ground on the Pi Pico. Vee allows for using the multiplexer with negative voltages, but since we aren't doing this we set it to ground to disable that feature.
 4. Also wire INH / Inhibit to ground, if this exists on your multiplexer. This pin disables the I/O if it is driven high, so we ground it to make sure the chip is always enabled.
-5. Wire the analog output (Often labelled COM or common in/out) on the multiplexer to an analog pin on your Pi Pico.
+5. Wire the analog output (Often labelled COM or common in/out, but also labelled SIG on some breakout boards) on the multiplexer to an analog pin on your Pi Pico.
 6. Wire A/S0, B/S1 and C/S2 (and D/S3 for the 16 channel multiplexer) to seperate digital pins on your Pi Pico.
 7. Wire each drum pad to a different channel on the multiplexer.
 8. When configuring, specify all these pins, and then specify the correct channel for a given pad.

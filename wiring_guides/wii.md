@@ -51,16 +51,16 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
     | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
     | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 
-[![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
+    [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
 
-```danger
-If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as VCC before, you just can't rely on the colours at all unfortunately.
-```
+    ```danger
+    If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as VCC before, you just can't rely on the colours at all unfortunately.
+    ```
 
-1. Connect the vcc on the microcontroller to the vcc on the breakout
+2. Connect the vcc on the microcontroller to the vcc on the breakout
    - If you are using a 5v Pro Micro, and your breakout does not support 5v input, then you will need to hook up VCC from the microcontroller to a 3.3v regulator, and then hook up the output of the regulator to the breakout
    - If you are using the microcontroller uno, use the 3.3v pin on your microcontroller as VCC
    - If you are using the breakout linked ![above](https://www.adafruit.com/product/4836), the `vin` pin is used for both 3.3v input and 5v input. The 3v pin is actually an output and is not needed for this project.
-2. Connect the gnd pin on the wii breakout / extension cable to the gnd on your microcontroller.
+3. Connect the gnd pin on the wii breakout / extension cable to the gnd on your microcontroller.
 
 Now that you have wired your adapter, go [configure it](https://santroller.tangentmc.net/tool/using.html).

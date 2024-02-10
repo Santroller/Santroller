@@ -84,7 +84,7 @@ extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
 extern long last_strobe;
-extern uint8_t stage_kit_millis[4];
+extern uint8_t stage_kit_millis[5];
 extern uint8_t strobe_delay;
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING

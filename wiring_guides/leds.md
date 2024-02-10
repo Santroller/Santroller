@@ -24,13 +24,13 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
    For beginners we provide a recommended pinout below for each microcontroller. These pinouts are the same pinouts that are used on the old Ardwiino firmware, so if you have an old device, this is the pinout it will be using.
    If you are using a Pi Pico and these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK and MOSI need to be from the same channel.
 
-   | Microcontroller               | SCK (CI)       | MOSI (DI)      |
-   | ----------------------------- | -------------- | -------------- |
-   | Pi Pico (Recommended)         | GP6            | GP3            |
-   | Pro Micro, Leonardo, Micro    | 15             | 16             |
-   | Uno                           | 13             | 11             |
-   | Mega                          | 52             | 51             |
-   | Pi Pico (Advanced, Channel 0) | GP2, GP6, GP18 | GP3, GP7, GP19 |
-   | Pi Pico (Advanced, Channel 1) | GP10, GP14     | GP11, GP15     |
+   | Microcontroller               | SCK (CI)         | MOSI (DI)        |
+   | ----------------------------- | ---------------- | ---------------- |
+   | Pi Pico (Recommended)         | GP6              | GP3              |
+   | Pro Micro, Leonardo, Micro    | 15               | 16               |
+   | Uno                           | 13               | 11               |
+   | Mega                          | 52               | 51               |
+   | Pi Pico (Advanced, Channel 0) | GP2, GP6, GP18   | GP3, GP7, GP19   |
+   | Pi Pico (Advanced, Channel 1) | GP10, GP14, GP26 | GP11, GP15, GP27 |
 
 Now that you have wired your LEDs, go [configure them](https://santroller.tangentmc.net/tool/using.html).

@@ -37,7 +37,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 1. Wire Vdd on the multiplexer to 3v3 on the Pico
 2. Wire Vss to GND on your Pico 
 3. If your multiplexer has a Vee, also wire that to ground on the Pi Pico
-4. Also wire INH / Inhibit to ground, if this exists on your microcontroller
+4. Also wire INH / Inhibit to ground, if this exists on your multiplexer. 
 5. Wire the analog output (Often labelled COM or common in/out) on the multiplexer to an analog pin on your Pi Pico
 6. Wire A/S0, B/S1 and C/S2 (and D/S3 for the 16 channel multiplexer) to seperate digital pins on your Pi Pico
 7. Wire each drum pad to a different channel on the multiplexer.

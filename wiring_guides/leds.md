@@ -22,7 +22,7 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
 1. Connect the VCC and GND pins on all LEDs that are being used to the microcontroller. It is recommended to use the 5V pin for this, as this is what the LEDs expect to be connecfted to. For the Pi Pico, this is the VBUS pin.
 2. Connect the SCK (CI) and MOSI (DI) on the first LED to the SCK and MOSI pins on your microcontroller. Then chain the SCK (CO) and MOSI (DO) outputs to the inputs on the next LED, until all LEDs are connected.
    For beginners we provide a recommended pinout below for each microcontroller. These pinouts are the same pinouts that are used on the old Ardwiino firmware, so if you have an old device, this is the pinout it will be using.
-   If these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK and MOSI need to be from the same channel.
+   If you are using a Pi Pico and these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK and MOSI need to be from the same channel.
 
    | Microcontroller               | SCK (CI)       | MOSI (DI)      |
    | ----------------------------- | -------------- | -------------- |

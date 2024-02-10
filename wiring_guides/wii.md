@@ -40,7 +40,11 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
 
     The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below, and this pinout is the same as the old Ardwiino firmware. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
 
-    [![pinout](/assets/images/wii.png)](/assets/images/wii.png)
+    [![pinout](/assets/images/wii.png)](/assets/images/wii.png) [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
+
+    ```danger
+    If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as VCC before, you just can't rely on the colours at all unfortunately.
+    ```
 
     | Microcontroller               | SDA                              | SCL                              |
     | ----------------------------- | -------------------------------- | -------------------------------- |
@@ -50,12 +54,6 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
     | Mega                          | 20                               | 21                               |
     | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
     | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
-
-    [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
-
-    ```danger
-    If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as VCC before, you just can't rely on the colours at all unfortunately.
-    ```
 
 2. Connect the vcc on the microcontroller to the vcc on the breakout
    - If you are using a 5v Pro Micro, and your breakout does not support 5v input, then you will need to hook up VCC from the microcontroller to a 3.3v regulator, and then hook up the output of the regulator to the breakout

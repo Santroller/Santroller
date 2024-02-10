@@ -637,7 +637,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             return 0;
         }
         case COMMAND_DISABLE_MULTIPLEXER: {
-            disable_multiplexer = wValue;
+            disable_multiplexer = response_buffer[0];
         }
 #ifdef SLAVE_TWI_PORT
 #ifdef INPUT_WT_SLAVE_NECK

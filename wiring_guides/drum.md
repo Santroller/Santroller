@@ -43,6 +43,8 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 7. Wire each drum pad to a different channel on the multiplexer.
 8. When configuring, specify all these pins, and then specify the correct channel for a given pad.
 
+Note: close the tool if you want to use your drum kit, the multiplexer is overridden by the tool when it updates its sensor values, and this will override the controller inputs when it happens.
+
 Now that you have wired your drum, go [configure it](https://santroller.tangentmc.net/tool/using.html).
 
 ## Drum Specific Configuration

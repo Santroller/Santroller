@@ -25,5 +25,5 @@ readme_index:
   with_frontmatter: true
   show_sorted: false
 commonmark:
-  options: ["SMART", "FOOTNOTES"]
+  options: ["UNSAFE", "SMART", "FOOTNOTES"]
   extensions: ["strikethrough", "autolink", "table", "tagfilter"]

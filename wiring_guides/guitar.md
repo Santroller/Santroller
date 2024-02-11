@@ -6,7 +6,7 @@ sort: 2
 
 [![Finished adaptor](/assets/images/direct.jpg)](/assets/images/direct.jpg)
 
-## Wiring a Guitar
+## Wiring
 
 ### Supplies
 
@@ -95,13 +95,11 @@ The world tour slider bar originally used a single wire to connect between the b
    2. Connect the input pin to a digital pin on the Pi Pico. You will need to solder directly to the chip on the PCB.
    3. Connect a 1Mohm resistor between the input pin and ground.
    4. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
+   5. Make sure you remember these pin numbers, as pin detection does not work for slider bars.
 
 2. Cut the traces indicated with red lines in the following image.
 
    [![World tour slider traces](/assets/images/wt_traces.png)](/assets/images/wt_traces.png)
-
-3. When configuring, you set the S0, S1, S2 and input pin on the slider input.
-4. The `Threshold` option allows for adjusting how much of a change is required before the slider detects an input. Essentially, on startup the value of the bar when not touched is recorded, and then if the bar reads a value higher than its resting value + the threshold, it will see this as the pad being touched.
 
 </details>
 
@@ -126,8 +124,7 @@ The world tour slider bar originally used a single wire to connect between the b
    - For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
    - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
    - For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
-</details>
-
+   </details>
 
 <details>
     <summary>Joystick (or DPad)</summary>
@@ -145,6 +142,7 @@ For guitars with a DPad that is seperate, it will be much easier to wire as you 
 3.  Home, left, and right can be connected to any unused digital pin on the microcontroller.
 
 For guitars with a joystick, there will be four pins, one is VCC, one is GND, one is the x axis and one is the y axis. You can work out which is which by tracing the traces, however on some guitars the traces are labelled for you. The joystick needs to go to an analogue pin (one of the A pins)
+
 </details>
 
 <details>
@@ -175,6 +173,103 @@ Note that you can also choose to replace the original PCB with a 3D printed stru
 When the strums are part of the main board you will need to cut the traces or you will have phantom inputs as your signal will still be traveling through the motherboard. (this is when your strum switches constantly input and you likely cannot autobind inputs in the configurator) You will need to take a knife and cut any traces that connect to the strum switches. In the picture below, the person did not cut many traces as they knew which ones were causing phantom inputs. Cutting extra traces is not going to affect your arduino guitar, as none of the traces are used except the one that connects the two grounds of the switches together. Even if you accidentally cut that trace, you will be able to connect the grounds again with a little extra wire.
 
 [![Trace Cuts on PCB](/assets/images/trace%20cuts.jpg)](/assets/images/trace%20cuts.jpg)
+
 </details>
 
-Now that you have wired your guitar, go [configure it](https://santroller.tangentmc.net/tool/using.html).
+## Programming
+
+1.  Start Santroller with your microcontroller plugged in.
+2.  Set the Input Type to Directly Wired
+3.  Hit Configure
+4.  Click on `Controller Settings`
+5.  Set `Emulation Type` to `Controller` for standard guitars and `Fortnite Festival` for Fortnite Festival.
+6.  Set the `Controller Type` based on the game you want to play.
+7.  `Windows controller mode` can be set based on your preferences. Note that this only affects windows, a controller in XInput mode will use the correct mode on a console, and will automatically use HID mode on Linux and macOS.
+    1. `XInput` - This works more natively on windows, and most games will automatically bind controls.
+    2. `HID` - This uses HID on windows, which means games won't automatically bind controls, but HID is polled a bit more efficiently in games like Clone Hero.
+8.  If you would like to adjust settings related to polling, click on `Controller Poll Settings`
+9.  If you would like to use `Queue Based Inputs` you can turn that on here. This puts any buttons you press into a queue, and sends them out to the PC as fast as USB allows. This means that the controller will process your inputs at a faster poll rate than 1ms (the fastest rate USB allows) and then the PC will be sent your inputs at a 1ms rate.
+10. Set the Poll Rate to your preferred setting. 0 sends data as fast as possible, any other number polls inputs at that speed.
+11. Debounce can be adjusted here. Debounce is necessary as button inputs are noisy. When you hit a button, it will often bounce and send multiple presses, which some games may percieve as you hitting the button multiple times, which can result in dropped sustains. When you set debounce to a value, the signal ignores any release inputs for that time frame, so if you for example set it to 1ms, then the button input will be on for a minimum of 1ms, and only after that will the release be processed. This has the effect of stretching out the button press to at least 1ms, which ignores any bouncing in that timeframe.
+12. Combined strum debounce shares the debounce timeframe between both strums. This means that if you set the strum debounce to 1ms and strummed down, both strum up and down inputs are ignored over that 1ms timeframe. This helps avoid extra strum inputs when your strum switch rebounds after being released.
+13. Now you can start setting up your inputs. To keep this information relevant, it is grouped by function.
+    <details>
+      <summary>Frets, strum and other buttons</summary>
+
+    1. Click on the button you want to configure, and make sure the `Input Type` is set to `Digital Pin Input`.
+    2. Click on the `Find Pin` button, and then press the button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for that button should now light up whenever the button is pressed.
+
+    </details>
+    <details>
+      <summary>Joystick</summary>
+
+    1. Click on D-pad Left, and set the `Input Type` to `Analog Pin Input`.
+    2. Set `Type` to `Joystick Negative`
+    3. Click on find pin and move the joystick left or right
+    4. Adjust the threshold so that the D-pad Left icon lights up when you have pushed the Joystick far enough to the left. This means you can adjust how sensitive you want your joystick to be.
+    5. You can do the same for D-pad right, however, set the `Type` to `Joystick Positive` instead.
+    6. If you wish to also map joystick up and down, click `Add Setting` and add another Strup Up and Strum Down input. Then you can follow the above instructions again, only using negative for up and positive for down, and when detecting the pin, move the joystick up and down instead.
+
+    </details>
+
+    <details>
+      <summary>Whammy</summary>
+
+    1. Click on the whammy, and make sure the `Input Type` is set to `Analog Pin Input`.
+    2. Click on the `Find Pin` button, and then press on the whammy. If you have wired everything correctly, the tool should detect the pin and the `Original Value` value should change when you push on the whammy.
+    3. Click on `Calibrate`.
+    4. Release the whammy bar and hit `Next`.
+    5. Push the whammy all the way in, and hit `Next`
+    6. Release the whammy again, and hit `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
+    </details>
+
+    <details>
+      <summary>Digital Tilt</summary>
+
+    1. Click on Tilt, and make sure the `Input Type` is set to `Digital Pin Input`.
+    2. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt icon should light up whenever you tilt the guitar.
+    3. If you are using a SW520D based tilt sensor, some versions of this sensor will have an inverted output. You can turn on the `Invert` option to correct this.
+    </details>
+
+    <details>
+      <summary>Analog Tilt</summary>
+
+    1. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
+    2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
+    3. Click on `Calibrate`
+    4. Tilt your guitar down, and then hit `Next`
+    5. Tilt the guitar up, and then hit `Next`
+    6. Hold your guitar in its resting position and then hit `Next`.
+    </details>
+
+    <details>
+      <summary>World Tour Slider Bar</summary>
+
+    1. Click on Add Setting, and add a `GHWT Slider Inputs` setting
+    2. Set the pins based on how you wired the WT Slider bar.
+    4. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    5. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
+    6. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
+    7. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    </details>
+
+    <details>
+      <summary>GH5 Neck</summary>
+
+    8. Click on Add Setting, and add a `GH5 Neck Inputs` setting
+    9. Set the SDA and SCL pins to the pins you used when you wired up the neck.
+    10. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    11. If you don't want to hardwire the frets and wish to take the latency hit and wire the standard frets via the GH5 neck PCB, you can enable the frets.
+    </details>
+
+    <details>
+      <summary>Crazy Guitar Neck</summary>
+
+    12. Click on Add Setting, and add a `Crazy Guitar Neck Inputs` setting
+    13. Set the SDA and SCL pins to the pins you used when you wired up the neck.
+    14. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    15. If you don't want to hardwire the frets and wish to take the latency hit and wire the standard frets via the Crazy Guitar neck PCB, you can enable the frets.
+    </details>
+    
+14. If you do not want to hook an input up, hit the `Remove` button to the right on that input.
+15. Once everything is configured correctly, the `Save Settings` button should be clickable and you can hit that button to write your config to the guitar. It is now ready.

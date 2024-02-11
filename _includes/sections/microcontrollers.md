@@ -1,3 +1,5 @@
+<details>
+    <summary>Microcontroller information</summary>    
     * Pi Pico 
     This micro controller was created by the Raspberry Pi foundation, so it means that buying one supports them instead of random companies cloning Arduinos. They are considerably more powerful than any of the other supported Arduinos. The Pi Pico supports a few extra features, such as USB Input (which allows for XB1 / Series compatability), Peripheral microcontrollers and the GHWT tap bar. Note that the Pi Pico runs at 3.3v, so it can just be used as is for PS2 and Wii adapters. Pi Picos also tend to be quite cheap and often have the advantage that they can often be brought at local stores. With the currrent firmware, picos work much much better than arduinos if your goal is to create adaptors, but they also work better for direct wiring too. There are many boards based on the Pi Pico as well, and all of these work just fine with the firmware.
 
@@ -27,3 +29,4 @@
 
     * ESP32
     Currently this is not supported due to the base ESP32 not fully supporting USB. There are some ESP32 models that have USB support, but these end up being more expensive than the Pi Pico, and thus it does not make sense to support these.
+</details>

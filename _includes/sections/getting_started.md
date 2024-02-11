@@ -29,3 +29,4 @@ Note that on the pi pico you need to use the `3v3 out` pin (pin 36)  for your VC
 If you are unfamiliar with microcontrollers, you may also be unfamiliar with PCBs in general and figuring out which pins correlate to which function. Here are some terms you will need to know. 
   * PCB (printed circuit board) - the often green or brown boards containing traces and electronic components
   * traces - the copper conductors on a board. They look flat and are often metalic. Think of them as "wires" on the board itself connecting components. If you are still confused, a quick google can help you understand traces.
+</details>

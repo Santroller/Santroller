@@ -104,7 +104,7 @@ The world tour slider bar originally used a single wire to connect between the b
 </details>
 
 <details>
-    <summary>GH5 guitar neck</summary>
+    <summary>GH5 guitar neck (Standard)</summary>
 
 1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
    - For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
@@ -115,7 +115,7 @@ The world tour slider bar originally used a single wire to connect between the b
 </details>
 
 <details>
-    <summary>Crazy guitar neck</summary>
+    <summary>Crazy guitar neck (Standard)</summary>
 
 [![crazy guitar](/assets/images/crazy-guitar.png)](/assets/images/crazy-guitar.png)
 
@@ -125,6 +125,19 @@ The world tour slider bar originally used a single wire to connect between the b
    - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
    - For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
    </details>
+
+<details>
+    <summary>GH5 / Crazy guitar frets (Direct, lower latency)</summary>
+
+1. If you wish to bypass the neck connector for your frets, there are two choices, you can opt to wire the frets directly from the fret pcb to the pico, or you can use peripheral mode and avoid needing to run more wires.
+2. For direct mode, run a wire from the fret pin to a pin on the pico, and make sure there is a wire from the ground pin on the fret pcb to the picos ground pin.
+</details>
+
+<details>
+    <summary>GH5 / Crazy guitar frets (Peripheral, lower latency)</summary>
+
+1. If you wish to bypass the neck connector for your frets, but still want to keep a neck connector, you can opt to put a second peripheral pico in the neck. This allows you to poll the pins at direct speeds, but use the same pins the original neck used. For this, you wire SDA and SCL from the slider PCB to a second pico, along with hooking up ground from the slider PCB to the peripheral picos ground and V to the VSYS pin on the peripheral pico.
+</details>
 
 <details>
     <summary>Joystick (or DPad)</summary>
@@ -177,6 +190,19 @@ When the strums are part of the main board you will need to cut the traces or yo
 </details>
 
 ## Programming
+
+### Peripheral
+
+If you intend to use the peripheral features, it is recommended to program the peripheral pico first. Follow the below instructions to do that, or skip these if you are not using this feature.
+
+1.  Plug the peripheral pico into your computer. Make sure the main pico is not plugged in at this stage.
+2.  Open Santroller
+3.  Set the Input Type to `Peripheral Device`
+4.  Pick the SCL and SDA pins
+5.  Hit configure
+6.  Now you can unplug the peripheral pico from your comptuter, and follow the rest of the instructions
+
+### Main
 
 1.  Start Santroller with your microcontroller plugged in.
 2.  Set the Input Type to Directly Wired
@@ -247,29 +273,58 @@ When the strums are part of the main board you will need to cut the traces or yo
 
     1. Click on Add Setting, and add a `GHWT Slider Inputs` setting
     2. Set the pins based on how you wired the WT Slider bar.
-    4. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
-    5. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
-    6. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
-    7. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    3. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    4. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
+    5. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
+    6. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
     </details>
 
     <details>
-      <summary>GH5 Neck</summary>
+      <summary>World Tour Slider Bar (Peripheral)</summary>
 
-    8. Click on Add Setting, and add a `GH5 Neck Inputs` setting
-    9. Set the SDA and SCL pins to the pins you used when you wired up the neck.
-    10. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
-    11. If you don't want to hardwire the frets and wish to take the latency hit and wire the standard frets via the GH5 neck PCB, you can enable the frets.
+    1. Click on `Peripheral Settings`
+    2. Enable the Peripheral
+    3. Set the SDA and SCL pins that are being used by the peripheral. Normally, these will end up being the same as the ones you use for the neck itself.
+    4. Click on Add Setting, and add a `GHWT Slider Inputs (Peripheral)` setting
+    5. Set the pins based on how you wired the WT Slider bar.
+    6. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    7. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
+    8. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
+    9. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
     </details>
 
     <details>
-      <summary>Crazy Guitar Neck</summary>
+      <summary>GH5 Neck (Standard wiring)</summary>
 
-    12. Click on Add Setting, and add a `Crazy Guitar Neck Inputs` setting
-    13. Set the SDA and SCL pins to the pins you used when you wired up the neck.
-    14. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
-    15. If you don't want to hardwire the frets and wish to take the latency hit and wire the standard frets via the Crazy Guitar neck PCB, you can enable the frets.
+    1. The GH5 neck puts inputs over a single set of pins. This does add a bit of latency to the frets, but if you want the simplest wiring, you can keep the frets connected to the neck.
+    2. Click on Add Setting, and add a `GH5 Neck Inputs` setting
+    3. Set the SDA and SCL pins to the pins you used when you wired up the neck.
+    4. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    5. Click on `enable` for each of the frets.
     </details>
-    
+
+    <details>
+      <summary>Crazy Guitar Neck (Standard wiring)</summary>
+
+    1. The Crazy Guitar neck puts inputs over a single set of pins. This does add a bit of latency to the frets, but if you want the simplest wiring, you can keep the frets connected to the neck.
+    2. Click on Add Setting, and add a `Crazy Guitar Neck Inputs` setting
+    3. Set the SDA and SCL pins to the pins you used when you wired up the neck.
+    4. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    5. Click on `enable` for each of the frets.
+    </details>
+
+    <details>
+      <summary>GH5 / Crazy Guitar (Peripheral Mode)</summary>
+
+    1. If you wish to have better latency frets with these necks, but do not want to hardwire the frets, you can instead opt to use the peripheral mode. You can still follow the Standard wiring if you would like the slider bar to work, but then you do not need to enable the frets as we will bypass the original neck for those inputs.
+    2. Click on `Peripheral Settings`
+    3. Enable the Peripheral
+    4. Set the SDA and SCL pins that are being used by the peripheral. Normally, these will end up being the same as the ones you use for the neck itself.
+    5. Go to each fret, and set its `Input Type` to `Digital Pin Input (Peripheral)`.
+    6. If you know the pin you used for the fret when it was wired to the Peripheral Pico, set it here, otherwise pick a random pin for now.
+    7. Hit `Save Settings`. Note that every other setting will need to be configured before you can do this. The peripheral pico also needs to be programmed.
+    8. Now that the peripheral settings are saved, you can use `Find Pin` if necessary to detect the pin your fret was hooked up to.
+    </details>
+
 14. If you do not want to hook an input up, hit the `Remove` button to the right on that input.
 15. Once everything is configured correctly, the `Save Settings` button should be clickable and you can hit that button to write your config to the guitar. It is now ready.

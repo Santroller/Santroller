@@ -8,7 +8,7 @@ sort: 2
 If you are new to this, read the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html) for an overview on everything you need to know for modifying a controller.
 If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, you will want to avoid the relevant pins when picking pins for things. Note that for the Pi Pico, you can configure these pins, so it is recommended you open the tool and use it to set up pins for these sorts of things, as only very specific pins can be used for this sort of thing. 
 
-<details>
+<!-- <details>
   <summary>Click me</summary>
   
   ### Heading
@@ -23,7 +23,7 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
     console.log('Something', something);
   }
   ```
-</details>
+</details> -->
 
 ### Supplies
 * A microcontroller from the list in the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html)

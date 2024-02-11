@@ -11,16 +11,13 @@ sort: 2
 ### Supplies
 
 - A microcontroller
-
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
     {% include sections/microcontrollers.md %}
 
 - A Tilt Switch
-
   - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
     - I recommend using two tilt sensors in series, as this can help with accidental activations
   - The tool also supports using analog tilt switches
-  - Three pin tilt sensors such as some SW520D breakout boards can work, but you will need to invert the input as the firmware expects switches to go low when they are activated, but these types of switches go high.
 
 - Some Wire
 - Soldering Iron

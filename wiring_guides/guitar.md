@@ -14,13 +14,10 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
 ### Supplies
 
 - A microcontroller
-  
-  The Pi Pico is recommended, but click below to see information about other microcontrollers.
-  
-  {% include sections/microcontrollers.md %}
+  - The Pi Pico is recommended, but click below to see information about other microcontrollers.
+    {% include sections/microcontrollers.md %}
 
 - A Tilt Switch
-
   - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
     - I recommend using two tilt sensors in series, as this can help with accidental activations
   - The tool also supports using analog tilt switches

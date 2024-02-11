@@ -26,4 +26,4 @@ readme_index:
   show_sorted: false
 commonmark:
   options: ["SMART", "FOOTNOTES"]
-  extensions: ["strikethrough", "autolink", "tables"]
+  extensions: ["strikethrough", "autolink", "table", "tagfilter"]

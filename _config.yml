@@ -16,6 +16,7 @@
 title: Santroller
 description: A platform for building highly configurable rhythm game controllers
 remote_theme: rundocs/jekyll-rtd-theme
+markdown: CommonMarkGhPages
 fluid: true
 lang: en
 scss: |
@@ -23,3 +24,6 @@ scss: |
 readme_index:
   with_frontmatter: true
   show_sorted: false
+commonmark:
+  options: ["SMART", "FOOTNOTES"]
+  extensions: ["strikethrough", "autolink", "tables"]

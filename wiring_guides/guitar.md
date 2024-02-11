@@ -14,6 +14,7 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
 ### Supplies
 
 - A microcontroller
+  
   The Pi Pico is recommended, but click below to see information about other microcontrollers.
   <details>
     <summary>Microcontroller information</summary>    

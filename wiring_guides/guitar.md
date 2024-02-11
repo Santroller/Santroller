@@ -2,31 +2,25 @@
 sort: 2
 ---
 
-# Guitars
+# Setting up a Guitar
 
 [![Finished adaptor](/assets/images/direct.jpg)](/assets/images/direct.jpg)
 
 ## Wiring a Guitar
 
-If you are new to this, read the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html) for an overview on everything you need to know for modifying a controller.
-If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, you will want to avoid the relevant pins when picking pins for things. Note that for the Pi Pico, you can configure these pins, so it is recommended you open the tool and use it to set up pins for these sorts of things, as only very specific pins can be used for this sort of thing.
-
 ### Supplies
 
 - A microcontroller
+
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
     {% include sections/microcontrollers.md %}
 
 - A Tilt Switch
+
   - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
     - I recommend using two tilt sensors in series, as this can help with accidental activations
   - The tool also supports using analog tilt switches
-
-  ```danger
-  You do not want to get this type of sensor, as it does not work. If you do accidentally get one of these you *might* have luck just cutting the sensor from the top of the board and using it, but your mileage may vary doing that, as I have seen it work for some people and not for others.
-
-  [![Basic](/assets/images/s-l500.png)](/assets/images/s-l500.png)
-  ```
+  - Three pin tilt sensors such as some SW520D breakout boards can work, but you will need to invert the input as the firmware expects switches to go low when they are activated, but these types of switches go high.
 
 - Some Wire
 - Soldering Iron
@@ -37,6 +31,8 @@ If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, y
 
 ### Wiring Steps
 
+{% include sections/getting_started.md %}
+
 For every function of the guitar, you will follow these same 3 basic steps. More details for specific functions will be given below.
 
 1. Find out what each pin correlates to on the exsisting components in the guitar. (AKA work out the pinout) In some guitars, all of the pins are labeled on the main board or other various pcbs, sometimes on the bottom of the main board.
@@ -45,7 +41,8 @@ For every function of the guitar, you will follow these same 3 basic steps. More
 
 Once you have successfully modded one guitar (or even during your first) you will find it easiest to disconnect everything then begin soldering as it gives you more room to work. To keep the relevant information in this guide easy to find, information is sorted by function.
 
-### Start and Select
+<details>
+    <summary>Start and Select</summary>
 
 [![360startselect](/assets/images/360startselect.jpg)](/assets/images/360startselect.jpg)
 
@@ -60,7 +57,10 @@ To wire an xplorer start/select board you will have to solder directly to the co
 Note that with the Pi Pico, you can instead just hook these inputs up over USB, and avoid soldering them.
 ```
 
-### Whammy
+</details>
+
+<details>
+    <summary>Whammy</summary>
 
 1. With most whammy's there are 3 pins. (if there are 4, you do not need the fourth. 2 pins is discussed below) The middle pin is the data pin, one outer pin is VCC while the other pin is GND (it doesn't matter which one, you can flip it when programming later if needed). Whammy needs to go to an analogue pin.
 2. Connect VCC and GND to the microcontroller. (the two outside wires)
@@ -71,14 +71,19 @@ If you are working on a controller with only "2" pins as shown below, you will n
 
 [![2pinwhammy](/assets/images/2wirewhammy.jpg)](/assets/images/2wirewhammy.jpg)
 
-### Digital Tilt
+</details>
+
+<details>
+    <summary>Digital Tilt</summary>
 
 1. Connect one pin of the first tilt sensor to ground
 2. Connect the other pin of the first tilt sensor to a pin on the second tilt sensor
 3. Connect the other pin of the second tilt sensor to a digital pin on your microcontroller.
 4. Affix the sensors to your guitar. You will need to play around with their position to get them to activate at the exact point you want tilt activating.
+</details>
 
-### World tour slider bar (Pi Pico only)
+<details>
+    <summary>World tour slider bar (Pi Pico only)</summary>
 
 The world tour slider bar originally used a single wire to connect between the bar and the main PCB. This caused a lot of problems, as the format of data being sent over this wire is not optimal for speed, and it limits the combinations of frets we can read from the slider bar. To combat this, we bypass the chip generating this data, and opt to build it outselves from the raw slider pads. This does use more pins though, so you may find that it is difficult to reuse the original neck connector. If you have problems doing this, you can use the [peripheral feature](https://santroller.tangentmc.net/wiring_guides/peripheral.html) to put a second Pi Pico in the neck, which will allow for putting all neck inputs over a couple of wires, saving pins.
 
@@ -98,7 +103,10 @@ The world tour slider bar originally used a single wire to connect between the b
 3. When configuring, you set the S0, S1, S2 and input pin on the slider input.
 4. The `Threshold` option allows for adjusting how much of a change is required before the slider detects an input. Essentially, on startup the value of the bar when not touched is recorded, and then if the bar reads a value higher than its resting value + the threshold, it will see this as the pad being touched.
 
-### GH5 guitar neck
+</details>
+
+<details>
+    <summary>GH5 guitar neck</summary>
 
 1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
    - For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
@@ -106,7 +114,10 @@ The world tour slider bar originally used a single wire to connect between the b
    - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
    - For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
 
-### Crazy guitar neck
+</details>
+
+<details>
+    <summary>Crazy guitar neck</summary>
 
 [![crazy guitar](/assets/images/crazy-guitar.png)](/assets/images/crazy-guitar.png)
 
@@ -115,8 +126,11 @@ The world tour slider bar originally used a single wire to connect between the b
    - For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
    - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
    - For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
+</details>
 
-### Joystick (or DPad)
+
+<details>
+    <summary>Joystick (or DPad)</summary>
 
 For d-pads that are integrated with the main board it is advised you skip wiring the dpad as you have to solder directly to the contacts and run wires accross the board. You will either be able to use your keyboard for these buttons, or they really won't really be needed as the games were designed to be controlled with the guitar alone. Below is an example of what this can look like, and why it is advisable to skip.
 
@@ -131,14 +145,18 @@ For guitars with a DPad that is seperate, it will be much easier to wire as you 
 3.  Home, left, and right can be connected to any unused digital pin on the microcontroller.
 
 For guitars with a joystick, there will be four pins, one is VCC, one is GND, one is the x axis and one is the y axis. You can work out which is which by tracing the traces, however on some guitars the traces are labelled for you. The joystick needs to go to an analogue pin (one of the A pins)
+</details>
 
-### Frets
+<details>
+    <summary>Frets</summary>
 
 1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
 2. Connect the common grounds to a ground pin on the microcontroller.
 3. Connect each fret to its own unused digital pin.
+</details>
 
-### Strum
+<details>
+    <summary>Strum</summary>
 
 The Strum switches are similar to the start and select buttons, they will be three wires on some guitars. For these situations it is easy enough to connect to the microcontroller.
 
@@ -157,5 +175,6 @@ Note that you can also choose to replace the original PCB with a 3D printed stru
 When the strums are part of the main board you will need to cut the traces or you will have phantom inputs as your signal will still be traveling through the motherboard. (this is when your strum switches constantly input and you likely cannot autobind inputs in the configurator) You will need to take a knife and cut any traces that connect to the strum switches. In the picture below, the person did not cut many traces as they knew which ones were causing phantom inputs. Cutting extra traces is not going to affect your arduino guitar, as none of the traces are used except the one that connects the two grounds of the switches together. Even if you accidentally cut that trace, you will be able to connect the grounds again with a little extra wire.
 
 [![Trace Cuts on PCB](/assets/images/trace%20cuts.jpg)](/assets/images/trace%20cuts.jpg)
+</details>
 
 Now that you have wired your guitar, go [configure it](https://santroller.tangentmc.net/tool/using.html).

@@ -9,8 +9,20 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 If you want to use things like LEDs or peripherals or GH5 necks or GHWT necks, you will want to avoid the relevant pins when picking pins for things. Note that for the Pi Pico, you can configure these pins, so it is recommended you open the tool and use it to set up pins for these sorts of things, as only very specific pins can be used for this sort of thing. 
 
 <details>
-<summary>Click me</summary>
-test
+  <summary>Click me</summary>
+  
+  ### Heading
+  1. Foo
+  2. Bar
+     * Baz
+     * Qux
+
+  ### Some Javascript
+  ```js
+  function logSomething(something) {
+    console.log('Something', something);
+  }
+  ```
 </details>
 
 ### Supplies

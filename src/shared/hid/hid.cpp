@@ -631,11 +631,6 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             brightness = response_buffer[0];
             return 0;
         }
-        case COMMAND_SET_DETECT: {
-            overrideR2 = wValue > 0;
-            overriddenR2 = wValue;
-            return 0;
-        }
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
         }

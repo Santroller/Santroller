@@ -4,7 +4,7 @@ sort: 5
 # Commercial use of the Santroller platform
 The standard tool does not license you to use it for profit. 
 However, there is a commercial version of it that can be obtained by subscribing to the projects [GitHub Sponsers](https://github.com/sponsors/sanjay900).
-{% include sponser.html %}
+{% include sponser.md %}
 
 # Features of the commercial tool
 * Only the RP2040 is supported by this tool, as we leverage its features to simplify programming for your customers.

@@ -13,10 +13,11 @@ A microcontroller is a small board that can be programmed to perform various fun
   * Digital Pins - These pins are the "basic" pins. They can essentially only show if a button is pressed or not pressed. You will use these for strum, start/select and frets. The are the most common pin on your microcontroller and are usually labelled with just a number. 
   * Analogue Pins - These pins provide a range of values rather than just on and off. These are the pins you will need to use for whammy, tilt (when using an accelerometer), or your joystick. Analogue pins are labeled on the pinout with A followed by a number. 
 
- ```note
+```note
 Analogue pins can be used as a digital pin, but digital pins CANNOT be used as an analogue pin. So if it the instructions say connect to a digital pin, you can use an analogue pin.
 ```
- ```note
+
+```note
 VCC and GND can have more than one wire soldered to them. For example, if you want tilt and whammy but only have one VCC you can solder them both to the single VCC pin on the microcontroller.
 ```
 
@@ -24,7 +25,7 @@ VCC and GND can have more than one wire soldered to them. For example, if you wa
 Avoid pins 0 and 1 on the Arduino Uno, as these get used for sending controller information over USB. 
 ```
 
- ```danger
+```danger
 Note that on the pi pico you need to use the `3v3 out` pin (pin 36)  for your VCC, not 5V or `3v3_en`. The pins on the pico are not rated for 5v, and the `3v3_en` pin is actually an input that will stop your pico from starting.
 ```
 

@@ -139,7 +139,7 @@ The standard version of this tool can NOT be used commercially, and the commerci
 # Donate Link
 
 I have put several years of development time into this project, if you like it feel free to support this project by clicking the below link:
-<iframe src="https://github.com/sponsors/sanjay900/button" title="Sponsor sanjay900" height="35" width="116" style="border: 0;"></iframe>
+{% include sponser.md %}
 
 # Current Sponsors
 <div class="sponsors">

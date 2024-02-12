@@ -21,10 +21,9 @@
   * ESP32
     * Currently this is not supported due to the base ESP32 not fully supporting USB. There are some ESP32 models that have USB support, but these end up being more expensive than the Pi Pico, and thus it does not make sense to support these.
 {% endcapture %}
-
-<details>
-  <summary>
-    {{ summary | markdownify | remove: '<p>' | remove: '</p>' }}
-  </summary>
-  {{ details | markdownify }}
-</details>
+  <details>
+    <summary>
+      {{ summary | markdownify | remove: '<p>' | remove: '</p>' }}
+    </summary>
+    {{ details | markdownify }}
+  </details>

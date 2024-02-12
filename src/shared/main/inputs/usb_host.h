@@ -488,6 +488,10 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
+                    usb_host_data.dpadLeft = report->dpadLeft;
+                    usb_host_data.dpadRight = report->dpadRight;
+                    usb_host_data.dpadUp = report->dpadUp;
+                    usb_host_data.dpadDown = report->dpadDown;
                     if (report->tilt) {
                         usb_host_data.tilt = INT16_MAX;
                     }
@@ -521,6 +525,10 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
+                    usb_host_data.dpadLeft = report->dpadLeft;
+                    usb_host_data.dpadRight = report->dpadRight;
+                    usb_host_data.dpadUp = report->dpadUp;
+                    usb_host_data.dpadDown = report->dpadDown;
                     if (report->tilt) {
                         usb_host_data.tilt = report->tilt;
                     }
@@ -568,6 +576,10 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.back |= report->back;
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;
+                        usb_host_data.dpadLeft = report->dpadLeft;
+                        usb_host_data.dpadRight = report->dpadRight;
+                        usb_host_data.dpadUp = report->dpadUp;
+                        usb_host_data.dpadDown = report->dpadDown;
                         if (report->greenVelocity) {
                             usb_host_data.greenVelocity = report->greenVelocity;
                         }
@@ -593,6 +605,10 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.b |= report->b;
                         usb_host_data.x |= report->x;
                         usb_host_data.y |= report->y;
+                        usb_host_data.dpadLeft = report->dpadLeft;
+                        usb_host_data.dpadRight = report->dpadRight;
+                        usb_host_data.dpadUp = report->dpadUp;
+                        usb_host_data.dpadDown = report->dpadDown;
                         usb_host_data.kick1 |= report->leftShoulder;
                         usb_host_data.kick2 |= report->leftThumbClick;
                         usb_host_data.back |= report->back;

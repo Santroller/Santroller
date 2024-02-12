@@ -10,7 +10,9 @@ sort: 2
 
 ### Supplies
 
-{% include sections/microcontrollers.md %}
+- A microcontroller
+  - The Pi Pico is recommended, but click below to see information about other microcontrollers.
+    {% include sections/microcontrollers.md %}
 
 - A Tilt Switch
   - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)

@@ -52,4 +52,15 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
    | 330             | 60                  |
    | 220             | 90                  |
 
-Now that you have wired your LEDs, go [configure them](https://santroller.tangentmc.net/tool/using.html).
+## Programming
+
+1. Click on LED Settings
+2. Set the LED Type to `STP16CPC26`
+3. Set the CLK and SDI pins as you wired them
+5. Set the LED count to the amount of LEDs you have connected together.
+6. Hit `Save Settings`
+8. If you want a button to control an LED, click on the button in question. 
+7. Click on the leds you want to link to this button in the `Selected LEDs` section.
+9. If you want an analog input (such as whammy) to control an LED, click on it.
+10. Configuring analog based LEDs is much the same as digital, but instead of pressed and released being digital, the LEDs will smoothly transition between pressed and released depending on the value of the analog input.
+11. If you would like to respond to game events in supported games, hit the `Add Setting` button and add an `LED Binding`. You can then pick the LED type in question, and configure it, in much the same way as the inputs.

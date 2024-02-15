@@ -33,4 +33,18 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
    | Pi Pico (Advanced, Channel 0) | GP2, GP6, GP18   | GP3, GP7, GP19   |
    | Pi Pico (Advanced, Channel 1) | GP10, GP14, GP26 | GP11, GP15, GP27 |
 
-Now that you have wired your LEDs, go [configure them](https://santroller.tangentmc.net/tool/using.html).
+## Programming
+
+1. Click on LED Settings
+2. Set the LED Type to one of the APA102 settings. If you know which LED type you are using, you can pick that here, otherwise try `APA102 - RBG`.
+3. Set the CI and DI pins as you wired them
+4. Set the LED Brightness. For full sized APA102s, you can use max brightness, but it is recommended to set the brightness for the smaller 2020 leds to 9 or lower.
+5. Set the LED count to the amount of LEDs you have connected together.
+8. Hit `Save Settings`
+7. If you want a button to control an LED, click on the button in question. 
+8. Click on the leds you want to link to this input in the `Selected LEDs` section.
+9. You can then set the colour when the button is pressed, and the colour when it is released.
+10. As you pick a colour the LED should update in real time so you can preview what the colour looks like. If the colour is totally wrong, you likley picked the wrong APA102 type, and will need to change the LED Type to figure out the correct order for your specific LEDs.
+11. If you want an analog input (such as whammy) to control an LED, click on it
+12. Configuring analog based LEDs is much the same as digital, but instead of pressed and released being digital, the LEDs will smoothly transition between pressed and released depending on the value of the analog input.
+13. If you would like to respond to game events in supported games, hit the `Add Setting` button and add an `LED Binding`. You can then pick the LED type in question, and configure it, in much the same way as the inputs.

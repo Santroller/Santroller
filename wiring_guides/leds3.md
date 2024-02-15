@@ -15,7 +15,7 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
 ## Steps
 
 1. Wire GND on your drivers to GND on your microcontroller
-2. Wire Vdd on your drivers to VCC on your microcontroller
+2. Wire V<sub>DD</sub> on your drivers to V<sub>CC</sub> on your microcontroller
 3. Connect the SCK (CLK) pin on each driver to your microcontroller.
    If you are using a Pi Pico and these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK and MOSI need to be from the same channel.
 
@@ -40,7 +40,7 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
    | Pi Pico (Advanced, Channel 0) | GP3, GP7, GP19   |
    | Pi Pico (Advanced, Channel 1) | GP11, GP15, GP27 |
 
-5. Connect your LEDs to the OUTn pins. The cathode of each LED connects to an OUTn pin, while the anodes are all connected together and connect to the voltage supply for your LEDs. Depending on how many LEDs you are using, it may make sense to use an external supply here, which would need to have its VCC connected to the anodes of the LEDs, and its GND connected to GND on the drivers.
+5. Connect your LEDs to the OUTn pins. The cathode of each LED connects to an OUTn pin, while the anodes are all connected together and connect to the voltage supply for your LEDs. Depending on how many LEDs you are using, it may make sense to use an external supply here, which would need to have its V<sub>CC</sub> connected to the anodes of the LEDs, and its GND connected to GND on the drivers.
 6. Connect a resistor between R-EXT and GND, depending on how much current you want to drive each LED with.
 
    | Resistor (ohms) | Output Current (mA) |

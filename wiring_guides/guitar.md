@@ -28,10 +28,12 @@ sort: 2
         - I recommend using two tilt sensors in series, as this can help with accidental activations
       - The tool also supports using analog tilt switches
   - USB Host
+    - Pi Pico
     - One of the following
       - A USB female breakout 
       - A USB extension cable
       - A controller with a cable already attached that you are willing to cut
+
 ### Wiring Steps
 
 {% include sections/getting_started.md %}
@@ -65,9 +67,9 @@ Note that with the Pi Pico, you can instead just hook these inputs up over USB, 
 <details>
     <summary>Whammy</summary>
 
-1. With most whammy's there are 3 pins. (if there are 4, you do not need the fourth. 2 pins is discussed below) The middle pin is the data pin, one outer pin is VCC while the other pin is GND (it doesn't matter which one, you can flip it when programming later if needed). Whammy needs to go to an analogue pin.
-2. Connect VCC and GND to the microcontroller. (the two outside wires)
-   - If your whammy is not responding correctly in game, you may need to swap VCC and GND around.
+1. With most whammy's there are 3 pins. (if there are 4, you do not need the fourth. 2 pins is discussed below) The middle pin is the data pin, one outer pin is V<sub>CC</sub> while the other pin is GND (it doesn't matter which one, you can flip it when programming later if needed). Whammy needs to go to an analogue pin.
+2. Connect V<sub>CC</sub> and GND to the microcontroller. (the two outside wires)
+   - If your whammy is not responding correctly in game, you may need to swap V<sub>CC</sub> and GND around.
 3. Connect the data (middle) pin to an analogue pin on the microcontroller. These are labeled with an A on the microcontroller.
 
 If you are working on a controller with only "2" pins as shown below, you will need to desolder the bridged pins and run 3 wires yourself as noted above for the whammy to work best with the configurator.
@@ -97,7 +99,7 @@ The world tour slider bar originally used a single wire to connect between the b
    1. Connect S0, S1 and S2 to seperate digital pins on the Pi Pico. You will need to solder directly to the chip on the PCB.
    2. Connect the input pin to a digital pin on the Pi Pico. You will need to solder directly to the chip on the PCB.
    3. Connect a 1Mohm resistor between the input pin and ground.
-   4. Connect wires from the ground trace to ground on the Pi Pico, and from the VCC trace to the 3v3 pin on the pi pico.
+   4. Connect wires from the ground trace to ground on the Pi Pico, and from the V<sub>CC</sub> trace to the 3v3 pin on the pi pico.
    5. Make sure you remember these pin numbers, as pin detection does not work for slider bars.
 
 2. Cut the traces indicated with red lines in the following image.
@@ -109,7 +111,7 @@ The world tour slider bar originally used a single wire to connect between the b
 <details>
     <summary>GH5 guitar neck (Standard)</summary>
 
-1. Hook up VCC (marked as V or VCC) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
+1. Hook up V<sub>CC</sub> (marked as V or V<sub>CC</sub>) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
    - For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
    - For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
    - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
@@ -122,7 +124,7 @@ The world tour slider bar originally used a single wire to connect between the b
 
 [![crazy guitar](/assets/images/crazy-guitar.png)](/assets/images/crazy-guitar.png)
 
-1. Hook up VCC, GND, SCL and SDA pins to your microcontroller. Note that this is one of the few I2C devices that works perfectly fine on 5v.
+1. Hook up V<sub>CC</sub>, GND, SCL and SDA pins to your microcontroller. Note that this is one of the few I2C devices that works perfectly fine on 5v.
    - For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
    - For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
    - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
@@ -157,7 +159,7 @@ For guitars with a DPad that is seperate, it will be much easier to wire as you 
 2.  Up and down on the dpad MUST be connected to the same pins you will be using for strum. You will want to twist those wires together and solder them to the same pin. You may want to wait until you are working on the strum to connect these pins.
 3.  Home, left, and right can be connected to any unused digital pin on the microcontroller.
 
-For guitars with a joystick, there will be four pins, one is VCC, one is GND, one is the x axis and one is the y axis. You can work out which is which by tracing the traces, however on some guitars the traces are labelled for you. The joystick needs to go to an analogue pin (one of the A pins)
+For guitars with a joystick, there will be four pins, one is V<sub>CC</sub>, one is GND, one is the x axis and one is the y axis. You can work out which is which by tracing the traces, however on some guitars the traces are labelled for you. The joystick needs to go to an analogue pin (one of the A pins)
 
 </details>
 

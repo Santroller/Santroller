@@ -21,17 +21,17 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 
 1. Open the main section from your turntable
 2. If you want the face buttons to work, then you will need to disconnect the original microcontroller from the main pcb. It is on its own seperate daughterboard, so you can just cut all the pins and seperate it. Be extremely careful doing this though, as the traces on the DJ Hero turntable are very low quality, and are extremely easy to break. Once you have done this, follow the traces and find all the different grounds, and connect them to the ground on your microcontroller. Then connect each buttons signal up to seperate digital inputs on your microcontroller.
-3. The effects knob is just a potentiometer, so one of the outer pins goes to VCC, the other to GND, and the middle pin goes to an analog pin on your microcontroller.
+3. The effects knob is just a potentiometer, so one of the outer pins goes to V<sub>CC</sub>, the other to GND, and the middle pin goes to an analog pin on your microcontroller.
 4. Wire the euphoeria button
-   1. Connect V to VCC on your microcontroller.
+   1. Connect V to V<sub>CC</sub> on your microcontroller.
    3. Connect V0 to ground on your microcontroller.
    3. Connect AT to a pin that supports analog outputs on your microcontroller. Use the configuration tool to figure this out, as it will only allow you to select a supported pin.
 5. Wire up the Crossfader / Turntable connection board.
 
-   1. There is a three wire ribbon cable going to this board, and this is for the Crossfader. This is also a potentiometer, so the middle pin needs to go to an analog pin on your microcontroller, and one of the outer pins needs to go to VCC, and the other goes to ground.
+   1. There is a three wire ribbon cable going to this board, and this is for the Crossfader. This is also a potentiometer, so the middle pin needs to go to an analog pin on your microcontroller, and one of the outer pins needs to go to V<sub>CC</sub>, and the other goes to ground.
    2. The board has connectors that go to little boards that connect to the Turntable platters. These are labeled V C D and G.
 
-      1. Hook up V to VCC and G to GND, and then hook up the C to SCL and D to SDA. The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
+      1. Hook up V to V<sub>CC</sub> and G to GND, and then hook up the C to SCL and D to SDA. The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
 
          | Microcontroller               | SDA (D)                          | SCL (C)                          |
          | ----------------------------- | -------------------------------- | -------------------------------- |

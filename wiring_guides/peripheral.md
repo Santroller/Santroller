@@ -18,7 +18,7 @@ LEDs require 5 volts, but most I2C devices run on 3.3 volts. This means if you i
 ## Steps
 
 1. Connect VBUS to VBUS and GND to GND
-2. Note that if you are sharing pins between the peripheral and another device, you will need to disconnect the VCC from the original device and connect its VCC to 3v3 on your pico. This is because VBUS is a 5V rail, and devices like the GH5 neck and the DJ Hero turntable platter run on 3.3v.
+2. Note that if you are sharing pins between the peripheral and another device, you will need to disconnect the V<sub>CC</sub> from the original device and connect its V<sub>CC</sub> to 3v3 on your pico. This is because VBUS is a 5V rail, and devices like the GH5 neck and the DJ Hero turntable platter run on 3.3v.
 3. Connect SCK to SCK and SDA to SDA between the picos. If the recommended pins don't work for you, you can pick your own pins. The pins do not need to be the same on the peripheral and the main pico, however, the SDA and SCL on the peripheral pico need to be in the same channel, and the SDA and SCL on the main pico need to be in the same channel.
 
    | Microcontroller               | SDA                              | SCL                              |

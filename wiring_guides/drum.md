@@ -33,10 +33,11 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
       - A controller with a cable already attached that you are willing to cut
 
 ```note
-close the tool if you want to use your drum kit, the multiplexer is overridden by the tool when it updates its sensor values, and this will override the controller inputs when it happens.
+Close the tool if you want to use your drum kit, the multiplexer is overridden by the tool when it updates its sensor values, and this will override the controller inputs when it happens.
 ```
 
 ## Wiring Steps
+{% include sections/getting_started.md %}
 
 To keep the relevant information in this guide easy to find, information is sorted by function.
 

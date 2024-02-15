@@ -553,7 +553,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
     if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
         seen_windows = true;
     }
@@ -858,16 +858,15 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
-                if (consoleType == PS4) {
-                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
-                    desc->EndpointOutHID.wMaxPacketSize = 64;
-                    desc->EndpointInHID.wMaxPacketSize = 64;
-                }
 
 #if DEVICE_TYPE_IS_INSTRUMENT
                 desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
 #else
-                if (consoleType == PS3) {
+                if (consoleType == PS4) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
+                    desc->EndpointOutHID.wMaxPacketSize = 64;
+                    desc->EndpointInHID.wMaxPacketSize = 64;
+                } else if (consoleType == PS3) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);

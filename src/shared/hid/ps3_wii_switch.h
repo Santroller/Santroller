@@ -390,9 +390,18 @@ const uint8_t PROGMEM ps4_descriptor[] = {
     0x95, 0x36,        //   Report Count (54)
     0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
 
-    0x85, 0x05,        //   Report ID (5)
-    0x09, 0x22,        //   Usage (0x22)
-    0x95, 0x1F,        //   Report Count (31)what
+    0x85, 0x05,  //   Report ID (5)
+    0x09, 0x22,  //   Usage (0x22)
+    0x95, 0x1F,  //   Report Count (31)
+    0x91, 0x02,  //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+
+    0x85, 0x03,        //   Report ID (3)
+    0x0A, 0x21, 0x27,  //   Usage (0x2721)
+    0x95, 0x2F,        //   Report Count (47)
+    0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+    0xC0,              // End Collection
+
+    0x06, 0xF0, 0xFF,  // Usage Page (Vendor Defined 0xFFF0)
     0x09, 0x40,        // Usage (0x40)
     0xA1, 0x01,        // Collection (Application)
     0x85, 0xF0,        //   Report ID (-16)

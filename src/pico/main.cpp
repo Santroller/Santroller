@@ -202,8 +202,12 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     uint16_t host_vid = 0;
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
+    printf("%04x %04x\r\n", host_vid, host_pid);
     USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
     type.dev_addr = dev_addr;
+    if (type.console_type == PS4) {
+        controllerType = PS4;
+    }
     if (controllerType == XBOX360) {
         if (subtype) {
             type.console_type = controllerType;

@@ -22,9 +22,15 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 - Wire Cutters
 - Heatshrink
 
-## Supplies if you are building a drum kit from scratch
-
-- 1 Piezo sensor per drum pad / cymbal
+- Supplies for specific features
+  - Drum kit from scratch
+    - 1 Piezo sensor per drum pad / cymbal
+  - USB Host
+    - Pi Pico
+    - One of the following
+      - A USB female breakout 
+      - A USB extension cable
+      - A controller with a cable already attached that you are willing to cut
 
 ```note
 close the tool if you want to use your drum kit, the multiplexer is overridden by the tool when it updates its sensor values, and this will override the controller inputs when it happens.

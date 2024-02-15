@@ -4,7 +4,7 @@ sort: 2
 
 # Setting up a Guitar
 
-[![Finished adaptor](/assets/images/direct.jpg)](/assets/images/direct.jpg)
+[![Finished guitar](/assets/images/direct.jpg)](/assets/images/direct.jpg)
 
 ## Wiring
 
@@ -14,11 +14,6 @@ sort: 2
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
     {% include sections/microcontrollers.md %}
 
-- A Tilt Switch
-  - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
-    - I recommend using two tilt sensors in series, as this can help with accidental activations
-  - The tool also supports using analog tilt switches
-
 - Some Wire
 - Soldering Iron
 - Multimeter (it will be used mainly in continuity mode, where it beeps when the two contacts are shorted together)
@@ -26,6 +21,17 @@ sort: 2
 - Wire Cutters
 - Heatshrink
 
+- Supplies for specific features
+  - Tilt
+    - A Tilt Switch
+      - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
+        - I recommend using two tilt sensors in series, as this can help with accidental activations
+      - The tool also supports using analog tilt switches
+  - USB Host
+    - One of the following
+      - A USB female breakout 
+      - A USB extension cable
+      - A controller with a cable already attached that you are willing to cut
 ### Wiring Steps
 
 {% include sections/getting_started.md %}
@@ -186,6 +192,18 @@ When the strums are part of the main board you will need to cut the traces or yo
 
 </details>
 
+<details>
+    <summary>USB Host (Pi Pico Only)</summary>
+If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox Series, you can wire a USB port to the Pi Pico. You can also use this feature if your  guitar is USB based (like the xplorer) and you would rather pass some inputs through instead of wiring them manually, such as the dpad or start and select on the xplorer.
+
+1. If you are using a USB extension cable, cut it in half and expose the four cables.
+2. Hook up the V+ (Red) to the VBUS pin on your Pi Pico
+3. Hook up the V- (Black) to ground on your Pi Pico
+4. Hook up D+ (Green) to a unused digital pin.
+5. Hook up D- (White) to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
+
+</details>
+
 ## Programming
 
 ### Peripheral
@@ -321,6 +339,18 @@ If you intend to use the peripheral features, it is recommended to program the p
     6. If you know the pin you used for the fret when it was wired to the Peripheral Pico, set it here, otherwise pick a random pin for now.
     7. Hit `Save Settings`. Note that every other setting will need to be configured before you can do this. The peripheral pico also needs to be programmed.
     8. Now that the peripheral settings are saved, you can use `Find Pin` if necessary to detect the pin your fret was hooked up to.
+    </details>
+
+    <details>
+      <summary>USB Host (Pi Pico Only)</summary>
+
+    1. Click on Add setting
+    2. Find and add `USB Host inputs`
+    3. Bind D+
+    4. Hit Save
+    5. If you plug in a supported controller, the tool should detect it and tell you what it is.
+    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`. 
+
     </details>
 
 14. If you do not want to hook an input up, hit the `Remove` button to the right on that input.

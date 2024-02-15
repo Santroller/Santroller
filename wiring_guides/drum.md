@@ -24,9 +24,11 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 
 ## Supplies if you are building a drum kit from scratch
 
-- Piezo sensor
+- 1 Piezo sensor per drum pad / cymbal
 
-Note: close the tool if you want to use your drum kit, the multiplexer is overridden by the tool when it updates its sensor values, and this will override the controller inputs when it happens.
+```note
+close the tool if you want to use your drum kit, the multiplexer is overridden by the tool when it updates its sensor values, and this will override the controller inputs when it happens.
+```
 
 ## Wiring Steps
 

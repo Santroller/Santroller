@@ -12,7 +12,7 @@ Unplug your Pi Pico from your computer, press and hold the BOOTSEL button and pl
 ## Pro Micro 
 The Pro Micro is a bit special, in that it will only stay in bootloader mode for 8 seconds. This means that the easiest way to rescue a Pro Micro is to open the tool first.
 
-Once the tool is open, short the rst pin to ground twice in quick succession, and the tool will detect the Pro Micro in bootloader mode. You can then quickly program it again.
+Once the tool is open, short the rst pin to ground twice in quick succession, and the tool will detect the Pro Micro in bootloader mode. You can then quickly program it again. You can be too quick when shorting though, the perfect timing is around 0.5 seconds between the two shorts.
 
 [![Pro Micro Reset](/assets/images/promicrorst.png)](/assets/images/promicrorst.png)
 

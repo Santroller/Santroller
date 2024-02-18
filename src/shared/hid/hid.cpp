@@ -432,10 +432,33 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif
-#ifdef BLUETOOTH_RX
-    bt_set_report(data, len, reportType, report_id);
-#endif
     uint8_t id = data[0];
+#ifdef BLUETOOTH_RX
+    // BT uses HID, so convert XInput based reports to HID before sending them over BT
+    if (consoleType == XBOX360 || consoleType == WINDOWS) {
+#if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE == STAGE_KIT
+        uint8_t data_hid[8] = {0};
+        data_hid[0] = PS3_REPORT_ID;
+        if (id == XBOX_LED_ID) {
+            uint8_t led = data[2];
+            uint8_t player = xbox_players[led];
+            handle_player_leds(player);
+            data_hid[1] = PS3_LED_RUMBLE_ID;
+            data_hid[3] = 1 << player;
+            bt_set_report(data_hid, 8, reportType, report_id);
+
+        } else if (id == XBOX_RUMBLE_ID) {
+            data_hid[1] = SANTROLLER_LED_ID;
+            data_hid[2] = data[3];
+            data_hid[4] = data[2];
+            bt_set_report(data_hid, 8, reportType, report_id);
+        }
+#endif
+    } else {
+        bt_set_report(data, len, reportType, report_id);
+    }
+
+#endif
 #ifdef INPUT_USB_HOST
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
@@ -495,7 +518,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
             handle_rumble(report->motor_left, report->motor_right);
         }
-#if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE==STAGE_KIT
+#if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE == STAGE_KIT
         else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
             handle_rumble(data[2], data[3]);
         } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {

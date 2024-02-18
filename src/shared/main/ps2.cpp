@@ -53,6 +53,12 @@ static const uint8_t commandEnableRumble[] = {0x4d, 0x00, 0x01, 0xff,
                                               0xff, 0xff, 0xff, 0xff};
 static const uint8_t commandGetStatus[] = {0x45, 0x00, 0x00, 0x5A,
                                            0x5A, 0x5A, 0x5A, 0x5A};
+
+static const uint8_t commandGetExtra[] = {0x46, 0x00, 0x00, 0x5A,
+                                           0x5A, 0xA, 0x5A, 0x5A};
+static const uint8_t commandGetExtra2[] = {0x46, 0x00, 0x00, 0x5A,
+                                           0x5A, 0xA, 0x5A, 0x5A};
+
 static const uint8_t commandSetMode[] = {0x44, 0x00, /* enabled */ 0x01,
                                          /* locked */ 0x00, 0x02};
 
@@ -146,9 +152,7 @@ uint8_t *autoShiftData(uint8_t port, const uint8_t *out, const uint8_t len) {
 }
 bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
     bool ret = false;
-
     unsigned long start = millis();
-    uint8_t cnt = 0;
     do {
         uint8_t *in = autoShiftData(port, buf, len);
         /* We can't know if we have successfully enabled analog mode until
@@ -156,22 +160,20 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
          * consecutive valid replies
          */
         if (in != NULL) {
-            ++cnt;
             if (buf == commandEnterConfig) {
                 ret = isConfigReply(in);
             } else if (buf == commandExitConfig) {
                 ret = !isConfigReply(in);
-            } else {
-                ret = cnt >= 3;
             }
         }
 
         if (!ret) {
-            delayMicroseconds(COMMAND_RETRY_INTERVAL);
+            delay(COMMAND_RETRY_INTERVAL);
         }
     } while (!ret && millis() - start <= COMMAND_TIMEOUT);
     return ret;
 }
+extern unsigned long millis_at_boot;
 uint8_t *tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
@@ -189,14 +191,12 @@ uint8_t *tickPS2() {
         }
         if (sendCommand(port, commandEnterConfig, sizeof(commandEnterConfig))) {
             // Enable analog sticks
-            sendCommand(port, commandSetMode, sizeof(commandSetMode));
-            // Enable analog buttons
-
+            sendCommand(port, commandSetMode, sizeof(commandSetMode));            
             // Enable pressure sensitive buttons
             // Some PS2 controllers are stupid and *really* need to be told to enable pressure sensitivity
-            for (int i = 0; i < 20; i++) {
-                sendCommand(port, commandSetPressures, sizeof(commandSetPressures));
-            }
+            // for (int i = 0; i < 20; i++) {
+            sendCommand(port, commandSetPressures, sizeof(commandSetPressures));
+            // }
             sendCommand(port, commandExitConfig, sizeof(commandExitConfig));
         }
         uint8_t *in =

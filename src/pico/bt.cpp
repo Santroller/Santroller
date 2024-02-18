@@ -96,7 +96,7 @@ static void le_keyboard_setup(void) {
 
     // setup device information service
     device_information_service_server_init();
-    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID_BLE, USB_VERSION_BCD(DEVICE_TYPE, 0, 0));
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID, USB_VERSION_BCD(DEVICE_TYPE, 0, 0));
 
     hids_device_init(0, REPORT, sizeof(REPORT));
 
@@ -131,32 +131,32 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     switch (hci_event_packet_get_type(packet)) {
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             con_handle = HCI_CON_HANDLE_INVALID;
-            printf("Disconnected\n");
+            printf("Disconnected\r\n");
             break;
         case SM_EVENT_JUST_WORKS_REQUEST:
-            printf("Just Works requested\n");
+            printf("Just Works requested\r\n");
             sm_just_works_confirm(sm_event_just_works_request_get_handle(packet));
             break;
         case SM_EVENT_NUMERIC_COMPARISON_REQUEST:
-            printf("Confirming numeric comparison: %" PRIu32 "\n", sm_event_numeric_comparison_request_get_passkey(packet));
+            printf("Confirming numeric comparison: %" PRIu32 "\r\n", sm_event_numeric_comparison_request_get_passkey(packet));
             sm_numeric_comparison_confirm(sm_event_passkey_display_number_get_handle(packet));
             break;
         case SM_EVENT_PASSKEY_DISPLAY_NUMBER:
-            printf("Display Passkey: %" PRIu32 "\n", sm_event_passkey_display_number_get_passkey(packet));
+            printf("Display Passkey: %" PRIu32 "\r\n", sm_event_passkey_display_number_get_passkey(packet));
             break;
         case SM_EVENT_PAIRING_COMPLETE:
             switch (sm_event_pairing_complete_get_status(packet)) {
                 case ERROR_CODE_SUCCESS:
-                    printf("Pairing complete, success\n");
+                    printf("Pairing complete, success\r\n");
                     break;
                 case ERROR_CODE_CONNECTION_TIMEOUT:
-                    printf("Pairing failed, timeout\n");
+                    printf("Pairing failed, timeout\r\n");
                     break;
                 case ERROR_CODE_REMOTE_USER_TERMINATED_CONNECTION:
-                    printf("Pairing failed, disconnected\n");
+                    printf("Pairing failed, disconnected\r\n");
                     break;
                 case ERROR_CODE_AUTHENTICATION_FAILURE:
-                    printf("Pairing failed, authentication failure with reason = %u\n", sm_event_pairing_complete_get_reason(packet));
+                    printf("Pairing failed, authentication failure with reason = %u\r\n", sm_event_pairing_complete_get_reason(packet));
                     break;
                 default:
                     break;
@@ -167,17 +167,17 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 case HCI_SUBEVENT_LE_CONNECTION_COMPLETE: {
                     // print connection parameters (without using float operations)
                     uint16_t conn_interval = hci_subevent_le_connection_complete_get_conn_interval(packet);
-                    printf("LE Connection Complete:\n");
-                    printf("- Connection Interval: %u.%02u ms\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
-                    printf("- Connection Latency: %u\n", hci_subevent_le_connection_complete_get_conn_latency(packet));
+                    printf("LE Connection Complete:\r\n");
+                    printf("- Connection Interval: %u.%02u ms\r\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
+                    printf("- Connection Latency: %u\r\n", hci_subevent_le_connection_complete_get_conn_latency(packet));
                     break;
                 }
                 case HCI_SUBEVENT_LE_CONNECTION_UPDATE_COMPLETE: {
                     // print connection parameters (without using float operations)
                     uint16_t conn_interval = hci_subevent_le_connection_update_complete_get_conn_interval(packet);
-                    printf("LE Connection Update:\n");
-                    printf("- Connection Interval: %u.%02u ms\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
-                    printf("- Connection Latency: %u\n", hci_subevent_le_connection_update_complete_get_conn_latency(packet));
+                    printf("LE Connection Update:\r\n");
+                    printf("- Connection Interval: %u.%02u ms\r\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
+                    printf("- Connection Latency: %u\r\n", hci_subevent_le_connection_update_complete_get_conn_latency(packet));
                     break;
                 }
                 default:
@@ -189,16 +189,33 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 case HIDS_SUBEVENT_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_input_report_enable_get_con_handle(packet);
                     gap_request_connection_parameter_update(con_handle, 6, 7, 0, 100);
-                    printf("Report Characteristic Subscribed %u\n", hids_subevent_input_report_enable_get_enable(packet));
+                    printf("Input Report Characteristic Subscribed %u\r\n", hids_subevent_input_report_enable_get_enable(packet));
+                    break;
+                case HIDS_SUBEVENT_OUTPUT_REPORT_ENABLE:
+                    con_handle = hids_subevent_output_report_enable_get_con_handle(packet);
+                    printf("Output Report Characteristic Subscribed %u\r\n", hids_subevent_output_report_enable_get_enable(packet));
+                    break;
+                case HIDS_SUBEVENT_FEATURE_REPORT_ENABLE:
+                    con_handle = hids_subevent_feature_report_enable_get_con_handle(packet);
+                    printf("Feature Report Characteristic Subscribed %u\r\n", hids_subevent_feature_report_enable_get_enable(packet));
                     break;
                 case HIDS_SUBEVENT_BOOT_KEYBOARD_INPUT_REPORT_ENABLE:
                     con_handle = hids_subevent_boot_keyboard_input_report_enable_get_con_handle(packet);
-                    printf("Boot Keyboard Characteristic Subscribed %u\n", hids_subevent_boot_keyboard_input_report_enable_get_enable(packet));
+                    printf("Boot Keyboard Characteristic Subscribed %u\r\n", hids_subevent_boot_keyboard_input_report_enable_get_enable(packet));
                     break;
                 case HIDS_SUBEVENT_PROTOCOL_MODE:
                     protocol_mode = hids_subevent_protocol_mode_get_protocol_mode(packet);
-                    printf("Protocol Mode: %s mode\n", hids_subevent_protocol_mode_get_protocol_mode(packet) ? "Report" : "Boot");
+                    printf("Protocol Mode: %s mode\r\n", hids_subevent_protocol_mode_get_protocol_mode(packet) ? "Report" : "Boot");
                     break;
+                case HIDS_SUBEVENT_SET_REPORT: {
+                    uint16_t len = hids_subevent_set_report_get_report_length(packet);
+                    uint8_t type = hids_subevent_set_report_get_report_type(packet);
+                    uint8_t id = hids_subevent_set_report_get_report_id(packet);
+                    printf("YES %u\r\n", len);
+                    const uint8_t* output = hids_subevent_set_report_get_report_data(packet);
+                    hid_set_report(output, len, type, id);
+                    break;
+                }
                 default:
                     break;
             }

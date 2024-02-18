@@ -25,9 +25,6 @@ extern uint8_t hid_sequence_number;
 // Sequence number used for sending reports to the ps4
 extern uint8_t ps4_sequence_number;
 
-// If a stage kit is used for auth, pass any stage kit commands through to it
-extern bool passthrough_stage_kit;
-
 // Used for ps4 auth
 extern bool auth_ps4_controller_found;
 

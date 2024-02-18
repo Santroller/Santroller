@@ -211,7 +211,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     uint16_t len = hids_subevent_set_report_get_report_length(packet);
                     uint8_t type = hids_subevent_set_report_get_report_type(packet);
                     uint8_t id = hids_subevent_set_report_get_report_id(packet);
-                    printf("YES %u\r\n", len);
                     const uint8_t* output = hids_subevent_set_report_get_report_data(packet);
                     hid_set_report(output, len, type, id);
                     break;

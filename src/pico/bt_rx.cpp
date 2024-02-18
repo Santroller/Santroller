@@ -93,6 +93,10 @@ int get_bt_address(uint8_t *addr) {
     return SIZE_OF_BD_ADDRESS;
 }
 
+void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
+    hids_client_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, data, len);
+}
+
 bool check_bluetooth_ready() {
     return app_state == READY;
 }
@@ -110,7 +114,7 @@ static void hog_stop_scan_timer(btstack_timer_source_t *ts) {
  * Start scanning
  */
 void hog_start_scan() {
-    printf("Scanning for LE HID devices...\n");
+    printf("Scanning for LE HID devices...\r\n");
     devices_found = 0;
 #ifdef BT_ADDR
     if (has_address) {
@@ -146,7 +150,7 @@ static void hog_reconnect_timeout(btstack_timer_source_t *ts) {
  */
 static void hog_connection_timeout(btstack_timer_source_t *ts) {
     UNUSED(ts);
-    printf("Timeout - abort connection\n");
+    printf("Timeout - abort connection\r\n");
     gap_connect_cancel();
 
     btstack_run_loop_set_timer(&reconnect_timer, 100);
@@ -194,7 +198,7 @@ static void hog_start_connect(void) {
  * In case of error, disconnect and start scanning again
  */
 static void handle_outgoing_connection_error(void) {
-    printf("Error occurred, disconnect and start over\n");
+    printf("Error occurred, disconnect and start over\r\n");
     gap_disconnect(connection_handle);
     hog_start_reconnect_timer();
 }
@@ -222,7 +226,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             status = gattservice_subevent_hid_service_connected_get_status(packet);
             switch (status) {
                 case ERROR_CODE_SUCCESS:
-                    printf("HID service client connected, found %d services\n",
+                    printf("HID service client connected, found %d services\r\n",
                            gattservice_subevent_hid_service_connected_get_num_instances(packet));
 
                     // store device as bonded
@@ -232,16 +236,17 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
 
                     hids_client_get_hid_information(hids_cid, 0);
                     // done
-                    printf("Ready - receiving data\n");
+                    printf("Ready - receiving data\r\n");
                     app_state = READY;
                     break;
                 default:
-                    printf("HID service client connection failed, err 0x%02x.\n", status);
+                    printf("HID service client connection failed, err 0x%02x.\r\n", status);
                     handle_outgoing_connection_error();
                     break;
             }
             break;
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
+            printf("info done\r\n");
             gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
@@ -294,7 +299,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                                 }
                             }
                             if (!found) {
-                                printf("Found, device address %s ...\n", address_string);
+                                printf("Found, device address %s ...\r\n", address_string);
                                 memcpy(scan_buffer + (devices_found * SIZE_OF_BD_ADDRESS), address_string, SIZE_OF_BD_ADDRESS);
                                 devices_found++;
                             }
@@ -308,11 +313,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     connection_handle = HCI_CON_HANDLE_INVALID;
                     switch (app_state) {
                         case READY:
-                            printf("\nDisconnected, try to reconnect...\n");
+                            printf("\r\nDisconnected, try to reconnect...\r\n");
                             app_state = W4_TIMEOUT_THEN_RECONNECT;
                             break;
                         default:
-                            printf("\nDisconnected, start over...\n");
+                            printf("\r\nDisconnected, start over...\r\n");
                             app_state = W4_TIMEOUT_THEN_SCAN;
                             break;
                     }
@@ -324,17 +329,17 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         case HCI_SUBEVENT_LE_CONNECTION_COMPLETE: {
                             // print connection parameters (without using float operations)
                             uint16_t conn_interval = hci_subevent_le_connection_complete_get_conn_interval(packet);
-                            printf("LE Connection Complete:\n");
-                            printf("- Connection Interval: %u.%02u ms\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
-                            printf("- Connection Latency: %u\n", hci_subevent_le_connection_complete_get_conn_latency(packet));
+                            printf("LE Connection Complete:\r\n");
+                            printf("- Connection Interval: %u.%02u ms\r\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
+                            printf("- Connection Latency: %u\r\n", hci_subevent_le_connection_complete_get_conn_latency(packet));
                             break;
                         }
                         case HCI_SUBEVENT_LE_CONNECTION_UPDATE_COMPLETE: {
                             // print connection parameters (without using float operations)
                             uint16_t conn_interval = hci_subevent_le_connection_update_complete_get_conn_interval(packet);
-                            printf("LE Connection Update:\n");
-                            printf("- Connection Interval: %u.%02u ms\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
-                            printf("- Connection Latency: %u\n", hci_subevent_le_connection_update_complete_get_conn_latency(packet));
+                            printf("LE Connection Update:\r\n");
+                            printf("- Connection Interval: %u.%02u ms\r\n", conn_interval * 125 / 100, 25 * (conn_interval & 3));
+                            printf("- Connection Latency: %u\r\n", hci_subevent_le_connection_update_complete_get_conn_latency(packet));
                             break;
                         }
                         default:
@@ -376,41 +381,46 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
 
     switch (hci_event_packet_get_type(packet)) {
         case SM_EVENT_JUST_WORKS_REQUEST:
-            printf("Just works requested\n");
+            printf("Just works requested\r\n");
             sm_just_works_confirm(sm_event_just_works_request_get_handle(packet));
             break;
         case SM_EVENT_NUMERIC_COMPARISON_REQUEST:
-            printf("Confirming numeric comparison: %" PRIu32 "\n", sm_event_numeric_comparison_request_get_passkey(packet));
+            printf("Confirming numeric comparison: %" PRIu32 "\r\n", sm_event_numeric_comparison_request_get_passkey(packet));
             sm_numeric_comparison_confirm(sm_event_passkey_display_number_get_handle(packet));
             break;
         case SM_EVENT_PASSKEY_DISPLAY_NUMBER:
-            printf("Display Passkey: %" PRIu32 "\n", sm_event_passkey_display_number_get_passkey(packet));
+            printf("Display Passkey: %" PRIu32 "\r\n", sm_event_passkey_display_number_get_passkey(packet));
             break;
         case SM_EVENT_PAIRING_COMPLETE:
             switch (sm_event_pairing_complete_get_status(packet)) {
                 case ERROR_CODE_SUCCESS:
-                    printf("Pairing complete, success\n");
+                    printf("Pairing complete, success\r\n");
 
                     // continue - query primary services
-                    printf("Search for HID service.\n");
+                    printf("Search for HID service.\r\n");
                     app_state = W4_HID_CLIENT_CONNECTED;
                     device_information_service_client_query(connection_handle, handle_gatt_client_event);
                     break;
                 case ERROR_CODE_CONNECTION_TIMEOUT:
-                    printf("Pairing failed, timeout\n");
+                    printf("Pairing failed, timeout\r\n");
                     hog_start_reconnect_timer();
                     break;
                 case ERROR_CODE_REMOTE_USER_TERMINATED_CONNECTION:
-                    printf("Pairing failed, disconnected\n");
+                    printf("Pairing failed, disconnected\r\n");
                     hog_start_reconnect_timer();
                     break;
                 case ERROR_CODE_AUTHENTICATION_FAILURE:
-                    printf("Pairing failed, reason = %u\n", sm_event_pairing_complete_get_reason(packet));
+                    printf("Pairing failed, reason = %u\r\n", sm_event_pairing_complete_get_reason(packet));
                     hog_start_reconnect_timer();
                     break;
                 default:
                     break;
             }
+            break;
+        case SM_EVENT_REENCRYPTION_COMPLETE:
+            printf("Re-encryption complete, success\n");
+            app_state = W4_HID_CLIENT_CONNECTED;
+            device_information_service_client_query(connection_handle, handle_gatt_client_event);
             break;
         default:
             break;

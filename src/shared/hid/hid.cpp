@@ -432,6 +432,9 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif
+#ifdef BLUETOOTH_RX
+    bt_set_report(data, len, reportType, report_id);
+#endif
     uint8_t id = data[0];
 #ifdef INPUT_USB_HOST
     // Handle Xbox 360 LEDs and rumble

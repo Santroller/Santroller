@@ -436,7 +436,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #ifdef BLUETOOTH_RX
     // BT uses HID, so convert XInput based reports to HID before sending them over BT
     if (consoleType == XBOX360 || consoleType == WINDOWS) {
-#if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE == STAGE_KIT
         uint8_t data_hid[8] = {0};
         data_hid[0] = PS3_REPORT_ID;
         if (id == XBOX_LED_ID) {
@@ -453,7 +452,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             data_hid[4] = data[2];
             bt_set_report(data_hid, 8, reportType, report_id);
         }
-#endif
     } else {
         bt_set_report(data, len, reportType, report_id);
     }

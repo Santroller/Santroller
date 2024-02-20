@@ -43,6 +43,33 @@ for (int i = 0; i < device_count; i++) {
         }
     }
     switch (console_type) {
+        case UNIVERSAL: {
+            USB_Host_Data_t *report = (USB_Host_Data_t *)data;
+            if (report->leftStickX) {
+                usb_host_data.leftStickX = report->leftStickX;
+            }
+            if (report->leftStickY) {
+                usb_host_data.leftStickY = report->leftStickY;
+            }
+            if (report->rightStickX) {
+                usb_host_data.rightStickX = report->rightStickX;
+            }
+            if (report->rightStickY) {
+                usb_host_data.rightStickY = report->rightStickY;
+            }
+            if (report->leftTrigger) {
+                usb_host_data.leftTrigger = report->leftTrigger;
+            }
+            if (report->rightTrigger) {
+                usb_host_data.rightTrigger = report->rightTrigger;
+            }
+            usb_host_data.dpadLeft |= report->dpadLeft;
+            usb_host_data.dpadRight |= report->dpadRight;
+            usb_host_data.dpadUp |= report->dpadUp;
+            usb_host_data.dpadDown |= report->dpadDown;
+            usb_host_data.genericButtons |= report->genericButtons;
+            break;
+        }
         case PS3: {
             PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)data;
             uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
@@ -836,4 +863,5 @@ for (int i = 0; i < device_count; i++) {
         }
     }
 }
+memcpy(&last_usb_host_data, &usb_host_data, sizeof(last_usb_host_data));
 #endif

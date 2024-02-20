@@ -27,13 +27,16 @@
 #include "tusb_option.h"
 
 #if (CFG_TUH_ENABLED && CFG_TUH_XINPUT)
+#include "class/hid/hid.h"
 #include "defines.h"
 #include "descriptors.h"
 #include "hid.h"
+#include "hidparser.h"
 #include "host/usbh.h"
 #include "host/usbh_classdriver.h"
 #include "xinput_host.h"
 
+#define INVALID_REPORT_ID -1
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
 //--------------------------------------------------------------------+
@@ -51,6 +54,7 @@ typedef struct
 
     uint8_t epin_buf[CFG_TUH_XINPUT_EPIN_BUFSIZE];
     uint8_t epout_buf[CFG_TUH_XINPUT_EPOUT_BUFSIZE];
+    HID_ReportInfo_t *info;
 } xinputh_interface_t;
 
 typedef struct
@@ -67,7 +71,7 @@ TU_ATTR_ALWAYS_INLINE static inline xinputh_device_t *get_dev(uint8_t dev_addr);
 TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t *get_instance(uint8_t dev_addr, uint8_t instance);
 static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf);
 static uint8_t get_instance_id_by_epaddr(uint8_t dev_addr, uint8_t ep_addr);
-
+static int16_t reportID;
 //--------------------------------------------------------------------+
 // Interface API
 //--------------------------------------------------------------------+
@@ -126,6 +130,102 @@ void xinputh_init(void) {
     tu_memclr(_xinputh_dev, sizeof(_xinputh_dev));
 }
 
+static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportData, HID_ReportItem_t *const ReportItem) {
+    if (ReportItem->ReportID) {
+        if (ReportItem->ReportID != ReportData[0])
+            return false;
+
+        ReportData++;
+    }
+    return USB_GetHIDReportItemInfo(ReportItem->ReportID, ReportData, ReportItem);
+}
+
+int16_t GetAxis(HID_ReportItem_t *item) {
+    uint8_t size = item->Attributes.BitSize;
+    // Shift uint to int
+    uint32_t val = item->Value;
+    if (size > 16) {
+        val >>= size-16;
+    } else if (size < 16) {
+        val <<= 16-size;
+    }
+    return val - INT16_MAX;
+}
+
+uint16_t GetTrigger(HID_ReportItem_t *item) {
+    uint8_t size = item->Attributes.BitSize;
+    // Shift uint to int
+    uint32_t val = item->Value;
+    if (size > 16) {
+        val >>= size-16;
+    } else if (size < 16) {
+        val <<= 16-size;
+    }
+    return val;
+}
+
+void fill_generic_report(uint8_t dev_addr, uint8_t instance, const uint8_t *report, USB_Host_Data_t *out) {
+    memset(out, 0, sizeof(USB_Host_Data_t));
+    xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
+    if (hid_itf->info != NULL) {
+        HID_ReportItem_t *item = hid_itf->info->FirstReportItem;
+        while (item) {
+            if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
+                switch (item->Attributes.Usage.Page) {
+                    case HID_USAGE_PAGE_DESKTOP:
+                        switch (item->Attributes.Usage.Usage) {
+                            case HID_USAGE_DESKTOP_X:
+                                out->leftStickX = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_Y:
+                                out->leftStickY = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RX:
+                                out->rightStickX = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RY:
+                                out->rightStickY = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_Z:
+                                out->leftTrigger = GetTrigger(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RZ:
+                                out->rightTrigger = GetTrigger(item);
+                                break;
+                            case HID_USAGE_DESKTOP_HAT_SWITCH:
+                                out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;
+                                out->dpadRight = item->Value == 3 || item->Value == 2 || item->Value == 1;
+                                out->dpadUp = item->Value == 0 || item->Value == 1 || item->Value == 7;
+                                out->dpadDown = item->Value == 5 || item->Value == 4 || item->Value == 3;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_UP:
+                                out->dpadUp = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_RIGHT:
+                                out->dpadRight = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_DOWN:
+                                out->dpadDown = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_LEFT:
+                                out->dpadLeft = 1;
+                                break;
+                        }
+                        break;
+                    case HID_USAGE_PAGE_BUTTON: {
+                        uint8_t usage = item->Attributes.Usage.Usage;
+                        if (usage <= 16 && item->Value) {
+                            out->genericButtons |= 1 << usage-1;
+                        }
+                        break;
+                    }
+                }
+            }
+            item = item->Next;
+        }
+    }
+}
+
 bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) {
     (void)result;
 
@@ -133,8 +233,8 @@ bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, ui
     uint8_t const instance = get_instance_id_by_epaddr(dev_addr, ep_addr);
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
     if (dir == TUSB_DIR_IN) {
-        tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
         usbh_edpt_xfer(dev_addr, hid_itf->ep_in, hid_itf->epin_buf, hid_itf->epin_size);
+        tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
     }
 
     return true;
@@ -145,11 +245,44 @@ void xinputh_close(uint8_t dev_addr) {
 
     xinputh_device_t *hid_dev = get_dev(dev_addr);
 
-    if (tuh_xinput_umount_cb) {
-        for (uint8_t inst = 0; inst < hid_dev->inst_count; inst++) tuh_xinput_umount_cb(dev_addr, inst);
+    for (uint8_t inst = 0; inst < hid_dev->inst_count; inst++) {
+        if (tuh_xinput_umount_cb) {
+            tuh_xinput_umount_cb(dev_addr, inst);
+        }
+        if (hid_dev->instances[inst].info != NULL) {
+            USB_FreeReportInfo(hid_dev->instances[inst].info);
+        }
     }
 
     tu_memclr(hid_dev, sizeof(xinputh_device_t));
+}
+
+bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem) {
+    if (CurrentItem->ItemType != HID_REPORT_ITEM_In)
+        return false;
+
+    if (reportID == INVALID_REPORT_ID) {
+        reportID = CurrentItem->ReportID;
+    }
+    switch (CurrentItem->Attributes.Usage.Page) {
+        case HID_USAGE_PAGE_DESKTOP:
+            switch (CurrentItem->Attributes.Usage.Usage) {
+                case HID_USAGE_DESKTOP_X:
+                case HID_USAGE_DESKTOP_Y:
+                case HID_USAGE_DESKTOP_Z:
+                case HID_USAGE_DESKTOP_RZ:
+                case HID_USAGE_DESKTOP_HAT_SWITCH:
+                case HID_USAGE_DESKTOP_DPAD_UP:
+                case HID_USAGE_DESKTOP_DPAD_DOWN:
+                case HID_USAGE_DESKTOP_DPAD_LEFT:
+                case HID_USAGE_DESKTOP_DPAD_RIGHT:
+                    return true;
+            }
+            return false;
+        case HID_USAGE_PAGE_BUTTON:
+            return true;
+    }
+    return false;
 }
 
 //--------------------------------------------------------------------+
@@ -214,6 +347,8 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         if (!temp_buf[0]) {
             temp_buf[0] = 0x05;
         }
+        reportID = INVALID_REPORT_ID;
+        USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
         // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
         // TODO: if at some point we want to support hid controllers, we can parse out the report more here, and actually work out a mapping
         while (len) {

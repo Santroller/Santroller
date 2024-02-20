@@ -26,6 +26,7 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
+
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
@@ -46,6 +47,8 @@ typedef struct {
     USB_Device_Type_t type;
     USB_LastReport_Data_t report;
     uint8_t report_length;
+    uint8_t dev_addr;
+    uint8_t inst;
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
@@ -185,6 +188,16 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
 }
 
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
+    if (usb_host_devices[id].type.console_type == UNIVERSAL) {
+        USB_Host_Data_t* host = (USB_Host_Data_t*)buf;
+
+        // for (int i = 0; i < usb_host_devices[id].report_length; i++) {
+        //     printf("%02x, ", buf[i]);
+        // }
+        // printf("\r\n");
+        fill_generic_report(usb_host_devices[id].dev_addr, usb_host_devices[id].inst, (uint8_t*)&usb_host_devices[id].report, host);
+        return;
+    }
     memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);
 }
 
@@ -216,6 +229,8 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             x360_dev_addr = dev_addr;
             xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
+            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+            usb_host_devices[total_usb_host_devices].inst = instance;
             total_usb_host_devices++;
             if (consoleType == XBOX360) {
                 foundXB = true;
@@ -226,6 +241,8 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         type.console_type = XBOXONE;
         xone_controller_connected(dev_addr);
         usb_host_devices[total_usb_host_devices].type = type;
+            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+            usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
         if (consoleType == XBOXONE) {
             foundXB = true;
@@ -243,16 +260,26 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 }
             }
             usb_host_devices[total_usb_host_devices].type = type;
+            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+            usb_host_devices[total_usb_host_devices].inst = instance;
             total_usb_host_devices++;
             if (type.console_type == PS3) {
                 printf("Found PS3 controller\r\n");
                 printf("Sub type: %d\r\n", type.sub_type);
                 ps3_controller_connected(dev_addr, host_vid, host_pid);
             }
+        } else {
+            usb_host_devices[total_usb_host_devices].type = type;
+            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+            usb_host_devices[total_usb_host_devices].inst = instance;
+            total_usb_host_devices++;
+            printf("Found Generic controller\r\n");
         }
     } else if (controllerType == PS4) {
         type.console_type = PS4;
         usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
         if (!ps4_dev_addr) {
             ps4_dev_addr = dev_addr;

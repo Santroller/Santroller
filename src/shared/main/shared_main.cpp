@@ -111,6 +111,7 @@ USB_LastReport_Data_t temp_report_usb_host;
 USB_LastReport_Data_t temp_report_usb_host_xb1;
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
+USB_Host_Data_t last_usb_host_data;
 #endif
 uint8_t rawWt;
 uint8_t rawWtPeripheral;
@@ -2119,7 +2120,7 @@ void set_console_type(uint8_t new_console_type) {
 }
 #if USB_HOST_STACK
 USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
-    USB_Device_Type_t type = {0, GAMEPAD};
+    USB_Device_Type_t type = {UNIVERSAL, GAMEPAD};
     switch (vid) {
         case SONY_VID:
             switch (pid) {

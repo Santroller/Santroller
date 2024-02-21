@@ -185,6 +185,6 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
     6. Bind D+
     7. Hit Save
     8. If you plug in a supported controller, the tool should detect it and tell you what it is.
-    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`. 
+    9. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
     </details>

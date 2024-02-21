@@ -20,7 +20,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
     - For GH, the velocity data is used for accents and ghosts. These award extra points when you hit them with the right velocity, but that is entirely optional.
     - If you skip the multiplexer, follow the digital instructions instead of the analog ones
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
-  - The CD4051B and CD4067B aren't recommended as these parts don't seem to work very well.
+  - The CD4051B/CD4051BE and CD4067B aren't recommended as these parts don't seem to work very well.
 - 1MOhm resistor per drum / cymbal pad
 - Some Wire
 - Soldering Iron

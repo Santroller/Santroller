@@ -182,11 +182,11 @@ typedef struct {
 } __attribute__((packed)) USB_6KRO_Data_t;
 
 typedef union {
-    #ifdef TICK_SIXKRO
+#ifdef TICK_SIXKRO
     USB_6KRO_Data_t keyboard;
-    #else
+#else
     USB_NKRO_Data_t keyboard;
-    #endif
+#endif
     USB_MIDI_Data_t midi;
     uint8_t raw[64];
     USB_Mouse_Data_t mouse;
@@ -287,7 +287,27 @@ typedef struct {
     uint16_t accelZ;
     uint16_t accelY;
     uint16_t gyro;
-    uint16_t genericButtons;
+    union {
+        struct {
+            uint16_t genericButton1 : 1;
+            uint16_t genericButton2 : 1;
+            uint16_t genericButton3 : 1;
+            uint16_t genericButton4 : 1;
+            uint16_t genericButton5 : 1;
+            uint16_t genericButton6 : 1;
+            uint16_t genericButton7 : 1;
+            uint16_t genericButton8 : 1;
+            uint16_t genericButton9 : 1;
+            uint16_t genericButton10 : 1;
+            uint16_t genericButton11 : 1;
+            uint16_t genericButton12 : 1;
+            uint16_t genericButton13 : 1;
+            uint16_t genericButton14 : 1;
+            uint16_t genericButton15 : 1;
+            uint16_t genericButton16 : 1;
+        };
+        uint16_t genericButtons;
+    };
     uint16_t genericX;
     uint16_t genericY;
     uint16_t genericZ;

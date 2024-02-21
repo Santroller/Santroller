@@ -288,4 +288,11 @@ typedef struct {
     uint16_t accelY;
     uint16_t gyro;
     uint16_t genericButtons;
+    uint16_t genericX;
+    uint16_t genericY;
+    uint16_t genericZ;
+    uint16_t genericRX;
+    uint16_t genericRY;
+    uint16_t genericRZ;
+    uint16_t genericSlider;
 } __attribute__((packed)) USB_Host_Data_t;

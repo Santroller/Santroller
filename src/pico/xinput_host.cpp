@@ -140,19 +140,7 @@ static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportDat
     return USB_GetHIDReportItemInfo(ReportItem->ReportID, ReportData, ReportItem);
 }
 
-int16_t GetAxis(HID_ReportItem_t *item) {
-    uint8_t size = item->Attributes.BitSize;
-    // Shift uint to int
-    uint32_t val = item->Value;
-    if (size > 16) {
-        val >>= size-16;
-    } else if (size < 16) {
-        val <<= 16-size;
-    }
-    return val - INT16_MAX;
-}
-
-uint16_t GetTrigger(HID_ReportItem_t *item) {
+uint16_t GetAxis(HID_ReportItem_t *item) {
     uint8_t size = item->Attributes.BitSize;
     // Shift uint to int
     uint32_t val = item->Value;
@@ -175,22 +163,25 @@ void fill_generic_report(uint8_t dev_addr, uint8_t instance, const uint8_t *repo
                     case HID_USAGE_PAGE_DESKTOP:
                         switch (item->Attributes.Usage.Usage) {
                             case HID_USAGE_DESKTOP_X:
-                                out->leftStickX = GetAxis(item);
+                                out->genericX = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_Y:
-                                out->leftStickY = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RX:
-                                out->rightStickX = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RY:
-                                out->rightStickY = GetAxis(item);
+                                out->genericY = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_Z:
-                                out->leftTrigger = GetTrigger(item);
+                                out->genericZ = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RX:
+                                out->genericRX = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RY:
+                                out->genericRY = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_RZ:
-                                out->rightTrigger = GetTrigger(item);
+                                out->genericRZ = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_SLIDER:
+                                out->genericSlider = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_HAT_SWITCH:
                                 out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;

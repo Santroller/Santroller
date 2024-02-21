@@ -115,22 +115,22 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x09, 0x30,  //   Usage (X)
 #endif
 #if HID_AXIS_COUNT >= 2
-    0x09, 0x31,  //   Usage (X)
+    0x09, 0x31,  //   Usage (Y)
 #endif
 #if HID_AXIS_COUNT >= 3
-    0x09, 0x32,  //   Usage (X)
+    0x09, 0x32,  //   Usage (Z)
 #endif
 #if HID_AXIS_COUNT >= 4
-    0x09, 0x33,  //   Usage (X)
+    0x09, 0x33,  //   Usage (RX)
 #endif
 #if HID_AXIS_COUNT >= 5
-    0x09, 0x34,  //   Usage (X)
+    0x09, 0x34,  //   Usage (RY)
 #endif
 #if HID_AXIS_COUNT >= 6
-    0x09, 0x35,  //   Usage (X)
+    0x09, 0x35,  //   Usage (RZ)
 #endif
 #if HID_AXIS_COUNT >= 7
-    0x09, 0x36,  //   Usage (X)
+    0x09, 0x36,  //   Usage (Slider)
 #endif
     0x75, 0x08,            //   Report Size (8)
     0x95, HID_AXIS_COUNT,  //   Report Count (4)

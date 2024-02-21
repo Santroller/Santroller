@@ -115,13 +115,13 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         bInterfaceProtocol : 0x03,
         iInterface : 0
     },
-    UnkownDescriptor2 : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_EXTRA_1, 0x40, 0x01, XINPUT_EXTRA_2,
-                         0x20, 0x16, XINPUT_EXTRA_3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
-                         XINPUT_EXTRA_4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+    UnkownDescriptor2 : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_MIC_IN, 0x40, 0x01, XINPUT_AUDIO_OUT,
+                         0x20, 0x16, XINPUT_UNK_IN, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
+                         XINPUT_UNK_OUT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     ReportINEndpoint21 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_EXTRA_1,
+        bEndpointAddress : XINPUT_MIC_IN,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 2,
@@ -129,7 +129,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     ReportOUTEndpoint22 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_EXTRA_2,
+        bEndpointAddress : XINPUT_AUDIO_OUT,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 4,
@@ -137,7 +137,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     ReportINEndpoint23 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_EXTRA_3,
+        bEndpointAddress : XINPUT_UNK_IN,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 0x40,
@@ -145,7 +145,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     ReportOUTEndpoint24 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_EXTRA_4,
+        bEndpointAddress : XINPUT_UNK_OUT,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 0x10,
@@ -162,11 +162,11 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         iInterface : 0
     },
     UnkownDescriptor3 : {
-        0x09, 0x21, 0x00, 0x01, 0x01, 0x22, XINPUT_EXTRA_5, 0x07, 0x00},
+        0x09, 0x21, 0x00, 0x01, 0x01, 0x22, XINPUT_UNK_2_IN, 0x07, 0x00},
     ReportINEndpoint31 : {
         bLength : sizeof(XBOX360ConfigurationDescriptor.ReportINEndpoint31),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_EXTRA_5,
+        bEndpointAddress : XINPUT_UNK_2_IN,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x20,
         bInterval : 16,

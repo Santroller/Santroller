@@ -13,7 +13,9 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
     {% include sections/microcontrollers.md %}
 
-- A 4051 or 4067 based analog multiplexer (Only necesssary for the Pi Pico, as other microcontrollers will have enough analog pins for a drum kit)
+- A 4051 or 4067 based analog multiplexer
+  - Only necessary for the Pi Pico, and only if you want your pads to respond with proper velocity, like a RB2 kit.
+  - You can otherwise opt to wire the pads to digital pins, and your kit will function like a RB1 kit.
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
 - 1MOhm resistor per drum / cymbal pad
 - Some Wire
@@ -67,11 +69,22 @@ To keep the relevant information in this guide easy to find, information is sort
 </details>
 
 <details>
-    <summary>Drum / Cymbal pads</summary>
+    <summary>Drum / Cymbal pads (Analog)</summary>
 
 1. Disconnect the piezos from the main drum PCB.
 2. Solder the black wire from the piezo to ground.
 3. Solder the red wire to an analog input on the multiplexer for the Pi Pico, or to an analog pin on your micocontroller if your microcontroller has enough analog pins.
+4. Solder a 1Mohm resistor between the red and black wires on the piezo.
+
+</details>
+
+
+<details>
+    <summary>Drum / Cymbal pads (Digital)</summary>
+
+1. Disconnect the piezos from the main drum PCB.
+2. Solder the black wire from the piezo to ground.
+3. Solder the red wire to a digital pin on your microcontroller
 4. Solder a 1Mohm resistor between the red and black wires on the piezo.
 
 </details>

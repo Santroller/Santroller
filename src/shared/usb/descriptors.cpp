@@ -618,6 +618,16 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x86:
             return transfer_with_usb_controller(get_device_address_for(XBOX360), requestType, request, wValue, wIndex, wLength, requestBuffer);
     }
+#else
+    switch (request) {
+        case 0x81:
+        case 0x82:
+        case 0x87:
+        case 0x84:
+        case 0x83:
+        case 0x86:
+            return 0;
+    }
 #endif
     // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
     // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.

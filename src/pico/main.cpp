@@ -127,6 +127,12 @@ void tick_bluetooth(const void *buf, uint8_t len) {
 #endif
 #if BLUETOOTH
 void loop1() {
+    if (consoleType == XBOX360 && !foundXB && XINPUT_AUTH) {
+        return;
+    } 
+    if (consoleType == XBOXONE && !foundXB) {
+        return;
+    }
     tud_task();
 }
 #endif
@@ -234,6 +240,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             total_usb_host_devices++;
             if (consoleType == XBOX360) {
                 foundXB = true;
+                printf("found xb\r\n");
             }
         }
     } else if (controllerType == XBOXONE) {

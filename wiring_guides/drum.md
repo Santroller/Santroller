@@ -14,8 +14,11 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
     {% include sections/microcontrollers.md %}
 
 - A 4051 or 4067 based analog multiplexer
-  - Only necessary for the Pi Pico, and only if you want your pads to respond with proper velocity, like a RB2 kit.
-  - You can otherwise opt to wire the pads to digital pins, and your kit will function like a RB1 kit.
+  - Only necessary for the Pi Pico, other microcontrollers have enough analog pins
+  - Entirley optional, certain game features won't work with digital drums
+    - For Rock Band, the velocity data is only used for freestyle drums. 
+    - For GH, the velocity data is used for accents and ghosts. These award extra points when you hit them with the right velocity, but that is entirely optional.
+    - If you skip the multiplexer, follow the digital instructions instead of the analog ones
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
 - 1MOhm resistor per drum / cymbal pad
 - Some Wire
@@ -166,13 +169,22 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
     </details>
 
     <details>
+      <summary>Drum / Cymbal pads / GH Pedal (Direct digital)</summary>
+
+    1. Click on the drum pad in question
+    2. Set the input type to `Digital Pin Input`
+    3. Click on `Find Pin` and then hit the drum pad in question, it should detect the drum that was just hit.
+
+    </details>
+
+    <details>
       <summary>USB Host (Pi Pico Only)</summary>
 
-    1. Click on Add setting
-    2. Find and add `USB Host inputs`
-    3. Bind D+
-    4. Hit Save
-    5. If you plug in a supported controller, the tool should detect it and tell you what it is.
+    4. Click on Add setting
+    5. Find and add `USB Host inputs`
+    6. Bind D+
+    7. Hit Save
+    8. If you plug in a supported controller, the tool should detect it and tell you what it is.
     6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`. 
 
     </details>

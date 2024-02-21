@@ -217,6 +217,7 @@ typedef struct {
         PS3_REPORT ps3;
         XINPUT_REPORT xinput;
         XBOX_ONE_REPORT xone;
+        USB_Host_Data_t host;
         uint8_t data[64];
     } lastControllerReport;
 #endif

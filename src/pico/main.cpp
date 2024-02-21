@@ -196,12 +196,12 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
     if (usb_host_devices[id].type.console_type == UNIVERSAL) {
         USB_Host_Data_t* host = (USB_Host_Data_t*)buf;
+        fill_generic_report(usb_host_devices[id].dev_addr, usb_host_devices[id].inst, (uint8_t*)&usb_host_devices[id].report, host);
 
-        // for (int i = 0; i < usb_host_devices[id].report_length; i++) {
+        // for (int i = 20; i < sizeof(USB_Host_Data_t); i++) {
         //     printf("%02x, ", buf[i]);
         // }
         // printf("\r\n");
-        fill_generic_report(usb_host_devices[id].dev_addr, usb_host_devices[id].inst, (uint8_t*)&usb_host_devices[id].report, host);
         return;
     }
     memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);

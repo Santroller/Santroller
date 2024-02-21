@@ -142,7 +142,6 @@ static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportDat
 
 uint16_t GetAxis(HID_ReportItem_t *item) {
     uint8_t size = item->Attributes.BitSize;
-    // Shift uint to int
     uint32_t val = item->Value;
     if (size > 16) {
         val >>= size-16;
@@ -341,7 +340,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         reportID = INVALID_REPORT_ID;
         USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
         // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
-        // TODO: if at some point we want to support hid controllers, we can parse out the report more here, and actually work out a mapping
         while (len) {
             // Size is first two bits
             uint8_t size = (current[0] & 0b11) + 1;

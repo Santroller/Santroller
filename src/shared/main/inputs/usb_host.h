@@ -45,24 +45,13 @@ for (int i = 0; i < device_count; i++) {
     switch (console_type) {
         case UNIVERSAL: {
             USB_Host_Data_t *report = (USB_Host_Data_t *)data;
-            if (report->leftStickX) {
-                usb_host_data.leftStickX = report->leftStickX;
-            }
-            if (report->leftStickY) {
-                usb_host_data.leftStickY = report->leftStickY;
-            }
-            if (report->rightStickX) {
-                usb_host_data.rightStickX = report->rightStickX;
-            }
-            if (report->rightStickY) {
-                usb_host_data.rightStickY = report->rightStickY;
-            }
-            if (report->leftTrigger) {
-                usb_host_data.leftTrigger = report->leftTrigger;
-            }
-            if (report->rightTrigger) {
-                usb_host_data.rightTrigger = report->rightTrigger;
-            }
+            usb_host_data.genericX = report->genericX;
+            usb_host_data.genericY = report->genericY;
+            usb_host_data.genericX = report->genericX;
+            usb_host_data.genericRX = report->genericRX;
+            usb_host_data.genericRY = report->genericRY;
+            usb_host_data.genericRX = report->genericRX;
+            usb_host_data.genericSlider = report->genericSlider;
             usb_host_data.dpadLeft |= report->dpadLeft;
             usb_host_data.dpadRight |= report->dpadRight;
             usb_host_data.dpadUp |= report->dpadUp;

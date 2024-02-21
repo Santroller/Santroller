@@ -11,6 +11,7 @@ sort: 2
 ### Supplies
 
 - A microcontroller
+
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
     {% include sections/microcontrollers.md %}
 
@@ -30,7 +31,7 @@ sort: 2
   - USB Host
     - Pi Pico
     - One of the following
-      - A USB female breakout 
+      - A USB female breakout
       - A USB extension cable
       - A controller with a cable already attached that you are willing to cut
 
@@ -111,11 +112,17 @@ The world tour slider bar originally used a single wire to connect between the b
 <details>
     <summary>GH5 guitar neck (Standard)</summary>
 
-1. Hook up V<sub>CC</sub> (marked as V or V<sub>CC</sub>) and GND (marked as GND or G), and then hook up the SCL (marked as CLK or C) and SDA (marked as Data or D) pins to your microcontroller.
-   - For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
-   - For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
-   - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
-   - For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
+1. Hook up V<sub>CC</sub> (marked as V or V<sub>CC</sub>) and GND (marked as GND or G) to the microcontroller
+2. Hook up SDA (Marked as D) and SCL (marked as C) to the microcontroller
+
+   | Microcontroller               | SDA (D)                          | SCL (C)                          |
+   | ----------------------------- | -------------------------------- | -------------------------------- |
+   | Pi Pico (Recommended)         | GP18                             | GP19                             |
+   | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
+   | Uno                           | A4                               | A5                               |
+   | Mega                          | 20                               | 21                               |
+   | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+   | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 
 </details>
 
@@ -125,10 +132,16 @@ The world tour slider bar originally used a single wire to connect between the b
 [![crazy guitar](/assets/images/crazy-guitar.png)](/assets/images/crazy-guitar.png)
 
 1. Hook up V<sub>CC</sub>, GND, SCL and SDA pins to your microcontroller. Note that this is one of the few I2C devices that works perfectly fine on 5v.
-   - For a Pi Pico, you should choose pins using the tool, as you can choose but only specific pin combinations work.
-   - For an Arduino Pro Micro, Leonardo or Micro, the SDA pin is pin 2 and the SCL pin is pin 3.
-   - For an Arduino Uno, pin A4 is SDA and A5 is SCL. Note that on newer arduinos, these pins are also available at the top of the board and are labeled SDA and SCL, but note that these are the same pins, so you can use either.
-   - For an Arduino Mega, pin 20 is SDA and pin 21 is SCL.
+2. Hook up SDA (Marked as D) and SCL (marked as C) to the microcontroller
+
+   | Microcontroller               | SDA (D)                          | SCL (C)                          |
+   | ----------------------------- | -------------------------------- | -------------------------------- |
+   | Pi Pico (Recommended)         | GP18                             | GP19                             |
+   | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
+   | Uno                           | A4                               | A5                               |
+   | Mega                          | 20                               | 21                               |
+   | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+   | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
    </details>
 
 <details>
@@ -139,9 +152,16 @@ The world tour slider bar originally used a single wire to connect between the b
 </details>
 
 <details>
-    <summary>GH5 / Crazy guitar frets (Peripheral, lower latency)</summary>
+    <summary>Peripheral (Low Latency Frets with 4 pins)</summary>
 
-1. If you wish to bypass the neck connector for your frets, but still want to keep a neck connector, you can opt to put a second peripheral pico in the neck. This allows you to poll the pins at direct speeds, but use the same pins the original neck used. For this, you wire SDA and SCL from the slider PCB to a second pico, along with hooking up ground from the slider PCB to the peripheral picos ground and V to the VSYS pin on the peripheral pico.
+1. In some cases, you may want to poll frets directly, but you still wish to use a neck connector that does not have enough pins to connect the frets. You can get around this by putting a second Pi Pico in the neck.
+2. Choose some SDA and SCL pins on each Pico, and connect them by these pins.
+
+   | Microcontroller               | SDA                              | SCL                              |
+   | ----------------------------- | -------------------------------- | -------------------------------- |
+   | Pi Pico (Recommended)         | GP18                             | GP19                             |
+   | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+   | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 </details>
 
 <details>
@@ -297,6 +317,15 @@ If you intend to use the peripheral features, it is recommended to program the p
     </details>
 
     <details>
+      <summary>Peripheral</summary>
+
+    1. Click on `Peripheral Settings`
+    2. Enable the Peripheral
+    3. Set the SDA and SCL pins on the main PCB that are being connected to the peripheral.
+    4. Hit save
+    </details>
+
+    <details>
       <summary>World Tour Slider Bar (Peripheral)</summary>
 
     1. Click on `Peripheral Settings`
@@ -351,7 +380,7 @@ If you intend to use the peripheral features, it is recommended to program the p
     3. Bind D+
     4. Hit Save
     5. If you plug in a supported controller, the tool should detect it and tell you what it is.
-    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`. 
+    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
     </details>
 

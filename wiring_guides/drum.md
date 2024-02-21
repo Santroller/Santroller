@@ -14,7 +14,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
     {% include sections/microcontrollers.md %}
 
 - A 4051 or 4067 based analog multiplexer (Only necesssary for the Pi Pico, as other microcontrollers will have enough analog pins for a drum kit)
-  - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better
+  - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
 - 1MOhm resistor per drum / cymbal pad
 - Some Wire
 - Soldering Iron

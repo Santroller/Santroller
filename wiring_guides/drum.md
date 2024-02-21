@@ -16,7 +16,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 - A 4051 or 4067 based analog multiplexer
   - Only necessary for the Pi Pico, other microcontrollers have enough analog pins
   - Entirley optional, certain game features won't work with digital drums
-    - For Rock Band, the velocity data is only used for freestyle drums. 
+    - For Rock Band, the velocity data is only used for freestyle drums.
     - For GH, the velocity data is used for accents and ghosts. These award extra points when you hit them with the right velocity, but that is entirely optional.
     - If you skip the multiplexer, follow the digital instructions instead of the analog ones
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
@@ -34,7 +34,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
   - USB Host
     - Pi Pico
     - One of the following
-      - A USB female breakout 
+      - A USB female breakout
       - A USB extension cable
       - A controller with a cable already attached that you are willing to cut
 
@@ -43,6 +43,7 @@ Close the tool if you want to use your drum kit, the multiplexer is overridden b
 ```
 
 ## Wiring Steps
+
 {% include sections/getting_started.md %}
 
 To keep the relevant information in this guide easy to find, information is sorted by function.
@@ -80,7 +81,6 @@ To keep the relevant information in this guide easy to find, information is sort
 4. Solder a 1Mohm resistor between the red and black wires on the piezo.
 
 </details>
-
 
 <details>
     <summary>Drum / Cymbal pads (Digital)</summary>
@@ -180,11 +180,11 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
     <details>
       <summary>USB Host (Pi Pico Only)</summary>
 
-    4. Click on Add setting
-    5. Find and add `USB Host inputs`
-    6. Bind D+
-    7. Hit Save
-    8. If you plug in a supported controller, the tool should detect it and tell you what it is.
-    9. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
+    1. Click on Add setting
+    2. Find and add `USB Host inputs`
+    3. Bind D+
+    4. Hit Save
+    5. If you plug in a supported controller, the tool should detect it and tell you what it is.
+    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
     </details>

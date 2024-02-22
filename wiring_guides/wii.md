@@ -2,7 +2,7 @@
 sort: 5
 ---
 
-# Building an Adaptor for a Wii Controller
+# Setting up an Adaptor for a Wii Controller
 
 ## Supplies
 

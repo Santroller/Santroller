@@ -41,7 +41,7 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
     [![pinout](/assets/images/wii.png)](/assets/images/wii.png) [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
 
     ```danger
-    If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as V<sub>CC</sub> before, you just can't rely on the colours at all unfortunately.
+    If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as 3.3V before, you just can't rely on the colours at all unfortunately.
     ```
 
     | Microcontroller               | SDA                              | SCL                              |

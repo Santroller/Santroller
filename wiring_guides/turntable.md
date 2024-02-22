@@ -2,7 +2,7 @@
 sort: 4
 ---
 
-# Settin up a Turntable
+# Setting up a Turntable
 
 ## Wiring
 

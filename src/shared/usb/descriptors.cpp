@@ -62,7 +62,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
             (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500)
     },
-    Interface1 : {
+    InterfaceGamepad : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
         bInterfaceNumber : INTERFACE_ID_Device,
@@ -73,7 +73,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         bInterfaceProtocol : 0x01,
         iInterface : NO_DESCRIPTOR
     },
-    Interface1ID : {
+    GamepadDescriptor : {
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
         flags : XINPUT_FLAGS,
@@ -104,73 +104,73 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         bInterval : 1,
     },
 
-    Interface2 : {
+    InterfaceAudio : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
         bInterfaceNumber : INTERFACE_ID_Padding,
         bAlternateSetting : 0x00,
-        bNumEndpoints : 4,
+        bNumEndpoints : 0,
         bInterfaceClass : 0xFF,
         bInterfaceSubClass : 0x5D,
         bInterfaceProtocol : 0x03,
         iInterface : 0
     },
-    UnkownDescriptor2 : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_MIC_IN, 0x40, 0x01, XINPUT_AUDIO_OUT,
+    AudioDescriptor : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_MIC_IN, 0x40, 0x01, XINPUT_AUDIO_OUT,
                          0x20, 0x16, XINPUT_UNK_IN, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
                          XINPUT_UNK_OUT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    ReportINEndpoint21 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_MIC_IN,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 2,
-    },
-    ReportOUTEndpoint22 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_AUDIO_OUT,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 4,
-    },
-    ReportINEndpoint23 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_UNK_IN,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 0x40,
-    },
-    ReportOUTEndpoint24 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_UNK_OUT,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 0x10,
-    },
-    Interface3 : {
+    // ReportINEndpoint21 : {
+    //     bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+    //     bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+    //     bEndpointAddress : XINPUT_MIC_IN,
+    //     bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    //     wMaxPacketSize : 0x20,
+    //     bInterval : 2,
+    // },
+    // ReportOUTEndpoint22 : {
+    //     bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+    //     bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+    //     bEndpointAddress : XINPUT_AUDIO_OUT,
+    //     bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    //     wMaxPacketSize : 0x20,
+    //     bInterval : 4,
+    // },
+    // ReportINEndpoint23 : {
+    //     bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+    //     bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+    //     bEndpointAddress : XINPUT_UNK_IN,
+    //     bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    //     wMaxPacketSize : 0x20,
+    //     bInterval : 0x40,
+    // },
+    // ReportOUTEndpoint24 : {
+    //     bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+    //     bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+    //     bEndpointAddress : XINPUT_UNK_OUT,
+    //     bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    //     wMaxPacketSize : 0x20,
+    //     bInterval : 0x10,
+    // },
+    InterfacePluginModule : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
         bInterfaceNumber : INTERFACE_ID_Config,
         bAlternateSetting : 0x00,
-        bNumEndpoints : 1,
+        bNumEndpoints : 0,
         bInterfaceClass : 0xFF,
         bInterfaceSubClass : 0x5D,
         bInterfaceProtocol : 0x02,
         iInterface : 0
     },
-    UnkownDescriptor3 : {
+    PluginModuleDescriptor : {
         0x09, 0x21, 0x00, 0x01, 0x01, 0x22, XINPUT_UNK_2_IN, 0x07, 0x00},
-    ReportINEndpoint31 : {
-        bLength : sizeof(XBOX360ConfigurationDescriptor.ReportINEndpoint31),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_UNK_2_IN,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 16,
-    },
+    // ReportINEndpoint31 : {
+    //     bLength : sizeof(XBOX360ConfigurationDescriptor.ReportINEndpoint31),
+    //     bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+    //     bEndpointAddress : XINPUT_UNK_2_IN,
+    //     bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+    //     wMaxPacketSize : 0x20,
+    //     bInterval : 16,
+    // },
     InterfaceSecurity : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
@@ -182,7 +182,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         bInterfaceProtocol : 0x13,
         iInterface : 4
     },
-    UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
+    SecurityDescriptor : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
 #endif
 
@@ -273,7 +273,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bInterfaceProtocol : 0x13,
         iInterface : 4
     },
-    UnkownDescriptor4 : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
+    SecurityDescriptor : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
 
 const PROGMEM XBOX_ONE_CONFIGURATION_DESCRIPTOR XBOXOneConfigurationDescriptor = {

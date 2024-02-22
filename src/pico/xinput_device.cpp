@@ -228,7 +228,6 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 
         if (ep_addr == p_xinput->ep_out || ep_addr == p_xinput->ep_in) break;
     }
-
     if (ep_addr == p_xinput->ep_out) {
         hid_set_report(p_xinput->epout_buf, xferred_bytes, 0x00, INTERRUPT_ID);
         if (consoleType == XBOX360 || consoleType == WINDOWS) {

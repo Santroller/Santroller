@@ -25,7 +25,15 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 4. Wire the euphoeria button
    1. Connect V to V<sub>CC</sub> on your microcontroller.
    3. Connect V0 to ground on your microcontroller.
-   3. Connect AT to a pin that supports analog outputs on your microcontroller. Use the configuration tool to figure this out, as it will only allow you to select a supported pin.
+   3. Connect AT to one of the following pins
+
+      | Microcontroller            | Analog Output Pins     |
+      | -------------------------- | ---------------------- |
+      | Pi Pico (Recommended)      | Any                    |
+      | Pro Micro, Leonardo, Micro | 3, 5, 6, 9, 10, 11, 13 |
+      | Uno                        | 3, 5, 6, 9, 10         |
+      | Mega                       | 2 - 13, 44 - 46        |
+
 5. Wire up the Crossfader / Turntable connection board.
 
    1. There is a three wire ribbon cable going to this board, and this is for the Crossfader. This is also a potentiometer, so the middle pin needs to go to an analog pin on your microcontroller, and one of the outer pins needs to go to V<sub>CC</sub>, and the other goes to ground.

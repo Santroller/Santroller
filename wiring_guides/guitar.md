@@ -89,6 +89,14 @@ If you are working on a controller with only "2" pins as shown below, you will n
 </details>
 
 <details>
+    <summary>Analog Tilt</summary>
+
+1. Connect GND to GND
+2. Connect V<sub>CC</sub> to V<sub>CC</sub>
+3. Connect the signal pin to an analog pin on your microcontroller
+</details>
+
+<details>
     <summary>World tour slider bar (Pi Pico only)</summary>
 
 The world tour slider bar originally used a single wire to connect between the bar and the main PCB. This caused a lot of problems, as the format of data being sent over this wire is not optimal for speed, and it limits the combinations of frets we can read from the slider bar. To combat this, we bypass the chip generating this data, and opt to build it outselves from the raw slider pads. This does use more pins though, so you may find that it is difficult to reuse the original neck connector. If you have problems doing this, you can use the [peripheral feature](https://santroller.tangentmc.net/wiring_guides/peripheral.html) to put a second Pi Pico in the neck, which will allow for putting all neck inputs over a couple of wires, saving pins.

@@ -2,7 +2,7 @@
 sort: 6
 ---
 
-# Building an Adaptor for a PS2 Controller
+# Setting up an Adaptor for a PS2 Controller
 
 ## Supplies
 

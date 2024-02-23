@@ -36,13 +36,13 @@ typedef struct {
     USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
     USB_INTERFACE_DESCRIPTOR InterfaceAudio;
     uint8_t AudioDescriptor[0x1B];
-    // USB_ENDPOINT_DESCRIPTOR ReportINEndpoint21;
-    // USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint22;
-    // USB_ENDPOINT_DESCRIPTOR ReportINEndpoint23;
-    // USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint24;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint21;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint22;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint23;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint24;
     USB_INTERFACE_DESCRIPTOR InterfacePluginModule;
     uint8_t PluginModuleDescriptor[0x09];
-    // USB_ENDPOINT_DESCRIPTOR ReportINEndpoint31;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint31;
     USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
     uint8_t SecurityDescriptor[0x06];
 } __attribute__((packed)) XBOX_360_CONFIGURATION_DESCRIPTOR;

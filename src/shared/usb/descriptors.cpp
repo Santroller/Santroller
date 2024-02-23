@@ -116,8 +116,8 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         iInterface : 0
     },
     AudioDescriptor : {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, XINPUT_MIC_IN, 0x40, 0x01, XINPUT_AUDIO_OUT,
-                         0x20, 0x16, XINPUT_UNK_IN, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
-                         XINPUT_UNK_OUT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                       0x20, 0x16, XINPUT_UNK_IN, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
+                       XINPUT_UNK_OUT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     ReportINEndpoint21 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
@@ -493,6 +493,9 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             handle_auth_led();
         }
     }
+// Doing this actually *breaks* xb360 on pro micros.
+// But its necessary on the pico :/
+#if SUPPORTS_PICO
     switch (request) {
         case 0x81:
         case 0x82:
@@ -502,6 +505,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
         case 0x86:
             return true;
     }
+#endif
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         switch (request) {
             case HID_REQUEST_SET_PROTOCOL:

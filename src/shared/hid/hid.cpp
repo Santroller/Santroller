@@ -449,7 +449,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         } else if (id == XBOX_RUMBLE_ID) {
             data_hid[1] = SANTROLLER_LED_ID;
             data_hid[2] = data[3];
-            data_hid[4] = data[2];
+            data_hid[3] = data[4];
             bt_set_report(data_hid, 8, reportType, report_id);
         }
     } else {
@@ -460,7 +460,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #ifdef INPUT_USB_HOST
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
-    if (consoleType == XBOXONE) {
+    if ((consoleType == XBOXONE) && report_id != BLUETOOTH_REPORT) {
         if (xbox_one_state == WaitingDesc1) {
             xbox_one_state = IdentDesc1;
         } else if (xbox_one_state == WaitingDesc) {
@@ -499,7 +499,8 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         }
     } else
 #endif
-        if (consoleType == XBOX360 || consoleType == WINDOWS) {
+// Bt reports are ALWAYS hid even if USB is in xinput mode
+        if ((consoleType == XBOX360 || consoleType == WINDOWS) && report_id != BLUETOOTH_REPORT) {
         if (id == XBOX_LED_ID) {
             uint8_t led = data[2];
             uint8_t player = xbox_players[led];

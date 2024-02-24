@@ -320,6 +320,23 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
             handle_player_leds(i + 1);
         }
     }
+    #if defined(INPUT_USB_HOST) && DEVICE_TYPE == GAMEPAD
+    USB_Device_Type_t type;
+    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+        type = get_usb_host_device_type(i);
+        if (type.sub_type != GAMEPAD) continue;
+        switch (type.console_type) {
+            case PS4: {
+                ps4_output_report *report = &ps4_output_reports[i];
+                report->lightbar_green = green;
+                report->lightbar_red = red;
+                report->lightbar_blue = blue;
+                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
+                return;
+            }
+        }
+    }
+    #endif
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     // printf("%d %d\r\n", rumble_left, rumble_right);

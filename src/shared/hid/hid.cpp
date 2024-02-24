@@ -320,23 +320,6 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
             handle_player_leds(i + 1);
         }
     }
-    #if defined(INPUT_USB_HOST) && DEVICE_TYPE == GAMEPAD
-    USB_Device_Type_t type;
-    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
-        type = get_usb_host_device_type(i);
-        if (type.sub_type != GAMEPAD) continue;
-        switch (type.console_type) {
-            case PS4: {
-                ps4_output_report *report = &ps4_output_reports[i];
-                report->lightbar_green = green;
-                report->lightbar_red = red;
-                report->lightbar_blue = blue;
-                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
-                return;
-            }
-        }
-    }
-    #endif
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     // printf("%d %d\r\n", rumble_left, rumble_right);
@@ -364,7 +347,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                 ps4_output_report *report = &ps4_output_reports[i];
                 report->motor_left = rumble_left;
                 report->motor_right = rumble_right;
-                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report);
+                send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(ps4_output_report));
                 return;
             }
             case XBOX360: {
@@ -533,6 +516,16 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             ps4_output_report *report = (ps4_output_report *)data;
             handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
             handle_rumble(report->motor_left, report->motor_right);
+
+            #if defined(INPUT_USB_HOST) && DEVICE_TYPE == GAMEPAD
+            USB_Device_Type_t type;
+            for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+                type = get_usb_host_device_type(i);
+                if (type.sub_type != GAMEPAD || type.console_type != PS4) continue;
+                send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(ps4_output_report));
+                return;
+            }
+            #endif
         }
 #if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE == STAGE_KIT
         else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {

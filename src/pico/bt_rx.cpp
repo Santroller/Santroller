@@ -56,6 +56,8 @@ static hid_protocol_mode_t protocol_mode = HID_PROTOCOL_MODE_REPORT;
 
 // SDP
 static uint8_t hid_descriptor_storage[500];
+static uint8_t send_report_buf[64];
+static uint8_t send_report_len = 0;
 
 // used to implement connection timeout and reconnect timer
 static btstack_timer_source_t connection_timer;
@@ -94,10 +96,19 @@ int get_bt_address(uint8_t *addr) {
 }
 
 void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
-    hids_client_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, data, len);
+    hids_client_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, send_report_buf, send_report_len);
+    memcpy(send_report_buf, data, len);
+    send_report_len = len;
 }
 
 bool check_bluetooth_ready() {
+#if DEVICE_TYPE == STAGE_KIT
+    if (app_state == READY) {
+        if (send_report_len) {
+            hids_client_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, send_report_buf, send_report_len);
+        }
+    }
+#endif
     return app_state == READY;
 }
 

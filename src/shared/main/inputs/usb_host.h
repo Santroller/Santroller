@@ -447,48 +447,6 @@ for (int i = 0; i < device_count; i++) {
         }
         case XBOX360: {
             switch (device_type.sub_type) {
-                case XINPUT_GAMEPAD: {
-                    XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)data;
-                    usb_host_data.green |= report->a;
-                    usb_host_data.red |= report->b;
-                    usb_host_data.yellow |= report->y;
-                    usb_host_data.blue |= report->x;
-                    usb_host_data.orange |= report->leftShoulder;
-                    usb_host_data.a |= report->a;
-                    usb_host_data.b |= report->b;
-                    usb_host_data.x |= report->x;
-                    usb_host_data.y |= report->y;
-                    usb_host_data.leftShoulder |= report->leftShoulder;
-                    usb_host_data.rightShoulder |= report->rightShoulder;
-                    usb_host_data.back |= report->back;
-                    usb_host_data.start |= report->start;
-                    usb_host_data.guide |= report->guide;
-                    usb_host_data.leftThumbClick |= report->leftThumbClick;
-                    usb_host_data.rightThumbClick |= report->rightThumbClick;
-                    usb_host_data.dpadLeft = report->dpadLeft;
-                    usb_host_data.dpadRight = report->dpadRight;
-                    usb_host_data.dpadUp = report->dpadUp;
-                    usb_host_data.dpadDown = report->dpadDown;
-                    if (report->leftTrigger) {
-                        usb_host_data.leftTrigger = report->leftTrigger << 8;
-                    }
-                    if (report->rightTrigger) {
-                        usb_host_data.rightTrigger = report->rightTrigger << 8;
-                    }
-                    if (report->leftStickX) {
-                        usb_host_data.leftStickX = report->leftStickX;
-                    }
-                    if (report->leftStickY) {
-                        usb_host_data.leftStickY = report->leftStickY;
-                    }
-                    if (report->rightStickX) {
-                        usb_host_data.rightStickX = report->rightStickX;
-                    }
-                    if (report->rightStickY) {
-                        usb_host_data.rightStickY = report->rightStickY;
-                    }
-                    break;
-                }
                 case XINPUT_GUITAR: {
                     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)data;
                     usb_host_data.a |= report->a;
@@ -721,6 +679,49 @@ for (int i = 0; i < device_count; i++) {
                     }
                     if (report->rightTableVelocity) {
                         usb_host_data.rightTableVelocity = report->rightTableVelocity;
+                    }
+                    break;
+                }
+                // Any other subtypes we dont handle can just be read like gamepads.
+                default: {
+                    XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)data;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.rightShoulder |= report->rightShoulder;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    usb_host_data.leftThumbClick |= report->leftThumbClick;
+                    usb_host_data.rightThumbClick |= report->rightThumbClick;
+                    usb_host_data.dpadLeft = report->dpadLeft;
+                    usb_host_data.dpadRight = report->dpadRight;
+                    usb_host_data.dpadUp = report->dpadUp;
+                    usb_host_data.dpadDown = report->dpadDown;
+                    if (report->leftTrigger) {
+                        usb_host_data.leftTrigger = report->leftTrigger << 8;
+                    }
+                    if (report->rightTrigger) {
+                        usb_host_data.rightTrigger = report->rightTrigger << 8;
+                    }
+                    if (report->leftStickX) {
+                        usb_host_data.leftStickX = report->leftStickX;
+                    }
+                    if (report->leftStickY) {
+                        usb_host_data.leftStickY = report->leftStickY;
+                    }
+                    if (report->rightStickX) {
+                        usb_host_data.rightStickX = report->rightStickX;
+                    }
+                    if (report->rightStickY) {
+                        usb_host_data.rightStickY = report->rightStickY;
                     }
                     break;
                 }

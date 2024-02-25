@@ -640,10 +640,9 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
 
         out->guide |= report->guide;
+        // PS3 RB tilt is digital so we need to convert
         if (report->tilt != PS3_STICK_CENTER) {
-            out->tilt = report->tilt << 2;
-            // TODO: this
-            out->tiltDigital = true;
+            out->tilt = true;
         }
         if (report->whammy) {
             last_zero = millis() + 1000;

@@ -11,9 +11,13 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 - A microcontroller
 
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
+  - If you want analog drum support, you currently will need to use a Pro Micro, as there is currently issues with multiplexer support for the Pi Pico.
+
     {% include sections/microcontrollers.md %}
 
-- A 4051 or 4067 based analog multiplexer
+- ~~A multiplexer for the pi pico~~ Sadly, at the current time multiplexer support is not working.
+  - For the Pi Pico, follow the digital instructions. When multiplexers are working, this guide will be updated.
+<!-- - A 4051 or 4067 based analog multiplexer
   - Only necessary for the Pi Pico, other microcontrollers have enough analog pins
   - Entirley optional, certain game features won't work with digital drums
     - For Rock Band, the velocity data is only used for freestyle drums.
@@ -21,7 +25,8 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
     - If you skip the multiplexer, follow the digital instructions instead of the analog ones
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
   - the 74HCT4051 or 74HCT4067 will not work as these are 5V parts and are not tolerant of the 3.3V voltage levels of the Pi Pico.
-  - The CD4051B/CD4051BE and CD4067B aren't recommended as these parts don't seem to work very well.
+  - The CD4051B/CD4051BE and CD4067B aren't recommended as these parts don't seem to work very well. -->
+
 - 1MOhm resistor per drum / cymbal pad
 - Some Wire
 - Soldering Iron
@@ -58,7 +63,7 @@ To keep the relevant information in this guide easy to find, information is sort
 
 </details>
 
-<details>
+<!-- <details>
     <summary>Multiplexer</summary>
 
 [![4051](/assets/images/cd4051.png)](/assets/images/cd4051.png)
@@ -72,7 +77,7 @@ To keep the relevant information in this guide easy to find, information is sort
 6. Wire A/S0, B/S1 and C/S2 (and D/S3 for the 16 channel multiplexer) to seperate digital pins on your Pi Pico.
 7. Wire each drum pad to a different channel on the multiplexer.
 
-</details>
+</details> -->
 
 <details>
     <summary>Drum / Cymbal pads (Analog)</summary>
@@ -145,7 +150,7 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
 
     </details>
 
-    <details>
+    <!-- <details>
       <summary>Drum / Cymbal pads / GH Pedal (Multiplexer)</summary>
 
     1. Click on the drum pad in question
@@ -156,7 +161,7 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
     6. Hit the pad lightly, and drag the minimum up so that it registers small hits.
     7. Hit nearby pads and make sure that the vibrations from those pads don't activate the pad you are configuring. If they do, then increase the minimum. You should end up with each pad registering hits, without crosstalk or needing to hit the pads too hard.
 
-    </details>
+    </details> -->
 
     <details>
       <summary>Drum / Cymbal pads / GH Pedal (Direct analog)</summary>

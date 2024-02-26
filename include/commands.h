@@ -40,7 +40,7 @@ enum SerialCommands {
     COMMAND_WRITE_DIGITAL,
     COMMAND_LED_BRIGHTNESS,
     COMMAND_READ_ADXL,
-    MAX
+    MAX=100
 };
 
 extern uint8_t lastSuccessfulPS2Packet[32];

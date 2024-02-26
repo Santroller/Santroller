@@ -25,7 +25,9 @@
 #include "serial.h"
 #include "shared_main.h"
 #include "xinput_device.h"
+#include "io.h"
 #include "xinput_host.h"
+#include "fxpt_math.h"
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
@@ -139,6 +141,7 @@ void loop1() {
 void loop() {
     tick_usb();
 }
+ 
 void setup() {
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;

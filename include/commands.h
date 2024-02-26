@@ -39,6 +39,7 @@ enum SerialCommands {
     COMMAND_WRITE_ANALOG,
     COMMAND_WRITE_DIGITAL,
     COMMAND_LED_BRIGHTNESS,
+    COMMAND_READ_ADXL,
     MAX
 };
 
@@ -63,6 +64,8 @@ extern uint8_t ps2ControllerType;
 extern bool overrideR2;
 extern bool slave_initted;
 extern uint8_t overriddenR2;
+extern uint16_t pitch;
+extern uint16_t roll;
 
 #ifdef __cplusplus
 }

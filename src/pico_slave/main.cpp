@@ -137,7 +137,6 @@ void req() {
     }
 }
 #define WT_BUFFER 8
-uint32_t lastWt[5] = {0};
 uint32_t lastWtSum[5] = {0};
 uint32_t lastWtAvg[5][WT_BUFFER] = {0};
 uint8_t nextWt[5] = {0};

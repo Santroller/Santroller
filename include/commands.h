@@ -64,8 +64,6 @@ extern uint8_t ps2ControllerType;
 extern bool overrideR2;
 extern bool slave_initted;
 extern uint8_t overriddenR2;
-extern uint16_t pitch;
-extern uint16_t roll;
 extern int16_t filtered[3];
 
 #ifdef __cplusplus

@@ -34,6 +34,7 @@ sort: 2
       - A USB female breakout
       - A USB extension cable
       - A controller with a cable already attached that you are willing to cut
+        - Needs to be a wired controller, wireless controllers won't work, nor will the play and charge kit.
 
 ### Wiring Steps
 

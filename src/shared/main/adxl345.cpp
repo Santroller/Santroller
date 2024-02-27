@@ -2,7 +2,7 @@
 #include "adxl.h"
 #include "fxpt_math.h"
 #include "config.h"
-static int16_t filtered[3] = {0};
+int16_t filtered[3] = {0};
 uint16_t pitch;
 uint16_t roll;
 #ifdef INPUT_ADXL

@@ -643,8 +643,9 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         }
         case COMMAND_READ_ADXL: {
             uint16_t response[2] = {pitch, roll};
-            memcpy(response_buffer, &response, sizeof(response));
-            return sizeof(response);
+            memcpy(response_buffer, &response, sizeof(response) + sizeof(filtered));
+            memcpy(response_buffer+sizeof(response), &filtered, sizeof(response) + sizeof(filtered));
+            return sizeof(response) + sizeof(filtered);
         }
         case COMMAND_READ_DIGITAL: {
             uint8_t port = wValue & 0xff;

@@ -18,7 +18,7 @@ sort: 9
 2. Find and add `USB Host inputs`
 3. Bind D+
 4. Hit Save
-5. If you plug in a supported controller, the tool should detect it and tell you what it is. Note that only wired controllers will work for this, wireless controllers or the play and charge kit won't work.
+5. If you plug in a supported controller, the tool should detect it and tell you what it is. Note that only wired controllers will work for this, wireless only controllers or the play and charge kit won't work.
 
 
 Now that you have USB Inputs wired, you can [configure them](https://santroller.tangentmc.net/tool/using.html).

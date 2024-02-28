@@ -80,21 +80,21 @@ To keep the relevant information in this guide easy to find, information is sort
 </details> -->
 
 <details>
-    <summary>Drum / Cymbal pads (Analog)</summary>
+    <summary>Drum / Cymbal pads (Digital) (Pi Pico)</summary>
 
 1. Disconnect the piezos from the main drum PCB.
 2. Solder the black wire from the piezo to ground.
-3. Solder the red wire to an analog input on the multiplexer for the Pi Pico, or to an analog pin on your micocontroller if your microcontroller has enough analog pins.
+3. Solder the red wire to a digital pin on your microcontroller
 4. Solder a 1Mohm resistor between the red and black wires on the piezo.
 
 </details>
 
 <details>
-    <summary>Drum / Cymbal pads (Digital)</summary>
+    <summary>Drum / Cymbal pads (Analog) (Other microcontrollers)</summary>
 
 1. Disconnect the piezos from the main drum PCB.
 2. Solder the black wire from the piezo to ground.
-3. Solder the red wire to a digital pin on your microcontroller
+3. Solder the red wire to an analog input on the multiplexer for the Pi Pico, or to an analog pin on your micocontroller if your microcontroller has enough analog pins.
 4. Solder a 1Mohm resistor between the red and black wires on the piezo.
 
 </details>

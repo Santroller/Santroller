@@ -28,6 +28,7 @@ sort: 2
       - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
         - I recommend using two tilt sensors in series, as this can help with accidental activations
       - The tool also supports using analog tilt switches
+      - The tool also supports using the ADXL345
   - USB Host
     - Pi Pico
     - One of the following
@@ -95,6 +96,23 @@ If you are working on a controller with only "2" pins as shown below, you will n
 1. Connect GND to GND
 2. Connect V<sub>CC</sub> to V<sub>CC</sub>
 3. Connect the signal pin to an analog pin on your microcontroller
+</details>
+
+<details>
+    <summary>ADXL345</summary>
+
+1. Connect GND to GND
+2. Connect V<sub>CC</sub> to V<sub>CC</sub> (note that this is a 3.3v device, so for 5V microcontrollers make sure your ADXL345 breakout has a voltage regulator onboard)
+3. Hook up SDA and SCL to the microcontroller
+
+   | Microcontroller               | SDA                              | SCL                              |
+   | ----------------------------- | -------------------------------- | -------------------------------- |
+   | Pi Pico (Recommended)         | GP18                             | GP19                             |
+   | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
+   | Uno                           | A4                               | A5                               |
+   | Mega                          | 20                               | 21                               |
+   | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+   | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 </details>
 
 <details>
@@ -307,6 +325,17 @@ If you intend to use the peripheral features, it is recommended to program the p
       <summary>Analog Tilt</summary>
 
     1. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
+    2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
+    3. Click on `Calibrate`
+    4. Tilt your guitar down, and then hit `Next`
+    5. Tilt the guitar up, and then hit `Next`
+    6. Hold your guitar in its resting position and then hit `Next`.
+    </details>
+
+    <details>
+      <summary>ADXL345 based Tilt</summary>
+
+    1. Click on Tilt, and make sure the `Input Type` is set to `ADXL345 Input`.
     2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
     3. Click on `Calibrate`
     4. Tilt your guitar down, and then hit `Next`

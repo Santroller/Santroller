@@ -71,7 +71,8 @@ To keep the relevant information in this guide easy to find, information is sort
     <summary>Platter (Standard)</summary>
 
 1.  The platters connect to the same PCB that the crossfader is on. There will be some labelled pads, V, C, D and G.
-2.  Hook up V to V<sub>CC</sub> and G to GND, and then hook up the C to SCL and D to SDA. The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
+2.  Hook up V to V<sub>CC</sub> and G to GND. For safety I would recommend hooking V to 3.3v on a 5v microcontroller, as most I2C devices I have come across don't like being powered by 5v.
+3.  Hook up the C to SCL and D to SDA. The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
 
 | Microcontroller               | SDA (D)                          | SCL (C)                          |
 | ----------------------------- | -------------------------------- | -------------------------------- |

@@ -841,7 +841,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS3_TYPE;
             }
-#else
+#elif DEVICE_TYPE == GAMEPAD
             else if (consoleType == PS3) {
                 dev->idVendor = SONY_VID;
                 dev->idProduct = SONY_DS3_PID;

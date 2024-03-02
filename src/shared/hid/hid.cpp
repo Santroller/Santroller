@@ -527,7 +527,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             }
             #endif
         }
-#if DEVICE_TYPE_IS_INSTRUMENT || DEVICE_TYPE == STAGE_KIT
+#if DEVICE_TYPE_IS_INSTRUMENT
         else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
             handle_rumble(data[2], data[3]);
         } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {

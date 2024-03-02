@@ -329,3 +329,24 @@ typedef struct
     uint8_t whammy;
     uint8_t tilt;
 } __attribute__((packed)) PCGHLGuitar_Data_t;
+
+typedef struct {
+    uint8_t reportTypeId; // 0x5B
+    uint8_t stageKitStrobe : 7;
+    uint8_t stageKitFog : 1;
+    uint8_t stageKitBlue;
+    uint8_t stageKitGreen;
+    uint8_t stageKitYellow;
+    uint8_t stageKitRed;
+    uint8_t multiplier;
+    uint8_t starPowerState;
+    uint8_t starPowerActive : 1;
+    uint8_t soloActive : 1;
+    uint8_t open : 1;
+    uint8_t : 5;
+} __attribute__((packed)) PCStageKitOutputWithoutReportId_Data_t;
+
+typedef struct {
+    uint8_t reportId; // 0x01
+    PCStageKitOutputWithoutReportId_Data_t report;
+} __attribute__((packed)) PCStageKitOutput_Data_t;

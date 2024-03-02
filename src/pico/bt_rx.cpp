@@ -102,7 +102,7 @@ void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t
 }
 
 bool check_bluetooth_ready() {
-// TODO: this is awful. We should rewrite hid leds to instead use a proper report format that contains the state of all leds at once.
+// This is awful but for stage kit we need to make sure the packet is received
 #if DEVICE_TYPE == STAGE_KIT
     if (app_state == READY) {
         if (send_report_len) {

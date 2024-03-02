@@ -57,6 +57,7 @@ uint8_t last_star_power = 0;
 bool star_power_active = false;
 bool strobing = false;
 long last_strobe = 0;
+PCStageKitOutput_Data_t stage_kit_report = {0};
 #ifdef INPUT_USB_HOST
 
 uint8_t xone_sequences[8] = {1, 1, 1, 1, 1, 1, 1, 1};
@@ -322,7 +323,7 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
     }
 }
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
-    // printf("%d %d\r\n", rumble_left, rumble_right);
+    // printf("Rumble: %d %d\r\n", rumble_left, rumble_right);
     HANDLE_RUMBLE;
 #ifdef HANDLE_LED_RUMBLE_OFF
     if (rumble_left == 0x00 && rumble_right == 0xFF) {
@@ -424,9 +425,78 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     }
 #endif
 }
+void handle_rumble(PCStageKitOutputWithoutReportId_Data_t *report) {
+    HANDLE_RUMBLE_EXPANDED;
+}
 void handle_keyboard_leds(uint8_t leds) {
     HANDLE_KEYBOARD_LED;
 }
+
+#ifdef BLUETOOTH_RX
+void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
+    switch (rumble_right) {
+        case RUMBLE_STAGEKIT_FOG_ON:
+            stage_kit_report.report.stageKitFog = true;
+            break;
+        case RUMBLE_STAGEKIT_FOG_OFF:
+            stage_kit_report.report.stageKitFog = false;
+            break;
+        case RUMBLE_STAGEKIT_SLOW_STROBE:
+            stage_kit_report.report.stageKitStrobe = 1;
+            break;
+        case RUMBLE_STAGEKIT_MEDIUM_STROBE:
+            stage_kit_report.report.stageKitStrobe = 2;
+            break;
+        case RUMBLE_STAGEKIT_FAST_STROBE:
+            stage_kit_report.report.stageKitStrobe = 3;
+            break;
+        case RUMBLE_STAGEKIT_FASTEST_STROBE:
+            stage_kit_report.report.stageKitStrobe = 4;
+            break;
+        case RUMBLE_STAGEKIT_NO_STROBE:
+            stage_kit_report.report.stageKitStrobe = 0;
+            break;
+        case RUMBLE_STAGEKIT_ALLOFF:
+            stage_kit_report.report.stageKitFog = false;
+            stage_kit_report.report.stageKitStrobe = 0;
+            stage_kit_report.report.stageKitBlue = 0;
+            stage_kit_report.report.stageKitGreen = 0;
+            stage_kit_report.report.stageKitYellow = 0;
+            stage_kit_report.report.stageKitRed = 0;
+            break;
+        case RUMBLE_STAGEKIT_BLUE:
+            stage_kit_report.report.stageKitBlue = rumble_left;
+            break;
+        case RUMBLE_STAGEKIT_GREEN:
+            stage_kit_report.report.stageKitGreen = rumble_left;
+            break;
+        case RUMBLE_STAGEKIT_YELLOW:
+            stage_kit_report.report.stageKitYellow = rumble_left;
+            break;
+        case RUMBLE_STAGEKIT_RED:
+            stage_kit_report.report.stageKitRed = rumble_left;
+            break;
+        case RUMBLE_SANTROLLER_MULTIPLIER:
+            stage_kit_report.report.multiplier = rumble_left - 0x0A;
+            break;
+        case RUMBLE_SANTROLLER_SOLO:
+            stage_kit_report.report.soloActive = rumble_left;
+            break;
+        case RUMBLE_SANTROLLER_OPEN_KICK:
+            stage_kit_report.report.open = rumble_left;
+            break;
+        case RUMBLE_SANTROLLER_STAR_POWER_ACTIVE:
+            stage_kit_report.report.starPowerActive = rumble_left;
+            break;
+        case RUMBLE_SANTROLLER_STAR_POWER_FILL:
+            stage_kit_report.report.starPowerState = rumble_left;
+            break;
+    }
+    stage_kit_report.reportId = PS3_LED_RUMBLE_ID;
+    stage_kit_report.report.reportTypeId = SANTROLLER_LED_EXPANDED_ID;
+    bt_set_report((uint8_t *)&stage_kit_report, sizeof(stage_kit_report), 1, 1);
+}
+#endif
 
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
 #if DEVICE_TYPE_IS_KEYBOARD
@@ -447,13 +517,29 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             bt_set_report(data_hid, 8, reportType, report_id);
 
         } else if (id == XBOX_RUMBLE_ID) {
+#if DEVICE_TYPE == GAMEPAD
             data_hid[1] = SANTROLLER_LED_ID;
             data_hid[2] = data[3];
             data_hid[3] = data[4];
             bt_set_report(data_hid, 8, reportType, report_id);
+#else
+            handle_bt_rumble(data[3], data[4]);
+#endif
         }
     } else {
+#if DEVICE_TYPE == GAMEPAD
         bt_set_report(data, len, reportType, report_id);
+#else
+        // Convert rumble based reports to combined reports 
+        if (id == SANTROLLER_LED_ID) {
+            handle_bt_rumble(data[1], data[2]);
+        } else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
+            handle_bt_rumble(data[2], data[3]);
+            // Pass combined reports directly over bt
+        } else if (id == SANTROLLER_LED_EXPANDED_ID || (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_EXPANDED_ID)) {
+            bt_set_report(data, len, reportType, report_id);
+        } 
+#endif
     }
 
 #endif
@@ -499,52 +585,58 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         }
     } else
 #endif
-// Bt reports are ALWAYS hid even if USB is in xinput mode
+        // Bt reports are ALWAYS hid even if USB is in xinput mode
         if ((consoleType == XBOX360 || consoleType == WINDOWS) && report_id != BLUETOOTH_REPORT) {
-        if (id == XBOX_LED_ID) {
-            uint8_t led = data[2];
-            uint8_t player = xbox_players[led];
-            handle_player_leds(player);
+            if (id == XBOX_LED_ID) {
+                uint8_t led = data[2];
+                uint8_t player = xbox_players[led];
+                handle_player_leds(player);
 
-        } else if (id == XBOX_RUMBLE_ID) {
-            uint8_t rumble_left = data[3];
-            uint8_t rumble_right = data[4];
-            handle_rumble(rumble_left, rumble_right);
-        }
-    } else {
-        if (id == PS4_LED_RUMBLE_ID) {
-            ps4_output_report *report = (ps4_output_report *)data;
-            handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
-            handle_rumble(report->motor_left, report->motor_right);
-
-            #if defined(INPUT_USB_HOST) && DEVICE_TYPE == GAMEPAD
-            USB_Device_Type_t type;
-            for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
-                type = get_usb_host_device_type(i);
-                if (type.sub_type != GAMEPAD || type.console_type != PS4) continue;
-                send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(ps4_output_report));
-                return;
+            } else if (id == XBOX_RUMBLE_ID) {
+                uint8_t rumble_left = data[3];
+                uint8_t rumble_right = data[4];
+                handle_rumble(rumble_left, rumble_right);
             }
-            #endif
-        }
+        } else {
+            if (id == PS4_LED_RUMBLE_ID) {
+                ps4_output_report *report = (ps4_output_report *)data;
+                handle_lightbar_leds(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
+                handle_rumble(report->motor_left, report->motor_right);
+
+#if defined(INPUT_USB_HOST) && DEVICE_TYPE == GAMEPAD
+                USB_Device_Type_t type;
+                for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+                    type = get_usb_host_device_type(i);
+                    if (type.sub_type != GAMEPAD || type.console_type != PS4) continue;
+                    send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(ps4_output_report));
+                    return;
+                }
+#endif
+            }
 #if DEVICE_TYPE_IS_INSTRUMENT
-        else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
-            handle_rumble(data[2], data[3]);
-        } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {
-            uint8_t player = data[3];
-            handle_player_leds_ps3(player);
-        } else if (id == PS3_LED_RUMBLE_ID) {
-            uint8_t player = data[2];
-            handle_player_leds_ps3(player);
-        } else if (id == SANTROLLER_LED_ID) {
-            handle_rumble(data[1], data[2]);
-        }
+            else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
+                handle_rumble(data[2], data[3]);
+            } else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_EXPANDED_ID) {
+                PCStageKitOutput_Data_t *output = (PCStageKitOutput_Data_t *)data;
+                handle_rumble(&output->report);
+            } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {
+                uint8_t player = data[3];
+                handle_player_leds_ps3(player);
+            } else if (id == PS3_LED_RUMBLE_ID) {
+                uint8_t player = data[2];
+                handle_player_leds_ps3(player);
+            } else if (id == SANTROLLER_LED_ID) {
+                handle_rumble(data[1], data[2]);
+            } else if (id == SANTROLLER_LED_EXPANDED_ID) {
+                PCStageKitOutputWithoutReportId_Data_t *output = (PCStageKitOutputWithoutReportId_Data_t *)data;
+                handle_rumble(output);
+            }
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        else if (id == DJ_LED_ID) {
-            uint8_t euphoria_on = data[2] * 0xFF;
-            // left and right need to be different for xb compatibility reasons
-            handle_rumble(euphoria_on, 255 - euphoria_on);
-        }
+            else if (id == DJ_LED_ID) {
+                uint8_t euphoria_on = data[2] * 0xFF;
+                // left and right need to be different for xb compatibility reasons
+                handle_rumble(euphoria_on, 255 - euphoria_on);
+            }
 #endif
 #else
         else if (id == PS3_LED_RUMBLE_ID) {
@@ -553,7 +645,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             handle_player_leds_ps3(player);
         }
 #endif
-    }
+        }
 }
 long millis_since_command = 0;
 uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success) {

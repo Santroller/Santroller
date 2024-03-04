@@ -568,14 +568,12 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         } else if (xbox_one_state == Ready) {
             // Live guitar is a bit special, so handle it here
 #if DEVICE_TYPE == LIVE_GUITAR
-            if (id == 0x22) {
+            if (id == GHL_HID_OUTPUT) {
                 uint8_t sub_id = data[1];
                 if (sub_id == PS3_LED_RUMBLE_ID) {
                     uint8_t player = (data[3] & 0x0F);
                     handle_player_leds(player + 1);
-                } else if (sub_id == XBOX_ONE_GHL_POKE_ID) {
-                    last_ghl_poke_time = millis();
-                }
+                } 
             }
 #endif
             if (id == GIP_CMD_RUMBLE) {

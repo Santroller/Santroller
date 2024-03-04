@@ -3,7 +3,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-long last_ghl_poke_time = 0;
 bool seen_hid_descriptor_read = false;
 bool seen_ps4 = false;
 bool descriptor_requested = false;

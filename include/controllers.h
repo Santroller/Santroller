@@ -1,7 +1,5 @@
 #include "config.h"
 
-// Timer used for detection if a GHL Xbox one controller is in GHL mode or navigation mode
-extern long last_ghl_poke_time;
 
 // State of the Xbox One controller initilisation
 extern Xbox_One_State_t xbox_one_state;

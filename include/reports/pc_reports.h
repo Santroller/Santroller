@@ -1,6 +1,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "config.h"
 typedef struct {
     uint8_t reportId;
     // Button bits
@@ -331,7 +333,7 @@ typedef struct
 } __attribute__((packed)) PCGHLGuitar_Data_t;
 
 typedef struct {
-    uint8_t reportTypeId; // 0x5B
+    uint8_t reportTypeId;  // 0x5B
     uint8_t stageKitStrobe : 7;
     uint8_t stageKitFog : 1;
     uint8_t stageKitBlue;
@@ -342,11 +344,67 @@ typedef struct {
     uint8_t starPowerState;
     uint8_t starPowerActive : 1;
     uint8_t soloActive : 1;
-    uint8_t open : 1;
+    uint8_t noteMiss : 1;
     uint8_t : 5;
+    union {
+        uint8_t noteRaw;
+        struct {
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+            bool openHit : 1;
+            bool greenHit : 1;
+            bool redHit : 1;
+            bool yellowHit : 1;
+
+            bool blueHit : 1;
+            bool orangeHit : 1;
+            uint8_t : 2;
+#elif DEVICE_TYPE == LIVE_GUITAR
+            bool openHit : 1;
+            bool black1Hit : 1;
+            bool black2Hit : 1;
+            bool black3Hit : 1;
+
+            bool white1Hit : 1;
+            bool white2Hit : 1;
+            bool white3Hit : 1;
+            uint8_t : 1;
+#elif DEVICE_TYPE == GUITAR_HERO_DRUMS
+            bool kickHit : 1;
+            bool redPadHit : 1;
+            bool yellowCymbalHit : 1;
+            bool bluePadHit : 1;
+
+            bool orangeCymbalHit : 1;
+            bool greenPadHit : 1;
+            uint8_t : 2;
+#elif DEVICE_TYPE == ROCK_BAND_DRUMS
+            bool kickHit : 1;
+            bool redPadHit : 1;
+            bool yellowPadHit : 1;
+            bool bluePadHit : 1;
+
+            bool greenPadHit : 1;
+            bool yellowCymbalHit : 1;
+            bool blueCymbalHit : 1;
+            bool greenCymbalHit : 1;
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+            bool leftScratchHit : 1;
+            bool leftGreenHit : 1;
+            bool leftRedHit : 1;
+            bool leftBlueHit : 1;
+
+            bool rightScratchHit : 1;
+            bool rightGreenHit : 1;
+            bool rightRedHit : 1;
+            bool rightBlueHit : 1;
+
+            uint8_t euphoriaBrightness;
+#endif
+        };
+    };
 } __attribute__((packed)) PCStageKitOutputWithoutReportId_Data_t;
 
 typedef struct {
-    uint8_t reportId; // 0x01
+    uint8_t reportId;  // 0x01
     PCStageKitOutputWithoutReportId_Data_t report;
 } __attribute__((packed)) PCStageKitOutput_Data_t;

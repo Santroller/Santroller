@@ -476,14 +476,14 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
         case RUMBLE_STAGEKIT_RED:
             stage_kit_report.report.stageKitRed = rumble_left;
             break;
+        case RUMBLE_SANTROLLER_NOTE_MISS:
+            stage_kit_report.report.noteMiss = rumble_left;
+            break;
         case RUMBLE_SANTROLLER_MULTIPLIER:
-            stage_kit_report.report.multiplier = rumble_left - 0x0A;
+            stage_kit_report.report.multiplier = rumble_left;
             break;
         case RUMBLE_SANTROLLER_SOLO:
             stage_kit_report.report.soloActive = rumble_left;
-            break;
-        case RUMBLE_SANTROLLER_OPEN_KICK:
-            stage_kit_report.report.open = rumble_left;
             break;
         case RUMBLE_SANTROLLER_STAR_POWER_ACTIVE:
             stage_kit_report.report.starPowerActive = rumble_left;
@@ -491,6 +491,14 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
         case RUMBLE_SANTROLLER_STAR_POWER_FILL:
             stage_kit_report.report.starPowerState = rumble_left;
             break;
+        case RUMBLE_SANTROLLER_NOTE_HIT:
+            stage_kit_report.report.noteRaw = rumble_left;
+            break;
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        case RUMBLE_SANTROLLER_EUPHORIA_LED:
+            stage_kit_report.report.euphoriaBrightness = rumble_left;
+            break;
+#endif
     }
     stage_kit_report.reportId = PS3_LED_RUMBLE_ID;
     stage_kit_report.report.reportTypeId = SANTROLLER_LED_EXPANDED_ID;
@@ -530,7 +538,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE == GAMEPAD
         bt_set_report(data, len, reportType, report_id);
 #else
-        // Convert rumble based reports to combined reports 
+        // Convert rumble based reports to combined reports
         if (id == SANTROLLER_LED_ID) {
             handle_bt_rumble(data[1], data[2]);
         } else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_ID) {
@@ -538,7 +546,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             // Pass combined reports directly over bt
         } else if (id == SANTROLLER_LED_EXPANDED_ID || (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_EXPANDED_ID)) {
             bt_set_report(data, len, reportType, report_id);
-        } 
+        }
 #endif
     }
 
@@ -573,7 +581,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 if (sub_id == PS3_LED_RUMBLE_ID) {
                     uint8_t player = (data[3] & 0x0F);
                     handle_player_leds(player + 1);
-                } 
+                }
             }
 #endif
             if (id == GIP_CMD_RUMBLE) {

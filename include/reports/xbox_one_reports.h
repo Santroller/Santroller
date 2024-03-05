@@ -196,10 +196,14 @@ typedef struct
 
 typedef struct
 {
-    XboxOneGamepad_Data_t gamepad;
     GipHeader_t Header;
     PS3GHLGuitar_Data_t report;
 } __attribute__((packed)) XboxOneGHLGuitar_Data_t;
+typedef struct
+{
+    XboxOneGHLGuitar_Data_t guitar;
+    XboxOneGamepad_Data_t gamepad;
+} __attribute__((packed)) XboxOneGHLGuitarWithGamepad_Data_t;
 
 typedef struct
 {

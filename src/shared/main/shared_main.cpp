@@ -1346,7 +1346,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 }
 #endif
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
-    uint8_t size = 0;
+    // output_console_type = XBOXONE;
+    uint8_t packet_size = 0;
     uint8_t led_tmp;
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
@@ -1467,16 +1468,21 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     bool updateHIDSequence = false;
 #if USB_HOST_STACK
     if (output_console_type == XBOXONE) {
-        // The GHL guitar is special. It sends both a standard gamepad report and a report with a format mirroring the ps3 ghl report
-        if (DEVICE_TYPE_IS_LIVE_GUITAR) {
-            memset(buf, 0, sizeof(XboxOneGHLGuitar_Data_t));
-        }
         XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
-        size = sizeof(XBOX_ONE_REPORT);
-        report_size = size - sizeof(GipHeader_t);
-        memset(buf, 0, size);
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+        XboxOneGHLGuitarWithGamepad_Data_t *reportGHL = (XboxOneGHLGuitarWithGamepad_Data_t *)buf;
+        // The GHL guitar is special. It sends both a standard gamepad report and a report with a format mirroring the ps3 ghl report
+        // We append the standard gamepad after the ps3 report, so swap out buffers so that the gamepad tick writes to the correct place
+        memset(buf, 0, sizeof(XboxOneGHLGuitarWithGamepad_Data_t));
+        report = &reportGHL->gamepad;
+#endif
+        packet_size = sizeof(XBOX_ONE_REPORT);
+        report_size = packet_size - sizeof(GipHeader_t);
+        memset(buf, 0, packet_size);
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         TICK_XBOX_ONE;
+        asm volatile("" ::
+                         : "memory");
 #if DEVICE_TYPE_IS_GUITAR
         if (report->tilt < 0x70) {
             report->tilt = 0;
@@ -1493,19 +1499,22 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         // We use an unused bit as a flag for sending the guide key code, so flip it back
         report->guide = false;
-        GipPacket_t *packet = (GipPacket_t *)buf;
+        GipPacket_t *packet = (GipPacket_t *)report;
         report_data = (USB_Report_Data_t *)packet->data;
         updateSequence = true;
-
-        if (DEVICE_TYPE_IS_LIVE_GUITAR) {
-            // Set things up so that we can use the below PS3 code to fill in the ps3 part of this report
-            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)buf;
-            GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
-            size = sizeof(XboxOneGHLGuitar_Data_t);
-            report_data = (USB_Report_Data_t *)&report->report;
-            report_size = sizeof(PS3_REPORT);
-            updateHIDSequence = true;
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+        packet_size = sizeof(XboxOneGHLGuitarWithGamepad_Data_t);
+        uint8_t cmp = memcmp(last_report, report_data, report_size);
+        if (cmp == 0) {
+            // gamepad report has not changed, so only send GHL report
+            packet_size = sizeof(XboxOneGHLGuitar_Data_t);
+            updateSequence = false;
         }
+        memcpy(last_report, report_data, report_size);
+        GIP_HEADER((&reportGHL->guitar), GHL_HID_REPORT, false, hid_sequence_number);
+        report_data = (USB_Report_Data_t *)&reportGHL->guitar.report;
+        updateHIDSequence = true;
+#endif
     }
 #endif
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
@@ -1523,7 +1532,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == GUITAR_HERO_DRUMS
         report->leftThumbClick = true;
 #endif
-        report_size = size = sizeof(XINPUT_REPORT);
+        report_size = packet_size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
@@ -1548,11 +1557,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-        report_size = size = sizeof(PS4_REPORT);
+        report_size = packet_size = sizeof(PS4_REPORT);
     }
 #endif
     if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
-        report_size = size = sizeof(PC_REPORT);
+        report_size = packet_size = sizeof(PC_REPORT);
         PC_REPORT *report = (PC_REPORT *)report_data;
         memset(report, 0, sizeof(PC_REPORT));
 #if DEVICE_TYPE == GAMEPAD
@@ -1596,12 +1605,16 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS3_WITHOUT_CAPTURE;
         report_size = size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4 && !updateSequence) {
+    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4) {
 #else
     // For instruments, we instead use the below block, as all other console types use the below format
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && !updateSequence && !updateHIDSequence) {
+    if ((output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL) || updateHIDSequence) {
 #endif
-        report_size = size = sizeof(PS3_REPORT);
+        report_size = sizeof(PS3_REPORT);
+        // Do NOT update the size for XBONE, since the XBONE packets have a totally different size!
+        if (!updateHIDSequence) {
+            packet_size = report_size;
+        }
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         memset(report, 0, sizeof(PS3_REPORT));
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
@@ -1665,7 +1678,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (report_sequence_number == 0) {
             report_sequence_number = 1;
         }
-    } 
+    }
 #if DEVICE_TYPE_IS_LIVE_GUITAR
     if (updateHIDSequence) {
         hid_sequence_number++;
@@ -1677,7 +1690,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #endif
 #endif
-    return size;
+    return packet_size;
 }
 
 #ifdef BLUETOOTH_TX
@@ -1754,7 +1767,7 @@ bool tick_usb(void) {
 }
 #ifdef BLUETOOTH_RX
 int tick_bluetooth_inputs(const void *buf) {
-    uint8_t size = 0;
+    uint8_t packet_size = 0;
     uint8_t report_size = 0;
     uint8_t output_console_type = consoleType;
     // Tick Inputs
@@ -1789,8 +1802,8 @@ int tick_bluetooth_inputs(const void *buf) {
     PC_REPORT *input = (PC_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
     if (output_console_type == UNIVERSAL) {
-        report_size = size = sizeof(PC_REPORT);
-        memcpy(report_data, buf, size);
+        report_size = packet_size = sizeof(PC_REPORT);
+        memcpy(report_data, buf, packet_size);
         PC_REPORT *report = (PC_REPORT *)report_data;
         report->dpad = input->dpad >= 0x08 ? 0 : dpad_bindings_reverse[input->dpad];
         TICK_PC;
@@ -1802,22 +1815,26 @@ int tick_bluetooth_inputs(const void *buf) {
     bool updateSequence = false;
     bool updateHIDSequence = false;
     if (output_console_type == XBOXONE) {
+        XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)report_data;
         // The GHL guitar is special. It uses a standard nav report in the xbox menus, but then in game, it uses the ps3 report.
         // To switch modes, a poke command is sent every 8 seconds
         // In nav mode, we handle things like a controller, while in ps3 mode, we fall through and just set the report using ps3 mode.
-        if (DEVICE_TYPE_IS_LIVE_GUITAR) {
-            memset(buf, 0, sizeof(XboxOneGHLGuitar_Data_t));
-        }
-        
-        XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)report_data;
-        size = sizeof(XBOX_ONE_REPORT);
-        report_size = size - sizeof(GipHeader_t);
-        memset(report_data, 0, size);
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+        XboxOneGHLGuitarWithGamepad_Data_t *reportGHL = (XboxOneGHLGuitarWithGamepad_Data_t *)&combined_report;
+        // The GHL guitar is special. It sends both a standard gamepad report and a report with a format mirroring the ps3 ghl report
+        // We append the standard gamepad after the ps3 report, so swap out buffers so that the gamepad tick writes to the correct place
+        memset(&combined_report, 0, sizeof(XboxOneGHLGuitarWithGamepad_Data_t));
+        report = &reportGHL->gamepad;
+#endif
+
+        packet_size = sizeof(XBOX_ONE_REPORT);
+        report_size = packet_size - sizeof(GipHeader_t);
+        memset(report_data, 0, packet_size);
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         convert_universal_to_type((uint8_t *)report_data, input, XBOXONE);
         TICK_XBOX_ONE;
         asm volatile("" ::
-                            : "memory");
+                         : "memory");
         if (report->guide != lastXboxOneGuide) {
             lastXboxOneGuide = report->guide;
             GipKeystroke_t *keystroke = (GipKeystroke_t *)report_data;
@@ -1828,18 +1845,23 @@ int tick_bluetooth_inputs(const void *buf) {
         }
         // We use an unused bit as a flag for sending the guide key code, so flip it back
         report->guide = false;
-        GipPacket_t *packet = (GipPacket_t *)report_data;
+        GipPacket_t *packet = (GipPacket_t *)report;
         report_data = (USB_Report_Data_t *)packet->data;
         updateSequence = true;
-        
-        if (DEVICE_TYPE_IS_LIVE_GUITAR) {
-            XboxOneGHLGuitar_Data_t *report = (XboxOneGHLGuitar_Data_t *)report_data;
-            GIP_HEADER(report, GHL_HID_REPORT, false, hid_sequence_number);
-            size = sizeof(XboxOneGHLGuitar_Data_t);
-            report_data = (USB_Report_Data_t *)&report->report;
-            report_size = sizeof(PS3_REPORT);
-            updateHIDSequence = true;
+
+#if DEVICE_TYPE_IS_LIVE_GUITAR
+        packet_size = sizeof(XboxOneGHLGuitarWithGamepad_Data_t);
+        uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
+        if (cmp == 0) {
+            // gamepad report has not changed, so only send GHL report
+            packet_size = sizeof(XboxOneGHLGuitar_Data_t);
+            updateSequence = false;
         }
+        memcpy(&last_report_bt, report_data, report_size);
+        GIP_HEADER((&reportGHL->guitar), GHL_HID_REPORT, false, hid_sequence_number);
+        report_data = (USB_Report_Data_t *)&reportGHL->guitar.report;
+        updateHIDSequence = true;
+#endif
     }
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
@@ -1852,7 +1874,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
         TICK_XINPUT;
-        report_size = size = sizeof(XINPUT_REPORT);
+        report_size = packet_size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
@@ -1860,8 +1882,8 @@ int tick_bluetooth_inputs(const void *buf) {
     if (output_console_type == PS4) {
         PS4_REPORT *report = (PS4_REPORT *)report_data;
         PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
-        report_size = size = sizeof(PS4_REPORT);
-        memset(report_data, 0, size);
+        report_size = packet_size = sizeof(PS4_REPORT);
+        memset(report_data, 0, packet_size);
         gamepad->report_id = 0x01;
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;
@@ -1900,11 +1922,15 @@ int tick_bluetooth_inputs(const void *buf) {
     }
     if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
 #else
-    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && !updateSequence && !updateHIDSequence) {
+    if ((output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL) || updateHIDSequence) {
 #endif
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
-        report_size = size = sizeof(PS3_REPORT);
-        memset(report_data, 0, size);
+        report_size = sizeof(PS3_REPORT);
+        // Do NOT update the size for XBONE , since the XBONE packets have a totally different size!
+        if (!updateHIDSequence) {
+            packet_size = report_size;
+        }
+        memset(report_data, 0, packet_size);
         PS3_REPORT *report = (PS3_REPORT *)report_data;
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
@@ -1975,17 +2001,17 @@ int tick_bluetooth_inputs(const void *buf) {
             }
         }
     }
-    if (output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3) {
+    if (output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3&& !updateHIDSequence) {
         uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
         if (cmp == 0) {
             return 0;
         }
         memcpy(&last_report_bt, report_data, report_size);
     }
-    if (size) {
-        send_report_to_pc(&combined_report, size);
+    if (packet_size) {
+        send_report_to_pc(&combined_report, packet_size);
     }
-    return size;
+    return packet_size;
 }
 #endif
 void tick(void) {

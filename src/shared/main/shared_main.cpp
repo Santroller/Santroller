@@ -1603,7 +1603,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
         TICK_PS3_WITHOUT_CAPTURE;
-        report_size = size = sizeof(PS3Gamepad_Data_t);
+        report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != PS4) {
 #else

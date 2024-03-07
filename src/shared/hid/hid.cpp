@@ -492,7 +492,7 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
             stage_kit_report.report.starPowerState = rumble_left;
             break;
         case RUMBLE_SANTROLLER_NOTE_HIT:
-            stage_kit_report.report.noteRaw = rumble_left;
+            stage_kit_report.report.noteHitRaw = rumble_left;
             break;
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         case RUMBLE_SANTROLLER_EUPHORIA_LED:

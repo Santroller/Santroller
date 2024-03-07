@@ -347,7 +347,7 @@ typedef struct {
     uint8_t noteMiss : 1;
     uint8_t : 5;
     union {
-        uint8_t noteRaw;
+        uint8_t noteHitRaw;
         struct {
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
             bool openHit : 1;

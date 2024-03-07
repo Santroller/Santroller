@@ -55,6 +55,7 @@ uint8_t current_player = 0;
 uint8_t strobe_delay = 0;
 uint8_t last_star_power = 0;
 bool star_power_active = false;
+bool received_valid_command = false;
 bool strobing = false;
 long last_strobe = 0;
 PCStageKitOutput_Data_t stage_kit_report = {0};
@@ -601,6 +602,17 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             } else if (id == XBOX_RUMBLE_ID) {
                 uint8_t rumble_left = data[3];
                 uint8_t rumble_right = data[4];
+                // Turntable commands will conflict as the actual game sends rumble out on both motors at the same time
+                // For that reason, we ignore any santroller commands where both rumbles are the same until we receive a valid packet
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+                if ((rumble_right >= RUMBLE_SANTROLLER_STAR_POWER_FILL && rumble_right <= RUMBLE_SANTROLLER_NOTE_MISS) || rumble_right == RUMBLE_SANTROLLER_NOTE_HIT) {
+                    if (rumble_left != rumble_right) {
+                        received_valid_command = true;
+                    } else if (!received_valid_command) {
+                        return;
+                    }
+                }
+#endif
                 handle_rumble(rumble_left, rumble_right);
             }
         } else {

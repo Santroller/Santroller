@@ -1918,7 +1918,7 @@ int tick_bluetooth_inputs(const void *buf) {
         report->reportId = 1;
         convert_universal_to_type((uint8_t *)report_data, input, output_console_type);
         TICK_PS3_WITHOUT_CAPTURE;
-        report_size = size = sizeof(PS3Gamepad_Data_t);
+        report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
 #else

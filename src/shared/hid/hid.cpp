@@ -323,7 +323,7 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
         }
     }
 }
-bool lastEuphoriaLed = false;
+
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     // printf("Rumble: %d %d\r\n", rumble_left, rumble_right);
     HANDLE_RUMBLE;
@@ -392,14 +392,10 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
         return;
     }
 #endif
-#if defined(INPUT_WII) && DEVICE_TYPE == DJ_HERO_TURNTABLE
-    // The PS3 spams led state out, and wii turntables really don't like this.
-    if (wiiControllerType == WII_DJ_HERO_TURNTABLE && rumble_right == RUMBLE_SANTROLLER_EUPHORIA_LED) {
-        if ((rumble_left != 0) != lastEuphoriaLed) {
-            lastEuphoriaLed = rumble_left != 0;
-            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, lastEuphoriaLed);
-        }
-    }
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+if (rumble_right == RUMBLE_SANTROLLER_EUPHORIA_LED) {
+    lastEuphoriaLed = rumble_left != 0;
+}
 #endif
 #if defined(INPUT_USB_HOST) && DEVICE_TYPE == DJ_HERO_TURNTABLE
     // Only ps3 and xinput have dj turntables

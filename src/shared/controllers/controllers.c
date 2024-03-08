@@ -22,6 +22,7 @@ bool seen_windows_xb1 = 0;
 bool seen_windows = false;
 bool read_any_string = false;
 bool read_device_desc = false;
+bool lastEuphoriaLed = false;
 #ifdef __cplusplus
 }
 #endif

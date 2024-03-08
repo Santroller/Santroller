@@ -5,6 +5,7 @@
 
 #include "Arduino.h"
 #include "config.h"
+#include "controllers.h"
 #include "io.h"
 uint8_t wiiBytes;
 #ifdef INPUT_WII
@@ -88,6 +89,7 @@ void initWiiExt(void) {
     }
 }
 bool initialised = false;
+bool lastWiiEuphoriaLed = false;
 bool wiiDataValid() {
     return initialised;
 }
@@ -102,6 +104,15 @@ uint8_t* tickWii() {
         initWiiExt();
         return NULL;
     }
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    // Update the led if it changes
+    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
+        if (lastWiiEuphoriaLed != lastEuphoriaLed) {
+            lastWiiEuphoriaLed = lastEuphoriaLed;
+            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, lastWiiEuphoriaLed);
+        }
+    }
+#endif
     initialised = true;
     return data;
 }

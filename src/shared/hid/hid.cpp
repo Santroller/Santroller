@@ -323,6 +323,7 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
         }
     }
 }
+bool lastEuphoriaLed = false;
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     // printf("Rumble: %d %d\r\n", rumble_left, rumble_right);
     HANDLE_RUMBLE;
@@ -392,8 +393,12 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     }
 #endif
 #if defined(INPUT_WII) && DEVICE_TYPE == DJ_HERO_TURNTABLE
-    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
-        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, rumble_left != 0);
+    // The PS3 spams led state out, and wii turntables really don't like this.
+    if (wiiControllerType == WII_DJ_HERO_TURNTABLE && rumble_right == RUMBLE_SANTROLLER_EUPHORIA_LED) {
+        if ((rumble_left != 0) != lastEuphoriaLed) {
+            lastEuphoriaLed = rumble_left != 0;
+            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, lastEuphoriaLed);
+        }
     }
 #endif
 #if defined(INPUT_USB_HOST) && DEVICE_TYPE == DJ_HERO_TURNTABLE
@@ -603,14 +608,16 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 uint8_t rumble_left = data[3];
                 uint8_t rumble_right = data[4];
                 // Turntable commands will conflict as the actual game sends rumble out on both motors at the same time
-                // For that reason, we ignore any santroller commands where both rumbles are the same until we receive a valid packet
+                // To solve this problem, we stay in a turntable compatibility mode until we receive a valid santroller command
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
                 if ((rumble_right >= RUMBLE_SANTROLLER_STAR_POWER_FILL && rumble_right <= RUMBLE_SANTROLLER_NOTE_MISS) || rumble_right == RUMBLE_SANTROLLER_NOTE_HIT) {
                     if (rumble_left != rumble_right) {
                         received_valid_command = true;
-                    } else if (!received_valid_command) {
-                        return;
-                    }
+                    } 
+                }
+                // Turntable led emulation mode
+                if (!received_valid_command && rumble_left == rumble_right) {
+                    rumble_right = RUMBLE_SANTROLLER_EUPHORIA_LED; 
                 }
 #endif
                 handle_rumble(rumble_left, rumble_right);
@@ -652,8 +659,8 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
             else if (id == DJ_LED_ID) {
                 uint8_t euphoria_on = data[2] * 0xFF;
-                // left and right need to be different for xb compatibility reasons
-                handle_rumble(euphoria_on, 255 - euphoria_on);
+                // Use the santroller euphoria rumble command so that rumble is correctly mapped
+                handle_rumble(euphoria_on, RUMBLE_SANTROLLER_EUPHORIA_LED);
             }
 #endif
 #else

@@ -19,7 +19,8 @@ bool twi_readFrom(TWI_BLOCK, uint8_t, uint8_t *, uint8_t, uint8_t);
 bool twi_writeTo(TWI_BLOCK, uint8_t, uint8_t *, uint8_t, uint8_t, uint8_t);
 bool twi_readFromPointer(TWI_BLOCK, uint8_t address, uint8_t pointer, uint8_t length,
                          uint8_t *data);
-bool twi_readSingleFromPointer(TWI_BLOCK, uint8_t address, uint8_t pointer, uint8_t *data);
+bool twi_readFromPointerRepeatedStart(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
+                         uint8_t *data);
 bool twi_readFromPointerSlow(TWI_BLOCK, uint8_t address, uint8_t pointer, uint8_t length,
                              uint8_t *data);
 bool twi_writeSingleToPointer(TWI_BLOCK, uint8_t address, uint8_t pointer, uint8_t data);

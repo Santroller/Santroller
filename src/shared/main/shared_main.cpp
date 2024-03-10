@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "adxl.h"
+#include "mpr121.h"
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
@@ -1352,6 +1353,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
 #include "inputs/adxl.h"
+#include "inputs/mpr121.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/ps2.h"
@@ -2054,6 +2056,9 @@ void tick(void) {
     }
 
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
+        if (ready_for_next_packet()) {
+            send_report_to_pc(&combined_report, last_usb_report_size);
+        }
         return;
     }
 

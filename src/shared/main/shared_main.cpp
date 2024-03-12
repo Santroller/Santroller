@@ -1403,8 +1403,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     for (int i = 1; i < REPORT_ID_END; i++) {
 #ifdef TICK_MOUSE
         if (i == REPORT_ID_MOUSE) {
-            size = sizeof(USB_Mouse_Data_t);
-            memset(buf, 0, size);
+            packet_size = sizeof(USB_Mouse_Data_t);
+            memset(buf, 0, sizpacket_sizee);
             USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
             report->rid = REPORT_ID_MOUSE;
             TICK_MOUSE;
@@ -1415,8 +1415,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #ifdef TICK_CONSUMER
         if (i == REPORT_ID_CONSUMER) {
-            size = sizeof(USB_ConsumerControl_Data_t);
-            memset(buf, 0, size);
+            packet_size = sizeof(USB_ConsumerControl_Data_t);
+            memset(buf, 0, packet_size);
             USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)buf;
             report->rid = REPORT_ID_CONSUMER;
             TICK_CONSUMER;
@@ -1427,8 +1427,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #ifdef TICK_NKRO
         if (i == REPORT_ID_NKRO) {
-            size = sizeof(USB_NKRO_Data_t);
-            memset(buf, 0, size);
+            packet_size = sizeof(USB_NKRO_Data_t);
+            memset(buf, 0, packet_size);
             USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)buf;
             report->rid = REPORT_ID_NKRO;
             TICK_NKRO;
@@ -1439,8 +1439,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #ifdef TICK_SIXKRO
         if (i == REPORT_ID_NKRO) {
-            size = sizeof(USB_6KRO_Data_t);
-            memset(buf, 0, size);
+            packet_size = sizeof(USB_6KRO_Data_t);
+            memset(buf, 0, packet_size);
             USB_6KRO_Data_t *report = (USB_6KRO_Data_t *)buf;
             report->rid = REPORT_ID_NKRO;
             TICK_SIXKRO;
@@ -1452,12 +1452,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
         // If we are directly asked for a HID report, always just reply with the NKRO one
         if (lastReportToCheck) {
-            uint8_t cmp = memcmp(lastReportToCheck, buf, size);
+            uint8_t cmp = memcmp(lastReportToCheck, buf, packet_size);
             if (cmp == 0) {
-                size = 0;
+                packet_size = 0;
                 continue;
             }
-            memcpy(lastReportToCheck, buf, size);
+            memcpy(lastReportToCheck, buf, packet_size);
             break;
         } else {
             break;

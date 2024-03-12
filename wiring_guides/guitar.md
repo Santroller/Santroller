@@ -113,7 +113,8 @@ If you are working on a controller with only "2" pins as shown below, you will n
    | Mega                          | 20                               | 21                               |
    | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
    | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
-</details>
+
+   </details>
 
 <details>
     <summary>World tour slider bar (Pi Pico only)</summary>
@@ -169,6 +170,7 @@ The world tour slider bar originally used a single wire to connect between the b
    | Mega                          | 20                               | 21                               |
    | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
    | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
+
    </details>
 
 <details>
@@ -189,7 +191,8 @@ The world tour slider bar originally used a single wire to connect between the b
    | Pi Pico (Recommended)         | GP18                             | GP19                             |
    | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
    | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
-</details>
+
+   </details>
 
 <details>
     <summary>Joystick (or DPad)</summary>
@@ -294,49 +297,49 @@ If you intend to use the peripheral features, it is recommended to program the p
      <details>
       <summary>Start + Select to Home</summary>
 
-    3. Click on the home / Xbox / PS button.
-    4. Set the `Input Type` to `Shortcut`
-    4. Set the next `Input TYpe` to `Digital Pin Input` 
-    5. Click on the first `Find Pin` button, and then press the start button on the guitar. If you have wired everything correctly, the tool should detect the pin.
-    6. Click on the second `Find Pin` button, and then press the select button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for the home button should now light up whenever both start and select is pressed.
+    1. Click on the home / Xbox / PS button.
+    2. Set the `Input Type` to `Shortcut`
+    3. Set the next `Input TYpe` to `Digital Pin Input`
+    4. Click on the first `Find Pin` button, and then press the start button on the guitar. If you have wired everything correctly, the tool should detect the pin.
+    5. Click on the second `Find Pin` button, and then press the select button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for the home button should now light up whenever both start and select is pressed.
 
     </details>
 
     <details>
       <summary>Joystick</summary>
 
-    5. Click on D-pad Left, and set the `Input Type` to `Analog Pin Input`.
-    6. Set `Type` to `Joystick Negative`
-    7. Click on find pin and move the joystick left or right
-    8. Adjust the threshold so that the D-pad Left icon lights up when you have pushed the Joystick far enough to the left. This means you can adjust how sensitive you want your joystick to be.
-    9. You can do the same for D-pad right, however, set the `Type` to `Joystick Positive` instead.
-    10. If you wish to also map joystick up and down, click `Add Setting` and add another Strup Up and Strum Down input. Then you can follow the above instructions again, only using negative for up and positive for down, and when detecting the pin, move the joystick up and down instead.
+    1. Click on D-pad Left, and set the `Input Type` to `Analog Pin Input`.
+    2. Set `Type` to `Joystick Negative`
+    3. Click on find pin and move the joystick left or right
+    4. Adjust the threshold so that the D-pad Left icon lights up when you have pushed the Joystick far enough to the left. This means you can adjust how sensitive you want your joystick to be.
+    5. You can do the same for D-pad right, however, set the `Type` to `Joystick Positive` instead.
+    6. If you wish to also map joystick up and down, click `Add Setting` and add another Strup Up and Strum Down input. Then you can follow the above instructions again, only using negative for up and positive for down, and when detecting the pin, move the joystick up and down instead.
 
     </details>
 
     <details>
       <summary>Whammy</summary>
 
-    11. Click on the whammy, and make sure the `Input Type` is set to `Analog Pin Input`.
-    12. Click on the `Find Pin` button, and then press on the whammy. If you have wired everything correctly, the tool should detect the pin and the `Original Value` value should change when you push on the whammy.
-    13. Click on `Calibrate`.
-    14. Release the whammy bar and hit `Next`.
-    15. Push the whammy all the way in, and hit `Next`
-    16. Release the whammy again, and hit `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
+    1. Click on the whammy, and make sure the `Input Type` is set to `Analog Pin Input`.
+    2. Click on the `Find Pin` button, and then press on the whammy. If you have wired everything correctly, the tool should detect the pin and the `Original Value` value should change when you push on the whammy.
+    3. Click on `Calibrate`.
+    4. Release the whammy bar and hit `Next`.
+    5. Push the whammy all the way in, and hit `Next`
+    6. Release the whammy again, and hit `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
     </details>
 
     <details>
       <summary>Digital Tilt</summary>
 
-    17. Click on Tilt, and make sure the `Input Type` is set to `Digital Pin Input`.
-    18. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt icon should light up whenever you tilt the guitar.
-    19. If you are using a SW520D based tilt sensor, some versions of this sensor will have an inverted output. You can turn on the `Invert` option to correct this.
+    1. Click on Tilt, and make sure the `Input Type` is set to `Digital Pin Input`.
+    2. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt icon should light up whenever you tilt the guitar.
+    3. If you are using a SW520D based tilt sensor, some versions of this sensor will have an inverted output. You can turn on the `Invert` option to correct this.
     </details>
 
     <details>
       <summary>Analog Tilt</summary>
 
-    20. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
+    1. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
     2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
     3. Click on `Calibrate`
     4. Tilt your guitar down, and then hit `Next`
@@ -347,20 +350,20 @@ If you intend to use the peripheral features, it is recommended to program the p
     <details>
       <summary>ADXL345 based Tilt</summary>
 
-    7. Click on Tilt, and make sure the `Input Type` is set to `ADXL345 Input`.
-    8. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
-    9. Click on `Calibrate`
-    10. Tilt your guitar down, and then hit `Next`
-    11. Tilt the guitar up, and then hit `Next`
-    12. Hold your guitar in its resting position and then hit `Next`.
+    1. Click on Tilt, and make sure the `Input Type` is set to `ADXL345 Input`.
+    2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
+    3. Click on `Calibrate`
+    4. Tilt your guitar down, and then hit `Next`
+    5. Tilt the guitar up, and then hit `Next`
+    6. Hold your guitar in its resting position and then hit `Next`.
     </details>
 
     <details>
       <summary>World Tour Slider Bar</summary>
 
-    13. Click on Add Setting, and add a `GHWT Slider Inputs` setting
-    14. Set the pins based on how you wired the WT Slider bar.
-    15. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    1. Click on Add Setting, and add a `GHWT Slider Inputs` setting
+    2. Set the pins based on how you wired the WT Slider bar.
+    3. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
     4. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
     5. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
     6. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
@@ -369,44 +372,44 @@ If you intend to use the peripheral features, it is recommended to program the p
     <details>
       <summary>Peripheral</summary>
 
-    7. Click on `Peripheral Settings`
-    8. Enable the Peripheral
-    9. Set the SDA and SCL pins on the main PCB that are being connected to the peripheral.
-    10. Hit save
+    1. Click on `Peripheral Settings`
+    2. Enable the Peripheral
+    3. Set the SDA and SCL pins on the main PCB that are being connected to the peripheral.
+    4. Hit save
     </details>
 
     <details>
       <summary>World Tour Slider Bar (Peripheral)</summary>
 
-    11. Click on `Peripheral Settings`
-    12. Enable the Peripheral
-    13. Set the SDA and SCL pins that are being used by the peripheral. Normally, these will end up being the same as the ones you use for the neck itself.
-    14. Click on Add Setting, and add a `GHWT Slider Inputs (Peripheral)` setting
-    15. Set the pins based on how you wired the WT Slider bar.
-    16. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
-    17. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
-    18. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
-    19. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    1. Click on `Peripheral Settings`
+    2. Enable the Peripheral
+    3. Set the SDA and SCL pins that are being used by the peripheral. Normally, these will end up being the same as the ones you use for the neck itself.
+    4. Click on Add Setting, and add a `GHWT Slider Inputs (Peripheral)` setting
+    5. Set the pins based on how you wired the WT Slider bar.
+    6. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    7. You should see data from the slider bar under `Raw Values`. The first value should increase when you tap on the green fret, and the rest of the values should also increase when you tap them.
+    8. Set the threshold so that the tap bar correctly detects the currently tapped frets. A good value to start with is to use the difference between the value when a fret is released, and when it is tapped.
+    9. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
     </details>
 
     <details>
       <summary>GH5 Neck (Standard wiring)</summary>
 
-    20. The GH5 neck puts inputs over a single set of pins. This does add a bit of latency to the frets, but if you want the simplest wiring, you can keep the frets connected to the neck.
-    21. Click on Add Setting, and add a `GH5 Neck Inputs` setting
-    22. Set the SDA and SCL pins to the pins you used when you wired up the neck.
-    23. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
-    24. Click on `enable` for each of the frets.
+    1. The GH5 neck puts inputs over a single set of pins. This does add a bit of latency to the frets, but if you want the simplest wiring, you can keep the frets connected to the neck.
+    2. Click on Add Setting, and add a `GH5 Neck Inputs` setting
+    3. Set the SDA and SCL pins to the pins you used when you wired up the neck.
+    4. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    5. Click on `enable` for each of the frets.
     </details>
 
     <details>
       <summary>Crazy Guitar Neck (Standard wiring)</summary>
 
-    25. The Crazy Guitar neck puts inputs over a single set of pins. This does add a bit of latency to the frets, but if you want the simplest wiring, you can keep the frets connected to the neck.
-    26. Click on Add Setting, and add a `Crazy Guitar Neck Inputs` setting
-    27. Set the SDA and SCL pins to the pins you used when you wired up the neck.
-    28. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
-    29. Click on `enable` for each of the frets.
+    1. The Crazy Guitar neck puts inputs over a single set of pins. This does add a bit of latency to the frets, but if you want the simplest wiring, you can keep the frets connected to the neck.
+    2. Click on Add Setting, and add a `Crazy Guitar Neck Inputs` setting
+    3. Set the SDA and SCL pins to the pins you used when you wired up the neck.
+    4. If you would like to map the slider bar to the standard frets, you can enable "Slider to frets". Note that if you are using `Rock Band` mode, the tap bar is automatically mapped to the solo frets.
+    5. Click on `enable` for each of the frets.
     </details>
 
     <details>
@@ -425,12 +428,12 @@ If you intend to use the peripheral features, it is recommended to program the p
     <details>
       <summary>USB Host (Pi Pico Only)</summary>
 
-    9. Click on Add setting
-    10. Find and add `USB Host inputs`
-    11. Bind D+
-    12. Hit Save
-    13. If you plug in a supported controller, the tool should detect it and tell you what it is.
-    14. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
+    1. Click on Add setting
+    2. Find and add `USB Host inputs`
+    3. Bind D+
+    4. Hit Save
+    5. If you plug in a supported controller, the tool should detect it and tell you what it is.
+    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
     </details>
 

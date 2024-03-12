@@ -24,11 +24,15 @@ sort: 2
 
 - Supplies for specific features
   - Tilt
-    - A Tilt Switch
-      - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
+    - Any of the following options are supported
+      - A Digital Tilt Switch (somtimes called a mercury or ball tilt switch)
         - I recommend using two tilt sensors in series, as this can help with accidental activations
-      - The tool also supports using analog tilt switches
-      - The tool also supports using the ADXL345
+      - The ADXL345 Accelerometer
+        - This gives a proper analog value of the devices acceleration
+          - Tilt is detected by observing acceleration due to gravity
+      - An analog accelerometer, such as the ADXL335
+        - This gives a proper analog value of the devices acceleration
+          - Tilt is detected by observing acceleration due to gravity
   - USB Host
     - Pi Pico
     - One of the following

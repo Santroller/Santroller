@@ -2056,9 +2056,6 @@ void tick(void) {
     }
 
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
-        if (ready_for_next_packet()) {
-            send_report_to_pc(&combined_report, last_usb_report_size);
-        }
         return;
     }
 

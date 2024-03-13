@@ -55,7 +55,7 @@ bool init_mpr121() {
 }
 uint16_t tick_mpr121_cap() {
     if (!mpr121_init && !init_mpr121()) {
-        return;
+        return 0;
     }
     uint16_t raw;
     if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_TOUCHSTATUS_L, sizeof(raw), (uint8_t*)&raw)) {
@@ -66,7 +66,7 @@ uint16_t tick_mpr121_cap() {
 #if MPR121_ENABLE
 uint8_t tick_mpr121_gpio() {
     if (!mpr121_init && !init_mpr121()) {
-        return;
+        return 0;
     }
     uint8_t gpioRaw;
     if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, 1, &gpioRaw)) {

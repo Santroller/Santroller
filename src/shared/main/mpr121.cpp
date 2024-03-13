@@ -53,7 +53,7 @@ bool init_mpr121() {
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_ECR, ECR_SETTING);  // start with above ECR setting
     return true;
 }
-void tick_mpr121() {
+uint16_t tick_mpr121_cap() {
     if (!mpr121_init && !init_mpr121()) {
         return;
     }
@@ -61,12 +61,19 @@ void tick_mpr121() {
     if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_TOUCHSTATUS_L, sizeof(raw), (uint8_t*)&raw)) {
         mpr121_init = false;
     }
+    return raw;
+}
 #if MPR121_ENABLE
+uint8_t tick_mpr121_gpio() {
+    if (!mpr121_init && !init_mpr121()) {
+        return;
+    }
     uint8_t gpioRaw;
     if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, 1, &gpioRaw)) {
         mpr121_init = false;
     }
-#endif
+    return gpioRaw;
     // LEDS: write to MPR121_GPIOSET or MPR121_GPIOCLR depending on led state
 }
+#endif
 #endif

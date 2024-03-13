@@ -931,6 +931,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->start |= report->start;
         out->padFlag = report->padFlag;
         out->cymbalFlag = report->cymbalFlag;
+        out->rightShoulder |= report->rightShoulder;
+        out->leftShoulder |= report->leftShoulder;
 
         out->guide |= report->guide;
         if (report->yellowVelocity) {

@@ -340,11 +340,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 }
                 wasXb1Input = header->command == GIP_INPUT_REPORT;
             }
-            // printf("Received report from: %d (%d)\r\n", i, usb_host_devices[i].type.console_type);
-            // for (int i = 0; i < len; i++) {
-            //     printf("%02x, ", report[i]);
-            // }
-            // printf("\r\n");
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
             return;

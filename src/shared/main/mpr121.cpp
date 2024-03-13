@@ -1,5 +1,4 @@
 #include "mpr121.h"
-#include "stdio.h"
 
 #include "config.h"
 #include "io.h"
@@ -14,7 +13,7 @@ bool init_mpr121() {
         return false;
     }
     mpr121_init = true;
-    for (uint8_t i = 0; i < 12; i++) {
+    for (uint8_t i = 0; i < MPR121_TOUCHPADS; i++) {
         twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_TOUCHTH_0 + 2 * i, MPR121_TOUCH_THRESHOLD_DEFAULT);
         twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_RELEASETH_0 + 2 * i, MPR121_RELEASE_THRESHOLD_DEFAULT);
     }
@@ -35,18 +34,21 @@ bool init_mpr121() {
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_DEBOUNCE, 0);
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_CONFIG1, 0x10);  // default, 16uA charge current
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_CONFIG2, 0x20);
-// #ifdef AUTOCONFIG
+
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_AUTOCONFIG0, 0x0B);
 
     // correct values for Vdd = 3.3V
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_UPLIMIT, 200);      // ((Vdd - 0.7)/Vdd) * 256
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_TARGETLIMIT, 180);  // UPLIMIT * 0.9
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_LOWLIMIT, 130);     // UPLIMIT * 0.65
-// #endif
 
+#if MPR121_ENABLE
+    twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODIR, MPR121_DDR);
+    twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIOEN, MPR121_ENABLE);
+#endif
     // enable X electrodes and start MPR121
     uint8_t ECR_SETTING =
-        0b10000000 + 12;                                                                         // 5 bits for baseline tracking & proximity disabled + X
+        0b10000000 + MPR121_TOUCHPADS;                                                           // 5 bits for baseline tracking & proximity disabled + X
                                                                                                  // amount of electrodes running (12)
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_ECR, ECR_SETTING);  // start with above ECR setting
     return true;
@@ -59,5 +61,12 @@ void tick_mpr121() {
     if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_TOUCHSTATUS_L, sizeof(raw), (uint8_t*)&raw)) {
         mpr121_init = false;
     }
+#if MPR121_ENABLE
+    uint8_t gpioRaw;
+    if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, 1, &gpioRaw)) {
+        mpr121_init = false;
+    }
+#endif
+    // LEDS: write to MPR121_GPIOSET or MPR121_GPIOCLR depending on led state
 }
 #endif

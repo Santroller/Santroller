@@ -320,10 +320,12 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80) {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
+                p_xinput->epin_size = desc_ep->wMaxPacketSize;
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
                 usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             } else {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
+                p_xinput->epout_size = desc_ep->wMaxPacketSize;
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
             }
         }

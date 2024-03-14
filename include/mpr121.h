@@ -47,8 +47,7 @@ enum {
 #ifdef __cplusplus
 extern "C" {
 #endif
-uint8_t tick_mpr121_gpio();
-uint16_t tick_mpr121_cap();
+uint16_t tick_mpr121();
 bool init_mpr121();
 #ifdef __cplusplus
 }

@@ -2,7 +2,7 @@
 
 #include "config.h"
 #include "io.h"
-#ifdef INPUT_MPR121
+#ifdef MPR121_TWI_PORT
 bool mpr121_init = false;
 bool init_mpr121() {
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_SOFTRESET, 0x63);

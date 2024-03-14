@@ -85,6 +85,7 @@ long lastLed = 0;
 long lastSentGHLPoke = 0;
 long input_start = 0;
 long lastDebounce = 0;
+uint16_t lastMpr121 = 0;
 bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;

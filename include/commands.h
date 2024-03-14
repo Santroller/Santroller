@@ -40,6 +40,8 @@ enum SerialCommands {
     COMMAND_WRITE_DIGITAL,
     COMMAND_LED_BRIGHTNESS,
     COMMAND_READ_ADXL,
+    COMMAND_READ_MPR121,
+    COMMAND_READ_MPR121_VALID,
     MAX=100
 };
 
@@ -65,6 +67,8 @@ extern bool overrideR2;
 extern bool slave_initted;
 extern uint8_t overriddenR2;
 extern int16_t filtered[3];
+extern bool mpr121_init;
+extern uint16_t lastMpr121;
 
 #ifdef __cplusplus
 }

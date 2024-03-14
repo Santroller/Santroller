@@ -785,6 +785,14 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
         }
+#ifdef MPR121_TWI_PORT
+        case COMMAND_READ_MPR121_VALID:
+            response_buffer[0] = mpr121_init;
+            return 1;
+        case COMMAND_READ_MPR121: 
+            memcpy(response_buffer, &lastMpr121, sizeof(lastMpr121));
+            return sizeof(lastMpr121);
+#endif
 #ifdef SLAVE_TWI_PORT
 #ifdef INPUT_WT_SLAVE_NECK
         case COMMAND_READ_PERIPHERAL_GHWT:

@@ -36,7 +36,7 @@ sort: 2
   - USB Host
     - Pi Pico
     - 2x 27ohm resistor
-    - 2x 47pF capicator
+    - 2x 47pF capacitor
     - One of the following
       - A USB female breakout
       - A USB extension cable
@@ -261,8 +261,8 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
 3. Hook up the V- / GND (Black) to ground on your Pi Pico
 4. Hook up D+ (Green) to one side of a 27ohm resistor and the other side to a unused digital pin.
 5. Hook up D- (White) to one side of a 27ohm resistor and the other side to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
-6. Connect a 47pF capicator between D+ and ground
-7. Connect a 47pF capicator between D- and ground
+6. Connect a 47pF capacitor between D+ and ground
+7. Connect a 47pF capacitor between D- and ground
 
 </details>
 

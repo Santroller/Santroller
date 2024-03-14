@@ -1,5 +1,5 @@
 ---
-sort: 9
+sort: 11
 ---
 
 # Adding Standard LEDs with a STP16CPC26 driver

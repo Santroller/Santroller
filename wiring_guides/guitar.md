@@ -35,6 +35,8 @@ sort: 2
           - Tilt is detected by observing acceleration due to gravity
   - USB Host
     - Pi Pico
+    - 2x 27ohm resistor
+    - 2x 47pF capicator
     - One of the following
       - A USB female breakout
       - A USB extension cable
@@ -252,11 +254,15 @@ When the strums are part of the main board you will need to cut the traces or yo
     <summary>USB Host (Pi Pico Only)</summary>
 If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox Series, you can wire a USB port to the Pi Pico. You can also use this feature if your  guitar is USB based (like the xplorer) and you would rather pass some inputs through instead of wiring them manually, such as the dpad or start and select on the xplorer.
 
+[![usb](/assets/images/usb.png)](/assets/images/usb.png)
+
 1. If you are using a USB extension cable, cut it in half and expose the four cables.
-2. Hook up the V+ (Red) to the VBUS pin on your Pi Pico
-3. Hook up the V- (Black) to ground on your Pi Pico
-4. Hook up D+ (Green) to a unused digital pin.
-5. Hook up D- (White) to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
+2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
+3. Hook up the V- / GND (Black) to ground on your Pi Pico
+4. Hook up D+ (Green) to one side of a 27ohm resistor and the other side to a unused digital pin.
+5. Hook up D- (White) to one side of a 27ohm resistor and the other side to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
+6. Connect a 47pF capicator between D+ and ground
+7. Connect a 47pF capicator between D- and ground
 
 </details>
 

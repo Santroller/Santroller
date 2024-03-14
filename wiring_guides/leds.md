@@ -1,5 +1,5 @@
 ---
-sort: 8
+sort: 9
 ---
 
 # Adding RGB LEDs to controllers

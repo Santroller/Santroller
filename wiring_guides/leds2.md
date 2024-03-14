@@ -1,5 +1,5 @@
 ---
-sort: 9
+sort: 10
 ---
 
 # Adding Standard LEDs inline on a controller

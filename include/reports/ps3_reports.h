@@ -138,7 +138,7 @@ typedef struct {
 typedef struct {
     uint8_t reportId;
     uint8_t : 8;
-    uint8_t back : 1;  // select
+    uint8_t back : 1;             // select
     uint8_t leftThumbClick : 1;   // l3
     uint8_t rightThumbClick : 1;  // r3
     uint8_t start : 1;
@@ -148,10 +148,10 @@ typedef struct {
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
 
-    uint8_t l2 : 1;   // l1
-    uint8_t r2 : 1;  // r1
-    uint8_t leftShoulder : 1;             // l1
-    uint8_t rightShoulder : 1;             // r1
+    uint8_t l2 : 1;             // l1
+    uint8_t r2 : 1;             // r1
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t rightShoulder : 1;  // r1
 
     uint8_t y : 1;  // triangle
     uint8_t b : 1;  // circle
@@ -379,23 +379,23 @@ typedef struct
 
 typedef struct
 {
-    bool x : 1;  // square, blue
-    bool a : 1;  // cross, green
-    bool b : 1;  // circle, red
-    bool y : 1;  // triangle, yellow
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
 
-    bool leftShoulder : 1;  // orange, l1
-    bool tilt : 1;          // tilt, r1
-    bool solo : 1;          // l2
-    bool : 1;               // r2
+    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t tilt : 1;          // tilt, r1
+    uint8_t solo : 1;          // l2
+    uint8_t : 1;               // r2
 
-    bool back : 1;  // select
-    bool start : 1;
-    bool : 1;
-    bool : 1;
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
@@ -412,6 +412,165 @@ typedef struct
     uint8_t unused2[12];
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
+
+typedef struct
+{
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
+
+    uint8_t : 1;  // orange, l1
+    uint8_t : 1;  // tilt, r1
+    uint8_t : 1;  // l2
+    uint8_t : 1;  // r2
+
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+    uint8_t : 2;
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t : 4;
+
+    uint8_t unused1[2];
+
+    uint16_t lowEFret : 5;
+    uint16_t aFret : 5;
+    uint16_t dFret : 5;
+    uint16_t : 1;
+    uint16_t gFret : 5;
+    uint16_t bFret : 5;
+    uint16_t highEFret : 5;
+    uint16_t soloFlag : 1;
+
+    uint16_t lowEVelocity : 7;
+    uint16_t greenFret : 1;
+    uint16_t aVelocity : 7;
+    uint16_t redFret : 1;
+    uint16_t dVelocity : 7;
+    uint16_t yellowFret : 1;
+    uint16_t gVelocity : 7;
+    uint16_t blueFret : 1;
+    uint16_t bVelocity : 7;
+    uint16_t orangeFret : 1;
+    uint16_t highEVelocity : 7;
+    uint16_t : 1;
+
+    uint8_t autoCal_Microphone;  // When the sensor isn't activated, this
+    uint8_t autoCal_Light;       // and this just duplicate the tilt axis
+    uint8_t tilt;
+
+    uint8_t : 7;
+    uint8_t pedal : 1;
+
+    uint8_t unused2;
+
+    uint8_t pedalConnection : 1;
+    uint8_t : 7;
+
+    int16_t unused3[2];
+
+    uint8_t counter;  // Unsure what this is, but this is what it's defined as in the spreadsheet linked below.
+                      // No description is provided for it until more investigation can be done.
+
+    uint8_t unused4;
+} __attribute__((__packed__)) PS3RockBandProGuitar_Data_t;
+
+typedef struct
+{
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
+
+    uint8_t : 1;  // orange, l1
+    uint8_t : 1;  // tilt, r1
+    uint8_t : 1;  // l2
+    uint8_t : 1;  // r2
+
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+
+    //     0
+    //   7   1
+    // 6   8   2
+    //   5   3
+    //     4
+    uint8_t dpad;
+
+    uint8_t unused1[2];
+
+    uint8_t key8 : 1;
+    uint8_t key7 : 1;
+    uint8_t key6 : 1;
+    uint8_t key5 : 1;
+    uint8_t key4 : 1;
+    uint8_t key3 : 1;
+    uint8_t key2 : 1;
+    uint8_t key1 : 1;
+
+    uint8_t key16 : 1;
+    uint8_t key15 : 1;
+    uint8_t key14 : 1;
+    uint8_t key13 : 1;
+    uint8_t key12 : 1;
+    uint8_t key11 : 1;
+    uint8_t key10 : 1;
+    uint8_t key9 : 1;
+
+    uint8_t key24 : 1;
+    uint8_t key23 : 1;
+    uint8_t key22 : 1;
+    uint8_t key21 : 1;
+    uint8_t key20 : 1;
+    uint8_t key19 : 1;
+    uint8_t key18 : 1;
+    uint8_t key17 : 1;
+
+    uint8_t velocity1 : 7;
+    uint8_t key25 : 1;
+    uint8_t velocity2 : 7;
+    uint8_t : 1;
+    uint8_t velocity3 : 7;
+    uint8_t : 1;
+    uint8_t velocity4 : 7;
+    uint8_t : 1;
+    uint8_t velocity5 : 7;
+    uint8_t : 1;
+
+    uint8_t : 7;
+    uint8_t overdrive : 1;
+    uint8_t pedalAnalog : 7;
+    uint8_t pedalDigital : 1;
+    uint8_t touchPad : 7;
+    uint8_t : 1;
+
+    uint8_t unused2[4];
+
+    uint8_t pedalConnection : 1;  // Always 0 with the MIDI Pro Adapter
+    uint8_t : 7;
+
+    int16_t unused3[2];
+
+    uint8_t pressCount;  // Unsure what this is, but this is what it's defined as in the spreadsheet linked below.
+                         // No description is provided for it until more investigation can be done.
+
+    uint8_t unused4;
+} __attribute__((__packed__)) PS3RockBandProKeyboard_Data_t;
 
 typedef struct
 {
@@ -468,23 +627,23 @@ typedef struct
 } __attribute__((packed)) PS3Turntable_Data_t;
 typedef struct
 {
-    bool x : 1;  // square, white1
-    bool a : 1;  // cross, black1
-    bool b : 1;  // circle, black2
-    bool y : 1;  // triangle, black3
+    uint8_t x : 1;  // square, white1
+    uint8_t a : 1;  // cross, black1
+    uint8_t b : 1;  // circle, black2
+    uint8_t y : 1;  // triangle, black3
 
-    bool leftShoulder : 1;   // white2, l1
-    bool rightShoulder : 1;  // white3, r1
-    bool : 1;
-    bool : 1;
+    uint8_t leftShoulder : 1;   // white2, l1
+    uint8_t rightShoulder : 1;  // white3, r1
+    uint8_t : 1;
+    uint8_t : 1;
 
-    bool back : 1;            // back, heroPower
-    bool start : 1;           // start, pause
-    bool leftThumbClick : 1;  // leftThumbClick, ghtv
-    bool : 1;
+    uint8_t back : 1;            // back, heroPower
+    uint8_t start : 1;           // start, pause
+    uint8_t leftThumbClick : 1;  // leftThumbClick, ghtv
+    uint8_t : 1;
 
-    bool guide : 1;    // ps
-    bool capture : 1;  // switch capture button
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
@@ -505,4 +664,3 @@ typedef struct
 
     uint16_t unused4[3];
 } __attribute__((packed)) PS3GHLGuitar_Data_t;
-

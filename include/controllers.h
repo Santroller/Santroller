@@ -43,3 +43,4 @@ extern bool read_any_string;
 // Used for detecting any connection at all
 extern bool read_device_desc;
 extern bool lastEuphoriaLed;
+extern bool proButtonsEnabled;

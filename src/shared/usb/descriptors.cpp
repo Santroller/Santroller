@@ -458,9 +458,22 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
         iInterface : NO_DESCRIPTOR,
     },
 };
+// Pro instruments use a different init flow
+#if DEVICE_TYPE_IS_PRO
+const PROGMEM uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
+                                                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                                 {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
+                                                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                                 {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
+const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
+                                                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                                {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
+                                                {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                                {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
+#else
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
-
+#endif
 // It appears for ps5 arcade stick compat, we can set byte 5 to 0x07
 const PROGMEM uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x4f, 0x00, 0x2c, 0x56,
@@ -554,10 +567,11 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
+uint8_t ps3_id_id = 0;
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
     if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
         seen_windows = true;
     }
@@ -638,8 +652,20 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
         // PS3s request this as some form of controller id
         if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
+            // Pro instruments use a different init flow
+#if DEVICE_TYPE_IS_PRO
+            if (proButtonsEnabled) {
+                memcpy_P(requestBuffer, enabled_response[ps3_id_id], sizeof(enabled_response[ps3_id_id]));
+            } else {
+                memcpy_P(requestBuffer, disabled_response[ps3_id_id], sizeof(disabled_response[ps3_id_id]));
+            }
+            ps3_id_id++;
+            if (ps3_id_id > 4) ps3_id_id = 4;
+            return sizeof(8);
+#else
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);
+#endif
         }
         // Fakemote sends this, so we know to jump to PS3 mode
         if (consoleType == UNIVERSAL && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
@@ -766,6 +792,28 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         const uint8_t reportType = (wValue >> 8);
         const uint8_t reportId = (wValue & 0xFF);
         hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
+
+        for (int i = 0; i < wLength; i++) {
+            printf("%02x, ", requestBuffer[i]);
+        }
+        printf("\r\n");
+
+#if DEVICE_TYPE_IS_PRO
+        if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
+            switch (requestBuffer[2]) {
+                case 0x89:
+                    printf("MIDI data enabled.\r\n");
+                    proButtonsEnabled = true;
+                    ps3_id_id = 0;
+                    break;
+                case 0x81:
+                    printf("MIDI data disabled.\r\n");
+                    proButtonsEnabled = false;
+                    ps3_id_id = 0;
+                    break;
+            }
+        }
+#endif
         return 0;
     }
     return 0;

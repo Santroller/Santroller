@@ -153,10 +153,11 @@ uint8_t lastLedStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 Led_t ledStatePeripheral[LED_COUNT_PERIPHERAL];
 Led_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL];
 #endif
-
+#if TICK_LED_MPR121
 uint8_t ledStateMpr121[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
 uint8_t ledStateSelectMpr121[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
 uint8_t lastLedStateMpr121[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
+#endif
 #define UP 1 << 0
 #define DOWN 1 << 1
 #define LEFT 1 << 2
@@ -207,7 +208,9 @@ void init_main(void) {
     powerMode.subcommand = 0x00;
     memset(ledState, 0, sizeof(ledState));
     memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
+#if TICK_LED_MPR121
     memset(ledStateMpr121, 0, sizeof(ledStateMpr121));
+#endif
     memset(usedKeys, 0, sizeof(usedKeys));
     memset(keyIndex, 0, sizeof(keyIndex));
     LED_INIT;

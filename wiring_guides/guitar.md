@@ -44,7 +44,7 @@ sort: 2
     - Peripheral Pico Mode, great latency
       - Requires a second Pi Pico, places the second Pi Pico in the neck and uses that to poll the frets, while leaving the original slider bar pcb to poll the slider bar, sharing power and data between both devices.
     - Hardwire frets, great latency
-      - No extra parts required, but sacrifies the detachable neck.
+      - No extra parts required, but sacrifices the detachable neck.
   - USB Host
     - Pi Pico
     - 2x 27ohm resistor

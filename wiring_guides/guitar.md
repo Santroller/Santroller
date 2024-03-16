@@ -36,6 +36,15 @@ sort: 2
   - Guitar Hero World Tour Guitar
     - MPR121
       - An MPR121 is necessary for hooking up the slider bar, but it can also be used for the frets in order to save on the number of pins being used.
+  - Guitar Hero 5 Guitar or Crazy Guitar
+    - Standard Mode, worst latency
+      - No extra parts required.
+    - MPR121 Mode, great latency
+      - Requires a MPR121, replaces the microcontroller on the slider bar and handles both slider and frets.
+    - Peripheral Pico Mode, great latency
+      - Requires a second Pi Pico, places the second Pi Pico in the neck and uses that to poll the frets, while leaving the original slider bar pcb to poll the slider bar, sharing power and data between both devices.
+    - Hardwire frets, great latency
+      - No extra parts required, but sacrifies the detachable neck.
   - USB Host
     - Pi Pico
     - 2x 27ohm resistor
@@ -194,9 +203,35 @@ The world tour slider bar originally used a single wire to connect between the b
 <details>
     <summary>GH5 / Crazy guitar frets (Direct, lower latency)</summary>
 
-1. If you wish to bypass the neck connector for your frets, there are two choices, you can opt to wire the frets directly from the fret pcb to the pico, or you can use peripheral mode and avoid needing to run more wires.
+1. If you wish to bypass the neck connector for your frets, there are three choices, you can opt to wire the frets directly from the fret pcb to the pico, you can use an MPR121 and avoid needing to run more wires, or you can use peripheral mode and avoid needing to run more wires. The MPR121 replaces the entire slider bar PCB and handles both the slider pads and the frets, while the peripheral only handles the frets, and requires using the original slider bar PCB for keeping slider functionality.
 2. For direct mode, run a wire from the fret pin to a pin on the pico, and make sure there is a wire from the ground pin on the fret pcb to the picos ground pin.
 </details>
+
+<details>
+    <summary>MPR121 (Low Latency Frets with 4 pins)</summary>
+
+1. In some cases, you may want to poll frets directly, but you still wish to use a neck connector that does not have enough pins to connect the frets. You can get around this by using an MPR121. 
+
+2. Cut the traces going from the main chip to the pads on the slider PCB.
+
+3. Solder each via on the Slider bar PCB to its own channel on the MPR121. It is recommended to use channels 0-4 for the slider bar, as the MPR121 requires assigning touch pads first before other pins.
+
+4. For the frets, follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
+5. Connect the common grounds to a ground pin on the MPR121.
+6. Connect each fret to its own unused channel on the MPR121.
+7. Hook up V<sub>CC</sub> (marked as 3.3V) and GND (marked as GND) to the microcontroller. Note that this means you need to use a 3.3V power pin on your microconroller, so if your microcontroller only has 5V power pins you will need a voltage regulator.
+8. Hook up SDA and SCL to the microcontroller
+
+   | Microcontroller               | SDA (D)                          | SCL (C)                          |
+   | ----------------------------- | -------------------------------- | -------------------------------- |
+   | Pi Pico (Recommended)         | GP18                             | GP19                             |
+   | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
+   | Uno                           | A4                               | A5                               |
+   | Mega                          | 20                               | 21                               |
+   | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+   | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
+
+   </details>
 
 <details>
     <summary>Peripheral (Low Latency Frets with 4 pins)</summary>
@@ -209,6 +244,13 @@ The world tour slider bar originally used a single wire to connect between the b
    | Pi Pico (Recommended)         | GP18                             | GP19                             |
    | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
    | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
+
+3. Connect the Slider bar to the same SDA and SCL pins
+4. Connect VBUS and GND between the two Pi Picos.
+5. Connect the Slider bar to 3.3v and GND on the peripheral Pico.
+6. For the frets, if it is not labeled it is easiest to follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
+7. Connect the common grounds to a ground pin on the peripheral Pico.
+8. Connect each fret to its own unused digital pin on the peripheral Pico.
 
    </details>
 
@@ -407,6 +449,8 @@ If you intend to use the peripheral features, it is recommended to program the p
   2. Set the `Input Type` to `MPR121 Input`
   3. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
   4. Set the channels based on your wiring. The configuration will update live, so if you are unsure which via maps to which slider pad, you can just work through the channels and assign things to the correct pads by touching each pad and working out which channel is which.
+  5. Go to each fret, and set its `Input Type` to `MPR121 Input`.
+  6. Set the channel based on your wiring. If you are unsure which channel you used, you can just walk through each channel and work out which one was used, as the status of the MPR121 will update live as you press and release frets.
   </details>
 
   <details>
@@ -430,16 +474,23 @@ If you intend to use the peripheral features, it is recommended to program the p
   </details>
 
   <details>
+    <summary>GH5 / Crazy Guitar (MPR121 Mode)/summary>
+
+1. If you wish to have better latency frets with these necks, you can replace the slider bar controller with an MPR121, which will give you low latency but will still use the same amount of wires.
+2. Click on Add Setting, and add a `Slider` setting
+3. Set the `Input Type` to `MPR121 Input`
+4. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+5. Set the channels based on your wiring. The configuration will update live, so if you are unsure which via maps to which slider pad, you can just work through the channels and assign things to the correct pads by touching each pad and working out which channel is which.
+6. Go to each fret, and set its `Input Type` to `MPR121 Input`.
+7. Set the channel based on your wiring. If you are unsure which channel you used, you can just walk through each channel and work out which one was used, as the status of the MPR121 will update live as you press and release frets.
+  </details>
+
+  <details>
     <summary>GH5 / Crazy Guitar (Peripheral Mode)</summary>
 
   1. If you wish to have better latency frets with these necks, but do not want to hardwire the frets, you can instead opt to use the peripheral mode. You can still follow the Standard wiring if you would like the slider bar to work, but then you do not need to enable the frets as we will bypass the original neck for those inputs.
-  2. Click on `Peripheral Settings`
-  3. Enable the Peripheral
-  4. Set the SDA and SCL pins that are being used by the peripheral. Normally, these will end up being the same as the ones you use for the neck itself.
-  5. Go to each fret, and set its `Input Type` to `Digital Pin Input (Peripheral)`.
-  6. If you know the pin you used for the fret when it was wired to the Peripheral Pico, set it here, otherwise pick a random pin for now.
-  7. Hit `Save Settings`. Note that every other setting will need to be configured before you can do this. The peripheral pico also needs to be programmed.
-  8. Now that the peripheral settings are saved, you can use `Find Pin` if necessary to detect the pin your fret was hooked up to.
+  2. Go to each fret, and set its `Input Type` to `Digital Pin Input (Peripheral)`.
+  3. Use `Find Pin` to detect the pin your fret was hooked up to.
   </details>
 
   <details>

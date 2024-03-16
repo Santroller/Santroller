@@ -45,8 +45,11 @@ bool init_mpr121() {
 #if MPR121_ENABLE
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODIR, MPR121_DDR);
     twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIOEN, MPR121_ENABLE);
+    // Set GPIO to LED driver on outputs and pullup on inputs.
+    twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIOCTL1, 0xFF);
+    twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIOCTL2, 0xFF);
 #endif
-    // enable X electrodes and start MPR121
+    // enable electrodes and start MPR121
     uint8_t ECR_SETTING =
         0b10000000 + MPR121_TOUCHPADS;                                                           // 5 bits for baseline tracking & proximity disabled + X
                                                                                                  // amount of electrodes running (12)

@@ -793,11 +793,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         const uint8_t reportId = (wValue & 0xFF);
         hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
 
-        for (int i = 0; i < wLength; i++) {
-            printf("%02x, ", requestBuffer[i]);
-        }
-        printf("\r\n");
-
 #if DEVICE_TYPE_IS_PRO
         if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
             switch (requestBuffer[2]) {

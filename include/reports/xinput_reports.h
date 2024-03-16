@@ -58,7 +58,7 @@ typedef struct {
     uint16_t rightThumbX;
     uint16_t rightThumbY;
     uint8_t reserved[4];
-    uint8_t flags;
+    uint16_t flags;
 } __attribute__((packed)) XInputInputCapabilities_t;
 
 typedef struct {

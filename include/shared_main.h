@@ -38,6 +38,9 @@ typedef struct {
 extern uint8_t ledState[ROUND_UP(LED_COUNT_STP, 8) / 8];
 extern uint8_t ledStateSelect[ROUND_UP(LED_COUNT_STP, 8) / 8];
 extern uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
+extern uint8_t ledState[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
+extern uint8_t ledStateSelect[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
+extern uint8_t lastLedState[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
 #else
 extern Led_t ledState[LED_COUNT];
 extern Led_t lastLedState[LED_COUNT];

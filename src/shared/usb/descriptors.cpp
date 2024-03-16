@@ -797,12 +797,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
             switch (requestBuffer[2]) {
                 case 0x89:
-                    printf("MIDI data enabled.\r\n");
                     proButtonsEnabled = true;
                     ps3_id_id = 0;
                     break;
                 case 0x81:
-                    printf("MIDI data disabled.\r\n");
                     proButtonsEnabled = false;
                     ps3_id_id = 0;
                     break;

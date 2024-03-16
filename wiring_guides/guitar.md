@@ -274,7 +274,7 @@ The world tour slider bar originally used a single wire to connect between the b
 </details>
 
 <details>
-    <summary>MPR121 (Low Latency Frets with 4 pins)</summary>
+    <summary>GH5 / Crazy guitar frets (MPR121, Low Latency Frets with 4 pins)</summary>
 
 1. In some cases, you may want to poll frets directly, but you still wish to use a neck connector that does not have enough pins to connect the frets. You can get around this by using an MPR121. 
 
@@ -300,7 +300,7 @@ The world tour slider bar originally used a single wire to connect between the b
    </details>
 
 <details>
-    <summary>Peripheral (Low Latency Frets with 4 pins)</summary>
+    <summary>GH5 / Crazy guitar frets (Peripheral, Low Latency Frets with 4 pins)</summary>
 
 1. In some cases, you may want to poll frets directly, but you still wish to use a neck connector that does not have enough pins to connect the frets. You can get around this by putting a second Pi Pico in the neck.
 2. Choose some SDA and SCL pins on each Pico, and connect them by these pins.

@@ -839,6 +839,20 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             return 0;
         }
 #endif
+#if LED_COUNT_MPR121
+        case COMMAND_SET_LEDS_MPR121: {
+            uint8_t led = response_buffer[0];
+            if (led >= LED_COUNT_MPR121) return 0;
+            if (response_buffer[1]) {
+                bit_set(ledStateMpr121, led % 8);
+                bit_set(ledStateMpr121Select, led % 8);
+            } else {
+                bit_clear(ledStateMpr121, led % 8);
+                bit_clear(ledStateMpr121Select, led % 8);
+            }
+            return 0;
+        }
+#endif
 #if LED_COUNT_STP
         case COMMAND_SET_LEDS: {
             uint8_t led = response_buffer[0];

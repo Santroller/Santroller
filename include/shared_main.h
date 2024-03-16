@@ -45,6 +45,12 @@ extern uint8_t lastLedState[ROUND_UP(LED_COUNT_MPR121, 8) / 8];
 extern Led_t ledState[LED_COUNT];
 extern Led_t lastLedState[LED_COUNT];
 #endif
+
+#if LED_COUNT_MPR121
+extern uint8_t ledStateMpr121;
+extern uint8_t ledStateMpr121Select;
+extern uint8_t lastLedStateMpr121;
+#endif
 #if LED_COUNT_PERIPHERAL_STP
 extern uint8_t ledStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 extern uint8_t ledStatePeripheralSelect[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];

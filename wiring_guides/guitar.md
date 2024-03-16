@@ -135,6 +135,72 @@ If you are working on a controller with only "2" pins as shown below, you will n
    </details>
 
 <details>
+    <summary>Joystick (or DPad)</summary>
+
+For d-pads that are integrated with the main board it is advised you skip wiring the dpad as you have to solder directly to the contacts and run wires accross the board. You will either be able to use your keyboard for these buttons, or they really won't really be needed as the games were designed to be controlled with the guitar alone. Below is an example of what this can look like, and why it is advisable to skip.
+
+[![curseddpad](/assets/images/curseddpad.jpg)](/assets/images/curseddpad.jpg)
+
+For guitars with a DPad that is seperate, it will be much easier to wire as you can follow the traces and wire it to the pins like you would for start/select.
+
+[![wtdpad](/assets/images/wtdpad.jpg)](/assets/images/wtdpad.jpg)
+
+1.  Find ground. There will be a single common ground and a pin for each direction or multiple "grounds" depending on the model. (some may once again be labeled as col or column) Just like for start and select, you will need to follow the traces to figure out which pin is GND. Mark GND, then connect it to a GND pin on the microcontroller. If there are more than one ground wires, you can twist them together and combine them again.
+2.  Up and down on the dpad MUST be connected to the same pins you will be using for strum. You will want to twist those wires together and solder them to the same pin. You may want to wait until you are working on the strum to connect these pins.
+3.  Home, left, and right can be connected to any unused digital pin on the microcontroller.
+
+For guitars with a joystick, there will be four pins, one is V<sub>CC</sub>, one is GND, one is the x axis and one is the y axis. You can work out which is which by tracing the traces, however on some guitars the traces are labelled for you. The joystick needs to go to an analogue pin (one of the A pins)
+
+</details>
+
+<details>
+    <summary>Frets</summary>
+
+1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
+2. Connect the common grounds to a ground pin on the microcontroller.
+3. Connect each fret to its own unused digital pin.
+</details>
+
+<details>
+    <summary>Strum</summary>
+
+The Strum switches are similar to the start and select buttons, they will be three wires on some guitars. For these situations it is easy enough to connect to the microcontroller.
+
+1. Connect Strum
+2. Connect the common ground to a GND on the microcontroller.
+3. Connect each strum switch to seperate unused pins on the microcontroller.
+
+On others, the Strum switches are a part of the main PCB, and you will need to solder directly to the strum switches, which should poke out the back of the main PCB. For example, on a wiitar, you will see the following:
+
+[![Wii Strum PCB](/assets/images/wii-strum.jpg)](/assets/images/wii-strum.jpg)
+
+In this case, there are two grounds that will be shorted together, so with the multimeter, you should be able to work out which pins are ground, by testing a pin from each switch, and working out which ones are shorted together by it beeping.
+
+Note that you can also choose to replace the original PCB with a 3D printed strum switch holder. If you want to go that route, there are some designs around for various guitars. The image at the beginning of this guide shows how this would look.
+
+When the strums are part of the main board you will need to cut the traces or you will have phantom inputs as your signal will still be traveling through the motherboard. (this is when your strum switches constantly input and you likely cannot autobind inputs in the configurator) You will need to take a knife and cut any traces that connect to the strum switches. In the picture below, the person did not cut many traces as they knew which ones were causing phantom inputs. Cutting extra traces is not going to affect your arduino guitar, as none of the traces are used except the one that connects the two grounds of the switches together. Even if you accidentally cut that trace, you will be able to connect the grounds again with a little extra wire.
+
+[![Trace Cuts on PCB](/assets/images/trace%20cuts.jpg)](/assets/images/trace%20cuts.jpg)
+
+</details>
+
+<details>
+    <summary>USB Host (Pi Pico Only)</summary>
+If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox Series, you can wire a USB port to the Pi Pico. You can also use this feature if your  guitar is USB based (like the xplorer) and you would rather pass some inputs through instead of wiring them manually, such as the dpad or start and select on the xplorer.
+
+[![usb](/assets/images/usb.png)](/assets/images/usb.png)
+
+1. If you are using a USB extension cable, cut it in half and expose the four cables.
+2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
+3. Hook up the V- / GND (Black) to ground on your Pi Pico
+4. Hook up D+ (Green) to one side of a 27ohm resistor and the other side to a unused digital pin.
+5. Hook up D- (White) to one side of a 27ohm resistor and the other side to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
+6. Connect a 47pF capacitor between D+ and ground
+7. Connect a 47pF capacitor between D- and ground
+
+</details>
+
+<details>
     <summary>Guitar Hero World Tour neck</summary>
 
 The world tour slider bar originally used a single wire to connect between the bar and the main PCB. This caused a lot of problems, as the format of data being sent over this wire is not optimal for speed, and it limits the combinations of frets we can read from the slider bar. To combat this, we bypass the chip generating this data, and opt to use a dedicated touch sensor chip, the MPR121, to handle reading from the slider bar and sending us data in a format that we can easily use.
@@ -253,72 +319,6 @@ The world tour slider bar originally used a single wire to connect between the b
 8. Connect each fret to its own unused digital pin on the peripheral Pico.
 
    </details>
-
-<details>
-    <summary>Joystick (or DPad)</summary>
-
-For d-pads that are integrated with the main board it is advised you skip wiring the dpad as you have to solder directly to the contacts and run wires accross the board. You will either be able to use your keyboard for these buttons, or they really won't really be needed as the games were designed to be controlled with the guitar alone. Below is an example of what this can look like, and why it is advisable to skip.
-
-[![curseddpad](/assets/images/curseddpad.jpg)](/assets/images/curseddpad.jpg)
-
-For guitars with a DPad that is seperate, it will be much easier to wire as you can follow the traces and wire it to the pins like you would for start/select.
-
-[![wtdpad](/assets/images/wtdpad.jpg)](/assets/images/wtdpad.jpg)
-
-1.  Find ground. There will be a single common ground and a pin for each direction or multiple "grounds" depending on the model. (some may once again be labeled as col or column) Just like for start and select, you will need to follow the traces to figure out which pin is GND. Mark GND, then connect it to a GND pin on the microcontroller. If there are more than one ground wires, you can twist them together and combine them again.
-2.  Up and down on the dpad MUST be connected to the same pins you will be using for strum. You will want to twist those wires together and solder them to the same pin. You may want to wait until you are working on the strum to connect these pins.
-3.  Home, left, and right can be connected to any unused digital pin on the microcontroller.
-
-For guitars with a joystick, there will be four pins, one is V<sub>CC</sub>, one is GND, one is the x axis and one is the y axis. You can work out which is which by tracing the traces, however on some guitars the traces are labelled for you. The joystick needs to go to an analogue pin (one of the A pins)
-
-</details>
-
-<details>
-    <summary>Frets</summary>
-
-1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
-2. Connect the common grounds to a ground pin on the microcontroller.
-3. Connect each fret to its own unused digital pin.
-</details>
-
-<details>
-    <summary>Strum</summary>
-
-The Strum switches are similar to the start and select buttons, they will be three wires on some guitars. For these situations it is easy enough to connect to the microcontroller.
-
-1. Connect Strum
-2. Connect the common ground to a GND on the microcontroller.
-3. Connect each strum switch to seperate unused pins on the microcontroller.
-
-On others, the Strum switches are a part of the main PCB, and you will need to solder directly to the strum switches, which should poke out the back of the main PCB. For example, on a wiitar, you will see the following:
-
-[![Wii Strum PCB](/assets/images/wii-strum.jpg)](/assets/images/wii-strum.jpg)
-
-In this case, there are two grounds that will be shorted together, so with the multimeter, you should be able to work out which pins are ground, by testing a pin from each switch, and working out which ones are shorted together by it beeping.
-
-Note that you can also choose to replace the original PCB with a 3D printed strum switch holder. If you want to go that route, there are some designs around for various guitars. The image at the beginning of this guide shows how this would look.
-
-When the strums are part of the main board you will need to cut the traces or you will have phantom inputs as your signal will still be traveling through the motherboard. (this is when your strum switches constantly input and you likely cannot autobind inputs in the configurator) You will need to take a knife and cut any traces that connect to the strum switches. In the picture below, the person did not cut many traces as they knew which ones were causing phantom inputs. Cutting extra traces is not going to affect your arduino guitar, as none of the traces are used except the one that connects the two grounds of the switches together. Even if you accidentally cut that trace, you will be able to connect the grounds again with a little extra wire.
-
-[![Trace Cuts on PCB](/assets/images/trace%20cuts.jpg)](/assets/images/trace%20cuts.jpg)
-
-</details>
-
-<details>
-    <summary>USB Host (Pi Pico Only)</summary>
-If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox Series, you can wire a USB port to the Pi Pico. You can also use this feature if your  guitar is USB based (like the xplorer) and you would rather pass some inputs through instead of wiring them manually, such as the dpad or start and select on the xplorer.
-
-[![usb](/assets/images/usb.png)](/assets/images/usb.png)
-
-1. If you are using a USB extension cable, cut it in half and expose the four cables.
-2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
-3. Hook up the V- / GND (Black) to ground on your Pi Pico
-4. Hook up D+ (Green) to one side of a 27ohm resistor and the other side to a unused digital pin.
-5. Hook up D- (White) to one side of a 27ohm resistor and the other side to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
-6. Connect a 47pF capacitor between D+ and ground
-7. Connect a 47pF capacitor between D- and ground
-
-</details>
 
 ## Programming
 

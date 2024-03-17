@@ -43,6 +43,12 @@ enum {
   MPR121_GPIOTOGGLE = 0x7A,
 
   MPR121_SOFTRESET = 0x80,
+
+  // https://files.seeedstudio.com/wiki/Grove-12_Key_Capacitive_I2C_Touch_Sensor_V2-MPR121/res/AN3894.pdf
+  MPR121_PWM0 = 0x81,
+  MPR121_PWM1 = 0x82,
+  MPR121_PWM2 = 0x83,
+  MPR121_PWM3 = 0x84,
 };
 
 #include <stdint.h>

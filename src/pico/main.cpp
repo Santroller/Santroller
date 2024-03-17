@@ -232,6 +232,10 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     }
     if (controllerType == XBOX360) {
         if (subtype) {
+            // GHL guitars are special and we need to create a fake subtype to map the inputs correctly
+            if (host_vid == XBOX_360_GHLIVE_DONGLE_VID && host_pid == XBOX_360_GHLIVE_DONGLE_PID) {
+                subtype = XINPUT_GUITAR_HERO_LIVE;
+            }
             type.console_type = controllerType;
             type.sub_type = subtype;
 

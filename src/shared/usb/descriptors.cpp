@@ -76,8 +76,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
     GamepadDescriptor : {
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
-        flags : XINPUT_FLAGS,
-        reserved : 0x01,
+        reserved : {0x10, 0x01},
         subtype : SUB_TYPE,
         reserved2 : 0x25,
         bEndpointAddressIn : DEVICE_EPADDR_IN,

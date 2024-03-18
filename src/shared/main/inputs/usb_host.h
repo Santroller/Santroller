@@ -196,7 +196,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.dpadRight |= right;
                     usb_host_data.dpadUp |= up;
                     usb_host_data.dpadDown |= down;
-                    if (report->tilt) {
+                    if (report->tilt != PS3_ACCEL_CENTER) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {
@@ -333,7 +333,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
-                    if (report->tilt) {
+                    if (report->tilt != PS3_ACCEL_CENTER) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {
@@ -360,17 +360,17 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.rightBlue |= report->rightBlue;
                     usb_host_data.rightRed |= report->rightRed;
                     usb_host_data.rightGreen |= report->rightGreen;
-                    if (report->effectsKnob) {
+                    if (report->effectsKnob != PS3_ACCEL_CENTER) {
                         usb_host_data.effectsKnob = (report->effectsKnob - PS3_ACCEL_CENTER) << 6;
                     }
-                    if (report->crossfader) {
+                    if (report->crossfader != PS3_ACCEL_CENTER) {
                         usb_host_data.crossfader = (report->crossfader - PS3_ACCEL_CENTER) << 6;
                     }
-                    if (report->leftTableVelocity) {
-                        usb_host_data.leftTableVelocity = (report->leftTableVelocity - 0x80) << 8;
+                    if (report->leftTableVelocity != PS3_STICK_CENTER) {
+                        usb_host_data.leftTableVelocity = (report->leftTableVelocity - PS3_STICK_CENTER) << 8;
                     }
-                    if (report->rightTableVelocity) {
-                        usb_host_data.rightTableVelocity = (report->rightTableVelocity - 0x80) << 8;
+                    if (report->rightTableVelocity != PS3_STICK_CENTER) {
+                        usb_host_data.rightTableVelocity = (report->rightTableVelocity - PS3_STICK_CENTER) << 8;
                     }
                     break;
                 }
@@ -434,7 +434,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
-                    if (report->tilt) {
+                    if (report->tilt != PS3_ACCEL_CENTER) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {

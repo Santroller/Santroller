@@ -412,7 +412,7 @@ uint8_t handle_calibration_turntable_ps3(uint8_t previous, int16_t orig_val, uin
     return previous;
 }
 int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uint8_t multiplier) {
-    int32_t val = (orig_val * multiplier) >> 9;
+    int32_t val = (orig_val * multiplier) >> 8;
     if (val > 64) {
         val = 64;
     }

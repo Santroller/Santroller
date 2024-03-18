@@ -377,7 +377,7 @@ If you intend to use the peripheral features, it is recommended to program the p
   3. Click on find pin and move the joystick left or right
   4. Adjust the threshold so that the D-pad Left icon lights up when you have pushed the Joystick far enough to the left. This means you can adjust how sensitive you want your joystick to be.
   5. You can do the same for D-pad right, however, set the `Type` to `Joystick Positive` instead.
-  6. If you wish to also map joystick up and down, click `Add Setting` and add another Strup Up and Strum Down input. Then you can follow the above instructions again, only using negative for up and positive for down, and when detecting the pin, move the joystick up and down instead.
+  6. If you wish to also map joystick up and down, click `Add Setting` and add another Strum Up and Strum Down input. Then you can follow the above instructions again, only using negative for up and positive for down, and when detecting the pin, move the joystick up and down instead.
 
   </details>
 

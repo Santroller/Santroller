@@ -358,7 +358,7 @@ If you intend to use the peripheral features, it is recommended to program the p
 
   </details>
 
-    <details>
+  <details>
     <summary>Start + Select to Home</summary>
 
   1. Click on the home / Xbox / PS button.

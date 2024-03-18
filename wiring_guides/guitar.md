@@ -474,7 +474,7 @@ If you intend to use the peripheral features, it is recommended to program the p
   </details>
 
   <details>
-    <summary>GH5 / Crazy Guitar (MPR121 Mode)/summary>
+    <summary>GH5 / Crazy Guitar (MPR121 Mode)</summary>
 
     1. If you wish to have better latency frets with these necks, you can replace the slider bar controller with an MPR121, which will give you low latency but will still use the same amount of wires.
     2. Click on Add Setting, and add a `Slider` setting

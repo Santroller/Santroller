@@ -476,13 +476,13 @@ If you intend to use the peripheral features, it is recommended to program the p
   <details>
     <summary>GH5 / Crazy Guitar (MPR121 Mode)/summary>
 
-1. If you wish to have better latency frets with these necks, you can replace the slider bar controller with an MPR121, which will give you low latency but will still use the same amount of wires.
-2. Click on Add Setting, and add a `Slider` setting
-3. Set the `Input Type` to `MPR121 Input`
-4. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
-5. Set the channels based on your wiring. The configuration will update live, so if you are unsure which via maps to which slider pad, you can just work through the channels and assign things to the correct pads by touching each pad and working out which channel is which.
-6. Go to each fret, and set its `Input Type` to `MPR121 Input`.
-7. Set the channel based on your wiring. If you are unsure which channel you used, you can just walk through each channel and work out which one was used, as the status of the MPR121 will update live as you press and release frets.
+    1. If you wish to have better latency frets with these necks, you can replace the slider bar controller with an MPR121, which will give you low latency but will still use the same amount of wires.
+    2. Click on Add Setting, and add a `Slider` setting
+    3. Set the `Input Type` to `MPR121 Input`
+    4. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    5. Set the channels based on your wiring. The configuration will update live, so if you are unsure which via maps to which slider pad, you can just work through the channels and assign things to the correct pads by touching each pad and working out which channel is which.
+    6. Go to each fret, and set its `Input Type` to `MPR121 Input`.
+    7. Set the channel based on your wiring. If you are unsure which channel you used, you can just walk through each channel and work out which one was used, as the status of the MPR121 will update live as you press and release frets.
   </details>
 
   <details>

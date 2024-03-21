@@ -77,42 +77,42 @@ typedef struct
 typedef struct
 {
     GipHeader_t Header;
-    bool sync : 1;
-    bool guide : 1;
-    bool start : 1;  // menu
-    bool back : 1;   // view
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
 
-    bool a : 1;  // green
-    bool b : 1;  // red
-    bool x : 1;  // blue
-    bool y : 1;  // yellow
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t x : 1;  // blue
+    uint8_t y : 1;  // yellow
 
-    bool dpadUp : 1;    // dpadStrumUp
-    bool dpadDown : 1;  // dpadStrumDown
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;    // dpadStrumUp
+    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
 
-    bool leftShoulder : 1;  // orange
-    bool : 1;
-    bool solo : 1;  // leftThumbClick
-    bool : 1;
+    uint8_t leftShoulder : 1;  // orange
+    uint8_t : 1;
+    uint8_t solo : 1;  // leftThumbClick
+    uint8_t : 1;
 
     uint8_t tilt;
     uint8_t whammy;
     uint8_t pickup;
 
-    bool green : 1;
-    bool red : 1;
-    bool yellow : 1;
-    bool blue : 1;
-    bool orange : 1;
+    uint8_t green : 1;
+    uint8_t red : 1;
+    uint8_t yellow : 1;
+    uint8_t blue : 1;
+    uint8_t orange : 1;
     uint8_t : 3;
 
-    bool soloGreen : 1;
-    bool soloRed : 1;
-    bool soloYellow : 1;
-    bool soloBlue : 1;
-    bool soloOrange : 1;
+    uint8_t soloGreen : 1;
+    uint8_t soloRed : 1;
+    uint8_t soloYellow : 1;
+    uint8_t soloBlue : 1;
+    uint8_t soloOrange : 1;
     uint8_t : 3;
 
     uint8_t unknown[3];
@@ -121,25 +121,25 @@ typedef struct
 typedef struct
 {
     GipHeader_t Header;
-    bool sync : 1;
-    bool guide : 1;
-    bool start : 1;  // menu
-    bool back : 1;   // view
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
 
-    bool a : 1;  // green
-    bool b : 1;  // red
-    bool x : 1;  // blue
-    bool y : 1;  // yellow
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t x : 1;  // blue
+    uint8_t y : 1;  // yellow
 
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
 
-    bool leftShoulder : 1;   // kick1
-    bool rightShoulder : 1;  // kick2
-    bool : 1;
-    bool : 1;
+    uint8_t leftShoulder : 1;   // kick1
+    uint8_t rightShoulder : 1;  // kick2
+    uint8_t : 1;
+    uint8_t : 1;
 
     uint8_t yellowVelocity : 4;
     uint8_t redVelocity : 4;
@@ -156,28 +156,26 @@ typedef struct
 typedef struct
 {
     GipHeader_t Header;
-    bool sync : 1;
-    bool guide : 1;
-    bool start : 1;  // menu
-    bool back : 1;   // view
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
 
-    bool a : 1;
-    bool b : 1;
-    bool x : 1;
-    bool y : 1;
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t x : 1;
+    uint8_t y : 1;
 
-    bool dpadUp : 1;
-    bool dpadDown : 1;
-    bool dpadLeft : 1;
-    bool dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
 
-    bool : 1;
-    bool : 1;
-    bool : 1;
-    bool : 1;
+    uint8_t : 4;
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;
+    
     uint16_t leftGreen : 1;
     uint16_t leftRed : 1;
     uint16_t leftBlue : 1;

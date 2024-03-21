@@ -66,10 +66,10 @@ uint16_t tick_mpr121() {
     }
 #if MPR121_ENABLE
     uint8_t gpioRaw;
-    if (!twi_readFromPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, 1, &gpioRaw)) {
+    if (!twi_readFromPointerRepeatedStart(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, 1, &gpioRaw)) {
         mpr121_init = false;
     }
-    raw |= (gpioRaw & ~MPR121_DDR) << 4;
+    raw |= (gpioRaw & MPR121_ENABLE) << 4;
 #endif
     return raw;
 }

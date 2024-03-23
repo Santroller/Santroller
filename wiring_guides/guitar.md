@@ -100,6 +100,18 @@ If you are working on a controller with only "2" pins as shown below, you will n
 </details>
 
 <details>
+    <summary>Pickup Selector</summary>
+
+1. With most pickup selectors's there are 3 pins. (if there are 4, you do not need the fourth. 2 pins is discussed below) The middle pin is the data pin, one outer pin is V<sub>CC</sub> while the other pin is GND (it doesn't matter which one, you can flip it when programming later if needed). Whammy needs to go to an analogue pin.
+2. Connect V<sub>CC</sub> and GND to the microcontroller. (the two outside wires)
+   - If your whammy is not responding correctly in game, you may need to swap V<sub>CC</sub> and GND around.
+3. Connect the data (middle) pin to an analogue pin on the microcontroller. These are labeled with an A on the microcontroller.
+
+If you are working on a controller with only "2" pins as the RB Precision Bass, you will need to desolder the bridged pins and run 3 wires yourself as noted above for the pickup selector to work best with the configurator. For the Precision Bass this is easiest done by desoldering the PCB attached to the potentiometer, and then running your own wires directly to the potentiometer.
+
+</details>
+
+<details>
     <summary>Digital Tilt</summary>
 
 1. Connect one pin of the first tilt sensor to ground
@@ -390,6 +402,18 @@ If you intend to use the peripheral features, it is recommended to program the p
   4. Release the whammy bar and hit `Next`.
   5. Push the whammy all the way in, and hit `Next`
   6. Release the whammy again, and hit `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
+  </details>
+
+  <details>
+    <summary>Pickup Selector</summary>
+
+  1. Click on the pickup selector, and make sure the `Input Type` is set to `Analog Pin Input`.
+  2. Click on the `Find Pin` button, and then move the pickup selector. If you have wired everything correctly, the tool should detect the pin and the `Original Value` value should change when you move the pickup selector.
+  3. If the `Original Value` of the pickup selector decreases as you increase the notch position on your guitar, turn on `Invert`.
+  4. Set the pickup selector to the second position
+  5. Drag the slider for `Notch 2 Value` so that the current notch is `Notch 2`.
+  6. Set the pickup selector to the third position and then move the slider for `Notch 3` as detailed above.
+  7. Repeat this for the other notches. After this, the current notch should reflect the status of the pickup selector.
   </details>
 
   <details>

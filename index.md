@@ -89,6 +89,11 @@ This is done using the Santroller Configurator, which can program various microc
   - USB devices (Pi Pico only)
     - This is also how authentication works, it gets passed through to an offical USB controller
   - Direct wiring to digital or analog sources
+  - MPR121
+    - This is a capacative touch chip that can handle both the slider bar and frets over I2C, much like how the GH5 guitar neck works
+    - However, it has the same latency as direct wiring
+  - ADXL345
+    - Can be used as a tilt sensor and mapped to any axis
 - Support for bluetooth (Pi Pico W required)
   - Supports both conecting to a bluetooth receiver directly, or building a bluetooth receiver from a second Pico W
   - Using a second Pico W allows for using the receiver on a device that doesn't support bluetooth gamepads directly, such as a console

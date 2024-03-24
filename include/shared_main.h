@@ -27,6 +27,7 @@ void authentication_successful(void);
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
+    uint8_t brightness;
     uint8_t r;
     uint8_t g;
     uint8_t b;

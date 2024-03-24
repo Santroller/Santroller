@@ -819,9 +819,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
                 return 0;
             }
             ledState[led].select = 1;
-            ledState[led].r = response_buffer[1];
-            ledState[led].g = response_buffer[2];
-            ledState[led].b = response_buffer[3];
+            ledState[led].brightness = response_buffer[1];
+            ledState[led].r = response_buffer[2];
+            ledState[led].g = response_buffer[3];
+            ledState[led].b = response_buffer[4];
             return 0;
         }
 #endif
@@ -834,9 +835,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
                 return 0;
             }
             ledStatePeripheral[led].select = 1;
-            ledStatePeripheral[led].r = response_buffer[1];
-            ledStatePeripheral[led].g = response_buffer[2];
-            ledStatePeripheral[led].b = response_buffer[3];
+            ledStatePeripheral[led].brightness = response_buffer[1];
+            ledStatePeripheral[led].r = response_buffer[2];
+            ledStatePeripheral[led].g = response_buffer[3];
+            ledStatePeripheral[led].b = response_buffer[4];
             return 0;
         }
 #endif

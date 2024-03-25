@@ -37,3 +37,6 @@ The switch clears both the in and out endpoint, and we detect this to jump to a 
 
 # Mac / linux / android
 We stay in a "Universal" mode if none of the above stuff is detected, which will just use standard HID
+
+# OG Xbox
+Detect XID descriptor read. It will be sent if you include a interface that looks like a XID device.

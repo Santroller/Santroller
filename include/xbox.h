@@ -27,8 +27,8 @@ typedef struct {
     uint16_t wAlternateProductIds[4];
 } __attribute__((packed)) XID_DESCRIPTOR;
 
-extern const XInputVibrationCapabilities_t capabilities1;
-extern const XInputInputCapabilities_t capabilities2;
+extern const XInputVibrationCapabilities_t XInputVibrationCapabilities;
+extern const XInputInputCapabilities_t XInputInputCapabilities;
 extern const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR ExtendedIDs;
 extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs;  
 extern const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs360;
@@ -37,5 +37,5 @@ extern const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsOne;
 extern const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsOneDetect;
 
 extern const XID_DESCRIPTOR DukeXIDDescriptor;
-extern const OGXboxGamepad_Data_t DukeXIDCapabilitiesIn;
-extern const OGXboxOutput_Report_t DukeXIDCapabilitiesOut;
+extern const OGXboxGamepad_Data_t DukeXIDInputCapabilities;
+extern const OGXboxOutput_Report_t DukeXIDVibrationCapabilities;

@@ -534,20 +534,22 @@ uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
-    if (consoleType != XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+    if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
+    if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         return true;
     }
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 1 && wValue == 0x0100) {
-        return true;
-    }
-    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 1 && wValue == 0x0200) {
-        return true;
-    }
-    if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == 9 && wValue == 0x0200) {
-        return true;
+    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        if (request == 6 && wValue == 0x4200) {
+            return true;
+        }
+        if (request == 1 && wValue == 0x0100) {
+            return true;
+        }
+        if (request == 1 && wValue == 0x0200) {
+            return true;
+        }
     }
     if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
         if (xbox_360_state == Auth1) {
@@ -557,8 +559,8 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             handle_auth_led();
         }
     }
-// Doing this actually *breaks* xb360 on pro micros.
-// But its necessary on the pico :/
+    // Doing this actually *breaks* xb360 on pro micros.
+    // But its necessary on the pico :/
 #if SUPPORTS_PICO
     switch (request) {
         case 0x81:
@@ -628,17 +630,19 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         reset_usb();
         return 0;
     }
-    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
-        memcpy_P(requestBuffer, &DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
-        return sizeof(DukeXIDDescriptor);
-    }
-    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 1 && wValue == 0x0100) {
-        memcpy_P(requestBuffer, &DukeXIDCapabilitiesIn, sizeof(DukeXIDCapabilitiesIn));
-        return sizeof(DukeXIDCapabilitiesIn);
-    }
-    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 1 && wValue == 0x0200) {
-        memcpy_P(requestBuffer, &DukeXIDCapabilitiesOut, sizeof(DukeXIDCapabilitiesOut));
-        return sizeof(DukeXIDCapabilitiesOut);
+    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        if (request == 6 && wValue == 0x4200) {
+            memcpy_P(requestBuffer, &DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
+            return sizeof(DukeXIDDescriptor);
+        }
+        if (request == 1 && wValue == 0x0100) {
+            memcpy_P(requestBuffer, &DukeXIDInputCapabilities, sizeof(DukeXIDInputCapabilities));
+            return sizeof(DukeXIDInputCapabilities);
+        }
+        if (request == 1 && wValue == 0x0200) {
+            memcpy_P(requestBuffer, &DukeXIDVibrationCapabilities, sizeof(DukeXIDVibrationCapabilities));
+            return sizeof(DukeXIDVibrationCapabilities);
+        }
     }
     if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
         seen_windows = true;
@@ -811,14 +815,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == VIBRATION_CAPABILITIES_WVALUE) {
-            memcpy_P(requestBuffer, &capabilities1, sizeof(capabilities1));
-            return sizeof(capabilities1);
+            memcpy_P(requestBuffer, &XInputVibrationCapabilities, sizeof(XInputVibrationCapabilities));
+            return sizeof(XInputVibrationCapabilities);
         } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR) {
             memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
             return ExtendedIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == INPUT_CAPABILITIES_WVALUE) {
-            memcpy_P(requestBuffer, &capabilities2, sizeof(capabilities2));
-            return sizeof(capabilities2);
+            memcpy_P(requestBuffer, &XInputInputCapabilities, sizeof(XInputInputCapabilities));
+            return sizeof(XInputInputCapabilities);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && (consoleType == WINDOWS || consoleType == XBOX360) && request == HID_REQUEST_GET_REPORT && wIndex == 0x0000 && wValue == SERIAL_NUMBER_WVALUE) {
         uint32_t serial = micros();

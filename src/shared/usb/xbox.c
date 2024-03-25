@@ -1,11 +1,11 @@
 #include "xbox.h"
 
+#include "config.h"
 #include "endpoints.h"
 #include "progmem.h"
 #include "reports/xinput_reports.h"
 #include "stdint.h"
 #include "wcid.h"
-#include "config.h"
 const XInputVibrationCapabilities_t PROGMEM capabilities1 = {
     rid : 0x00,
     rsize : sizeof(XInputVibrationCapabilities_t),
@@ -98,4 +98,48 @@ const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE PROGMEM DevCompatIDsOne = {
             SubCompatibleID : {0},
             Reserved2 : {0}
         }}
+};
+
+const XID_DESCRIPTOR DukeXIDDescriptor PROGMEM = {
+    bLength : sizeof(XID_DESCRIPTOR),
+    bDescriptorType : 0x42,
+    bcdXid : USB_VERSION_BCD(1, 0, 0),
+    bType : 0x01,
+    bSubType : 0x02,
+    bMaxInputReportSize : sizeof(OG_XBOX_REPORT),
+    bMaxOutputReportSize : sizeof(OGXboxOutput_Report_t),
+    wAlternateProductIds : {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
+};
+
+const OGXboxGamepad_Data_t DukeXIDCapabilitiesIn PROGMEM = {
+    rid : 0x00,
+    rsize : sizeof(OGXboxGamepad_Data_t),
+    dpadUp : 1,
+    dpadDown : 1,
+    dpadLeft : 1,
+    dpadRight : 1,
+    start : 1,
+    back : 1,
+    leftThumbClick : 1,
+    rightThumbClick : 1,
+    padding : 0,
+    a : 0xFF,
+    b : 0xFF,
+    x : 0xFF,
+    y : 0xFF,
+    leftShoulder : 0xFF,
+    rightShoulder : 0xFF,
+    leftTrigger : 0xFF,
+    rightTrigger : 0xFF,
+    leftStickX : 0xFF,
+    leftStickY : 0xFF,
+    rightStickX : 0xFF,
+    rightStickY : 0xFF,
+};
+
+const OGXboxOutput_Report_t DukeXIDCapabilitiesOut PROGMEM = {
+    rid : 0x00,
+    rsize : sizeof(OGXboxOutput_Report_t),
+    left : 0xFFFF,
+    right : 0xFFFF
 };

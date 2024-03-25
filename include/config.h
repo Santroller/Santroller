@@ -42,6 +42,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #if DEVICE_TYPE == DANCE_PAD
 #define SUB_TYPE XINPUT_DANCE_PAD
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PC_REPORT PCGamepad_Data_t
@@ -49,6 +50,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS4Gamepad_Data_t
 #elif DEVICE_TYPE == STAGE_KIT
 #define SUB_TYPE XINPUT_STAGE_KIT
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PC_REPORT PCStageKit_Data_t
@@ -56,6 +58,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS4Gamepad_Data_t
 #elif DEVICE_TYPE == GAMEPAD
 #define SUB_TYPE XINPUT_GAMEPAD
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputGamepad_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PC_REPORT PCGamepad_Data_t
@@ -65,6 +68,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3_GH_GUITAR_PID
 #define WII_TYPE WII_RB_GUITAR_PID
+#define OG_XBOX_REPORT OGXboxGuitarHeroGuitar_Data_t
 #define XINPUT_REPORT XInputGuitarHeroGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCGuitarHeroGuitar_Data_t
@@ -76,6 +80,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_GUITAR
 #define PS3_TYPE PS3_RB_GUITAR_PID
 #define WII_TYPE WII_RB_GUITAR_PID
+#define OG_XBOX_REPORT OGXboxRockBandGuitar_Data_t
 #define XINPUT_REPORT XInputRockBandGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandGuitar_Data_t
@@ -87,6 +92,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_PRO_GUITAR
 #define PS3_TYPE PS3_MPA_MUSTANG_PID
 #define WII_TYPE WII_MPA_MUSTANG_PID
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputRockBandProGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandProGuitar_Data_t
@@ -98,6 +104,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_PRO_GUITAR
 #define PS3_TYPE PS3_MPA_SQUIRE_PID
 #define WII_TYPE WII_MPA_SQUIRE_PID
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputRockBandProGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandProGuitar_Data_t
@@ -109,6 +116,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_MPA_DRUMS_PID
 #define WII_TYPE WII_MPA_DRUMS_PID
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PC_REPORT PCRockBandDrums_Data_t
@@ -120,6 +128,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_PRO_KEYS
 #define PS3_TYPE PS3_MPA_KEYS_PID
 #define WII_TYPE WII_MPA_KEYS_PID
+#define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputRockBandKeyboard_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandProKeyboard_Data_t
@@ -130,6 +139,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == LIVE_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3WIIU_GHLIVE_DONGLE_PID
+#define OG_XBOX_REPORT OGXboxGHLGuitar_Data_t
 #define XINPUT_REPORT XInputGHLGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PC_REPORT PCGHLGuitar_Data_t
@@ -141,6 +151,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID
 #define WII_TYPE WII_RB_DRUM_PID
+#define OG_XBOX_REPORT OGXboxGuitarHeroDrums_Data_t
 #define XINPUT_REPORT XInputGuitarHeroDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PC_REPORT PCGuitarHeroDrums_Data_t
@@ -152,6 +163,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_RB_DRUM_PID
 #define WII_TYPE WII_RB_DRUM_PID
+#define OG_XBOX_REPORT OGXboxRockBandDrums_Data_t
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PC_REPORT PCRockBandDrums_Data_t
@@ -162,6 +174,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUB_TYPE XINPUT_TURNTABLE
 #define PS3_TYPE PS3_DJ_TURNTABLE_PID
+#define OG_XBOX_REPORT OGXboxTurntable_Data_t
 #define XINPUT_REPORT XInputTurntable_Data_t
 #define XBOX_ONE_REPORT XboxOneTurntable_Data_t
 #define PC_REPORT PCTurntable_Data_t

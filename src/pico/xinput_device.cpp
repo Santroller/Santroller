@@ -106,7 +106,6 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                       uint16_t max_len) {
     uint16_t drv_len;
     if (TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass) {
-        TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass, 0);
         drv_len = sizeof(tusb_desc_interface_t) +
                   (itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
 
@@ -171,6 +170,38 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                 }
             }
         }
+    } else if (0x58 == itf_desc->bInterfaceClass) {
+
+        // len = interface + n*endpoints
+        drv_len = sizeof(tusb_desc_interface_t) + itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t);
+        TU_ASSERT(max_len >= drv_len, 0);
+
+        // Find available interface
+        xinputd_interface_t *p_hid = NULL;
+        uint8_t hid_id;
+        for (hid_id = 0; hid_id < CFG_TUD_XINPUT; hid_id++) {
+            if (_xinputd_itf[hid_id].ep_in == 0) {
+                p_hid = &_xinputd_itf[hid_id];
+                break;
+            }
+        }
+        TU_ASSERT(p_hid, 0);
+
+        uint8_t const *p_desc = (uint8_t const *)itf_desc;
+
+        //------------- Endpoint Descriptor -------------//
+        p_desc = tu_desc_next(p_desc);
+        TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &p_hid->ep_out, &p_hid->ep_in), 0);
+
+        p_hid->itf_num = itf_desc->bInterfaceNumber;
+
+        // Prepare for output endpoint
+        if (p_hid->ep_out) {
+            if (!usbd_edpt_xfer(rhport, p_hid->ep_out, p_hid->epout_buf, sizeof(p_hid->epout_buf))) {
+                TU_LOG_FAILED();
+                TU_BREAKPOINT();
+            }
+        }
     } else {
         TU_VERIFY(TUSB_CLASS_HID == itf_desc->bInterfaceClass, 0);
 
@@ -230,7 +261,7 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     }
     if (ep_addr == p_xinput->ep_out) {
         hid_set_report(p_xinput->epout_buf, xferred_bytes, 0x00, INTERRUPT_ID);
-        if (consoleType == XBOX360 || consoleType == WINDOWS) {
+        if (consoleType == XBOX360 || consoleType == WINDOWS || consoleType == OG_XBOX) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x20));
 

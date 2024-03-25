@@ -49,6 +49,13 @@ typedef struct {
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
+    USB_INTERFACE_DESCRIPTOR InterfaceGamepad;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
+} __attribute__((packed)) OG_XBOX_CONFIGURATION_DESCRIPTOR;
+
+typedef struct {
+    USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR InterfaceHID;
     USB_HID_DESCRIPTOR HIDDescriptor;
     USB_ENDPOINT_DESCRIPTOR EndpointInHID;

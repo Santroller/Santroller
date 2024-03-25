@@ -2,7 +2,6 @@
 
 #include "Arduino.h"
 #include "adxl.h"
-#include "mpr121.h"
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
@@ -12,6 +11,7 @@
 #include "inputs/slave.h"
 #include "io.h"
 #include "io_define.h"
+#include "mpr121.h"
 #include "pico_slave.h"
 #include "pin_funcs.h"
 #include "ps2.h"
@@ -1361,9 +1361,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
 #include "inputs/adxl.h"
-#include "inputs/mpr121.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
+#include "inputs/mpr121.h"
 #include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
 #include "inputs/turntable.h"
@@ -1527,6 +1527,19 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
     }
 #endif
+    if (output_console_type == OG_XBOX) {
+        OG_XBOX_REPORT *report = (OG_XBOX_REPORT *)report_data;
+        memset(report_data, 0, sizeof(OG_XBOX_REPORT));
+        report->rid = 0;
+        report->rsize = sizeof(OG_XBOX_REPORT);
+// Whammy on the xbox guitars goes from min to max, so it needs to default to min
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
+        report->whammy = INT16_MIN;
+#endif
+        TICK_OG_XBOX;
+
+        report_size = packet_size = sizeof(OG_XBOX_REPORT);
+    }
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
@@ -2011,7 +2024,7 @@ int tick_bluetooth_inputs(const void *buf) {
             }
         }
     }
-    if (output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3&& !updateHIDSequence) {
+    if (output_console_type != REAL_PS3 && output_console_type != PS4 && output_console_type != PS3 && !updateHIDSequence) {
         uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
         if (cmp == 0) {
             return 0;

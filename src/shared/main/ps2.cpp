@@ -202,7 +202,12 @@ uint8_t *tickPS2() {
         uint8_t *in =
             autoShiftData(port, commandPollInput, sizeof(commandPollInput));
         if (isDualShock2Reply(in)) {
-            ps2ControllerType = PSX_DUALSHOCK_2_CONTROLLER;
+            uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
+            if (bit_check(buttonWord, PSB_PAD_LEFT)) {
+                ps2ControllerType = PSX_GUITAR_HERO_CONTROLLER;
+            } else {
+                ps2ControllerType = PSX_DUALSHOCK_2_CONTROLLER;
+            }
         } else if (isDualShockReply(in)) {
             uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
             if (bit_check(buttonWord, PSB_PAD_LEFT)) {

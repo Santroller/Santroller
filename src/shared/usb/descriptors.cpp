@@ -625,6 +625,8 @@ bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
         reset_usb();
@@ -644,6 +646,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return sizeof(DukeXIDVibrationCapabilities);
         }
     }
+#endif
     if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
         seen_windows = true;
     }
@@ -667,6 +670,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS) && request == USB_REQUEST_SET_INTERFACE) {
         return 0;
     }
+
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
         reset_usb();
@@ -719,9 +724,12 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return 0;
     }
 #endif
+#endif
     // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
     // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
+
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         // PS3s request this as some form of controller id
         if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
             // Pro instruments use a different init flow
@@ -790,11 +798,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
             return tick_inputs(requestBuffer, NULL, consoleType);
         }
-        #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         if (consoleType == OG_XBOX && wValue == 0x0100 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == sizeof(OG_XBOX_REPORT)) {
             return tick_inputs(requestBuffer, NULL, consoleType);
         }
-        #endif
+#endif
         bool test = true;
         uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);
         if (test) {

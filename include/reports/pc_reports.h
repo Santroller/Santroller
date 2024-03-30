@@ -229,9 +229,6 @@ typedef struct
     uint8_t x : 1;  // square, blue
 
     uint8_t leftShoulder : 1;  // orange, l1
-    uint8_t back : 1;          // select
-    uint8_t start : 1;
-    uint8_t guide : 1;  // ps
 
     uint8_t soloGreen : 1;
     uint8_t soloRed : 1;
@@ -239,6 +236,9 @@ typedef struct
     uint8_t soloBlue : 1;
 
     uint8_t soloOrange : 1;
+    uint8_t back : 1;          // select
+    uint8_t start : 1;
+    uint8_t guide : 1;  // ps
     uint8_t : 3;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later

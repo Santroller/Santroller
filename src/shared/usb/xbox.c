@@ -106,7 +106,7 @@ const XID_DESCRIPTOR PROGMEM DukeXIDDescriptor = {
     bcdXid : USB_VERSION_BCD(1, 0, 0),
     bType : 0x01,
     bSubType : 0x02,
-    bMaxInputReportSize : sizeof(OG_XBOX_REPORT),
+    bMaxInputReportSize : sizeof(OGXboxGamepad_Data_t),
     bMaxOutputReportSize : sizeof(OGXboxOutput_Report_t),
     wAlternateProductIds : {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
 };

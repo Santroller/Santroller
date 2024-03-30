@@ -790,9 +790,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
             return tick_inputs(requestBuffer, NULL, consoleType);
         }
+        #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         if (consoleType == OG_XBOX && wValue == 0x0100 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == sizeof(OG_XBOX_REPORT)) {
             return tick_inputs(requestBuffer, NULL, consoleType);
         }
+        #endif
         bool test = true;
         uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);
         if (test) {

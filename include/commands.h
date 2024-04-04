@@ -43,6 +43,8 @@ enum SerialCommands {
     COMMAND_READ_MPR121,
     COMMAND_READ_MPR121_VALID,
     COMMAND_SET_LEDS_MPR121,
+    COMMAND_READ_MAX170X,
+    COMMAND_READ_MAX170X_VALID,
     MAX=100
 };
 
@@ -70,6 +72,8 @@ extern uint8_t overriddenR2;
 extern int16_t filtered[3];
 extern bool mpr121_init;
 extern uint16_t lastMpr121;
+extern bool max170x_init;
+extern uint8_t lastBattery;
 
 #ifdef __cplusplus
 }

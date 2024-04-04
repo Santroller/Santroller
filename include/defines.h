@@ -66,7 +66,7 @@
 #define PINMODE_FLOATING 2
 #define PINMODE_BUS 3
 
-#define LEDS_DISABLED 0 
+#define LEDS_DISABLED 0
 #define LEDS_APA102 1
 
 #define MIDI_TYPE_NOTE 0
@@ -75,6 +75,23 @@
 #define TAP_BAR_UNKNOWN 0
 #define TAP_BAR_WT 1
 #define TAP_BAR_GH5 2
+#define BTN_A 0x01
+#define BTN_B 0x02
+#define BTN_C 0x03
+#define BTN_X 0x04
+#define BTN_Y 0x05
+#define BTN_Z 0x06
+#define BTN_TL 0x07
+#define BTN_TR 0x08
+#define BTN_TL2 0x09
+#define BTN_TR2 0x0a
+#define BTN_SELECT 0x0b
+#define BTN_START 0x0c
+#define BTN_GUIDE 0x0d
+#define BTN_THUMBL 0x0e
+#define BTN_THUMBR 0x0f
+#define BTN_END 0x0f
+#define BTN_USAGE(x) 0x09, x
 
 typedef enum {
     WII_NUNCHUK = 0x0000,

@@ -91,8 +91,7 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x75, 0x01,              //   Report Size (1)
     0x95, HID_BUTTON_COUNT,  //   Report Count (HID_BUTTON_COUNT)
     0x05, 0x09,              //   Usage Page (Button)
-    0x19, 0x01,              //   Usage Minimum (0x01)
-    0x29, HID_BUTTON_COUNT,  //   Usage Maximum (HID_BUTTON_COUNT)
+    HID_BUTTON_USAGES,
     0x81, 0x02,              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
 #if HID_BUTTON_PADDING
     0x95, HID_BUTTON_PADDING,  //   Report Count (HID_BUTTON_PADDING)

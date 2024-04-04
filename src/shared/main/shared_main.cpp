@@ -18,6 +18,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
+#include "max170x.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -2040,6 +2041,9 @@ int tick_bluetooth_inputs(const void *buf) {
 void tick(void) {
 #ifdef SLAVE_TWI_PORT
     tick_slave();
+#endif
+#ifdef MAX1704X_TWI_PORT
+    tick_max170x();
 #endif
 #ifdef TICK_LED_STROBE
     TICK_LED_STROBE;

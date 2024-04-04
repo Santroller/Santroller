@@ -82,6 +82,10 @@ void send_report(uint8_t size, uint8_t *report) {
 }
 const uint8_t adv_data_len = sizeof(adv_data);
 
+void set_battery_state(uint8_t state) {
+    battery_service_server_set_battery_value(state);
+}
+
 static void le_keyboard_setup(void) {
     l2cap_init();
 

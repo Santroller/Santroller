@@ -82,3 +82,6 @@ void tick_bluetooth(const void* buf, uint8_t len);
 int tick_bluetooth_inputs(const void *buf);
 #endif
 extern uint8_t brightness;
+#ifdef BLUETOOTH_TX
+void set_battery_state(uint8_t state);
+#endif

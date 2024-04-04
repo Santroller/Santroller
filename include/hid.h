@@ -82,9 +82,9 @@ extern uint8_t stage_kit_millis[5];
 extern uint8_t strobe_delay;
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING
-extern const uint8_t pc_descriptor[94 + 2*HID_AXIS_COUNT];
+extern const uint8_t pc_descriptor[90 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
 #else
-extern const uint8_t pc_descriptor[90 + 2*HID_AXIS_COUNT];
+extern const uint8_t pc_descriptor[86 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
 #endif
 #else
 extern const uint8_t pc_descriptor[134];

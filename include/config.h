@@ -46,6 +46,23 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define HID_BUTTON_COUNT 14 \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_TL2), \
+    BTN_USAGE(BTN_TR2), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_THUMBL), \
+    BTN_USAGE(BTN_THUMBR), \
+    BTN_USAGE(BTN_GUIDE), \
+    BTN_USAGE(BTN_END+1)
+// exclude pressure
+#define HID_AXIS_COUNT 6
 #elif DEVICE_TYPE == STAGE_KIT
 #define SUB_TYPE XINPUT_STAGE_KIT
 #define OG_XBOX_REPORT OGXboxGamepad_Data_t
@@ -54,6 +71,23 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCStageKit_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define HID_BUTTON_COUNT 14
+// exclude pressure
+#define HID_AXIS_COUNT 6 \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_TL2), \
+    BTN_USAGE(BTN_TR2), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_THUMBL), \
+    BTN_USAGE(BTN_THUMBR), \
+    BTN_USAGE(BTN_GUIDE), \
+    BTN_USAGE(BTN_END+1)
 #elif DEVICE_TYPE == GAMEPAD
 #define SUB_TYPE XINPUT_GAMEPAD
 #define OG_XBOX_REPORT OGXboxGamepad_Data_t
@@ -62,6 +96,24 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define HID_BUTTON_COUNT 14
+// exclude pressure
+#define HID_AXIS_COUNT 6
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_TL2), \
+    BTN_USAGE(BTN_TR2), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_THUMBL), \
+    BTN_USAGE(BTN_THUMBR), \
+    BTN_USAGE(BTN_GUIDE), \
+    BTN_USAGE(BTN_END+1)
 #elif DEVICE_TYPE == GUITAR_HERO_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3_GH_GUITAR_PID
@@ -74,6 +126,16 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS3GuitarHeroGuitar_Data_t
 #define HID_BUTTON_COUNT 9
 #define HID_AXIS_COUNT 3
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_GUIDE)
 #elif DEVICE_TYPE == ROCK_BAND_GUITAR
 #define SUB_TYPE XINPUT_GUITAR
 #define PS3_TYPE PS3_RB_GUITAR_PID
@@ -86,6 +148,20 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS3RockBandGuitar_Data_t
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_END+1), \
+    BTN_USAGE(BTN_END+2), \
+    BTN_USAGE(BTN_END+3), \
+    BTN_USAGE(BTN_END+4), \
+    BTN_USAGE(BTN_END+5), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_GUIDE)
 #elif DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG
 #define SUB_TYPE XINPUT_PRO_GUITAR
 #define PS3_TYPE PS3_MUSTANG_PID
@@ -133,6 +209,17 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS4GHLGuitar_Data_t
 #define HID_BUTTON_COUNT 10
 #define HID_AXIS_COUNT 2
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_THUMBL), \
+    BTN_USAGE(BTN_GUIDE)
 #elif DEVICE_TYPE == GUITAR_HERO_DRUMS
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID
@@ -145,6 +232,16 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS3GuitarHeroDrums_Data_t
 #define HID_BUTTON_COUNT 9
 #define HID_AXIS_COUNT 6
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_GUIDE)
 #elif DEVICE_TYPE == ROCK_BAND_DRUMS
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_RB_DRUM_PID
@@ -157,6 +254,18 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS3RockBandDrums_Data_t
 #define HID_BUTTON_COUNT 11
 #define HID_AXIS_COUNT 7
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_THUMBR), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_THUMBL), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_GUIDE)
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
 #define SUB_TYPE XINPUT_TURNTABLE
 #define PS3_TYPE PS3_DJ_TURNTABLE_PID
@@ -168,11 +277,24 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS3Turntable_Data_t
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 4
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_GUIDE), \
+    BTN_USAGE(BTN_END+1), \
+    BTN_USAGE(BTN_END+2), \
+    BTN_USAGE(BTN_END+3), \
+    BTN_USAGE(BTN_END+4), \
+    BTN_USAGE(BTN_END+5), \
+    BTN_USAGE(BTN_END+6)
 #endif
-#ifndef HID_BUTTON_COUNT
-#define HID_BUTTON_COUNT 14
-// exclude pressure
-#define HID_AXIS_COUNT 6
+
+#ifndef HID_AXIS_COUNT
+#error missing HID_AXIS_COUNT and HID_BUTTON_COUNT
 #endif
 #define HID_BUTTON_PADDING ((HID_BUTTON_COUNT % 8) ? (8 - (HID_BUTTON_COUNT % 8)) : 0)
 // Xbox One Controller config

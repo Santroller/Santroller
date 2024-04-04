@@ -786,6 +786,14 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
         }
+#ifdef MAX1704X_TWI_PORT
+        case COMMAND_READ_MAX170X_VALID:
+            response_buffer[0] = max170x_init;
+            return 1;
+        case COMMAND_READ_MAX170X: 
+            memcpy(response_buffer, &lastBattery, sizeof(lastBattery));
+            return sizeof(lastBattery);
+#endif
 #ifdef MPR121_TWI_PORT
         case COMMAND_READ_MPR121_VALID:
             response_buffer[0] = mpr121_init;

@@ -14,10 +14,11 @@ bool write8(uint8_t addr, uint8_t data) {
 bool init_max170x() {
     write16(REGISTER_COMMAND, RESET_COMMAND);
     uint16_t data;
-    twi_readFromPointerRepeatedStart(MAX1704X_TWI_PORT, MAX710X_I2C_ADDRESS, REGISTER_CONFIG, sizeof(data), (uint8_t*)&data);
-    if (data != 0x971C) {
+    twi_readFromPointer(MAX1704X_TWI_PORT, MAX710X_I2C_ADDRESS, REGISTER_CONFIG, sizeof(data), (uint8_t*)&data);
+    if (data != 0x1C97) {
         return false;
     }
+    sleep_ms(10);
     write16(REGISTER_MODE, QUICKSTART_MODE);
     max170x_init = true;
 
@@ -28,7 +29,7 @@ void tick_max170x() {
         return;
     }
     uint8_t raw;
-    if (!twi_readFromPointerRepeatedStart(MAX1704X_TWI_PORT, MAX710X_I2C_ADDRESS, REGISTER_SOC, sizeof(raw), (uint8_t*)&raw)) {
+    if (!twi_readFromPointer(MAX1704X_TWI_PORT, MAX710X_I2C_ADDRESS, REGISTER_SOC, sizeof(raw), (uint8_t*)&raw)) {
         max170x_init = false;
     }
 #ifdef BLUETOOTH_TX

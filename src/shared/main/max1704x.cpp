@@ -33,8 +33,10 @@ void tick_max170x() {
         max170x_init = false;
     }
 #ifdef BLUETOOTH_TX
-    set_battery_state(raw);
-    lastBattery = raw;
+    if (lastBattery != raw) {
+        set_battery_state(raw);
+        lastBattery = raw;
+    }
 #endif
 }
 #endif

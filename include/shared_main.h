@@ -28,14 +28,24 @@ typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
     uint8_t brightness;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
+    uint8_t led[3];
 } Led_t;
 
+typedef struct {
+    // If this bit is set, then an led effect (like star power) has overridden the leds
+    uint8_t select;
+    uint8_t r[4];
+    uint8_t g[4];
+    uint8_t b[4];
+} Led_WS2812_t;
+extern uint8_t ws2812_bits[4];
+extern uint8_t led_tmp;
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
 // for STP, two bits per led, select and on
-#if LED_COUNT_STP
+#if LED_COUNT_WS2812
+extern Led_WS2812_t ledState[LED_COUNT_WS2812];
+extern Led_WS2812_t lastLedState[LED_COUNT_WS2812];
+#elif LED_COUNT_STP
 extern uint8_t ledState[ROUND_UP(LED_COUNT_STP, 8) / 8];
 extern uint8_t ledStateSelect[ROUND_UP(LED_COUNT_STP, 8) / 8];
 extern uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
@@ -49,7 +59,10 @@ extern uint8_t ledStateMpr121;
 extern uint8_t ledStateMpr121Select;
 extern uint8_t lastLedStateMpr121;
 #endif
-#if LED_COUNT_PERIPHERAL_STP
+#if LED_COUNT_PERIPHERAL_WS2812
+extern Led_WS2812_t ledStatePeripheral[LED_COUNT_PERIPHERAL_WS2812];
+extern Led_WS2812_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL_WS2812];
+#elif LED_COUNT_PERIPHERAL_STP
 extern uint8_t ledStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 extern uint8_t ledStatePeripheralSelect[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 extern uint8_t lastLedStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];

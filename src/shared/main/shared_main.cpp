@@ -58,6 +58,7 @@ Buffer_Report_t last_queue_report;
 long last_queue = 0;
 uint8_t brightness = LED_BRIGHTNESS;
 uint8_t queue_size = 0;
+uint8_t led_tmp;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #define TURNTABLE_BUFFER_SIZE 16
@@ -138,7 +139,11 @@ uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
-#if LED_COUNT_STP
+uint8_t ws2812_bits[] = {0x88, 0x8C, 0xC8, 0xCC};
+#if LED_COUNT_WS2812
+Led_WS2812_t ledState[LED_COUNT_WS2812];
+Led_WS2812_t lastLedState[LED_COUNT_WS2812];
+#elif LED_COUNT_STP
 uint8_t ledState[ROUND_UP(LED_COUNT_STP, 8) / 8];
 uint8_t ledStateSelect[ROUND_UP(LED_COUNT_STP, 8) / 8];
 uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
@@ -146,7 +151,10 @@ uint8_t lastLedState[ROUND_UP(LED_COUNT_STP, 8) / 8];
 Led_t ledState[LED_COUNT];
 Led_t lastLedState[LED_COUNT];
 #endif
-#if LED_COUNT_PERIPHERAL_STP
+#if LED_COUNT_PERIPHERAL_WS2812
+Led_WS2812_t ledStatePeripheral[LED_COUNT_PERIPHERAL_WS2812];
+Led_WS2812_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL_WS2812];
+#elif LED_COUNT_PERIPHERAL_STP
 uint8_t ledStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 uint8_t ledStatePeripheralSelect[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
 uint8_t lastLedStatePeripheral[ROUND_UP(LED_COUNT_PERIPHERAL_STP, 8) / 8];
@@ -1356,9 +1364,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 }
 #endif
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
-    // output_console_type = XBOXONE;
     uint8_t packet_size = 0;
-    uint8_t led_tmp;
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
 #include "inputs/adxl.h"

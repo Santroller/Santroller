@@ -20,7 +20,9 @@ void spi_begin() {
     spi_set_format(spi0, 8, (spi_cpol_t)SPI_0_CPOL,
                    (spi_cpha_t)SPI_0_CPHA, SPI_MSB_FIRST);
     gpio_set_function(SPI_0_MOSI, GPIO_FUNC_SPI);
+#ifdef SPI_0_SCK
     gpio_set_function(SPI_0_SCK, GPIO_FUNC_SPI);
+#endif
 #ifdef SPI_0_MISO
     gpio_set_function(SPI_0_MISO, GPIO_FUNC_SPI);
     gpio_set_pulls(SPI_0_MISO, true, false);
@@ -31,7 +33,9 @@ void spi_begin() {
     spi_set_format(spi1, 8, (spi_cpol_t)SPI_1_CPOL,
                    (spi_cpha_t)SPI_1_CPHA, SPI_MSB_FIRST);
     gpio_set_function(SPI_1_MOSI, GPIO_FUNC_SPI);
+#ifdef SPI_1_SCK
     gpio_set_function(SPI_1_SCK, GPIO_FUNC_SPI);
+#endif
 #ifdef SPI_1_MISO
     gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
     gpio_set_pulls(SPI_1_MISO, true, false);
@@ -173,7 +177,7 @@ uint8_t tickWt() {
     }
     long m = micros();
     readWt(6);
-    uint8_t ret= checkWt(1) | (checkWt(0) << 1) | (checkWt(2) << 2) | (checkWt(3) << 3) | (checkWt(4) << 4);
+    uint8_t ret = checkWt(1) | (checkWt(0) << 1) | (checkWt(2) << 2) | (checkWt(3) << 3) | (checkWt(4) << 4);
     m = micros() - m;
     printf("%d\r\n", m);
     return ret;

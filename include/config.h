@@ -46,7 +46,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PC_REPORT PCGamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
-#define HID_BUTTON_COUNT 14 \
+#define HID_BUTTON_COUNT 14
+#define HID_BUTTON_USAGES \
     BTN_USAGE(BTN_X), \
     BTN_USAGE(BTN_A), \
     BTN_USAGE(BTN_B), \
@@ -73,7 +74,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS4_REPORT PS4Gamepad_Data_t
 #define HID_BUTTON_COUNT 14
 // exclude pressure
-#define HID_AXIS_COUNT 6 \
+#define HID_AXIS_COUNT 6
+#define HID_BUTTON_USAGES \
     BTN_USAGE(BTN_X), \
     BTN_USAGE(BTN_A), \
     BTN_USAGE(BTN_B), \

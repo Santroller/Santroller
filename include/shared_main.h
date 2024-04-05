@@ -28,7 +28,9 @@ typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
     uint8_t brightness;
-    uint8_t led[3];
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
 } Led_t;
 
 typedef struct {

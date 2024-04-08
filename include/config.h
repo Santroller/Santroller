@@ -311,10 +311,12 @@ extern const uint8_t config[CONFIGURATION_LEN];
     BTN_USAGE(BTN_TR2)
 #endif
 
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
 #ifndef HID_AXIS_COUNT
 #error missing HID_AXIS_COUNT and HID_BUTTON_COUNT
 #endif
 #define HID_BUTTON_PADDING ((HID_BUTTON_COUNT % 8) ? (8 - (HID_BUTTON_COUNT % 8)) : 0)
+#endif
 // Xbox One Controller config
 #define TEMP 0xFF
 #if DEVICE_TYPE_IS_GUITAR

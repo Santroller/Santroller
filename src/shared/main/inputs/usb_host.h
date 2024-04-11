@@ -477,7 +477,7 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.soloOrange |= report->leftShoulder;
                     }
                     if (report->whammy) {
-                        usb_host_data.whammy = report->whammy;
+                        usb_host_data.whammy = (report->whammy >> 8) - PS3_STICK_CENTER;
                     }
                     if (report->pickup) {
                         usb_host_data.pickup = report->pickup;
@@ -507,7 +507,7 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.tilt = report->tilt;
                     }
                     if (report->whammy) {
-                        usb_host_data.whammy = report->whammy;
+                        usb_host_data.whammy = (report->whammy >> 8) - PS3_STICK_CENTER;
                     }
 
                     // uint8_t slider = (report->slider >> 8) ^ 0x80;

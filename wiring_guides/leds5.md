@@ -2,7 +2,7 @@
 sort: 9
 ---
 
-# Adding WS2812 RGB LEDs to controllers (Untested)
+# Adding WS2812 RGB LEDs to controllers
 
 You can add LEDs that will light up when a button or analogue input is pressed. For people playing YARG, you can also make the frets light up based on in-game events such as Star Power.
 
@@ -39,6 +39,7 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
 8. Click on the leds you want to link to this input in the `Selected LEDs` section.
 9. You can then set the colour when the button is pressed, and the colour when it is released.
 10. As you pick a colour the LED should update in real time so you can preview what the colour looks like.
-11. If you want an analog input (such as whammy) to control an LED, click on it
-12. Configuring analog based LEDs is much the same as digital, but instead of pressed and released being digital, the LEDs will smoothly transition between pressed and released depending on the value of the analog input.
-13. If you would like to respond to game events in supported games, hit the `Add Setting` button and add an `LED Binding`. You can then pick the LED type in question, and configure it, in much the same way as the inputs.
+11. Note that the WS2812 LEDs don't support global brightness, so brightness control is done by setting a darker colour. This can easily be done by changing the colour mode to `HSV`, and the `V` will act as a brightness slider for a given colour.
+12. If you want an analog input (such as whammy) to control an LED, click on it
+13. Configuring analog based LEDs is much the same as digital, but instead of pressed and released being digital, the LEDs will smoothly transition between pressed and released depending on the value of the analog input.
+14. If you would like to respond to game events in supported games, hit the `Add Setting` button and add an `LED Binding`. You can then pick the LED type in question, and configure it, in much the same way as the inputs.

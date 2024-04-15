@@ -39,7 +39,7 @@ typedef struct {
     uint8_t r[4];
     uint8_t g[4];
     uint8_t b[4];
-} Led_WS2812_t;
+} __attribute__((packed)) Led_WS2812_t;
 extern uint8_t ws2812_bits[4];
 extern uint8_t led_tmp;
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))

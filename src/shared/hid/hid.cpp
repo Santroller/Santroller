@@ -394,9 +394,9 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     }
 #endif
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-if (rumble_right == RUMBLE_SANTROLLER_EUPHORIA_LED) {
-    lastEuphoriaLed = rumble_left != 0;
-}
+    if (rumble_right == RUMBLE_SANTROLLER_EUPHORIA_LED) {
+        lastEuphoriaLed = rumble_left != 0;
+    }
 #endif
 #if defined(INPUT_USB_HOST) && DEVICE_TYPE == DJ_HERO_TURNTABLE
     // Only ps3 and xinput have dj turntables
@@ -610,11 +610,11 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 if ((rumble_right >= RUMBLE_SANTROLLER_STAR_POWER_FILL && rumble_right <= RUMBLE_SANTROLLER_NOTE_MISS) || rumble_right == RUMBLE_SANTROLLER_NOTE_HIT) {
                     if (rumble_left != rumble_right) {
                         received_valid_command = true;
-                    } 
+                    }
                 }
                 // Turntable led emulation mode
                 if (!received_valid_command && rumble_left == rumble_right) {
-                    rumble_right = RUMBLE_SANTROLLER_EUPHORIA_LED; 
+                    rumble_right = RUMBLE_SANTROLLER_EUPHORIA_LED;
                 }
 #endif
                 handle_rumble(rumble_left, rumble_right);
@@ -790,7 +790,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_MAX170X_VALID:
             response_buffer[0] = max170x_init;
             return 1;
-        case COMMAND_READ_MAX170X: 
+        case COMMAND_READ_MAX170X:
             memcpy(response_buffer, &lastBattery, sizeof(lastBattery));
             return sizeof(lastBattery);
 #endif
@@ -798,7 +798,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_READ_MPR121_VALID:
             response_buffer[0] = mpr121_init;
             return 1;
-        case COMMAND_READ_MPR121: 
+        case COMMAND_READ_MPR121:
             memcpy(response_buffer, &lastMpr121, sizeof(lastMpr121));
             return sizeof(lastMpr121);
 #endif
@@ -821,42 +821,26 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
 #if LED_COUNT_WS2812
         case COMMAND_SET_LEDS: {
             uint8_t led = response_buffer[0];
-            if (led >= LED_COUNT) return 0;
-            bool zero = true;
-            for (int i = 0; i < sizeof(Led_WS2812_t) - 1; i++) {
-                if (response_buffer[i] != 0x88) {
-                    zero = false;
-                }
-            }
-            if (!zero) {
+            if (led >= LED_COUNT_WS2812) return 0;
+            if (!response_buffer[1]) {
                 ledState[led].select = 0;
                 return 0;
             }
+            memcpy(&ledState[led], response_buffer, sizeof(Led_WS2812_t));
             ledState[led].select = 1;
-            memcpy(ledState[led].r, response_buffer+1, 4);
-            memcpy(ledState[led].g, response_buffer+1+4, 4);
-            memcpy(ledState[led].b, response_buffer+1+8, 4);
             return 0;
         }
 #endif
 #if LED_COUNT_PERIPHERAL_WS2812
         case COMMAND_SET_LEDS_PERIPHERAL: {
             uint8_t led = response_buffer[0];
-            if (led >= LED_COUNT) return 0;
-            bool zero = true;
-            for (int i = 0; i < sizeof(Led_WS2812_t) - 1; i++) {
-                if (response_buffer[i] != 0x88) {
-                    zero = false;
-                }
-            }
-            if (!zero) {
+            if (led >= LED_COUNT_PERIPHERAL_WS2812) return 0;
+            if (!response_buffer[1]) {
                 ledStatePeripheral[led].select = 0;
                 return 0;
             }
+            memcpy(&ledStatePeripheral[led], response_buffer, sizeof(Led_WS2812_t));
             ledStatePeripheral[led].select = 1;
-            memcpy(ledStatePeripheral[led].r, response_buffer+1, 4);
-            memcpy(ledStatePeripheral[led].g, response_buffer+1+4, 4);
-            memcpy(ledStatePeripheral[led].b, response_buffer+1+8, 4);
             return 0;
         }
 #endif

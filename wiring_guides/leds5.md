@@ -6,6 +6,8 @@ sort: 9
 
 You can add LEDs that will light up when a button or analogue input is pressed. For people playing YARG, you can also make the frets light up based on in-game events such as Star Power.
 
+We abuse the SPI hardware on the microcontroller to get around some problems that previously stopped us implementing WS2812 support in the past. This means that the WS2812s don't have any problems, but it does mean that only certain pins can be used for driving the WS2812, much like how the APA102s work.
+
 ## Supplies
 
 - A controller modded using any of the guides

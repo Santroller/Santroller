@@ -9,6 +9,7 @@ from serial import Serial, SerialException
 import os
 import psutil
 from time import sleep
+from sys import platform
 
 REBOOT=48
 BOOTLOADER=49
@@ -81,6 +82,9 @@ if "upload" in BUILD_TARGETS:
         dev = None
         print("Waiting for bootloader device")
         sleep(3)
+        avrdude_path_2 = ["avrdude"]
+        if platform == "darwin":
+            avrdude_path_2 = ["bin","avrdude"]
         subprocess.run([join(env.PioPlatform().get_package_dir("tool-avrdude"),"avrdude"), "-C", join(env.PioPlatform().get_package_dir("tool-avrdude"), "avrdude.conf"), "-p", "atmega32u4", "-P", env.subst("$UPLOAD_PORT"), "-c","avr109", "-e"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 def mytarget_callback(*args, **kwargs):
@@ -95,11 +99,13 @@ def mytarget_callback2(*args, **kwargs):
     print("Waiting for bootloader device")
     env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
     print("PORT: "+env.subst("$UPLOAD_PORT"))
-
+avrdude_path = "avrdude"
+if platform == "darwin":
+    avrdude_path = "bin/avrdude"
 env.AddCustomTarget(
     name="micro_clean",
     dependencies=None,
-    actions=['"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
+    actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/{avrdude_path}" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
     title=None,
     description=None
 )
@@ -107,7 +113,7 @@ env.AddCustomTarget(
 env.AddCustomTarget(
     name="micro_clean_existing",
     dependencies=None,
-    actions=[mytarget_callback2,'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
+    actions=[mytarget_callback2,f'"$PROJECT_PACKAGES_DIR/tool-avrdude/{avrdude_path}" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
     title=None,
     description=None
 )
@@ -115,7 +121,7 @@ env.AddCustomTarget(
 env.AddCustomTarget(
     name="micro_clean_jump",
     dependencies=None,
-    actions=[mytarget_callback,'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
+    actions=[mytarget_callback,f'"$PROJECT_PACKAGES_DIR/tool-avrdude/{avrdude_path}" -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p atmega32u4 -P $UPLOAD_PORT -c avr109 -e'],
     title=None,
     description=None
 )
@@ -125,7 +131,7 @@ for type in ["arduino_mega_2560", "arduino_mega_adk", "arduino_uno"]:
         env.AddCustomTarget(
             name=f"{type}_{proc}_clean",
             dependencies=None,
-            actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -u -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb.hex:i"'],
+            actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/{avrdude_path}" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -u -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb.hex:i"'],
             title=None,
             description=None
         )

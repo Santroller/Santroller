@@ -112,8 +112,7 @@ bool disable_multiplexer = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
-USB_LastReport_Data_t temp_report_usb_host;
-USB_LastReport_Data_t temp_report_usb_host_xb1;
+uint8_t temp_report_usb_host[64];
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
 USB_Host_Data_t last_usb_host_data;

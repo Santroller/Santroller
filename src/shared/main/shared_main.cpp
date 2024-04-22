@@ -565,7 +565,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 
         out->guide |= report->guide;
         if (report->tilt != PS3_STICK_CENTER) {
-            out->tilt = report->tilt;
+            out->tilt = PS3_ACCEL_CENTER + (report->tilt - PS3_STICK_CENTER);
         }
         if (report->whammy != PS3_STICK_CENTER) {
             out->whammy = report->whammy;

@@ -741,7 +741,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
             ps3_id_id++;
             if (ps3_id_id > 4) ps3_id_id = 4;
-            return sizeof(8);
+            return 8;
 #else
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             return sizeof(ps3_init);

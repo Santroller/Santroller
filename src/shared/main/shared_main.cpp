@@ -1949,9 +1949,9 @@ int tick_bluetooth_inputs(const void *buf) {
         TICK_PS3_WITHOUT_CAPTURE;
         report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && !updateSequence) {
+    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != XBOXONE) {
 #else
-    if ((output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL) || updateHIDSequence) {
+    if ((output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
 #endif
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
         report_size = sizeof(PS3_REPORT);

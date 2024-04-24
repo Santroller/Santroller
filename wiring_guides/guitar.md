@@ -223,7 +223,7 @@ The world tour slider bar originally used a single wire to connect between the b
 
 2. Solder each of the circled vias on the WT Slider bar PCB to its own channel on the MPR121. It is recommended to use channels 0-4 for the slider bar, as the MPR121 requires assigning touch pads first before other pins.
 
-   [![World tour slider pins](/assets/images/wt_pins.png)](/assets/images/wt_vias.png)
+   [![World tour slider pins](/assets/images/wt_vias.png)](/assets/images/wt_vias.png)
 
 3. For the frets, follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
 4. Connect the common grounds to a ground pin on the MPR121.

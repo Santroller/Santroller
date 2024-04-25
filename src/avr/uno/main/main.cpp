@@ -132,6 +132,8 @@ void setup() {
     init_main();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
+    } else {
+        consoleType = 0;
     }
     USB_Device_GetInternalSerialDescriptor();
 }

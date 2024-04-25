@@ -48,6 +48,8 @@ void setup() {
     init_main();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
+    } else {
+        consoleType = 0;
     }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware

@@ -625,7 +625,6 @@ bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
-
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
@@ -1012,13 +1011,16 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
 
-#if DEVICE_TYPE_IS_INSTRUMENT
-                desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
-#else
                 if (consoleType == PS4) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
+
+#if DEVICE_TYPE_IS_INSTRUMENT
+                } else {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
+                }
+#else
                 } else if (consoleType == PS3) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
                 } else {
@@ -1043,6 +1045,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
 #elif DEVICE_TYPE_IS_NORMAL_GAMEPAD
+
             if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);

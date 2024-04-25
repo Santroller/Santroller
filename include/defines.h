@@ -23,6 +23,11 @@
 #define XINPUT_GUITAR_HERO_LIVE 24
 #define XINPUT_PRO_GUITAR 25
 
+#define PS4_GAMEPAD 0
+#define PS4_GUITAR 1
+#define PS4_DRUMS 2
+#define PS4_FIGHTSTICK 7 // Useful on PS5?
+
 #define GAMEPAD 1
 #define DANCE_PAD 2
 #define GUITAR_HERO_GUITAR 3

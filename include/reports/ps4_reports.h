@@ -100,6 +100,118 @@ typedef struct
 {
     uint8_t reportId;
 
+    uint8_t joystickX;
+    uint8_t joystickY;
+    uint8_t unused[2];
+
+    // To make things easier we use bitfields here and them map to dpad later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    
+    uint8_t x : 1;  // blue
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t y : 1;  // yellow
+
+    uint8_t leftShoulder : 1;   // orange
+    uint8_t : 1;  
+    uint8_t : 1;                // l2
+    uint8_t : 1;                // r2
+
+    uint8_t back : 1;             // share
+    uint8_t start : 1;           // pause, options
+    uint8_t solo : 1;            // l3, solo
+    uint8_t : 1;            // r3, p1 on riffmaster
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // touchpad click
+    uint8_t : 6;
+
+    uint8_t unused2[22];
+
+    uint8_t powerLevel : 4;
+    uint8_t : 4;
+
+    uint8_t unused3[12];
+
+    uint8_t pickup;
+    uint8_t whammy;
+    uint8_t tilt;
+
+    uint8_t green : 1;
+    uint8_t red : 1;
+    uint8_t yellow : 1;
+    uint8_t blue : 1;
+    uint8_t orange : 1;
+    uint8_t : 3;
+
+    uint8_t soloGreen : 1;
+    uint8_t soloRed : 1;
+    uint8_t soloYellow : 1;
+    uint8_t soloBlue : 1;
+    uint8_t soloOrange : 1;
+    uint8_t : 3;
+
+    uint8_t unused4[26];
+    uint32_t crc32;
+} __attribute__((packed)) PS4RockBandGuitar_Data_t;
+
+typedef struct
+{
+    uint8_t reportId;
+    uint8_t unused1[4];
+
+    //     0
+    //   7   1
+    // 6   8   2
+    //   5   3
+    //     4
+    // To make things easier we use bitfields here and them map to dpad later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    
+    uint8_t x : 1;  // blue
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t y : 1;  // yellow
+
+    uint8_t kick1 : 1;
+    uint8_t kick2 : 1;
+    uint8_t : 2;
+    uint8_t back : 1;
+    uint8_t start : 1;
+    uint8_t : 2;
+
+    uint8_t guide : 1;
+    uint8_t : 7;
+
+    uint8_t unused2[22];
+
+    uint8_t powerLevel : 4; // seems to range differently, packets listed in Minatsuki have 0x0C
+    uint8_t : 4;
+
+    uint8_t unused3[12];
+
+    uint8_t redVelocity;
+    uint8_t blueVelocity;
+    uint8_t yellowVelocity;
+    uint8_t greenVelocity;
+
+    uint8_t yellowCymbalVelocity;
+    uint8_t blueCymbalVelocity;
+    uint8_t greenCymbalVelocity;
+
+    uint8_t unused4[24];
+    uint32_t crc32;
+} __attribute__((packed)) PS4RockBandDrums_Data_t;
+typedef struct
+{
+    uint8_t reportId;
+
     uint8_t unused1;
     uint8_t strumBar;
     uint8_t whammy;

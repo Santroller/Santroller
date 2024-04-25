@@ -119,13 +119,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == GUITAR_HERO_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3_GH_GUITAR_PID
+#define PS4_TYPE PS4_GUITAR
 #define WII_TYPE WII_RB_GUITAR_PID
 #define OG_XBOX_REPORT OGXboxGuitarHeroGuitar_Data_t
 #define XINPUT_REPORT XInputGuitarHeroGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCGuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
-#define PS4_REPORT PS3GuitarHeroGuitar_Data_t
+#define PS4_REPORT PS4RockBandGuitar_Data_t
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #define HID_BUTTON_USAGES \
@@ -145,13 +146,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == ROCK_BAND_GUITAR
 #define SUB_TYPE XINPUT_GUITAR
 #define PS3_TYPE PS3_RB_GUITAR_PID
+#define PS4_TYPE PS4_GUITAR
 #define WII_TYPE WII_RB_GUITAR_PID
 #define OG_XBOX_REPORT OGXboxRockBandGuitar_Data_t
 #define XINPUT_REPORT XInputRockBandGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
-#define PS4_REPORT PS3RockBandGuitar_Data_t
+#define PS4_REPORT PS4RockBandGuitar_Data_t
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #define HID_BUTTON_USAGES \
@@ -233,13 +235,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == GUITAR_HERO_DRUMS
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID
+#define PS4_TYPE PS4_DRUMS
 #define WII_TYPE WII_RB_DRUM_PID
 #define OG_XBOX_REPORT OGXboxGuitarHeroDrums_Data_t
 #define XINPUT_REPORT XInputGuitarHeroDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PC_REPORT PCGuitarHeroDrums_Data_t
 #define PS3_REPORT PS3GuitarHeroDrums_Data_t
-#define PS4_REPORT PS3GuitarHeroDrums_Data_t
+#define PS4_REPORT PS4RockBandDrums_Data_t
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 6
 #define HID_BUTTON_USAGES \
@@ -259,13 +262,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == ROCK_BAND_DRUMS
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_RB_DRUM_PID
+#define PS4_TYPE PS4_DRUMS
 #define WII_TYPE WII_RB_DRUM_PID
 #define OG_XBOX_REPORT OGXboxRockBandDrums_Data_t
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PC_REPORT PCRockBandDrums_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t
-#define PS4_REPORT PS3RockBandDrums_Data_t
+#define PS4_REPORT PS4RockBandDrums_Data_t
 #define HID_BUTTON_COUNT 15
 #define HID_AXIS_COUNT 7
 #define HID_BUTTON_USAGES \
@@ -310,7 +314,9 @@ extern const uint8_t config[CONFIGURATION_LEN];
     BTN_USAGE(BTN_TL2), \
     BTN_USAGE(BTN_TR2)
 #endif
-
+#ifndef PS4_TYPE
+#define PS4_TYPE PS4_GAMEPAD
+#endif
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
 #ifndef HID_AXIS_COUNT
 #error missing HID_AXIS_COUNT and HID_BUTTON_COUNT
@@ -351,7 +357,7 @@ extern const uint8_t xb1_descriptor[XBOX_ONE_DESCRIPTOR_SIZE];
 extern const uint8_t xb1_descriptor_end[6];
 #define SUPPORTS_MIDI EMULATION_TYPE == EMULATION_TYPE_MIDI
 #define SUPPORTS_HID EMULATION_TYPE != EMULATION_TYPE_MIDI
-#define SUPPORTS_PS4 (DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == LIVE_GUITAR)
+#define SUPPORTS_PS4 (DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == LIVE_GUITAR || PS4_INSTRUMENT)
 #define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
 #define SUPPORTS_AVR defined(__AVR__)
 #define SUPPORTS_TEENSY (defined(__arm__) && defined(CORE_TEENSY))

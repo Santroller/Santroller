@@ -515,7 +515,7 @@ const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
 #endif
 // It appears for ps5 arcade stick compat, we can set byte 5 to 0x07
 const PROGMEM uint8_t ps4_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x4f, 0x00, 0x2c, 0x56,
+    0x03, 0x21, 0x27, 0x04, 0x4f, PS4_TYPE, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
     0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -765,7 +765,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         // PS3 and PS4 send this
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
             // PS3 Drums and Guitars get used on both consoles, so we can jump straight to PS3 mode
-#if DEVICE_TYPE_IS_INSTRUMENT && DEVICE_TYPE != LIVE_GUITAR
+#if DEVICE_TYPE_IS_INSTRUMENT && !SUPPORTS_PS4
             consoleType = REAL_PS3;
             reset_usb();
 #else
@@ -955,6 +955,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #if DEVICE_TYPE_IS_LIVE_GUITAR
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS4_GHLIVE_DONGLE_PID;
+#elif DEVICE_TYPE_IS_GUITAR && PS4_INSTRUMENT
+                dev->idVendor = 0x0E6F;
+                dev->idProduct = 0x0173;
+#elif DEVICE_TYPE_IS_DRUM && PS4_INSTRUMENT
+                dev->idVendor = 0x0738;
+                dev->idProduct = 0x8262;
 #else
                 dev->idVendor = PS4_VID;
                 dev->idProduct = PS4_PID;

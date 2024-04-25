@@ -31,8 +31,6 @@ For PS4/PS5, you need to leave it plugged in, playstations continuously check th
 
 ## Wiring Steps (without capacitor and resistor)
 
-[![usb](/assets/images/usb.png)](/assets/images/usb.png)
-
 1. If you are using a USB extension cable, cut it in half and expose the four cables.
 2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
 3. Hook up the V- / GND (Black) to ground on your Pi Pico

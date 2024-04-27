@@ -2201,6 +2201,9 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                 type.console_type = SANTROLLER;
             }
         }
+        case RAPHNET_VID: {
+            type.console_type = RAPHNET;
+        }
         case SONY_VID:
             switch (pid) {
                 case SONY_DS3_PID:

@@ -60,7 +60,7 @@ static void release_##structure(structure##_t* pointer)\
 
 ACQUIRE_AND_RELEASE(HID_ReportSizeInfo, 100);
 ACQUIRE_AND_RELEASE(HID_CollectionPath, 25);
-ACQUIRE_AND_RELEASE(HID_ReportInfo, 1);
+ACQUIRE_AND_RELEASE(HID_ReportInfo, 10);
 ACQUIRE_AND_RELEASE(HID_ReportItem, 50);
 
 void USB_FreeReportInfo(HID_ReportInfo_t *ReportInfo)

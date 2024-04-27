@@ -59,6 +59,78 @@ for (int i = 0; i < device_count; i++) {
             usb_host_data.genericButtons |= report->genericButtons;
             break;
         }
+        case RAPHNET: {
+            switch (device_type.sub_type) {
+                case GAMEPAD: {
+                    RaphnetGamepad_Data_t *report = (RaphnetGamepad_Data_t *)data;
+                    usb_host_data.leftStickX = report->leftJoyX - 16000;
+                    usb_host_data.leftStickY = report->leftJoyY - 16000;
+                    usb_host_data.rightStickX = report->rightJoyX - 16000;
+                    usb_host_data.rightStickY = report->rightJoyY - 16000;
+                    usb_host_data.leftTrigger = report->leftTrigger;
+                    usb_host_data.rightTrigger = report->rightTrigger;
+                    usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.rightShoulder |= report->rightShoulder;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.back |= report->select;
+                    usb_host_data.guide |= report->home;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
+                    usb_host_data.dpadLeft |= report->left;
+                    usb_host_data.dpadRight |= report->right;
+                    usb_host_data.dpadUp |= report->up;
+                    usb_host_data.dpadDown |= report->down;
+                    break;
+                }
+                case GUITAR_HERO_GUITAR: {
+                    RaphnetGuitar_Data_t *report = (RaphnetGuitar_Data_t *)data;
+                    usb_host_data.leftStickX = report->joyX - 16000;
+                    usb_host_data.leftStickY = report->joyY - 16000;
+                    usb_host_data.whammy = report->whammy >> 8;
+                    usb_host_data.start = report->plus;
+                    usb_host_data.back = report->minus;
+                    usb_host_data.green |= report->green;
+                    usb_host_data.red |= report->red;
+                    usb_host_data.yellow |= report->yellow;
+                    usb_host_data.blue |= report->blue;
+                    usb_host_data.orange |= report->orange;
+                    usb_host_data.a |= report->green;
+                    usb_host_data.b |= report->red;
+                    usb_host_data.y |= report->yellow;
+                    usb_host_data.x |= report->blue;
+                    usb_host_data.leftShoulder |= report->orange;
+                    usb_host_data.dpadUp |= report->up;
+                    usb_host_data.dpadDown |= report->down;
+                    break;
+                }
+                case GUITAR_HERO_DRUMS: {
+                    RaphnetDrum_Data_t *report = (RaphnetDrum_Data_t *)data;
+                    usb_host_data.leftStickX = report->joyX - 16000;
+                    usb_host_data.leftStickY = report->joyY - 16000;
+                    usb_host_data.start = report->plus;
+                    usb_host_data.back = report->minus;
+                    usb_host_data.green |= report->green;
+                    usb_host_data.red |= report->red;
+                    usb_host_data.yellow |= report->yellow;
+                    usb_host_data.blue |= report->blue;
+                    usb_host_data.orange |= report->orange;
+                    usb_host_data.a |= report->green;
+                    usb_host_data.b |= report->red;
+                    usb_host_data.y |= report->yellow;
+                    usb_host_data.x |= report->blue;
+                    usb_host_data.leftShoulder |= report->orange;
+                    break;
+                }
+            }
+            break;
+        }
         case SANTROLLER: {
             PCGamepad_Data_t *report = (PCGamepad_Data_t *)data;
             uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];

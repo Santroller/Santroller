@@ -8,6 +8,7 @@
 #include "reports/xbox_one_reports.h"
 #include "reports/xinput_reports.h"
 #include "reports/og_xbox_reports.h"
+#include "reports/raphnet_reports.h"
 
 #define SIMULTANEOUS_KEYS 6
 #define NKRO_KEYS ((0x73 / 8) + 1)

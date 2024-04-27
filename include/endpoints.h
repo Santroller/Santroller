@@ -72,6 +72,7 @@ enum endpoints_t {
 #define PRO_CONTROLLER_PID 0x2009
 #define GUITAR_PRAISE_VID 0x0314
 #define GUITAR_PRAISE_PID 0x0830
+#define RAPHNET_VID 0x289b
 
 #define SIMULTANEOUS_KEYS 6
 

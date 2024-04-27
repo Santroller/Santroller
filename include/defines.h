@@ -26,7 +26,7 @@
 #define PS4_GAMEPAD 0
 #define PS4_GUITAR 1
 #define PS4_DRUMS 2
-#define PS4_FIGHTSTICK 7 // Useful on PS5?
+#define PS4_FIGHTSTICK 7  // Useful on PS5?
 
 #define GAMEPAD 1
 #define DANCE_PAD 2
@@ -61,6 +61,7 @@
 #define MIDI 11
 #define BLUETOOTH_REPORT 12
 #define SANTROLLER 13
+#define RAPHNET 14
 #define UNKNOWN 0xFF
 
 #define EMULATION_TYPE_CONTROLLER 0
@@ -143,3 +144,16 @@ typedef enum {
     PSX_MOUSE,
     PSX_NO_DEVICE
 } PsxControllerType_t;
+
+#define RNT_TYPE_NONE_NEW 100
+#define RNT_TYPE_CLASSIC 101
+#define RNT_TYPE_NUNCHUK 112
+#define RNT_TYPE_CLASSIC_PRO 113
+#define RNT_TYPE_WIIMOTE_TAIKO 114
+#define RNT_TYPE_PSX_DIGITAL 119
+#define RNT_TYPE_PSX_ANALOG 120
+#define RNT_TYPE_PSX_NEGCON 121
+#define RNT_TYPE_PSX_MOUSE 122
+#define RNT_TYPE_WII_GUITAR 127
+#define RNT_TYPE_UDRAW_TABLET 128
+#define RNT_TYPE_WII_DRUM 130

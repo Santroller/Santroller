@@ -227,7 +227,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     printf("%04x %04x\r\n", host_vid, host_pid);
     USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
     type.dev_addr = dev_addr;
-    if (type.console_type == PS4 || type.console_type == SANTROLLER) {
+    if (type.console_type == PS4 || type.console_type == SANTROLLER || type.console_type == RAPHNET) {
         controllerType = type.console_type;
     }
     if (controllerType == XBOX360) {
@@ -273,6 +273,41 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         total_usb_host_devices++;
         printf("Found Santroller controller\r\n");
         printf("Sub type: %d\r\n", type.sub_type);
+    } else if (controllerType == RAPHNET) {
+        uint8_t data[] = {0x00, 0x00, 0x00};
+        uint8_t data2[] = {0x06, 0x00, 0x00};
+        for (int i = 0; i < 10; i++) {
+            transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_SET_REPORT, 0x0300, 1, 3, data2);
+            transfer_with_usb_controller(dev_addr, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_GET_REPORT, 0x0300, 1, 3, data);
+            if (data[0]) {
+                break;
+            }
+            sleep_ms(100);
+        }
+        switch (data[2]) {
+            case RNT_TYPE_PSX_DIGITAL:
+            case RNT_TYPE_PSX_ANALOG:
+            case RNT_TYPE_PSX_NEGCON:
+            case RNT_TYPE_PSX_MOUSE:
+            case RNT_TYPE_CLASSIC:
+            case RNT_TYPE_UDRAW_TABLET:
+            case RNT_TYPE_NUNCHUK:
+            case RNT_TYPE_CLASSIC_PRO:
+                type.sub_type = GAMEPAD;
+                break;
+            case RNT_TYPE_WII_GUITAR:
+                type.sub_type = GUITAR_HERO_GUITAR;
+                break;
+            case RNT_TYPE_WII_DRUM:
+                type.sub_type = GUITAR_HERO_DRUMS;
+                break;
+        }
+        printf("Found Raphnet controller\r\n");
+        printf("Sub type: %02x %02x\r\n", type.sub_type, data[2]);
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
     } else if (controllerType == UNKNOWN) {
         if (type.console_type) {
             if (type.console_type == PS3) {

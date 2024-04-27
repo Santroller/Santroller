@@ -514,6 +514,34 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     handle_keyboard_leds(data[0]);
 #endif
     uint8_t id = data[0];
+#if defined(INPUT_USB_HOST)
+    for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
+        USB_Device_Type_t type = get_usb_host_device_type(i);
+        if (type.console_type != SANTROLLER) continue;
+        // Convert xinput payloads to their hid counterparts and send
+        if (consoleType == XBOX360 || consoleType == WINDOWS) {
+            uint8_t data_hid[8] = {0};
+            data_hid[0] = PS3_REPORT_ID;
+            if (id == XBOX_LED_ID) {
+                uint8_t led = data[2];
+                uint8_t player = xbox_players[led];
+                handle_player_leds(player);
+                data_hid[1] = PS3_LED_RUMBLE_ID;
+                data_hid[3] = 1 << player;
+                send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+
+            } else if (id == XBOX_RUMBLE_ID) {
+                data_hid[1] = SANTROLLER_LED_ID;
+                data_hid[2] = data[3];
+                data_hid[3] = data[4];
+                send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+            }
+        } else {
+            // Already a hid payload, send it as is
+            send_report_to_controller(type.dev_addr, data, len);
+        }
+    }
+#endif
 #ifdef BLUETOOTH_RX
     // BT uses HID, so convert XInput based reports to HID before sending them over BT
     if (consoleType == XBOX360 || consoleType == WINDOWS) {

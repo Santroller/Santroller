@@ -1,5 +1,5 @@
 #include <stdint.h>
-void send_report_to_controller(uint8_t deviceType, uint8_t *report, uint8_t len) {
+void send_report_to_controller(uint8_t deviceType, const uint8_t *report, uint8_t len) {
 }
 uint8_t get_device_address_for(uint8_t deviceType) {
     return 0;

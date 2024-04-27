@@ -519,7 +519,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         USB_Device_Type_t type = get_usb_host_device_type(i);
         if (type.console_type != SANTROLLER) continue;
         // Convert xinput payloads to their hid counterparts and send
-        if (consoleType == XBOX360 || consoleType == WINDOWS) {
+        if ((consoleType == XBOX360 || consoleType == WINDOWS) && report_id != BLUETOOTH_REPORT) {
             uint8_t data_hid[8] = {0};
             data_hid[0] = PS3_REPORT_ID;
             if (id == XBOX_LED_ID) {
@@ -534,6 +534,30 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 data_hid[2] = data[3];
                 data_hid[3] = data[4];
                 send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+            }
+        } else if ((consoleType == XBOXONE) && report_id != BLUETOOTH_REPORT) {
+            if (xbox_one_state == Ready) {
+                uint8_t data_hid[8] = {0};
+                data_hid[0] = PS3_REPORT_ID;
+                // Live guitar is a bit special, so handle it here
+#if DEVICE_TYPE == LIVE_GUITAR
+                if (id == GHL_HID_OUTPUT) {
+                    uint8_t sub_id = data[1];
+                    if (sub_id == PS3_LED_RUMBLE_ID) {
+                        uint8_t player = (data[3] & 0x0F);
+                        data_hid[1] = PS3_LED_RUMBLE_ID;
+                        data_hid[3] = 1 << player;
+                        send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+                    }
+                }
+#endif
+                if (id == GIP_CMD_RUMBLE) {
+                    GipRumble_t *rumble = (GipRumble_t *)data;
+                    data_hid[1] = SANTROLLER_LED_ID;
+                    data_hid[2] = rumble->leftMotor;
+                    data_hid[3] = rumble->rightMotor;
+                    send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+                }
             }
         } else {
             // Already a hid payload, send it as is

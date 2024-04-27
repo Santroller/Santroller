@@ -525,7 +525,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             if (id == XBOX_LED_ID) {
                 uint8_t led = data[2];
                 uint8_t player = xbox_players[led];
-                handle_player_leds(player);
                 data_hid[1] = PS3_LED_RUMBLE_ID;
                 data_hid[3] = 1 << player;
                 send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));

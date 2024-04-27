@@ -13,10 +13,12 @@
 #include "controllers.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
+#include "fxpt_math.h"
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
 #include "hidescriptorparser.h"
 #include "host/usbh_classdriver.h"
+#include "io.h"
 #include "pico/bootrom.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
@@ -25,9 +27,7 @@
 #include "serial.h"
 #include "shared_main.h"
 #include "xinput_device.h"
-#include "io.h"
 #include "xinput_host.h"
-#include "fxpt_math.h"
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
@@ -131,7 +131,7 @@ void tick_bluetooth(const void *buf, uint8_t len) {
 void loop1() {
     if (consoleType == XBOX360 && !foundXB && XINPUT_AUTH) {
         return;
-    } 
+    }
     if (consoleType == XBOXONE && !foundXB) {
         return;
     }
@@ -141,7 +141,7 @@ void loop1() {
 void loop() {
     tick_usb();
 }
- 
+
 void setup() {
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
@@ -198,8 +198,8 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
 
 void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
     if (usb_host_devices[id].type.console_type == UNIVERSAL) {
-        USB_Host_Data_t* host = (USB_Host_Data_t*)buf;
-        fill_generic_report(usb_host_devices[id].dev_addr, usb_host_devices[id].inst, (uint8_t*)&usb_host_devices[id].report, host);
+        USB_Host_Data_t *host = (USB_Host_Data_t *)buf;
+        fill_generic_report(usb_host_devices[id].dev_addr, usb_host_devices[id].inst, (uint8_t *)&usb_host_devices[id].report, host);
 
         // for (int i = 20; i < sizeof(USB_Host_Data_t); i++) {
         //     printf("%02x, ", buf[i]);
@@ -227,8 +227,8 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     printf("%04x %04x\r\n", host_vid, host_pid);
     USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
     type.dev_addr = dev_addr;
-    if (type.console_type == PS4) {
-        controllerType = PS4;
+    if (type.console_type == PS4 || type.console_type == SANTROLLER) {
+        controllerType = type.console_type;
     }
     if (controllerType == XBOX360) {
         if (subtype) {
@@ -255,20 +255,31 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         type.console_type = XBOXONE;
         xone_controller_connected(dev_addr);
         usb_host_devices[total_usb_host_devices].type = type;
-            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
-            usb_host_devices[total_usb_host_devices].inst = instance;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
         if (consoleType == XBOXONE) {
             foundXB = true;
         }
 
+    } else if (controllerType == SANTROLLER) {
+        tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf));
+        tuh_descriptor_get_device_sync(dev_addr, buf, sizeof(USB_DEVICE_DESCRIPTOR));
+        USB_DEVICE_DESCRIPTOR *desc = (USB_DEVICE_DESCRIPTOR *)buf;
+        type.sub_type = desc->bcdDevice >> 8;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found Santroller controller\r\n");
+        printf("Sub type: %d\r\n", type.sub_type);
     } else if (controllerType == UNKNOWN) {
         if (type.console_type) {
             if (type.console_type == PS3) {
                 // GHWT and GH5 guitars have the same vid and pid, but different tap bar functions. We can read the device name to actually determine what it is
                 if (type.sub_type == GUITAR_HERO_GUITAR && XFER_RESULT_SUCCESS == tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf))) {
-                    uint16_t wtProduct[] = {'G','u','i','t','a','r',' ','H','e','r','o','4'};
-                    if (memcmp(wtProduct, buf, sizeof(wtProduct)) || memcmp(wtProduct, buf+1, sizeof(wtProduct))) {
+                    uint16_t wtProduct[] = {'G', 'u', 'i', 't', 'a', 'r', ' ', 'H', 'e', 'r', 'o', '4'};
+                    if (memcmp(wtProduct, buf, sizeof(wtProduct)) || memcmp(wtProduct, buf + 1, sizeof(wtProduct))) {
                         type.sub_type = GUITAR_HERO_GUITAR_WT;
                     }
                 }
@@ -281,6 +292,9 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 printf("Found PS3 controller\r\n");
                 printf("Sub type: %d\r\n", type.sub_type);
                 ps3_controller_connected(dev_addr, host_vid, host_pid);
+            } else if (type.console_type == SANTROLLER) {
+                printf("Found Santroller controller\r\n");
+                printf("Sub type: %d\r\n", type.sub_type);
             }
         } else {
             usb_host_devices[total_usb_host_devices].type = type;

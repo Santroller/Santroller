@@ -2196,6 +2196,11 @@ void set_console_type(uint8_t new_console_type) {
 USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
     USB_Device_Type_t type = {UNIVERSAL, GAMEPAD};
     switch (vid) {
+        case ARDWIINO_VID: {
+            if (pid == ARDWIINO_PID) {
+                type.console_type = SANTROLLER;
+            }
+        }
         case SONY_VID:
             switch (pid) {
                 case SONY_DS3_PID:

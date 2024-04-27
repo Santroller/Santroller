@@ -37,6 +37,7 @@ enum endpoints_t {
 #define PS4_DS_PID_1 0x05c4
 #define PS4_DS_PID_2 0x09cc
 #define PS4_DS_PID_3 0x0ba0
+#define PS5_DS_PID 0x0ce6
 #define PS3_GH_GUITAR_PID 0x0100
 #define PS3_GH_DRUM_PID 0x0120
 #define PS3_RB_GUITAR_PID 0x0200
@@ -60,6 +61,7 @@ enum endpoints_t {
 #define XBOX_ONE_RB_VID 0x0738
 #define XBOX_ONE_RB_DRUM_PID 0x4262
 #define XBOX_ONE_RB_GUITAR_PID 0x4161
+#define GHLIVE_DONGLE_VID 0x1430
 #define XBOX_ONE_GHLIVE_DONGLE_VID 0x1430
 #define XBOX_ONE_GHLIVE_DONGLE_PID 0x079B
 #define XBOX_360_GHLIVE_DONGLE_VID 0x1430

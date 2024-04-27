@@ -120,6 +120,7 @@ USB_Host_Data_t last_usb_host_data;
 uint8_t rawWt;
 uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
+bool auth_ps4_is_ghl = false;
 bool seen_ps4_console = false;
 GipPowerMode_t powerMode;
 long last_poll = 0;
@@ -2170,6 +2171,7 @@ void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
         handle_player_leds(1);
     }
     auth_ps4_controller_found = true;
+    auth_ps4_is_ghl = vid == GHLIVE_DONGLE_VID && pid == PS4_GHLIVE_DONGLE_PID;
 }
 
 void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {

@@ -513,14 +513,23 @@ const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
 #endif
-// It appears for ps5 arcade stick compat, we can set byte 5 to 0x07
 const PROGMEM uint8_t ps4_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x4f, PS4_TYPE, 0x2c, 0x56,
+    0x03, 0x21, 0x27, 0x04, 0x91, PS4_TYPE, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
     0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// TODO: if we detect a ghl dongle  being used for auth, switch to this pagesize report
+// (or maybe when doing auth, only hardcode the pagesize for gamepads)
+AuthPageSizeReport ps4_pagesize_report_ghl = {
+    type : 0xF3,
+    u1 : 0x00,
+    size_challenge : 0x20,
+    size_response : 0x20,
+    u4 : {0x00, 0x00, 0x00, 0x00}
+};
 
 AuthPageSizeReport ps4_pagesize_report = {
     type : 0xF3,
@@ -727,7 +736,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
     // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         // PS3s request this as some form of controller id
         if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
@@ -789,6 +797,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 }
 #endif
                 case GET_AUTH_PAGE_SIZE: {
+                    if (auth_ps4_is_ghl) {
+                        memcpy_P(requestBuffer, &ps4_pagesize_report_ghl, sizeof(ps4_pagesize_report_ghl));
+                        return sizeof(ps4_pagesize_report_ghl);
+                    }
                     memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
                     return sizeof(ps4_pagesize_report);
                 }
@@ -951,15 +963,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
             else if (consoleType == PS4) {
-#if DEVICE_TYPE_IS_LIVE_GUITAR
+#if DEVICE_TYPE_IS_INSTRUMENT
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS4_GHLIVE_DONGLE_PID;
-#elif DEVICE_TYPE_IS_GUITAR && PS4_INSTRUMENT
-                dev->idVendor = 0x0E6F;
-                dev->idProduct = 0x0173;
-#elif DEVICE_TYPE_IS_DRUM && PS4_INSTRUMENT
-                dev->idVendor = 0x0738;
-                dev->idProduct = 0x8262;
 #else
                 dev->idVendor = PS4_VID;
                 dev->idProduct = PS4_PID;

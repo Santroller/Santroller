@@ -2200,9 +2200,11 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
             if (pid == ARDWIINO_PID) {
                 type.console_type = SANTROLLER;
             }
+            break;
         }
         case RAPHNET_VID: {
             type.console_type = RAPHNET;
+            break;
         }
         case SONY_VID:
             switch (pid) {

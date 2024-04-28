@@ -14,11 +14,11 @@ typedef struct {
     uint8_t yellow : 1;
     uint8_t blue : 1;
     uint8_t orange : 1;
-    uint8_t up : 1;
+    uint8_t down : 1;
     uint8_t plus : 1;
     uint8_t minus : 1;
 
-    uint8_t down : 1;
+    uint8_t up : 1;
     uint8_t : 7;
 
 } __attribute__((packed)) RaphnetGuitar_Data_t;

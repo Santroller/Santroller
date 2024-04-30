@@ -43,7 +43,7 @@ if "upload" in BUILD_TARGETS:
         # Windows needs to erase before programming
         if sys.platform == 'win32':
             print("Erasing")
-            subprocess.run([join(env["PROJECT_CORE_DIR"],"dfu-programmer"), "erase", env["BOARD_MCU"], "--force"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            subprocess.run([join(env["PROJECT_CORE_DIR"],"dfu-programmer"), env["BOARD_MCU"], "erase", "--force"], stderr=subprocess.STDOUT)
     if "detect_frequency_mini" in upload_options and upload_options["detect_frequency_mini"] == "true":
         print("Uploading script to detect speed")
         cwd = os.getcwd()

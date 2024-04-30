@@ -127,7 +127,7 @@ if sys.platform == 'win32':
             env.AddCustomTarget(
                 name=f"{type}_{proc}_clean",
                 dependencies=None,
-                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} flash "$PROJECT_PACKAGES_DIR/../../default_firmwares/{type}_usb.hex" --force'],
+                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} erase --force', f'"$PROJECT_CORE_DIR/dfu-programmer" {board} flash "$PROJECT_PACKAGES_DIR/../../default_firmwares/{type}_usb.hex"'],
                 title=None,
                 description=None
             )

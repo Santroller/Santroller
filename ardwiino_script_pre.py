@@ -127,7 +127,7 @@ if sys.platform == 'win32':
             env.AddCustomTarget(
                 name=f"{type}_{proc}_clean",
                 dependencies=None,
-                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} flash "$PROJECT_DIR/../default_firmwares/{type}_usb.hex" --force'],
+                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} flash "$PROJECT_PACKAGES_DIR/../../default_firmwares/{type}_usb.hex" --force'],
                 title=None,
                 description=None
             )
@@ -137,7 +137,7 @@ else:
             env.AddCustomTarget(
                 name=f"{type}_{proc}_clean",
                 dependencies=None,
-                actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -u -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb.hex:i"'],
+                actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -u -c flip1 -U flash:w:"$PROJECT_PACKAGES_DIR/../../default_firmwares/{type}_usb.hex:i"'],
                 title=None,
                 description=None
             )

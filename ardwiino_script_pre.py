@@ -120,12 +120,24 @@ env.AddCustomTarget(
     description=None
 )
 
-for type in ["arduino_mega_2560", "arduino_mega_adk", "arduino_uno"]:
-    for proc, board in [("8","at90usb82"), ("16","atmega16u2")]:
-        env.AddCustomTarget(
-            name=f"{type}_{proc}_clean",
-            dependencies=None,
-            actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -u -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb.hex:i"'],
-            title=None,
-            description=None
-        )
+# Windows needs to use a different programmer command
+if sys.platform == 'win32':
+    for type in ["arduino_mega_2560", "arduino_mega_adk", "arduino_uno"]:
+        for proc, board in [("8","at90usb82"), ("16","atmega16u2")]:
+            env.AddCustomTarget(
+                name=f"{type}_{proc}_clean",
+                dependencies=None,
+                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} flash "$PROJECT_DIR/../default_firmwares/{type}_usb.hex" --force'],
+                title=None,
+                description=None
+            )
+else:
+    for type in ["arduino_mega_2560", "arduino_mega_adk", "arduino_uno"]:
+        for proc, board in [("8","at90usb82"), ("16","atmega16u2")]:
+            env.AddCustomTarget(
+                name=f"{type}_{proc}_clean",
+                dependencies=None,
+                actions=[f'"$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude" -F -C "$PROJECT_PACKAGES_DIR/tool-avrdude/avrdude.conf" -p {board} -u -c flip1 -U flash:w:"$PROJECT_DIR/../default_firmwares/{type}_usb.hex:i"'],
+                title=None,
+                description=None
+            )

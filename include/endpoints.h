@@ -75,6 +75,8 @@ enum endpoints_t {
 #define RAPHNET_VID 0x289b
 #define XBOX_ONE_JAG_VID 0x0e6f
 #define XBOX_ONE_JAG_PID 0x0170
+#define MAGICBOOTS_PS4_VID 0x0079
+#define MAGICBOOTS_PS4_PID 0x1893
 
 #define SIMULTANEOUS_KEYS 6
 

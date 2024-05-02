@@ -2219,6 +2219,12 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
             type.console_type = RAPHNET;
             break;
         }
+        case MAGICBOOTS_PS4_VID: {
+            if (pid == MAGICBOOTS_PS4_PID) {
+                type.console_type = PS4;
+            }
+            break;
+        }
         case SONY_VID:
             switch (pid) {
                 case SONY_DS3_PID:

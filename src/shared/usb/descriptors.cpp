@@ -1060,6 +1060,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
+            } else if (consoleType == FNF) {
+                address = fnf_descriptor;
+                size = sizeof(fnf_descriptor);
             } else if (consoleType != UNIVERSAL) {
 #if DEVICE_TYPE_IS_INSTRUMENT
                 address = ps3_instrument_descriptor;
@@ -1073,9 +1076,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     size = sizeof(ps3_instrument_descriptor);
                 }
 #endif
-            } else if (consoleType == FNF) {
-                address = fnf_descriptor;
-                size = sizeof(fnf_descriptor);
             } else {
                 address = pc_descriptor;
                 size = sizeof(pc_descriptor);

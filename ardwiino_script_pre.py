@@ -43,7 +43,7 @@ if "upload" in BUILD_TARGETS:
         # Windows needs to erase before programming
         if sys.platform == 'win32':
             print("Erasing")
-            subprocess.run([join(env["PROJECT_CORE_DIR"],"dfu-programmer"), env["BOARD_MCU"], "erase", "--force"], stderr=subprocess.STDOUT)
+            subprocess.run([join(env["$PROJECT_PACKAGES_DIR"],"..","dfu-programmer"), env["BOARD_MCU"], "erase", "--force"], stderr=subprocess.STDOUT)
     if "detect_frequency_mini" in upload_options and upload_options["detect_frequency_mini"] == "true":
         print("Uploading script to detect speed")
         cwd = os.getcwd()
@@ -131,7 +131,7 @@ if sys.platform == 'win32':
             env.AddCustomTarget(
                 name=f"{type}_{proc}_clean",
                 dependencies=None,
-                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} erase --force', f'"$PROJECT_CORE_DIR/dfu-programmer" {board} flash "$PROJECT_PACKAGES_DIR/../../default_firmwares/{type}_usb.hex"'],
+                actions=[f'"$PROJECT_CORE_DIR/dfu-programmer" {board} erase --force', f'"$PROJECT_PACKAGES_DIR/../dfu-programmer" {board} flash "$PROJECT_PACKAGES_DIR/../../default_firmwares/{type}_usb.hex"'],
                 title=None,
                 description=None
             )

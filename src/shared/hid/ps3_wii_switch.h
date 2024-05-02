@@ -78,6 +78,33 @@ const uint8_t PROGMEM ps3_instrument_descriptor[] = {
                        //   Null Position)
     0xC0,              // End Collection
 };
+const uint8_t PROGMEM fnf_descriptor[] = {
+    0x05, 0x01,              // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x05,              // Usage (Game Pad)
+    0xA1, 0x01,              // Collection (Application)
+    0x85, GIP_INPUT_REPORT,  //   Report ID (GIP_INPUT_REPORT)
+    0x15, 0x00,              //   Logical Minimum (0)
+    0x25, 0x01,              //   Logical Maximum (1)
+    0x35, 0x00,              //   Physical Minimum (0)
+    0x45, 0x01,              //   Physical Maximum (1)
+    0x75, 0x01,              //   Report Size (1)
+    0x95, 0x10,              //   Report Count (16)
+    0x05, 0x09,              //   Usage Page (Button)
+    0x19, 0x01,              //   Usage Minimum (0x01)
+    0x29, 0x10,              //   Usage Maximum (0x10)
+    0x81, 0x02,              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x26, 0xFF, 0x00,        //   Logical Maximum (255)
+    0x46, 0xFF, 0x00,        //   Physical Maximum (255)
+    0x09, 0x30,              //   Usage (X)
+    0x09, 0x31,              //   Usage (Y)
+    0x09, 0x32,              //   Usage (Z)
+    0x09, 0x33,              //   Usage (Rx)
+    0x09, 0x34,              //   Usage (Ry)
+    0x75, 0x08,              //   Report Size (8)
+    0x95, 5,                 //   Report Count (5)
+    0x81, 0x02,              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0xC0,                    // End Collection
+};
 #if DEVICE_TYPE_IS_INSTRUMENT
 const uint8_t PROGMEM pc_descriptor[] = {
     0x05, 0x01,              // Usage Page (Generic Desktop Ctrls)
@@ -92,7 +119,7 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0x95, HID_BUTTON_COUNT,  //   Report Count (HID_BUTTON_COUNT)
     0x05, 0x09,              //   Usage Page (Button)
     HID_BUTTON_USAGES,
-    0x81, 0x02,              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x02,  //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
 #if HID_BUTTON_PADDING
     0x95, HID_BUTTON_PADDING,  //   Report Count (HID_BUTTON_PADDING)
     0x81, 0x01,                //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)

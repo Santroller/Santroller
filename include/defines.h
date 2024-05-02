@@ -62,6 +62,7 @@
 #define BLUETOOTH_REPORT 12
 #define SANTROLLER 13
 #define RAPHNET 14
+#define FNF 15
 #define UNKNOWN 0xFF
 
 #define EMULATION_TYPE_CONTROLLER 0

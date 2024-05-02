@@ -236,7 +236,7 @@ typedef struct
     uint8_t soloBlue : 1;
 
     uint8_t soloOrange : 1;
-    uint8_t back : 1;          // select
+    uint8_t back : 1;  // select
     uint8_t start : 1;
     uint8_t guide : 1;  // ps
     uint8_t : 3;
@@ -257,6 +257,47 @@ typedef struct
     uint8_t pickup;
     uint8_t tilt;
 } __attribute__((packed)) PCRockBandGuitar_Data_t;
+
+typedef struct
+{
+    uint8_t reportId;
+
+    uint8_t start : 1;
+    uint8_t back : 1;  // select
+    uint8_t a : 1;     // cross, green
+    uint8_t b : 1;     // circle, red
+
+    uint8_t x : 1;  // square, blue
+    uint8_t y : 1;  // triangle, yellow
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t guide : 1;
+
+    uint8_t solo : 1;
+    uint8_t : 3;
+
+    uint8_t tilt;
+    uint8_t whammy;
+    uint8_t pickup;
+
+    uint8_t green : 1;
+    uint8_t red : 1;
+    uint8_t yellow : 1;
+    uint8_t blue : 1;
+    uint8_t orange : 1;
+    uint8_t : 3;
+
+    uint8_t soloGreen : 1;
+    uint8_t soloRed : 1;
+    uint8_t soloYellow : 1;
+    uint8_t soloBlue : 1;
+    uint8_t soloOrange : 1;
+    uint8_t : 3;
+} __attribute__((packed)) PCFortniteRockBandGuitar_Data_t;
 
 typedef struct
 {

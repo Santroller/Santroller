@@ -73,6 +73,8 @@ enum endpoints_t {
 #define GUITAR_PRAISE_VID 0x0314
 #define GUITAR_PRAISE_PID 0x0830
 #define RAPHNET_VID 0x289b
+#define XBOX_ONE_JAG_VID 0x0e6f
+#define XBOX_ONE_JAG_PID 0x0170
 
 #define SIMULTANEOUS_KEYS 6
 

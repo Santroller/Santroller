@@ -989,6 +989,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
 #endif
+            if (consoleType == FNF) {
+                dev->idVendor = XBOX_ONE_JAG_VID;
+                dev->idProduct = XBOX_ONE_JAG_PID;
+            }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
@@ -1021,7 +1025,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
-
+                } else if (consoleType == FNF) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
 #if DEVICE_TYPE_IS_INSTRUMENT
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
@@ -1068,6 +1073,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     size = sizeof(ps3_instrument_descriptor);
                 }
 #endif
+            } else if (consoleType == FNF) {
+                address = fnf_descriptor;
+                size = sizeof(fnf_descriptor);
             } else {
                 address = pc_descriptor;
                 size = sizeof(pc_descriptor);

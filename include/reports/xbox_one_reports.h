@@ -74,6 +74,7 @@ typedef struct
     int16_t rightStickY;
 } __attribute__((packed)) XboxOneGamepad_Data_t;
 
+
 typedef struct
 {
     GipHeader_t Header;

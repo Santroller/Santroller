@@ -65,6 +65,9 @@ uint16_t adc_read(uint8_t pin, uint8_t mask) {
 uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits) {
     if (!disable_multiplexer) {
         gpio_put_masked(mask, bits);
+#ifdef CD4051BE
+        sleep_us(50);
+#endif
         adc_select_input(pin);
         return adc_read() << 4;
     }

@@ -23,10 +23,12 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
     - If you skip the multiplexer, follow the digital instructions instead of the analog ones
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
   - the 74HCT4051 or 74HCT4067 will not work as these are 5V parts and are not tolerant of the 3.3V voltage levels of the Pi Pico.
-  - The CD4051B/CD4051BE and CD4067B aren't recommended as these parts don't seem to work very well.
+  - The CD4051B/CD4051BE and CD4067B aren't recommended as they are too slow at 3.3V.
+
+- 3.3V zener diode per drum / cymbal pad (if using a multiplexer)
+  - The multiplexers do not like high voltage spikes, and the zener diode will clamp them. Without this, you will get very messy readings when a drum is hit.
 
 - 1MOhm resistor per drum / cymbal pad
-- 3.3v zener diode per drum / cymbal pad
 - Some Wire
 - Soldering Iron
 - Multimeter (it will be used mainly in continuity mode, where it beeps when the two contacts are shorted together)

@@ -11,12 +11,12 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 - A microcontroller
 
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
-  - If you want analog drum support, you currently will need to use a Pro Micro, as there is currently issues with multiplexer support for the Pi Pico.
 
     {% include sections/microcontrollers.md %}
 
 - A 4051 or 4067 based analog multiplexer
   - Only necessary for the Pi Pico, other microcontrollers have enough analog pins
+  - Note that for the RB kit without cymbals, you can actually get away with a Pi Pico based board with 4 analog pins, and then the multiplexer is not required.
   - Entirley optional, certain game features won't work with digital drums
     - For Rock Band, the velocity data is only used for freestyle drums.
     - For GH, the velocity data is used for accents and ghosts. These award extra points when you hit them with the right velocity, but that is entirely optional.

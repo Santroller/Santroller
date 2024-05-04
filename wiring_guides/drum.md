@@ -26,6 +26,7 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
   - The CD4051B/CD4051BE and CD4067B aren't recommended as these parts don't seem to work very well.
 
 - 1MOhm resistor per drum / cymbal pad
+- 3.3v zener diode per drum / cymbal pad
 - Some Wire
 - Soldering Iron
 - Multimeter (it will be used mainly in continuity mode, where it beeps when the two contacts are shorted together)
@@ -95,7 +96,8 @@ To keep the relevant information in this guide easy to find, information is sort
 1. Disconnect the piezos from the main drum PCB.
 2. Solder the black wire from the piezo to ground.
 3. Solder the red wire to an analog input on the multiplexer for the Pi Pico, or to an analog pin on your micocontroller if your microcontroller has enough analog pins.
-4. Solder a 1Mohm resistor between the red and black wires on the piezo.
+4. Solder a 1Mohm resistor between the red (multiplexer) side of the piezo and ground
+5. Solder a diode between the red (multiplexer) side of the piezo and ground. The black stripe on the diode should connect to the red side of the multiplexer.
 
 </details>
 

@@ -284,7 +284,7 @@ void handle_player_leds(uint8_t player) {
                     rsize : sizeof(XInputLEDReport_t),
                     led : (xinput_led_t)(player + ONE - 1)
                 };
-                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
                 return;
             }
         }
@@ -351,7 +351,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                 ps4_output_report *report = &ps4_output_reports[i];
                 report->motor_left = rumble_left;
                 report->motor_right = rumble_right;
-                send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(ps4_output_report));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)report, sizeof(ps4_output_report));
                 return;
             }
             case XBOX360: {
@@ -361,7 +361,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                     leftRumble : rumble_left,
                     rightRumble : rumble_right
                 };
-                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
                 return;
             }
             case XBOXONE: {
@@ -373,7 +373,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                 if (xone_sequences[i] == 0) {
                     xone_sequences[i] = 1;
                 }
-                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
             }
         }
     }
@@ -389,7 +389,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
             leftRumble : rumble_left,
             rightRumble : rumble_right
         };
-        send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+        send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
         return;
     }
 #endif
@@ -411,7 +411,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                     leftRumble : rumble_left,
                     rightRumble : rumble_right
                 };
-                send_report_to_controller(type.dev_addr, (uint8_t *)&report, sizeof(report));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
                 return;
             }
             case PS3: {
@@ -527,13 +527,13 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 uint8_t player = xbox_players[led];
                 data_hid[1] = PS3_LED_RUMBLE_ID;
                 data_hid[3] = 1 << player;
-                send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
 
             } else if (id == XBOX_RUMBLE_ID) {
                 data_hid[1] = SANTROLLER_LED_ID;
                 data_hid[2] = data[3];
                 data_hid[3] = data[4];
-                send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
             }
         } else if ((consoleType == XBOXONE) && report_id != BLUETOOTH_REPORT) {
             if (xbox_one_state == Ready) {
@@ -547,7 +547,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                         uint8_t player = (data[3] & 0x0F);
                         data_hid[1] = PS3_LED_RUMBLE_ID;
                         data_hid[3] = 1 << player;
-                        send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+                        send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
                     }
                 }
 #endif
@@ -556,12 +556,12 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                     data_hid[1] = SANTROLLER_LED_ID;
                     data_hid[2] = rumble->leftMotor;
                     data_hid[3] = rumble->rightMotor;
-                    send_report_to_controller(type.dev_addr, (uint8_t *)&data_hid, sizeof(data_hid));
+                    send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
                 }
             }
         } else {
             // Already a hid payload, send it as is
-            send_report_to_controller(type.dev_addr, data, len);
+            send_report_to_controller(type.dev_addr, type.instance, data, len);
         }
     }
 #endif
@@ -681,7 +681,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
                     type = get_usb_host_device_type(i);
                     if (type.sub_type != GAMEPAD || type.console_type != PS4) continue;
-                    send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(ps4_output_report));
+                    send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)report, sizeof(ps4_output_report));
                     return;
                 }
 #endif

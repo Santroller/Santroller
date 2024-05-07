@@ -25,7 +25,7 @@ for (int i = 0; i < device_count; i++) {
             data.sub_command = 0x02;
             data.data[0] = 0x08;
             data.data[1] = 0x0A;
-            send_report_to_controller(device_type.dev_addr, (uint8_t *)&data, sizeof(data));
+            send_report_to_controller(device_type.dev_addr, device_type.instance, (uint8_t *)&data, sizeof(data));
         }
     }
     uint8_t *data = (uint8_t *)&temp_report_usb_host;
@@ -776,6 +776,7 @@ for (int i = 0; i < device_count; i++) {
             }
             break;
         }
+        case XBOX360_W:
         case XBOX360: {
             switch (device_type.sub_type) {
                 case XINPUT_GUITAR: {
@@ -815,6 +816,7 @@ for (int i = 0; i < device_count; i++) {
                     }
                     break;
                 }
+                case XINPUT_GUITAR_WT:
                 case XINPUT_GUITAR_ALTERNATE: {
                     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)data;
                     usb_host_data.a |= report->a;
@@ -841,31 +843,31 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.whammy = (report->whammy >> 8) - PS3_STICK_CENTER;
                     }
 
-                    // uint8_t slider = (report->slider >> 8) ^ 0x80;
+                    uint8_t slider = (report->slider >> 8) ^ 0x80;
 
-                    // TODO: eventually if we implement wireless receiver support then this might be worth it
-                    // We would then just check the vid and pid and do it that way
-                    // if (slider < 0x2F) {
-                    //     usb_host_data.slider = 0x95;
-                    // } else if (slider <= 0x3F) {
-                    //     usb_host_data.slider = 0xB0;
-                    // } else if (slider <= 0x5F) {
-                    //     usb_host_data.slider = 0xCD;
-                    // } else if (slider <= 0x6F) {
-                    //     usb_host_data.slider = 0xE6;
-                    // } else if (slider <= 0x8F) {
-                    //     usb_host_data.slider = 0;
-                    // } else if (slider <= 0x9F) {
-                    //     usb_host_data.slider = 0x1A;
-                    // } else if (slider <= 0xAF) {
-                    //     usb_host_data.slider = 0x2F;
-                    // } else if (slider <= 0xCF) {
-                    //     usb_host_data.slider = 0x49;
-                    // } else if (slider <= 0xEF) {
-                    //     usb_host_data.slider = 0x66;
-                    // } else {
-                    //     usb_host_data.slider = 0x7F;
-                    // }
+                    if (device_type.sub_type == XINPUT_GUITAR_WT) {
+                        if (slider < 0x2F) {
+                            usb_host_data.slider = 0x95;
+                        } else if (slider <= 0x3F) {
+                            usb_host_data.slider = 0xB0;
+                        } else if (slider <= 0x5F) {
+                            usb_host_data.slider = 0xCD;
+                        } else if (slider <= 0x6F) {
+                            usb_host_data.slider = 0xE6;
+                        } else if (slider <= 0x8F) {
+                            usb_host_data.slider = 0;
+                        } else if (slider <= 0x9F) {
+                            usb_host_data.slider = 0x1A;
+                        } else if (slider <= 0xAF) {
+                            usb_host_data.slider = 0x2F;
+                        } else if (slider <= 0xCF) {
+                            usb_host_data.slider = 0x49;
+                        } else if (slider <= 0xEF) {
+                            usb_host_data.slider = 0x66;
+                        } else {
+                            usb_host_data.slider = 0x7F;
+                        }
+                    }
                     break;
                 }
                 case XINPUT_DRUMS: {

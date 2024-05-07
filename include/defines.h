@@ -22,6 +22,8 @@
 // Not real, but its easier for us to match this way
 #define XINPUT_GUITAR_HERO_LIVE 24
 #define XINPUT_PRO_GUITAR 25
+// Also not real, but nice for matching
+#define XINPUT_GUITAR_WT 26
 
 #define PS4_GAMEPAD 0
 #define PS4_GUITAR 1
@@ -63,6 +65,7 @@
 #define SANTROLLER 13
 #define RAPHNET 14
 #define FNF 15
+#define XBOX360_W 16
 #define UNKNOWN 0xFF
 
 #define EMULATION_TYPE_CONTROLLER 0

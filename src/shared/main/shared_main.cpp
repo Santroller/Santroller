@@ -1786,7 +1786,8 @@ bool tick_usb(void) {
     if (!ready) return 0;
 #if USB_HOST_STACK
     if (data_from_console_size) {
-        send_report_to_controller(get_device_address_for(XBOXONE), data_from_console, data_from_console_size);
+        USB_Device_Type_t type = get_device_address_for(XBOXONE);
+        send_report_to_controller(type.dev_addr, type.instance, data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
     // If we have something pending to send to the xbox one controller, send it
@@ -2133,7 +2134,8 @@ void device_reset(void) {
     if (consoleType == XBOXONE) {
         if (xbox_one_state != Announce && xbox_one_state != WaitingDesc1) {
             powerMode.subcommand = 0x07;
-            send_report_to_controller(get_device_address_for(XBOXONE), (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
+            USB_Device_Type_t type = get_device_address_for(XBOXONE);
+            send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
             powerMode.subcommand = 0x00;
         }
     }
@@ -2167,9 +2169,9 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
     xbox_360_pid = pid;
 }
 
-void xone_controller_connected(uint8_t dev_addr) {
+void xone_controller_connected(uint8_t dev_addr, uint8_t instance) {
     printf("Sending to controller %d\r\n", dev_addr);
-    send_report_to_controller(dev_addr, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
+    send_report_to_controller(dev_addr, instance, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
 }
 
 void host_controller_connected() {

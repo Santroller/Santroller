@@ -39,9 +39,9 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
 static uint32_t __uninitialized_ram(persistedConsoleType);
 static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
-uint8_t xone_dev_addr = 0;
-uint8_t x360_dev_addr = 0;
-uint8_t ps4_dev_addr = 0;
+USB_Device_Type_t xone_dev_addr = {};
+USB_Device_Type_t x360_dev_addr = {};
+USB_Device_Type_t ps4_dev_addr = {};
 bool connected = false;
 #if USB_HOST_STACK
 uint8_t total_usb_host_devices = 0;
@@ -53,7 +53,7 @@ typedef struct {
     uint8_t inst;
 } Usb_Host_Device_t;
 
-Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX];
+Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX * CFG_TUH_XINPUT];
 #endif
 typedef struct {
     uint8_t pin_dp;
@@ -69,6 +69,7 @@ typedef struct {
     bool skip_alarm_pool;
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
+static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 bool ready_for_next_packet() {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
@@ -166,7 +167,7 @@ void authentication_successful() {
     authReady = true;
 }
 
-uint8_t get_device_address_for(uint8_t deviceType) {
+USB_Device_Type_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == XBOXONE) {
         return xone_dev_addr;
     }
@@ -176,12 +177,12 @@ uint8_t get_device_address_for(uint8_t deviceType) {
     if (deviceType == PS4) {
         return ps4_dev_addr;
     }
-    return 0;
+    return {0};
 }
 
-void send_report_to_controller(uint8_t dev_addr, const uint8_t *report, uint8_t len) {
-    if (dev_addr && tuh_xinput_mounted(dev_addr, 0)) {
-        tuh_xinput_send_report(dev_addr, 0, report, len);
+void send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t *report, uint8_t len) {
+    if (dev_addr && tuh_xinput_mounted(dev_addr, instance)) {
+        tuh_xinput_send_report(dev_addr, instance, report, len);
     }
 }
 void tud_mount_cb(void) {
@@ -220,13 +221,14 @@ uint8_t read_usb_host_devices(uint8_t *buf) {
 }
 
 void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerType, uint8_t subtype) {
-    printf("Detected controller: %d (%d) on %d\r\n", controllerType, subtype, dev_addr);
+    printf("Detected controller: %d (%d) on %d, %d\r\n", controllerType, subtype, dev_addr, instance);
     uint16_t host_vid = 0;
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     printf("%04x %04x\r\n", host_vid, host_pid);
     USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
     type.dev_addr = dev_addr;
+    type.instance = instance;
     if (type.console_type == PS4 || type.console_type == SANTROLLER || type.console_type == RAPHNET) {
         controllerType = type.console_type;
     }
@@ -236,10 +238,14 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             if (host_vid == XBOX_360_GHLIVE_DONGLE_VID && host_pid == XBOX_360_GHLIVE_DONGLE_PID) {
                 subtype = XINPUT_GUITAR_HERO_LIVE;
             }
+            // WT guitars handle the slider differently so create a fake subtype for that too
+            if (host_vid == XBOX_360_WT_KIOSK_VID && host_pid == XBOX_360_WT_KIOSK_PID) {
+                subtype = XINPUT_GUITAR_WT;
+            }
             type.console_type = controllerType;
             type.sub_type = subtype;
 
-            x360_dev_addr = dev_addr;
+            x360_dev_addr = type;
             xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
             usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
@@ -250,10 +256,21 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 printf("found xb\r\n");
             }
         }
+    } else if (controllerType == XBOX360_W) {
+        type.console_type = controllerType;
+        type.sub_type = UNKNOWN;
+
+        x360_dev_addr = type;
+        xinput_controller_connected(host_vid, host_pid, subtype);
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("found xb360 wireless\r\n");
     } else if (controllerType == XBOXONE) {
-        xone_dev_addr = dev_addr;
+        xone_dev_addr = type;
         type.console_type = XBOXONE;
-        xone_controller_connected(dev_addr);
+        xone_controller_connected(dev_addr, instance);
         usb_host_devices[total_usb_host_devices].type = type;
         usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
         usb_host_devices[total_usb_host_devices].inst = instance;
@@ -344,8 +361,8 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
         usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
-        if (!ps4_dev_addr) {
-            ps4_dev_addr = dev_addr;
+        if (!ps4_dev_addr.dev_addr) {
+            ps4_dev_addr = type;
 
             printf("Found PS4 controller\r\n");
             ps4_controller_connected(dev_addr, host_vid, host_pid);
@@ -358,14 +375,14 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     printf("Unplugged %d\r\n", dev_addr);
-    if (xone_dev_addr == dev_addr) {
-        xone_dev_addr = 0;
+    if (xone_dev_addr.dev_addr == dev_addr && xone_dev_addr.instance == instance) {
+        xone_dev_addr.dev_addr = 0;
     }
-    if (x360_dev_addr == dev_addr) {
-        x360_dev_addr = 0;
+    if (x360_dev_addr.dev_addr == dev_addr && x360_dev_addr.instance == instance) {
+        x360_dev_addr.dev_addr = 0;
     }
-    if (ps4_dev_addr == dev_addr) {
-        ps4_dev_addr = 0;
+    if (ps4_dev_addr.dev_addr == dev_addr && ps4_dev_addr.instance == instance) {
+        ps4_dev_addr.dev_addr = 0;
         ps4_controller_disconnected();
     }
     // Probably should actulaly work out what was unplugged and all that
@@ -373,11 +390,11 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
 }
 bool wasXb1Input = false;
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
-    if (dev_addr == xone_dev_addr) {
+    if (dev_addr == xone_dev_addr.dev_addr && instance == xone_dev_addr.instance) {
         receive_report_from_controller(report, len);
     }
     for (int i = 0; i < total_usb_host_devices; i++) {
-        if (usb_host_devices[i].type.dev_addr == dev_addr) {
+        if (usb_host_devices[i].dev_addr == dev_addr && usb_host_devices[i].inst == instance) {
             if (usb_host_devices[i].type.console_type == XBOXONE) {
                 GipHeader_t *header = (GipHeader_t *)report;
                 if (header->command == GIP_VIRTUAL_KEYCODE) {
@@ -392,6 +409,49 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     return;
                 }
                 wasXb1Input = header->command == GIP_INPUT_REPORT;
+            }
+            if (usb_host_devices[i].type.console_type == XBOX360_W) {
+                XBOX_WIRELESS_HEADER *header = (XBOX_WIRELESS_HEADER *)report;
+                if (header->id == 0x08) {
+                    // Disconnected
+                    if (header->type == 0x00) {
+                        usb_host_devices[i].type.sub_type = UNKNOWN;
+                    }
+                } else if (header->id == 0x00) {
+                    // Gamepad inputs
+                    if (header->type == 0x01 || header->type == 0x03) {
+                        memcpy(&usb_host_devices[i].report, report + sizeof(header), len - sizeof(header));
+                        usb_host_devices[i].report_length = len - sizeof(header);
+                    }
+                    // Link report
+                    if (header->type == 0x0f) {
+                        XBOX_WIRELESS_LINK_REPORT *linkReport = (XBOX_WIRELESS_LINK_REPORT *)report;
+                        if (linkReport->always_0xCC != 0xCC) {
+                            return;
+                        }
+                        uint8_t sub_type = linkReport->subtype & ~0x80;
+                        usb_host_devices[i].type.sub_type = sub_type;
+                        printf("Found subtype: %02x %02x %02x\r\n", sub_type, dev_addr, instance);
+                        // Request capabilities so we can figure out WT guitars
+                        if (sub_type == XINPUT_GUITAR_ALTERNATE) {
+                            // request capabilities
+                            send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
+                        }
+                    }
+                    if (header->type == 0x05) {
+                        XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES*)report;
+                        if (caps->always_0x12 != 0x12) {
+                            return;
+                        }
+                        printf("Found capabilities: %02x %02x\r\n", dev_addr, instance);
+                        if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0) {
+                            usb_host_devices[i].type.sub_type = XINPUT_GUITAR_WT;
+                            printf("Found wt\r\n");
+                        }
+                        
+                    }
+                }
+                return;
             }
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;

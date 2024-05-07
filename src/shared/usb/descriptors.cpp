@@ -719,7 +719,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x84:
         case 0x83:
         case 0x86:
-            return transfer_with_usb_controller(get_device_address_for(XBOX360), requestType, request, wValue, wIndex, wLength, requestBuffer);
+            USB_Device_Type_t type = get_device_address_for(XBOX360);
+            return transfer_with_usb_controller(type.dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer);
     }
 #else
     switch (request) {
@@ -790,10 +791,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 
 #if USB_HOST_STACK
                 case GET_RESPONSE: {
-                    return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
+                    return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
                 case GET_AUTH_STATUS: {
-                    return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
+                    return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer);
                 }
 #endif
                 case GET_AUTH_PAGE_SIZE: {
@@ -820,7 +821,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
     } else if (request == HID_REQUEST_SET_REPORT && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
 #if USB_HOST_STACK
-        return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wIndex, wLength, requestBuffer);
+        return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer);
 #else
         return 0;
 #endif

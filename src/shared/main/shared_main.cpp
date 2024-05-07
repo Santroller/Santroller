@@ -1378,8 +1378,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
     TICK_SHARED;
-    // give the user 5 seconds to jump between modes (aka, hold on plug in)
-    if (millis() < 5000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
+    // give the user 2 second to jump between modes (aka, hold on plug in)
+    if (millis() < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
         TICK_DETECTION;
     }
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.

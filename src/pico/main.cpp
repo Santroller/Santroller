@@ -39,11 +39,11 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
 static uint32_t __uninitialized_ram(persistedConsoleType);
 static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
+bool connected = false;
+#if USB_HOST_STACK
 USB_Device_Type_t xone_dev_addr = {};
 USB_Device_Type_t x360_dev_addr = {};
 USB_Device_Type_t ps4_dev_addr = {};
-bool connected = false;
-#if USB_HOST_STACK
 uint8_t total_usb_host_devices = 0;
 typedef struct {
     USB_Device_Type_t type;

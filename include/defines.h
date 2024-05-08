@@ -66,6 +66,8 @@
 #define RAPHNET 14
 #define FNF 15
 #define XBOX360_W 16
+#define KEYBOARD 17
+#define MOUSE 18
 #define UNKNOWN 0xFF
 
 #define EMULATION_TYPE_CONTROLLER 0

@@ -326,6 +326,20 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
         usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
+    } else if (controllerType == KEYBOARD) {
+        type.console_type = controllerType;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found Keyboard\r\n");
+    } else if (controllerType == MOUSE) {
+        type.console_type = controllerType;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found Mouse\r\n");
     } else if (controllerType == UNKNOWN) {
         if (type.console_type) {
             if (type.console_type == PS3) {
@@ -440,7 +454,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         }
                     }
                     if (header->type == 0x05) {
-                        XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES*)report;
+                        XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES *)report;
                         if (caps->always_0x12 != 0x12) {
                             return;
                         }
@@ -449,7 +463,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                             usb_host_devices[i].type.sub_type = XINPUT_GUITAR_WT;
                             printf("Found wt\r\n");
                         }
-                        
                     }
                 }
                 return;

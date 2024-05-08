@@ -43,6 +43,29 @@ for (int i = 0; i < device_count; i++) {
         }
     }
     switch (console_type) {
+        case KEYBOARD: {
+            USB_6KRO_Boot_Data_t *report = (USB_6KRO_Boot_Data_t *)data;
+            usb_host_data.keyboard.leftCtrl = report->leftCtrl;
+            usb_host_data.keyboard.leftShift = report->leftShift;
+            usb_host_data.keyboard.leftAlt = report->leftAlt;
+            usb_host_data.keyboard.lWin = report->lWin;
+            usb_host_data.keyboard.rightCtrl = report->rightCtrl;
+            usb_host_data.keyboard.rightShift = report->rightShift;
+            usb_host_data.keyboard.rightAlt = report->rightAlt;
+            usb_host_data.keyboard.rWin = report->rWin;
+            uint8_t *keyData = (uint8_t *)(&usb_host_data.keyboard) + 2;
+            for (uint8_t i = 0; i < SIMULTANEOUS_KEYS; i++) {
+                uint8_t keycode = report->KeyCode[i];
+                // F24 is the last supported key in our nkro report
+                if (keycode && keycode <= KEYCODE_F24) {
+                    bit_set(keyData[keycode / 8], keycode % 8);
+                }
+            }
+        }
+        case MOUSE: {
+            USB_Mouse_Boot_Data_t *report = (USB_Mouse_Boot_Data_t *)data;
+            memcpy(&usb_host_data.mouse, report, sizeof(report));
+        }
         case UNIVERSAL: {
             USB_Host_Data_t *report = (USB_Host_Data_t *)data;
             usb_host_data.genericX = report->genericX;
@@ -238,7 +261,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.soloYellow |= report->soloYellow;
                     usb_host_data.soloBlue |= report->soloBlue;
                     usb_host_data.soloOrange |= report->soloOrange;
-                    
+
                     if (report->whammy) {
                         usb_host_data.whammy = report->whammy;
                     }
@@ -335,7 +358,7 @@ for (int i = 0; i < device_count; i++) {
                 }
                 case LIVE_GUITAR: {
                     PCGHLGuitar_Data_t *report = (PCGHLGuitar_Data_t *)data;
-                     usb_host_data.a |= report->a;
+                    usb_host_data.a |= report->a;
                     usb_host_data.b |= report->b;
                     usb_host_data.x |= report->x;
                     usb_host_data.y |= report->y;
@@ -385,8 +408,7 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.rightTableVelocity = (report->rightTableVelocity - PS3_STICK_CENTER) << 8;
                     }
                     break;
-                }
-                break;
+                } break;
             }
             break;
         }

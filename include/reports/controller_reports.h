@@ -13,7 +13,7 @@
 #define SIMULTANEOUS_KEYS 6
 #define NKRO_KEYS ((0x73 / 8) + 1)
 #define SIMULTANEOUS_MIDI 12
-
+#define KEYCODE_F24 115
 typedef struct {
     // TMIDI_EventPacket_t midi[SIMULTANEOUS_MIDI];
 } USB_MIDI_Data_t;
@@ -183,6 +183,31 @@ typedef struct {
                                            keys. */
 } __attribute__((packed)) USB_6KRO_Data_t;
 
+typedef struct {
+    bool leftCtrl : 1;
+    bool leftShift : 1;
+    bool leftAlt : 1;
+    bool lWin : 1;
+    bool rightCtrl : 1;
+    bool rightShift : 1;
+    bool rightAlt : 1;
+    bool rWin : 1;
+    uint8_t Reserved;                   /**< Reserved for OEM use, always set to 0. */
+    uint8_t KeyCode[SIMULTANEOUS_KEYS]; /**< Key codes of the currently pressed
+                                           keys. */
+} __attribute__((packed)) USB_6KRO_Boot_Data_t;
+
+typedef struct {
+    bool left : 1;
+    bool right : 1;
+    bool middle : 1;
+    uint8_t : 5;
+    int8_t x;       /**< Current delta X movement of the mouse. */
+    int8_t y;       /**< Current delta Y movement on the mouse. */
+    int8_t scrollY; /** Current scroll Y delta movement on the mouse */
+    int8_t scrollX; /** Current scroll X delta movement on the mouse */
+} __attribute__((packed)) USB_Mouse_Boot_Data_t;
+
 typedef union {
 #ifdef TICK_SIXKRO
     USB_6KRO_Data_t keyboard;
@@ -317,4 +342,6 @@ typedef struct {
     uint16_t genericRY;
     uint16_t genericRZ;
     uint16_t genericSlider;
+    USB_NKRO_Data_t keyboard;
+    USB_Mouse_Boot_Data_t mouse;
 } __attribute__((packed)) USB_Host_Data_t;

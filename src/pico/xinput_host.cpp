@@ -144,9 +144,9 @@ uint16_t GetAxis(HID_ReportItem_t *item) {
     uint8_t size = item->Attributes.BitSize;
     uint32_t val = item->Value;
     if (size > 16) {
-        val >>= size-16;
+        val >>= size - 16;
     } else if (size < 16) {
-        val <<= 16-size;
+        val <<= 16 - size;
     }
     return val;
 }
@@ -205,7 +205,7 @@ void fill_generic_report(uint8_t dev_addr, uint8_t instance, const uint8_t *repo
                     case HID_USAGE_PAGE_BUTTON: {
                         uint8_t usage = item->Attributes.Usage.Usage;
                         if (usage <= 16 && item->Value) {
-                            out->genericButtons |= 1 << usage-1;
+                            out->genericButtons |= 1 << usage - 1;
                         }
                         break;
                     }
@@ -278,7 +278,7 @@ bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
 //--------------------------------------------------------------------+
 // Enumeration
 //--------------------------------------------------------------------+
-
+extern uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer);
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;
@@ -303,7 +303,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
     // Support standard HID devices
     if (TUSB_CLASS_HID == desc_itf->bInterfaceClass) {
         TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
-
         uint8_t const *p_desc = (uint8_t const *)desc_itf;
         // Xinput reserved endpoint
         //-------------- Xinput Descriptor --------------//
@@ -332,36 +331,45 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
 
         p_xinput->type = UNKNOWN;
-        uint8_t temp_buf[512];
-        uint8_t *current = temp_buf;
-        uint8_t len = x_desc->wDescriptorLength;
-        uint8_t last_id = 0;
-        tuh_descriptor_get_hid_report(dev_addr, p_xinput->itf_num, x_desc->bDescrType, 0, temp_buf, x_desc->wDescriptorLength, NULL, (uintptr_t)temp_buf);
-        // Seems that sometimes we miss the first byte?
-        if (!temp_buf[0]) {
-            temp_buf[0] = 0x05;
+        if (desc_itf->bInterfaceProtocol == HID_ITF_PROTOCOL_KEYBOARD) {
+            p_xinput->type = KEYBOARD;
         }
-        reportID = INVALID_REPORT_ID;
-        USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
-        // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
-        while (len) {
-            // Size is first two bits
-            uint8_t size = (current[0] & 0b11) + 1;
-            uint8_t type = current[0] >> 2 & 0b11;
-            uint8_t tag = current[0] >> 4;
-            if (type == HID_REPORT_TYPE_GLOBAL && tag == HID_REPORT_TAG_GLOBAL_REPORT_ID) {
-                last_id = current[1];
+        if (desc_itf->bInterfaceProtocol == HID_ITF_PROTOCOL_MOUSE) {
+            p_xinput->type = MOUSE;
+        }
+        // TODO: do we support nkro
+        if (p_xinput->type == UNKNOWN) {
+            uint8_t temp_buf[512];
+            uint8_t *current = temp_buf;
+            uint8_t len = x_desc->wDescriptorLength;
+            uint8_t last_id = 0;
+            tuh_descriptor_get_hid_report(dev_addr, p_xinput->itf_num, x_desc->bDescrType, 0, temp_buf, x_desc->wDescriptorLength, NULL, (uintptr_t)temp_buf);
+            // Seems that sometimes we miss the first byte?
+            if (!temp_buf[0]) {
+                temp_buf[0] = 0x05;
             }
-            // PS4 controllers define a feature request of 0x0303
-            // .... except the DS4 or knockoffs of it, but we end up doing a vid pid lookup for those anyways
-            // We can go one step further here: look for usage 0x2621 and 0x2721, which will let us detect PS4 or PS3 controllers.
-            if (type == HID_REPORT_TYPE_MAIN && tag == HID_REPORT_TAG_MAIN_FEATURE && last_id == 0x03) {
-                p_xinput->type = PS4;
-            }
-            len -= size;
-            current += size;
-            if (!size) {
-                break;
+            reportID = INVALID_REPORT_ID;
+            USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
+            // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
+            while (len) {
+                // Size is first two bits
+                uint8_t size = (current[0] & 0b11) + 1;
+                uint8_t type = current[0] >> 2 & 0b11;
+                uint8_t tag = current[0] >> 4;
+                if (type == HID_REPORT_TYPE_GLOBAL && tag == HID_REPORT_TAG_GLOBAL_REPORT_ID) {
+                    last_id = current[1];
+                }
+                // PS4 controllers define a feature request of 0x0303
+                // .... except the DS4 or knockoffs of it, but we end up doing a vid pid lookup for those anyways
+                // We can go one step further here: look for usage 0x2621 and 0x2721, which will let us detect PS4 or PS3 controllers.
+                if (type == HID_REPORT_TYPE_MAIN && tag == HID_REPORT_TAG_MAIN_FEATURE && last_id == 0x03) {
+                    p_xinput->type = PS4;
+                }
+                len -= size;
+                current += size;
+                if (!size) {
+                    break;
+                }
             }
         }
         _xinputh_dev->inst_count++;

@@ -325,6 +325,13 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
         usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
+    } else if (controllerType == XBOX360_BB) {
+        type.console_type = controllerType;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found XInput Big Button\r\n");
     } else if (controllerType == KEYBOARD) {
         type.console_type = controllerType;
         usb_host_devices[total_usb_host_devices].type = type;

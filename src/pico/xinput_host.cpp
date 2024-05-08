@@ -72,6 +72,7 @@ TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t *get_instance(uint8_t de
 static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf);
 static uint8_t get_instance_id_by_epaddr(uint8_t dev_addr, uint8_t ep_addr);
 static int16_t reportID;
+static bool foundPS4 = false;
 //--------------------------------------------------------------------+
 // Interface API
 //--------------------------------------------------------------------+
@@ -248,6 +249,9 @@ void xinputh_close(uint8_t dev_addr) {
 }
 
 bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem) {
+    if (CurrentItem->ItemType == HID_REPORT_ITEM_Feature && CurrentItem->ReportID == 3) {
+        foundPS4 = true;
+    }
     if (CurrentItem->ItemType != HID_REPORT_ITEM_In)
         return false;
 
@@ -348,28 +352,11 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             if (!temp_buf[0]) {
                 temp_buf[0] = 0x05;
             }
+            foundPS4 = false;
             reportID = INVALID_REPORT_ID;
             USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
-            // Extremely simple hid report parser, need to walk down and find feature reports to detect generic PS4 controllers.
-            while (len) {
-                // Size is first two bits
-                uint8_t size = (current[0] & 0b11) + 1;
-                uint8_t type = current[0] >> 2 & 0b11;
-                uint8_t tag = current[0] >> 4;
-                if (type == HID_REPORT_TYPE_GLOBAL && tag == HID_REPORT_TAG_GLOBAL_REPORT_ID) {
-                    last_id = current[1];
-                }
-                // PS4 controllers define a feature request of 0x0303
-                // .... except the DS4 or knockoffs of it, but we end up doing a vid pid lookup for those anyways
-                // We can go one step further here: look for usage 0x2621 and 0x2721, which will let us detect PS4 or PS3 controllers.
-                if (type == HID_REPORT_TYPE_MAIN && tag == HID_REPORT_TAG_MAIN_FEATURE && last_id == 0x03) {
-                    p_xinput->type = PS4;
-                }
-                len -= size;
-                current += size;
-                if (!size) {
-                    break;
-                }
+            if (foundPS4) {
+                p_xinput->type = PS4;
             }
         }
         _xinputh_dev->inst_count++;

@@ -198,7 +198,7 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
     return usb_host_devices[id].type;
 }
 
-void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
+uint8_t get_usb_host_device_data(uint8_t id, uint8_t *buf) {
     if (usb_host_devices[id].type.console_type == UNIVERSAL) {
         USB_Host_Data_t *host = (USB_Host_Data_t *)buf;
         fill_generic_report(usb_host_devices[id].dev_addr, usb_host_devices[id].inst, (uint8_t *)&usb_host_devices[id].report, host);
@@ -207,9 +207,10 @@ void get_usb_host_device_data(uint8_t id, uint8_t *buf) {
         //     printf("%02x, ", buf[i]);
         // }
         // printf("\r\n");
-        return;
+        return sizeof(USB_Host_Data_t);
     }
     memcpy(buf, &usb_host_devices[id].report, usb_host_devices[id].report_length);
+    return usb_host_devices[id].report_length;
 }
 
 uint8_t read_usb_host_devices(uint8_t *buf) {
@@ -473,6 +474,9 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     }
                 }
                 return;
+            }
+            if (usb_host_devices[i].type.console_type == STREAM_DECK && report[0] != STREAM_DECK_INPUT_REPORT_ID) {
+                continue;
             }
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;

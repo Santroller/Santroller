@@ -2216,6 +2216,42 @@ void set_console_type(uint8_t new_console_type) {
 USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
     USB_Device_Type_t type = {UNIVERSAL, GAMEPAD};
     switch (vid) {
+        case STREAM_DECK_VID: {
+            type.console_type = STREAM_DECK;
+            type.sub_type = UNKNOWN;
+            switch (pid) {
+                case STREAM_DECK_OG_PID:
+                    type.sub_type = STREAM_DECK_OG;
+                    break;
+                case STREAM_DECK_MINI_PID:
+                    type.sub_type = STREAM_DECK_MINI;
+                    break;
+                case STREAM_DECK_XL_PID:
+                    type.sub_type = STREAM_DECK_XL;
+                    break;
+                case STREAM_DECK_V2_PID:
+                    type.sub_type = STREAM_DECK_V2;
+                    break;
+                case STREAM_DECK_MK2_PID:
+                    type.sub_type = STREAM_DECK_MK2;
+                    break;
+                case STREAM_DECK_PLUS_PID:
+                    type.sub_type = STREAM_DECK_PLUS;
+                    break;
+                case STREAM_DECK_PEDAL_PID:
+                    type.sub_type = STREAM_DECK_PEDAL;
+                    break;
+                case STREAM_DECK_XLV2_PID:
+                    type.sub_type = STREAM_DECK_XLV2;
+                    break;
+                case STREAM_DECK_MINIV2_PID:
+                    type.sub_type = STREAM_DECK_MINIV2;
+                    break;
+                case STREAM_DECK_NEO_PID:
+                    type.sub_type = STREAM_DECK_NEO;
+                    break;
+            }
+        }
         case ARDWIINO_VID: {
             if (pid == ARDWIINO_PID) {
                 type.console_type = SANTROLLER;

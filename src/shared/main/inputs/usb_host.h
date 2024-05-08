@@ -29,7 +29,7 @@ for (int i = 0; i < device_count; i++) {
         }
     }
     uint8_t *data = (uint8_t *)&temp_report_usb_host;
-    get_usb_host_device_data(i, data);
+    uint8_t len = get_usb_host_device_data(i, data);
     uint8_t console_type = device_type.console_type;
     if (console_type == XBOXONE) {
         GipHeader_t *header = (GipHeader_t *)data;
@@ -43,6 +43,23 @@ for (int i = 0; i < device_count; i++) {
         }
     }
     switch (console_type) {
+        case STREAM_DECK: {
+            uint8_t offset = 1;
+            switch (device_type.sub_type) {
+                case STREAM_DECK_XL:
+                case STREAM_DECK_MK2:
+                case STREAM_DECK_NEO:
+                case STREAM_DECK_V2:
+                case STREAM_DECK_XLV2:
+                case STREAM_DECK_PEDAL:
+                case STREAM_DECK_PLUS:
+                    offset = 4;
+                    break;
+            }
+            for (uint8_t i = 0; i+offset < len && i < 16; i++) {
+                bit_write(data[i+offset], usb_host_data.genericButtons, i);
+            }
+        }
         case KEYBOARD: {
             USB_6KRO_Boot_Data_t *report = (USB_6KRO_Boot_Data_t *)data;
             usb_host_data.keyboard.leftCtrl = report->leftCtrl;
@@ -799,7 +816,7 @@ for (int i = 0; i < device_count; i++) {
             break;
         }
         case XBOX360_BB: {
-            XInputBigButton_Data_t *report = (XInputBigButton_Data_t*)data;
+            XInputBigButton_Data_t *report = (XInputBigButton_Data_t *)data;
             usb_host_data.green |= report->a;
             usb_host_data.red |= report->b;
             usb_host_data.yellow |= report->y;

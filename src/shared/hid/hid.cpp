@@ -291,7 +291,7 @@ void handle_player_leds(uint8_t player) {
                 return;
             }
             case XBOX360_W: {
-                uint8_t report[] = {0x00, 0x00, 0x08, 0x40 + (player + ONE - 1), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                uint8_t report[] = {0x00, 0x00, 0x08, (uint8_t)(0x40 | (player + ONE - 1)), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
                 send_report_to_controller(type.dev_addr, type.instance, report, sizeof(report));
                 return;
             }

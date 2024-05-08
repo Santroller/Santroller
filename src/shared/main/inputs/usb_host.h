@@ -801,6 +801,7 @@ for (int i = 0; i < device_count; i++) {
         case XBOX360_W:
         case XBOX360: {
             switch (device_type.sub_type) {
+                case XINPUT_GUITAR_BASS:
                 case XINPUT_GUITAR: {
                     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)data;
                     usb_host_data.a |= report->a;

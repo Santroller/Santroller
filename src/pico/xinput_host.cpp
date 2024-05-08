@@ -366,9 +366,32 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
     if (desc_itf->bInterfaceSubClass == 0x5D &&
-        (desc_itf->bInterfaceProtocol == 0x01 ||
-         desc_itf->bInterfaceProtocol == 0x03 ||
-         desc_itf->bInterfaceProtocol == 0x02)) {
+        desc_itf->bInterfaceProtocol == 0x04) {
+        // Big button
+        uint8_t endpoints = desc_itf->bNumEndpoints;
+        while (endpoints--) {
+            p_desc = tu_desc_next(p_desc);
+            tusb_desc_endpoint_t const *desc_ep =
+                (tusb_desc_endpoint_t const *)p_desc;
+            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            if (desc_ep->bEndpointAddress & 0x80) {
+                p_xinput->ep_in = desc_ep->bEndpointAddress;
+                p_xinput->epin_size = desc_ep->wMaxPacketSize;
+                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
+            } else {
+                p_xinput->ep_out = desc_ep->bEndpointAddress;
+                p_xinput->epout_size = desc_ep->wMaxPacketSize;
+                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+            }
+        }
+        p_xinput->itf_num = desc_itf->bInterfaceNumber;
+
+        p_xinput->type = XBOX360_BB;
+    } else if (desc_itf->bInterfaceSubClass == 0x5D &&
+               (desc_itf->bInterfaceProtocol == 0x01 ||
+                desc_itf->bInterfaceProtocol == 0x03 ||
+                desc_itf->bInterfaceProtocol == 0x02)) {
         // Xinput reserved endpoint
         //-------------- Xinput Descriptor --------------//
         p_desc = tu_desc_next(p_desc);

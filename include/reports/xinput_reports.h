@@ -1,34 +1,37 @@
 #pragma once
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define SERIAL_NUMBER_WVALUE 0x0000
 #define INPUT_CAPABILITIES_WVALUE 0x0100
 #define VIBRATION_CAPABILITIES_WVALUE 0x0000
 
-typedef enum {
-    OFF,
-    ALL_BLINKING,
-    ONE_FLASH,
-    TWO_FLASH,
-    THREE_FLASH,
-    FOUR_FLASH,
-    ONE,
-    TWO,
-    THREE,
-    FOUR,
-    ROTATING,
-    BLINKING_RET,
-    SLOW_BLINKING_RET,
-    ALTERNATING_RET
-} xinput_led_t;
+#define LED_OFF 0
+#define LED_ALL_BLINKING 1
+#define LED_ONE_FLASH 2
+#define LED_TWO_FLASH 3
+#define LED_THREE_FLASH 4
+#define LED_FOUR_FLASH 5
+#define LED_ONE 6
+#define LED_TWO 7
+#define LED_THREE 8
+#define LED_FOUR 9
+#define LED_ROTATING 10
+#define LED_BLINKING_RET 11
+#define LED_SLOW_BLINKING_RET 12
+#define LED_ALTERNATING_RE 13
+
+#define BB_GREEN 0
+#define BB_RED 0
+#define BB_BLUE 0
+#define BB_YELLOW 0
+
 
 typedef struct {
     uint8_t rid;
     uint8_t rsize;
-    xinput_led_t led;
+    uint8_t led;
 } __attribute__((packed)) XInputLEDReport_t;
-
 
 typedef struct {
     uint8_t rid;
@@ -65,6 +68,32 @@ typedef struct {
 typedef struct {
     uint32_t serial;
 } __attribute__((packed)) XInputSerialNumber_t;
+
+typedef struct {
+    uint8_t rid;
+    uint8_t rsize;
+    uint8_t controllerNumber;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+
+    uint8_t start : 1;
+    uint8_t back : 1;
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
+
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t guide : 1;
+    uint8_t : 1;
+
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t x : 1;
+    uint8_t y : 1;
+    uint8_t reserved;
+} __attribute__((packed)) XInputBigButton_Data_t;
 
 typedef struct {
     uint8_t rid;

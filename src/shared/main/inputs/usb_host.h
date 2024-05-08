@@ -798,6 +798,30 @@ for (int i = 0; i < device_count; i++) {
             }
             break;
         }
+        case XBOX360_BB: {
+            XInputBigButton_Data_t *report = (XInputBigButton_Data_t*)data;
+            usb_host_data.green |= report->a;
+            usb_host_data.red |= report->b;
+            usb_host_data.yellow |= report->y;
+            usb_host_data.blue |= report->x;
+            usb_host_data.orange |= report->leftShoulder;
+            usb_host_data.a |= report->a;
+            usb_host_data.b |= report->b;
+            usb_host_data.x |= report->x;
+            usb_host_data.y |= report->y;
+            usb_host_data.leftShoulder |= report->leftShoulder;
+            usb_host_data.rightShoulder |= report->rightShoulder;
+            usb_host_data.back |= report->back;
+            usb_host_data.start |= report->start;
+            usb_host_data.guide |= report->guide;
+            usb_host_data.leftThumbClick |= report->leftThumbClick;
+            usb_host_data.rightThumbClick |= report->rightThumbClick;
+            usb_host_data.dpadLeft = report->dpadLeft;
+            usb_host_data.dpadRight = report->dpadRight;
+            usb_host_data.dpadUp = report->dpadUp;
+            usb_host_data.dpadDown = report->dpadDown;
+            break;
+        }
         case XBOX360_W:
         case XBOX360: {
             switch (device_type.sub_type) {

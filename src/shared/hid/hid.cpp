@@ -285,13 +285,13 @@ void handle_player_leds(uint8_t player) {
                 XInputLEDReport_t report = {
                     rid : XBOX_LED_ID,
                     rsize : sizeof(XInputLEDReport_t),
-                    led : (xinput_led_t)(player + ONE - 1)
+                    led : (uint8_t)(player + LED_ONE - 1)
                 };
                 send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
                 return;
             }
             case XBOX360_W: {
-                uint8_t report[] = {0x00, 0x00, 0x08, (uint8_t)(0x40 | (player + ONE - 1)), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                uint8_t report[] = {0x00, 0x00, 0x08, (uint8_t)(0x40 | (player + LED_ONE - 1)), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
                 send_report_to_controller(type.dev_addr, type.instance, report, sizeof(report));
                 return;
             }

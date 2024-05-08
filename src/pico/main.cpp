@@ -247,11 +247,11 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             type.sub_type = subtype;
 
             x360_dev_addr = type;
-            xinput_controller_connected(host_vid, host_pid, subtype);
             usb_host_devices[total_usb_host_devices].type = type;
             usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
             usb_host_devices[total_usb_host_devices].inst = instance;
             total_usb_host_devices++;
+            xinput_controller_connected(host_vid, host_pid, subtype);
             if (consoleType == XBOX360) {
                 foundXB = true;
                 printf("found xb\r\n");
@@ -262,7 +262,6 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         type.sub_type = UNKNOWN;
 
         x360_dev_addr = type;
-        xinput_controller_connected(host_vid, host_pid, subtype);
         usb_host_devices[total_usb_host_devices].type = type;
         usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
         usb_host_devices[total_usb_host_devices].inst = instance;
@@ -447,6 +446,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         uint8_t sub_type = linkReport->subtype & ~0x80;
                         usb_host_devices[i].type.sub_type = sub_type;
                         printf("Found subtype: %02x %02x %02x\r\n", sub_type, dev_addr, instance);
+                        xinput_w_controller_connected();
                         // Request capabilities so we can figure out WT guitars
                         if (sub_type == XINPUT_GUITAR_ALTERNATE) {
                             // request capabilities

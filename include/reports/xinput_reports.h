@@ -29,6 +29,7 @@ typedef struct {
     xinput_led_t led;
 } __attribute__((packed)) XInputLEDReport_t;
 
+
 typedef struct {
     uint8_t rid;
     uint8_t rsize;

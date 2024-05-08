@@ -2164,9 +2164,14 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
 }
 
 void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype) {
+    handle_player_leds(0);
     if (xbox_360_state == Authenticated) return;
     xbox_360_vid = vid;
     xbox_360_pid = pid;
+}
+
+void xinput_w_controller_connected() {
+    handle_player_leds(0);
 }
 
 void xone_controller_connected(uint8_t dev_addr, uint8_t instance) {
@@ -2183,7 +2188,7 @@ void host_controller_connected() {
 
 void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
     if (vid == SONY_VID && (pid == PS4_DS_PID_1 || pid == PS4_DS_PID_2 || pid == PS4_DS_PID_3)) {
-        handle_player_leds(1);
+        handle_player_leds(0);
     }
     auth_ps4_controller_found = true;
     auth_ps4_is_ghl = vid == GHLIVE_DONGLE_VID && pid == PS4_GHLIVE_DONGLE_PID;
@@ -2194,7 +2199,7 @@ void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
         // Enable PS3 reports
         uint8_t hid_command_enable[] = {0x42, 0x0c, 0x00, 0x00};
         transfer_with_usb_controller(dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x03F4, 0x00, sizeof(hid_command_enable), hid_command_enable);
-        handle_player_leds(1);
+        handle_player_leds(0);
     }
 }
 

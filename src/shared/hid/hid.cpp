@@ -51,7 +51,7 @@ uint8_t stage_kit_millis[] = {
     125,  // Medium
     150,  // Slow
 };
-uint8_t current_player = 0;
+uint8_t current_player = 1;
 uint8_t strobe_delay = 0;
 uint8_t last_star_power = 0;
 bool star_power_active = false;
@@ -250,6 +250,9 @@ void handle_auth_led(void) {
 }
 void handle_player_leds(uint8_t player) {
     if (player == current_player) return;
+    if (player == 0) {
+        player = current_player;
+    }
     current_player = player;
     HANDLE_PLAYER_LED;
 #ifdef INPUT_USB_HOST
@@ -285,6 +288,11 @@ void handle_player_leds(uint8_t player) {
                     led : (xinput_led_t)(player + ONE - 1)
                 };
                 send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
+                return;
+            }
+            case XBOX360_W: {
+                uint8_t report[] = {0x00, 0x00, 0x08, 0x40 + (player + ONE - 1), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                send_report_to_controller(type.dev_addr, type.instance, report, sizeof(report));
                 return;
             }
         }

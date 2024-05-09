@@ -51,6 +51,8 @@ typedef struct {
     uint8_t report_length;
     uint8_t dev_addr;
     uint8_t inst;
+    bool switch_sent_timeout;
+    bool switch_sent_handshake;
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX * CFG_TUH_XINPUT];
@@ -231,7 +233,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
     type.dev_addr = dev_addr;
     type.instance = instance;
-    if (type.console_type == PS4 || type.console_type == SANTROLLER || type.console_type == RAPHNET) {
+    if (controllerType == UNKNOWN) {
         controllerType = type.console_type;
     }
     if (controllerType == XBOX360) {
@@ -321,7 +323,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
                 break;
         }
         printf("Found Raphnet controller\r\n");
-        printf("Sub type: %02x %02x\r\n", type.sub_type, data[2]);
+        printf("Sub type: %02x\r\n", type.sub_type);
         usb_host_devices[total_usb_host_devices].type = type;
         usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
         usb_host_devices[total_usb_host_devices].inst = instance;
@@ -347,36 +349,28 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
         usb_host_devices[total_usb_host_devices].inst = instance;
         total_usb_host_devices++;
         printf("Found Mouse\r\n");
-    } else if (controllerType == UNKNOWN) {
-        if (type.console_type) {
-            if (type.console_type == PS3) {
-                // GHWT and GH5 guitars have the same vid and pid, but different tap bar functions. We can read the device name to actually determine what it is
-                if (type.sub_type == GUITAR_HERO_GUITAR && XFER_RESULT_SUCCESS == tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf))) {
-                    uint16_t wtProduct[] = {'G', 'u', 'i', 't', 'a', 'r', ' ', 'H', 'e', 'r', 'o', '4'};
-                    if (memcmp(wtProduct, buf, sizeof(wtProduct)) || memcmp(wtProduct, buf + 1, sizeof(wtProduct))) {
-                        type.sub_type = GUITAR_HERO_GUITAR_WT;
-                    }
-                }
+    } else if (controllerType == STREAM_DECK) {
+        type.console_type = controllerType;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found Stream Deck, subtype: %02x\r\n", type.sub_type);
+    } else if (type.console_type == PS3) {
+        // GHWT and GH5 guitars have the same vid and pid, but different tap bar functions. We can read the device name to actually determine what it is
+        if (type.sub_type == GUITAR_HERO_GUITAR && XFER_RESULT_SUCCESS == tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf))) {
+            uint16_t wtProduct[] = {'G', 'u', 'i', 't', 'a', 'r', ' ', 'H', 'e', 'r', 'o', '4'};
+            if (memcmp(wtProduct, buf, sizeof(wtProduct)) || memcmp(wtProduct, buf + 1, sizeof(wtProduct))) {
+                type.sub_type = GUITAR_HERO_GUITAR_WT;
             }
-            usb_host_devices[total_usb_host_devices].type = type;
-            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
-            usb_host_devices[total_usb_host_devices].inst = instance;
-            total_usb_host_devices++;
-            if (type.console_type == PS3) {
-                printf("Found PS3 controller\r\n");
-                printf("Sub type: %d\r\n", type.sub_type);
-                ps3_controller_connected(dev_addr, host_vid, host_pid);
-            } else if (type.console_type == SANTROLLER) {
-                printf("Found Santroller controller\r\n");
-                printf("Sub type: %d\r\n", type.sub_type);
-            }
-        } else {
-            usb_host_devices[total_usb_host_devices].type = type;
-            usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
-            usb_host_devices[total_usb_host_devices].inst = instance;
-            total_usb_host_devices++;
-            printf("Found Generic controller\r\n");
         }
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found PS3 controller\r\n");
+        printf("Sub type: %d\r\n", type.sub_type);
+        ps3_controller_connected(dev_addr, host_vid, host_pid);
     } else if (controllerType == PS4) {
         type.console_type = PS4;
         usb_host_devices[total_usb_host_devices].type = type;
@@ -389,6 +383,26 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
             printf("Found PS4 controller\r\n");
             ps4_controller_connected(dev_addr, host_vid, host_pid);
         }
+    } else if (controllerType == PS5) {
+        type.console_type = PS5;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found PS5 controller\r\n");
+    } else if (controllerType == SWITCH) {
+        type.console_type = SWITCH;
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found Switch controller\r\n");
+    } else if (controllerType == UNKNOWN) {
+        usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].dev_addr = dev_addr;
+        usb_host_devices[total_usb_host_devices].inst = instance;
+        total_usb_host_devices++;
+        printf("Found Generic controller\r\n");
     }
     printf("Total devices: %d\r\n", total_usb_host_devices);
 
@@ -478,6 +492,25 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             if (usb_host_devices[i].type.console_type == STREAM_DECK && report[0] != STREAM_DECK_INPUT_REPORT_ID) {
                 continue;
             }
+            if (usb_host_devices[i].type.console_type == PS5 && report[0] != STREAM_DECK_INPUT_REPORT_ID) {
+                continue;
+            }
+            if (usb_host_devices[i].type.console_type == SWITCH) {
+                if (usb_host_devices[i].type.console_type == SWITCH && !usb_host_devices[i].switch_sent_handshake) {
+                    usb_host_devices[i].switch_sent_handshake = true;
+                    uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+                    send_report_to_controller(dev_addr, instance, buf, 2);
+                } else if (usb_host_devices[i].type.console_type == SWITCH && !usb_host_devices[i].switch_sent_timeout) {
+                    usb_host_devices[i].switch_sent_timeout = true;
+                    uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x04 /* PROCON_USB_ENABLE */};
+                    send_report_to_controller(dev_addr, instance, buf, 2);
+                }
+
+                if (report[0] != SWITCH_PRO_CON_FULL_REPORT_ID) {
+                    continue;
+                }
+            }
+
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
             return;

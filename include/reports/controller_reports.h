@@ -10,7 +10,9 @@
 #include "reports/xinput_reports.h"
 #include "reports/og_xbox_reports.h"
 #include "reports/raphnet_reports.h"
+#include "reports/switch_reports.h"
 
+#define STREAM_DECK_INPUT_REPORT_ID 1
 #define SIMULTANEOUS_KEYS 6
 #define NKRO_KEYS ((0x73 / 8) + 1)
 #define SIMULTANEOUS_MIDI 12

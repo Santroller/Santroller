@@ -56,8 +56,8 @@ for (int i = 0; i < device_count; i++) {
                     offset = 4;
                     break;
             }
-            for (uint8_t i = 0; i+offset < len && i < 16; i++) {
-                bit_write(data[i+offset], usb_host_data.genericButtons, i);
+            for (uint8_t i = 0; i + offset < len && i < 16; i++) {
+                bit_write(data[i + offset], usb_host_data.genericButtons, i);
             }
         }
         case KEYBOARD: {
@@ -920,6 +920,54 @@ for (int i = 0; i < device_count; i++) {
                     }
                     if (report->whammy) {
                         usb_host_data.whammy = report->whammy;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case SWITCH: {
+            switch (device_type.sub_type) {
+                case GAMEPAD: {
+                    SwitchProGamepad_Data_t *report = (SwitchProGamepad_Data_t *)data;
+                    usb_host_data.dpadLeft = report->dpad == 6 || report->dpad == 5 || report->dpad == 7;
+                    usb_host_data.dpadRight = report->dpad == 3 || report->dpad == 2 || report->dpad == 1;
+                    usb_host_data.dpadUp = report->dpad == 0 || report->dpad == 1 || report->dpad == 7;
+                    usb_host_data.dpadDown = report->dpad == 5 || report->dpad == 4 || report->dpad == 3;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.rightShoulder |= report->rightShoulder;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    usb_host_data.capture |= report->capture;
+                    usb_host_data.leftThumbClick |= report->leftThumbClick;
+                    usb_host_data.rightThumbClick |= report->rightThumbClick;
+                    if (report->leftTrigger) {
+                        usb_host_data.leftTrigger = report->leftTrigger << 8;
+                    }
+                    if (report->rightTrigger) {
+                        usb_host_data.rightTrigger = report->rightTrigger << 8;
+                    }
+                    if (report->leftStickX != PS3_STICK_CENTER) {
+                        usb_host_data.leftStickX = (report->leftStickX - PS3_STICK_CENTER) << 8;
+                    }
+                    if (report->leftStickY != PS3_STICK_CENTER) {
+                        usb_host_data.leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
+                    }
+                    if (report->rightStickX != PS3_STICK_CENTER) {
+                        usb_host_data.rightStickX = (report->rightStickX - PS3_STICK_CENTER) << 8;
+                    }
+                    if (report->rightStickY != PS3_STICK_CENTER) {
+                        usb_host_data.rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
                     }
                     break;
                 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 
+#define PS5_INPUT_REPORT_ID 1
 typedef struct {
     uint8_t report_id;
     uint8_t leftStickX;

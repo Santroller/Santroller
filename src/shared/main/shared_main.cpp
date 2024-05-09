@@ -2232,6 +2232,12 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                     break;
             }
         }
+        case NINTENDO_VID: {
+            if (pid == SWITCH_PRO_PID) {
+                type.console_type = SWITCH;
+            }
+            break;
+        }
         case ARDWIINO_VID: {
             if (pid == ARDWIINO_PID) {
                 type.console_type = SANTROLLER;

@@ -28,7 +28,7 @@ enum endpoints_t {
 #define HORI_VID 0x0f0d
 #define HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID 0x0092
 #define NINTENDO_VID 0x057E
-#define SWITCH_PID 0x2009
+#define SWITCH_PRO_PID 0x2009
 #define REDOCTANE_VID 0x12ba
 #define PS4_VID 0x03EB
 #define PS4_PID 0x2043
@@ -88,7 +88,6 @@ enum endpoints_t {
 #define MAGICBOOTS_PS4_VID 0x0079
 #define MAGICBOOTS_PS4_PID 0x1893
 
-#define STREAM_DECK_INPUT_REPORT_ID 1
 #define STREAM_DECK_VID 0x0fd9
 #define STREAM_DECK_OG_PID 0x0060
 #define STREAM_DECK_MINI_PID 0x0063
@@ -100,6 +99,7 @@ enum endpoints_t {
 #define STREAM_DECK_XLV2_PID 0x008f
 #define STREAM_DECK_MINIV2_PID 0x0090
 #define STREAM_DECK_NEO_PID 0x009a
+
 
 #define SIMULTANEOUS_KEYS 6
 

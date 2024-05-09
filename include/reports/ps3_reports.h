@@ -225,18 +225,18 @@ typedef struct {
 
     // Pressure axes for buttons
     // Neutral state is 0x00, max is 0xFF
-    uint8_t pressureDpadUp;
-    uint8_t pressureDpadRight;
-    uint8_t pressureDpadLeft;
-    uint8_t pressureDpadDown;
-    uint8_t leftTrigger;   // pressure_l2
-    uint8_t rightTrigger;  // pressure_r2
-    uint8_t pressureL1;
-    uint8_t pressureR1;
+    uint8_t pressureDpadLeft; 
+    uint8_t pressureDpadRight; 
+    uint8_t pressureDpadUp; 
+    uint8_t pressureDpadDown; 
     uint8_t pressureTriangle;
     uint8_t pressureCircle;
     uint8_t pressureCross;
     uint8_t pressureSquare;
+    uint8_t pressureL1;
+    uint8_t pressureR1;
+    uint8_t leftTrigger; //  pressure_l2
+    uint8_t rightTrigger; // pressure_r2
 
     // Each of the following are 10 bits in accuracy
     // Centered/neutral state is nominally 0x0200, actual values may vary

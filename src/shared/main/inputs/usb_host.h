@@ -792,6 +792,39 @@ for (int i = 0; i < device_count; i++) {
                     }
                     break;
                 }
+                case ROCK_BAND_GUITAR: {
+                    PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)data;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    if (report->tilt) {
+                        usb_host_data.tilt = report->tilt;
+                    }
+                    if (report->solo) {
+                        usb_host_data.soloGreen |= report->a;
+                        usb_host_data.soloRed |= report->b;
+                        usb_host_data.soloYellow |= report->y;
+                        usb_host_data.soloBlue |= report->x;
+                        usb_host_data.soloOrange |= report->leftShoulder;
+                    }
+                    if (report->whammy) {
+                        usb_host_data.whammy = report->whammy;
+                    }
+                    if (report->pickup) {
+                        usb_host_data.pickup = report->pickup;
+                    }
+                    break;
+                }
                 case LIVE_GUITAR: {
                     PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)data;
                     usb_host_data.a |= report->a;
@@ -806,6 +839,84 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.guide |= report->guide;
                     if (report->tilt != PS3_ACCEL_CENTER) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
+                    }
+                    if (report->whammy) {
+                        usb_host_data.whammy = report->whammy;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case PS5: {
+            PS5Gamepad_Data_t *dpad = (PS5Gamepad_Data_t *)data;
+            usb_host_data.dpadLeft = dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
+            usb_host_data.dpadRight = dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
+            usb_host_data.dpadUp = dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
+            usb_host_data.dpadDown = dpad->dpad == 5 || dpad->dpad == 4 || dpad->dpad == 3;
+            switch (device_type.sub_type) {
+                case GAMEPAD: {
+                    PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.rightShoulder |= report->rightShoulder;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    usb_host_data.leftThumbClick |= report->leftThumbClick;
+                    usb_host_data.rightThumbClick |= report->rightThumbClick;
+                    if (report->leftTrigger) {
+                        usb_host_data.leftTrigger = report->leftTrigger << 8;
+                    }
+                    if (report->rightTrigger) {
+                        usb_host_data.rightTrigger = report->rightTrigger << 8;
+                    }
+                    if (report->leftStickX != PS3_STICK_CENTER) {
+                        usb_host_data.leftStickX = (report->leftStickX - PS3_STICK_CENTER) << 8;
+                    }
+                    if (report->leftStickY != PS3_STICK_CENTER) {
+                        usb_host_data.leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
+                    }
+                    if (report->rightStickX != PS3_STICK_CENTER) {
+                        usb_host_data.rightStickX = (report->rightStickX - PS3_STICK_CENTER) << 8;
+                    }
+                    if (report->rightStickY != PS3_STICK_CENTER) {
+                        usb_host_data.rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
+                    }
+                    break;
+                }
+                case ROCK_BAND_GUITAR: {
+                    PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)data;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.leftShoulder |= report->leftShoulder;
+                    usb_host_data.green |= report->a;
+                    usb_host_data.red |= report->b;
+                    usb_host_data.yellow |= report->y;
+                    usb_host_data.blue |= report->x;
+                    usb_host_data.orange |= report->leftShoulder;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    if (report->tilt) {
+                        usb_host_data.tilt = report->tilt;
+                    }
+                    if (report->solo) {
+                        usb_host_data.soloGreen |= report->a;
+                        usb_host_data.soloRed |= report->b;
+                        usb_host_data.soloYellow |= report->y;
+                        usb_host_data.soloBlue |= report->x;
+                        usb_host_data.soloOrange |= report->leftShoulder;
                     }
                     if (report->whammy) {
                         usb_host_data.whammy = report->whammy;

@@ -1098,268 +1098,248 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->guide |= report->guide;
     }
 #else  // Gamepad or devices that use the same mapping as a gamepad
-    if (output_console_type == PS3) {
-        PS3_REPORT *out = (PS3_REPORT *)buf;
-        out->dpadUp |= up;
-        out->dpadDown |= down;
-        out->dpadLeft |= left;
-        out->dpadRight |= right;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
-
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-        out->l2 |= report->l2;
-        out->r2 |= report->r2;
-
-        out->back |= report->back;
-        out->start |= report->start;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
-
+    ifGamepad
         out->guide |= report->guide;
-        if (report->leftStickX != PS3_STICK_CENTER) {
-            out->leftStickX = report->leftStickX;
-        }
-        if (report->leftStickY != PS3_STICK_CENTER) {
-            out->leftStickY = report->leftStickY;
-        }
-        if (report->rightStickX != PS3_STICK_CENTER) {
-            out->rightStickX = report->rightStickX;
-        }
-        if (report->rightStickY != PS3_STICK_CENTER) {
-            out->rightStickY = report->rightStickY;
-        }
-        if (report->leftTrigger) {
-            out->leftTrigger = report->leftTrigger;
-        }
-        if (report->rightTrigger) {
-            out->rightTrigger = report->rightTrigger;
-        }
-        if (report->pressureDpadUp) {
-            out->pressureDpadUp = report->pressureDpadUp;
-        }
-        if (report->pressureDpadRight) {
-            out->pressureDpadRight = report->pressureDpadRight;
-        }
-        if (report->pressureDpadDown) {
-            out->pressureDpadDown = report->pressureDpadDown;
-        }
-        if (report->pressureDpadLeft) {
-            out->pressureDpadLeft = report->pressureDpadLeft;
-        }
-        if (report->pressureL1) {
-            out->pressureL1 = report->pressureL1;
-        }
-        if (report->pressureR1) {
-            out->pressureR1 = report->pressureR1;
-        }
-        if (report->pressureTriangle) {
-            out->pressureTriangle = report->pressureTriangle;
-        }
-        if (report->pressureCircle) {
-            out->pressureCircle = report->pressureCircle;
-        }
-        if (report->pressureCross) {
-            out->pressureCross = report->pressureCross;
-        }
-        if (report->pressureSquare) {
-            out->pressureSquare = report->pressureSquare;
-        }
+    if (report->leftStickX != PS3_STICK_CENTER) {
+        out->leftStickX = report->leftStickX;
     }
-    if (output_console_type == REAL_PS3) {
-        PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
-        out->dpadUp |= up;
-        out->dpadDown |= down;
-        out->dpadLeft |= left;
-        out->dpadRight |= right;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
-
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-        out->l2 |= report->l2;
-        out->r2 |= report->r2;
-
-        out->back |= report->back;
-        out->start |= report->start;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
-
-        out->guide |= report->guide;
-        if (report->leftStickX != PS3_STICK_CENTER) {
-            out->leftStickX = report->leftStickX;
-        }
-        if (report->leftStickY != PS3_STICK_CENTER) {
-            out->leftStickY = report->leftStickY;
-        }
-        if (report->rightStickX != PS3_STICK_CENTER) {
-            out->rightStickX = report->rightStickX;
-        }
-        if (report->rightStickY != PS3_STICK_CENTER) {
-            out->rightStickY = report->rightStickY;
-        }
-        if (report->leftTrigger) {
-            out->leftTrigger = report->leftTrigger;
-        }
-        if (report->rightTrigger) {
-            out->rightTrigger = report->rightTrigger;
-        }
-        if (report->pressureDpadUp) {
-            out->pressureDpadUp = report->pressureDpadUp;
-        }
-        if (report->pressureDpadRight) {
-            out->pressureDpadRight = report->pressureDpadRight;
-        }
-        if (report->pressureDpadDown) {
-            out->pressureDpadDown = report->pressureDpadDown;
-        }
-        if (report->pressureDpadLeft) {
-            out->pressureDpadLeft = report->pressureDpadLeft;
-        }
-        if (report->pressureL1) {
-            out->pressureL1 = report->pressureL1;
-        }
-        if (report->pressureR1) {
-            out->pressureR1 = report->pressureR1;
-        }
-        if (report->pressureTriangle) {
-            out->pressureTriangle = report->pressureTriangle;
-        }
-        if (report->pressureCircle) {
-            out->pressureCircle = report->pressureCircle;
-        }
-        if (report->pressureCross) {
-            out->pressureCross = report->pressureCross;
-        }
-        if (report->pressureSquare) {
-            out->pressureSquare = report->pressureSquare;
-        }
+    if (report->leftStickY != PS3_STICK_CENTER) {
+        out->leftStickY = report->leftStickY;
     }
-    if (output_console_type == PS4) {
-        PS4_REPORT *out = (PS4_REPORT *)buf;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
-
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-        out->l2 |= report->l2;
-        out->r2 |= report->r2;
-
-        out->back |= report->back;
-        out->start |= report->start;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
-
-        out->guide |= report->guide;
-        out->capture |= report->capture;
-        out->dpadUp |= up;
-        out->dpadDown |= down;
-        out->dpadLeft |= left;
-        out->dpadRight |= right;
-        if (report->leftStickX != PS3_STICK_CENTER) {
-            out->leftStickX = report->leftStickX;
-        }
-        if (report->leftStickY != PS3_STICK_CENTER) {
-            out->leftStickY = report->leftStickY;
-        }
-        if (report->rightStickX != PS3_STICK_CENTER) {
-            out->rightStickX = report->rightStickX;
-        }
-        if (report->rightStickY != PS3_STICK_CENTER) {
-            out->rightStickY = report->rightStickY;
-        }
-        if (report->leftTrigger) {
-            out->leftTrigger = report->leftTrigger;
-        }
-        if (report->rightTrigger) {
-            out->rightTrigger = report->rightTrigger;
-        }
+    if (report->rightStickX != PS3_STICK_CENTER) {
+        out->rightStickX = report->rightStickX;
     }
-    if (output_console_type == XBOXONE) {
-        XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
-
-        out->dpadUp |= up;
-        out->dpadDown |= down;
-        out->dpadLeft |= left;
-        out->dpadRight |= right;
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-
-        out->back |= report->back;
-        out->start |= report->start;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
-
-        out->guide |= report->guide;
-        if (report->leftStickX != PS3_STICK_CENTER) {
-            out->leftStickX = (report->leftStickX - 128) << 8;
-        }
-        if (report->leftStickY != PS3_STICK_CENTER) {
-            out->leftStickY = (report->leftStickY - 128) << 8;
-        }
-        if (report->rightStickX != PS3_STICK_CENTER) {
-            out->rightStickX = (report->rightStickX - 128) << 8;
-        }
-        if (report->rightStickY != PS3_STICK_CENTER) {
-            out->rightStickY = (report->rightStickY - 128) << 8;
-        }
-        if (report->leftTrigger) {
-            out->leftTrigger = (report->leftTrigger) << 8;
-        }
-        if (report->rightTrigger) {
-            out->rightTrigger = (report->rightTrigger) << 8;
-        }
+    if (report->rightStickY != PS3_STICK_CENTER) {
+        out->rightStickY = report->rightStickY;
     }
-    if (output_console_type == XBOX360) {
-        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
-        out->x |= report->x;
-        out->a |= report->a;
-        out->b |= report->b;
-        out->y |= report->y;
-        out->dpadUp |= up;
-        out->dpadDown |= down;
-        out->dpadLeft |= left;
-        out->dpadRight |= right;
-
-        out->back |= report->back;
-        out->start |= report->start;
-
-        out->guide |= report->guide;
-        if (report->leftStickX != PS3_STICK_CENTER) {
-            out->leftStickX = (report->leftStickX - 128) << 8;
-        }
-        if (report->leftStickY != PS3_STICK_CENTER) {
-            out->leftStickY = (report->leftStickY - 128) << 8;
-        }
-        if (report->rightStickX != PS3_STICK_CENTER) {
-            out->rightStickX = (report->rightStickX - 128) << 8;
-        }
-        if (report->rightStickY != PS3_STICK_CENTER) {
-            out->rightStickY = (report->rightStickY - 128) << 8;
-        }
-        if (report->leftTrigger) {
-            out->leftTrigger = report->leftTrigger;
-        }
-        if (report->rightTrigger) {
-            out->rightTrigger = report->rightTrigger;
-        }
-
-        out->leftShoulder |= report->leftShoulder;
-        out->rightShoulder |= report->rightShoulder;
-        out->leftThumbClick |= report->leftThumbClick;
-        out->rightThumbClick |= report->rightThumbClick;
+    if (report->leftTrigger) {
+        out->leftTrigger = report->leftTrigger;
     }
+    if (report->rightTrigger) {
+        out->rightTrigger = report->rightTrigger;
+    }
+    if (report->pressureDpadUp) {
+        out->pressureDpadUp = report->pressureDpadUp;
+    }
+    if (report->pressureDpadRight) {
+        out->pressureDpadRight = report->pressureDpadRight;
+    }
+    if (report->pressureDpadDown) {
+        out->pressureDpadDown = report->pressureDpadDown;
+    }
+    if (report->pressureDpadLeft) {
+        out->pressureDpadLeft = report->pressureDpadLeft;
+    }
+    if (report->pressureL1) {
+        out->pressureL1 = report->pressureL1;
+    }
+    if (report->pressureR1) {
+        out->pressureR1 = report->pressureR1;
+    }
+    if (report->pressureTriangle) {
+        out->pressureTriangle = report->pressureTriangle;
+    }
+    if (report->pressureCircle) {
+        out->pressureCircle = report->pressureCircle;
+    }
+    if (report->pressureCross) {
+        out->pressureCross = report->pressureCross;
+    }
+    if (report->pressureSquare) {
+        out->pressureSquare = report->pressureSquare;
+    }
+}
+if (output_console_type == REAL_PS3) {
+    PS3Gamepad_Data_t *out = (PS3Gamepad_Data_t *)buf;
+    out->dpadUp |= up;
+    out->dpadDown |= down;
+    out->dpadLeft |= left;
+    out->dpadRight |= right;
+    out->x |= report->x;
+    out->a |= report->a;
+    out->b |= report->b;
+    out->y |= report->y;
+
+    out->leftShoulder |= report->leftShoulder;
+    out->rightShoulder |= report->rightShoulder;
+    out->l2 |= report->l2;
+    out->r2 |= report->r2;
+
+    out->back |= report->back;
+    out->start |= report->start;
+    out->leftThumbClick |= report->leftThumbClick;
+    out->rightThumbClick |= report->rightThumbClick;
+
+    out->guide |= report->guide;
+    if (report->leftStickX != PS3_STICK_CENTER) {
+        out->leftStickX = report->leftStickX;
+    }
+    if (report->leftStickY != PS3_STICK_CENTER) {
+        out->leftStickY = report->leftStickY;
+    }
+    if (report->rightStickX != PS3_STICK_CENTER) {
+        out->rightStickX = report->rightStickX;
+    }
+    if (report->rightStickY != PS3_STICK_CENTER) {
+        out->rightStickY = report->rightStickY;
+    }
+    if (report->leftTrigger) {
+        out->leftTrigger = report->leftTrigger;
+    }
+    if (report->rightTrigger) {
+        out->rightTrigger = report->rightTrigger;
+    }
+    if (report->pressureDpadUp) {
+        out->pressureDpadUp = report->pressureDpadUp;
+    }
+    if (report->pressureDpadRight) {
+        out->pressureDpadRight = report->pressureDpadRight;
+    }
+    if (report->pressureDpadDown) {
+        out->pressureDpadDown = report->pressureDpadDown;
+    }
+    if (report->pressureDpadLeft) {
+        out->pressureDpadLeft = report->pressureDpadLeft;
+    }
+    if (report->pressureL1) {
+        out->pressureL1 = report->pressureL1;
+    }
+    if (report->pressureR1) {
+        out->pressureR1 = report->pressureR1;
+    }
+    if (report->pressureTriangle) {
+        out->pressureTriangle = report->pressureTriangle;
+    }
+    if (report->pressureCircle) {
+        out->pressureCircle = report->pressureCircle;
+    }
+    if (report->pressureCross) {
+        out->pressureCross = report->pressureCross;
+    }
+    if (report->pressureSquare) {
+        out->pressureSquare = report->pressureSquare;
+    }
+}
+if (output_console_type == PS4) {
+    PS4_REPORT *out = (PS4_REPORT *)buf;
+    out->x |= report->x;
+    out->a |= report->a;
+    out->b |= report->b;
+    out->y |= report->y;
+
+    out->leftShoulder |= report->leftShoulder;
+    out->rightShoulder |= report->rightShoulder;
+    out->l2 |= report->l2;
+    out->r2 |= report->r2;
+
+    out->back |= report->back;
+    out->start |= report->start;
+    out->leftThumbClick |= report->leftThumbClick;
+    out->rightThumbClick |= report->rightThumbClick;
+
+    out->guide |= report->guide;
+    out->capture |= report->capture;
+    out->dpadUp |= up;
+    out->dpadDown |= down;
+    out->dpadLeft |= left;
+    out->dpadRight |= right;
+    if (report->leftStickX != PS3_STICK_CENTER) {
+        out->leftStickX = report->leftStickX;
+    }
+    if (report->leftStickY != PS3_STICK_CENTER) {
+        out->leftStickY = report->leftStickY;
+    }
+    if (report->rightStickX != PS3_STICK_CENTER) {
+        out->rightStickX = report->rightStickX;
+    }
+    if (report->rightStickY != PS3_STICK_CENTER) {
+        out->rightStickY = report->rightStickY;
+    }
+    if (report->leftTrigger) {
+        out->leftTrigger = report->leftTrigger;
+    }
+    if (report->rightTrigger) {
+        out->rightTrigger = report->rightTrigger;
+    }
+}
+if (output_console_type == XBOXONE) {
+    XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
+    out->x |= report->x;
+    out->a |= report->a;
+    out->b |= report->b;
+    out->y |= report->y;
+
+    out->dpadUp |= up;
+    out->dpadDown |= down;
+    out->dpadLeft |= left;
+    out->dpadRight |= right;
+    out->leftShoulder |= report->leftShoulder;
+    out->rightShoulder |= report->rightShoulder;
+
+    out->back |= report->back;
+    out->start |= report->start;
+    out->leftThumbClick |= report->leftThumbClick;
+    out->rightThumbClick |= report->rightThumbClick;
+
+    out->guide |= report->guide;
+    if (report->leftStickX != PS3_STICK_CENTER) {
+        out->leftStickX = (report->leftStickX - 128) << 8;
+    }
+    if (report->leftStickY != PS3_STICK_CENTER) {
+        out->leftStickY = (report->leftStickY - 128) << 8;
+    }
+    if (report->rightStickX != PS3_STICK_CENTER) {
+        out->rightStickX = (report->rightStickX - 128) << 8;
+    }
+    if (report->rightStickY != PS3_STICK_CENTER) {
+        out->rightStickY = (report->rightStickY - 128) << 8;
+    }
+    if (report->leftTrigger) {
+        out->leftTrigger = (report->leftTrigger) << 8;
+    }
+    if (report->rightTrigger) {
+        out->rightTrigger = (report->rightTrigger) << 8;
+    }
+}
+if (output_console_type == XBOX360) {
+    XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+    out->x |= report->x;
+    out->a |= report->a;
+    out->b |= report->b;
+    out->y |= report->y;
+    out->dpadUp |= up;
+    out->dpadDown |= down;
+    out->dpadLeft |= left;
+    out->dpadRight |= right;
+
+    out->back |= report->back;
+    out->start |= report->start;
+
+    out->guide |= report->guide;
+    if (report->leftStickX != PS3_STICK_CENTER) {
+        out->leftStickX = (report->leftStickX - 128) << 8;
+    }
+    if (report->leftStickY != PS3_STICK_CENTER) {
+        out->leftStickY = (report->leftStickY - 128) << 8;
+    }
+    if (report->rightStickX != PS3_STICK_CENTER) {
+        out->rightStickX = (report->rightStickX - 128) << 8;
+    }
+    if (report->rightStickY != PS3_STICK_CENTER) {
+        out->rightStickY = (report->rightStickY - 128) << 8;
+    }
+    if (report->leftTrigger) {
+        out->leftTrigger = report->leftTrigger;
+    }
+    if (report->rightTrigger) {
+        out->rightTrigger = report->rightTrigger;
+    }
+
+    out->leftShoulder |= report->leftShoulder;
+    out->rightShoulder |= report->rightShoulder;
+    out->leftThumbClick |= report->leftThumbClick;
+    out->rightThumbClick |= report->rightThumbClick;
+}
 #endif
 }
 #endif
@@ -2278,6 +2258,9 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                 case PS4_DS_PID_3:
                     type.console_type = PS4;
                     break;
+                case PS5_DS_PID:
+                    type.console_type = PS5;
+                    break;
             }
             break;
         case REDOCTANE_VID:
@@ -2325,15 +2308,41 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                     break;
             }
             break;
-
-        case XBOX_ONE_RB_VID:
-            if (pid == XBOX_ONE_RB_GUITAR_PID) {
-                type.console_type = XBOXONE;
-                type.sub_type = ROCK_BAND_GUITAR;
-            } else if (pid == XBOX_ONE_RB_DRUM_PID) {
-                type.console_type = XBOXONE;
-                type.sub_type = ROCK_BAND_DRUMS;
+        case XBOX_ONE_JAG_VID:
+            switch (pid) {
+                case XBOX_ONE_JAG_PID:
+                    type.console_type = XBOXONE;
+                    type.sub_type = ROCK_BAND_GUITAR;
+                    break;
+                case PS4_JAG_PID:
+                case PS4_RIFFMASTER_PID:
+                    type.console_type = PS4;
+                    type.sub_type = ROCK_BAND_GUITAR;
+                    break;
+                case PS5_RIFFMASTER_PID:
+                    type.console_type = PS5;
+                    type.sub_type = ROCK_BAND_GUITAR;
+                    break;
             }
+
+            break;
+
+        case MAD_CATZ_VID:
+            switch (pid) {
+                case XBOX_ONE_RB_GUITAR_PID:
+                    type.console_type = XBOXONE;
+                    type.sub_type = ROCK_BAND_GUITAR;
+                    break;
+                case XBOX_ONE_RB_DRUM_PID:
+                    type.console_type = XBOXONE;
+                    type.sub_type = ROCK_BAND_DRUMS;
+                    break;
+                case PS4_STRAT_PID:
+                    type.console_type = PS4;
+                    type.sub_type = ROCK_BAND_GUITAR;
+                    break;
+            }
+
             break;
 
         case XBOX_ONE_GHLIVE_DONGLE_VID:

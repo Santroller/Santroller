@@ -727,6 +727,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             ps3_output_report *report = (ps3_output_report *)data;
             uint8_t player = report->leds_bitmap;
             handle_player_leds_ps3(player);
+            handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
         }
 #endif
         }

@@ -363,7 +363,9 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             if (!temp_buf[0]) {
                 temp_buf[0] = 0x05;
             }
+            foundPS3 = false;
             foundPS4 = false;
+            foundPS5 = false;
             reportID = INVALID_REPORT_ID;
             USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
             if (foundPS5) {

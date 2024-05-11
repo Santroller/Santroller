@@ -230,12 +230,10 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t controllerT
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     printf("%04x %04x\r\n", host_vid, host_pid);
-    USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid);
+    USB_Device_Type_t type = get_usb_device_type_for(host_vid, host_pid, controllerType);
     type.dev_addr = dev_addr;
     type.instance = instance;
-    if (controllerType == UNKNOWN) {
-        controllerType = type.console_type;
-    }
+    controllerType = type.console_type;
     if (controllerType == XBOX360) {
         if (subtype) {
             // GHL guitars are special and we need to create a fake subtype to map the inputs correctly

@@ -80,7 +80,7 @@ typedef struct {
     uint8_t dev_addr;
     uint8_t instance;
 } USB_Device_Type_t;
-USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid);
+USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid, uint8_t controllerType);
 USB_Device_Type_t get_device_address_for(uint8_t deviceType);
 #endif
 #ifdef INPUT_USB_HOST

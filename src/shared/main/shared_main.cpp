@@ -2193,8 +2193,8 @@ void set_console_type(uint8_t new_console_type) {
     reset_usb();
 }
 #if USB_HOST_STACK
-USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
-    USB_Device_Type_t type = {UNIVERSAL, GAMEPAD};
+USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid, uint8_t controllerType) {
+    USB_Device_Type_t type = {controllerType, GAMEPAD};
     switch (vid) {
         case STREAM_DECK_VID: {
             type.console_type = STREAM_DECK;
@@ -2231,6 +2231,7 @@ USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid) {
                     type.sub_type = STREAM_DECK_NEO;
                     break;
             }
+            break;
         }
         case NINTENDO_VID: {
             if (pid == SWITCH_PRO_PID) {

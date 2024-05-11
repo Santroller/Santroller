@@ -361,7 +361,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
             case PS4: {
                 ps4_output_report *report = &ps4_output_reports[i];
                 report->motor_left = rumble_left;
-                report->motor_right = rumble_right;
+                report->motor_right = rumble_right != 0;
                 send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)report, sizeof(ps4_output_report));
                 return;
             }
@@ -373,6 +373,11 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                     rightRumble : rumble_right
                 };
                 send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&report, sizeof(report));
+                return;
+            }
+            case XBOX360_W: {
+                uint8_t rumble_packet[] = {0x00, 0x01, 0x0f, 0xc0, 0x00, rumble_left, rumble_right, 0x00, 0x00, 0x00, 0x00, 0x00};
+                send_report_to_controller(type.dev_addr, type.instance, rumble_packet, sizeof(rumble_packet));
                 return;
             }
             case XBOXONE: {

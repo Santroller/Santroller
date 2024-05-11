@@ -303,25 +303,25 @@ void handle_player_leds(uint8_t player) {
 #endif
 }
 void handle_player_leds_ps3(uint8_t player_mask) {
-    if (player_mask & _BV(0)) {
+    if (player_mask == 0b0001) {
         handle_player_leds(1);
     }
-    if (player_mask & _BV(1)) {
+    if (player_mask == 0b0010) {
         handle_player_leds(2);
     }
-    if (player_mask & _BV(2)) {
+    if (player_mask == 0b0100) {
         handle_player_leds(3);
     }
-    if (player_mask & _BV(3)) {
+    if (player_mask == 0b1000) {
         handle_player_leds(4);
     }
-    if (player_mask & _BV(4)) {
+    if (player_mask == 0b1001) {
         handle_player_leds(5);
     }
-    if (player_mask & _BV(5)) {
+    if (player_mask == 0b1010) {
         handle_player_leds(6);
     }
-    if (player_mask & _BV(6)) {
+    if (player_mask == 0b1100) {
         handle_player_leds(7);
     }
 }
@@ -531,6 +531,10 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
 #endif
 
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
+    for (int i = 0; i < len; i++) {
+        printf("%02x, ", data[i]);
+    }
+    printf("\r\n");
 #if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif
@@ -546,9 +550,11 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             if (id == XBOX_LED_ID) {
                 uint8_t led = data[2];
                 uint8_t player = xbox_players[led];
-                data_hid[1] = PS3_LED_RUMBLE_ID;
-                data_hid[3] = 1 << player;
-                send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
+                if (player) {
+                    data_hid[1] = PS3_LED_RUMBLE_ID;
+                    data_hid[3] = 1 << player;
+                    send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
+                }
 
             } else if (id == XBOX_RUMBLE_ID) {
                 data_hid[1] = SANTROLLER_LED_ID;
@@ -594,10 +600,12 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         if (id == XBOX_LED_ID) {
             uint8_t led = data[2];
             uint8_t player = xbox_players[led];
-            handle_player_leds(player);
-            data_hid[1] = PS3_LED_RUMBLE_ID;
-            data_hid[3] = 1 << player;
-            bt_set_report(data_hid, 8, reportType, report_id);
+            if (player) {
+                handle_player_leds(player);
+                data_hid[1] = PS3_LED_RUMBLE_ID;
+                data_hid[3] = 1 << player;
+                bt_set_report(data_hid, 8, reportType, report_id);
+            }
 
         } else if (id == XBOX_RUMBLE_ID) {
 #if DEVICE_TYPE == GAMEPAD
@@ -671,7 +679,9 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             if (id == XBOX_LED_ID) {
                 uint8_t led = data[2];
                 uint8_t player = xbox_players[led];
-                handle_player_leds(player);
+                if (player) {
+                    handle_player_leds(player);
+                }
 
             } else if (id == XBOX_RUMBLE_ID) {
                 uint8_t rumble_left = data[3];
@@ -734,10 +744,10 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #endif
 #else
         else if (id == PS3_LED_RUMBLE_ID) {
-            ps3_output_report *report = (ps3_output_report *)data;
-            uint8_t player = report->leds_bitmap;
-            handle_player_leds_ps3(player);
-            handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
+            // ps3_output_report *report = (ps3_output_report *)data;
+            // uint8_t player = report->leds_bitmap;
+            handle_player_leds_ps3(data[2]);
+            // handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
         }
 #endif
         }

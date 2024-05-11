@@ -51,7 +51,7 @@ uint8_t stage_kit_millis[] = {
     125,  // Medium
     150,  // Slow
 };
-uint8_t current_player = 1;
+uint8_t current_player = 0xFF;
 uint8_t strobe_delay = 0;
 uint8_t last_star_power = 0;
 bool star_power_active = false;
@@ -252,6 +252,9 @@ void handle_player_leds(uint8_t player) {
     if (player == current_player) return;
     if (player == 0) {
         player = current_player;
+    }
+    if (player == 0xFF) {
+        player = 1;
     }
     current_player = player;
     HANDLE_PLAYER_LED;

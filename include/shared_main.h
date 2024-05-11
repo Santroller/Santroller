@@ -14,7 +14,7 @@ void send_report_to_pc(const void *report, uint8_t len);
 bool ready_for_next_packet(void);
 bool usb_configured(void);
 void receive_report_from_controller(uint8_t const *report, uint16_t len);
-void xinput_controller_connected(uint16_t vid, uint16_t pid, uint8_t subtype);
+void xinput_controller_connected(uint16_t vid, uint16_t pid);
 void xinput_w_controller_connected();
 void xone_controller_connected(uint8_t dev_addr, uint8_t instance);
 void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid);
@@ -80,7 +80,7 @@ typedef struct {
     uint8_t dev_addr;
     uint8_t instance;
 } USB_Device_Type_t;
-USB_Device_Type_t get_usb_device_type_for(uint16_t vid, uint16_t pid, uint8_t controllerType);
+void get_usb_device_type_for(uint16_t vid, uint16_t pid, USB_Device_Type_t *type);
 USB_Device_Type_t get_device_address_for(uint8_t deviceType);
 #endif
 #ifdef INPUT_USB_HOST

@@ -345,7 +345,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     }
 #endif
 
-#if defined(INPUT_USB_HOST) && DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if defined(INPUT_USB_HOST) && DEVICE_TYPE == GAMEPAD
     USB_Device_Type_t type;
     for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
         type = get_usb_host_device_type(i);

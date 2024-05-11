@@ -81,7 +81,7 @@ ps4_output_report ps4_output_reports[8] = {
     }};
 ps3_output_report ps3_output_reports[8] = {
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -100,7 +100,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -119,7 +119,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -138,7 +138,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -157,7 +157,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -176,7 +176,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -195,7 +195,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x01,
             right_duration : 0xFF,
@@ -214,7 +214,7 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     },
     {
-        report_id : PS3_LED_RUMBLE_ID,
+        report_id : PS3_LED_ID,
         rumble : {
             padding : 0x00,
             right_duration : 0xFF,
@@ -302,29 +302,56 @@ void handle_player_leds(uint8_t player) {
     }
 #endif
 }
+// PS3 controllers and other controllers use different LED bitmasks
+#if DEVICE_TYPE == GAMEPAD
 void handle_player_leds_ps3(uint8_t player_mask) {
-    if (player_mask == 0b0001) {
+    if (player_mask == 2) {
         handle_player_leds(1);
     }
-    if (player_mask == 0b0010) {
+    if (player_mask == 4) {
         handle_player_leds(2);
     }
-    if (player_mask == 0b0100) {
+    if (player_mask == 8) {
         handle_player_leds(3);
     }
-    if (player_mask == 0b1000) {
+    if (player_mask == 16) {
         handle_player_leds(4);
     }
-    if (player_mask == 0b1001) {
+    if (player_mask == 18) {
         handle_player_leds(5);
     }
-    if (player_mask == 0b1010) {
+    if (player_mask == 20) {
         handle_player_leds(6);
     }
-    if (player_mask == 0b1100) {
+    if (player_mask == 24) {
         handle_player_leds(7);
     }
 }
+#else
+void handle_player_leds_ps3(uint8_t player_mask) {
+    if (player_mask == 1) {
+        handle_player_leds(1);
+    }
+    if (player_mask == 2) {
+        handle_player_leds(2);
+    }
+    if (player_mask == 4) {
+        handle_player_leds(3);
+    }
+    if (player_mask == 8) {
+        handle_player_leds(4);
+    }
+    if (player_mask == 9) {
+        handle_player_leds(5);
+    }
+    if (player_mask == 10) {
+        handle_player_leds(6);
+    }
+    if (player_mask == 12) {
+        handle_player_leds(7);
+    }
+}
+#endif
 void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue) {
     HANDLE_LIGHTBAR_LED;
     // We know the default lightbar colours that sony uses so we can extract a player number from that.
@@ -531,10 +558,10 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
 #endif
 
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
-    for (int i = 0; i < len; i++) {
-        printf("%02x, ", data[i]);
-    }
-    printf("\r\n");
+    // for (int i = 0; i < len; i++) {
+    //     printf("%02x, ", data[i]);
+    // }
+    // printf("\r\n");
 #if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif
@@ -551,7 +578,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 uint8_t led = data[2];
                 uint8_t player = xbox_players[led];
                 if (player) {
-                    data_hid[1] = PS3_LED_RUMBLE_ID;
+                    data_hid[1] = PS3_LED_ID;
                     data_hid[3] = 1 << player;
                     send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
                 }
@@ -723,10 +750,10 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             } else if (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_EXPANDED_ID) {
                 PCStageKitOutput_Data_t *output = (PCStageKitOutput_Data_t *)data;
                 handle_rumble(&output->report);
-            } else if (id == PS3_REPORT_ID && data[1] == PS3_LED_RUMBLE_ID) {
+            } else if (id == PS3_REPORT_ID && data[1] == PS3_RUMBLE_ID) {
                 uint8_t player = data[3];
                 handle_player_leds_ps3(player);
-            } else if (id == PS3_LED_RUMBLE_ID) {
+            } else if (id == PS3_RUMBLE_ID) {
                 uint8_t player = data[2];
                 handle_player_leds_ps3(player);
             } else if (id == SANTROLLER_LED_ID) {
@@ -743,11 +770,11 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             }
 #endif
 #else
-        else if (id == PS3_LED_RUMBLE_ID) {
-            // ps3_output_report *report = (ps3_output_report *)data;
-            // uint8_t player = report->leds_bitmap;
-            handle_player_leds_ps3(data[2]);
-            // handle_rumble(report->rumble.left_motor_force, report->rumble.right_motor_on);
+        else if (id == PS3_LED_ID) {
+            handle_player_leds_ps3(data[9]);
+            handle_rumble(data[0x04], data[0x02] ? 0xff : 0);
+        } else if (id == PS3_RUMBLE_ID) {
+            handle_rumble(data[0x05], data[0x03] ? 0xff : 0);
         }
 #endif
         }

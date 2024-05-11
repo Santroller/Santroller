@@ -513,6 +513,66 @@ const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
                                     0x00, 0x00, 0x00, 0x00};
 #endif
+uint8_t ef_byte = 0;
+uint8_t master_bd_addr[6];
+uint8_t f5_state = 0;
+const PROGMEM uint8_t ps3_feature_01[] = {
+    0x00, 0x01, 0x04, 0x00, 0x07, 0x0c, 0x01, 0x02,
+    0x18, 0x18, 0x18, 0x18, 0x09, 0x0a, 0x10, 0x11,
+    0x12, 0x13, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00,
+    0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x04,
+    0x04, 0x04, 0x04, 0x00, 0x00, 0x04, 0x00, 0x01,
+    0x02, 0x07, 0x00, 0x17, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const PROGMEM uint8_t ps3_feature_f2[] = {
+    0xf2, 0xff, 0xff, 0x00,
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06,  // device bdaddr
+    0x00, 0x03, 0x50, 0x81, 0xd8, 0x01,
+    0x8a, 0x13, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00,
+    0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x04,
+    0x04, 0x04, 0x04, 0x00, 0x00, 0x04, 0x00, 0x01,
+    0x02, 0x07, 0x00, 0x17, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const PROGMEM uint8_t ps3_feature_f5[] = {
+    0x01, 0x00,
+    0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,  // dummy PS3 bdaddr
+    0xff, 0xf7, 0x00, 0x03, 0x50, 0x81, 0xd8, 0x01,
+    0x8a, 0x13, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00,
+    0x02, 0x02, 0x02, 0x02, 0x00, 0x00, 0x00, 0x04,
+    0x04, 0x04, 0x04, 0x00, 0x00, 0x04, 0x00, 0x01,
+    0x02, 0x07, 0x00, 0x17, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const PROGMEM uint8_t ps3_feature_f7[] = {
+    0x01, 0x04, 0xc4, 0x02, 0xd6, 0x01, 0xee, 0xff,
+    0x14, 0x13, 0x01, 0x02, 0xc4, 0x01, 0xd6, 0x00,
+    0x00, 0x02, 0x02, 0x02, 0x00, 0x03, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x02, 0x62, 0x01, 0x02, 0x01,
+    0x5e, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+const PROGMEM uint8_t ps3_feature_f8[] = {
+    0x00, 0x01, 0x00, 0x00, 0x07, 0x03, 0x01, 0xb0,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x02, 0x6b, 0x02, 0x68, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,};
+const PROGMEM uint8_t ps3_feature_ef[] = {
+    0x00, 0xef, 0x04, 0x00, 0x07, 0x03, 0x01, 0xb0,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x02, 0x6b, 0x02, 0x68, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const PROGMEM uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x91, PS4_TYPE, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
@@ -739,7 +799,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         // PS3s request this as some form of controller id
-        if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
+        if (consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
+            printf("test\r\n");
             // Pro instruments use a different init flow
 #if DEVICE_TYPE_IS_PRO
             if (proButtonsEnabled) {
@@ -765,16 +826,50 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = PS3;
             reset_usb();
         }
+        if (consoleType == PS3 && wValue == 0x03f8 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+            memcpy_P(requestBuffer, ps3_feature_f8, sizeof(ps3_feature_f8));
+            requestBuffer[7] = ef_byte;
+            return sizeof(ps3_feature_f8);
+        }
+        
+        if (consoleType == PS3 && wValue == 0x03f7 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+            memcpy_P(requestBuffer, ps3_feature_f7, sizeof(ps3_feature_f7));
+            return sizeof(ps3_feature_f7);
+        }
+        if (consoleType == PS3 && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+            memcpy_P(requestBuffer, ps3_feature_f2, sizeof(ps3_feature_f2));
+            return sizeof(ps3_feature_f2);
+        }
+        if (consoleType == PS3 && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+            memcpy_P(requestBuffer, ps3_feature_f5, sizeof(ps3_feature_f5));
+            if (f5_state == 0) {
+                /*
+                 * First request, tell that the bdaddr is not the one of the PS3.
+                 */
+                f5_state = 1;
+            } else {
+                /*
+                 * Next requests, tell that the bdaddr is the one of the PS3.
+                 */
+                memcpy(requestBuffer + 2, master_bd_addr, sizeof(master_bd_addr));
+            }
+            return sizeof(ps3_feature_f5);
+        }
+        if (consoleType == PS3 && wValue == 0x03ef && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+            memcpy_P(requestBuffer, ps3_feature_ef, sizeof(ps3_feature_ef));
+            requestBuffer[7] = ef_byte;
+            return sizeof(ps3_feature_ef);
+        }
         // PS3 sends this for a gamepad
         if (consoleType == PS3 && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
-            consoleType = REAL_PS3;
-            reset_usb();
+            memcpy_P(requestBuffer, ps3_feature_01, sizeof(ps3_feature_01));
+            return sizeof(ps3_feature_01);
         }
         // PS3 and PS4 send this
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
             // PS3 Drums and Guitars get used on both consoles, so we can jump straight to PS3 mode
 #if DEVICE_TYPE_IS_INSTRUMENT && !SUPPORTS_PS4
-            consoleType = REAL_PS3;
+            consoleType = PS3;
             reset_usb();
 #else
             // the PS3 and PS4 will end up here. PS4 mode will jump back to PS3 mode on a PS3 later.
@@ -834,6 +929,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
         }
         return 1;
+    } else if (consoleType == PS3 && wValue == 0x03ef && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
+        ef_byte = requestBuffer[6];
+        return 1;
+    } else if (consoleType == PS3 && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
+        memcpy(master_bd_addr, requestBuffer + 2, sizeof(master_bd_addr));
+        printf("Master bd address set\r\n");
+        return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == VIBRATION_CAPABILITIES_WVALUE) {
             memcpy_P(requestBuffer, &XInputVibrationCapabilities, sizeof(XInputVibrationCapabilities));
@@ -863,7 +965,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             compat->TotalSections = 2;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
-        } else if (consoleType == PS3 || consoleType == REAL_PS3) {
+        } else if (consoleType == PS3) {
             memcpy_P(requestBuffer, &DevCompatIDsPS3, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE));
         } else if (consoleType != UNIVERSAL) {
             return 0;
@@ -890,7 +992,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
 
 #if DEVICE_TYPE_IS_PRO
-        if (consoleType == REAL_PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
+        if (consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
             switch (requestBuffer[2]) {
                 case 0x89:
                     proButtonsEnabled = true;
@@ -979,7 +1081,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
 #ifdef PS3_TYPE
-            else if (consoleType == REAL_PS3 || consoleType == PS3) {
+            else if (consoleType == PS3) {
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS3_TYPE;
             }
@@ -1035,6 +1137,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #else
                 } else if (consoleType == PS3) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
+                    desc->EndpointOutHID.wMaxPacketSize = 64;
+                    desc->EndpointInHID.wMaxPacketSize = 64;
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }

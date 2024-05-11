@@ -34,7 +34,8 @@
 #define INTERRUPT_ID 0x16
 
 // HID "Report IDs" used for rumble and led data from the console
-#define PS3_LED_RUMBLE_ID 0x01
+#define PS3_RUMBLE_ID 0x01
+#define PS3_LED_ID 0x00
 #define XBOX_ONE_GHL_POKE_ID 0x02
 #define XONE_IDENTIFY_ID 0x04
 #define PS4_LED_RUMBLE_ID 0x05

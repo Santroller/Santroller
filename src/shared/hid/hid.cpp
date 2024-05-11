@@ -349,7 +349,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     USB_Device_Type_t type;
     for (uint8_t i = 0; i < get_usb_host_device_count(); i++) {
         type = get_usb_host_device_type(i);
-        if (type.sub_type != GAMEPAD) continue;
+        if (type.sub_type != GAMEPAD && type.sub_type != XINPUT_WHEEL) continue;
         switch (type.console_type) {
             case PS3: {
                 ps3_output_report *report = &ps3_output_reports[i];
@@ -363,6 +363,11 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                 report->motor_left = rumble_left;
                 report->motor_right = rumble_right != 0;
                 send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)report, sizeof(ps4_output_report));
+                return;
+            }
+            case OG_XBOX: {
+                uint8_t rumble_packet[] = {0x00, 0x06, 0x00, rumble_left, 0x00, rumble_right};
+                send_report_to_controller(type.dev_addr, type.instance, rumble_packet, sizeof(rumble_packet));
                 return;
             }
             case XBOX360: {

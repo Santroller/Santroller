@@ -380,6 +380,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         _xinputh_dev->inst_count++;
         tuh_xinput_receive_report(dev_addr, i);
+        p_xinput->subtype = GAMEPAD;
         return true;
     }
 
@@ -407,6 +408,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
 
         p_xinput->type = XBOX360_BB;
+        p_xinput->subtype = GAMEPAD;
     } else if (desc_itf->bInterfaceSubClass == 0x5D &&
                (desc_itf->bInterfaceProtocol == 0x01 ||
                 desc_itf->bInterfaceProtocol == 0x03 ||
@@ -434,6 +436,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = XBOX360;
+        p_xinput->subtype = GAMEPAD;
         if (desc_itf->bInterfaceProtocol == 0x01) {
             p_xinput->subtype = x_desc->subtype;
             usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
@@ -452,6 +455,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
         p_xinput->type = XBOX360;
+        p_xinput->subtype = GAMEPAD;
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         _xinputh_dev->inst_count++;
         return true;
@@ -473,6 +477,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = XBOXONE;
+        p_xinput->subtype = GAMEPAD;
         _xinputh_dev->inst_count++;
         usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
         return true;
@@ -496,6 +501,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         p_xinput->type = XBOX360_W;
+        p_xinput->subtype = UNKNOWN;
         _xinputh_dev->inst_count++;
         usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
         return true;

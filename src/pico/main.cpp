@@ -228,7 +228,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     printf("%04x %04x\r\n", host_vid, host_pid);
-    USB_Device_Type_t type = {console_type, console_type, dev_addr, instance};
+    USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance};
     get_usb_device_type_for(host_vid, host_pid, &type);
     switch (type.console_type) {
         case XBOX360:

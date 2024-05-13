@@ -59,6 +59,7 @@ for (int i = 0; i < device_count; i++) {
             for (uint8_t i = 0; i + offset < len && i < 16; i++) {
                 bit_write(data[i + offset], usb_host_data.genericButtons, i);
             }
+            break;
         }
         case KEYBOARD: {
             USB_6KRO_Boot_Data_t *report = (USB_6KRO_Boot_Data_t *)data;
@@ -78,10 +79,12 @@ for (int i = 0; i < device_count; i++) {
                     bit_set(keyData[keycode / 8], keycode % 8);
                 }
             }
+            break;
         }
         case MOUSE: {
             USB_Mouse_Boot_Data_t *report = (USB_Mouse_Boot_Data_t *)data;
             memcpy(&usb_host_data.mouse, report, sizeof(report));
+            break;
         }
         case UNIVERSAL: {
             USB_Host_Data_t *report = (USB_Host_Data_t *)data;

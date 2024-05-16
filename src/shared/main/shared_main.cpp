@@ -1931,6 +1931,9 @@ int tick_bluetooth_inputs(const void *buf) {
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
+#if DEVICE_TYPE == GUITAR_HERO_DRUMS
+        report->leftThumbClick = true;
+#endif
         convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
         TICK_XINPUT;
         report_size = packet_size = sizeof(XINPUT_REPORT);

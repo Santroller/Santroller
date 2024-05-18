@@ -1613,7 +1613,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PC;
         asm volatile("" ::
                          : "memory");
-        report->dpad = dpad_bindings[report->dpad];
+        report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
     if (output_console_type == FNF) {
@@ -1686,7 +1686,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         asm volatile("" ::
                          : "memory");
-        gamepad->dpad = dpad_bindings[gamepad->dpad];
+        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
 #ifdef CONFIGURABLE_BLOBS
         if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
             bool a = gamepad->a;
@@ -1868,7 +1868,7 @@ int tick_bluetooth_inputs(const void *buf) {
         TICK_PC;
         asm volatile("" ::
                          : "memory");
-        report->dpad = dpad_bindings[report->dpad];
+        report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     bool updateSequence = false;
@@ -1959,7 +1959,7 @@ int tick_bluetooth_inputs(const void *buf) {
         TICK_PS4;
         asm volatile("" ::
                          : "memory");
-        gamepad->dpad = dpad_bindings[gamepad->dpad];
+        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
     }
 #endif
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
@@ -2020,7 +2020,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         asm volatile("" ::
                          : "memory");
-        gamepad->dpad = dpad_bindings[gamepad->dpad];
+        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
 #ifdef CONFIGURABLE_BLOBS
         if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
             bool a = gamepad->a;

@@ -71,12 +71,12 @@ for (int i = 0; i < device_count; i++) {
             usb_host_data.keyboard.rightShift = report->rightShift;
             usb_host_data.keyboard.rightAlt = report->rightAlt;
             usb_host_data.keyboard.rWin = report->rWin;
-            uint8_t *keyData = (uint8_t *)(&usb_host_data.keyboard) + 2;
+            uint8_t *keyData = usb_host_data.keyboard.raw;
             for (uint8_t i = 0; i < SIMULTANEOUS_KEYS; i++) {
                 uint8_t keycode = report->KeyCode[i];
                 // F24 is the last supported key in our nkro report
                 if (keycode && keycode <= KEYCODE_F24) {
-                    bit_set(keyData[keycode / 8], keycode % 8);
+                    bit_set(keyData[keycode >> 3], keycode & 7);
                 }
             }
             break;

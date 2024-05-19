@@ -21,7 +21,7 @@ For PS4/PS5, you need to leave it plugged in, playstations continuously check th
 
 [![usb](/assets/images/usb.png)](/assets/images/usb.png)
 
-1. If you are using a USB extension cable, cut it in half and expose the four cables.
+1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.
 2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
 3. Hook up the V- / GND (Black) to ground on your Pi Pico
 4. Hook up D+ (Green) to one side of a 27ohm resistor and the other side to a unused digital pin.
@@ -31,7 +31,7 @@ For PS4/PS5, you need to leave it plugged in, playstations continuously check th
 
 ## Wiring Steps (without capacitor and resistor)
 
-1. If you are using a USB extension cable, cut it in half and expose the four cables.
+1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.
 2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
 3. Hook up the V- / GND (Black) to ground on your Pi Pico
 4. Hook up D+ (Green) to a unused digital pin.
@@ -42,4 +42,4 @@ For PS4/PS5, you need to leave it plugged in, playstations continuously check th
 2. Find and add `USB Host inputs`
 3. Bind D+
 4. Hit Save
-5. If you plug in a supported controller, the tool should detect it and tell you what it is. Note that only wired controllers will work for this, wireless only controllers or the play and charge kit won't work.
+5. If you plug in a supported controller, the tool should detect it and tell you what it is. Most controllers are supported, but things like the play and charge kit won't work over USB.

@@ -551,7 +551,7 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
             break;
 #endif
     }
-    stage_kit_report.reportId = PS3_LED_RUMBLE_ID;
+    stage_kit_report.reportId = PS3_RUMBLE_ID;
     stage_kit_report.report.reportTypeId = SANTROLLER_LED_EXPANDED_ID;
     bt_set_report((uint8_t *)&stage_kit_report, sizeof(stage_kit_report), 1, 1);
 }
@@ -597,9 +597,9 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE == LIVE_GUITAR
                 if (id == GHL_HID_OUTPUT) {
                     uint8_t sub_id = data[1];
-                    if (sub_id == PS3_LED_RUMBLE_ID) {
+                    if (sub_id == PS3_RUMBLE_ID) {
                         uint8_t player = (data[3] & 0x0F);
-                        data_hid[1] = PS3_LED_RUMBLE_ID;
+                        data_hid[1] = PS3_RUMBLE_ID;
                         data_hid[3] = 1 << player;
                         send_report_to_controller(type.dev_addr, type.instance, (uint8_t *)&data_hid, sizeof(data_hid));
                     }
@@ -629,7 +629,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             uint8_t player = xbox_players[led];
             if (player) {
                 handle_player_leds(player);
-                data_hid[1] = PS3_LED_RUMBLE_ID;
+                data_hid[1] = PS3_RUMBLE_ID;
                 data_hid[3] = 1 << player;
                 bt_set_report(data_hid, 8, reportType, report_id);
             }
@@ -688,7 +688,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
 #if DEVICE_TYPE == LIVE_GUITAR
             if (id == GHL_HID_OUTPUT) {
                 uint8_t sub_id = data[1];
-                if (sub_id == PS3_LED_RUMBLE_ID) {
+                if (sub_id == PS3_RUMBLE_ID) {
                     uint8_t player = (data[3] & 0x0F);
                     handle_player_leds(player + 1);
                 }

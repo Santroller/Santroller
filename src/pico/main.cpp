@@ -5,6 +5,9 @@
 #include <string.h>
 #include <tusb.h>
 
+#ifdef INPUT_MIDI
+#include "TUSB-MIDI.hpp"
+#endif
 #include "bt.h"
 #include "btstack_run_loop.h"
 #include "commands.h"
@@ -19,6 +22,7 @@
 #include "hidescriptorparser.h"
 #include "host/usbh_classdriver.h"
 #include "io.h"
+#include "midi_host.h"
 #include "pico/bootrom.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
@@ -70,7 +74,11 @@ typedef struct {
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
+#ifdef INPUT_MIDI
+using namespace usbMidi;
+UsbMidiTransport usbMIDITransport(0);
+MidiInterface<UsbMidiTransport> MIDI(usbMIDITransport);
+#endif
 bool ready_for_next_packet() {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
 }
@@ -110,6 +118,9 @@ static void tick_usb() {
     }
 #else
     tick();
+#endif
+#ifdef INPUT_MIDI
+    MIDI.read();
 #endif
 #if BLUETOOTH
     if (!authDone) {
@@ -160,8 +171,35 @@ void setup() {
         USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     tuh_init(TUH_OPT_RHPORT);
+#ifdef INPUT_MIDI
+    MIDI.begin(1);
+    MIDI.setHandleNoteOn(onNote);
+    MIDI.setHandleNoteOff(offNote);
+    MIDI.setHandleControlChange(onControlChange);
+    MIDI.setHandlePitchBend(onPitchBend);
+#endif
 #endif
 }
+
+#ifdef INPUT_MIDI
+void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
+    usbMIDITransport.tuh_midi_rx_cb(dev_addr, num_packets);
+}
+
+void tuh_midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx) {
+    printf("MIDI device address = %u, IN endpoint %u has %u cables, OUT endpoint %u has %u cables\r\n",
+           dev_addr, in_ep & 0xf, num_cables_rx, out_ep & 0xf, num_cables_tx);
+
+    usbMIDITransport.midi_dev_addr = dev_addr;
+}
+
+// Invoked when device with hid interface is un-mounted
+void tuh_midi_umount_cb(uint8_t dev_addr, uint8_t instance) {
+    printf("MIDI device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
+
+    usbMIDITransport.midi_dev_addr = 0;
+}
+#endif
 void authentication_successful() {
     printf("Auth done\r\n");
     authReady = true;
@@ -460,10 +498,19 @@ usbh_class_driver_t driver_host[] = {
         .open = xinputh_open,
         .set_config = xinputh_set_config,
         .xfer_cb = xinputh_xfer_cb,
-        .close = xinputh_close}};
+        .close = xinputh_close},
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "MIDI_Host_HID",
+#endif
+        .init = midih_init,
+        .open = midih_open,
+        .set_config = midih_set_config,
+        .xfer_cb = midih_xfer_cb,
+        .close = midih_close}};
 
 usbh_class_driver_t const *usbh_app_driver_get_cb(uint8_t *driver_count) {
-    *driver_count = 1;
+    *driver_count = 2;
     return driver_host;
 }
 #endif

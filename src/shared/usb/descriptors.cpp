@@ -499,9 +499,9 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
 };
 // Pro instruments use a different init flow
 #if DEVICE_TYPE_IS_PRO
-const PROGMEM uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
+const PROGMEM uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0d, 0x01},
                                                  {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                                 {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
+                                                 {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x82},
                                                  {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                                  {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
 const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
@@ -563,7 +563,7 @@ const PROGMEM uint8_t ps3_feature_f8[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,};
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const PROGMEM uint8_t ps3_feature_ef[] = {
     0x00, 0xef, 0x04, 0x00, 0x07, 0x03, 0x01, 0xb0,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -573,6 +573,7 @@ const PROGMEM uint8_t ps3_feature_ef[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 const PROGMEM uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x91, PS4_TYPE, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
@@ -581,8 +582,6 @@ const PROGMEM uint8_t ps4_feature_config[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// TODO: if we detect a ghl dongle  being used for auth, switch to this pagesize report
-// (or maybe when doing auth, only hardcode the pagesize for gamepads)
 AuthPageSizeReport ps4_pagesize_report_ghl = {
     type : 0xF3,
     u1 : 0x00,
@@ -689,7 +688,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     }
     return false;
 }
-uint8_t ps3_id_id = 0;
+uint8_t ps3_id_id = 4;
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
@@ -794,13 +793,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
 #endif
 #endif
-    // So, using a real dualshock with a ps3 requires a lot of work as there are a lot of handshakes that go on
-    // But using anything else works without effort. So what we do is when the user goes into PS3 mode, we start with a standard PS3 remote descriptor. When we detect the handshake, we know it is a real PS3, and we jump to a descriptor that is easier to use.
+
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         // PS3s request this as some form of controller id
         if (consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
-            printf("test\r\n");
             // Pro instruments use a different init flow
 #if DEVICE_TYPE_IS_PRO
             if (proButtonsEnabled) {
@@ -831,7 +828,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             requestBuffer[7] = ef_byte;
             return sizeof(ps3_feature_f8);
         }
-        
+
         if (consoleType == PS3 && wValue == 0x03f7 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_f7, sizeof(ps3_feature_f7));
             return sizeof(ps3_feature_f7);
@@ -993,12 +990,18 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 
 #if DEVICE_TYPE_IS_PRO
         if (consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
+            for (int i = 0; i < 0x28; i++) {
+                printf("%02x, ", requestBuffer[i]);
+            }
+            printf("\r\n");
             switch (requestBuffer[2]) {
                 case 0x89:
+                    printf("MIDI data enabled\r\n");
                     proButtonsEnabled = true;
                     ps3_id_id = 0;
                     break;
                 case 0x81:
+                    printf("MIDI data disabled\r\n");
                     proButtonsEnabled = false;
                     ps3_id_id = 0;
                     break;
@@ -1116,7 +1119,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == OG_XBOX) {
                 size = sizeof(OG_XBOX_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &OGXBOXConfigurationDescriptor, size);
-            } else if (consoleType == MIDI) {
+            } else if (consoleType == MIDI_ID) {
                 size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
             } else {

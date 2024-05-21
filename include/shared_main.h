@@ -24,7 +24,12 @@ void host_controller_connected(void);
 void on_connect(void);
 void set_console_type(uint8_t new_console_type);
 void authentication_successful(void);
+void onNote(uint8_t channel, uint8_t note, uint8_t velocity);
 
+void offNote(uint8_t channel, uint8_t note, uint8_t velocity);
+
+void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2);
+void onPitchBend(uint8_t channel, int pitch);
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;

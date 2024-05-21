@@ -225,18 +225,18 @@ typedef struct {
 
     // Pressure axes for buttons
     // Neutral state is 0x00, max is 0xFF
-    uint8_t pressureDpadLeft; 
-    uint8_t pressureDpadRight; 
-    uint8_t pressureDpadUp; 
-    uint8_t pressureDpadDown; 
+    uint8_t pressureDpadLeft;
+    uint8_t pressureDpadRight;
+    uint8_t pressureDpadUp;
+    uint8_t pressureDpadDown;
     uint8_t pressureTriangle;
     uint8_t pressureCircle;
     uint8_t pressureCross;
     uint8_t pressureSquare;
     uint8_t pressureL1;
     uint8_t pressureR1;
-    uint8_t leftTrigger; //  pressure_l2
-    uint8_t rightTrigger; // pressure_r2
+    uint8_t leftTrigger;   //  pressure_l2
+    uint8_t rightTrigger;  // pressure_r2
 
     // Each of the following are 10 bits in accuracy
     // Centered/neutral state is nominally 0x0200, actual values may vary
@@ -484,7 +484,9 @@ typedef struct
 
     uint8_t unused4;
 } __attribute__((__packed__)) PS3RockBandProGuitar_Data_t;
-
+// 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+// 0x40, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+// 0x00, 0x00, 0x00
 typedef struct
 {
     uint8_t x : 1;  // square, blue
@@ -504,13 +506,13 @@ typedef struct
 
     uint8_t guide : 1;    // ps
     uint8_t capture : 1;  // switch capture button
+    uint8_t : 2;
 
-    //     0
-    //   7   1
-    // 6   8   2
-    //   5   3
-    //     4
-    uint8_t dpad;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t : 4;
 
     uint8_t unused1[2];
 
@@ -541,21 +543,32 @@ typedef struct
     uint8_t key18 : 1;
     uint8_t key17 : 1;
 
-    uint8_t velocity1 : 7;
-    uint8_t key25 : 1;
-    uint8_t velocity2 : 7;
-    uint8_t : 1;
-    uint8_t velocity3 : 7;
-    uint8_t : 1;
-    uint8_t velocity4 : 7;
-    uint8_t : 1;
-    uint8_t velocity5 : 7;
-    uint8_t : 1;
+    union {
+        struct {
+            uint8_t velocity1 : 7;
+            uint8_t key25 : 1;
+
+            uint8_t velocity2 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity3 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity4 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity5 : 7;
+            uint8_t : 1;
+        };
+        uint8_t velocities[5];
+    };
 
     uint8_t : 7;
     uint8_t overdrive : 1;
+
     uint8_t pedalAnalog : 7;
     uint8_t pedalDigital : 1;
+
     uint8_t touchPad : 7;
     uint8_t : 1;
 
@@ -571,7 +584,6 @@ typedef struct
 
     uint8_t unused4;
 } __attribute__((__packed__)) PS3RockBandProKeyboard_Data_t;
-
 typedef struct
 {
     uint8_t x : 1;  // square

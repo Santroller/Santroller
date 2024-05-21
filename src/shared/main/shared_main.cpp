@@ -49,6 +49,36 @@ struct {
         };
     };
 } rtt_t;
+#ifdef INPUT_MIDI
+uint8_t midiVelocities[127] = {0};
+int16_t midiPitchWheel = 0;
+uint8_t midiModWheel = 0;
+uint8_t midiSustainPedal = 0;
+void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
+    printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
+    midiVelocities[note] = velocity;
+}
+
+void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
+    printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
+    midiVelocities[note] = 0;
+}
+
+void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2) {
+    printf("ControlChange ch=%d, b1=%d, b2=%d\r\n", channel, b1, b2);
+    if (b1 == MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL) {
+        midiSustainPedal = b2;
+    }
+    if (b1 == MIDI_CONTROL_COMMAND_MOD_WHEEL) {
+        midiModWheel = b2;
+    }
+}
+
+void onPitchBend(uint8_t channel, int pitch) {
+    printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
+    midiPitchWheel = pitch;
+}
+#endif
 uint8_t tmp = 0;
 long clone_guitar_timer = 0;
 long clone_guitar_ready_timer = 0;
@@ -1363,6 +1393,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #endif
 }
 #endif
+uint8_t rbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
@@ -1675,7 +1706,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
+        uint8_t currentVel = 0;
+        for (int i = FIRST_MIDI_KEY; i <= 127 && currentVel <= 4; i++) {
+            if (midiVelocities[i]) {
+                report->velocities[currentVel] = midiVelocities[i];
+                currentVel++;
+            }
+        }
+#endif
         TICK_PS3;
+        
 #if DEVICE_TYPE == GAMEPAD
         if (report->leftTrigger) {
             report->l2 = true;

@@ -61,7 +61,7 @@
 // NOTE: if the above ids ever go past 9, bluetooth will need to encode the consoleType differently.
 // The below ones are fine as bluetooth will never encode them.
 #define KEYBOARD_MOUSE 10
-#define MIDI 11
+#define MIDI_ID 11
 #define BLUETOOTH_REPORT 12
 #define SANTROLLER 13
 #define RAPHNET 14
@@ -99,6 +99,8 @@
 
 #define MIDI_TYPE_NOTE 0
 #define MIDI_TYPE_CONTROL_COMMAND 1
+#define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
+#define MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL 64
 
 #define TAP_BAR_UNKNOWN 0
 #define TAP_BAR_WT 1

@@ -375,6 +375,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t reportId;
     uint8_t x : 1;  // square, blue
     uint8_t a : 1;  // cross, green
     uint8_t b : 1;  // circle, red
@@ -396,10 +397,16 @@ typedef struct
     uint16_t orangeFret : 1;
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
-    uint8_t dpadUp : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
+    union {
+        struct {
+            uint8_t dpadUp : 1;
+            uint8_t dpadDown : 1;
+            uint8_t dpadLeft : 1;
+            uint8_t dpadRight : 1;
+            uint8_t : 4;
+        };
+        uint8_t dpad;
+    };
 
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
@@ -418,6 +425,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t reportId;
     uint8_t x : 1;  // square, blue
     uint8_t a : 1;  // cross, green
     uint8_t b : 1;  // circle, red
@@ -460,11 +468,16 @@ typedef struct
     uint8_t key25 : 1;
     uint8_t : 5;
 
-    uint8_t dpadUp : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-    uint8_t : 4;
+   union {
+        struct {
+            uint8_t dpadUp : 1;
+            uint8_t dpadDown : 1;
+            uint8_t dpadLeft : 1;
+            uint8_t dpadRight : 1;
+            uint8_t : 4;
+        };
+        uint8_t dpad;
+    };
 
     uint8_t velocity1;
     uint8_t velocity2;

@@ -29,7 +29,7 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#ifdef INPUT_MIDI
+#ifdef INPUT_USB_HOST
 #include "TUSB-MIDI.hpp"
 #endif
 
@@ -74,7 +74,7 @@ typedef struct {
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#ifdef INPUT_MIDI
+#ifdef INPUT_USB_HOST
 using namespace usbMidi;
 UsbMidiTransport usbMIDITransport(0);
 MidiInterface<UsbMidiTransport> MIDI(usbMIDITransport);
@@ -181,7 +181,7 @@ void setup() {
 #endif
 }
 
-#ifdef INPUT_MIDI
+#ifdef INPUT_USB_HOST
 void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
     usbMIDITransport.tuh_midi_rx_cb(dev_addr, num_packets);
 }

@@ -1584,7 +1584,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
-        TICK_XINPUT;
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
         uint8_t currentVel = 0;
@@ -1595,6 +1594,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
         }
 #endif
+        TICK_XINPUT;
 
 // xb360 is stupid
 #if DEVICE_TYPE == GUITAR_HERO_DRUMS

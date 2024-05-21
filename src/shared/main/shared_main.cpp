@@ -833,6 +833,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->dpadDown |= down;
         out->dpadLeft |= left;
         out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 
         out->back |= report->back;
         out->start |= report->start;
@@ -867,6 +869,8 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
         out->dpadDown |= down;
         out->dpadLeft |= left;
         out->dpadRight |= right;
+        out->leftShoulder |= report->leftShoulder;
+        out->rightShoulder |= report->rightShoulder;
 
         out->back |= report->back;
         out->start |= report->start;

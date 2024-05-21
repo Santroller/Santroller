@@ -240,22 +240,25 @@ typedef struct
     uint8_t back : 1;
     uint8_t solo : 1;  // leftThumbClick
     uint8_t : 1;
+union {
+        struct {
+            uint8_t velocity1 : 7;
+            uint8_t key25 : 1;
 
-    uint8_t leftShoulder : 1;  // orange
-    uint8_t : 1;
-    uint8_t guide : 1;
-    uint8_t : 1;
+            uint8_t velocity2 : 7;
+            uint8_t : 1;
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+            uint8_t velocity3 : 7;
+            uint8_t : 1;
 
-    uint8_t pickup;
-    uint8_t unused1;
-    int16_t calibrationSensor;
-    int16_t unused2;
-    int16_t whammy;
+            uint8_t velocity4 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity5 : 7;
+            uint8_t : 1;
+        };
+        uint8_t velocities[5];
+    };
     int16_t tilt;
     uint8_t reserved_1[6];
 } __attribute__((packed)) XInputRockBandGuitar_Data_t;
@@ -370,16 +373,25 @@ typedef struct
     uint8_t key18 : 1;
     uint8_t key17 : 1;
 
-    uint8_t velocity1 : 7;
-    uint8_t key25 : 1;
-    uint8_t velocity2 : 7;
-    uint8_t : 1;
-    uint8_t velocity3 : 7;
-    uint8_t : 1;
-    uint8_t velocity4 : 7;
-    uint8_t : 1;
-    uint8_t velocity5 : 7;
-    uint8_t : 1;
+   union {
+        struct {
+            uint8_t velocity1 : 7;
+            uint8_t key25 : 1;
+
+            uint8_t velocity2 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity3 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity4 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity5 : 7;
+            uint8_t : 1;
+        };
+        uint8_t velocities[5];
+    };
 
     uint8_t : 7;
     uint8_t overdrive : 1;

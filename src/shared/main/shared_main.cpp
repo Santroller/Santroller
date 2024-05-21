@@ -1586,6 +1586,16 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         TICK_XINPUT;
 
+#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
+        uint8_t currentVel = 0;
+        for (int i = FIRST_MIDI_KEY; i <= 127 && currentVel <= 4; i++) {
+            if (midiData.midiVelocities[i]) {
+                report->velocities[currentVel] = midiData.midiVelocities[i];
+                currentVel++;
+            }
+        }
+#endif
+
 // xb360 is stupid
 #if DEVICE_TYPE == GUITAR_HERO_DRUMS
         report->leftThumbClick = true;

@@ -5,14 +5,11 @@
 #include <string.h>
 #include <tusb.h>
 
-#ifdef INPUT_MIDI
-#include "TUSB-MIDI.hpp"
-#endif
+#include "config.h"
 #include "bt.h"
 #include "btstack_run_loop.h"
 #include "commands.h"
 #include "common/tusb_types.h"
-#include "config.h"
 #include "controllers.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
@@ -32,6 +29,9 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
+#ifdef INPUT_MIDI
+#include "TUSB-MIDI.hpp"
+#endif
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];

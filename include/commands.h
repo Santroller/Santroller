@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "midi.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +46,7 @@ enum SerialCommands {
     COMMAND_SET_LEDS_MPR121,
     COMMAND_READ_MAX170X,
     COMMAND_READ_MAX170X_VALID,
+    COMMAND_READ_MIDI,
     MAX=100
 };
 
@@ -74,7 +76,7 @@ extern bool mpr121_init;
 extern uint16_t lastMpr121;
 extern bool max170x_init;
 extern uint8_t lastBattery;
-
+extern Midi_Data_t midiData;
 #ifdef __cplusplus
 }
 #endif

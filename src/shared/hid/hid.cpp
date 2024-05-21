@@ -233,16 +233,6 @@ ps3_output_report ps3_output_reports[8] = {
         _reserved : {time_enabled : 0x00, duty_length : 0x00, enabled : 0x00, duty_off : 0x00, duty_on : 0x00},
     }};
 #endif
-const uint8_t PS3_REPORT_BUFFER[PS3_REPORT_BUFFER_SIZE] PROGMEM = {
-    0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00,
-    0xff, 0x27, 0x10, 0x00, 0x32,
-    0xff, 0x27, 0x10, 0x00, 0x32,
-    0xff, 0x27, 0x10, 0x00, 0x32,
-    0xff, 0x27, 0x10, 0x00, 0x32,
-    0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 void handle_auth_led(void) {
     authentication_successful();
@@ -896,6 +886,12 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
         }
+#ifdef INPUT_MIDI
+        case COMMAND_READ_MIDI: {
+            memcpy(response_buffer, &midiData, sizeof(Midi_Data_t));
+            return sizeof(Midi_Data_t);
+        }
+#endif
 #ifdef MAX1704X_TWI_PORT
         case COMMAND_READ_MAX170X_VALID:
             response_buffer[0] = max170x_init;

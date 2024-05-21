@@ -218,7 +218,6 @@ typedef struct
 //  */
 // #define MIDI_EVENT(virtualcable, command) (((virtualcable) << 4) | ((command) >> 4))
 
-
 /** \brief MIDI class-specific Streaming Interface Descriptor (USB-IF naming conventions).
  *
  *  Type define for an Audio class-specific MIDI streaming interface descriptor. This indicates to the host
@@ -338,3 +337,11 @@ typedef struct
     uint8_t Data2; /**< Second byte of data in the MIDI event. */
     uint8_t Data3; /**< Third byte of data in the MIDI event. */
 } __attribute__((packed)) MIDI_EVENT_PACKET;
+
+typedef struct
+{
+    uint8_t midiVelocities[127];
+    int16_t midiPitchWheel;
+    uint8_t midiModWheel;
+    uint8_t midiSustainPedal;
+} __attribute__((packed)) Midi_Data_t;

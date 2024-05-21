@@ -5,11 +5,11 @@
 #include <string.h>
 #include <tusb.h>
 
-#include "config.h"
 #include "bt.h"
 #include "btstack_run_loop.h"
 #include "commands.h"
 #include "common/tusb_types.h"
+#include "config.h"
 #include "controllers.h"
 #include "device/dcd.h"
 #include "device/usbd_pvt.h"
@@ -191,6 +191,10 @@ void tuh_midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t 
            dev_addr, in_ep & 0xf, num_cables_rx, out_ep & 0xf, num_cables_tx);
 
     usbMIDITransport.midi_dev_addr = dev_addr;
+
+    USB_Device_Type_t type = {MIDI_ID, 0, dev_addr, 0};
+    usb_host_devices[total_usb_host_devices].type = type;
+    total_usb_host_devices++;
 }
 
 // Invoked when device with hid interface is un-mounted
@@ -198,6 +202,8 @@ void tuh_midi_umount_cb(uint8_t dev_addr, uint8_t instance) {
     printf("MIDI device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
 
     usbMIDITransport.midi_dev_addr = 0;
+    // Probably should actulaly work out what was unplugged and all that
+    total_usb_host_devices = 0;
 }
 #endif
 void authentication_successful() {

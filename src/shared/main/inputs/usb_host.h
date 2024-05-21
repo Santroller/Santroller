@@ -9,6 +9,10 @@ if (millis() - lastSentGHLPoke > 8000) {
 memset(&usb_host_data, 0, sizeof(usb_host_data));
 for (int i = 0; i < device_count; i++) {
     USB_Device_Type_t device_type = get_usb_host_device_type(i);
+    // Midi gets handled async
+    if (device_type.console_type == MIDI_ID) {
+        continue;
+    }
     // Poke any GHL guitars to keep em alive
     if (poke_ghl && device_type.sub_type == LIVE_GUITAR) {
         if (device_type.console_type == PS3) {

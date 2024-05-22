@@ -112,7 +112,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     if (consoleType == WINDOWS || consoleType == XBOX360) {
         epsizeOut = 0x20;
     }
-    if (consoleType == MIDI) {
+    if (consoleType == MIDI_ID) {
         type = EP_TYPE_BULK;
     }
     Endpoint_ConfigureEndpoint(DEVICE_EPADDR_IN, type, epsize, 2);

@@ -52,8 +52,9 @@ struct {
 #ifdef INPUT_MIDI
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
+    // velocities are 7 bit
     printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    midiData.midiVelocities[note] = velocity;
+    midiData.midiVelocities[note] = velocity << 1;
 }
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
@@ -62,18 +63,20 @@ void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
 }
 
 void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2) {
+    // cc are 7 bit
     printf("ControlChange ch=%d, b1=%d, b2=%d\r\n", channel, b1, b2);
     if (b1 == MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL) {
-        midiData.midiSustainPedal = b2;
+        midiData.midiSustainPedal = b2 << 1;
     }
     if (b1 == MIDI_CONTROL_COMMAND_MOD_WHEEL) {
-        midiData.midiModWheel = b2;
+        midiData.midiModWheel = b2 << 1;
     }
 }
 
 void onPitchBend(uint8_t channel, int pitch) {
+    // pitchbend is signed 14 bit
     printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
-    midiData.midiPitchWheel = pitch;
+    midiData.midiPitchWheel = pitch << 2;
 }
 #endif
 uint8_t tmp = 0;

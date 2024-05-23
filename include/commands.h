@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "midi.h"
+#include "midi_descriptors.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

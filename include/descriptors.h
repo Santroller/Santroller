@@ -3,7 +3,7 @@
 
 #include "Usb.h"
 #include "endpoints.h"
-#include "midi.h"
+#include "midi_descriptors.h"
 #include "progmem.h"
 #include "wcid.h"
 #include "xbox.h"

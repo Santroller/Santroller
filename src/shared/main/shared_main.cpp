@@ -667,7 +667,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->whammy = (report->whammy - PS3_STICK_CENTER) << 8;
         }
         if (report->pickup != PS3_STICK_CENTER) {
-            out->pickup = (report->pickup) << 8;
+            out->pickup = report->pickup;
         }
     }
     if (output_console_type == PS3) {

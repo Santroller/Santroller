@@ -437,15 +437,14 @@ typedef struct
     uint8_t overdrive : 1;
 
     uint8_t pedalDigital : 1;
-    uint8_t pedalConnection : 1;
     uint8_t key1 : 1;
     uint8_t key2 : 1;
     uint8_t key3 : 1;
     uint8_t key4 : 1;
     uint8_t key5 : 1;
     uint8_t key6 : 1;
-
     uint8_t key7 : 1;
+
     uint8_t key8 : 1;
     uint8_t key9 : 1;
     uint8_t key10 : 1;
@@ -453,8 +452,8 @@ typedef struct
     uint8_t key12 : 1;
     uint8_t key13 : 1;
     uint8_t key14 : 1;
-
     uint8_t key15 : 1;
+
     uint8_t key16 : 1;
     uint8_t key17 : 1;
     uint8_t key18 : 1;
@@ -462,11 +461,11 @@ typedef struct
     uint8_t key20 : 1;
     uint8_t key21 : 1;
     uint8_t key22 : 1;
-
     uint8_t key23 : 1;
+
     uint8_t key24 : 1;
     uint8_t key25 : 1;
-    uint8_t : 5;
+    uint8_t : 6;
 
    union {
         struct {
@@ -478,8 +477,6 @@ typedef struct
         };
         uint8_t dpad;
     };
-
-    uint8_t velocities[5];
 
     uint8_t pedalAnalog;
     uint8_t touchPad;

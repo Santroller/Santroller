@@ -608,6 +608,107 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
             out->slider = report->slider;
         }
     }
+#elif DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+    if (output_console_type == XBOX360) {
+        XINPUT_REPORT *out = (XINPUT_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        out->pedalDigital |= report->pedalDigital;
+        out->overdrive |= report->overdrive;
+        out->key1 = report->key1;
+        out->key2 = report->key2;
+        out->key3 = report->key3;
+        out->key4 = report->key4;
+        out->key5 = report->key5;
+        out->key6 = report->key6;
+        out->key7 = report->key7;
+        out->key8 = report->key8;
+        out->key9 = report->key9;
+        out->key10 = report->key10;
+        out->key11 = report->key11;
+        out->key12 = report->key12;
+        out->key13 = report->key13;
+        out->key14 = report->key14;
+        out->key15 = report->key15;
+        out->key16 = report->key16;
+        out->key17 = report->key17;
+        out->key18 = report->key18;
+        out->key19 = report->key19;
+        out->key20 = report->key20;
+        out->key21 = report->key21;
+        out->key22 = report->key22;
+        out->key23 = report->key23;
+        out->key24 = report->key24;
+        out->key25 = report->key25;
+        if (report->pedalAnalog) {
+            out->pedalAnalog = 128-(report->pedalAnalog >> 1);
+        }
+        if (report->touchPad) {
+            out->touchPad = report->touchPad;
+        }
+
+        
+    }
+    if (output_console_type == PS3) {
+        PS3_REPORT *out = (PS3_REPORT *)buf;
+        out->x |= report->x;
+        out->a |= report->a;
+        out->b |= report->b;
+        out->y |= report->y;
+        out->dpadUp |= up;
+        out->dpadDown |= down;
+        out->dpadLeft |= left;
+        out->dpadRight |= right;
+
+        out->back |= report->back;
+        out->start |= report->start;
+
+        out->guide |= report->guide;
+        out->pedalDigital |= report->pedalDigital;
+        out->overdrive |= report->overdrive;
+        out->key1 = report->key1;
+        out->key2 = report->key2;
+        out->key3 = report->key3;
+        out->key4 = report->key4;
+        out->key5 = report->key5;
+        out->key6 = report->key6;
+        out->key7 = report->key7;
+        out->key8 = report->key8;
+        out->key9 = report->key9;
+        out->key10 = report->key10;
+        out->key11 = report->key11;
+        out->key12 = report->key12;
+        out->key13 = report->key13;
+        out->key14 = report->key14;
+        out->key15 = report->key15;
+        out->key16 = report->key16;
+        out->key17 = report->key17;
+        out->key18 = report->key18;
+        out->key19 = report->key19;
+        out->key20 = report->key20;
+        out->key21 = report->key21;
+        out->key22 = report->key22;
+        out->key23 = report->key23;
+        out->key24 = report->key24;
+        out->key25 = report->key25;
+        if (report->pedalAnalog) {
+            out->pedalAnalog = 128-(report->pedalAnalog >> 1);
+        }
+        if (report->touchPad) {
+            out->touchPad = report->touchPad;
+        }
+    }
 #elif DEVICE_TYPE == ROCK_BAND_GUITAR
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *out = (XBOX_ONE_REPORT *)buf;
@@ -1665,15 +1766,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PC;
         asm volatile("" ::
                          : "memory");
-#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
-        uint8_t currentVel = 0;
-        for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
-            if (proKeyVelocities[i]) {
-                report->velocities[currentVel] = proKeyVelocities[i];
-                currentVel++;
-            }
-        }
-#endif
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
@@ -1929,6 +2021,9 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 
 #else
+
+    uint8_t proKeyVelocities[25] = {0};
+    memset(proKeyVelocities, 0, sizeof(proKeyVelocities));
     PC_REPORT *input = (PC_REPORT *)(buf);
     USB_Report_Data_t *report_data = &combined_report;
     if (output_console_type == UNIVERSAL) {

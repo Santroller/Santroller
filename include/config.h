@@ -205,7 +205,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS3_REPORT PS3RockBandProKeyboard_Data_t
 #define PS4_REPORT PS3RockBandProKeyboard_Data_t
 #define HID_BUTTON_COUNT 35
-#define HID_AXIS_COUNT 7
+#define HID_AXIS_COUNT 2
 #define HID_BUTTON_USAGES \
     BTN_USAGE(BTN_X), \
     BTN_USAGE(BTN_A), \

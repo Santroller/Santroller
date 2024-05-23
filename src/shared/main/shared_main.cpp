@@ -1518,6 +1518,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
+    uint8_t proKeyVelocities[25] = {0};
 #if USB_HOST_STACK
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
@@ -1594,9 +1595,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
         uint8_t currentVel = 0;
-        for (int i = FIRST_MIDI_KEY; i <= 127 && currentVel <= 4; i++) {
-            if (midiData.midiVelocities[i]) {
-                report->velocities[currentVel] = midiData.midiVelocities[i];
+        for (int i = 0; i <= sizeof(proKeyVelocities) && currentVel <= 4; i++) {
+            if (proKeyVelocities[i]) {
+                report->velocities[currentVel] = proKeyVelocities[i];
                 currentVel++;
             }
         }
@@ -1722,9 +1723,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
         uint8_t currentVel = 0;
-        for (int i = FIRST_MIDI_KEY; i <= 127 && currentVel <= 4; i++) {
-            if (midiData.midiVelocities[i]) {
-                report->velocities[currentVel] = midiData.midiVelocities[i];
+        for (int i = 0; i <= sizeof(proKeyVelocities) && currentVel <= 4; i++) {
+            if (proKeyVelocities[i]) {
+                report->velocities[currentVel] = proKeyVelocities[i];
                 currentVel++;
             }
         }

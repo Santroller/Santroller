@@ -74,7 +74,6 @@ typedef struct
     int16_t rightStickY;
 } __attribute__((packed)) XboxOneGamepad_Data_t;
 
-
 typedef struct
 {
     GipHeader_t Header;
@@ -118,6 +117,90 @@ typedef struct
 
     uint8_t unknown[3];
 } __attribute__((packed)) XboxOneRockBandGuitar_Data_t;
+
+typedef struct
+{
+    
+    GipHeader_t Header;
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
+
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t x : 1;  // blue
+    uint8_t y : 1;  // yellow
+
+    uint8_t dpadUp : 1;    // dpadStrumUp
+    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+
+    uint8_t leftShoulder : 1;  // orange
+    uint8_t : 1;
+
+    uint8_t solo : 1;  // leftThumbClick
+    uint8_t : 1;
+
+    uint8_t key8 : 1;
+    uint8_t key7 : 1;
+    uint8_t key6 : 1;
+    uint8_t key5 : 1;
+    uint8_t key4 : 1;
+    uint8_t key3 : 1;
+    uint8_t key2 : 1;
+    uint8_t key1 : 1;
+
+    uint8_t key16 : 1;
+    uint8_t key15 : 1;
+    uint8_t key14 : 1;
+    uint8_t key13 : 1;
+    uint8_t key12 : 1;
+    uint8_t key11 : 1;
+    uint8_t key10 : 1;
+    uint8_t key9 : 1;
+
+    uint8_t key24 : 1;
+    uint8_t key23 : 1;
+    uint8_t key22 : 1;
+    uint8_t key21 : 1;
+    uint8_t key20 : 1;
+    uint8_t key19 : 1;
+    uint8_t key18 : 1;
+    uint8_t key17 : 1;
+
+    union {
+        struct {
+            uint8_t velocity1 : 7;
+            uint8_t key25 : 1;
+
+            uint8_t velocity2 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity3 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity4 : 7;
+            uint8_t : 1;
+
+            uint8_t velocity5 : 7;
+            uint8_t : 1;
+        };
+        uint8_t velocities[5];
+    };
+
+    uint8_t : 7;
+    uint8_t overdrive : 1;
+    uint8_t pedalAnalog : 7;
+    uint8_t pedalDigital : 1;
+
+    uint8_t touchPad : 7;
+    uint8_t : 1;
+
+    uint8_t pedalConnection : 1;  // If this matches PS3 MPA behavior, always 0 with the MIDI Pro Adapter
+    uint8_t : 7;
+} __attribute__((packed)) XboxOneRockBandKeyboard_Data_t;
 
 typedef struct
 {

@@ -200,7 +200,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define WII_TYPE WII_KEYBOARD_PID
 #define OG_XBOX_REPORT OGXboxRockBandKeyboard_Data_t
 #define XINPUT_REPORT XInputRockBandKeyboard_Data_t
-#define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
+#define XBOX_ONE_REPORT XboxOneRockBandKeyboard_Data_t
 #define PC_REPORT PCRockBandProKeyboard_Data_t
 #define PS3_REPORT PS3RockBandProKeyboard_Data_t
 #define PS4_REPORT PS3RockBandProKeyboard_Data_t

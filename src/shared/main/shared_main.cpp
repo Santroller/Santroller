@@ -260,6 +260,9 @@ void init_main(void) {
 #ifdef INPUT_ADXL
     init_adxl();
 #endif
+#ifdef INPUT_MIDI
+    memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
+#endif
 }
 #ifdef SLAVE_TWI_PORT
 bool slave_initted = false;
@@ -1519,6 +1522,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     bool updateSequence = false;
     bool updateHIDSequence = false;
     uint8_t proKeyVelocities[25] = {0};
+    memset(proKeyVelocities, 0, sizeof(proKeyVelocities));
 #if USB_HOST_STACK
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
@@ -1592,18 +1596,20 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
+        TICK_XINPUT;
+        asm volatile("" ::
+                         : "memory");
 
-#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
+
+#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
         uint8_t currentVel = 0;
-        for (int i = 0; i <= sizeof(proKeyVelocities) && currentVel <= 4; i++) {
+        for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
             if (proKeyVelocities[i]) {
-                report->velocities[currentVel] = proKeyVelocities[i];
+                report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
                 currentVel++;
             }
         }
 #endif
-        TICK_XINPUT;
-
 // xb360 is stupid
 #if DEVICE_TYPE == GUITAR_HERO_DRUMS
         report->leftThumbClick = true;
@@ -1659,6 +1665,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PC;
         asm volatile("" ::
                          : "memory");
+#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+        uint8_t currentVel = 0;
+        for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
+            if (proKeyVelocities[i]) {
+                report->velocities[currentVel] = proKeyVelocities[i];
+                currentVel++;
+            }
+        }
+#endif
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
@@ -1721,17 +1736,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
-#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS && defined(INPUT_MIDI)
-        uint8_t currentVel = 0;
-        for (int i = 0; i <= sizeof(proKeyVelocities) && currentVel <= 4; i++) {
-            if (proKeyVelocities[i]) {
-                report->velocities[currentVel] = proKeyVelocities[i];
-                currentVel++;
-            }
-        }
-#endif
         TICK_PS3;
-        
+
+        asm volatile("" ::
+                         : "memory");
 #if DEVICE_TYPE == GAMEPAD
         if (report->leftTrigger) {
             report->l2 = true;
@@ -1740,8 +1748,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->r2 = true;
         }
 #endif
-        asm volatile("" ::
-                         : "memory");
+#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+        uint8_t currentVel = 0;
+        for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
+            if (proKeyVelocities[i]) {
+                report->velocities[currentVel] = proKeyVelocities[i] >> 1;
+                currentVel++;
+            }
+        }
+#endif
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
 #ifdef CONFIGURABLE_BLOBS
         if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {

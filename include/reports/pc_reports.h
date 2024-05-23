@@ -479,15 +479,10 @@ typedef struct
         uint8_t dpad;
     };
 
-    uint8_t velocity1;
-    uint8_t velocity2;
-    uint8_t velocity3;
-    uint8_t velocity4;
-    uint8_t velocity5;
+    uint8_t velocities[5];
 
     uint8_t pedalAnalog;
     uint8_t touchPad;
-    uint8_t : 1;
 } __attribute__((__packed__)) PCRockBandProKeyboard_Data_t;
 
 typedef struct {

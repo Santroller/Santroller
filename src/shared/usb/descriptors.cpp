@@ -1134,6 +1134,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 } else if (consoleType == FNF) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
 #if DEVICE_TYPE_IS_INSTRUMENT
+#ifdef TICK_NKRO
+                } else if (consoleType == KEYBOARD_MOUSE) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(keyboard_mouse_descriptor);
+#endif
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }
@@ -1171,6 +1175,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == FNF) {
                 address = fnf_descriptor;
                 size = sizeof(fnf_descriptor);
+#ifdef TICK_NKRO
+            } else if (consoleType == KEYBOARD_MOUSE) {
+                address = keyboard_mouse_descriptor;
+                size = sizeof(keyboard_mouse_descriptor);
+#endif
             } else if (consoleType != UNIVERSAL) {
 #if DEVICE_TYPE_IS_INSTRUMENT
                 address = ps3_instrument_descriptor;

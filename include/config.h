@@ -398,6 +398,11 @@ extern const uint8_t xb1_descriptor_end[6];
 #define SUPPORTS_AVR defined(__AVR__)
 #define SUPPORTS_TEENSY (defined(__arm__) && defined(CORE_TEENSY))
 #define BLUETOOTH (defined(BLUETOOTH_TX) || defined(BLUETOOTH_RX))
+#if SUPPORTS_AVR
+#define PS3_WII_TIMEOUT 10000
+#else
+#define PS3_WII_TIMEOUT 5000
+#endif
 enum hid_reports_t {
     REPORT_ID_NONE,
     REPORT_ID_NKRO,

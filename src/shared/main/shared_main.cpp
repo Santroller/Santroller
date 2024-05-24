@@ -2223,7 +2223,7 @@ int tick_bluetooth_inputs(const void *buf) {
                         gamepad->leftTrigger = true;
                     }
                     if (report->tilt > 0x200) {
-                        gamepad->rightShoulder = true;
+                        gamepad->rightTrigger = true;
                     }
         #endif
                     gamepad->accelX = PS3_ACCEL_CENTER;

@@ -172,11 +172,10 @@ typedef struct {
             uint8_t : 4;
         };
 
-        uint8_t raw[16];
+        uint8_t raw[15];
     };
 
 } __attribute__((packed)) USB_NKRO_Data_t;
-
 typedef struct {
     uint8_t rid;
     bool leftCtrl : 1;

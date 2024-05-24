@@ -1620,6 +1620,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 break;
             }
         }
+        if (packet_size) {
+            return packet_size;
+        }
 #endif
 #if !(DEVICE_TYPE_IS_KEYBOARD)
 #if defined(TICK_NKRO) || defined(TICK_SIXKRO)

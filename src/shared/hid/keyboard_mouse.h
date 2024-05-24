@@ -66,7 +66,7 @@ const PROGMEM uint8_t keyboard_mouse_descriptor[] = {
     0x81, 0x02,                                                                              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0x95, 0x01,                                                                              //   Report Count (1)
     0x75, 0x08,                                                                              //   Report Size (8)
-    0x81, 0x02,                                                                              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x81, 0x03,                                                                              //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0x15, 0x00,                                                                              //   Logical Minimum (0)
     0x26, 0xFF, 0x00,                                                                        //   Logical Maximum (255)
     0x05, 0x07,                                                                              //   Usage Page (Kbrd/Keypad)

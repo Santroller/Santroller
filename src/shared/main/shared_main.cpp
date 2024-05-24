@@ -1850,7 +1850,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 gamepad->leftTrigger = true;
             }
             if (report->tilt > 0x200) {
-                gamepad->rightShoulder = true;
+                gamepad->rightTrigger = true;
             }
 #endif
             gamepad->accelX = PS3_ACCEL_CENTER;

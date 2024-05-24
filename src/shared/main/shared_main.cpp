@@ -107,8 +107,6 @@ PS3_REPORT bt_report;
 USB_Report_Data_t bt_report;
 #endif
 uint8_t debounce[DIGITAL_COUNT];
-uint8_t keyIndex[DIGITAL_COUNT];
-uint8_t usedKeys[6];
 uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 long lastDj = 0;
@@ -212,29 +210,19 @@ uint8_t gh5_mapping[] = {
     0x65, 0x61, 0x63, 0x5F};
 void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
     if (state) {
-        if (keyIndex[id]) {
-            report->KeyCode[keyIndex[id]] = key;
-            return;
-        }
-        for (size_t i = 0; i < sizeof(usedKeys); i++) {
+        for (size_t i = 0; i < 6; i++) {
             if (report->KeyCode[i] == key) {
                 return;
             }
             if (!report->KeyCode[i]) {
-                keyIndex[id] = i;
                 report->KeyCode[i] = key;
                 return;
             }
         }
         // Too many buttons - flag the overflow condition and clear all key indexes
         memset(report->KeyCode, KEY_ERR_OVF, sizeof(report->KeyCode));
-        memset(keyIndex, 0, sizeof(keyIndex));
         return;
     }
-    if (!keyIndex[id]) {
-        return;
-    }
-    keyIndex[id] = 0;
 }
 void init_main(void) {
 #if !DEVICE_TYPE_IS_NORMAL_GAMEPAD
@@ -247,8 +235,6 @@ void init_main(void) {
     powerMode.subcommand = 0x00;
     memset(ledState, 0, sizeof(ledState));
     memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
-    memset(usedKeys, 0, sizeof(usedKeys));
-    memset(keyIndex, 0, sizeof(keyIndex));
     LED_INIT;
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));

@@ -416,6 +416,16 @@ enum hid_reports_t {
 };
 
 typedef struct {
+#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+    union {
+        PC_REPORT universal;
+        PS4_REPORT ps4;
+        PS3_REPORT ps3;
+        XINPUT_REPORT xinput;
+        XBOX_ONE_REPORT xone;
+        USB_Host_Data_t host;
+        uint8_t data[64];
+    } lastControllerReport;
 #ifdef TICK_SIXKRO
     USB_6KRO_Data_t last6KROReport;
 #endif
@@ -428,16 +438,6 @@ typedef struct {
 #ifdef TICK_CONSUMER
     USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    union {
-        PC_REPORT universal;
-        PS4_REPORT ps4;
-        PS3_REPORT ps3;
-        XINPUT_REPORT xinput;
-        XBOX_ONE_REPORT xone;
-        USB_Host_Data_t host;
-        uint8_t data[64];
-    } lastControllerReport;
 #endif
 } USB_LastReport_Data_t;
 

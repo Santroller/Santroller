@@ -1134,7 +1134,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 } else if (consoleType == FNF) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
 #if DEVICE_TYPE_IS_INSTRUMENT
-#ifdef TICK_NKRO
+#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
                 } else if (consoleType == KEYBOARD_MOUSE) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(keyboard_mouse_descriptor);
 #endif
@@ -1175,7 +1175,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == FNF) {
                 address = fnf_descriptor;
                 size = sizeof(fnf_descriptor);
-#ifdef TICK_NKRO
+#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
             } else if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);

@@ -1552,7 +1552,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
     // Then mouse, as it is an axis so it is more likley to have changes
-#ifdef TICK_NKRO
+#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
 #if !DEVICE_TYPE_IS_KEYBOARD
     if (consoleType == KEYBOARD_MOUSE) {
 #endif
@@ -1622,7 +1622,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
 #if !(DEVICE_TYPE_IS_KEYBOARD)
-#ifdef TICK_NKRO
+#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
     }
 #endif
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;

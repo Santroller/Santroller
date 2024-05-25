@@ -21,6 +21,7 @@ To support this, we have a concept of "Mode Bindings". This means you can hold a
       [![Console Mode Direct](/assets/images/screenshots/fnf_console_direct.png)](/assets/images/screenshots/fnf_console_direct.png)
 
       This would make it so holding the button on pin GP4 when pluging in the guitar makes the guitar go into the Fortnite Festival keyboard emulation.
+5. If you wish to play on PlayStation, go into `Controller Settings` and make sure the `Rollover Mode` is set to `6KRO`
 5. Save your settings
 6. Unplug and replug the guitar, holding the input you just configured. Your guitar should show up as a keyboard now.
 7. Play festival

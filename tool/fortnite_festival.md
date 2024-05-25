@@ -11,6 +11,16 @@ To support this, we have a concept of "Mode Bindings". This means you can hold a
 2. Pick `Console Mode Binding`
 3. Set `Emulation Mode` to `Fortnite Festival (Instrument Mode)`
 4. Pick the correct `Input Type` and then configure the rest of the settings as necessary. You are configuring a button that when held will jump to keyboard emulation mode.
+   1. For example, on wii you may do something like this:
+
+      [![Console Mode Wii](/assets/images/screenshots/fnf_console_wii.png)](/assets/images/screenshots/fnf_console_wii.png)
+
+      This would make it so holding green when pluging in the guitar makes the guitar go into the Fortnite Festival keyboard emulation.
+   1. For direct you may do something like this:
+
+      [![Console Mode Direct](/assets/images/screenshots/fnf_console_direct.png)](/assets/images/screenshots/fnf_console_direct.png)
+
+      This would make it so holding the button on pin GP4 when pluging in the guitar makes the guitar go into the Fortnite Festival keyboard emulation.
 5. Save your settings
 6. Unplug and replug the guitar, holding the input you just configured. Your guitar should show up as a keyboard now.
 7. Play festival

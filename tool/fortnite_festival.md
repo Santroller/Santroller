@@ -1,0 +1,17 @@
+---
+sort: 5
+---
+# Configuring for Fortnite Festival Instrument Mode
+
+For instrument mode, it makes the most sense to emulate a keyboard, as this avoids the need for auth on consoles, and avoids a bunch of issues on PC. However, we do see that it is useful to be able to configure both standard guitar inputs and keyboard inputs at the same time.
+To support this, we have a concept of "Mode Bindings". This means you can hold a button on your guitar when plugging it onto a PC / console, and it will emulate a keyboard.
+
+## How to add the mode binding
+1. Hit `Add Setting`
+2. Pick `Console Mode Binding`
+3. Set `Emulation Mode` to `Fortnite Festival (Instrument Mode)`
+4. Pick the correct `Input Type` and then configure the rest of the settings as necessary. You are configuring a button that when held will jump to keyboard emulation mode.
+5. Save your settings
+6. Unplug and replug the guitar, holding the input you just configured. Your guitar should show up as a keyboard now.
+7. Play festival
+8. Unplug and replug the guitar without holding a button to go back to normal mode or to configure.

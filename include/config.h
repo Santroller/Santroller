@@ -421,6 +421,7 @@ typedef struct {
         USB_Host_Data_t host;
         uint8_t data[64];
     } lastControllerReport;
+#endif
 #ifdef TICK_SIXKRO
     USB_6KRO_Data_t last6KROReport;
 #endif
@@ -432,7 +433,6 @@ typedef struct {
 #endif
 #ifdef TICK_CONSUMER
     USB_ConsumerControl_Data_t lastConsumerReport;
-#endif
 #endif
 } USB_LastReport_Data_t;
 

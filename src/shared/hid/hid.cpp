@@ -861,6 +861,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &filtered, sizeof(filtered));
             return sizeof(filtered);
         }
+        case COMMAND_SET_ADXL_FILTER: {
+            memcpy(&currentLowPassAlpha, response_buffer, sizeof(currentLowPassAlpha));
+            return 0;
+        }
         case COMMAND_READ_DIGITAL: {
             uint8_t port = wValue & 0xff;
             uint8_t mask = (wValue >> 8);

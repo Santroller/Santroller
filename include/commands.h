@@ -47,6 +47,7 @@ enum SerialCommands {
     COMMAND_READ_MAX170X,
     COMMAND_READ_MAX170X_VALID,
     COMMAND_READ_MIDI,
+    COMMAND_SET_ADXL_FILTER,
     MAX=100
 };
 
@@ -77,6 +78,7 @@ extern uint16_t lastMpr121;
 extern bool max170x_init;
 extern uint8_t lastBattery;
 extern Midi_Data_t midiData;
+extern double currentLowPassAlpha;
 #ifdef __cplusplus
 }
 #endif

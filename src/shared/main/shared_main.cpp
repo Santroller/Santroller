@@ -109,6 +109,7 @@ USB_Report_Data_t bt_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
+bool tiltActive = false;
 long lastTilt = 0;
 long lastDj = 0;
 long lastSentPacket = 0;

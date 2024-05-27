@@ -1993,7 +1993,8 @@ bool tick_usb(void) {
     if (consoleType == XBOXONE && xbox_one_state != Ready) {
         size = tick_xbox_one();
         if (!size) {
-            return 0;
+            // We don't want the controller ticked due to usb being stated as "not ready"
+            return true;
         }
     }
 #endif

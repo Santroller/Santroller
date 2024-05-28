@@ -1549,7 +1549,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef TICK_MOUSE
             if (i == REPORT_ID_MOUSE) {
                 packet_size = sizeof(USB_Mouse_Data_t);
-                memset(buf, 0, sizpacket_sizee);
+                memset(buf, 0, packet_sizee);
                 USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
                 report->rid = REPORT_ID_MOUSE;
                 TICK_MOUSE;

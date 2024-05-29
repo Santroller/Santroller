@@ -1783,12 +1783,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
         TICK_PS3_WITHOUT_CAPTURE;
-        if (report->leftTrigger) {
-            report->l2 = true;
-        }
-        if (report->rightTrigger) {
-            report->r2 = true;
-        }
         report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
@@ -1841,14 +1835,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
         asm volatile("" ::
                          : "memory");
-#if DEVICE_TYPE == GAMEPAD
-        if (report->leftTrigger) {
-            report->l2 = true;
-        }
-        if (report->rightTrigger) {
-            report->r2 = true;
-        }
-#endif
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {

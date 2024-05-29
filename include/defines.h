@@ -65,7 +65,6 @@
 #define BLUETOOTH_REPORT 12
 #define SANTROLLER 13
 #define RAPHNET 14
-#define FNF 15
 #define XBOX360_W 16
 #define KEYBOARD 17
 #define MOUSE 18

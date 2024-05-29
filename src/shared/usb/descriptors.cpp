@@ -1095,14 +1095,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
 #endif
-            if (consoleType == FNF) {
-                dev->idVendor = XBOX_ONE_JAG_VID;
-                dev->idProduct = XBOX_ONE_JAG_PID;
-            }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-#if DEVICE_TYPE_IS_KEYBOARD
+#if DEVICE_TYPE == MIDI_ID
+            size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
+            memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
+#elif DEVICE_TYPE_IS_KEYBOARD
             size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else
@@ -1119,9 +1118,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == OG_XBOX) {
                 size = sizeof(OG_XBOX_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &OGXBOXConfigurationDescriptor, size);
-            } else if (consoleType == MIDI_ID) {
-                size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
-                memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
             } else {
                 size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
@@ -1131,8 +1127,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
-                } else if (consoleType == FNF) {
-                    desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if defined(TICK_NKRO) || defined(TICK_SIXKRO)
                 } else if (consoleType == KEYBOARD_MOUSE) {
@@ -1172,9 +1166,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
-            } else if (consoleType == FNF) {
-                address = fnf_descriptor;
-                size = sizeof(fnf_descriptor);
 #if defined(TICK_NKRO) || defined(TICK_SIXKRO)
             } else if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;

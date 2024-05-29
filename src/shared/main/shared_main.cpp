@@ -1765,19 +1765,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                          : "memory");
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
-    if (output_console_type == FNF) {
-        report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
-        PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)report_data;
-        memset(report, 0, sizeof(PCFortniteRockBandGuitar_Data_t));
-
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-        report->tilt = PS3_STICK_CENTER;
-#endif
-        report->reportId = GIP_INPUT_REPORT;
-        TICK_XBOX_ONE;
-    }
-#endif
 // If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
 // This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
 // However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
@@ -1807,7 +1794,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
 #else
     // For instruments, we instead use the below block, as all other console types use the below format
-    if ((output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != FNF && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
+    if ((output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
 #endif
         report_size = sizeof(PS3_REPORT);
         // Do NOT update the size for XBONE, since the XBONE packets have a totally different size!

@@ -252,7 +252,7 @@ void init_main(void) {
 #ifdef INPUT_MIDI
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
 #endif
-#ifdef WII_OUTPUT
+#ifdef TICK_WII
     initWiiOutput();
 #endif
 }
@@ -1493,7 +1493,7 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #endif
 }
 #endif
-#ifdef WII_OUTPUT
+#ifdef TICK_WII
 void tick_wiioutput() {
     // Tick Inputs
     if (wii_outputting) return;
@@ -2431,7 +2431,7 @@ void tick(void) {
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
-#ifdef WII_OUTPUT
+#ifdef TICK_WII
     tick_wiioutput();
 #endif
     bool ready = tick_usb();

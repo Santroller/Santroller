@@ -11,7 +11,7 @@
 #include "wii.h"
 #include "wm_crypto.h"
 
-#ifdef WII_OUTPUT
+#ifdef TICK_WII
 static volatile unsigned char wm_rand[10];
 static volatile unsigned char wm_key[6];
 static volatile unsigned char wm_ft[8];

@@ -10,6 +10,8 @@
 #include "io.h"
 #include "wm_crypto.h"
 #include "shared_main.h"
+
+#ifdef WII_OUTPUT
 static volatile unsigned char wm_rand[10];
 static volatile unsigned char wm_key[6];
 static volatile unsigned char wm_ft[8];
@@ -166,3 +168,4 @@ uint8_t req_data(uint8_t addr) {
         return twi_reg[addr];
     }
 }
+#endif

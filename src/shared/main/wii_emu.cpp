@@ -43,7 +43,6 @@ static unsigned char twi_reg[256];
 void initWiiOutput() {
     memset(twi_reg, 0, sizeof(twi_reg));
     twi_reg[0xF0] = 0; // disable encryption
-
 	// set id
 	for(unsigned int i = 0, j = 0xFA; i < 6; i++, j++)
 	{
@@ -70,6 +69,10 @@ Decryption method found at https://web.archive.org/web/20131106235350/http://www
 unsigned char wm_ror8(unsigned char a, unsigned char b) {
     // bit shift with roll-over
     return (a >> b) | ((a << (8 - b)) & 0xFF);
+}
+
+uint8_t wii_data_format() {
+    return twi_reg[0xFE];
 }
 
 void wm_gentabs() {

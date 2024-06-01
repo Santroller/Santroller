@@ -11,6 +11,7 @@
 #include "reports/switch_reports.h"
 #include "reports/xbox_one_reports.h"
 #include "reports/xinput_reports.h"
+#include "reports/wii_reports.h"
 
 #define STREAM_DECK_INPUT_REPORT_ID 1
 #define SIMULTANEOUS_KEYS 6

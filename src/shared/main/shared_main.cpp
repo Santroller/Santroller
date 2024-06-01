@@ -142,7 +142,6 @@ bool disable_multiplexer = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
-PS3_REPORT wii_report;
 uint8_t wii_data[8];
 uint8_t temp_report_usb_host[64];
 #ifdef INPUT_USB_HOST
@@ -1509,14 +1508,86 @@ void tick_wiioutput() {
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
     TICK_SHARED;
-    PS3_REPORT *report = &wii_report;
-    memset(report, 0, sizeof(XINPUT_REPORT));
+#if DEVICE_TYPE_IS_GUITAR
+    WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
-    TICK_PS3_WITHOUT_CAPTURE;
     TICK_WII;
     wii_data[4] = ~wii_data[4];
     wii_data[5] = ~wii_data[5];
     setInputs(wii_data, sizeof(wii_data));
+#elif DEVICE_TYPE_IS_DRUM
+    WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)wii_data;
+    memset(wii_data, 0, sizeof(wii_data));
+    TICK_WII;
+    wii_data[4] = ~wii_data[4];
+    wii_data[5] = ~wii_data[5];
+    setInputs(wii_data, sizeof(wii_data));
+#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+    WiiTurntableIntermediateFormat3_t temp_report;
+    WiiTurntableIntermediateFormat3_t *report = &temp_report;
+    memset(report, 0, sizeof(temp_report));
+    memset(wii_data, 0, sizeof(wii_data));
+    TICK_WII;
+    // Turntable report format is so muddled that we have to transform things by hand after
+    WiiTurntableDataFormat3_t *real_report = (WiiTurntableDataFormat3_t *)wii_data;
+    // Button bits are inverted
+    real_report->buttonsLow = ~report->buttonsLow;
+    real_report->buttonsHigh = ~report->buttonsHigh;
+    real_report->leftStickX = report->leftStickX;
+    real_report->leftStickY = report->leftStickY;
+    real_report->crossfader = report->crossfader;
+    real_report->effectsKnob20 = report->effectsKnob20;
+    real_report->effectsKnob43 = report->effectsKnob43;
+    real_report->leftTableVelocity40 = report->leftTableVelocity40;
+    real_report->leftTableVelocity5 = report->leftTableVelocity5;
+    real_report->rightTableVelocity0 = report->rightTableVelocity0;
+    real_report->rightTableVelocity21 = report->rightTableVelocity21;
+    real_report->rightTableVelocity43 = report->rightTableVelocity43;
+    real_report->rightTableVelocity5 = report->rightTableVelocity5;
+
+    setInputs(wii_data, sizeof(wii_data));
+#else
+    // Report format 3 is reasonable, so we can convert from that
+    WiiClassicDataFormat3_t temp_report;
+    WiiClassicDataFormat3_t *report = &temp_report;
+    memset(report, 0, sizeof(temp_report));
+    memset(wii_data, 0, sizeof(wii_data));
+    TICK_WII;
+    // button bits are inverted
+    report->buttonsLow = ~report->buttonsLow;
+    report->buttonsHigh = ~report->buttonsHigh;
+    uint8_t format = wii_data_format();
+    if (format == 3) {
+        memcpy(wii_data, report, sizeof(report));
+    } else if (format == 2) {
+        WiiClassicDataFormat2_t *real_report = (WiiClassicDataFormat2_t *)wii_data;
+        real_report->buttonsLow = report->buttonsLow;
+        real_report->buttonsHigh = report->buttonsHigh;
+        real_report->leftStickX92 = report->leftStickX;
+        real_report->leftStickY92 = report->leftStickY;
+        real_report->rightStickX92 = report->rightStickX;
+        real_report->rightStickY92 = report->rightStickY;
+        real_report->leftTrigger = report->leftTrigger;
+        real_report->rightTrigger = report->rightTrigger;
+    } else if (format == 1) {
+        // Similar to the turntable, classic format 1 is awful so we need to translate to an intermediate format first
+        WiiIntermediateClassicDataFormat_t intermediate_report;
+        intermediate_report.rightStickX = report->rightStickX >> 3;
+        intermediate_report.leftTrigger = report->leftTrigger >> 3;
+        WiiClassicDataFormat1_t *real_report = (WiiClassicDataFormat1_t *)wii_data;
+        real_report->buttonsLow = report->buttonsLow;
+        real_report->buttonsHigh = report->buttonsHigh;
+        real_report->leftStickX = report->leftStickX >> 2;
+        real_report->leftStickY = report->leftStickY >> 2;
+        real_report->rightTrigger = report->rightTrigger >> 3;
+        real_report->rightStickX0 = intermediate_report.rightStickX0;
+        real_report->rightStickX21 = intermediate_report.rightStickX21;
+        real_report->rightStickX43 = intermediate_report.rightStickX43;
+        real_report->leftTrigger20 = intermediate_report.leftTrigger20;
+        real_report->leftTrigger43 = intermediate_report.leftTrigger43;
+    }
+    setInputs(wii_data, sizeof(wii_data));
+#endif
 }
 #endif
 uint8_t rbcount = 0;

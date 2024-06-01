@@ -1696,7 +1696,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->whammy = INT16_MIN;
 #endif
         TICK_XINPUT;
-        printf("%04" PRIX16 "\r\n", report->slider);
         asm volatile("" ::
                          : "memory");
 

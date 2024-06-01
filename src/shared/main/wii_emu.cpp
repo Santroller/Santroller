@@ -1,15 +1,15 @@
 
-#include "wii.h"
-
 #include <Wire.h>
 #include <string.h>
 
 #include "Arduino.h"
 #include "config.h"
 #include "controllers.h"
+#include "hid.h"
 #include "io.h"
-#include "wm_crypto.h"
 #include "shared_main.h"
+#include "wii.h"
+#include "wm_crypto.h"
 
 #ifdef WII_OUTPUT
 static volatile unsigned char wm_rand[10];
@@ -18,15 +18,14 @@ static volatile unsigned char wm_ft[8];
 static volatile unsigned char wm_sb[8];
 // calibration data
 const unsigned char cal_data[32] = {
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00
-};
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00};
 #if DEVICE_TYPE_IS_GUITAR
 const unsigned char id[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x03};
 #elif DEVICE_TYPE_IS_DRUM
@@ -42,21 +41,19 @@ static unsigned char twi_reg[256];
 
 void initWiiOutput() {
     memset(twi_reg, 0, sizeof(twi_reg));
-    twi_reg[0xF0] = 0; // disable encryption
-	// set id
-	for(unsigned int i = 0, j = 0xFA; i < 6; i++, j++)
-	{
-		twi_reg[j] = id[i];
-	}
+    twi_reg[0xF0] = 0;  // disable encryption
+    // set id
+    for (unsigned int i = 0, j = 0xFA; i < 6; i++, j++) {
+        twi_reg[j] = id[i];
+    }
 
-	// set calibration data
-	for(unsigned int i = 0, j = 0x20; i < 6; i++, j++)
-	{
-		twi_reg[j] = cal_data[i];
-	}
+    // set calibration data
+    for (unsigned int i = 0, j = 0x20; i < 6; i++, j++) {
+        twi_reg[j] = cal_data[i];
+    }
 }
 void setInputs(uint8_t* inputs, uint8_t len) {
-    memcpy(twi_reg,inputs,len);
+    memcpy(twi_reg, inputs, len);
 }
 /*
 
@@ -102,10 +99,10 @@ void wm_gentabs() {
         // compare with actual key
         bool found = true;
         for (unsigned char i = 0; i < 6; i++) {
-           if (tkey[i] != wm_key[i]) {
-              found = false;
-              break;
-           }
+            if (tkey[i] != wm_key[i]) {
+                found = false;
+                break;
+            }
         }
         if (found) break;  // if match, then use this idx
     }
@@ -137,6 +134,12 @@ void recv_data(uint8_t addr, uint8_t data) {
     } else {
         twi_reg[addr] = data;
     }
+    // Euphoria LED
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    if (addr == 0xFB) {
+        handle_rumble(twi_reg[addr] * 0xFF, RUMBLE_SANTROLLER_EUPHORIA_LED);
+    }
+#endif
 }
 void recv_end(uint8_t addr, uint8_t len) {
     if (addr >= 0x40 && addr < 0x46) {

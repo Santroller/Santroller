@@ -10,6 +10,7 @@
 #include <string.h>
 #include <util/delay.h>
 #include <util/twi.h>
+#include "wii.h"
 
 #include "config.h"
 #include "util.h"
@@ -17,7 +18,6 @@
 #include "string.h"
 #define TWI_BUFFER_LENGTH 32
 #endif
-
 
 #define TWI_READY 0
 #define TWI_MRX 1
@@ -36,6 +36,11 @@ static volatile uint8_t twi_masterBufferIndex;
 static volatile uint8_t twi_masterBufferLength;
 
 static volatile uint8_t twi_error;
+static volatile unsigned int twi_reg_addr;
+
+static volatile unsigned char twi_first_addr_flag;  // set address flag
+static volatile unsigned char twi_rw_len;           // length of most recent operation
+
 void spi_begin() {
 #ifdef GC_SPI_CLOCK
     uint8_t clockDiv;
@@ -75,8 +80,7 @@ void spi_begin() {
 uint8_t spi_transfer(SPI_BLOCK block, uint8_t data) {
     SPDR = data;
     asm volatile("nop");
-    while (!(SPSR & _BV(SPIF)))
-        ;
+    while (!(SPSR & _BV(SPIF)));
     return SPDR;
 }
 void spi_high(SPI_BLOCK block) {}
@@ -119,6 +123,15 @@ void twi_init() {
     TWBR = 10;
 #endif
 #endif
+    // enable twi module, acks, and twi interrupt
+    TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
+#endif
+#ifdef GC_TWI_RX
+    twi_reg_addr = 0;
+
+    // set slave address
+    TWAR = WII_ADDR << 1;
+
     // enable twi module, acks, and twi interrupt
     TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
 #endif
@@ -481,6 +494,62 @@ ISR(TWI_vect) {
             twi_error = TW_BUS_ERROR;
             twi_stop();
             break;
+#ifdef GC_TWI_RX
+            // Slave Rx
+        case TW_SR_SLA_ACK:             // addressed, returned ack
+        case TW_SR_GCALL_ACK:           // addressed generally, returned ack
+        case TW_SR_ARB_LOST_SLA_ACK:    // lost arbitration, returned ack
+        case TW_SR_ARB_LOST_GCALL_ACK:  // lost arbitration generally, returned ack
+            // get ready to receive pointer
+            twi_first_addr_flag = 0;
+            // ack
+            twi_reply(1);
+            break;
+        case TW_SR_DATA_ACK:        // data received, returned ack
+        case TW_SR_GCALL_DATA_ACK:  // data received generally, returned ack
+            if (twi_first_addr_flag != 0) {
+                // put byte in register
+                unsigned char t = TWDR;
+                twi_reg_addr++;
+                twi_rw_len++;
+            } else {
+                // set address
+                twi_reg_addr = TWDR;
+                twi_first_addr_flag = 1;
+                twi_rw_len = 0;
+            }
+            twi_reply(1);  // ack
+            break;
+        case TW_SR_STOP:  // stop or repeated start condition received
+            // run user defined function
+            recv_end(twi_reg_addr - twi_rw_len, twi_rw_len);
+            twi_reply(1);  // ack future responses
+            break;
+        case TW_SR_DATA_NACK:        // data received, returned nack
+        case TW_SR_GCALL_DATA_NACK:  // data received generally, returned nack
+            twi_reply(0);            // nack back at master
+            break;
+
+        // Slave Tx
+        case TW_ST_SLA_ACK:           // addressed, returned ack
+        case TW_ST_ARB_LOST_SLA_ACK:  // arbitration lost, returned ack
+            twi_rw_len = 0;
+        case TW_ST_DATA_ACK:  // byte sent, ack returned
+                              // ready output byte
+            TWDR = req_data(twi_reg_addr);
+            twi_reg_addr++;
+            twi_rw_len++;
+            twi_reply(1);  // ack
+            break;
+        case TW_ST_DATA_NACK:  // received nack, we are done
+        case TW_ST_LAST_DATA:  // received ack, but we are done already!
+            // ack future responses
+            twi_reply(1);
+            break;
+        default:
+            twi_reply(0);
+            break;
+#endif
     }
 }
 #define INTERNAL_SERIAL_START_ADDRESS 0x0E

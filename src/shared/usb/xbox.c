@@ -20,12 +20,12 @@ const XInputInputCapabilities_t PROGMEM XInputInputCapabilities = {
     buttons : 0xf73f,
     leftTrigger : 0xff,
     rightTrigger : 0xff,
-    leftThumbX : 0x1209,
-    leftThumbY : 0x2882,
+    leftThumbX : ARDWIINO_VID,
+    leftThumbY : ARDWIINO_PID,
     rightThumbX : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
     rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},
-    flags : 0x0000
+    flags : 0xFFFF
 };
 
 const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {

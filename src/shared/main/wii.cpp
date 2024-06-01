@@ -11,7 +11,7 @@ uint8_t wiiBytes;
 #ifdef INPUT_WII
 uint8_t wiiPointer = 0;
 bool hiRes = false;
-bool encrypted = false;
+uint8_t s_box = 0;
 bool verifyData(const uint8_t* dataIn, uint8_t dataSize) {
     uint8_t orCheck = 0x00;   // Check if data is zeroed (bad connection)
     uint8_t andCheck = 0xFF;  // Check if data is maxed (bad init)
@@ -38,29 +38,24 @@ uint16_t readExtID(void) {
     return data[0] << 8 | data[5];
 }
 void initWiiExt(void) {
-    wiiControllerType = readExtID();
-    if (wiiControllerType == WII_NOT_INITIALISED) {
-        // Send packets needed to initialise a controller
-        if (!twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xF0, 0x55)) {
-            return;
-        }
-        delayMicroseconds(10);
-        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xFB, 0x00);
-        delayMicroseconds(10);
-        wiiControllerType = readExtID();
-        delayMicroseconds(10);
+    // Send packets needed to initialise a controller
+    if (!twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_ENCRYPTION_STATE_ID, WII_ENCRYPTION_FINISH_ID)) {
+        return;
     }
+    delayMicroseconds(10);
+    twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xFB, 0x00);
+    delayMicroseconds(10);
+    wiiControllerType = readExtID();
+    delayMicroseconds(10);
     if (wiiControllerType == WII_UBISOFT_DRAWSOME_TABLET) {
         // Drawsome tablet needs some additional init
         twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xFB, 0x01);
-        delayMicroseconds(10);
-        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, 0xF0, 0x55);
         delayMicroseconds(10);
     }
     wiiPointer = 0;
     wiiBytes = 6;
     hiRes = false;
-    encrypted = false;
+    s_box = 0;
     if (wiiControllerType == WII_CLASSIC_CONTROLLER ||
         wiiControllerType == WII_CLASSIC_CONTROLLER_PRO) {
         // Enable high-res mode (try a few times, sometimes the controller doesnt
@@ -88,19 +83,20 @@ void initWiiExt(void) {
         // get read back are constant. Hence we start at 0x5 instead of 0x0.
         wiiPointer = 5;
         wiiBytes = 1;
-    } 
+    }
     delayMicroseconds(200);
     uint8_t data[8] = {0};
     twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, wiiBytes, data);
-    uint8_t orCheck = 0x00;   
+    uint8_t orCheck = 0x00;
     for (int i = 0; i < wiiBytes; i++) {
         orCheck |= data[i];
     }
-    // Controller requires encryption (nyko frontman)
+    // It appears when you disable encryption on 
     if (orCheck == 0) {
         delayMicroseconds(200);
+
         // Enable encryption
-        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_ENCRYPTION_ID, 0xAA);
+        twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_ENCRYPTION_STATE_ID, WII_ENCRYPTION_ENABLE_ID);
         delayMicroseconds(200);
         // Write zeroed key in blocks
         uint8_t key[6] = {0};
@@ -110,9 +106,14 @@ void initWiiExt(void) {
         delayMicroseconds(200);
         twi_writeToPointer(WII_TWI_PORT, WII_ADDR, WII_ENCRYPTION_KEY_ID_3, 4, key);
         delayMicroseconds(200);
-        encrypted = true;
+        uint8_t id[WII_ID_LEN];
+        twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, WII_READ_ID, WII_ID_LEN, id);
+        // first party controllers return all FFs for the ID, third party ones don't
+        s_box = FIRST_PARTY_SBOX;
+        if (id[3] != 0xFF) {
+            s_box = THIRD_PARTY_SBOX;
+        }
     }
-    
 }
 bool initialised = false;
 bool lastWiiEuphoriaLed = false;
@@ -130,22 +131,10 @@ uint8_t* tickWii() {
         initWiiExt();
         return NULL;
     }
-    if (encrypted) {
-        // https://github.com/TheNathannator/WiitarThing/commit/1b81d187dbedaa7bec43c5e38bc17f6eedffaa6a
-        // Nyko frontman requires using a different decryption transform seed
-        uint8_t decrypted = (uint8_t)(((data[4] ^ 0x97) + 0x97) & 0xFF);
-        bool useCommonValue = (data[4] != 0xFF) && ((decrypted & 0xAB) == 0xAB);
-
-        for (int i = 0; i < 6; i++)
-        {
-            if (useCommonValue)
-            {
-                data[i] = (uint8_t)(((data[i] ^ 0x97) + 0x97) & 0xFF);
-            }
-            else
-            {
-                data[i] = (uint8_t)(((data[i] ^ 0x4D) + 0x4D) & 0xFF);
-            }
+    // decrypt if encryption is enabled
+    if (s_box) {
+        for (int i = 0; i < 8; i++) {
+            data[i] = (uint8_t)(((data[i] ^ s_box) + s_box) & 0xFF);
         }
     }
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE

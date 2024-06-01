@@ -220,7 +220,7 @@ typedef struct
 
     uint8_t accelZ;
     uint8_t accelX;
-    uint16_t slider;
+    int16_t slider;
     int16_t unused;
     int16_t whammy;
     int16_t tilt;

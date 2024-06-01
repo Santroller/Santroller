@@ -454,3 +454,13 @@ inline double read_double(uint16_t idx) {
 #endif
 
 extern bool disable_multiplexer;
+
+#if SUPPORTS_PICO
+#ifdef TWI_1_RX
+#define RXWIRE Wire1
+#else
+#define RXWIRE Wire
+#endif
+#else
+#define RXWIRE Wire
+#endif

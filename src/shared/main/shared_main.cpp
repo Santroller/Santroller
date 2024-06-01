@@ -205,11 +205,11 @@ static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05
 static const uint8_t dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RIGHT, DOWN, DOWN | LEFT, LEFT, UP | LEFT};
 
 uint8_t gh5_mapping[] = {
-    0x00, 0x95, 0xCD, 0xB0, 0x1A, 0x19, 0xE6,
-    0xE5, 0x49, 0x47, 0x48, 0x46, 0x2F, 0x2D,
-    0x2E, 0x2C, 0x7F, 0x7B, 0x7D, 0x79, 0x7E,
-    0x7A, 0x7C, 0x78, 0x66, 0x62, 0x64, 0x60,
-    0x65, 0x61, 0x63, 0x5F};
+    0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
+    0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD,
+    0xAE, 0xAC, 0xFF, 0xFB, 0xFD, 0xF9, 0xFE,
+    0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
+    0xE5, 0xE1, 0xE3, 0xDF};
 void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
     if (state) {
         for (size_t i = 0; i < 6; i++) {
@@ -1696,6 +1696,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->whammy = INT16_MIN;
 #endif
         TICK_XINPUT;
+        printf("%04" PRIX16 "\r\n", report->slider);
         asm volatile("" ::
                          : "memory");
 
@@ -2173,31 +2174,31 @@ int tick_bluetooth_inputs(const void *buf) {
         convert_universal_to_type((uint8_t *)report_data, input, PS3);
         TICK_PS3;
 
-        #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
-                if (output_console_type == SWITCH) {
-        #if DEVICE_TYPE == ROCK_BAND_GUITAR
-                    if (report->whammy > PS3_STICK_CENTER) {
-                        gamepad->leftTrigger = true;
-                    }
-        #endif
-        #if DEVICE_TYPE == GUITAR_HERO_GUITAR
-                    if (report->whammy > 0xC0) {
-                        gamepad->leftTrigger = true;
-                    }
-                    if (report->tilt > 0x200) {
-                        gamepad->rightTrigger = true;
-                    }
-        #endif
-                    gamepad->accelX = PS3_ACCEL_CENTER;
-                    gamepad->accelY = PS3_ACCEL_CENTER;
-                    gamepad->accelZ = PS3_ACCEL_CENTER;
-                    gamepad->gyro = PS3_ACCEL_CENTER;
-                    gamepad->leftStickX = PS3_STICK_CENTER;
-                    gamepad->leftStickY = PS3_STICK_CENTER;
-                    gamepad->rightStickX = PS3_STICK_CENTER;
-                    gamepad->rightStickY = PS3_STICK_CENTER;
-                }
-        #endif
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+        if (output_console_type == SWITCH) {
+#if DEVICE_TYPE == ROCK_BAND_GUITAR
+            if (report->whammy > PS3_STICK_CENTER) {
+                gamepad->leftTrigger = true;
+            }
+#endif
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+            if (report->whammy > 0xC0) {
+                gamepad->leftTrigger = true;
+            }
+            if (report->tilt > 0x200) {
+                gamepad->rightTrigger = true;
+            }
+#endif
+            gamepad->accelX = PS3_ACCEL_CENTER;
+            gamepad->accelY = PS3_ACCEL_CENTER;
+            gamepad->accelZ = PS3_ACCEL_CENTER;
+            gamepad->gyro = PS3_ACCEL_CENTER;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+        }
+#endif
 #if DEVICE_TYPE == GAMEPAD
         if (report->leftTrigger) {
             report->l2 = true;

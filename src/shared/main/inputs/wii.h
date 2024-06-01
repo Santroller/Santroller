@@ -28,27 +28,27 @@
                 hasTapBar = true;
             }
             lastTapWii = 0;
-            lastTapWiiGh5 = 0;
+            lastTapWiiGh5 = 0x80;
         } else if (lastTapWii == 0x0f) {
-            lastTapWiiGh5 = 0;
+            lastTapWiiGh5 = 0x80;
         } else if (lastTapWii < 0x05) {
-            lastTapWiiGh5 = 0x95;
+            lastTapWiiGh5 = 0x15;
         } else if (lastTapWii < 0x0A) {
-            lastTapWiiGh5 = 0xB0;
+            lastTapWiiGh5 = 0x30;
         } else if (lastTapWii < 0x0C) {
-            lastTapWiiGh5 = 0xCD;
+            lastTapWiiGh5 = 0x4D;
         } else if (lastTapWii < 0x12) {
-            lastTapWiiGh5 = 0xE6;
-        } else if (lastTapWii < 0x14) {
-            lastTapWiiGh5 = 0x1A;
-        } else if (lastTapWii < 0x17) {
-            lastTapWiiGh5 = 0x2F;
-        } else if (lastTapWii < 0x1A) {
-            lastTapWiiGh5 = 0x49;
-        } else if (lastTapWii < 0x1F) {
             lastTapWiiGh5 = 0x66;
+        } else if (lastTapWii < 0x14) {
+            lastTapWiiGh5 = 0x9A;
+        } else if (lastTapWii < 0x17) {
+            lastTapWiiGh5 = 0xAF;
+        } else if (lastTapWii < 0x1A) {
+            lastTapWiiGh5 = 0xC9;
+        } else if (lastTapWii < 0x1F) {
+            lastTapWiiGh5 = 0xE6;
         } else {
-            lastTapWiiGh5 = 0x7F;
+            lastTapWiiGh5 = 0xFF;
         }
 #endif
         // Turntable bits are all split up, so we slice them back up

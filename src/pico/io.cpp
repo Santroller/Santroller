@@ -3,8 +3,10 @@
 #include <math.h>
 #include <pico/unique_id.h>
 #include <stdio.h>
+#include <Wire.h>
 
 #include "Arduino.h"
+#include "wii.h"
 #include "commands.h"
 #include "config.h"
 #include "hardware/clocks.h"
@@ -67,6 +69,23 @@ uint8_t spi_transfer(SPI_BLOCK block, uint8_t data) {
     return resp;
 }
 void spi_high(SPI_BLOCK block) {}
+uint8_t addr;
+void recv(int len) {
+    addr = RXWIRE.read();
+    // remove addr
+    len -= 1;
+    if (len) {
+        for (int i = 0; i < len; i++) {
+            recv_data(addr+i, RXWIRE.read());
+        }
+        recv_end(addr, len);
+    }
+}
+
+// Called when the I2C slave is read from
+void req() {
+    RXWIRE.write(req_data(addr));
+}
 void twi_init() {
 #ifdef TWI_0_CLOCK
     i2c_init(i2c0, TWI_0_CLOCK);
@@ -82,6 +101,28 @@ void twi_init() {
     gpio_pull_up(TWI_1_SDA);
     gpio_pull_up(TWI_1_SCL);
 #endif
+
+#ifdef TWI_1_RX
+    RXWIRE.setSDA(TWI_1_SDA);
+    RXWIRE.setSCL(TWI_1_SCL);
+    i2c1->hw->enable = 0;
+    hw_set_bits(&i2c1->hw->con, I2C_IC_CON_RX_FIFO_FULL_HLD_CTRL_BITS);
+    i2c1->hw->enable = 1;
+    RXWIRE.begin(WII_ADDR);
+    RXWIRE.onReceive(recv);
+    RXWIRE.onRequest(req);
+#endif
+#ifdef TWI_0_RX
+    RXWIRE.setSDA(TWI_0_SDA);
+    RXWIRE.setSCL(TWI_0_SCL);
+    i2c0->hw->enable = 0;
+    hw_set_bits(&i2c0->hw->con, I2C_IC_CON_RX_FIFO_FULL_HLD_CTRL_BITS);
+    i2c0->hw->enable = 1;
+    RXWIRE.begin(WII_ADDR);
+    RXWIRE.onReceive(recv);
+    RXWIRE.onRequest(req);
+#endif
+
 }
 bool twi_readFromPointerSlow(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
                              uint8_t *data) {

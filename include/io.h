@@ -36,3 +36,6 @@ extern volatile bool spi_acknowledged;
 void initWt();
 uint8_t tickWt();
 #endif
+extern void recv_data(uint8_t addr, uint8_t data);
+extern void recv_end(uint8_t addr, uint8_t len);
+uint8_t req_data(uint8_t addr);

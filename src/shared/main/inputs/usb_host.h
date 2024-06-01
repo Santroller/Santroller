@@ -7,6 +7,8 @@ if (millis() - lastSentGHLPoke > 8000) {
     lastSentGHLPoke = millis();
 }
 memset(&usb_host_data, 0, sizeof(usb_host_data));
+// Slider rests at 0x80
+usb_host_data.slider = 0x80;
 for (int i = 0; i < device_count; i++) {
     USB_Device_Type_t device_type = get_usb_host_device_type(i);
     // Midi gets handled async
@@ -583,28 +585,28 @@ for (int i = 0; i < device_count; i++) {
                     if (device_type.sub_type == GUITAR_HERO_GUITAR_WT) {
                         // Its WT, convert to GH5
                         if (report->slider <= 0x2F) {
-                            usb_host_data.slider = 0x95;
+                            usb_host_data.slider = 0x15;
                         } else if (report->slider <= 0x3F) {
-                            usb_host_data.slider = 0xB0;
+                            usb_host_data.slider = 0x30;
                         } else if (report->slider <= 0x5F) {
-                            usb_host_data.slider = 0xCD;
+                            usb_host_data.slider = 0x4D;
                         } else if (report->slider <= 0x6F) {
-                            usb_host_data.slider = 0xE6;
-                        } else if (report->slider <= 0x8F) {
-                            usb_host_data.slider = 0;
-                        } else if (report->slider <= 0x9F) {
-                            usb_host_data.slider = 0x1A;
-                        } else if (report->slider <= 0xAF) {
-                            usb_host_data.slider = 0x2F;
-                        } else if (report->slider <= 0xCF) {
-                            usb_host_data.slider = 0x49;
-                        } else if (report->slider <= 0xEF) {
                             usb_host_data.slider = 0x66;
+                        } else if (report->slider <= 0x8F) {
+                            usb_host_data.slider = 0x80;
+                        } else if (report->slider <= 0x9F) {
+                            usb_host_data.slider = 0x9A;
+                        } else if (report->slider <= 0xAF) {
+                            usb_host_data.slider = 0xAF;
+                        } else if (report->slider <= 0xCF) {
+                            usb_host_data.slider = 0xC9;
+                        } else if (report->slider <= 0xEF) {
+                            usb_host_data.slider = 0xE6;
                         } else {
                             usb_host_data.slider = 0x7F;
                         }
                     } else {
-                        usb_host_data.slider = report->slider + 0x80;
+                        usb_host_data.slider = report->slider;
                     }
                     break;
                 }
@@ -1077,25 +1079,25 @@ for (int i = 0; i < device_count; i++) {
 
                     if (device_type.sub_type == XINPUT_GUITAR_WT) {
                         if (slider < 0x2F) {
-                            usb_host_data.slider = 0x95;
+                            usb_host_data.slider = 0x15;
                         } else if (slider <= 0x3F) {
-                            usb_host_data.slider = 0xB0;
+                            usb_host_data.slider = 0x30;
                         } else if (slider <= 0x5F) {
-                            usb_host_data.slider = 0xCD;
+                            usb_host_data.slider = 0x4D;
                         } else if (slider <= 0x6F) {
-                            usb_host_data.slider = 0xE6;
-                        } else if (slider <= 0x8F) {
-                            usb_host_data.slider = 0;
-                        } else if (slider <= 0x9F) {
-                            usb_host_data.slider = 0x1A;
-                        } else if (slider <= 0xAF) {
-                            usb_host_data.slider = 0x2F;
-                        } else if (slider <= 0xCF) {
-                            usb_host_data.slider = 0x49;
-                        } else if (slider <= 0xEF) {
                             usb_host_data.slider = 0x66;
+                        } else if (slider <= 0x8F) {
+                            usb_host_data.slider = 0x80;
+                        } else if (slider <= 0x9F) {
+                            usb_host_data.slider = 0x9A;
+                        } else if (slider <= 0xAF) {
+                            usb_host_data.slider = 0xAF;
+                        } else if (slider <= 0xCF) {
+                            usb_host_data.slider = 0xC9;
+                        } else if (slider <= 0xEF) {
+                            usb_host_data.slider = 0xE6;
                         } else {
-                            usb_host_data.slider = 0x7F;
+                            usb_host_data.slider = 0xFF;
                         }
                     }
                     break;

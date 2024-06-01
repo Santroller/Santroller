@@ -109,6 +109,5 @@ extern uint8_t brightness;
 void set_battery_state(uint8_t state);
 #endif
 extern uint8_t wii_data[8];
-extern volatile bool wii_outputting;
 uint8_t wii_data_format(void);
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right);

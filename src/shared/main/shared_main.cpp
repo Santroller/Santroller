@@ -1495,8 +1495,6 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #endif
 #ifdef TICK_WII
 void tick_wiioutput() {
-    // Tick Inputs
-    if (wii_outputting) return;
 #include "inputs/adxl.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"

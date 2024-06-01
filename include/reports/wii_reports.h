@@ -132,13 +132,16 @@ typedef struct {
 } __attribute__((packed)) WiiClassicDataFormat3_t;
 
 typedef struct {
-    uint8_t leftStickX : 5;
+    uint8_t leftStickX : 6;
     uint8_t : 2;
-    uint8_t leftStickY : 5;
+
+    uint8_t leftStickY : 6;
     uint8_t : 2;
-    uint8_t slider : 4;
+
+    uint8_t slider : 5;
     uint8_t : 3;
-    uint8_t whammy : 4;
+
+    uint8_t whammy : 5;
     uint8_t : 3;
 
     uint8_t : 1;
@@ -149,6 +152,7 @@ typedef struct {
     uint8_t : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadRight : 1;
+
     uint8_t dpadUp : 1;
     uint8_t dpadLeft : 1;
     uint8_t rightShoulder : 1;
@@ -160,9 +164,9 @@ typedef struct {
 } __attribute__((packed)) WiiGuitarDataFormat3_t;
 
 typedef struct {
-    uint8_t leftStickX : 5;
+    uint8_t leftStickX : 6;
     uint8_t : 2;
-    uint8_t leftStickY : 5;
+    uint8_t leftStickY : 6;
     uint8_t : 2;
     // Velocity is here but i don't want to emulate that right now
     uint8_t : 8;
@@ -192,23 +196,29 @@ typedef struct {
     uint8_t leftStickY : 6;
     uint8_t : 2;
     union {
-        signed int leftTableVelocity : 6;
         struct {
-            unsigned int leftTableVelocity40 : 5;
-            unsigned int leftTableVelocity5 : 1;
+            int8_t leftTableVelocity : 6;
+            int8_t : 2;
+        };
+        struct {
+            uint8_t leftTableVelocity40 : 5;
+            uint8_t leftTableVelocity5 : 1;
+            uint8_t : 2;
         };
     };
-    uint8_t : 2;
     union {
-        signed int rightTableVelocity : 6;
         struct {
-            unsigned int rightTableVelocity0 : 1;
-            unsigned int rightTableVelocity21 : 2;
-            unsigned int rightTableVelocity43 : 2;
-            unsigned int rightTableVelocity5 : 1;
+            int8_t rightTableVelocity : 6;
+            int8_t : 2;
+        };
+        struct {
+            uint8_t rightTableVelocity0 : 1;
+            uint8_t rightTableVelocity21 : 2;
+            uint8_t rightTableVelocity43 : 2;
+            uint8_t rightTableVelocity5 : 1;
+            uint8_t : 2;
         };
     };
-    uint8_t : 2;
     uint8_t crossfader : 4;
     uint8_t : 4;
 

@@ -42,10 +42,10 @@ struct {
     union {
         signed int rtt : 6;
         struct {
-            signed int rtt0 : 1;
-            signed int rtt21 : 2;
-            signed int rtt43 : 2;
-            signed int rtt5 : 1;
+            unsigned int rtt0 : 1;
+            unsigned int rtt21 : 2;
+            unsigned int rtt43 : 2;
+            unsigned int rtt5 : 1;
         };
     };
 } rtt_t;
@@ -2431,8 +2431,9 @@ void tick(void) {
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
+#ifdef WII_OUTPUT
     tick_wiioutput();
-
+#endif
     bool ready = tick_usb();
 
     // Input queuing is enabled, tick as often as possible

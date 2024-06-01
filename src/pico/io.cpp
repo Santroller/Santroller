@@ -84,7 +84,8 @@ void recv(int len) {
 
 // Called when the I2C slave is read from
 void req() {
-    RXWIRE.write(req_data(addr));
+    // Auto increment address for repeated reads
+    RXWIRE.write(req_data(addr++));
 }
 void twi_init() {
 #ifdef TWI_0_CLOCK
@@ -102,7 +103,7 @@ void twi_init() {
     gpio_pull_up(TWI_1_SCL);
 #endif
 
-#ifdef TWI_1_RX
+#ifdef TWI_1_OUTPUT
     RXWIRE.setSDA(TWI_1_SDA);
     RXWIRE.setSCL(TWI_1_SCL);
     i2c1->hw->enable = 0;
@@ -112,7 +113,7 @@ void twi_init() {
     RXWIRE.onReceive(recv);
     RXWIRE.onRequest(req);
 #endif
-#ifdef TWI_0_RX
+#ifdef TWI_0_OUTPUT
     RXWIRE.setSDA(TWI_0_SDA);
     RXWIRE.setSCL(TWI_0_SCL);
     i2c0->hw->enable = 0;

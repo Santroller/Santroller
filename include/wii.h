@@ -31,7 +31,7 @@ extern uint16_t wiiControllerType;
 uint8_t* tickWii();
 bool wiiDataValid();
 void setInputs(uint8_t* inputs, uint8_t len);
-void initWiiTx();
+void initWiiOutput();
 #ifdef __cplusplus
 }
 #endif

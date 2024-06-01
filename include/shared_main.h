@@ -6,6 +6,7 @@ void init_main(void);
 
 void device_reset(void);
 void tick(void);
+void tick_wiioutput(uint8_t* twi_reg);
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type);
 void reset_usb(void);
 uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer);
@@ -107,3 +108,5 @@ extern uint8_t brightness;
 #ifdef BLUETOOTH_TX
 void set_battery_state(uint8_t state);
 #endif
+extern uint8_t wii_data[8];
+extern volatile bool wii_outputting;

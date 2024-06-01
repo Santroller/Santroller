@@ -142,6 +142,8 @@ bool disable_multiplexer = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
+PS3_REPORT wii_report;
+uint8_t wii_data[8];
 uint8_t temp_report_usb_host[64];
 #ifdef INPUT_USB_HOST
 USB_Host_Data_t usb_host_data;
@@ -250,6 +252,9 @@ void init_main(void) {
 #endif
 #ifdef INPUT_MIDI
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
+#endif
+#ifdef WII_OUTPUT
+    initWiiOutput();
 #endif
 }
 #ifdef SLAVE_TWI_PORT
@@ -1489,6 +1494,31 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #endif
 }
 #endif
+#ifdef WII_OUTPUT
+void tick_wiioutput() {
+    // Tick Inputs
+    if (wii_outputting) return;
+#include "inputs/adxl.h"
+#include "inputs/clone_neck.h"
+#include "inputs/gh5_neck.h"
+#include "inputs/mpr121.h"
+#include "inputs/ps2.h"
+#include "inputs/slave_tick.h"
+#include "inputs/turntable.h"
+#include "inputs/usb_host.h"
+#include "inputs/wii.h"
+#include "inputs/wt_neck.h"
+    TICK_SHARED;
+    PS3_REPORT *report = &wii_report;
+    memset(report, 0, sizeof(XINPUT_REPORT));
+    memset(wii_data, 0, sizeof(wii_data));
+    TICK_PS3_WITHOUT_CAPTURE;
+    TICK_WII;
+    wii_data[4] = ~wii_data[4];
+    wii_data[5] = ~wii_data[5];
+    setInputs(wii_data, sizeof(wii_data));
+}
+#endif
 uint8_t rbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
@@ -2330,6 +2360,7 @@ void tick(void) {
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
+    tick_wiioutput();
 
     bool ready = tick_usb();
 

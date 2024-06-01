@@ -9,6 +9,7 @@
 #include "controllers.h"
 #include "io.h"
 #include "wm_crypto.h"
+#include "shared_main.h"
 static volatile unsigned char wm_rand[10];
 static volatile unsigned char wm_key[6];
 static volatile unsigned char wm_ft[8];
@@ -37,7 +38,8 @@ const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
 // virtual register
 static unsigned char twi_reg[256];
 
-void initWiiTx() {
+void initWiiOutput() {
+    memset(twi_reg, 0, sizeof(twi_reg));
     twi_reg[0xF0] = 0; // disable encryption
 
 	// set id

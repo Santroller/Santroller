@@ -1509,6 +1509,7 @@ void tick_wiioutput() {
 #if DEVICE_TYPE_IS_GUITAR
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
+    report->slider = 0x0F;
     TICK_WII;
     wii_data[4] = ~wii_data[4];
     wii_data[5] = ~wii_data[5];

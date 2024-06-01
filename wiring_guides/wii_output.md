@@ -20,10 +20,6 @@ sort: 13
 NEVER plug in both the usb cable to your computer, and the extension to a wii remote, it can only ever be plugged into one device at a time!
 ```
 
-## The finished product
-
-[![Finished adaptor](/assets/images/adaptor.jpg)](/assets/images/adaptor.jpg)
-
 ## Steps
 
 1.  Connect wires between the SDA and SCL pins on your breakout board / wii extension cable.

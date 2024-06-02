@@ -22,15 +22,15 @@ NEVER plug in both the usb cable to your computer, and the extension to a wii re
 
 ## Steps
 
-1.  Connect wires between the SDA and SCL pins on your breakout board / wii extension cable.
-    Refer to the following image for the pinout of a Wii Extension connector.
+1.  Connect wires between the SDA and SCL pins on your wii extension plug.
+    Refer to the following image for the pinout of a Wii Extension plug.
 
     The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below, and this pinout is the same as the old Ardwiino firmware. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
 
-    [![pinout](/assets/images/wii.png)](/assets/images/wii.png) [![Finished adaptor](/assets/images/wii-ext.jpg)](/assets/images/wii-ext.jpg)
+    [![pinout](/assets/images/wii-ext-pinout.jpg)](/assets/images/wii-ext-pinout.jpg)
 
     ```danger
-    If you are using a wii extension cable do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as 3.3V before, you just can't rely on the colours at all unfortunately.
+    Do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as 3.3V before, you just can't rely on the colours at all unfortunately. Even cables from guitar hero guitars don't use expected colours, I found that on mine, device detect was shorted to V<sub>CC</sub>, and then white was ground!
     ```
 
     | Microcontroller               | SDA                              | SCL                              |
@@ -40,10 +40,11 @@ NEVER plug in both the usb cable to your computer, and the extension to a wii re
     | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
     | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 
-2.  Connect the V<sub>CC</sub> on the microcontroller to the V<sub>CC</sub> on the breakout
+2.  Connect the V<sub>CC</sub> on the microcontroller to the V<sub>CC</sub> on the plug
     - On the Pi Pico, use V<sub>SYS</sub>
     - On the 3.3V Pro Micro, use V<sub>CC</sub>
 3.  Connect the gnd pin to the gnd on your microcontroller.
+4.  If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
 
 ## Programming
 

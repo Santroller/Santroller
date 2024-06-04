@@ -55,6 +55,7 @@ typedef struct {
     uint8_t report_length;
     bool switch_sent_timeout;
     bool switch_sent_handshake;
+    uint8_t xone_init_id;
 } Usb_Host_Device_t;
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX * CFG_TUH_XINPUT];
@@ -295,6 +296,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             xone_dev_addr = type;
             xone_controller_connected(dev_addr, instance);
             usb_host_devices[total_usb_host_devices].type = type;
+            usb_host_devices[total_usb_host_devices].xone_init_id = 0;
             total_usb_host_devices++;
             if (consoleType == XBOXONE) {
                 foundXB = true;
@@ -402,6 +404,18 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {
     total_usb_host_devices = 0;
 }
 bool wasXb1Input = false;
+void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
+    // If there are xb1 init packets to send, send them
+    for (int i = 0; i < total_usb_host_devices; i++) {
+        if (usb_host_devices[i].type.dev_addr == dev_addr && usb_host_devices[i].type.instance == instance) {
+            if (usb_host_devices[i].type.console_type == XBOXONE) {
+                if (xone_controller_send_init_packet(dev_addr, instance, usb_host_devices[i].xone_init_id)) {
+                    usb_host_devices[i].xone_init_id++;
+                }
+            }
+        }
+    }
+}
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (dev_addr == xone_dev_addr.dev_addr && instance == xone_dev_addr.instance) {
         receive_report_from_controller(report, len);

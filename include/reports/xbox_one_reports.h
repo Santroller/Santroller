@@ -1,14 +1,19 @@
 #include <stdint.h>
 
 #include "reports/ps3_reports.h"
-#define GIP_POWER_MODE_DEVICE_CONFIG 0x05
+#define GIP_ARRIVAL 0x02
 #define GIP_DEVICE_DESCRIPTOR 0x04
+#define GIP_POWER_MODE_DEVICE_CONFIG 0x05
+#define GIP_AUTHENTICATION 0x06
 #define GIP_VIRTUAL_KEYCODE 0x07
 #define GIP_CMD_RUMBLE 0x09
+#define GIP_CMD_LED      0x0a
 #define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
 #define GHL_HID_OUTPUT 0x22
 #define GIP_VKEY_LEFT_WIN 0x5b
+#define GIP_POWER_ON 0x00
+#define GIP_LED_ON 0x01
 typedef struct
 {
     uint8_t command;
@@ -35,6 +40,23 @@ typedef struct
     uint16_t unk2;
     uint16_t remainingBuffer;
 } __attribute__((packed)) Gip_Ack_t;
+typedef struct
+{
+    GipHeader_t Header;
+} __attribute__((packed)) Gip_DeviceDescriptorRequest_t;
+typedef struct
+{
+    GipHeader_t Header;
+    uint8_t unk1;
+    uint8_t unk2;
+} __attribute__((packed)) Gip_Auth_Done_t;
+typedef struct
+{
+    GipHeader_t Header;
+    uint8_t unk;
+    uint8_t mode;
+    uint8_t brightness;
+} __attribute__((packed)) Gip_Led_On_t;
 typedef struct {
     GipHeader_t Header;
     uint8_t sync : 1;

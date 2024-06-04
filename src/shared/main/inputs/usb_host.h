@@ -1358,6 +1358,10 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.soloYellow |= report->soloYellow;
                     usb_host_data.soloBlue |= report->soloBlue;
                     usb_host_data.soloOrange |= report->soloOrange;
+                    usb_host_data.dpadLeft = report->dpadLeft;
+                    usb_host_data.dpadRight = report->dpadRight;
+                    usb_host_data.dpadUp = report->dpadUp;
+                    usb_host_data.dpadDown = report->dpadDown;
                     if (report->tilt) {
                         usb_host_data.tilt = report->tilt << 8;
                     }
@@ -1380,6 +1384,10 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
+                    usb_host_data.dpadLeft = report->dpadLeft;
+                    usb_host_data.dpadRight = report->dpadRight;
+                    usb_host_data.dpadUp = report->dpadUp;
+                    usb_host_data.dpadDown = report->dpadDown;
                     if (report->greenVelocity) {
                         usb_host_data.green = true;
                         usb_host_data.greenVelocity = report->greenVelocity << 4;

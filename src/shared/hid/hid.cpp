@@ -665,13 +665,13 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             xbox_one_state = IdentDescEnd;
         } else if (xbox_one_state == Auth) {
             delay(1);
-            if (data[0] == 6 && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
+            if (data[0] == GIP_AUTHENTICATION && len == 6 && data[3] == 2 && data[4] == 1 && data[5] == 0) {
                 handle_auth_led();
                 printf("Ready!\r\n");
                 xbox_one_state = Ready;
                 data_from_console_size = len;
                 memcpy(data_from_console, data, len);
-            } else if (data[0] != 5 && data[0] != 2 && data[0] != 4) {
+            } else if (data[0] != GIP_POWER_MODE_DEVICE_CONFIG && data[0] != 2 && data[0] != 4) {
                 data_from_console_size = len;
                 memcpy(data_from_console, data, len);
             }

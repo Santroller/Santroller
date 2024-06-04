@@ -154,6 +154,8 @@ bool auth_ps4_controller_found = false;
 bool auth_ps4_is_ghl = false;
 bool seen_ps4_console = false;
 GipPowerMode_t powerMode;
+Gip_Led_On_t ledOn;
+Gip_Auth_Done_t authDonePacket;
 long last_poll = 0;
 
 /* Magic data taken from GHLtarUtility:
@@ -227,6 +229,7 @@ void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
         return;
     }
 }
+uint8_t seq = 1;
 void init_main(void) {
 #if !DEVICE_TYPE_IS_NORMAL_GAMEPAD
     consoleType = UNIVERSAL;
@@ -235,7 +238,16 @@ void init_main(void) {
     twi_init();
     spi_begin();
     GIP_HEADER((&powerMode), GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
-    powerMode.subcommand = 0x00;
+    powerMode.subcommand = GIP_POWER_ON;
+    GIP_HEADER((&ledOn), GIP_CMD_LED, true, 1);
+    ledOn.Header.sequence = 1;
+    ledOn.mode = GIP_LED_ON;
+    ledOn.brightness = 0x14;
+    ledOn.unk = 0;
+    GIP_HEADER((&authDonePacket), GIP_AUTHENTICATION, true, 1);
+    authDonePacket.unk1 = 0x01;
+    authDonePacket.unk2 = 0x00;
+    authDonePacket.Header.sequence = 2;
     memset(ledState, 0, sizeof(ledState));
     memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
     LED_INIT;
@@ -2498,6 +2510,17 @@ void xinput_w_controller_connected() {
 void xone_controller_connected(uint8_t dev_addr, uint8_t instance) {
     printf("Sending to controller %d\r\n", dev_addr);
     send_report_to_controller(dev_addr, instance, (uint8_t *)&powerMode, sizeof(GipPowerMode_t));
+}
+bool xone_controller_send_init_packet(uint8_t dev_addr, uint8_t instance, uint8_t id) {
+    if (id == 0) {
+        send_report_to_controller(dev_addr, instance, (uint8_t *)&ledOn, sizeof(ledOn));
+        return true;
+    } else if (id == 1 && consoleType != XBOXONE) {
+        // When used for auth, the console will send this
+        send_report_to_controller(dev_addr, instance, (uint8_t *)&authDonePacket, sizeof(authDonePacket));
+        return true;
+    }
+    return false;
 }
 
 void host_controller_connected() {

@@ -218,7 +218,6 @@ void fill_generic_report(uint8_t dev_addr, uint8_t instance, const uint8_t *repo
         }
     }
 }
-
 bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) {
     (void)result;
 
@@ -228,6 +227,8 @@ bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, ui
     if (dir == TUSB_DIR_IN) {
         usbh_edpt_xfer(dev_addr, hid_itf->ep_in, hid_itf->epin_buf, hid_itf->epin_size);
         tuh_xinput_report_received_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
+    } else {
+        tuh_xinput_report_sent_cb(dev_addr, instance, hid_itf->epin_buf, (uint16_t)xferred_bytes);
     }
 
     return true;

@@ -24,7 +24,7 @@ Fakemote is still in development, and it can ocassionally freeze your wii, but y
 
 ### Wii U instructions
 ```danger
-I haven't actually got a Wii U, so I am only assuming that this works as I cannot test it myself. If it works let me know and ill remove this disclaimer.
+From what I understand, this is not currently working, and as I do not own a Wii U, I can't easily fix this.
 ```
 1. Download `sd_vwii.zip` from https://github.com/sanjay900/fakemote/releases/latest
 2. Extract it to the root of your wii's SD card

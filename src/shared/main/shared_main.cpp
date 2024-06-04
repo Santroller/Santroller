@@ -2655,9 +2655,10 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, USB_Device_Type_t *type
                     break;
             }
             break;
-        case XBOX_ONE_JAG_VID:
+        case PDP_VID:
             switch (pid) {
                 case XBOX_ONE_JAG_PID:
+                case XBOX_ONE_RIFFMASTER_PID:
                     type->console_type = XBOXONE;
                     type->sub_type = ROCK_BAND_GUITAR;
                     break;

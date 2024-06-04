@@ -43,6 +43,12 @@ void spi_begin() {
     gpio_set_pulls(SPI_1_MISO, true, false);
 #endif
 #endif
+#ifdef SPI_0_OUTPUT
+    spi_set_slave(spi0, true);
+#endif
+#ifdef SPI_1_OUTPUT
+    spi_set_slave(spi1, true);
+#endif
 }
 static uint8_t revbits(uint8_t b) {
     b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;

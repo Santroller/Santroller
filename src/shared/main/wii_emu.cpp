@@ -1,5 +1,4 @@
 
-#include <Wire.h>
 #include <string.h>
 
 #include "Arduino.h"

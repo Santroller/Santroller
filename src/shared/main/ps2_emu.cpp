@@ -9,135 +9,79 @@
 
 uint8_t configMode = 0;
 uint8_t mode = 0x41;
-// There seems to be a bug with the pico's slave, where a 0xFF is outputted first, and then the data you actually want to send
-// as a result, we essentially have to offset all our reads by a byte, as the first 0xFF that gets sent is impliclty sent for us
-
 #if SUPPORTS_PICO
-uint8_t spi_transfer_bit_bang(void* port, uint8_t out) {
-    uint8_t ret = 0;
-    for (int i = 0; i < 8; i++) {
-        while (gpio_get(SPI_1_SCK)) {
-            tight_loop_contents();
-            if (PS2_OUTPUT_ATT_READ()) {
-                gpio_set_dir(SPI_1_MISO, false);
-                sleep_us(1);
-                return 0;
-            }
-        }
-        gpio_set_dir(SPI_1_MISO, !bit_check(out, i));
-        while (!gpio_get(SPI_1_SCK)) {
-            tight_loop_contents();
-        }
-        bit_write(gpio_get(SPI_1_MOSI), ret, i);
-    }   
-    gpio_set_dir(SPI_1_MISO, false);
-    sleep_us(1);
-    return ret;
-}
 uint8_t receiveCommand() {
+    // The pi pico has a odd bug, where the first byte is essentially garbage when using SPI slave.
+    // Since the PS2 requires the first byte be 0xFF, we just override whatever nonsense
+    // The SPI hardware is trying to output, and force all zeros.
+    // It gets worse though. The garbage byte receives the first response, which
+    // Misaligns all reads and writes, so we have to then misalign all our reads and writes
+    // In the other direction to make things come out correctly.
+    gpio_set_oeover(SPI_1_MISO, GPIO_OVERRIDE_LOW);
     uint8_t modeByte = configMode ? 0xF3 : mode;
     PS2_OUTPUT_ACK_SET();
-    uint8_t ret = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, 0xFF);
+    uint8_t ret = spi_transfer(PS2_OUTPUT_SPI_PORT, modeByte);
     PS2_OUTPUT_ACK_CLEAR();
-    sleep_us(1);
+    sleep_us(2);
     PS2_OUTPUT_ACK_SET();
     if (ret != 1) {
         return 0;
     }
-    ret = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, modeByte);
+    gpio_set_oeover(SPI_1_MISO, GPIO_OVERRIDE_NORMAL);
+    ret = spi_transfer(PS2_OUTPUT_SPI_PORT, 0x5A);
     PS2_OUTPUT_ACK_CLEAR();
     return ret;
 }
 uint8_t receiveAll(uint8_t* data, uint8_t len) {
     for (int i = 0; i < len - 1; i++) {
-        if (PS2_OUTPUT_ATT_READ()) {
+        PS2_OUTPUT_ACK_SET();
+        if (!PS2_OUTPUT_ATT_READ()) {
             return 0;
         }
-        PS2_OUTPUT_ACK_SET();
-        data[i] = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, data[i]);
+        data[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
         PS2_OUTPUT_ACK_CLEAR();
-        sleep_us(1);
+        sleep_us(2);
     }
     PS2_OUTPUT_ACK_SET();
-    data[len - 1] = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, data[len - 1]);
+    spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
     return len;
 }
 uint8_t receiveAll(uint8_t* data0, uint8_t* data1, uint8_t len) {
     uint8_t* data = data0;
     for (int i = 0; i < len - 1; i++) {
         PS2_OUTPUT_ACK_SET();
-        data0[i] = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, data[i]);
+        data0[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
         if (data0[1] == 1) {
             data = data1;
         }
         PS2_OUTPUT_ACK_CLEAR();
+        sleep_us(2);
     }
     PS2_OUTPUT_ACK_SET();
-    data[len - 1] = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, data[len - 1]);
+    spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
     return len;
 }
-// uint8_t receiveCommand() {
-//     // TODO: can we just raw bit-bang spi here? we probably have enough cpu spare?
-//     gpio_set_oeover(SPI_1_MISO, GPIO_OVERRIDE_LOW);
-//     uint8_t modeByte = configMode ? 0xF3 : mode;
-//     PS2_OUTPUT_ACK_SET();
-//     uint8_t ret = spi_transfer(PS2_OUTPUT_SPI_PORT, modeByte);
-//     PS2_OUTPUT_ACK_CLEAR();
-//     sleep_us(2);
-//     PS2_OUTPUT_ACK_SET();
-//     if (ret != 1) {
-//         return 0;
-//     }
-//     gpio_set_oeover(SPI_1_MISO, GPIO_OVERRIDE_NORMAL);
-//     ret = spi_transfer(PS2_OUTPUT_SPI_PORT, 0x5A);
-//     PS2_OUTPUT_ACK_CLEAR();
-//     sleep_us(2);
-//     return ret;
-// }
-// uint8_t receiveAll(uint8_t* data, uint8_t len) {
-//     for (int i = 0; i < len - 1; i++) {
-//         PS2_OUTPUT_ACK_SET();
-//         sleep_us(2);
-//         if (!PS2_OUTPUT_ATT_READ()) {
-//             return 0;
-//         }
-//         data[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
-//         PS2_OUTPUT_ACK_CLEAR();
-//     }
-//     PS2_OUTPUT_ACK_SET();
-//     spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
-//     return len;
-// }
-// uint8_t receiveAll(uint8_t* data0, uint8_t* data1, uint8_t len) {
-//     uint8_t* data = data0;
-//     for (int i = 0; i < len - 1; i++) {
-//         PS2_OUTPUT_ACK_SET();
-//         data0[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
-//         if (data0[1] == 1) {
-//             data = data1;
-//         }
-//         PS2_OUTPUT_ACK_CLEAR();
-//     }
-//     PS2_OUTPUT_ACK_SET();
-//     spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
-//     return len;
-// }
 #else
 uint8_t receiveCommand() {
     uint8_t modeByte = configMode ? 0xF3 : mode;
     PS2_OUTPUT_ACK_SET();
     uint8_t ret = spi_transfer(PS2_OUTPUT_SPI_PORT, 0xFF);
     PS2_OUTPUT_ACK_CLEAR();
+    sleep_us(2);
+    PS2_OUTPUT_ACK_SET();
     if (ret != 1) {
         return 0;
     }
-    return spi_transfer(PS2_OUTPUT_SPI_PORT, mode);
+    ret = spi_transfer(PS2_OUTPUT_SPI_PORT, mode);
+    PS2_OUTPUT_ACK_CLEAR();
+    return ret;
 }
 uint8_t receiveAll(uint8_t* data, uint8_t len) {
     for (int i = 0; i < len - 1; i++) {
         PS2_OUTPUT_ACK_SET();
         data[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i]);
         PS2_OUTPUT_ACK_CLEAR();
+        sleep_us(2);
     }
     PS2_OUTPUT_ACK_SET();
     data[len - 1] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
@@ -202,12 +146,6 @@ void ps2_emu_init() {
     #if DEVICE_TYPE_IS_GUITAR
     buttons1 &= ~0x80;
     #endif
-    gpio_init(SPI_1_SCK);
-    gpio_set_dir(SPI_1_SCK, INPUT);
-    gpio_init(SPI_1_MOSI);
-    gpio_set_dir(SPI_1_MOSI, INPUT);
-    gpio_init(SPI_1_MISO);
-    gpio_set_dir(SPI_1_MISO, OUTPUT);
 }
 void ps2_emu_tick() {
     if (PS2_OUTPUT_ATT_READ()) {

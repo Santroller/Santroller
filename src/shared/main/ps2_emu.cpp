@@ -17,16 +17,21 @@ uint8_t spi_transfer_bit_bang(void* port, uint8_t out) {
     uint8_t ret = 0;
     for (int i = 0; i < 8; i++) {
         while (gpio_get(SPI_1_SCK)) {
+            tight_loop_contents();
             if (PS2_OUTPUT_ATT_READ()) {
+                gpio_set_dir(SPI_1_MISO, false);
+                sleep_us(1);
                 return 0;
             }
         }
-        gpio_put(SPI_1_MISO, bit_check(out, i));
+        gpio_set_dir(SPI_1_MISO, !bit_check(out, i));
         while (!gpio_get(SPI_1_SCK)) {
             tight_loop_contents();
         }
         bit_write(gpio_get(SPI_1_MOSI), ret, i);
     }   
+    gpio_set_dir(SPI_1_MISO, false);
+    sleep_us(1);
     return ret;
 }
 uint8_t receiveCommand() {
@@ -34,20 +39,24 @@ uint8_t receiveCommand() {
     PS2_OUTPUT_ACK_SET();
     uint8_t ret = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, 0xFF);
     PS2_OUTPUT_ACK_CLEAR();
-    sleep_us(2);
+    sleep_us(1);
+    PS2_OUTPUT_ACK_SET();
     if (ret != 1) {
         return 0;
     }
-    PS2_OUTPUT_ACK_SET();
     ret = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, modeByte);
     PS2_OUTPUT_ACK_CLEAR();
     return ret;
 }
 uint8_t receiveAll(uint8_t* data, uint8_t len) {
     for (int i = 0; i < len - 1; i++) {
+        if (PS2_OUTPUT_ATT_READ()) {
+            return 0;
+        }
         PS2_OUTPUT_ACK_SET();
         data[i] = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, data[i]);
         PS2_OUTPUT_ACK_CLEAR();
+        sleep_us(1);
     }
     PS2_OUTPUT_ACK_SET();
     data[len - 1] = spi_transfer_bit_bang(PS2_OUTPUT_SPI_PORT, data[len - 1]);

@@ -258,6 +258,9 @@ void init_main(void) {
 #ifdef INPUT_PS2
     init_ack();
 #endif
+#ifdef TICK_PS2
+    ps2_emu_init();
+#endif
 #ifdef INPUT_ADXL
     init_adxl();
 #endif
@@ -1616,6 +1619,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+
     TICK_SHARED;
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if (millis() < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
@@ -2425,7 +2429,9 @@ void tick(void) {
         twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, ledStateMpr121);
     }
 #endif
-
+#ifdef TICK_PS2
+    ps2_emu_tick();
+#endif
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         // No benefit to ticking bluetooth faster than this!
 #ifdef BLUETOOTH_TX

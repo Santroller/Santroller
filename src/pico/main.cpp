@@ -244,7 +244,7 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id) {
 }
 
 uint8_t get_usb_host_device_data(uint8_t id, uint8_t *buf) {
-    if (usb_host_devices[id].type.console_type == UNIVERSAL) {
+    if (usb_host_devices[id].type.console_type == UNKNOWN) {
         USB_Host_Data_t *host = (USB_Host_Data_t *)buf;
         fill_generic_report(usb_host_devices[id].type.dev_addr, usb_host_devices[id].type.instance, (uint8_t *)&usb_host_devices[id].report, host);
 
@@ -483,7 +483,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             if (usb_host_devices[i].type.console_type == STREAM_DECK && report[0] != STREAM_DECK_INPUT_REPORT_ID) {
                 continue;
             }
-            if (usb_host_devices[i].type.console_type == PS5 && report[0] != STREAM_DECK_INPUT_REPORT_ID) {
+            if (usb_host_devices[i].type.console_type == PS5 && report[0] != PS5_INPUT_REPORT_ID) {
                 continue;
             }
             if (usb_host_devices[i].type.console_type == SWITCH) {

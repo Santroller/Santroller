@@ -64,7 +64,9 @@ enum MultitapPort { A = 0x01,
                     C = 0x03,
                     D = 0x04 };
 extern uint8_t ps2ControllerType;
-uint8_t* tickPS2();
+uint8_t* tickPS2(void);
+void ps2_emu_tick(void);
+void ps2_emu_init(void);
 #ifdef __cplusplus
 }
 #endif

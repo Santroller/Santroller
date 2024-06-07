@@ -30,25 +30,26 @@ void spi_begin() {
     gpio_set_pulls(SPI_0_MISO, true, false);
 #endif
 #endif
-#ifdef SPI_1_MOSI
-    spi_init(spi1, SPI_1_CLOCK);
-    spi_set_format(spi1, 8, (spi_cpol_t)SPI_1_CPOL,
-                   (spi_cpha_t)SPI_1_CPHA, SPI_MSB_FIRST);
-    gpio_set_function(SPI_1_MOSI, GPIO_FUNC_SPI);
-#ifdef SPI_1_SCK
-    gpio_set_function(SPI_1_SCK, GPIO_FUNC_SPI);
-#endif
-#ifdef SPI_1_MISO
-    gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
-    gpio_set_pulls(SPI_1_MISO, true, false);
-#endif
-#endif
+// #ifdef SPI_1_MOSI
+//     spi_init(spi1, SPI_1_CLOCK);
+//     spi_set_format(spi1, 8, (spi_cpol_t)SPI_1_CPOL,
+//                    (spi_cpha_t)SPI_1_CPHA, SPI_MSB_FIRST);
+//     gpio_set_function(SPI_1_MOSI, GPIO_FUNC_SPI);
+// #ifdef SPI_1_SCK
+//     gpio_set_function(SPI_1_SCK, GPIO_FUNC_SPI);
+// #endif
+// #ifdef SPI_1_MISO
+//     gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
+//     // gpio_set_pulls(SPI_1_MISO, true, false);
+// #endif
+// #endif
 #ifdef SPI_0_OUTPUT
     spi_set_slave(spi0, true);
 #endif
-#ifdef SPI_1_OUTPUT
-    spi_set_slave(spi1, true);
-#endif
+// #ifdef SPI_1_OUTPUT
+//     // gpio_set_function(9, GPIO_FUNC_SPI);
+//     spi_set_slave(spi1, true);
+// #endif
 }
 static uint8_t revbits(uint8_t b) {
     b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;

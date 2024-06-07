@@ -71,7 +71,6 @@ TU_ATTR_ALWAYS_INLINE static inline xinputh_device_t *get_dev(uint8_t dev_addr);
 TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t *get_instance(uint8_t dev_addr, uint8_t instance);
 static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf);
 static uint8_t get_instance_id_by_epaddr(uint8_t dev_addr, uint8_t ep_addr);
-static int16_t reportID;
 static bool foundPS5 = false;
 static bool foundPS4 = false;
 static bool foundPS3 = false;
@@ -267,9 +266,6 @@ bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
     if (CurrentItem->ItemType != HID_REPORT_ITEM_In)
         return false;
 
-    if (reportID == INVALID_REPORT_ID) {
-        reportID = CurrentItem->ReportID;
-    }
     switch (CurrentItem->Attributes.Usage.Page) {
         case HID_USAGE_PAGE_DESKTOP:
             switch (CurrentItem->Attributes.Usage.Usage) {
@@ -367,7 +363,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             foundPS3 = false;
             foundPS4 = false;
             foundPS5 = false;
-            reportID = INVALID_REPORT_ID;
             USB_ProcessHIDReport(temp_buf, x_desc->wDescriptorLength, &p_xinput->info);
             if (foundPS5) {
                 p_xinput->type = PS5;

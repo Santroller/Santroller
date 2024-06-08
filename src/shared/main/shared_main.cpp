@@ -446,6 +446,11 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint1
     return ret + PS3_STICK_CENTER;
 #endif
 }
+uint8_t handle_calibration_ps2_whammy(uint8_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
+    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then add center
+    uint8_t ret = handle_calibration_ps3_360_trigger(previous << 1, orig_val, min, multiplier, deadzone) >> 1;
+    return 0x7f - ret;
+}
 
 uint8_t handle_calibration_turntable_ps3(uint8_t previous, int16_t orig_val, uint8_t multiplier) {
     int32_t val = (orig_val * multiplier) >> 8;
@@ -2490,8 +2495,8 @@ void tick(void) {
 
     last_poll = micros();
 #if !defined(BLUETOOTH_TX)
-    // Tick the controller every 5ms if this device is usb only, and usb is not ready
-    if (!INPUT_QUEUE && !ready && millis() - lastSentPacket > 5) {
+    // Tick the controller every 5ms if this device is usb only, is connected to a usb port, and usb is not ready
+    if (!INPUT_QUEUE && !ready && usb_configured() && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
         tick_inputs(NULL, NULL, consoleType);
     }

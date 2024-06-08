@@ -102,29 +102,11 @@ uint8_t receiveAll(uint8_t* data0, uint8_t* data1, uint8_t len) {
     return len;
 }
 #endif
-long ba = 0;
 int counter = 0;
 
 uint8_t buttons1 = 0xff;
 uint8_t buttons2 = 0xff;
 
-uint8_t joyLX = 0x80;
-uint8_t joyLY = 0x80;
-uint8_t joyRX = 0x80;
-uint8_t joyRY = 0x80;
-
-uint8_t rightPressure = 0x00;
-uint8_t leftPressure = 0x00;
-uint8_t upPressure = 0x00;
-uint8_t downPressure = 0x00;
-uint8_t trianglePressure = 0x00;
-uint8_t squarePressure = 0x00;
-uint8_t crossPressure = 0x00;
-uint8_t circlePressure = 0x00;
-uint8_t L1Pressure = 0x00;
-uint8_t R1Pressure = 0x00;
-uint8_t L2Pressure = 0x00;
-uint8_t R2Pressure = 0x00;
 
 uint8_t motorSetting1 = 0xff;
 uint8_t motorSetting2 = 0xff;
@@ -254,6 +236,7 @@ bool ps2_emu_tick(PS2_REPORT* report) {
             while (!PS2_OUTPUT_ATT_READ()) {
                 sleep_us(20);  // conservative so we aren't still in ATT low at the top of the loop
             }
+            continue;
         } else {
             if (mode == 0x41)  // digital only
             {

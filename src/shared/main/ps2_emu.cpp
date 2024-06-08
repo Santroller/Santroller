@@ -147,7 +147,7 @@ void ps2_emu_init() {
     buttons1 &= ~0x80;
     #endif
 }
-void ps2_emu_tick() {
+bool ps2_emu_tick(PS2_REPORT* report) {
     if (PS2_OUTPUT_ATT_READ()) {
         timeoutCounter++;
         if (timeoutCounter >= 30000)  // we've been disconnected
@@ -159,7 +159,7 @@ void ps2_emu_tick() {
             configMode = 0;
             timeoutCounter = 0;
         }
-        return;
+        return false;
     }
     timeoutCounter = 0;
     while (1) {
@@ -257,23 +257,32 @@ void ps2_emu_tick() {
         } else {
             if (mode == 0x41)  // digital only
             {
-                uint8_t data[] = {0x5A, buttons1, buttons2};
+                uint8_t data[3] = {0x5A};
+                memcpy(data, report, sizeof(data));
+                // Buttons are inverted
+                data[1] ^= 0xFF; 
+                data[2] ^= 0xFF;
                 receiveAll(data, sizeof(data));
                 param1 = data[1];
                 param2 = data[2];
             }
             if (mode == 0x73)  // digital buttons, analog joysticks
             {
-                // For whatever reason, at this point it isnt sending the entire packet at once
-                uint8_t data[] = {0x5A, buttons1, buttons2, joyRX, joyRY, joyLX, joyLY};
+                uint8_t data[7] = {0x5A};
+                memcpy(data, report, sizeof(data));
+                // Buttons are inverted
+                data[1] ^= 0xFF; 
+                data[2] ^= 0xFF;
                 receiveAll(data, sizeof(data));
                 param1 = data[1];
             }
             if (mode == 0x79)  // analog joysticks, analog buttons
             {
-                uint8_t data[] = {0x5A, buttons1, buttons2, joyRX, joyRY, joyLX, joyLY, rightPressure,
-                                  leftPressure, upPressure, downPressure, trianglePressure, circlePressure, crossPressure,
-                                  squarePressure, L1Pressure, R1Pressure, L2Pressure, R2Pressure};
+                uint8_t data[19] = {0x5A};
+                memcpy(data, report, sizeof(data));
+                // Buttons are inverted
+                data[1] ^= 0xFF; 
+                data[2] ^= 0xFF;
                 receiveAll(data, sizeof(data));
                 param1 = data[1];
             }
@@ -281,27 +290,20 @@ void ps2_emu_tick() {
             if (cmd == 0x43) {
                 if (param1 == 0x01) {
                     configMode = 1;
+                    while (!PS2_OUTPUT_ATT_READ()) {
+                        sleep_us(20);  // conservative so we aren't still in ATT low at the top of the loop
+                    }
+                    continue;
                 }
             }
-            if (configMode) {
-                while (!PS2_OUTPUT_ATT_READ()) {
-                    sleep_us(20);  // conservative so we aren't still in ATT low at the top of the loop
-                }
-                continue;
-            }
-
             break;
         }
     }
     PS2_OUTPUT_ACK_SET();
 
-    if (millis() - ba > 1000) {
-        ba = millis();
-        buttons2 ^= 1 << 1;
-    }
-
     while (!PS2_OUTPUT_ATT_READ()) {
         sleep_us(20);  // conservative so we aren't still in ATT low at the top of the loop
     }
+    return true;
 }
 #endif

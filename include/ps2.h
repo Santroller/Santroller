@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "config.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -65,7 +66,7 @@ enum MultitapPort { A = 0x01,
                     D = 0x04 };
 extern uint8_t ps2ControllerType;
 uint8_t* tickPS2(void);
-void ps2_emu_tick(void);
+bool ps2_emu_tick(PS2_REPORT* report);
 void ps2_emu_init(void);
 #ifdef __cplusplus
 }

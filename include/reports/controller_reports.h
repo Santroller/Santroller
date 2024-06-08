@@ -4,6 +4,7 @@
 
 #include "reports/og_xbox_reports.h"
 #include "reports/pc_reports.h"
+#include "reports/ps2_reports.h"
 #include "reports/ps3_reports.h"
 #include "reports/ps4_reports.h"
 #include "reports/ps5_reports.h"

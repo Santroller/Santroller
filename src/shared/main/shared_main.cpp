@@ -1508,6 +1508,36 @@ void convert_universal_to_type(uint8_t *buf, PC_REPORT *report, uint8_t output_c
 #endif
 }
 #endif
+#ifdef TICK_PS2
+PS2_REPORT ps2Report;
+void tick_ps2output() {
+    PS2_REPORT *report = &ps2Report;
+    if (!ps2_emu_tick(report)) {
+        return;
+    }
+    uint8_t packet_size = 0;
+    Buffer_Report_t current_queue_report = {val : 0};
+// Tick Inputs
+#include "inputs/adxl.h"
+#include "inputs/clone_neck.h"
+#include "inputs/gh5_neck.h"
+#include "inputs/mpr121.h"
+#include "inputs/ps2.h"
+#include "inputs/slave_tick.h"
+#include "inputs/turntable.h"
+#include "inputs/usb_host.h"
+#include "inputs/wii.h"
+#include "inputs/wt_neck.h"
+
+    TICK_SHARED;
+    memset(report, 0, sizeof(report));
+    TICK_PS2;
+    report->header = 0x5A;
+    #if DEVICE_TYPE_IS_GUITAR
+    report->dpadLeft = true;
+    #endif
+}
+#endif
 #ifdef TICK_WII
 void tick_wiioutput() {
 #include "inputs/adxl.h"
@@ -2430,7 +2460,7 @@ void tick(void) {
     }
 #endif
 #ifdef TICK_PS2
-    ps2_emu_tick();
+    tick_ps2output();
 #endif
     if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
         // No benefit to ticking bluetooth faster than this!

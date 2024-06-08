@@ -2,8 +2,8 @@
     uint8_t *wiiData;
     // If we didn't send the last packet, then we need to wait some time as the wii controllers do not like being polled quickly
     if (micros() - lastTick > 750) {
-        lastTick = micros();
         wiiData = tickWii();
+        lastTick = micros();
     } else {
         wiiData = lastSuccessfulWiiPacket;
     }

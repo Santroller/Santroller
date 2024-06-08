@@ -1,13 +1,13 @@
 # PS2 Support
 
-| Controller Type                        | Game                    | PS2 Support                                                                               | 
-| -------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------- | 
-| Gamepad                                | Any                     | Requires [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) | 
-| Guitar Hero Guitar                     | Guitar Hero 2           | Requires [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) | 
-| Guitar Hero Guitar                     | Guitar Hero 3           | Requires [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) | 
-| Guitar Hero Guitar / Guitar Hero Drums | Guitar Hero WT or newer | Works natively                                                                            | 
-| Rock Band Guitar / Rock Band Drums     | Rock Band (All Games)   | Works natively                                                                            | 
-| DJ Hero Turntable                      | DJ Hero                 | Works natively                                                                            | 
+| Controller Type                        | Game                    | PS2 Support                                                                                                                                                                                                      |
+| -------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gamepad                                | Any                     | Requires [PS2 Controller emulation](https://santroller.tangentmc.net/wiring_guides/ps2_output.html) or a Modded PS2 + [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) |
+| Guitar Hero Guitar                     | Guitar Hero 2           | Requires [PS2 Controller emulation](https://santroller.tangentmc.net/wiring_guides/ps2_output.html) or a Modded PS2 + [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) |
+| Guitar Hero Guitar                     | Guitar Hero 3           | Requires [PS2 Controller emulation](https://santroller.tangentmc.net/wiring_guides/ps2_output.html) or a Modded PS2 + [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) |
+| Guitar Hero Guitar / Guitar Hero Drums | Guitar Hero WT or newer | Works natively                                                                                                                                                                                                   |
+| Rock Band Guitar / Rock Band Drums     | Rock Band (All Games)   | Works natively                                                                                                                                                                                                   |
+| DJ Hero Turntable                      | DJ Hero                 | Works natively                                                                                                                                                                                                   |
 
 PS2 controller support is totally dependant on the game and controller type. For games that expect standard gamepad input, you will need to use PADEMU to emulate a standard controller, as the PS2 did not support USB controllers.
 For Rock Band games, the PS2 used USB instruments, so a controller in Rock Band Guitar or Drum mode will just work.

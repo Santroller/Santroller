@@ -15,6 +15,9 @@ For Rock Band games, the PS2 used USB instruments, so a controller in Rock Band 
 Guitar Hero games are a bit more complicated. The first two games used a guitar that was based on the Dualshock 1, which used the standard PS2 controller port. For this reason, these games don't support USB instruments. PADEMU will automatically detect PS3 guitars and emulate PS2 Guitars for these games if it is enabled.
 Guitar Hero World Tour introduced compatibility with PS3 instruments and thus for GHWT or newer, you can just use USB instruments without needing something like PADEMU.
 
+## Emulating a PS2 controller
+You can follow the [PS2 controller guide](https://santroller.tangentmc.net/wiring_guides/ps2_output.html), and actually emulate proper PS2 controllers.
+
 ## PADEMU
 
 If a PS2 game is expecting a standard controller you usually would not be able to use a USB controller. However, OpenPS2Loader comes with PADEMU, which lets you emulate a PS2 gamepad from a usb device.

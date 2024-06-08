@@ -1,6 +1,10 @@
 # Fakemote
 The Guitar Hero games on wii require a guitar that is plugged into a Wii remotes extension port, not a USB instrument.
 For this reason, an unmodified console will not be able to support a USB guitar, however the [fakemote](https://github.com/sanjay900/fakemote) CIOS module allows for emulating a wii remote + guitar using a USB instrument.
+You can emulate wii extensions with santroller and then plug them into a wii remote.
+
+## Emulating a Wii Extension
+You can follow the [Wii Extension emulation guide](https://santroller.tangentmc.net/wiring_guides/wii_output.html), and actually emulate proper wii extensions, and then plug them into your remote.
 
 # Setting up fakemote
 

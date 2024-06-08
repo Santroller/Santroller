@@ -351,7 +351,7 @@ If you intend to use the peripheral features, it is recommended to program the p
 2.  Set the Input Type to Directly Wired
 3.  Hit Configure
 4.  Click on `Controller Settings`
-5.  Set `Emulation Type` to `Controller` for standard guitars and `Fortnite Festival` for Fortnite Festival.
+5.  Set `Emulation Type` to `Controller`
 6.  Set the `Controller Type` based on the game you want to play.
 7.  `Windows controller mode` can be set based on your preferences. Note that this only affects windows, a controller in XInput mode will use the correct mode on a console, and will automatically use HID mode on Linux and macOS.
     1. `XInput` - This works more natively on windows, and most games will automatically bind controls.

@@ -92,7 +92,7 @@ for (int i = 0; i < device_count; i++) {
             memcpy(&usb_host_data.mouse, report, sizeof(report));
             break;
         }
-        case UNKNOWN: {
+        case GENERIC: {
             USB_Host_Data_t *report = (USB_Host_Data_t *)data;
             usb_host_data.genericX = report->genericX;
             usb_host_data.genericY = report->genericY;

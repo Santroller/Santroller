@@ -342,7 +342,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
 
-        p_xinput->type = UNKNOWN;
+        p_xinput->type = GENERIC;
         if (desc_itf->bInterfaceProtocol == HID_ITF_PROTOCOL_KEYBOARD) {
             p_xinput->type = KEYBOARD;
         }
@@ -350,7 +350,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_xinput->type = MOUSE;
         }
         // TODO: do we support nkro
-        if (p_xinput->type == UNKNOWN) {
+        if (p_xinput->type == GENERIC) {
             uint8_t temp_buf[512];
             uint8_t *current = temp_buf;
             uint8_t len = x_desc->wDescriptorLength;

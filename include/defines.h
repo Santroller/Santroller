@@ -71,6 +71,7 @@
 #define XBOX360_BB 19
 #define PS5 20
 #define STREAM_DECK 21
+#define GENERIC 22
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

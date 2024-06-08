@@ -74,14 +74,13 @@ void spi_begin() {
 #endif
 #ifdef SPI_1_MISO
     gpio_set_function(SPI_1_MISO, GPIO_FUNC_SPI);
-    // gpio_set_pulls(SPI_1_MISO, true, false);
+    gpio_set_pulls(SPI_1_MISO, true, false);
 #endif
 #endif
 #ifdef SPI_0_OUTPUT
     spi_set_slave(spi0, true);
 #endif
 #ifdef SPI_1_OUTPUT
-    // gpio_set_function(9, GPIO_FUNC_SPI);
     spi_set_slave(spi1, true);
 #endif
 }

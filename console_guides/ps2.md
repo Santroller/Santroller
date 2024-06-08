@@ -2,9 +2,9 @@
 
 | Controller Type                        | Game                    | PS2 Support                                                                               | 
 | -------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------- | 
-| Gamepad                                | Any                     | Requires [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) | 
-| Guitar Hero Guitar                     | Guitar Hero 2           | Requires [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) | 
-| Guitar Hero Guitar                     | Guitar Hero 3           | Requires [nightly build of OPL](https://santroller.tangentmc.net/console_guides/ps2.html) | 
+| Gamepad                                | Any                     | Requires [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) | 
+| Guitar Hero Guitar                     | Guitar Hero 2           | Requires [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) | 
+| Guitar Hero Guitar                     | Guitar Hero 3           | Requires [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest) | 
 | Guitar Hero Guitar / Guitar Hero Drums | Guitar Hero WT or newer | Works natively                                                                            | 
 | Rock Band Guitar / Rock Band Drums     | Rock Band (All Games)   | Works natively                                                                            | 
 | DJ Hero Turntable                      | DJ Hero                 | Works natively                                                                            | 

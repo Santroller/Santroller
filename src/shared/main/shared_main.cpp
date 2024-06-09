@@ -1672,12 +1672,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                         debounce[i]--;
                     }
                 }
-                #if LED_DEBOUNCE_COUNT
-                    for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
-                        if (ledDebounce[i]) {
-                            ledDebounce[i]--;
-                        }
+                #if LED_COUNT
+                for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+                    if (ledDebounce[i]) {
+                        ledDebounce[i]--;
                     }
+                }
                 #endif
             }
             if (current_queue_report.val != last_queue_report.val) {
@@ -2420,12 +2420,12 @@ int tick_bluetooth_inputs(const void *buf) {
                 debounce[i]--;
             }
         }
-        #if LED_DEBOUNCE_COUNT
-            for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
-                if (ledDebounce[i]) {
-                    ledDebounce[i]--;
-                }
+        #if LED_COUNT
+        for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+            if (ledDebounce[i]) {
+                ledDebounce[i]--;
             }
+        }
         #endif
     }
     if (output_console_type != PS4 && output_console_type != PS3 && !updateHIDSequence) {
@@ -2490,12 +2490,12 @@ void tick(void) {
                 debounce[i]--;
             }
         }
-        #if LED_DEBOUNCE_COUNT
-            for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
-                if (ledDebounce[i]) {
-                    ledDebounce[i]--;
-                }
+        #if LED_COUNT
+        for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+            if (ledDebounce[i]) {
+                ledDebounce[i]--;
             }
+        }
         #endif
     }
 

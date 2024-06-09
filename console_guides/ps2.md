@@ -23,6 +23,7 @@ You can follow the [PS2 controller guide](https://santroller.tangentmc.net/wirin
 
 If a PS2 game is expecting a standard controller you usually would not be able to use a USB controller. However, OpenPS2Loader comes with PADEMU, which lets you emulate a PS2 gamepad from a usb device.
 The firmware is designed to go into PS3 mode when it detects it is plugged into a PS2, and PADEMU has support for both PS3 gamepads and PS3 guitars.
+Do note that this method will NOT work for offical game discs, as OPL does not support booting discs, only disc images stored on the internal HDD or a network share or a USB drive.
 
 ## Setting up PADEMU
 

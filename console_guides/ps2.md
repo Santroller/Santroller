@@ -16,9 +16,28 @@ Guitar Hero games are a bit more complicated. The first two games used a guitar 
 Guitar Hero World Tour introduced compatibility with PS3 instruments and thus for GHWT or newer, you can just use USB instruments without needing something like PADEMU.
 
 ## Emulating a PS2 controller
+
 You can follow the [PS2 controller guide](https://santroller.tangentmc.net/wiring_guides/ps2_output.html), and actually emulate proper PS2 controllers.
 
 ## PADEMU
 
 If a PS2 game is expecting a standard controller you usually would not be able to use a USB controller. However, OpenPS2Loader comes with PADEMU, which lets you emulate a PS2 gamepad from a usb device.
-The firmware is designed to go into PS3 mode when it detects it is plugged into a PS2, and PADEMU has support for both PS3 gamepads and PS3 guitars. Note that for guitars, you need to use a [development relase of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z), as I added support for guitar emulation myself as it originally was not part of PADEMU.
+The firmware is designed to go into PS3 mode when it detects it is plugged into a PS2, and PADEMU has support for both PS3 gamepads and PS3 guitars.
+
+## Setting up PADEMU
+
+1. Plug the santroller controller into a USB port
+1. Plug your standard PS2 gamepad into port 2
+1. Make sure you have a [nightly build of OPL](https://github.com/ps2homebrew/Open-PS2-Loader/releases/tag/latest)
+1. Launch OPL
+1. Go into `Controller Settings`
+1. Go into `Configure PADEMU`
+1. Turn on `Pad Emulator`
+1. Set `Pad Emulator Mode` to `DualShocker3/4 USB`
+1. Set `Multitap Emulation` to `Off`
+1. Set `Settings For Port` to `1P`
+1. Set `Emulation` to `On`
+1. Click `OK`
+1. Click `Save Changes`
+1. Start the game from within OPL
+1. Your Santroller device should now be working in game.

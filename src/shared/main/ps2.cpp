@@ -173,13 +173,11 @@ bool sendCommand(uint8_t port, const uint8_t *buf, uint8_t len) {
     } while (!ret && millis() - start <= COMMAND_TIMEOUT);
     return ret;
 }
-int ps2GuitarPollRate = KRAMER_STRIKER ? 10000 : 3000;
 extern unsigned long millis_at_boot;
 uint8_t *tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
-    // Some PS2 guitars want 10000 here, others are happy with 3000
-    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < ps2GuitarPollRate) {
+    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 3000) {
         return inputBuffer;
     }
     // If this is changed to a different port, you can talk to different devices

@@ -10,7 +10,7 @@
 | DJ Hero Turntable                      | DJ Hero                 | Works natively                                                                                                                                                                                                   |
 
 PS2 controller support is totally dependant on the game and controller type. For games that expect standard gamepad input, you will need to use PADEMU to emulate a standard controller, as the PS2 did not support USB controllers.
-For Rock Band games, the PS2 used USB instruments, so a controller in Rock Band Guitar or Drum mode will just work.
+For Rock Band games, the PS2 used USB instruments, so a controller in Rock Band or GH Guitar or Drum mode will just work.
 
 Guitar Hero games are a bit more complicated. The first two games used a guitar that was based on the Dualshock 1, which used the standard PS2 controller port. For this reason, these games don't support USB instruments. PADEMU will automatically detect PS3 guitars and emulate PS2 Guitars for these games if it is enabled.
 Guitar Hero World Tour introduced compatibility with PS3 instruments and thus for GHWT or newer, you can just use USB instruments without needing something like PADEMU.

@@ -107,6 +107,7 @@ PS3_REPORT bt_report;
 USB_Report_Data_t bt_report;
 #endif
 uint8_t debounce[DIGITAL_COUNT];
+uint8_t ledDebounce[LED_DEBOUNCE_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
 bool tiltActive = false;
@@ -1671,6 +1672,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                         debounce[i]--;
                     }
                 }
+                #if LED_DEBOUNCE_COUNT
+                    for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+                        if (ledDebounce[i]) {
+                            ledDebounce[i]--;
+                        }
+                    }
+                #endif
             }
             if (current_queue_report.val != last_queue_report.val) {
                 queue[queue_tail] = current_queue_report;
@@ -1916,10 +1924,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                          : "memory");
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
-// If we are dealing with a non instrument controller (like a gamepad) then we use the proper ps3 controller report format, to allow for emulator support and things like that
-// This also gives us PS2 support via PADEMU and wii support via fakemote for standard controllers.
-// However, actual ps3 support was being a pain so we use the instrument descriptor there, since the ps3 doesn't care.
-// This also has the bonus that it will keep switch support working as well
+// For gamepads, use the PS3 report format on PS3
 #if DEVICE_TYPE == GAMEPAD
     if (output_console_type == PS3) {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
@@ -2415,6 +2420,13 @@ int tick_bluetooth_inputs(const void *buf) {
                 debounce[i]--;
             }
         }
+        #if LED_DEBOUNCE_COUNT
+            for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+                if (ledDebounce[i]) {
+                    ledDebounce[i]--;
+                }
+            }
+        #endif
     }
     if (output_console_type != PS4 && output_console_type != PS3 && !updateHIDSequence) {
         uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
@@ -2478,6 +2490,13 @@ void tick(void) {
                 debounce[i]--;
             }
         }
+        #if LED_DEBOUNCE_COUNT
+            for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+                if (ledDebounce[i]) {
+                    ledDebounce[i]--;
+                }
+            }
+        #endif
     }
 
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {

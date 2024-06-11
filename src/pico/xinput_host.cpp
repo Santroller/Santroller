@@ -360,6 +360,11 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             if (!temp_buf[0]) {
                 temp_buf[0] = 0x05;
             }
+            // printf("Report: \r\n");
+            // for (int i = 0; i < x_desc->wDescriptorLength; i++) {
+            //     printf("%02x ", temp_buf[i]);
+            // }
+            // printf("\r\n");
             foundPS3 = false;
             foundPS4 = false;
             foundPS5 = false;

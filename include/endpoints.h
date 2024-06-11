@@ -82,6 +82,10 @@ enum endpoints_t {
 #define XBOX_ONE_JAG_PID 0x0170
 #define MAGICBOOTS_PS4_VID 0x0079
 #define MAGICBOOTS_PS4_PID 0x1893
+#define LTEK_VID 0x6667
+#define LTEK_PID 0xc006
+#define ARDUINO_VID 0x2341
+#define STEPMANIA_X_PID 0x8037
 
 #define STREAM_DECK_VID 0x0fd9
 #define STREAM_DECK_OG_PID 0x0060

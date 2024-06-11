@@ -756,6 +756,28 @@ for (int i = 0; i < device_count; i++) {
             }
             break;
         }
+        case LTEK: {
+            LTEK_Report_Data_t *report = (LTEK_Report_Data_t *)data;
+            usb_host_data.a |= report->dpadDown;
+            usb_host_data.b |= report->dpadRight;
+            usb_host_data.dpadLeft |= report->dpadLeft;
+            usb_host_data.dpadRight |= report->dpadRight;
+            usb_host_data.dpadUp |= report->dpadUp;
+            usb_host_data.dpadDown |= report->dpadDown;
+            usb_host_data.start |= report->start;
+            usb_host_data.back |= report->back;
+            break;
+        }
+        case STEPMANIAX: {
+            StepManiaX_Report_Data_t *report = (StepManiaX_Report_Data_t *)data;
+            usb_host_data.a |= report->dpadDown;
+            usb_host_data.b |= report->dpadRight;
+            usb_host_data.dpadLeft |= report->dpadLeft;
+            usb_host_data.dpadRight |= report->dpadRight;
+            usb_host_data.dpadUp |= report->dpadUp;
+            usb_host_data.dpadDown |= report->dpadDown;
+            break;
+        }
         case PS4: {
             PS4Dpad_Data_t *dpad = (PS4Dpad_Data_t *)data;
             usb_host_data.dpadLeft = dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;

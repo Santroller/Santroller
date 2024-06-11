@@ -2678,6 +2678,18 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, USB_Device_Type_t *type
             }
             break;
         }
+        case ARDUINO_VID: {
+            if (pid == STEPMANIA_X_PID) {
+                type->console_type = STEPMANIAX;
+                type->sub_type = DANCE_PAD;
+            }
+        }
+        case LTEK_VID: {
+            if (pid == LTEK_PID) {
+                type->console_type = LTEK;
+                type->sub_type = DANCE_PAD;
+            }
+        }
         case SONY_VID:
             switch (pid) {
                 case SONY_DS3_PID:

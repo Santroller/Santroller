@@ -469,7 +469,7 @@ typedef struct
     uint8_t key25 : 1;
     uint8_t : 6;
 
-   union {
+    union {
         struct {
             uint8_t dpadUp : 1;
             uint8_t dpadDown : 1;
@@ -561,27 +561,28 @@ typedef struct {
     PCStageKitOutputWithoutReportId_Data_t report;
 } __attribute__((packed)) PCStageKitOutput_Data_t;
 typedef struct {
-        uint8_t dpadLeft : 1;
-        uint8_t dpadRight : 1;
-        uint8_t dpadUp : 1;
-        uint8_t dpadDown : 1;
-        uint8_t dpadCenter : 1;
-        uint8_t : 4; 
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadCenter : 1;
+    uint8_t : 3;
 
-        uint8_t b10;
-        uint8_t b11;
-        uint8_t b12;
+    uint8_t : 1;
+    uint8_t start;
+    uint8_t back;
+    uint8_t : 5;
 } __attribute__((packed)) LTEK_Report_Data_t;
 typedef struct {
-        uint8_t reportId;  // 0x03
-        uint8_t dpadUpLeft: 1;
-        uint8_t dpadUp : 1;
-        uint8_t dpadUpRight: 1;
-        uint8_t dpadLeft : 1;
-        uint8_t dpadCenter : 1;
-        uint8_t dpadRight : 1;
-        uint8_t dpadDownLeft: 1;
-        uint8_t dpadDown : 1;
-        uint8_t dpadDownRight: 1;
-        uint8_t padding : 7;
+    uint8_t reportId;  // 0x03
+    uint8_t dpadUpLeft : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadUpRight : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadCenter : 1;
+    uint8_t dpadRight : 1;
+    uint8_t dpadDownLeft : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadDownRight : 1;
+    uint8_t padding : 7;
 } __attribute__((packed)) StepManiaX_Report_Data_t;

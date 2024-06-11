@@ -59,6 +59,12 @@ This is done using the Santroller Configurator, which can program various microc
       - No ghosting, works on most devices
     - 6KRO (6-Key Rollover)
       - Only 6 keys can be used simultaneously, required for PS4 and PS5
+  - PS2 controllers
+  - PS2 guitars
+  - Wii classic controller
+  - Wii guitar hero guitar
+  - Wii guitar hero drums
+  - Wii DJ Hero Turntable
 - Lower latency in comparison to the older Guitar Configurator firmware
 - Inputs update live while configuring, to make calibration and testing as easy as possible.
 - Controllers automatically detect what they are plugged into, and reconfigure themselves for that device.
@@ -95,7 +101,7 @@ This is done using the Santroller Configurator, which can program various microc
     - LEDs can also be controlled over this interface
   - USB devices (Pi Pico only)
     - This is also how authentication works, it gets passed through to an offical USB controller
-    - Works with both game controllers and MIDI devices
+    - Works with both game controllers, MIDI devices, keyboards and mice
   - Direct wiring to digital or analog sources
   - MPR121
     - This is a capacative touch chip that can handle both the slider bar and frets over I2C, much like how the GH5 guitar neck works

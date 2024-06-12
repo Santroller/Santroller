@@ -17,10 +17,6 @@ If you are new to this, read the [following guide](https://santroller.tangentmc.
 - A 4051 or 4067 based analog multiplexer
   - Only necessary for the Pi Pico, other microcontrollers have enough analog pins
   - Note that for the RB kit without cymbals, you can actually get away with a Pi Pico based board with 4 analog pins, and then the multiplexer is not required.
-  - Entirley optional, certain game features won't work with digital drums
-    - For Rock Band, the velocity data is only used for freestyle drums.
-    - For GH, the velocity data is used for accents and ghosts. These award extra points when you hit them with the right velocity, but that is entirely optional.
-    - If you skip the multiplexer, follow the digital instructions instead of the analog ones
   - 74HC4051 / 74HC4067 recommended, these are `high speed` parts and thus they switch faster and work better.
   - the 74HCT4051 or 74HCT4067 will not work as these are 5V parts and are not tolerant of the 3.3V voltage levels of the Pi Pico.
   - The CD4051B/CD4051BE and CD4067B aren't recommended as they are slower parts
@@ -84,17 +80,7 @@ To keep the relevant information in this guide easy to find, information is sort
 </details>
 
 <details>
-    <summary>Drum / Cymbal pads (Digital) (Pi Pico)</summary>
-
-1. Disconnect the piezos from the main drum PCB.
-2. Solder the black wire from the piezo to ground.
-3. Solder the red wire to a digital pin on your microcontroller
-4. Solder a 1Mohm resistor between the red and black wires on the piezo.
-
-</details>
-
-<details>
-    <summary>Drum / Cymbal pads (Analog) (Other microcontrollers)</summary>
+    <summary>Drum / Cymbal pads</summary>
 
 1. Disconnect the piezos from the main drum PCB.
 2. Solder the black wire from the piezo to ground.
@@ -181,15 +167,6 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
     4. Hit the drum pad in question. You should see the raw value for the drum pad change.
     5. Hit the pad lightly, and drag the minimum up so that it registers small hits.
     6. Hit nearby pads and make sure that the vibrations from those pads don't activate the pad you are configuring. If they do, then increase the minimum. You should end up with each pad registering hits, without crosstalk or needing to hit the pads too hard.
-
-    </details>
-
-    <details>
-      <summary>Drum / Cymbal pads / GH Pedal (Direct digital)</summary>
-
-    1. Click on the drum pad in question
-    2. Set the input type to `Digital Pin Input`
-    3. Click on `Find Pin` and then hit the drum pad in question, it should detect the drum that was just hit.
 
     </details>
 

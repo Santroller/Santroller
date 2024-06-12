@@ -568,10 +568,10 @@ typedef struct {
     uint8_t dpadCenter : 1;
     uint8_t : 3;
 
-    uint8_t : 1;
-    uint8_t start;
+    uint8_t : 2;
     uint8_t back;
-    uint8_t : 5;
+    uint8_t start;
+    uint8_t : 4;
 } __attribute__((packed)) LTEK_Report_Data_t;
 typedef struct {
     uint8_t reportId;  // 0x03

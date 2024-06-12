@@ -758,8 +758,6 @@ for (int i = 0; i < device_count; i++) {
         }
         case LTEK: {
             LTEK_Report_Data_t *report = (LTEK_Report_Data_t *)data;
-            usb_host_data.a |= report->dpadDown;
-            usb_host_data.b |= report->dpadRight;
             usb_host_data.dpadLeft |= report->dpadLeft;
             usb_host_data.dpadRight |= report->dpadRight;
             usb_host_data.dpadUp |= report->dpadUp;
@@ -770,8 +768,6 @@ for (int i = 0; i < device_count; i++) {
         }
         case STEPMANIAX: {
             StepManiaX_Report_Data_t *report = (StepManiaX_Report_Data_t *)data;
-            usb_host_data.a |= report->dpadDown;
-            usb_host_data.b |= report->dpadRight;
             usb_host_data.dpadLeft |= report->dpadLeft;
             usb_host_data.dpadRight |= report->dpadRight;
             usb_host_data.dpadUp |= report->dpadUp;

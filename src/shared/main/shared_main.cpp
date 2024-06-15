@@ -1937,6 +1937,20 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                          : "memory");
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
+
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
+    if (output_console_type == FNF) {
+        report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
+        PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)report_data;
+        memset(report, 0, sizeof(PCFortniteRockBandGuitar_Data_t));
+
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
+        report->tilt = PS3_STICK_CENTER;
+#endif
+        report->reportId = GIP_INPUT_REPORT;
+        TICK_XBOX_ONE;
+    }
+#endif
 // For gamepads, use the PS3 report format on PS3
 #if DEVICE_TYPE == GAMEPAD
     if (output_console_type == PS3) {
@@ -1999,17 +2013,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->leftStickY = PS3_STICK_CENTER;
             gamepad->rightStickX = PS3_STICK_CENTER;
             gamepad->rightStickY = PS3_STICK_CENTER;
-        }
-        if (output_console_type == FNF) {
-            report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
-            PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)report_data;
-            memset(report, 0, sizeof(PCFortniteRockBandGuitar_Data_t));
-
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-            report->tilt = PS3_STICK_CENTER;
-#endif
-            report->reportId = GIP_INPUT_REPORT;
-            TICK_XBOX_ONE;
         }
 
 #endif

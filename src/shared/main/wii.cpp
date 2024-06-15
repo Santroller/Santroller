@@ -91,7 +91,7 @@ void initWiiExt(void) {
     for (int i = 0; i < wiiBytes; i++) {
         orCheck |= data[i];
     }
-    // It appears when you disable encryption on 
+    // It appears when you disable encryption on some third party controllers, they stop replying with inputs
     if (orCheck == 0) {
         delayMicroseconds(200);
 
@@ -123,6 +123,15 @@ bool wiiDataValid() {
 uint8_t* tickWii() {
     static uint8_t data[8];
     memset(data, 0, sizeof(data));
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    // Update the led if it changes
+    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
+        if (lastWiiEuphoriaLed != lastEuphoriaLed) {
+            lastWiiEuphoriaLed = lastEuphoriaLed;
+            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, lastWiiEuphoriaLed);
+        }
+    }
+#endif
     if (wiiControllerType == WII_NOT_INITIALISED ||
         wiiControllerType == WII_NO_EXTENSION ||
         !twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, wiiBytes, data) ||
@@ -137,15 +146,6 @@ uint8_t* tickWii() {
             data[i] = (uint8_t)(((data[i] ^ s_box) + s_box) & 0xFF);
         }
     }
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    // Update the led if it changes
-    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
-        if (lastWiiEuphoriaLed != lastEuphoriaLed) {
-            lastWiiEuphoriaLed = lastEuphoriaLed;
-            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, lastWiiEuphoriaLed);
-        }
-    }
-#endif
     initialised = true;
     return data;
 }

@@ -78,7 +78,7 @@ extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + SIXKRO_SIZE + CONSUME
 extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t ps4_descriptor[160];
-extern const uint8_t fnf_descriptor[51];
+extern const uint8_t fnf_descriptor[53];
 extern long last_strobe;
 extern uint8_t stage_kit_millis[5];
 extern uint8_t strobe_delay;

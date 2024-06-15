@@ -93,6 +93,7 @@ const uint8_t PROGMEM fnf_descriptor[] = {
     0x19, 0x01,              //   Usage Minimum (0x01)
     0x29, 0x10,              //   Usage Maximum (0x10)
     0x81, 0x02,              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x05, 0x01,              //   Usage Page (Generic Desktop Ctrls)
     0x26, 0xFF, 0x00,        //   Logical Maximum (255)
     0x46, 0xFF, 0x00,        //   Physical Maximum (255)
     0x09, 0x30,              //   Usage (X)

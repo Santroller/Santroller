@@ -158,6 +158,7 @@ GipPowerMode_t powerMode;
 Gip_Led_On_t ledOn;
 Gip_Auth_Done_t authDonePacket;
 long last_poll = 0;
+long last_poll_dj_ps3 = 0;
 
 /* Magic data taken from GHLtarUtility:
  * https://github.com/ghlre/GHLtarUtility/blob/master/PS3Guitar.cs
@@ -2544,10 +2545,11 @@ void tick(void) {
     }
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
     if (consoleType == PS3) {
-        if (!INPUT_QUEUE && (micros() - last_poll) < (10000)) {
+        if (!INPUT_QUEUE && (micros() - last_poll_dj_ps3) < (10000)) {
             tick_inputs(NULL, NULL, consoleType);
             return;
         }
+        last_poll_dj_ps3 = micros();
     }
 #endif
 #ifdef TICK_WII

@@ -1855,6 +1855,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        report->effectsKnob = INT16_MIN;
+#endif
         TICK_OG_XBOX;
 
         report_size = packet_size = sizeof(OG_XBOX_REPORT);
@@ -1867,6 +1870,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Whammy on the xbox guitars goes from min to max, so it needs to default to min
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
+#endif
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        report->effectsKnob = INT16_MIN;
 #endif
         TICK_XINPUT;
         asm volatile("" ::
@@ -1930,7 +1936,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->leftTableVelocity = PS3_STICK_CENTER;
         report->rightTableVelocity = PS3_STICK_CENTER;
         report->crossfader = PS3_STICK_CENTER;
-        report->effectsKnob = PS3_STICK_CENTER;
+        report->effectsKnob = 0;
 #endif
         report->reportId = 1;
         TICK_PC;
@@ -1997,6 +2003,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->leftStickY = PS3_STICK_CENTER;
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        report->effectsKnob = 0;
+#endif
         TICK_PS3;
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
         if (output_console_type == SWITCH) {

@@ -1024,11 +1024,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
         seen_windows_desc = true;
     }
 
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
-    if (RIFFMASTER_ON_WINDOWS && consoleType == KEYBOARD_MOUSE && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT && seen_windows_desc) {
-        set_console_type(FNF);
-    }
-#endif
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
         if (seen_windows_desc) {
             if (WINDOWS_USES_XINPUT) {
@@ -1043,11 +1038,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
         set_console_type(WINDOWS);
     }
 
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
-    if (RIFFMASTER_ON_WINDOWS && consoleType == KEYBOARD_MOUSE && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
-        set_console_type(FNF);
-    }
-#endif
 #endif
 #endif
     descriptor_requested = true;

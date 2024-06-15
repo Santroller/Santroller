@@ -1949,6 +1949,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         report->reportId = GIP_INPUT_REPORT;
         TICK_XBOX_ONE;
+        asm volatile("" ::
+                         : "memory");
+        //  alias tilt to dpad left so that tilt works
+        if (report->tilt > 200) {
+            report->dpadLeft = true;
+        }
     }
 #endif
 // For gamepads, use the PS3 report format on PS3

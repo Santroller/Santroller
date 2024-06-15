@@ -1952,9 +1952,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         asm volatile("" ::
                          : "memory");
         //  alias tilt to dpad left so that tilt works
-        if (report->tilt > 200) {
+        if (report->tilt > 200 || report->back) {
             report->dpadLeft = true;
         }
+        report->back = false;
     }
 #endif
 // For gamepads, use the PS3 report format on PS3

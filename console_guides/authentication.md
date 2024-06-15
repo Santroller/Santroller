@@ -15,8 +15,11 @@ You can follow the [USB Inputs](https://santroller.tangentmc.net/wiring_guides/u
 
 ## Supported controllers
 Xbox 360: most controllers should work
+
 Xbox One / Series: The Xbox One or Series gamepads will work here, third party controllers do not. 
+
 PS4: DS4 works, most other controllers should work too.
+
 PS5: A "typed"` controller is needed. A GHLive dongle or a [MAGPS4](https://www.mayflash.com/product/MAGPS4.html) should work for this, or a PS4 drumkit, guitar, wheel or fight stick. A DS4 or DS5 will NOT work here.
 
 ## Xbox 360 RGH

@@ -469,12 +469,27 @@ uint8_t handle_calibration_turntable_ps3(uint8_t previous, int16_t orig_val, uin
     return previous;
 }
 int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uint8_t multiplier) {
+    #if WINDOWS_TURNTABLE_FULLRANGE
+        if (consoleType == WINDOWS) {
+            int32_t val = (orig_val * multiplier);
+            if (val > INT16_MAX) {
+                val = INT16_MAX;
+            }
+            if (val < INT16_MIN) {
+                val = INT16_MIN;
+            }
+            if (abs(val) > abs(previous)) {
+                return (int16_t)val;
+            }
+            return previous;
+        }
+    #endif
     int32_t val = (orig_val * multiplier) >> 8;
-    if (val > 64) {
-        val = 64;
+    if (val > 128) {
+        val = 128;
     }
-    if (val < -64) {
-        val = -64;
+    if (val < -128) {
+        val = -128;
     }
     if (abs(val) > abs(previous)) {
         return (int16_t)val;

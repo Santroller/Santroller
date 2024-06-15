@@ -2542,6 +2542,14 @@ void tick(void) {
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+    if (consoleType == PS3) {
+        if (!INPUT_QUEUE && (micros() - last_poll) < (10000)) {
+            tick_inputs(NULL, NULL, consoleType);
+            return;
+        }
+    }
+#endif
 #ifdef TICK_WII
     tick_wiioutput();
 #endif

@@ -756,6 +756,16 @@ for (int i = 0; i < device_count; i++) {
             }
             break;
         }
+        case LTEK_ID: {
+            LTEK_Report_With_Id_Data_t *report = (LTEK_Report_With_Id_Data_t *)data;
+            usb_host_data.dpadLeft |= report->dpadLeft;
+            usb_host_data.dpadRight |= report->dpadRight;
+            usb_host_data.dpadUp |= report->dpadUp;
+            usb_host_data.dpadDown |= report->dpadDown;
+            usb_host_data.start |= report->start;
+            usb_host_data.back |= report->back;
+            break;
+        }
         case LTEK: {
             LTEK_Report_Data_t *report = (LTEK_Report_Data_t *)data;
             usb_host_data.dpadLeft |= report->dpadLeft;

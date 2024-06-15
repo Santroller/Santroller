@@ -84,6 +84,8 @@ enum endpoints_t {
 #define MAGICBOOTS_PS4_PID 0x1893
 #define LTEK_VID 0x6667
 #define LTEK_PID 0xc006
+#define LTEK_LUFA_VID 0x03EB
+#define LTEK_LUFA_PID 0x8041
 #define ARDUINO_VID 0x2341
 #define STEPMANIA_X_PID 0x8037
 

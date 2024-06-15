@@ -74,6 +74,7 @@
 #define GENERIC 22
 #define LTEK 23
 #define STEPMANIAX 24
+#define LTEK_ID 25
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

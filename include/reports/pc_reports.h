@@ -561,6 +561,7 @@ typedef struct {
     PCStageKitOutputWithoutReportId_Data_t report;
 } __attribute__((packed)) PCStageKitOutput_Data_t;
 typedef struct {
+    uint8_t reportId;  // 0x01
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t dpadUp : 1;
@@ -569,8 +570,21 @@ typedef struct {
     uint8_t : 3;
 
     uint8_t : 2;
-    uint8_t back;
-    uint8_t start;
+    uint8_t back : 1;
+    uint8_t start : 1;
+    uint8_t : 4;
+} __attribute__((packed)) LTEK_Report_With_Id_Data_t;
+typedef struct {
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadCenter : 1;
+    uint8_t : 3;
+
+    uint8_t : 2;
+    uint8_t back : 1;
+    uint8_t start : 1;
     uint8_t : 4;
 } __attribute__((packed)) LTEK_Report_Data_t;
 typedef struct {

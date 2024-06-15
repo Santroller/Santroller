@@ -358,6 +358,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         case GENERIC:
         case STEPMANIAX:
         case LTEK:
+        case LTEK_ID:
             printf("Found Generic controller\r\n");
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;

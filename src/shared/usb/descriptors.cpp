@@ -1023,6 +1023,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         seen_windows_desc = true;
     }
+
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+    if (RIFFMASTER_ON_WINDOWS && consoleType == KEYBOARD_MOUSE && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT && seen_windows_desc) {
+        set_console_type(FNF);
+    }
+#endif
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
         if (seen_windows_desc) {
             if (WINDOWS_USES_XINPUT) {
@@ -1036,6 +1042,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
     if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         set_console_type(WINDOWS);
     }
+
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+    if (RIFFMASTER_ON_WINDOWS && consoleType == KEYBOARD_MOUSE && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
+        set_console_type(FNF);
+    }
+#endif
 #endif
 #endif
     descriptor_requested = true;
@@ -1095,6 +1107,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
 #endif
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+            if (consoleType == FNF) {
+                dev->idVendor = PDP_VID;
+                dev->idProduct = XBOX_ONE_JAG_PID;
+            }
+#endif
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
@@ -1132,6 +1150,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 } else if (consoleType == KEYBOARD_MOUSE) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(keyboard_mouse_descriptor);
 #endif
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+                } else if (consoleType == FNF) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
+#endif
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }
@@ -1166,6 +1188,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
             if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
+
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+            } else if (consoleType == FNF) {
+                address = fnf_descriptor;
+                size = sizeof(fnf_descriptor);
+#endif
 #if defined(TICK_NKRO) || defined(TICK_SIXKRO)
             } else if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;

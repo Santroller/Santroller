@@ -1552,9 +1552,9 @@ void tick_ps2output() {
     memset(report, 0, sizeof(report));
     TICK_PS2;
     report->header = 0x5A;
-    #if DEVICE_TYPE_IS_GUITAR
+#if DEVICE_TYPE_IS_GUITAR
     report->dpadLeft = true;
-    #endif
+#endif
 }
 #endif
 #ifdef TICK_WII
@@ -1685,13 +1685,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                         debounce[i]--;
                     }
                 }
-                #if LED_COUNT
+#if LED_COUNT
                 for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
                     if (ledDebounce[i]) {
                         ledDebounce[i]--;
                     }
                 }
-                #endif
+#endif
             }
             if (current_queue_report.val != last_queue_report.val) {
                 queue[queue_tail] = current_queue_report;
@@ -2433,13 +2433,13 @@ int tick_bluetooth_inputs(const void *buf) {
                 debounce[i]--;
             }
         }
-        #if LED_COUNT
+#if LED_COUNT
         for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
             if (ledDebounce[i]) {
                 ledDebounce[i]--;
             }
         }
-        #endif
+#endif
     }
     if (output_console_type != PS4 && output_console_type != PS3 && !updateHIDSequence) {
         uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
@@ -2503,15 +2503,19 @@ void tick(void) {
                 debounce[i]--;
             }
         }
-        #if LED_COUNT
+#if LED_COUNT
         for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
             if (ledDebounce[i]) {
                 ledDebounce[i]--;
             }
         }
-        #endif
+#endif
     }
-
+    if (consoleType == KEYBOARD_MOUSE && DEVICE_TYPE_IS_GUITAR) {
+        if (!INPUT_QUEUE && (micros() - last_poll) < (4000)) {
+            return;
+        }
+    }
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }

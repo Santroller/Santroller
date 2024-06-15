@@ -2531,11 +2531,13 @@ void tick(void) {
         }
 #endif
     }
-    if (consoleType == KEYBOARD_MOUSE && DEVICE_TYPE_IS_GUITAR) {
+#if DEVICE_TYPE_IS_GUITAR
+    if (consoleType == KEYBOARD_MOUSE || consoleType == FNF) {
         if (!INPUT_QUEUE && (micros() - last_poll) < (4000)) {
             return;
         }
     }
+#endif
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }

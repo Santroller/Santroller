@@ -128,7 +128,12 @@ uint8_t* tickWii() {
     if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
         if (lastWiiEuphoriaLed != lastEuphoriaLed) {
             lastWiiEuphoriaLed = lastEuphoriaLed;
-            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, lastWiiEuphoriaLed);
+            // encrypt if encryption is enabled
+            uint8_t state = lastEuphoriaLed ? 1: 0;
+            if (s_box) {
+                state = (state - s_box) ^ s_box;
+            }
+            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, state);
         }
     }
 #endif

@@ -2465,7 +2465,7 @@ int tick_bluetooth_inputs(const void *buf) {
                 debounce[i]--;
             }
         }
-#if LED_COUNT
+#if LED_COUNT || HAS_LED_OUTPUT
         for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
             if (ledDebounce[i]) {
                 ledDebounce[i]--;
@@ -2535,7 +2535,7 @@ void tick(void) {
                 debounce[i]--;
             }
         }
-#if LED_COUNT
+#if LED_COUNT || HAS_LED_OUTPUT
         for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
             if (ledDebounce[i]) {
                 ledDebounce[i]--;

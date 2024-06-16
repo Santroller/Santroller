@@ -1686,7 +1686,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                         debounce[i]--;
                     }
                 }
-#if LED_COUNT
+#if LED_COUNT || HAS_LED_OUTPUT
                 for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
                     if (ledDebounce[i]) {
                         ledDebounce[i]--;

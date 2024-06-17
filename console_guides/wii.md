@@ -18,7 +18,7 @@ Fakemote is still in development, and it can ocassionally freeze your wii, but y
 3. Open the `Homebrew Channel`
 4. Launch `d2x cIOS installer (sanjay900)`
 5. Press any button to continue when prompted
-6. For `Select cIOS` select the last option `v10 sanjay900-53 d2x-v10-sanjay900-53`
+6. For `Select cIOS` select the last option `v10 sanjay900-53 d2x-v10-sanjay900-53` (press right to scroll through the options)
 7. For `Select cIOS base` make sure it is set to `57`
 8. For `Select cIOS slot` make sure it is set to `245`
 9. For `Select cIOS revision` make sure it is set to `65535`

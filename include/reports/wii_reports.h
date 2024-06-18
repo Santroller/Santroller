@@ -156,9 +156,9 @@ typedef struct {
     uint8_t dpadUp : 1;
     uint8_t dpadLeft : 1;
     uint8_t rightShoulder : 1;
-    uint8_t x : 1;
-    uint8_t a : 1;
     uint8_t y : 1;
+    uint8_t a : 1;
+    uint8_t x : 1;
     uint8_t b : 1;
     uint8_t leftShoulder : 1;
 } __attribute__((packed)) WiiGuitarDataFormat3_t;

@@ -173,7 +173,7 @@ void setup() {
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     tuh_init(TUH_OPT_RHPORT);
 #ifdef INPUT_MIDI
-    MIDI.begin(1);
+    MIDI.begin(0);
     MIDI.setHandleNoteOn(onNote);
     MIDI.setHandleNoteOff(offNote);
     MIDI.setHandleControlChange(onControlChange);

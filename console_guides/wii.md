@@ -4,7 +4,7 @@ The Wii is an interesting case, because different games use different types of i
 ## Rock Band
 Rock Band used USB instruments, so if you set your emulation mode to either `Rock Band Guitar` or `Rock Band Drums`, it will just work out of the box.
 
-## Guitar Hero
+## Guitar Hero / DJ Hero
 Guitar Hero instruments plugged into the Wii Remote. This means we need to emulate the Wii Extension in some form to play these games.
 
 You can either physically wire a Wii extension port to your controller and plug it into a Wii Remote, or you can mod your Wii and use software to emulate a Wii Extension.

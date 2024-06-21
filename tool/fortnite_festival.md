@@ -8,6 +8,8 @@ To support this, we have a concept of "Mode Bindings". This means you can hold a
 
 Note that if your are on the nintendo switch, the default guitar bindings are configured in such a way that you should be able to remap to usable controls within fortnite festival. Keyboard emulation doesn't actually work on the switch, but that doesn't really matter since you don't need auth to use controller mode.
 
+Some people prefer emulating a gamepad on windows, so we also offer that. However, we can't emulate a real riffmaster due to auth requirements, so we instead emulate enough of a riffmater to trick the game, but as a result this does not have working whammy.
+
 ## How to add the mode binding
 1. Hit `Add Setting`
 2. Pick `Console Mode Binding`

@@ -37,10 +37,10 @@ We currently provide mappings for quite a few different usb devices. Below is a 
 - Switch Pro Controller
 - Stream Deck and its peripherals
 - Generic HID Gamepads (though you will need to map things yourself)
-- Most Wired PS5 gamepads
-- Most Wired PS4 gamepads
-- Most Wired PS3 gamepads
-- Most Wired Xbox One Gamepads
+- Most Wired PS5 controllers
+- Most Wired PS4 controllers
+- Most Wired PS3 controllers
+- Most Wired Xbox One controllers
 - Most USB Keyboards and Mice
 
 ## Mapping a generic gamepad

@@ -42,3 +42,12 @@ We currently provide mappings for quite a few different usb devices. Below is a 
 - Most Wired PS3 gamepads
 - Most Wired Xbox One Gamepads
 - Most USB Keyboards and Mice
+
+## Mapping a generic gamepad
+If your gamepad is not supported, you can map it manually yourself.
+
+1. Click "Add Setting"
+2. Find the axis / button you want to assign an input to
+3. Set the input type to `USB Host`
+4. Pick one of the `generic` inputs. These are the first 16 detected buttons and the main axis that gamepads often bind things to.
+5. Calibrate and save, and your mapping should now work.

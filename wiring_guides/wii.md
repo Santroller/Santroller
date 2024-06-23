@@ -77,22 +77,22 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
     3. Connect the signal pin to an analog pin on your microcontroller
     </details>
 
-<details>
-    <summary>ADXL345</summary>
+    <details>
+        <summary>ADXL345</summary>
 
-1. Connect GND to GND
-2. Connect V<sub>CC</sub> to V<sub>CC</sub> (note that this is a 3.3v device, so for 5V microcontrollers make sure your ADXL345 breakout has a voltage regulator onboard)
-3. Hook up SDA and SCL to the microcontroller
+    1. Connect GND to GND
+    2. Connect V<sub>CC</sub> to V<sub>CC</sub> (note that this is a 3.3v device, so for 5V microcontrollers make sure your ADXL345 breakout has a voltage regulator onboard)
+    3. Hook up SDA and SCL to the microcontroller
 
-   | Microcontroller               | SDA                              | SCL                              |
-   | ----------------------------- | -------------------------------- | -------------------------------- |
-   | Pi Pico (Recommended)         | GP18                             | GP19                             |
-   | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
-   | Uno                           | A4                               | A5                               |
-   | Mega                          | 20                               | 21                               |
-   | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
-   | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
-</details>
+      | Microcontroller               | SDA                              | SCL                              |
+      | ----------------------------- | -------------------------------- | -------------------------------- |
+      | Pi Pico (Recommended)         | GP18                             | GP19                             |
+      | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
+      | Uno                           | A4                               | A5                               |
+      | Mega                          | 20                               | 21                               |
+      | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
+      | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
+    </details>
 
 ## Programming
 

@@ -53,3 +53,12 @@ If your gamepad is not supported, you can map it manually yourself.
 3. Set the input type to `USB Host`
 4. Pick one of the `generic` inputs. These are the first 16 detected buttons and the main axis that gamepads often bind things to.
 5. Calibrate and save, and your mapping should now work.
+
+## Mapping a USB keyboard or mouse
+
+1. Click "Add Setting"
+2. Find the axis / button you want to assign an input to
+3. Set the input type to `USB Host`
+4. Pick `Keyboard Input` or `Mouse Axis` or `Mouse button`
+5. Pick the key from the list, or hit `Click to assign` and press a key / move the keyboard / mouse plugged into your PC
+6. Save

@@ -29,8 +29,8 @@ We currently provide mappings for quite a few different usb devices. Below is a 
 - Xbox 360 Big Button controller
 - Most Xbox 360 wired controllers
 - Most Xbox 360 wired instruments
-- Most Xbox 360 wireless controllers (via PC Xbox USB adapter)
-- Most Xbox 360 wireless instruments (via PC Xbox USB adapter)
+- Most Xbox 360 wireless controllers (via Xbox 360 Wireless Gaming Receiver)
+- Most Xbox 360 wireless instruments (via Xbox 360 Wireless Gaming Receiver)
 - Magicboots PS4 Dongle
 - L-TEK Dance Pad
 - L-TEK Pro Dance Pad

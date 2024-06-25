@@ -164,25 +164,25 @@ void fill_generic_report(uint8_t dev_addr, uint8_t instance, const uint8_t *repo
                     case HID_USAGE_PAGE_DESKTOP:
                         switch (item->Attributes.Usage.Usage) {
                             case HID_USAGE_DESKTOP_X:
-                                out->genericX = GetAxis(item);
+                                out->genericAxisX = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_Y:
-                                out->genericY = GetAxis(item);
+                                out->genericAxisY = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_Z:
-                                out->genericZ = GetAxis(item);
+                                out->genericAxisZ = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_RX:
-                                out->genericRX = GetAxis(item);
+                                out->genericAxisRx = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_RY:
-                                out->genericRY = GetAxis(item);
+                                out->genericAxisRy = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_RZ:
-                                out->genericRZ = GetAxis(item);
+                                out->genericAxisRz = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_SLIDER:
-                                out->genericSlider = GetAxis(item);
+                                out->genericAxisSlider = GetAxis(item);
                                 break;
                             case HID_USAGE_DESKTOP_HAT_SWITCH:
                                 out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;

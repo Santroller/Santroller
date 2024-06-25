@@ -94,12 +94,12 @@ for (int i = 0; i < device_count; i++) {
         }
         case GENERIC: {
             USB_Host_Data_t *report = (USB_Host_Data_t *)data;
-            usb_host_data.genericX = report->genericX;
-            usb_host_data.genericY = report->genericY;
-            usb_host_data.genericX = report->genericX;
-            usb_host_data.genericRX = report->genericRX;
-            usb_host_data.genericRY = report->genericRY;
-            usb_host_data.genericRX = report->genericRX;
+            usb_host_data.genericAxisX = report->genericAxisX;
+            usb_host_data.genericAxisY = report->genericAxisY;
+            usb_host_data.genericAxisZ = report->genericAxisZ;
+            usb_host_data.genericAxisRx = report->genericAxisRx;
+            usb_host_data.genericAxisRy = report->genericAxisRy;
+            usb_host_data.genericAxisRz = report->genericAxisRz;
             usb_host_data.genericSlider = report->genericSlider;
             usb_host_data.dpadLeft |= report->dpadLeft;
             usb_host_data.dpadRight |= report->dpadRight;

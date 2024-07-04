@@ -86,7 +86,7 @@ To keep the relevant information in this guide easy to find, information is sort
 2. Solder the black wire from the piezo to ground.
 3. Solder the red wire to an analog input on the multiplexer for the Pi Pico, or to an analog pin on your micocontroller if your microcontroller has enough analog pins.
 4. Solder a 1Mohm resistor between the analog pin on your multiplexer / microcontroller and ground
-5. Solder a diode between the red (multiplexer) side of the piezo and ground. The black stripe on the diode should connect to the red side of the multiplexer.
+5. Solder a diode between the the analog pin on your multiplexer / microcontroller and ground
 
 </details>
 

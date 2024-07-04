@@ -89,7 +89,7 @@ To keep the relevant information in this guide easy to find, information is sort
 2. Solder the black wire from the piezo to ground.
 3. Solder the red wire to an analog input on the multiplexer / micocontroller.
 4. Solder a 1Mohm resistor between the analog input your piezo is connected to on your multiplexer / microcontroller and ground
-5. Solder a diode between the the analog input your piezo is connected to on your multiplexer / microcontroller and ground
+5. Solder a diode between the analog input your piezo is connected to on your multiplexer / microcontroller and ground
 
 </details>
 

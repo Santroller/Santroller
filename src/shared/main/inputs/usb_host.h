@@ -396,6 +396,10 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
+                    usb_host_data.dpadLeft |= left;
+                    usb_host_data.dpadRight |= right;
+                    usb_host_data.dpadUp |= up;
+                    usb_host_data.dpadDown |= down;
                     if (report->tilt != PS3_ACCEL_CENTER) {
                         usb_host_data.tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
@@ -437,7 +441,6 @@ for (int i = 0; i < device_count; i++) {
                     }
                     break;
                 } 
-                break;
             }
             break;
         }

@@ -183,6 +183,8 @@ for (int i = 0; i < device_count; i++) {
         case SANTROLLER: {
             PCGamepad_Data_t *report = (PCGamepad_Data_t *)data;
             uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+            asm volatile("" ::
+                         : "memory");
             bool up = dpad & UP;
             bool left = dpad & LEFT;
             bool down = dpad & DOWN;
@@ -434,13 +436,16 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.rightTableVelocity = (report->rightTableVelocity - PS3_STICK_CENTER) << 8;
                     }
                     break;
-                } break;
+                } 
+                break;
             }
             break;
         }
         case PS3: {
             PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)data;
             uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+            asm volatile("" ::
+                         : "memory");
             bool up = dpad & UP;
             bool left = dpad & LEFT;
             bool down = dpad & DOWN;

@@ -1945,7 +1945,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
 
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
+#if DEVICE_TYPE_IS_GUITAR 
     if (output_console_type == FNF) {
         report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
         PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)report_data;

@@ -208,7 +208,11 @@ uint8_t *tickPS2() {
             } else {
                 ps2ControllerType = PSX_DUALSHOCK_2_CONTROLLER;
             }
-        } else if (isDualShockReply(in)) {
+        } 
+        else if (bit_check(buttonWord, PSB_PAD_LEFT, PSB_PAD_DOWN, PSB_PAD_RIGHT)) {
+                ps2ControllerType = PSX_POPN_CONTROLLER;
+        }
+        else if (isDualShockReply(in)) {
             uint16_t buttonWord = ~(((uint16_t)in[4] << 8) | in[3]);
             if (bit_check(buttonWord, PSB_PAD_LEFT)) {
                 ps2ControllerType = PSX_GUITAR_HERO_CONTROLLER;

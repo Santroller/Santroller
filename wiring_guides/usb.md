@@ -14,7 +14,7 @@ If you are going to be selling your devices, its highly recommended that you inc
 However, if you are making this strictly for authentication reasons you likley won't need them, as most gamepads will work without them.
 
 ## Do i need to keep the controller plugged in
-For Xbox 360, Xbox One and Festival on PC, no, you should be able to unplug your controller after authentication is done.
+For Xbox 360 and Xbox One no, you should be able to unplug your controller after authentication is done.
 For PS4/PS5, you need to leave it plugged in, playstations continuously check the authentication state.
 
 ## Wiring Steps (with capacitor and resistor)

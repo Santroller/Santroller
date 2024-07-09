@@ -16,8 +16,6 @@ We currently provide mappings for quite a few different usb devices. Below is a 
 - PS3 / WiiU Guitar Hero Live
 - Wii RB Guitar
 - Wii RB Drums
-- PS4 Jag
-- PS4 Strat
 - PS4 Riffmaster
 - PS5 Riffmaster
 - Xbox One Jag

@@ -30,7 +30,7 @@ We currently provide mappings for quite a few different usb devices. Below is a 
 - L-TEK Dance Pad
 - L-TEK Pro Dance Pad
 - Stepmania X Dance Pad
-- Raphnet
+- Raphnet wii
 - Switch Pro Controller
 - Stream Deck and its peripherals
 - Generic HID Gamepads (though you will need to map things yourself)

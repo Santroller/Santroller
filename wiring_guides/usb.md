@@ -7,6 +7,9 @@ sort: 7
 * A USB Extension cable, or a USB breakout
 * 2x 27ohm resistor (optional, recommended if you want to use Hubs or PS3 instruments)
 * 2x 47pF capacitor (optional, recommended if you want to use Hubs or PS3 instruments)
+* 3.3V to 5V boost converter 
+   * only necessary if you wish to use USB host in combination with PS2 or Wii controller emulation
+   * This is not necessary if you are using the adafruit feather with USB host, as that board has one built in.
 
 ## Do I need the capacitor and resistor
 
@@ -36,6 +39,14 @@ For PS4/PS5, you need to leave it plugged in, playstations continuously check th
 3. Hook up the V- / GND (Black) to ground on your Pi Pico
 4. Hook up D+ (Green) to a unused digital pin.
 5. Hook up D- (White) to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
+
+## Wiring for USB Host + PS2 or Wii emulation
+1. Follow one of the above guides for GND, D+ and D-
+2. Connect GND on the Pico to GND on the boost converter
+3. Connect VSYS on the Pico to the input terminal on your boost converter
+4. Connect the V+ / VBUS (Red) from your breakout or extension to the output pin on your boost converter
+
+
 
 ## Configuring
 1. Click on Add setting

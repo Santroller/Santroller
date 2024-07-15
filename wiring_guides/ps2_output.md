@@ -55,3 +55,7 @@ NEVER plug in both the usb cable to your computer, and the PS2, it can only ever
 4.  Find `PS2 Controller Emulation` in the dropdown and add it
 5.  For the Pi Pico, set your SCK, MOSI, and MISO pins
 6.  Set your Acknowledge and Attention pins
+
+## USB Host
+
+Make sure you follow the relevant steps outlined in the [USB Host Guide](https://santroller.tangentmc.net/wiring_guides/usb.html) as some extra wiring is necessary to power USB devices when using PS2 controller emulation.

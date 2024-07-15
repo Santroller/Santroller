@@ -28,7 +28,7 @@
 #define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
 #define KEY_ERR_OVF 0x01
-
+#define REQUIRE_LED_DEBOUNCE LED_COUNT || LED_COUNT_PERIPHERAL || LED_COUNT_STP || LED_COUNT_PERIPHERAL_STP || LED_COUNT_WS2812 || LED_COUNT_PERIPHERAL_WS2812 || HAS_LED_OUTPUT
 struct {
     union {
         signed int ltt : 6;
@@ -1686,7 +1686,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                         debounce[i]--;
                     }
                 }
-#if LED_COUNT || HAS_LED_OUTPUT
+#if REQUIRE_LED_DEBOUNCE
                 for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
                     if (ledDebounce[i]) {
                         ledDebounce[i]--;
@@ -2465,7 +2465,7 @@ int tick_bluetooth_inputs(const void *buf) {
                 debounce[i]--;
             }
         }
-#if LED_COUNT || HAS_LED_OUTPUT
+#if REQUIRE_LED_DEBOUNCE
         for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
             if (ledDebounce[i]) {
                 ledDebounce[i]--;

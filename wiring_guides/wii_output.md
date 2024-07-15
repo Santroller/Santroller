@@ -53,3 +53,7 @@ NEVER plug in both the usb cable to your computer, and the extension to a wii re
 4.  Click on `Add Setting`
 5.  Find `Wii Extension Emulation` in the dropdown and add it 
 6.  For the Pi Pico, set your SDA and SCL pins.
+
+## USB Host
+
+Make sure you follow the relevant steps outlined in the [USB Host Guide](https://santroller.tangentmc.net/wiring_guides/usb.html) as some extra wiring is necessary to power USB devices when using Wii Extension Emulation.

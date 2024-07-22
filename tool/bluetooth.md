@@ -6,6 +6,10 @@ Santroller configurator allows using the Pico W to create wireless guitars. You 
 Note that once this is done, USB still works, so you can still use a guitar over USB if the battery dies or you want the better latency that wired provides.
 
 ```danger
+There are fake Pico W boards out there that are NOT supported by santroller. If you see an ESP based wireless module on the listing for your Pico W, do NOT buy it.
+```
+
+```danger
 Programming and configuring only works over USB. If you are designing a controller around this, make sure that the USB port is still accessible.
 ```
 

@@ -2535,7 +2535,7 @@ void tick(void) {
                 debounce[i]--;
             }
         }
-#if LED_COUNT || HAS_LED_OUTPUT
+#if REQUIRE_LED_DEBOUNCE
         for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
             if (ledDebounce[i]) {
                 ledDebounce[i]--;

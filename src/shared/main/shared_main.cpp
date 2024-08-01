@@ -2001,8 +2001,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->gyro = PS3_ACCEL_CENTER;
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;
+#if DEVICE_TYPE != ROCK_BAND_PRO_KEYS
+        // For Pro Keys, these bytes should be 0 by default
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
+#endif
 
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         report->effectsKnob = 0;
@@ -2040,7 +2043,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
             if (proKeyVelocities[i]) {
-                report->velocities[currentVel] = proKeyVelocities[i] >> 1;
+                report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
                 currentVel++;
             }
         }

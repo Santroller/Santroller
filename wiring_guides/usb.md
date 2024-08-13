@@ -8,12 +8,13 @@ sort: 7
 * 2x 27ohm resistor (optional, recommended if you want to use Hubs or PS3 instruments)
 * 2x 47pF capacitor (optional, recommended if you want to use Hubs or PS3 instruments)
 * 3.3V to 5V boost converter 
-   * only necessary if you wish to use USB host in combination with PS2 or Wii controller emulation
+   * only necessary if you wish to use USB host while plugging your pico into a Wii remote or a ps2 controller port
    * This is not necessary if you are using the adafruit feather with USB host, as that board has one built in.
 
 ## Do I need the capacitor and resistor
 
 If you are going to be selling your devices, its highly recommended that you include these, as some USB devices do require them.
+If you wish to plug another pico into this adapter, then you will need the them.
 However, if you are making this strictly for authentication reasons you likley won't need them, as most gamepads will work without them.
 
 ## Do i need to keep the controller plugged in

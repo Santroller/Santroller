@@ -817,6 +817,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.guide |= report->guide;
                     usb_host_data.leftThumbClick |= report->leftThumbClick;
                     usb_host_data.rightThumbClick |= report->rightThumbClick;
+                    usb_host_data.capture |= report->capture;
                     if (report->leftTrigger) {
                         usb_host_data.leftTrigger = report->leftTrigger << 8;
                     }

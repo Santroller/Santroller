@@ -253,6 +253,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #elif DEVICE_TYPE == LIVE_GUITAR
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3WIIU_GHLIVE_DONGLE_PID
+#define PS4_TYPE PS4_GUITAR
 #define OG_XBOX_REPORT OGXboxGHLGuitar_Data_t
 #define XINPUT_REPORT XInputGHLGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t

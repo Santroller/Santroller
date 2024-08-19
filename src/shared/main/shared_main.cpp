@@ -2016,14 +2016,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
             if (report->whammy > PS3_STICK_CENTER) {
                 gamepad->leftTrigger = true;
+                gamepad->l2 = true;
             }
 #endif
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
             if (report->whammy > 0xC0) {
                 gamepad->leftTrigger = true;
+                gamepad->l2 = true;
             }
             if (report->tilt > 0x200) {
                 gamepad->rightTrigger = true;
+                gamepad->r2 = true;
             }
 #endif
             gamepad->accelX = PS3_ACCEL_CENTER;
@@ -2382,14 +2385,17 @@ int tick_bluetooth_inputs(const void *buf) {
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
             if (report->whammy > PS3_STICK_CENTER) {
                 gamepad->leftTrigger = true;
+                gamepad->l2 = true;
             }
 #endif
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
             if (report->whammy > 0xC0) {
-                gamepad->leftTrigger = true;
+                gamepad->leftTrigger = true
+                gamepad->l2 = true;
             }
             if (report->tilt > 0x200) {
                 gamepad->rightTrigger = true;
+                gamepad->r2 = true;
             }
 #endif
             gamepad->accelX = PS3_ACCEL_CENTER;

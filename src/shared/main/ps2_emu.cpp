@@ -10,6 +10,11 @@
 uint8_t configMode = 0;
 uint8_t mode = 0x41;
 #if SUPPORTS_PICO
+#if PS2_SPI_PORT == SPI_1
+#define PS2_SPI_MOSI SPI_1_MISO
+#else
+#define PS2_SPI_MOSI SPI_0_MISO
+#endif
 uint8_t receiveCommand() {
     // The pi pico has a odd bug, where the first byte is essentially garbage when using SPI slave.
     // Since the PS2 requires the first byte be 0xFF, we just override whatever nonsense
@@ -17,7 +22,7 @@ uint8_t receiveCommand() {
     // It gets worse though. The garbage byte receives the first response, which
     // Misaligns all reads and writes, so we have to then misalign all our reads and writes
     // In the other direction to make things come out correctly.
-    gpio_set_oeover(SPI_1_MISO, GPIO_OVERRIDE_LOW);
+    gpio_set_oeover(PS2_SPI_MOSI, GPIO_OVERRIDE_LOW);
     uint8_t modeByte = configMode ? 0xF3 : mode;
     PS2_OUTPUT_ACK_SET();
     uint8_t ret = spi_transfer(PS2_OUTPUT_SPI_PORT, modeByte);
@@ -27,7 +32,7 @@ uint8_t receiveCommand() {
     if (ret != 1) {
         return 0;
     }
-    gpio_set_oeover(SPI_1_MISO, GPIO_OVERRIDE_NORMAL);
+    gpio_set_oeover(PS2_SPI_MOSI, GPIO_OVERRIDE_NORMAL);
     ret = spi_transfer(PS2_OUTPUT_SPI_PORT, 0x5A);
     PS2_OUTPUT_ACK_CLEAR();
     return ret;
@@ -107,7 +112,6 @@ int counter = 0;
 uint8_t buttons1 = 0xff;
 uint8_t buttons2 = 0xff;
 
-
 uint8_t motorSetting1 = 0xff;
 uint8_t motorSetting2 = 0xff;
 
@@ -124,10 +128,10 @@ void ps2_emu_init() {
     param1 = 0;
     param2 = 0;
     param3 = 0;
-    // Guitars need to hold dpad left
-    #if DEVICE_TYPE_IS_GUITAR
+// Guitars need to hold dpad left
+#if DEVICE_TYPE_IS_GUITAR
     buttons1 &= ~0x80;
-    #endif
+#endif
 }
 bool ps2_emu_tick(PS2_REPORT* report) {
     if (PS2_OUTPUT_ATT_READ()) {
@@ -149,7 +153,7 @@ bool ps2_emu_tick(PS2_REPORT* report) {
         if (!cmd)
             break;
 
-        if (configMode ) {
+        if (configMode) {
             switch (cmd) {
                 case 0x40: {
                     uint8_t data[] = {0x5A, 0x00, 0x00, 0x02, 0x00, 0x00, 0x5A};
@@ -243,7 +247,7 @@ bool ps2_emu_tick(PS2_REPORT* report) {
                 uint8_t data[3] = {0x5A};
                 memcpy(data, report, sizeof(data));
                 // Buttons are inverted
-                data[1] ^= 0xFF; 
+                data[1] ^= 0xFF;
                 data[2] ^= 0xFF;
                 receiveAll(data, sizeof(data));
                 param1 = data[1];
@@ -254,7 +258,7 @@ bool ps2_emu_tick(PS2_REPORT* report) {
                 uint8_t data[7] = {0x5A};
                 memcpy(data, report, sizeof(data));
                 // Buttons are inverted
-                data[1] ^= 0xFF; 
+                data[1] ^= 0xFF;
                 data[2] ^= 0xFF;
                 receiveAll(data, sizeof(data));
                 param1 = data[1];
@@ -264,7 +268,7 @@ bool ps2_emu_tick(PS2_REPORT* report) {
                 uint8_t data[19] = {0x5A};
                 memcpy(data, report, sizeof(data));
                 // Buttons are inverted
-                data[1] ^= 0xFF; 
+                data[1] ^= 0xFF;
                 data[2] ^= 0xFF;
                 receiveAll(data, sizeof(data));
                 param1 = data[1];

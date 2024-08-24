@@ -149,6 +149,10 @@ void send_report_to_pc(const void* report, uint8_t len) {
 void loop() {
     // Wait for a packet from the 8u2/16u2.
     if (!ready) {
+        if (!usb_ready) {
+            // tick controller when usb isn't ready for console bindings.
+            tick();
+        }
         return;
     }
     ready = false;

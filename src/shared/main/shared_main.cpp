@@ -1931,6 +1931,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->tilt = PS3_STICK_CENTER;
+        report->whammy = PS3_STICK_CENTER;
+#endif
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+        report->slider = PS3_STICK_CENTER;
+#endif
+#if DEVICE_TYPE == ROCK_BAND_GUITAR
+        report->pickup = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         report->leftTableVelocity = PS3_STICK_CENTER;

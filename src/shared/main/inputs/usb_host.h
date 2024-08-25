@@ -854,7 +854,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
                     if (report->tilt) {
-                        usb_host_data.tilt = report->tilt << 8;
+                        usb_host_data.tilt = report->tilt << 7;
                     }
                     if (report->solo) {
                         usb_host_data.soloGreen |= report->a;
@@ -957,7 +957,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
                     if (report->tilt) {
-                        usb_host_data.tilt = report->tilt << 8;
+                        usb_host_data.tilt = report->tilt << 7;
                     }
                     if (report->solo) {
                         usb_host_data.soloGreen |= report->a;

@@ -121,9 +121,9 @@ bool wiiDataValid() {
     return initialised;
 }
 uint8_t* tickWii() {
-    #if WII_SHARED
+#if WII_SHARED
     delayMicroseconds(10);
-    #endif
+#endif
     static uint8_t data[8];
     memset(data, 0, sizeof(data));
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
@@ -132,7 +132,7 @@ uint8_t* tickWii() {
         if (lastWiiEuphoriaLed != lastEuphoriaLed) {
             lastWiiEuphoriaLed = lastEuphoriaLed;
             // encrypt if encryption is enabled
-            uint8_t state = lastEuphoriaLed ? 1: 0;
+            uint8_t state = lastEuphoriaLed ? 1 : 0;
             if (s_box) {
                 state = (state - s_box) ^ s_box;
             }

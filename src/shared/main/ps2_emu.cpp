@@ -10,11 +10,6 @@
 uint8_t configMode = 0;
 uint8_t mode = 0x41;
 #if SUPPORTS_PICO
-#if PS2_SPI_PORT == SPI_1
-#define PS2_SPI_MOSI SPI_1_MISO
-#else
-#define PS2_SPI_MOSI SPI_0_MISO
-#endif
 uint8_t receiveCommand() {
     // The pi pico has a odd bug, where the first byte is essentially garbage when using SPI slave.
     // Since the PS2 requires the first byte be 0xFF, we just override whatever nonsense

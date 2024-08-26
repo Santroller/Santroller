@@ -121,7 +121,7 @@ bool wiiDataValid() {
     return initialised;
 }
 uint8_t* tickWii() {
-#if WII_SHARED
+#ifdef WII_SHARED
     delayMicroseconds(10);
 #endif
     static uint8_t data[8];

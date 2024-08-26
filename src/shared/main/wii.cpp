@@ -121,6 +121,9 @@ bool wiiDataValid() {
     return initialised;
 }
 uint8_t* tickWii() {
+    #if WII_SHARED
+    delayMicroseconds(10);
+    #endif
     static uint8_t data[8];
     memset(data, 0, sizeof(data));
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE

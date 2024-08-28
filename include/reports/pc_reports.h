@@ -221,6 +221,42 @@ typedef struct
     uint8_t tilt;
 } __attribute__((packed)) PCGuitarHeroGuitar_Data_t;
 
+// Festivals default mappings suck, so its easiest to set up custom mappings for that here
+typedef struct
+{
+    uint8_t reportId;
+    uint8_t rightShoulder : 1;  // a, cross, green
+    uint8_t leftShoulder : 1;   // b, circle, red
+    uint8_t x : 1;              // y, triangle, yellow
+    uint8_t y : 1;              // x, square, blue
+
+    uint8_t dpadUp : 1;    // leftShoulder, orange, l1
+    uint8_t dpadDown : 1;  // rightShoulder, spPedal, r1
+    uint8_t back: 1;           // back, select
+    uint8_t start : 1;     // start
+
+    uint8_t guide : 1;  // ps
+    uint8_t : 2;
+    uint8_t whammy : 1;
+    uint8_t tilt : 1;
+    uint8_t : 2;
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    union {
+        struct {
+            uint8_t b : 1;          // dpadUp
+            uint8_t dpadRight : 1;  // dpadDown
+            uint8_t a : 1;          // dpadLeft
+            uint8_t dpadLeft : 1;   // dpadRight
+            uint8_t : 4;
+        };
+        uint8_t dpad;
+    };
+
+    uint8_t unused[2];
+    uint8_t slider;
+} __attribute__((packed)) FestivalProGuitarLayer_Data_t;
+
 typedef struct
 {
     uint8_t reportId;

@@ -94,48 +94,6 @@ typedef struct {
 } __attribute__((packed)) PS3Dpad_Data_t;
 
 typedef struct {
-    // Button bits
-    uint8_t y : 1;
-    uint8_t b : 1;
-    uint8_t a : 1;
-    uint8_t x : 1;
-
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
-
-    uint8_t back : 1;  // select
-    uint8_t start : 1;
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
-
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // switch capture button
-    uint8_t : 2;
-
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    uint8_t dpadUp : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-    uint8_t : 4;
-
-    // Stick axes
-    // Neutral state is 0x80
-    // X axis is left at 0x00, right at 0xFF
-    // Y axis is top at 0x00, bottom at 0xFF
-    uint8_t leftStickX;
-    uint8_t leftStickY;
-    uint8_t rightStickX;
-    uint8_t rightStickY;
-
-    uint8_t unused2[12];
-    uint16_t unused3[4];
-
-} __attribute__((packed)) SwitchGamepad_Data_t;
-
-typedef struct {
     uint8_t reportId;
     uint8_t : 8;
     uint8_t back : 1;             // select

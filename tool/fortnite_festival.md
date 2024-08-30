@@ -1,9 +1,9 @@
 ---
 sort: 5
 ---
-# Configuring for Fortnite Festival Pro Mode
+# Configuring for Fortnite Festival
 
-For Pro mode, it makes the most sense to emulate a keyboard, as this avoids the need for auth on consoles, and avoids a bunch of issues on PC. However, we do see that it is useful to be able to configure both standard guitar inputs and keyboard inputs at the same time.
+For fortnite festival, it makes the most sense to emulate a keyboard, as this avoids the need for auth on consoles, and avoids a bunch of issues on PC. However, we do see that it is useful to be able to configure both standard guitar inputs and keyboard inputs at the same time.
 To support this, we have a concept of "Mode Bindings". This means you can hold a button on your guitar when plugging it onto a PC / console, and it will emulate a keyboard.
 
 Note that if your are on the nintendo switch, the default guitar bindings are configured in such a way that you should be able to remap to usable controls within fortnite festival. Keyboard emulation doesn't actually work on the switch, but that doesn't really matter since you don't need auth to use controller mode.

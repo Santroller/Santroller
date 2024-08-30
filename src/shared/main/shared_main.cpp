@@ -1924,36 +1924,55 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
     if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
-        report_size = packet_size = sizeof(PC_REPORT);
-        PC_REPORT *report = (PC_REPORT *)report_data;
-        memset(report, 0, sizeof(PC_REPORT));
+#ifdef TICK_FESTIVAL
+        if (!festival_gameplay_mode) {
+#endif
+            PC_REPORT *report = (PC_REPORT *)report_data;
+            report_size = packet_size = sizeof(PC_REPORT);
+            memset(report, 0, sizeof(PC_REPORT));
 #if DEVICE_TYPE == GAMEPAD
-        report->leftStickX = PS3_STICK_CENTER;
-        report->leftStickY = PS3_STICK_CENTER;
-        report->rightStickX = PS3_STICK_CENTER;
-        report->rightStickY = PS3_STICK_CENTER;
+            report->leftStickX = PS3_STICK_CENTER;
+            report->leftStickY = PS3_STICK_CENTER;
+            report->rightStickX = PS3_STICK_CENTER;
+            report->rightStickY = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-        report->tilt = PS3_STICK_CENTER;
-        report->whammy = PS3_STICK_CENTER;
+            report->tilt = PS3_STICK_CENTER;
+            report->whammy = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
-        report->slider = PS3_STICK_CENTER;
+            report->slider = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
-        report->pickup = PS3_STICK_CENTER;
+            report->pickup = PS3_STICK_CENTER;
 #endif
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->leftTableVelocity = PS3_STICK_CENTER;
-        report->rightTableVelocity = PS3_STICK_CENTER;
-        report->crossfader = PS3_STICK_CENTER;
-        report->effectsKnob = 0;
+            report->leftTableVelocity = PS3_STICK_CENTER;
+            report->rightTableVelocity = PS3_STICK_CENTER;
+            report->crossfader = PS3_STICK_CENTER;
+            report->effectsKnob = 0;
 #endif
-        report->reportId = 1;
-        TICK_PC;
-        asm volatile("" ::
-                         : "memory");
-        report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+            report->reportId = 1;
+            TICK_PC;
+            asm volatile("" ::
+                             : "memory");
+            report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+#ifdef TICK_FESTIVAL
+        } else {
+            FestivalProGuitarLayer_Data_t *report = (FestivalProGuitarLayer_Data_t *)report_data;
+            report_size = packet_size = sizeof(FestivalProGuitarLayer_Data_t);
+            memset(report, 0, sizeof(FestivalProGuitarLayer_Data_t));
+            report->unused[0] = PS3_STICK_CENTER;
+            report->unused[1] = PS3_STICK_CENTER;
+            report->slider = PS3_STICK_CENTER;
+            report->reportId = 1;
+            TICK_FESTIVAL;
+
+            asm volatile("" ::
+                             : "memory");
+            report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+        }
+#endif
     }
 
 #if DEVICE_TYPE_IS_GUITAR
@@ -2006,6 +2025,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
         memset(gamepad, 0, sizeof(PS3Dpad_Data_t));
+
+        asm volatile("" ::
+                            : "memory");
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -2075,21 +2097,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
 #ifdef TICK_FESTIVAL
-        } else if (output_console_type == SWITCH) {
+        } else {
             SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)report_data;
             TICK_FESTIVAL;
 
             asm volatile("" ::
                              : "memory");
             gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-        } else {
-            FestivalProGuitarLayer_Data_t *report = (FestivalProGuitarLayer_Data_t *)report_data;
-            TICK_FESTIVAL;
-
-            asm volatile("" ::
-                             : "memory");
-            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-        }
+        } 
 #endif
     }
 

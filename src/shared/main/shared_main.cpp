@@ -159,7 +159,8 @@ Gip_Led_On_t ledOn;
 Gip_Auth_Done_t authDonePacket;
 long last_poll = 0;
 long last_poll_dj_ps3 = 0;
-
+bool festival_gameplay_mode = false;
+long last_festival_toggle = 0;
 /* Magic data taken from GHLtarUtility:
  * https://github.com/ghlre/GHLtarUtility/blob/master/PS3Guitar.cs
  * Note: The Wii U and PS3 dongles happen to share the same!
@@ -1999,9 +2000,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (!updateHIDSequence) {
             packet_size = report_size;
         }
-        PS3_REPORT *report = (PS3_REPORT *)report_data;
-        memset(report, 0, sizeof(PS3_REPORT));
+
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
+        memset(gamepad, 0, sizeof(PS3Dpad_Data_t));
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -2017,59 +2018,47 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
         report->effectsKnob = 0;
 #endif
-        TICK_PS3;
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
-        if (output_console_type == SWITCH) {
-#if DEVICE_TYPE == ROCK_BAND_GUITAR
-            if (report->whammy > PS3_STICK_CENTER) {
-                gamepad->leftTrigger = true;
-                gamepad->l2 = true;
+#ifdef TICK_FESTIVAL
+        if (!festival_gameplay_mode) {
+#endif
+            PS3_REPORT *report = (PS3_REPORT *)report_data;
+            TICK_PS3;
+#ifdef TICK_FESTIVAL
+            if (output_console_type == SWITCH) {
+                gamepad->accelX = PS3_ACCEL_CENTER;
+                gamepad->accelY = PS3_ACCEL_CENTER;
+                gamepad->accelZ = PS3_ACCEL_CENTER;
+                gamepad->gyro = PS3_ACCEL_CENTER;
+                gamepad->leftStickX = PS3_STICK_CENTER;
+                gamepad->leftStickY = PS3_STICK_CENTER;
+                gamepad->rightStickX = PS3_STICK_CENTER;
+                gamepad->rightStickY = PS3_STICK_CENTER;
             }
 #endif
-#if DEVICE_TYPE == GUITAR_HERO_GUITAR
-            if (report->whammy > 0xC0) {
-                gamepad->leftTrigger = true;
-                gamepad->l2 = true;
-            }
-            if (report->tilt > 0x200) {
-                gamepad->rightTrigger = true;
-                gamepad->r2 = true;
-            }
-#endif
-            gamepad->accelX = PS3_ACCEL_CENTER;
-            gamepad->accelY = PS3_ACCEL_CENTER;
-            gamepad->accelZ = PS3_ACCEL_CENTER;
-            gamepad->gyro = PS3_ACCEL_CENTER;
-            gamepad->leftStickX = PS3_STICK_CENTER;
-            gamepad->leftStickY = PS3_STICK_CENTER;
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
-        }
 
-#endif
-        asm volatile("" ::
-                         : "memory");
+            asm volatile("" ::
+                             : "memory");
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
-        uint8_t currentVel = 0;
-        for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
-            if (proKeyVelocities[i]) {
-                report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
-                currentVel++;
+            uint8_t currentVel = 0;
+            for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
+                if (proKeyVelocities[i]) {
+                    report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
+                    currentVel++;
+                }
             }
-        }
 #endif
-        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
 #ifdef CONFIGURABLE_BLOBS
-        if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
-            bool a = gamepad->a;
-            bool b = gamepad->b;
-            bool x = gamepad->x;
-            bool y = gamepad->y;
-            gamepad->b = a;
-            gamepad->a = b;
-            gamepad->x = y;
-            gamepad->y = x;
-        }
+            if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
+                bool a = gamepad->a;
+                bool b = gamepad->b;
+                bool x = gamepad->x;
+                bool y = gamepad->y;
+                gamepad->b = a;
+                gamepad->a = b;
+                gamepad->x = y;
+                gamepad->y = x;
+            }
 #elif SWAP_SWITCH_FACE_BUTTONS
         if (output_console_type == SWITCH) {
             bool a = gamepad->a;
@@ -2080,6 +2069,23 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->a = b;
             gamepad->x = y;
             gamepad->y = x;
+        }
+#endif
+#ifdef TICK_FESTIVAL
+        } else if (output_console_type == SWITCH) {
+            SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)report_data;
+            TICK_FESTIVAL;
+
+            asm volatile("" ::
+                             : "memory");
+            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+        } else {
+            FestivalProGuitarLayer_Data_t *report = (FestivalProGuitarLayer_Data_t *)report_data;
+            TICK_FESTIVAL;
+
+            asm volatile("" ::
+                             : "memory");
+            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         }
 #endif
     }

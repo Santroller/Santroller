@@ -1676,6 +1676,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     if (millis() < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
         TICK_DETECTION;
     }
+#ifdef TICK_DETECTION_FESTIVAL
+    TICK_DETECTION_FESTIVAL;
+#endif
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     // if input queues are enabled, then we just tick as often as possible
     if (!buf) {

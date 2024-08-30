@@ -1952,7 +1952,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
     }
 
-#if DEVICE_TYPE_IS_GUITAR 
+#if DEVICE_TYPE_IS_GUITAR
     if (output_console_type == FNF) {
         report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
         PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)report_data;
@@ -2397,8 +2397,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
             if (report->whammy > 0xC0) {
-                gamepad->leftTrigger = true
-                gamepad->l2 = true;
+                gamepad->leftTrigger = true gamepad->l2 = true;
             }
             if (report->tilt > 0x200) {
                 gamepad->rightTrigger = true;
@@ -2512,6 +2511,9 @@ void tick(void) {
 #ifdef TICK_LED_STROBE
     TICK_LED_STROBE;
 #endif
+#ifdef TICK_LED_BLUETOOTH
+    TICK_LED_BLUETOOTH;
+#endif;
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when
     // the device is plugged in again

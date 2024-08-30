@@ -2513,7 +2513,7 @@ void tick(void) {
 #endif
 #ifdef TICK_LED_BLUETOOTH
     TICK_LED_BLUETOOTH;
-#endif;
+#endif
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when
     // the device is plugged in again

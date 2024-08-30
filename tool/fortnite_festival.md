@@ -12,8 +12,7 @@ Some people prefer emulating a riffmaster on windows, so we also offer that. How
 
 ## How to add the mode binding
 1. Hit `Add Setting`
-2. Pick `Console Mode Binding`
-3. Set `Emulation Mode` to `Fortnite Festival (Pro Mode - Keyboard)`
+3. Pick `Fortnite Festival (Pro Mode - Keyboard)`
    1. This will work on consoles and PC
    2. If you wish to emulate a riffmaster compatible guitar on PC, you can instead use `Fortnite Festival (Pro Mode - PC gamepad)`, but do note that whammy won't work.
    3. You can always add both modes if you wish to be able to use both, just put them on different buttons.

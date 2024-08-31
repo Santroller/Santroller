@@ -103,17 +103,17 @@ typedef struct {
     uint8_t rightStickX;
     uint8_t rightStickY;
     uint8_t b : 1; // dpadUp
-    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
     uint8_t a : 1; // dpadLeft
     uint8_t dpadRight : 1;
     // 14 bits for buttons.
     uint8_t x : 1;  // square (x) - yellow
-    uint8_t dpadUp : 1;  // cross (a)
-    uint8_t dpadDown : 1;  // circle (b) - orange
+    uint8_t rightShoulder : 1;  // cross (a)
+    uint8_t leftShoulder : 1;  // circle (b) - orange
     uint8_t y : 1;  // triangle (y) - blue
 
-    uint8_t rightShoulder : 1;   // l1 (leftShoulder) - strum up
-    uint8_t rightShoulder : 1;  // r1 (rightShoulder) - strum down
+    uint8_t dpadUp : 1;   // l1 (leftShoulder) - strum up
+    uint8_t dpadDown : 1;  // r1 (rightShoulder) - strum down
     uint8_t whammy : 1;             // l2 - whammy
     uint8_t tilt : 1;             // r2 - overdrive
 

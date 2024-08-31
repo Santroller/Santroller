@@ -76,6 +76,7 @@
 #define LTEK 23
 #define STEPMANIAX 24
 #define LTEK_ID 25
+#define IOS_FESTIVAL 26
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

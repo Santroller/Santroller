@@ -874,7 +874,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
 #endif
         }
-        if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if ((consoleType == PS4 || consoleType == IOS_FESTIVAL) && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             switch (wValue) {
                 case 0x0303:
                     seen_ps4 = true;
@@ -1079,6 +1079,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = PS4_PID;
 #endif
             }
+            else if (consoleType == IOS_FESTIVAL) {
+                dev->idVendor = PS4_VID;
+                dev->idProduct = PS4_PID;
+            }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {
                 dev->idVendor = WII_RB_VID;
@@ -1131,7 +1135,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
 
-                if (consoleType == PS4) {
+                if (consoleType == PS4 || consoleType == IOS_FESTIVAL) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
@@ -1175,7 +1179,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(keyboard_mouse_descriptor);
 #elif DEVICE_TYPE_IS_NORMAL_GAMEPAD
 
-            if (consoleType == PS4) {
+            if (consoleType == PS4 || consoleType == IOS_FESTIVAL) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
 

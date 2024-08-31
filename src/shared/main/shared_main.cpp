@@ -1923,6 +1923,47 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = packet_size = sizeof(PS4_REPORT);
     }
 #endif
+#ifdef TICK_FESTIVAL
+    if (output_console_type == IOS_FESTIVAL) {
+        if (!festival_gameplay_mode) {
+            PS4_REPORT *report = (PS4_REPORT *)report_data;
+            memset(report, 0, sizeof(PS4_REPORT));
+            PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
+            gamepad->report_id = 0x01;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+            // PS4 does not start using the controller until it sees a PS button press.
+            if (!seen_ps4_console) {
+                report->guide = true;
+            }
+            TICK_PS4;
+            asm volatile("" ::
+                             : "memory");
+            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+            report_size = packet_size = sizeof(PS4_REPORT);
+        } else {
+            PS4FestivalProGuitarLayer_Data_t *report = (PS4FestivalProGuitarLayer_Data_t *)report_data;
+            memset(report, 0, sizeof(PS4FestivalProGuitarLayer_Data_t));
+            PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
+            gamepad->report_id = 0x01;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+            // PS4 does not start using the controller until it sees a PS button press.
+            if (!seen_ps4_console) {
+                report->guide = true;
+            }
+            TICK_FESTIVAL;
+            asm volatile("" ::
+                             : "memory");
+            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+            report_size = packet_size = sizeof(PS4FestivalProGuitarLayer_Data_t);
+        }
+    }
+#endif
     if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
 #ifdef TICK_FESTIVAL
         if (!festival_gameplay_mode) {
@@ -2027,7 +2068,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(gamepad, 0, sizeof(PS3Dpad_Data_t));
 
         asm volatile("" ::
-                            : "memory");
+                         : "memory");
         gamepad->accelX = PS3_ACCEL_CENTER;
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
@@ -2104,13 +2145,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             asm volatile("" ::
                              : "memory");
             gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-        } 
+        }
 #endif
     }
 
     TICK_RESET
     // Some hosts want packets sent every frame
-    if (last_report && output_console_type != PS4 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
+    if (last_report && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;

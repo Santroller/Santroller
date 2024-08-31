@@ -1934,10 +1934,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->leftStickY = PS3_STICK_CENTER;
             gamepad->rightStickX = PS3_STICK_CENTER;
             gamepad->rightStickY = PS3_STICK_CENTER;
-            // PS4 does not start using the controller until it sees a PS button press.
-            if (!seen_ps4_console) {
-                report->guide = true;
-            }
             TICK_PS4;
             asm volatile("" ::
                              : "memory");
@@ -1952,10 +1948,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->leftStickY = PS3_STICK_CENTER;
             gamepad->rightStickX = PS3_STICK_CENTER;
             gamepad->rightStickY = PS3_STICK_CENTER;
-            // PS4 does not start using the controller until it sees a PS button press.
-            if (!seen_ps4_console) {
-                report->guide = true;
-            }
             TICK_FESTIVAL;
             asm volatile("" ::
                              : "memory");

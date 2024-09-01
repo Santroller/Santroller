@@ -1934,6 +1934,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->leftStickY = PS3_STICK_CENTER;
             gamepad->rightStickX = PS3_STICK_CENTER;
             gamepad->rightStickY = PS3_STICK_CENTER;
+            // PS4 does not start using the controller until it sees a PS button press.
+            if (!seen_ps4_console) {
+                report->guide = true;
+            }
             TICK_PS4;
             asm volatile("" ::
                              : "memory");
@@ -1948,6 +1952,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             gamepad->leftStickY = PS3_STICK_CENTER;
             gamepad->rightStickX = PS3_STICK_CENTER;
             gamepad->rightStickY = PS3_STICK_CENTER;
+            // PS4 does not start using the controller until it sees a PS button press.
+            if (!seen_ps4_console) {
+                report->guide = true;
+            }
             TICK_FESTIVAL;
             asm volatile("" ::
                              : "memory");
@@ -2048,7 +2056,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
 #else
     // For instruments, we instead use the below block, as all other console types use the below format
-    if ((output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
+    if ((output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
 #endif
         report_size = sizeof(PS3_REPORT);
         // Do NOT update the size for XBONE, since the XBONE packets have a totally different size!
@@ -2157,6 +2165,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->reportCounter = ps4_sequence_number++;
     }
 #endif
+
+    if (output_console_type == IOS_FESTIVAL) {
+        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
+        gamepad->reportCounter = ps4_sequence_number++;
+    }
 #if USB_HOST_STACK
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (updateSequence) {
@@ -2511,6 +2524,9 @@ int tick_bluetooth_inputs(const void *buf) {
         ps4_sequence_number++;
     }
 #endif
+    if (output_console_type == IOS_FESTIVAL) {
+        ps4_sequence_number++;
+    }
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (updateSequence) {
         report_sequence_number++;

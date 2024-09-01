@@ -143,7 +143,7 @@ void tick_bluetooth(const void *buf, uint8_t len) {
 #endif
 #if BLUETOOTH
 void loop1() {
-    if (consoleType == XBOX360 && !foundXB && XINPUT_AUTH) {
+    if (consoleType == XBOX360 && !foundXB && xboxAuthValid) {
         return;
     }
     if (consoleType == XBOXONE && !foundXB) {

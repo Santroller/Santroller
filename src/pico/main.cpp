@@ -287,7 +287,6 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
                 foundXB = true;
                 // Reboot the controller and wait for auth
                 if (!xboxAuthValid) {
-                    printf("found xb, auth restart\r\n");
                     xboxAuthValid = true;
                     reset_usb();
                 }

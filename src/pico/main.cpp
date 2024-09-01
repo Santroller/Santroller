@@ -107,9 +107,7 @@ static void tick_usb() {
         return;
     }
 #endif
-#if !BLUETOOTH
     tud_task();
-#endif
 #if USB_HOST_STACK
     tuh_task();
 #endif
@@ -124,17 +122,14 @@ static void tick_usb() {
 #ifdef INPUT_MIDI
     MIDI.read();
 #endif
-#if BLUETOOTH
     if (!authDone) {
         if (consoleType != XBOXONE && (consoleType != XBOX360 || !xboxAuthValid)) {
             authReady = millis() > 1000;
         }
         if (authReady) {
-            btstack_main();
             authDone = true;
         }
     }
-#endif
 }
 #ifdef BLUETOOTH_RX
 void tick_bluetooth(const void *buf, uint8_t len) {
@@ -143,13 +138,9 @@ void tick_bluetooth(const void *buf, uint8_t len) {
 #endif
 #if BLUETOOTH
 void loop1() {
-    if (consoleType == XBOX360 && !foundXB && xboxAuthValid) {
-        return;
-    }
-    if (consoleType == XBOXONE && !foundXB) {
-        return;
-    }
-    tud_task();
+}
+void setup1() {
+    btstack_main();
 }
 #endif
 void loop() {

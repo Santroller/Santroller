@@ -231,6 +231,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
 int btstack_main(void);
 int btstack_main(void) {
+    printf("Bt tx init\r\n");
     le_keyboard_setup();
 
     // turn on!

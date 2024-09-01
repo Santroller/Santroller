@@ -43,6 +43,7 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
 static uint32_t __uninitialized_ram(persistedConsoleType);
 static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
+static uint32_t __uninitialized_ram(xboxAuthValid);
 bool connected = false;
 #if USB_HOST_STACK
 USB_Device_Type_t xone_dev_addr = {};
@@ -97,7 +98,7 @@ bool authDone = false;
 long test3 = 0;
 static void tick_usb() {
 #if USB_HOST_STACK
-    if (consoleType == XBOX360 && !foundXB && XINPUT_AUTH) {
+    if (consoleType == XBOX360 && !foundXB && xboxAuthValid) {
         tuh_task();
         return;
     }
@@ -125,7 +126,7 @@ static void tick_usb() {
 #endif
 #if BLUETOOTH
     if (!authDone) {
-        if (consoleType != XBOXONE && (consoleType != XBOX360 || !XINPUT_AUTH)) {
+        if (consoleType != XBOXONE && (consoleType != XBOX360 || !xboxAuthValid)) {
             authReady = millis() > 1000;
         }
         if (authReady) {
@@ -160,6 +161,7 @@ void setup() {
         consoleType = persistedConsoleType;
     } else {
         windows_in_hid = false;
+        xboxAuthValid = false;
         consoleType = UNIVERSAL;
     }
     generateSerialString(&serialstring, consoleType);
@@ -283,6 +285,12 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             xinput_controller_connected(host_vid, host_pid);
             if (consoleType == XBOX360) {
                 foundXB = true;
+                // Reboot the controller and wait for auth
+                if (!xboxAuthValid) {
+                    printf("found xb, auth restart\r\n");
+                    xboxAuthValid = true;
+                    reset_usb();
+                }
                 printf("found xb\r\n");
             }
             break;

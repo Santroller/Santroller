@@ -2451,7 +2451,8 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
             if (report->whammy > 0xC0) {
-                gamepad->leftTrigger = true gamepad->l2 = true;
+                gamepad->leftTrigger = true;
+                 gamepad->l2 = true;
             }
             if (report->tilt > 0x200) {
                 gamepad->rightTrigger = true;

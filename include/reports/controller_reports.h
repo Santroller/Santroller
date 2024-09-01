@@ -225,7 +225,7 @@ typedef union {
     USB_NKRO_Data_t keyboard;
 #endif
     USB_MIDI_Data_t midi;
-    uint8_t raw[64];
+    uint8_t raw[128];
     USB_Mouse_Data_t mouse;
 } USB_Report_Data_t;
 

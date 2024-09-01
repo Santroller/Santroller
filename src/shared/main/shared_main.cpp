@@ -1900,7 +1900,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
 #if SUPPORTS_PS4
-    if (output_console_type == PS4) {
+    if (output_console_type == PS4 || output_console_type == IOS_FESTIVAL) {
         if (millis() > 450000 && !auth_ps4_controller_found) {
             reset_usb();
         }
@@ -1926,41 +1926,29 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef TICK_FESTIVAL
     if (output_console_type == IOS_FESTIVAL) {
         if (!festival_gameplay_mode) {
-            PS4_REPORT *report = (PS4_REPORT *)report_data;
-            memset(report, 0, sizeof(PS4_REPORT));
-            PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
-            gamepad->report_id = 0x01;
-            gamepad->leftStickX = PS3_STICK_CENTER;
-            gamepad->leftStickY = PS3_STICK_CENTER;
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
-            // PS4 does not start using the controller until it sees a PS button press.
-            if (!seen_ps4_console) {
-                report->guide = true;
-            }
-            TICK_PS4;
-            asm volatile("" ::
-                             : "memory");
-            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-            report_size = packet_size = sizeof(PS4_REPORT);
+            PS3GamepadGuitar_Data_t *report = (PS3GamepadGuitar_Data_t *)report_data;
+            memset(report, 0, sizeof(PS3GamepadGuitar_Data_t));
+            report->reportId = 1;
+            report->accelX = PS3_ACCEL_CENTER;
+            report->accelY = PS3_ACCEL_CENTER;
+            report->accelZ = PS3_ACCEL_CENTER;
+            report->gyro = PS3_ACCEL_CENTER;
+            report->leftStickX = PS3_STICK_CENTER;
+            report->leftStickY = PS3_STICK_CENTER;
+            report->rightStickX = PS3_STICK_CENTER;
+            report->rightStickY = PS3_STICK_CENTER;
+            TICK_PS3_WITHOUT_CAPTURE;
+            report_size = packet_size = sizeof(PS3GamepadGuitar_Data_t);
         } else {
-            PS4FestivalProGuitarLayer_Data_t *report = (PS4FestivalProGuitarLayer_Data_t *)report_data;
-            memset(report, 0, sizeof(PS4FestivalProGuitarLayer_Data_t));
-            PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
-            gamepad->report_id = 0x01;
-            gamepad->leftStickX = PS3_STICK_CENTER;
-            gamepad->leftStickY = PS3_STICK_CENTER;
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
-            // PS4 does not start using the controller until it sees a PS button press.
-            if (!seen_ps4_console) {
-                report->guide = true;
-            }
+            PS3FestivalProGuitarLayer_Data_t *report = (PS3FestivalProGuitarLayer_Data_t *)report_data;
+            memset(report, 0, sizeof(PS3FestivalProGuitarLayer_Data_t));
+            report->reportId = 0x01;
+            report->leftStickX = PS3_STICK_CENTER;
+            report->leftStickY = PS3_STICK_CENTER;
+            report->rightStickX = PS3_STICK_CENTER;
+            report->rightStickY = PS3_STICK_CENTER;
             TICK_FESTIVAL;
-            asm volatile("" ::
-                             : "memory");
-            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-            report_size = packet_size = sizeof(PS4FestivalProGuitarLayer_Data_t);
+            report_size = packet_size = sizeof(PS3FestivalProGuitarLayer_Data_t);
         }
     }
 #endif
@@ -2166,10 +2154,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
 
-    if (output_console_type == IOS_FESTIVAL) {
-        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
-        gamepad->reportCounter = ps4_sequence_number++;
-    }
 #if USB_HOST_STACK
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (updateSequence) {
@@ -2524,9 +2508,6 @@ int tick_bluetooth_inputs(const void *buf) {
         ps4_sequence_number++;
     }
 #endif
-    if (output_console_type == IOS_FESTIVAL) {
-        ps4_sequence_number++;
-    }
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     if (updateSequence) {
         report_sequence_number++;

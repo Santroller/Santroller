@@ -797,7 +797,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         // PS3s request this as some form of controller id
-        if (consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
             // Pro instruments use a different init flow
 #if DEVICE_TYPE_IS_PRO
             if (proButtonsEnabled) {
@@ -823,21 +823,21 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             consoleType = PS3;
             reset_usb();
         }
-        if (consoleType == PS3 && wValue == 0x03f8 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f8 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_f8, sizeof(ps3_feature_f8));
             requestBuffer[7] = ef_byte;
             return sizeof(ps3_feature_f8);
         }
 
-        if (consoleType == PS3 && wValue == 0x03f7 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f7 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_f7, sizeof(ps3_feature_f7));
             return sizeof(ps3_feature_f7);
         }
-        if (consoleType == PS3 && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_f2, sizeof(ps3_feature_f2));
             return sizeof(ps3_feature_f2);
         }
-        if (consoleType == PS3 && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_f5, sizeof(ps3_feature_f5));
             if (f5_state == 0) {
                 /*
@@ -852,13 +852,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
             return sizeof(ps3_feature_f5);
         }
-        if (consoleType == PS3 && wValue == 0x03ef && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03ef && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_ef, sizeof(ps3_feature_ef));
             requestBuffer[7] = ef_byte;
             return sizeof(ps3_feature_ef);
         }
         // PS3 sends this for a gamepad
-        if (consoleType == PS3 && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0301 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x40) {
             memcpy_P(requestBuffer, ps3_feature_01, sizeof(ps3_feature_01));
             return sizeof(ps3_feature_01);
         }
@@ -874,7 +874,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
 #endif
         }
-        if ((consoleType == PS4 || consoleType == IOS_FESTIVAL) && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
+        if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             switch (wValue) {
                 case 0x0303:
                     seen_ps4 = true;
@@ -926,10 +926,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
         }
         return 1;
-    } else if (consoleType == PS3 && wValue == 0x03ef && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
+    } else if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03ef && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
         ef_byte = requestBuffer[6];
         return 1;
-    } else if (consoleType == PS3 && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
+    } else if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
         memcpy(master_bd_addr, requestBuffer + 2, sizeof(master_bd_addr));
         printf("Master bd address set\r\n");
         return 1;
@@ -989,7 +989,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
 
 #if DEVICE_TYPE_IS_PRO
-        if (consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
             for (int i = 0; i < 0x28; i++) {
                 printf("%02x, ", requestBuffer[i]);
             }
@@ -1078,10 +1078,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = PS4_VID;
                 dev->idProduct = PS4_PID;
 #endif
-            }
-            else if (consoleType == IOS_FESTIVAL) {
-                dev->idVendor = PS4_VID;
-                dev->idProduct = PS4_PID;
+            } else if (consoleType == IOS_FESTIVAL) {
+                dev->idVendor = SONY_VID;
+                dev->idProduct = SONY_DS3_PID;
             }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {
@@ -1135,8 +1134,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
                 UNIVERSAL_CONFIGURATION_DESCRIPTOR *desc = (UNIVERSAL_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
 
-                if (consoleType == PS4 || consoleType == IOS_FESTIVAL) {
+                if (consoleType == PS4) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps4_descriptor);
+                    desc->EndpointOutHID.wMaxPacketSize = 64;
+                    desc->EndpointInHID.wMaxPacketSize = 64;
+                } else if (consoleType == IOS_FESTIVAL) {
+                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
 #if DEVICE_TYPE_IS_INSTRUMENT
@@ -1179,10 +1182,12 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(keyboard_mouse_descriptor);
 #elif DEVICE_TYPE_IS_NORMAL_GAMEPAD
 
-            if (consoleType == PS4 || consoleType == IOS_FESTIVAL) {
+            if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
-
+            } else if (consoleType == IOS_FESTIVAL) {
+                address = ps3_descriptor;
+                size = sizeof(ps3_descriptor);
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
             } else if (consoleType == FNF) {
                 address = fnf_descriptor;

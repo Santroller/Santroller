@@ -1,3 +1,4 @@
+#include <stddef.h>
 #ifdef __AVR_ATmega328P__
 #define NUM_TOTAL_PINS 24
 #define PORT_COUNT 3

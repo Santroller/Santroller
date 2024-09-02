@@ -18,13 +18,13 @@
 #include "hid.h"
 #include "shared_main.h"
 #if DEVICE_TYPE_IS_KEYBOARD
-    // Appearance HID - Keyboard (Category 15, Sub-Category 1)
-    #define REPORT keyboard_mouse_descriptor
-    #define APPEARANCE 0xC1
+// Appearance HID - Keyboard (Category 15, Sub-Category 1)
+#define REPORT keyboard_mouse_descriptor
+#define APPEARANCE 0xC1
 #else
-    // Appearance HID - Gamepad (Category 15, Sub-Category 4)
-    #define REPORT pc_descriptor
-    #define APPEARANCE 0xC4
+// Appearance HID - Gamepad (Category 15, Sub-Category 4)
+#define REPORT pc_descriptor
+#define APPEARANCE 0xC4
 #endif
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -76,7 +76,7 @@ int get_bt_address(uint8_t *addr) {
 }
 void send_report(uint8_t size, uint8_t *report) {
     if (con_handle != HCI_CON_HANDLE_INVALID) {
-        hids_device_send_input_report(con_handle, report+1, size-1);
+        hids_device_send_input_report(con_handle, report + 1, size - 1);
         // hids_device_request_can_send_now_event(con_handle);
     }
 }
@@ -215,7 +215,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     uint16_t len = hids_subevent_set_report_get_report_length(packet);
                     uint8_t type = hids_subevent_set_report_get_report_type(packet);
                     uint8_t id = hids_subevent_set_report_get_report_id(packet);
-                    const uint8_t* output = hids_subevent_set_report_get_report_data(packet);
+                    const uint8_t *output = hids_subevent_set_report_get_report_data(packet);
                     hid_set_report(output, len, type, BLUETOOTH_REPORT);
                     break;
                 }
@@ -236,7 +236,7 @@ int btstack_main(void) {
 
     // turn on!
     hci_power_control(HCI_POWER_ON);
-
+    btstack_run_loop_execute();
     return 0;
 }
 #endif

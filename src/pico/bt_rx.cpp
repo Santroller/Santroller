@@ -474,6 +474,7 @@ int btstack_main(void) {
 
     // Turn on the device
     hci_power_control(HCI_POWER_ON);
+    btstack_run_loop_execute();
     return 0;
 }
 

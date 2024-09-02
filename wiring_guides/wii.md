@@ -150,9 +150,11 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
       <summary>ADXL345 based Tilt</summary>
 
     1. Click on Tilt, and make sure the `Input Type` is set to `ADXL345 Input`.
-    2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
-    3. Click on `Calibrate`
-    4. Tilt your guitar down, and then hit `Next`
-    5. Tilt the guitar up, and then hit `Next`
-    6. Hold your guitar in its resting position and then hit `Next`.
+    2. For the Pi Pico, set the SDA and SCL pins that you have used.
+    3. Hit save.
+    4. Click on `Calibrate`
+    5. Hold your guitar in its resting position, and then hit `Next`
+    6. Tilt the guitar up, and then hit `Next`
+    7. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
+    8. Adjust the `Low Pass Filter`. This value controls how new value from the ADXL are filtered, a value closer to 0 will result in a sensor that won't respond to a shake or strumming, but if you decrease it too much the sensor will have a decreased responsiveness. If you set it closer to 1, then the sensor will be very responsive but it will also pick up any tiny vibrations as well. From testing a value of 0.05 seemed like a good place to start. 
     </details>

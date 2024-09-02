@@ -439,7 +439,7 @@ If you intend to use the peripheral features, it is recommended to program the p
     <summary>ADXL345 based Tilt</summary>
 
   1. Click on Tilt, and make sure the `Input Type` is set to `ADXL345 Input`.
-  2. Set the SDA and SCL pins that you have used.
+  2. For the Pi Pico, set the SDA and SCL pins that you have used.
   3. Hit save.
   4. Click on `Calibrate`
   5. Hold your guitar in its resting position, and then hit `Next`

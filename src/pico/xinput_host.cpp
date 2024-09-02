@@ -33,7 +33,7 @@
 #include "hid.h"
 #include "hidparser.h"
 #include "host/usbh.h"
-#include "host/usbh_classdriver.h"
+#include "host/usbh_pvt.h"
 #include "xinput_host.h"
 
 #define INVALID_REPORT_ID -1
@@ -128,8 +128,9 @@ bool tuh_xinput_send_report(uint8_t dev_addr, uint8_t instance, uint8_t const *r
 //--------------------------------------------------------------------+
 // USBH API
 //--------------------------------------------------------------------+
-void xinputh_init(void) {
+bool xinputh_init(void) {
     tu_memclr(_xinputh_dev, sizeof(_xinputh_dev));
+    return true;
 }
 
 static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportData, HID_ReportItem_t *const ReportItem) {

@@ -6,7 +6,6 @@
 #include <tusb.h>
 
 #include "bt.h"
-#include "btstack_run_loop.h"
 #include "commands.h"
 #include "common/tusb_types.h"
 #include "config.h"
@@ -17,7 +16,8 @@
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
 #include "hidescriptorparser.h"
-#include "host/usbh_classdriver.h"
+#include "host/usbh.h"
+#include "host/usbh_pvt.h"
 #include "io.h"
 #include "midi_host.h"
 #include "pico/bootrom.h"
@@ -61,6 +61,10 @@ typedef struct {
 
 Usb_Host_Device_t usb_host_devices[CFG_TUH_DEVICE_MAX * CFG_TUH_XINPUT];
 #endif
+typedef enum {
+    PIO_USB_PINOUT_DPDM = 0,  // DM = DP+1
+    PIO_USB_PINOUT_DMDP,      // DM = DP-1
+} PIO_USB_PINOUT;
 typedef struct {
     uint8_t pin_dp;
     uint8_t pio_tx_num;
@@ -73,6 +77,7 @@ typedef struct {
     int8_t debug_pin_rx;
     int8_t debug_pin_eop;
     bool skip_alarm_pool;
+    PIO_USB_PINOUT pinout;
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -148,9 +153,9 @@ void loop() {
 }
 
 void setup() {
-    #if USB_HOST_STACK
+#if USB_HOST_STACK
     set_sys_clock_khz(120000, true);
-    #endif
+#endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
     } else {
@@ -164,7 +169,19 @@ void setup() {
     tud_init(TUD_OPT_RHPORT);
 #if USB_HOST_STACK
     pio_usb_configuration_t config = {
-        USB_HOST_DP_PIN, 0, 0, 0, 1, 0, 1, NULL, -1, -1, .skip_alarm_pool = false};
+        pin_dp : USB_HOST_DP_PIN,
+        pio_tx_num : 0,
+        sm_tx : 0,
+        tx_ch : 0,
+        pio_rx_num : 0,
+        sm_rx : 1,
+        sm_eop : 2,
+        alarm_pool : NULL,
+        debug_pin_rx : -1,
+        debug_pin_eop : -1,
+        skip_alarm_pool : false,
+        pinout : PIO_USB_PINOUT_DPDM
+    };
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     tuh_init(TUH_OPT_RHPORT);
 #ifdef INPUT_MIDI
@@ -262,7 +279,7 @@ uint8_t read_usb_host_devices(uint8_t *buf) {
     return total_usb_host_devices * 2;
 }
 
-void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_type, uint8_t sub_type) {
+bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_type, uint8_t sub_type) {
     printf("Detected controller: %d (%d) on %d, %d\r\n", console_type, sub_type, dev_addr, instance);
     uint16_t host_vid = 0;
     uint16_t host_pid = 0;
@@ -391,6 +408,7 @@ void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     printf("Total devices: %d\r\n", total_usb_host_devices);
 
     host_controller_connected();
+    return true;
 }
 
 void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance) {

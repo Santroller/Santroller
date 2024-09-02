@@ -118,7 +118,7 @@ bool tuh_xinput_receive_report(uint8_t dev_addr, uint8_t instance);
 // can be used to parse common/simple enough descriptor.
 // Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
 // therefore report_desc = NULL, desc_len = 0
-void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t type, uint8_t subtype);
+bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t type, uint8_t subtype);
 bool tuh_xinput_ready(uint8_t dev_addr, uint8_t instance);
 bool tuh_xinput_send_report(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len);
 
@@ -142,7 +142,7 @@ TU_ATTR_WEAK void tuh_xinput_set_protocol_complete_cb(uint8_t dev_addr, uint8_t 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void xinputh_init(void);
+bool xinputh_init(void);
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const* desc_itf, uint16_t max_len);
 bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num);
 bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);

@@ -4,7 +4,6 @@
 #define CFG_TUSB_OS OPT_OS_PICO
 #define CFG_TUSB_RHPORT0_MODE (OPT_MODE_DEVICE)
 #define CFG_TUSB_RHPORT1_MODE (OPT_MODE_HOST)
-#define TUP_DCD_ENDPOINT_MAX 8
 // Allow usb hubs
 #define CFG_TUH_DEVICE_MAX 8
 // RHPort max operational speed can defined by board.mk

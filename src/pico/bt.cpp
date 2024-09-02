@@ -131,7 +131,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     UNUSED(size);
 
     if (packet_type != HCI_EVENT_PACKET) return;
-
     switch (hci_event_packet_get_type(packet)) {
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             con_handle = HCI_CON_HANDLE_INVALID;
@@ -218,6 +217,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     const uint8_t *output = hids_subevent_set_report_get_report_data(packet);
                     hid_set_report(output, len, type, BLUETOOTH_REPORT);
                     break;
+                }
+                case HIDS_SUBEVENT_CAN_SEND_NOW: {
+
+                    printf("can send now\r\n");
                 }
                 default:
                     break;

@@ -749,6 +749,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x81:
             uint8_t serial[0x0B];
             read_serial(serial, sizeof(serial));
+            xsm3_import_kv_keys(kv_key_1, kv_key_2);
             xsm3_set_serial(serial);
             xsm3_initialise_state();
             xsm3_set_identification_data(xsm3_id_data_ms_controller);

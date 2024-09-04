@@ -186,7 +186,7 @@ typedef struct {
     uint8_t slider;
     uint8_t pickup;
     uint8_t tilt;
-    uint8_t pressureCross;
+    uint8_t solo;
     uint8_t pressureSquare;
     uint8_t padding_4[15];
     // Each of the following are 10 bits in accuracy

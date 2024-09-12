@@ -2069,9 +2069,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 #endif
 
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->effectsKnob = 0;
-#endif
 #ifdef TICK_FESTIVAL
         if (!festival_gameplay_mode) {
 #endif
@@ -2090,6 +2087,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
 #endif
 
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+            report->effectsKnob = 0;
+#endif
             asm volatile("" ::
                              : "memory");
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
@@ -2452,7 +2452,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
             if (report->whammy > 0xC0) {
                 gamepad->leftTrigger = true;
-                 gamepad->l2 = true;
+                gamepad->l2 = true;
             }
             if (report->tilt > 0x200) {
                 gamepad->rightTrigger = true;

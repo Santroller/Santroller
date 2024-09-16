@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "serial.h"
 
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
@@ -90,6 +91,7 @@ static void le_keyboard_setup(void) {
     l2cap_init();
 
     sm_init();
+    sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
 
     // setup ATT server
@@ -101,6 +103,9 @@ static void le_keyboard_setup(void) {
     // setup device information service
     device_information_service_server_init();
     device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID, USB_VERSION_BCD(DEVICE_TYPE, 0, 0));
+    char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
+    pico_get_unique_board_id_string(id, sizeof(id));
+    device_information_service_server_set_serial_number(id);
 
     hids_device_init(0, REPORT, sizeof(REPORT));
 

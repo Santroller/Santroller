@@ -232,7 +232,6 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
     if (hci_event_packet_get_type(packet) != HCI_EVENT_GATTSERVICE_META) {
         return;
     }
-
     switch (hci_event_gattservice_meta_get_subevent_code(packet)) {
         case GATTSERVICE_SUBEVENT_HID_SERVICE_CONNECTED:
             status = gattservice_subevent_hid_service_connected_get_status(packet);
@@ -411,7 +410,9 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                     // continue - query primary services
                     printf("Search for HID service.\r\n");
                     app_state = W4_HID_CLIENT_CONNECTED;
-                    device_information_service_client_query(connection_handle, handle_gatt_client_event);
+                    // device_information_service_client_query(connection_handle, handle_gatt_client_event);
+                    gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
+                    hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
                     break;
                 case ERROR_CODE_CONNECTION_TIMEOUT:
                     printf("Pairing failed, timeout\r\n");

@@ -433,16 +433,8 @@ uint16_t handle_calibration_ps3_accel(uint16_t previous, uint16_t orig_val, int1
 long last_zero = 0;
 uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint16_t min, int16_t multiplier, uint16_t deadzone) {
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
-    // RB whammy has a timeout where it returns the center pos when not moved after a while
-    int8_t ret = handle_calibration_xbox_whammy((previous - PS3_STICK_CENTER) << 8, orig_val, min, multiplier, deadzone) >> 8;
-    if (ret < -120) {
-        if (last_zero - millis() > 1000) {
-            return PS3_STICK_CENTER;
-        }
-    } else {
-        last_zero = millis() + 1000;
-    }
-    return (uint8_t)(ret + PS3_STICK_CENTER);
+    // RB whammy is full range
+    return handle_calibration_ps3_360_trigger(previous, orig_val, min, multiplier, deadzone);
 #else
     // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then add center
     uint8_t ret = handle_calibration_ps3_360_trigger(previous << 1, orig_val, min, multiplier, deadzone) >> 1;
@@ -2069,9 +2061,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 #endif
 
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->effectsKnob = 0;
-#endif
 #ifdef TICK_FESTIVAL
         if (!festival_gameplay_mode) {
 #endif
@@ -2090,6 +2079,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
 #endif
 
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+            report->effectsKnob = 0;
+#endif
             asm volatile("" ::
                              : "memory");
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
@@ -2452,7 +2444,7 @@ int tick_bluetooth_inputs(const void *buf) {
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
             if (report->whammy > 0xC0) {
                 gamepad->leftTrigger = true;
-                 gamepad->l2 = true;
+                gamepad->l2 = true;
             }
             if (report->tilt > 0x200) {
                 gamepad->rightTrigger = true;

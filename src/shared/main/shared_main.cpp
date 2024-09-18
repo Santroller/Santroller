@@ -2065,10 +2065,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (!festival_gameplay_mode) {
 #endif
             PS3_REPORT *report = (PS3_REPORT *)report_data;
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+            report->effectsKnob = 0;
+#endif
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
             report->whammy = 0;
 #endif
             TICK_PS3;
+            asm volatile("" ::
+                             : "memory");
 #ifdef TICK_FESTIVAL
             if (output_console_type == SWITCH) {
                 gamepad->accelX = PS3_ACCEL_CENTER;
@@ -2082,11 +2087,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
 #endif
 
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            report->effectsKnob = 0;
-#endif
-            asm volatile("" ::
-                             : "memory");
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
             uint8_t currentVel = 0;
             for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {

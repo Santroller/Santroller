@@ -40,14 +40,15 @@ enum SerialCommands {
     COMMAND_WRITE_ANALOG,
     COMMAND_WRITE_DIGITAL,
     COMMAND_LED_BRIGHTNESS,
-    COMMAND_READ_ADXL,
+    COMMAND_READ_ACCEL,
     COMMAND_READ_MPR121,
     COMMAND_READ_MPR121_VALID,
     COMMAND_SET_LEDS_MPR121,
     COMMAND_READ_MAX170X,
     COMMAND_READ_MAX170X_VALID,
     COMMAND_READ_MIDI,
-    COMMAND_SET_ADXL_FILTER,
+    COMMAND_SET_ACCEL_FILTER,
+    COMMAND_ACCEL_VALID,
     MAX=100
 };
 
@@ -73,6 +74,7 @@ extern bool overrideR2;
 extern bool slave_initted;
 extern uint8_t overriddenR2;
 extern int16_t filtered[3];
+extern bool accel_found;
 extern bool mpr121_init;
 extern uint16_t lastMpr121;
 extern bool max170x_init;

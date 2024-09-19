@@ -1,3 +1,3 @@
 #ifdef INPUT_ADXL
-    tick_adxl();
+    tick_accel();
 #endif

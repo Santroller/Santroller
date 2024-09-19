@@ -264,9 +264,6 @@ void init_main(void) {
 #ifdef TICK_PS2
     ps2_emu_init();
 #endif
-#ifdef INPUT_ADXL
-    init_adxl();
-#endif
 #ifdef INPUT_MIDI
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
 #endif

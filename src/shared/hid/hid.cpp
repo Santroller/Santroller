@@ -857,11 +857,15 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &response, sizeof(response));
             return sizeof(response);
         }
-        case COMMAND_READ_ADXL: {
+        case COMMAND_READ_ACCEL: {
             memcpy(response_buffer, &filtered, sizeof(filtered));
             return sizeof(filtered);
         }
-        case COMMAND_SET_ADXL_FILTER: {
+        case COMMAND_ACCEL_VALID: {
+            response_buffer[0] = accel_found;
+            return 1;
+        }
+        case COMMAND_SET_ACCEL_FILTER: {
             memcpy(&currentLowPassAlpha, response_buffer, sizeof(currentLowPassAlpha));
             return 0;
         }

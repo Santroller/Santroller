@@ -5,6 +5,10 @@
 #define NONE 0
 #define INVALID_PIN 0xFF
 
+#define ADXL345 1
+#define LIS3DH 2
+#define MPU6050 3
+
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
 #define XINPUT_GAMEPAD 1

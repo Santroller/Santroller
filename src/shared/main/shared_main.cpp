@@ -1,7 +1,7 @@
 #include "shared_main.h"
 
 #include "Arduino.h"
-#include "adxl.h"
+#include "accel.h"
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
@@ -1528,7 +1528,7 @@ void tick_ps2output() {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
-#include "inputs/adxl.h"
+#include "inputs/accel.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
@@ -1550,7 +1550,7 @@ void tick_ps2output() {
 #endif
 #ifdef TICK_WII
 void tick_wiioutput() {
-#include "inputs/adxl.h"
+#include "inputs/accel.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
@@ -1649,7 +1649,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
-#include "inputs/adxl.h"
+#include "inputs/accel.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"

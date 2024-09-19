@@ -1,3 +1,3 @@
-#ifdef INPUT_ADXL
+#if ACCEL_TYPE
     tick_accel();
 #endif

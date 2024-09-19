@@ -2,10 +2,10 @@
 #include "config.h"
 #include "fxpt_math.h"
 #include "io.h"
-#if ACCEL_TYPE
 int16_t filtered[3] = {0};
 double currentLowPassAlpha = LOW_PASS_ALPHA;
 bool accel_found = false;
+#if ACCEL_TYPE
 void init_accel() {
 #if ACCEL_TYPE == LIS3DH
     uint8_t id = 0;

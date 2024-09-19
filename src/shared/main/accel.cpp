@@ -19,7 +19,7 @@ void init_accel() {
 #elif ACCEL_TYPE == ADXL345
     uint8_t id = 0;
     twi_readFromPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_REG_DEVID, 1, &id);
-    if (id != ADXL345_REG_DEVID) {
+    if (id != ADXL345_ID) {
         return;
     }
     accel_found = true;

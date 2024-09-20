@@ -358,7 +358,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             uint8_t last_id = 0;
             tuh_descriptor_get_hid_report(dev_addr, p_xinput->itf_num, x_desc->bDescrType, 0, temp_buf, x_desc->wDescriptorLength, NULL, (uintptr_t)temp_buf);
             // Seems that sometimes we miss the first byte?
-            if (!temp_buf[0]) {
+            if (!temp_buf[0] || temp_buf[0] == 4) {
                 temp_buf[0] = 0x05;
             }
             // printf("Report: \r\n");

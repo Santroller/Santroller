@@ -569,22 +569,22 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.overdrive |= report->overdrive;
                     usb_host_data.pedalDigital |= report->pedalDigital;
                     if (report->pedalAnalog) {
-                        usb_host_data.pedalAnalog = report->pedalAnalog;
+                        usb_host_data.pedalAnalog = report->pedalAnalog << 1;
                     }
                     if (report->velocity1) {
-                        usb_host_data.velocity1 = report->velocity1;
+                        usb_host_data.velocity1 = report->velocity1 << 1;
                     }
                     if (report->velocity2) {
-                        usb_host_data.velocity2 = report->velocity2;
+                        usb_host_data.velocity2 = report->velocity2 << 1;
                     }
                     if (report->velocity3) {
-                        usb_host_data.velocity3 = report->velocity3;
+                        usb_host_data.velocity3 = report->velocity3 << 1;
                     }
                     if (report->velocity4) {
-                        usb_host_data.velocity4 = report->velocity4;
+                        usb_host_data.velocity4 = report->velocity4 << 1;
                     }
                     if (report->velocity5) {
-                        usb_host_data.velocity5 = report->velocity5;
+                        usb_host_data.velocity5 = report->velocity5 << 1;
                     }
                     break;
                 }
@@ -1391,22 +1391,22 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.overdrive |= report->overdrive;
                     usb_host_data.pedalDigital |= report->pedalDigital;
                     if (report->pedalAnalog) {
-                        usb_host_data.pedalAnalog = report->pedalAnalog;
+                        usb_host_data.pedalAnalog = report->pedalAnalog << 1;
                     }
                     if (report->velocity1) {
-                        usb_host_data.velocity1 = report->velocity1;
+                        usb_host_data.velocity1 = report->velocity1 << 1;
                     }
                     if (report->velocity2) {
-                        usb_host_data.velocity2 = report->velocity2;
+                        usb_host_data.velocity2 = report->velocity2 << 1;
                     }
                     if (report->velocity3) {
-                        usb_host_data.velocity3 = report->velocity3;
+                        usb_host_data.velocity3 = report->velocity3 << 1;
                     }
                     if (report->velocity4) {
-                        usb_host_data.velocity4 = report->velocity4;
+                        usb_host_data.velocity4 = report->velocity4 << 1;
                     }
                     if (report->velocity5) {
-                        usb_host_data.velocity5 = report->velocity5;
+                        usb_host_data.velocity5 = report->velocity5 << 1;
                     }
                     break;
                 }

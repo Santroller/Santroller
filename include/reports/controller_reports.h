@@ -10,9 +10,9 @@
 #include "reports/ps5_reports.h"
 #include "reports/raphnet_reports.h"
 #include "reports/switch_reports.h"
+#include "reports/wii_reports.h"
 #include "reports/xbox_one_reports.h"
 #include "reports/xinput_reports.h"
-#include "reports/wii_reports.h"
 
 #define STREAM_DECK_INPUT_REPORT_ID 1
 #define SIMULTANEOUS_KEYS 6
@@ -383,16 +383,7 @@ typedef struct {
 
     uint8_t key25 : 1;
     uint8_t overdrive : 1;
-    uint8_t pedalDigital : 1;
-    uint8_t :5;
-
-    uint8_t velocity1;
-    uint8_t velocity2;
-    uint8_t velocity3;
-    uint8_t velocity4;
-    uint8_t velocity5;
-
-    uint8_t pedalAnalog;
-
-    uint8_t touchPad;;
+    uint8_t : 6;
+    uint8_t pedal;
+    uint8_t touchPad;
 } __attribute__((packed)) USB_Host_Data_t;

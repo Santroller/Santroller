@@ -62,8 +62,8 @@ To keep the relevant information in this guide easy to find, information is sort
 <details>
     <summary>Face buttons</summary>
 
-1. Remove the button PCB from the turntable
-2. There should be a little PCB attached to the button PCB. Disconnect this in some way, either by cutting it away, desoldering it or cutting traces going to the microcontroller on it. Be careful though, as the traces on these PCBs are very cheap and can break very very easily.
+1. Remove the face button PCB from the turntable
+2. There is a smaller PCB attached to the main button PCB with headers, which contains the main micro controller. Disconnect this in some way, either by cutting it away, desoldering it or cutting traces going to the microcontroller on it. Be careful though, as the traces on these PCBs are very cheap and can break very very easily.
 3. Follow the traces from each pad. You will find that there will be common traces going to multiple pads, which you can connect to ground. Connect the other trace going to each pad to a digital pin on your microcontroller. In effect, you should end up with one side of every pad going to ground, and the other side going to a digital pin. Some tables may even have the pins labeled for you, which can make things easier.
 </details>
 

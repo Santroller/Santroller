@@ -61,7 +61,10 @@ extern uint8_t ws2812_bits[4];
 extern uint8_t led_tmp;
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
 // for STP, two bits per led, select and on
-#if LED_COUNT_WS2812
+#if LED_COUNT_WS2812W
+extern Led_WS2812W_t ledState[LED_COUNT_WS2812W];
+extern Led_WS2812W_t lastLedState[LED_COUNT_WS2812W];
+#elif LED_COUNT_WS2812
 extern Led_WS2812_t ledState[LED_COUNT_WS2812];
 extern Led_WS2812_t lastLedState[LED_COUNT_WS2812];
 #elif LED_COUNT_STP
@@ -78,7 +81,10 @@ extern uint8_t ledStateMpr121;
 extern uint8_t ledStateMpr121Select;
 extern uint8_t lastLedStateMpr121;
 #endif
-#if LED_COUNT_PERIPHERAL_WS2812
+#if LED_COUNT_PERIPHERAL_WS2812W
+extern Led_WS2812W_t ledStatePeripheral[LED_COUNT_PERIPHERAL_WS2812W];
+extern Led_WS2812W_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL_WS2812W];
+#elif LED_COUNT_PERIPHERAL_WS2812
 extern Led_WS2812_t ledStatePeripheral[LED_COUNT_PERIPHERAL_WS2812];
 extern Led_WS2812_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL_WS2812];
 #elif LED_COUNT_PERIPHERAL_STP

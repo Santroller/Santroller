@@ -14,7 +14,7 @@ void init_accel() {
         return;
     }
     accel_found = true;
-    twi_writeSingleToPointer(ACCEL_TWI_PORT, LIS3DH_ADDRESS, LIS3DH_REG_CTRL1, 0b11101110);
+    twi_writeSingleToPointer(ACCEL_TWI_PORT, LIS3DH_ADDRESS, LIS3DH_REG_CTRL1, 0b01110111);
     twi_writeSingleToPointer(ACCEL_TWI_PORT, LIS3DH_ADDRESS, LIS3DH_REG_CTRL4, 0x88);
 #elif ACCEL_TYPE == ADXL345
     uint8_t id = 0;

@@ -2868,6 +2868,10 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, USB_Device_Type_t *type
                     type->console_type = PS3;
                     type->sub_type = LIVE_GUITAR;
                     break;
+                case PS3_KEYBOARD_PID:
+                    type->console_type = PS3;
+                    type->sub_type = ROCK_BAND_PRO_KEYS;
+                    break;
             }
             break;
 
@@ -2885,7 +2889,12 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, USB_Device_Type_t *type
                     type->console_type = PS3;
                     type->sub_type = ROCK_BAND_DRUMS;
                     break;
+                case WII_KEYBOARD_PID:
+                    type->console_type = PS3;
+                    type->sub_type = ROCK_BAND_PRO_KEYS;
+                    break;
             }
+
             break;
         case PDP_VID:
             switch (pid) {

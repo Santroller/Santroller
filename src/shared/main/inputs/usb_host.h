@@ -526,6 +526,68 @@ for (int i = 0; i < device_count; i++) {
                     }
                     break;
                 }
+                case ROCK_BAND_PRO_KEYS: {
+                    PS3RockBandProKeyboard_Data_t *report = (PS3RockBandProKeyboard_Data_t *)data;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    usb_host_data.dpadLeft |= left;
+                    usb_host_data.dpadRight |= right;
+                    usb_host_data.dpadUp |= up;
+                    usb_host_data.dpadDown |= down;
+                    usb_host_data.key1 |= report->key1;
+                    usb_host_data.key2 |= report->key2;
+                    usb_host_data.key3 |= report->key3;
+                    usb_host_data.key4 |= report->key4;
+                    usb_host_data.key5 |= report->key5;
+                    usb_host_data.key6 |= report->key6;
+                    usb_host_data.key7 |= report->key7;
+                    usb_host_data.key8 |= report->key8;
+
+                    usb_host_data.key9 |= report->key9;
+                    usb_host_data.key10 |= report->key10;
+                    usb_host_data.key11 |= report->key11;
+                    usb_host_data.key12 |= report->key12;
+                    usb_host_data.key13 |= report->key13;
+                    usb_host_data.key14 |= report->key14;
+                    usb_host_data.key15 |= report->key15;
+                    usb_host_data.key16 |= report->key16;
+
+                    usb_host_data.key17 |= report->key17;
+                    usb_host_data.key18 |= report->key18;
+                    usb_host_data.key19 |= report->key19;
+                    usb_host_data.key20 |= report->key20;
+                    usb_host_data.key21 |= report->key21;
+                    usb_host_data.key22 |= report->key22;
+                    usb_host_data.key23 |= report->key23;
+                    usb_host_data.key24 |= report->key24;
+                    usb_host_data.key25 |= report->key25;
+                    usb_host_data.overdrive |= report->overdrive;
+                    usb_host_data.pedalDigital |= report->pedalDigital;
+                    if (report->pedalAnalog) {
+                        usb_host_data.pedalAnalog = report->pedalAnalog;
+                    }
+                    if (report->velocity1) {
+                        usb_host_data.velocity1 = report->velocity1;
+                    }
+                    if (report->velocity2) {
+                        usb_host_data.velocity2 = report->velocity2;
+                    }
+                    if (report->velocity3) {
+                        usb_host_data.velocity3 = report->velocity3;
+                    }
+                    if (report->velocity4) {
+                        usb_host_data.velocity4 = report->velocity4;
+                    }
+                    if (report->velocity5) {
+                        usb_host_data.velocity5 = report->velocity5;
+                    }
+                    break;
+                }
                 case ROCK_BAND_GUITAR: {
                     PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)data;
                     usb_host_data.a |= report->a;
@@ -1283,6 +1345,68 @@ for (int i = 0; i < device_count; i++) {
                     }
                     if (report->rightTableVelocity) {
                         usb_host_data.rightTableVelocity = report->rightTableVelocity;
+                    }
+                    break;
+                }
+                case XINPUT_PRO_KEYS: {
+                    XInputRockBandKeyboard_Data_t *report = (XInputRockBandKeyboard_Data_t *)data;
+                    usb_host_data.a |= report->a;
+                    usb_host_data.b |= report->b;
+                    usb_host_data.x |= report->x;
+                    usb_host_data.y |= report->y;
+                    usb_host_data.back |= report->back;
+                    usb_host_data.start |= report->start;
+                    usb_host_data.guide |= report->guide;
+                    usb_host_data.dpadLeft = report->dpadLeft;
+                    usb_host_data.dpadRight = report->dpadRight;
+                    usb_host_data.dpadUp = report->dpadUp;
+                    usb_host_data.dpadDown = report->dpadDown;
+                    usb_host_data.key1 |= report->key1;
+                    usb_host_data.key2 |= report->key2;
+                    usb_host_data.key3 |= report->key3;
+                    usb_host_data.key4 |= report->key4;
+                    usb_host_data.key5 |= report->key5;
+                    usb_host_data.key6 |= report->key6;
+                    usb_host_data.key7 |= report->key7;
+                    usb_host_data.key8 |= report->key8;
+
+                    usb_host_data.key9 |= report->key9;
+                    usb_host_data.key10 |= report->key10;
+                    usb_host_data.key11 |= report->key11;
+                    usb_host_data.key12 |= report->key12;
+                    usb_host_data.key13 |= report->key13;
+                    usb_host_data.key14 |= report->key14;
+                    usb_host_data.key15 |= report->key15;
+                    usb_host_data.key16 |= report->key16;
+
+                    usb_host_data.key17 |= report->key17;
+                    usb_host_data.key18 |= report->key18;
+                    usb_host_data.key19 |= report->key19;
+                    usb_host_data.key20 |= report->key20;
+                    usb_host_data.key21 |= report->key21;
+                    usb_host_data.key22 |= report->key22;
+                    usb_host_data.key23 |= report->key23;
+                    usb_host_data.key24 |= report->key24;
+                    usb_host_data.key25 |= report->key25;
+                    usb_host_data.overdrive |= report->overdrive;
+                    usb_host_data.pedalDigital |= report->pedalDigital;
+                    if (report->pedalAnalog) {
+                        usb_host_data.pedalAnalog = report->pedalAnalog;
+                    }
+                    if (report->velocity1) {
+                        usb_host_data.velocity1 = report->velocity1;
+                    }
+                    if (report->velocity2) {
+                        usb_host_data.velocity2 = report->velocity2;
+                    }
+                    if (report->velocity3) {
+                        usb_host_data.velocity3 = report->velocity3;
+                    }
+                    if (report->velocity4) {
+                        usb_host_data.velocity4 = report->velocity4;
+                    }
+                    if (report->velocity5) {
+                        usb_host_data.velocity5 = report->velocity5;
                     }
                     break;
                 }

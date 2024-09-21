@@ -5,35 +5,15 @@ sort: 7
 ## Supplies
 * A Pi Pico
 * A USB Extension cable, or a USB breakout
-* 2x 27ohm resistor (optional, recommended if you want to use Hubs or PS3 instruments)
-* 2x 47pF capacitor (optional, recommended if you want to use Hubs or PS3 instruments)
 * 3.3V to 5V boost converter 
    * only necessary if you wish to use USB host while plugging your pico into a Wii remote or a ps2 controller port
    * This is not necessary if you are using the adafruit feather with USB host, as that board has one built in.
-
-## Do I need the capacitor and resistor
-
-If you are going to be selling your devices, its highly recommended that you include these, as some USB devices do require them.
-If you wish to plug another pico into this adapter, then you will need the them.
-However, if you are making this strictly for authentication reasons you likley won't need them, as most gamepads will work without them.
 
 ## Do i need to keep the controller plugged in
 For Xbox 360 and Xbox One no, you should be able to unplug your controller after authentication is done.
 For PS4/PS5, you need to leave it plugged in, playstations continuously check the authentication state.
 
-## Wiring Steps (with capacitor and resistor)
-
-[![usb](/assets/images/usb.png)](/assets/images/usb.png)
-
-1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.
-2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
-3. Hook up the V- / GND (Black) to ground on your Pi Pico
-4. Hook up D+ (Green) to one side of a 27ohm resistor and the other side to a unused digital pin.
-5. Hook up D- (White) to one side of a 27ohm resistor and the other side to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
-6. Connect a 47pF capacitor between D+ and ground
-7. Connect a 47pF capacitor between D- and ground
-
-## Wiring Steps (without capacitor and resistor)
+## Wiring Steps
 
 1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.
 2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
@@ -46,8 +26,6 @@ For PS4/PS5, you need to leave it plugged in, playstations continuously check th
 2. Connect GND on the Pico to GND on the boost converter
 3. Connect VSYS on the Pico to the input terminal on your boost converter
 4. Connect the V+ / VBUS (Red) from your breakout or extension to the output pin on your boost converter
-
-
 
 ## Configuring
 1. Click on Add setting

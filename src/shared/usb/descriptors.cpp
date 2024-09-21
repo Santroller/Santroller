@@ -1059,8 +1059,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == OG_XBOX) {
                 dev->idVendor = 0x045E;
                 dev->idProduct = 0x0289;
-                dev->bcdDevice = 0x0121;
-                dev->bcdUSB = 0x0110;
+                dev->bMaxPacketSize0 = 32;
             }
 #if USB_HOST_STACK
             else if (consoleType == XBOXONE) {

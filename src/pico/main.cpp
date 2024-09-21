@@ -5,7 +5,6 @@
 #include <string.h>
 #include <tusb.h>
 
-#include "bt.h"
 #include "commands.h"
 #include "common/tusb_types.h"
 #include "config.h"
@@ -21,7 +20,6 @@
 #include "io.h"
 #include "midi_host.h"
 #include "pico/bootrom.h"
-#include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
 #include "pin_funcs.h"
 #include "reports/controller_reports.h"
@@ -30,7 +28,11 @@
 #include "xinput_device.h"
 #include "xinput_host.h"
 #ifdef INPUT_USB_HOST
+#include "bt.h"
 #include "TUSB-MIDI.hpp"
+#endif
+#if BLUETOOTH
+#include "pico/cyw43_arch.h"
 #endif
 
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];

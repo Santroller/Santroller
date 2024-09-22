@@ -127,10 +127,10 @@ If you are working on a controller with only "2" pins as the RB Precision Bass, 
 </details>
 
 <details>
-    <summary>ADXL345</summary>
+    <summary>ADXL345 Or MPU 6050 or LIS3DH</summary>
 
 1. Connect GND to GND
-2. Connect V<sub>CC</sub> to V<sub>CC</sub> (note that this is a 3.3v device, so for 5V microcontrollers make sure your ADXL345 breakout has a voltage regulator onboard)
+2. Connect V<sub>CC</sub> to V<sub>CC</sub> (note that this is a 3.3v device, so for 5V microcontrollers make sure your breakout has a voltage regulator onboard or you are using your own regulator)
 3. Hook up SDA and SCL to the microcontroller
 
    | Microcontroller               | SDA                              | SCL                              |
@@ -431,17 +431,19 @@ If you intend to use the peripheral features, it is recommended to program the p
   6. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed.
   </details>
   <details>
-    <summary>ADXL345 based Tilt</summary>
-  1. Click on `Add setting`
-  2. Add an `Accelerometer`
-  5. For the Pi Pico, set the SDA and SCL pins that you have used.
-  6. Hit save.
-  4. Click on Tilt, and make sure the `Input Type` is set to `Accelerometer Input`.
-  7. Click on `Calibrate`
-  8. Hold your guitar in its resting position, and then hit `Next`
-  9. Tilt the guitar up, and then hit `Next`
-  10. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
-  11. Adjust the `Low Pass Filter`. This value controls how new value from the ADXL are filtered, a value closer to 0 will result in a sensor that won't respond to a shake or strumming, but if you decrease it too much the sensor will have a decreased responsiveness. If you set it closer to 1, then the sensor will be very responsive but it will also pick up any tiny vibrations as well. From testing a value of 0.05 seemed like a good place to start. 
+     <summary>ADXL345 or MPU-6050 or LIS3DH based Tilt</summary>
+
+   1. Click on `Add setting`
+   2. Add an `Accelerometer`
+   3. For the Pi Pico, set the SDA and SCL pins that you have used.
+   4. Set the `Accelerometer Type` for your given sensor
+   5. Hit save.
+   6. Click on Tilt, and make sure the `Input Type` is set to `Accelerometer Input`.
+   7. Click on `Calibrate`
+   8. Hold your guitar in its resting position, and then hit `Next`
+   9. Tilt the guitar up, and then hit `Next`
+   10. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
+   11. Adjust the `Low Pass Filter`. This value controls how new value from the ADXL are filtered, a value closer to 0 will result in a sensor that won't respond to a shake or strumming, but if you decrease it too much the sensor will have a decreased responsiveness. If you set it closer to 1, then the sensor will be very responsive but it will also pick up any tiny vibrations as well. From testing a value of 0.05 seemed like a good place to start. 
   </details>
 
   <details>

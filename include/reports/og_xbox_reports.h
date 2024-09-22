@@ -38,6 +38,33 @@ typedef struct {
     int16_t rightStickY;
 } __attribute__((packed)) OGXboxGamepad_Data_t;
 
+typedef struct {
+    uint8_t rid;
+    uint8_t rsize;
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t start : 1;
+    uint8_t back : 1;  // select
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightThumbClick : 1;  // r3
+    uint8_t padding;
+    uint8_t a;
+    uint8_t b;
+    uint8_t x;
+    uint8_t y;
+    uint8_t leftShoulder;
+    uint8_t rightShoulder;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
+    uint16_t leftStickX;
+    uint16_t leftStickY;
+    uint16_t rightStickX;
+    uint16_t rightStickY;
+} __attribute__((packed)) OGXboxGamepadCapabilities_Data_t;
+
+
 typedef struct
 {
     uint8_t rid;

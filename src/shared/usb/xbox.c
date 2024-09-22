@@ -117,9 +117,9 @@ const XID_DESCRIPTOR PROGMEM DukeXIDDescriptor = {
     wAlternateProductIds : {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
 };
 
-const OGXboxGamepad_Data_t PROGMEM DukeXIDInputCapabilities = {
+const OGXboxGamepadCapabilities_Data_t PROGMEM DukeXIDInputCapabilities = {
     rid : 0x00,
-    rsize : sizeof(OGXboxGamepad_Data_t),
+    rsize : sizeof(OGXboxGamepadCapabilities_Data_t),
     dpadUp : 1,
     dpadDown : 1,
     dpadLeft : 1,
@@ -137,10 +137,10 @@ const OGXboxGamepad_Data_t PROGMEM DukeXIDInputCapabilities = {
     rightShoulder : 0xFF,
     leftTrigger : 0xFF,
     rightTrigger : 0xFF,
-    leftStickX : 0xFF,
-    leftStickY : 0xFF,
-    rightStickX : 0xFF,
-    rightStickY : 0xFF,
+    leftStickX : UINT16_MAX,
+    leftStickY : UINT16_MAX,
+    rightStickX : UINT16_MAX,
+    rightStickY : UINT16_MAX,
 };
 
 const OGXboxOutput_Report_t PROGMEM DukeXIDVibrationCapabilities = {

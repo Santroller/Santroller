@@ -430,18 +430,18 @@ If you intend to use the peripheral features, it is recommended to program the p
   5. Tilt the guitar up, and then hit `Next`
   6. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed.
   </details>
-
   <details>
     <summary>ADXL345 based Tilt</summary>
-
-  1. Click on Tilt, and make sure the `Input Type` is set to `ADXL345 Input`.
-  2. For the Pi Pico, set the SDA and SCL pins that you have used.
-  3. Hit save.
-  4. Click on `Calibrate`
-  5. Hold your guitar in its resting position, and then hit `Next`
-  6. Tilt the guitar up, and then hit `Next`
-  7. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
-  8. Adjust the `Low Pass Filter`. This value controls how new value from the ADXL are filtered, a value closer to 0 will result in a sensor that won't respond to a shake or strumming, but if you decrease it too much the sensor will have a decreased responsiveness. If you set it closer to 1, then the sensor will be very responsive but it will also pick up any tiny vibrations as well. From testing a value of 0.05 seemed like a good place to start. 
+  1. Click on `Add setting`
+  2. Add an `Accelerometer`
+  5. For the Pi Pico, set the SDA and SCL pins that you have used.
+  6. Hit save.
+  4. Click on Tilt, and make sure the `Input Type` is set to `Accelerometer Input`.
+  7. Click on `Calibrate`
+  8. Hold your guitar in its resting position, and then hit `Next`
+  9. Tilt the guitar up, and then hit `Next`
+  10. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
+  11. Adjust the `Low Pass Filter`. This value controls how new value from the ADXL are filtered, a value closer to 0 will result in a sensor that won't respond to a shake or strumming, but if you decrease it too much the sensor will have a decreased responsiveness. If you set it closer to 1, then the sensor will be very responsive but it will also pick up any tiny vibrations as well. From testing a value of 0.05 seemed like a good place to start. 
   </details>
 
   <details>

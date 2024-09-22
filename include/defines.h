@@ -9,6 +9,10 @@
 #define LIS3DH 2
 #define MPU6050 3
 
+#define XINPUT_FLAGS_NO_NAV 0xFFFF
+#define XINPUT_FLAGS_NONE 0x0000
+#define XINPUT_FLAGS_FORCE_FEEDBACK 0x000D
+
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
 #define XINPUT_GAMEPAD 1

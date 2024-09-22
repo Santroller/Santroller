@@ -25,15 +25,7 @@ const XInputInputCapabilities_t PROGMEM XInputInputCapabilities = {
     rightThumbX : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
     rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},
-    #if DEVICE_TYPE == LIVE_GUITAR
-    // GHL needs no navigation flag
-    flags : 0xFFFF
-    #elif DEVICE_TYPE == GUITAR_HERO_DRUMS
-    flags: 0
-    #else
-    // Everything else just needs ForceFeedback
-    flags : 0x000D
-    #endif
+    flags : XINPUT_FLAGS
 };
 
 const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR PROGMEM ExtendedIDs = {

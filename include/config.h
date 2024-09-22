@@ -47,6 +47,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define HID_BUTTON_COUNT 14
 #define HID_BUTTON_USAGES \
     BTN_USAGE(BTN_X), \
@@ -74,6 +75,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define HID_BUTTON_COUNT 14
 // exclude pressure
 #define HID_AXIS_COUNT 6
@@ -101,6 +103,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define HID_BUTTON_COUNT 14
 // exclude pressure
 #define HID_AXIS_COUNT 6
@@ -131,6 +134,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2GuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
 #define PS4_REPORT PS4RockBandGuitar_Data_t
+// FFB flag enables support for the tap bar
+#define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #define HID_BUTTON_USAGES \
@@ -159,6 +164,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2GuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
 #define PS4_REPORT PS4RockBandGuitar_Data_t
+// FFB flag was set on strats
+#define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #define HID_BUTTON_USAGES \
@@ -186,6 +193,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #elif DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
@@ -199,6 +207,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 3
 #elif DEVICE_TYPE == ROCK_BAND_PRO_KEYS
@@ -212,6 +221,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProKeyboard_Data_t
 #define PS4_REPORT PS3RockBandProKeyboard_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define HID_BUTTON_COUNT 35
 #define HID_AXIS_COUNT 2
 #define HID_BUTTON_USAGES \
@@ -261,6 +271,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3GHLGuitar_Data_t
 #define PS4_REPORT PS4GHLGuitar_Data_t
+// GHL guitars set no navigation
+#define XINPUT_FLAGS XINPUT_FLAGS_NO_NAV
 #define HID_BUTTON_COUNT 14
 #define HID_AXIS_COUNT 2
 #define HID_BUTTON_USAGES \
@@ -290,6 +302,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3GuitarHeroDrums_Data_t
 #define PS4_REPORT PS4RockBandDrums_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 6
 #define HID_BUTTON_USAGES \
@@ -318,6 +331,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t
 #define PS4_REPORT PS4RockBandDrums_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define HID_BUTTON_COUNT 15
 #define HID_AXIS_COUNT 7
 #define HID_BUTTON_USAGES \
@@ -346,6 +360,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3Turntable_Data_t
 #define PS4_REPORT PS3Turntable_Data_t
+#define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define HID_BUTTON_COUNT 13
 #define HID_AXIS_COUNT 4
 #define HID_BUTTON_USAGES \

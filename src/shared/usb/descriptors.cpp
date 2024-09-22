@@ -605,10 +605,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
-    if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
-        return true;
-    }
-    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    if ((consoleType == OG_XBOX || consoleType == UNIVERSAL) && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == 6 && wValue == 0x4200) {
             return true;
         }
@@ -699,7 +696,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         reset_usb();
         return 0;
     }
-    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    if ((consoleType == UNIVERSAL || consoleType == OG_XBOX) && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == 6 && wValue == 0x4200) {
             memcpy_P(requestBuffer, &DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
             return sizeof(DukeXIDDescriptor);

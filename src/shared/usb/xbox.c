@@ -28,6 +28,8 @@ const XInputInputCapabilities_t PROGMEM XInputInputCapabilities = {
     #if DEVICE_TYPE == LIVE_GUITAR
     // GHL needs no navigation flag
     flags : 0xFFFF
+    #elif DEVICE_TYPE == GUITAR_HERO_DRUMS
+    flags: 0
     #else
     // Everything else just needs ForceFeedback
     flags : 0x000D

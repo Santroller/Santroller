@@ -19,13 +19,14 @@ sort: 5
 - Supplies for specific features
   - Tilt
     - Any of the following options are supported
-      - A Tilt Switch
-        - The tool supports using basic digital tilt switches (somtimes called a mercury or ball tilt switch)
-          - I recommend using two tilt sensors in series, as this can help with accidental activations
-      - Analog accelerometer (such as the ADXL335 or the accelerometer on some GH guitars)
-      - ADXL345
-      - MPU-6050
-      - LIS3DH
+      - A Digital Tilt Switch (somtimes called a mercury or ball tilt switch)
+        - I recommend using two tilt sensors in series, as this can help with accidental activations
+      - The ADXL345, MPU-6050 or LIS3DH Accelerometer
+        - This gives a proper analog value of the devices acceleration
+          - Tilt is detected by observing acceleration due to gravity
+      - An analog accelerometer, such as the ADXL335
+        - This gives a proper analog value of the devices acceleration
+          - Tilt is detected by observing acceleration due to gravity
 
 ```danger
 Be careful that you don't ever provide 5v power to the power pin of a Wii Extension, as they are not designed for this. The data pins however are tolerant of 5v, so you can hook these up directly to pins on your microcontroller.

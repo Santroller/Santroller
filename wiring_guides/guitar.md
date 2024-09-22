@@ -27,7 +27,7 @@ sort: 2
     - Any of the following options are supported
       - A Digital Tilt Switch (somtimes called a mercury or ball tilt switch)
         - I recommend using two tilt sensors in series, as this can help with accidental activations
-      - The ADXL345 Accelerometer
+      - The ADXL345, MPU-6050 or LIS3DH Accelerometer
         - This gives a proper analog value of the devices acceleration
           - Tilt is detected by observing acceleration due to gravity
       - An analog accelerometer, such as the ADXL335

@@ -1654,6 +1654,7 @@ uint8_t rbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
+    USB_RB_Drums_t current_drum_report = {0};
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -1858,7 +1859,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->effectsKnob = INT16_MIN;
 #endif
         TICK_OG_XBOX;
-
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        FLAM();
+#endif
         report_size = packet_size = sizeof(OG_XBOX_REPORT);
     }
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
@@ -1877,6 +1880,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         asm volatile("" ::
                          : "memory");
 
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        FLAM();
+#endif
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
@@ -2096,8 +2102,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 }
             }
 #endif
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+            FLAM();
+#endif
             gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-#ifdef CONFIGURABLE_BLOBS
             if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
                 bool a = gamepad->a;
                 bool b = gamepad->b;
@@ -2108,18 +2116,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 gamepad->x = y;
                 gamepad->y = x;
             }
-#elif SWAP_SWITCH_FACE_BUTTONS
-        if (output_console_type == SWITCH) {
-            bool a = gamepad->a;
-            bool b = gamepad->b;
-            bool x = gamepad->x;
-            bool y = gamepad->y;
-            gamepad->b = a;
-            gamepad->a = b;
-            gamepad->x = y;
-            gamepad->y = x;
-        }
-#endif
 #ifdef TICK_FESTIVAL
         } else {
             SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)report_data;
@@ -2251,6 +2247,7 @@ int tick_bluetooth_inputs(const void *buf) {
     uint8_t packet_size = 0;
     uint8_t report_size = 0;
     uint8_t output_console_type = consoleType;
+    USB_RB_Drums_t current_drum_report = {0};
     // Tick Inputs
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
@@ -2347,6 +2344,24 @@ int tick_bluetooth_inputs(const void *buf) {
         updateHIDSequence = true;
 #endif
     }
+    if (output_console_type == OG_XBOX) {
+        OG_XBOX_REPORT *report = (OG_XBOX_REPORT *)report_data;
+        memset(report_data, 0, sizeof(OG_XBOX_REPORT));
+        report->rid = 0;
+        report->rsize = sizeof(OG_XBOX_REPORT);
+// Whammy on the xbox guitars goes from min to max, so it needs to default to min
+#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
+        report->whammy = INT16_MIN;
+#endif
+#if DEVICE_TYPE == DJ_HERO_TURNTABLE
+        report->effectsKnob = INT16_MIN;
+#endif
+        TICK_OG_XBOX;
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        FLAM();
+#endif
+        report_size = packet_size = sizeof(OG_XBOX_REPORT);
+    }
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
         XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
         memset(report_data, 0, sizeof(XINPUT_REPORT));
@@ -2361,6 +2376,10 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
         convert_universal_to_type((uint8_t *)report_data, input, XBOX360);
         TICK_XINPUT;
+
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        FLAM();
+#endif
         report_size = packet_size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
@@ -2475,7 +2494,10 @@ int tick_bluetooth_inputs(const void *buf) {
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-#ifdef CONFIGURABLE_BLOBS
+
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        FLAM();
+#endif
         if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
             bool a = gamepad->a;
             bool b = gamepad->b;
@@ -2486,18 +2508,6 @@ int tick_bluetooth_inputs(const void *buf) {
             gamepad->x = y;
             gamepad->y = x;
         }
-#elif SWAP_SWITCH_FACE_BUTTONS
-        if (output_console_type == SWITCH) {
-            bool a = gamepad->a;
-            bool b = gamepad->b;
-            bool x = gamepad->x;
-            bool y = gamepad->y;
-            gamepad->b = a;
-            gamepad->a = b;
-            gamepad->x = y;
-            gamepad->y = x;
-        }
-#endif
     }
 #if SUPPORTS_PS4
     if (output_console_type == PS4) {

@@ -387,3 +387,57 @@ typedef struct {
     uint8_t pedal;
     uint8_t touchPad;
 } __attribute__((packed)) USB_Host_Data_t;
+#define YELLOW 0
+#define RED 1
+#define GREEN 2
+#define BLUE 3
+#define CYMBAL 4
+typedef union {
+    struct {
+        uint8_t yellow : 1;
+        uint8_t red : 1;
+        uint8_t green : 1;
+        uint8_t blue : 1;
+
+        uint8_t yellowCymbal : 1;
+        uint8_t : 1;
+        uint8_t greenCymbal : 1;
+        uint8_t blueCymbal : 1;
+    };
+    uint8_t buttons;
+} USB_RB_Drums_t;
+
+// Need to auto-flam, so scan through hit drums and only hit one at a time.
+#define FLAM()                                          \
+    if (current_drum_report.buttons) {                  \
+        for (int i = 0; i < 8; i++) {                   \
+            int curIdx = (i + rbcount) & 0x7;           \
+            if (current_drum_report.buttons & curIdx) { \
+                rbcount = curIdx + 1;                   \
+                if (curIdx < CYMBAL) {                  \
+                    report->padFlag = true;             \
+                } else {                                \
+                    report->cymbalFlag = true;          \
+                }                                       \
+                uint8_t col = curIdx & 0x5;             \
+                if (col == GREEN) {                     \
+                    report->a = true;                   \
+                }                                       \
+                if (col == RED) {                       \
+                    report->b = true;                   \
+                }                                       \
+                if (col == YELLOW) {                    \
+                    report->y = true;                   \
+                    if (curIdx >= CYMBAL) {             \
+                        report->dpadUp = true;          \
+                    }                                   \
+                }                                       \
+                if (col == BLUE) {                      \
+                    report->x = true;                   \
+                    if (curIdx >= CYMBAL) {             \
+                        report->dpadDown = true;        \
+                    }                                   \
+                }                                       \
+            }                                           \
+        }                                               \
+    }

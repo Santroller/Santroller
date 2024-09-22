@@ -30,7 +30,7 @@ sort: 2
       - The ADXL345, MPU-6050 or LIS3DH Accelerometer
         - This gives a proper analog value of the devices acceleration
           - Tilt is detected by observing acceleration due to gravity
-      - An analog accelerometer, such as the ADXL335
+      - An analog accelerometer, such as the ADXL335, or the accelerometer on some GH guitars
         - This gives a proper analog value of the devices acceleration
           - Tilt is detected by observing acceleration due to gravity
   - Guitar Hero World Tour Guitar

@@ -28,10 +28,10 @@
 #include "xinput_device.h"
 #include "xinput_host.h"
 #ifdef INPUT_USB_HOST
-#include "bt.h"
 #include "TUSB-MIDI.hpp"
 #endif
 #if BLUETOOTH
+#include "bt.h"
 #include "pico/cyw43_arch.h"
 #endif
 

@@ -412,7 +412,7 @@ typedef union {
     if (current_drum_report.buttons) {                  \
         for (int i = 0; i < 8; i++) {                   \
             int curIdx = (i + rbcount) & 0x7;           \
-            if (current_drum_report.buttons & curIdx) { \
+            if (current_drum_report.buttons & (1 << curIdx)) { \
                 rbcount = curIdx + 1;                   \
                 if (curIdx < CYMBAL) {                  \
                     report->padFlag = true;             \
@@ -438,6 +438,7 @@ typedef union {
                         report->dpadDown = true;        \
                     }                                   \
                 }                                       \
+                break;                                  \
             }                                           \
         }                                               \
     }

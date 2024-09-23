@@ -25,7 +25,7 @@ class Context:
 
 me = psutil.Process(os.getpid())
 Import("env")
-pioasm_tool = {"Windows": " x86_64-w64-mingw32.pioasm-efe2103.240919.zip ","Linux":"x86_64-linux-gnu.pioasm-efe2103.240919.tar.gz","Darwin":" x86_64-apple-darwin20.4.pioasm-efe2103.240919.tar.gz "}
+pioasm_tool = {"Windows": " x86_64-w64-mingw32.pioasm-efe2103.240919.zip","Linux":"x86_64-linux-gnu.pioasm-efe2103.240919.tar.gz","Darwin":" x86_64-apple-darwin20.4.pioasm-efe2103.240919.tar.gz "}
 # Compile any .pio files
 if "pico" in env["BOARD"]:
     pm = ToolPackageManager()

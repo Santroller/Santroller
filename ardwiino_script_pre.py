@@ -4,11 +4,17 @@ import subprocess
 import sys
 from os.path import join
 import libusb_package
-from platformio.util import get_serial_ports
+from platformio.util import get_serial_ports, get_systype
+from platformio.exception import ReturnErrorCode, UserSideException
+from platformio.package.manager.tool import ToolPackageManager
+from platformio.proc import get_pythonexe_path, where_is_program
 from serial import Serial, SerialException
 import os
 import psutil
+import glob
 from time import sleep
+import subprocess
+import platform
 
 REBOOT=48
 BOOTLOADER=49
@@ -19,6 +25,15 @@ class Context:
 
 me = psutil.Process(os.getpid())
 Import("env")
+pioasm_tool = {"Windows": " x86_64-w64-mingw32.pioasm-efe2103.240919.zip ","Linux":"x86_64-linux-gnu.pioasm-efe2103.240919.tar.gz","Darwin":" x86_64-apple-darwin20.4.pioasm-efe2103.240919.tar.gz "}
+# Compile any .pio files
+if "pico" in env["BOARD"]:
+    pm = ToolPackageManager()
+
+    pkg = pm.get_package("https://github.com/earlephilhower/pico-quick-toolchain/releases/download/2.3.0/"+pioasm_tool[platform.system()])
+    for file in glob.iglob(os.path.join(env["PROJECT_SRC_DIR"],"pico","**","*.pio"),recursive=True):
+        subprocess.call([os.path.join(pkg.path, "pioasm"), os.path.join(env["PROJECT_SRC_DIR"],"pico",file), os.path.join(env["PROJECT_SRC_DIR"],"pico",file+".h")])
+
 if "upload" in BUILD_TARGETS:
     upload_options = env.BoardConfig().get("upload", {})
     if "detect_controller" in upload_options and upload_options["detect_controller"] == "true":

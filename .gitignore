@@ -10,3 +10,4 @@ include/config_data*.h
 .idea
 include/kv.h
 check_ps4_auth.py
+*.pio.h

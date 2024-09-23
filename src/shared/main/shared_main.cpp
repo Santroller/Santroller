@@ -310,17 +310,17 @@ int16_t adc_i(uint8_t pin) {
 int16_t handle_calibration_xbox(int16_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     int32_t val = orig_val;
     if (val < center) {
-        if (center - val < deadzone) {
+        if ((center - val) < deadzone) {
             val = 0;
         } else {
-            val = map(val, min, center, INT16_MIN, 0);
+            val = map(val, min, center-deadzone, INT16_MIN, 0);
         }
 
     } else {
-        if (val - center < deadzone) {
+        if ((val - center) < deadzone) {
             val = 0;
         } else {
-            val = map(val, center, max, 0, INT16_MAX);
+            val = map(val, center+deadzone, max, 0, INT16_MAX);
         }
     }
     if (val > INT16_MAX) {

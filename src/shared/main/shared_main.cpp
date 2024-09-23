@@ -308,18 +308,20 @@ int16_t adc_i(uint8_t pin) {
     return ret - 32767;
 }
 int16_t handle_calibration_xbox(int16_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
-    int32_t val_deadzone = orig_val - center;
-    if (val_deadzone < deadzone && val_deadzone > -deadzone) {
-        return 0;
-    }
     int32_t val = orig_val;
-    if (val_deadzone < 0) {
-        deadzone = -deadzone;
-    }
     if (val < center) {
-        val = map(val, min, center, INT16_MIN, 0);
+        if (center - val < deadzone) {
+            val = 0;
+        } else {
+            val = map(val, min, center, INT16_MIN, 0);
+        }
+
     } else {
-        val = map(val, center, max, 0, INT16_MAX);
+        if (val - center < deadzone) {
+            val = 0;
+        } else {
+            val = map(val, center, max, 0, INT16_MAX);
+        }
     }
     if (val > INT16_MAX) {
         val = INT16_MAX;

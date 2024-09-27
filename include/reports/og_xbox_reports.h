@@ -28,8 +28,8 @@ typedef struct {
     uint8_t b;
     uint8_t x;
     uint8_t y;
-    uint8_t leftShoulder;
-    uint8_t rightShoulder;
+    uint8_t leftShoulder; // black
+    uint8_t rightShoulder; // white
     uint8_t leftTrigger;
     uint8_t rightTrigger;
     int16_t leftStickX;

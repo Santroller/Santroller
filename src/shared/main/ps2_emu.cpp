@@ -5,7 +5,6 @@
 #include "io.h"
 #include "ps2.h"
 #include "util.h"
-#include "psxSPI.pio.h"
 #include "pico/stdio.h"
 #include "pico/multicore.h"
 

@@ -14,60 +14,60 @@
 uint8_t configMode = 0;
 uint8_t mode = 0x41;
 #if SUPPORTS_PICO
-extern "C" uint8_t receiveCommand();
-extern "C" uint8_t receiveAll(uint8_t* data, uint8_t len);
-extern "C" uint8_t receiveAll2(uint8_t* data0, uint8_t* data1, uint8_t len);
-// uint8_t receiveCommand() {
-//     // The pi pico has a odd bug, where the first byte is essentially garbage when using SPI slave.
-//     // Since the PS2 requires the first byte be 0xFF, we just override whatever nonsense
-//     // The SPI hardware is trying to output, and force all zeros.
-//     // It gets worse though. The garbage byte receives the first response, which
-//     // Misaligns all reads and writes, so we have to then misalign all our reads and writes
-//     // In the other direction to make things come out correctly.
-//     gpio_set_oeover(PS2_SPI_MOSI, GPIO_OVERRIDE_LOW);
-//     uint8_t modeByte = configMode ? 0xF3 : mode;
-//     PS2_OUTPUT_ACK_SET();
-//     uint8_t ret = spi_transfer(PS2_OUTPUT_SPI_PORT, modeByte);
-//     PS2_OUTPUT_ACK_CLEAR();
-//     sleep_us(2);
-//     PS2_OUTPUT_ACK_SET();
-//     if (ret != 1) {
-//         return 0;
-//     }
-//     gpio_set_oeover(PS2_SPI_MOSI, GPIO_OVERRIDE_NORMAL);
-//     ret = spi_transfer(PS2_OUTPUT_SPI_PORT, 0x5A);
-//     PS2_OUTPUT_ACK_CLEAR();
-//     return ret;
-// }
-// uint8_t receiveAll(uint8_t* data, uint8_t len) {
-//     for (int i = 0; i < len - 1; i++) {
-//         PS2_OUTPUT_ACK_SET();
-//         if (!PS2_OUTPUT_ATT_READ()) {
-//             return 0;
-//         }
-//         data[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
-//         PS2_OUTPUT_ACK_CLEAR();
-//         sleep_us(2);
-//     }
-//     PS2_OUTPUT_ACK_SET();
-//     spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
-//     return len;
-// }
-// uint8_t receiveAll2(uint8_t* data0, uint8_t* data1, uint8_t len) {
-//     uint8_t* data = data0;
-//     for (int i = 0; i < len - 1; i++) {
-//         PS2_OUTPUT_ACK_SET();
-//         data0[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
-//         if (data0[1] == 1) {
-//             data = data1;
-//         }
-//         PS2_OUTPUT_ACK_CLEAR();
-//         sleep_us(2);
-//     }
-//     PS2_OUTPUT_ACK_SET();
-//     spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
-//     return len;
-// }
+// extern "C" uint8_t receiveCommand();
+// extern "C" uint8_t receiveAll(uint8_t* data, uint8_t len);
+// extern "C" uint8_t receiveAll2(uint8_t* data0, uint8_t* data1, uint8_t len);
+uint8_t receiveCommand() {
+    // The pi pico has a odd bug, where the first byte is essentially garbage when using SPI slave.
+    // Since the PS2 requires the first byte be 0xFF, we just override whatever nonsense
+    // The SPI hardware is trying to output, and force all zeros.
+    // It gets worse though. The garbage byte receives the first response, which
+    // Misaligns all reads and writes, so we have to then misalign all our reads and writes
+    // In the other direction to make things come out correctly.
+    gpio_set_oeover(PS2_SPI_MOSI, GPIO_OVERRIDE_LOW);
+    uint8_t modeByte = configMode ? 0xF3 : mode;
+    PS2_OUTPUT_ACK_SET();
+    uint8_t ret = spi_transfer(PS2_OUTPUT_SPI_PORT, modeByte);
+    PS2_OUTPUT_ACK_CLEAR();
+    sleep_us(2);
+    PS2_OUTPUT_ACK_SET();
+    if (ret != 1) {
+        return 0;
+    }
+    gpio_set_oeover(PS2_SPI_MOSI, GPIO_OVERRIDE_NORMAL);
+    ret = spi_transfer(PS2_OUTPUT_SPI_PORT, 0x5A);
+    PS2_OUTPUT_ACK_CLEAR();
+    return ret;
+}
+uint8_t receiveAll(uint8_t* data, uint8_t len) {
+    for (int i = 0; i < len - 1; i++) {
+        PS2_OUTPUT_ACK_SET();
+        if (!PS2_OUTPUT_ATT_READ()) {
+            return 0;
+        }
+        data[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
+        PS2_OUTPUT_ACK_CLEAR();
+        sleep_us(2);
+    }
+    PS2_OUTPUT_ACK_SET();
+    spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
+    return len;
+}
+uint8_t receiveAll2(uint8_t* data0, uint8_t* data1, uint8_t len) {
+    uint8_t* data = data0;
+    for (int i = 0; i < len - 1; i++) {
+        PS2_OUTPUT_ACK_SET();
+        data0[i] = spi_transfer(PS2_OUTPUT_SPI_PORT, data[i + 1]);
+        if (data0[1] == 1) {
+            data = data1;
+        }
+        PS2_OUTPUT_ACK_CLEAR();
+        sleep_us(2);
+    }
+    PS2_OUTPUT_ACK_SET();
+    spi_transfer(PS2_OUTPUT_SPI_PORT, data[len - 1]);
+    return len;
+}
 #else
 uint8_t receiveCommand() {
     uint8_t modeByte = configMode ? 0xF3 : mode;

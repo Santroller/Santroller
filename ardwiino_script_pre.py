@@ -25,14 +25,14 @@ class Context:
 
 me = psutil.Process(os.getpid())
 Import("env")
-# pioasm_tool = {"Windows": "x86_64-w64-mingw32.pioasm-efe2103.240919.zip","Linux":"x86_64-linux-gnu.pioasm-efe2103.240919.tar.gz","Darwin":" x86_64-apple-darwin20.4.pioasm-efe2103.240919.tar.gz "}
+pioasm_tool = {"Windows": "x86_64-w64-mingw32.pioasm-efe2103.240919.zip","Linux":"x86_64-linux-gnu.pioasm-efe2103.240919.tar.gz","Darwin":"x86_64-apple-darwin20.4.pioasm-efe2103.240919.tar.gz"}
 # Compile any .pio files
-# if "pico" in env["BOARD"]:
-#     pm = ToolPackageManager()
+if "pico" in env["BOARD"]:
+    pm = ToolPackageManager()
 
-#     pkg = pm.get_package("https://github.com/earlephilhower/pico-quick-toolchain/releases/download/2.3.0/"+pioasm_tool[platform.system()])
-#     for file in glob.iglob(os.path.join(env["PROJECT_SRC_DIR"],"pico","**","*.pio"),recursive=True):
-#         subprocess.call([os.path.join(pkg.path, "pioasm"), os.path.join(env["PROJECT_SRC_DIR"],"pico",file), os.path.join(env["PROJECT_SRC_DIR"],"pico",file+".h")])
+    pkg = pm.get_package("https://github.com/earlephilhower/pico-quick-toolchain/releases/download/2.3.0/"+pioasm_tool[platform.system()])
+    for file in glob.iglob(os.path.join(env["PROJECT_SRC_DIR"],"pico","**","*.pio"),recursive=True):
+        subprocess.call([os.path.join(pkg.path, "pioasm"), os.path.join(env["PROJECT_SRC_DIR"],"pico",file), os.path.join(env["PROJECT_SRC_DIR"],"pico",file+".h")])
 
 if "upload" in BUILD_TARGETS:
     upload_options = env.BoardConfig().get("upload", {})

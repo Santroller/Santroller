@@ -1656,7 +1656,7 @@ uint8_t rbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
-    USB_RB_Drums_t current_drum_report = {0};
+    USB_RB_Drums_t current_drum_report = {buttons: 0};
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -2252,7 +2252,7 @@ int tick_bluetooth_inputs(const void *buf) {
     uint8_t packet_size = 0;
     uint8_t report_size = 0;
     uint8_t output_console_type = consoleType;
-    USB_RB_Drums_t current_drum_report = {0};
+    USB_RB_Drums_t current_drum_report = {buttons: 0};
     // Tick Inputs
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"

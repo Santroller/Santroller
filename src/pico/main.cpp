@@ -588,7 +588,6 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 }
 
 uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
-    
     if (!dev_addr) {
         // Device is not connected yet!
         return 0;
@@ -607,7 +606,7 @@ uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t reque
     xfer.buffer = buffer;
     xfer.complete_cb = NULL;
     xfer.user_data = 0;
-    printf("%d\r\n", tuh_control_xfer(&xfer));
+    tuh_control_xfer(&xfer);
     if (xfer.result != XFER_RESULT_SUCCESS) {
         return false;
     }

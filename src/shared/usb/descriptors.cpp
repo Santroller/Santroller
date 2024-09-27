@@ -210,17 +210,17 @@ const PROGMEM OG_XBOX_CONFIGURATION_DESCRIPTOR OGXBOXConfigurationDescriptor = {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
         bEndpointAddress : DEVICE_EPADDR_IN,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        bmAttributes : USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA,
         wMaxPacketSize : 0x20,
-        bInterval : 1,
+        bInterval : 4,
     },
     ReportOUTEndpoint12 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
         bEndpointAddress : DEVICE_EPADDR_OUT,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        bmAttributes : USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA,
         wMaxPacketSize : 0x20,
-        bInterval : 1,
+        bInterval : 4,
     }
 };
 #endif
@@ -284,27 +284,11 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
         bInterfaceNumber : INTERFACE_ID_Padding,
         bAlternateSetting : 0x00,
-        bNumEndpoints : 2,
-        bInterfaceClass : 0x58,
-        bInterfaceSubClass : 0x42,
-        bInterfaceProtocol : 0,
+        bNumEndpoints : 0,
+        bInterfaceClass : 0xff,
+        bInterfaceSubClass : 0xff,
+        bInterfaceProtocol : 0xff,
         iInterface : NO_DESCRIPTOR
-    },
-    ReportINEndpoint11 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_MIC_IN,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 1,
-    },
-    ReportOUTEndpoint12 : {
-        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
-        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_AUDIO_OUT,
-        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
-        wMaxPacketSize : 0x20,
-        bInterval : 1,
     },
     InterfaceConfig : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
@@ -621,7 +605,10 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         return true;
     }
-    if ((consoleType == OG_XBOX || consoleType == UNIVERSAL) && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
+        return true;
+    }
+    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == 6 && wValue == 0x4200) {
             return true;
         }
@@ -707,12 +694,12 @@ bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
+    if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
         reset_usb();
         return 0;
     }
-    if ((consoleType == UNIVERSAL || consoleType == OG_XBOX) && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == 6 && wValue == 0x4200) {
             memcpy_P(requestBuffer, &DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
             return sizeof(DukeXIDDescriptor);
@@ -1072,7 +1059,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == OG_XBOX) {
                 dev->idVendor = 0x045E;
                 dev->idProduct = 0x0289;
-                dev->bMaxPacketSize0 = 32;
             }
 #if USB_HOST_STACK
             else if (consoleType == XBOXONE) {

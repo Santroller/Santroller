@@ -2044,10 +2044,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS3_WITHOUT_CAPTURE;
         report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
+    if (output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
 #else
     // For instruments, we instead use the below block, as all other console types use the below format
-    if ((output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
+    if ((output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
 #endif
         report_size = sizeof(PS3_REPORT);
         // Do NOT update the size for XBONE, since the XBONE packets have a totally different size!
@@ -2135,7 +2135,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
     TICK_RESET
     // Some hosts want packets sent every frame
-    if (last_report && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
+    if (last_report && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0) {
             return 0;
@@ -2437,9 +2437,9 @@ int tick_bluetooth_inputs(const void *buf) {
         }
         report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != XBOXONE) {
+    if (output_console_type != OG_XBOX && output_console_type != UNIVERSAL && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != PS4 && output_console_type != XBOXONE) {
 #else
-    if ((output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
+    if ((output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
 #endif
         PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
         report_size = sizeof(PS3_REPORT);

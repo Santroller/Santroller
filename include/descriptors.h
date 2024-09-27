@@ -61,6 +61,8 @@ typedef struct {
     USB_ENDPOINT_DESCRIPTOR EndpointInHID;
     USB_ENDPOINT_DESCRIPTOR EndpointOutHID;
     USB_INTERFACE_DESCRIPTOR InterfaceExtra;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
     USB_INTERFACE_DESCRIPTOR InterfaceConfig;
     USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
     uint8_t SecurityDescriptor[0x06];

@@ -383,8 +383,9 @@ typedef struct {
 
     uint8_t key25 : 1;
     uint8_t overdrive : 1;
-    uint8_t : 6;
-    uint8_t pedal;
+    uint8_t pedalDigital : 1;
+    uint8_t : 5;
+    uint8_t pedalAnalog;
     uint8_t touchPad;
 } __attribute__((packed)) USB_Host_Data_t;
 #define YELLOW 0

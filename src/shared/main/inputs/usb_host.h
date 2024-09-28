@@ -614,12 +614,9 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.key24 |= report->key24;
                     usb_host_data.key25 |= report->key25;
                     usb_host_data.overdrive |= report->overdrive;
-
-                    if (report->pedalDigital) {
-                        usb_host_data.pedal = 0xFF;
-                    }
+                    usb_host_data.pedalDigital |= report->pedalDigital;
                     if (report->pedalAnalog) {
-                        usb_host_data.pedal = report->pedalAnalog << 1;
+                        usb_host_data.pedalAnalog = report->pedalAnalog << 1;
                     }
                     if (report->touchPad) {
                         usb_host_data.touchPad = report->touchPad << 1;
@@ -1415,11 +1412,9 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.key24 |= report->key24;
                     usb_host_data.key25 |= report->key25;
                     usb_host_data.overdrive |= report->overdrive;
-                    if (report->pedalDigital) {
-                        usb_host_data.pedal = 0xFF;
-                    }
+                    usb_host_data.pedalDigital |= report->pedalDigital;
                     if (report->pedalAnalog) {
-                        usb_host_data.pedal = report->pedalAnalog << 1;
+                        usb_host_data.pedalAnalog = report->pedalAnalog << 1;
                     }
                     if (report->touchPad) {
                         usb_host_data.touchPad = report->touchPad << 1;

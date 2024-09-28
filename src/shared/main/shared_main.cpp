@@ -154,6 +154,7 @@ uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
 bool auth_ps4_is_ghl = false;
 bool seen_ps4_console = false;
+bool hasFlags = false;
 GipPowerMode_t powerMode;
 Gip_Led_On_t ledOn;
 Gip_Auth_Done_t authDonePacket;

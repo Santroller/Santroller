@@ -1,3 +1,50 @@
+#define SET_PADS()                                                              \
+    bool green = report->a;                                                     \
+    bool red = report->b;                                                       \
+    bool yellow = report->y;                                                    \
+    bool blue = report->x;                                                      \
+    bool pad = report->padFlag;                                                 \
+    bool cymbal = report->cymbalFlag;                                           \
+    if (pad || cymbal) {                                                        \
+        hasFlags = true;                                                        \
+    }                                                                           \
+    if (pad && cymbal) {                                                        \
+        int colorCount = 0;                                                     \
+        colorCount += red ? 1 : 0;                                              \
+        colorCount += (yellow || report->dpadUp) ? 1 : 0;                       \
+        colorCount += (blue || report->dpadDown) ? 1 : 0;                       \
+        colorCount += (green || !(report->dpadUp || report->dpadDown)) ? 1 : 0; \
+                                                                                \
+        if (colorCount > 1) {                                                   \
+            if (report->dpadUp) {                                               \
+                usb_host_data.yellowCymbal = true;                              \
+                yellow = false;                                                 \
+                cymbal = false;                                                 \
+            }                                                                   \
+            if (report->dpadDown) {                                             \
+                usb_host_data.blueCymbal = true;                                \
+                blue = false;                                                   \
+                cymbal = false;                                                 \
+            }                                                                   \
+            if (!(report->dpadUp || report->dpadDown)) {                        \
+                usb_host_data.greenCymbal = true;                               \
+                green = false;                                                  \
+                cymbal = false;                                                 \
+            }                                                                   \
+        }                                                                       \
+    }                                                                           \
+    if (pad || (!cymbal && !hasFlags)) {                                        \
+        usb_host_data.red |= red;                                               \
+        usb_host_data.green |= green;                                           \
+        usb_host_data.yellow |= yellow;                                         \
+        usb_host_data.blue |= blue;                                             \
+    }                                                                           \
+                                                                                \
+    if (cymbal) {                                                               \
+        usb_host_data.greenCymbal |= green;                                     \
+        usb_host_data.blueCymbal |= blue;                                       \
+        usb_host_data.yellowCymbal |= yellow;                                   \
+    }
 #ifdef INPUT_USB_HOST
 uint8_t device_count = get_usb_host_device_count();
 bool poke_ghl = false;
@@ -184,7 +231,7 @@ for (int i = 0; i < device_count; i++) {
             PCGamepad_Data_t *report = (PCGamepad_Data_t *)data;
             uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
             asm volatile("" ::
-                         : "memory");
+                             : "memory");
             bool up = dpad & UP;
             bool left = dpad & LEFT;
             bool down = dpad & DOWN;
@@ -440,7 +487,7 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.rightTableVelocity = (report->rightTableVelocity - PS3_STICK_CENTER) << 8;
                     }
                     break;
-                } 
+                }
             }
             break;
         }
@@ -448,7 +495,7 @@ for (int i = 0; i < device_count; i++) {
             PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)data;
             uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
             asm volatile("" ::
-                         : "memory");
+                             : "memory");
             bool up = dpad & UP;
             bool left = dpad & LEFT;
             bool down = dpad & DOWN;
@@ -567,7 +614,7 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.key24 |= report->key24;
                     usb_host_data.key25 |= report->key25;
                     usb_host_data.overdrive |= report->overdrive;
-                    
+
                     if (report->pedalDigital) {
                         usb_host_data.pedal = 0xFF;
                     }
@@ -673,6 +720,7 @@ for (int i = 0; i < device_count; i++) {
                 }
                 case ROCK_BAND_DRUMS: {
                     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
+                    SET_PADS();
                     usb_host_data.a |= report->a;
                     usb_host_data.b |= report->b;
                     usb_host_data.x |= report->x;
@@ -682,13 +730,6 @@ for (int i = 0; i < device_count; i++) {
                     usb_host_data.back |= report->back;
                     usb_host_data.start |= report->start;
                     usb_host_data.guide |= report->guide;
-                    usb_host_data.green |= report->a && report->padFlag;
-                    usb_host_data.red |= report->b && report->padFlag;
-                    usb_host_data.yellow |= report->y && report->padFlag;
-                    usb_host_data.blue |= report->x && report->padFlag;
-                    usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
-                    usb_host_data.blueCymbal |= report->x && report->cymbalFlag && up;
-                    usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && down;
                     usb_host_data.dpadLeft |= left;
                     usb_host_data.dpadRight |= right;
                     usb_host_data.dpadUp |= up;
@@ -1232,6 +1273,7 @@ for (int i = 0; i < device_count; i++) {
                         }
                     } else {
                         XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)data;
+                        SET_PADS();
                         usb_host_data.a |= report->a;
                         usb_host_data.b |= report->b;
                         usb_host_data.x |= report->x;
@@ -1245,13 +1287,6 @@ for (int i = 0; i < device_count; i++) {
                         usb_host_data.back |= report->back;
                         usb_host_data.start |= report->start;
                         usb_host_data.guide |= report->guide;
-                        usb_host_data.green |= report->a && report->padFlag;
-                        usb_host_data.red |= report->b && report->padFlag;
-                        usb_host_data.yellow |= report->y && report->padFlag;
-                        usb_host_data.blue |= report->x && report->padFlag;
-                        usb_host_data.greenCymbal |= report->a && report->cymbalFlag;
-                        usb_host_data.blueCymbal |= report->x && report->cymbalFlag && report->dpadUp;
-                        usb_host_data.yellowCymbal |= report->y && report->cymbalFlag && report->dpadDown;
                         if (usb_host_data.kick1 || usb_host_data.kick2) {
                             usb_host_data.kickVelocity = 0xFF;
                         }

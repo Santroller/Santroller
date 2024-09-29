@@ -1,5 +1,5 @@
 #include "config.h"
-#ifdef BLUETOOTH_RX
+#ifdef BLUETOOTH_RX_BLE
 #include <btstack_tlv.h>
 #include <inttypes.h>
 #include <stdint.h>
@@ -54,6 +54,10 @@ static bool has_address = false;
 static uint16_t hids_cid;
 static hid_protocol_mode_t protocol_mode = HID_PROTOCOL_MODE_REPORT;
 
+static uint16_t vid = 0;
+static uint16_t pid = 0;
+static uint16_t version = 0;
+static USB_Device_Type_t type;
 // SDP
 static uint8_t hid_descriptor_storage[500];
 static uint8_t send_report_buf[64];
@@ -102,22 +106,14 @@ void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t
 }
 
 bool check_bluetooth_ready() {
-// This is awful but for stage kit we need to make sure the packet is received
-#if DEVICE_TYPE == STAGE_KIT
-    if (app_state == READY) {
-        if (send_report_len) {
-            hids_client_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, send_report_buf, send_report_len);
-        }
-    }
-#endif
     return app_state == READY;
 }
 
-void hog_stop_scan() {
+void bt_stop_scan() {
     gap_stop_scan();
 }
 
-static void hog_stop_scan_timer(btstack_timer_source_t *ts) {
+static void bt_stop_scan_timer(btstack_timer_source_t *ts) {
     UNUSED(ts);
     printf("stop scan\r\n");
     gap_stop_scan();
@@ -125,7 +121,7 @@ static void hog_stop_scan_timer(btstack_timer_source_t *ts) {
 /**
  * Start scanning
  */
-void hog_start_scan() {
+void bt_start_scan() {
     printf("Scanning for LE HID devices...\r\n");
     devices_found = 0;
 #ifdef BT_ADDR
@@ -139,11 +135,11 @@ void hog_start_scan() {
     gap_start_scan();
     // Auto stop scanning after 10 seconds
     btstack_run_loop_set_timer(&scan_timer, 10000);
-    btstack_run_loop_set_timer_handler(&scan_timer, &hog_stop_scan_timer);
+    btstack_run_loop_set_timer_handler(&scan_timer, &bt_stop_scan_timer);
     btstack_run_loop_add_timer(&scan_timer);
 }
 
-int hog_get_scan_results(uint8_t *buf) {
+int bt_get_scan_results(uint8_t *buf) {
     memcpy(buf, scan_buffer, devices_found * SIZE_OF_BD_ADDRESS);
     return devices_found * SIZE_OF_BD_ADDRESS;
 }
@@ -256,13 +252,31 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     break;
             }
             break;
+        case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_PNP_ID:
+            status = gattservice_subevent_device_information_pnp_id_get_att_status(packet);
+            if (status != ATT_ERROR_SUCCESS){
+                printf("PNP ID read failed, ATT Error 0x%02x\n", status);
+            } else {
+                vid = gattservice_subevent_device_information_pnp_id_get_vendor_id(packet);
+                pid = gattservice_subevent_device_information_pnp_id_get_product_id(packet);
+                version = gattservice_subevent_device_information_pnp_id_get_product_version(packet);
+                get_usb_device_type_for(vid, pid, version, &type);
+                printf("Vendor Source ID: 0x%02x\n", gattservice_subevent_device_information_pnp_id_get_vendor_source_id(packet)); 
+                printf("Vendor  ID:       0x%04x\n", gattservice_subevent_device_information_pnp_id_get_vendor_id(packet)); 
+                printf("Product ID:       0x%04x\n", gattservice_subevent_device_information_pnp_id_get_product_id(packet)); 
+                printf("Product Version:  0x%04x\n", gattservice_subevent_device_information_pnp_id_get_product_version(packet)); 
+                if (type.console_type == UNIVERSAL) {
+                    gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
+                }
+            }
+            break;
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
             printf("info done\r\n");
             gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
         case GATTSERVICE_SUBEVENT_HID_REPORT: {
-            tick_bluetooth(gattservice_subevent_hid_report_get_report(packet), gattservice_subevent_hid_report_get_report_len(packet));
+            tick_bluetooth(gattservice_subevent_hid_report_get_report(packet), gattservice_subevent_hid_report_get_report_len(packet), type);
             break;
         }
 
@@ -410,9 +424,9 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                     // continue - query primary services
                     printf("Search for HID service.\r\n");
                     app_state = W4_HID_CLIENT_CONNECTED;
-                    // device_information_service_client_query(connection_handle, handle_gatt_client_event);
-                    gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
-                    hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
+                    // TODO: figure out why device_information_service isnt working anymore
+                    device_information_service_client_query(connection_handle, handle_gatt_client_event);
+                    // hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
                     break;
                 case ERROR_CODE_CONNECTION_TIMEOUT:
                     printf("Pairing failed, timeout\r\n");
@@ -470,7 +484,7 @@ int btstack_main(void) {
     gatt_client_init();
 
     hids_client_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
-
+    device_information_service_client_init();
     app_state = W4_WORKING;
 
     // Turn on the device

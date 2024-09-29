@@ -118,14 +118,7 @@ static void tick_usb() {
 #if USB_HOST_STACK
     tuh_task();
 #endif
-#ifdef BLUETOOTH_RX
-    // if connected to the transmitter, then run the bt based tick, otherwise run the usb based tick.
-    if (!check_bluetooth_ready()) {
-        tick();
-    }
-#else
     tick();
-#endif
 #ifdef INPUT_MIDI
     MIDI.read();
 #endif
@@ -138,9 +131,9 @@ static void tick_usb() {
         }
     }
 }
-#ifdef BLUETOOTH_RX
-void tick_bluetooth(const void *buf, uint8_t len) {
-    tick_bluetooth_inputs(buf);
+#if BLUETOOTH_RX
+void tick_bluetooth(const void *buf, uint8_t len, USB_Device_Type_t type) {
+    tick_bluetooth_inputs(buf, len, type);
 }
 #endif
 #if BLUETOOTH
@@ -286,9 +279,10 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     uint16_t host_vid = 0;
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
-    printf("%04x %04x\r\n", host_vid, host_pid);
     USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance};
-    get_usb_device_type_for(host_vid, host_pid, &type);
+    USB_DEVICE_DESCRIPTOR desc;
+    tuh_descriptor_get_configuration_sync(dev_addr, 0, &desc, sizeof(desc));
+    get_usb_device_type_for(host_vid, host_pid, desc.bcdDevice, &type);
     switch (type.console_type) {
         case XBOX360:
             x360_dev_addr = type;

@@ -5,9 +5,9 @@ int btstack_main();
 void send_report(uint8_t size, uint8_t* report);
 bool check_bluetooth_ready(void);
 
-void hog_start_scan();
-int hog_get_scan_results(uint8_t* buffer);
-void hog_stop_scan(void);
+void bt_start_scan();
+int bt_get_scan_results(uint8_t* buffer);
+void bt_stop_scan(void);
 int get_bt_address(uint8_t* buffer);
 
 #define SIZE_OF_BD_ADDRESS 18

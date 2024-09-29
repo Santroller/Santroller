@@ -475,7 +475,7 @@ void handle_keyboard_leds(uint8_t leds) {
     HANDLE_KEYBOARD_LED;
 }
 
-#ifdef BLUETOOTH_RX
+#if BLUETOOTH_RX
 void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
     switch (rumble_right) {
         case RUMBLE_STAGEKIT_FOG_ON:
@@ -611,7 +611,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         }
     }
 #endif
-#ifdef BLUETOOTH_RX
+#if BLUETOOTH_RX
     // BT uses HID, so convert XInput based reports to HID before sending them over BT
     if (consoleType == XBOX360 || consoleType == WINDOWS) {
         uint8_t data_hid[8] = {0};
@@ -1043,17 +1043,17 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             return sizeof(last_usb_host_data);
         }
 #endif
-#ifdef BLUETOOTH_RX
+#if BLUETOOTH_RX
         case COMMAND_START_BT_SCAN: {
-            hog_start_scan();
+            bt_start_scan();
             return 0;
         }
         case COMMAND_STOP_BT_SCAN: {
-            hog_stop_scan();
+            bt_stop_scan();
             return 0;
         }
         case COMMAND_GET_BT_DEVICES: {
-            return hog_get_scan_results(response_buffer);
+            return bt_get_scan_results(response_buffer);
         }
 #endif
 #if BLUETOOTH

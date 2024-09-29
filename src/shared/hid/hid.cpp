@@ -1055,6 +1055,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_GET_BT_DEVICES: {
             return bt_get_scan_results(response_buffer);
         }
+        case COMMAND_READ_BLUETOOTH_INPUTS: {
+            memcpy(response_buffer, &bt_data, sizeof(bt_data));
+            return sizeof(bt_data);
+        }
 #endif
 #if BLUETOOTH
         case COMMAND_GET_BT_STATE: {

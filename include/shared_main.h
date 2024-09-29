@@ -121,6 +121,7 @@ extern USB_LastReport_Data_t last_report_bt;
 #if BLUETOOTH_RX
 void tick_bluetooth(const void *buf, uint8_t len, USB_Device_Type_t type);
 int tick_bluetooth_inputs(const void *buf, uint8_t len, USB_Device_Type_t type);
+void bluetooth_connected(void);
 #endif
 extern uint8_t brightness;
 #ifdef BLUETOOTH_TX

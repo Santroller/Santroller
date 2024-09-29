@@ -12,6 +12,7 @@
 
 #include "btstack.h"
 #include "btstack_config.h"
+#include "hidparser.h"
 #include "shared_main.h"
 #ifdef CONFIGURABLE_BLOBS
 static const char *remote_addr_string = (const char *)&BT_ADDR;
@@ -59,6 +60,7 @@ enum STATE state = INIT;
 static uint16_t hid_host_cid = 0;
 static bool hid_host_descriptor_available = false;
 static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT_WITH_FALLBACK_TO_BOOT;
+static HID_ReportInfo_t *info;
 
 int get_bt_address(uint8_t *addr) {
     bd_addr_t local_addr;
@@ -173,6 +175,10 @@ static uint16_t pid = 0;
 static uint16_t version = 0;
 static USB_Device_Type_t type;
 static void hid_host_handle_interrupt_report(const uint8_t *report, uint16_t report_len) {
+    if (type.console_type == GENERIC) {
+        fill_generic_report(info, report, &bt_data);
+        return;
+    }
     tick_bluetooth_inputs(report + 1, report_len - 1, type);
 }
 
@@ -204,9 +210,11 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
             break;
         case SDP_EVENT_QUERY_COMPLETE:
             if (sdp_event_query_complete_get_status(packet)) {
-                printf("SDP query failed 0x%02x\n", sdp_event_query_complete_get_status(packet));
+                printf("SDP query failed 0x%02x\r\n", sdp_event_query_complete_get_status(packet));
+                sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr, BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
                 break;
             }
+            type.console_type = GENERIC;
             type.sub_type = GAMEPAD;
             get_usb_device_type_for(vid, pid, version, &type);
             printf("Found device: %02x %02x\r\n", type.console_type, type.sub_type);
@@ -360,6 +368,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                                 return;
                             }
                             app_state = APP_CONNECTED;
+                            bluetooth_connected();
                             hid_host_descriptor_available = false;
                             hid_host_cid = hid_subevent_connection_opened_get_hid_cid(packet);
                             printf("HID Host connected.\r\n");
@@ -375,6 +384,23 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             status = hid_subevent_descriptor_available_get_status(packet);
                             if (status == ERROR_CODE_SUCCESS) {
                                 hid_host_descriptor_available = true;
+                                if (type.console_type == GENERIC) {
+                                    // TODO: detect keyboard and mouse
+                                    foundPS3 = false;
+                                    foundPS4 = false;
+                                    foundPS5 = false;
+                                    USB_ProcessHIDReport(hid_descriptor_storage_get_descriptor_data(hid_host_cid), hid_descriptor_storage_get_descriptor_len(hid_host_cid), &info);
+
+                                    if (foundPS5) {
+                                        type.console_type = PS5;
+                                    }
+                                    if (foundPS4) {
+                                        type.console_type = PS4;
+                                    }
+                                    if (foundPS3) {
+                                        type.console_type = PS3;
+                                    }
+                                }
                                 printf("HID Descriptor available, please start typing.\r\n");
                                 // TODO: why is this so slow
                                 // read full report
@@ -428,6 +454,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             hid_host_cid = 0;
                             hid_host_descriptor_available = false;
                             printf("HID Host disconnected.\r\n");
+                            if (has_address) {
+                                // Grab vid and pid
+                                sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr, BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+                            }
                             break;
 
                         default:

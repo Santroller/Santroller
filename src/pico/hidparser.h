@@ -64,13 +64,16 @@
 /* Includes: */
 #include <stdint.h>
 #include <stdbool.h>
+#include "config.h"
 
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
-
+extern bool foundPS5;
+extern bool foundPS4;
+extern bool foundPS3;
 	/* Macros: */
 #if !defined(HID_STATETABLE_STACK_DEPTH) || defined(__DOXYGEN__)
 /** Constant indicating the maximum stack depth of the state table. A larger state table
@@ -397,7 +400,7 @@ extern "C"
 	 *		  it should be ignored.
 	 */
 	bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem);
-
+	void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out);
 	/** Enum for the different types of HID reports. */
 	enum HID_ReportItemTypes_t
 	{

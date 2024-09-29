@@ -71,9 +71,6 @@ TU_ATTR_ALWAYS_INLINE static inline xinputh_device_t *get_dev(uint8_t dev_addr);
 TU_ATTR_ALWAYS_INLINE static inline xinputh_interface_t *get_instance(uint8_t dev_addr, uint8_t instance);
 static uint8_t get_instance_id_by_itfnum(uint8_t dev_addr, uint8_t itf);
 static uint8_t get_instance_id_by_epaddr(uint8_t dev_addr, uint8_t ep_addr);
-static bool foundPS5 = false;
-static bool foundPS4 = false;
-static bool foundPS3 = false;
 //--------------------------------------------------------------------+
 // Interface API
 //--------------------------------------------------------------------+
@@ -133,90 +130,11 @@ bool xinputh_init(void) {
     return true;
 }
 
-static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportData, HID_ReportItem_t *const ReportItem) {
-    if (ReportItem->ReportID) {
-        if (ReportItem->ReportID != ReportData[0])
-            return false;
 
-        ReportData++;
-    }
-    return USB_GetHIDReportItemInfo(ReportItem->ReportID, ReportData, ReportItem);
-}
-
-uint16_t GetAxis(HID_ReportItem_t *item) {
-    uint8_t size = item->Attributes.BitSize;
-    uint32_t val = item->Value;
-    if (size > 16) {
-        val >>= size - 16;
-    } else if (size < 16) {
-        val <<= 16 - size;
-    }
-    return val;
-}
-
-void fill_generic_report(uint8_t dev_addr, uint8_t instance, const uint8_t *report, USB_Host_Data_t *out) {
+void fill_generic_report_host(uint8_t dev_addr, uint8_t instance, const uint8_t *report, USB_Host_Data_t *out) {
     memset(out, 0, sizeof(USB_Host_Data_t));
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
-    if (hid_itf->info != NULL) {
-        HID_ReportItem_t *item = hid_itf->info->FirstReportItem;
-        while (item) {
-            if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
-                switch (item->Attributes.Usage.Page) {
-                    case HID_USAGE_PAGE_DESKTOP:
-                        switch (item->Attributes.Usage.Usage) {
-                            case HID_USAGE_DESKTOP_X:
-                                out->genericAxisX = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_Y:
-                                out->genericAxisY = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_Z:
-                                out->genericAxisZ = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RX:
-                                out->genericAxisRx = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RY:
-                                out->genericAxisRy = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RZ:
-                                out->genericAxisRz = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_SLIDER:
-                                out->genericAxisSlider = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_HAT_SWITCH:
-                                out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;
-                                out->dpadRight = item->Value == 3 || item->Value == 2 || item->Value == 1;
-                                out->dpadUp = item->Value == 0 || item->Value == 1 || item->Value == 7;
-                                out->dpadDown = item->Value == 5 || item->Value == 4 || item->Value == 3;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_UP:
-                                out->dpadUp = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_RIGHT:
-                                out->dpadRight = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_DOWN:
-                                out->dpadDown = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_LEFT:
-                                out->dpadLeft = 1;
-                                break;
-                        }
-                        break;
-                    case HID_USAGE_PAGE_BUTTON: {
-                        uint8_t usage = item->Attributes.Usage.Usage;
-                        if (usage <= 16 && item->Value) {
-                            out->genericButtons |= 1 << usage - 1;
-                        }
-                        break;
-                    }
-                }
-            }
-            item = item->Next;
-        }
-    }
+    fill_generic_report(hid_itf->info, report, out);
 }
 bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) {
     (void)result;
@@ -251,42 +169,6 @@ void xinputh_close(uint8_t dev_addr) {
     tu_memclr(hid_dev, sizeof(xinputh_device_t));
 }
 
-bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem) {
-    if (CurrentItem->ItemType == HID_REPORT_ITEM_Feature && CurrentItem->Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR) {
-        if (CurrentItem->Attributes.Usage.Usage == 0x2821) {
-            foundPS5 = true;
-        }
-        if (CurrentItem->Attributes.Usage.Usage == 0x2721) {
-            foundPS4 = true;
-        }
-        if (CurrentItem->Attributes.Usage.Usage == 0x2621) {
-            foundPS3 = true;
-        }
-    }
-
-    if (CurrentItem->ItemType != HID_REPORT_ITEM_In)
-        return false;
-
-    switch (CurrentItem->Attributes.Usage.Page) {
-        case HID_USAGE_PAGE_DESKTOP:
-            switch (CurrentItem->Attributes.Usage.Usage) {
-                case HID_USAGE_DESKTOP_X:
-                case HID_USAGE_DESKTOP_Y:
-                case HID_USAGE_DESKTOP_Z:
-                case HID_USAGE_DESKTOP_RZ:
-                case HID_USAGE_DESKTOP_HAT_SWITCH:
-                case HID_USAGE_DESKTOP_DPAD_UP:
-                case HID_USAGE_DESKTOP_DPAD_DOWN:
-                case HID_USAGE_DESKTOP_DPAD_LEFT:
-                case HID_USAGE_DESKTOP_DPAD_RIGHT:
-                    return true;
-            }
-            return false;
-        case HID_USAGE_PAGE_BUTTON:
-            return true;
-    }
-    return false;
-}
 
 //--------------------------------------------------------------------+
 // Enumeration

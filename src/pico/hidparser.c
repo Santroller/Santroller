@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "class/hid/hid.h"
 #ifdef DYNAMIC
 #include <malloc.h>
 #define ACQUIRE_AND_RELEASE(structure, size) \
@@ -62,6 +63,131 @@ ACQUIRE_AND_RELEASE(HID_ReportSizeInfo, 100);
 ACQUIRE_AND_RELEASE(HID_CollectionPath, 25);
 ACQUIRE_AND_RELEASE(HID_ReportInfo, 10);
 ACQUIRE_AND_RELEASE(HID_ReportItem, 50);
+
+bool foundPS5 = false;
+bool foundPS4 = false;
+bool foundPS3 = false;
+
+static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportData, HID_ReportItem_t *const ReportItem) {
+    if (ReportItem->ReportID) {
+        if (ReportItem->ReportID != ReportData[0])
+            return false;
+
+        ReportData++;
+    }
+    return USB_GetHIDReportItemInfo(ReportItem->ReportID, ReportData, ReportItem);
+}
+
+uint16_t GetAxis(HID_ReportItem_t *item) {
+    uint8_t size = item->Attributes.BitSize;
+    uint32_t val = item->Value;
+    if (size > 16) {
+        val >>= size - 16;
+    } else if (size < 16) {
+        val <<= 16 - size;
+    }
+    return val;
+}
+
+void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out) {
+    if (info != NULL) {
+        HID_ReportItem_t *item = info->FirstReportItem;
+        while (item) {
+            if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
+                switch (item->Attributes.Usage.Page) {
+                    case HID_USAGE_PAGE_DESKTOP:
+                        switch (item->Attributes.Usage.Usage) {
+                            case HID_USAGE_DESKTOP_X:
+                                out->genericAxisX = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_Y:
+                                out->genericAxisY = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_Z:
+                                out->genericAxisZ = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RX:
+                                out->genericAxisRx = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RY:
+                                out->genericAxisRy = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RZ:
+                                out->genericAxisRz = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_SLIDER:
+                                out->genericAxisSlider = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_HAT_SWITCH:
+                                out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;
+                                out->dpadRight = item->Value == 3 || item->Value == 2 || item->Value == 1;
+                                out->dpadUp = item->Value == 0 || item->Value == 1 || item->Value == 7;
+                                out->dpadDown = item->Value == 5 || item->Value == 4 || item->Value == 3;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_UP:
+                                out->dpadUp = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_RIGHT:
+                                out->dpadRight = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_DOWN:
+                                out->dpadDown = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_LEFT:
+                                out->dpadLeft = 1;
+                                break;
+                        }
+                        break;
+                    case HID_USAGE_PAGE_BUTTON: {
+                        uint8_t usage = item->Attributes.Usage.Usage;
+                        if (usage <= 16 && item->Value) {
+                            out->genericButtons |= 1 << usage - 1;
+                        }
+                        break;
+                    }
+                }
+            }
+            item = item->Next;
+        }
+    }
+}
+
+bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem) {
+    if (CurrentItem->ItemType == HID_REPORT_ITEM_Feature && CurrentItem->Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR) {
+        if (CurrentItem->Attributes.Usage.Usage == 0x2821) {
+            foundPS5 = true;
+        }
+        if (CurrentItem->Attributes.Usage.Usage == 0x2721) {
+            foundPS4 = true;
+        }
+        if (CurrentItem->Attributes.Usage.Usage == 0x2621) {
+            foundPS3 = true;
+        }
+    }
+
+    if (CurrentItem->ItemType != HID_REPORT_ITEM_In)
+        return false;
+
+    switch (CurrentItem->Attributes.Usage.Page) {
+        case HID_USAGE_PAGE_DESKTOP:
+            switch (CurrentItem->Attributes.Usage.Usage) {
+                case HID_USAGE_DESKTOP_X:
+                case HID_USAGE_DESKTOP_Y:
+                case HID_USAGE_DESKTOP_Z:
+                case HID_USAGE_DESKTOP_RZ:
+                case HID_USAGE_DESKTOP_HAT_SWITCH:
+                case HID_USAGE_DESKTOP_DPAD_UP:
+                case HID_USAGE_DESKTOP_DPAD_DOWN:
+                case HID_USAGE_DESKTOP_DPAD_LEFT:
+                case HID_USAGE_DESKTOP_DPAD_RIGHT:
+                    return true;
+            }
+            return false;
+        case HID_USAGE_PAGE_BUTTON:
+            return true;
+    }
+    return false;
+}
 
 void USB_FreeReportInfo(HID_ReportInfo_t *ReportInfo)
 {

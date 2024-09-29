@@ -18,6 +18,7 @@
 #include "endpoints.h"
 #include "gap.h"
 #include "hid.h"
+#include "hidparser.h"
 #include "shared_main.h"
 
 // TAG to store remote device address and type in TLV
@@ -74,6 +75,7 @@ static btstack_packet_callback_registration_t sm_event_callback_registration;
 // used to store remote device in TLV
 static const btstack_tlv_t *btstack_tlv_singleton_impl;
 static void *btstack_tlv_singleton_context;
+static HID_ReportInfo_t *info;
 
 static void hog_connect(void);
 /**
@@ -257,6 +259,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     // done
                     printf("Ready - receiving data\r\n");
                     app_state = READY;
+                    bluetooth_connected();
                     break;
                 default:
                     printf("HID service client connection failed, err 0x%02x.\r\n", status);
@@ -266,17 +269,18 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             break;
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_PNP_ID:
             status = gattservice_subevent_device_information_pnp_id_get_att_status(packet);
-            if (status != ATT_ERROR_SUCCESS){
+            if (status != ATT_ERROR_SUCCESS) {
                 printf("PNP ID read failed, ATT Error 0x%02x\n", status);
             } else {
                 vid = gattservice_subevent_device_information_pnp_id_get_vendor_id(packet);
                 pid = gattservice_subevent_device_information_pnp_id_get_product_id(packet);
                 version = gattservice_subevent_device_information_pnp_id_get_product_version(packet);
+                type.console_type = GENERIC;
                 get_usb_device_type_for(vid, pid, version, &type);
-                printf("Vendor Source ID: 0x%02x\r\n", gattservice_subevent_device_information_pnp_id_get_vendor_source_id(packet)); 
-                printf("Vendor  ID:       0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_vendor_id(packet)); 
-                printf("Product ID:       0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_product_id(packet)); 
-                printf("Product Version:  0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_product_version(packet)); 
+                printf("Vendor Source ID: 0x%02x\r\n", gattservice_subevent_device_information_pnp_id_get_vendor_source_id(packet));
+                printf("Vendor  ID:       0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_vendor_id(packet));
+                printf("Product ID:       0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_product_id(packet));
+                printf("Product Version:  0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_product_version(packet));
             }
             break;
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
@@ -287,7 +291,31 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             }
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
+        case GATTSERVICE_SUBEVENT_HID_INFORMATION: {
+            uint16_t cid = gattservice_subevent_hid_information_get_hids_cid(packet);
+            if (type.console_type == GENERIC) {
+                foundPS3 = false;
+                foundPS4 = false;
+                foundPS5 = false;
+                USB_ProcessHIDReport(hids_client_descriptor_storage_get_descriptor_data(cid, 0), hids_client_descriptor_storage_get_descriptor_len(cid, 0), &info);
+
+                if (foundPS5) {
+                    type.console_type = PS5;
+                }
+                if (foundPS4) {
+                    type.console_type = PS4;
+                }
+                if (foundPS3) {
+                    type.console_type = PS3;
+                }
+            }
+            break;
+        }
         case GATTSERVICE_SUBEVENT_HID_REPORT: {
+            if (type.console_type == GENERIC) {
+                fill_generic_report(info, gattservice_subevent_hid_report_get_report(packet), &bt_data);
+                break;
+            }
             tick_bluetooth(gattservice_subevent_hid_report_get_report(packet), gattservice_subevent_hid_report_get_report_len(packet), type);
             break;
         }

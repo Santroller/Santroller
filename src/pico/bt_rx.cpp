@@ -39,7 +39,6 @@ static enum {
     W4_TIMEOUT_THEN_RECONNECT,
 } app_state;
 
-static const uint8_t santroller_name[] = "SantrollerBT";
 #ifdef CONFIGURABLE_BLOBS
 static const char *bt_addr = (const char *)&BT_ADDR;
 #else
@@ -89,7 +88,13 @@ static bool adv_event_contains_hid_service(const uint8_t *packet) {
     return ad_data_contains_uuid16(ad_len, ad_data, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE);
 }
 
-static uint8_t scan_buffer[MAX_DEVICES_TO_SCAN * SIZE_OF_BD_ADDRESS];
+typedef struct {
+    char addr[SIZE_OF_BD_ADDRESS];
+    char name_buffer[100];
+} scan_data_t;
+
+static scan_data_t devices[MAX_DEVICES_TO_SCAN];
+static uint16_t buffer_size;
 static uint8_t devices_found;
 
 int get_bt_address(uint8_t *addr) {
@@ -126,7 +131,7 @@ void bt_start_scan() {
     devices_found = 0;
 #ifdef BT_ADDR
     if (has_address) {
-        memcpy(scan_buffer, bt_addr, SIZE_OF_BD_ADDRESS);
+        strcpy(devices[0].name_buffer, bt_addr);
         devices_found = 1;
     }
 #endif
@@ -140,8 +145,15 @@ void bt_start_scan() {
 }
 
 int bt_get_scan_results(uint8_t *buf) {
-    memcpy(buf, scan_buffer, devices_found * SIZE_OF_BD_ADDRESS);
-    return devices_found * SIZE_OF_BD_ADDRESS;
+    int size = 0;
+    for (int i = 0; i < devices_found; i++) {
+        int len = strnlen(devices[i].name_buffer, sizeof(devices[i].name_buffer));
+        memcpy(buf + size, devices[i].name_buffer, len);
+        size += len;
+        devices[i].name_buffer[size] = '\0';
+        size++;
+    }
+    return size;
 }
 
 /**
@@ -194,7 +206,7 @@ static void hog_start_connect(void) {
 #ifdef BT_ADDR
 #ifdef CONFIGURABLE_BLOBS
     // If the address starts with a null byte, then it is not actually set and should be ignored.
-    if (scan_buffer[0]) {
+    if (devices[0]) {
         return;
     }
 #endif
@@ -261,18 +273,18 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                 pid = gattservice_subevent_device_information_pnp_id_get_product_id(packet);
                 version = gattservice_subevent_device_information_pnp_id_get_product_version(packet);
                 get_usb_device_type_for(vid, pid, version, &type);
-                printf("Vendor Source ID: 0x%02x\n", gattservice_subevent_device_information_pnp_id_get_vendor_source_id(packet)); 
-                printf("Vendor  ID:       0x%04x\n", gattservice_subevent_device_information_pnp_id_get_vendor_id(packet)); 
-                printf("Product ID:       0x%04x\n", gattservice_subevent_device_information_pnp_id_get_product_id(packet)); 
-                printf("Product Version:  0x%04x\n", gattservice_subevent_device_information_pnp_id_get_product_version(packet)); 
-                if (type.console_type == UNIVERSAL) {
-                    gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
-                }
+                printf("Vendor Source ID: 0x%02x\r\n", gattservice_subevent_device_information_pnp_id_get_vendor_source_id(packet)); 
+                printf("Vendor  ID:       0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_vendor_id(packet)); 
+                printf("Product ID:       0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_product_id(packet)); 
+                printf("Product Version:  0x%04x\r\n", gattservice_subevent_device_information_pnp_id_get_product_version(packet)); 
             }
             break;
         case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
             printf("info done\r\n");
-            gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
+            // TODO: do other controllers work okay with this?
+            if (type.console_type == SANTROLLER) {
+                gap_update_connection_parameters(connection_handle, 6, 6, 0, 100);
+            }
             hids_client_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             break;
         case GATTSERVICE_SUBEVENT_HID_REPORT: {
@@ -310,24 +322,31 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     const uint8_t *adv_data = gap_event_advertising_report_get_data(packet);
                     uint8_t adv_size = gap_event_advertising_report_get_data_length(packet);
                     ad_context_t context;
-                    // Scan for devices, and if they are santrollers then store their mac addresses.
                     for (ad_iterator_init(&context, adv_size, adv_data); ad_iterator_has_more(&context); ad_iterator_next(&context)) {
                         uint8_t data_type = ad_iterator_get_data_type(&context);
+                        if (data_type != BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME) {
+                            continue;
+                        }
                         uint8_t size = ad_iterator_get_data_len(&context);
                         const uint8_t *data = ad_iterator_get_data(&context);
-                        if (data_type == BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME && memcmp(data, santroller_name, sizeof(santroller_name) - 1) == 0) {
-                            char *address_string = bd_addr_to_str(address);
-                            bool found = false;
-                            for (int i = 0; i < devices_found; i++) {
-                                if (memcmp(address_string, scan_buffer + (i * SIZE_OF_BD_ADDRESS), SIZE_OF_BD_ADDRESS) == 0) {
-                                    found = true;
-                                }
+                        char *address_string = bd_addr_to_str(address);
+                        bool found = false;
+                        int current_device = devices_found;
+                        for (int i = 0; i < devices_found; i++) {
+                            if (memcmp(address_string, devices[i].addr, SIZE_OF_BD_ADDRESS) == 0) {
+                                found = true;
                             }
-                            if (!found) {
-                                printf("Found, device address %s ...\r\n", address_string);
-                                memcpy(scan_buffer + (devices_found * SIZE_OF_BD_ADDRESS), address_string, SIZE_OF_BD_ADDRESS);
-                                devices_found++;
-                            }
+                        }
+                        if (!found) {
+                            memcpy(devices[devices_found].addr, address_string, SIZE_OF_BD_ADDRESS);
+                            memcpy(devices[devices_found].name_buffer, data, size);
+                            devices[devices_found].name_buffer[size] = ' ';
+                            devices[devices_found].name_buffer[size + 1] = '(';
+                            memcpy(devices[devices_found].name_buffer + size + 2, address_string, SIZE_OF_BD_ADDRESS);
+                            devices[devices_found].name_buffer[size + SIZE_OF_BD_ADDRESS + 1] = ')';
+                            devices[devices_found].name_buffer[size + SIZE_OF_BD_ADDRESS + 2] = 0;
+                            printf("Found device '%s'\r\n", devices[devices_found].name_buffer);
+                            devices_found++;
                         }
                     }
                     break;

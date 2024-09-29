@@ -116,6 +116,10 @@ static void hid_host_setup(void) {
     setvbuf(stdin, NULL, _IONBF, 0);
 }
 
+void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
+    hid_host_send_set_report(hid_host_cid, (hid_report_type_t)reportType, report_id, data, len);
+}
+
 void bt_start_scan(void) {
     printf("Starting inquiry scan..\r\n");
     gap_inquiry_start(INQUIRY_INTERVAL);

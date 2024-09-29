@@ -5,8 +5,6 @@
 #include "io.h"
 #include "ps2.h"
 #include "util.h"
-#include "pico/stdio.h"
-#include "pico/multicore.h"
 
 #ifdef TICK_PS2
 

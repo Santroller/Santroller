@@ -32,6 +32,14 @@ void offNote(uint8_t channel, uint8_t note, uint8_t velocity);
 
 void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2);
 void onPitchBend(uint8_t channel, int pitch);
+
+typedef struct {
+    uint8_t console_type;
+    uint8_t sub_type;
+    uint8_t dev_addr;
+    uint8_t instance;
+} USB_Device_Type_t;
+void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_Device_Type_t *type);
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds
     uint8_t select;
@@ -96,13 +104,6 @@ extern Led_t ledStatePeripheral[LED_COUNT_PERIPHERAL];
 extern Led_t lastLedStatePeripheral[LED_COUNT_PERIPHERAL];
 #endif
 #if USB_HOST_STACK
-typedef struct {
-    uint8_t console_type;
-    uint8_t sub_type;
-    uint8_t dev_addr;
-    uint8_t instance;
-} USB_Device_Type_t;
-void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_Device_Type_t *type);
 USB_Device_Type_t get_device_address_for(uint8_t deviceType);
 #endif
 #ifdef INPUT_USB_HOST

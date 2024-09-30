@@ -3,7 +3,10 @@ from pprint import pp
 import subprocess
 import sys
 from os.path import join
-import libusb_package
+try:
+    import libusb_package
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "libusb-package"])
 from platformio.util import get_serial_ports, get_systype
 from platformio.exception import ReturnErrorCode, UserSideException
 from platformio.package.manager.tool import ToolPackageManager

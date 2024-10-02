@@ -13,7 +13,11 @@ from platformio.package.manager.tool import ToolPackageManager
 from platformio.proc import get_pythonexe_path, where_is_program
 from serial import Serial, SerialException
 import os
-import psutil
+
+try:
+    import psutil
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "psutil"])
 import glob
 from time import sleep
 import subprocess

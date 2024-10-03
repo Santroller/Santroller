@@ -27,7 +27,7 @@ NEVER plug in both the usb cable to your computer, and the extension to a wii re
 
     The Pi Pico lets you pick from various pins for the SDA and SCL pins. We provide recommended pins below, and this pinout is the same as the old Ardwiino firmware. If you need to use other pins, the options are provided below but the SDA and SCL pins must be from the same channel.
 
-    [![pinout](/assets/images/wii-ext-pinout.jpg)](/assets/images/wii-ext-pinout.jpg)
+    [![pinout](/assets/images/wii-ext-pinout.png)](/assets/images/wii-ext-pinout.png)
 
     ```danger
     Do NOT rely on the colours, the manufacturers are all over the place with this and the only way to validate them is to test each wire according to the above image. I've come across connectors wired with green as ground and black as 3.3V before, you just can't rely on the colours at all unfortunately. Even cables from guitar hero guitars don't use expected colours, I found that on mine, device detect was shorted to V<sub>CC</sub>, and then white was ground!

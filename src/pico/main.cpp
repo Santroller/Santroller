@@ -280,9 +280,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance};
-    USB_DEVICE_DESCRIPTOR desc;
-    tuh_descriptor_get_configuration_sync(dev_addr, 0, &desc, sizeof(desc));
-    get_usb_device_type_for(host_vid, host_pid, desc.bcdDevice, &type);
+    get_usb_device_type_for(host_vid, host_pid, 0, &type);
     switch (type.console_type) {
         case XBOX360:
             x360_dev_addr = type;

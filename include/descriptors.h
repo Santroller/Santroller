@@ -50,6 +50,24 @@ typedef struct {
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR InterfaceGamepad;
+    XBOX_ID_DESCRIPTOR GamepadDescriptor;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
+    USB_INTERFACE_DESCRIPTOR InterfaceGamepad2;
+    XBOX_ID_DESCRIPTOR GamepadDescriptor2;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint21;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint22;
+    USB_INTERFACE_DESCRIPTOR InterfaceGamepad3;
+    XBOX_ID_DESCRIPTOR GamepadDescriptor3;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint31;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint32;
+    USB_INTERFACE_DESCRIPTOR InterfaceSecurity;
+    uint8_t SecurityDescriptor[0x06];
+} __attribute__((packed)) XBOX_360_CONFIGURATION_MULTI_DESCRIPTOR;
+
+typedef struct {
+    USB_CONFIGURATION_DESCRIPTOR Config;
+    USB_INTERFACE_DESCRIPTOR InterfaceGamepad;
     USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
     USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
 } __attribute__((packed)) OG_XBOX_CONFIGURATION_DESCRIPTOR;

@@ -82,6 +82,20 @@ const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
             CompatibleID : "XUSB10",
             SubCompatibleID : {0},
             Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Padding,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : INTERFACE_ID_XBOX_Security,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
         }}
 };
 

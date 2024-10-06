@@ -129,7 +129,6 @@ uint8_t lastSuccessfulGH5Packet[2];
 uint8_t lastSuccessfulClonePacket[4];
 uint8_t lastSuccessfulTurntablePacketLeft[3];
 uint8_t lastSuccessfulTurntablePacketRight[3];
-uint8_t last_usb_report_size = 0;
 long lastSuccessfulGHWTPacket;
 bool lastGH5WasSuccessful = false;
 bool lastCloneWasSuccessful = false;
@@ -2765,10 +2764,9 @@ bool tick_usb(void) {
 #endif
     if (!size) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);
-        last_usb_report_size = size;
     }
-    if (last_usb_report_size) {
-        send_report_to_pc(&combined_report, last_usb_report_size);
+    if (size) {
+        send_report_to_pc(&combined_report, size);
     }
     seen_ps4_console = true;
     return size;

@@ -280,7 +280,9 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance};
-    get_usb_device_type_for(host_vid, host_pid, 0, &type);
+    tuh_descriptor_get_device_sync(dev_addr, buf, sizeof(USB_DEVICE_DESCRIPTOR));
+    USB_DEVICE_DESCRIPTOR *desc = (USB_DEVICE_DESCRIPTOR *)buf;
+    get_usb_device_type_for(host_vid, host_pid, desc->bcdDevice, &type);
     switch (type.console_type) {
         case XBOX360:
             x360_dev_addr = type;
@@ -315,9 +317,6 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             break;
         case SANTROLLER: {
             tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf));
-            tuh_descriptor_get_device_sync(dev_addr, buf, sizeof(USB_DEVICE_DESCRIPTOR));
-            USB_DEVICE_DESCRIPTOR *desc = (USB_DEVICE_DESCRIPTOR *)buf;
-            type.sub_type = desc->bcdDevice >> 8;
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
             printf("Found Santroller controller\r\n");

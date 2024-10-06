@@ -62,6 +62,36 @@ const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE PROGMEM DevCompatIDsPS3 = {
         }}
 };
 
+const OS_COMPATIBLE_ID_DESCRIPTOR_THREE PROGMEM DevCompatIDsUniversal = {
+    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_THREE),
+    Version : 0x0100,
+    Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
+    TotalSections : 3,
+    Reserved : {0},
+    CompatID : {
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Config,
+            Reserved : 0x01,
+            CompatibleID : "WINUSB",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : INTERFACE_ID_Padding,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : INTERFACE_ID_XBOX_Security,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        }}
+};
+
 const OS_COMPATIBLE_ID_DESCRIPTOR PROGMEM DevCompatIDs = {
     TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
     Version : 0x0100,

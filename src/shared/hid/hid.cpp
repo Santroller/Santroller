@@ -857,13 +857,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &response, sizeof(response));
             return sizeof(response);
         }
-        case COMMAND_READ_ACCEL_ADC: {
-            memcpy(response_buffer, &accel_adc, sizeof(accel_adc));
-            return sizeof(accel_adc);
-        }
         case COMMAND_READ_ACCEL: {
             memcpy(response_buffer, &filtered, sizeof(filtered));
-            return sizeof(filtered);
+            memcpy(response_buffer+sizeof(filtered), &accel_adc, sizeof(accel_adc));
+            return sizeof(filtered) + sizeof(accel_adc);
         }
         case COMMAND_ACCEL_VALID: {
             response_buffer[0] = accel_found;

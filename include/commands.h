@@ -50,6 +50,7 @@ enum SerialCommands {
     COMMAND_SET_ACCEL_FILTER,
     COMMAND_ACCEL_VALID,
     COMMAND_READ_BLUETOOTH_INPUTS,
+    COMMAND_READ_ACCEL_ADC,
     MAX=100
 };
 
@@ -75,6 +76,7 @@ extern bool overrideR2;
 extern bool slave_initted;
 extern uint8_t overriddenR2;
 extern int16_t filtered[3];
+extern uint16_t accel_adc[3];
 extern bool accel_found;
 extern bool mpr121_init;
 extern uint16_t lastMpr121;

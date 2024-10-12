@@ -32,14 +32,11 @@ static inline void generateSerialString(STRING_DESCRIPTOR_PICO* const UnicodeStr
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES] = '3';
 
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = '0' + consoleType;
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = '0' + DEVICE_TYPE;
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3] = '0' + WINDOWS_USES_XINPUT;
-#elif DEVICE_TYPE == KEYBOARD_MOUSE_TYPE
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = 'K';
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3] = '0';
 #else
-    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = 'K' + DEVICE_TYPE;
+    UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 2] = 'K';
     UnicodeString->UnicodeString[PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 3] = '0';
 #endif
 }

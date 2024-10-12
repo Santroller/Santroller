@@ -39,7 +39,7 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bMaxPacketSize0 : ENDPOINT_SIZE,
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
 #else
     bcdDevice : USB_VERSION_BCD(0, 0, 0),
@@ -49,7 +49,7 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     iSerialNumber : 0x03,
     bNumConfigurations : 1
 };
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
 const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
@@ -839,7 +839,7 @@ bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
         reset_usb();
@@ -884,7 +884,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return 0;
     }
 
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
         reset_usb();
@@ -942,7 +942,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 #endif
 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
         // PS3s request this as some form of controller id
         if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
             // Pro instruments use a different init flow
@@ -1167,7 +1167,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
 #if USB_HOST_STACK
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         seen_windows_desc = true;
@@ -1197,7 +1197,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
@@ -1327,7 +1327,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #if DEVICE_TYPE_IS_KEYBOARD
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
-#elif DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#elif DEVICE_TYPE_IS_GAMEPAD
 
             if (consoleType == PS4) {
                 address = ps4_descriptor;

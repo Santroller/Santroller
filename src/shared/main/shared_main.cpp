@@ -101,7 +101,7 @@ int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
 USB_Report_Data_t combined_report;
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
 PS3_REPORT bt_report;
 #else
 USB_Report_Data_t bt_report;
@@ -242,7 +242,7 @@ void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
 }
 uint8_t seq = 1;
 void init_main(void) {
-#if !DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if !DEVICE_TYPE_IS_GAMEPAD
     consoleType = UNIVERSAL;
 #endif
     initPins();
@@ -2678,7 +2678,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #if USB_HOST_STACK
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     if (updateSequence) {
         report_sequence_number++;
         if (report_sequence_number == 0) {
@@ -2729,7 +2729,7 @@ bool tick_usb(void) {
         }
     }
 #endif
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating

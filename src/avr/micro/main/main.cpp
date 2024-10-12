@@ -147,14 +147,11 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = '3';
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = consoleType + '0';
-#if DEVICE_TYPE_IS_NORMAL_GAMEPAD
+#if DEVICE_TYPE_IS_GAMEPAD
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = DEVICE_TYPE + '0';
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
-#elif DEVICE_TYPE == KEYBOARD_MOUSE_TYPE
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #else
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K' + DEVICE_TYPE;
+    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #endif
 }

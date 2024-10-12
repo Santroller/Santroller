@@ -99,7 +99,7 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = DEVICE_TYPE + '0';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
-#elif EMULATION_TYPE == EMULATION_TYPE_KEYBOARD_MOUSE
+#elif DEVICE_TYPE == KEYBOARD_MOUSE_TYPE
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
 #else

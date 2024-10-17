@@ -386,6 +386,9 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #define HID_BUTTON_PADDING ((HID_BUTTON_COUNT % 8) ? (8 - (HID_BUTTON_COUNT % 8)) : 0)
 #endif
+#ifndef XINPUT_FLAGS
+#define XINPUT_FLAGS 0
+#endif
 // Xbox One Controller config
 #define TEMP 0xFF
 #if DEVICE_TYPE_IS_GUITAR

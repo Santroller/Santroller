@@ -140,43 +140,44 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
       <summary>Face buttons / RB Pedal</summary>
 
     1. Click on the button you want to configure, and make sure the `Input Type` is set to `Digital Pin Input`.
-    2. Click on the `Find Pin` button, and then press the button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for that button should now light up whenever the button is pressed.
+    2. Make sure `Pin Mode` is set to `Pull Up`
+    3. Click on the `Find Pin` button, and then press the button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for that button should now light up whenever the button is pressed.
 
     </details>
 
     <details>
       <summary>Drum / Cymbal pads / GH Pedal (Multiplexer)</summary>
 
-    1. Click on the drum pad in question
-    2. Set the `Input Type` to multiplexer
-    3. Set the S0, S1, S2 (and S3 for a 4067 based multiplexer) pins
-    4. Set the analog output / SIG / COM pin to the analog pin you wired it to
-    5. Hit the drum pad in question. You should see the raw value for the drum pad change.
-    6. Hit the pad lightly, and drag the minimum up so that it registers small hits.
-    7. Hit nearby pads and make sure that the vibrations from those pads don't activate the pad you are configuring. If they do, then increase the minimum. You should end up with each pad registering hits, without crosstalk or needing to hit the pads too hard.
+    4. Click on the drum pad in question
+    5. Set the `Input Type` to multiplexer
+    6. Set the S0, S1, S2 (and S3 for a 4067 based multiplexer) pins
+    7. Set the analog output / SIG / COM pin to the analog pin you wired it to
+    8. Hit the drum pad in question. You should see the raw value for the drum pad change.
+    9. Hit the pad lightly, and drag the minimum up so that it registers small hits.
+    10. Hit nearby pads and make sure that the vibrations from those pads don't activate the pad you are configuring. If they do, then increase the minimum. You should end up with each pad registering hits, without crosstalk or needing to hit the pads too hard.
 
     </details>
 
     <details>
       <summary>Drum / Cymbal pads / GH Pedal (Direct analog)</summary>
 
-    1. Click on the drum pad in question
-    2. Set the input type to `Analog Pin Input`
-    3. Click on `Find Pin` and then hit the drum pad in question, it should detect the drum that was just hit.
-    4. Hit the drum pad in question. You should see the raw value for the drum pad change.
-    5. Hit the pad lightly, and drag the minimum up so that it registers small hits.
-    6. Hit nearby pads and make sure that the vibrations from those pads don't activate the pad you are configuring. If they do, then increase the minimum. You should end up with each pad registering hits, without crosstalk or needing to hit the pads too hard.
+    11. Click on the drum pad in question
+    12. Set the input type to `Analog Pin Input`
+    13. Click on `Find Pin` and then hit the drum pad in question, it should detect the drum that was just hit.
+    14. Hit the drum pad in question. You should see the raw value for the drum pad change.
+    15. Hit the pad lightly, and drag the minimum up so that it registers small hits.
+    16. Hit nearby pads and make sure that the vibrations from those pads don't activate the pad you are configuring. If they do, then increase the minimum. You should end up with each pad registering hits, without crosstalk or needing to hit the pads too hard.
 
     </details>
 
     <details>
       <summary>USB Host (Pi Pico Only)</summary>
 
-    1. Click on Add setting
-    2. Find and add `USB Host inputs`
-    3. Bind D+
-    4. Hit Save
-    5. If you plug in a supported controller, the tool should detect it and tell you what it is.
-    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
+    17. Click on Add setting
+    18. Find and add `USB Host inputs`
+    19. Bind D+
+    20. Hit Save
+    21. If you plug in a supported controller, the tool should detect it and tell you what it is.
+    22. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
     </details>

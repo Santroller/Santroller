@@ -371,7 +371,7 @@ If you intend to use the peripheral features, it is recommended to program the p
 
   1. Click on the home / Xbox / PS button.
   2. Set the `Input Type` to `Shortcut`
-  3. Set the next `Input TYpe` to `Digital Pin Input`
+  3. Set the next `Input Type` to `Digital Pin Input`
   4. Click on the first `Find Pin` button, and then press the start button on the guitar. If you have wired everything correctly, the tool should detect the pin.
   5. Click on the second `Find Pin` button, and then press the select button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for the home button should now light up whenever both start and select is pressed.
 

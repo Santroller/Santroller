@@ -101,24 +101,25 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
 ## Programming
 
 1.  Start Santroller with your microcontroller plugged in.
-2.  Set the Input Type to `Wii Adapter`
-3.  Hit Configure
-4.  Click on `Controller Settings`
-5.  Set `Emulation Type` to `Controller` for controllers, or `Fortnite Festival` if you want to emulate a keyboard for `Fortnite Festival`
-6.  Set the `Controller Type` based on the game you want to play.
-7.  `Windows controller mode` can be set based on your preferences. Note that this only affects windows, a controller in XInput mode will use the correct mode on a console, and will automatically use HID mode on Linux and macOS.
+2.  Set the `Connection Method` to `Wii Adapter`.
+3.  Set `Device to Emulate` for the type of device you want to emulate. 
+4.  For guitars, if you wish to add tilt, 
+5.  Hit Configure
+6.  If you are on the Pi Pico and are using different pins, set your SCL and SDA pin.
+7.  Hit `Save Settings`.
+8.  `Windows controller mode` can be set based on your preferences. Note that this only affects windows, a controller in XInput mode will use the correct mode on a console, and will automatically use HID mode on Linux and macOS.
     1. `XInput` - This works more natively on windows, and most games will automatically bind controls.
     2. `HID` - This uses HID on windows, which means games won't automatically bind controls, but HID is polled a bit more efficiently in games like Clone Hero.
-8.  If you would like to adjust settings related to polling, click on `Controller Poll Settings`
-9.  If you would like to use `Queue Based Inputs` you can turn that on here. This puts any buttons you press into a queue, and sends them out to the PC as fast as USB allows. This means that the controller will process your inputs at a faster poll rate than 1ms (the fastest rate USB allows) and then the PC will be sent your inputs at a 1ms rate.
-10. Set the Poll Rate to your preferred setting. 0 sends data as fast as possible, any other number polls inputs at that speed.
+9.  If you would like to adjust settings related to polling, click on `Controller Poll Settings`
+10. If you would like to use `Queue Based Inputs` you can turn that on here. This puts any buttons you press into a queue, and sends them out to the PC as fast as USB allows. This means that the controller will process your inputs at a faster poll rate than 1ms (the fastest rate USB allows) and then the PC will be sent your inputs at a 1ms rate.
+11. Set the Poll Rate to your preferred setting. 0 sends data as fast as possible, any other number polls inputs at that speed.
     1.  Note that for `Dj Hero Turntables` this needs to be set to 10, otherwise the platter won't work correctly.
-11. Debounce can be adjusted here. Debounce is necessary as button inputs are noisy. When you hit a button, it will often bounce and send multiple presses, which some games may percieve as you hitting the button multiple times, which can result in dropped sustains. When you set debounce to a value, the signal ignores any release inputs for that time frame, so if you for example set it to 1ms, then the button input will be on for a minimum of 1ms, and only after that will the release be processed. This has the effect of stretching out the button press to at least 1ms, which ignores any bouncing in that timeframe.
-12. Combined strum debounce shares the debounce timeframe between both strums (only available on guitars). This means that if you set the strum debounce to 1ms and strummed down, both strum up and down inputs are ignored over that 1ms timeframe. This helps avoid extra strum inputs when your strum switch rebounds after being released.
-13. Click on `Wii Extension Inputs`
-14. If you are using a Pi Pico, specify the SDA and SCL pins that you wired your extension port to.
-15. Hit Save.
-16. You can now calibrate your inputs. If your controller is already plugged in it should be detected and show only those inputs, but you can use the `Wii Inputs to display below` dropdown to specify the controller you want to configure.
+12. Debounce can be adjusted here. Debounce is necessary as button inputs are noisy. When you hit a button, it will often bounce and send multiple presses, which some games may percieve as you hitting the button multiple times, which can result in dropped sustains. When you set debounce to a value, the signal ignores any release inputs for that time frame, so if you for example set it to 1ms, then the button input will be on for a minimum of 1ms, and only after that will the release be processed. This has the effect of stretching out the button press to at least 1ms, which ignores any bouncing in that timeframe.
+13. Combined strum debounce shares the debounce timeframe between both strums (only available on guitars). This means that if you set the strum debounce to 1ms and strummed down, both strum up and down inputs are ignored over that 1ms timeframe. This helps avoid extra strum inputs when your strum switch rebounds after being released.
+14. Click on `Wii Extension Inputs`
+15. If you are using a Pi Pico, specify the SDA and SCL pins that you wired your extension port to.
+16. Hit Save.
+17. You can now calibrate your inputs. If your controller is already plugged in it should be detected and show only those inputs, but you can use the `Wii Inputs to display below` dropdown to specify the controller you want to configure.
     1.  Joysticks or crossfader
         1.  Hit the `Calibrate` button and then move the stick all the way left / up
         2.  Hit `Next` and then move the stick all the way right / down
@@ -130,11 +131,12 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
         4.  Release the whammy again, and hit `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
     3.  Turntable Spin
         1.  If your turntable isn't responsive enough in games, you can set a multiplier, which will multiply the value coming from the table by a constant amount.
-17. If you would like to use Tilt, make sure you are emulating a guitar, and then hit `Add Setting` and add a `Tilt` setting. Then follow one of the below options:
+18. If you would like to use Tilt, make sure you are emulating a guitar, and then hit `Add Setting` and add a `Tilt` setting. Then follow one of the below options:
     <details>
       <summary>Digital Tilt</summary>
 
     1. Click on Tilt, and make sure the `Input Type` is set to `Digital Pin Input`.
+    1. Make sure `Pin Mode` is set to `Pull Up`.
     2. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt icon should light up whenever you tilt the guitar.
     3. If you are using a SW520D based tilt sensor, some versions of this sensor will have an inverted output. You can turn on the `Invert` option to correct this.
     </details>
@@ -142,12 +144,12 @@ Be careful that you don't ever provide 5v power to the power pin of a Wii Extens
     <details>
       <summary>Analog Tilt</summary>
 
-    1. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
-    2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
-    3. Click on `Calibrate`
-    4. Tilt your guitar down, and then hit `Next`
-    5. Tilt the guitar up, and then hit `Next`
-    6. Hold your guitar in its resting position and then hit `Next`.
+    4. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
+    5. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
+    6. Click on `Calibrate`
+    7. Tilt your guitar down, and then hit `Next`
+    8. Tilt the guitar up, and then hit `Next`
+    9. Hold your guitar in its resting position and then hit `Next`.
     </details>
 
     <details>

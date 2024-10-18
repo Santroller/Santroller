@@ -43,6 +43,7 @@ Usually LEDs will have a recommended resistor in their datasheets, but there are
 
 1. Click on the button in question
 2. Make sure the input type is set to `Digital Pin Input`
+2. Make sure `Pin Mode` is set to `Pull Up`.
 3. Hit `Find Pin`
 4. Press the button on your controller
 5. Turn on `Invert`. Due to how we wire LEDs, the input needs to be inverted to work correctly.

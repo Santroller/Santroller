@@ -2138,6 +2138,11 @@ void tick_wiioutput() {
     WiiClassicDataFormat3_t *report = &temp_report;
     memset(report, 0, sizeof(temp_report));
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = PS3_STICK_CENTER;
+    report->leftStickY = PS3_STICK_CENTER;
+    report->rightStickX = PS3_STICK_CENTER;
+    report->rightStickY = PS3_STICK_CENTER;
     TICK_WII;
     // button bits are inverted
     report->buttonsLow = ~report->buttonsLow;

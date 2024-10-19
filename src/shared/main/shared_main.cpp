@@ -2096,6 +2096,9 @@ void tick_wiioutput() {
 #if DEVICE_TYPE_IS_GUITAR
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = 0x20;
+    report->leftStickY = 0x20;
     report->slider = 0x0F;
     TICK_WII;
     wii_data[4] = ~wii_data[4];
@@ -2104,6 +2107,9 @@ void tick_wiioutput() {
 #elif DEVICE_TYPE_IS_DRUM
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = 0x20;
+    report->leftStickY = 0x20;
     TICK_WII;
     wii_data[4] = ~wii_data[4];
     wii_data[5] = ~wii_data[5];
@@ -2111,6 +2117,9 @@ void tick_wiioutput() {
 #elif DEVICE_TYPE == DJ_HERO_TURNTABLE
     WiiTurntableIntermediateFormat3_t temp_report;
     WiiTurntableIntermediateFormat3_t *report = &temp_report;
+    // Center sticks
+    report->leftStickX = 0x20;
+    report->leftStickY = 0x20;
     memset(report, 0, sizeof(temp_report));
     memset(wii_data, 0, sizeof(wii_data));
     TICK_WII;

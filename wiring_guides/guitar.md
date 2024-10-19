@@ -362,6 +362,7 @@ If you intend to use the peripheral features, it is recommended to program the p
     <summary>Frets, strum and other buttons</summary>
 
   1. Click on the button you want to configure, and make sure the `Input Type` is set to `Digital Pin Input`.
+  2. Make sure `Pin Mode` is set to `Pull Up`.
   2. Click on the `Find Pin` button, and then press the button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for that button should now light up whenever the button is pressed.
 
   </details>
@@ -372,6 +373,7 @@ If you intend to use the peripheral features, it is recommended to program the p
   1. Click on the home / Xbox / PS button.
   2. Set the `Input Type` to `Shortcut`
   3. Set the next `Input Type` to `Digital Pin Input`
+  2. Make sure `Pin Mode` is set to `Pull Up`.
   4. Click on the first `Find Pin` button, and then press the start button on the guitar. If you have wired everything correctly, the tool should detect the pin.
   5. Click on the second `Find Pin` button, and then press the select button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for the home button should now light up whenever both start and select is pressed.
 
@@ -382,7 +384,7 @@ If you intend to use the peripheral features, it is recommended to program the p
 
   1. Click on D-pad Left, and set the `Input Type` to `Analog Pin Input`.
   2. Set `Type` to `Joystick Negative`
-  3. Click on find pin and move the joystick left or right
+  3. Click on `Find Pin` and move the joystick left or right
   4. Adjust the threshold so that the D-pad Left icon lights up when you have pushed the Joystick far enough to the left. This means you can adjust how sensitive you want your joystick to be.
   5. You can do the same for D-pad right, however, set the `Type` to `Joystick Positive` instead.
   6. If you wish to also map joystick up and down, click `Add Setting` and add another Strum Up and Strum Down input. Then you can follow the above instructions again, only using negative for up and positive for down, and when detecting the pin, move the joystick up and down instead.
@@ -416,6 +418,7 @@ If you intend to use the peripheral features, it is recommended to program the p
     <summary>Digital Tilt</summary>
 
   1. Click on Tilt, and make sure the `Input Type` is set to `Digital Pin Input`.
+  2. Make sure `Pin Mode` is set to `Pull Up`.
   2. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt icon should light up whenever you tilt the guitar.
   3. If you are using a SW520D based tilt sensor, some versions of this sensor will have an inverted output. You can turn on the `Invert` option to correct this.
   </details>
@@ -424,7 +427,7 @@ If you intend to use the peripheral features, it is recommended to program the p
     <summary>Analog Tilt</summary>
 
   1. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
-  2. Click on the `Find Pin` button, and tthen tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
+  2. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
   3. Click on `Calibrate`
   5. Hold your guitar in its resting position, and then hit `Next`
   5. Tilt the guitar up, and then hit `Next`
@@ -513,6 +516,7 @@ If you intend to use the peripheral features, it is recommended to program the p
 
   1. If you wish to have better latency frets with these necks, but do not want to hardwire the frets, you can instead opt to use the peripheral mode. You can still follow the Standard wiring if you would like the slider bar to work, but then you do not need to enable the frets as we will bypass the original neck for those inputs.
   2. Go to each fret, and set its `Input Type` to `Digital Pin Input (Peripheral)`.
+  2. Make sure `Pin Mode` is set to `Pull Up`.
   3. Use `Find Pin` to detect the pin your fret was hooked up to.
   </details>
 

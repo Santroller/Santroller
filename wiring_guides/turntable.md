@@ -157,6 +157,7 @@ If you intend to use the peripheral features, it is recommended to program the p
       <summary>Buttons or Dpad</summary>
 
     1. Click on the button you want to configure, and make sure the `Input Type` is set to `Digital Pin Input`.
+    2. Make sure `Pin Mode` is set to `Pull Up`.
     2. Click on the `Find Pin` button, and then press the button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for that button should now light up whenever the button is pressed.
 
     </details>
@@ -202,18 +203,23 @@ If you intend to use the peripheral features, it is recommended to program the p
     6. Disable all the frets
     7. Click on `Add Setting`
     8. Add each fret for the turntable you are configuring
-    9. For each fret: 1. Click on the Fret 2. Set the Input Type to `Digital Pin Input (Peripheral)` 3. Click on `Find Pin` 4. Press the fret in question. The tool should detect this and the fret should light up in the tool when pressed.
+    9. For each fret: 
+       1.  Click on the Fret 
+       2.  Set the Input Type to `Digital Pin Input (Peripheral)` 
+       3.  Make sure `Pin Mode` is set to `Pull Up`.
+       4.  Click on `Find Pin` 
+       5.  Press the fret in question. The tool should detect this and the fret should light up in the tool when pressed.
     </details>
 
     <details>
       <summary>USB Host (Pi Pico Only)</summary>
 
-    1. Click on Add setting
-    2. Find and add `USB Host inputs`
-    3. Bind D+
-    4. Hit Save
-    5. If you plug in a supported controller, the tool should detect it and tell you what it is.
-    6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
+    10. Click on Add setting
+    11. Find and add `USB Host inputs`
+    12. Bind D+
+    13. Hit Save
+    14. If you plug in a supported controller, the tool should detect it and tell you what it is.
+    15. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
     </details>
 

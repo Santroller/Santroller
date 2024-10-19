@@ -140,7 +140,7 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
       <summary>Face buttons / RB Pedal</summary>
 
     1. Click on the button you want to configure, and make sure the `Input Type` is set to `Digital Pin Input`.
-    2. Make sure `Pin Mode` is set to `Pull Up`
+    2. Make sure `Pin Mode` is set to `Pull Up`.
     3. Click on the `Find Pin` button, and then press the button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for that button should now light up whenever the button is pressed.
 
     </details>

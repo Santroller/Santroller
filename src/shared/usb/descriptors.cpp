@@ -656,7 +656,7 @@ const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0
                                                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                                 {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
 #else
-const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_ID,
+const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_FLAGS,
                                     0x00, 0x00, 0x00, 0x00};
 #endif
 uint8_t ef_byte = 0;
@@ -1139,10 +1139,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 
 #if DEVICE_TYPE_IS_PRO
         if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
-            for (int i = 0; i < 0x28; i++) {
-                printf("%02x, ", requestBuffer[i]);
-            }
-            printf("\r\n");
+            // for (int i = 0; i < 0x28; i++) {
+            //     printf("%02x, ", requestBuffer[i]);
+            // }
+            // printf("\r\n");
             switch (requestBuffer[2]) {
                 case 0x89:
                     printf("MIDI data enabled\r\n");

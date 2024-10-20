@@ -54,7 +54,9 @@
             uint8_t pedalDigital : 1; \
             uint8_t : 5;              \
         };                            \
-    };
+    }
+
+typedef PRO_KEY_BUTTONS prokey_buttons_t;
 typedef struct {
     uint8_t reportId;
     // Button bits

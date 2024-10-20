@@ -10,35 +10,35 @@
     usb_host_data->back |= report->back;                                               \
     usb_host_data->start |= report->start;                                             \
     usb_host_data->guide |= report->guide;                                             \
-    uint32_t old_buttons = usb_host_data->proKeyButtons;                               \
-    usb_host_data->proKeyButtons = 0;                                                  \
-    usb_host_data->key1 |= report->key1;                                               \
-    usb_host_data->key2 |= report->key2;                                               \
-    usb_host_data->key3 |= report->key3;                                               \
-    usb_host_data->key4 |= report->key4;                                               \
-    usb_host_data->key5 |= report->key5;                                               \
-    usb_host_data->key6 |= report->key6;                                               \
-    usb_host_data->key7 |= report->key7;                                               \
-    usb_host_data->key8 |= report->key8;                                               \
+    prokey_buttons_t buttons = {0};                                                    \
+    buttons.proKeyButtons = 0;                                                        \
+    buttons.key1 = report->key1;                                                     \
+    buttons.key2 = report->key2;                                                     \
+    buttons.key3 = report->key3;                                                     \
+    buttons.key4 = report->key4;                                                     \
+    buttons.key5 = report->key5;                                                     \
+    buttons.key6 = report->key6;                                                     \
+    buttons.key7 = report->key7;                                                     \
+    buttons.key8 = report->key8;                                                     \
                                                                                        \
-    usb_host_data->key9 |= report->key9;                                               \
-    usb_host_data->key10 |= report->key10;                                             \
-    usb_host_data->key11 |= report->key11;                                             \
-    usb_host_data->key12 |= report->key12;                                             \
-    usb_host_data->key13 |= report->key13;                                             \
-    usb_host_data->key14 |= report->key14;                                             \
-    usb_host_data->key15 |= report->key15;                                             \
-    usb_host_data->key16 |= report->key16;                                             \
+    buttons.key9 = report->key9;                                                     \
+    buttons.key10 = report->key10;                                                   \
+    buttons.key11 = report->key11;                                                   \
+    buttons.key12 = report->key12;                                                   \
+    buttons.key13 = report->key13;                                                   \
+    buttons.key14 = report->key14;                                                   \
+    buttons.key15 = report->key15;                                                   \
+    buttons.key16 = report->key16;                                                   \
                                                                                        \
-    usb_host_data->key17 |= report->key17;                                             \
-    usb_host_data->key18 |= report->key18;                                             \
-    usb_host_data->key19 |= report->key19;                                             \
-    usb_host_data->key20 |= report->key20;                                             \
-    usb_host_data->key21 |= report->key21;                                             \
-    usb_host_data->key22 |= report->key22;                                             \
-    usb_host_data->key23 |= report->key23;                                             \
-    usb_host_data->key24 |= report->key24;                                             \
-    usb_host_data->key25 |= report->key25;                                             \
+    buttons.key17 = report->key17;                                                   \
+    buttons.key18 = report->key18;                                                   \
+    buttons.key19 = report->key19;                                                   \
+    buttons.key20 = report->key20;                                                   \
+    buttons.key21 = report->key21;                                                   \
+    buttons.key22 = report->key22;                                                   \
+    buttons.key23 = report->key23;                                                   \
+    buttons.key24 = report->key24;                                                   \
+    buttons.key25 = report->key25;                                                   \
     usb_host_data->overdrive |= report->overdrive;                                     \
     usb_host_data->pedalDigital |= report->pedalDigital;                               \
     if (report->pedalAnalog) {                                                         \
@@ -50,12 +50,11 @@
                                                                                        \
     uint8_t currentVel = 0;                                                            \
     for (int i = 0; i < 25; i++) {                                                     \
-        if (usb_host_data->proKeyButtons & i) {                                        \
+        if (buttons.proKeyButtons & i) {                                        \
             if (currentVel < 5) {                                                      \
                 usb_host_data->proKeyVelocities[i] = report->velocities[currentVel++]; \
             } else {                                                                   \
                 usb_host_data->proKeyVelocities[i] = 64;                               \
             }                                                                          \
         }                                                                              \
-    }                                                                                  \
-    usb_host_data->proKeyButtons |= old_buttons;
+    }                                                                                  

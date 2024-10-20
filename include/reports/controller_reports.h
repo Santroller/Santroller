@@ -286,7 +286,9 @@ typedef struct {
     uint8_t yellowCymbal : 1;
     uint8_t blueCymbal : 1;
     uint8_t greenCymbal : 1;
-    uint8_t : 3;
+    uint8_t overdrive : 1;
+    uint8_t pedalDigital : 1;
+    uint8_t : 1;
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;
@@ -326,6 +328,7 @@ typedef struct {
     uint16_t accelZ;
     uint16_t accelY;
     uint16_t gyro;
+
     union {
         struct {
             uint16_t genericButton1 : 1;
@@ -356,7 +359,6 @@ typedef struct {
     uint16_t genericAxisSlider;
     USB_NKRO_Data_t keyboard;
     USB_Mouse_Boot_Data_t mouse;
-    PRO_KEY_BUTTONS;
     uint8_t proKeyVelocities[25];
     uint8_t pedalAnalog;
     uint8_t touchPad;

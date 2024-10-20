@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "reports/dance_pad_reports.h"
+#include "reports/drum_reports.h"
 #include "reports/og_xbox_reports.h"
 #include "reports/pc_reports.h"
 #include "reports/ps2_reports.h"
@@ -13,8 +15,6 @@
 #include "reports/wii_reports.h"
 #include "reports/xbox_one_reports.h"
 #include "reports/xinput_reports.h"
-#include "reports/drum_reports.h"
-#include "reports/dance_pad_reports.h"
 
 #define STREAM_DECK_INPUT_REPORT_ID 1
 #define SIMULTANEOUS_KEYS 6
@@ -356,37 +356,20 @@ typedef struct {
     uint16_t genericAxisSlider;
     USB_NKRO_Data_t keyboard;
     USB_Mouse_Boot_Data_t mouse;
-    uint8_t key1 : 1;
-    uint8_t key2 : 1;
-    uint8_t key3 : 1;
-    uint8_t key4 : 1;
-    uint8_t key5 : 1;
-    uint8_t key6 : 1;
-    uint8_t key7 : 1;
-    uint8_t key8 : 1;
-
-    uint8_t key9 : 1;
-    uint8_t key10 : 1;
-    uint8_t key11 : 1;
-    uint8_t key12 : 1;
-    uint8_t key13 : 1;
-    uint8_t key14 : 1;
-    uint8_t key15 : 1;
-    uint8_t key16 : 1;
-
-    uint8_t key17 : 1;
-    uint8_t key18 : 1;
-    uint8_t key19 : 1;
-    uint8_t key20 : 1;
-    uint8_t key21 : 1;
-    uint8_t key22 : 1;
-    uint8_t key23 : 1;
-    uint8_t key24 : 1;
-
-    uint8_t key25 : 1;
-    uint8_t overdrive : 1;
-    uint8_t pedalDigital : 1;
-    uint8_t : 5;
+    PRO_KEY_BUTTONS;
+    uint8_t proKeyVelocities[25];
     uint8_t pedalAnalog;
     uint8_t touchPad;
+    uint8_t lowEFret;
+    uint8_t aFret;
+    uint8_t dFret;
+    uint8_t gFret;
+    uint8_t bFret;
+    uint8_t highEFret;
+    uint8_t lowEFretVelocity;
+    uint8_t aFretVelocity;
+    uint8_t dFretVelocity;
+    uint8_t gFretVelocity;
+    uint8_t bFretVelocity;
+    uint8_t highEFretVelocity;
 } __attribute__((packed)) USB_Host_Data_t;

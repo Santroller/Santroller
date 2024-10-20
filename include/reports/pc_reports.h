@@ -4,6 +4,57 @@
 
 #include "config.h"
 
+
+// To make things easier, we use bitfields here, and then we map to a proper hat later
+#define DPAD                       \
+    union {                        \
+        struct {                   \
+            uint8_t dpadUp : 1;    \
+            uint8_t dpadDown : 1;  \
+            uint8_t dpadLeft : 1;  \
+            uint8_t dpadRight : 1; \
+            uint8_t : 4;           \
+        };                         \
+        uint8_t dpad;              \
+    };
+
+#define PRO_KEY_BUTTONS               \
+    union {                           \
+        uint32_t proKeyButtons;       \
+        struct {                      \
+            uint8_t key1 : 1;         \
+            uint8_t key2 : 1;         \
+            uint8_t key3 : 1;         \
+            uint8_t key4 : 1;         \
+            uint8_t key5 : 1;         \
+            uint8_t key6 : 1;         \
+            uint8_t key7 : 1;         \
+            uint8_t key8 : 1;         \
+                                      \
+            uint8_t key9 : 1;         \
+            uint8_t key10 : 1;        \
+            uint8_t key11 : 1;        \
+            uint8_t key12 : 1;        \
+            uint8_t key13 : 1;        \
+            uint8_t key14 : 1;        \
+            uint8_t key15 : 1;        \
+            uint8_t key16 : 1;        \
+                                      \
+            uint8_t key17 : 1;        \
+            uint8_t key18 : 1;        \
+            uint8_t key19 : 1;        \
+            uint8_t key20 : 1;        \
+            uint8_t key21 : 1;        \
+            uint8_t key22 : 1;        \
+            uint8_t key23 : 1;        \
+            uint8_t key24 : 1;        \
+                                      \
+            uint8_t key25 : 1;        \
+            uint8_t overdrive : 1;    \
+            uint8_t pedalDigital : 1; \
+            uint8_t : 5;              \
+        };                            \
+    };
 typedef struct {
     uint8_t reportId;
     // Button bits
@@ -26,17 +77,7 @@ typedef struct {
     uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     // Stick axes
     // Neutral state is 0x80
@@ -86,17 +127,7 @@ typedef struct {
     uint8_t capture : 1;  // switch capture button
     uint8_t : 2;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     // Stick axes
     // Neutral state is 0x80
@@ -130,17 +161,7 @@ typedef struct
     uint8_t guide : 1;
     uint8_t : 5;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint8_t greenVelocity;
     uint8_t redVelocity;
@@ -167,17 +188,7 @@ typedef struct
     uint8_t guide : 1;  // ps
     uint8_t : 7;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint8_t greenVelocity;
     uint8_t redVelocity;
@@ -203,17 +214,7 @@ typedef struct
     uint8_t guide : 1;  // ps
     uint8_t : 7;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint8_t whammy;
     uint8_t slider;
@@ -231,7 +232,7 @@ typedef struct
 
     uint8_t dpadUp : 1;    // leftShoulder, orange, l1
     uint8_t dpadDown : 1;  // rightShoulder, spPedal, r1
-    uint8_t back: 1;           // back, select
+    uint8_t back : 1;      // back, select
     uint8_t start : 1;     // start
 
     uint8_t guide : 1;  // ps
@@ -278,17 +279,7 @@ typedef struct
     uint8_t guide : 1;  // ps
     uint8_t : 3;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint8_t whammy;
     uint8_t pickup;
@@ -358,17 +349,7 @@ typedef struct
     uint8_t leftBlue : 1;
     uint8_t : 3;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint8_t leftTableVelocity;
     uint8_t rightTableVelocity;
@@ -394,17 +375,7 @@ typedef struct
     bool guide : 1;           // ps
     uint8_t : 6;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint8_t whammy;
     uint8_t tilt;
@@ -433,17 +404,7 @@ typedef struct
     uint16_t blueFret : 1;
     uint16_t orangeFret : 1;
 
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    DPAD;
 
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
@@ -451,14 +412,15 @@ typedef struct
     uint16_t gFret : 5;
     uint16_t bFret : 5;
     uint16_t highEFret : 5;
-    uint16_t lowEVelocity : 7;
-    uint16_t aVelocity : 7;
-    uint16_t dVelocity : 7;
-    uint16_t gVelocity : 7;
-    uint16_t bVelocity : 7;
-    uint16_t highEVelocity : 7;
+    uint16_t lowEFretVelocity : 7;
+    uint16_t aFretVelocity : 7;
+    uint16_t dFretVelocity : 7;
+    uint16_t gFretVelocity : 7;
+    uint16_t bFretVelocity : 7;
+    uint16_t highEFretVelocity : 7;
     uint8_t tilt;
 } __attribute__((__packed__)) PCRockBandProGuitar_Data_t;
+
 
 typedef struct
 {
@@ -471,54 +433,14 @@ typedef struct
     uint8_t back : 1;  // select
     uint8_t start : 1;
     uint8_t guide : 1;  // ps
-    uint8_t overdrive : 1;
-
-    uint8_t pedalDigital : 1;
-    uint8_t key1 : 1;
-    uint8_t key2 : 1;
-    uint8_t key3 : 1;
-    uint8_t key4 : 1;
-    uint8_t key5 : 1;
-    uint8_t key6 : 1;
-    uint8_t key7 : 1;
-
-    uint8_t key8 : 1;
-    uint8_t key9 : 1;
-    uint8_t key10 : 1;
-    uint8_t key11 : 1;
-    uint8_t key12 : 1;
-    uint8_t key13 : 1;
-    uint8_t key14 : 1;
-    uint8_t key15 : 1;
-
-    uint8_t key16 : 1;
-    uint8_t key17 : 1;
-    uint8_t key18 : 1;
-    uint8_t key19 : 1;
-    uint8_t key20 : 1;
-    uint8_t key21 : 1;
-    uint8_t key22 : 1;
-    uint8_t key23 : 1;
-
-    uint8_t key24 : 1;
-    uint8_t key25 : 1;
-    uint8_t : 6;
-
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t dpadRight : 1;
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
+    uint8_t : 1;        // padding
+    PRO_KEY_BUTTONS;
+    DPAD;
 
     uint8_t pedalAnalog;
     uint8_t touchPad;
+    uint8_t velocities[5];
 } __attribute__((__packed__)) PCRockBandProKeyboard_Data_t;
-
 typedef struct {
     uint8_t reportTypeId;  // 0x5B
     uint8_t stageKitStrobe : 7;

@@ -223,7 +223,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x06
 #define HID_BUTTON_COUNT 35
-#define HID_AXIS_COUNT 2
+#define HID_AXIS_COUNT 7
 #define HID_BUTTON_USAGES \
     BTN_USAGE(BTN_X), \
     BTN_USAGE(BTN_A), \

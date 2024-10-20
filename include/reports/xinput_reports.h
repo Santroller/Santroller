@@ -293,17 +293,17 @@ typedef struct
     uint16_t highEFret : 5;
     uint16_t soloFlag : 1;
 
-    uint16_t lowEVelocity : 7;
+    uint16_t lowEFretVelocity : 7;
     uint16_t greenFret : 1;
-    uint16_t aVelocity : 7;
+    uint16_t aFretVelocity : 7;
     uint16_t redFret : 1;
-    uint16_t dVelocity : 7;
+    uint16_t dFretVelocity : 7;
     uint16_t yellowFret : 1;
-    uint16_t gVelocity : 7;
+    uint16_t gFretVelocity : 7;
     uint16_t blueFret : 1;
-    uint16_t bVelocity : 7;
+    uint16_t bFretVelocity : 7;
     uint16_t orangeFret : 1;
-    uint16_t highEVelocity : 7;
+    uint16_t highEFretVelocity : 7;
     uint16_t : 1;
 
     uint8_t autoCal_Microphone;  // When the sensor isn't activated, this

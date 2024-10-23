@@ -200,15 +200,28 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define WII_TYPE WII_SQUIRE_PID
 #define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputRockBandProGuitar_Data_t
-#define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
+#define XBOX_ONE_REPORT XboxOneRockBandProGuitar_Data_t
 #define PC_REPORT PCRockBandProGuitar_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x06
-#define HID_BUTTON_COUNT 13
-#define HID_AXIS_COUNT 3
+#define HID_BUTTON_COUNT 14
+#define HID_AXIS_COUNT 7
+#define HID_BUTTON_USAGES \
+    BTN_USAGE(BTN_X), \
+    BTN_USAGE(BTN_A), \
+    BTN_USAGE(BTN_B), \
+    BTN_USAGE(BTN_Y), \
+    BTN_USAGE(BTN_SELECT), \
+    BTN_USAGE(BTN_START), \
+    BTN_USAGE(BTN_GUIDE), \
+    BTN_USAGE(BTN_TL), \
+    BTN_USAGE(BTN_TR), \
+    BTN_USAGE(BTN_TL2), \
+    BTN_USAGE(BTN_TR2), \
+    BTN_USAGE(BTN_THUMBL)
 #elif DEVICE_TYPE == ROCK_BAND_PRO_KEYS
 #define SUB_TYPE XINPUT_PRO_KEYS
 #define PS3_TYPE PS3_KEYBOARD_PID

@@ -5,8 +5,6 @@
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
-#include "state_translation/pro_keys.h"
-#include "state_translation/pro_guitar.h"
 #include "endpoints.h"
 #include "fxpt_math.h"
 #include "hid.h"
@@ -18,6 +16,8 @@
 #include "pico_slave.h"
 #include "pin_funcs.h"
 #include "ps2.h"
+#include "state_translation/pro_guitar.h"
+#include "state_translation/pro_keys.h"
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
@@ -955,7 +955,30 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
-                    TRANSLATE_PRO_GUITAR;
+                    usb_host_data->back |= report->back;
+                    usb_host_data->start |= report->start;
+                    usb_host_data->guide |= report->guide;
+
+                    usb_host_data->a |= report->a;
+                    usb_host_data->b |= report->b;
+                    usb_host_data->x |= report->x;
+                    usb_host_data->y |= report->y;
+
+                    usb_host_data->green |= report->greenFret;
+                    usb_host_data->red |= report->redFret;
+                    usb_host_data->yellow |= report->yellowFret;
+                    usb_host_data->blue |= report->blueFret;
+                    usb_host_data->orange |= report->orangeFret;
+
+                    usb_host_data->lowEFret = report->lowEFret;
+                    usb_host_data->aFret = report->aFret;
+                    usb_host_data->dFret = report->dFret;
+                    usb_host_data->gFret = report->gFret;
+                    usb_host_data->bFret = report->bFret;
+                    usb_host_data->highEFret = report->highEFret;
+
+                    usb_host_data->tilt |= report->tilt;
+                    usb_host_data->pedalDigital |= report->pedal;
                     break;
                 }
             }
@@ -2171,7 +2194,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
     TICK_SHARED;
     // give the user 2 second to jump between modes (aka, hold on plug in)
-    if ((millis()-input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
+    if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
         TICK_DETECTION;
     }
 #ifdef TICK_DETECTION_FESTIVAL
@@ -2312,6 +2335,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(buf, 0, packet_size);
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         TICK_XBOX_ONE;
+        #if PRO_GUITAR && USB_HOST_STACK
+            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+        #endif
+        #if PRO_GUITAR && BLUETOOTH_RX
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
+        #endif
         asm volatile("" ::
                          : "memory");
 #if DEVICE_TYPE_IS_GUITAR
@@ -2379,6 +2408,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->effectsKnob = INT16_MIN;
 #endif
         TICK_XINPUT;
+
+        #if PRO_GUITAR && USB_HOST_STACK
+            TRANSLATE_TO_PRO_GUITAR_BOTH(usb_host_data)
+        #endif
+        #if PRO_GUITAR && BLUETOOTH_RX
+            TRANSLATE_TO_PRO_GUITAR_BOTH(bt_data)
+        #endif
         asm volatile("" ::
                          : "memory");
 
@@ -2420,6 +2456,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->guide = true;
         }
         TICK_PS4;
+
+        #if PRO_GUITAR && USB_HOST_STACK
+            TRANSLATE_TO_PRO_GUITAR_BOTH(usb_host_data)
+        #endif
+        #if PRO_GUITAR && BLUETOOTH_RX
+            TRANSLATE_TO_PRO_GUITAR_BOTH(bt_data)
+        #endif
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
@@ -2486,6 +2529,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
             report->reportId = 1;
             TICK_PC;
+
+        #if PRO_GUITAR && USB_HOST_STACK
+            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+        #endif
+        #if PRO_GUITAR && BLUETOOTH_RX
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
+        #endif
             asm volatile("" ::
                              : "memory");
             report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
@@ -2583,6 +2633,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->whammy = 0;
 #endif
             TICK_PS3;
+
+        #if PRO_GUITAR && USB_HOST_STACK
+            TRANSLATE_TO_PRO_GUITAR_BOTH(usb_host_data)
+        #endif
+        #if PRO_GUITAR && BLUETOOTH_RX
+            TRANSLATE_TO_PRO_GUITAR_BOTH(bt_data)
+        #endif
             asm volatile("" ::
                              : "memory");
 #ifdef TICK_FESTIVAL

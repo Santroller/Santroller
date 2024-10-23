@@ -142,6 +142,41 @@ typedef struct
 
 typedef struct
 {
+    GipHeader_t Header;
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1;  // menu
+    uint8_t back : 1;   // view
+
+    uint8_t a : 1;  // green
+    uint8_t b : 1;  // red
+    uint8_t x : 1;  // blue
+    uint8_t y : 1;  // yellow
+
+    uint8_t dpadUp : 1;    // dpadStrumUp
+    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+
+    uint8_t leftShoulder : 1;  // orange
+    uint8_t : 1;
+    uint8_t solo : 1;  // leftThumbClick
+    uint8_t : 1;
+
+    uint8_t tilt;
+    uint8_t lowEFret;
+    uint8_t aFret;
+
+    uint8_t dFret;
+    uint8_t gFret;
+    uint8_t bFret;
+    uint8_t highEFret;
+
+    uint8_t unknown[1];
+} __attribute__((packed)) XboxOneRockBandProGuitar_Data_t;
+
+typedef struct
+{
     
     GipHeader_t Header;
     uint8_t sync : 1;

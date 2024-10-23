@@ -394,33 +394,25 @@ typedef struct
     uint8_t back : 1;  // select
     uint8_t start : 1;
     uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // switch capture button
+    uint8_t greenFret : 1;
 
+    uint8_t redFret : 1;
+    uint8_t yellowFret : 1;
+    uint8_t blueFret : 1;
+    uint8_t orangeFret : 1;
+    
     uint8_t pedal : 1;
-    uint8_t pedalConnection : 1;
-    uint16_t soloFlag : 1;
-    uint16_t greenFret : 1;
-
-    uint16_t redFret : 1;
-    uint16_t yellowFret : 1;
-    uint16_t blueFret : 1;
-    uint16_t orangeFret : 1;
+    uint8_t : 3;
 
     DPAD;
 
-    uint16_t lowEFret : 5;
-    uint16_t aFret : 5;
-    uint16_t dFret : 5;
-    uint16_t gFret : 5;
-    uint16_t bFret : 5;
-    uint16_t highEFret : 5;
-    uint16_t lowEFretVelocity : 7;
-    uint16_t aFretVelocity : 7;
-    uint16_t dFretVelocity : 7;
-    uint16_t gFretVelocity : 7;
-    uint16_t bFretVelocity : 7;
-    uint16_t highEFretVelocity : 7;
     uint8_t tilt;
+    uint8_t lowEFret;
+    uint8_t aFret;
+    uint8_t dFret;
+    uint8_t gFret;
+    uint8_t bFret;
+    uint8_t highEFret;
 } __attribute__((__packed__)) PCRockBandProGuitar_Data_t;
 
 

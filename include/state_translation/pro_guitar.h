@@ -30,3 +30,20 @@
                                                                   \
     usb_host_data->tilt |= report->tilt;                          \
     usb_host_data->pedalDigital |= report->pedal;
+
+#define TRANSLATE_TO_PRO_GUITAR(item)                   \
+    report->lowEFret = item.lowEFret;                   \
+    report->aFret = item.aFret;                         \
+    report->dFret = item.dFret;                         \
+    report->gFret = item.gFret;                         \
+    report->bFret = item.bFret;                         \
+    report->highEFret = item.highEFret;
+
+#define TRANSLATE_TO_PRO_GUITAR_BOTH(item)              \
+    report->lowEFretVelocity = item.lowEFretVelocity;   \
+    report->aFretVelocity = item.aFretVelocity;         \
+    report->dFretVelocity = item.dFretVelocity;         \
+    report->gFretVelocity = item.gFretVelocity;         \
+    report->bFretVelocity = item.bFretVelocity;         \
+    report->highEFretVelocity = item.highEFretVelocity; \
+    TRANSLATE_TO_PRO_GUITAR(item)

@@ -1,4 +1,10 @@
-#define TRANSLATE_PRO_NO_VELOCITY                                 \
+ #define TRANSLATE_PRO_GUITAR                                    \
+    usb_host_data->lowEFretVelocity = report->lowEFretVelocity; \
+    usb_host_data->aFretVelocity = report->aFretVelocity;       \
+    usb_host_data->dFretVelocity = report->dFretVelocity;       \
+    usb_host_data->gFretVelocity = report->gFretVelocity;       \
+    usb_host_data->bFretVelocity = report->bFretVelocity;       \
+    usb_host_data->highEFretVelocity = report->highEFretVelocity;                       \
     usb_host_data->back |= report->back;                          \
     usb_host_data->start |= report->start;                        \
     usb_host_data->guide |= report->guide;                        \
@@ -23,23 +29,6 @@
                                                                   \
     usb_host_data->tilt |= report->tilt;                          \
     usb_host_data->pedalDigital |= report->pedal;
-#define TRANSLATE_PRO_GUITAR                                    \
-    TRANSLATE_PRO_NO_VELOCITY                                   \
-                                                                \
-    usb_host_data->lowEFretVelocity = report->lowEFretVelocity; \
-    usb_host_data->aFretVelocity = report->aFretVelocity;       \
-    usb_host_data->dFretVelocity = report->dFretVelocity;       \
-    usb_host_data->gFretVelocity = report->gFretVelocity;       \
-    usb_host_data->bFretVelocity = report->bFretVelocity;       \
-    usb_host_data->highEFretVelocity = report->highEFretVelocity;
-
-#define TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(item) \
-    report->lowEFret = item.lowEFret; \
-    report->aFret = item.aFret;       \
-    report->dFret = item.dFret;       \
-    report->gFret = item.gFret;       \
-    report->bFret = item.bFret;       \
-    report->highEFret = item.highEFret;
 
 #define TRANSLATE_TO_PRO_GUITAR(item)              \
     report->lowEFretVelocity = item.lowEFretVelocity;   \
@@ -53,4 +42,9 @@
     report->yellow = item.yellow;                       \
     report->blue = item.blue;                           \
     report->orange = item.orange;                       \
-    TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(item)
+    report->lowEFret = item.lowEFret; \
+    report->aFret = item.aFret;       \
+    report->dFret = item.dFret;       \
+    report->gFret = item.gFret;       \
+    report->bFret = item.bFret;       \
+    report->highEFret = item.highEFret;

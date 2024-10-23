@@ -159,6 +159,24 @@ const uint8_t PROGMEM pc_descriptor[] = {
 #if HID_AXIS_COUNT >= 7
     0x09, 0x36,  //   Usage (Slider)
 #endif
+#if HID_AXIS_COUNT >= 8
+    0x09, 0x37,  //   Usage (Slider)
+#endif
+#if HID_AXIS_COUNT >= 9
+    0x09, 0x38,  //   Usage (Slider)
+#endif
+#if HID_AXIS_COUNT >= 10
+    0x09, 0x39,  //   Usage (Slider)
+#endif
+#if HID_AXIS_COUNT >= 11
+    0x09, 0x40,  //   Usage (Slider)
+#endif
+#if HID_AXIS_COUNT >= 12
+    0x09, 0x41,  //   Usage (Slider)
+#endif
+#if HID_AXIS_COUNT >= 13
+    0x09, 0x42,  //   Usage (Slider)
+#endif
     0x75, 0x08,            //   Report Size (8)
     0x95, HID_AXIS_COUNT,  //   Report Count (4)
     0x81, 0x02,            //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)

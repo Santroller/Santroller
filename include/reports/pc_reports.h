@@ -413,6 +413,12 @@ typedef struct
     uint8_t gFret;
     uint8_t bFret;
     uint8_t highEFret;
+    uint8_t lowEFretVelocity;
+    uint8_t aFretVelocity;
+    uint8_t dFretVelocity;
+    uint8_t gFretVelocity;
+    uint8_t bFretVelocity;
+    uint8_t highEFretVelocity;
 } __attribute__((__packed__)) PCRockBandProGuitar_Data_t;
 
 

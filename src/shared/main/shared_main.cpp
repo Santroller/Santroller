@@ -955,7 +955,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
-                    TRANSLATE_PRO_NO_VELOCITY;
+                    TRANSLATE_PRO_GUITAR;
                     break;
                 }
             }
@@ -2502,10 +2502,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TICK_PC;
 
         #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(usb_host_data)
+            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
         #endif
         #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(bt_data)
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
         #endif
             asm volatile("" ::
                              : "memory");

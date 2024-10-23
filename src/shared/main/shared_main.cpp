@@ -1165,9 +1165,9 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     }
                     if (report->greenVelocity) {
                         if (usb_host_data->greenCymbal) {
-                            usb_host_data->greenCymbalVelocity = report->greenVelocity;
+                            usb_host_data->greenCymbalVelocity = 0xFF - report->greenVelocity;
                         } else {
-                            usb_host_data->greenVelocity = report->greenVelocity;
+                            usb_host_data->greenVelocity = 0xFF - report->greenVelocity;
                         }
                     }
                     if (report->redVelocity) {
@@ -1175,16 +1175,16 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     }
                     if (report->yellowVelocity) {
                         if (usb_host_data->yellowCymbal) {
-                            usb_host_data->yellowCymbalVelocity = report->yellowVelocity;
+                            usb_host_data->yellowCymbalVelocity = 0xFF - report->yellowVelocity;
                         } else {
-                            usb_host_data->yellowVelocity = report->yellowVelocity;
+                            usb_host_data->yellowVelocity = 0xFF - report->yellowVelocity;
                         }
                     }
                     if (report->blueVelocity) {
                         if (usb_host_data->blueCymbal) {
-                            usb_host_data->blueCymbalVelocity = report->blueVelocity;
+                            usb_host_data->blueCymbalVelocity = 0xFF - report->blueVelocity;
                         } else {
-                            usb_host_data->blueVelocity = report->blueVelocity;
+                            usb_host_data->blueVelocity = 0xFF - report->blueVelocity;
                         }
                     }
                     break;

@@ -955,30 +955,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
-                    usb_host_data->back |= report->back;
-                    usb_host_data->start |= report->start;
-                    usb_host_data->guide |= report->guide;
-
-                    usb_host_data->a |= report->a;
-                    usb_host_data->b |= report->b;
-                    usb_host_data->x |= report->x;
-                    usb_host_data->y |= report->y;
-
-                    usb_host_data->green |= report->greenFret;
-                    usb_host_data->red |= report->redFret;
-                    usb_host_data->yellow |= report->yellowFret;
-                    usb_host_data->blue |= report->blueFret;
-                    usb_host_data->orange |= report->orangeFret;
-
-                    usb_host_data->lowEFret = report->lowEFret;
-                    usb_host_data->aFret = report->aFret;
-                    usb_host_data->dFret = report->dFret;
-                    usb_host_data->gFret = report->gFret;
-                    usb_host_data->bFret = report->bFret;
-                    usb_host_data->highEFret = report->highEFret;
-
-                    usb_host_data->tilt |= report->tilt;
-                    usb_host_data->pedalDigital |= report->pedal;
+                    TRANSLATE_PRO_NO_VELOCITY;
                     break;
                 }
             }
@@ -2336,10 +2313,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         TICK_XBOX_ONE;
         #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(usb_host_data)
         #endif
         #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR(bt_data)
+            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(bt_data)
         #endif
         asm volatile("" ::
                          : "memory");
@@ -2410,10 +2387,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_XINPUT;
 
         #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR_BOTH(usb_host_data)
+            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
         #endif
         #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR_BOTH(bt_data)
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
         #endif
         asm volatile("" ::
                          : "memory");
@@ -2458,10 +2435,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS4;
 
         #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR_BOTH(usb_host_data)
+            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
         #endif
         #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR_BOTH(bt_data)
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
         #endif
         asm volatile("" ::
                          : "memory");
@@ -2531,10 +2508,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TICK_PC;
 
         #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(usb_host_data)
         #endif
         #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR(bt_data)
+            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(bt_data)
         #endif
             asm volatile("" ::
                              : "memory");
@@ -2635,10 +2612,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TICK_PS3;
 
         #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR_BOTH(usb_host_data)
+            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
         #endif
         #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR_BOTH(bt_data)
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
         #endif
             asm volatile("" ::
                              : "memory");

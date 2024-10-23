@@ -294,15 +294,15 @@ typedef struct
     uint16_t soloFlag : 1;
 
     uint16_t lowEFretVelocity : 7;
-    uint16_t greenFret : 1;
+    uint16_t green : 1;
     uint16_t aFretVelocity : 7;
-    uint16_t redFret : 1;
+    uint16_t red : 1;
     uint16_t dFretVelocity : 7;
-    uint16_t yellowFret : 1;
+    uint16_t yellow : 1;
     uint16_t gFretVelocity : 7;
-    uint16_t blueFret : 1;
+    uint16_t blue : 1;
     uint16_t bFretVelocity : 7;
-    uint16_t orangeFret : 1;
+    uint16_t orange : 1;
     uint16_t highEFretVelocity : 7;
     uint16_t : 1;
 

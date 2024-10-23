@@ -394,12 +394,12 @@ typedef struct
     uint8_t back : 1;  // select
     uint8_t start : 1;
     uint8_t guide : 1;    // ps
-    uint8_t greenFret : 1;
+    uint8_t green : 1;
 
-    uint8_t redFret : 1;
-    uint8_t yellowFret : 1;
-    uint8_t blueFret : 1;
-    uint8_t orangeFret : 1;
+    uint8_t red : 1;
+    uint8_t yellow : 1;
+    uint8_t blue : 1;
+    uint8_t orange : 1;
     
     uint8_t pedal : 1;
     uint8_t : 3;

@@ -3091,7 +3091,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             }
             break;
 
-        case WII_RB_VID:
+        case HARMONIX_VID:
             // Polled the same as PS3, so treat them as PS3 instruments
             switch (pid) {
                 case WII_RB_GUITAR_PID:

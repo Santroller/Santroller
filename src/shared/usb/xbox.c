@@ -20,8 +20,16 @@ const XInputInputCapabilities_t PROGMEM XInputInputCapabilities = {
     buttons : 0xf73f,
     leftTrigger : 0xff,
     rightTrigger : 0xff,
+    #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG
+    leftThumbX : HARMONIX_VID,
+    leftThumbY : XBOX_360_MUSTANG_PID,
+    #elif DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+    leftThumbX : HARMONIX_VID,
+    leftThumbY : XBOX_360_SQUIRE_PID,
+    #else
     leftThumbX : ARDWIINO_VID,
     leftThumbY : ARDWIINO_PID,
+    #endif
     rightThumbX : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
     rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},

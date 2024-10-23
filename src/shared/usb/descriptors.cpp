@@ -1231,7 +1231,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #ifdef WII_TYPE
             else if (consoleType == WII_RB) {
-                dev->idVendor = WII_RB_VID;
+                dev->idVendor = HARMONIX_VID;
                 dev->idProduct = WII_TYPE;
             }
 #endif

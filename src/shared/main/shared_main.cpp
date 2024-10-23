@@ -2312,12 +2312,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(buf, 0, packet_size);
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         TICK_XBOX_ONE;
-        #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(usb_host_data)
-        #endif
-        #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR_NO_VELOCITY(bt_data)
-        #endif
         asm volatile("" ::
                          : "memory");
 #if DEVICE_TYPE_IS_GUITAR

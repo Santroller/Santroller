@@ -287,8 +287,18 @@ typedef struct {
     uint8_t blueCymbal : 1;
     uint8_t greenCymbal : 1;
     uint8_t overdrive : 1;
-    uint8_t pedalDigital : 1;
-    uint8_t : 1;
+    uint8_t pedal : 1;
+    uint8_t white1 : 1;
+
+    uint8_t white2 : 1;
+    uint8_t white3 : 1;
+    uint8_t black1 : 1;
+    uint8_t black2 : 1;
+    uint8_t black3 : 1;
+    uint8_t ghtv : 1;
+    uint8_t euphoria : 1;
+    uint8_t nunchukC: 1;
+    uint8_t nunchukZ: 1;
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;
@@ -328,7 +338,6 @@ typedef struct {
     uint16_t accelZ;
     uint16_t accelY;
     uint16_t gyro;
-
     union {
         struct {
             uint16_t genericButton1 : 1;
@@ -357,9 +366,35 @@ typedef struct {
     uint16_t genericAxisRy;
     uint16_t genericAxisRz;
     uint16_t genericAxisSlider;
-    USB_NKRO_Data_t keyboard;
+    USB_6KRO_Boot_Data_t keyboard;
     USB_Mouse_Boot_Data_t mouse;
-    uint8_t proKeyVelocities[25];
+    uint8_t key1 : 1;
+    uint8_t key2 : 1;
+    uint8_t key3 : 1;
+    uint8_t key4 : 1;
+    uint8_t key5 : 1;
+    uint8_t key6 : 1;
+    uint8_t key7 : 1;
+    uint8_t key8 : 1;
+
+    uint8_t key9 : 1;
+    uint8_t key10 : 1;
+    uint8_t key11 : 1;
+    uint8_t key12 : 1;
+    uint8_t key13 : 1;
+    uint8_t key14 : 1;
+    uint8_t key15 : 1;
+    uint8_t key16 : 1;
+
+    uint8_t key17 : 1;
+    uint8_t key18 : 1;
+    uint8_t key19 : 1;
+    uint8_t key20 : 1;
+    uint8_t key21 : 1;
+    uint8_t key22 : 1;
+    uint8_t key23 : 1;
+    uint8_t key24 : 1;
+    uint8_t key25 : 1;
     uint8_t pedalAnalog;
     uint8_t touchPad;
     uint8_t lowEFret;
@@ -374,4 +409,5 @@ typedef struct {
     uint8_t gFretVelocity;
     uint8_t bFretVelocity;
     uint8_t highEFretVelocity;
+    uint8_t velocities[5];
 } __attribute__((packed)) USB_Host_Data_t;

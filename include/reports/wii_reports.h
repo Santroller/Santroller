@@ -155,12 +155,12 @@ typedef struct {
 
     uint8_t dpadUp : 1;
     uint8_t dpadLeft : 1;
-    uint8_t rightShoulder : 1;
-    uint8_t y : 1;
-    uint8_t a : 1;
-    uint8_t x : 1;
-    uint8_t b : 1;
-    uint8_t leftShoulder : 1;
+    uint8_t pedal : 1;
+    uint8_t yellow : 1;
+    uint8_t green : 1;
+    uint8_t blue : 1;
+    uint8_t red : 1;
+    uint8_t orange : 1;
 } __attribute__((packed)) WiiGuitarDataFormat3_t;
 
 typedef struct {
@@ -182,12 +182,12 @@ typedef struct {
     uint8_t dpadRight : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadLeft : 1;
-    uint8_t rightShoulder : 1;
-    uint8_t x : 1;
-    uint8_t a : 1;
-    uint8_t y : 1;
-    uint8_t b : 1;
-    uint8_t leftShoulder : 1;
+    uint8_t kick1 : 1;
+    uint8_t blue : 1;
+    uint8_t green : 1;
+    uint8_t yellow : 1;
+    uint8_t red : 1;
+    uint8_t orange : 1;
 } __attribute__((packed)) WiiDrumDataFormat3_t;
 
 typedef struct {
@@ -250,7 +250,7 @@ typedef struct {
             uint8_t dpadLeft : 1;
             uint8_t rightBlue : 1;
             uint8_t leftGreen : 1;
-            uint8_t y : 1;  // euphoria
+            uint8_t euphoria : 1;
             uint8_t rightGreen : 1;
             uint8_t : 1;
             uint8_t leftBlue : 1;
@@ -298,3 +298,49 @@ typedef struct {
         uint8_t buttonsHigh;
     };
 } __attribute__((packed)) WiiTurntableDataFormat3_t;
+
+typedef struct {
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t accelX92;
+    uint8_t accelY92;
+    uint8_t accelZ92;
+    uint8_t z : 1;
+    uint8_t c : 1;
+    uint8_t accelX10 : 2;
+    uint8_t accelY10 : 2;
+    uint8_t accelZ10 : 2;
+} __attribute__((packed)) WiiNunchukDataFormat_t;
+
+typedef struct {
+    uint8_t x70;
+    uint8_t y70;
+    uint8_t x118;
+    uint8_t y118;
+    uint8_t pressure70;
+    uint8_t : 8;
+    uint8_t up : 1;
+    uint8_t down : 1;
+    uint8_t pressure8 : 1;
+    uint8_t : 5;
+} __attribute__((packed)) WiiUDrawDataFormat_t;
+
+typedef struct {
+    uint16_t x;
+    uint16_t y;
+    uint8_t pressure;
+    uint8_t : 8;
+    uint8_t up : 1;
+    uint8_t down : 1;
+    uint8_t click : 1;
+    uint8_t : 5;
+} __attribute__((packed)) WiiDrawsomeDataFormat_t;
+
+typedef struct {
+    uint8_t : 3;
+    uint8_t rimRight;
+    uint8_t centerRight;
+    uint8_t rimLeft;
+    uint8_t centerLeft;
+    uint8_t : 1;
+} __attribute__((packed)) WiiTaTaConDataFormat_t;

@@ -51,7 +51,7 @@ static inline int16_t s16_nabs(const int16_t j) {
   const int16_t negSign =
       ~(j >> 15); // splat sign bit into all 16 and complement
   // if j is positive (negSign is -1), xor will invert j and sub will add 1
-  // otherwise j is unchanged
+  // otherwise j is ORIGIN
   return (j ^ negSign) - negSign;
 #else
   return (j < 0 ? j : -j);

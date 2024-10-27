@@ -2,59 +2,58 @@
 // Translate a Pro keys style report to a usb host report
 // Note that we temporarily clear the buttons and then merge after
 // As that makes it easier to process the velocities
-#define TRANSLATE_PRO_KEYS                                                             \
-    usb_host_data->a |= report->a;                                                     \
-    usb_host_data->b |= report->b;                                                     \
-    usb_host_data->x |= report->x;                                                     \
-    usb_host_data->y |= report->y;                                                     \
-    usb_host_data->back |= report->back;                                               \
-    usb_host_data->start |= report->start;                                             \
-    usb_host_data->guide |= report->guide;                                             \
-    prokey_buttons_t buttons = {0};                                                    \
-    buttons.proKeyButtons = 0;                                                        \
-    buttons.key1 = report->key1;                                                     \
-    buttons.key2 = report->key2;                                                     \
-    buttons.key3 = report->key3;                                                     \
-    buttons.key4 = report->key4;                                                     \
-    buttons.key5 = report->key5;                                                     \
-    buttons.key6 = report->key6;                                                     \
-    buttons.key7 = report->key7;                                                     \
-    buttons.key8 = report->key8;                                                     \
-                                                                                       \
-    buttons.key9 = report->key9;                                                     \
-    buttons.key10 = report->key10;                                                   \
-    buttons.key11 = report->key11;                                                   \
-    buttons.key12 = report->key12;                                                   \
-    buttons.key13 = report->key13;                                                   \
-    buttons.key14 = report->key14;                                                   \
-    buttons.key15 = report->key15;                                                   \
-    buttons.key16 = report->key16;                                                   \
-                                                                                       \
-    buttons.key17 = report->key17;                                                   \
-    buttons.key18 = report->key18;                                                   \
-    buttons.key19 = report->key19;                                                   \
-    buttons.key20 = report->key20;                                                   \
-    buttons.key21 = report->key21;                                                   \
-    buttons.key22 = report->key22;                                                   \
-    buttons.key23 = report->key23;                                                   \
-    buttons.key24 = report->key24;                                                   \
-    buttons.key25 = report->key25;                                                   \
-    usb_host_data->overdrive |= report->overdrive;                                     \
-    usb_host_data->pedalDigital |= report->pedalDigital;                               \
-    if (report->pedalAnalog) {                                                         \
-        usb_host_data->pedalAnalog = report->pedalAnalog << 1;                         \
-    }                                                                                  \
-    if (report->touchPad) {                                                            \
-        usb_host_data->touchPad = report->touchPad << 1;                               \
-    }                                                                                  \
-                                                                                       \
-    uint8_t currentVel = 0;                                                            \
-    for (int i = 0; i < 25; i++) {                                                     \
-        if (buttons.proKeyButtons & i) {                                        \
-            if (currentVel < 5) {                                                      \
-                usb_host_data->proKeyVelocities[i] = report->velocities[currentVel++]; \
-            } else {                                                                   \
-                usb_host_data->proKeyVelocities[i] = 64;                               \
-            }                                                                          \
-        }                                                                              \
-    }                                                                                  
+#define TRANSLATE_PRO_KEYS(SRC, DEST)              \
+    DEST->a |= SRC->a;                             \
+    DEST->b |= SRC->b;                             \
+    DEST->x |= SRC->x;                             \
+    DEST->y |= SRC->y;                             \
+    DEST->key1 |= SRC->key1;                       \
+    DEST->key2 |= SRC->key2;                       \
+    DEST->key3 |= SRC->key3;                       \
+    DEST->key4 |= SRC->key4;                       \
+    DEST->key5 |= SRC->key5;                       \
+    DEST->key6 |= SRC->key6;                       \
+    DEST->key7 |= SRC->key7;                       \
+    DEST->key8 |= SRC->key8;                       \
+                                                   \
+    DEST->key9 |= SRC->key9;                       \
+    DEST->key10 |= SRC->key10;                     \
+    DEST->key11 |= SRC->key11;                     \
+    DEST->key12 |= SRC->key12;                     \
+    DEST->key13 |= SRC->key13;                     \
+    DEST->key14 |= SRC->key14;                     \
+    DEST->key15 |= SRC->key15;                     \
+    DEST->key16 |= SRC->key16;                     \
+                                                   \
+    DEST->key17 |= SRC->key17;                     \
+    DEST->key18 |= SRC->key18;                     \
+    DEST->key19 |= SRC->key19;                     \
+    DEST->key20 |= SRC->key20;                     \
+    DEST->key21 |= SRC->key21;                     \
+    DEST->key22 |= SRC->key22;                     \
+    DEST->key23 |= SRC->key23;                     \
+    DEST->key24 |= SRC->key24;                     \
+    DEST->key25 |= SRC->key25;                     \
+    DEST->overdrive |= SRC->overdrive;             \
+    DEST->pedal |= SRC->pedal;                     \
+    if (SRC->pedalAnalog) {                        \
+        DEST->pedalAnalog = SRC->pedalAnalog << 1; \
+    }                                              \
+    if (SRC->touchPad) {                           \
+        DEST->touchPad = SRC->touchPad << 1;       \
+    }                                              \
+    if (SRC->velocities[0]) {                      \
+        DEST->velocities[0] = SRC->velocities[0];  \
+    }                                              \
+    if (SRC->velocities[1]) {                      \
+        DEST->velocities[1] = SRC->velocities[1];  \
+    }                                              \
+    if (SRC->velocities[2]) {                      \
+        DEST->velocities[2] = SRC->velocities[2];  \
+    }                                              \
+    if (SRC->velocities[3]) {                      \
+        DEST->velocities[3] = SRC->velocities[3];  \
+    }                                              \
+    if (SRC->velocities[4]) {                      \
+        DEST->velocities[4] = SRC->velocities[4];  \
+    }

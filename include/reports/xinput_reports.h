@@ -26,7 +26,6 @@
 #define BB_BLUE 0
 #define BB_YELLOW 0
 
-
 typedef struct {
     uint8_t rid;
     uint8_t rsize;
@@ -137,18 +136,18 @@ typedef struct
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t leftThumbClick : 1;  // pedal2
-    uint8_t padFlag : 1;         // right thumb click
+    uint8_t kick2 : 1;    // pedal2
+    uint8_t padFlag : 1;  // right thumb click
 
-    uint8_t leftShoulder : 1;  // pedal1
-    uint8_t cymbalFlag : 1;    // right shoulder click
+    uint8_t kick1 : 1;       // pedal1
+    uint8_t cymbalFlag : 1;  // right shoulder click
     uint8_t guide : 1;
     uint8_t : 1;
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t green : 1;   // green
+    uint8_t red : 1;     // red
+    uint8_t blue : 1;    // blue
+    uint8_t yellow : 1;  // yellow
 
     uint8_t unused[2];
     int16_t redVelocity;
@@ -172,15 +171,15 @@ typedef struct
     uint8_t leftThumbClick : 1;  // isGuitarHero
     uint8_t : 1;
 
-    uint8_t leftShoulder : 1;   // kick
-    uint8_t rightShoulder : 1;  // orange
+    uint8_t kick1 : 1;   // kick
+    uint8_t orange : 1;  // orange
     uint8_t guide : 1;
     uint8_t : 1;
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t green : 1;  // green
+    uint8_t red : 1;  // red
+    uint8_t blue : 1;  // blue
+    uint8_t yellow : 1;  // yellow
 
     // TODO: The hi-hat pedal data is probably here somewhere
     uint8_t unused1[2];
@@ -191,7 +190,9 @@ typedef struct
     uint8_t blueVelocity;
     uint8_t orangeVelocity;
     uint8_t kickVelocity;
-    uint8_t reserved_1[6];
+    int16_t leftStickX;
+    int16_t leftStickY;
+    uint8_t reserved_1[2];
 } __attribute__((packed)) XInputGuitarHeroDrums_Data_t;
 
 typedef struct
@@ -208,15 +209,15 @@ typedef struct
     uint8_t : 1;
     uint8_t : 1;
 
-    uint8_t leftShoulder : 1;   // orange
-    uint8_t rightShoulder : 1;  // pedal
+    uint8_t orange : 1;   // orange
+    uint8_t pedal : 1;  // pedal
     uint8_t guide : 1;
     uint8_t : 1;
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t green : 1;  // green
+    uint8_t red : 1;  // red
+    uint8_t blue : 1;  // blue
+    uint8_t yellow : 1;  // yellow
 
     uint8_t accelZ;
     uint8_t accelX;
@@ -224,7 +225,9 @@ typedef struct
     int16_t unused;
     int16_t whammy;
     int16_t tilt;
-    uint8_t reserved_1[6];
+    int16_t leftStickX;
+    int16_t leftStickY;
+    uint8_t reserved_1[2];
 } __attribute__((packed)) XInputGuitarHeroGuitar_Data_t;
 
 typedef struct
@@ -241,15 +244,15 @@ typedef struct
     uint8_t solo : 1;  // leftThumbClick
     uint8_t : 1;
 
-    uint8_t leftShoulder : 1;  // orange
+    uint8_t orange : 1;  // orange
     uint8_t : 1;
     uint8_t guide : 1;
     uint8_t : 1;
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t green : 1;  // green
+    uint8_t red : 1;  // red
+    uint8_t blue : 1;  // blue
+    uint8_t yellow : 1;  // yellow
 
     uint8_t pickup;
     uint8_t unused1;
@@ -257,32 +260,34 @@ typedef struct
     int16_t unused2;
     int16_t whammy;
     int16_t tilt;
-    uint8_t reserved_1[6];
+    int16_t leftStickX;
+    int16_t leftStickY;
+    uint8_t reserved_1[2];
 } __attribute__((packed)) XInputRockBandGuitar_Data_t;
 
 typedef struct
 {
     uint8_t rid;
     uint8_t rsize;
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t solo : 1;  // leftThumbClick
+    uint8_t : 1;
     uint8_t : 1;
 
-    uint8_t leftShoulder : 1;  // orange
+    uint8_t : 1;
     uint8_t : 1;
     uint8_t guide : 1;
     uint8_t : 1;
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t x : 1;
+    uint8_t y : 1;
 
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
@@ -393,7 +398,7 @@ typedef struct
     uint8_t : 7;
     uint8_t overdrive : 1;
     uint8_t pedalAnalog : 7;
-    uint8_t pedalDigital : 1;
+    uint8_t pedal : 1;
 
     uint8_t touchPad : 7;
     uint8_t : 1;
@@ -413,25 +418,24 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t start : 1;           // start, pause
-    uint8_t back : 1;            // back, heroPower
-    uint8_t leftThumbClick : 1;  // leftThumbClick, ghtv
+    uint8_t start : 1;  // start, pause
+    uint8_t back : 1;   // back, heroPower
+    uint8_t ghtv : 1;   // leftThumbClick, ghtv
     uint8_t : 1;
 
-    uint8_t leftShoulder : 1;   // white2 leftShoulder
-    uint8_t rightShoulder : 1;  // white3 rightShoulder
+    uint8_t white2 : 1;  // white2 leftShoulder
+    uint8_t white3 : 1;  // white3 rightShoulder
     uint8_t guide : 1;
     uint8_t : 1;
 
-    uint8_t a : 1;  // black1 a
-    uint8_t b : 1;  // black2 b
-    uint8_t x : 1;  // white1 x
-    uint8_t y : 1;  // black3 y
+    uint8_t black1 : 1;  // black1 a
+    uint8_t black2 : 1;  // black2 b
+    uint8_t white1 : 1;  // white1 x
+    uint8_t black3 : 1;  // black3 y
 
     uint8_t unused1[2];
-    int16_t unused2;
-
-    int16_t strumBar;
+    int16_t leftStickX;
+    int16_t leftStickY;
     int16_t tilt;
     int16_t whammy;
     uint8_t reserved_1[6];
@@ -459,7 +463,7 @@ typedef struct
     uint8_t a : 1;
     uint8_t b : 1;
     uint8_t x : 1;
-    uint8_t y : 1;  // euphoria
+    uint8_t euphoria : 1;  // euphoria
 
     uint8_t leftGreen : 1;
     uint8_t leftRed : 1;

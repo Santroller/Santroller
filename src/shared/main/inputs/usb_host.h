@@ -49,7 +49,7 @@ for (int i = 0; i < device_count; i++) {
             continue;
         }
     }
-    convert_report(data, len, device_type, &usb_host_data);
+    convert_report(data, len, device_type.console_type, device_type.sub_type, &usb_host_data);
 }
 memcpy(&last_usb_host_data, &usb_host_data, sizeof(usb_host_data));
 #endif

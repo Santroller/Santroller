@@ -312,13 +312,13 @@ typedef struct {
 
 typedef struct
 {
-    uint8_t x : 1;  // square, blue
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // cirlce, red
-    uint8_t y : 1;  // triangle, yellow
+    uint8_t blue : 1;  // square, blue
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // cirlce, red
+    uint8_t yellow : 1;  // triangle, yellow
 
-    uint8_t leftShoulder : 1;   // kick1, l1
-    uint8_t rightShoulder : 1;  // kick2, r1
+    uint8_t kick1 : 1;   // kick1, l1
+    uint8_t kick2 : 1;  // kick2, r1
     uint8_t : 1;
     uint8_t : 1;
 
@@ -354,13 +354,13 @@ typedef struct
 
 typedef struct
 {
-    uint8_t x : 1;  // square, blue
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
+    uint8_t blue : 1;  // square, blue
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // circle, red
+    uint8_t yellow : 1;  // triangle, yellow
 
-    uint8_t leftShoulder : 1;   // kick, l1
-    uint8_t rightShoulder : 1;  // orange, r1
+    uint8_t kick1 : 1;   // kick, l1
+    uint8_t orange : 1;  // orange, r1
     uint8_t : 1;
     uint8_t : 1;
 
@@ -396,13 +396,13 @@ typedef struct
 
 typedef struct
 {
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t x : 1;  // square, blue
+    uint8_t yellow : 1;  // triangle, yellow
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // circle, red
+    uint8_t blue : 1;  // square, blue
 
-    uint8_t leftShoulder : 1;   // orange, l1
-    uint8_t rightShoulder : 1;  // spPedal, r1
+    uint8_t orange : 1;   // orange, l1
+    uint8_t pedal : 1;  // spPedal, r1
     uint8_t : 1;
     uint8_t : 1;
 
@@ -422,7 +422,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t whammy;
     uint8_t slider;
 
@@ -443,12 +444,12 @@ typedef struct
 
 typedef struct
 {
-    uint8_t x : 1;  // square, blue
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
+    uint8_t blue : 1;  // square, blue
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // circle, red
+    uint8_t yellow : 1;  // triangle, yellow
 
-    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t orange : 1;  // orange, l1
     uint8_t tilt : 1;          // tilt, r1
     uint8_t solo : 1;          // l2
     uint8_t : 1;               // r2
@@ -469,7 +470,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t whammy;
     uint8_t pickup;
 
@@ -505,7 +507,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
@@ -578,7 +581,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 
     uint8_t key8 : 1;
     uint8_t key7 : 1;
@@ -631,7 +635,7 @@ typedef struct
     uint8_t overdrive : 1;
 
     uint8_t pedalAnalog : 7;
-    uint8_t pedalDigital : 1;
+    uint8_t pedal : 1;
 
     uint8_t touchPad : 7;
     uint8_t : 1;
@@ -653,7 +657,7 @@ typedef struct
     uint8_t x : 1;  // square
     uint8_t a : 1;  // cross
     uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle, euphoria
+    uint8_t euphoria : 1;  // triangle, euphoria
 
     uint8_t : 1;
     uint8_t : 1;
@@ -676,7 +680,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t leftTableVelocity;
     uint8_t rightTableVelocity;
 
@@ -703,19 +708,19 @@ typedef struct
 } __attribute__((packed)) PS3Turntable_Data_t;
 typedef struct
 {
-    uint8_t x : 1;  // square, white1
-    uint8_t a : 1;  // cross, black1
-    uint8_t b : 1;  // circle, black2
-    uint8_t y : 1;  // triangle, black3
+    uint8_t white1 : 1;  // square, white1
+    uint8_t black1 : 1;  // cross, black1
+    uint8_t black2 : 1;  // circle, black2
+    uint8_t black3 : 1;  // triangle, black3
 
-    uint8_t leftShoulder : 1;   // white2, l1
-    uint8_t rightShoulder : 1;  // white3, r1
+    uint8_t white2 : 1;   // white2, l1
+    uint8_t white3 : 1;  // white3, r1
     uint8_t : 1;
     uint8_t : 1;
 
     uint8_t back : 1;            // back, heroPower
     uint8_t start : 1;           // start, pause
-    uint8_t leftThumbClick : 1;  // leftThumbClick, ghtv
+    uint8_t ghtv : 1;  // leftThumbClick, ghtv
     uint8_t : 1;
 
     uint8_t guide : 1;    // ps
@@ -728,8 +733,8 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t : 4;
-    uint8_t unused1;   // leftStickX
-    uint8_t strumBar;  // leftStickY
+    uint8_t leftStickX;   // leftStickX
+    uint8_t leftStickY;  // leftStickY
     uint8_t tilt2;     // rightStickX
     uint8_t whammy;    // rightStickY
 

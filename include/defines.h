@@ -2,6 +2,11 @@
 
 #include <stdint.h>
 
+#define UP 1 << 0
+#define DOWN 1 << 1
+#define LEFT 1 << 2
+#define RIGHT 1 << 3
+
 #define NONE 0
 #define INVALID_PIN 0xFF
 
@@ -136,6 +141,16 @@
 #define BTN_THUMBR 0x0f
 #define BTN_END 0x0f
 #define BTN_USAGE(x) 0x09, x
+
+#define NUNCHUK 1
+#define CLASSIC_LOWRES 2
+#define CLASSIC_HIGHRES 3
+#define UDRAW 4
+#define DRAWSOME 5
+#define GUITAR 6
+#define DRUM 7
+#define TURNTABLE 8
+#define TAIKO 9
 
 typedef enum {
     WII_NUNCHUK = 0x0000,

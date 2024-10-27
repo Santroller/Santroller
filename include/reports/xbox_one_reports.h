@@ -138,6 +138,14 @@ typedef struct
     uint8_t : 3;
 
     uint8_t unknown[3];
+    int16_t leftStickX;
+    int16_t leftStickY;
+
+    uint8_t share : 1;
+    uint8_t : 7;
+
+    uint8_t unknown2[13];
+
 } __attribute__((packed)) XboxOneRockBandGuitar_Data_t;
 
 typedef struct
@@ -267,18 +275,18 @@ typedef struct
     uint8_t start : 1;  // menu
     uint8_t back : 1;   // view
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t green : 1;  // green
+    uint8_t red : 1;  // red
+    uint8_t blue : 1;  // blue
+    uint8_t yellow : 1;  // yellow
 
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t leftShoulder : 1;   // kick1
-    uint8_t rightShoulder : 1;  // kick2
+    uint8_t kick1 : 1;   // kick1
+    uint8_t kick2 : 1;  // kick2
     uint8_t : 1;
     uint8_t : 1;
 

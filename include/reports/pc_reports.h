@@ -51,7 +51,7 @@
                                       \
             uint8_t key25 : 1;        \
             uint8_t overdrive : 1;    \
-            uint8_t pedalDigital : 1; \
+            uint8_t pedal : 1; \
             uint8_t : 5;              \
         };                            \
     }
@@ -148,15 +148,15 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t x : 1;  // square
-    uint8_t y : 1;  // triangle
+    uint8_t green : 1;  // cross
+    uint8_t red : 1;  // circle
+    uint8_t blue : 1;  // square
+    uint8_t yellow : 1;  // triangle
 
     uint8_t padFlag : 1;
     uint8_t cymbalFlag : 1;
-    uint8_t leftShoulder : 1;   // kick 1
-    uint8_t rightShoulder : 1;  // kick 2
+    uint8_t kick1 : 1;   // kick 1
+    uint8_t kick2 : 1;  // kick 2
 
     uint8_t back : 1;
     uint8_t start : 1;
@@ -177,13 +177,13 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // circle, red
+    uint8_t yellow : 1;  // triangle, yellow
+    uint8_t blue : 1;  // square, blue
 
-    uint8_t rightShoulder : 1;  // orange, r1
-    uint8_t leftShoulder : 1;   // kick, l1
+    uint8_t orange : 1;  // orange, r1
+    uint8_t kick1 : 1;   // kick, l1
     uint8_t back : 1;           // select
     uint8_t start : 1;
 
@@ -203,24 +203,28 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // circle, red
+    uint8_t yellow : 1;  // triangle, yellow
+    uint8_t blue : 1;  // square, blue
 
-    uint8_t leftShoulder : 1;   // orange, l1
-    uint8_t rightShoulder : 1;  // spPedal, r1
+    uint8_t orange : 1;   // orange, l1
+    uint8_t kick1 : 1;  // spPedal, r1
     uint8_t back : 1;           // select
     uint8_t start : 1;
 
     uint8_t guide : 1;  // ps
-    uint8_t : 7;
+    uint8_t pedal : 1;  // ps
+    uint8_t : 6;
 
     DPAD;
 
     uint8_t whammy;
     uint8_t slider;
     uint8_t tilt;
+
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((packed)) PCGuitarHeroGuitar_Data_t;
 
 // Festivals default mappings suck, so its easiest to set up custom mappings for that here
@@ -263,12 +267,12 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t green : 1;  // cross, green
+    uint8_t red : 1;  // circle, red
+    uint8_t yellow : 1;  // triangle, yellow
+    uint8_t blue : 1;  // square, blue
 
-    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t orange : 1;  // orange, l1
 
     uint8_t soloGreen : 1;
     uint8_t soloRed : 1;
@@ -286,6 +290,9 @@ typedef struct
     uint8_t whammy;
     uint8_t pickup;
     uint8_t tilt;
+
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((packed)) PCRockBandGuitar_Data_t;
 
 typedef struct
@@ -336,7 +343,7 @@ typedef struct
     uint8_t a : 1;  // cross
     uint8_t b : 1;  // circle
     uint8_t x : 1;  // square
-    uint8_t y : 1;  // triangle, euphoria
+    uint8_t euphoria : 1;  // triangle, euphoria
 
     uint8_t back : 1;  // select
     uint8_t start : 1;
@@ -358,22 +365,24 @@ typedef struct
 
     uint8_t effectsKnob;
     uint8_t crossfader;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((packed)) PCTurntable_Data_t;
 
 typedef struct
 {
     uint8_t reportId;
-    bool a : 1;  // cross, black1
-    bool b : 1;  // circle, black2
-    bool y : 1;  // triangle, black3
+    bool black1 : 1;  // cross, black1
+    bool black2 : 1;  // circle, black2
+    bool black3 : 1;  // triangle, black3
 
-    bool x : 1;              // square, white1
-    bool leftShoulder : 1;   // white2, l1
-    bool rightShoulder : 1;  // white3, r1
+    bool white1 : 1;              // square, white1
+    bool white2 : 1;   // white2, l1
+    bool white3 : 1;  // white3, r1
     bool back : 1;           // back, heroPower
     bool start : 1;          // start, pause
 
-    bool leftThumbClick : 1;  // leftThumbClick, ghtv
+    bool ghtv : 1;  // leftThumbClick, ghtv
     bool guide : 1;           // ps
     uint8_t : 6;
 
@@ -381,6 +390,8 @@ typedef struct
 
     uint8_t whammy;
     uint8_t tilt;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((packed)) PCGHLGuitar_Data_t;
 
 typedef struct
@@ -419,6 +430,8 @@ typedef struct
     uint8_t gFretVelocity;
     uint8_t bFretVelocity;
     uint8_t highEFretVelocity;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((__packed__)) PCRockBandProGuitar_Data_t;
 
 
@@ -440,6 +453,8 @@ typedef struct
     uint8_t pedalAnalog;
     uint8_t touchPad;
     uint8_t velocities[5];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((__packed__)) PCRockBandProKeyboard_Data_t;
 typedef struct {
     uint8_t reportTypeId;  // 0x5B

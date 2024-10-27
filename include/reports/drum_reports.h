@@ -19,10 +19,10 @@ typedef union {
     uint8_t buttons;
 } USB_RB_Drums_t;
 #define SET_PADS()                                                              \
-    bool green = report->a;                                                     \
-    bool red = report->b;                                                       \
-    bool yellow = report->y;                                                    \
-    bool blue = report->x;                                                      \
+    bool green = report->green;                                                 \
+    bool red = report->red;                                                     \
+    bool yellow = report->yellow;                                               \
+    bool blue = report->blue;                                                   \
     bool pad = report->padFlag;                                                 \
     bool cymbal = report->cymbalFlag;                                           \
     if (pad || cymbal) {                                                        \

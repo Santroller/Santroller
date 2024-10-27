@@ -41,8 +41,8 @@ typedef struct
 {
     uint8_t report_id;
 
-    uint8_t joystickX;
-    uint8_t joystickY;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 
     uint8_t unused1[5];
 
@@ -71,8 +71,9 @@ typedef struct
 
     uint32_t packetCounter;
 
-    uint8_t unused3[25];
+    uint8_t unused3[24];
 
+    uint8_t pickup;
     uint8_t whammy;
     uint8_t tilt;
 

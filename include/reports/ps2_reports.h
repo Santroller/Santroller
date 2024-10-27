@@ -53,7 +53,6 @@ typedef struct {
     uint8_t rightTrigger;  // pressure_r2
 } __attribute__((packed)) PS2Gamepad_Data_t;
 
-
 typedef struct
 {
     uint8_t header;
@@ -68,15 +67,18 @@ typedef struct
     uint8_t dpadLeft : 1;
 
     uint8_t tilt : 1;
-    uint8_t a : 1;  // cross, green
+    uint8_t green : 1;  // cross, green
+    uint8_t pedal: 1;
     uint8_t : 1;
-    uint8_t : 1;
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t b : 1;  // circle, red
-    uint8_t x : 1;  // square, blue
-    uint8_t leftShoulder : 1;   // orange, l1
-    
-    uint8_t unused1[2];
+    uint8_t yellow : 1;  // triangle, yellow
+    uint8_t red : 1;  // circle, red
+    uint8_t blue : 1;  // square, blue
+    uint8_t orange : 1;   // orange, l1
+    uint8_t dpad;
+    uint8_t unused1;
     uint8_t slider;
     uint8_t whammy;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 } __attribute__((packed)) PS2GuitarHeroGuitar_Data_t;
+

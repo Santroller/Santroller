@@ -220,13 +220,13 @@ typedef struct
     
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
+    uint8_t green;  // green
+    uint8_t red;  // red
+    uint8_t blue;  // blue
+    uint8_t yellow;  // yellow
 
-    uint8_t leftShoulder;   // orange
-    uint8_t rightShoulder;  // pedal
+    uint8_t orange;   // orange
+    uint8_t pedal;  // pedal
 
     uint8_t accelZ;
     uint8_t accelX;
@@ -252,18 +252,18 @@ typedef struct
     
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
+    uint8_t green;  // green
+    uint8_t red;  // red
+    uint8_t blue;  // blue
+    uint8_t yellow;  // yellow
 
-    uint8_t leftShoulder;  // orange
+    uint8_t orange;  // orange
     uint8_t padding2;
 
     uint8_t pickup;
     uint8_t unused1;
-    int16_t calibrationSensor;
-    int16_t unused2;
+    int16_t leftStickX;
+    int16_t leftStickY;
     int16_t whammy;
     int16_t tilt;
 } __attribute__((packed)) OGXboxRockBandGuitar_Data_t;
@@ -292,9 +292,9 @@ typedef struct
     uint8_t rightShoulder;  // white3 rightShoulder
 
     uint8_t unused1[2];
-    int16_t unused2;
-
-    int16_t strumBar;
+    
+    int16_t leftStickX;
+    int16_t leftStickY;
     int16_t tilt;
     int16_t whammy;
 } __attribute__((packed)) OGXboxGHLGuitar_Data_t;

@@ -101,8 +101,8 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t joystickX;
-    uint8_t joystickY;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t unused[2];
 
     // To make things easier we use bitfields here and them map to dpad later
@@ -214,8 +214,8 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t unused1;
-    uint8_t strumBar;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t whammy;
     uint8_t tilt;
 
@@ -224,19 +224,19 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t x : 1;  // square, white1
-    uint8_t a : 1;  // cross, black1
-    uint8_t b : 1;  // circle, black2
-    uint8_t y : 1;  // triangle, black3
+    uint8_t white1 : 1;  // square, white1
+    uint8_t black1 : 1;  // cross, black1
+    uint8_t black2 : 1;  // circle, black2
+    uint8_t black3 : 1;  // triangle, black3
 
-    uint8_t leftShoulder : 1;   // white2, l1
-    uint8_t rightShoulder : 1;  // white3, r1
+    uint8_t white2 : 1;   // white2, l1
+    uint8_t white3 : 1;  // white3, r1
     uint8_t : 1;                // l2
     uint8_t : 1;                // r2
 
     uint8_t : 1;                 // share
     uint8_t start : 1;           // pause, options
-    uint8_t leftThumbClick : 1;  // l3, ghtv
+    uint8_t ghtv : 1;  // l3, ghtv
     uint8_t back : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
 
     uint8_t guide : 1;    // ps

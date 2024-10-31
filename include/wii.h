@@ -17,15 +17,7 @@ extern "C" {
 #define WII_HIGHRES_MODE 0x03
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
-enum DrumType {
-    DRUM_GREEN,
-    DRUM_RED,
-    DRUM_YELLOW,
-    DRUM_BLUE,
-    DRUM_ORANGE,
-    DRUM_KICK,
-    DRUM_HIHAT
-};
+
 extern bool hiRes;
 extern uint16_t wiiControllerType;
 uint8_t* tickWii();

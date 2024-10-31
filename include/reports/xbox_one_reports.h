@@ -257,7 +257,7 @@ typedef struct
 
     uint8_t : 7;
     uint8_t overdrive : 1;
-    uint8_t pedalAnalog : 7;
+    uint8_t kickVelocity : 7;
     uint8_t pedalDigital : 1;
 
     uint8_t touchPad : 7;

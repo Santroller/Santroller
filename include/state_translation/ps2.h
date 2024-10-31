@@ -2,7 +2,7 @@
 
 #include "defines.h"
 #include "reports/controller_reports.h"
-#include "state_translation/generic.h"
+#include "state_translation/shared.h"
 inline void ps2_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
     if (sub_type == PSX_GUITAR_HERO_CONTROLLER) {
         PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)data;
@@ -179,7 +179,7 @@ inline void ps2_to_universal_report(const uint8_t *data, uint8_t len, uint8_t su
     }
 }
 
-inline void universal_report_to_ps2(uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+inline uint8_t universal_report_to_ps2(uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     switch (sub_type) {
         case GUITAR_HERO_GUITAR: {
             PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)data;
@@ -187,91 +187,51 @@ inline void universal_report_to_ps2(uint8_t *data, uint8_t len, uint8_t sub_type
             report->dpadLeft = true;
             report->dpadDown = usb_host_data->dpadDown;
             report->dpadUp = usb_host_data->dpadUp;
-            report->green |= usb_host_data->green;
-            report->red |= usb_host_data->red;
-            report->yellow |= usb_host_data->yellow;
-            report->blue |= usb_host_data->blue;
-            report->orange |= usb_host_data->orange;
-            report->pedal |= usb_host_data->pedal;
-            if (usb_host_data->tilt) {
-                report->tilt = usb_host_data->tilt > 20000;
-            }
-            if (usb_host_data->whammy) {
-                report->whammy = 0x7f - (usb_host_data->whammy >> 1);
-            }
-            if (usb_host_data->leftStickX) {
-                report->leftStickX = (usb_host_data->leftStickX >> 8) + 0x80;
-            }
-            if (usb_host_data->leftStickY) {
-                report->leftStickY = (-usb_host_data->leftStickY >> 8) + 0x80;
-            }
-            if (usb_host_data->slider) {
-                report->slider = usb_host_data->slider;
-            }
+            report->green = usb_host_data->green;
+            report->red = usb_host_data->red;
+            report->yellow = usb_host_data->yellow;
+            report->blue = usb_host_data->blue;
+            report->orange = usb_host_data->orange;
+            report->kick1 = usb_host_data->kick1;
+            report->tilt = usb_host_data->tilt > 20000;
+            report->whammy = 0x7f - (usb_host_data->whammy >> 1);
+            report->leftStickX = (usb_host_data->leftStickX >> 8) + 0x80;
+            report->leftStickY = (-usb_host_data->leftStickY >> 8) + 0x80;
+            report->slider = usb_host_data->slider;
+            return sizeof(PS2GuitarHeroGuitar_Data_t);
         }
         default: {
             PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)data;
             report->header = 0x5A;
-            report->dpadLeft |= usb_host_data->dpadLeft;
-            report->dpadRight |= usb_host_data->dpadRight;
-            report->dpadUp |= usb_host_data->dpadUp;
-            report->dpadDown |= usb_host_data->dpadDown;
-            report->a |= usb_host_data->a;
-            report->b |= usb_host_data->b;
-            report->x |= usb_host_data->x;
-            report->y |= usb_host_data->y;
-            report->leftShoulder |= usb_host_data->leftShoulder;
-            report->rightShoulder |= usb_host_data->rightShoulder;
-            if (usb_host_data->leftTrigger) {
-                report->leftTrigger = usb_host_data->leftTrigger >> 8;
-            }
-            if (usb_host_data->rightTrigger) {
-                report->rightTrigger = usb_host_data->rightTrigger >> 8;
-            }
-            if (usb_host_data->leftStickX != 0x80) {
-                report->leftStickX = (usb_host_data->leftStickX >> 8) + 0x80;
-            }
-            if (usb_host_data->leftStickY != 0x80) {
-                report->leftStickY = (-usb_host_data->leftStickY >> 8) + 0x80;
-            }
-            if (usb_host_data->rightStickX != 0x80) {
-                report->rightStickX = (usb_host_data->rightStickX >> 8) + 0x80;
-            }
-            if (usb_host_data->rightStickY != 0x80) {
-                report->rightStickY = (-usb_host_data->rightStickY >> 8) + 0x80;
-            }
-            report->leftThumbClick |= usb_host_data->leftThumbClick;
-            report->rightThumbClick |= usb_host_data->rightThumbClick;
-            if (usb_host_data->pressureDpadUp) {
-                report->pressureDpadUp = usb_host_data->pressureDpadUp;
-            }
-            if (usb_host_data->pressureDpadRight) {
-                report->pressureDpadRight = usb_host_data->pressureDpadRight;
-            }
-            if (usb_host_data->pressureDpadDown) {
-                report->pressureDpadDown = usb_host_data->pressureDpadDown;
-            }
-            if (usb_host_data->pressureDpadLeft) {
-                report->pressureDpadLeft = usb_host_data->pressureDpadLeft;
-            }
-            if (usb_host_data->pressureL1) {
-                report->pressureL1 = usb_host_data->pressureL1;
-            }
-            if (usb_host_data->pressureR1) {
-                report->pressureR1 = usb_host_data->pressureR1;
-            }
-            if (usb_host_data->pressureTriangle) {
-                report->pressureTriangle = usb_host_data->pressureTriangle;
-            }
-            if (usb_host_data->pressureCircle) {
-                report->pressureCircle = usb_host_data->pressureCircle;
-            }
-            if (usb_host_data->pressureCross) {
-                report->pressureCross = usb_host_data->pressureCross;
-            }
-            if (usb_host_data->pressureSquare) {
-                report->pressureSquare = usb_host_data->pressureSquare;
-            };
+            report->dpadLeft = usb_host_data->dpadLeft;
+            report->dpadRight = usb_host_data->dpadRight;
+            report->dpadUp = usb_host_data->dpadUp;
+            report->dpadDown = usb_host_data->dpadDown;
+            report->a = usb_host_data->a;
+            report->b = usb_host_data->b;
+            report->x = usb_host_data->x;
+            report->y = usb_host_data->y;
+            report->leftShoulder = usb_host_data->leftShoulder;
+            report->rightShoulder = usb_host_data->rightShoulder;
+            report->leftTrigger = usb_host_data->leftTrigger >> 8;
+            report->rightTrigger = usb_host_data->rightTrigger >> 8;
+            report->leftStickX = (usb_host_data->leftStickX >> 8) + 0x80;
+            report->leftStickY = (-usb_host_data->leftStickY >> 8) + 0x80;
+            report->rightStickX = (usb_host_data->rightStickX >> 8) + 0x80;
+            report->rightStickY = (-usb_host_data->rightStickY >> 8) + 0x80;
+            report->leftThumbClick = usb_host_data->leftThumbClick;
+            report->rightThumbClick = usb_host_data->rightThumbClick;
+            report->pressureDpadUp = usb_host_data->pressureDpadUp;
+            report->pressureDpadRight = usb_host_data->pressureDpadRight;
+            report->pressureDpadDown = usb_host_data->pressureDpadDown;
+            report->pressureDpadLeft = usb_host_data->pressureDpadLeft;
+            report->pressureL1 = usb_host_data->pressureL1;
+            report->pressureR1 = usb_host_data->pressureR1;
+            report->pressureTriangle = usb_host_data->pressureTriangle;
+            report->pressureCircle = usb_host_data->pressureCircle;
+            report->pressureCross = usb_host_data->pressureCross;
+            report->pressureSquare = usb_host_data->pressureSquare;
+            return sizeof(PS2Gamepad_Data_t);
         }
     }
 }

@@ -21,7 +21,7 @@ typedef struct {
 
     uint8_t up : 1;
     // TODO: validate this
-    uint8_t pedal : 1;
+    uint8_t kick1 : 1;
     uint8_t : 6;
 
 } __attribute__((packed)) RaphnetGuitar_Data_t;

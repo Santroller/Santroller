@@ -20,6 +20,18 @@
 #define SIMULTANEOUS_KEYS 6
 #define NKRO_KEYS ((0x73 / 8) + 1)
 #define SIMULTANEOUS_MIDI 12
+#define KEYCODE_1 0x1e // Keyboard 1 and !
+#define KEYCODE_2 0x1f // Keyboard 2 and @
+#define KEYCODE_3 0x20 // Keyboard 3 and #
+#define KEYCODE_4 0x21 // Keyboard 4 and $
+#define KEYCODE_5 0x22 // Keyboard 5 and %
+#define KEYCODE_6 0x23 // Keyboard 6 and ^
+#define KEYCODE_7 0x24 // Keyboard 7 and &
+#define KEYCODE_8 0x25 // Keyboard 8 and *
+#define KEYCODE_9 0x26 // Keyboard 9 and (
+#define KEYCODE_0 0x27 // Keyboard 0 and )
+#define KEYCODE_ENTER 0x28 // Keyboard Return (ENTER)
+#define KEYCODE_SPACE 0x2c // Keyboard Spacebar
 #define KEYCODE_F24 115
 typedef struct {
     // TMIDI_EventPacket_t midi[SIMULTANEOUS_MIDI];
@@ -287,7 +299,6 @@ typedef struct {
     uint8_t blueCymbal : 1;
     uint8_t greenCymbal : 1;
     uint8_t overdrive : 1;
-    uint8_t pedal : 1;
     uint8_t white1 : 1;
 
     uint8_t white2 : 1;
@@ -334,10 +345,10 @@ typedef struct {
     int16_t rightTableVelocity;
     int16_t effectsKnob;
     int16_t crossfader;
-    uint16_t accelX;
-    uint16_t accelZ;
-    uint16_t accelY;
-    uint16_t gyro;
+    int16_t accelX;
+    int16_t accelZ;
+    int16_t accelY;
+    int16_t gyro;
     union {
         struct {
             uint16_t genericButton1 : 1;
@@ -366,8 +377,9 @@ typedef struct {
     uint16_t genericAxisRy;
     uint16_t genericAxisRz;
     uint16_t genericAxisSlider;
-    USB_6KRO_Boot_Data_t keyboard;
+    USB_NKRO_Data_t keyboard;
     USB_Mouse_Boot_Data_t mouse;
+    USB_ConsumerControl_Data_t consumerControl;
     uint8_t key1 : 1;
     uint8_t key2 : 1;
     uint8_t key3 : 1;
@@ -395,7 +407,6 @@ typedef struct {
     uint8_t key23 : 1;
     uint8_t key24 : 1;
     uint8_t key25 : 1;
-    uint8_t pedalAnalog;
     uint8_t touchPad;
     uint8_t lowEFret;
     uint8_t aFret;

@@ -469,12 +469,8 @@ extern const uint8_t xb1_descriptor_end[6];
 enum hid_reports_t {
     REPORT_ID_NONE,
     REPORT_ID_NKRO,
-#ifdef TICK_CONSUMER
     REPORT_ID_CONSUMER,
-#endif
-#ifdef TICK_MOUSE
     REPORT_ID_MOUSE,
-#endif
     REPORT_ID_END
 };
 
@@ -490,16 +486,16 @@ typedef struct {
         uint8_t data[64];
     } lastControllerReport;
 #endif
-#ifdef TICK_SIXKRO
+#if KEYBOARD_TYPE == SIXKRO
     USB_6KRO_Data_t last6KROReport;
 #endif
-#ifdef TICK_NKRO
+#if KEYBOARD_TYPE == NKRO
     USB_NKRO_Data_t lastNKROReport;
 #endif
-#ifdef TICK_MOUSE
+#ifdef HAS_MOUSE
     USB_Mouse_Data_t lastMouseReport;
 #endif
-#ifdef TICK_CONSUMER
+#if KEYBOARD_TYPE == NKRO
     USB_ConsumerControl_Data_t lastConsumerReport;
 #endif
 } USB_LastReport_Data_t;

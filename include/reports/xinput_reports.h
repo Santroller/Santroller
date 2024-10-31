@@ -190,9 +190,7 @@ typedef struct
     uint8_t blueVelocity;
     uint8_t orangeVelocity;
     uint8_t kickVelocity;
-    int16_t leftStickX;
-    int16_t leftStickY;
-    uint8_t reserved_1[2];
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGuitarHeroDrums_Data_t;
 
 typedef struct
@@ -210,7 +208,7 @@ typedef struct
     uint8_t : 1;
 
     uint8_t orange : 1;   // orange
-    uint8_t pedal : 1;  // pedal
+    uint8_t kick1 : 1;  // pedal
     uint8_t guide : 1;
     uint8_t : 1;
 
@@ -260,9 +258,7 @@ typedef struct
     int16_t unused2;
     int16_t whammy;
     int16_t tilt;
-    int16_t leftStickX;
-    int16_t leftStickY;
-    uint8_t reserved_1[2];
+    uint8_t reserved_1[6];
 } __attribute__((packed)) XInputRockBandGuitar_Data_t;
 
 typedef struct
@@ -316,7 +312,7 @@ typedef struct
     uint8_t tilt;
 
     uint8_t : 7;
-    uint8_t pedal : 1;
+    uint8_t kick1 : 1;
 
     uint8_t unused2;
 
@@ -397,8 +393,8 @@ typedef struct
 
     uint8_t : 7;
     uint8_t overdrive : 1;
-    uint8_t pedalAnalog : 7;
-    uint8_t pedal : 1;
+    uint8_t kickVelocity : 7;
+    uint8_t kick1 : 1;
 
     uint8_t touchPad : 7;
     uint8_t : 1;

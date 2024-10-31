@@ -205,20 +205,20 @@ typedef struct {
     uint8_t rightThumbClick : 1;  // r3
     uint8_t start : 1;
 
-    uint8_t b : 1; // dpadUp
+    uint8_t red : 1; // dpadUp
     uint8_t dpadRight : 1;
     uint8_t dpadLeft : 1;
-    uint8_t a : 1; // dpadLeft
+    uint8_t green : 1; // dpadLeft
 
     uint8_t whammy : 1;             // l2 - whammy
     uint8_t tilt : 1;             // r2 - overdrive
     uint8_t dpadUp : 1;   // l1 (leftShoulder) - strum up
     uint8_t dpadDown : 1;  // r1 (rightShoulder) - strum down
 
-    uint8_t x : 1;  // triangle (y) - blue
-    uint8_t leftShoulder : 1;  // circle (b) - orange
+    uint8_t blue : 1;  // triangle (y) - blue
+    uint8_t orange : 1;  // circle (b) - orange
     uint8_t rightShoulder : 1;  // cross (a)
-    uint8_t y : 1;  // square (x) - yellow
+    uint8_t yellow : 1;  // square (x) - yellow
 
     uint8_t guide : 1;
     uint8_t : 7;
@@ -402,7 +402,7 @@ typedef struct
     uint8_t blue : 1;  // square, blue
 
     uint8_t orange : 1;   // orange, l1
-    uint8_t pedal : 1;  // spPedal, r1
+    uint8_t kick1 : 1;  // spPedal, r1
     uint8_t : 1;
     uint8_t : 1;
 
@@ -537,7 +537,7 @@ typedef struct
     uint8_t tilt;
 
     uint8_t : 7;
-    uint8_t pedal : 1;
+    uint8_t kick1 : 1;
 
     uint8_t unused2;
 
@@ -634,8 +634,8 @@ typedef struct
     uint8_t : 7;
     uint8_t overdrive : 1;
 
-    uint8_t pedalAnalog : 7;
-    uint8_t pedal : 1;
+    uint8_t kickVelocity : 7;
+    uint8_t kick1 : 1;
 
     uint8_t touchPad : 7;
     uint8_t : 1;

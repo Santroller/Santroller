@@ -1,90 +1,185 @@
-#include "state_translation/drums.h"
-#include "state_translation/guitar.h"
-#include "state_translation/pro_guitar.h"
-#include "state_translation/pro_keys.h"
-#include "state_translation/turntable.h"
-#define RAPHNET_JOYSTICK(joystick) joystick - 16000
-#define PS3_JOYSTICK(joystick) (joystick >> 8) + PS3_STICK_CENTER
-#define PS3_XBOX_TRIGGER(trigger) trigger >> 8
-#define PS3_XBOX_TRIGGER_REV(trigger) trigger << 8
-#define PS3_JOYSTICK_REV(joystick) (joystick - PS3_STICK_CENTER) << 8
-#define PS3_ACCEL(accel) (accel + PS3_ACCEL_CENTER) << 6
-#define PS3_ACCEL_REV(accel) (accel - PS3_ACCEL_CENTER) << 6
-#define ORIGIN(joystick) joystick
-// XB1 triggers range from 0 - 1024
-#define XBOX_ONE_TRIGGER(trigger) trigger >> 6
-#define XBOX_ONE_TRIGGER_REV(trigger) trigger << 6
-#define TRANSLATE_GAMEPAD_NO_CLICK(JOYSTICK, TRIGGER, SRC, DEST) \
-    DEST->a |= SRC->a;                                           \
-    DEST->b |= SRC->b;                                           \
-    DEST->x |= SRC->x;                                           \
-    DEST->y |= SRC->y;                                           \
-    DEST->leftShoulder |= SRC->leftShoulder;                     \
-    DEST->rightShoulder |= SRC->rightShoulder;                   \
-    if (SRC->leftTrigger) {                                      \
-        DEST->leftTrigger = TRIGGER(SRC->leftTrigger);           \
-    }                                                            \
-    if (SRC->rightTrigger) {                                     \
-        DEST->rightTrigger = TRIGGER(SRC->rightTrigger);         \
-    }                                                            \
-    if (SRC->leftStickX != PS3_STICK_CENTER) {                   \
-        DEST->leftStickX = JOYSTICK(SRC->leftStickX);            \
-    }                                                            \
-    if (SRC->leftStickY != PS3_STICK_CENTER) {                   \
-        DEST->leftStickY = JOYSTICK(-SRC->leftStickY);           \
-    }                                                            \
-    if (SRC->rightStickX != PS3_STICK_CENTER) {                  \
-        DEST->rightStickX = JOYSTICK(SRC->rightStickX);          \
-    }                                                            \
-    if (SRC->rightStickY != PS3_STICK_CENTER) {                  \
-        DEST->rightStickY = JOYSTICK(-SRC->rightStickY);         \
-    }
-#define TRANSLATE_GAMEPAD(JOYSTICK, TRIGGER, SRC, DEST)      \
-    TRANSLATE_GAMEPAD_NO_CLICK(JOYSTICK, TRIGGER, SRC, DEST) \
-    DEST->leftThumbClick |= SRC->leftThumbClick;             \
-    DEST->rightThumbClick |= SRC->rightThumbClick;
-#define TRANSLATE_GAMEPAD_CAPTURE(JOYSTICK, TRIGGER, SRC, DEST) \
-    TRANSLATE_GAMEPAD(JOYSTICK, TRIGGER, SRC, DEST)             \
-    DEST->capture |= SRC->capture;
+#include <stdint.h>
+#include <string.h>
 
-#define TRANSLATE_GAMEPAD_PRESSURE(JOYSTICK, TRIGGER, SRC, DEST) \
-    TRANSLATE_GAMEPAD(JOYSTICK, TRIGGER, SRC, DEST)              \
-    if (SRC->pressureDpadUp) {                                   \
-        DEST->pressureDpadUp = SRC->pressureDpadUp;              \
-    }                                                            \
-    if (SRC->pressureDpadRight) {                                \
-        DEST->pressureDpadRight = SRC->pressureDpadRight;        \
-    }                                                            \
-    if (SRC->pressureDpadDown) {                                 \
-        DEST->pressureDpadDown = SRC->pressureDpadDown;          \
-    }                                                            \
-    if (SRC->pressureDpadLeft) {                                 \
-        DEST->pressureDpadLeft = SRC->pressureDpadLeft;          \
-    }                                                            \
-    if (SRC->pressureL1) {                                       \
-        DEST->pressureL1 = SRC->pressureL1;                      \
-    }                                                            \
-    if (SRC->pressureR1) {                                       \
-        DEST->pressureR1 = SRC->pressureR1;                      \
-    }                                                            \
-    if (SRC->pressureTriangle) {                                 \
-        DEST->pressureTriangle = SRC->pressureTriangle;          \
-    }                                                            \
-    if (SRC->pressureCircle) {                                   \
-        DEST->pressureCircle = SRC->pressureCircle;              \
-    }                                                            \
-    if (SRC->pressureCross) {                                    \
-        DEST->pressureCross = SRC->pressureCross;                \
-    }                                                            \
-    if (SRC->pressureSquare) {                                   \
-        DEST->pressureSquare = SRC->pressureSquare;              \
+#include "defines.h"
+#include "reports/controller_reports.h"
+#include "state_translation/shared.h"
+#include "util.h"
+extern bool hasFlags;
+extern const uint8_t dpad_bindings[11];
+extern const uint8_t dpad_bindings_reverse[8];
+inline void generic_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
+    USB_Host_Data_t *report = (USB_Host_Data_t *)data;
+    usb_host_data->genericAxisX = report->genericAxisX;
+    usb_host_data->genericAxisY = report->genericAxisY;
+    usb_host_data->genericAxisZ = report->genericAxisZ;
+    usb_host_data->genericAxisRx = report->genericAxisRx;
+    usb_host_data->genericAxisRy = report->genericAxisRy;
+    usb_host_data->genericAxisRz = report->genericAxisRz;
+    usb_host_data->genericAxisSlider = report->genericAxisSlider;
+    usb_host_data->dpadLeft |= report->dpadLeft;
+    usb_host_data->dpadRight |= report->dpadRight;
+    usb_host_data->dpadUp |= report->dpadUp;
+    usb_host_data->dpadDown |= report->dpadDown;
+    usb_host_data->genericButtons |= report->genericButtons;
+}
+// inline void keyboard_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
+//     USB_6KRO_Boot_Data_t *report = (USB_6KRO_Boot_Data_t *)data;
+//     memcpy(&usb_host_data->keyboard, report, sizeof(USB_6KRO_Boot_Data_t));
+// }
+inline void keyboard_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
+    USB_6KRO_Boot_Data_t *report = (USB_6KRO_Boot_Data_t *)data;
+    usb_host_data->keyboard.leftCtrl = report->leftCtrl;
+    usb_host_data->keyboard.leftShift = report->leftShift;
+    usb_host_data->keyboard.leftAlt = report->leftAlt;
+    usb_host_data->keyboard.lWin = report->lWin;
+    usb_host_data->keyboard.rightCtrl = report->rightCtrl;
+    usb_host_data->keyboard.rightShift = report->rightShift;
+    usb_host_data->keyboard.rightAlt = report->rightAlt;
+    usb_host_data->keyboard.rWin = report->rWin;
+    uint8_t *keyData = usb_host_data->keyboard.raw;
+    for (uint8_t i = 0; i < SIMULTANEOUS_KEYS; i++) {
+        uint8_t keycode = report->KeyCode[i];
+        // F24 is the last supported key in our nkro report
+        if (keycode && keycode <= KEYCODE_F24) {
+            bit_set(keyData[keycode >> 3], keycode & 7);
+        }
     }
+}
+inline void mouse_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
+    USB_Mouse_Boot_Data_t *report = (USB_Mouse_Boot_Data_t *)data;
+    memcpy(&usb_host_data->mouse, report, sizeof(USB_Mouse_Boot_Data_t));
+}
+inline int universal_report_to_keyboard_mouse(uint8_t *data, USB_LastReport_Data_t *last_report, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+    if (sub_type == GUITAR_HERO_GUITAR || sub_type == ROCK_BAND_GUITAR) {
+#if KEYBOARD_TYPE == SIXKRO
+        uint8_t packet_size = sizeof(USB_6KRO_Data_t);
+        USB_6KRO_Data_t *report = (USB_6KRO_Data_t *)data;
+        report->rid = REPORT_ID_NKRO;
+        uint8_t current = 0;
+        if (usb_host_data->green) {
+            report->KeyCode[current++] = KEYCODE_1;
+        }
+        if (usb_host_data->red) {
+            report->KeyCode[current++] = KEYCODE_2;
+        }
+        if (usb_host_data->yellow) {
+            report->KeyCode[current++] = KEYCODE_3;
+        }
+        if (usb_host_data->blue) {
+            report->KeyCode[current++] = KEYCODE_4;
+        }
+        if (usb_host_data->orange) {
+            report->KeyCode[current++] = KEYCODE_5;
+        }
+        if (usb_host_data->dpadDown) {
+            report->KeyCode[current++] = KEYCODE_ENTER;
+        }
+        if (usb_host_data->back && current < SIMULTANEOUS_KEYS) {
+            report->KeyCode[current++] = KEYCODE_SPACE;
+        }
+        report->rightShift = usb_host_data->dpadUp;
+        uint8_t cmp = memcmp(&last_report->last6KROReport, data, packet_size);
+        if (cmp == 0) {
+            return 0;
+        }
+        return packet_size;
+#else
+        USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)data;
+        uint8_t packet_size = sizeof(USB_NKRO_Data_t);
+        report->rid = REPORT_ID_NKRO;
+        report->d1 = usb_host_data->green;
+        report->d2 = usb_host_data->red;
+        report->d3 = usb_host_data->yellow;
+        report->d4 = usb_host_data->blue;
+        report->d5 = usb_host_data->orange;
+        report->rightShift = usb_host_data->dpadUp;
+        report->enter = usb_host_data->dpadDown;
+        report->space = usb_host_data->back;
+        uint8_t cmp = memcmp(&last_report->lastNKROReport, data, packet_size);
+        if (cmp == 0) {
+            return 0;
+        }
+        return packet_size;
+#endif
+    }
+    uint8_t packet_size = 0;
+    void *lastReportToCheck;
+    for (int i = 1; i < REPORT_ID_END; i++) {
+#ifdef HAS_MOUSE
+        if (i == REPORT_ID_MOUSE) {
+            packet_size = sizeof(USB_Mouse_Data_t);
+            memset(data, 0, packet_size);
+            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)data;
+            memcpy(data, &usb_host_data->mouse, sizeof(USB_Mouse_Data_t));
+            report->rid = REPORT_ID_MOUSE;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastMouseReport;
+            }
+        }
+#endif
+#if KEYBOARD_TYPE == NKRO
+        if (i == REPORT_ID_CONSUMER) {
+            packet_size = sizeof(USB_ConsumerControl_Data_t);
+            memset(data, 0, packet_size);
+            memcpy(data, &usb_host_data->consumerControl, sizeof(USB_ConsumerControl_Data_t));
+            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)data;
+            report->rid = REPORT_ID_CONSUMER;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastConsumerReport;
+            }
+        }
+        if (i == REPORT_ID_NKRO) {
+            packet_size = sizeof(USB_NKRO_Data_t);
+            memset(data, 0, packet_size);
+            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)data;
+            report->rid = REPORT_ID_NKRO;
+            memcpy(data, &usb_host_data->keyboard, sizeof(USB_NKRO_Data_t));
+            if (last_report) {
+                lastReportToCheck = &last_report->lastNKROReport;
+            }
+        }
+#elif KEYBOARD_TYPE == SIXKRO
+        if (i == REPORT_ID_NKRO) {
+            packet_size = sizeof(USB_6KRO_Data_t);
+            memset(data, 0, packet_size);
+            USB_6KRO_Data_t *report = (USB_6KRO_Data_t *)data;
+            report->rid = REPORT_ID_NKRO;
+            report->leftCtrl = usb_host_data->keyboard.leftCtrl;
+            report->leftShift = usb_host_data->keyboard.leftShift;
+            report->leftAlt = usb_host_data->keyboard.leftAlt;
+            report->lWin = usb_host_data->keyboard.lWin;
+            report->rightCtrl = usb_host_data->keyboard.rightCtrl;
+            report->rightShift = usb_host_data->keyboard.rightShift;
+            report->rightAlt = usb_host_data->keyboard.rightAlt;
+            report->rWin = usb_host_data->keyboard.rWin;
+            const uint8_t *keyData = usb_host_data->keyboard.raw;
+            uint8_t set = 0;
+            for (uint8_t keycode = 0; i < sizeof(usb_host_data->keyboard.raw) << 3 && set < SIMULTANEOUS_KEYS; keycode++) {
+                if (keyData[keycode >> 3] & (keycode & 7)) {
+                    report->KeyCode[set++] = keycode;
+                }
+            }
+            if (last_report) {
+                lastReportToCheck = &last_report->last6KROReport;
+            }
+        }
+#endif
 
-#define DPAD_REV()                                                                 \
-    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad]; \
-    asm volatile("" ::                                                             \
-                     : "memory");                                                  \
-    usb_host_data->dpadLeft |= dpad & LEFT;                                        \
-    usb_host_data->dpadRight |= dpad & RIGHT;                                      \
-    usb_host_data->dpadUp |= dpad & UP;                                            \
-    usb_host_data->dpadDown |= dpad & DOWN;
+        // If we are directly asked for a HID report, always just reply with the NKRO one
+        if (lastReportToCheck) {
+            uint8_t cmp = memcmp(lastReportToCheck, data, packet_size);
+            if (cmp == 0) {
+                packet_size = 0;
+                continue;
+            }
+            memcpy(lastReportToCheck, data, packet_size);
+            break;
+        } else {
+            break;
+        }
+    }
+    if (packet_size) {
+        return packet_size;
+    }
+}

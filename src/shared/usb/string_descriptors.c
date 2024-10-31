@@ -1,5 +1,6 @@
 #include "string_descriptors.h"
 #include "config.h"
+
 /** Language descriptor structure. This descriptor, located in FLASH memory, is
  * returned when the host requests the string descriptor with index 0 (the first
  * index). It is actually an array of 16-bit integers, which indicate via the

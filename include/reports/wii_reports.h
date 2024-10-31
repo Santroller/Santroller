@@ -155,7 +155,7 @@ typedef struct {
 
     uint8_t dpadUp : 1;
     uint8_t dpadLeft : 1;
-    uint8_t pedal : 1;
+    uint8_t kick1 : 1;
     uint8_t yellow : 1;
     uint8_t green : 1;
     uint8_t blue : 1;
@@ -168,8 +168,12 @@ typedef struct {
     uint8_t : 2;
     uint8_t leftStickY : 6;
     uint8_t : 2;
-    // Velocity is here but i don't want to emulate that right now
-    uint8_t : 8;
+    uint8_t : 1;
+    uint8_t which : 5;
+    uint8_t : 1;
+    uint8_t hhp;
+    uint8_t : 5;
+    uint8_t velocity : 3;
     uint8_t : 8;
 
     uint8_t : 1;

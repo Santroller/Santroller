@@ -68,7 +68,7 @@ typedef struct
 
     uint8_t tilt : 1;
     uint8_t green : 1;  // cross, green
-    uint8_t pedal: 1;
+    uint8_t kick1: 1;
     uint8_t : 1;
     uint8_t yellow : 1;  // triangle, yellow
     uint8_t red : 1;  // circle, red

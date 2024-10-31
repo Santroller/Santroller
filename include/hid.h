@@ -2,22 +2,19 @@
 #include <stdint.h>
 
 #include "config.h"
-#ifdef TICK_NKRO
+#if KEYBOARD_TYPE == NKRO
 #define NKRO_SIZE 65
+#define CONSUMER_SIZE 53
 #else
 #define NKRO_SIZE 0
+#define CONSUMER_SIZE 0
 #endif
-#ifdef TICK_SIXKRO
+#if KEYBOARD_TYPE == SIXKRO
 #define SIXKRO_SIZE 66
 #else
 #define SIXKRO_SIZE 0
 #endif
-#ifdef TICK_CONSUMER
-#define CONSUMER_SIZE 53
-#else
-#define CONSUMER_SIZE 0
-#endif
-#ifdef TICK_MOUSE
+#ifdef HAS_MOUSE
 #define MOUSE_SIZE 71
 #else
 #define MOUSE_SIZE 0

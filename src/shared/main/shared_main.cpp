@@ -522,13 +522,8 @@ uint8_t tick_xbox_one() {
 
 long lastTick;
 uint8_t keyboard_report = 0;
-// TODO: check the logic for all of this
-// TODO: split these into multiple files, its a touch messy like this
 void convert_report(const uint8_t *data, uint8_t len, uint8_t console_type, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
     switch (console_type) {
-        case WII: {
-            wii_to_universal_report(data, len, sub_type, usb_host_data);
-        }
         case PS2: {
             ps2_to_universal_report(data, len, sub_type, usb_host_data);
             break;
@@ -552,64 +547,19 @@ void convert_report(const uint8_t *data, uint8_t len, uint8_t console_type, uint
             break;
         }
         case KEYBOARD: {
-            USB_6KRO_Boot_Data_t *report = (USB_6KRO_Boot_Data_t *)data;
-            memcpy(&usb_host_data->keyboard, report, sizeof(USB_6KRO_Boot_Data_t));
+            keyboard_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case MOUSE: {
-            USB_Mouse_Boot_Data_t *report = (USB_Mouse_Boot_Data_t *)data;
-            memcpy(&usb_host_data->mouse, report, sizeof(USB_Mouse_Boot_Data_t));
+            mouse_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case GENERIC: {
-            USB_Host_Data_t *report = (USB_Host_Data_t *)data;
-            usb_host_data->genericAxisX = report->genericAxisX;
-            usb_host_data->genericAxisY = report->genericAxisY;
-            usb_host_data->genericAxisZ = report->genericAxisZ;
-            usb_host_data->genericAxisRx = report->genericAxisRx;
-            usb_host_data->genericAxisRy = report->genericAxisRy;
-            usb_host_data->genericAxisRz = report->genericAxisRz;
-            usb_host_data->genericAxisSlider = report->genericAxisSlider;
-            usb_host_data->dpadLeft |= report->dpadLeft;
-            usb_host_data->dpadRight |= report->dpadRight;
-            usb_host_data->dpadUp |= report->dpadUp;
-            usb_host_data->dpadDown |= report->dpadDown;
-            usb_host_data->genericButtons |= report->genericButtons;
+            generic_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case RAPHNET: {
-            switch (sub_type) {
-                case GAMEPAD: {
-                    RaphnetGamepad_Data_t *report = (RaphnetGamepad_Data_t *)data;
-                    TRANSLATE_GAMEPAD_NO_CLICK(RAPHNET_JOYSTICK, ORIGIN, report, usb_host_data);
-                    usb_host_data->dpadLeft |= report->left;
-                    usb_host_data->dpadRight |= report->right;
-                    usb_host_data->dpadUp |= report->up;
-                    usb_host_data->dpadDown |= report->down;
-                    break;
-                }
-                case GUITAR_HERO_GUITAR: {
-                    RaphnetGuitar_Data_t *report = (RaphnetGuitar_Data_t *)data;
-                    usb_host_data->dpadUp |= report->up;
-                    usb_host_data->dpadDown |= report->down;
-                    TRANSLATE_GH_GUITAR(PS3_XBOX_TRIGGER, PS3_XBOX_TRIGGER, PS3_XBOX_TRIGGER, RAPHNET_JOYSTICK, report, usb_host_data);
-                    break;
-                }
-                case GUITAR_HERO_DRUMS: {
-                    RaphnetDrum_Data_t *report = (RaphnetDrum_Data_t *)data;
-                    // TODO: wii drums are weird but i assume we can atleast share the logic for both types of wii drums
-                    usb_host_data->leftStickX = report->leftStickX - 16000;
-                    usb_host_data->leftStickY = report->leftStickY - 16000;
-                    usb_host_data->start = report->plus;
-                    usb_host_data->back = report->minus;
-                    usb_host_data->green |= report->green;
-                    usb_host_data->red |= report->red;
-                    usb_host_data->yellow |= report->yellow;
-                    usb_host_data->blue |= report->blue;
-                    usb_host_data->orange |= report->orange;
-                    break;
-                }
-            }
+            raphnet_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case SANTROLLER: {
@@ -649,74 +599,19 @@ void convert_report(const uint8_t *data, uint8_t len, uint8_t console_type, uint
             break;
         }
         case PS4: {
-            PS4Dpad_Data_t *report = (PS4Dpad_Data_t *)data;
-            DPAD_REV();
-            switch (sub_type) {
-                case GAMEPAD: {
-                    PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)data;
-                    TRANSLATE_GAMEPAD(PS3_JOYSTICK_REV, PS3_XBOX_TRIGGER_REV, report, usb_host_data);
-                    break;
-                }
-                case ROCK_BAND_GUITAR: {
-                    PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)data;
-                    TRANSLATE_RB_GUITAR(PS3_JOYSTICK_REV, PS3_JOYSTICK_REV, ORIGIN, PS3_JOYSTICK_REV, report, usb_host_data);
-                    TRANSLATE_RB_GUITAR_SPLIT_SOLO(report, usb_host_data);
-                    break;
-                }
-                case LIVE_GUITAR: {
-                    PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)data;
-                    TRANSLATE_GHL_GUITAR(PS3_GH_TILT_REV, ORIGIN, report, usb_host_data);
-                    break;
-                }
-            }
+            ps4_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case PS5: {
-            PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
-            DPAD_REV();
-            switch (sub_type) {
-                case GAMEPAD: {
-                    PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
-                    TRANSLATE_GAMEPAD(PS3_JOYSTICK_REV, PS3_XBOX_TRIGGER_REV, report, usb_host_data);
-                    break;
-                }
-                case ROCK_BAND_GUITAR: {
-                    PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)data;
-                    TRANSLATE_RB_GUITAR(PS3_JOYSTICK_REV, PS3_JOYSTICK_REV, ORIGIN, PS3_JOYSTICK_REV, report, usb_host_data);
-                    TRANSLATE_RB_GUITAR_SPLIT_SOLO(report, usb_host_data);
-                    break;
-                }
-            }
+            ps5_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case SWITCH: {
-            switch (sub_type) {
-                case GAMEPAD: {
-                    SwitchProGamepad_Data_t *report = (SwitchProGamepad_Data_t *)data;
-                    DPAD_REV();
-                    TRANSLATE_GAMEPAD(PS3_JOYSTICK_REV, PS3_XBOX_TRIGGER_REV, report, usb_host_data);
-                    break;
-                }
-            }
+            switch_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case XBOX360_BB: {
-            XInputBigButton_Data_t *report = (XInputBigButton_Data_t *)data;
-            usb_host_data->a |= report->a;
-            usb_host_data->b |= report->b;
-            usb_host_data->x |= report->x;
-            usb_host_data->y |= report->y;
-            usb_host_data->leftShoulder |= report->leftShoulder;
-            usb_host_data->rightShoulder |= report->rightShoulder;
-            usb_host_data->back |= report->back;
-            usb_host_data->start |= report->start;
-            usb_host_data->guide |= report->guide;
-            usb_host_data->leftThumbClick |= report->leftThumbClick;
-            usb_host_data->rightThumbClick |= report->rightThumbClick;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            x360bb_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case XBOX360_W:
@@ -731,7 +626,7 @@ void convert_report(const uint8_t *data, uint8_t len, uint8_t console_type, uint
     }
 }
 
-void convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     uint8_t dpad = 0;
     if (usb_host_data->dpadUp) {
         dpad |= UP;
@@ -757,83 +652,41 @@ void convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, uint8
     dpad = dpad_bindings[dpad];
     switch (console_type) {
         case OG_XBOX: {
-            universal_report_to_ogxbox(data, len, sub_type, usb_host_data);
+            return universal_report_to_ogxbox(data, len, sub_type, usb_host_data);
         }
         case BLUETOOTH_REPORT:
         case SANTROLLER: {
-            universal_report_to_santroller(dpad, data, len, sub_type, usb_host_data);
+            return universal_report_to_santroller(dpad, data, len, sub_type, usb_host_data);
         }
+#ifdef TICK_PS2
         case PS2: {
-            universal_report_to_ps2(data, len, sub_type, usb_host_data);
+            return universal_report_to_ps2(data, len, sub_type, usb_host_data);
         }
-        case WII: {
-#ifdef TICK_WII
-            universal_report_to_wii(data, len, sub_type, usb_host_data);
 #endif
-            break;
+#ifdef TICK_WII
+        case WII: {
+            return universal_report_to_wii(data, len, sub_type, usb_host_data);
         }
+#endif
         case SWITCH:
         case PS3: {
-            universal_report_to_ps3(dpad, data, len, sub_type, usb_host_data);
-            break;
+            return universal_report_to_ps3(dpad, data, len, console_type, sub_type, usb_host_data);
         }
         case PS4: {
-            PS4Dpad_Data_t *dpad_report = (PS4Dpad_Data_t *)data;
-            dpad_report->dpad = dpad;
-            dpad_report->guide |= usb_host_data->guide;
-            dpad_report->back |= usb_host_data->back;
-            dpad_report->start |= usb_host_data->start;
-            switch (sub_type) {
-                case GAMEPAD: {
-                    PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)data;
-                    TRANSLATE_GAMEPAD(PS3_JOYSTICK, PS3_XBOX_TRIGGER, usb_host_data, report);
-                    break;
-                }
-                case ROCK_BAND_GUITAR: {
-                    PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)data;
-                    TRANSLATE_RB_GUITAR(PS3_JOYSTICK, PS3_JOYSTICK, ORIGIN, PS3_JOYSTICK, usb_host_data, report);
-                    TRANSLATE_RB_GUITAR_SPLIT_SOLO(usb_host_data, report);
-                    break;
-                }
-                case LIVE_GUITAR: {
-                    PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)data;
-                    TRANSLATE_GHL_GUITAR(PS3_GH_TILT, ORIGIN, usb_host_data, report);
-                    break;
-                }
-            }
-            break;
+            return universal_report_to_ps4(dpad, data, len, sub_type, usb_host_data);
         }
         case PS5: {
-            PS5Gamepad_Data_t *dpad_report = (PS5Gamepad_Data_t *)data;
-            dpad_report->dpad = dpad;
-            dpad_report->guide |= usb_host_data->guide;
-            dpad_report->back |= usb_host_data->back;
-            dpad_report->start |= usb_host_data->start;
-            switch (sub_type) {
-                case GAMEPAD: {
-                    PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
-                    TRANSLATE_GAMEPAD(PS3_JOYSTICK, PS3_XBOX_TRIGGER, usb_host_data, report);
-                    break;
-                }
-                case ROCK_BAND_GUITAR: {
-                    PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)data;
-                    TRANSLATE_RB_GUITAR(PS3_JOYSTICK, PS3_JOYSTICK, ORIGIN, PS3_JOYSTICK, usb_host_data, report);
-                    TRANSLATE_RB_GUITAR_SPLIT_SOLO(usb_host_data, report);
-                    break;
-                }
-            }
-            break;
+            return universal_report_to_ps5(dpad, data, len, sub_type, usb_host_data);
         }
         case XBOX360_W:
         case XBOX360: {
-            universal_report_to_x360(data, len, sub_type, usb_host_data);
-            break;
+            return universal_report_to_x360(data, len, sub_type, usb_host_data);
         }
         case XBOXONE: {
-            universal_report_to_xbone(data, len, sub_type, usb_host_data);
-            break;
+            return universal_report_to_xbone(data, len, sub_type, usb_host_data);
         }
     }
+    return 0;
 }
 
 #ifdef TICK_PS2
@@ -984,6 +837,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
     USB_RB_Drums_t current_drum_report = {buttons : 0};
+    uint8_t current_mode = DEVICE_TYPE;
+    if (festival_gameplay_mode) {
+        current_mode = FORTNITE_GUITAR;
+    }
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -1004,7 +861,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef TICK_DETECTION_FESTIVAL
     TICK_DETECTION_FESTIVAL;
 #endif
-    convert_report_back((uint8_t *)buf, 0, output_console_type, output_console_type, &test_report);
+    // for (int i = 0; i < wiiBytes ; i++) {
+    //     printf("%02x, ",wiiData[i]);
+    // }
+    // printf("\r\n");
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     // if input queues are enabled, then we just tick as often as possible
     if (!buf) {
@@ -1043,10 +903,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // Tick all three reports, and then go for the first one that has changes
     // We prioritise NKRO, then Consumer, because these are both only buttons
     // Then mouse, as it is an axis so it is more likley to have changes
-#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
-#if !DEVICE_TYPE_IS_KEYBOARD
-    if (consoleType == KEYBOARD_MOUSE) {
-#endif
+#if DEVICE_TYPE_IS_KEYBOARD
         void *lastReportToCheck;
         for (int i = 1; i < REPORT_ID_END; i++) {
 #ifdef TICK_MOUSE
@@ -1114,17 +971,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (packet_size) {
             return packet_size;
         }
-#endif
-#if !(DEVICE_TYPE_IS_KEYBOARD)
-#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
     }
-#endif
+#else
+    if (wiiValid) {
+        wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &test_report);
+    }
+    if (ps2Valid) {
+        ps2_to_universal_report(ps2Data, sizeof(lastSuccessfulPS2Packet), ps2ControllerType, &test_report);
+    }
     USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
     uint8_t report_size;
     bool updateSequence = false;
     bool updateHIDSequence = false;
-    uint8_t proKeyVelocities[25] = {0};
-    memset(proKeyVelocities, 0, sizeof(proKeyVelocities));
 #if USB_HOST_STACK
     if (output_console_type == XBOXONE) {
         XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
@@ -1139,7 +997,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report_size = packet_size - sizeof(GipHeader_t);
         memset(buf, 0, packet_size);
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-        TICK_XBOX_ONE;
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, XBOXONE, current_mode, &test_report);
         asm volatile("" ::
                          : "memory");
 #if DEVICE_TYPE_IS_GUITAR
@@ -1173,320 +1031,59 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         GIP_HEADER((&reportGHL->guitar), GHL_HID_REPORT, false, hid_sequence_number);
         report_data = (USB_Report_Data_t *)&reportGHL->guitar.report;
         updateHIDSequence = true;
+        report_size = convert_report_back((uint8_t *)report_data, 0, PS3, current_mode, &test_report);
 #endif
     }
 #endif
     if (output_console_type == OG_XBOX) {
-        OG_XBOX_REPORT *report = (OG_XBOX_REPORT *)report_data;
-        memset(report_data, 0, sizeof(OG_XBOX_REPORT));
-        report->rid = 0;
-        report->rsize = sizeof(OG_XBOX_REPORT);
-// Whammy on the xbox guitars goes from min to max, so it needs to default to min
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-        report->whammy = INT16_MIN;
-#endif
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->effectsKnob = INT16_MIN;
-#endif
-        TICK_OG_XBOX;
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-        FLAM();
-#endif
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, OG_XBOX, current_mode, &test_report);
         report_size = packet_size = sizeof(OG_XBOX_REPORT);
     }
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
-        XINPUT_REPORT *report = (XINPUT_REPORT *)report_data;
-        memset(report_data, 0, sizeof(XINPUT_REPORT));
-        report->rid = 0;
-        report->rsize = sizeof(XINPUT_REPORT);
-// Whammy on the xbox guitars goes from min to max, so it needs to default to min
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-        report->whammy = INT16_MIN;
-#endif
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->effectsKnob = INT16_MIN;
-#endif
-        TICK_XINPUT;
-
-#if PRO_GUITAR && USB_HOST_STACK
-        TRANSLATE_PRO_GUITAR((&usb_host_data), report)
-#endif
-#if PRO_GUITAR && BLUETOOTH_RX
-        TRANSLATE_PRO_GUITAR((&bt_data), report)
-#endif
-        asm volatile("" ::
-                         : "memory");
-
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-        FLAM();
-#endif
-#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
-        uint8_t currentVel = 0;
-        for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
-            if (proKeyVelocities[i]) {
-                report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
-                currentVel++;
-            }
-        }
-#endif
-// xb360 is stupid
-#if DEVICE_TYPE == GUITAR_HERO_DRUMS
-        report->leftThumbClick = true;
-#endif
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, XBOX360, current_mode, &test_report);
         report_size = packet_size = sizeof(XINPUT_REPORT);
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
 #if SUPPORTS_PS4
-    if (output_console_type == PS4 || output_console_type == IOS_FESTIVAL) {
+    if (output_console_type == PS4) {
         if (millis() > 450000 && !auth_ps4_controller_found) {
             reset_usb();
         }
-        PS4_REPORT *report = (PS4_REPORT *)report_data;
-        memset(report, 0, sizeof(PS4_REPORT));
-        PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)report;
-        gamepad->report_id = 0x01;
-        gamepad->leftStickX = PS3_STICK_CENTER;
-        gamepad->leftStickY = PS3_STICK_CENTER;
-        gamepad->rightStickX = PS3_STICK_CENTER;
-        gamepad->rightStickY = PS3_STICK_CENTER;
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS4, current_mode, &test_report);
+        PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)buf;
         // PS4 does not start using the controller until it sees a PS button press.
         if (!seen_ps4_console) {
-            report->guide = true;
+            gamepad->guide = true;
         }
-        TICK_PS4;
-
-#if PRO_GUITAR && USB_HOST_STACK
-        TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-#endif
-#if PRO_GUITAR && BLUETOOTH_RX
-        TRANSLATE_TO_PRO_GUITAR(bt_data)
-#endif
-        asm volatile("" ::
-                         : "memory");
-        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = packet_size = sizeof(PS4_REPORT);
     }
 #endif
-#ifdef TICK_FESTIVAL
+    // IOS works native with PS3 gamepads in FNF so thats what we emulate for that scenario
     if (output_console_type == IOS_FESTIVAL) {
-        if (!festival_gameplay_mode) {
-            PS3GamepadGuitar_Data_t *report = (PS3GamepadGuitar_Data_t *)report_data;
-            memset(report, 0, sizeof(PS3GamepadGuitar_Data_t));
-            report->reportId = 1;
-            report->accelX = PS3_ACCEL_CENTER;
-            report->accelY = PS3_ACCEL_CENTER;
-            report->accelZ = PS3_ACCEL_CENTER;
-            report->gyro = PS3_ACCEL_CENTER;
-            report->leftStickX = PS3_STICK_CENTER;
-            report->leftStickY = PS3_STICK_CENTER;
-            report->rightStickX = PS3_STICK_CENTER;
-            report->rightStickY = PS3_STICK_CENTER;
-            TICK_PS3_WITHOUT_CAPTURE;
-            report_size = packet_size = sizeof(PS3GamepadGuitar_Data_t);
-        } else {
-            PS3FestivalProGuitarLayer_Data_t *report = (PS3FestivalProGuitarLayer_Data_t *)report_data;
-            memset(report, 0, sizeof(PS3FestivalProGuitarLayer_Data_t));
-            report->reportId = 0x01;
-            report->leftStickX = PS3_STICK_CENTER;
-            report->leftStickY = PS3_STICK_CENTER;
-            report->rightStickX = PS3_STICK_CENTER;
-            report->rightStickY = PS3_STICK_CENTER;
-            TICK_FESTIVAL;
-            report_size = packet_size = sizeof(PS3FestivalProGuitarLayer_Data_t);
-        }
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, IOS_FESTIVAL, current_mode, &test_report);
     }
-#endif
     if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
-#ifdef TICK_FESTIVAL
-        if (!festival_gameplay_mode) {
-#endif
-            PC_REPORT *report = (PC_REPORT *)report_data;
-            report_size = packet_size = sizeof(PC_REPORT);
-            memset(report, 0, sizeof(PC_REPORT));
-#if DEVICE_TYPE == GAMEPAD
-            report->leftStickX = PS3_STICK_CENTER;
-            report->leftStickY = PS3_STICK_CENTER;
-            report->rightStickX = PS3_STICK_CENTER;
-            report->rightStickY = PS3_STICK_CENTER;
-#endif
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-            report->tilt = PS3_STICK_CENTER;
-            report->whammy = 0;
-#endif
-#if DEVICE_TYPE == GUITAR_HERO_GUITAR
-            report->slider = PS3_STICK_CENTER;
-#endif
-#if DEVICE_TYPE == ROCK_BAND_GUITAR
-            report->pickup = PS3_STICK_CENTER;
-#endif
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            report->leftTableVelocity = PS3_STICK_CENTER;
-            report->rightTableVelocity = PS3_STICK_CENTER;
-            report->crossfader = PS3_STICK_CENTER;
-            report->effectsKnob = 0;
-#endif
-            report->reportId = 1;
-            TICK_PC;
-
-#if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_PRO_GUITAR((&usb_host_data), report)
-#endif
-#if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_PRO_GUITAR((&bt_data), report)
-#endif
-            asm volatile("" ::
-                             : "memory");
-            report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
-#ifdef TICK_FESTIVAL
-        } else {
-            FestivalProGuitarLayer_Data_t *report = (FestivalProGuitarLayer_Data_t *)report_data;
-            report_size = packet_size = sizeof(FestivalProGuitarLayer_Data_t);
-            memset(report, 0, sizeof(FestivalProGuitarLayer_Data_t));
-            report->unused[0] = PS3_STICK_CENTER;
-            report->unused[1] = PS3_STICK_CENTER;
-            report->slider = PS3_STICK_CENTER;
-            report->reportId = 1;
-            TICK_FESTIVAL;
-
-            asm volatile("" ::
-                             : "memory");
-            report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
-        }
-#endif
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, UNIVERSAL, current_mode, &test_report);
     }
 
 #if DEVICE_TYPE_IS_GUITAR
     if (output_console_type == FNF) {
-        report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
-        PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)report_data;
-        memset(report, 0, sizeof(PCFortniteRockBandGuitar_Data_t));
-
-#if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
-        report->tilt = PS3_STICK_CENTER;
-#endif
-        report->reportId = GIP_INPUT_REPORT;
-        TICK_XBOX_ONE;
-        asm volatile("" ::
-                         : "memory");
-        //  alias tilt to dpad left so that tilt works
-        if (report->tilt > 200 || report->back) {
-            report->dpadLeft = true;
-        }
-        report->back = false;
+        convert_report_back((uint8_t *)buf, 0, FNF, current_mode, &test_report);
     }
 #endif
 // For gamepads, use the PS3 report format on PS3
 #if DEVICE_TYPE == GAMEPAD
     if (output_console_type == PS3) {
-        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
-        memset(report, 0, sizeof(PS3Gamepad_Data_t));
-        report->reportId = 1;
-        report->accelX = PS3_ACCEL_CENTER;
-        report->accelY = PS3_ACCEL_CENTER;
-        report->accelZ = PS3_ACCEL_CENTER;
-        report->gyro = PS3_ACCEL_CENTER;
-        report->leftStickX = PS3_STICK_CENTER;
-        report->leftStickY = PS3_STICK_CENTER;
-        report->rightStickX = PS3_STICK_CENTER;
-        report->rightStickY = PS3_STICK_CENTER;
-        TICK_PS3_WITHOUT_CAPTURE;
+        convert_report_back((uint8_t *)buf, 0, PS3, current_mode, &test_report);
         report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
     if (output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
 #else
     // For instruments, we instead use the below block, as all other console types use the below format
-    if ((output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence) {
+    if ((output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE)) {
 #endif
-        report_size = sizeof(PS3_REPORT);
-        // Do NOT update the size for XBONE, since the XBONE packets have a totally different size!
-        if (!updateHIDSequence) {
-            packet_size = report_size;
-        }
-
-        PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)report_data;
-        memset(gamepad, 0, sizeof(PS3Dpad_Data_t));
-
-        asm volatile("" ::
-                         : "memory");
-        gamepad->accelX = PS3_ACCEL_CENTER;
-        gamepad->accelY = PS3_ACCEL_CENTER;
-        gamepad->accelZ = PS3_ACCEL_CENTER;
-        gamepad->gyro = PS3_ACCEL_CENTER;
-        gamepad->leftStickX = PS3_STICK_CENTER;
-        gamepad->leftStickY = PS3_STICK_CENTER;
-#if DEVICE_TYPE != ROCK_BAND_PRO_KEYS
-        // For Pro Keys, these bytes should be 0 by default
-        gamepad->rightStickX = PS3_STICK_CENTER;
-        gamepad->rightStickY = PS3_STICK_CENTER;
-#endif
-
-#ifdef TICK_FESTIVAL
-        if (!festival_gameplay_mode) {
-#endif
-            PS3_REPORT *report = (PS3_REPORT *)report_data;
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            report->effectsKnob = 0;
-#endif
-#if DEVICE_TYPE == ROCK_BAND_GUITAR
-            report->whammy = 0;
-#endif
-            TICK_PS3;
-
-#if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_PRO_GUITAR((&usb_host_data), report)
-#endif
-#if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_PRO_GUITAR((&bt_data), report)
-#endif
-            asm volatile("" ::
-                             : "memory");
-#ifdef TICK_FESTIVAL
-            if (output_console_type == SWITCH) {
-                gamepad->accelX = PS3_ACCEL_CENTER;
-                gamepad->accelY = PS3_ACCEL_CENTER;
-                gamepad->accelZ = PS3_ACCEL_CENTER;
-                gamepad->gyro = PS3_ACCEL_CENTER;
-                gamepad->leftStickX = PS3_STICK_CENTER;
-                gamepad->leftStickY = PS3_STICK_CENTER;
-                gamepad->rightStickX = PS3_STICK_CENTER;
-                gamepad->rightStickY = PS3_STICK_CENTER;
-            }
-#endif
-
-#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
-            uint8_t currentVel = 0;
-            for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
-                if (proKeyVelocities[i]) {
-                    report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
-                    currentVel++;
-                }
-            }
-#endif
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-            FLAM();
-#endif
-            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-            if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
-                bool a = gamepad->a;
-                bool b = gamepad->b;
-                bool x = gamepad->x;
-                bool y = gamepad->y;
-                gamepad->b = a;
-                gamepad->a = b;
-                gamepad->x = y;
-                gamepad->y = x;
-            }
-#ifdef TICK_FESTIVAL
-        } else {
-            SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)report_data;
-            TICK_FESTIVAL;
-
-            asm volatile("" ::
-                             : "memory");
-            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
-        }
-#endif
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS3, current_mode, &test_report);
     }
 
     TICK_RESET

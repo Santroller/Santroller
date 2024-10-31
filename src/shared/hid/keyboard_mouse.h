@@ -14,7 +14,7 @@
 #define EndCharacter 0x73
 #define NkroSize (EndCharacter+1)
 const PROGMEM uint8_t keyboard_mouse_descriptor[] = {
-    #ifdef TICK_NKRO
+    #if KEYBOARD_TYPE==NKRO
     0x05, 0x01,                                                                              // Usage Page (Generic Desktop Ctrls)
     0x09, 0x06,                                                                              // Usage (Keyboard)
     0xA1, 0x01,                                                                              // Collection (Application)
@@ -50,8 +50,7 @@ const PROGMEM uint8_t keyboard_mouse_descriptor[] = {
     0x75, 0x03,                                                                              //   Report Size (3)
     0x91, 0x01,                                                                              //   Output (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0xC0,                                                                                    // End Collection
-    #endif
-    #ifdef TICK_SIXKRO
+    #elif KEYBOARD_TYPE==SIXKRO
     0x05, 0x01,                                                                              // Usage Page (Generic Desktop Ctrls)
     0x09, 0x06,                                                                              // Usage (Keyboard)
     0xA1, 0x01,                                                                              // Collection (Application)
@@ -86,7 +85,7 @@ const PROGMEM uint8_t keyboard_mouse_descriptor[] = {
     0x91, 0x01,                                                                              //   Output (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0xC0,                                                                                    // End Collection
     #endif
-    #ifdef TICK_MOUSE
+    #ifdef HAS_MOUSE
     0x05, 0x01,                                                                              // Usage Page (Generic Desktop Ctrls)
     0x09, 0x02,                                                                              // Usage (Mouse)
     0xA1, 0x01,                                                                              // Collection (Application)
@@ -125,7 +124,7 @@ const PROGMEM uint8_t keyboard_mouse_descriptor[] = {
     0xC0,                                                                                    //   End Collection
     0xC0,                                                                                    // End Collection
     #endif
-    #ifdef TICK_CONSUMER
+    #if KEYBOARD_TYPE==NKRO
     0x05, 0x0C,                                                                              /* usage page (consumer device) */
     0x09, 0x01,                                                                              /* usage -- consumer control */
     0xA1, 0x01,                                                                              /* collection (application) */

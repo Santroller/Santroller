@@ -2,16 +2,15 @@
 sort: 9
 ---
 
-# Adding APA102 RGB LEDs to controllers
+# Adding SK9822 or APA102 RGB LEDs to controllers
 
 You can add LEDs that will light up when a button or analogue input is pressed. For people playing YARG, you can also make the frets light up based on in-game events such as Star Power.
 
 ## Supplies
 
 - A controller modded using any of the guides
-- Some APA102s (or Dotstar or SK9822 or APA107 or HD107s as these are all compatible / clones of the APA102)
-  - Note that if your using JLCPCB, the SK9822 is often available when the APA102 is not.
-  - Even though its a clone, the SK9822 is actually a better LED than the APA102. The APA102s will flicker at low brightness, the SK9822 will not.
+- Some SK9822s (or Dotstar or APA102 or APA107 or HD107s as these are all compatible / clones of the APA102)
+  - Note that the SK9822 is a clone of the APA102, but it uses a constant current driver so it functions better at low brightnesses and it is more available.
 
 ## The finished product
 

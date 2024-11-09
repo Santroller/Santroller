@@ -53,8 +53,6 @@ enum SerialCommands {
     MAX=100
 };
 
-extern uint8_t lastSuccessfulPS2Packet[32];
-extern uint8_t lastSuccessfulWiiPacket[8];
 extern uint8_t lastSuccessfulTurntablePacketLeft[3];
 extern uint8_t lastSuccessfulTurntablePacketRight[3];
 extern uint8_t lastSuccessfulGH5Packet[2];

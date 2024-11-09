@@ -115,6 +115,8 @@ USB_Device_Type_t get_usb_host_device_type(uint8_t id);
 uint8_t get_usb_host_device_data(uint8_t id, uint8_t *buf);
 extern USB_Host_Data_t usb_host_data;
 extern USB_Host_Data_t last_usb_host_data;
+extern USB_Host_Data_t lastSuccessfulPS2Packet;
+extern USB_Host_Data_t lastSuccessfulWiiPacket;
 #endif
 extern USB_Host_Data_t bt_data;
 extern USB_Host_Data_t last_report;

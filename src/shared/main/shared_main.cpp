@@ -83,8 +83,6 @@ int16_t dj_sum_right = 0;
 int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
-USB_Host_Data_t wii_report;
-USB_Host_Data_t ps2_report;
 USB_Host_Data_t last_report;
 USB_Report_Data_t bt_report;
 uint8_t debounce[DIGITAL_COUNT];
@@ -104,8 +102,6 @@ bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
-uint8_t lastSuccessfulPS2Packet[BUFFER_SIZE];
-uint8_t lastSuccessfulWiiPacket[8];
 uint8_t lastSuccessfulGH5Packet[2];
 uint8_t lastSuccessfulClonePacket[4];
 uint8_t lastSuccessfulTurntablePacketLeft[3];
@@ -123,6 +119,8 @@ bool disable_multiplexer = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
+USB_Host_Data_t lastSuccessfulPS2Packet;
+USB_Host_Data_t lastSuccessfulWiiPacket;
 uint8_t wii_data[8];
 #ifdef INPUT_USB_HOST
 uint8_t temp_report_usb_host[128];

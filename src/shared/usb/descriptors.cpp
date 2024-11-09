@@ -1245,10 +1245,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = xbox_360_vid;
                 dev->idProduct = xbox_360_pid;
             } else if (consoleType == OG_XBOX) {
-                dev->idVendor = 0x045E;
-                dev->idProduct = 0x0289;
+                dev->idVendor = MICROSOFT_VID;
+                dev->idProduct = DUKE_PID;
             } else if (consoleType == XBOXONE) {
-                dev->idVendor = XBOX_ONE_CONTROLLER_VID;
+                dev->idVendor = MICROSOFT_VID;
                 dev->idProduct = XBOX_ONE_CONTROLLER_PID;
                 dev->bDeviceClass = 0xff;
                 dev->bDeviceSubClass = 0x47;
@@ -1361,14 +1361,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
-#if CONSOLE_TYPE == MIDI_ID
-            size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
-            memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
-#elif DEVICE_TYPE_IS_KEYBOARD
-            size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
-            memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
-#else
-
+            if (consoleType == MIDI_TYPE) {
+                size = sizeof(MIDI_CONFIGURATION_DESCRIPTOR);
+                memcpy_P(descriptorBuffer, &MIDIConfigurationDescriptor, size);
+            }
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
@@ -1470,17 +1466,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->Config.wTotalLength = sizeof(HID_CONFIGURATION_DESCRIPTOR);
                 }
             }
-#endif
             break;
         }
         case HID_DESCRIPTOR_REPORT: {
             const void *address;
             seen_hid_descriptor_read = true;
-#if DEVICE_TYPE_IS_KEYBOARD
-            address = keyboard_mouse_descriptor;
-            size = sizeof(keyboard_mouse_descriptor);
-#else
-
             if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
@@ -1545,7 +1535,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 address = ps3_instrument_descriptor;
                 size = sizeof(ps3_instrument_descriptor);
             }
-#endif
             memcpy_P(descriptorBuffer, address, size);
             break;
         }

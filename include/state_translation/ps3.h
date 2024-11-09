@@ -570,6 +570,17 @@ inline uint8_t universal_report_to_ps3(uint8_t dpad, uint8_t *data, uint8_t len,
             report->slider = usb_host_data->slider;
             return sizeof(PS3GuitarHeroGuitar_Data_t);
         }
+        case GUITAR_HERO_GUITAR_PS2_ON_PS3: {
+            PS2OnPs3GuitarHeroGuitar_Data_t *report = (PS2OnPs3GuitarHeroGuitar_Data_t *)data;
+            report->green = usb_host_data->green;
+            report->red = usb_host_data->red;
+            report->yellow = usb_host_data->yellow;
+            report->blue = usb_host_data->blue;
+            report->orange = usb_host_data->orange;
+            report->tilt = usb_host_data->tilt > 20000;
+            report->whammy = 0x7f - (usb_host_data->whammy >> 1);
+            return sizeof(PS2OnPs3GuitarHeroGuitar_Data_t);
+        }
         case ROCK_BAND_DRUMS: {
             PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
             report->green = usb_host_data->green;

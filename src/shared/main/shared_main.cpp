@@ -1057,18 +1057,12 @@ uint8_t tick_inputs(USB_Host_Data_t *report, USB_LastReport_Data_t *last_report,
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
-#include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
 #include "inputs/turntable.h"
 #include "inputs/usb_host.h"
-#include "inputs/wii.h"
 #include "inputs/wt_neck.h"
-    if (wiiValid) {
-        wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &wii_report);
-    }
-    if (ps2Valid) {
-        ps2_to_universal_report(ps2Data, sizeof(lastSuccessfulPS2Packet), ps2ControllerType, &ps2_report);
-    }
+#include "inputs/ps2.h"
+#include "inputs/wii.h"
     TICK_SHARED;
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {

@@ -11,5 +11,6 @@
     lastWiiWasSuccessful = wiiValid;
     if (wiiValid) {
         memcpy(lastSuccessfulWiiPacket, wiiData, sizeof(lastSuccessfulWiiPacket));
+        wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &wii_report);
     }
 #endif

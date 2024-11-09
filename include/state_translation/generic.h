@@ -155,7 +155,7 @@ inline int universal_report_to_keyboard_mouse(uint8_t *data, USB_LastReport_Data
             report->rWin = usb_host_data->keyboard.rWin;
             const uint8_t *keyData = usb_host_data->keyboard.raw;
             uint8_t set = 0;
-            for (uint8_t keycode = 0; i < sizeof(usb_host_data->keyboard.raw) << 3 && set < SIMULTANEOUS_KEYS; keycode++) {
+            for (uint8_t keycode = 0; keycode < sizeof(usb_host_data->keyboard.raw) << 3 && set < SIMULTANEOUS_KEYS; keycode++) {
                 if (keyData[keycode >> 3] & (keycode & 7)) {
                     report->KeyCode[set++] = keycode;
                 }

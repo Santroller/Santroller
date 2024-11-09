@@ -79,15 +79,17 @@ extern const uint8_t fnf_descriptor[53];
 extern long last_strobe;
 extern uint8_t stage_kit_millis[5];
 extern uint8_t strobe_delay;
-#if DEVICE_TYPE_IS_INSTRUMENT
-#if HID_BUTTON_PADDING
-extern const uint8_t pc_descriptor[90 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
-#else
-extern const uint8_t pc_descriptor[86 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
-#endif
-#else
-extern const uint8_t pc_descriptor[134];
-#endif
+extern const uint8_t pc_descriptor_gh_guitar[122];
+extern const uint8_t pc_descriptor_rb_guitar[122];
+extern const uint8_t pc_descriptor_rb_pro_guitar[142];
+extern const uint8_t pc_descriptor_rb_pro_keys[174];
+extern const uint8_t pc_descriptor_live_guitar[122];
+extern const uint8_t pc_descriptor_gh_guitar[122];
+extern const uint8_t pc_descriptor_gh_drums[128];
+extern const uint8_t pc_descriptor_rb_drums[134];
+extern const uint8_t pc_descriptor_turntable[124];
+extern const uint8_t pc_descriptor_gamepad[134];
+extern const uint8_t pc_descriptor_buttons[134];
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right);

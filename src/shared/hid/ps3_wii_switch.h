@@ -106,95 +106,246 @@ const uint8_t PROGMEM fnf_descriptor[] = {
     0x81, 0x02,              //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0xC0,                    // End Collection
 };
-#if DEVICE_TYPE_IS_INSTRUMENT
-const uint8_t PROGMEM pc_descriptor[] = {
-    0x05, 0x01,              // Usage Page (Generic Desktop Ctrls)
-    0x09, 0x05,              // Usage (Game Pad)
-    0xA1, 0x01,              // Collection (Application)
-    0x85, 0x01,              //   Report ID (1)
-    0x15, 0x00,              //   Logical Minimum (0)
-    0x25, 0x01,              //   Logical Maximum (1)
-    0x35, 0x00,              //   Physical Minimum (0)
-    0x45, 0x01,              //   Physical Maximum (1)
-    0x75, 0x01,              //   Report Size (1)
-    0x95, HID_BUTTON_COUNT,  //   Report Count (HID_BUTTON_COUNT)
-    0x05, 0x09,              //   Usage Page (Button)
-    HID_BUTTON_USAGES,
-    0x81, 0x02,  //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-#if HID_BUTTON_PADDING
-    0x95, HID_BUTTON_PADDING,  //   Report Count (HID_BUTTON_PADDING)
-    0x81, 0x01,                //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-#endif
-    0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
-    0x25, 0x07,        //   Logical Maximum (7)
-    0x46, 0x3B, 0x01,  //   Physical Maximum (315)
-    0x75, 0x04,        //   Report Size (4)
-    0x95, 0x01,        //   Report Count (1)
-    0x65, 0x14,        //   Unit (System: English Rotation, Length: Centimeter)
-    0x09, 0x39,        //   Usage (Hat switch)
-    0x81, 0x42,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null State)
-    0x65, 0x00,        //   Unit (None)
-    0x95, 0x01,        //   Report Count (1)
-    0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-    0x26, 0xFF, 0x00,  //   Logical Maximum (255)
-    0x46, 0xFF, 0x00,  //   Physical Maximum (255)
-#if HID_AXIS_COUNT >= 1
-    0x09, 0x30,  //   Usage (X)
-#endif
-#if HID_AXIS_COUNT >= 2
-    0x09, 0x31,  //   Usage (Y)
-#endif
-#if HID_AXIS_COUNT >= 3
-    0x09, 0x33,  //   Usage (RX)
-#endif
-#if HID_AXIS_COUNT >= 4
-    0x09, 0x34,  //   Usage (RY)
-#endif
-#if HID_AXIS_COUNT >= 5
-    0x09, 0x32,  //   Usage (Z)
-#endif
-#if HID_AXIS_COUNT >= 6
-    0x09, 0x35,  //   Usage (RZ)
-#endif
-#if HID_AXIS_COUNT >= 7
-    0x09, 0x36,  //   Usage (Slider)
-#endif
-#if HID_AXIS_COUNT >= 8
-    0x09, 0x37,  //   Usage (Slider)
-#endif
-#if HID_AXIS_COUNT >= 9
-    0x09, 0x38,  //   Usage (Slider)
-#endif
-#if HID_AXIS_COUNT >= 10
-    0x09, 0x39,  //   Usage (Slider)
-#endif
-#if HID_AXIS_COUNT >= 11
-    0x09, 0x40,  //   Usage (Slider)
-#endif
-#if HID_AXIS_COUNT >= 12
-    0x09, 0x41,  //   Usage (Slider)
-#endif
-#if HID_AXIS_COUNT >= 13
-    0x09, 0x42,  //   Usage (Slider)
-#endif
-    0x75, 0x08,            //   Report Size (8)
-    0x95, HID_AXIS_COUNT,  //   Report Count (4)
-    0x81, 0x02,            //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-    0x0A, 0x21, 0x26,      //   Usage (0x2621)
-    0x95, 0x08,            //   Report Count (8)
-    0x91, 0x02,            //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
-    0x06, 0x00, 0xFF,      //   Usage Page (Vendor Defined 0xFF00)
-    0x85, 0x03,            //   Report ID (3)
-    0x0A, 0x21, 0x27,      //   Usage (0x2721)
-    0x95, 0x2F,            //   Report Count (47)
-    0xB1, 0x02,            //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
-    0x0A, 0x21, 0x26,      //   Usage (0x2621)
-    0x95, 0x20,            //   Report Count (32)
-    0xB1, 0x02,            //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
-    0xC0,                  // End Collection
-};
-#else
-const uint8_t PROGMEM pc_descriptor[] = {
+
+#define HID_BUTTON_PADDING(HID_BUTTON_COUNT) ((HID_BUTTON_COUNT % 8) ? (8 - (HID_BUTTON_COUNT % 8)) : 0)
+#define HID_AXIS_USAGE1 0x09, 0x30                     //   Usage (X)
+#define HID_AXIS_USAGE2 HID_AXIS_USAGE1, 0x09, 0x31    //   Usage (Y)
+#define HID_AXIS_USAGE3 HID_AXIS_USAGE2, 0x09, 0x33    //   Usage (RX)
+#define HID_AXIS_USAGE4 HID_AXIS_USAGE3, 0x09, 0x34    //   Usage (RY)
+#define HID_AXIS_USAGE5 HID_AXIS_USAGE4, 0x09, 0x32    //   Usage (Z)
+#define HID_AXIS_USAGE6 HID_AXIS_USAGE5, 0x09, 0x35    //   Usage (RZ)
+#define HID_AXIS_USAGE7 HID_AXIS_USAGE6, 0x09, 0x36    //   Usage (Slider)
+#define HID_AXIS_USAGE8 HID_AXIS_USAGE7, 0x09, 0x37    //   Usage (?)
+#define HID_AXIS_USAGE9 HID_AXIS_USAGE8, 0x09, 0x38    //   Usage (?)
+#define HID_AXIS_USAGE10 HID_AXIS_USAGE9, 0x09, 0x39   //   Usage (?)
+#define HID_AXIS_USAGE11 HID_AXIS_USAGE10, 0x09, 0x40  //   Usage (?)
+#define HID_AXIS_USAGE12 HID_AXIS_USAGE11, 0x09, 0x41  //   Usage (?)
+#define HID_AXIS_USAGE13 HID_AXIS_USAGE12, 0x09, 0x42  //   Usage (?)
+
+#define PC_DESCRIPTOR(HID_BUTTON_COUNT, HID_BUTTON_USAGES, HID_AXIS_COUNT)                                                         \
+    {                                                                                                                              \
+        0x05, 0x01,             /* Usage Page (Generic Desktop Ctrls)*/                                                            \
+        0x09, 0x05,             /* Usage (Game Pad)*/                                                                              \
+        0xA1, 0x01,             /* Collection (Application)*/                                                                      \
+        0x85, 0x01,             /*   Report ID (1)*/                                                                               \
+        0x15, 0x00,             /*   Logical Minimum (0)*/                                                                         \
+        0x25, 0x01,             /*   Logical Maximum (1)*/                                                                         \
+        0x35, 0x00,             /*   Physical Minimum (0)*/                                                                        \
+        0x45, 0x01,             /*   Physical Maximum (1)*/                                                                        \
+        0x75, 0x01,             /*   Report Size (1)*/                                                                             \
+        0x95, HID_BUTTON_COUNT, /*   Report Count (HID_BUTTON_COUNT)*/                                                             \
+        0x05, 0x09,             /*   Usage Page (Button)*/                                                                         \
+        HID_BUTTON_USAGES,                                                                                                         \
+        0x81, 0x02,                                 /*   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)*/    \
+        0x95, HID_BUTTON_PADDING(HID_BUTTON_COUNT), /*   Report Count (HID_BUTTON_PADDING)*/                                       \
+        0x81, 0x01,                                 /*   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)*/ \
+        0x05, 0x01,                                 /*   Usage Page (Generic Desktop Ctrls)*/                                      \
+        0x25, 0x07,                                 /*   Logical Maximum (7)*/                                                     \
+        0x46, 0x3B, 0x01,                           /*   Physical Maximum (315)*/                                                  \
+        0x75, 0x04,                                 /*   Report Size (4)*/                                                         \
+        0x95, 0x01,                                 /*   Report Count (1)*/                                                        \
+        0x65, 0x14,                                 /*   Unit (System: English Rotation, Length: Centimeter)*/                     \
+        0x09, 0x39,                                 /*   Usage (Hat switch)*/                                                      \
+        0x81, 0x42,                                 /*   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null State)*/          \
+        0x65, 0x00,                                 /*   Unit (None)*/                                                             \
+        0x95, 0x01,                                 /*   Report Count (1)*/                                                        \
+        0x81, 0x01,                                 /*   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)*/ \
+        0x26, 0xFF, 0x00,                           /*   Logical Maximum (255)*/                                                   \
+        0x46, 0xFF, 0x00,                           /*   Physical Maximum (255)*/                                                  \
+        HID_AXIS_USAGE##HID_AXIS_COUNT,             /*   Usages */                                                                 \
+        0x75,                                                                                                                      \
+        0x08,                 /*   Report Size (8)*/                                                                               \
+        0x95, HID_AXIS_COUNT, /*   Report Count (4)*/                                                                              \
+        0x81, 0x02,           /*   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)*/                          \
+        0x0A, 0x21, 0x26,     /*   Usage (0x2621)*/                                                                                \
+        0x95, 0x08,           /*   Report Count (8)*/                                                                              \
+        0x91, 0x02,           /*   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)*/            \
+        0x06, 0x00, 0xFF,     /*   Usage Page (Vendor Defined 0xFF00)*/                                                            \
+        0x85, 0x03,           /*   Report ID (3)*/                                                                                 \
+        0x0A, 0x21, 0x27,     /*   Usage (0x2721)*/                                                                                \
+        0x95, 0x2F,           /*   Report Count (47)*/                                                                             \
+        0xB1, 0x02,           /*   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)*/           \
+        0x0A, 0x21, 0x26,     /*   Usage (0x2621)*/                                                                                \
+        0x95, 0x20,           /*   Report Count (32)*/                                                                             \
+        0xB1, 0x02,           /*   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)*/           \
+        0xC0,                 /* End Collection*/                                                                                  \
+    };
+#define BUTTON_USAGES          \
+    BTN_USAGE(BTN_X),          \
+        BTN_USAGE(BTN_A),      \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2),    \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_THUMBL), \
+        BTN_USAGE(BTN_THUMBR), \
+        BTN_USAGE(BTN_GUIDE),  \
+        BTN_USAGE(BTN_C)
+
+const uint8_t PROGMEM pc_descriptor_buttons[] = PC_DESCRIPTOR(14, BUTTON_USAGES, 6);
+#define GH_GUITAR_USAGES       \
+    BTN_USAGE(BTN_A),          \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_X),      \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_GUIDE),  \
+        BTN_USAGE(BTN_C),      \
+        BTN_USAGE(BTN_Z),      \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2)
+
+const uint8_t PROGMEM pc_descriptor_gh_guitar[] = PC_DESCRIPTOR(13, GH_GUITAR_USAGES, 3);
+
+#define RB_GUITAR_USAGES       \
+    BTN_USAGE(BTN_A),          \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_X),      \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2),    \
+        BTN_USAGE(BTN_C),      \
+        BTN_USAGE(BTN_Z),      \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_GUIDE)
+
+const uint8_t PROGMEM pc_descriptor_rb_guitar[] = PC_DESCRIPTOR(13, GH_GUITAR_USAGES, 3);
+
+#define RB_PRO_GUITAR_USAGES   \
+    BTN_USAGE(BTN_X),          \
+        BTN_USAGE(BTN_A),      \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_GUIDE),  \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2),    \
+        BTN_USAGE(BTN_THUMBL), \
+        BTN_USAGE(BTN_THUMBR)
+
+const uint8_t PROGMEM pc_descriptor_rb_pro_guitar[] = PC_DESCRIPTOR(13, RB_PRO_GUITAR_USAGES, 13);
+
+#define RB_PRO_KEY_USAGES        \
+    BTN_USAGE(BTN_X),            \
+        BTN_USAGE(BTN_A),        \
+        BTN_USAGE(BTN_B),        \
+        BTN_USAGE(BTN_Y),        \
+        BTN_USAGE(BTN_SELECT),   \
+        BTN_USAGE(BTN_START),    \
+        BTN_USAGE(BTN_GUIDE),    \
+        BTN_USAGE(BTN_TL),       \
+        BTN_USAGE(BTN_TR),       \
+        BTN_USAGE(BTN_C),        \
+        BTN_USAGE(BTN_TL2),      \
+        BTN_USAGE(BTN_TR2),      \
+        BTN_USAGE(BTN_THUMBL),   \
+        BTN_USAGE(BTN_THUMBR),   \
+        BTN_USAGE(BTN_Z),        \
+        BTN_USAGE(BTN_END + 1),  \
+        BTN_USAGE(BTN_END + 2),  \
+        BTN_USAGE(BTN_END + 3),  \
+        BTN_USAGE(BTN_END + 4),  \
+        BTN_USAGE(BTN_END + 5),  \
+        BTN_USAGE(BTN_END + 6),  \
+        BTN_USAGE(BTN_END + 7),  \
+        BTN_USAGE(BTN_END + 8),  \
+        BTN_USAGE(BTN_END + 9),  \
+        BTN_USAGE(BTN_END + 10), \
+        BTN_USAGE(BTN_END + 11), \
+        BTN_USAGE(BTN_END + 12), \
+        BTN_USAGE(BTN_END + 13), \
+        BTN_USAGE(BTN_END + 14), \
+        BTN_USAGE(BTN_END + 15), \
+        BTN_USAGE(BTN_END + 16), \
+        BTN_USAGE(BTN_END + 17), \
+        BTN_USAGE(BTN_END + 18), \
+        BTN_USAGE(BTN_END + 19), \
+        BTN_USAGE(BTN_END + 20)
+
+const uint8_t PROGMEM pc_descriptor_rb_pro_keys[] = PC_DESCRIPTOR(35, RB_PRO_KEY_USAGES, 7);
+
+#define LIVE_GUITAR_USAGES     \
+    BTN_USAGE(BTN_A),          \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_X),      \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_THUMBL), \
+        BTN_USAGE(BTN_GUIDE),  \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2),    \
+        BTN_USAGE(BTN_C),      \
+        BTN_USAGE(BTN_Z)
+
+const uint8_t PROGMEM pc_descriptor_live_guitar[] = PC_DESCRIPTOR(14, LIVE_GUITAR_USAGES, 2);
+
+#define GUITAR_HERO_DRUM_USAGES \
+    BTN_USAGE(BTN_A),           \
+        BTN_USAGE(BTN_B),       \
+        BTN_USAGE(BTN_Y),       \
+        BTN_USAGE(BTN_X),       \
+        BTN_USAGE(BTN_TL),      \
+        BTN_USAGE(BTN_TR),      \
+        BTN_USAGE(BTN_SELECT),  \
+        BTN_USAGE(BTN_START),   \
+        BTN_USAGE(BTN_GUIDE),   \
+        BTN_USAGE(BTN_TL2),     \
+        BTN_USAGE(BTN_TR2),     \
+        BTN_USAGE(BTN_C),       \
+        BTN_USAGE(BTN_Z)
+const uint8_t PROGMEM pc_descriptor_gh_drums[] = PC_DESCRIPTOR(13, GUITAR_HERO_DRUM_USAGES, 6);
+
+#define ROCK_BAND_DRUM_USAGES  \
+    BTN_USAGE(BTN_A),          \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_X),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_THUMBR), \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_THUMBL), \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_GUIDE),  \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2),    \
+        BTN_USAGE(BTN_C),      \
+        BTN_USAGE(BTN_Z)
+const uint8_t PROGMEM pc_descriptor_rb_drums[] = PC_DESCRIPTOR(15, ROCK_BAND_DRUM_USAGES, 7);
+
+#define TURNTABLE_USAGES       \
+    BTN_USAGE(BTN_A),          \
+        BTN_USAGE(BTN_B),      \
+        BTN_USAGE(BTN_X),      \
+        BTN_USAGE(BTN_Y),      \
+        BTN_USAGE(BTN_SELECT), \
+        BTN_USAGE(BTN_START),  \
+        BTN_USAGE(BTN_GUIDE),  \
+        BTN_USAGE(BTN_C),      \
+        BTN_USAGE(BTN_Z),      \
+        BTN_USAGE(BTN_TL),     \
+        BTN_USAGE(BTN_TR),     \
+        BTN_USAGE(BTN_TL2),    \
+        BTN_USAGE(BTN_TR2)
+const uint8_t PROGMEM pc_descriptor_turntable[] = PC_DESCRIPTOR(13, TURNTABLE_USAGES, 4);
+
+const uint8_t PROGMEM pc_descriptor_gamepad[] = {
     0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
     0x09, 0x05,        // Usage (Game Pad)
     0xA1, 0x01,        // Collection (Application)
@@ -260,7 +411,6 @@ const uint8_t PROGMEM pc_descriptor[] = {
     0xB1, 0x02,        //   Feature (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
     0xC0,              // End Collection
 };
-#endif
 
 const uint8_t PROGMEM ps3_descriptor[] = {
     0x05, 0x01,       /*  Usage Page (Desktop),               */

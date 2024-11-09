@@ -77,7 +77,7 @@ const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor =
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
         reserved : {0x10, 0x01},
-        subtype : SUB_TYPE,
+        subtype : XINPUT_GAMEPAD,
         reserved2 : 0x25,
         bEndpointAddressIn : DEVICE_EPADDR_IN,
         bMaxDataSizeIn : 0x14,
@@ -210,7 +210,7 @@ const PROGMEM XBOX_360_CONFIGURATION_MULTI_DESCRIPTOR XBOX360MultiConfigurationD
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
         reserved : {0x10, 0x01},
-        subtype : SUB_TYPE,
+        subtype : XINPUT_GAMEPAD,
         reserved2 : 0x25,
         bEndpointAddressIn : DEVICE_EPADDR_IN,
         bMaxDataSizeIn : 0x14,
@@ -291,7 +291,7 @@ const PROGMEM XBOX_360_CONFIGURATION_MULTI_DESCRIPTOR XBOX360MultiConfigurationD
         bLength : sizeof(XBOX_ID_DESCRIPTOR),
         bDescriptorType : 0x21,
         reserved : {0x10, 0x01},
-        subtype : XINPUT_DRUMS,
+        subtype : XINPUT_GAMEPAD,
         reserved2 : 0x25,
         bEndpointAddressIn : XINPUT_UNK_IN,
         bMaxDataSizeIn : 0x14,
@@ -649,14 +649,14 @@ const PROGMEM uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x00, 
                                                  {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                                  {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x82},
                                                  {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                                 {0x21, 0x26, 0x02, PS3_FLAGS, 0x00, 0x00, 0x00, 0x00}};
+                                                 {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
 const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
                                                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                                 {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
                                                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                                {0x21, 0x26, 0x02, PS3_FLAGS, 0x00, 0x00, 0x00, 0x00}};
+                                                {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
 #else
-const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, PS3_FLAGS,
+const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x06,
                                     0x00, 0x00, 0x00, 0x00};
 #endif
 uint8_t ef_byte = 0;
@@ -721,7 +721,7 @@ const PROGMEM uint8_t ps3_feature_ef[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 const PROGMEM uint8_t ps4_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x91, PS4_TYPE, 0x2c, 0x56,
+    0x03, 0x21, 0x27, 0x04, 0x91, PS4_GAMEPAD, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
     0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -957,6 +957,17 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return 8;
 #else
             memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
+            switch (DEVICE_TYPE) {
+                case ROCK_BAND_DRUMS:
+                    requestBuffer[3] = 0x05;
+                    break;
+                case GAMEPAD:
+                case GUITAR_HERO_DRUMS:
+                case STAGE_KIT:
+                case DANCE_PAD:
+                    requestBuffer[3] = 0x07;
+                    break;
+            }
             return sizeof(ps3_init);
 #endif
         }
@@ -1026,6 +1037,12 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 case 0x0303:
                     seen_ps4 = true;
                     memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
+                    if (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR || DEVICE_TYPE == LIVE_GUITAR) {
+                        requestBuffer[5] = PS4_GUITAR;
+                    }
+                    if (DEVICE_TYPE == ROCK_BAND_DRUMS || DEVICE_TYPE == GUITAR_HERO_DRUMS) {
+                        requestBuffer[5] = PS4_DRUMS;
+                    }
                     return sizeof(ps4_feature_config);
 
 #if USB_HOST_STACK
@@ -1047,10 +1064,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             }
         }
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {
-            return tick_inputs(requestBuffer, NULL, consoleType);
+            return tick_controllers(requestBuffer, NULL, consoleType, &last_report);
         }
-        if (consoleType == OG_XBOX && wValue == 0x0100 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == sizeof(OG_XBOX_REPORT)) {
-            return tick_inputs(requestBuffer, NULL, consoleType);
+        if (consoleType == OG_XBOX && wValue == 0x0100 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == sizeof(OGXboxGamepad_Data_t)) {
+            return tick_controllers(requestBuffer, NULL, OG_XBOX, &last_report);
         }
 #endif
         bool test = true;
@@ -1089,6 +1106,37 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return ExtendedIDs.TotalLength;
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == INPUT_CAPABILITIES_WVALUE) {
             memcpy_P(requestBuffer, &XInputInputCapabilities, sizeof(XInputInputCapabilities));
+
+            XInputInputCapabilities_t *desc = (XInputInputCapabilities_t *)requestBuffer;
+            switch (DEVICE_TYPE) {
+                case DANCE_PAD:
+                case STAGE_KIT:
+                case GAMEPAD:
+                case GUITAR_HERO_GUITAR:
+                case ROCK_BAND_GUITAR:
+                case ROCK_BAND_DRUMS:
+                    desc->flags = XINPUT_FLAGS_FORCE_FEEDBACK;
+                    break;
+                case LIVE_GUITAR:
+                    desc->flags = XINPUT_FLAGS_NO_NAV;
+                    break;
+                case ROCK_BAND_PRO_KEYS:
+                case GUITAR_HERO_DRUMS:
+                case DJ_HERO_TURNTABLE:
+                    desc->flags = XINPUT_FLAGS_NONE;
+                    break;
+                case ROCK_BAND_PRO_GUITAR_MUSTANG:
+                    desc->flags = XINPUT_FLAGS_NONE;
+                    desc->leftThumbX = HARMONIX_VID;
+                    desc->leftThumbY = XBOX_360_MUSTANG_PID;
+                    break;
+                case ROCK_BAND_PRO_GUITAR_SQUIRE:
+                    desc->flags = XINPUT_FLAGS_NONE;
+                    desc->leftThumbX = HARMONIX_VID;
+                    desc->leftThumbY = XBOX_360_SQUIRE_PID;
+                    break;
+            }
+            desc->rightThumbX = USB_VERSION_BCD(DEVICE_TYPE, 0, 0);
             return sizeof(XInputInputCapabilities);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && (consoleType == WINDOWS || consoleType == XBOX360) && request == HID_REQUEST_GET_REPORT && wIndex == 0x0000 && wValue == SERIAL_NUMBER_WVALUE) {
@@ -1136,27 +1184,20 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         const uint8_t reportType = (wValue >> 8);
         const uint8_t reportId = (wValue & 0xFF);
         hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
-
-#if DEVICE_TYPE_IS_PRO
-        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
-            // for (int i = 0; i < 0x28; i++) {
-            //     printf("%02x, ", requestBuffer[i]);
-            // }
-            // printf("\r\n");
-            switch (requestBuffer[2]) {
-                case 0x89:
-                    printf("MIDI data enabled\r\n");
-                    proButtonsEnabled = true;
-                    ps3_id_id = 0;
-                    break;
-                case 0x81:
-                    printf("MIDI data disabled\r\n");
-                    proButtonsEnabled = false;
-                    ps3_id_id = 0;
-                    break;
+        if (DEVICE_TYPE_IS_PRO) {
+            if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
+                switch (requestBuffer[2]) {
+                    case 0x89:
+                        proButtonsEnabled = true;
+                        ps3_id_id = 0;
+                        break;
+                    case 0x81:
+                        proButtonsEnabled = false;
+                        ps3_id_id = 0;
+                        break;
+                }
             }
         }
-#endif
         return 0;
     }
     return 0;
@@ -1197,7 +1238,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
-#if DEVICE_TYPE_IS_GAMEPAD
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
@@ -1207,52 +1247,117 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == OG_XBOX) {
                 dev->idVendor = 0x045E;
                 dev->idProduct = 0x0289;
-            }
-#if USB_HOST_STACK
-            else if (consoleType == XBOXONE) {
+            } else if (consoleType == XBOXONE) {
                 dev->idVendor = XBOX_ONE_CONTROLLER_VID;
                 dev->idProduct = XBOX_ONE_CONTROLLER_PID;
                 dev->bDeviceClass = 0xff;
                 dev->bDeviceSubClass = 0x47;
                 dev->bDeviceProtocol = 0xd0;
-            }
-#endif
-            else if (consoleType == PS4) {
-#if DEVICE_TYPE_IS_INSTRUMENT
-                dev->idVendor = XBOX_REDOCTANE_VID;
-                dev->idProduct = PS4_GHLIVE_DONGLE_PID;
-#else
-                dev->idVendor = PS4_VID;
-                dev->idProduct = PS4_PID;
-#endif
+            } else if (consoleType == PS4) {
+                // We just use the ghl dongle ids for PS4 as PS4 doesn't care
+                if (DEVICE_TYPE == GAMEPAD) {
+                    dev->idVendor = PS4_VID;
+                    dev->idProduct = PS4_PID;
+                } else {
+                    dev->idVendor = XBOX_REDOCTANE_VID;
+                    dev->idProduct = PS4_GHLIVE_DONGLE_PID;
+                }
             } else if (consoleType == IOS_FESTIVAL) {
                 dev->idVendor = SONY_VID;
                 dev->idProduct = SONY_DS3_PID;
             }
-#ifdef WII_TYPE
-            else if (consoleType == WII_RB) {
-                dev->idVendor = HARMONIX_VID;
-                dev->idProduct = WII_TYPE;
+            if (DEVICE_TYPE == GUITAR_HERO_GUITAR) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_RB_GUITAR_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_GH_GUITAR_PID;
+                }
             }
-#endif
-#ifdef PS3_TYPE
-            else if (consoleType == PS3) {
-                dev->idVendor = REDOCTANE_VID;
-                dev->idProduct = PS3_TYPE;
+            if (DEVICE_TYPE == ROCK_BAND_GUITAR) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_RB_GUITAR_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_RB_GUITAR_PID;
+                }
             }
-#elif DEVICE_TYPE == GAMEPAD
-            else if (consoleType == PS3) {
-                dev->idVendor = SONY_VID;
-                dev->idProduct = SONY_DS3_PID;
+            if (DEVICE_TYPE == GUITAR_HERO_DRUMS) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_RB_DRUM_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_GH_DRUM_PID;
+                }
             }
-#endif
-#endif
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+            if (DEVICE_TYPE == ROCK_BAND_DRUMS) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_RB_DRUM_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_RB_DRUM_PID;
+                }
+            }
+            if (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_MUSTANG_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_MUSTANG_PID;
+                }
+            }
+            if (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_SQUIRE_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_SQUIRE_PID;
+                }
+            }
+            if (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE) {
+                if (consoleType == WII_RB) {
+                    dev->idVendor = HARMONIX_VID;
+                    dev->idProduct = WII_KEYBOARD_PID;
+                }
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_KEYBOARD_PID;
+                }
+            }
+            if (DEVICE_TYPE == LIVE_GUITAR) {
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3WIIU_GHLIVE_DONGLE_PID;
+                }
+            }
+            if (DEVICE_TYPE == DJ_HERO_TURNTABLE) {
+                if (consoleType == PS3) {
+                    dev->idVendor = REDOCTANE_VID;
+                    dev->idProduct = PS3_DJ_TURNTABLE_PID;
+                }
+            }
+            if (DEVICE_TYPE == GAMEPAD) {
+                if (consoleType == PS3) {
+                    dev->idVendor = SONY_VID;
+                    dev->idProduct = SONY_DS3_PID;
+                }
+            }
             if (consoleType == FNF) {
                 dev->idVendor = PDP_VID;
                 dev->idProduct = XBOX_ONE_JAG_PID;
             }
-#endif
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
@@ -1264,15 +1369,43 @@ uint16_t descriptorRequest(const uint16_t wValue,
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else
 
-#if USB_HOST_STACK
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
-            } else
-#endif
-                if (consoleType == WINDOWS || consoleType == XBOX360) {
+            } else if (consoleType == WINDOWS || consoleType == XBOX360) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
+                XBOX_360_CONFIGURATION_DESCRIPTOR *desc = (XBOX_360_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
+                switch (DEVICE_TYPE) {
+                    case DANCE_PAD:
+                        desc->GamepadDescriptor.subtype = XINPUT_DANCE_PAD;
+                        break;
+                    case STAGE_KIT:
+                        desc->GamepadDescriptor.subtype = XINPUT_STAGE_KIT;
+                        break;
+                    case GUITAR_HERO_GUITAR:
+                    case LIVE_GUITAR:
+                        desc->GamepadDescriptor.subtype = XINPUT_GUITAR_ALTERNATE;
+                        break;
+                    case ROCK_BAND_GUITAR:
+                        desc->GamepadDescriptor.subtype = XINPUT_GUITAR;
+                        break;
+                    case ROCK_BAND_PRO_GUITAR_MUSTANG:
+                    case ROCK_BAND_PRO_GUITAR_SQUIRE:
+                        desc->GamepadDescriptor.subtype = XINPUT_PRO_GUITAR;
+                        break;
+                    case ROCK_BAND_PRO_KEYS:
+                        desc->GamepadDescriptor.subtype = XINPUT_PRO_KEYS;
+                        break;
+                    case ROCK_BAND_DRUMS:
+                    case GUITAR_HERO_DRUMS:
+                        desc->GamepadDescriptor.subtype = XINPUT_DRUMS;
+                        break;
+                    case DJ_HERO_TURNTABLE:
+                        desc->GamepadDescriptor.subtype = XINPUT_TURNTABLE;
+                        break;
+                }
+
             } else if (consoleType == OG_XBOX) {
                 size = sizeof(OG_XBOX_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &OGXBOXConfigurationDescriptor, size);
@@ -1289,29 +1422,48 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
                     desc->EndpointOutHID.wMaxPacketSize = 64;
                     desc->EndpointInHID.wMaxPacketSize = 64;
-#if DEVICE_TYPE_IS_INSTRUMENT
-#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
                 } else if (consoleType == KEYBOARD_MOUSE) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(keyboard_mouse_descriptor);
-#endif
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
                 } else if (consoleType == FNF) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
-#endif
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }
-#else
-                } else if (consoleType == PS3) {
-                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
-                    desc->EndpointOutHID.wMaxPacketSize = 64;
-                    desc->EndpointInHID.wMaxPacketSize = 64;
-                } else {
-                    desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
-                }
-#endif
                 if (consoleType == UNIVERSAL) {
-                    desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor);
+                    switch (DEVICE_TYPE) {
+                        case GAMEPAD:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_gamepad);
+                            break;
+                        case DANCE_PAD:
+                        case STAGE_KIT:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_buttons);
+                            break;
+                        case GUITAR_HERO_GUITAR:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_gh_guitar);
+                            break;
+                        case LIVE_GUITAR:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_live_guitar);
+                            break;
+                        case ROCK_BAND_GUITAR:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_rb_guitar);
+                            break;
+                        case ROCK_BAND_PRO_GUITAR_MUSTANG:
+                        case ROCK_BAND_PRO_GUITAR_SQUIRE:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_rb_pro_guitar);
+                            break;
+                        case ROCK_BAND_PRO_KEYS:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_rb_pro_keys);
+                            break;
+                        case ROCK_BAND_DRUMS:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_rb_drums);
+                            break;
+                        case GUITAR_HERO_DRUMS:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_gh_drums);
+                            break;
+                        case DJ_HERO_TURNTABLE:
+                            desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_turntable);
+                            break;
+                    }
                 } else {
                     // Strip out all the extra interfaces used for configuring / x360 compat, consoles dont need them
                     desc->Config.bNumInterfaces = 1;
@@ -1327,7 +1479,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #if DEVICE_TYPE_IS_KEYBOARD
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
-#elif DEVICE_TYPE_IS_GAMEPAD
+#else
 
             if (consoleType == PS4) {
                 address = ps4_descriptor;
@@ -1335,36 +1487,64 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == IOS_FESTIVAL) {
                 address = ps3_descriptor;
                 size = sizeof(ps3_descriptor);
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
             } else if (consoleType == FNF) {
                 address = fnf_descriptor;
                 size = sizeof(fnf_descriptor);
-#endif
-#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
             } else if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);
-#endif
-            } else if (consoleType != UNIVERSAL) {
-#if DEVICE_TYPE_IS_INSTRUMENT
+            } else if (consoleType == UNIVERSAL) {
+                switch (DEVICE_TYPE) {
+                    case GAMEPAD:
+                        address = pc_descriptor_gamepad;
+                        size = sizeof(pc_descriptor_gamepad);
+                        break;
+                    case DANCE_PAD:
+                    case STAGE_KIT:
+                        address = pc_descriptor_buttons;
+                        size = sizeof(pc_descriptor_buttons);
+                        break;
+                    case GUITAR_HERO_GUITAR:
+                        address = pc_descriptor_gh_guitar;
+                        size = sizeof(pc_descriptor_gh_guitar);
+                        break;
+                    case LIVE_GUITAR:
+                        address = pc_descriptor_live_guitar;
+                        size = sizeof(pc_descriptor_live_guitar);
+                        break;
+                    case ROCK_BAND_GUITAR:
+                        address = pc_descriptor_rb_guitar;
+                        size = sizeof(pc_descriptor_rb_guitar);
+                        break;
+                    case ROCK_BAND_PRO_GUITAR_MUSTANG:
+                    case ROCK_BAND_PRO_GUITAR_SQUIRE:
+                        address = pc_descriptor_rb_pro_guitar;
+                        size = sizeof(pc_descriptor_rb_pro_guitar);
+                        break;
+                    case ROCK_BAND_PRO_KEYS:
+                        address = pc_descriptor_rb_pro_keys;
+                        size = sizeof(pc_descriptor_rb_pro_keys);
+                        break;
+                    case ROCK_BAND_DRUMS:
+                        address = pc_descriptor_rb_drums;
+                        size = sizeof(pc_descriptor_rb_drums);
+                        break;
+                    case GUITAR_HERO_DRUMS:
+                        address = pc_descriptor_gh_drums;
+                        size = sizeof(pc_descriptor_gh_drums);
+                        break;
+                    case DJ_HERO_TURNTABLE:
+                        address = pc_descriptor_turntable;
+                        size = sizeof(pc_descriptor_turntable);
+                        break;
+                }
+            } else if (consoleType == PS3 && DEVICE_TYPE_IS_INSTRUMENT) {
+                address = ps3_descriptor;
+                size = sizeof(ps3_descriptor);
+            } else {
                 address = ps3_instrument_descriptor;
                 size = sizeof(ps3_instrument_descriptor);
-#else
-                if (consoleType == PS3) {
-                    address = ps3_descriptor;
-                    size = sizeof(ps3_descriptor);
-                } else {
-                    address = ps3_instrument_descriptor;
-                    size = sizeof(ps3_instrument_descriptor);
-                }
-#endif
-            } else {
-                address = pc_descriptor;
-                size = sizeof(pc_descriptor);
             }
-#else
-            address = ps3_instrument_descriptor;
-            size = sizeof(ps3_instrument_descriptor);
 #endif
             memcpy_P(descriptorBuffer, address, size);
             break;

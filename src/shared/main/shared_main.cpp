@@ -27,6 +27,7 @@
 #define CLONE_ADDR 0x10
 #define CLONE_VALID_PACKET 0x52
 #define GH5NECK_BUTTONS_PTR 0x12
+#define GH5DRUM_BUTTONS_PTR 0x10
 #define BUFFER_SIZE_QUEUE 255
 #define KEY_ERR_OVF 0x01
 #define REQUIRE_LED_DEBOUNCE LED_COUNT || LED_COUNT_PERIPHERAL || LED_COUNT_STP || LED_COUNT_PERIPHERAL_STP || LED_COUNT_WS2812 || LED_COUNT_PERIPHERAL_WS2812 || HAS_LED_OUTPUT || LED_COUNT_MPR121 || LED_COUNT_WS2812W || LED_COUNT_PERIPHERAL_WS2812W
@@ -74,7 +75,7 @@ uint8_t led_tmp;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #define TURNTABLE_BUFFER_SIZE 16
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING
+#if INPUT_DJ_TURNTABLE_SMOOTHING
 int16_t dj_sum_left = 0;
 int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_left = 0;
@@ -82,13 +83,10 @@ int16_t dj_sum_right = 0;
 int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
 int8_t dj_next_right = 0;
 #endif
-USB_Host_Data_t test_report;
-USB_Report_Data_t combined_report;
-#if DEVICE_TYPE_IS_GAMEPAD
-PS3_REPORT bt_report;
-#else
+USB_Host_Data_t wii_report;
+USB_Host_Data_t ps2_report;
+USB_Host_Data_t last_report;
 USB_Report_Data_t bt_report;
-#endif
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t ledDebounce[LED_DEBOUNCE_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
@@ -241,7 +239,7 @@ void init_main(void) {
     memset(ledState, 0, sizeof(ledState));
     memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
     LED_INIT;
-#ifdef INPUT_DJ_TURNTABLE_SMOOTHING
+#if INPUT_DJ_TURNTABLE_SMOOTHING
     memset(dj_last_readings_left, 0, sizeof(dj_last_readings_left));
     memset(dj_last_readings_right, 0, sizeof(dj_last_readings_right));
 #endif
@@ -477,17 +475,49 @@ int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uin
 uint16_t descriptor_index = 0;
 uint8_t tick_xbox_one() {
     uint32_t serial = micros();
+    const uint8_t *announce;
+    const uint8_t *xb1_descriptor;
+    const uint8_t *xb1_descriptor_end;
+    uint16_t len;
+    switch (DEVICE_TYPE) {
+        case ROCK_BAND_DRUMS:
+        case GUITAR_HERO_DRUMS:
+            announce = announce_drums;
+            xb1_descriptor = xb1_descriptor_drums;
+            xb1_descriptor_end = xb1_descriptor_drums_end;
+            len = sizeof(xb1_descriptor_drums);
+            break;
+        case GUITAR_HERO_GUITAR:
+        case ROCK_BAND_GUITAR:
+            announce = announce_guitar;
+            xb1_descriptor = xb1_descriptor_guitar;
+            xb1_descriptor_end = xb1_descriptor_guitar_end;
+            len = sizeof(xb1_descriptor_guitar);
+            break;
+        case LIVE_GUITAR:
+            announce = announce_ghl;
+            xb1_descriptor = xb1_descriptor_ghl;
+            xb1_descriptor_end = xb1_descriptor_ghl_end;
+            len = sizeof(xb1_descriptor_ghl);
+            break;
+        default:
+            announce = announce_gamepad;
+            xb1_descriptor = xb1_descriptor_gamepad;
+            xb1_descriptor_end = xb1_descriptor_gamepad_end;
+            len = sizeof(xb1_descriptor_gamepad);
+            break;
+    }
     switch (xbox_one_state) {
         case Announce:
             descriptor_index = 0;
             xbox_one_state = WaitingDesc1;
-            memcpy(&combined_report, announce, sizeof(announce));
-            memcpy(&combined_report.raw[7], &serial, 3);
+            memcpy(&last_report, announce, sizeof(announce));
+            memcpy(((uint8_t *)&last_report) + 7, &serial, 3);
             return sizeof(announce);
         case IdentDesc1:
             xbox_one_state = WaitingDesc;
             descriptor_index += 64;
-            memcpy(&combined_report, xb1_descriptor, 64);
+            memcpy(&last_report, xb1_descriptor, 64);
             return 64;
         case IdentDesc: {
             uint16_t len = sizeof(xb1_descriptor) - descriptor_index;
@@ -496,20 +526,20 @@ uint8_t tick_xbox_one() {
             } else {
                 xbox_one_state = WaitingDescEnd;
             }
-            memcpy(&combined_report, xb1_descriptor + descriptor_index, len);
+            memcpy(&last_report, xb1_descriptor + descriptor_index, len);
             descriptor_index += len;
             return len;
         }
         case IdentDescEnd: {
             xbox_one_state = Auth;
-            memcpy(&combined_report, xb1_descriptor_end, sizeof(xb1_descriptor_end));
+            memcpy(&last_report, xb1_descriptor_end, sizeof(xb1_descriptor_end));
             return sizeof(xb1_descriptor_end);
         }
         case Auth:
             if (data_from_controller_size) {
                 uint8_t size = data_from_controller_size;
                 data_from_controller_size = 0;
-                memcpy(&combined_report, data_from_controller, size);
+                memcpy(&last_report, data_from_controller, size);
                 return size;
             }
             return 0;
@@ -832,15 +862,196 @@ void tick_wiioutput() {
 void bluetooth_connected() {
     input_start = millis();
 }
-uint8_t rbcount = 0;
-uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+uint8_t tick_keyboard(void *buf, USB_LastReport_Data_t *last_report) {
+    // Tick all three reports, and then go for the first one that has changes
+    // We prioritise NKRO, then Consumer, because these are both only buttons
+    // Then mouse, as it is an axis so it is more likley to have changes
     uint8_t packet_size = 0;
-    Buffer_Report_t current_queue_report = {val : 0};
-    USB_RB_Drums_t current_drum_report = {buttons : 0};
+    void *lastReportToCheck;
+    for (int i = 1; i < REPORT_ID_END; i++) {
+#ifdef TICK_MOUSE
+        if (i == REPORT_ID_MOUSE) {
+            packet_size = sizeof(USB_Mouse_Data_t);
+            memset(buf, 0, packet_size);
+            USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
+            report->rid = REPORT_ID_MOUSE;
+            TICK_MOUSE;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastMouseReport;
+            }
+        }
+#endif
+#ifdef TICK_CONSUMER
+        if (i == REPORT_ID_CONSUMER) {
+            packet_size = sizeof(USB_ConsumerControl_Data_t);
+            memset(buf, 0, packet_size);
+            USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)buf;
+            report->rid = REPORT_ID_CONSUMER;
+            TICK_CONSUMER;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastConsumerReport;
+            }
+        }
+#endif
+#ifdef TICK_NKRO
+        if (i == REPORT_ID_NKRO) {
+            packet_size = sizeof(USB_NKRO_Data_t);
+            memset(buf, 0, packet_size);
+            USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)buf;
+            report->rid = REPORT_ID_NKRO;
+            TICK_NKRO;
+            if (last_report) {
+                lastReportToCheck = &last_report->lastNKROReport;
+            }
+        }
+#endif
+#ifdef TICK_SIXKRO
+        if (i == REPORT_ID_NKRO) {
+            packet_size = sizeof(USB_6KRO_Data_t);
+            memset(buf, 0, packet_size);
+            USB_6KRO_Data_t *report = (USB_6KRO_Data_t *)buf;
+            report->rid = REPORT_ID_NKRO;
+            TICK_SIXKRO;
+            if (last_report) {
+                lastReportToCheck = &last_report->last6KROReport;
+            }
+        }
+#endif
+
+        // If we are directly asked for a HID report, always just reply with the NKRO one
+        if (lastReportToCheck) {
+            uint8_t cmp = memcmp(lastReportToCheck, buf, packet_size);
+            if (cmp == 0) {
+                packet_size = 0;
+                continue;
+            }
+            memcpy(lastReportToCheck, buf, packet_size);
+            break;
+        } else {
+            break;
+        }
+    }
+    return packet_size;
+}
+uint8_t tick_controllers(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type, USB_Host_Data_t *universal_report) {
     uint8_t current_mode = DEVICE_TYPE;
     if (festival_gameplay_mode) {
         current_mode = FORTNITE_GUITAR;
     }
+    USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
+    uint8_t report_size;
+    uint8_t packet_size = 0;
+    bool updateSequence = false;
+    bool updateHIDSequence = false;
+    if (output_console_type == XBOXONE) {
+        XboxOneGamepad_Data_t *report = (XboxOneGamepad_Data_t *)buf;
+        XboxOneGHLGuitarWithGamepad_Data_t *reportGHL = (XboxOneGHLGuitarWithGamepad_Data_t *)buf;
+        // The GHL guitar is special. It sends both a standard gamepad report and a report with a format mirroring the ps3 ghl report
+        // We append the standard gamepad after the ps3 report, so swap out buffers so that the gamepad tick writes to the correct place
+        memset(buf, 0, sizeof(XboxOneGHLGuitarWithGamepad_Data_t));
+        report = &reportGHL->gamepad;
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, XBOXONE, current_mode, universal_report);
+        report_size = packet_size - sizeof(GipHeader_t);
+        GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
+
+        if (report->guide != lastXboxOneGuide) {
+            lastXboxOneGuide = report->guide;
+            GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
+            GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystroke_sequence_number++);
+            keystroke->pressed = report->guide;
+            keystroke->keycode = GIP_VKEY_LEFT_WIN;
+            return sizeof(GipKeystroke_t);
+        }
+        // We use an unused bit as a flag for sending the guide key code, so flip it back
+        report->guide = false;
+        GipPacket_t *packet = (GipPacket_t *)report;
+        report_data = (USB_Report_Data_t *)packet->data;
+        updateSequence = true;
+        if (current_mode == LIVE_GUITAR) {
+            packet_size = sizeof(XboxOneGHLGuitarWithGamepad_Data_t);
+            uint8_t cmp = memcmp(last_report, report_data, report_size);
+            if (cmp == 0) {
+                // gamepad report has not changed, so only send GHL report
+                packet_size = sizeof(XboxOneGHLGuitar_Data_t);
+                updateSequence = false;
+            }
+            memcpy(last_report, report_data, report_size);
+            GIP_HEADER((&reportGHL->guitar), GHL_HID_REPORT, false, hid_sequence_number);
+            report_data = (USB_Report_Data_t *)&reportGHL->guitar.report;
+            updateHIDSequence = true;
+            report_size = convert_report_back((uint8_t *)report_data, 0, PS3, current_mode, universal_report);
+        }
+    }
+    if (output_console_type == OG_XBOX) {
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, OG_XBOX, current_mode, universal_report);
+    }
+    if (output_console_type == WINDOWS || output_console_type == XBOX360) {
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, XBOX360, current_mode, universal_report);
+    }
+    // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
+    // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
+    if (output_console_type == PS4) {
+        if (millis() > 450000 && !auth_ps4_controller_found) {
+            reset_usb();
+        }
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS4, current_mode, universal_report);
+        PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)buf;
+        // PS4 does not start using the controller until it sees a PS button press.
+        if (!seen_ps4_console) {
+            gamepad->guide = true;
+        }
+    }
+    // IOS works native with PS3 gamepads in FNF so thats what we emulate for that scenario
+    if (output_console_type == IOS_FESTIVAL) {
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, IOS_FESTIVAL, current_mode, universal_report);
+    }
+    if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, UNIVERSAL, current_mode, universal_report);
+    }
+
+    if (output_console_type == FNF) {
+        convert_report_back((uint8_t *)buf, 0, FNF, current_mode, universal_report);
+    }
+
+    // For instruments, we instead use the below block, as all other console types use the below format
+    if ((output_console_type == PS3 || output_console_type == WII || output_console_type == SWITCH)) {
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS3, current_mode, universal_report);
+    }
+
+    TICK_RESET
+    // Some hosts want packets sent every frame
+    if (last_report && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
+        uint8_t cmp = memcmp(last_report, report_data, report_size);
+        if (cmp == 0) {
+            return 0;
+        }
+        memcpy(last_report, report_data, report_size);
+    }
+    // Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
+    if (output_console_type == PS4) {
+        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
+        gamepad->reportCounter = ps4_sequence_number++;
+    }
+
+    if (updateSequence) {
+        report_sequence_number++;
+        if (report_sequence_number == 0) {
+            report_sequence_number = 1;
+        }
+    }
+    if (updateHIDSequence) {
+        hid_sequence_number++;
+        if (hid_sequence_number == 0) {
+            hid_sequence_number = 1;
+        }
+    }
+    return packet_size;
+}
+uint8_t rbcount = 0;
+uint8_t tick_inputs(USB_Host_Data_t *report, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+    uint8_t packet_size = 0;
+    Buffer_Report_t current_queue_report = {val : 0};
+    USB_RB_Drums_t current_drum_report = {buttons : 0};
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -852,7 +1063,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
-
+    if (wiiValid) {
+        wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &wii_report);
+    }
+    if (ps2Valid) {
+        ps2_to_universal_report(ps2Data, sizeof(lastSuccessfulPS2Packet), ps2ControllerType, &ps2_report);
+    }
     TICK_SHARED;
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
@@ -861,13 +1077,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #ifdef TICK_DETECTION_FESTIVAL
     TICK_DETECTION_FESTIVAL;
 #endif
-    // for (int i = 0; i < wiiBytes ; i++) {
-    //     printf("%02x, ",wiiData[i]);
-    // }
-    // printf("\r\n");
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     // if input queues are enabled, then we just tick as often as possible
-    if (!buf) {
+    if (!report) {
         if (INPUT_QUEUE) {
             if (micros() - last_queue > 100) {
                 last_queue = micros();
@@ -900,228 +1112,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         current_queue_report = queue[queue_tail - queue_size];
         queue_size--;
     }
-    // Tick all three reports, and then go for the first one that has changes
-    // We prioritise NKRO, then Consumer, because these are both only buttons
-    // Then mouse, as it is an axis so it is more likley to have changes
-#if DEVICE_TYPE_IS_KEYBOARD
-        void *lastReportToCheck;
-        for (int i = 1; i < REPORT_ID_END; i++) {
-#ifdef TICK_MOUSE
-            if (i == REPORT_ID_MOUSE) {
-                packet_size = sizeof(USB_Mouse_Data_t);
-                memset(buf, 0, packet_size);
-                USB_Mouse_Data_t *report = (USB_Mouse_Data_t *)buf;
-                report->rid = REPORT_ID_MOUSE;
-                TICK_MOUSE;
-                if (last_report) {
-                    lastReportToCheck = &last_report->lastMouseReport;
-                }
-            }
-#endif
-#ifdef TICK_CONSUMER
-            if (i == REPORT_ID_CONSUMER) {
-                packet_size = sizeof(USB_ConsumerControl_Data_t);
-                memset(buf, 0, packet_size);
-                USB_ConsumerControl_Data_t *report = (USB_ConsumerControl_Data_t *)buf;
-                report->rid = REPORT_ID_CONSUMER;
-                TICK_CONSUMER;
-                if (last_report) {
-                    lastReportToCheck = &last_report->lastConsumerReport;
-                }
-            }
-#endif
-#ifdef TICK_NKRO
-            if (i == REPORT_ID_NKRO) {
-                packet_size = sizeof(USB_NKRO_Data_t);
-                memset(buf, 0, packet_size);
-                USB_NKRO_Data_t *report = (USB_NKRO_Data_t *)buf;
-                report->rid = REPORT_ID_NKRO;
-                TICK_NKRO;
-                if (last_report) {
-                    lastReportToCheck = &last_report->lastNKROReport;
-                }
-            }
-#endif
-#ifdef TICK_SIXKRO
-            if (i == REPORT_ID_NKRO) {
-                packet_size = sizeof(USB_6KRO_Data_t);
-                memset(buf, 0, packet_size);
-                USB_6KRO_Data_t *report = (USB_6KRO_Data_t *)buf;
-                report->rid = REPORT_ID_NKRO;
-                TICK_SIXKRO;
-                if (last_report) {
-                    lastReportToCheck = &last_report->last6KROReport;
-                }
-            }
-#endif
-
-            // If we are directly asked for a HID report, always just reply with the NKRO one
-            if (lastReportToCheck) {
-                uint8_t cmp = memcmp(lastReportToCheck, buf, packet_size);
-                if (cmp == 0) {
-                    packet_size = 0;
-                    continue;
-                }
-                memcpy(lastReportToCheck, buf, packet_size);
-                break;
-            } else {
-                break;
-            }
-        }
-        if (packet_size) {
-            return packet_size;
-        }
-    }
-#else
-    if (wiiValid) {
-        wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &test_report);
-    }
-    if (ps2Valid) {
-        ps2_to_universal_report(ps2Data, sizeof(lastSuccessfulPS2Packet), ps2ControllerType, &test_report);
-    }
-    USB_Report_Data_t *report_data = (USB_Report_Data_t *)buf;
-    uint8_t report_size;
-    bool updateSequence = false;
-    bool updateHIDSequence = false;
-#if USB_HOST_STACK
-    if (output_console_type == XBOXONE) {
-        XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
-#if DEVICE_TYPE_IS_LIVE_GUITAR
-        XboxOneGHLGuitarWithGamepad_Data_t *reportGHL = (XboxOneGHLGuitarWithGamepad_Data_t *)buf;
-        // The GHL guitar is special. It sends both a standard gamepad report and a report with a format mirroring the ps3 ghl report
-        // We append the standard gamepad after the ps3 report, so swap out buffers so that the gamepad tick writes to the correct place
-        memset(buf, 0, sizeof(XboxOneGHLGuitarWithGamepad_Data_t));
-        report = &reportGHL->gamepad;
-#endif
-        packet_size = sizeof(XBOX_ONE_REPORT);
-        report_size = packet_size - sizeof(GipHeader_t);
-        memset(buf, 0, packet_size);
-        GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, XBOXONE, current_mode, &test_report);
-        asm volatile("" ::
-                         : "memory");
-#if DEVICE_TYPE_IS_GUITAR
-        if (report->tilt < 0x70) {
-            report->tilt = 0;
-        }
-#endif
-
-        if (report->guide != lastXboxOneGuide) {
-            lastXboxOneGuide = report->guide;
-            GipKeystroke_t *keystroke = (GipKeystroke_t *)buf;
-            GIP_HEADER(keystroke, GIP_VIRTUAL_KEYCODE, true, keystroke_sequence_number++);
-            keystroke->pressed = report->guide;
-            keystroke->keycode = GIP_VKEY_LEFT_WIN;
-            return sizeof(GipKeystroke_t);
-        }
-        // We use an unused bit as a flag for sending the guide key code, so flip it back
-        report->guide = false;
-        GipPacket_t *packet = (GipPacket_t *)report;
-        report_data = (USB_Report_Data_t *)packet->data;
-        updateSequence = true;
-#if DEVICE_TYPE_IS_LIVE_GUITAR
-        packet_size = sizeof(XboxOneGHLGuitarWithGamepad_Data_t);
-        uint8_t cmp = memcmp(last_report, report_data, report_size);
-        if (cmp == 0) {
-            // gamepad report has not changed, so only send GHL report
-            packet_size = sizeof(XboxOneGHLGuitar_Data_t);
-            updateSequence = false;
-        }
-        memcpy(last_report, report_data, report_size);
-        GIP_HEADER((&reportGHL->guitar), GHL_HID_REPORT, false, hid_sequence_number);
-        report_data = (USB_Report_Data_t *)&reportGHL->guitar.report;
-        updateHIDSequence = true;
-        report_size = convert_report_back((uint8_t *)report_data, 0, PS3, current_mode, &test_report);
-#endif
-    }
-#endif
-    if (output_console_type == OG_XBOX) {
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, OG_XBOX, current_mode, &test_report);
-        report_size = packet_size = sizeof(OG_XBOX_REPORT);
-    }
-    if (output_console_type == WINDOWS || output_console_type == XBOX360) {
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, XBOX360, current_mode, &test_report);
-        report_size = packet_size = sizeof(XINPUT_REPORT);
-    }
-// Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
-// DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
-#if SUPPORTS_PS4
-    if (output_console_type == PS4) {
-        if (millis() > 450000 && !auth_ps4_controller_found) {
-            reset_usb();
-        }
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS4, current_mode, &test_report);
-        PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)buf;
-        // PS4 does not start using the controller until it sees a PS button press.
-        if (!seen_ps4_console) {
-            gamepad->guide = true;
-        }
-        report_size = packet_size = sizeof(PS4_REPORT);
-    }
-#endif
-    // IOS works native with PS3 gamepads in FNF so thats what we emulate for that scenario
-    if (output_console_type == IOS_FESTIVAL) {
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, IOS_FESTIVAL, current_mode, &test_report);
-    }
-    if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, UNIVERSAL, current_mode, &test_report);
-    }
-
-#if DEVICE_TYPE_IS_GUITAR
-    if (output_console_type == FNF) {
-        convert_report_back((uint8_t *)buf, 0, FNF, current_mode, &test_report);
-    }
-#endif
-// For gamepads, use the PS3 report format on PS3
-#if DEVICE_TYPE == GAMEPAD
-    if (output_console_type == PS3) {
-        convert_report_back((uint8_t *)buf, 0, PS3, current_mode, &test_report);
-        report_size = packet_size = sizeof(PS3Gamepad_Data_t);
-    }
-    if (output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4) {
-#else
-    // For instruments, we instead use the below block, as all other console types use the below format
-    if ((output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE)) {
-#endif
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS3, current_mode, &test_report);
-    }
-
-    TICK_RESET
-    // Some hosts want packets sent every frame
-    if (last_report && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
-        uint8_t cmp = memcmp(last_report, report_data, report_size);
-        if (cmp == 0) {
-            return 0;
-        }
-        memcpy(last_report, report_data, report_size);
-    }
-// Standard PS4 controllers need a report counter, but we don't want to include that when comparing so we add it here
-#if SUPPORTS_PS4
-    if (output_console_type == PS4) {
-        PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
-        gamepad->reportCounter = ps4_sequence_number++;
-    }
-#endif
-
-#if USB_HOST_STACK
-#if DEVICE_TYPE_IS_GAMEPAD
-    if (updateSequence) {
-        report_sequence_number++;
-        if (report_sequence_number == 0) {
-            report_sequence_number = 1;
-        }
-    }
-#if DEVICE_TYPE_IS_LIVE_GUITAR
-    if (updateHIDSequence) {
-        hid_sequence_number++;
-        if (hid_sequence_number == 0) {
-            hid_sequence_number = 1;
-        }
-    }
-#endif
-#endif
-#endif
-#endif
     return packet_size;
 }
 
@@ -1146,7 +1136,7 @@ bool tick_usb(void) {
         millis_at_boot = millis();
     }
 
-#if !DEVICE_TYPE_IS_KEYBOARD
+#if DEVICE_TYPE_IS_GAMEPAD
     if (!WINDOWS_USES_XINPUT) {
         // If we ended up here, then someone probably changed back to hid mode so we should jump back
         if (consoleType == WINDOWS) {
@@ -1154,16 +1144,14 @@ bool tick_usb(void) {
             reset_usb();
         }
     }
-#endif
-#if DEVICE_TYPE_IS_GAMEPAD
     // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
     if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
         // The wii however will configure the usb device before it stops communicating
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == ROCK_BAND_DRUMS
-        if (usb_configured()) {
-            set_console_type(WII_RB);
+        if (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == ROCK_BAND_DRUMS) {
+            if (usb_configured()) {
+                set_console_type(WII_RB);
+            }
         }
-#endif
         // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
         set_console_type(PS3);
     }
@@ -1189,10 +1177,10 @@ bool tick_usb(void) {
     }
 #endif
     if (!size) {
-        size = tick_inputs(&combined_report, &last_report_usb, consoleType);
+        size = tick_inputs(&last_report, &last_report_usb, consoleType);
     }
     if (size) {
-        send_report_to_pc(&combined_report, size);
+        send_report_to_pc(&last_report, size);
     }
     seen_ps4_console = true;
     return size;
@@ -1385,7 +1373,7 @@ void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
         transfer_with_usb_controller(dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x03F4, 0x00, sizeof(hid_command_enable), hid_command_enable);
         handle_player_leds(0);
     }
-    if (vid == REDOCTANE_VID && pid == PS3_KEYBOARD_PID) {
+    if (vid == REDOCTANE_VID && (pid == PS3_KEYBOARD_PID || pid == PS3_MUSTANG_PID || pid == PS3_SQUIRE_PID || pid == PS3_MPA_MUSTANG_PID || pid == PS3_MPA_SQUIRE_PID || pid == PS3_MPA_KEYBOARD_PID)) {
         uint8_t hid_command_enable[40] = {
             0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1541,6 +1529,15 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
                     type->console_type = PS3;
                     type->sub_type = ROCK_BAND_PRO_KEYS;
                     break;
+                case PS3_MUSTANG_PID:
+                case PS3_MPA_MUSTANG_PID:
+                    type->console_type = PS3;
+                    type->sub_type = ROCK_BAND_PRO_GUITAR_MUSTANG;
+                    break;
+                case PS3_SQUIRE_PID:
+                case PS3_MPA_SQUIRE_PID:
+                    type->console_type = PS3;
+                    type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
             }
             break;
 
@@ -1562,6 +1559,15 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
                 case WII_MPA_KEYBOARD_PID:
                     type->console_type = PS3;
                     type->sub_type = ROCK_BAND_PRO_KEYS;
+                    break;
+                case WII_MUSTANG_PID:
+                case WII_MPA_MUSTANG_PID:
+                    type->console_type = PS3;
+                    type->sub_type = ROCK_BAND_PRO_GUITAR_MUSTANG;
+                case WII_SQUIRE_PID:
+                case WII_MPA_SQUIRE_PID:
+                    type->console_type = PS3;
+                    type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
                     break;
             }
 

@@ -38,6 +38,7 @@
 #define XINPUT_PRO_GUITAR 25
 // Also not real, but nice for matching
 #define XINPUT_GUITAR_WT 26
+#define XINPUT_SKYLANDERS_PORTAL 36
 
 #define PS4_GAMEPAD 0
 #define PS4_GUITAR 1

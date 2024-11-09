@@ -166,35 +166,31 @@ inline void wii_to_universal_report(const uint8_t *data, uint8_t len, uint16_t c
             usb_host_data->start |= !report->start;
             usb_host_data->guide |= !report->guide;
             usb_host_data->back |= !report->back;
-            usb_host_data->dpadDown |= !report->dpadDown;
-            usb_host_data->dpadRight |= !report->dpadRight;
-            usb_host_data->dpadUp |= !report->dpadUp;
-            usb_host_data->dpadLeft |= !report->dpadLeft;
             usb_host_data->green |= !report->green;
             usb_host_data->red |= !report->red;
             usb_host_data->yellow |= !report->yellow;
             usb_host_data->blue |= !report->blue;
             usb_host_data->orange |= !report->orange;
-            switch (report->which) {
-                case 0x1B:
-                    drumVelocity[DRUM_KICK] = report->velocity;
-                    break;
-                case 0x12:
-                    drumVelocity[DRUM_GREEN] = report->velocity;
-                    break;
-                case 0x19:
-                    drumVelocity[DRUM_RED] = report->velocity;
-                    break;
-                case 0x11:
-                    drumVelocity[DRUM_YELLOW] = report->velocity;
-                    break;
-                case 0x0F:
-                    drumVelocity[DRUM_BLUE] = report->velocity;
-                    break;
-                case 0x0E:
-                    drumVelocity[DRUM_ORANGE] = report->velocity;
-                    break;
-            }
+            // switch (report->which) {
+            //     case 0x1B:
+            //         drumVelocity[DRUM_KICK] = report->velocity;
+            //         break;
+            //     case 0x12:
+            //         drumVelocity[DRUM_GREEN] = report->velocity;
+            //         break;
+            //     case 0x19:
+            //         drumVelocity[DRUM_RED] = report->velocity;
+            //         break;
+            //     case 0x11:
+            //         drumVelocity[DRUM_YELLOW] = report->velocity;
+            //         break;
+            //     case 0x0F:
+            //         drumVelocity[DRUM_BLUE] = report->velocity;
+            //         break;
+            //     case 0x0E:
+            //         drumVelocity[DRUM_ORANGE] = report->velocity;
+            //         break;
+            // }
             // We only get velocity on events above, so zero them when the digital input is off
             if (!report->green) {
                 drumVelocity[DRUM_GREEN] = 0;
@@ -301,10 +297,6 @@ inline uint8_t universal_report_to_wii(uint8_t *data, uint8_t len, uint8_t sub_t
             memset(data, 0, sizeof(WiiDrumDataFormat3_t));
             report->leftStickX = usb_host_data->leftStickX >> 2;
             report->leftStickY = usb_host_data->leftStickY >> 2;
-            report->dpadUp = usb_host_data->dpadUp;
-            report->dpadDown = usb_host_data->dpadDown;
-            report->dpadLeft = usb_host_data->dpadLeft;
-            report->dpadRight = usb_host_data->dpadRight;
             report->green = usb_host_data->green;
             report->red = usb_host_data->red;
             report->yellow = usb_host_data->yellow;

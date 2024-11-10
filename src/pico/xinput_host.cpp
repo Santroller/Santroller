@@ -182,7 +182,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
     }
     // Some controllers need a delay here otherwise they don't initialise properly
     sleep_ms(1);
-    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
+    TU_VERIFY(0x58 == desc_itf->bInterfaceClass || TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
     xinputh_interface_t *p_xinput = NULL;
     uint8_t i = 0;
     for (; i < CFG_TUH_XINPUT; i++) {
@@ -391,7 +391,30 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         _xinputh_dev->inst_count++;
         usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
         return true;
-    }
+    } else if (desc_itf->bInterfaceClass == 0x58) {
+        uint8_t endpoints = desc_itf->bNumEndpoints;
+        while (endpoints--) {
+            p_desc = tu_desc_next(p_desc);
+            tusb_desc_endpoint_t const *desc_ep =
+                (tusb_desc_endpoint_t const *)p_desc;
+            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            if (desc_ep->bEndpointAddress & 0x80) {
+                p_xinput->ep_in = desc_ep->bEndpointAddress;
+                p_xinput->epin_size = desc_ep->wMaxPacketSize;
+                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
+            } else {
+                p_xinput->ep_out = desc_ep->bEndpointAddress;
+                p_xinput->epout_size = desc_ep->wMaxPacketSize;
+                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+            }
+        }
+        p_xinput->itf_num = desc_itf->bInterfaceNumber;
+
+        p_xinput->type = OG_XBOX;
+        p_xinput->subtype = GAMEPAD;
+        return true;
+    } 
     return false;
 }
 

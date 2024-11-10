@@ -359,6 +359,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             break;
         }
         case XBOX360_BB:
+        case OG_XBOX:
         case KEYBOARD:
         case MOUSE:
         case STREAM_DECK:

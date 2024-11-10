@@ -1553,6 +1553,60 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             break;
         }
+        case OG_XBOX: {
+            OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)data;
+            usb_host_data->a |= report->a > 0x20;
+            usb_host_data->b |= report->b > 0x20;
+            usb_host_data->x |= report->x > 0x20;
+            usb_host_data->y |= report->y > 0x20;
+            usb_host_data->leftShoulder |= report->leftShoulder > 0x20;
+            usb_host_data->rightShoulder |= report->rightShoulder > 0x20;
+            usb_host_data->back |= report->back;
+            usb_host_data->start |= report->start;
+            usb_host_data->leftThumbClick |= report->leftThumbClick;
+            usb_host_data->rightThumbClick |= report->rightThumbClick;
+            usb_host_data->dpadLeft = report->dpadLeft;
+            usb_host_data->dpadRight = report->dpadRight;
+            usb_host_data->dpadUp = report->dpadUp;
+            usb_host_data->dpadDown = report->dpadDown;
+            if (report->leftTrigger) {
+                usb_host_data->leftTrigger = report->leftTrigger << 8;
+            }
+            if (report->rightTrigger) {
+                usb_host_data->rightTrigger = report->rightTrigger << 8;
+            }
+            if (report->leftStickX) {
+                usb_host_data->leftStickX = report->leftStickX;
+            }
+            if (report->leftStickY) {
+                usb_host_data->leftStickY = report->leftStickY;
+            }
+            if (report->rightStickX) {
+                usb_host_data->rightStickX = report->rightStickX;
+            }
+            if (report->rightStickY) {
+                usb_host_data->rightStickY = report->rightStickY;
+            }
+            if (report->leftShoulder) {
+                usb_host_data->pressureL1 = report->leftShoulder;
+            }
+            if (report->rightShoulder) {
+                usb_host_data->rightShoulder = report->rightShoulder;
+            }
+            if (report->y) {
+                usb_host_data->pressureTriangle = report->y;
+            }
+            if (report->b) {
+                usb_host_data->pressureCircle = report->b;
+            }
+            if (report->a) {
+                usb_host_data->pressureCross = report->a;
+            }
+            if (report->x) {
+                usb_host_data->pressureSquare = report->x;
+            }
+            break;
+        }
         case XBOX360_BB: {
             XInputBigButton_Data_t *report = (XInputBigButton_Data_t *)data;
             usb_host_data->green |= report->a;

@@ -298,15 +298,15 @@ typedef struct {
     uint8_t yellowCymbal : 1;
     uint8_t blueCymbal : 1;
     uint8_t greenCymbal : 1;
-    uint8_t overdrive : 1;
     uint8_t white1 : 1;
-
     uint8_t white2 : 1;
     uint8_t white3 : 1;
+    
     uint8_t black1 : 1;
     uint8_t black2 : 1;
     uint8_t black3 : 1;
     uint8_t ghtv : 1;
+    uint8_t overdrive : 1;
     uint8_t euphoria : 1;
     uint8_t nunchukC: 1;
     uint8_t nunchukZ: 1;

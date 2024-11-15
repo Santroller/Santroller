@@ -464,7 +464,7 @@ extern const uint8_t xb1_descriptor_end[6];
 #define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
 #define SUPPORTS_AVR defined(__AVR__)
 #define SUPPORTS_TEENSY (defined(__arm__) && defined(CORE_TEENSY))
-#define BLUETOOTH_RX defined(BLUETOOTH_RX_BLE) || defined(BLUETOOTH_RX_CLASSIC)
+#define BLUETOOTH_RX (defined(BLUETOOTH_RX_BLE) || defined(BLUETOOTH_RX_CLASSIC))
 #define BLUETOOTH (defined(BLUETOOTH_TX) || BLUETOOTH_RX)
 enum hid_reports_t {
     REPORT_ID_NONE,

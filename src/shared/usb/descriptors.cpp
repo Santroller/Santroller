@@ -765,14 +765,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             return true;
         }
     }
-    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
-        if (xbox_360_state == Auth1) {
-            xbox_360_state = Auth2;
-        } else if (xbox_360_state == Auth2) {
-            xbox_360_state = Authenticated;
-            handle_auth_led();
-        }
-    }
     // Doing this actually *breaks* xb360 on pro micros.
     // But its necessary on the pico :/
 #if SUPPORTS_PICO
@@ -860,6 +852,15 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
     }
 #endif
+
+    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
+        if (xbox_360_state == Auth1) {
+            xbox_360_state = Auth2;
+        } else if (xbox_360_state == Auth2) {
+            xbox_360_state = Authenticated;
+            handle_auth_led();
+        }
+    }
     if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
         seen_windows = true;
     }

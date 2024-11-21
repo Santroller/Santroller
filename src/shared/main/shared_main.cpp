@@ -311,8 +311,14 @@ int16_t adc_i(uint8_t pin) {
     int32_t ret = adc(pin);
     return ret - 32767;
 }
-int16_t handle_calibration_xbox(int16_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
+int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     int32_t val = orig_val;
+    if (val > INT16_MAX) {
+        val = INT16_MAX;
+    }
+    if (val < INT16_MIN) {
+        val = INT16_MIN;
+    }
     if (val < center) {
         if ((center - val) < deadzone) {
             val = 0;
@@ -416,12 +422,12 @@ uint16_t handle_calibration_drum(uint16_t previous, uint16_t orig_val, uint32_t 
     }
     return previous;
 }
-uint8_t handle_calibration_ps3(uint8_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
+uint8_t handle_calibration_ps3(uint8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, min, max, center, deadzone) >> 8;
     return (uint8_t)(ret + PS3_STICK_CENTER);
 }
 
-int8_t handle_calibration_mouse(int8_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
+int8_t handle_calibration_mouse(int8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     return handle_calibration_xbox(previous << 8, orig_val, min, max, center, deadzone) >> 8;
 }
 
@@ -587,7 +593,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         }
         case MOUSE: {
             USB_Mouse_Boot_Data_t *report = (USB_Mouse_Boot_Data_t *)data;
-            memcpy(&usb_host_data->mouse, report, sizeof(report));
+            memcpy(&usb_host_data->mouse, report, sizeof(USB_Mouse_Boot_Data_t));
             break;
         }
         case GENERIC: {
@@ -2970,6 +2976,11 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     if (xbox_360_state == Authenticated) return;
     xbox_360_vid = vid;
     xbox_360_pid = pid;
+    // Using the skylander pid on a 360 results in it not being classed as a controller
+    // IDs from the xplorer auth just fine with the portals blobs however
+    if (xbox_360_vid == XBOX_REDOCTANE_VID && xbox_360_pid == 0x1f17) {
+        xbox_360_pid = 0x4748;
+    }
 }
 
 void xinput_w_controller_connected() {

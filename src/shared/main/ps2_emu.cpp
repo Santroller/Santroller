@@ -133,7 +133,7 @@ void ps2_emu_init() {
 #endif
 
 }
-bool ps2_emu_tick(PS2_REPORT* report) {
+bool ps2_emu_tick(uint8_t* report) {
     if (PS2_OUTPUT_ATT_READ()) {
         timeoutCounter++;
         if (timeoutCounter >= 30000)  // we've been disconnected

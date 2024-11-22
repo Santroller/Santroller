@@ -4,7 +4,7 @@
 #include "defines.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
-inline void universal_report_to_festival_hid(uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+inline void universal_report_to_festival_hid(uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     uint8_t packet_size;
     uint8_t report_size = packet_size = sizeof(PCFortniteRockBandGuitar_Data_t);
     PCFortniteRockBandGuitar_Data_t *report = (PCFortniteRockBandGuitar_Data_t *)data;

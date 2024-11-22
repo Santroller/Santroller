@@ -121,7 +121,7 @@ inline void xbone_to_universal_report(const uint8_t *data, uint8_t len, uint8_t 
     }
 }
 
-inline uint8_t universal_report_to_xbone(uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+inline uint8_t universal_report_to_xbone(uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     XboxOneGamepad_Data_t *dpad_report = (XboxOneGamepad_Data_t *)data;
     dpad_report->dpadLeft = usb_host_data->dpadLeft;
     dpad_report->dpadRight = usb_host_data->dpadRight;

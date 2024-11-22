@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "serial.h"
 
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
@@ -17,14 +16,13 @@
 #include "descriptors.h"
 #include "endpoints.h"
 #include "hid.h"
+#include "serial.h"
 #include "shared_main.h"
 #if DEVICE_TYPE_IS_KEYBOARD
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
-#define REPORT keyboard_mouse_descriptor
 #define APPEARANCE 0xC1
 #else
 // Appearance HID - Gamepad (Category 15, Sub-Category 4)
-#define REPORT pc_descriptor
 #define APPEARANCE 0xC4
 #endif
 // static btstack_timer_source_t heartbeat;
@@ -107,7 +105,43 @@ static void le_keyboard_setup(void) {
     pico_get_unique_board_id_string(id, sizeof(id));
     device_information_service_server_set_serial_number(id);
 
-    hids_device_init(0, REPORT, sizeof(REPORT));
+    switch (DEVICE_TYPE) {
+        case KEYBOARD_MOUSE:
+            hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
+            break;
+        case GAMEPAD:
+            hids_device_init(0, pc_descriptor_gamepad, sizeof(pc_descriptor_gamepad));
+            break;
+        case DANCE_PAD:
+        case STAGE_KIT:
+            hids_device_init(0, pc_descriptor_buttons, sizeof(pc_descriptor_buttons));
+            break;
+        case GUITAR_HERO_GUITAR:
+            hids_device_init(0, pc_descriptor_gh_guitar, sizeof(pc_descriptor_gh_guitar));
+            break;
+        case LIVE_GUITAR:
+            hids_device_init(0, pc_descriptor_live_guitar, sizeof(pc_descriptor_live_guitar));
+            break;
+        case ROCK_BAND_GUITAR:
+            hids_device_init(0, pc_descriptor_rb_guitar, sizeof(pc_descriptor_rb_guitar));
+            break;
+        case ROCK_BAND_PRO_GUITAR_MUSTANG:
+        case ROCK_BAND_PRO_GUITAR_SQUIRE:
+            hids_device_init(0, pc_descriptor_rb_pro_guitar, sizeof(pc_descriptor_rb_pro_guitar));
+            break;
+        case ROCK_BAND_PRO_KEYS:
+            hids_device_init(0, pc_descriptor_rb_pro_keys, sizeof(pc_descriptor_rb_pro_keys));
+            break;
+        case ROCK_BAND_DRUMS:
+            hids_device_init(0, pc_descriptor_rb_drums, sizeof(pc_descriptor_rb_drums));
+            break;
+        case GUITAR_HERO_DRUMS:
+            hids_device_init(0, pc_descriptor_gh_drums, sizeof(pc_descriptor_gh_drums));
+            break;
+        case DJ_HERO_TURNTABLE:
+            hids_device_init(0, pc_descriptor_turntable, sizeof(pc_descriptor_turntable));
+            break;
+    }
 
     // setup advertisements
     uint16_t adv_int_min = 0x0030;
@@ -224,7 +258,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 }
                 case HIDS_SUBEVENT_CAN_SEND_NOW: {
-
                     printf("can send now\r\n");
                 }
                 default:

@@ -390,7 +390,7 @@ inline void x360_to_universal_report(const uint8_t *data, uint8_t len, uint8_t s
     }
 }
 
-inline uint8_t universal_report_to_x360(uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+inline uint8_t universal_report_to_x360(uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     XInputGamepad_Data_t *dpad_report = (XInputGamepad_Data_t *)data;
     dpad_report->rid = 0;
     dpad_report->rsize = sizeof(XInputGamepad_Data_t);

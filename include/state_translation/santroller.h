@@ -325,7 +325,7 @@ inline void santroller_to_universal_report(const uint8_t *data, uint8_t len, uin
     }
 }
 
-inline uint8_t universal_report_to_santroller(uint8_t dpad, uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+inline uint8_t universal_report_to_santroller(uint8_t dpad, uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     PCGamepad_Data_t *report = (PCGamepad_Data_t *)data;
     report->dpad = dpad;
     report->guide = usb_host_data->guide;

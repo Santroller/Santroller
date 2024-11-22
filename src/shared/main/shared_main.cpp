@@ -740,181 +740,46 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
     dpad = dpad_bindings[dpad];
     switch (console_type) {
         case OG_XBOX: {
-            return universal_report_to_ogxbox(data, len, sub_type, usb_host_data);
+            return universal_report_to_ogxbox(data, sub_type, usb_host_data);
         }
         case BLUETOOTH_REPORT:
         case SANTROLLER: {
-            return universal_report_to_santroller(dpad, data, len, sub_type, usb_host_data);
+            return universal_report_to_santroller(dpad, data, sub_type, usb_host_data);
         }
-#ifdef TICK_PS2
-        case PS2: {
-            return universal_report_to_ps2(data, len, sub_type, usb_host_data);
-        }
-#endif
-#ifdef TICK_WII
-        case WII: {
-            return universal_report_to_wii(data, len, sub_type, usb_host_data);
-        }
-#endif
         case SWITCH:
         case PS3: {
-            return universal_report_to_ps3(dpad, data, len, console_type, sub_type, usb_host_data);
+            return universal_report_to_ps3(dpad, data, console_type, sub_type, usb_host_data);
         }
         case PS4: {
-            return universal_report_to_ps4(dpad, data, len, sub_type, usb_host_data);
+            return universal_report_to_ps4(dpad, data, sub_type, usb_host_data);
         }
         case PS5: {
-            return universal_report_to_ps5(dpad, data, len, sub_type, usb_host_data);
+            return universal_report_to_ps5(dpad, data, sub_type, usb_host_data);
         }
         case XBOX360_W:
         case XBOX360: {
-            return universal_report_to_x360(data, len, sub_type, usb_host_data);
+            return universal_report_to_x360(data, sub_type, usb_host_data);
         }
         case XBOXONE: {
-            return universal_report_to_xbone(data, len, sub_type, usb_host_data);
+            return universal_report_to_xbone(data, sub_type, usb_host_data);
         }
     }
     return 0;
 }
 
-#ifdef TICK_PS2
-PS2_REPORT ps2Report;
+#ifdef PS2_OUTPUT_SPI_PORT
+uint8_t ps2Report[32];
 void tick_ps2output() {
-    PS2_REPORT *report = &ps2Report;
-    if (!ps2_emu_tick(report)) {
+    uint8_t size = universal_report_to_ps2(ps2Report, DEVICE_TYPE, &last_report);
+    if (!ps2_emu_tick(ps2Report)) {
         return;
     }
-    uint8_t packet_size = 0;
-    Buffer_Report_t current_queue_report = {val : 0};
-// Tick Inputs
-#include "inputs/accel.h"
-#include "inputs/clone_neck.h"
-#include "inputs/gh5_neck.h"
-#include "inputs/mpr121.h"
-#include "inputs/ps2.h"
-#include "inputs/slave_tick.h"
-#include "inputs/turntable.h"
-#include "inputs/usb_host.h"
-#include "inputs/wii.h"
-#include "inputs/wt_neck.h"
-
-    TICK_SHARED;
-    memset(report, 0, sizeof(report));
-    TICK_PS2;
-    report->header = 0x5A;
-#if DEVICE_TYPE_IS_GUITAR
-    report->dpadLeft = true;
-#endif
 }
 #endif
-#ifdef TICK_WII
+#ifdef WII_OUTPUT_TWI_PORT
 void tick_wiioutput() {
-#include "inputs/accel.h"
-#include "inputs/clone_neck.h"
-#include "inputs/gh5_neck.h"
-#include "inputs/mpr121.h"
-#include "inputs/ps2.h"
-#include "inputs/slave_tick.h"
-#include "inputs/turntable.h"
-#include "inputs/usb_host.h"
-#include "inputs/wii.h"
-#include "inputs/wt_neck.h"
-    TICK_SHARED;
-#if DEVICE_TYPE_IS_GUITAR
-    WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)wii_data;
-    memset(wii_data, 0, sizeof(wii_data));
-    // Center sticks
-    report->leftStickX = 0x20;
-    report->leftStickY = 0x20;
-    report->slider = 0x0F;
-    TICK_WII;
-    wii_data[4] = ~wii_data[4];
-    wii_data[5] = ~wii_data[5];
-    setInputs(wii_data, sizeof(wii_data));
-#elif DEVICE_TYPE_IS_DRUM
-    WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)wii_data;
-    memset(wii_data, 0, sizeof(wii_data));
-    // Center sticks
-    report->leftStickX = 0x20;
-    report->leftStickY = 0x20;
-    TICK_WII;
-    wii_data[4] = ~wii_data[4];
-    wii_data[5] = ~wii_data[5];
-    setInputs(wii_data, sizeof(wii_data));
-#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
-    WiiTurntableIntermediateFormat3_t temp_report;
-    WiiTurntableIntermediateFormat3_t *report = &temp_report;
-    // Center sticks
-    report->leftStickX = 0x20;
-    report->leftStickY = 0x20;
-    memset(report, 0, sizeof(temp_report));
-    memset(wii_data, 0, sizeof(wii_data));
-    TICK_WII;
-    // Turntable report format is so muddled that we have to transform things by hand after
-    WiiTurntableDataFormat3_t *real_report = (WiiTurntableDataFormat3_t *)wii_data;
-    // Button bits are inverted
-    real_report->buttonsLow = ~report->buttonsLow;
-    real_report->buttonsHigh = ~report->buttonsHigh;
-    real_report->leftStickX = report->leftStickX;
-    real_report->leftStickY = report->leftStickY;
-    real_report->crossfader = report->crossfader;
-    real_report->effectsKnob20 = report->effectsKnob20;
-    real_report->effectsKnob43 = report->effectsKnob43;
-    real_report->leftTableVelocity40 = report->leftTableVelocity40;
-    real_report->leftTableVelocity5 = report->leftTableVelocity5;
-    real_report->rightTableVelocity0 = report->rightTableVelocity0;
-    real_report->rightTableVelocity21 = report->rightTableVelocity21;
-    real_report->rightTableVelocity43 = report->rightTableVelocity43;
-    real_report->rightTableVelocity5 = report->rightTableVelocity5;
-
-    setInputs(wii_data, sizeof(wii_data));
-#else
-    // Report format 3 is reasonable, so we can convert from that
-    WiiClassicDataFormat3_t temp_report;
-    WiiClassicDataFormat3_t *report = &temp_report;
-    memset(report, 0, sizeof(temp_report));
-    memset(wii_data, 0, sizeof(wii_data));
-    // Center sticks
-    report->leftStickX = PS3_STICK_CENTER;
-    report->leftStickY = PS3_STICK_CENTER;
-    report->rightStickX = PS3_STICK_CENTER;
-    report->rightStickY = PS3_STICK_CENTER;
-    TICK_WII;
-    // button bits are inverted
-    report->buttonsLow = ~report->buttonsLow;
-    report->buttonsHigh = ~report->buttonsHigh;
-    uint8_t format = wii_data_format();
-    if (format == 3) {
-        memcpy(wii_data, report, sizeof(report));
-    } else if (format == 2) {
-        WiiClassicDataFormat2_t *real_report = (WiiClassicDataFormat2_t *)wii_data;
-        real_report->buttonsLow = report->buttonsLow;
-        real_report->buttonsHigh = report->buttonsHigh;
-        real_report->leftStickX92 = report->leftStickX;
-        real_report->leftStickY92 = report->leftStickY;
-        real_report->rightStickX92 = report->rightStickX;
-        real_report->rightStickY92 = report->rightStickY;
-        real_report->leftTrigger = report->leftTrigger;
-        real_report->rightTrigger = report->rightTrigger;
-    } else if (format == 1) {
-        // Similar to the turntable, classic format 1 is awful so we need to translate to an intermediate format first
-        WiiIntermediateClassicDataFormat_t intermediate_report;
-        intermediate_report.rightStickX = report->rightStickX >> 3;
-        intermediate_report.leftTrigger = report->leftTrigger >> 3;
-        WiiClassicDataFormat1_t *real_report = (WiiClassicDataFormat1_t *)wii_data;
-        real_report->buttonsLow = report->buttonsLow;
-        real_report->buttonsHigh = report->buttonsHigh;
-        real_report->leftStickX = report->leftStickX >> 2;
-        real_report->leftStickY = report->leftStickY >> 2;
-        real_report->rightTrigger = report->rightTrigger >> 3;
-        real_report->rightStickX0 = intermediate_report.rightStickX0;
-        real_report->rightStickX21 = intermediate_report.rightStickX21;
-        real_report->rightStickX43 = intermediate_report.rightStickX43;
-        real_report->leftTrigger20 = intermediate_report.leftTrigger20;
-        real_report->leftTrigger43 = intermediate_report.leftTrigger43;
-    }
-    setInputs(wii_data, sizeof(wii_data));
-#endif
+    uint8_t size = universal_report_to_wii(wii_data, DEVICE_TYPE, wii_data_format(), &last_report);
+    setInputs(wii_data, size);
 }
 #endif
 void bluetooth_connected() {
@@ -1169,7 +1034,7 @@ uint8_t tick_inputs(USB_Host_Data_t *report, USB_LastReport_Data_t *last_report,
 
 #ifdef BLUETOOTH_TX
 bool tick_bluetooth(void) {
-    uint8_t size = tick_inputs(&bt_report, &last_report_bt, BLUETOOTH_REPORT);
+    uint8_t size = tick_controllers(&bt_report, &last_report_bt, BLUETOOTH_REPORT, &last_report);
     send_report(size, (uint8_t *)&bt_report);
     return size;
 }

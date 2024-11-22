@@ -97,7 +97,7 @@ inline void ps5_to_universal_report(const uint8_t *data, uint8_t len, uint8_t su
     }
 }
 
-inline uint8_t universal_report_to_ps5(uint8_t dpad, uint8_t *data, uint8_t len, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+inline uint8_t universal_report_to_ps5(uint8_t dpad, uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
     PS5Gamepad_Data_t *dpad_report = (PS5Gamepad_Data_t *)data;
     dpad_report->dpad = dpad;
     dpad_report->guide = usb_host_data->guide;

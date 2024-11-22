@@ -284,8 +284,14 @@ int16_t adc_i(uint8_t pin) {
     int32_t ret = adc(pin);
     return ret - 32767;
 }
-int16_t handle_calibration_xbox(int16_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
+int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     int32_t val = orig_val;
+    if (val > INT16_MAX) {
+        val = INT16_MAX;
+    }
+    if (val < INT16_MIN) {
+        val = INT16_MIN;
+    }
     if (val < center) {
         if ((center - val) < deadzone) {
             val = 0;
@@ -389,12 +395,12 @@ uint16_t handle_calibration_drum(uint16_t previous, uint16_t orig_val, uint32_t 
     }
     return previous;
 }
-uint8_t handle_calibration_ps3(uint8_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
+uint8_t handle_calibration_ps3(uint8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, min, max, center, deadzone) >> 8;
     return (uint8_t)(ret + PS3_STICK_CENTER);
 }
 
-int8_t handle_calibration_mouse(int8_t previous, int16_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
+int8_t handle_calibration_mouse(int8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone) {
     return handle_calibration_xbox(previous << 8, orig_val, min, max, center, deadzone) >> 8;
 }
 
@@ -636,6 +642,60 @@ void convert_report(const uint8_t *data, uint8_t len, uint8_t console_type, uint
         }
         case SWITCH: {
             switch_to_universal_report(data, len, sub_type, usb_host_data);
+            break;
+        }
+        case OG_XBOX: {
+            OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)data;
+            usb_host_data->a |= report->a > 0x20;
+            usb_host_data->b |= report->b > 0x20;
+            usb_host_data->x |= report->x > 0x20;
+            usb_host_data->y |= report->y > 0x20;
+            usb_host_data->leftShoulder |= report->leftShoulder > 0x20;
+            usb_host_data->rightShoulder |= report->rightShoulder > 0x20;
+            usb_host_data->back |= report->back;
+            usb_host_data->start |= report->start;
+            usb_host_data->leftThumbClick |= report->leftThumbClick;
+            usb_host_data->rightThumbClick |= report->rightThumbClick;
+            usb_host_data->dpadLeft = report->dpadLeft;
+            usb_host_data->dpadRight = report->dpadRight;
+            usb_host_data->dpadUp = report->dpadUp;
+            usb_host_data->dpadDown = report->dpadDown;
+            if (report->leftTrigger) {
+                usb_host_data->leftTrigger = report->leftTrigger << 8;
+            }
+            if (report->rightTrigger) {
+                usb_host_data->rightTrigger = report->rightTrigger << 8;
+            }
+            if (report->leftStickX) {
+                usb_host_data->leftStickX = report->leftStickX;
+            }
+            if (report->leftStickY) {
+                usb_host_data->leftStickY = report->leftStickY;
+            }
+            if (report->rightStickX) {
+                usb_host_data->rightStickX = report->rightStickX;
+            }
+            if (report->rightStickY) {
+                usb_host_data->rightStickY = report->rightStickY;
+            }
+            if (report->leftShoulder) {
+                usb_host_data->pressureL1 = report->leftShoulder;
+            }
+            if (report->rightShoulder) {
+                usb_host_data->rightShoulder = report->rightShoulder;
+            }
+            if (report->y) {
+                usb_host_data->pressureTriangle = report->y;
+            }
+            if (report->b) {
+                usb_host_data->pressureCircle = report->b;
+            }
+            if (report->a) {
+                usb_host_data->pressureCross = report->a;
+            }
+            if (report->x) {
+                usb_host_data->pressureSquare = report->x;
+            }
             break;
         }
         case XBOX360_BB: {
@@ -1321,6 +1381,11 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     if (xbox_360_state == Authenticated) return;
     xbox_360_vid = vid;
     xbox_360_pid = pid;
+    // Using the skylander pid on a 360 results in it not being classed as a controller
+    // IDs from the xplorer auth just fine with the portals blobs however
+    if (xbox_360_vid == XBOX_REDOCTANE_VID && xbox_360_pid == 0x1f17) {
+        xbox_360_pid = 0x4748;
+    }
 }
 
 void xinput_w_controller_connected() {

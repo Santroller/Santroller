@@ -54,6 +54,11 @@ inline void xbone_to_universal_report(const uint8_t *data, uint8_t len, uint8_t 
             usb_host_data->yellow |= report->yellow;
             usb_host_data->blue |= report->blue;
             usb_host_data->orange |= report->orange;
+            usb_host_data->a |= report->a;
+            usb_host_data->b |= report->b;
+            usb_host_data->x |= report->x;
+            usb_host_data->y |= report->y;
+            usb_host_data->leftShoulder |= report->leftShoulder;
             if (report->tilt) {
                 usb_host_data->tilt = report->tilt << 8;
             }
@@ -157,6 +162,11 @@ inline uint8_t universal_report_to_xbone(uint8_t *data, uint8_t sub_type, const 
             report->blue = usb_host_data->blue;
             report->orange = usb_host_data->orange;
             report->tilt = usb_host_data->tilt;
+            report->a |= usb_host_data->a;
+            report->b |= usb_host_data->b;
+            report->x |= usb_host_data->x;
+            report->y |= usb_host_data->y;
+            report->leftShoulder |= usb_host_data->leftShoulder;
             if (report->tilt < 0x70) {
                 report->tilt = 0;
             }
@@ -180,6 +190,7 @@ inline uint8_t universal_report_to_xbone(uint8_t *data, uint8_t sub_type, const 
             } else if (usb_host_data->pickup == 0xE5) {
                 report->pickup = 0x40;
             }
+            // TODO: dpad left -> back
             return sizeof(XboxOneRockBandGuitar_Data_t);
         }
         case ROCK_BAND_DRUMS: {

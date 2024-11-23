@@ -1,4 +1,4 @@
-#ifdef INPUT_PS2
+#ifdef PS2_OUTPUT_SPI_PORT
     uint8_t *ps2Data = tickPS2();
     bool ps2Valid = ps2Data != NULL;
     lastPS2WasSuccessful = ps2Valid;

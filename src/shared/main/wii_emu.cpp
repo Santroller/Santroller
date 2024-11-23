@@ -10,7 +10,7 @@
 #include "wii.h"
 #include "wm_crypto.h"
 
-#ifdef TICK_WII
+#ifdef WII_OUTPUT_TWI_PORT
 static volatile unsigned char wm_rand[10];
 static volatile unsigned char wm_key[6];
 static volatile unsigned char wm_ft[8];
@@ -25,26 +25,28 @@ const unsigned char cal_data[32] = {
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00};
-#if DEVICE_TYPE_IS_GUITAR
-const unsigned char id[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x03};
-#elif DEVICE_TYPE_IS_DRUM
-const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x03};
-#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
-const unsigned char id[6] = {0x03, 0x00, 0xA4, 0x20, 0x01, 0x03};
-#else
-const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
-#endif
 
 // virtual register
 static unsigned char twi_reg[256];
 
 void initWiiOutput() {
+    if (DEVICE_TYPE_IS_GUITAR) {
+        const unsigned char id[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x03};
+        memcpy(twi_reg + 0xFA, id, sizeof(id));
+    } else if (DEVICE_TYPE_IS_DRUM) {
+        const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x03};
+        memcpy(twi_reg + 0xFA, id, sizeof(id));
+
+    } else if (deviceType == DJ_HERO_TURNTABLE) {
+        const unsigned char id[6] = {0x03, 0x00, 0xA4, 0x20, 0x01, 0x03};
+        memcpy(twi_reg + 0xFA, id, sizeof(id));
+
+    } else {
+        const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
+        memcpy(twi_reg + 0xFA, id, sizeof(id));
+    }
     memset(twi_reg, 0, sizeof(twi_reg));
     twi_reg[0xF0] = 0;  // disable encryption
-    // set id
-    for (unsigned int i = 0, j = 0xFA; i < 6; i++, j++) {
-        twi_reg[j] = id[i];
-    }
 
     // set calibration data
     for (unsigned int i = 0, j = 0x20; i < 6; i++, j++) {
@@ -134,11 +136,11 @@ void recv_data(uint8_t addr, uint8_t data) {
         twi_reg[addr] = data;
     }
     // Euphoria LED
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    if (addr == 0xFB) {
-        handle_rumble(twi_reg[addr] * 0xFF, RUMBLE_SANTROLLER_EUPHORIA_LED);
+    if (DEVICE_TYPE == DJ_HERO_TURNTABLE) {
+        if (addr == 0xFB) {
+            handle_rumble(twi_reg[addr] * 0xFF, RUMBLE_SANTROLLER_EUPHORIA_LED);
+        }
     }
-#endif
 }
 void recv_end(uint8_t addr, uint8_t len) {
     if (addr >= 0x40 && addr < 0x46) {

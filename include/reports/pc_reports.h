@@ -4,7 +4,6 @@
 
 #include "config.h"
 
-
 // To make things easier, we use bitfields here, and then we map to a proper hat later
 #define DPAD                       \
     union {                        \
@@ -18,42 +17,42 @@
         uint8_t dpad;              \
     };
 
-#define PRO_KEY_BUTTONS               \
-    union {                           \
-        uint32_t proKeyButtons;       \
-        struct {                      \
-            uint8_t key1 : 1;         \
-            uint8_t key2 : 1;         \
-            uint8_t key3 : 1;         \
-            uint8_t key4 : 1;         \
-            uint8_t key5 : 1;         \
-            uint8_t key6 : 1;         \
-            uint8_t key7 : 1;         \
-            uint8_t key8 : 1;         \
-                                      \
-            uint8_t key9 : 1;         \
-            uint8_t key10 : 1;        \
-            uint8_t key11 : 1;        \
-            uint8_t key12 : 1;        \
-            uint8_t key13 : 1;        \
-            uint8_t key14 : 1;        \
-            uint8_t key15 : 1;        \
-            uint8_t key16 : 1;        \
-                                      \
-            uint8_t key17 : 1;        \
-            uint8_t key18 : 1;        \
-            uint8_t key19 : 1;        \
-            uint8_t key20 : 1;        \
-            uint8_t key21 : 1;        \
-            uint8_t key22 : 1;        \
-            uint8_t key23 : 1;        \
-            uint8_t key24 : 1;        \
-                                      \
-            uint8_t key25 : 1;        \
-            uint8_t overdrive : 1;    \
-            uint8_t kick1 : 1; \
-            uint8_t : 5;              \
-        };                            \
+#define PRO_KEY_BUTTONS            \
+    union {                        \
+        uint32_t proKeyButtons;    \
+        struct {                   \
+            uint8_t key1 : 1;      \
+            uint8_t key2 : 1;      \
+            uint8_t key3 : 1;      \
+            uint8_t key4 : 1;      \
+            uint8_t key5 : 1;      \
+            uint8_t key6 : 1;      \
+            uint8_t key7 : 1;      \
+            uint8_t key8 : 1;      \
+                                   \
+            uint8_t key9 : 1;      \
+            uint8_t key10 : 1;     \
+            uint8_t key11 : 1;     \
+            uint8_t key12 : 1;     \
+            uint8_t key13 : 1;     \
+            uint8_t key14 : 1;     \
+            uint8_t key15 : 1;     \
+            uint8_t key16 : 1;     \
+                                   \
+            uint8_t key17 : 1;     \
+            uint8_t key18 : 1;     \
+            uint8_t key19 : 1;     \
+            uint8_t key20 : 1;     \
+            uint8_t key21 : 1;     \
+            uint8_t key22 : 1;     \
+            uint8_t key23 : 1;     \
+            uint8_t key24 : 1;     \
+                                   \
+            uint8_t key25 : 1;     \
+            uint8_t overdrive : 1; \
+            uint8_t kick1 : 1;     \
+            uint8_t : 5;           \
+        };                         \
     }
 
 typedef PRO_KEY_BUTTONS prokey_buttons_t;
@@ -148,14 +147,14 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t green : 1;  // cross
-    uint8_t red : 1;  // circle
-    uint8_t blue : 1;  // square
+    uint8_t green : 1;   // cross
+    uint8_t red : 1;     // circle
+    uint8_t blue : 1;    // square
     uint8_t yellow : 1;  // triangle
 
     uint8_t padFlag : 1;
     uint8_t cymbalFlag : 1;
-    uint8_t kick1 : 1;   // kick 1
+    uint8_t kick1 : 1;  // kick 1
     uint8_t kick2 : 1;  // kick 2
 
     uint8_t back : 1;
@@ -177,14 +176,14 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t green : 1;  // cross, green
-    uint8_t red : 1;  // circle, red
+    uint8_t green : 1;   // cross, green
+    uint8_t red : 1;     // circle, red
     uint8_t yellow : 1;  // triangle, yellow
-    uint8_t blue : 1;  // square, blue
+    uint8_t blue : 1;    // square, blue
 
     uint8_t orange : 1;  // orange, r1
     uint8_t kick1 : 1;   // kick, l1
-    uint8_t back : 1;           // select
+    uint8_t back : 1;    // select
     uint8_t start : 1;
 
     uint8_t guide : 1;  // ps
@@ -203,14 +202,14 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t green : 1;  // cross, green
-    uint8_t red : 1;  // circle, red
+    uint8_t green : 1;   // cross, green
+    uint8_t red : 1;     // circle, red
     uint8_t yellow : 1;  // triangle, yellow
-    uint8_t blue : 1;  // square, blue
+    uint8_t blue : 1;    // square, blue
 
-    uint8_t orange : 1;   // orange, l1
-    uint8_t kick1 : 1;  // spPedal, r1
-    uint8_t back : 1;           // select
+    uint8_t orange : 1;  // orange, l1
+    uint8_t kick1 : 1;   // spPedal, r1
+    uint8_t back : 1;    // select
     uint8_t start : 1;
 
     uint8_t guide : 1;  // ps
@@ -227,10 +226,10 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t kick1 : 1;  // a, cross, green
-    uint8_t orange : 1;   // b, circle, red
-    uint8_t blue : 1;              // y, triangle, yellow
-    uint8_t yellow : 1;              // x, square, blue
+    uint8_t kick1 : 1;   // a, cross, green
+    uint8_t orange : 1;  // b, circle, red
+    uint8_t blue : 1;    // y, triangle, yellow
+    uint8_t yellow : 1;  // x, square, blue
 
     uint8_t dpadUp : 1;    // leftShoulder, orange, l1
     uint8_t dpadDown : 1;  // rightShoulder, spPedal, r1
@@ -246,9 +245,9 @@ typedef struct
     // To make things easier, we use bitfields here, and then we map to a proper hat later
     union {
         struct {
-            uint8_t red : 1;          // dpadUp
+            uint8_t red : 1;        // dpadUp
             uint8_t dpadRight : 1;  // dpadDown
-            uint8_t green : 1;          // dpadLeft
+            uint8_t green : 1;      // dpadLeft
             uint8_t dpadLeft : 1;   // dpadRight
             uint8_t : 4;
         };
@@ -263,10 +262,10 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t green : 1;  // cross, green
-    uint8_t red : 1;  // circle, red
+    uint8_t green : 1;   // cross, green
+    uint8_t red : 1;     // circle, red
     uint8_t yellow : 1;  // triangle, yellow
-    uint8_t blue : 1;  // square, blue
+    uint8_t blue : 1;    // square, blue
 
     uint8_t orange : 1;  // orange, l1
 
@@ -333,9 +332,9 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t x : 1;  // square
+    uint8_t a : 1;         // cross
+    uint8_t b : 1;         // circle
+    uint8_t x : 1;         // square
     uint8_t euphoria : 1;  // triangle, euphoria
 
     uint8_t back : 1;  // select
@@ -367,14 +366,14 @@ typedef struct
     bool black2 : 1;  // circle, black2
     bool black3 : 1;  // triangle, black3
 
-    bool white1 : 1;              // square, white1
-    bool white2 : 1;   // white2, l1
+    bool white1 : 1;  // square, white1
+    bool white2 : 1;  // white2, l1
     bool white3 : 1;  // white3, r1
-    bool back : 1;           // back, heroPower
-    bool start : 1;          // start, pause
+    bool back : 1;    // back, heroPower
+    bool start : 1;   // start, pause
 
-    bool ghtv : 1;  // leftThumbClick, ghtv
-    bool guide : 1;           // ps
+    bool ghtv : 1;   // leftThumbClick, ghtv
+    bool guide : 1;  // ps
     uint8_t : 6;
 
     DPAD;
@@ -393,14 +392,14 @@ typedef struct
 
     uint8_t back : 1;  // select
     uint8_t start : 1;
-    uint8_t guide : 1;    // ps
+    uint8_t guide : 1;  // ps
     uint8_t green : 1;
 
     uint8_t red : 1;
     uint8_t yellow : 1;
     uint8_t blue : 1;
     uint8_t orange : 1;
-    
+
     uint8_t kick1 : 1;
     uint8_t : 3;
 
@@ -420,7 +419,6 @@ typedef struct
     uint8_t bFretVelocity;
     uint8_t highEFretVelocity;
 } __attribute__((__packed__)) PCRockBandProGuitar_Data_t;
-
 
 typedef struct
 {
@@ -460,7 +458,6 @@ typedef struct {
     union {
         uint8_t noteHitRaw;
         struct {
-#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
             bool openHit : 1;
             bool greenHit : 1;
             bool redHit : 1;
@@ -469,7 +466,8 @@ typedef struct {
             bool blueHit : 1;
             bool orangeHit : 1;
             uint8_t : 2;
-#elif DEVICE_TYPE == LIVE_GUITAR
+        } guitar_leds;
+        struct {
             bool openHit : 1;
             bool black1Hit : 1;
             bool black2Hit : 1;
@@ -479,7 +477,8 @@ typedef struct {
             bool white2Hit : 1;
             bool white3Hit : 1;
             uint8_t : 1;
-#elif DEVICE_TYPE == GUITAR_HERO_DRUMS
+        } live_guitar_leds;
+        struct {
             bool kickHit : 1;
             bool redPadHit : 1;
             bool yellowCymbalHit : 1;
@@ -488,7 +487,8 @@ typedef struct {
             bool orangeCymbalHit : 1;
             bool greenPadHit : 1;
             uint8_t : 2;
-#elif DEVICE_TYPE == ROCK_BAND_DRUMS
+        } gh_drums;
+        struct {
             bool kickHit : 1;
             bool redPadHit : 1;
             bool yellowPadHit : 1;
@@ -498,7 +498,8 @@ typedef struct {
             bool yellowCymbalHit : 1;
             bool blueCymbalHit : 1;
             bool greenCymbalHit : 1;
-#elif DEVICE_TYPE == DJ_HERO_TURNTABLE
+        } rb_drums;
+        struct {
             bool leftScratchHit : 1;
             bool leftGreenHit : 1;
             bool leftRedHit : 1;
@@ -510,8 +511,7 @@ typedef struct {
             bool rightBlueHit : 1;
 
             uint8_t euphoriaBrightness;
-#endif
-        };
+        } turntable;
     };
 } __attribute__((packed)) PCStageKitOutputWithoutReportId_Data_t;
 

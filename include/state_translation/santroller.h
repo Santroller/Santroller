@@ -331,13 +331,10 @@ inline uint8_t universal_report_to_santroller(uint8_t dpad, uint8_t *data, uint8
     report->guide = usb_host_data->guide;
     report->back = usb_host_data->back;
     report->start = usb_host_data->start;
+    report->reportId = 1;
     switch (sub_type) {
         case GAMEPAD: {
             PCGamepad_Data_t *report = (PCGamepad_Data_t *)data;
-            report->dpadLeft = usb_host_data->dpadLeft;
-            report->dpadRight = usb_host_data->dpadRight;
-            report->dpadUp = usb_host_data->dpadUp;
-            report->dpadDown = usb_host_data->dpadDown;
             report->a = usb_host_data->a;
             report->b = usb_host_data->b;
             report->x = usb_host_data->x;

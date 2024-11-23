@@ -6,7 +6,7 @@
 #include "ps2.h"
 #include "util.h"
 
-#ifdef TICK_PS2
+#ifdef PS2_OUTPUT_SPI_PORT
 
 uint8_t configMode = 0;
 uint8_t mode = 0x41;
@@ -128,9 +128,9 @@ void ps2_emu_init() {
     param2 = 0;
     param3 = 0;
 // Guitars need to hold dpad left
-#if DEVICE_TYPE_IS_GUITAR
+if (DEVICE_TYPE_IS_GUITAR) {
     buttons1 &= ~0x80;
-#endif
+}
 
 }
 bool ps2_emu_tick(uint8_t* report) {

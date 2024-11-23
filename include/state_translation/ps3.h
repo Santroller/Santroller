@@ -418,6 +418,9 @@ inline uint8_t universal_report_to_ps3(uint8_t dpad, uint8_t *data, uint8_t cons
             report->rightShoulder = usb_host_data->rightShoulder;
             report->leftTrigger = usb_host_data->leftTrigger >> 8;
             report->rightTrigger = usb_host_data->rightTrigger >> 8;
+            // Generate digital triggers
+            report->l2 = usb_host_data->leftTrigger > 0x80;
+            report->r2 = usb_host_data->rightTrigger > 0x80;
             report->leftStickX = (usb_host_data->leftStickX >> 8) + 0x80;
             report->leftStickY = (-usb_host_data->leftStickY >> 8) + 0x80;
             report->rightStickX = (usb_host_data->rightStickX >> 8) + 0x80;

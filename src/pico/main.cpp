@@ -42,6 +42,7 @@ CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
 #define PERSISTED_CONSOLE_TYPE_VALID 0x3A2F
+static uint32_t __uninitialized_ram(persistedDeviceType);
 static uint32_t __uninitialized_ram(persistedConsoleType);
 static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
@@ -153,13 +154,19 @@ void setup() {
 #endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
+        deviceType = persistedDeviceType;
     } else {
         windows_in_hid = false;
         xboxAuthValid = false;
         consoleType = UNIVERSAL;
+        deviceType = DEVICE_TYPE;
+        if (DEVICE_TYPE == AUTOMATIC || DEVICE_TYPE == AUTOMATIC_RB || DEVICE_TYPE == AUTOMATIC_GH) {
+            deviceType = GAMEPAD;
+        }
     }
     generateSerialString(&serialstring, consoleType);
     printf("ConsoleType: %d\r\n", consoleType);
+    printf("DeviceType: %d\r\n", deviceType);
     init_main();
     tud_init(TUD_OPT_RHPORT);
 #if USB_HOST_STACK
@@ -299,6 +306,38 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
                 }
                 printf("found xb\r\n");
             }
+            switch (type.sub_type) {
+                case XINPUT_GUITAR_ALTERNATE:
+                    set_device_type(GUITAR_HERO_GUITAR);
+                    break;
+                case XINPUT_GUITAR:
+                    set_device_type(ROCK_BAND_GUITAR);
+                    break;
+                case XINPUT_GUITAR_HERO_LIVE:
+                    set_device_type(LIVE_GUITAR);
+                    break;
+                case XINPUT_PRO_GUITAR:
+                    set_device_type(ROCK_BAND_PRO_GUITAR_MUSTANG);
+                    break;
+                case XINPUT_PRO_KEYS:
+                    set_device_type(ROCK_BAND_PRO_KEYS);
+                    break;
+                case XINPUT_DRUMS:
+                    XInputInputCapabilities_t caps;
+                    transfer_with_usb_controller(dev_addr, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_GET_REPORT, INPUT_CAPABILITIES_WVALUE, 0, sizeof(caps), (uint8_t *)&caps);
+                    if (caps.flags) {
+                        set_device_type(ROCK_BAND_DRUMS);
+                    } else {
+                        set_device_type(GUITAR_HERO_DRUMS);
+                    }
+                    break;
+                case XINPUT_TURNTABLE:
+                    set_device_type(DJ_HERO_TURNTABLE);
+                    break;
+                default:
+                    set_device_type(GAMEPAD);
+                    break;
+            }
             break;
         case XBOX360_W:
             x360_dev_addr = type;
@@ -315,6 +354,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             if (consoleType == XBOXONE) {
                 foundXB = true;
             }
+            set_device_type(type.sub_type);
             break;
         case SANTROLLER: {
             tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf));
@@ -322,6 +362,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             total_usb_host_devices++;
             printf("Found Santroller controller\r\n");
             printf("Sub type: %d\r\n", type.sub_type);
+            set_device_type(type.sub_type);
             break;
         }
         case RAPHNET: {
@@ -345,12 +386,15 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
                 case RNT_TYPE_NUNCHUK:
                 case RNT_TYPE_CLASSIC_PRO:
                     type.sub_type = GAMEPAD;
+                    set_device_type(GAMEPAD);
                     break;
                 case RNT_TYPE_WII_GUITAR:
                     type.sub_type = GUITAR_HERO_GUITAR;
+                    set_device_type(GUITAR_HERO_GUITAR);
                     break;
                 case RNT_TYPE_WII_DRUM:
                     type.sub_type = GUITAR_HERO_DRUMS;
+                    set_device_type(GUITAR_HERO_DRUMS);
                     break;
             }
             printf("Found Raphnet controller\r\n");
@@ -374,6 +418,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             printf("Found Generic controller\r\n");
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
+            set_device_type(GAMEPAD);
             break;
         case PS3:
             // GHWT and GH5 guitars have the same vid and pid, but different tap bar functions. We can read the device name to actually determine what it is
@@ -388,6 +433,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             printf("Found PS3 controller\r\n");
             printf("Sub type: %d\r\n", type.sub_type);
             ps3_controller_connected(dev_addr, host_vid, host_pid);
+            set_device_type(type.sub_type);
             break;
         case PS4:
             usb_host_devices[total_usb_host_devices].type = type;
@@ -398,6 +444,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
                 printf("Found PS4 controller\r\n");
                 ps4_controller_connected(dev_addr, host_vid, host_pid);
             }
+            set_device_type(type.sub_type);
             break;
     }
     printf("Total devices: %d\r\n", total_usb_host_devices);
@@ -478,10 +525,31 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         usb_host_devices[i].type.sub_type = sub_type;
                         printf("Found subtype: %02x %02x %02x\r\n", sub_type, dev_addr, instance);
                         xinput_w_controller_connected();
-                        // Request capabilities so we can figure out WT guitars
-                        if (sub_type == XINPUT_GUITAR_ALTERNATE) {
-                            // request capabilities
-                            send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
+                        switch (sub_type) {
+                            case XINPUT_GUITAR_ALTERNATE:
+                                // Request capabilities so we can figure out WT guitars
+                                send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
+                                set_device_type(GUITAR_HERO_GUITAR);
+                                break;
+                            case XINPUT_GUITAR:
+                                set_device_type(ROCK_BAND_GUITAR);
+                                break;
+                            case XINPUT_PRO_GUITAR:
+                                set_device_type(ROCK_BAND_PRO_GUITAR_MUSTANG);
+                                break;
+                            case XINPUT_PRO_KEYS:
+                                set_device_type(ROCK_BAND_PRO_KEYS);
+                                break;
+                            case XINPUT_DRUMS:
+                                // Request capabilities so we can figure out drum type
+                                send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
+                                break;
+                            case XINPUT_TURNTABLE:
+                                set_device_type(DJ_HERO_TURNTABLE);
+                                break;
+                            default:
+                                set_device_type(GAMEPAD);
+                                break;
                         }
                     }
                     if (header->type == 0x05) {
@@ -493,6 +561,14 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0) {
                             usb_host_devices[i].type.sub_type = XINPUT_GUITAR_WT;
                             printf("Found wt\r\n");
+                        }
+                        // TODO: where are the flags
+                        if (usb_host_devices[i].type.sub_type == XINPUT_DRUMS) {
+                            if (caps->unk[0]) {
+                                set_device_type(ROCK_BAND_DRUMS);
+                            } else {
+                                set_device_type(GUITAR_HERO_DRUMS);
+                            }
                         }
                     }
                 }
@@ -672,6 +748,7 @@ void bootloader(void) {
 }
 void reset_usb(void) {
     persistedConsoleType = consoleType;
+    persistedDeviceType = deviceType;
     persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
     reboot();
 }

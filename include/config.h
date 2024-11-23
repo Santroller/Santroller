@@ -12,6 +12,7 @@ extern "C" {
 
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
+extern uint8_t deviceType;
 #ifdef CONFIGURABLE_BLOBS
 extern const uint8_t* config;
 extern const uint8_t* config_blobs;
@@ -23,13 +24,14 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #include "defines.h"
 #include "reports/controller_reports.h"
-#define DEVICE_TYPE_IS_LIVE_GUITAR (DEVICE_TYPE == LIVE_GUITAR)
-#define DEVICE_TYPE_IS_GUITAR (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR))
-#define DEVICE_TYPE_IS_DRUM (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE == ROCK_BAND_DRUMS || DEVICE_TYPE == GUITAR_HERO_DRUMS))
-#define DEVICE_TYPE_IS_INSTRUMENT (DEVICE_TYPE_IS_GAMEPAD && (DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE == LIVE_GUITAR || DEVICE_TYPE_IS_DRUM || DEVICE_TYPE == DJ_HERO_TURNTABLE || DEVICE_TYPE == STAGE_KIT || DEVICE_TYPE_IS_PRO))
-#define DEVICE_TYPE_IS_KEYBOARD (DEVICE_TYPE == KEYBOARD_MOUSE_TYPE)
-#define DEVICE_TYPE_IS_GAMEPAD (!(DEVICE_TYPE_IS_KEYBOARD))
-#define DEVICE_TYPE_IS_PRO (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE || DEVICE_TYPE == ROCK_BAND_PRO_KEYS)
+#define DEVICE_TYPE_IS_LIVE_GUITAR (deviceType == LIVE_GUITAR)
+#define DEVICE_TYPE_IS_GAMEPAD (deviceType == GAMEPAD)
+#define DEVICE_TYPE_IS_GUITAR (DEVICE_TYPE_IS_CONTROLLER && (deviceType == ROCK_BAND_GUITAR || deviceType == GUITAR_HERO_GUITAR))
+#define DEVICE_TYPE_IS_DRUM (DEVICE_TYPE_IS_CONTROLLER && (deviceType == ROCK_BAND_DRUMS || deviceType == GUITAR_HERO_DRUMS))
+#define DEVICE_TYPE_IS_INSTRUMENT (DEVICE_TYPE_IS_CONTROLLER && (DEVICE_TYPE_IS_GUITAR || deviceType == LIVE_GUITAR || DEVICE_TYPE_IS_DRUM || deviceType == DJ_HERO_TURNTABLE || deviceType == STAGE_KIT || DEVICE_TYPE_IS_PRO))
+#define DEVICE_TYPE_IS_KEYBOARD (deviceType == KEYBOARD_MOUSE_TYPE)
+#define DEVICE_TYPE_IS_CONTROLLER (!(DEVICE_TYPE_IS_KEYBOARD))
+#define DEVICE_TYPE_IS_PRO (deviceType == ROCK_BAND_PRO_GUITAR_MUSTANG || deviceType == ROCK_BAND_PRO_GUITAR_SQUIRE || deviceType == ROCK_BAND_PRO_KEYS)
 
 typedef union {
     USB_Host_Data_t gamepad;
@@ -51,7 +53,7 @@ extern const uint8_t xb1_descriptor_gamepad[244];
 extern const uint8_t xb1_descriptor_gamepad_end[6];
 #define SUPPORTS_MIDI DEVICE_TYPE == MIDI_TYPE
 #define SUPPORTS_HID DEVICE_TYPE != MIDI_TYPE
-#define SUPPORTS_PS4 (DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == LIVE_GUITAR || PS4_INSTRUMENT)
+#define SUPPORTS_PS4 (DEVICE_TYPE_IS_GAMEPAD || DEVICE_TYPE == LIVE_GUITAR || PS4_INSTRUMENT)
 #define SUPPORTS_PICO defined(ARDUINO_ARCH_RP2040)
 #define SUPPORTS_AVR defined(__AVR__)
 #define SUPPORTS_TEENSY (defined(__arm__) && defined(CORE_TEENSY))
@@ -66,23 +68,13 @@ enum hid_reports_t {
 };
 
 typedef struct {
-#if DEVICE_TYPE_IS_GAMEPAD
     union {
         USB_Host_Data_t host;
     } lastControllerReport;
-#endif
-#if KEYBOARD_TYPE == SIXKRO
     USB_6KRO_Data_t last6KROReport;
-#endif
-#if KEYBOARD_TYPE == NKRO
     USB_NKRO_Data_t lastNKROReport;
-#endif
-#ifdef HAS_MOUSE
     USB_Mouse_Data_t lastMouseReport;
-#endif
-#if KEYBOARD_TYPE == NKRO
     USB_ConsumerControl_Data_t lastConsumerReport;
-#endif
 } USB_LastReport_Data_t;
 
 #define USB_VERSION_BCD(Major, Minor, Revision) \

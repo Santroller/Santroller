@@ -497,12 +497,6 @@ inline uint8_t universal_report_to_x360(uint8_t *data, uint8_t sub_type, const U
             report->white2 = usb_host_data->white2;
             report->white3 = usb_host_data->white3;
             report->ghtv = usb_host_data->ghtv;
-            if (usb_host_data->dpadUp) {
-                report->leftStickY = 0x00;
-            }
-            if (usb_host_data->dpadDown) {
-                report->leftStickY = 0xFF;
-            }
             report->tilt = usb_host_data->tilt;
             report->whammy = (usb_host_data->whammy << 8) - 0x7fff;
             return sizeof(XInputGHLGuitar_Data_t);

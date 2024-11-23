@@ -29,6 +29,7 @@ typedef struct
     uint16_t UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 4];
 } __attribute__((packed)) SignatureDescriptor_t;
 volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
+volatile uint16_t persistedDeviceType __attribute__((section(".noinit")));
 volatile uint16_t persistedConsoleTypeValid __attribute__((section(".noinit")));
 void SetupHardware(void);
 
@@ -48,8 +49,10 @@ void setup() {
     init_main();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
+        deviceType = persistedDeviceType;
     } else {
         consoleType = 0;
+        deviceType = DEVICE_TYPE;
     }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
@@ -147,13 +150,13 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
 
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = '3';
     desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = consoleType + '0';
-#if DEVICE_TYPE_IS_GAMEPAD
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = DEVICE_TYPE + '0';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
-#else
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
-    desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
-#endif
+    if (DEVICE_TYPE_IS_CONTROLLER) {
+        desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = deviceType + '0';
+        desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
+    } else {
+        desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
+        desc->UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
+    }
 }
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
@@ -168,6 +171,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 }
 void reset_usb(void) {
     persistedConsoleType = consoleType;
+    persistedDeviceType = deviceType;
     persistedConsoleTypeValid = 0x3A2F;
     reboot();
 }

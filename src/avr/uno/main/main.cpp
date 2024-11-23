@@ -43,6 +43,7 @@ typedef struct
 } __attribute__((packed)) SignatureDescriptor_t;
 
 volatile uint16_t persistedConsoleType __attribute__((section(".noinit")));
+volatile uint16_t persistedDevicetype __attribute__((section(".noinit")));
 volatile uint16_t persistedConsoleTypeValid __attribute__((section(".noinit")));
 SignatureDescriptor_t signature;
 // Set up some arrays for storing received data / data to transmit
@@ -95,14 +96,13 @@ static void USB_Device_GetInternalSerialDescriptor(void) {
     SREG = CurrentGlobalInt;
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4)] = '3';
     signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 1] = consoleType + '0';
-
-#if DEVICE_TYPE_IS_GAMEPAD
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = DEVICE_TYPE + '0';
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
-#else
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
-    signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
-#endif
+    if (DEVICE_TYPE_IS_CONTROLLER) {
+        signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = deviceType + '0';
+        signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = WINDOWS_USES_XINPUT + '0';
+    } else {
+        signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 2] = 'K';
+        signature.UnicodeString[(INTERNAL_SERIAL_LENGTH_BITS / 4) + 3] = '0';
+    }
 }
 
 void reset_usb(void) {
@@ -129,8 +129,10 @@ void setup() {
     init_main();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
+        consoleType = persistedDeviceType;
     } else {
         consoleType = 0;
+        deviceType = DEVICE_TYPE;
     }
     USB_Device_GetInternalSerialDescriptor();
 }

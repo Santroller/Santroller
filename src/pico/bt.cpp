@@ -18,13 +18,6 @@
 #include "hid.h"
 #include "serial.h"
 #include "shared_main.h"
-#if DEVICE_TYPE_IS_KEYBOARD
-// Appearance HID - Keyboard (Category 15, Sub-Category 1)
-#define APPEARANCE 0xC1
-#else
-// Appearance HID - Gamepad (Category 15, Sub-Category 4)
-#define APPEARANCE 0xC4
-#endif
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
@@ -34,7 +27,7 @@ static uint8_t protocol_mode = 1;
 
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 
-const uint8_t adv_data[] = {
+uint8_t adv_data[] = {
     // Flags general discoverable, BR/EDR not supported
     0x02,
     BLUETOOTH_DATA_TYPE_FLAGS,
@@ -61,7 +54,8 @@ const uint8_t adv_data[] = {
     ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
     0x03,
     BLUETOOTH_DATA_TYPE_APPEARANCE,
-    APPEARANCE,
+    // Appearance HID - Gamepad (Category 15, Sub-Category 4)
+    0xC4,
     0x03,
 };
 bool check_bluetooth_ready() {
@@ -100,12 +94,12 @@ static void le_keyboard_setup(void) {
 
     // setup device information service
     device_information_service_server_init();
-    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID, USB_VERSION_BCD(DEVICE_TYPE, 0, 0));
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, ARDWIINO_VID, ARDWIINO_PID, USB_VERSION_BCD(deviceType, 0, 0));
     char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
     pico_get_unique_board_id_string(id, sizeof(id));
     device_information_service_server_set_serial_number(id);
 
-    switch (DEVICE_TYPE) {
+    switch (deviceType) {
         case KEYBOARD_MOUSE:
             hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
             break;
@@ -142,7 +136,10 @@ static void le_keyboard_setup(void) {
             hids_device_init(0, pc_descriptor_turntable, sizeof(pc_descriptor_turntable));
             break;
     }
-
+    if (DEVICE_TYPE_IS_KEYBOARD) {
+        // Appearance HID - Keyboard (Category 15, Sub-Category 1)
+        adv_data[sizeof(adv_data) - 1] = 0xC1;
+    }
     // setup advertisements
     uint16_t adv_int_min = 0x0030;
     uint16_t adv_int_max = 0x0030;

@@ -85,6 +85,7 @@ int8_t dj_next_right = 0;
 #endif
 USB_Host_Data_t last_report;
 USB_Report_Data_t bt_report;
+USB_Report_Data_t usb_report;
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t ledDebounce[LED_DEBOUNCE_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
@@ -217,7 +218,7 @@ void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
 }
 uint8_t seq = 1;
 void init_main(void) {
-#if !DEVICE_TYPE_IS_GAMEPAD
+#if !DEVICE_TYPE_IS_CONTROLLER
     consoleType = UNIVERSAL;
 #endif
     initPins();
@@ -483,7 +484,7 @@ uint8_t tick_xbox_one() {
     const uint8_t *xb1_descriptor;
     const uint8_t *xb1_descriptor_end;
     uint16_t len;
-    switch (DEVICE_TYPE) {
+    switch (deviceType) {
         case ROCK_BAND_DRUMS:
         case GUITAR_HERO_DRUMS:
             announce = announce_drums;
@@ -743,6 +744,7 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
             return universal_report_to_ogxbox(data, sub_type, usb_host_data);
         }
         case BLUETOOTH_REPORT:
+        case UNIVERSAL:
         case SANTROLLER: {
             return universal_report_to_santroller(dpad, data, sub_type, usb_host_data);
         }
@@ -770,7 +772,7 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
 #ifdef PS2_OUTPUT_SPI_PORT
 uint8_t ps2Report[32];
 void tick_ps2output() {
-    uint8_t size = universal_report_to_ps2(ps2Report, DEVICE_TYPE, &last_report);
+    uint8_t size = universal_report_to_ps2(ps2Report, deviceType, &last_report);
     if (!ps2_emu_tick(ps2Report)) {
         return;
     }
@@ -778,7 +780,7 @@ void tick_ps2output() {
 #endif
 #ifdef WII_OUTPUT_TWI_PORT
 void tick_wiioutput() {
-    uint8_t size = universal_report_to_wii(wii_data, DEVICE_TYPE, wii_data_format(), &last_report);
+    uint8_t size = universal_report_to_wii(wii_data, deviceType, wii_data_format(), &last_report);
     setInputs(wii_data, size);
 }
 #endif
@@ -857,7 +859,7 @@ uint8_t tick_keyboard(void *buf, USB_LastReport_Data_t *last_report) {
     return packet_size;
 }
 uint8_t tick_controllers(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type, USB_Host_Data_t *universal_report) {
-    uint8_t current_mode = DEVICE_TYPE;
+    uint8_t current_mode = deviceType;
     if (festival_gameplay_mode) {
         current_mode = FORTNITE_GUITAR;
     }
@@ -933,7 +935,7 @@ uint8_t tick_controllers(void *buf, USB_LastReport_Data_t *last_report, uint8_t 
     }
 
     if (output_console_type == FNF) {
-        convert_report_back((uint8_t *)buf, 0, FNF, current_mode, universal_report);
+        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, FNF, current_mode, universal_report);
     }
 
     // For instruments, we instead use the below block, as all other console types use the below format
@@ -971,7 +973,7 @@ uint8_t tick_controllers(void *buf, USB_LastReport_Data_t *last_report, uint8_t 
     return packet_size;
 }
 uint8_t rbcount = 0;
-uint8_t tick_inputs(USB_Host_Data_t *report, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
+uint8_t tick_inputs(USB_Host_Data_t *report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
     USB_RB_Drums_t current_drum_report = {buttons : 0};
@@ -980,12 +982,12 @@ uint8_t tick_inputs(USB_Host_Data_t *report, USB_LastReport_Data_t *last_report,
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
+#include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
 #include "inputs/turntable.h"
 #include "inputs/usb_host.h"
-#include "inputs/wt_neck.h"
-#include "inputs/ps2.h"
 #include "inputs/wii.h"
+#include "inputs/wt_neck.h"
     TICK_SHARED;
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
@@ -1052,31 +1054,30 @@ bool tick_usb(void) {
     if (millis_at_boot == 0 && read_device_desc) {
         millis_at_boot = millis();
     }
-
-#if DEVICE_TYPE_IS_GAMEPAD
-    if (!WINDOWS_USES_XINPUT) {
-        // If we ended up here, then someone probably changed back to hid mode so we should jump back
-        if (consoleType == WINDOWS) {
-            consoleType = UNIVERSAL;
-            reset_usb();
-        }
-    }
-    // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
-        // The wii however will configure the usb device before it stops communicating
-        if (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == ROCK_BAND_DRUMS) {
-            if (usb_configured()) {
-                set_console_type(WII_RB);
+    if (DEVICE_TYPE_IS_CONTROLLER) {
+        if (!WINDOWS_USES_XINPUT) {
+            // If we ended up here, then someone probably changed back to hid mode so we should jump back
+            if (consoleType == WINDOWS) {
+                consoleType = UNIVERSAL;
+                reset_usb();
             }
         }
-        // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-        set_console_type(PS3);
+        // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
+        if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
+            // The wii however will configure the usb device before it stops communicating
+            if (deviceType == ROCK_BAND_GUITAR || deviceType == ROCK_BAND_DRUMS) {
+                if (usb_configured()) {
+                    set_console_type(WII_RB);
+                }
+            }
+            // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+            set_console_type(PS3);
+        }
+        // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
+        if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
+            set_console_type(PS3);
+        }
     }
-    // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
-    if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
-        set_console_type(PS3);
-    }
-#endif
     if (!ready) return 0;
 #if USB_HOST_STACK
     if (data_from_console_size) {
@@ -1094,10 +1095,13 @@ bool tick_usb(void) {
     }
 #endif
     if (!size) {
-        size = tick_inputs(&last_report, &last_report_usb, consoleType);
+        memset(&last_report, 0, sizeof(last_report));
+        tick_inputs(&last_report, consoleType);
+        memset(&usb_report, 0, size);
+        size = tick_controllers(&usb_report, &last_report_usb, consoleType, &last_report);
     }
     if (size) {
-        send_report_to_pc(&last_report, size);
+        send_report_to_pc(&usb_report, size);
     }
     seen_ps4_console = true;
     return size;
@@ -1170,40 +1174,40 @@ void tick(void) {
         }
 #endif
     }
-#if DEVICE_TYPE_IS_GUITAR
-    if (consoleType == KEYBOARD_MOUSE || consoleType == FNF) {
-        if (!INPUT_QUEUE && (micros() - last_poll) < (4000)) {
-            return;
+    if (DEVICE_TYPE_IS_GUITAR) {
+        if (consoleType == KEYBOARD_MOUSE || consoleType == FNF) {
+            if (!INPUT_QUEUE && (micros() - last_poll) < (4000)) {
+                return;
+            }
         }
     }
-#endif
     if (!INPUT_QUEUE && POLL_RATE && (micros() - last_poll) < (POLL_RATE * 1000)) {
         return;
     }
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    if (consoleType == PS3) {
-        if (!INPUT_QUEUE && (micros() - last_poll_dj_ps3) < (10000)) {
-            tick_inputs(NULL, NULL, consoleType);
-            return;
+    if (DEVICE_TYPE == DJ_HERO_TURNTABLE) {
+        if (consoleType == PS3) {
+            if (!INPUT_QUEUE && (micros() - last_poll_dj_ps3) < (10000)) {
+                tick_inputs(NULL, consoleType);
+                return;
+            }
+            last_poll_dj_ps3 = micros();
         }
-        last_poll_dj_ps3 = micros();
     }
-#endif
-#ifdef TICK_WII
+#ifdef WII_OUTPUT_TWI_PORT
     tick_wiioutput();
 #endif
     bool ready = tick_usb();
 
     // Input queuing is enabled, tick as often as possible
     if (INPUT_QUEUE && !ready) {
-        tick_inputs(NULL, NULL, consoleType);
+        tick_inputs(NULL, consoleType);
     }
 
     last_poll = micros();
     // Tick the controller every 5ms if this device is usb only, is connected to a usb port, and usb is not ready
     if (!INPUT_QUEUE && !ready && usb_configured() && millis() - lastSentPacket > 5) {
         lastSentPacket = millis();
-        tick_inputs(NULL, NULL, consoleType);
+        tick_inputs(NULL, consoleType);
     }
 }
 
@@ -1313,6 +1317,24 @@ void ps4_controller_disconnected(void) {
 void set_console_type(uint8_t new_console_type) {
     if (consoleType == new_console_type && new_console_type != UNIVERSAL) return;
     consoleType = new_console_type;
+    reset_usb();
+}
+void set_device_type(uint8_t new_device_type) {
+    if ((DEVICE_TYPE != AUTOMATIC && DEVICE_TYPE != AUTOMATIC_RB && DEVICE_TYPE != AUTOMATIC_GH) || deviceType == new_device_type) return;
+    // Force device types for RB and GH modes
+    if (new_device_type == ROCK_BAND_DRUMS && DEVICE_TYPE == AUTOMATIC_GH) {
+        new_device_type = GUITAR_HERO_DRUMS;
+    }
+    if (new_device_type == ROCK_BAND_GUITAR && DEVICE_TYPE == AUTOMATIC_GH) {
+        new_device_type = GUITAR_HERO_GUITAR;
+    }
+    if (new_device_type == GUITAR_HERO_DRUMS && DEVICE_TYPE == AUTOMATIC_RB) {
+        new_device_type = ROCK_BAND_DRUMS;
+    }
+    if (new_device_type == GUITAR_HERO_GUITAR && DEVICE_TYPE == AUTOMATIC_RB) {
+        new_device_type = ROCK_BAND_GUITAR;
+    }
+    deviceType = new_device_type;
     reset_usb();
 }
 #if USB_HOST_STACK || BLUETOOTH_RX

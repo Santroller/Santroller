@@ -116,6 +116,7 @@ inline uint8_t universal_report_to_ps4(uint8_t dpad, uint8_t *data, uint8_t sub_
             report->soloYellow = usb_host_data->soloYellow;
             report->soloBlue = usb_host_data->soloBlue;
             report->soloOrange = usb_host_data->soloOrange;
+            // TODO: dpad left -> back
             return sizeof(PS4RockBandGuitar_Data_t);
         }
         case LIVE_GUITAR: {

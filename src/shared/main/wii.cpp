@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "Arduino.h"
+#include "shared_main.h"
 #include "config.h"
 #include "controllers.h"
 #include "io.h"
@@ -121,25 +122,34 @@ bool wiiDataValid() {
     return initialised;
 }
 uint8_t* tickWii() {
-#ifdef WII_SHARED
-    delayMicroseconds(10);
-#endif
     static uint8_t data[8];
     memset(data, 0, sizeof(data));
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    // Update the led if it changes
-    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
-        if (lastWiiEuphoriaLed != lastEuphoriaLed) {
-            lastWiiEuphoriaLed = lastEuphoriaLed;
-            // encrypt if encryption is enabled
-            uint8_t state = lastEuphoriaLed ? 1 : 0;
-            if (s_box) {
-                state = (state - s_box) ^ s_box;
+    if (deviceType == DJ_HERO_TURNTABLE) {
+        // Update the led if it changes
+        if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
+            if (lastWiiEuphoriaLed != lastEuphoriaLed) {
+                lastWiiEuphoriaLed = lastEuphoriaLed;
+                // encrypt if encryption is enabled
+                uint8_t state = lastEuphoriaLed ? 1 : 0;
+                if (s_box) {
+                    state = (state - s_box) ^ s_box;
+                }
+                twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, state);
             }
-            twi_writeSingleToPointer(WII_TWI_PORT, WII_ADDR, WII_DJ_EUPHORIA, state);
         }
     }
-#endif
+    if (wiiControllerType == WII_DJ_HERO_TURNTABLE) {
+        set_device_type(DJ_HERO_TURNTABLE);
+    }
+    if (wiiControllerType == WII_GUITAR_HERO_GUITAR_CONTROLLER) {
+        set_device_type(GUITAR_HERO_GUITAR);
+    }
+    if (wiiControllerType == WII_GUITAR_HERO_DRUM_CONTROLLER) {
+        set_device_type(GUITAR_HERO_DRUMS);
+    }
+    if (wiiControllerType == WII_CLASSIC_CONTROLLER || wiiControllerType == WII_CLASSIC_CONTROLLER_PRO) {
+        set_device_type(GAMEPAD);
+    }
     if (wiiControllerType == WII_NOT_INITIALISED ||
         wiiControllerType == WII_NO_EXTENSION ||
         !twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, wiiBytes, data) ||

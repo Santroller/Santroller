@@ -39,17 +39,12 @@ const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor = {
     bMaxPacketSize0 : ENDPOINT_SIZE,
     idVendor : ARDWIINO_VID,
     idProduct : ARDWIINO_PID,
-#if DEVICE_TYPE_IS_GAMEPAD
-    bcdDevice : USB_VERSION_BCD(DEVICE_TYPE, 0, 0),
-#else
     bcdDevice : USB_VERSION_BCD(0, 0, 0),
-#endif
     iManufacturer : 0x01,
     iProduct : 0x02,
     iSerialNumber : 0x03,
     bNumConfigurations : 1
 };
-#if DEVICE_TYPE_IS_GAMEPAD
 const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
@@ -369,7 +364,6 @@ const PROGMEM OG_XBOX_CONFIGURATION_DESCRIPTOR OGXBOXConfigurationDescriptor = {
         bInterval : 4,
     }
 };
-#endif
 
 const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescriptor = {
     Config : {
@@ -401,11 +395,7 @@ const PROGMEM UNIVERSAL_CONFIGURATION_DESCRIPTOR UniversalConfigurationDescripto
         bCountryCode : 0x00,
         bNumDescriptors : 1,
         bDescrType : HID_DESCRIPTOR_REPORT,
-#if DEVICE_TYPE_IS_KEYBOARD
-        wDescriptorLength : sizeof(keyboard_mouse_descriptor)
-#else
         wDescriptorLength : sizeof(ps3_instrument_descriptor)
-#endif
     },
     EndpointInHID : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
@@ -644,7 +634,6 @@ const PROGMEM MIDI_CONFIGURATION_DESCRIPTOR MIDIConfigurationDescriptor = {
     },
 };
 // Pro instruments use a different init flow
-#if DEVICE_TYPE_IS_PRO
 const PROGMEM uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0d, 0x01},
                                                  {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                                  {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x82},
@@ -655,10 +644,8 @@ const PROGMEM uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0
                                                 {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
                                                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                                 {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
-#else
 const PROGMEM uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x06,
                                     0x00, 0x00, 0x00, 0x00};
-#endif
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
 uint8_t f5_state = 0;
@@ -831,7 +818,6 @@ bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
-#if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
         reset_usb();
@@ -851,7 +837,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return sizeof(DukeXIDVibrationCapabilities);
         }
     }
-#endif
 
     if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
         if (xbox_360_state == Auth1) {
@@ -885,7 +870,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return 0;
     }
 
-#if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
         consoleType = XBOX360;
         reset_usb();
@@ -940,25 +924,24 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return 0;
     }
 #endif
-#endif
 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
-#if DEVICE_TYPE_IS_GAMEPAD
         // PS3s request this as some form of controller id
         if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
             // Pro instruments use a different init flow
-#if DEVICE_TYPE_IS_PRO
-            if (proButtonsEnabled) {
-                memcpy_P(requestBuffer, enabled_response[ps3_id_id], sizeof(enabled_response[ps3_id_id]));
+            if (DEVICE_TYPE_IS_PRO) {
+                if (proButtonsEnabled) {
+                    memcpy_P(requestBuffer, enabled_response[ps3_id_id], sizeof(enabled_response[ps3_id_id]));
+                } else {
+                    memcpy_P(requestBuffer, disabled_response[ps3_id_id], sizeof(disabled_response[ps3_id_id]));
+                }
+                ps3_id_id++;
+                if (ps3_id_id > 4) ps3_id_id = 4;
+                return 8;
             } else {
-                memcpy_P(requestBuffer, disabled_response[ps3_id_id], sizeof(disabled_response[ps3_id_id]));
+                memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
             }
-            ps3_id_id++;
-            if (ps3_id_id > 4) ps3_id_id = 4;
-            return 8;
-#else
-            memcpy_P(requestBuffer, ps3_init, sizeof(ps3_init));
-            switch (DEVICE_TYPE) {
+            switch (deviceType) {
                 case ROCK_BAND_DRUMS:
                     requestBuffer[3] = 0x05;
                     break;
@@ -970,7 +953,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     break;
             }
             return sizeof(ps3_init);
-#endif
         }
         // Fakemote sends this, so we know to jump to PS3 mode
         if (consoleType == UNIVERSAL && wValue == 0x03f2 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
@@ -1024,24 +1006,23 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         // PS3 and PS4 send this
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
             // PS3 Drums and Guitars get used on both consoles, so we can jump straight to PS3 mode
-#if DEVICE_TYPE_IS_INSTRUMENT && !SUPPORTS_PS4
-            consoleType = PS3;
+            if (DEVICE_TYPE_IS_INSTRUMENT && !SUPPORTS_PS4) {
+                consoleType = PS3;
+            } else {
+                // the PS3 and PS4 will end up here. PS4 mode will jump back to PS3 mode on a PS3 later.
+                consoleType = PS4;
+            }
             reset_usb();
-#else
-            // the PS3 and PS4 will end up here. PS4 mode will jump back to PS3 mode on a PS3 later.
-            consoleType = PS4;
-            reset_usb();
-#endif
         }
         if (consoleType == PS4 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             switch (wValue) {
                 case 0x0303:
                     seen_ps4 = true;
                     memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
-                    if (DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR || DEVICE_TYPE == LIVE_GUITAR) {
+                    if (deviceType == ROCK_BAND_GUITAR || deviceType == GUITAR_HERO_GUITAR || deviceType == LIVE_GUITAR) {
                         requestBuffer[5] = PS4_GUITAR;
                     }
-                    if (DEVICE_TYPE == ROCK_BAND_DRUMS || DEVICE_TYPE == GUITAR_HERO_DRUMS) {
+                    if (deviceType == ROCK_BAND_DRUMS || deviceType == GUITAR_HERO_DRUMS) {
                         requestBuffer[5] = PS4_DRUMS;
                     }
                     return sizeof(ps4_feature_config);
@@ -1070,7 +1051,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (consoleType == OG_XBOX && wValue == 0x0100 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == sizeof(OGXboxGamepad_Data_t)) {
             return tick_controllers(requestBuffer, NULL, OG_XBOX, &last_report);
         }
-#endif
         bool test = true;
         uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);
         if (test) {
@@ -1109,7 +1089,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             memcpy_P(requestBuffer, &XInputInputCapabilities, sizeof(XInputInputCapabilities));
 
             XInputInputCapabilities_t *desc = (XInputInputCapabilities_t *)requestBuffer;
-            switch (DEVICE_TYPE) {
+            switch (deviceType) {
                 case DANCE_PAD:
                 case STAGE_KIT:
                 case GAMEPAD:
@@ -1137,7 +1117,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     desc->leftThumbY = XBOX_360_SQUIRE_PID;
                     break;
             }
-            desc->rightThumbX = USB_VERSION_BCD(DEVICE_TYPE, 0, 0);
+            desc->rightThumbX = USB_VERSION_BCD(deviceType, 0, 0);
             return sizeof(XInputInputCapabilities);
         }
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && (consoleType == WINDOWS || consoleType == XBOX360) && request == HID_REQUEST_GET_REPORT && wIndex == 0x0000 && wValue == SERIAL_NUMBER_WVALUE) {
@@ -1209,28 +1189,28 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
-#if DEVICE_TYPE_IS_GAMEPAD
+    if (DEVICE_TYPE_IS_CONTROLLER) {
 #if USB_HOST_STACK
-    if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
-        seen_windows_desc = true;
-    }
-
-    if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
-        if (seen_windows_desc) {
-            if (WINDOWS_USES_XINPUT) {
-                set_console_type(WINDOWS);
-            }
-        } else {
-            set_console_type(XBOXONE);
+        if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
+            seen_windows_desc = true;
         }
-    }
+
+        if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType == HID_DESCRIPTOR_REPORT) {
+            if (seen_windows_desc) {
+                if (WINDOWS_USES_XINPUT) {
+                    set_console_type(WINDOWS);
+                }
+            } else {
+                set_console_type(XBOXONE);
+            }
+        }
 #else
-    if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
-        set_console_type(WINDOWS);
-    }
+        if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
+            set_console_type(WINDOWS);
+        }
 
 #endif
-#endif
+    }
     descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
     switch (descriptorType) {
@@ -1239,6 +1219,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             size = sizeof(USB_DEVICE_DESCRIPTOR);
             memcpy_P(descriptorBuffer, &deviceDescriptor, size);
             USB_DEVICE_DESCRIPTOR *dev = (USB_DEVICE_DESCRIPTOR *)descriptorBuffer;
+            if (DEVICE_TYPE_IS_CONTROLLER) {
+                dev->bcdDevice = (uint16_t)USB_VERSION_BCD(deviceType, 0, 0);
+            }
             if (consoleType == SWITCH) {
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
@@ -1256,7 +1239,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->bDeviceProtocol = 0xd0;
             } else if (consoleType == PS4) {
                 // We just use the ghl dongle ids for PS4 as PS4 doesn't care
-                if (DEVICE_TYPE == GAMEPAD) {
+                if (DEVICE_TYPE_IS_GAMEPAD) {
                     dev->idVendor = PS4_VID;
                     dev->idProduct = PS4_PID;
                 } else {
@@ -1267,7 +1250,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = SONY_VID;
                 dev->idProduct = SONY_DS3_PID;
             }
-            if (DEVICE_TYPE == GUITAR_HERO_GUITAR) {
+            if (deviceType == GUITAR_HERO_GUITAR) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_RB_GUITAR_PID;
@@ -1277,7 +1260,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_GH_GUITAR_PID;
                 }
             }
-            if (DEVICE_TYPE == ROCK_BAND_GUITAR) {
+            if (deviceType == ROCK_BAND_GUITAR) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_RB_GUITAR_PID;
@@ -1287,7 +1270,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_RB_GUITAR_PID;
                 }
             }
-            if (DEVICE_TYPE == GUITAR_HERO_DRUMS) {
+            if (deviceType == GUITAR_HERO_DRUMS) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_RB_DRUM_PID;
@@ -1297,7 +1280,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_GH_DRUM_PID;
                 }
             }
-            if (DEVICE_TYPE == ROCK_BAND_DRUMS) {
+            if (deviceType == ROCK_BAND_DRUMS) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_RB_DRUM_PID;
@@ -1307,7 +1290,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_RB_DRUM_PID;
                 }
             }
-            if (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG) {
+            if (deviceType == ROCK_BAND_PRO_GUITAR_MUSTANG) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_MUSTANG_PID;
@@ -1317,7 +1300,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_MUSTANG_PID;
                 }
             }
-            if (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE) {
+            if (deviceType == ROCK_BAND_PRO_GUITAR_SQUIRE) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_SQUIRE_PID;
@@ -1327,7 +1310,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_SQUIRE_PID;
                 }
             }
-            if (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE) {
+            if (deviceType == ROCK_BAND_PRO_GUITAR_SQUIRE) {
                 if (consoleType == WII_RB) {
                     dev->idVendor = HARMONIX_VID;
                     dev->idProduct = WII_KEYBOARD_PID;
@@ -1337,19 +1320,19 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     dev->idProduct = PS3_KEYBOARD_PID;
                 }
             }
-            if (DEVICE_TYPE == LIVE_GUITAR) {
+            if (deviceType == LIVE_GUITAR) {
                 if (consoleType == PS3) {
                     dev->idVendor = REDOCTANE_VID;
                     dev->idProduct = PS3WIIU_GHLIVE_DONGLE_PID;
                 }
             }
-            if (DEVICE_TYPE == DJ_HERO_TURNTABLE) {
+            if (deviceType == DJ_HERO_TURNTABLE) {
                 if (consoleType == PS3) {
                     dev->idVendor = REDOCTANE_VID;
                     dev->idProduct = PS3_DJ_TURNTABLE_PID;
                 }
             }
-            if (DEVICE_TYPE == GAMEPAD) {
+            if (DEVICE_TYPE_IS_GAMEPAD) {
                 if (consoleType == PS3) {
                     dev->idVendor = SONY_VID;
                     dev->idProduct = SONY_DS3_PID;
@@ -1373,7 +1356,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
                 XBOX_360_CONFIGURATION_DESCRIPTOR *desc = (XBOX_360_CONFIGURATION_DESCRIPTOR *)descriptorBuffer;
-                switch (DEVICE_TYPE) {
+                switch (deviceType) {
                     case DANCE_PAD:
                         desc->GamepadDescriptor.subtype = XINPUT_DANCE_PAD;
                         break;
@@ -1427,7 +1410,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }
                 if (consoleType == UNIVERSAL) {
-                    switch (DEVICE_TYPE) {
+                    switch (deviceType) {
                         case GAMEPAD:
                             desc->HIDDescriptor.wDescriptorLength = sizeof(pc_descriptor_gamepad);
                             break;
@@ -1485,7 +1468,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);
             } else if (consoleType == UNIVERSAL) {
-                switch (DEVICE_TYPE) {
+                switch (deviceType) {
                     case GAMEPAD:
                         address = pc_descriptor_gamepad;
                         size = sizeof(pc_descriptor_gamepad);

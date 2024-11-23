@@ -166,31 +166,37 @@ inline void wii_to_universal_report(const uint8_t *data, uint8_t len, uint16_t c
             usb_host_data->start |= !report->start;
             usb_host_data->guide |= !report->guide;
             usb_host_data->back |= !report->back;
-            usb_host_data->green |= !report->green;
-            usb_host_data->red |= !report->red;
-            usb_host_data->yellow |= !report->yellow;
-            usb_host_data->blue |= !report->blue;
-            usb_host_data->orange |= !report->orange;
-            // switch (report->which) {
-            //     case 0x1B:
-            //         drumVelocity[DRUM_KICK] = report->velocity;
-            //         break;
-            //     case 0x12:
-            //         drumVelocity[DRUM_GREEN] = report->velocity;
-            //         break;
-            //     case 0x19:
-            //         drumVelocity[DRUM_RED] = report->velocity;
-            //         break;
-            //     case 0x11:
-            //         drumVelocity[DRUM_YELLOW] = report->velocity;
-            //         break;
-            //     case 0x0F:
-            //         drumVelocity[DRUM_BLUE] = report->velocity;
-            //         break;
-            //     case 0x0E:
-            //         drumVelocity[DRUM_ORANGE] = report->velocity;
-            //         break;
-            // }
+            // The analog values respond faster than the digital ones, so its best to use them as well
+            usb_host_data->green |= !report->green || drumVelocity[DRUM_GREEN];
+            usb_host_data->red |= !report->red || drumVelocity[DRUM_RED];
+            usb_host_data->yellow |= !report->yellow || drumVelocity[DRUM_YELLOW];
+            usb_host_data->blue |= !report->blue || drumVelocity[DRUM_BLUE];
+            usb_host_data->orange |= !report->orange || drumVelocity[DRUM_ORANGE];
+            // 
+            uint8_t velocity = (report->velocity0) | (report->velocity1 << 1) | (report->velocity2 << 2) | (report->velocity3 << 3) | (report->velocity64 << 4);
+            switch (~report->note) {
+                case MIDI_DRUM_KICK:
+                    drumVelocity[DRUM_KICK] = velocity;
+                    break;
+                case MIDI_DRUM_GREEN:
+                    drumVelocity[DRUM_GREEN] = velocity;
+                    break;
+                case MIDI_DRUM_RED:
+                    drumVelocity[DRUM_RED] = velocity;
+                    break;
+                case MIDI_DRUM_YELLOW:
+                    drumVelocity[DRUM_YELLOW] = velocity;
+                    break;
+                case MIDI_DRUM_BLUE:
+                    drumVelocity[DRUM_BLUE] = velocity;
+                    break;
+                case MIDI_DRUM_ORANGE:
+                    drumVelocity[DRUM_ORANGE] = velocity;
+                    break;
+                case MIDI_DRUM_HI_HAT:
+                    drumVelocity[DRUM_HIHAT] = velocity;
+                    break;
+            }
             // We only get velocity on events above, so zero them when the digital input is off
             if (!report->green) {
                 drumVelocity[DRUM_GREEN] = 0;
@@ -336,9 +342,7 @@ inline uint8_t universal_report_to_wii(uint8_t *data, uint8_t sub_type, uint8_t 
             return sizeof(WiiTurntableDataFormat3_t);
         }
         default: {
-            // TODO: we can just go stragiht to the correct report format
-            // TODO: could probably make TRANSLATE_* functions specifically for wii stuff so we dont have to repeat things
-            // Report format 3 is reasonable, so we can convert from that
+            // TODO: we can just go straight to the correct report format
             WiiClassicDataFormat3_t temp_report;
             WiiClassicDataFormat3_t *report = &temp_report;
             memset(report, 0, sizeof(temp_report));

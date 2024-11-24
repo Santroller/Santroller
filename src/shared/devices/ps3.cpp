@@ -1,13 +1,12 @@
 #include <stdint.h>
 
-#include "defines.h"
+#include "Usb.h"
 #include "config.h"
+#include "defines.h"
+#include "ids.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"
-extern bool hasFlags;
-extern const uint8_t dpad_bindings[11];
-extern const uint8_t dpad_bindings_reverse[8];
 void ps3_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
     if (sub_type != GAMEPAD) {
         PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)data;
@@ -213,6 +212,7 @@ void ps3_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type,
             break;
         }
         case ROCK_BAND_DRUMS: {
+            static bool hasFlags;
             PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
             bool green = report->green;
             bool red = report->red;
@@ -645,12 +645,7 @@ uint8_t universal_report_to_ps3(uint8_t dpad, uint8_t *data, uint8_t console_typ
             report->white2 = usb_host_data->white2;
             report->white3 = usb_host_data->white3;
             report->ghtv = usb_host_data->ghtv;
-            if (usb_host_data->dpadUp) {
-                report->leftStickY = 0x00;
-            }
-            if (usb_host_data->dpadDown) {
-                report->leftStickY = 0xFF;
-            }
+            report->leftStickY = usb_host_data->leftStickY;
             report->tilt = 0x0200 + ((-(usb_host_data->tilt >> 7)) - 40);
             report->whammy = usb_host_data->whammy;
             return sizeof(PS3GHLGuitar_Data_t);
@@ -704,4 +699,91 @@ uint8_t universal_report_to_ps3(uint8_t dpad, uint8_t *data, uint8_t console_typ
         }
     }
     return 0;
+}
+void fill_device_descriptor_ps3(USB_DEVICE_DESCRIPTOR *dev) {
+    if (consoleType == SWITCH) {
+        dev->idVendor = HORI_VID;
+        dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
+    } else if (consoleType == IOS_FESTIVAL) {
+        dev->idVendor = SONY_VID;
+        dev->idProduct = SONY_DS3_PID;
+    } else if (deviceType == GUITAR_HERO_GUITAR) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_RB_GUITAR_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_GH_GUITAR_PID;
+        }
+    } else if (deviceType == ROCK_BAND_GUITAR) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_RB_GUITAR_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_RB_GUITAR_PID;
+        }
+    } else if (deviceType == GUITAR_HERO_DRUMS) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_RB_DRUM_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_GH_DRUM_PID;
+        }
+    } else if (deviceType == ROCK_BAND_DRUMS) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_RB_DRUM_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_RB_DRUM_PID;
+        }
+    } else if (deviceType == ROCK_BAND_PRO_GUITAR_MUSTANG) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_MUSTANG_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_MUSTANG_PID;
+        }
+    } else if (deviceType == ROCK_BAND_PRO_GUITAR_SQUIRE) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_SQUIRE_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_SQUIRE_PID;
+        }
+    } else if (deviceType == ROCK_BAND_PRO_GUITAR_SQUIRE) {
+        if (consoleType == WII_RB) {
+            dev->idVendor = HARMONIX_VID;
+            dev->idProduct = WII_KEYBOARD_PID;
+        }
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_KEYBOARD_PID;
+        }
+    } else if (deviceType == LIVE_GUITAR) {
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3WIIU_GHLIVE_DONGLE_PID;
+        }
+    } else if (deviceType == DJ_HERO_TURNTABLE) {
+        if (consoleType == PS3) {
+            dev->idVendor = REDOCTANE_VID;
+            dev->idProduct = PS3_DJ_TURNTABLE_PID;
+        }
+    } else if (DEVICE_TYPE_IS_GAMEPAD) {
+        if (consoleType == PS3) {
+            dev->idVendor = SONY_VID;
+            dev->idProduct = SONY_DS3_PID;
+        }
+    }
 }

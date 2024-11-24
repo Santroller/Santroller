@@ -1,15 +1,14 @@
+#include "state_translation/wii.h"
+
 #include <stdint.h>
 #include <string.h>
 
 #include "defines.h"
-#include "config.h"
+#include "commands.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"
-#include "state_translation/wii.h"
 
-extern uint8_t drumVelocity[8];
-extern bool hasTapBar;
 void wii_to_universal_report(const uint8_t *data, uint8_t len, uint16_t controllerType, bool hiRes, USB_Host_Data_t *usb_host_data) {
     switch (controllerType) {
         case WII_NUNCHUK: {
@@ -76,6 +75,7 @@ void wii_to_universal_report(const uint8_t *data, uint8_t len, uint16_t controll
             break;
         }
         case WII_GUITAR_HERO_GUITAR_CONTROLLER: {
+            static bool hasTapBar;
             WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)data;
             usb_host_data->leftStickX = (report->leftStickX << 10) - INT16_MAX;
             usb_host_data->leftStickY = (report->leftStickY << 10) - INT16_MAX;
@@ -132,56 +132,9 @@ void wii_to_universal_report(const uint8_t *data, uint8_t len, uint16_t controll
             usb_host_data->start = !report->start;
             usb_host_data->guide = !report->guide;
             usb_host_data->back = !report->back;
-            // The analog values respond faster than the digital ones, so its best to use them as well
-            usb_host_data->green = !report->green || drumVelocity[DRUM_GREEN];
-            usb_host_data->red = !report->red || drumVelocity[DRUM_RED];
-            usb_host_data->yellow = !report->yellow || drumVelocity[DRUM_YELLOW];
-            usb_host_data->blue = !report->blue || drumVelocity[DRUM_BLUE];
-            usb_host_data->orange = !report->orange || drumVelocity[DRUM_ORANGE];
-            //
-            uint8_t velocity = (report->velocity0) | (report->velocity1 << 1) | (report->velocity2 << 2) | (report->velocity3 << 3) | (report->velocity64 << 4);
-            switch (~report->note) {
-                case MIDI_DRUM_KICK:
-                    drumVelocity[DRUM_KICK] = velocity;
-                    break;
-                case MIDI_DRUM_GREEN:
-                    drumVelocity[DRUM_GREEN] = velocity;
-                    break;
-                case MIDI_DRUM_RED:
-                    drumVelocity[DRUM_RED] = velocity;
-                    break;
-                case MIDI_DRUM_YELLOW:
-                    drumVelocity[DRUM_YELLOW] = velocity;
-                    break;
-                case MIDI_DRUM_BLUE:
-                    drumVelocity[DRUM_BLUE] = velocity;
-                    break;
-                case MIDI_DRUM_ORANGE:
-                    drumVelocity[DRUM_ORANGE] = velocity;
-                    break;
-                case MIDI_DRUM_HI_HAT:
-                    drumVelocity[DRUM_HIHAT] = velocity;
-                    break;
-            }
-            // We only get velocity on events above, so zero them when the digital input is off
-            if (!report->green) {
-                drumVelocity[DRUM_GREEN] = 0;
-            }
-            if (!report->red) {
-                drumVelocity[DRUM_RED] = 0;
-            }
-            if (!report->yellow) {
-                drumVelocity[DRUM_YELLOW] = 0;
-            }
-            if (!report->blue) {
-                drumVelocity[DRUM_BLUE] = 0;
-            }
-            if (!report->orange) {
-                drumVelocity[DRUM_ORANGE] = 0;
-            }
-            if (!report->kick1) {
-                drumVelocity[DRUM_KICK] = 0;
-            }
+            
+            // Use drum velocities only for calculating drum hits, the digital values have lag
+            midiData.midiVelocities[~report->note] = (report->velocity0) | (report->velocity1 << 1) | (report->velocity2 << 2) | (report->velocity3 << 3) | (report->velocity64 << 4);
             break;
         }
         case WII_DJ_HERO_TURNTABLE: {

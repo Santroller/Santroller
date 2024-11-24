@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "defines.h"
+#include "config.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"

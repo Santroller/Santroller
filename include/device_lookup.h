@@ -128,8 +128,4 @@ inline void fill_device_descriptor(USB_DEVICE_DESCRIPTOR *dev) {
             dev->idProduct = SONY_DS3_PID;
         }
     }
-    if (consoleType == FNF) {
-        dev->idVendor = PDP_VID;
-        dev->idProduct = XBOX_ONE_JAG_PID;
-    }
 }

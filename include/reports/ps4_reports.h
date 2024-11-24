@@ -215,7 +215,7 @@ typedef struct
     uint8_t reportId;
 
     uint8_t leftStickX;
-    uint8_t leftStickY;
+    uint8_t strumBar;
     uint8_t whammy;
     uint8_t tilt;
 

@@ -23,7 +23,6 @@
 #include "ids.h"
 #define REQUIRE_LED_DEBOUNCE LED_COUNT || LED_COUNT_PERIPHERAL || LED_COUNT_STP || LED_COUNT_PERIPHERAL_STP || LED_COUNT_WS2812 || LED_COUNT_PERIPHERAL_WS2812 || HAS_LED_OUTPUT || LED_COUNT_MPR121 || LED_COUNT_WS2812W || LED_COUNT_PERIPHERAL_WS2812W
 
-#ifdef INPUT_MIDI
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
@@ -52,7 +51,6 @@ void onPitchBend(uint8_t channel, int pitch) {
     printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
     midiData.midiPitchWheel = pitch << 2;
 }
-#endif
 uint8_t tmp = 0;
 
 Buffer_Report_t last_queue_report;
@@ -80,7 +78,6 @@ long lastSentGHLPoke = 0;
 long input_start = 0;
 long lastDebounce = 0;
 uint16_t lastMpr121 = 0;
-bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
 uint16_t wiiControllerType = WII_NO_EXTENSION;
 uint8_t ps2ControllerType = PSX_NO_DEVICE;
@@ -114,7 +111,6 @@ uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
 bool auth_ps4_is_ghl = false;
 bool seen_ps4_console = false;
-bool hasFlags = false;
 GipPowerMode_t powerMode;
 Gip_Led_On_t ledOn;
 Gip_Auth_Done_t authDonePacket;
@@ -658,7 +654,7 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
         dpad |= RIGHT;
     }
     // Cymbal flags are mapped to dpad up and down
-    if (sub_type == ROCK_BAND_DRUMS && console_type == PS3) {
+    if (sub_type == ROCK_BAND_DRUMS && (console_type == PS3 || console_type == WII_RB)) {
         if (usb_host_data->yellowCymbal) {
             dpad |= UP;
         }
@@ -676,18 +672,14 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
         case SANTROLLER: {
             return universal_report_to_santroller(dpad, data, sub_type, usb_host_data);
         }
+        case IOS_FESTIVAL:
+        case WII_RB:
         case SWITCH:
         case PS3: {
             return universal_report_to_ps3(dpad, data, console_type, sub_type, usb_host_data);
         }
-        case FNF: {
-            return universal_report_to_festival_hid(data, sub_type, usb_host_data);
-        }
         case PS4: {
             return universal_report_to_ps4(dpad, data, sub_type, usb_host_data);
-        }
-        case PS5: {
-            return universal_report_to_ps5(dpad, data, sub_type, usb_host_data);
         }
         case XBOX360_W:
         case XBOX360: {
@@ -863,10 +855,6 @@ uint8_t tick_controllers(void *buf, USB_LastReport_Data_t *last_report, uint8_t 
     }
     if (output_console_type == BLUETOOTH_REPORT || output_console_type == UNIVERSAL) {
         report_size = packet_size = convert_report_back((uint8_t *)buf, 0, UNIVERSAL, current_mode, universal_report);
-    }
-
-    if (output_console_type == FNF) {
-        report_size = packet_size = convert_report_back((uint8_t *)buf, 0, FNF, current_mode, universal_report);
     }
 
     // For instruments, we instead use the below block, as all other console types use the below format
@@ -1103,7 +1091,7 @@ void tick(void) {
 #endif
     }
     if (DEVICE_TYPE_IS_GUITAR) {
-        if (consoleType == KEYBOARD_MOUSE || consoleType == FNF) {
+        if (consoleType == KEYBOARD_MOUSE) {
             if (!INPUT_QUEUE && (micros() - last_poll) < (4000)) {
                 return;
             }

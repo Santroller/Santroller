@@ -314,7 +314,7 @@ typedef struct {
     uint16_t rightTrigger;
 
     int16_t leftStickX;
-    int16_t leftStickY;
+    int16_t leftStickY; // Also used for strum bar
     int16_t rightStickX;
     int16_t rightStickY;
     uint8_t pressureDpadUp;

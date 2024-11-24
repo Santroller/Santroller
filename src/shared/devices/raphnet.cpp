@@ -5,10 +5,6 @@
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"
-extern bool hasFlags;
-extern const uint8_t dpad_bindings[11];
-extern const uint8_t dpad_bindings_reverse[8];
-extern bool hasTapBar;
 void raphnet_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
     switch (sub_type) {
         case GAMEPAD: {
@@ -44,6 +40,7 @@ void raphnet_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_t
             break;
         }
         case GUITAR_HERO_GUITAR: {
+            static bool hasTapBar;
             RaphnetGuitar_Data_t *report = (RaphnetGuitar_Data_t *)data;
             usb_host_data->dpadUp |= report->up;
             usb_host_data->dpadDown |= report->down;

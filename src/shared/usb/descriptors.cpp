@@ -4,6 +4,7 @@
 #include "commands.h"
 #include "config.h"
 #include "controllers.h"
+#include "device_lookup.h"
 #include "hid.h"
 #include "io.h"
 #include "pin_funcs.h"
@@ -11,7 +12,6 @@
 #include "usbhid.h"
 #include "util.h"
 #include "xsm3/xsm3.h"
-#include "device_lookup.h"
 
 #ifdef KV_KEY_1
 const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
@@ -1077,15 +1077,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         return 1;
     } else if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_SET_REPORT) {
         memcpy(master_bd_addr, requestBuffer + 2, sizeof(master_bd_addr));
-        printf("Master bd address set\r\n");
         return 1;
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
         if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == VIBRATION_CAPABILITIES_WVALUE) {
             memcpy_P(requestBuffer, &XInputVibrationCapabilities, sizeof(XInputVibrationCapabilities));
             return sizeof(XInputVibrationCapabilities);
         } else if (request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR) {
-            memcpy_P(requestBuffer, &ExtendedIDs, ExtendedIDs.TotalLength);
-            return ExtendedIDs.TotalLength;
+            memcpy_P(requestBuffer, &ExtendedIDs, sizeof(ExtendedIDs));
+            return sizeof(ExtendedIDs);
         } else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == INPUT_CAPABILITIES_WVALUE) {
             memcpy_P(requestBuffer, &XInputInputCapabilities, sizeof(XInputInputCapabilities));
 
@@ -1166,18 +1165,16 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         const uint8_t reportType = (wValue >> 8);
         const uint8_t reportId = (wValue & 0xFF);
         hid_set_report((uint8_t *)requestBuffer, wLength, reportType, reportId);
-        if (DEVICE_TYPE_IS_PRO) {
-            if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
-                switch (requestBuffer[2]) {
-                    case 0x89:
-                        proButtonsEnabled = true;
-                        ps3_id_id = 0;
-                        break;
-                    case 0x81:
-                        proButtonsEnabled = false;
-                        ps3_id_id = 0;
-                        break;
-                }
+        if (DEVICE_TYPE_IS_PRO && consoleType == PS3 && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && wLength == 0x28) {
+            switch (requestBuffer[2]) {
+                case 0x89:
+                    proButtonsEnabled = true;
+                    ps3_id_id = 0;
+                    break;
+                case 0x81:
+                    proButtonsEnabled = false;
+                    ps3_id_id = 0;
+                    break;
             }
         }
         return 0;
@@ -1286,8 +1283,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                     desc->EndpointInHID.wMaxPacketSize = 64;
                 } else if (consoleType == KEYBOARD_MOUSE) {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(keyboard_mouse_descriptor);
-                } else if (consoleType == FNF) {
-                    desc->HIDDescriptor.wDescriptorLength = sizeof(fnf_descriptor);
                 } else {
                     desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_instrument_descriptor);
                 }
@@ -1343,9 +1338,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == IOS_FESTIVAL) {
                 address = ps3_descriptor;
                 size = sizeof(ps3_descriptor);
-            } else if (consoleType == FNF) {
-                address = fnf_descriptor;
-                size = sizeof(fnf_descriptor);
             } else if (consoleType == KEYBOARD_MOUSE) {
                 address = keyboard_mouse_descriptor;
                 size = sizeof(keyboard_mouse_descriptor);

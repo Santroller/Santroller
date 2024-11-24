@@ -1,13 +1,12 @@
 #include <stdint.h>
 
-#include "defines.h"
+#include "Usb.h"
 #include "config.h"
+#include "defines.h"
+#include "ids.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"
-extern bool hasFlags;
-extern const uint8_t dpad_bindings[11];
-extern const uint8_t dpad_bindings_reverse[8];
 void xbone_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
     XboxOneGamepad_Data_t *report = (XboxOneGamepad_Data_t *)data;
     usb_host_data->dpadLeft |= report->dpadLeft;
@@ -204,4 +203,12 @@ uint8_t universal_report_to_xbone(uint8_t *data, uint8_t sub_type, const USB_Hos
         }
     }
     return 0;
+}
+
+void fill_device_descriptor_xbone(USB_DEVICE_DESCRIPTOR *dev) {
+    dev->idVendor = MICROSOFT_VID;
+    dev->idProduct = XBOX_ONE_CONTROLLER_PID;
+    dev->bDeviceClass = 0xff;
+    dev->bDeviceSubClass = 0x47;
+    dev->bDeviceProtocol = 0xd0;
 }

@@ -1,19 +1,18 @@
 #include <stdint.h>
 
-#include "defines.h"
+#include "Usb.h"
 #include "config.h"
+#include "defines.h"
+#include "ids.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"
-extern bool hasFlags;
-extern const uint8_t dpad_bindings[11];
-extern const uint8_t dpad_bindings_reverse[8];
-void ps5_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
-    PS4Dpad_Data_t *report = (PS4Dpad_Data_t *)data;
+void ps4_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
+    PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
     DPAD_REV();
     switch (sub_type) {
         case GAMEPAD: {
-            PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)data;
+            PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
             usb_host_data->a |= report->a;
             usb_host_data->b |= report->b;
             usb_host_data->x |= report->x;
@@ -44,7 +43,7 @@ void ps5_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type,
             break;
         }
         case ROCK_BAND_GUITAR: {
-            PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)data;
+            PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)data;
             usb_host_data->green |= report->green;
             usb_host_data->red |= report->red;
             usb_host_data->yellow |= report->yellow;
@@ -73,41 +72,18 @@ void ps5_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type,
             solo_to_slider(usb_host_data);
             break;
         }
-        case LIVE_GUITAR: {
-            PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)data;
-            usb_host_data->black1 |= report->black1;
-            usb_host_data->black2 |= report->black2;
-            usb_host_data->black3 |= report->black3;
-            usb_host_data->white1 |= report->white1;
-            usb_host_data->white2 |= report->white2;
-            usb_host_data->white3 |= report->white3;
-            usb_host_data->ghtv |= report->ghtv;
-            if (report->dpadUp) {
-                usb_host_data->leftStickY = 0x00;
-            }
-            if (report->dpadDown) {
-                usb_host_data->leftStickY = 0xFF;
-            }
-            if (report->tilt) {
-                usb_host_data->tilt = (-((report->tilt - 0x0200) + 40)) << 7;
-            }
-            if (report->whammy) {
-                usb_host_data->whammy = report->whammy;
-            };
-            break;
-        }
     }
 }
 
-uint8_t universal_report_to_ps5(uint8_t dpad, uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
-    PS5Gamepad_Data_t *dpad_report = (PS5Gamepad_Data_t *)data;
+uint8_t universal_report_to_ps4(uint8_t dpad, uint8_t *data, uint8_t sub_type, const USB_Host_Data_t *usb_host_data) {
+    PS4Dpad_Data_t *dpad_report = (PS4Dpad_Data_t *)data;
     dpad_report->dpad = dpad;
     dpad_report->guide = usb_host_data->guide;
     dpad_report->back = usb_host_data->back;
     dpad_report->start = usb_host_data->start;
     switch (sub_type) {
         case GAMEPAD: {
-            PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)data;
+            PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)data;
             report->a = usb_host_data->a;
             report->b = usb_host_data->b;
             report->x = usb_host_data->x;
@@ -122,10 +98,10 @@ uint8_t universal_report_to_ps5(uint8_t dpad, uint8_t *data, uint8_t sub_type, c
             report->rightStickY = (-usb_host_data->rightStickY >> 8) + 0x80;
             report->leftThumbClick = usb_host_data->leftThumbClick;
             report->rightThumbClick = usb_host_data->rightThumbClick;
-            return sizeof(PS5Gamepad_Data_t);
+            return sizeof(PS4Gamepad_Data_t);
         }
         case ROCK_BAND_GUITAR: {
-            PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)data;
+            PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)data;
             report->green = usb_host_data->green;
             report->red = usb_host_data->red;
             report->yellow = usb_host_data->yellow;
@@ -141,8 +117,35 @@ uint8_t universal_report_to_ps5(uint8_t dpad, uint8_t *data, uint8_t sub_type, c
             report->soloYellow = usb_host_data->soloYellow;
             report->soloBlue = usb_host_data->soloBlue;
             report->soloOrange = usb_host_data->soloOrange;
-            return sizeof(PS5RockBandGuitar_Data_t);
+            // TODO: dpad left -> back
+            return sizeof(PS4RockBandGuitar_Data_t);
+        }
+        case LIVE_GUITAR: {
+            PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)data;
+            report->black1 = usb_host_data->black1;
+            report->black2 = usb_host_data->black2;
+            report->black3 = usb_host_data->black3;
+            report->white1 = usb_host_data->white1;
+            report->white2 = usb_host_data->white2;
+            report->white3 = usb_host_data->white3;
+            report->ghtv = usb_host_data->ghtv;
+            report->leftStickX = (usb_host_data->leftStickX >> 8) + 0x80;
+            // TODO: check this
+            report->strumBar = (-usb_host_data->leftStickY >> 8) + 0x80;
+            report->tilt = 0x0200 + ((-(usb_host_data->tilt >> 7)) - 40);
+            report->whammy = usb_host_data->whammy;
+            return sizeof(PS4GHLGuitar_Data_t);
         }
     }
     return 0;
+}
+void fill_device_descriptor_ps4(USB_DEVICE_DESCRIPTOR *dev) {
+    // We just use the ghl dongle ids for PS4 as PS4 doesn't care
+    if (DEVICE_TYPE_IS_GAMEPAD) {
+        dev->idVendor = SONY_VID;
+        dev->idProduct = PS4_DS_PID_1;
+    } else {
+        dev->idVendor = XBOX_REDOCTANE_VID;
+        dev->idProduct = PS4_GHLIVE_DONGLE_PID;
+    }
 }

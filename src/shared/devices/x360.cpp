@@ -1,11 +1,14 @@
+#include "state_translation/x360.h"
+
 #include <stdint.h>
 
+#include "Usb.h"
 #include "defines.h"
-#include "config.h"
+#include "ids.h"
 #include "reports/controller_reports.h"
 #include "state_translation/shared.h"
 #include "state_translation/slider.h"
-#include "state_translation/x360.h"
+#include "controllers.h"
 void x360bb_to_universal_report(const uint8_t *data, uint8_t len, uint8_t sub_type, USB_Host_Data_t *usb_host_data) {
     XInputBigButton_Data_t *report = (XInputBigButton_Data_t *)data;
     usb_host_data->a |= report->a;
@@ -611,4 +614,9 @@ uint8_t universal_report_to_x360(uint8_t *data, uint8_t sub_type, const USB_Host
             return sizeof(XInputGamepad_Data_t);
         }
     }
+}
+
+void fill_device_descriptor_xb360(USB_DEVICE_DESCRIPTOR *dev) {
+    dev->idVendor = xbox_360_vid;
+    dev->idProduct = xbox_360_pid;
 }

@@ -14,7 +14,7 @@ bool twi_writeSingleToPointer(TWI_BLOCK block, uint8_t address, uint8_t pointer,
   return twi_writeToPointer(block, address, pointer, 1, &data);
 }
 bool twi_writeToPointer(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
-                        uint8_t *data) {
+                        const uint8_t *data) {
   uint8_t data2[length + 1];
   data2[0] = pointer;
   memcpy(data2 + 1, data, length);

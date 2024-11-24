@@ -2,8 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "config.h"
-
 // To make things easier, we use bitfields here, and then we map to a proper hat later
 #define DPAD                       \
     union {                        \

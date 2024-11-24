@@ -1,5 +1,6 @@
 #include "controllers.h"
 #include "endpoints.h"
+#include "ids.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

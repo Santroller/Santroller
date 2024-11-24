@@ -10,3 +10,4 @@
 #include "switch.h"
 #include "raphnet.h"
 #include "generic.h"
+#include "festival.h"

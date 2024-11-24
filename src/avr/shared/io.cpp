@@ -266,7 +266,7 @@ bool twi_readFrom(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t lengt
     return length;
 }
 
-bool twi_writeTo(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
+bool twi_writeTo(TWI_BLOCK block, uint8_t address, const uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop) {
     // ensure data will fit into buffer
     if (TWI_BUFFER_LENGTH < length) return false;

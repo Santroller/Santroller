@@ -7,8 +7,8 @@
         wiiData = tickWii();
         lastTick = micros();
         if (wiiValid) {
-            memset(&lastSuccessfulWiiPacket, 0, sizeof(lastSuccessfulWiiPacket));
-            wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &lastSuccessfulWiiPacket);
+            memset(&temp_report, 0, sizeof(temp_report));
+            wii_to_universal_report(wiiData, wiiBytes, wiiControllerType, hiRes, &temp_report);
         }
     }
 #endif

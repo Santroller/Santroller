@@ -19,16 +19,9 @@ typedef struct {
         uint8_t leftTrigger : 5;
     };
 } __attribute__((packed)) WiiIntermediateClassicDataFormat_t;
+
 typedef struct {
-    uint8_t leftStickX : 6;
-    uint8_t rightStickX43 : 2;
-    uint8_t leftStickY : 6;
-    uint8_t rightStickX21 : 2;
-    uint8_t rightStickY : 5;
-    uint8_t leftTrigger43 : 2;
-    uint8_t rightStickX0 : 1;
-    uint8_t rightTrigger : 5;
-    uint8_t leftTrigger20 : 3;
+
     union {
         struct {
             uint8_t : 1;
@@ -55,6 +48,18 @@ typedef struct {
         };
         uint8_t buttonsHigh;
     };
+} __attribute__((packed)) WiiClassicButtons_t;
+typedef struct {
+    uint8_t leftStickX : 6;
+    uint8_t rightStickX43 : 2;
+    uint8_t leftStickY : 6;
+    uint8_t rightStickX21 : 2;
+    uint8_t rightStickY : 5;
+    uint8_t leftTrigger43 : 2;
+    uint8_t rightStickX0 : 1;
+    uint8_t rightTrigger : 5;
+    uint8_t leftTrigger20 : 3;
+    WiiClassicButtons_t buttons;
 } __attribute__((packed)) WiiClassicDataFormat1_t;
 typedef struct {
     uint8_t leftStickX92;
@@ -67,33 +72,7 @@ typedef struct {
     uint8_t rightStickY10 : 2;
     uint8_t leftTrigger;
     uint8_t rightTrigger;
-
-    union {
-        struct {
-            uint8_t : 1;
-            uint8_t r2 : 1;
-            uint8_t start : 1;
-            uint8_t guide : 1;
-            uint8_t back : 1;
-            uint8_t l2 : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadRight : 1;
-        };
-        uint8_t buttonsLow;
-    };
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t rightShoulder : 1;
-            uint8_t x : 1;
-            uint8_t a : 1;
-            uint8_t y : 1;
-            uint8_t b : 1;
-            uint8_t leftShoulder : 1;
-        };
-        uint8_t buttonsHigh;
-    };
+    WiiClassicButtons_t buttons;
 } __attribute__((packed)) WiiClassicDataFormat2_t;
 typedef struct {
     uint8_t leftStickX;
@@ -102,35 +81,9 @@ typedef struct {
     uint8_t rightStickY;
     uint8_t leftTrigger;
     uint8_t rightTrigger;
+    WiiClassicButtons_t buttons;
 
-    union {
-        struct {
-            uint8_t : 1;
-            uint8_t r2 : 1;
-            uint8_t start : 1;
-            uint8_t guide : 1;
-            uint8_t back : 1;
-            uint8_t l2 : 1;
-            uint8_t dpadDown : 1;
-            uint8_t dpadRight : 1;
-        };
-        uint8_t buttonsLow;
-    };
-    union {
-        struct {
-            uint8_t dpadUp : 1;
-            uint8_t dpadLeft : 1;
-            uint8_t rightShoulder : 1;
-            uint8_t x : 1;
-            uint8_t a : 1;
-            uint8_t y : 1;
-            uint8_t b : 1;
-            uint8_t leftShoulder : 1;
-        };
-        uint8_t buttonsHigh;
-    };
 } __attribute__((packed)) WiiClassicDataFormat3_t;
-
 typedef struct {
     uint8_t leftStickX : 6;
     uint8_t : 2;

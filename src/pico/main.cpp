@@ -535,7 +535,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                                 set_device_type(ROCK_BAND_GUITAR);
                                 break;
                             case XINPUT_PRO_GUITAR:
-                                set_device_type(ROCK_BAND_PRO_GUITAR_MUSTANG);
+                                send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
                                 break;
                             case XINPUT_PRO_KEYS:
                                 set_device_type(ROCK_BAND_PRO_KEYS);
@@ -561,6 +561,12 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0) {
                             usb_host_devices[i].type.sub_type = XINPUT_GUITAR_WT;
                             printf("Found wt\r\n");
+                        }
+                        if (caps->leftStickX == HARMONIX_VID && (caps->rightStickX & 0xfff0) == XBOX_360_MUSTANG_PID) {
+                            set_device_type(ROCK_BAND_PRO_GUITAR_MUSTANG);
+                        }
+                        if (caps->leftStickX == HARMONIX_VID && (caps->rightStickX & 0xfff0) == XBOX_360_SQUIRE_PID) {
+                            set_device_type(ROCK_BAND_PRO_GUITAR_SQUIRE);
                         }
                         // TODO: where are the flags
                         if (usb_host_devices[i].type.sub_type == XINPUT_DRUMS) {

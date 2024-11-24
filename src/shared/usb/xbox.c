@@ -6,6 +6,7 @@
 #include "reports/xinput_reports.h"
 #include "stdint.h"
 #include "wcid.h"
+#include "ids.h"
 const XInputVibrationCapabilities_t PROGMEM XInputVibrationCapabilities = {
     rid : 0x00,
     rsize : sizeof(XInputVibrationCapabilities_t),

@@ -20,16 +20,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
-#define DJLEFT_ADDR 0x0E
-#define DJRIGHT_ADDR 0x0D
-#define DJ_BUTTONS_PTR 0x12
-#define GH5NECK_ADDR 0x0D
-#define CLONE_ADDR 0x10
-#define CLONE_VALID_PACKET 0x52
-#define GH5NECK_BUTTONS_PTR 0x12
-#define GH5DRUM_BUTTONS_PTR 0x10
-#define BUFFER_SIZE_QUEUE 255
-#define KEY_ERR_OVF 0x01
+#include "ids.h"
 #define REQUIRE_LED_DEBOUNCE LED_COUNT || LED_COUNT_PERIPHERAL || LED_COUNT_STP || LED_COUNT_PERIPHERAL_STP || LED_COUNT_WS2812 || LED_COUNT_PERIPHERAL_WS2812 || HAS_LED_OUTPUT || LED_COUNT_MPR121 || LED_COUNT_WS2812W || LED_COUNT_PERIPHERAL_WS2812W
 
 #ifdef INPUT_MIDI
@@ -63,10 +54,7 @@ void onPitchBend(uint8_t channel, int pitch) {
 }
 #endif
 uint8_t tmp = 0;
-long clone_guitar_timer = 0;
-long clone_guitar_ready_timer = 0;
-bool clone_ready = false;
-bool reading = false;
+
 Buffer_Report_t last_queue_report;
 long last_queue = 0;
 uint8_t brightness = LED_BRIGHTNESS;
@@ -75,15 +63,8 @@ uint8_t led_tmp;
 uint8_t queue_tail = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #define TURNTABLE_BUFFER_SIZE 16
-#if INPUT_DJ_TURNTABLE_SMOOTHING
-int16_t dj_sum_left = 0;
-int8_t dj_last_readings_left[TURNTABLE_BUFFER_SIZE];
-int8_t dj_next_left = 0;
-int16_t dj_sum_right = 0;
-int8_t dj_last_readings_right[TURNTABLE_BUFFER_SIZE];
-int8_t dj_next_right = 0;
-#endif
 USB_Host_Data_t last_report;
+USB_Host_Data_t temp_report;
 USB_Report_Data_t bt_report;
 USB_Report_Data_t usb_report;
 uint8_t debounce[DIGITAL_COUNT];
@@ -120,8 +101,6 @@ bool disable_multiplexer = false;
 uint8_t overriddenR2 = 0;
 USB_LastReport_Data_t last_report_usb;
 USB_LastReport_Data_t last_report_bt;
-USB_Host_Data_t lastSuccessfulPS2Packet;
-USB_Host_Data_t lastSuccessfulWiiPacket;
 uint8_t wii_data[8];
 #ifdef INPUT_USB_HOST
 uint8_t temp_report_usb_host[128];
@@ -156,7 +135,6 @@ uint8_t ghl_ps3wiiu_magic_data[] = {
 uint8_t ghl_ps4_magic_data[] = {
     0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-uint8_t clone_data[] = {0x53, 0x10, 0x00, 0x01};
 uint8_t ws2812_bits[] = {0x88, 0x8C, 0xC8, 0xCC};
 #if LED_COUNT_WS2812W
 Led_WS2812W_t ledState[LED_COUNT_WS2812W];
@@ -319,7 +297,7 @@ int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min,
     return previous;
 }
 
-int16_t handle_calibration_xbox_whammy(int16_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
+int16_t handle_calibration_xbox_whammy(int16_t previous, uint16_t orig_val, int32_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -346,7 +324,7 @@ int16_t handle_calibration_xbox_whammy(int16_t previous, uint16_t orig_val, uint
     return previous;
 }
 uint16_t handle_calibration_xbox_one_trigger(uint16_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
-    int32_t val = orig_val;
+    uint32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
             return 0;
@@ -371,7 +349,7 @@ uint16_t handle_calibration_xbox_one_trigger(uint16_t previous, uint16_t orig_va
     }
     return previous;
 }
-uint16_t handle_calibration_drum(uint16_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_drum(uint16_t previous, uint16_t orig_val, int32_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {
@@ -516,7 +494,7 @@ uint8_t tick_xbox_one() {
         case Announce:
             descriptor_index = 0;
             xbox_one_state = WaitingDesc1;
-            memcpy(&last_report, announce, sizeof(announce));
+            memcpy(&last_report, announce, sizeof(announce_drums));
             memcpy(((uint8_t *)&last_report) + 7, &serial, 3);
             return sizeof(announce);
         case IdentDesc1:
@@ -537,7 +515,7 @@ uint8_t tick_xbox_one() {
         }
         case IdentDescEnd: {
             xbox_one_state = Auth;
-            memcpy(&last_report, xb1_descriptor_end, sizeof(xb1_descriptor_end));
+            memcpy(&last_report, xb1_descriptor_end, sizeof(xb1_descriptor_drums_end));
             return sizeof(xb1_descriptor_end);
         }
         case Auth:
@@ -646,57 +624,7 @@ void convert_report(const uint8_t *data, uint8_t len, uint8_t console_type, uint
             break;
         }
         case OG_XBOX: {
-            OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)data;
-            usb_host_data->a |= report->a > 0x20;
-            usb_host_data->b |= report->b > 0x20;
-            usb_host_data->x |= report->x > 0x20;
-            usb_host_data->y |= report->y > 0x20;
-            usb_host_data->leftShoulder |= report->leftShoulder > 0x20;
-            usb_host_data->rightShoulder |= report->rightShoulder > 0x20;
-            usb_host_data->back |= report->back;
-            usb_host_data->start |= report->start;
-            usb_host_data->leftThumbClick |= report->leftThumbClick;
-            usb_host_data->rightThumbClick |= report->rightThumbClick;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
-            if (report->leftTrigger) {
-                usb_host_data->leftTrigger = report->leftTrigger << 8;
-            }
-            if (report->rightTrigger) {
-                usb_host_data->rightTrigger = report->rightTrigger << 8;
-            }
-            if (report->leftStickX) {
-                usb_host_data->leftStickX = report->leftStickX;
-            }
-            if (report->leftStickY) {
-                usb_host_data->leftStickY = report->leftStickY;
-            }
-            if (report->rightStickX) {
-                usb_host_data->rightStickX = report->rightStickX;
-            }
-            if (report->rightStickY) {
-                usb_host_data->rightStickY = report->rightStickY;
-            }
-            if (report->leftShoulder) {
-                usb_host_data->pressureL1 = report->leftShoulder;
-            }
-            if (report->rightShoulder) {
-                usb_host_data->rightShoulder = report->rightShoulder;
-            }
-            if (report->y) {
-                usb_host_data->pressureTriangle = report->y;
-            }
-            if (report->b) {
-                usb_host_data->pressureCircle = report->b;
-            }
-            if (report->a) {
-                usb_host_data->pressureCross = report->a;
-            }
-            if (report->x) {
-                usb_host_data->pressureSquare = report->x;
-            }
+            ogxbox_to_universal_report(data, len, sub_type, usb_host_data);
             break;
         }
         case XBOX360_BB: {
@@ -730,7 +658,7 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
         dpad |= RIGHT;
     }
     // Cymbal flags are mapped to dpad up and down
-    if (sub_type == ROCK_BAND_DRUMS) {
+    if (sub_type == ROCK_BAND_DRUMS && console_type == PS3) {
         if (usb_host_data->yellowCymbal) {
             dpad |= UP;
         }
@@ -751,6 +679,9 @@ uint8_t convert_report_back(uint8_t *data, uint8_t len, uint8_t console_type, ui
         case SWITCH:
         case PS3: {
             return universal_report_to_ps3(dpad, data, console_type, sub_type, usb_host_data);
+        }
+        case FNF: {
+            return universal_report_to_festival_hid(data, sub_type, usb_host_data);
         }
         case PS4: {
             return universal_report_to_ps4(dpad, data, sub_type, usb_host_data);
@@ -943,7 +874,6 @@ uint8_t tick_controllers(void *buf, USB_LastReport_Data_t *last_report, uint8_t 
         report_size = packet_size = convert_report_back((uint8_t *)buf, 0, PS3, current_mode, universal_report);
     }
 
-    TICK_RESET
     // Some hosts want packets sent every frame
     if (last_report && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
@@ -979,7 +909,6 @@ uint8_t tick_inputs(USB_Host_Data_t *report, uint8_t output_console_type) {
     USB_RB_Drums_t current_drum_report = {buttons : 0};
 // Tick Inputs
 #include "inputs/accel.h"
-#include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
@@ -987,7 +916,6 @@ uint8_t tick_inputs(USB_Host_Data_t *report, uint8_t output_console_type) {
 #include "inputs/turntable.h"
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
-#include "inputs/wt_neck.h"
     TICK_SHARED;
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
@@ -1337,239 +1265,3 @@ void set_device_type(uint8_t new_device_type) {
     deviceType = new_device_type;
     reset_usb();
 }
-#if USB_HOST_STACK || BLUETOOTH_RX
-void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_Device_Type_t *type) {
-    switch (vid) {
-        case STREAM_DECK_VID: {
-            type->console_type = STREAM_DECK;
-            type->sub_type = UNKNOWN;
-            switch (pid) {
-                case STREAM_DECK_OG_PID:
-                    type->sub_type = STREAM_DECK_OG;
-                    break;
-                case STREAM_DECK_MINI_PID:
-                    type->sub_type = STREAM_DECK_MINI;
-                    break;
-                case STREAM_DECK_XL_PID:
-                    type->sub_type = STREAM_DECK_XL;
-                    break;
-                case STREAM_DECK_V2_PID:
-                    type->sub_type = STREAM_DECK_V2;
-                    break;
-                case STREAM_DECK_MK2_PID:
-                    type->sub_type = STREAM_DECK_MK2;
-                    break;
-                case STREAM_DECK_PLUS_PID:
-                    type->sub_type = STREAM_DECK_PLUS;
-                    break;
-                case STREAM_DECK_PEDAL_PID:
-                    type->sub_type = STREAM_DECK_PEDAL;
-                    break;
-                case STREAM_DECK_XLV2_PID:
-                    type->sub_type = STREAM_DECK_XLV2;
-                    break;
-                case STREAM_DECK_MINIV2_PID:
-                    type->sub_type = STREAM_DECK_MINIV2;
-                    break;
-                case STREAM_DECK_NEO_PID:
-                    type->sub_type = STREAM_DECK_NEO;
-                    break;
-            }
-            break;
-        }
-        case NINTENDO_VID: {
-            if (pid == SWITCH_PRO_PID) {
-                type->console_type = SWITCH;
-                type->sub_type = GAMEPAD;
-            }
-            break;
-        }
-        case ARDWIINO_VID: {
-            if (pid == ARDWIINO_PID) {
-                type->console_type = SANTROLLER;
-                type->sub_type = (version >> 8) & 0xFF;
-            }
-            break;
-        }
-        case RAPHNET_VID: {
-            type->console_type = RAPHNET;
-            type->sub_type = GAMEPAD;
-            break;
-        }
-        case MAGICBOOTS_PS4_VID: {
-            if (pid == MAGICBOOTS_PS4_PID) {
-                type->console_type = PS4;
-                type->sub_type = GAMEPAD;
-            }
-            break;
-        }
-        case ARDUINO_VID: {
-            if (pid == STEPMANIA_X_PID) {
-                type->console_type = STEPMANIAX;
-                type->sub_type = DANCE_PAD;
-            }
-            break;
-        }
-        case LTEK_LUFA_VID: {
-            if (pid == LTEK_LUFA_PID) {
-                type->console_type = LTEK_ID;
-                type->sub_type = DANCE_PAD;
-            }
-            break;
-        }
-        case LTEK_VID: {
-            if (pid == LTEK_PID) {
-                type->console_type = LTEK;
-                type->sub_type = DANCE_PAD;
-            }
-            break;
-        }
-        case SONY_VID:
-            switch (pid) {
-                case SONY_DS3_PID:
-                    type->console_type = PS3;
-                    type->sub_type = GAMEPAD;
-                    break;
-                case PS4_DS_PID_1:
-                case PS4_DS_PID_2:
-                case PS4_DS_PID_3:
-                    type->console_type = PS4;
-                    type->sub_type = GAMEPAD;
-                    break;
-                case PS5_DS_PID:
-                    type->console_type = PS5;
-                    type->sub_type = GAMEPAD;
-                    break;
-            }
-            break;
-        case REDOCTANE_VID:
-            switch (pid) {
-                case PS3_GH_GUITAR_PID:
-                    type->console_type = PS3;
-                    type->sub_type = GUITAR_HERO_GUITAR;
-                    break;
-                case PS3_GH_DRUM_PID:
-                    type->console_type = PS3;
-                    type->sub_type = GUITAR_HERO_DRUMS;
-                    break;
-                case PS3_RB_GUITAR_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-                case PS3_RB_DRUM_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_DRUMS;
-                    break;
-                case PS3_DJ_TURNTABLE_PID:
-                    type->console_type = PS3;
-                    type->sub_type = DJ_HERO_TURNTABLE;
-                    break;
-                case PS3WIIU_GHLIVE_DONGLE_PID:
-                    type->console_type = PS3;
-                    type->sub_type = LIVE_GUITAR;
-                    break;
-                case PS3_MPA_KEYBOARD_PID:
-                case PS3_KEYBOARD_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_PRO_KEYS;
-                    break;
-                case PS3_MUSTANG_PID:
-                case PS3_MPA_MUSTANG_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_PRO_GUITAR_MUSTANG;
-                    break;
-                case PS3_SQUIRE_PID:
-                case PS3_MPA_SQUIRE_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
-            }
-            break;
-
-        case HARMONIX_VID:
-            // Polled the same as PS3, so treat them as PS3 instruments
-            switch (pid) {
-                case WII_RB_GUITAR_PID:
-                case WII_RB_GUITAR_2_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-
-                case WII_RB_DRUM_PID:
-                case WII_RB_DRUM_2_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_DRUMS;
-                    break;
-                case WII_KEYBOARD_PID:
-                case WII_MPA_KEYBOARD_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_PRO_KEYS;
-                    break;
-                case WII_MUSTANG_PID:
-                case WII_MPA_MUSTANG_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_PRO_GUITAR_MUSTANG;
-                case WII_SQUIRE_PID:
-                case WII_MPA_SQUIRE_PID:
-                    type->console_type = PS3;
-                    type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
-                    break;
-            }
-
-            break;
-        case PDP_VID:
-            switch (pid) {
-                case XBOX_ONE_JAG_PID:
-                case XBOX_ONE_RIFFMASTER_PID:
-                    type->console_type = XBOXONE;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-                case PS4_JAG_PID:
-                case PS4_RIFFMASTER_PID:
-                    type->console_type = PS4;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-                case PS5_RIFFMASTER_PID:
-                    type->console_type = PS5;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-            }
-
-            break;
-
-        case MAD_CATZ_VID:
-            switch (pid) {
-                case XBOX_ONE_RB_GUITAR_PID:
-                    type->console_type = XBOXONE;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-                case XBOX_ONE_RB_DRUM_PID:
-                    type->console_type = XBOXONE;
-                    type->sub_type = ROCK_BAND_DRUMS;
-                    break;
-                case PS4_STRAT_PID:
-                    type->console_type = PS4;
-                    type->sub_type = ROCK_BAND_GUITAR;
-                    break;
-            }
-
-            break;
-
-        case XBOX_REDOCTANE_VID:
-            switch (pid) {
-                case XBOX_ONE_GHLIVE_DONGLE_PID:
-                    type->console_type = XBOXONE;
-                    type->sub_type = LIVE_GUITAR;
-                    break;
-                case XBOX_360_GHLIVE_DONGLE_PID:
-                    type->console_type = XBOX360;
-                    type->sub_type = XINPUT_GUITAR_HERO_LIVE;
-                    break;
-                case XBOX_360_WT_KIOSK_PID:
-                    type->console_type = XBOX360;
-                    type->sub_type = XINPUT_GUITAR_WT;
-                    break;
-            }
-            break;
-    }
-}
-#endif

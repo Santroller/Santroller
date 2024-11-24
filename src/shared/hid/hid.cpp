@@ -802,14 +802,14 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             if (!lastWiiWasSuccessful) {
                 return 0;
             }
-            memcpy(response_buffer, &lastSuccessfulWiiPacket, sizeof(lastSuccessfulWiiPacket));
-            return sizeof(lastSuccessfulWiiPacket);
+            // memcpy(response_buffer, &temp_report, sizeof(temp_report));
+            // return sizeof(temp_report);
         case COMMAND_READ_PS2:
             if (!lastPS2WasSuccessful) {
                 return 0;
             }
-            memcpy(response_buffer, &lastSuccessfulPS2Packet, sizeof(lastSuccessfulPS2Packet));
-            return sizeof(lastSuccessfulPS2Packet);
+            // memcpy(response_buffer, &temp_report, sizeof(temp_report));
+            // return sizeof(temp_report);
         case COMMAND_READ_DJ_LEFT:
             if (!lastTurntableWasSuccessfulLeft) {
                 return 0;
@@ -834,15 +834,6 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             }
             memcpy(response_buffer, &lastSuccessfulClonePacket, sizeof(lastSuccessfulClonePacket));
             return sizeof(lastSuccessfulClonePacket);
-#ifdef INPUT_WT_NECK
-        case COMMAND_READ_GHWT: {
-            volatile uint8_t *data = (volatile uint8_t *)lastWt;
-            for (int i = 0; i < sizeof(lastWt); i++) {
-                response_buffer[i] = data[i];
-            }
-            return sizeof(lastWt);
-        }
-#endif
         case COMMAND_READ_ANALOG: {
             uint8_t pin = wValue & 0xff;
             uint8_t mask = (wValue >> 8);
@@ -851,16 +842,16 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             return sizeof(response);
         }
         case COMMAND_READ_ACCEL: {
-            memcpy(response_buffer, &filtered, sizeof(filtered));
-            memcpy(response_buffer + sizeof(filtered), &accel_adc, sizeof(accel_adc));
-            return sizeof(filtered) + sizeof(accel_adc);
+            // memcpy(response_buffer, &filtered, sizeof(filtered));
+            // memcpy(response_buffer + sizeof(filtered), &accel_adc, sizeof(accel_adc));
+            // return sizeof(filtered) + sizeof(accel_adc);
         }
         case COMMAND_ACCEL_VALID: {
-            response_buffer[0] = accel_found;
-            return 1;
+            // response_buffer[0] = accel_found;
+            // return 1;
         }
         case COMMAND_SET_ACCEL_FILTER: {
-            memcpy(&currentLowPassAlpha, response_buffer, sizeof(currentLowPassAlpha));
+            // memcpy(&currentLowPassAlpha, response_buffer, sizeof(currentLowPassAlpha));
             return 0;
         }
         case COMMAND_READ_DIGITAL: {

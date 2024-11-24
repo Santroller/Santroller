@@ -1,7 +1,6 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "reports/dance_pad_reports.h"
 #include "reports/drum_reports.h"
 #include "reports/og_xbox_reports.h"

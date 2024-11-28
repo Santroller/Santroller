@@ -206,12 +206,6 @@ static void hog_start_connect(void) {
     }
     // Only try to connect if we have "paired" a device
 #ifdef BT_ADDR
-#ifdef CONFIGURABLE_BLOBS
-    // If the address starts with a null byte, then it is not actually set and should be ignored.
-    if (devices[0]) {
-        return;
-    }
-#endif
     hog_connect();
 #endif
 }

@@ -15,8 +15,6 @@ You can follow the [Wii Extension emulation guide](https://santroller.tangentmc.
 ## Emulating a Wii Extension in software
 I have written a module that you can use with a USB Loader to play Guitar Hero games with a USB instrument, Santroller BSlug. 
 
-Note that for the time being, this does NOT work for DJ Hero, but that is being worked on.
-
 ### Setting up Santroller BSlug
 1. Download `sd.zip` from https://github.com/Santroller/santroller-bslug/releases/latest
 2. Extract it to the root of your wii's SD card

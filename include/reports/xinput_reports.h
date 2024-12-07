@@ -429,11 +429,12 @@ typedef struct
     uint8_t y : 1;  // black3 y
 
     uint8_t unused1[2];
-    int16_t unused2;
 
+    int16_t unused2;
     int16_t strumBar;
     int16_t tilt;
     int16_t whammy;
+    
     uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGHLGuitar_Data_t;
 

@@ -13,9 +13,9 @@ You can either physically wire a Wii extension port to your controller and plug 
 You can follow the [Wii Extension emulation guide](https://santroller.tangentmc.net/wiring_guides/wii_output.html), and actually emulate proper wii extensions, and then plug them into your remote.
 
 ## Emulating a Wii Extension in software
-I have written a module that you can use with a USB Loader to play Guitar Hero games with a USB instrument, Santroller BSlug. 
+I have written a module that you can use with a USB Loader to play the Guitar Hero, Band Hero and DJ Hero games with a USB instrument, Santroller Brainslug. 
 
-### Setting up Santroller BSlug (Real Disc)
+### Setting up Santroller Brainslug (Real Disc)
 1. Download `sd.zip` from https://github.com/Santroller/santroller-bslug/releases/latest
 2. Extract it to the root of your wii's SD card
 3. Plug in the USB instrument
@@ -23,7 +23,7 @@ I have written a module that you can use with a USB Loader to play Guitar Hero g
 5. Launch brainslug
 
 
-### Setting up Santroller BSlug (USB Loader GX)
+### Setting up Santroller Brainslug (USB Loader GX)
 1. Download `sd.zip` from https://github.com/Santroller/santroller-bslug/releases/latest
 2. Extract it to the root of your wii's SD card
 3. Rename RGHE52.dol with the title id for the game you wish to play. You can also copy and paste the dol file with multiple names to use this module with multiple different games.

@@ -15,7 +15,15 @@ You can follow the [Wii Extension emulation guide](https://santroller.tangentmc.
 ## Emulating a Wii Extension in software
 I have written a module that you can use with a USB Loader to play Guitar Hero games with a USB instrument, Santroller BSlug. 
 
-### Setting up Santroller BSlug
+### Setting up Santroller BSlug (Real Disc)
+1. Download `sd.zip` from https://github.com/Santroller/santroller-bslug/releases/latest
+2. Extract it to the root of your wii's SD card
+3. Plug in the USB instrument
+4. Launch the homebrew channel
+5. Launch brainslug
+
+
+### Setting up Santroller BSlug (USB Loader GX)
 1. Download `sd.zip` from https://github.com/Santroller/santroller-bslug/releases/latest
 2. Extract it to the root of your wii's SD card
 3. Rename RGHE52.dol with the title id for the game you wish to play. You can also copy and paste the dol file with multiple names to use this module with multiple different games.

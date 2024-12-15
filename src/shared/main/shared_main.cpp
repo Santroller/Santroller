@@ -431,17 +431,17 @@ int8_t handle_calibration_mouse(int8_t previous, int32_t orig_val, int16_t min, 
     return handle_calibration_xbox(previous << 8, orig_val, min, max, center, deadzone) >> 8;
 }
 
-uint8_t handle_calibration_ps3_360_trigger(uint8_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
+uint8_t handle_calibration_ps3_360_trigger(uint8_t previous, uint16_t orig_val, int16_t min, int16_t multiplier, uint16_t deadzone) {
     return handle_calibration_xbox_one_trigger(previous << 2, orig_val, min, multiplier, deadzone) >> 2;
 }
 
-uint16_t handle_calibration_ps3_accel(uint16_t previous, uint16_t orig_val, int16_t offset, uint32_t min, int16_t multiplier, uint16_t deadzone) {
+uint16_t handle_calibration_ps3_accel(uint16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, uint16_t deadzone) {
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
     // Also, the game is looking for the value going negative, not positive
-    int16_t ret = (-(handle_calibration_xbox((-(previous + GUITAR_ONE_G)) << 7, orig_val, offset, min, multiplier, deadzone) >> 7)) - GUITAR_ONE_G;
+    int16_t ret = (-(handle_calibration_xbox((-(previous + GUITAR_ONE_G)) << 7, orig_val, min, max, center, deadzone) >> 7)) - GUITAR_ONE_G;
 #else
-    int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, offset, min, multiplier, deadzone) >> 6;
+    int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, min, max, center, deadzone) >> 6;
 #endif
     return PS3_ACCEL_CENTER + ret;
 }

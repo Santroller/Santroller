@@ -34,3 +34,6 @@ If you intend to use a rechargable battery and have the USB port charge it, ther
 5. Expand `Controller Settings`, and set the `Controller Type` to the same `Controller Type` used in the transmitter.
 6. Expand `Bluetooth Input` and hit `Start Scan`
 7. Find your transmitter in the `Selected Device` drop-down, and then hit `Save Settings`
+
+## Authentication
+If you wish to use your receiver on a console that requires Authentication, the USB Host needs to be set up on the receiver end, not the transmitter.

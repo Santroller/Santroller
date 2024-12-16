@@ -109,7 +109,7 @@ To keep the relevant information in this guide easy to find, information is sort
 
 <details>
     <summary>USB Host (Pi Pico Only)</summary>
-If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox Series, you can wire a USB port to the Pi Pico.
+If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox Series, you can connect a USB port to the Pi Pico.
 
 [![usb](/assets/images/usb.png)](/assets/images/usb.png)
 
@@ -125,11 +125,11 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
 
 1.  Start Santroller with your microcontroller plugged in.
 2.  Set the Input Type to Directly Wired
-3.  Hit Configure
+3.  Click on `Configure`
 4.  Click on `Controller Settings`
 5.  Set `Emulation Type` to `Controller` for standard guitars and `Fortnite Festival` for Fortnite Festival.
 6.  Set the `Controller Type` based on the game you want to play.
-7.  `Windows controller mode` can be set based on your preferences. Note that this only affects windows, a controller in XInput mode will use the correct mode on a console, and will automatically use HID mode on Linux and macOS.
+7.  `Windows controller mode` can be set based on your preferences. Note that this is only for Windows, no other operating systems or consoles will be affected by this option.
     1. `XInput` - This works more natively on windows, and most games will automatically bind controls.
     2. `HID` - This uses HID on windows, which means games won't automatically bind controls, but HID is polled a bit more efficiently in games like Clone Hero.
 8.  If you would like to adjust settings related to polling, click on `Controller Poll Settings`
@@ -162,7 +162,7 @@ If you want to use your controller on an unmodifed Xbox 360 or Xbox One or Xbox 
       <summary>Drum / Cymbal pads / GH Pedal (Direct analog)</summary>
 
     11. Click on the drum pad in question
-    12. Set the input type to `Analog Pin Input`
+    12. Set the `input type` to `Analog Pin Input`
     13. Click on `Find Pin` and then hit the drum pad in question, it should detect the drum that was just hit.
     14. Hit the drum pad in question. You should see the raw value for the drum pad change.
     15. Hit the pad lightly, and drag the minimum up so that it registers small hits.

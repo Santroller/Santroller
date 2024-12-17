@@ -22,35 +22,35 @@ sort: 2
 - Wire Cutters
 - Heatshrink
 
-- Supplies for specific features
+- Supplies for specific features.
   - Tilt
-    - Any of the following options are supported
+    - Any of the following options are supported.
       - A Digital Tilt Switch (somtimes called a mercury or ball tilt switch)
-        - I recommend using two tilt sensors in series, as this can help with accidental activations
-      - The ADXL345, MPU-6050 or LIS3DH Accelerometer
-        - This gives a proper analog value of the devices acceleration
-          - Tilt is detected by observing acceleration due to gravity
-      - An analog accelerometer, such as the ADXL335, or the accelerometer on some GH guitars
+        - It is recommended using two tilt sensors in series, as this can help with accidental activations.
+      - An ADXL345, MPU-6050 or LIS3DH Accelerometer.
+        - Gives a proper analog value of the devices acceleration.
+          - Tilt is detected by observing acceleration due to gravity.
+      - An analog accelerometer, such as the ADXL335, or the accelerometer on certain GH guitars.
         - This gives a proper analog value of the devices acceleration
           - Tilt is detected by observing acceleration due to gravity
   - Guitar Hero World Tour Guitar
     - MPR121
-      - An MPR121 is necessary for hooking up the slider bar, but it can also be used for the frets in order to save on the number of pins being used.
+      - Required for reusing the slider bar from a Guitar Hero World Tour Guitar.
   - Guitar Hero 5 Guitar or Crazy Guitar
-    - Standard Mode, worst latency
+    - Standard Mode, worst latency.
       - No extra parts required.
     - MPR121 Mode, great latency
       - Requires a MPR121, replaces the microcontroller on the slider bar and handles both slider and frets.
-    - Peripheral Pico Mode, great latency
+    - Peripheral Pico Mode, great latency.
       - Requires a second Pi Pico, places the second Pi Pico in the neck and uses that to poll the frets, while leaving the original slider bar pcb to poll the slider bar, sharing power and data between both devices.
-    - Hardwire frets, great latency
+    - Hardwire frets, great latency.
       - No extra parts required, but sacrifices the detachable neck.
   - USB Host
     - Pi Pico
     - One of the following
-      - A USB female breakout
-      - A USB extension cable
-      - A controller with a cable already attached that you are willing to cut
+      - A USB female breakout.
+      - A USB extension cable.
+      - A controller with a cable already attached that you are willing to cut.
         - Needs to be a wired controller, wireless only controllers won't work, nor will the play and charge kit.
 
 ### Wiring Steps
@@ -72,7 +72,7 @@ Once you have successfully modded one guitar (or even during your first) you wil
 
 [![wiilpstartselect](/assets/images/wiiLPstartselect.jpg)](/assets/images/wiiLPstartselect.jpg)
 
-1. If it is not labeled on the motherboard, you need to figure out which pin (or pins) is GND. If you remove the membrane, you will be able to see which pin connects to both start and select by following the traces - that pin is GND. (if there are multiple "grounds" they may be labeled as col, or column) Marking GND with a sharpie or using a differently colored wire is reccomended. If you are still unsure, the multimeter can help you confirm if you have the wires correct, as it will beep when you hit a button and have the correct wires. There are examples of the 360 WT and WiiLP above.
+1. If it is not labeled on the motherboard, you need to figure out which pin (or pins) is GND. If you remove the membrane, you will be able to see which pin connects to both start and select by following the traces - that pin is GND. (if there are multiple "grounds" they may be labeled as col, or column) Marking GND with a sharpie or using a differently colored wire is reccomended. If you are still unsure, the multimeter can help you confirm if you have the wires correct, as it will beep when you click a button and have the correct wires. There are examples of the 360 WT and WiiLP above.
 2. Connect the common ground to a GND on the microcontroller. If there are two ground wires, you can twist them together and put them in one ground pin on the microcontroller. This will sometimes be necessary when using a microcontroller that has a smaller number of pins.
 3. Connect each button to an unused digital pin on the microcontroller.
 
@@ -86,9 +86,9 @@ Note that with the Pi Pico, you can instead just hook these inputs up over USB, 
 <details>
     <summary>Whammy</summary>
 
-1. With most whammy's there are 3 pins. (if there are 4, you do not need the fourth. 2 pins is discussed below) The middle pin is the data pin, one outer pin is V<sub>CC</sub> while the other pin is GND (it doesn't matter which one, you can flip it when programming later if needed). Whammy needs to go to an analogue pin.
+1. With most whammy bars, there are 3 pins. (if there are 4, you do not need the fourth. 2 pins is discussed below) The middle pin is the data pin, one outer pin is V<sub>CC</sub> while the other pin is GND (it doesn't matter which one, you can flip it when programming later if needed). Whammy needs to go to an analogue pin.
 2. Connect V<sub>CC</sub> and GND to the microcontroller. (the two outside wires)
-   - If your whammy is not responding correctly in game, you may need to swap V<sub>CC</sub> and GND around.
+   - If your whammy isn't responding properly in game, you may need to swap V<sub>CC</sub> and GND around.
 3. Connect the data (middle) pin to an analogue pin on the microcontroller. These are labeled with an A on the microcontroller.
 
 If you are working on a controller with only "2" pins as shown below, you will need to desolder the bridged pins and run 3 wires yourself as noted above for the whammy to work best with the configurator.
@@ -335,27 +335,27 @@ The world tour slider bar originally used a single wire to connect between the b
 If you intend to use the peripheral features, it is recommended to program the peripheral pico first. Follow the below instructions to do that, or skip these if you are not using this feature.
 
 1.  Plug the peripheral pico into your computer. Make sure the main pico is not plugged in at this stage.
-2.  Open Santroller
+2.  Open `Santroller`
 3.  Set the Input Type to `Peripheral Device`
-4.  Pick the SCL and SDA pins
-5.  Hit configure
-6.  Now you can unplug the peripheral pico from your comptuter, and follow the rest of the instructions
+4.  Pick the SCL and SDA pins.
+5.  Click `Configure`
+6.  Now you can unplug the peripheral pico from your comptuter, and follow the rest of the instructions.
 
 ### Main
 
 1.  Start Santroller with your microcontroller plugged in.
 2.  Set the Input Type to Directly Wired
-3.  Hit Configure
+3.  Click `Configure`
 4.  Click on `Controller Settings`
 5.  Set `Emulation Type` to `Controller`
 6.  Set the `Controller Type` based on the game you want to play.
-7.  `Windows controller mode` can be set based on your preferences. Note that this only affects windows, a controller in XInput mode will use the correct mode on a console, and will automatically use HID mode on Linux and macOS.
+7.  `Windows Controller Mode` can be set based on your preferences. Note that this is only for Windows, no other operating systems or consoles will be affected by this option.
     1. `XInput` - This works more natively on windows, and most games will automatically bind controls.
     2. `HID` - This uses HID on windows, which means games won't automatically bind controls, but HID is polled a bit more efficiently in games like Clone Hero.
 8.  If you would like to adjust settings related to polling, click on `Controller Poll Settings`
 9.  If you would like to use `Queue Based Inputs` you can turn that on here. This puts any buttons you press into a queue, and sends them out to the PC as fast as USB allows. This means that the controller will process your inputs at a faster poll rate than 1ms (the fastest rate USB allows) and then the PC will be sent your inputs at a 1ms rate.
 10. Set the Poll Rate to your preferred setting. 0 sends data as fast as possible, any other number polls inputs at that speed.
-11. Debounce can be adjusted here. Debounce is necessary as button inputs are noisy. When you hit a button, it will often bounce and send multiple presses, which some games may percieve as you hitting the button multiple times, which can result in dropped sustains. When you set debounce to a value, the signal ignores any release inputs for that time frame, so if you for example set it to 1ms, then the button input will be on for a minimum of 1ms, and only after that will the release be processed. This has the effect of stretching out the button press to at least 1ms, which ignores any bouncing in that timeframe.
+11. Debounce can be adjusted here. Debounce is necessary as button inputs are noisy. When you click a button, it will often bounce and send multiple presses, which some games may percieve as you clicking the button multiple times, which can result in dropped sustains. When you set debounce to a value, the signal ignores any release inputs for that time frame, so if you for example set it to 1ms, then the button input will be on for a minimum of 1ms, and only after that will the release be processed. This has the effect of stretching out the button press to at least 1ms, which ignores any bouncing in that timeframe.
 12. Combined strum debounce shares the debounce timeframe between both strums. This means that if you set the strum debounce to 1ms and strummed down, both strum up and down inputs are ignored over that 1ms timeframe. This helps avoid extra strum inputs when your strum switch rebounds after being released.
 13. Now you can start setting up your inputs. To keep this information relevant, it is grouped by function.
   <details>
@@ -397,9 +397,9 @@ If you intend to use the peripheral features, it is recommended to program the p
   1. Click on the whammy, and make sure the `Input Type` is set to `Analog Pin Input`.
   2. Click on the `Find Pin` button, and then press on the whammy. If you have wired everything correctly, the tool should detect the pin and the `Original Value` value should change when you push on the whammy.
   3. Click on `Calibrate`.
-  4. Release the whammy bar and hit `Next`.
-  5. Push the whammy all the way in, and hit `Next`
-  6. Release the whammy again, and hit `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
+  4. Release the whammy bar and click `Next`.
+  5. Push the whammy all the way in, and click `Next`
+  6. Release the whammy again, and click `Next`. If your whammy is noisy, you can push it in a tiny bit, and the zero position will be set to this location, which will make sure that the whammy is always considered released when it is released.
   </details>
 
   <details>
@@ -429,9 +429,9 @@ If you intend to use the peripheral features, it is recommended to program the p
   1. Click on Tilt, and make sure the `Input Type` is set to `Analog Pin Input`.
   2. Click on the `Find Pin` button, and then tilt your guitar. If you have wired everything correctly, the tool should detect the pin and the tilt `Original Value` value should change as you tilt your guitar.
   3. Click on `Calibrate`
-  5. Hold your guitar in its resting position, and then hit `Next`
-  5. Tilt the guitar up, and then hit `Next`
-  6. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed.
+  5. Hold your guitar in its resting position, and then click `Next`
+  5. Tilt the guitar up, and then click `Next`
+  6. Tilt your guitar up a little bit and then click `Next`. Values below this position will be zeroed.
   </details>
   <details>
      <summary>ADXL345 or MPU-6050 or LIS3DH based Tilt</summary>
@@ -440,12 +440,12 @@ If you intend to use the peripheral features, it is recommended to program the p
    2. Add an `Accelerometer`
    3. For the Pi Pico, set the SDA and SCL pins that you have used.
    4. Set the `Accelerometer Type` for your given sensor
-   5. Hit save.
+   5. Click `Save`
    6. Click on Tilt, and make sure the `Input Type` is set to `Accelerometer Input`.
    7. Click on `Calibrate`
-   8. Hold your guitar in its resting position, and then hit `Next`
-   9. Tilt the guitar up, and then hit `Next`
-   10. Tilt your guitar up a little bit and then hit `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
+   8. Hold your guitar in its resting position, and then click `Next`
+   9. Tilt the guitar up, and then click `Next`
+   10. Tilt your guitar up a little bit and then click `Next`. Values below this position will be zeroed. With the adxl, you can increase the deadzone to help counteract strumming or shaking activating tilt.
    11. Adjust the `Low Pass Filter`. This value controls how new value from the ADXL are filtered, a value closer to 0 will result in a sensor that won't respond to a shake or strumming, but if you decrease it too much the sensor will have a decreased responsiveness. If you set it closer to 1, then the sensor will be very responsive but it will also pick up any tiny vibrations as well. From testing a value of 0.05 seemed like a good place to start. 
   </details>
 
@@ -455,8 +455,8 @@ If you intend to use the peripheral features, it is recommended to program the p
   1. Click on `MPR121 Settings`
   2. Enable the Peripheral
   3. Set the SDA and SCL pins that you have used.
-  4. Set the `MPR!21 Capacitive Touch Pad Count` based on the number of touch pads you are using. For a normal slider bar, this should be 5, or if you aren't using a slider bar set this to 0.
-  5. Hit save
+  4. Set the `MPR121 Capacitive Touch Pad Count` based on the number of touch pads you are using. For a normal slider bar, this should be 5, or if you aren't using a slider bar set this to 0.
+  5. Click `Save`
   </details>
 
   <details>
@@ -465,7 +465,7 @@ If you intend to use the peripheral features, it is recommended to program the p
   1. Click on `Peripheral Settings`
   2. Enable the Peripheral
   3. Set the SDA and SCL pins on the main PCB that are being connected to the peripheral.
-  4. Hit save
+  4. Click `Save`
   </details>
 
   <details>
@@ -473,7 +473,7 @@ If you intend to use the peripheral features, it is recommended to program the p
 
   1. Click on Add Setting, and add a `Slider` setting
   2. Set the `Input Type` to `MPR121 Input`
-  3. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+  3. Click `Save Settings`. Note that everything else needs to be configured before you can do this.
   4. Set the channels based on your wiring. The configuration will update live, so if you are unsure which via maps to which slider pad, you can just work through the channels and assign things to the correct pads by touching each pad and working out which channel is which.
   5. Go to each fret, and set its `Input Type` to `MPR121 Input`.
   6. Set the channel based on your wiring. If you are unsure which channel you used, you can just walk through each channel and work out which one was used, as the status of the MPR121 will update live as you press and release frets.
@@ -505,7 +505,7 @@ If you intend to use the peripheral features, it is recommended to program the p
     1. If you wish to have better latency frets with these necks, you can replace the slider bar controller with an MPR121, which will give you low latency but will still use the same amount of wires.
     2. Click on Add Setting, and add a `Slider` setting
     3. Set the `Input Type` to `MPR121 Input`
-    4. Hit `Save Settings`. Note that everything else needs to be configured before you can do this.
+    4. Click `Save Settings`. Note that everything else needs to be configured before you can do this.
     5. Set the channels based on your wiring. The configuration will update live, so if you are unsure which via maps to which slider pad, you can just work through the channels and assign things to the correct pads by touching each pad and working out which channel is which.
     6. Go to each fret, and set its `Input Type` to `MPR121 Input`.
     7. Set the channel based on your wiring. If you are unsure which channel you used, you can just walk through each channel and work out which one was used, as the status of the MPR121 will update live as you press and release frets.
@@ -526,11 +526,11 @@ If you intend to use the peripheral features, it is recommended to program the p
   1. Click on Add setting
   2. Find and add `USB Host inputs`
   3. Bind D+
-  4. Hit Save
+  4. Click `Save`
   5. If you plug in a supported controller, the tool should detect it and tell you what it is.
   6. If you have a modded xbox and are using `usbdsecpatch`, you can disable `Authentication for Xbox 360`.
 
   </details>
 
-14. If you do not want to hook an input up, hit the `Remove` button to the right on that input.
+14. If you do not want to hook an input up, click the `Remove` button to the right on that input.
 15. Once everything is configured correctly, the `Save Settings` button should be clickable and you can hit that button to write your config to the guitar. It is now ready.

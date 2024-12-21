@@ -439,7 +439,7 @@ uint16_t handle_calibration_ps3_accel(uint16_t previous, int32_t orig_val, int16
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
     // Also, the game is looking for the value going negative, not positive
-    int16_t ret = (-(handle_calibration_xbox((-(previous + GUITAR_ONE_G)) << 7, orig_val, min, max, center, deadzone) >> 7)) - GUITAR_ONE_G;
+    int16_t ret = (-(handle_calibration_xbox((-(previous - PS3_ACCEL_CENTER)) << 8, orig_val, min, max, center, deadzone) >> 8));
 #else
     int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, min, max, center, deadzone) >> 6;
 #endif
@@ -451,14 +451,14 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint3
     // RB whammy is full range
     return handle_calibration_ps3_360_trigger(previous, orig_val, min, multiplier, deadzone);
 #else
-    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then add center
-    uint8_t ret = handle_calibration_ps3_360_trigger(previous << 1, orig_val, min, multiplier, deadzone) >> 1;
+    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then subtract center
+    uint8_t ret = handle_calibration_ps3_360_trigger((previous - PS3_STICK_CENTER) << 1, orig_val, min, multiplier, deadzone) >> 1;
     return ret + PS3_STICK_CENTER;
 #endif
 }
 uint8_t handle_calibration_ps2_whammy(uint8_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
-    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then add center
-    uint8_t ret = handle_calibration_ps3_360_trigger(previous << 1, orig_val, min, multiplier, deadzone) >> 1;
+    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then subtract from center
+    uint8_t ret = handle_calibration_ps3_360_trigger((0x7f + previous) << 1, orig_val, min, multiplier, deadzone) >> 1;
     return 0x7f - ret;
 }
 

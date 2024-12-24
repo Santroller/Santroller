@@ -84,7 +84,7 @@ typedef struct {
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t xbox360w_prescence[] = {0x00, 0x00, 0x0F, 0x0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 #ifdef INPUT_USB_HOST
 using namespace usbMidi;
 UsbMidiTransport usbMIDITransport(0);
@@ -315,6 +315,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
             printf("found xb360 wireless\r\n");
+            send_report_to_controller(dev_addr, instance, xbox360w_prescence, sizeof(xbox360w_prescence));
             break;
         case XBOXONE:
             xone_dev_addr = type;

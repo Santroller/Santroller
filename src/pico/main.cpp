@@ -27,6 +27,7 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
+#include "hid.h"
 #ifdef INPUT_USB_HOST
 #include "TUSB-MIDI.hpp"
 #endif
@@ -146,6 +147,14 @@ void setup1() {
 void loop() {
     tick_usb();
 }
+#if defined DEBUG_RP2040_PORT
+extern "C"
+__attribute((weak))
+ssize_t _write(int fd, const void *buf, size_t count) {
+    (void) fd;
+    return DEBUG_RP2040_PORT.write((const char *)buf, count);
+}
+#endif
 
 void setup() {
 #if USB_HOST_STACK
@@ -159,6 +168,7 @@ void setup() {
         consoleType = UNIVERSAL;
     }
     generateSerialString(&serialstring, consoleType);
+    Serial1.printf("Test\r\n");
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
     tud_init(TUD_OPT_RHPORT);
@@ -434,6 +444,7 @@ void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const
         }
     }
 }
+long last360w = 0;
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (dev_addr == xone_dev_addr.dev_addr && instance == xone_dev_addr.instance) {
         receive_report_from_controller(report, len);
@@ -456,6 +467,14 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 wasXb1Input = header->command == GIP_INPUT_REPORT;
             }
             if (usb_host_devices[i].type.console_type == XBOX360_W) {
+                // Corrupt report, ignore
+                if (len < sizeof(XBOX_WIRELESS_HEADER)) {
+                    return;
+                }
+                if (millis() - last360w > 10000) {
+                    handle_player_leds(0);
+                    last360w = millis();
+                }
                 XBOX_WIRELESS_HEADER *header = (XBOX_WIRELESS_HEADER *)report;
                 if (header->id == 0x08) {
                     // Disconnected

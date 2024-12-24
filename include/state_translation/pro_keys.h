@@ -50,7 +50,7 @@
                                                                                        \
     uint8_t currentVel = 0;                                                            \
     for (int i = 0; i < 25; i++) {                                                     \
-        if (buttons.proKeyButtons & i) {                                        \
+        if (buttons.proKeyButtons & (1 << i)) {                                        \
             if (currentVel < 5) {                                                      \
                 usb_host_data->proKeyVelocities[i] = report->velocities[currentVel++]; \
             } else {                                                                   \

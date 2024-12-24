@@ -461,6 +461,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     // Disconnected
                     if (header->type == 0x00) {
                         usb_host_devices[i].type.sub_type = UNKNOWN;
+                        printf("Disconnected\r\n", dev_addr, instance);
                     }
                 } else if (header->id == 0x00) {
                     // Gamepad inputs

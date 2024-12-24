@@ -84,6 +84,7 @@ typedef struct {
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t xbox360w_prescence[] = {0x00, 0x00, 0x0F, 0x0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 #ifdef INPUT_USB_HOST
 using namespace usbMidi;
 UsbMidiTransport usbMIDITransport(0);
@@ -168,7 +169,6 @@ void setup() {
         consoleType = UNIVERSAL;
     }
     generateSerialString(&serialstring, consoleType);
-    Serial1.printf("Test\r\n");
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();
     tud_init(TUD_OPT_RHPORT);

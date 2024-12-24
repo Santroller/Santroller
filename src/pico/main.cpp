@@ -444,7 +444,7 @@ void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const
         }
     }
 }
-long last360w = 0;
+long lastPlayerLed = 0;
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (!len) {
         // Skip processing a null report, assume it is corrupted
@@ -452,6 +452,11 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
     }
     if (dev_addr == xone_dev_addr.dev_addr && instance == xone_dev_addr.instance) {
         receive_report_from_controller(report, len);
+    }
+    // Send player indicator every 10 seconds or so just as a keep alive
+    if (millis() - lastPlayerLed > 10000) {
+        handle_player_leds(0);
+        lastPlayerLed = millis();
     }
     for (int i = 0; i < total_usb_host_devices; i++) {
         if (usb_host_devices[i].type.dev_addr == dev_addr && usb_host_devices[i].type.instance == instance) {
@@ -474,10 +479,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 // Corrupt report, ignore
                 if (len < sizeof(XBOX_WIRELESS_HEADER)) {
                     return;
-                }
-                if (millis() - last360w > 10000) {
-                    handle_player_leds(0);
-                    last360w = millis();
                 }
                 XBOX_WIRELESS_HEADER *header = (XBOX_WIRELESS_HEADER *)report;
                 if (header->id == 0x08) {

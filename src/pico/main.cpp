@@ -446,6 +446,10 @@ void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const
 }
 long last360w = 0;
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
+    if (!len) {
+        // Skip processing a null report, assume it is corrupted
+        return;
+    }
     if (dev_addr == xone_dev_addr.dev_addr && instance == xone_dev_addr.instance) {
         receive_report_from_controller(report, len);
     }

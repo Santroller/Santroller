@@ -7,7 +7,6 @@ sort: 7
 * A USB Extension cable, or a USB breakout
 * 3.3V to 5V boost converter 
    * only necessary if you wish to use USB host while plugging your pico into a Wii remote or a ps2 controller port
-   * This is not necessary if you are using the adafruit feather with USB host, as that board has one built in.
 
 ## Do i need to keep the controller plugged in
 For Xbox 360 and Xbox One no, you should be able to unplug your controller after authentication is done.

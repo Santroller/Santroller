@@ -65,39 +65,3 @@ typedef union {
         usb_host_data->blueCymbal |= blue;                                      \
         usb_host_data->yellowCymbal |= yellow;                                  \
     }
-
-// Need to auto-flam, so scan through hit drums and only hit one at a time.
-#define FLAM()                                                 \
-    if (current_drum_report.buttons) {                         \
-        for (int i = 0; i < 8; i++) {                          \
-            int curIdx = (i + rbcount) & 0x7;                  \
-            if (current_drum_report.buttons & (1 << curIdx)) { \
-                rbcount = curIdx + 1;                          \
-                if (curIdx < CYMBAL) {                         \
-                    report->padFlag = true;                    \
-                } else {                                       \
-                    report->cymbalFlag = true;                 \
-                }                                              \
-                uint8_t col = curIdx & 0x3;                    \
-                if (col == GREEN) {                            \
-                    report->a = true;                          \
-                }                                              \
-                if (col == RED) {                              \
-                    report->b = true;                          \
-                }                                              \
-                if (col == YELLOW) {                           \
-                    report->y = true;                          \
-                    if (curIdx >= CYMBAL) {                    \
-                        report->dpadUp = true;                 \
-                    }                                          \
-                }                                              \
-                if (col == BLUE) {                             \
-                    report->x = true;                          \
-                    if (curIdx >= CYMBAL) {                    \
-                        report->dpadDown = true;               \
-                    }                                          \
-                }                                              \
-                break;                                         \
-            }                                                  \
-        }                                                      \
-    }

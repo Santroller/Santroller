@@ -2212,11 +2212,14 @@ void tick_wiioutput() {
 void bluetooth_connected() {
     input_start = millis();
 }
+USB_RB_Drums_t last_drum_report = {buttons : 0};
 uint8_t rbcount = 0;
+uint8_t lastrbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
     USB_RB_Drums_t current_drum_report = {buttons : 0};
+    bool drumHit = false;
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -2421,9 +2424,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->effectsKnob = INT16_MIN;
 #endif
         TICK_OG_XBOX;
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-        FLAM();
-#endif
         report_size = packet_size = sizeof(OG_XBOX_REPORT);
     }
     if (output_console_type == WINDOWS || output_console_type == XBOX360) {
@@ -2449,9 +2449,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         asm volatile("" ::
                          : "memory");
 
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-        FLAM();
-#endif
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
@@ -2695,9 +2692,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 }
             }
 #endif
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-            FLAM();
-#endif
             gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
             if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
                 bool a = gamepad->a;
@@ -2720,7 +2714,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
     }
-
     TICK_RESET
     // Some hosts want packets sent every frame
     if (last_report && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence) {

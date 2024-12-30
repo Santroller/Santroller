@@ -293,6 +293,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
 
         p_xinput->type = XBOX360_BB;
         p_xinput->subtype = GAMEPAD;
+        return true;
     } else if (desc_itf->bInterfaceSubClass == 0x5D &&
                (desc_itf->bInterfaceProtocol == 0x01 ||
                 desc_itf->bInterfaceProtocol == 0x03 ||

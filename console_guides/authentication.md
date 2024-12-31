@@ -8,7 +8,7 @@ There are currently two ways to trick the console
 ## Consoles needing authentication
 - Xbox 360, though this can be patched away using [UsbdSecPatch](#usbdsecpatch) on RGHed consoles
 - Xbox One and Series
-- PS4 / PS5, but only if you are not playing Rock Band 4. For RB4, you can use PS3 mode and the controllers won't require auth.
+- PS4 / PS5, but only if you are not playing Rock Band 4. For RB4, you can use PS3 mode and the controllers won't require auth. For other controller types, the PS4 checks auth every 8 minutes, so without an auth controller the pico will reboot every 8 minutes to avoid being timed out by the console.
 
 ## Passing authentication checks to a legitimate controller
 You can follow the [USB Inputs](https://santroller.tangentmc.net/wiring_guides/usb.html) guide. When USB Inputs are enabled, authentication checks will automatically be passed to a controller.

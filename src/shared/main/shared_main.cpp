@@ -1864,10 +1864,22 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                         usb_host_data->crossfader = report->crossfader;
                     }
                     if (report->leftTableVelocity) {
-                        usb_host_data->leftTableVelocity = report->leftTableVelocity;
+                        if (report->leftTableVelocity > 127) {
+                            report->leftTableVelocity = 127;
+                        }
+                        if (report->leftTableVelocity < -127) {
+                            report->leftTableVelocity = -127;
+                        }
+                        usb_host_data->leftTableVelocity = report->leftTableVelocity << 8;
                     }
                     if (report->rightTableVelocity) {
-                        usb_host_data->rightTableVelocity = report->rightTableVelocity;
+                        if (report->rightTableVelocity > 127) {
+                            report->rightTableVelocity = 127;
+                        }
+                        if (report->rightTableVelocity < -127) {
+                            report->rightTableVelocity = -127;
+                        }
+                        usb_host_data->rightTableVelocity = report->rightTableVelocity << 8;
                     }
                     break;
                 }

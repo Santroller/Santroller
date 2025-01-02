@@ -359,7 +359,7 @@ int16_t handle_calibration_xbox_whammy(int16_t previous, uint16_t orig_val, uint
     val -= min;
     val *= multiplier;
     val /= 512;
-    val -= INT16_MAX;
+    val += INT16_MIN;
     if (val > INT16_MAX) {
         val = INT16_MAX;
     }

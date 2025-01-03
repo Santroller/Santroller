@@ -40,12 +40,16 @@ This is done using the Santroller Configurator, which can program various microc
   - Guitar Hero Drums
   - Rock Band Drums
   - Rock Band Pro Drums
+  - Rock Band Pro Guitar
+    - Currently, only works with USB host and plugging in a pro guitar
+    - So this is only really useful for using a pro guitars on different consoles
+  - Rock Band Pro Keys
+    - Works with keyboards over USB host, but also works with MIDI keyboards over usb host
   - Guitar Hero Live Guitars
   - DJ Hero Turntables
   - Rock Band Stage Kit
   - Standard Gamepad
   - Guitar Praise Guitar
-  - Rock Band Pro Keys
   - Fortnite Festival
     - Uses Keyboard mode under the hood, but simplifies the binding process
     - Supports a emulated strum mode that requires both fret inputs and strum inputs to register an input

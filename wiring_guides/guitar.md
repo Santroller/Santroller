@@ -166,9 +166,32 @@ For guitars with a joystick, there will be four pins, one is V<sub>CC</sub>, one
 <details>
     <summary>Frets</summary>
 
-1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. At the end of this guide, there are some images for known neck pinouts. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
+1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
 2. Connect the common grounds to a ground pin on the microcontroller.
 3. Connect each fret to its own unused digital pin.
+</details>
+
+<details>
+    <summary>RB Frets</summary>
+With some RB guitars, the solo frets are combined with the standard frets. These guitars have 7 wires, as they then just have a single `solo` input that gets sent if any solo frets are pressed. This means that these guitars by default won't be able to tell if you are pressing both normal and solo frets at the same time, but that isn't something you should ever really need.
+
+For these guitars, you have multiple options on how you can wire up the frets.
+
+#### Run new wires
+Since most of these guitars are hardwired, you can opt to just run new wires yourself from the standard fret PCB, which would then give you seperate fret inputs. In this case, you do not need to connect up the solo input, as you are bypassing it.
+
+1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
+2. Connect the common grounds to a ground pin on the microcontroller.
+3. Connect each fret to its own unused digital pin.
+
+#### Wire up the solo input
+You can also just wire up the solo input to a pin on your microcontroller, and then when programming you can follow some different steps to make the solo frets function.
+
+1. For the frets, if it is not labeled it is easiest to open up the neck and follow the traces between the fret contacts. The ground wire traces will connect to all of the fret contacts, whereas a fret trace will lead to a single fret contact. If using the multimeter, test between the fret wire and the ground wire, and the multimeter should beep when the fret is pressed.
+2. Connect the common grounds to a ground pin on the microcontroller.
+3. Connect each fret to its own unused digital pin.
+4. Connect the solo input to its own unused digital pin.
+
 </details>
 
 <details>
@@ -368,14 +391,26 @@ If you intend to use the peripheral features, it is recommended to program the p
   </details>
 
   <details>
+    <summary>RB Solo Frets (Combined)</summary>
+  
+  In this example we will use the green solo fret, but you can substitute the fret for the other colours to set the rest of the frets up.
+  1. Click on the green solo fret.
+  2. Set the `Input Type` to `Shortcut`
+  3. Set the next `Input Type` to `Digital Pin Input`
+  2. Make sure `Pin Mode` is set to `Pull Up`.
+  3. Click on the first `Find Pin` button, and then press the normal green fret button.
+  4. Hold the green fret and then press the second `Find Pin` button. While holding the green fret, press the solo green fret. This should then detect the solo input, and you can release both buttons. At this point, the icon for the green solo fret should light up when it is pressed.
+  </details>
+
+  <details>
     <summary>Start + Select to Home</summary>
 
   1. Click on the home / Xbox / PS button.
   2. Set the `Input Type` to `Shortcut`
   3. Set the next `Input Type` to `Digital Pin Input`
-  2. Make sure `Pin Mode` is set to `Pull Up`.
-  4. Click on the first `Find Pin` button, and then press the start button on the guitar. If you have wired everything correctly, the tool should detect the pin.
-  5. Click on the second `Find Pin` button, and then press the select button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for the home button should now light up whenever both start and select is pressed.
+  4. Make sure `Pin Mode` is set to `Pull Up`.
+  5. Click on the first `Find Pin` button, and then press the start button on the guitar. If you have wired everything correctly, the tool should detect the pin.
+  6. Click on the second `Find Pin` button, and then press the select button on the guitar. If you have wired everything correctly, the tool should detect the pin and the icon for the home button should now light up whenever both start and select is pressed.
 
   </details>
 

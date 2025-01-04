@@ -18,6 +18,7 @@ uint8_t keystroke_sequence_number;
 uint8_t report_sequence_number;
 uint8_t hid_sequence_number;
 uint8_t ps4_sequence_number;
+uint8_t portal_state = 0;
 bool seen_windows_xb1 = 0;
 bool seen_windows = false;
 bool read_any_string = false;

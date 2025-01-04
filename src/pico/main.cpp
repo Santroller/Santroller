@@ -14,6 +14,7 @@
 #include "fxpt_math.h"
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
+#include "hid.h"
 #include "hidescriptorparser.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
@@ -27,7 +28,6 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#include "hid.h"
 #ifdef INPUT_USB_HOST
 #include "TUSB-MIDI.hpp"
 #endif
@@ -120,6 +120,9 @@ static void tick_usb() {
 #if USB_HOST_STACK
     tuh_task();
 #endif
+    if (tud_suspended()) {
+        tud_remote_wakeup();
+    }
     tick();
 #ifdef INPUT_MIDI
     MIDI.read();
@@ -150,9 +153,10 @@ void loop() {
 }
 #if defined DEBUG_RP2040_PORT
 extern "C"
-__attribute((weak))
-ssize_t _write(int fd, const void *buf, size_t count) {
-    (void) fd;
+    __attribute((weak))
+    ssize_t
+    _write(int fd, const void *buf, size_t count) {
+    (void)fd;
     return DEBUG_RP2040_PORT.write((const char *)buf, count);
 }
 #endif

@@ -33,6 +33,8 @@
 #define XINPUT_PRO_GUITAR 25
 // Also not real, but nice for matching
 #define XINPUT_GUITAR_WT 26
+#define XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS 33
+#define XINPUT_SKYLANDERS 36
 
 #define PS4_GAMEPAD 0
 #define PS4_GUITAR 1
@@ -57,6 +59,9 @@
 #define ROCK_BAND_PRO_GUITAR_SQUIRE 18
 #define KEYBOARD_MOUSE_TYPE 19
 #define MIDI_TYPE 20
+#define DISNEY_INFINITY 21
+#define SKYLANDERS 22
+#define LEGO_DIMENSIONS 23
 
 #define UNIVERSAL 0
 #define XBOX360 1

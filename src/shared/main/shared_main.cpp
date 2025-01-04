@@ -439,7 +439,7 @@ uint16_t handle_calibration_ps3_accel(uint16_t previous, int32_t orig_val, int16
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
     // For whatever reason, the acceleration for guitars swings between -128 to 128, not -512 to 512
     // Also, the game is looking for the value going negative, not positive
-    int16_t ret = (-(handle_calibration_xbox(-((previous - PS3_ACCEL_CENTER) << 8) , orig_val, min, max, center, deadzone) >> 8));
+    int16_t ret = (-(handle_calibration_xbox(-((previous - PS3_ACCEL_CENTER) << 8), orig_val, min, max, center, deadzone) >> 8));
 #else
     int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, min, max, center, deadzone) >> 6;
 #endif
@@ -2452,12 +2452,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         TICK_XINPUT;
 
-        #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-        #endif
-        #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR(bt_data)
-        #endif
+#if PRO_GUITAR && USB_HOST_STACK
+        TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+#endif
+#if PRO_GUITAR && BLUETOOTH_RX
+        TRANSLATE_TO_PRO_GUITAR(bt_data)
+#endif
         asm volatile("" ::
                          : "memory");
 
@@ -2497,12 +2497,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         TICK_PS4;
 
-        #if PRO_GUITAR && USB_HOST_STACK
-            TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-        #endif
-        #if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR(bt_data)
-        #endif
+#if PRO_GUITAR && USB_HOST_STACK
+        TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+#endif
+#if PRO_GUITAR && BLUETOOTH_RX
+        TRANSLATE_TO_PRO_GUITAR(bt_data)
+#endif
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
@@ -2570,12 +2570,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->reportId = 1;
             TICK_PC;
 
-        #if PRO_GUITAR && USB_HOST_STACK
+#if PRO_GUITAR && USB_HOST_STACK
             TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-        #endif
-        #if PRO_GUITAR && BLUETOOTH_RX
+#endif
+#if PRO_GUITAR && BLUETOOTH_RX
             TRANSLATE_TO_PRO_GUITAR(bt_data)
-        #endif
+#endif
             asm volatile("" ::
                              : "memory");
             report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
@@ -2674,12 +2674,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
             TICK_PS3;
 
-        #if PRO_GUITAR && USB_HOST_STACK
+#if PRO_GUITAR && USB_HOST_STACK
             TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-        #endif
-        #if PRO_GUITAR && BLUETOOTH_RX
+#endif
+#if PRO_GUITAR && BLUETOOTH_RX
             TRANSLATE_TO_PRO_GUITAR(bt_data)
-        #endif
+#endif
             asm volatile("" ::
                              : "memory");
 #ifdef TICK_FESTIVAL
@@ -2774,6 +2774,8 @@ bool tick_bluetooth(void) {
 #endif
 bool windows_in_hid = false;
 unsigned long millis_at_boot = 0;
+uint8_t init_packet_skylanders[32] = {0x0b, 0x14, 0x53, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+uint8_t version_response_skylanders[32] = {0x0b, 0x14, 0x52, 0x02, 0x1B};
 bool tick_usb(void) {
     uint8_t size = 0;
     bool ready = ready_for_next_packet();
@@ -2827,6 +2829,30 @@ bool tick_usb(void) {
             return true;
         }
     }
+// #if DEVICE_TYPE == SKYLANDERS
+//     if (consoleType == XBOX360) {
+//         size = 32;
+//         switch (portal_state) {
+//             case 0:
+//                 memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
+//                 break;
+//             case 1:
+//                 memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
+//                 break;
+//         }
+//     }
+    // if (consoleType == XBOXONE) {
+    //     size = 32;
+    //     switch (portal_state) {
+    //         case 0:
+    //             memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
+    //             break;
+    //         case 1:
+    //             memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
+    //             break;
+    //     }
+    // }
+// #endif
 #endif
     if (!size) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);
@@ -2986,6 +3012,12 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     if (xbox_360_vid == XBOX_REDOCTANE_VID && xbox_360_pid == 0x1f17) {
         xbox_360_pid = 0x4748;
     }
+    // Skylanders games require you use the portal vid and pid
+#if DEVICE_TYPE == SKYLANDERS
+    if (xbox_360_vid == XBOX_REDOCTANE_VID) {
+        xbox_360_pid = 0x1f17;
+    }
+#endif
 }
 
 void xinput_w_controller_connected() {

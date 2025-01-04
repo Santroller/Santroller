@@ -550,10 +550,15 @@ void handle_bt_rumble(uint8_t rumble_left, uint8_t rumble_right) {
 #endif
 
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id) {
-    // for (int i = 0; i < len; i++) {
-    //     printf("%02x, ", data[i]);
-    // }
-    // printf("\r\n");
+    for (int i = 0; i < len; i++) {
+        printf("%02x, ", data[i]);
+    }
+    printf("\r\n");
+    if (data[0] == 0x0b) {
+        if (data[2] == 0x52) {
+            portal_state = 1;
+        }
+    }
 #if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif

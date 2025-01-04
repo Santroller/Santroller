@@ -3012,6 +3012,10 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     if (xbox_360_vid == XBOX_REDOCTANE_VID && xbox_360_pid == 0x1f17) {
         xbox_360_pid = 0x4748;
     }
+    // Same thing with disney infinity portals and lego dimensions portals
+    if (xbox_360_vid == 0x24C6 && (xbox_360_pid == 0xFA00 || xbox_360_pid == 0xFA01)) {
+        xbox_360_pid = 0x4748;
+    }
     // Skylanders games require you use the portal vid and pid
 #if DEVICE_TYPE == SKYLANDERS
     if (xbox_360_vid == XBOX_REDOCTANE_VID) {

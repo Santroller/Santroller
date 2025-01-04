@@ -631,6 +631,9 @@ uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t reque
     xfer.user_data = 0;
     tuh_control_xfer(&xfer);
     if (xfer.result != XFER_RESULT_SUCCESS) {
+        // If the controller stalls the request, then we need to forward that on to the console too.
+        dcd_edpt_stall(TUD_OPT_RHPORT, 0);
+        dcd_edpt_stall(TUD_OPT_RHPORT, 0 | TUSB_DIR_IN_MASK);
         return false;
     }
     return xfer.actual_len;

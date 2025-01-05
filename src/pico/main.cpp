@@ -120,9 +120,9 @@ static void tick_usb() {
 #if USB_HOST_STACK
     tuh_task();
 #endif
-    // if (tud_suspended()) {
-    //     tud_remote_wakeup();
-    // }
+    if (tud_suspended()) {
+        tud_remote_wakeup();
+    }
     tick();
 #ifdef INPUT_MIDI
     MIDI.read();
@@ -668,7 +668,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             }
             if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
                 uint8_t ret = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
-                if (request->wLength) {
+                // TODO: better stall fix later
+                if (request->bRequest == 0x87) {
                     return ret;
                 }
             }

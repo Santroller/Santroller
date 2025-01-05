@@ -2841,17 +2841,17 @@ bool tick_usb(void) {
 //                 break;
 //         }
 //     }
-    // if (consoleType == XBOXONE) {
-    //     size = 32;
-    //     switch (portal_state) {
-    //         case 0:
-    //             memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
-    //             break;
-    //         case 1:
-    //             memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
-    //             break;
-    //     }
-    // }
+// if (consoleType == XBOXONE) {
+//     size = 32;
+//     switch (portal_state) {
+//         case 0:
+//             memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
+//             break;
+//         case 1:
+//             memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
+//             break;
+//     }
+// }
 // #endif
 #endif
     if (!size) {
@@ -2992,7 +2992,7 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
         report_sequence_number = report[2] + 1;
     }
     const GipHeader_t *header = (const GipHeader_t *)report;
-    if (header->command == 0x02) {
+    if (header->command == GIP_ARRIVAL) {
         return;
     }
     if (xbox_one_state != Auth) {

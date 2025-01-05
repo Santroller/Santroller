@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "reports/ps3_reports.h"
+#define GIP_CMD_ACKNOWLEDGE 0x01
 #define GIP_ARRIVAL 0x02
 #define GIP_DEVICE_DESCRIPTOR 0x04
 #define GIP_POWER_MODE_DEVICE_CONFIG 0x05

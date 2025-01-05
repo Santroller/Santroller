@@ -120,9 +120,9 @@ static void tick_usb() {
 #if USB_HOST_STACK
     tuh_task();
 #endif
-    if (tud_suspended()) {
-        tud_remote_wakeup();
-    }
+    // if (tud_suspended()) {
+    //     tud_remote_wakeup();
+    // }
     tick();
 #ifdef INPUT_MIDI
     MIDI.read();

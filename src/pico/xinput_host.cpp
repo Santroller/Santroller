@@ -173,7 +173,7 @@ void xinputh_close(uint8_t dev_addr) {
 //--------------------------------------------------------------------+
 // Enumeration
 //--------------------------------------------------------------------+
-extern uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer);
+extern uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool* status);
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
     (void)rhport;
     (void)max_len;

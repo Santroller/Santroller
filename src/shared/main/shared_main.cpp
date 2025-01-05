@@ -3073,7 +3073,7 @@ void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
     if (vid == SONY_VID && pid == SONY_DS3_PID) {
         // Enable PS3 reports
         uint8_t hid_command_enable[] = {0x42, 0x0c, 0x00, 0x00};
-        transfer_with_usb_controller(dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x03F4, 0x00, sizeof(hid_command_enable), hid_command_enable);
+        transfer_with_usb_controller(dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x03F4, 0x00, sizeof(hid_command_enable), hid_command_enable, NULL);
         handle_player_leds(0);
     }
     if (vid == REDOCTANE_VID && pid == PS3_KEYBOARD_PID) {
@@ -3083,7 +3083,7 @@ void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
             0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0300, 0, sizeof(hid_command_enable), hid_command_enable);
+        transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0300, 0, sizeof(hid_command_enable), hid_command_enable, NULL);
     }
 }
 

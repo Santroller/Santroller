@@ -343,8 +343,8 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             uint8_t data[] = {0x00, 0x00, 0x00};
             uint8_t data2[] = {0x06, 0x00, 0x00};
             for (int i = 0; i < 10; i++) {
-                transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_SET_REPORT, 0x0300, 1, 3, data2);
-                transfer_with_usb_controller(dev_addr, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_GET_REPORT, 0x0300, 1, 3, data);
+                transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_SET_REPORT, 0x0300, 1, 3, data2, NULL);
+                transfer_with_usb_controller(dev_addr, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_GET_REPORT, 0x0300, 1, 3, data, NULL);
                 if (data[0]) {
                     break;
                 }
@@ -610,9 +610,12 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return NULL;
 }
 
-uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer) {
+uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool* status) {
     if (!dev_addr) {
         // Device is not connected yet!
+        if (status) {
+            *status = false;
+        }
         return 0;
     }
     tusb_control_request_t setup = {
@@ -631,6 +634,9 @@ uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t reque
     xfer.user_data = 0;
     tuh_control_xfer(&xfer);
     if (xfer.result != XFER_RESULT_SUCCESS) {
+        if (status) {
+            *status = false;
+        }
         return false;
     }
     return xfer.actual_len;
@@ -657,9 +663,10 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         }
     }
     if (controlRequestValid(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength)) {
+        bool status = true;
         if (request->bmRequestType_bit.direction == TUSB_DIR_IN) {
             if (stage == CONTROL_STAGE_SETUP) {
-                uint16_t len = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
+                uint16_t len = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &status);
                 tud_control_xfer(rhport, request, buf, len);
             }
         } else {
@@ -667,12 +674,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                 tud_control_xfer(rhport, request, buf, request->wLength);
             }
             if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength)) {
-                uint8_t ret = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf);
-                // TODO: better stall fix later
-                if (request->bRequest == 0x87) {
-                    return ret;
-                }
+                uint8_t ret = controlRequest(request->bmRequestType, request->bRequest, request->wValue, request->wIndex, request->wLength, buf, &status);
             }
+        }
+        if (!status) {
+            return status;
         }
     }
 

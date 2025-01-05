@@ -9,7 +9,7 @@ void tick(void);
 void tick_wiioutput();
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type);
 void reset_usb(void);
-uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer);
+uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool* status);
 void send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t *report, uint8_t len);
 void send_report_to_pc(const void *report, uint8_t len);
 bool ready_for_next_packet(void);

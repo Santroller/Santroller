@@ -121,7 +121,7 @@ extern const PROGMEM HID_CONFIGURATION_DESCRIPTOR HIDConfigurationDescriptor;
 extern const PROGMEM XBOX_360_CONFIGURATION_DESCRIPTOR XBOX360ConfigurationDescriptor;
 extern const PROGMEM USB_DEVICE_DESCRIPTOR deviceDescriptor;
 extern const PROGMEM OS_DESCRIPTOR OSDescriptorString;
-uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t* requestBuffer);
+uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t* requestBuffer, bool* status);
 uint16_t descriptorRequest(const uint16_t wValue,
                            const uint16_t wIndex,
                            void* descriptorBuffer);

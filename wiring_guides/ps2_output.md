@@ -45,7 +45,6 @@ NEVER plug in both the usb cable to your computer, and the PS2, it can only ever
    - On the Pi Pico, use V<sub>SYS</sub>
    - On the 3.3V Pro Micro, use V<sub>CC</sub>
 3. Connect the gnd pin to the gnd on your microcontroller.
-4. If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
 
 ## Programming
 

@@ -674,6 +674,8 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->yellow |= report->yellow;
                     usb_host_data->blue |= report->blue;
                     usb_host_data->orange |= report->orange;
+                    // TODO: figure out kick mappings for raphnet
+                    // usb_host_data->kick1 |= report->kick1;
                     usb_host_data->a |= report->green;
                     usb_host_data->b |= report->red;
                     usb_host_data->y |= report->yellow;
@@ -816,6 +818,13 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
+
+                    usb_host_data->green |= report->a;
+                    usb_host_data->red |= report->b;
+                    usb_host_data->yellow |= report->y;
+                    usb_host_data->blue |= report->x;
+                    usb_host_data->orange |= report->rightShoulder;
+                    usb_host_data->kick1 |= report->leftShoulder;
                     if (report->greenVelocity) {
                         usb_host_data->greenVelocity = report->greenVelocity;
                     }
@@ -1209,6 +1218,12 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
+                    usb_host_data->green |= report->a;
+                    usb_host_data->red |= report->b;
+                    usb_host_data->yellow |= report->y;
+                    usb_host_data->blue |= report->x;
+                    usb_host_data->orange |= report->rightShoulder;
+                    usb_host_data->kick1 |= report->leftShoulder;
                     if (report->greenVelocity) {
                         usb_host_data->greenVelocity = report->greenVelocity;
                     }
@@ -1749,6 +1764,12 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                         usb_host_data->dpadRight = report->dpadRight;
                         usb_host_data->dpadUp = report->dpadUp;
                         usb_host_data->dpadDown = report->dpadDown;
+                        usb_host_data->green |= report->a;
+                        usb_host_data->red |= report->b;
+                        usb_host_data->yellow |= report->y;
+                        usb_host_data->blue |= report->x;
+                        usb_host_data->orange |= report->rightShoulder;
+                        usb_host_data->kick1 |= report->leftShoulder;
                         if (report->greenVelocity) {
                             usb_host_data->greenVelocity = report->greenVelocity;
                         }

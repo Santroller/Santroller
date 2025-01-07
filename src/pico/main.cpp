@@ -151,15 +151,6 @@ void setup1() {
 void loop() {
     tick_usb();
 }
-#if defined DEBUG_RP2040_PORT
-extern "C"
-    __attribute((weak))
-    ssize_t
-    _write(int fd, const void *buf, size_t count) {
-    (void)fd;
-    return DEBUG_RP2040_PORT.write((const char *)buf, count);
-}
-#endif
 
 void setup() {
 #if USB_HOST_STACK

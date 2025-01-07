@@ -207,7 +207,7 @@ void loop() {
                 buf = ctr->data;
             }
             // 8u2/16u2 wants us to handle a control request.
-            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, buf);
+            uint16_t len = controlRequest(ctr->bmRequestType, ctr->request, ctr->wValue, ctr->wIndex, ctr->wLength, buf, NULL);
             if (len > wLength) len = wLength;
             header->len = len;
             break;

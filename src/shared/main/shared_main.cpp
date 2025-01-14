@@ -2453,9 +2453,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->effectsKnob = INT16_MIN;
-#endif
         TICK_OG_XBOX;
         report_size = packet_size = sizeof(OG_XBOX_REPORT);
     }
@@ -2467,9 +2464,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Whammy on the xbox guitars goes from min to max, so it needs to default to min
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
-#endif
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-        report->effectsKnob = INT16_MIN;
 #endif
         TICK_XINPUT;
 
@@ -2586,7 +2580,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->leftTableVelocity = PS3_STICK_CENTER;
             report->rightTableVelocity = PS3_STICK_CENTER;
             report->crossfader = PS3_STICK_CENTER;
-            report->effectsKnob = 0;
+            report->effectsKnob = PS3_STICK_CENTER;
 #endif
             report->reportId = 1;
             TICK_PC;
@@ -2687,9 +2681,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         if (!festival_gameplay_mode) {
 #endif
             PS3_REPORT *report = (PS3_REPORT *)report_data;
-#if DEVICE_TYPE == DJ_HERO_TURNTABLE
-            report->effectsKnob = 0;
-#endif
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
             report->whammy = 0;
 #endif

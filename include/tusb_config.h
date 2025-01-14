@@ -22,6 +22,7 @@
 #define CFG_TUH_MIDI 1
 
 // HID buffer size Should be sufficient to hold ID (if any) + Data
+#define CFG_TUH_ENUMERATION_BUFSIZE 512
 #define CFG_TUD_VENDOR_EP_BUFSIZE VENDOR_EPSIZE
 #define CFG_TUD_VENDOR_TX_BUFSIZE VENDOR_EPSIZE
 #define CFG_TUD_VENDOR_RX_BUFSIZE VENDOR_EPSIZE

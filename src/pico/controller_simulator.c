@@ -15,8 +15,7 @@ uint smDatWriter;
 
 uint offsetCmdReader;
 uint offsetDatWriter;
-PS2_REPORT inputStateB;
-volatile PS2_REPORT *inputState = &inputStateB;
+uint8_t inputState[19];
 
 static uint8_t mode = MODE_DIGITAL;
 static bool config_mode = false;
@@ -388,7 +387,7 @@ void init_pio() {
 #ifdef TICK_PS2
 bool ps2_emu_tick(PS2_REPORT *report) {
     timeout = false;
-    memcpy(&inputStateB, report, sizeof(PS2_REPORT));
+    memcpy(inputState, report, sizeof(PS2_REPORT));
     ((uint8_t *)inputState)[1] ^= 0xFF;
     ((uint8_t *)inputState)[2] ^= 0xFF;
     while (RECV_CMD() == 0x01 && !timeout) {

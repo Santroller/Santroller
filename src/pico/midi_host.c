@@ -238,57 +238,6 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
 #if CFG_MIDI_HOST_DEVSTRINGS
     p_midi_host->num_string_indices = 0;
 #endif
-
-    // // Roland devices are a bit special
-    // if (TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass) {
-    //     uint8_t const *p_desc = (uint8_t const *)desc_itf;
-    //     uint16_t len_parsed = 0;
-    //     while (len_parsed < max_len) {
-    //         if (desc_itf->bDescriptorType == TUSB_DESC_INTERFACE) {
-    //             len_parsed += desc_itf->bLength;
-    //             p_desc = tu_desc_next(p_desc);
-    //             if (p_desc[0] >= 6 &&
-    //                 p_desc[1] == TUSB_DESC_CS_INTERFACE &&
-    //                 p_desc[2] == 0xf1 &&
-    //                 p_desc[3] == 0x02) {
-    //                 if (p_desc[4] > 0x10 || p_desc[5] > 0x10)
-    //                     continue;
-    //                 p_midi_host->itf_num = desc_itf->bInterfaceNumber;
-    //                 p_midi_host->num_cables_rx = (1 << p_desc[4]) - 1;
-    //                 p_midi_host->num_cables_tx = (1 << p_desc[5]) - 1;
-    //                 uint8_t endpoints = desc_itf->bNumEndpoints;
-    //                 while (endpoints--) {
-    //                     p_desc = tu_desc_next(p_desc);
-    //                     tusb_desc_endpoint_t const *desc_ep =
-    //                         (tusb_desc_endpoint_t const *)p_desc;
-    //                     TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
-    //                     if (desc_ep->bEndpointAddress & 0x80) {
-    //                         p_midi_host->ep_in = desc_ep->bEndpointAddress;
-    //                         p_midi_host->ep_in_max = desc_ep->wMaxPacketSize;
-    //                         if (p_midi_host->ep_out_max > CFG_TUH_MIDI_TX_BUFSIZE)
-    //                             p_midi_host->ep_out_max = CFG_TUH_MIDI_TX_BUFSIZE;
-    //                         TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
-    //                     } else {
-    //                         p_midi_host->ep_out = desc_ep->bEndpointAddress;
-    //                         p_midi_host->ep_out_max = desc_ep->wMaxPacketSize;
-    //                         if (p_midi_host->ep_in_max > CFG_TUH_MIDI_RX_BUFSIZE)
-    //                             p_midi_host->ep_in_max = CFG_TUH_MIDI_RX_BUFSIZE;
-    //                         TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
-    //                     }
-    //                 }
-    //                 p_midi_host->dev_addr = dev_addr;
-
-    //                 if (tuh_midi_mount_cb) {
-    //                     tuh_midi_mount_cb(dev_addr, p_midi_host->ep_in, p_midi_host->ep_out, p_midi_host->num_cables_rx, p_midi_host->num_cables_tx);
-    //                 }
-    //                 return true;
-    //             }
-    //         }
-    //         len_parsed += desc_itf->bLength;
-    //         p_desc = tu_desc_next(p_desc);
-    //         desc_itf = (tusb_desc_interface_t const *)p_desc;
-    //     }
-    // }
     // Some roland devices use vendor specific and have their own header
     TU_VERIFY(TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass || TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass);
     // There can be just a MIDI interface or an audio and a MIDI interface. Only open the MIDI interface

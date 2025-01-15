@@ -716,10 +716,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->guide |= report->guide;
                     usb_host_data->leftThumbClick |= report->leftThumbClick;
                     usb_host_data->rightThumbClick |= report->rightThumbClick;
-                    usb_host_data->dpadLeft |= report->dpadLeft;
-                    usb_host_data->dpadRight |= report->dpadRight;
-                    usb_host_data->dpadUp |= report->dpadUp;
-                    usb_host_data->dpadDown |= report->dpadDown;
+                    usb_host_data->dpadLeft |= left;
+                    usb_host_data->dpadRight |= right;
+                    usb_host_data->dpadUp |= up;
+                    usb_host_data->dpadDown |= down;
                     if (report->leftTrigger) {
                         usb_host_data->leftTrigger = report->leftTrigger << 8;
                     }

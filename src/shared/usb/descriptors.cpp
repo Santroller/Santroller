@@ -1038,6 +1038,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 }
 #endif
                 case GET_AUTH_PAGE_SIZE: {
+                    // Wouldnt it make more sense to just grab it from the controller, and if it stalls then we return the default
                     if (auth_ps4_is_ghl) {
                         memcpy_P(requestBuffer, &ps4_pagesize_report_ghl, sizeof(ps4_pagesize_report_ghl));
                         return sizeof(ps4_pagesize_report_ghl);

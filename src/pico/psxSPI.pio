@@ -53,7 +53,6 @@ in pins 1		    ; sample 1 bit form DAT line
 ;	Bits are outputted by changing pin direction:
 ;	0 -> set pin as input (Hi-Z) -> output a one
 ;	1 -> set pin as output low -> output a zero
-; TODO: SLOW_CLKDIV 50 without USBHOST, 48 with
 set pindirs, 0			side 0	; release DAT line (set pin as input = Hi-Z)
 wait 0 gpio PIN_SEL		side 0	; wait for SEL to go low
 .wrap_target
@@ -68,7 +67,7 @@ jmp x-- sendbit			side 0			; count and send 8 bits
 .wrap
 
 % c-sdk {
-#define SLOW_CLKDIV 48	// 125MHz divided down to 2.5 MHz - we need this so we don't count clocks not meant for us on systems like the PS2
+#define SLOW_CLKDIV 50	// 125MHz divided down to 2.5 MHz - we need this so we don't count clocks not meant for us on systems like the PS2
 
 static inline void cmd_reader_program_init(PIO pio, uint sm, uint offset) {
 	pio_sm_config c = cmd_reader_program_get_default_config(offset);

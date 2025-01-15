@@ -458,7 +458,7 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint3
 }
 uint8_t handle_calibration_ps2_whammy(uint8_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
     // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then subtract from center
-    uint8_t ret = handle_calibration_ps3_360_trigger((0x7f + previous) << 1, orig_val, min, multiplier, deadzone) >> 1;
+    uint8_t ret = handle_calibration_ps3_360_trigger((0x7f - previous) << 1, orig_val, min, multiplier, deadzone) >> 1;
     return 0x7f - ret;
 }
 
@@ -2125,11 +2125,13 @@ void tick_ps2output() {
 
     TICK_SHARED;
     memset(report, 0, sizeof(report));
-    TICK_PS2;
-    report->header = 0x5A;
+    
 #if DEVICE_TYPE_IS_GUITAR
     report->dpadLeft = true;
+    report->whammy = 0x7f;
 #endif
+    TICK_PS2;
+    report->header = 0x5A;
 }
 #endif
 #ifdef TICK_WII

@@ -213,6 +213,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGuitarHeroGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCGuitarHeroGuitar_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerGH_Data_t
 #define PS2_REPORT PS2GuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
 #define PS4_REPORT PS4RockBandGuitar_Data_t
@@ -244,6 +245,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputRockBandGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandGuitar_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerRB_Data_t
 #define PS2_REPORT PS2GuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
 #define PS4_REPORT PS4RockBandGuitar_Data_t
@@ -274,6 +276,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputRockBandProGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandGuitar_Data_t
 #define PC_REPORT PCRockBandProGuitar_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerRB_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
@@ -303,6 +306,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputRockBandProGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandProGuitar_Data_t
 #define PC_REPORT PCRockBandProGuitar_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerRB_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
@@ -332,6 +336,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputRockBandKeyboard_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandKeyboard_Data_t
 #define PC_REPORT PCRockBandProKeyboard_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerRB_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProKeyboard_Data_t
 #define PS4_REPORT PS3RockBandProKeyboard_Data_t
@@ -383,6 +388,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGHLGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneGamepad_Data_t
 #define PC_REPORT PCGHLGuitar_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerGH_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3GHLGuitar_Data_t
 #define PS4_REPORT PS4GHLGuitar_Data_t
@@ -415,6 +421,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define XINPUT_REPORT XInputGuitarHeroDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
 #define PC_REPORT PCGuitarHeroDrums_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerGH_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3GuitarHeroDrums_Data_t
 #define PS4_REPORT PS4RockBandDrums_Data_t
@@ -444,6 +451,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define OG_XBOX_REPORT OGXboxRockBandDrums_Data_t
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
+#define PC_FESTIVAL_REPORT FestivalProGuitarLayerRB_Data_t
 #define PC_REPORT PCRockBandDrums_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t

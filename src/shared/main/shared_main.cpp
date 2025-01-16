@@ -2598,9 +2598,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
 #ifdef TICK_FESTIVAL
         } else {
-            FestivalProGuitarLayer_Data_t *report = (FestivalProGuitarLayer_Data_t *)report_data;
-            report_size = packet_size = sizeof(FestivalProGuitarLayer_Data_t);
-            memset(report, 0, sizeof(FestivalProGuitarLayer_Data_t));
+            PC_FESTIVAL_REPORT *report = (PC_FESTIVAL_REPORT *)report_data;
+            report_size = packet_size = sizeof(PC_FESTIVAL_REPORT);
+            memset(report, 0, sizeof(PC_FESTIVAL_REPORT));
             report->unused[0] = PS3_STICK_CENTER;
             report->unused[1] = PS3_STICK_CENTER;
             report->slider = PS3_STICK_CENTER;

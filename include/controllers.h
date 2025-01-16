@@ -25,7 +25,6 @@ extern uint8_t ps4_sequence_number;
 
 // Used for ps4 auth
 extern bool auth_ps4_controller_found;
-extern bool auth_ps4_is_ghl;
 
 // Used for differenciating ps3 and ps4
 extern bool seen_ps4;

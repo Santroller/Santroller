@@ -728,14 +728,6 @@ const PROGMEM uint8_t ps4_feature_config[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-AuthPageSizeReport ps4_pagesize_report_ghl = {
-    type : 0xF3,
-    u1 : 0x00,
-    size_challenge : 0x20,
-    size_response : 0x20,
-    u4 : {0x00, 0x00, 0x00, 0x00}
-};
-
 AuthPageSizeReport ps4_pagesize_report = {
     type : 0xF3,
     u1 : 0x00,
@@ -829,7 +821,7 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
 uint8_t ps3_id_id = 4;
 bool cleared_input = false;
 bool cleared_output = false;
-uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer, bool* status) {
+uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer, bool *status) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
 #if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
@@ -1036,16 +1028,23 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 case GET_AUTH_STATUS: {
                     return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
                 }
-#endif
                 case GET_AUTH_PAGE_SIZE: {
-                    // Wouldnt it make more sense to just grab it from the controller, and if it stalls then we return the default
-                    if (auth_ps4_is_ghl) {
-                        memcpy_P(requestBuffer, &ps4_pagesize_report_ghl, sizeof(ps4_pagesize_report_ghl));
-                        return sizeof(ps4_pagesize_report_ghl);
+                    // Don't start the auth process until we see a controller
+                    if (get_device_address_for(PS4).dev_addr == 0) {
+                        return 0;
                     }
+                    // Attempt to read the page size from the connected controller
+                    // On a DS4, this will fail but we have the default page size report for that scenario.
+                    transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_GET_REPORT, GET_AUTH_PAGE_SIZE, INTERFACE_ID_Device, sizeof(AuthPageSizeReport), (uint8_t *)&ps4_pagesize_report, NULL);
                     memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
                     return sizeof(ps4_pagesize_report);
                 }
+#else
+                case GET_AUTH_PAGE_SIZE: {
+                    memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
+                    return sizeof(ps4_pagesize_report);
+                }
+#endif
             }
         }
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80) {

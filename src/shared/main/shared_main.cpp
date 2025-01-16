@@ -155,7 +155,6 @@ USB_Host_Data_t bt_data;
 uint8_t rawWt;
 uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
-bool auth_ps4_is_ghl = false;
 bool seen_ps4_console = false;
 bool hasFlags = false;
 GipPowerMode_t powerMode;
@@ -3080,7 +3079,6 @@ void ps4_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
         handle_player_leds(0);
     }
     auth_ps4_controller_found = true;
-    auth_ps4_is_ghl = vid == XBOX_REDOCTANE_VID && pid == PS4_GHLIVE_DONGLE_PID;
 }
 
 void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {

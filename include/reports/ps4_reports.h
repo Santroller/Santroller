@@ -277,6 +277,7 @@ enum BackendAuthState {
     NO_TRANSACTION,
 };
 enum PS4ReportIds {
+    FEATURE_REPORT = 0x0303,
     SET_CHALLENGE = 0x03f0,
     GET_RESPONSE,
     GET_AUTH_STATUS,

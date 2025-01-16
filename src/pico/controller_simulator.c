@@ -408,7 +408,7 @@ bool ps2_emu_tick(PS2_REPORT *report) {
         found_ps2 = true;
         process_joy_req();
     }
-    while (RECV_CMD() == 0x01 && !timeout && found_ps2) {
+    while (found_ps2 && RECV_CMD() == 0x01 && !timeout) {
         process_joy_req();
     }
     return true;

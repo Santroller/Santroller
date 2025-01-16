@@ -32,7 +32,6 @@ void SEND(uint8_t byte) {
     if (timeout) {
         return;
     }
-    long timeoutCounter = micros();
     while (pio_sm_is_tx_fifo_full(psx_device_pio, smDatWriter)) {
         if (timeout) {
             return;
@@ -41,11 +40,23 @@ void SEND(uint8_t byte) {
     write_byte_blocking(psx_device_pio, smDatWriter, byte);
 }
 
-uint8_t RECV_CMD() {
+uint8_t RECV_CMD_TIMEOUT() {
     if (timeout) {
         return 0;
     }
     long timeoutCounter = micros();
+    while (pio_sm_is_rx_fifo_empty(psx_device_pio, smCmdReader)) {
+        if (timeout || micros() - timeoutCounter > 800) {
+            return 0;
+        }
+    }
+    return read_byte_blocking(psx_device_pio, smCmdReader);
+}
+
+uint8_t RECV_CMD() {
+    if (timeout) {
+        return 0;
+    }
     while (pio_sm_is_rx_fifo_empty(psx_device_pio, smCmdReader)) {
         if (timeout) {
             return 0;
@@ -384,13 +395,20 @@ void init_pio() {
     cmd_reader_program_init(psx_device_pio, smCmdReader, offsetCmdReader);
     dat_writer_program_init(psx_device_pio, smDatWriter, offsetDatWriter);
 }
+
+static bool found_ps2 = false;
 #ifdef TICK_PS2
 bool ps2_emu_tick(PS2_REPORT *report) {
     timeout = false;
     memcpy(inputState, report, sizeof(PS2_REPORT));
     ((uint8_t *)inputState)[1] ^= 0xFF;
     ((uint8_t *)inputState)[2] ^= 0xFF;
-    while (RECV_CMD() == 0x01 && !timeout) {
+    // Throw a timeout on the first command read until we see a ps2
+    if (!found_ps2 && RECV_CMD_TIMEOUT() == 0x01) {
+        found_ps2 = true;
+        process_joy_req();
+    }
+    while (RECV_CMD() == 0x01 && !timeout && found_ps2) {
         process_joy_req();
     }
     return true;

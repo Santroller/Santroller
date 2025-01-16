@@ -1,6 +1,7 @@
 ;	Author:	Daniele Giuliani
 ;	Interfaces with the modified SPI protocol used by
 ;	PSX to communicate with controller/memory cards
+;   TODO: can we make it so these aren't constants we have to fiddle with?
 
 .define PUBLIC PIN_DAT 11
 .define PUBLIC PIN_CMD 12

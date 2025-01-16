@@ -14,7 +14,6 @@
 #include "reports/controller_reports.h"
 #include "shared_main.h"
 #define INTERNAL_SERIAL_START_ADDRESS 0x0E
-#define USB_STRING_LEN(UnicodeChars) (sizeof(USB_Descriptor_Header_t) + ((UnicodeChars) << 1))
 #define INTERNAL_SERIAL_LENGTH_BITS 80
 /** \name Control Request Data Direction Masks */
 /**@{*/
@@ -72,7 +71,7 @@ bool usb_ready = false;
 
 static void USB_Device_GetInternalSerialDescriptor(void) {
     signature.Header.Type = 0x03;
-    signature.Header.Size = USB_STRING_LEN((INTERNAL_SERIAL_LENGTH_BITS / 4) + 4);
+    signature.Header.Size = sizeof(SignatureDescriptor_t);
 
     uint8_t CurrentGlobalInt = SREG;
     cli();
@@ -174,15 +173,17 @@ void loop() {
             break;
         }
         case DESCRIPTOR_ID: {
+            // Wlength will be overwritten in descriptorRequest so cache it
+            uint16_t wLength = desc->wLength;
             // 8u2/16u2 wants a descriptor, so return it
             // Serial number string descriptor, return one we prepared earlier
             if (desc->wValue == ((0x03 << 8) | 3)) {
                 memcpy(dt->data, &signature, sizeof(SignatureDescriptor_t));
-                header->len = sizeof(SignatureDescriptor_t);
+                uint16_t len = sizeof(SignatureDescriptor_t);
+                if (len > wLength) len = wLength;
+                header->len = len;
                 break;
             }
-            // Wlength will be overwritten in descriptorRequest so cache it
-            uint16_t wLength = desc->wLength;
             uint16_t len = descriptorRequest(desc->wValue, desc->wIndex, dt->data);
             if (len > wLength) len = wLength;
             header->len = len;

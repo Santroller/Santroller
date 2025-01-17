@@ -10,7 +10,7 @@ sort: 13
 * A USB Extension cable, or a USB breakout
 - A Pi Pico
 - A Wii extension plug
-- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >5V maximum reverse voltage)
+- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >10V maximum reverse voltage)
 - Some Wire
 - A Soldering Iron  
 - A boost converter that can step up 3.3v to 5V

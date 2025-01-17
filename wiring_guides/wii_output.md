@@ -12,9 +12,6 @@ If you wish to also use USB Host, follow the [Wii extension emulation + USB Host
 ## Supplies
 
 - A controller built using one of the other guides
-- 
-- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >5V maximum reverse voltage)
-
 - A microcontroller
 
   - The Pi Pico is recommended, but other 3.3v microcontrollers like the 3.3v pro micro may work. 5v only microcontrollers will NOT work.

@@ -13,10 +13,14 @@ There are currently two ways to trick the console
 ## Passing authentication checks to a legitimate controller
 You can follow the [USB Inputs](https://santroller.tangentmc.net/wiring_guides/usb.html) guide. When USB Inputs are enabled, authentication checks will automatically be passed to a controller.
 
+## Do i need to keep the controller plugged in
+For Xbox 360 and Xbox One no, you should be able to unplug your controller after authentication is done.
+For PS4/PS5, you need to leave it plugged in, playstations continuously check the authentication state.
+
 ## Supported controllers
 Xbox 360: most controllers should work
 
-Xbox One / Series: The Xbox One or Series gamepads will work here, third party controllers do not. 
+Xbox One / Series: The Xbox One or Series gamepads will work here, some third party controllers work work and some wont.
 
 PS4: DS4 works, most other controllers should work too.
 

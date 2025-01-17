@@ -2,7 +2,7 @@
 sort: 13
 ---
 
-# Setting up emulation of a Wii extension  (Pi Pico Only)
+# Setting up emulation of a Wii extension with USB Host (Pi Pico Only)
 
 ## Supplies
 

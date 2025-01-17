@@ -2,7 +2,7 @@
 sort: 14
 ---
 
-# Setting up emulation of a PS2 controller with USB Host
+# Setting up emulation of a PS2 controller with USB Host (Pi Pico Only)
 
 ## Supplies
 

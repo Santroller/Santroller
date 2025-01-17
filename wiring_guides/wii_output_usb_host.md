@@ -2,7 +2,7 @@
 sort: 13
 ---
 
-# Setting up emulation of a Wii extension
+# Setting up emulation of a Wii extension (Pi Pico Only)
 
 ## Supplies
 

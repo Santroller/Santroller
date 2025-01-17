@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#define ID_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2) + 1)
+#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2) + 1)
 typedef struct
 {
     uint8_t bLength;                    // Length of this descriptor.

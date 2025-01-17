@@ -39,7 +39,7 @@
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
-    .bLength = sizeof(STRING_DESCRIPTOR_PICO),
+    .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + (SERIAL_LEN + 3) * 2),
     .bDescriptorType = USB_DESCRIPTOR_STRING,
     .UnicodeString = {}};
 #define PERSISTED_CONSOLE_TYPE_VALID 0x3A2F

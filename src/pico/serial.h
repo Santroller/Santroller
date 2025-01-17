@@ -4,12 +4,12 @@
 
 #include "config.h"
 
-#define SERIAL_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2) + 1)
+#define ID_LEN ((PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2) + 1)
 typedef struct
 {
     uint8_t bLength;                    // Length of this descriptor.
     uint8_t bDescriptorType;            // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
-    uint16_t UnicodeString[(SERIAL_LEN)+4]; /**< String data, as unicode characters (alternatively,
+    uint16_t UnicodeString[(SERIAL_LEN)+3]; /**< String data, as unicode characters (alternatively,
                                          *   string language IDs). If normal ASCII characters are
                                          *   to be used, they must be added as an array of characters
                                          *   rather than a normal C string so that they are widened to

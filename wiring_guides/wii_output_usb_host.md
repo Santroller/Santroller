@@ -2,25 +2,27 @@
 sort: 13
 ---
 
-# Setting up emulation of a Wii extension
-
-```danger
-If you wish to also use USB Host, follow the [Wii extension emulation + USB Host guide](https://santroller.tangentmc.net/wiring_guides/wii_output_usb_host.html)
-```
-
+# Setting up emulation of a Wii extension with USB Host (Pi Pico Only)
 
 ## Supplies
 
 - A controller built using one of the other guides
-- A microcontroller
-
-  - The Pi Pico is recommended, but other 3.3v microcontrollers like the 3.3v pro micro may work. 5v only microcontrollers will NOT work.
-
+* A USB Extension cable, or a USB breakout
+- A Pi Pico
 - A Wii extension plug
+- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >10V maximum reverse voltage)
 - Some Wire
-- A Soldering Iron
+- A Soldering Iron  
+- A boost converter that can step up 3.3v to 5V
 
 ## Steps
+
+
+1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.
+2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
+3. Hook up the V- / GND (Black) to ground on your Pi Pico
+4. Hook up D+ (Green) to a unused digital pin.
+5. Hook up D- (White) to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
 
 1.  Connect wires between the SDA and SCL pins on your wii extension plug.
     Refer to the following image for the pinout of a Wii Extension plug.
@@ -36,15 +38,14 @@ If you wish to also use USB Host, follow the [Wii extension emulation + USB Host
     | Microcontroller               | SDA                              | SCL                              |
     | ----------------------------- | -------------------------------- | -------------------------------- |
     | Pi Pico (Recommended)         | GP18                             | GP19                             |
-    | Pro Micro, Leonardo, Micro    | 2                                | 3                                |
     | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
     | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 
-2.  Connect the V<sub>CC</sub> on the microcontroller to the V<sub>CC</sub> on the plug, through the diode
-    - On the Pi Pico, use V<sub>SYS</sub>
-    - On the 3.3V Pro Micro, use V<sub>CC</sub>
-3.  Connect the gnd pin to the gnd on your microcontroller.
-4.  If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
+2. Connect the V<sub>CC</sub> from the Wii Excension to the voltage input for your boost converter
+3. Connect the voltage output from the boost converter to the pico, via the Schottky diode
+4. Connect the ground pin from the boost converter to the pico
+5. Connect the gnd pin to the gnd on your microcontroller.
+6. If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
 
 ## Programming
 
@@ -53,7 +54,8 @@ If you wish to also use USB Host, follow the [Wii extension emulation + USB Host
 4.  Click on `Add Setting`
 5.  Find `Wii Extension Emulation` in the dropdown and add it 
 6.  For the Pi Pico, set your SDA and SCL pins.
-
-## USB Host
-
-Make sure you follow the relevant steps outlined in the [USB Host Guide](https://santroller.tangentmc.net/wiring_guides/usb.html) as some extra wiring is necessary to power USB devices when using Wii Extension Emulation.
+1.  Click on Add setting
+2.  Find and add `USB Host inputs`
+3.  Bind D+
+4.  Hit Save
+5.  If you plug in a supported controller to the usb port, the tool should detect it and tell you what it is. Most controllers are supported, but things like the play and charge kit won't work over USB.

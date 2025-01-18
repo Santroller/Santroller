@@ -18,6 +18,8 @@ The simplest way to safely add a second power source to Pico is to feed it into 
 This is necessary as it means the USB voltage won't feed back into your batteries, since the batteries and USB run on different voltages. 
 Internally, there is another Schottky diode on the pico to prevent the batteries from feeding back into the USB pins.
 
+For picking a Schottky diode, all that matters is that it can handle the current demands of your application, and that it has a >10V maximum reverse voltage. A 20A diode would be more than enough and these are pretty easy to find.
+
 If you intend to use a rechargable battery and have the USB port charge it, there are various products out there that can add battery charging support to the pico, that come with the necessary electronics required to support both charging and data over a USB cable.
 
 ## Programming a Bluetooth Transmitter

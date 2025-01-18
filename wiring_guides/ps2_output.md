@@ -4,6 +4,11 @@ sort: 14
 
 # Setting up emulation of a PS2 controller
 
+```danger
+If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
+```
+
+
 ## Supplies
 
 - A controller built using one of the other guides
@@ -41,11 +46,10 @@ NEVER plug in both the usb cable to your computer, and the PS2, it can only ever
    | Uno (Advanced)                           | 13                 | 11                      | 12                  | Any                 | Any                |
    | Mega (Advanced)                          | 52                 | 51                      | 50                  | Any                 | Any                |
 
-2. Connect the V<sub>CC</sub> on the microcontroller to the V<sub>CC</sub> on the plug
+2. Connect the V<sub>CC</sub> on the microcontroller to the V<sub>CC</sub> on the plug, through the diode
    - On the Pi Pico, use V<sub>SYS</sub>
    - On the 3.3V Pro Micro, use V<sub>CC</sub>
 3. Connect the gnd pin to the gnd on your microcontroller.
-4. If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
 
 ## Programming
 
@@ -55,7 +59,3 @@ NEVER plug in both the usb cable to your computer, and the PS2, it can only ever
 4.  Find `PS2 Controller Emulation` in the dropdown and add it
 5.  For the Pi Pico, set your SCK, MOSI, and MISO pins
 6.  Set your Acknowledge and Attention pins
-
-## USB Host
-
-Make sure you follow the relevant steps outlined in the [USB Host Guide](https://santroller.tangentmc.net/wiring_guides/usb.html) as some extra wiring is necessary to power USB devices when using PS2 controller emulation.

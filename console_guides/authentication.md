@@ -8,7 +8,7 @@ There are currently two ways to trick the console
 ## Consoles needing authentication
 - Xbox 360, although this can be patched out using [UsbdSecPatch](#usbdsecpatch) on RGH or JTAG modded consoles.
 - Xbox One and Series S|X
-- PS4 / PS5, but only if you are not playing Rock Band 4. For Rock Band 4, you can use PS3 mode.
+- PS4 / PS5, but only if you are not playing Rock Band 4. For Rock Band 4, you can use PS3 mode. If you are playing games besides Rock Band 4, you will need an authentication controller or dongle.
 
 ## Passing authentication checks to a legitimate controller
 You can follow the [USB Inputs](https://santroller.tangentmc.net/wiring_guides/usb.html) guide. When USB Inputs are enabled, authentication checks will automatically be passed to a controller.

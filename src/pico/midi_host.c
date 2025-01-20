@@ -297,7 +297,7 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
             // assume it is an input jack
             midi_desc_in_jack_t const *p_mdij = (midi_desc_in_jack_t const *)p_desc;
             if (p_mdij->bDescriptorSubType == MIDI_CS_INTERFACE_HEADER) {
-                TU_LOG2("Found MIDI Interface Header\r\b");
+                TU_LOG2("Found MIDI Interface Header\r\n");
             } else if (p_mdij->bDescriptorSubType == MIDI_CS_INTERFACE_IN_JACK) {
                 // Then it is an in jack.
                 TU_LOG2("Found in jack\r\n");
@@ -343,10 +343,10 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
                 TU_LOG2("Found element\r\n");
 #endif
             } else if (p_mdij->bDescriptorSubType == MIDI_CS_ROLAND_HEADER) {
-                midi_desc_roland_header_t *p_rl = (midi_desc_roland_header_t *)p_desc;
-                if (p_rl->bLength >= 6 && p_rl->always_2 == 0x02) {
-                    if (p_rl->num_cables_rx > 0x10 || p_rl->num_cables_tx > 0x10)
-                        TU_VERIFY(false);
+                midi_desc_roland_header_t const *p_rl = (midi_desc_roland_header_t const *)p_desc;
+                TU_LOG2("Found Roland Header %02x %02x %02x %02x\r\n", p_rl->bLength, p_rl->always_2, p_rl->num_cables_rx, p_rl->num_cables_tx);
+                if (p_rl->bLength >= sizeof(midi_desc_roland_header_t) && p_rl->always_2 == 0x02) {
+                    TU_VERIFY(p_rl->num_cables_rx < 0x10 && p_rl->num_cables_tx < 0x10);
                     TU_LOG2("Found Roland Header\r\n");
                     p_midi_host->num_cables_rx = (1 << p_rl->num_cables_rx) - 1;
                     p_midi_host->num_cables_tx = (1 << p_rl->num_cables_tx) - 1;
@@ -360,6 +360,7 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
                 TU_LOG2("Unknown CS Interface sub-type %u\r\n", p_mdij->bDescriptorSubType);
                 TU_VERIFY(false);  // unknown CS Interface sub-type
             }
+            len_parsed += p_mdij->bLength;
         } else if (p_mdh->bDescriptorType == TUSB_DESC_CS_ENDPOINT) {
             TU_LOG2("found CS_ENDPOINT Descriptor for %u\r\n", prev_ep_addr);
             TU_VERIFY(prev_ep_addr != 0);
@@ -403,7 +404,7 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
             TU_LOG2("found ENDPOINT Descriptor for %u\r\n", p_ep->bEndpointAddress);
             if (tu_edpt_dir(p_ep->bEndpointAddress) == TUSB_DIR_OUT) {
                 TU_VERIFY(p_midi_host->ep_out == 0);
-                // TU_VERIFY(p_midi_host->num_cables_tx == 0);
+                TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || p_midi_host->num_cables_tx == 0);
                 p_midi_host->ep_out = p_ep->bEndpointAddress;
                 p_midi_host->ep_out_max = p_ep->wMaxPacketSize;
                 if (p_midi_host->ep_out_max > CFG_TUH_MIDI_TX_BUFSIZE)
@@ -412,7 +413,7 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
                 out_desc = p_ep;
             } else {
                 TU_VERIFY(p_midi_host->ep_in == 0);
-                // TU_VERIFY(p_midi_host->num_cables_rx == 0);
+                TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || p_midi_host->num_cables_rx == 0);
                 p_midi_host->ep_in = p_ep->bEndpointAddress;
                 p_midi_host->ep_in_max = p_ep->wMaxPacketSize;
                 if (p_midi_host->ep_in_max > CFG_TUH_MIDI_RX_BUFSIZE)
@@ -421,6 +422,9 @@ bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *d
                 in_desc = p_ep;
             }
             len_parsed += p_mdh->bLength;
+        }
+        if (TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && (p_midi_host->ep_out != 0 && p_midi_host->num_cables_tx != 0) && (p_midi_host->ep_in != 0 && p_midi_host->num_cables_rx != 0)) {
+            break;
         }
         p_desc = tu_desc_next(p_desc);
         p_mdh = (midi_desc_header_t const *)p_desc;
@@ -840,3 +844,4 @@ uint8_t tuh_midi_get_all_istrings(uint8_t dev_addr, const uint8_t **istrings) {
 }
 #endif
 #endif
+

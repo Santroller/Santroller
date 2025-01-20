@@ -5,6 +5,7 @@ sort: 7
 
 ```danger
 If you wish to also use PS2 Emulation, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
+```
 
 ```danger
 If you wish to also use Wii Extension emulation, follow the [Wii extension emulation + USB Host guide](https://santroller.tangentmc.net/wiring_guides/wii_output_usb_host.html)
@@ -16,7 +17,7 @@ If you wish to also use Wii Extension emulation, follow the [Wii extension emula
 
 ## Wiring Steps
 
-1. If you are using a USB extension cable, cut it to and expose the four cables. Keep the socket end, as you require it to connect a controller.
+1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.
 2. Hook up the V+ / VBUS (Red) to the VBUS pin on your Pi Pico
 3. Hook up the V- / GND (Black) to ground on your Pi Pico
 4. Hook up D+ (Green) to a unused digital pin.

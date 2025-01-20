@@ -24,8 +24,8 @@ If you wish to also use Wii Extension emulation, follow the [Wii extension emula
 5. Hook up D- (White) to the digital pin directly after D+. For example, you can hook up D+ to GP2 and D- to GP3.
 
 ## Configuring
-1. Click on Add setting
+1. Click on 'Add setting'
 2. Find and add `USB Host inputs`
-3. Bind D+
-4. Hit Save
-5. If you plug in a supported controller, the tool should detect it and tell you what it is. Most controllers are supported, but things like the play and charge kit won't work over USB.
+3. Bind 'D+'
+4. Hit 'Save'
+5. If you plug in a supported controller, the tool should detect it and tell you what it is. Most controllers are supported, but accesories like the Xbox 360 Play & Charge Kit won't work over USB.

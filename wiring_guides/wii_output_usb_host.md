@@ -49,7 +49,7 @@ sort: 13
 
 ## Programming
 
-1.  Start Santroller with your microcontroller plugged in.
+1.  Start *Santroller* with your microcontroller plugged in.
 3.  Hit Configure
 4.  Click on `Add Setting`
 5.  Find `Wii Extension Emulation` in the dropdown and add it 

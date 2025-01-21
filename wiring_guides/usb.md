@@ -28,4 +28,4 @@ If you wish to also use Wii Extension emulation, follow the [Wii extension emula
 2. Find and add `USB Host inputs`
 3. Bind `D+`
 4. Hit `Save`
-5. If you plug in a supported controller, the tool should detect it and tell you what it is. Most controllers are supported, but accesories like the Xbox 360 Play & Charge Kit won't work over USB.
+5. If you plug in a supported controller, the tool should detect it and tell you what it has detected. Most controllers are supported, but accessories like the Xbox 360 Play & Charge Kit won't work over USB.

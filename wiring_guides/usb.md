@@ -15,6 +15,7 @@ If you wish to also use Wii Extension emulation, follow the [Wii extension emula
 
 ## Supplies
 * A Pi Pico
+  * Note that if you don't want to solder, there are boards out there with USB Host set up already, such as the Adafruit Feather RP2040 with USB host.
 * A USB Extension cable, or a USB breakout
 
 ## Wiring Steps

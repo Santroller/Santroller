@@ -3,9 +3,11 @@ sort: 7
 ---
 # Setting up an Adaptor for a USB controller (Pi Pico Only)
 
+
 ```danger
 If you wish to also use PS2 Emulation, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
 ```
+
 
 ```danger
 If you wish to also use Wii Extension emulation, follow the [Wii extension emulation + USB Host guide](https://santroller.tangentmc.net/wiring_guides/wii_output_usb_host.html)

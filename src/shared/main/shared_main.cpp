@@ -2716,6 +2716,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             PS2GuitarOnPS3_Data_t *report = (PS2GuitarOnPS3_Data_t *)report_data;
 
             TICK_PS3;
+            report->dpadLeft = true;
 
             asm volatile("" ::
                              : "memory");

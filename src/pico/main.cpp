@@ -168,9 +168,6 @@ void setup() {
         if (SLEEP_PIN != -1) {
             // Sleep works best when nothing else is started, so we reboot the pico before and after sleep
             if (pico_is_sleeping) {
-                for (int i = 0; i < __GPIOCNT; i++) {
-                    pinMode(i, INPUT);
-                }
                 pinMode(SLEEP_PIN, SLEEP_ACTIVE_HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
                 sleep_run_from_xosc();
                 sleep_goto_dormant_until_pin(SLEEP_PIN, true, SLEEP_ACTIVE_HIGH); 

@@ -165,20 +165,20 @@ void setup() {
 #endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
-        #ifdef SLEEP_PIN
-        // Sleep works best when nothing else is started, so we reboot the pico before and after sleep
-        if (pico_is_sleeping) {
-            for (int i = 0; i < __GPIOCNT; i++) {
-                pinMode(i, INPUT);
+        if (SLEEP_PIN != -1) {
+            // Sleep works best when nothing else is started, so we reboot the pico before and after sleep
+            if (pico_is_sleeping) {
+                for (int i = 0; i < __GPIOCNT; i++) {
+                    pinMode(i, INPUT);
+                }
+                pinMode(SLEEP_PIN, SLEEP_ACTIVE_HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
+                sleep_run_from_xosc();
+                sleep_goto_dormant_until_pin(SLEEP_PIN, true, SLEEP_ACTIVE_HIGH); 
+                sleep_power_up();
+                pico_is_sleeping = false;
+                reset_usb();
             }
-            pinMode(SLEEP_PIN, SLEEP_ACTIVE_HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
-            sleep_run_from_xosc();
-            sleep_goto_dormant_until_pin(SLEEP_PIN, true, SLEEP_ACTIVE_HIGH); 
-            sleep_power_up();
-            pico_is_sleeping = false;
-            reset_usb();
         }
-        #endif
     } else {
         windows_in_hid = false;
         xboxAuthValid = false;

@@ -16,12 +16,12 @@
 #include "pico_slave.h"
 #include "pin_funcs.h"
 #include "ps2.h"
+#include "sleep.h"
 #include "state_translation/pro_guitar.h"
 #include "state_translation/pro_keys.h"
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
-#include "sleep.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -2931,22 +2931,18 @@ void tick(void) {
 #ifdef TICK_LED_BLUETOOTH
     TICK_LED_BLUETOOTH;
 #endif
-#ifdef SLEEP_INACTIVITY_TIMEOUT_MS
     // Only sleep if the timeout has passed and we aren't connected over USB
-    if (millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
+    if (SLEEP_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
         go_to_sleep();
     }
 
-#endif
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when
     // the device is plugged in again
     if (slave_initted) {
-#if RGB_INACTIVITY_TIMEOUT_MS
-        if (millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
+        if (RGB_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
             memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
         }
-#endif  // RGB_INACTIVITY_TIMEOUT_MS
         if (memcmp(lastLedStatePeripheral, ledStatePeripheral, sizeof(ledStatePeripheral)) != 0) {
             memcpy(lastLedStatePeripheral, ledStatePeripheral, sizeof(ledStatePeripheral));
             TICK_LED_PERIPHERAL;
@@ -2956,11 +2952,9 @@ void tick(void) {
     }
 #endif
 #ifdef TICK_LED
-#if RGB_INACTIVITY_TIMEOUT_MS
-    if (millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
+    if (RGB_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
         memset(ledState, 0, sizeof(ledState));
     }
-#endif  // RGB_INACTIVITY_TIMEOUT_MS
     if (memcmp(lastLedState, ledState, sizeof(ledState)) != 0) {
         memcpy(lastLedState, ledState, sizeof(ledState));
         TICK_LED;
@@ -2968,6 +2962,9 @@ void tick(void) {
 #endif
 
 #if LED_COUNT_MPR121
+    if (RGB_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
+        ledStateMpr121 = 0;
+    }
     if (lastLedStateMpr121 != ledStateMpr121) {
         lastLedStateMpr121 = ledStateMpr121;
         twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, ledStateMpr121);

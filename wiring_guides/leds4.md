@@ -19,3 +19,6 @@ If you are using an MPR121 for the slider bar, and wish to hook up LEDs to it an
 ## Programming
 
 1. Click on the output you wish to configure LEDs for, and then click on the channel next to `Selected LEDs on MPR121`
+
+## LED inactivity
+You can turn on the `Turn on LEDs after inactivity` setting to have the leds turn completly off after a timer. This is useful if you have leds on `always on` mode, but wish to have your guitar power its LEDs off after it is unused for a given amount of time.

@@ -108,6 +108,9 @@ PS3_REPORT bt_report;
 #else
 USB_Report_Data_t bt_report;
 #endif
+// Note for future explorers: it seems like the debounce array is always used for digital inputs,
+// regardless of whether debouncing is actually enabled. Idle timeout/shutdown stuff
+// relies on this, although it's unconfirmed without access to configurator source code.
 uint8_t debounce[DIGITAL_COUNT];
 uint8_t ledDebounce[LED_DEBOUNCE_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
@@ -120,6 +123,11 @@ long lastLed = 0;
 long lastSentGHLPoke = 0;
 long input_start = 0;
 long lastDebounce = 0;
+long lastInputActivity = 0;  // used for inactivity timeout(s)
+long lastHeartbeat = 0;
+long lastInactivityPulse = 0;
+bool startedInactivityPulse = false;  // used to ignore inputs while outputting pulse
+                                      // (for hardware wired with input and output via same pin)
 uint16_t lastMpr121 = 0;
 bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
@@ -2123,8 +2131,15 @@ void tick_ps2output() {
 #include "inputs/wt_neck.h"
 
     TICK_SHARED;
+    if (!startedInactivityPulse) {
+        // check if any inputs are active, and if so set lastInputActivity to now
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                lastInputActivity = millis();
+            }
+        }
+    }
     memset(report, 0, sizeof(report));
-    
 #if DEVICE_TYPE_IS_GUITAR
     report->dpadLeft = true;
     report->whammy = 0x7f;
@@ -2146,6 +2161,14 @@ void tick_wiioutput() {
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
     TICK_SHARED;
+    if (!startedInactivityPulse) {
+        // check if any inputs are active, and if so set lastInputActivity to now
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                lastInputActivity = millis();
+            }
+        }
+    }
 #if DEVICE_TYPE_IS_GUITAR
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
@@ -2267,6 +2290,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wt_neck.h"
 
     TICK_SHARED;
+    if (!startedInactivityPulse) {
+        // check if any inputs are active, and if so set lastInputActivity to now
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                lastInputActivity = millis();
+            }
+        }
+    }
+
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
         TICK_DETECTION;
@@ -2871,6 +2903,7 @@ bool tick_usb(void) {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);
     }
     if (size) {
+        lastSentPacket = millis();  // make 5ms idle ticking wait until 5ms after last report
         send_report_to_pc(&combined_report, size);
     }
     seen_ps4_console = true;
@@ -2901,6 +2934,11 @@ void tick(void) {
     // If we are controlling peripheral leds, then we need to send the latest state when
     // the device is plugged in again
     if (slave_initted) {
+#if RGB_INACTIVITY_TIMEOUT_MS
+        if (millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
+            memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
+        }
+#endif  // RGB_INACTIVITY_TIMEOUT_MS
         if (memcmp(lastLedStatePeripheral, ledStatePeripheral, sizeof(ledStatePeripheral)) != 0) {
             memcpy(lastLedStatePeripheral, ledStatePeripheral, sizeof(ledStatePeripheral));
             TICK_LED_PERIPHERAL;
@@ -2910,6 +2948,11 @@ void tick(void) {
     }
 #endif
 #ifdef TICK_LED
+#if RGB_INACTIVITY_TIMEOUT_MS
+    if (millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS) {
+        memset(ledState, 0, sizeof(ledState));
+    }
+#endif  // RGB_INACTIVITY_TIMEOUT_MS
     if (memcmp(lastLedState, ledState, sizeof(ledState)) != 0) {
         memcpy(lastLedState, ledState, sizeof(ledState));
         TICK_LED;
@@ -2974,11 +3017,75 @@ void tick(void) {
     }
 
     last_poll = micros();
-    // Tick the controller every 5ms if this device is usb only, is connected to a usb port, and usb is not ready
-    if (!INPUT_QUEUE && !ready && usb_configured() && millis() - lastSentPacket > 5) {
+    // Tick the controller every 5ms if this device is connected to a usb port and usb is not ready
+    if (!INPUT_QUEUE && !ready && usb_configured() && millis() - lastSentPacket >= 5) {
         lastSentPacket = millis();
         tick_inputs(NULL, NULL, consoleType);
     }
+
+#if HEARTBEAT_PERIOD_MS
+    if ((lastHeartbeat == 0) || (millis() - lastHeartbeat >= HEARTBEAT_PERIOD_MS)) {
+        // heartbeat resets regularly regardless of activity
+        lastHeartbeat = millis();
+        // trigger output only if inputs have been active though
+        if (millis() - lastInputActivity < HEARTBEAT_INACTIVITY_TIMEOUT_MS) {
+            uint8_t activeMask = HEARTBEAT_INVERT ? 0 : HEARTBEAT_GPIO_MASK;
+            digital_write(HEARTBEAT_GPIO_PORT, HEARTBEAT_GPIO_MASK, activeMask);
+        }
+    }
+    // unset heartbeat output if pulse is over
+    if (millis() - lastHeartbeat >= HEARTBEAT_PULSE_DURATION_MS) {
+        uint8_t activeMask = HEARTBEAT_INVERT ? HEARTBEAT_GPIO_MASK : 0;
+        digital_write(HEARTBEAT_GPIO_PORT, HEARTBEAT_GPIO_MASK, activeMask);
+    }
+#endif  // HEARTBEAT_PERIOD_MS
+
+#if INACTIVITY_OUTPUT_TIMEOUT_MS
+#if INACTIVITY_OUTPUT_NON_USB_ONLY
+    if (!usb_configured()) {
+#endif  // INACTIVITY_OUTPUT_NON_USB_ONLY
+        // unlike heartbeat, no regular resetting cycle - just a timeout for the
+        // inactivity output
+        if (millis() - lastInputActivity >= INACTIVITY_OUTPUT_TIMEOUT_MS) {
+#if INACTIVITY_OUTPUT_PULSE_COUNT
+            // gate to check if already done outputting pulses
+            // (technically not super ideal because lastInactivityPulse may slightly desynchronise,
+            // but should be fine for intended purpose of a few fairly long pulses)
+            if (millis() - lastInputActivity - INACTIVITY_OUTPUT_TIMEOUT_MS < INACTIVITY_OUTPUT_PULSE_TOTAL_MS) {
+                startedInactivityPulse = true;
+                if (millis() - lastInactivityPulse >= INACTIVITY_OUTPUT_PULSE_PERIOD_MS) {
+                    lastInactivityPulse = millis();
+                    // input activity has already been checked, so no need to recheck
+                    // - just set the output
+                    uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
+                    digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+                }
+                // unset output once current pulse's duration is over
+                if (millis() - lastInactivityPulse >= INACTIVITY_OUTPUT_PULSE_DURATION_MS) {
+                    uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
+                    digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+                }
+            } else {
+                startedInactivityPulse = false;
+                // unset output once all pulses are done
+                uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
+                digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+            }
+#else  // INACTIVITY_OUTPUT_PULSE_COUNT
+            // set output continuously on if no pulses
+            uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
+            digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+#endif  // INACTIVITY_OUTPUT_PULSE_COUNT
+        } else {
+            startedInactivityPulse = false;
+            // unset output when inputs have been active
+            uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
+            digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+        }
+#if INACTIVITY_OUTPUT_NON_USB_ONLY
+    }
+#endif  // INACTIVITY_OUTPUT_NON_USB_ONLY
+#endif  // INACTIVITY_OUTPUT_TIMEOUT_MS
 }
 
 void device_reset(void) {

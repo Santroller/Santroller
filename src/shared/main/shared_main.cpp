@@ -126,6 +126,8 @@ long lastDebounce = 0;
 long lastInputActivity = 0;  // used for inactivity timeout(s)
 long lastHeartbeat = 0;
 long lastInactivityPulse = 0;
+bool startedInactivityPulse = false;  // used to ignore inputs while outputting pulse
+                                      // (for hardware wired with input and output via same pin)
 uint16_t lastMpr121 = 0;
 bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
@@ -2129,10 +2131,12 @@ void tick_ps2output() {
 #include "inputs/wt_neck.h"
 
     TICK_SHARED;
-    // check if any inputs are active, and if so set lastInputActivity to now
-    for (int i = 0; i < DIGITAL_COUNT; i++) {
-        if (debounce[i]) {
-            lastInputActivity = millis();
+    if (!startedInactivityPulse) {
+        // check if any inputs are active, and if so set lastInputActivity to now
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                lastInputActivity = millis();
+            }
         }
     }
     memset(report, 0, sizeof(report));
@@ -2157,10 +2161,12 @@ void tick_wiioutput() {
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
     TICK_SHARED;
-    // check if any inputs are active, and if so set lastInputActivity to now
-    for (int i = 0; i < DIGITAL_COUNT; i++) {
-        if (debounce[i]) {
-            lastInputActivity = millis();
+    if (!startedInactivityPulse) {
+        // check if any inputs are active, and if so set lastInputActivity to now
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                lastInputActivity = millis();
+            }
         }
     }
 #if DEVICE_TYPE_IS_GUITAR
@@ -2284,10 +2290,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wt_neck.h"
 
     TICK_SHARED;
-    // check if any inputs are active, and if so set lastInputActivity to now
-    for (int i = 0; i < DIGITAL_COUNT; i++) {
-        if (debounce[i]) {
-            lastInputActivity = millis();
+    if (!startedInactivityPulse) {
+        // check if any inputs are active, and if so set lastInputActivity to now
+        for (int i = 0; i < DIGITAL_COUNT; i++) {
+            if (debounce[i]) {
+                lastInputActivity = millis();
+            }
         }
     }
 
@@ -3033,41 +3041,50 @@ void tick(void) {
 #endif  // HEARTBEAT_PERIOD_MS
 
 #if INACTIVITY_OUTPUT_TIMEOUT_MS
-    // unlike heartbeat, no regular resetting cycle - just a timeout for the
-    // inactivity output
-    if (millis() - lastInputActivity >= INACTIVITY_OUTPUT_TIMEOUT_MS) {
+#if INACTIVITY_OUTPUT_NON_USB_ONLY
+    if (!usb_configured()) {
+#endif  // INACTIVITY_OUTPUT_NON_USB_ONLY
+        // unlike heartbeat, no regular resetting cycle - just a timeout for the
+        // inactivity output
+        if (millis() - lastInputActivity >= INACTIVITY_OUTPUT_TIMEOUT_MS) {
 #if INACTIVITY_OUTPUT_PULSE_COUNT
-        // gate to check if already done outputting pulses
-        // (technically not super ideal because lastInactivityPulse may slightly desynchronise,
-        // but should be fine for intended purpose of a few fairly long pulses)
-        if (millis() - lastInputActivity - INACTIVITY_OUTPUT_TIMEOUT_MS < INACTIVITY_OUTPUT_PULSE_TOTAL_MS) {
-            if (millis() - lastInactivityPulse >= INACTIVITY_OUTPUT_PULSE_PERIOD_MS) {
-                lastInactivityPulse = millis();
-                // input activity has already been checked, so no need to recheck
-                // - just set the output
-                uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
-                digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
-            }
-            // unset output once current pulse's duration is over
-            if (millis() - lastInactivityPulse >= INACTIVITY_OUTPUT_PULSE_DURATION_MS) {
+            // gate to check if already done outputting pulses
+            // (technically not super ideal because lastInactivityPulse may slightly desynchronise,
+            // but should be fine for intended purpose of a few fairly long pulses)
+            if (millis() - lastInputActivity - INACTIVITY_OUTPUT_TIMEOUT_MS < INACTIVITY_OUTPUT_PULSE_TOTAL_MS) {
+                startedInactivityPulse = true;
+                if (millis() - lastInactivityPulse >= INACTIVITY_OUTPUT_PULSE_PERIOD_MS) {
+                    lastInactivityPulse = millis();
+                    // input activity has already been checked, so no need to recheck
+                    // - just set the output
+                    uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
+                    digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+                }
+                // unset output once current pulse's duration is over
+                if (millis() - lastInactivityPulse >= INACTIVITY_OUTPUT_PULSE_DURATION_MS) {
+                    uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
+                    digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+                }
+            } else {
+                startedInactivityPulse = false;
+                // unset output once all pulses are done
                 uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
                 digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
             }
+#else  // INACTIVITY_OUTPUT_PULSE_COUNT
+            // set output continuously on if no pulses
+            uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
+            digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+#endif  // INACTIVITY_OUTPUT_PULSE_COUNT
         } else {
-            // unset output once all pulses are done
+            startedInactivityPulse = false;
+            // unset output when inputs have been active
             uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
             digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
         }
-#else  // INACTIVITY_OUTPUT_PULSE_COUNT
-        // set output continuously on if no pulses
-        uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
-        digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
-#endif  // INACTIVITY_OUTPUT_PULSE_COUNT
-    } else {
-        // unset output when inputs have been active
-        uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
-        digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+#if INACTIVITY_OUTPUT_NON_USB_ONLY
     }
+#endif  // INACTIVITY_OUTPUT_NON_USB_ONLY
 #endif  // INACTIVITY_OUTPUT_TIMEOUT_MS
 }
 

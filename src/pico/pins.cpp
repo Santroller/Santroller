@@ -47,7 +47,7 @@ void digital_write(uint8_t port, uint8_t mask, uint8_t activeMask) {
 // the call to the cyw43
 #if BLUETOOTH
     if (mask32 & 1 << 25) {
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, activeMask32 & 1 << 25);
+        cyw43_arch_gpio_put(0, activeMask32 & 1 << 25);
     }
 #endif
     gpio_put_masked(mask32, activeMask32);

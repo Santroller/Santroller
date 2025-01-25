@@ -94,6 +94,7 @@
 #define IOS_FESTIVAL 26
 #define PS2 27
 #define WII 28
+#define PS2_ON_PS3 29
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

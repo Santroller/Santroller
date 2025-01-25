@@ -165,6 +165,7 @@ void setup() {
 #endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
+        #ifdef SLEEP_PIN
         // Sleep works best when nothing else is started, so we reboot the pico before and after sleep
         if (pico_is_sleeping) {
             for (int i = 0; i < __GPIOCNT; i++) {
@@ -177,6 +178,7 @@ void setup() {
             pico_is_sleeping = false;
             reset_usb();
         }
+        #endif
     } else {
         windows_in_hid = false;
         xboxAuthValid = false;

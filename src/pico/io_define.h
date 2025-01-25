@@ -1,12 +1,10 @@
+#include "config.h"
 #include <stdint.h>
 #include <hardware/spi.h>
 #include <hardware/i2c.h>
 #include <hardware/adc.h>
 #if BLUETOOTH
-extern "C" {
-#include <cyw43.h>
-#include <cyw43_stats.h>
-}
+#include <pico/cyw43_arch.h>
 #endif
 #define NUM_TOTAL_PINS 29
 #define DIGITAL_BITMASK_TYPE uint16_t

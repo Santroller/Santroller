@@ -310,6 +310,54 @@ typedef struct {
 
 } __attribute__((packed)) PS3SimpleGamepad_Data_t;
 
+typedef struct {
+    // Button bits
+    uint8_t y : 1;  // triangle, yellow
+    uint8_t x : 1;  // cross, blue
+    uint8_t b : 1;  // circle, red
+    uint8_t leftShoulder : 1;  // square, orange
+
+    uint8_t : 1;   // orange, l1
+    uint8_t : 1;  // spPedal, r1
+    uint8_t tilt: 1; // tilt, l2
+    uint8_t a: 1; // green, r2
+
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+    uint8_t : 2;
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t : 4;
+
+    uint8_t whammy;
+    uint8_t slider;
+    uint8_t unused1[2];
+
+    uint8_t pressure_dpadRight_yellow;  // yellow
+    uint8_t pressure_dpadLeft;
+    uint8_t pressure_dpadUp_green;     // green
+    uint8_t pressure_dpadDown_orange;  // orange
+    uint8_t pressure_blue;
+    uint8_t pressure_red;
+    uint8_t unused2[6];
+
+    // Reminder that these values are 10-bit in range
+    uint16_t accelX; 
+    uint16_t accelZ;
+    uint16_t accelY;
+    uint16_t unused3;
+
+} __attribute__((packed)) PS2GuitarOnPS3_Data_t;
+
 typedef struct
 {
     uint8_t x : 1;  // square, blue

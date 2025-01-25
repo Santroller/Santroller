@@ -31,6 +31,7 @@ uint8_t spi_transfer(SPI_BLOCK block, uint8_t data);
 void spi_high(SPI_BLOCK block);
 void init_ack();
 void init_att();
+void go_to_sleep();
 void read_serial(uint8_t* id, uint8_t len);
 extern volatile bool spi_acknowledged;
 #ifdef INPUT_WT_NECK

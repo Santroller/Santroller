@@ -4,6 +4,7 @@
 #include <pico/unique_id.h>
 #include <string.h>
 #include <tusb.h>
+#include <sleep.h>
 
 #include "commands.h"
 #include "common/tusb_types.h"
@@ -47,6 +48,7 @@ static uint32_t __uninitialized_ram(persistedConsoleType);
 static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 static uint32_t __uninitialized_ram(xboxAuthValid);
+static uint32_t __uninitialized_ram(pico_is_sleeping);
 bool connected = false;
 #if USB_HOST_STACK
 USB_Device_Type_t xone_dev_addr = {};
@@ -152,12 +154,29 @@ void loop() {
     tick_usb();
 }
 
+void go_to_sleep() {
+    pico_is_sleeping = true;
+    reset_usb();
+}
+
 void setup() {
 #if USB_HOST_STACK
     set_sys_clock_khz(120000, true);
 #endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
+        // Sleep works best when nothing else is started, so we reboot the pico before and after sleep
+        if (pico_is_sleeping) {
+            for (int i = 0; i < __GPIOCNT; i++) {
+                pinMode(i, INPUT);
+            }
+            pinMode(SLEEP_PIN, SLEEP_ACTIVE_HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
+            sleep_run_from_xosc();
+            sleep_goto_dormant_until_pin(SLEEP_PIN, true, SLEEP_ACTIVE_HIGH); 
+            sleep_power_up();
+            pico_is_sleeping = false;
+            reset_usb();
+        }
     } else {
         windows_in_hid = false;
         xboxAuthValid = false;

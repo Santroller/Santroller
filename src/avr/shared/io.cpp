@@ -575,3 +575,6 @@ void read_serial(uint8_t *id, uint8_t len) {
 
     SREG = oldSREG;
 }
+void go_to_sleep() {
+    // TODO: sleep is current pico only.
+}

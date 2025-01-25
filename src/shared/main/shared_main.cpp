@@ -21,6 +21,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
+#include "sleep.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -2930,6 +2931,13 @@ void tick(void) {
 #ifdef TICK_LED_BLUETOOTH
     TICK_LED_BLUETOOTH;
 #endif
+#ifdef SLEEP_INACTIVITY_TIMEOUT_MS
+    // Only sleep if the timeout has passed and we aren't connected over USB
+    if (millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
+        go_to_sleep();
+    }
+
+#endif
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when
     // the device is plugged in again
@@ -3071,10 +3079,10 @@ void tick(void) {
                 uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? INACTIVITY_OUTPUT_GPIO_MASK : 0;
                 digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
             }
-#else  // INACTIVITY_OUTPUT_PULSE_COUNT
-            // set output continuously on if no pulses
-            uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
-            digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
+#else   // INACTIVITY_OUTPUT_PULSE_COUNT
+        // set output continuously on if no pulses
+        uint8_t activeMask = INACTIVITY_OUTPUT_INVERT ? 0 : INACTIVITY_OUTPUT_GPIO_MASK;
+        digital_write(INACTIVITY_OUTPUT_GPIO_PORT, INACTIVITY_OUTPUT_GPIO_MASK, activeMask);
 #endif  // INACTIVITY_OUTPUT_PULSE_COUNT
         } else {
             startedInactivityPulse = false;

@@ -62,6 +62,7 @@
 #define DISNEY_INFINITY 21
 #define SKYLANDERS 22
 #define LEGO_DIMENSIONS 23
+#define TAIKO 24
 
 #define UNIVERSAL 0
 #define XBOX360 1

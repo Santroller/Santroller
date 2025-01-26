@@ -195,19 +195,31 @@ const uint8_t PROGMEM pc_descriptor[] = {
 };
 #else
 const uint8_t PROGMEM pc_descriptor[] = {
-    0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
-    0x09, 0x05,        // Usage (Game Pad)
-    0xA1, 0x01,        // Collection (Application)
-    0x85, 0x01,        //   Report ID (1)
-    0x15, 0x00,        //   Logical Minimum (0)
-    0x25, 0x01,        //   Logical Maximum (1)
-    0x35, 0x00,        //   Physical Minimum (0)
-    0x45, 0x01,        //   Physical Maximum (1)
-    0x75, 0x01,        //   Report Size (1)
-    0x95, 0x0E,        //   Report Count (14)
-    0x05, 0x09,        //   Usage Page (Button)
-    0x19, 0x01,        //   Usage Minimum (0x01)
-    0x29, 0x0E,        //   Usage Maximum (0x0E)
+    0x05, 0x01,  // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x05,  // Usage (Game Pad)
+    0xA1, 0x01,  // Collection (Application)
+    0x85, 0x01,  //   Report ID (1)
+    0x15, 0x00,  //   Logical Minimum (0)
+    0x25, 0x01,  //   Logical Maximum (1)
+    0x35, 0x00,  //   Physical Minimum (0)
+    0x45, 0x01,  //   Physical Maximum (1)
+    0x75, 0x01,  //   Report Size (1)
+    0x95, 0x0E,  //   Report Count (14)
+    0x05, 0x09,  //   Usage Page (Button)
+    BTN_USAGE(BTN_X),
+    BTN_USAGE(BTN_A),
+    BTN_USAGE(BTN_B),
+    BTN_USAGE(BTN_Y),
+    BTN_USAGE(BTN_TL),
+    BTN_USAGE(BTN_TR),
+    BTN_USAGE(BTN_TL2),
+    BTN_USAGE(BTN_TR2),
+    BTN_USAGE(BTN_SELECT),
+    BTN_USAGE(BTN_START),
+    BTN_USAGE(BTN_THUMBL),
+    BTN_USAGE(BTN_THUMBR),
+    BTN_USAGE(BTN_GUIDE),
+    BTN_USAGE(BTN_C),
     0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0x95, 0x02,        //   Report Count (2)
     0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)

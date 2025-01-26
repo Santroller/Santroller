@@ -1065,6 +1065,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     }
                     break;
                 }
+                
                 case ROCK_BAND_PRO_KEYS: {
                     PS3RockBandProKeyboard_Data_t *report = (PS3RockBandProKeyboard_Data_t *)data;
                     usb_host_data->dpadLeft |= left;
@@ -1578,8 +1579,39 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     }
                     break;
                 }
+                case TAIKO: {
+                    SwitchTaiko_Data_t *report = (SwitchTaiko_Data_t *)data;
+                    usb_host_data->green |= report->a;
+                    usb_host_data->red |= report->b;
+                    usb_host_data->yellow |= report->y;
+                    usb_host_data->blue |= report->x;
+                    usb_host_data->orange |= report->leftShoulder;
+                    usb_host_data->a |= report->a;
+                    usb_host_data->b |= report->b;
+                    usb_host_data->x |= report->x;
+                    usb_host_data->y |= report->y;
+                    usb_host_data->leftShoulder |= report->leftShoulder;
+                    usb_host_data->rightShoulder |= report->rightShoulder;
+                    usb_host_data->back |= report->back;
+                    usb_host_data->start |= report->start;
+                    usb_host_data->guide |= report->guide;
+                    usb_host_data->leftThumbClick |= report->leftThumbClick;
+                    usb_host_data->rightThumbClick |= report->rightThumbClick;
+                    usb_host_data->dpadLeft = report->dpad == 6 || report->dpad == 5 || report->dpad == 7;
+                    usb_host_data->dpadRight = report->dpad == 3 || report->dpad == 2 || report->dpad == 1;
+                    usb_host_data->dpadUp = report->dpad == 0 || report->dpad == 1 || report->dpad == 7;
+                    usb_host_data->dpadDown = report->dpad == 5 || report->dpad == 4 || report->dpad == 3;
+                    if (report->l2) {
+                        usb_host_data->leftTrigger = UINT16_MAX;
+                    }
+                    if (report->r2) {
+                        usb_host_data->rightTrigger = UINT16_MAX;
+                    }
+                    break;
+                }
             }
             break;
+            
         }
         case OG_XBOX: {
             OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)data;
@@ -3384,6 +3416,13 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
                     break;
             }
             break;
+        case HORI_VID:
+            switch (pid) {
+                case HORI_TAIKO_PID:
+                    type->console_type = SWITCH;
+                    type->sub_type = TAIKO;
+                    break;
+            }
 
         case HARMONIX_VID:
             // Polled the same as PS3, so treat them as PS3 instruments

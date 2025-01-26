@@ -546,12 +546,12 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             if (usb_host_devices[i].type.console_type == STEPMANIAX && report[0] != STEPMANIA_X_REPORT_ID) {
                 continue;
             }
-            if (usb_host_devices[i].type.console_type == SWITCH) {
-                if (usb_host_devices[i].type.console_type == SWITCH && !usb_host_devices[i].switch_sent_handshake) {
+            if (usb_host_devices[i].type.console_type == SWITCH && usb_host_devices[i].type.sub_type == GAMEPAD) {
+                if (!usb_host_devices[i].switch_sent_handshake) {
                     usb_host_devices[i].switch_sent_handshake = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);
-                } else if (usb_host_devices[i].type.console_type == SWITCH && !usb_host_devices[i].switch_sent_timeout) {
+                } else if (!usb_host_devices[i].switch_sent_timeout) {
                     usb_host_devices[i].switch_sent_timeout = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x04 /* PROCON_USB_ENABLE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);

@@ -175,7 +175,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
     BTN_USAGE(BTN_THUMBR), \
     BTN_USAGE(BTN_GUIDE), \
     BTN_USAGE(BTN_C)
-#elif DEVICE_TYPE == GAMEPAD
+#elif DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == TAIKO
 #define SUB_TYPE XINPUT_GAMEPAD
 #define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputGamepad_Data_t

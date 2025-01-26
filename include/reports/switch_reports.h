@@ -125,3 +125,28 @@ typedef struct
     uint8_t unused[2];
     uint8_t slider;
 } __attribute__((packed)) SwitchFestivalProGuitarLayer_Data_t;
+
+
+typedef struct {
+    uint8_t y : 1;
+    uint8_t b : 1;
+    uint8_t a : 1;
+    uint8_t x : 1;
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t l2 : 1; // l2 rimLeft
+    uint8_t r2 : 1; // r2 rimRight
+
+    uint8_t back : 1;
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1; //l3 centerLeft
+    uint8_t rightThumbClick : 1; //r3 centerRight
+    uint8_t guide : 1;
+    uint8_t capture : 1;
+    uint8_t : 2;
+
+    uint8_t dpad;
+    uint8_t sticks[4]; // always 0x80
+    uint8_t : 8;
+
+} __attribute__((packed)) SwitchTaiko_Data_t;

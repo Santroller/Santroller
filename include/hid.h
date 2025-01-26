@@ -89,7 +89,7 @@ extern const uint8_t pc_descriptor[90 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
 extern const uint8_t pc_descriptor[86 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
 #endif
 #else
-extern const uint8_t pc_descriptor[134];
+extern const uint8_t pc_descriptor[158];
 #endif
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);

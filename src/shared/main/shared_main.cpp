@@ -16,7 +16,6 @@
 #include "pico_slave.h"
 #include "pin_funcs.h"
 #include "ps2.h"
-#include "sleep.h"
 #include "state_translation/pro_guitar.h"
 #include "state_translation/pro_keys.h"
 #include "usbhid.h"

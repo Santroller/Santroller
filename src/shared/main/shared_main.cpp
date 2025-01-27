@@ -2980,7 +2980,7 @@ void tick(void) {
     TICK_LED_BLUETOOTH;
 #endif
     // Only sleep if the timeout has passed and we aren't connected over USB
-    if (SLEEP_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
+    if (SLEEP_PIN != -1 && SLEEP_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
         go_to_sleep();
     }
 
@@ -3418,7 +3418,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             break;
         case HORI_VID:
             switch (pid) {
-                case HORI_TAIKO_PID:
+                case HORI_SWITCH_TAIKO_PID:
                     type->console_type = SWITCH;
                     type->sub_type = TAIKO;
                     break;

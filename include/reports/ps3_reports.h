@@ -310,6 +310,25 @@ typedef struct {
 
 } __attribute__((packed)) PS3SimpleGamepad_Data_t;
 
+// DS1                                     Guitar
+// L2                                      tilt (its digital)
+// R2                                      green
+// Circle                                  red
+// Triangle                                yellow
+// Cross                                   blue
+// Square                                  orange
+// dpad up                                 strum up
+// dpad down                               strum down
+// dpad left                               always on
+// start                                   start
+// select                                  select
+// left stick y axis                       whammy
+// dpad right = (((RightStickX >> 6) == 3) && RightStickX != 255)
+// dpad down = (((RightStickX >> 6) == 2) && RightStickX != 128)
+// dpad left = (((RightStickX >> 6) == 1) && RightStickX != 127)
+// dpad up = ((RightStickX >> 6) == 0)   
+
+
 typedef struct {
     // Button bits
     uint8_t y : 1;  // triangle, yellow

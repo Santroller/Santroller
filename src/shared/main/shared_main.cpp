@@ -2703,10 +2703,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)report_data;
         memset(report, 0, sizeof(PS3Gamepad_Data_t));
         report->reportId = 1;
-        report->accelX = PS3_ACCEL_CENTER;
-        report->accelY = PS3_ACCEL_CENTER;
-        report->accelZ = PS3_ACCEL_CENTER;
-        report->gyro = PS3_ACCEL_CENTER;
+        report->accelX = __bswap16(PS3_ACCEL_CENTER);
+        report->accelY = __bswap16(PS3_ACCEL_CENTER);
+        report->accelZ = __bswap16(PS3_ACCEL_CENTER);
+        report->gyro = __bswap16(PS3_ACCEL_CENTER);
         report->leftStickX = PS3_STICK_CENTER;
         report->leftStickY = PS3_STICK_CENTER;
         report->rightStickX = PS3_STICK_CENTER;

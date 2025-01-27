@@ -136,15 +136,19 @@ typedef struct {
     uint8_t pressureCircle;
     uint8_t pressureCross;
     uint8_t pressureSquare;
-    uint8_t padding_4[15];
-    // Each of the following are 10 bits in accuracy
-    // Centered/neutral state is nominally 0x0200, actual values may vary
-    uint16_t accelX;  // Left/right acceleration (roll)
-    uint16_t accelZ;  // Forward/back acceleration (pitch)
-    uint16_t accelY;  // Up/down acceleration (gravity)
-    uint16_t gyro;    // Left/right instantaneous rotation (yaw)
-} __attribute__((packed)) PS3Gamepad_Data_t;
+    uint8_t unk3[3];
 
+    uint8_t charge;  // charging status ? 02 = charge, 03 = normal
+    uint8_t battery_status;
+    uint8_t connection;  // connection type
+
+    uint8_t unk4[9];
+
+    uint16_t accelX;
+    uint16_t accelY;
+    uint16_t accelZ;
+    uint16_t gyro;
+} __attribute__((packed)) PS3Gamepad_Data_t;
 typedef struct {
     uint8_t reportId;
     uint8_t : 8;

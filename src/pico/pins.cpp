@@ -20,11 +20,13 @@ uint ws2812Offset;
 void putWs2812(uint32_t pixel) {
      pio_sm_put_blocking(ws2812Pio, ws2812Sm, pixel);
 }
+
+// TODO: is this extra << 8 needed
 static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
     return
-            ((uint32_t) (r) << 8) |
+            (((uint32_t) (r) << 8) |
             ((uint32_t) (g) << 16) |
-            (uint32_t) (b);
+            (uint32_t) (b)) << 8;
 }
 
 static inline uint32_t urgbw_u32(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {

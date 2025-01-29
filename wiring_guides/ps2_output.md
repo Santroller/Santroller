@@ -8,7 +8,6 @@ sort: 14
 If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
 ```
 
-
 ## Supplies
 
 - A controller built using one of the other guides
@@ -40,8 +39,7 @@ NEVER plug in both the usb cable to your computer, and the PS2, it can only ever
    | Pro Micro, Leonardo, Micro (Recommended) | 15                 | 16                      | 14                  | 7                   | 10                 |
    | Uno (Recommended)                        | 13                 | 11                      | 12                  | 2                   | 10                 |
    | Mega (Recommended)                       | 52                 | 51                      | 50                  | 2                   | 10                 |
-   | Pi Pico (Advanced, Channel 0)            | GP2, GP6, GP18     | GP0, GP4, GP16, GP20    | GP3, GP7, GP19      | Any                 | Any                |
-   | Pi Pico (Advanced, Channel 1)            | GP10, GP14, GP26   | GP8, GP12, GP28         | GP11, GP15, GP27    | Any                 | Any                |
+   | Pi Pico (Advanced)                       | Any                | Any                     | Any                 | Any                 | Any                |
    | Pro Micro, Leonardo, Micro (Advanced)    | 15                 | 16                      | 14                  | Any                 | Any                |
    | Uno (Advanced)                           | 13                 | 11                      | 12                  | Any                 | Any                |
    | Mega (Advanced)                          | 52                 | 51                      | 50                  | Any                 | Any                |

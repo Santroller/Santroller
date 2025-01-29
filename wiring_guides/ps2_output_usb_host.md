@@ -37,8 +37,7 @@ sort: 14
    | Microcontroller                          | SCK / Clock / Blue | MOSI / Command / Orange | MISO / Data / Brown | Acknowledge / Green | Attention / Yellow |
    | ---------------------------------------- | ------------------ | ----------------------- | ------------------- | ------------------- | ------------------ |
    | Pi Pico (Recommended)                    | GP6                | GP4                     | GP3                 | GP7                 | GP10               |
-   | Pi Pico (Advanced, Channel 0)            | GP2, GP6, GP18     | GP0, GP4, GP16, GP20    | GP3, GP7, GP19      | Any                 | Any                |
-   | Pi Pico (Advanced, Channel 1)            | GP10, GP14, GP26   | GP8, GP12, GP28         | GP11, GP15, GP27    | Any                 | Any                |
+   | Pi Pico (Advanced)                       | Any                | Any                     | Any                 | Any                 | Any                |
 
 2. Connect the gnd pin to the gnd on your microcontroller.
 

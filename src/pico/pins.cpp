@@ -19,9 +19,9 @@ uint ws2812Sm;
 uint ws2812Offset;
 void putWs2812(uint8_t r, uint8_t g, uint8_t b) {
      pio_sm_put_blocking(ws2812Pio, ws2812Sm, 
-            ((uint32_t) (r) << 8) |
+            (((uint32_t) (r) << 8) |
             ((uint32_t) (g) << 16) |
-            (uint32_t) (b));
+            (uint32_t) (b)) << 8);
 }
 void putWs2812(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
      pio_sm_put_blocking(ws2812Pio, ws2812Sm, 
@@ -32,12 +32,12 @@ void putWs2812(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
 }
 
 void initPins(void) {
+    adc_init();
+    PIN_INIT;
 #ifdef WS2812_PIN
     pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, WS2812_PIN, 1, true);
     ws2812_program_init(ws2812Pio, ws2812Sm, ws2812Offset, WS2812_PIN, 800000, LED_COUNT_WS2812W);
 #endif
-    adc_init();
-    PIN_INIT;
 }
 
 uint8_t digital_read(uint8_t port, uint8_t mask) {

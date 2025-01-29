@@ -1065,7 +1065,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     }
                     break;
                 }
-                
+
                 case ROCK_BAND_PRO_KEYS: {
                     PS3RockBandProKeyboard_Data_t *report = (PS3RockBandProKeyboard_Data_t *)data;
                     usb_host_data->dpadLeft |= left;
@@ -1611,7 +1611,6 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 }
             }
             break;
-            
         }
         case OG_XBOX: {
             OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)data;
@@ -2532,6 +2531,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
         TICK_XINPUT;
 
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+            if (seen_rpcs3) {
+                report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
+            }
+#endif
 #if PRO_GUITAR && USB_HOST_STACK
         TRANSLATE_TO_PRO_GUITAR(usb_host_data)
 #endif
@@ -2649,6 +2653,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
             report->reportId = 1;
             TICK_PC;
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+            if (seen_rpcs3) {
+                report->whammy = PS3_STICK_CENTER + (report->whammy >> 1);
+            }
+#endif
 
 #if PRO_GUITAR && USB_HOST_STACK
             TRANSLATE_TO_PRO_GUITAR(usb_host_data)

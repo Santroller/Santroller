@@ -45,4 +45,6 @@ extern bool read_device_desc;
 extern bool lastEuphoriaLed;
 extern bool proButtonsEnabled;
 
+extern bool seen_rpcs3;
+
 extern uint8_t portal_state;

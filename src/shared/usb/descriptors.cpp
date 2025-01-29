@@ -961,9 +961,12 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             reset_usb();
         }
         // RPCS3 sends this. Jump any devices with RPCS3 compat enabled
-        if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT && RPCS3_COMPAT) {
-            consoleType = PS3;
-            reset_usb();
+        if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT) {
+            if (RPCS3_COMPAT) {
+                consoleType = PS3;
+                reset_usb();
+            }
+            seen_rpcs3 = true;
         }
         if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x03f8 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             memcpy_P(requestBuffer, ps3_feature_f8, sizeof(ps3_feature_f8));

@@ -7,14 +7,24 @@
 #include "io_define.h"
 #include "pin_funcs.h"
 #include "util.h"
+#include "ws2812.pio.h"
 uint16_t adcReading[NUM_ANALOG_INPUTS];
 bool first = true;
 uint16_t adc(uint8_t pin) {
     adc_select_input(pin);
     return adc_read() << 4;
 }
-
+PIO ws2812Pio;
+uint ws2812Sm;
+uint ws2812Offset;
+void putWs2812(uint32_t pixel) {
+     pio_sm_put_blocking(ws2812Pio, ws2812Sm, pixel);
+}
 void initPins(void) {
+#ifdef WS2812_PIN
+    pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, WS2812_PIN, 1, true);
+    ws2812_program_init(ws2812Pio, ws2812Sm, ws2812Offset, WS2812_PIN, 800000, LED_COUNT_WS2812W);
+#endif
     adc_init();
     PIN_INIT;
 }

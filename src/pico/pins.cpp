@@ -20,6 +20,20 @@ uint ws2812Offset;
 void putWs2812(uint32_t pixel) {
      pio_sm_put_blocking(ws2812Pio, ws2812Sm, pixel);
 }
+static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
+    return
+            ((uint32_t) (r) << 8) |
+            ((uint32_t) (g) << 16) |
+            (uint32_t) (b);
+}
+
+static inline uint32_t urgbw_u32(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
+    return
+            ((uint32_t) (r) << 8) |
+            ((uint32_t) (g) << 16) |
+            ((uint32_t) (w) << 24) |
+            (uint32_t) (b);
+}
 void initPins(void) {
 #ifdef WS2812_PIN
     pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, WS2812_PIN, 1, true);

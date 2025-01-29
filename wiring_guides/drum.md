@@ -4,8 +4,6 @@ sort: 3
 
 # Setting up a Drum Kit
 
-If you are new to this, read the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html) for an overview on everything you need to know for modifying a controller.
-
 ## Supplies
 
 - A microcontroller

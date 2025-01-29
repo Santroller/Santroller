@@ -20,15 +20,7 @@ This is only supported on the Pi Pico, as it has hardware onboard that can drive
 ## Steps
 
 1. Connect the V<sub>CC</sub> and GND pins on all LEDs that are being used to the microcontroller. It is recommended to use the 5V pin for this, as this is what the LEDs expect to be connected to. For the Pi Pico, this is the VBUS pin.
-2. Connect the data on the first LED to the MOSI pins on your microcontroller. Then chain the data outputs to the data on the next LED, until all LEDs are connected.
-   For beginners we provide a recommended pinout below for each microcontroller.
-   If you are using a Pi Pico and these pins don't work for you, you can use one of the advanced pinouts below.
-
-   | Microcontroller               | MOSI (data)      |
-   | ----------------------------- | ---------------- |
-   | Pi Pico (Recommended)         | GP3              |
-   | Pi Pico (Advanced, Channel 0) | GP3, GP7, GP19   |
-   | Pi Pico (Advanced, Channel 1) | GP11, GP15, GP27 |
+2. Connect the data on the first LED to any GPIO pin on the pico. Then chain the data outputs to the data on the next LED, until all LEDs are connected.
 
 ## Programming
 

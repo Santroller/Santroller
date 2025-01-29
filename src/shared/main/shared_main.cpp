@@ -458,7 +458,7 @@ uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint3
     // RB whammy is full range
     return handle_calibration_ps3_360_trigger(previous, orig_val, min, multiplier, deadzone);
 #else
-    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then subtract center
+    // GH whammy ignores the negative half of the axis, so shift to get between 0 and 127, then add center
     uint8_t ret = handle_calibration_ps3_360_trigger((previous - PS3_STICK_CENTER) << 1, orig_val, min, multiplier, deadzone) >> 1;
     return ret + PS3_STICK_CENTER;
 #endif
@@ -2747,6 +2747,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             PS2GuitarOnPS3_Data_t *report = (PS2GuitarOnPS3_Data_t *)report_data;
 
             TICK_PS3;
+            report->whammy = 0xFF - report->whammy;
             report->dpadLeft = true;
 
             asm volatile("" ::

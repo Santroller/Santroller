@@ -2306,7 +2306,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
     USB_RB_Drums_t current_drum_report = {buttons : 0};
-    bool drumHit = false;
+    int drumHit = -1;
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -2528,12 +2528,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
+
         TICK_XINPUT;
 
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
-            if (seen_rpcs3) {
-                report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
-            }
+        if (seen_rpcs3) {
+            report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
+        }
 #endif
 #if PRO_GUITAR && USB_HOST_STACK
         TRANSLATE_TO_PRO_GUITAR(usb_host_data)
@@ -2548,7 +2549,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
             if (proKeyVelocities[i]) {
-                report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
+                report->velocities[currentVel] = proKeyVelocities[i] >> 1;
                 currentVel++;
             }
         }
@@ -2798,7 +2799,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 uint8_t currentVel = 0;
                 for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
                     if (proKeyVelocities[i]) {
-                        report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
+                        report->velocities[currentVel] = proKeyVelocities[i] >> 1;
                         currentVel++;
                     }
                 }
@@ -3256,15 +3257,6 @@ void ps3_controller_connected(uint8_t dev_addr, uint16_t vid, uint16_t pid) {
         uint8_t hid_command_enable[] = {0x42, 0x0c, 0x00, 0x00};
         transfer_with_usb_controller(dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x03F4, 0x00, sizeof(hid_command_enable), hid_command_enable, NULL);
         handle_player_leds(0);
-    }
-    if (vid == REDOCTANE_VID && pid == PS3_KEYBOARD_PID) {
-        uint8_t hid_command_enable[40] = {
-            0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
-            0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0300, 0, sizeof(hid_command_enable), hid_command_enable, NULL);
     }
 }
 

@@ -2,9 +2,9 @@
 #include <SPI.h>
 #include <pico/stdlib.h>
 #include <pico/unique_id.h>
+#include <sleep.h>
 #include <string.h>
 #include <tusb.h>
-#include <sleep.h>
 
 #include "commands.h"
 #include "common/tusb_types.h"
@@ -170,7 +170,7 @@ void setup() {
             if (pico_is_sleeping) {
                 pinMode(SLEEP_PIN, SLEEP_ACTIVE_HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
                 sleep_run_from_xosc();
-                sleep_goto_dormant_until_pin(SLEEP_PIN, true, SLEEP_ACTIVE_HIGH); 
+                sleep_goto_dormant_until_pin(SLEEP_PIN, true, SLEEP_ACTIVE_HIGH);
                 sleep_power_up();
                 pico_is_sleeping = false;
                 reset_usb();
@@ -408,6 +408,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
                 }
             }
             usb_host_devices[total_usb_host_devices].type = type;
+            usb_host_devices[total_usb_host_devices].xone_init_id = millis();
             total_usb_host_devices++;
             printf("Found PS3 controller\r\n");
             printf("Sub type: %d\r\n", type.sub_type);
@@ -459,6 +460,7 @@ void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const
     }
 }
 long lastPlayerLed = 0;
+long lastWakeup = 0;
 void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
     if (!len) {
         // Skip processing a null report, assume it is corrupted
@@ -488,6 +490,17 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     return;
                 }
                 wasXb1Input = header->command == GIP_INPUT_REPORT;
+            }
+            if ((millis() - usb_host_devices[i].xone_init_id) < 5000) {
+                if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_PRO_KEYS) {
+                    uint8_t hid_command_enable[40] = {
+                        0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
+                        0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                    transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0300, 0, sizeof(hid_command_enable), hid_command_enable, NULL);
+                }
             }
             if (usb_host_devices[i].type.console_type == XBOX360_W) {
                 // Corrupt report, ignore
@@ -619,8 +632,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return NULL;
 }
 
-uint32_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool* status) {
-    
+uint32_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool *status) {
     if (!dev_addr) {
         // Device is not connected yet!
         if (status) {

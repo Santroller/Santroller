@@ -351,7 +351,7 @@ int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min,
     return previous;
 }
 
-int16_t handle_calibration_xbox_whammy(int16_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
+int16_t handle_calibration_xbox_whammy(int16_t previous, uint32_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
     int32_t val = orig_val;
     if (multiplier > 0) {
         if ((val - min) < deadzone) {

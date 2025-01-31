@@ -16,13 +16,12 @@ If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](h
 
   - The Pi Pico is recommended, but other 3.3v microcontrollers like the 3.3v pro micro may work. 5v only microcontrollers will NOT work.
 
+- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >10V maximum reverse voltage)
+  - While this isn't strictly necessary, it will protect you from plugging in both the PS2 and USB at the same time, and frying your PS2.
+
 - A PS2 controller plug
 - Some Wire
 - A Soldering Iron
-
-```danger
-NEVER plug in both the usb cable to your computer, and the PS2, it can only ever be plugged into one device at a time!
-```
 
 ## Steps
 

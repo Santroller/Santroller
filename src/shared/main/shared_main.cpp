@@ -2307,7 +2307,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     Buffer_Report_t current_queue_report = {val : 0};
     USB_RB_Drums_t current_drum_report = {buttons : 0};
     bool drumHit = false;
-    bool drumSeen[DIGITAL_COUNT] = {false};
+    #if DIGITAL_COUNT
+        bool drumSeen[DIGITAL_COUNT] = {false};
+    #endif
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"

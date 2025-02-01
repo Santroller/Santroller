@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "serial.h"
 
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
@@ -17,6 +16,7 @@
 #include "descriptors.h"
 #include "endpoints.h"
 #include "hid.h"
+#include "serial.h"
 #include "shared_main.h"
 #if DEVICE_TYPE_IS_KEYBOARD
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
@@ -66,6 +66,36 @@ const uint8_t adv_data[] = {
     APPEARANCE,
     0x03,
 };
+const uint8_t adv_data_kb[] = {
+    // Flags general discoverable, BR/EDR not supported
+    0x02,
+    BLUETOOTH_DATA_TYPE_FLAGS,
+    0x06,
+    // Name
+    0x0d,
+    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
+    'S',
+    'a',
+    'n',
+    't',
+    'r',
+    'o',
+    'l',
+    'l',
+    'e',
+    'r',
+    'B',
+    'T',
+    // 16-bit Service UUIDs
+    0x03,
+    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
+    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
+    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
+    0x03,
+    BLUETOOTH_DATA_TYPE_APPEARANCE,
+    0xC1,
+    0x03,
+};
 bool check_bluetooth_ready() {
     return con_handle != HCI_CON_HANDLE_INVALID;
 }
@@ -106,8 +136,15 @@ static void le_keyboard_setup(void) {
     char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
     pico_get_unique_board_id_string(id, sizeof(id));
     device_information_service_server_set_serial_number(id);
-
-    hids_device_init(0, REPORT, sizeof(REPORT));
+#if DEVICE_TYPE_IS_KEYBOARD
+        hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
+#else
+    if (consoleType == KEYBOARD_MOUSE) {
+        hids_device_init(0, keyboard_mouse_descriptor, sizeof(keyboard_mouse_descriptor));
+    } else {
+        hids_device_init(0, pc_descriptor, sizeof(pc_descriptor));
+    }
+#endif
 
     // setup advertisements
     uint16_t adv_int_min = 0x0030;
@@ -116,7 +153,15 @@ static void le_keyboard_setup(void) {
     bd_addr_t null_addr;
     memset(null_addr, 0, 6);
     gap_advertisements_set_params(adv_int_min, adv_int_max, adv_type, 0, null_addr, 0x07, 0x00);
-    gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data);
+#if DEVICE_TYPE_IS_KEYBOARD
+        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_kb);
+#else
+    if (consoleType == KEYBOARD_MOUSE) {
+        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_kb);
+    } else {
+        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data);
+    }
+#endif
     gap_advertisements_enable(1);
 
     // register for HCI events
@@ -224,7 +269,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 }
                 case HIDS_SUBEVENT_CAN_SEND_NOW: {
-
                     printf("can send now\r\n");
                 }
                 default:

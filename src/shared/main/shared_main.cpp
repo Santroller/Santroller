@@ -2333,7 +2333,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 
     // give the user 2 second to jump between modes (aka, hold on plug in)
-    if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS)) {
+    if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS || output_console_type == BLUETOOTH_REPORT)) {
         TICK_DETECTION;
     }
 #ifdef TICK_DETECTION_FESTIVAL

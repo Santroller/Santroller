@@ -2307,9 +2307,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     Buffer_Report_t current_queue_report = {val : 0};
     USB_RB_Drums_t current_drum_report = {buttons : 0};
     bool drumHit = false;
-    #if DIGITAL_COUNT
-        bool drumSeen[DIGITAL_COUNT] = {false};
-    #endif
+#if DIGITAL_COUNT
+    bool drumSeen[DIGITAL_COUNT] = {false};
+#endif
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
@@ -2549,6 +2549,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                          : "memory");
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+        bool key25 = report->key25;
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
             if (proKeyVelocities[i]) {
@@ -2556,6 +2557,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 currentVel++;
             }
         }
+        report->key25 = key25;
 #endif
 // xb360 is stupid
 #if DEVICE_TYPE == GUITAR_HERO_DRUMS
@@ -2799,6 +2801,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+                bool key25 = report->key25;
                 uint8_t currentVel = 0;
                 for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
                     if (proKeyVelocities[i]) {
@@ -2806,6 +2809,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                         currentVel++;
                     }
                 }
+                report->key25 = key25;
 #endif
                 gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
                 if (SWAP_SWITCH_FACE_BUTTONS && output_console_type == SWITCH) {
@@ -2995,6 +2999,11 @@ void tick(void) {
     // Only sleep if the timeout has passed and we aren't connected over USB
     if (SLEEP_PIN != -1 && SLEEP_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
         go_to_sleep();
+    }
+
+    // Tick inputs constantly for detection
+    if ((millis() - input_start) < 2000) {
+        tick_inputs(NULL, NULL, consoleType);
     }
 
 #ifdef TICK_LED_PERIPHERAL

@@ -18,9 +18,10 @@ extern "C" {
 #define __CAT(x, y) x##y
 #define CAT(x, y) __CAT(x, y)
 
+// Strings have a null terminator. We don't want that, but bLength and bDescriptorType take two extra bytes so that cuts the null terminator from the string.
 #define USB_DESCRIPTOR_STRING_UTF(s)                                        \
     {                                                                       \
-        .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + sizeof(CAT(u, s))), \
+        .bLength = (sizeof(CAT(u, s))), \
         .bDescriptorType = USB_DESCRIPTOR_STRING,                           \
         .UnicodeString = { CAT(u, s) }                                      \
     }

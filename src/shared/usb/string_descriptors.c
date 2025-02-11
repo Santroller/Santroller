@@ -13,32 +13,24 @@ const PROGMEM STRING_DESCRIPTOR languageString = USB_DESCRIPTOR_STRING_ARRAY(LAN
  *  Descriptor.
  */
 #ifdef DEVICE_VENDOR
-const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_ARRAY(DEVICE_VENDOR);
+const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_UTF(DEVICE_VENDOR);
 #else
-const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_ARRAY('s', 'a', 'n', 'j', 'a', 'y', '9', '0', '0');
+const PROGMEM STRING_DESCRIPTOR manufacturerString = USB_DESCRIPTOR_STRING_UTF("sanjay900");
 #endif
 /** Product descriptor string. This is a Unicode string containing the product's
  * details in human readable form, and is read out upon request by the host when
  * the appropriate string ID is requested, listed in the Device Descriptor.
  */
 #ifdef DEVICE_PRODUCT
-const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY(DEVICE_PRODUCT);
+const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_UTF(DEVICE_PRODUCT);
 #else
-const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_ARRAY('S', 'a', 'n', 't', 'r', 'o', 'l', 'l', 'e', 'r');
+const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_UTF("Santroller");
 #endif
 
 /**
  * Descriptor used by the Xbox 360 to determine if a controller supports authentication
  */
-const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_ARRAY(
-    'X', 'b', 'o', 'x', ' ', 'S', 'e', 'c', 'u', 'r', 'i', 't', 'y',
-    ' ', 'M', 'e', 't', 'h', 'o', 'd', ' ', '3', ',', ' ',
-    'V', 'e', 'r', 's', 'i', 'o', 'n', ' ', '1', '.', '0', '0', ',',
-    ' ', 0xa9, ' ', '2', '0', '0', '5', ' ',
-    'M', 'i', 'c', 'r', 'o', 's', 'o', 'f', 't', ' ',
-    'C', 'o', 'r', 'p', 'o', 'r', 'a', 't', 'i', 'o', 'n', '.', ' ',
-    'A', 'l', 'l', ' ', 'r', 'i', 'g', 'h', 't', 's', ' ',
-    'r', 'e', 's', 'e', 'r', 'v', 'e', 'd', '.');
+const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_UTF("Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.");
 
 const PROGMEM STRING_DESCRIPTOR *const descriptorStrings[3] = {
     &languageString, &manufacturerString, &productString};

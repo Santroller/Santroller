@@ -1,5 +1,6 @@
-#include "progmem.h"
 #include <stdint.h>
+
+#include "progmem.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,6 +14,16 @@ extern "C" {
         .bDescriptorType = USB_DESCRIPTOR_STRING,                                           \
         .UnicodeString = { __VA_ARGS__ }                                                    \
     }
+
+#define __CAT(x, y) x##y
+#define CAT(x, y) __CAT(x, y)
+
+#define USB_DESCRIPTOR_STRING_UTF(s)                                        \
+    {                                                                       \
+        .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + sizeof(CAT(u, s))), \
+        .bDescriptorType = USB_DESCRIPTOR_STRING,                           \
+        .UnicodeString = { CAT(u, s) }                                      \
+    }
 typedef struct
 {
     uint8_t bLength;          // Length of this descriptor.
@@ -22,14 +33,9 @@ typedef struct
                                *   to be used, they must be added as an array of characters
                                *   rather than a normal C string so that they are widened to
                                *   Unicode size.
-                               *
-                               *   Under GCC, strings prefixed with the "L" character (before
-                               *   the opening string quotation mark) are considered to be
-                               *   Unicode strings, and may be used instead of an explicit
-                               *   array of ASCII characters on little endian devices with
-                               *   UTF-16-LE \c wchar_t encoding.
                                */
-} __attribute__((packed)) STRING_DESCRIPTOR;
+}
+__attribute__((packed)) STRING_DESCRIPTOR;
 
 extern const PROGMEM STRING_DESCRIPTOR *const descriptorStrings[3];
 extern const PROGMEM STRING_DESCRIPTOR *const ps3DescriptorStrings[3];

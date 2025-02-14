@@ -1,24 +1,24 @@
 ---
 layout: default
-title: Santroller
+title: Santroller ES
 ---
 
-![Santroller](assets/images/logo.png)
+![Santroller](/assets/images/logo.png)
 
-[Español](/es)
+[English](/index.html)
 
 The Santroller platform provides the ability to program micro controllers that emulate various rhythm game controllers for computers and various consoles.
 This is done using the Santroller Configurator, which can program various microcontrollers to emulate different controllers.
 
 # Gallery
 
-[![home screen](assets/images/screenshots/home.png)](assets/images/screenshots/home.png)
-[![main screen](assets/images/screenshots/main.png)](assets/images/screenshots/main.png)
-[![main screen with everything](assets/images/screenshots/combined.png)](assets/images/screenshots/combined.png)
-[![alt text](assets/images/adaptor.jpg)](assets/images/adaptor.jpg)
-[![alt text](assets/images/adaptor-ps2.jpg)](assets/images/adaptor-ps2.jpg)
-[![alt text](assets/images/direct.jpg)](assets/images/direct.jpg)
-[![alt text](assets/images/inline-led.jpg)](assets/images/inline-led.jpg)
+[![home screen](/assets/images/screenshots/home.png)](/assets/images/screenshots/home.png)
+[![main screen](/assets/images/screenshots/main.png)](/assets/images/screenshots/main.png)
+[![main screen with everything](/assets/images/screenshots/combined.png)](/assets/images/screenshots/combined.png)
+[![alt text](/assets/images/adaptor.jpg)](/assets/images/adaptor.jpg)
+[![alt text](/assets/images/adaptor-ps2.jpg)](/assets/images/adaptor-ps2.jpg)
+[![alt text](/assets/images/direct.jpg)](/assets/images/direct.jpg)
+[![alt text](/assets/images/inline-led.jpg)](/assets/images/inline-led.jpg)
 
 # Features
 

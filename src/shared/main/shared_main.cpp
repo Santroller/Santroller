@@ -1649,7 +1649,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 usb_host_data->pressureL1 = report->leftShoulder;
             }
             if (report->rightShoulder) {
-                usb_host_data->rightShoulder = report->rightShoulder;
+                usb_host_data->pressureR1 = report->rightShoulder;
             }
             if (report->y) {
                 usb_host_data->pressureTriangle = report->y;
@@ -2333,7 +2333,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 
     // give the user 2 second to jump between modes (aka, hold on plug in)
-    if ((millis() - input_start) < 2000 && (output_console_type == UNIVERSAL || output_console_type == WINDOWS || output_console_type == BLUETOOTH_REPORT)) {
+    if ((millis() - input_start) < 2000) {
         TICK_DETECTION;
     }
 #ifdef TICK_DETECTION_FESTIVAL

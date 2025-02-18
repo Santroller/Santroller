@@ -56,14 +56,17 @@ Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
     printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    midiData.midiVelocities[note] = velocity << 1;
-    midiData.midiVelocitiesTemp[note] = velocity << 1;
+    velocity = velocity << 1;
+    midiData.midiVelocities[note] = velocity;
+    if (velocity > midiData.midiVelocitiesTemp[note]) {
+        midiData.midiVelocitiesTemp[note] = velocity;
+    }
 }
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
     midiData.midiVelocities[note] = 0;
-    midiData.midiVelocitiesTemp[note] = 0;
+    // midiData.midiVelocitiesTemp[note] = 0;
 }
 
 void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2) {

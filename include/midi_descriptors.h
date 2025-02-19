@@ -340,8 +340,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t midiVelocities[128];
     uint8_t midiVelocitiesTemp[128];
+    uint8_t midiVelocities[128];
     int16_t midiPitchWheel;
     uint8_t midiModWheel;
     uint8_t midiSustainPedal;

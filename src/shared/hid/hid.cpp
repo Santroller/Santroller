@@ -904,8 +904,8 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         }
 #ifdef INPUT_MIDI
         case COMMAND_READ_MIDI: {
-            memcpy(response_buffer, &midiData, sizeof(Midi_Data_t));
-            return sizeof(Midi_Data_t);
+            memcpy(response_buffer, &midiData.midiVelocities, (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities)));
+            return (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities));
         }
 #endif
 #ifdef MAX1704X_TWI_PORT

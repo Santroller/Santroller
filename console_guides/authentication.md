@@ -13,6 +13,7 @@ There are currently three ways to trick the console
     - For Fortnite Festival you can follow the [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html) guide.
 - PS4 / PS5, but only if you are not playing Fortnite Festival or Rock Band 4. 
     - For Rock Band 4, you can use PS3 mode. 
+    - For GHL, you can patch the game to support other instruments using [OrbisInstrumentalizer](https://github.com/InvoxiPlayGames/OrbisInstrumentalizer).
     - For Fortnite Festival you can follow the [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html) guide.
 
 ## Passing authentication checks to a legitimate controller

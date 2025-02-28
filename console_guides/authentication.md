@@ -1,23 +1,19 @@
 # Authentication controllers
 Some consoles check if a controller is a genuine controller. Our controllers are unoffical, so we need to trick the console into thinking our controller is genuine.
 
-## Fortnite Festival
-
-Note that fortnite festival also works with keyboards on Xbox One and Series S|X, and on PS4/5. For these consoles you can just follow the [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html) guide, which will set your controller up so it emulates a keyboard, bypassing the need for auth.
-
-## Bypassing Authentication
-
-There are currently two ways to trick the console
+There are currently three ways to trick the console
 1. Pass the check to an offical controller, by plugging a genuine controller into your Pi Pico. (This method only works on the Pi Pico)
 2. Mod the console. There is a patch for the Xbox 360 that removes the authentication check.
+3. Some games support controllers that don't need authentication, such as a keyboard, or a PS3 instrument.
 
 ## Consoles needing authentication
-- Xbox 360, although this can be patched out using [UsbdSecPatch](#usbdsecpatch) on RGH or JTAG modded consoles.
-- Xbox One and Series S|X, but only if you are not if you are not playing Fortnite Festival. 
-    - For Fortnite Festival you can follow [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html).
+- Xbox 360
+    - This can be patched out using [UsbdSecPatch](#usbdsecpatch) on RGH or JTAG modded consoles.
+- Xbox One and Series S|X, but only if you are not playing Fortnite Festival. 
+    - For Fortnite Festival you can follow the [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html) guide.
 - PS4 / PS5, but only if you are not playing Fortnite Festival or Rock Band 4. 
     - For Rock Band 4, you can use PS3 mode. 
-    - For Fortnite Festival you can follow [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html).
+    - For Fortnite Festival you can follow the [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html) guide.
 
 ## Passing authentication checks to a legitimate controller
 You can follow the [USB Inputs](https://santroller.tangentmc.net/wiring_guides/usb.html) guide. When USB Inputs are enabled, authentication checks will automatically be passed to a controller.

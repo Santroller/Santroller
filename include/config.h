@@ -9,6 +9,10 @@ extern "C" {
 #if __has_include("config_data.h")
 #include "config_data.h"
 #endif
+#if __has_include("kv.h")
+#include "kv.h"
+#endif
+
 
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;

@@ -824,7 +824,7 @@ uint8_t ps3_id_id = 4;
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer, bool *status) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
 #if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
@@ -888,10 +888,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 #ifdef KV_KEY_1
     switch (request) {
         case 0x81:
-            uint8_t serial[0x0B];
-            read_serial(serial, sizeof(serial));
             xsm3_import_kv_keys(kv_key_1, kv_key_2);
-            xsm3_set_serial(serial);
             xsm3_initialise_state();
             xsm3_set_identification_data(xsm3_id_data_ms_controller);
             memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));

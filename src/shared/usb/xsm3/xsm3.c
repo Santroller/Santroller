@@ -37,26 +37,42 @@
 #endif  // XSM3_NO_DEBUGGING
 
 // constant variables
-uint8_t xsm3_id_data_ms_controller[0x1D] = {
+const uint8_t xsm3_id_data_ms_controller[0x1D] = {
     0x49, 0x4B, 0x00, 0x00, 0x17, 0x41, 0x41, 0x41,
     0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
     0x00, 0x00, 0x80, 0x02, 0x09, 0x12, 0x82, 0x28,
     0x03, 0x00, 0x01, 0x01, 0x71};
 
-// constant variables (not exposed outside of this module)
+// static global keys from the keyvault (shared across every retail system)
 static const uint8_t xsm3_key_0x1D[0x10] = {
     0xE3, 0x5B, 0xFB, 0x1C, 0xCD, 0xAD, 0x32, 0x5B,
-    0xF7, 0x0E, 0x07, 0xFD, 0x62, 0x3D, 0xA7, 0xC4};
+	0xF7, 0x0E, 0x07, 0xFD, 0x62, 0x3D, 0xA7, 0xC4
+};
 static const uint8_t xsm3_key_0x1E[0x10] = {
-    0x8F, 0x29, 0x08, 0x38, 0x0B, 0x5B, 0xFE, 0x68,
-    0x7C, 0x26, 0x46, 0x2A, 0x51, 0xF2, 0xBC, 0x19};
+	0x8F, 0x29, 0x08, 0x38, 0x0B, 0x5B, 0xFE, 0x68,
+	0x7C, 0x26, 0x46, 0x2A, 0x51, 0xF2, 0xBC, 0x19
+};
 
+/*
+global device keys from devkit keyvaults
+static const uint8_t xsm3_key_0x1D[0x10] = {
+    0xC2, 0x15, 0xE5, 0x5E, 0xE5, 0x51, 0x94, 0x2A,
+    0xEC, 0x3D, 0x45, 0xEC, 0xB6, 0xE6, 0xF2, 0x16
+};
+static const uint8_t xsm3_key_0x1E[0x10] = {
+    0xC7, 0x45, 0xAD, 0x1F, 0x08, 0x0B, 0xD9, 0xE9,
+    0x9B, 0x1C, 0x34, 0xE3, 0xA4, 0x6D, 0xC8, 0xC4
+};
+*/
+
+// devkit recovery keys for generating 0x23/0x24 keys from console ID
+// these keys do not work on a retail system.
 static const uint8_t xsm3_root_key_0x23[0x10] = {
     0xB9, 0xE0, 0x9E, 0x68, 0x04, 0x83, 0x91, 0xB3,
     0x32, 0x45, 0x7A, 0xDA, 0x43, 0x6B, 0x80, 0xAD
 };
 static const uint8_t xsm3_root_key_0x24[0x10] = {
-    0x92, 0x5D, 0x29, 0x6E, 0xB0, 0x61, 0x0B, 0xF1,
+	0x92, 0x5D, 0x29, 0x6E, 0xB0, 0x61, 0x0B, 0xF1,
     0xD6, 0x29, 0x3B, 0xC8, 0xC7, 0xD9, 0x32, 0xBC
 };
 
@@ -99,30 +115,6 @@ void xsm3_initialise_state() {
     memset(xsm3_challenge_init_hash, 0, sizeof(xsm3_challenge_init_hash));
 }
 
-static void xsm3_generate_kv_keys() {
-    // make a sha-1 hash of the console id
-    uint8_t console_id_hash[0x14];
-    ExCryptSha(xsm3_console_id, 0x8, NULL, 0, NULL, 0, console_id_hash, 0x14);
-    // encrypt it with the root keys for 1st party controllers
-    uint64_t des_parity[3];
-    uint64_t des_key[3];
-    uint64_t feed = 0;
-    EXCRYPT_DES3_STATE state = {0};
-    // calculate the 0x23 key
-    memcpy(&des_parity, xsm3_root_key_0x23, sizeof(xsm3_root_key_0x23));
-    des_parity[2] = des_parity[0];
-    ExCryptDesParity((uint8_t*)des_parity, 0x18, (uint8_t*)des_key);
-    ExCryptDes3Key(&state, des_key);
-    ExCryptDes3Cbc(&state, console_id_hash, 0x10, xsm3_kv_2des_key_1, (uint8_t*)&feed, 1);
-    // calculate the 0x24 key
-    feed = 0;
-    memcpy(&des_parity, xsm3_root_key_0x24, sizeof(xsm3_root_key_0x24));
-    des_parity[2] = des_parity[0];
-    ExCryptDesParity((uint8_t*)des_parity, 0x18, (uint8_t*)des_key);
-    ExCryptDes3Key(&state, des_key);
-    ExCryptDes3Cbc(&state, console_id_hash + 0x4, 0x10, xsm3_kv_2des_key_2, (uint8_t*)&feed, 1);
-}
-
 static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
     // packet length in header doesn't include the header itself
     uint8_t packet_length = packet[0x4] + 0x5;
@@ -134,11 +126,6 @@ static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
     }
     // last byte of the packet is the checksum
     return checksum;
-}
-
-void xsm3_set_serial(const uint8_t serial[0x0B]) {
-    memcpy(xsm3_id_data_ms_controller + 6, serial, 11);
-    xsm3_id_data_ms_controller[0x1C] = xsm3_calculate_checksum(xsm3_id_data_ms_controller);
 }
 
 static bool xsm3_verify_checksum(const uint8_t* packet) {
@@ -161,20 +148,15 @@ void xsm3_set_identification_data(const uint8_t id_data[0x1D]) {
 
     // contains serial number (len: 0xC), unknown (len: 0x2) and the "category node" to use (len: 0x1)
     memcpy(xsm3_identification_data, id_data, 0xF);
-    // // vendor ID
-    //  *(unsigned short *)(xsm3_identification_data + 0x10) = *(unsigned short *)(id_data + 0xF);
-    // // product ID
-    // *(unsigned short *)(xsm3_identification_data + 0x12) = *(unsigned short *)(id_data + 0x11);
-    // // unknown
-    // *(unsigned char *)(xsm3_identification_data + 0x14) = *(unsigned char *)(id_data + 0x13);
-    // // unknown
-    // *(unsigned char *)(xsm3_identification_data + 0x15) = *(unsigned char *)(id_data + 0x16);
-    // // unknown
-    // *(unsigned short *)(xsm3_identification_data + 0x16) = *(unsigned short *)(id_data + 0x14);
+    // vendor ID
     memcpy(xsm3_identification_data + 0x10, id_data + 0xF, sizeof(unsigned short));
+    // product ID
     memcpy(xsm3_identification_data + 0x12, id_data + 0x11, sizeof(unsigned short));
+    // unknown
     memcpy(xsm3_identification_data + 0x14, id_data + 0x13, sizeof(unsigned char));
+    // unknown
     memcpy(xsm3_identification_data + 0x15, id_data + 0x16, sizeof(unsigned char));
+    // unknown
     memcpy(xsm3_identification_data + 0x16, id_data + 0x14, sizeof(unsigned short));
 }
 
@@ -206,7 +188,6 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     if (memcmp(incoming_packet_mac + 4, challenge_packet + 0x5 + 0x18, 0x4) != 0) {
         XSM3_printf("[ MAC failed when validating challenge init! ]\n");
     }
-    xsm3_generate_kv_keys();
 
     // TODO: somehow..derive the kv keys from the console certificate
 

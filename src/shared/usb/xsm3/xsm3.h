@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 // Identification data taken from an official wired controller. (Serial number is static.)
-extern uint8_t xsm3_id_data_ms_controller[0x1D];
+extern const uint8_t xsm3_id_data_ms_controller[0x1D];
 
 // The response data from the previously completed challenge.
 extern uint8_t xsm3_challenge_response[0x30];

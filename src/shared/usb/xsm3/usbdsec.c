@@ -140,8 +140,10 @@ void UsbdSecXSMAuthenticationAcr(const uint8_t *console_id, const uint8_t *input
 	uint8_t cd[8];
 
 	// fill in the input block with the first 4 bytes of input data and the first 4 bytes of the console ID
-	*(uint32_t *)block = *(uint32_t *)input;
-	*(uint32_t *)(block + 4) = *(uint32_t *)console_id;
+	// *(uint32_t *)block = *(uint32_t *)input;
+	// *(uint32_t *)(block + 4) = *(uint32_t *)console_id;
+	memcpy(block, input, 4);
+	memcpy(block+4, console_id, 4);
 	// run custom "parve" crypto algorithms. idk whar they do
 	ExCryptParveEcb(key, UsbdSecSboxData, input + 0x10, iv);
 	ExCryptParveEcb(key, UsbdSecSboxData, block, cd);

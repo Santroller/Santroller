@@ -37,44 +37,19 @@
 #endif  // XSM3_NO_DEBUGGING
 
 // constant variables
-const uint8_t xsm3_id_data_ms_controller[0x1D] = {
+uint8_t xsm3_id_data_ms_controller[0x1D] = {
     0x49, 0x4B, 0x00, 0x00, 0x17, 0x41, 0x41, 0x41,
     0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
     0x00, 0x00, 0x80, 0x02, 0x09, 0x12, 0x82, 0x28,
     0x03, 0x00, 0x01, 0x01, 0x71};
 
-// static global keys from the keyvault (shared across every retail system)
+// constant variables (not exposed outside of this module)
 static const uint8_t xsm3_key_0x1D[0x10] = {
     0xE3, 0x5B, 0xFB, 0x1C, 0xCD, 0xAD, 0x32, 0x5B,
-	0xF7, 0x0E, 0x07, 0xFD, 0x62, 0x3D, 0xA7, 0xC4
-};
+    0xF7, 0x0E, 0x07, 0xFD, 0x62, 0x3D, 0xA7, 0xC4};
 static const uint8_t xsm3_key_0x1E[0x10] = {
-	0x8F, 0x29, 0x08, 0x38, 0x0B, 0x5B, 0xFE, 0x68,
-	0x7C, 0x26, 0x46, 0x2A, 0x51, 0xF2, 0xBC, 0x19
-};
-
-/*
-global device keys from devkit keyvaults
-static const uint8_t xsm3_key_0x1D[0x10] = {
-    0xC2, 0x15, 0xE5, 0x5E, 0xE5, 0x51, 0x94, 0x2A,
-    0xEC, 0x3D, 0x45, 0xEC, 0xB6, 0xE6, 0xF2, 0x16
-};
-static const uint8_t xsm3_key_0x1E[0x10] = {
-    0xC7, 0x45, 0xAD, 0x1F, 0x08, 0x0B, 0xD9, 0xE9,
-    0x9B, 0x1C, 0x34, 0xE3, 0xA4, 0x6D, 0xC8, 0xC4
-};
-*/
-
-// devkit recovery keys for generating 0x23/0x24 keys from console ID
-// these keys do not work on a retail system.
-static const uint8_t xsm3_root_key_0x23[0x10] = {
-    0xB9, 0xE0, 0x9E, 0x68, 0x04, 0x83, 0x91, 0xB3,
-    0x32, 0x45, 0x7A, 0xDA, 0x43, 0x6B, 0x80, 0xAD
-};
-static const uint8_t xsm3_root_key_0x24[0x10] = {
-	0x92, 0x5D, 0x29, 0x6E, 0xB0, 0x61, 0x0B, 0xF1,
-    0xD6, 0x29, 0x3B, 0xC8, 0xC7, 0xD9, 0x32, 0xBC
-};
+    0x8F, 0x29, 0x08, 0x38, 0x0B, 0x5B, 0xFE, 0x68,
+    0x7C, 0x26, 0x46, 0x2A, 0x51, 0xF2, 0xBC, 0x19};
 
 // response to give to the given challenge command
 uint8_t xsm3_challenge_response[0x30];
@@ -126,6 +101,17 @@ static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
     }
     // last byte of the packet is the checksum
     return checksum;
+}
+
+void xsm3_set_vid_pid(uint16_t vid, uint16_t pid) {
+    uint8_t* id_data = xsm3_id_data_ms_controller;
+    // skip over the packet header
+    id_data += 0x5;
+    // vendor ID
+    memcpy(id_data + 0xf, &vid, sizeof(unsigned short));
+    // product ID
+    memcpy(id_data + 0x11, &pid, sizeof(unsigned short));
+    xsm3_id_data_ms_controller[0x1C] = xsm3_calculate_checksum(xsm3_id_data_ms_controller);
 }
 
 static bool xsm3_verify_checksum(const uint8_t* packet) {
@@ -221,8 +207,10 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     UsbdSecXSM3AuthenticationCrypt(xsm3_random_console_data_enc, xsm3_decryption_buffer, 0x20, xsm3_challenge_response + 0x5, 1);
     // calculate MAC using the encrypted swapped random key and use it to calculate ACR
     UsbdSecXSM3AuthenticationMac(xsm3_random_console_data_swap_enc, NULL, xsm3_challenge_response + 0x5, 0x20, response_packet_mac);
+    uint8_t tmp = xsm3_console_id[0];
     // calculate ACR and append to the end of the xsm3_challenge_response
     UsbdSecXSMAuthenticationAcr(xsm3_console_id, xsm3_identification_data, response_packet_mac, xsm3_challenge_response + 0x5 + 0x20);
+    xsm3_console_id[0] = tmp;
     // calculate the checksum for the response packet
     xsm3_challenge_response[0x5 + 0x28] = xsm3_calculate_checksum(xsm3_challenge_response);
 
@@ -250,14 +238,13 @@ void xsm3_do_challenge_verify(uint8_t challenge_packet[0x16]) {
     if (memcmp(incoming_packet_mac, challenge_packet + 0x5 + 0x8, 0x8) != 0) {
         XSM3_printf("[ MAC failed when validating challenge verify! ]\n");
     }
-
     // clear response buffers
     memset(xsm3_challenge_response, 0, sizeof(xsm3_challenge_response));
     memset(xsm3_decryption_buffer, 0, sizeof(xsm3_decryption_buffer));
     // set header and packet length of challenge response
-    xsm3_challenge_response[0] = 0x49;  // packet magic
+    xsm3_challenge_response[0] = 0x49; // packet magic
     xsm3_challenge_response[1] = 0x4C;
-    xsm3_challenge_response[4] = 0x10;  // packet length
+    xsm3_challenge_response[4] = 0x10; // packet length
     // calculate the ACR value and encrypt it into the outgoing packet using the encrypted random
     UsbdSecXSMAuthenticationAcr(xsm3_console_id, xsm3_identification_data, xsm3_random_console_data + 0x8, xsm3_decryption_buffer);
     UsbdSecXSM3AuthenticationCrypt(xsm3_random_console_data_enc, xsm3_decryption_buffer, 0x8, xsm3_challenge_response + 0x5, 1);

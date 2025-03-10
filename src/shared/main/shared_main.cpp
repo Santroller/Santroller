@@ -3205,7 +3205,6 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
 void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     handle_player_leds(0);
     if (xbox_360_state == Authenticated) return;
-#ifndef KV_KEY_1
     xbox_360_vid = vid;
     xbox_360_pid = pid;
     // Using the skylander pid on a 360 results in it not being classed as a controller
@@ -3232,7 +3231,6 @@ void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     if (xbox_360_vid == XBOX_POWERA_VID) {
         xbox_360_pid = 0xFA01;
     }
-#endif
 #endif
 }
 

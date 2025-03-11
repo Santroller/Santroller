@@ -12,10 +12,6 @@
 #include "util.h"
 #include "xsm3/xsm3.h"
 
-#ifdef KV_KEY_1
-const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
-const PROGMEM uint8_t kv_key_2[16] = KV_KEY_2;
-#endif
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
@@ -824,7 +820,7 @@ uint8_t ps3_id_id = 4;
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer, bool *status) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
 #if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
@@ -851,6 +847,8 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (xbox_360_state == Auth1) {
             xbox_360_state = Auth2;
         } else if (xbox_360_state == Auth2) {
+            xbox_360_state = Auth3;
+        } else if (xbox_360_state == Auth3) {
             xbox_360_state = Authenticated;
             handle_auth_led();
         }
@@ -885,13 +883,12 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         reset_usb();
         return 0;
     }
-#ifdef KV_KEY_1
+#ifdef KV_KEY_ARRAY
     switch (request) {
         case 0x81:
             xsm3_set_vid_pid(xbox_360_vid, xbox_360_pid);
             xsm3_initialise_state();
             xsm3_set_identification_data(xsm3_id_data_ms_controller);
-            xsm3_import_kv_keys(kv_key_1, kv_key_2);
             memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
             return sizeof(xsm3_id_data_ms_controller);
         case 0x82:

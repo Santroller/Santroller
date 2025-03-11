@@ -19,6 +19,7 @@
 
 #include "xsm3.h"
 
+#include <avr/pgmspace.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "config.h"
 #include "excrypt.h"
 #include "usbdsec.h"
 
@@ -35,6 +37,16 @@
 #else
 #define XSM3_printf
 #endif  // XSM3_NO_DEBUGGING
+
+#ifdef KV_KEY_ARRAY
+#ifdef CONFIGURABLE_BLOBS
+static const uint8_t* kv_keys = (const uint8_t*)&KV_KEY_ARRAY;
+uint8_t key_count = KV_KEY_SIZE;
+#else
+static PROGMEM uint8_t kv_keys[] = KV_KEY_ARRAY;
+uint8_t key_count = KV_KEY_SIZE;
+#endif
+#endif
 
 // constant variables
 uint8_t xsm3_id_data_ms_controller[0x1D] = {
@@ -174,7 +186,24 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     if (memcmp(incoming_packet_mac + 4, challenge_packet + 0x5 + 0x18, 0x4) != 0) {
         XSM3_printf("[ MAC failed when validating challenge init! ]\n");
     }
-
+#ifdef KV_KEY_ARRAY
+    for (int i = 0; i < key_count; i++) {
+        uint8_t* keys = kv_keys + (i * (sizeof(xsm3_kv_2des_key_1) + sizeof(xsm3_kv_2des_key_2) + 5));
+        if (memcmp(keys, xsm3_console_id, 5) == 0) {
+            memcpy(xsm3_kv_2des_key_1, keys + 5, sizeof(xsm3_kv_2des_key_1));
+            memcpy(xsm3_kv_2des_key_2, keys + 5 + sizeof(xsm3_kv_2des_key_1), sizeof(xsm3_kv_2des_key_2));
+            for (int i = 0; i < 16; i++) {
+                printf("%02x, ", xsm3_kv_2des_key_1[i]);
+            }
+            printf("\r\n");
+            for (int i = 0; i < 16; i++) {
+                printf("%02x, ", xsm3_kv_2des_key_2[i]);
+            }
+            printf("\r\n");
+            break;
+        }
+    }
+#endif
     // TODO: somehow..derive the kv keys from the console certificate
 
     // the random value is swapped at an 8 byte boundary
@@ -242,9 +271,9 @@ void xsm3_do_challenge_verify(uint8_t challenge_packet[0x16]) {
     memset(xsm3_challenge_response, 0, sizeof(xsm3_challenge_response));
     memset(xsm3_decryption_buffer, 0, sizeof(xsm3_decryption_buffer));
     // set header and packet length of challenge response
-    xsm3_challenge_response[0] = 0x49; // packet magic
+    xsm3_challenge_response[0] = 0x49;  // packet magic
     xsm3_challenge_response[1] = 0x4C;
-    xsm3_challenge_response[4] = 0x10; // packet length
+    xsm3_challenge_response[4] = 0x10;  // packet length
     // calculate the ACR value and encrypt it into the outgoing packet using the encrypted random
     UsbdSecXSMAuthenticationAcr(xsm3_console_id, xsm3_identification_data, xsm3_random_console_data + 0x8, xsm3_decryption_buffer);
     UsbdSecXSM3AuthenticationCrypt(xsm3_random_console_data_enc, xsm3_decryption_buffer, 0x8, xsm3_challenge_response + 0x5, 1);

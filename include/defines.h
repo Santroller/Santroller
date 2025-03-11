@@ -173,6 +173,7 @@ typedef enum {
 typedef enum {
     Auth1,
     Auth2,
+    Auth3,
     Authenticated
 } Xbox_360_State_t;
 typedef enum {

@@ -192,14 +192,6 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
         if (memcmp(keys, xsm3_console_id, 5) == 0) {
             memcpy(xsm3_kv_2des_key_1, keys + 5, sizeof(xsm3_kv_2des_key_1));
             memcpy(xsm3_kv_2des_key_2, keys + 5 + sizeof(xsm3_kv_2des_key_1), sizeof(xsm3_kv_2des_key_2));
-            for (int i = 0; i < 16; i++) {
-                printf("%02x, ", xsm3_kv_2des_key_1[i]);
-            }
-            printf("\r\n");
-            for (int i = 0; i < 16; i++) {
-                printf("%02x, ", xsm3_kv_2des_key_2[i]);
-            }
-            printf("\r\n");
             break;
         }
     }
@@ -236,10 +228,8 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     UsbdSecXSM3AuthenticationCrypt(xsm3_random_console_data_enc, xsm3_decryption_buffer, 0x20, xsm3_challenge_response + 0x5, 1);
     // calculate MAC using the encrypted swapped random key and use it to calculate ACR
     UsbdSecXSM3AuthenticationMac(xsm3_random_console_data_swap_enc, NULL, xsm3_challenge_response + 0x5, 0x20, response_packet_mac);
-    uint8_t tmp = xsm3_console_id[0];
     // calculate ACR and append to the end of the xsm3_challenge_response
     UsbdSecXSMAuthenticationAcr(xsm3_console_id, xsm3_identification_data, response_packet_mac, xsm3_challenge_response + 0x5 + 0x20);
-    xsm3_console_id[0] = tmp;
     // calculate the checksum for the response packet
     xsm3_challenge_response[0x5 + 0x28] = xsm3_calculate_checksum(xsm3_challenge_response);
 

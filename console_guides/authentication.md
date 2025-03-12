@@ -35,11 +35,12 @@ You can use the [Xbox360BadUpdate](https://github.com/Grimdoomer/Xbox360BadUpdat
 ### Instructions
 1. Follow [MrMario2011's video guide](https://www.youtube.com/watch?v=3Ay0V2edQJU) on setting up Xbox360BadUpdate and dumping your NAND and CPU key.
     * Make sure to completely disconnect your Xbox from the internet.
-3. In the Santroller Configurator, in "Controller Settings" click "Import Keys".
+3. In the Santroller Configurator, in "Controller Settings" click "Import Keys from NAND Image".
 4. Select the flashdmp.bin file on your USB drive, dumped in the tutorial linked above. If asked, find your cpukey.txt.
 5. Make sure the ID shown matches the Console ID shown in your Xbox 360's System Info.
 6. Click "Save Settings" to write the new firmware with keys back to your controller.
 7. **Make sure to reboot your Xbox console before connecting it back to the internet.**
+8. Note that you can easily export your keys with the "Export Keys to Backup" and then use the "Import Keys from Backup" if you wish to move all your keys between devices.
 
 ## Xbox 360 RGH
 You can use [UsbdSecPatch](https://github.com/InvoxiPlayGames/UsbdSecPatch/releases) module to patch out the authentication checks on an RGH modded console.

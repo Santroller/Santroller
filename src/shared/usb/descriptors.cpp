@@ -886,7 +886,9 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 #ifdef KV_KEY_ARRAY
     switch (request) {
         case 0x81:
-            xsm3_set_vid_pid(xbox_360_vid, xbox_360_pid);
+            uint8_t serial[0x0C];
+            read_serial(serial, sizeof(serial));
+            xsm3_set_vid_pid(serial, xbox_360_vid, xbox_360_pid);
             xsm3_initialise_state();
             xsm3_set_identification_data(xsm3_id_data_ms_controller);
             memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));

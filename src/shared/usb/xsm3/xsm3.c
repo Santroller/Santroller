@@ -115,7 +115,9 @@ static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
     return checksum;
 }
 
-void xsm3_set_vid_pid(uint16_t vid, uint16_t pid) {
+void xsm3_set_vid_pid(const uint8_t serial[0x0C], uint16_t vid, uint16_t pid) {
+
+    memcpy(xsm3_id_data_ms_controller + 6, serial, 0x0C);
     uint8_t* id_data = xsm3_id_data_ms_controller;
     // skip over the packet header
     id_data += 0x5;

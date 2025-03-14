@@ -50,7 +50,7 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]);
 // Completes a verify challenge passed from request 0x87 and places the response data in xsm3_challenge_response.
 void xsm3_do_challenge_verify(uint8_t challenge_packet[0x16]);
 
-void xsm3_set_vid_pid(uint16_t vid, uint16_t pid);
+void xsm3_set_vid_pid(const uint8_t serial[0x0C], uint16_t vid, uint16_t pid);
 #ifdef __cplusplus
 }
 #endif

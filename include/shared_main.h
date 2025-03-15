@@ -57,21 +57,10 @@ typedef struct {
     uint8_t b;
 } __attribute__((packed)) Led_WS2812_t;
 
-typedef struct {
-    // If this bit is set, then an led effect (like star power) has overridden the leds
-    uint8_t select;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t w;
-} __attribute__((packed)) Led_WS2812W_t;
 extern uint8_t led_tmp;
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
 // for STP, two bits per led, select and on
-#if LED_COUNT_WS2812W
-extern Led_WS2812W_t ledState[LED_COUNT_WS2812W];
-extern Led_WS2812W_t lastLedState[LED_COUNT_WS2812W];
-#elif LED_COUNT_WS2812
+#if LED_COUNT_WS2812
 extern Led_WS2812_t ledState[LED_COUNT_WS2812];
 extern Led_WS2812_t lastLedState[LED_COUNT_WS2812];
 #elif LED_COUNT_STP

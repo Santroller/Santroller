@@ -14,6 +14,7 @@ uint16_t adc(uint8_t pin) {
     adc_select_input(pin);
     return adc_read() << 4;
 }
+
 PIO ws2812Pio;
 uint ws2812Sm;
 uint ws2812Offset;
@@ -26,9 +27,9 @@ void putWs2812(uint8_t a, uint8_t b, uint8_t c) {
     c -= w;
 #endif
     pio_sm_put_blocking(ws2812Pio, ws2812Sm,
-                        ((uint32_t)(a) << 8) |
+                        ((uint32_t)(a) << 24) |
                             ((uint32_t)(b) << 16) |
-                            ((uint32_t)(c) << 24) |
+                            ((uint32_t)(c) << 8) |
                             ((uint32_t)(w)));
 }
 

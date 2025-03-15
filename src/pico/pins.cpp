@@ -25,12 +25,12 @@ void putWs2812(uint8_t r, uint8_t g, uint8_t b) {
                             << 8);
 }
 void putWs2812(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
-    if (r == 255 && g == 255 && b == 255) {
-        w = 255;
-        r = 0;
-        g = 0;
-        b = 0;
-    }
+#if MIX_W
+    w = min(min(r, g), b);
+    r -= w;
+    g -= w;
+    b -= w;
+#endif
     pio_sm_put_blocking(ws2812Pio, ws2812Sm,
                         ((uint32_t)(r) << 8) |
                             ((uint32_t)(g) << 24) |

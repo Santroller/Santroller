@@ -18,21 +18,24 @@ PIO ws2812Pio;
 uint ws2812Sm;
 uint ws2812Offset;
 void putWs2812(uint8_t r, uint8_t g, uint8_t b) {
-     pio_sm_put_blocking(ws2812Pio, ws2812Sm, 
-            (((uint32_t) (r) << 8) |
-            ((uint32_t) (g) << 16) |
-            (uint32_t) (b)) << 8);
+    pio_sm_put_blocking(ws2812Pio, ws2812Sm,
+                        (((uint32_t)(r) << 8) |
+                         ((uint32_t)(g) << 16) |
+                         (uint32_t)(b))
+                            << 8);
 }
 void putWs2812(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
-     if (r == g == b == 255) {
+    if (r == 255 && g == 255 && b == 255) {
         w = 255;
-        r = g = b = 0;
-     }
-     pio_sm_put_blocking(ws2812Pio, ws2812Sm, 
-            ((uint32_t) (r) << 8) |
-            ((uint32_t) (g) << 24) |
-            ((uint32_t) (b) << 16) |
-            (uint32_t) (w));
+        r = 0;
+        g = 0;
+        b = 0;
+    }
+    pio_sm_put_blocking(ws2812Pio, ws2812Sm,
+                        ((uint32_t)(r) << 8) |
+                            ((uint32_t)(g) << 24) |
+                            ((uint32_t)(b) << 16) |
+                            (uint32_t)(w));
 }
 
 void initPins(void) {

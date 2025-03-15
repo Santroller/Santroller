@@ -944,7 +944,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_SET_LEDS: {
             uint8_t led = response_buffer[0];
             if (led >= LED_COUNT_WS2812) return 0;
-            if (!response_buffer[1]) {
+            if (response_buffer[1] == 0 && response_buffer[2] == 0 && response_buffer[3] == 0) {
                 ledState[led].select = 0;
                 return 0;
             }
@@ -957,20 +957,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_SET_LEDS_PERIPHERAL: {
             uint8_t led = response_buffer[0];
             if (led >= LED_COUNT_PERIPHERAL_WS2812) return 0;
-            if (!response_buffer[1]) {
-                ledStatePeripheral[led].select = 0;
-                return 0;
-            }
-            memcpy(&ledStatePeripheral[led], response_buffer, sizeof(Led_WS2812_t));
-            ledStatePeripheral[led].select = 1;
-            return 0;
-        }
-#endif
-#if LED_COUNT_PERIPHERAL_WS2812W
-        case COMMAND_SET_LEDS_PERIPHERAL: {
-            uint8_t led = response_buffer[0];
-            if (led >= LED_COUNT_PERIPHERAL_WS2812W) return 0;
-            if (!response_buffer[1]) {
+            if (response_buffer[1] == 0 && response_buffer[2] == 0 && response_buffer[3] == 0) {
                 ledStatePeripheral[led].select = 0;
                 return 0;
             }

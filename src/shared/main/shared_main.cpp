@@ -558,6 +558,50 @@ long lastTick;
 uint8_t keyboard_report = 0;
 void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_type, USB_Host_Data_t *usb_host_data) {
     switch (device_type.console_type) {
+        case STADIA: {
+            Stadia_Data_t *report = (Stadia_Data_t *)data;
+            uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+            asm volatile("" ::
+                             : "memory");
+            bool up = dpad & UP;
+            bool left = dpad & LEFT;
+            bool down = dpad & DOWN;
+            bool right = dpad & RIGHT;
+            usb_host_data->a |= report->a;
+            usb_host_data->b |= report->b;
+            usb_host_data->x |= report->x;
+            usb_host_data->y |= report->y;
+            usb_host_data->capture |= report->capture;
+            usb_host_data->leftShoulder |= report->leftShoulder;
+            usb_host_data->rightShoulder |= report->rightShoulder;
+            usb_host_data->back |= report->back;
+            usb_host_data->start |= report->start;
+            usb_host_data->guide |= report->guide;
+            usb_host_data->leftThumbClick |= report->leftThumbClick;
+            usb_host_data->rightThumbClick |= report->rightThumbClick;
+            usb_host_data->dpadLeft |= left;
+            usb_host_data->dpadRight |= right;
+            usb_host_data->dpadUp |= up;
+            usb_host_data->dpadDown |= down;
+            if (report->leftTrigger) {
+                usb_host_data->leftTrigger = report->leftTrigger << 8;
+            }
+            if (report->rightTrigger) {
+                usb_host_data->rightTrigger = report->rightTrigger << 8;
+            }
+            if (report->leftStickX != PS3_STICK_CENTER) {
+                usb_host_data->leftStickX = (report->leftStickX - PS3_STICK_CENTER) << 8;
+            }
+            if (report->leftStickY != PS3_STICK_CENTER) {
+                usb_host_data->leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
+            }
+            if (report->rightStickX != PS3_STICK_CENTER) {
+                usb_host_data->rightStickX = (report->rightStickX - PS3_STICK_CENTER) << 8;
+            }
+            if (report->rightStickY != PS3_STICK_CENTER) {
+                usb_host_data->rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
+            }
+        }
         case STREAM_DECK: {
             uint8_t offset = 1;
             switch (device_type.sub_type) {
@@ -3378,6 +3422,12 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
                     type->console_type = PS5;
                     type->sub_type = GAMEPAD;
                     break;
+            }
+            break;
+        case STADIA_VID:
+            if (pid == STADIA_PID) {
+                type->console_type = STADIA;
+                type->sub_type = GAMEPAD;
             }
             break;
         case REDOCTANE_VID:

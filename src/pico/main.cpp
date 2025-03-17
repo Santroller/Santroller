@@ -395,6 +395,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         case STEPMANIAX:
         case LTEK:
         case LTEK_ID:
+        case STADIA:
             printf("Found Generic controller\r\n");
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
@@ -557,6 +558,9 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 continue;
             }
             if (usb_host_devices[i].type.console_type == STEPMANIAX && report[0] != STEPMANIA_X_REPORT_ID) {
+                continue;
+            }
+            if (usb_host_devices[i].type.console_type == STADIA && report[0] != STADIA_REPORT_ID) {
                 continue;
             }
             if (usb_host_devices[i].type.console_type == SWITCH && usb_host_devices[i].type.sub_type == GAMEPAD) {

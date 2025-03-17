@@ -112,6 +112,9 @@ enum endpoints_t {
 #define STREAM_DECK_MINIV2_PID 0x0090
 #define STREAM_DECK_NEO_PID 0x009a
 
+#define STADIA_VID 0x18d1
+#define STADIA_PID 0x9400
+
 
 #define SIMULTANEOUS_KEYS 6
 

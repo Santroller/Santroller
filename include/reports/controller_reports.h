@@ -17,6 +17,7 @@
 #include "reports/xinput_reports.h"
 
 #define STREAM_DECK_INPUT_REPORT_ID 1
+#define STADIA_REPORT_ID 3
 #define SIMULTANEOUS_KEYS 6
 #define NKRO_KEYS ((0x73 / 8) + 1)
 #define SIMULTANEOUS_MIDI 12
@@ -375,3 +376,37 @@ typedef struct {
     uint8_t bFretVelocity;
     uint8_t highEFretVelocity;
 } __attribute__((packed)) USB_Host_Data_t;
+
+
+
+typedef struct {
+
+    uint8_t report_id; // 0x03
+    uint8_t dpad : 4;
+    uint8_t : 4;
+    
+    uint8_t capture : 1;
+    uint8_t assistant : 1;
+    uint8_t r2 : 1;             // r2
+    uint8_t l2 : 1;             // l2
+    uint8_t guide : 1;    // ps
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // options
+    uint8_t rightThumbClick : 1;  // r3
+
+    uint8_t leftThumbClick : 1;   // l3
+    uint8_t rightShoulder : 1;  // r1
+    uint8_t leftShoulder : 1;   // l1
+    uint8_t y : 1;  // triangle
+    uint8_t x : 1;  // square
+    uint8_t b : 1;  // circle
+    uint8_t a : 1;  // cross
+    uint8_t : 1;
+
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint8_t leftTrigger;   // pressure_l2
+    uint8_t rightTrigger;  // pressure_r2
+} __attribute__((packed)) Stadia_Data_t;

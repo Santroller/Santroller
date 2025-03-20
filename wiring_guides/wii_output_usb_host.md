@@ -41,8 +41,8 @@ sort: 13
     | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
     | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 
-2. Connect the V<sub>CC</sub> from the Wii Excension to the voltage input for your boost converter
-3. Connect the voltage output from the boost converter to the pico, via the Schottky diode
+2. Connect the V<sub>CC</sub> from the Wii Extension to the voltage input for your boost converter
+3. Connect the voltage output from the boost converter to VBUS the pico, via the Schottky diode
 4. Connect the ground pin from the boost converter to the pico
 5. Connect the gnd pin to the gnd on your microcontroller.
 6. If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.

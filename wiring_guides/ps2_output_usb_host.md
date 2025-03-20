@@ -44,11 +44,11 @@ sort: 14
 3. Pick one of the following options depending on the type of voltage converter you wish to use
    1. If you are using a 5V regulator:
       1. Connect the rumble wire (grey) from the PS2 plug to the voltage input for your regulator
-      2. Connect the voltage output from the regulator to the pico, via the Schottky diode
+      2. Connect the voltage output from the regulator to VBUS on the pico, via the Schottky diode
       3. Connect the ground pin from the regulator to the pico
    2. If you are using a 3.3V to 5V boost converter:
       1. Connect the 3.3V wire (red) from the PS2 plug to the voltage input for your boost converter
-      2. Connect the voltage output from the boost converter to the pico, via the Schottky diode
+      2. Connect the voltage output from the boost converter to VBUS on the pico, via the Schottky diode
       3. Connect the ground pin from the boost converter to the pico
 
 ## Programming

@@ -1738,11 +1738,29 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->rid == 1) {
                 uint8_t dpad = report->dpad - 1;
-                usb_host_data->green |= report->a;
-                usb_host_data->red |= report->b;
-                usb_host_data->yellow |= report->y;
-                usb_host_data->blue |= report->x;
-                usb_host_data->orange |= report->leftShoulder;
+                usb_host_data->dpadLeft = dpad == 6 || dpad == 5 || dpad == 7;
+                usb_host_data->dpadRight = dpad == 3 || dpad == 2 || dpad == 1;
+                usb_host_data->dpadUp = dpad == 0 || dpad == 1 || dpad == 7;
+                usb_host_data->dpadDown = dpad == 5 || dpad == 4 || dpad == 3;
+                // Festival pro mode mappings
+                usb_host_data->green |= dpad == 6 || dpad == 5 || dpad == 7;
+                usb_host_data->red |= dpad == 0 || dpad == 1 || dpad == 7;
+                usb_host_data->yellow |= report->x;
+                usb_host_data->blue |= report->y;
+                usb_host_data->orange |= report->b;
+                // Festival expert mappings
+                // usb_host_data->green |= dpad == 6 || dpad == 5 || dpad == 7;
+                // usb_host_data->red |= dpad == 3 || dpad == 2 || dpad == 1;
+                // usb_host_data->yellow |= report->x;
+                // usb_host_data->blue |= report->y;
+                // usb_host_data->orange |= report->b;
+
+                // Festival easy/med/hard mappings
+                // usb_host_data->green |= dpad == 6 || dpad == 5 || dpad == 7;
+                // usb_host_data->red |= dpad == 3 || dpad == 2 || dpad == 1;
+                // usb_host_data->yellow |= report->x;
+                // usb_host_data->blue |= report->b;
+                // usb_host_data->orange |= report->y;
                 usb_host_data->a |= report->a;
                 usb_host_data->b |= report->b;
                 usb_host_data->x |= report->x;
@@ -1753,10 +1771,6 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 usb_host_data->start |= report->start;
                 usb_host_data->leftThumbClick |= report->leftThumbClick;
                 usb_host_data->rightThumbClick |= report->rightThumbClick;
-                usb_host_data->dpadLeft = dpad == 6 || dpad == 5 || dpad == 7;
-                usb_host_data->dpadRight = dpad == 3 || dpad == 2 || dpad == 1;
-                usb_host_data->dpadUp = dpad == 0 || dpad == 1 || dpad == 7;
-                usb_host_data->dpadDown = dpad == 5 || dpad == 4 || dpad == 3;
                 if (report->leftTrigger) {
                     usb_host_data->leftTrigger = report->leftTrigger << 6;
                 }

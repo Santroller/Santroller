@@ -1228,29 +1228,26 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     if (usb_host_data->kick1 || usb_host_data->kick2) {
                         usb_host_data->kickVelocity = 0xFF;
                     }
-                    if (report->greenVelocity) {
-                        if (usb_host_data->greenCymbal) {
-                            usb_host_data->greenCymbalVelocity = 0xFF - report->greenVelocity;
-                        } else {
-                            usb_host_data->greenVelocity = 0xFF - report->greenVelocity;
-                        }
+                    if (usb_host_data->green) {
+                        usb_host_data->greenVelocity = 0xFF;
                     }
-                    if (report->redVelocity) {
-                        usb_host_data->redVelocity = report->redVelocity;
+                    if (usb_host_data->greenCymbal) {
+                        usb_host_data->greenCymbalVelocity = 0xFF;
                     }
-                    if (report->yellowVelocity) {
-                        if (usb_host_data->yellowCymbal) {
-                            usb_host_data->yellowCymbalVelocity = 0xFF - report->yellowVelocity;
-                        } else {
-                            usb_host_data->yellowVelocity = 0xFF - report->yellowVelocity;
-                        }
+                    if (usb_host_data->red) {
+                        usb_host_data->redVelocity = 0xFF;
                     }
-                    if (report->blueVelocity) {
-                        if (usb_host_data->blueCymbal) {
-                            usb_host_data->blueCymbalVelocity = 0xFF - report->blueVelocity;
-                        } else {
-                            usb_host_data->blueVelocity = 0xFF - report->blueVelocity;
-                        }
+                    if (usb_host_data->yellow) {
+                        usb_host_data->yellowVelocity = 0xFF;
+                    }
+                    if (usb_host_data->yellowCymbal) {
+                        usb_host_data->yellowCymbalVelocity = 0xFF;
+                    }
+                    if (usb_host_data->blue) {
+                        usb_host_data->blueVelocity = 0xFF;
+                    }
+                    if (usb_host_data->blueCymbal) {
+                        usb_host_data->blueCymbalVelocity = 0xFF;
                     }
                     break;
                 }
@@ -1732,6 +1729,55 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->dpadDown = report->dpadDown;
             break;
         }
+
+        case XINPUTCOMPAT: {
+            XInputCompatGamepad_Data_t *report = (XInputCompatGamepad_Data_t *)data;
+            if (report->rid == 2) {
+                usb_host_data->guide = data[1];
+                break;
+            }
+            if (report->rid == 1) {
+                uint8_t dpad = report->dpad - 1;
+                usb_host_data->green |= report->a;
+                usb_host_data->red |= report->b;
+                usb_host_data->yellow |= report->y;
+                usb_host_data->blue |= report->x;
+                usb_host_data->orange |= report->leftShoulder;
+                usb_host_data->a |= report->a;
+                usb_host_data->b |= report->b;
+                usb_host_data->x |= report->x;
+                usb_host_data->y |= report->y;
+                usb_host_data->leftShoulder |= report->leftShoulder;
+                usb_host_data->rightShoulder |= report->rightShoulder;
+                usb_host_data->back |= report->back;
+                usb_host_data->start |= report->start;
+                usb_host_data->leftThumbClick |= report->leftThumbClick;
+                usb_host_data->rightThumbClick |= report->rightThumbClick;
+                usb_host_data->dpadLeft = dpad == 6 || dpad == 5 || dpad == 7;
+                usb_host_data->dpadRight = dpad == 3 || dpad == 2 || dpad == 1;
+                usb_host_data->dpadUp = dpad == 0 || dpad == 1 || dpad == 7;
+                usb_host_data->dpadDown = dpad == 5 || dpad == 4 || dpad == 3;
+                if (report->leftTrigger) {
+                    usb_host_data->leftTrigger = report->leftTrigger << 6;
+                }
+                if (report->rightTrigger) {
+                    usb_host_data->rightTrigger = report->rightTrigger << 6;
+                }
+                if (report->leftStickX) {
+                    usb_host_data->leftStickX = report->leftStickX - INT16_MAX;
+                }
+                if (report->leftStickY) {
+                    usb_host_data->leftStickY = -(report->leftStickY - INT16_MAX);
+                }
+                if (report->rightStickX) {
+                    usb_host_data->rightStickX = report->rightStickX - INT16_MAX;
+                }
+                if (report->rightStickY) {
+                    usb_host_data->rightStickY = -(report->rightStickY - INT16_MAX);
+                }
+            }
+            break;
+        }
         case XBOX360_W:
         case XBOX360: {
             switch (device_type.sub_type) {
@@ -1827,93 +1873,91 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     }
                     break;
                 }
-                case XINPUT_DRUMS: {
-                    XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)data;
-                    // leftThumbClick is true for guitar hero, false for rockband
-                    if (gamepad->leftThumbClick) {
-                        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)data;
-                        usb_host_data->a |= report->a;
-                        usb_host_data->b |= report->b;
-                        usb_host_data->x |= report->x;
-                        usb_host_data->y |= report->y;
-                        usb_host_data->leftShoulder |= report->leftShoulder;
-                        usb_host_data->back |= report->back;
-                        usb_host_data->start |= report->start;
-                        usb_host_data->guide |= report->guide;
-                        usb_host_data->dpadLeft = report->dpadLeft;
-                        usb_host_data->dpadRight = report->dpadRight;
-                        usb_host_data->dpadUp = report->dpadUp;
-                        usb_host_data->dpadDown = report->dpadDown;
-                        usb_host_data->green |= report->a;
-                        usb_host_data->red |= report->b;
-                        usb_host_data->yellow |= report->y;
-                        usb_host_data->blue |= report->x;
-                        usb_host_data->orange |= report->rightShoulder;
-                        usb_host_data->kick1 |= report->leftShoulder;
-                        if (report->greenVelocity) {
-                            usb_host_data->greenVelocity = report->greenVelocity;
-                        }
-                        if (report->redVelocity) {
-                            usb_host_data->redVelocity = report->redVelocity;
-                        }
-                        if (report->yellowVelocity) {
-                            usb_host_data->yellowVelocity = report->yellowVelocity;
-                        }
-                        if (report->blueVelocity) {
-                            usb_host_data->blueVelocity = report->blueVelocity;
-                        }
-                        if (report->orangeVelocity) {
-                            usb_host_data->orangeVelocity = report->orangeVelocity;
-                        }
-                        if (report->kickVelocity) {
-                            usb_host_data->kickVelocity = report->kickVelocity;
-                            usb_host_data->kick1 = true;
-                        }
-                    } else {
-                        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)data;
-                        SET_PADS();
-                        usb_host_data->a |= report->a;
-                        usb_host_data->b |= report->b;
-                        usb_host_data->x |= report->x;
-                        usb_host_data->y |= report->y;
-                        usb_host_data->dpadLeft = report->dpadLeft;
-                        usb_host_data->dpadRight = report->dpadRight;
-                        usb_host_data->dpadUp = report->dpadUp;
-                        usb_host_data->dpadDown = report->dpadDown;
-                        usb_host_data->kick1 |= report->leftShoulder;
-                        usb_host_data->kick2 |= report->leftThumbClick;
-                        usb_host_data->back |= report->back;
-                        usb_host_data->start |= report->start;
-                        usb_host_data->guide |= report->guide;
-                        if (usb_host_data->kick1 || usb_host_data->kick2) {
-                            usb_host_data->kickVelocity = 0xFF;
-                        }
-                        if (report->greenVelocity) {
-                            if (usb_host_data->greenCymbal) {
-                                usb_host_data->greenCymbalVelocity = (0x7FFF - report->greenVelocity) >> 7;
-                            } else {
-                                usb_host_data->greenVelocity = (0x7FFF - report->greenVelocity) >> 7;
-                            }
-                        }
-                        if (report->redVelocity) {
-                            usb_host_data->redVelocity = (0x7FFF - report->redVelocity) >> 7;
-                        }
-                        if (report->yellowVelocity) {
-                            if (usb_host_data->yellowCymbal) {
-                                usb_host_data->yellowCymbalVelocity = (0x7FFF - report->yellowVelocity) >> 7;
-                            } else {
-                                usb_host_data->yellowVelocity = (0x7FFF - report->yellowVelocity) >> 7;
-                            }
-                        }
-                        if (report->blueVelocity) {
-                            if (usb_host_data->blueCymbal) {
-                                usb_host_data->blueCymbalVelocity = (0x7FFF - report->blueVelocity) >> 7;
-                            } else {
-                                usb_host_data->blueVelocity = (0x7FFF - report->blueVelocity) >> 7;
-                            }
-                        }
+                case XINPUT_RB_DRUMS: {
+                    XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)data;
+                    bool up = report->dpadUp;
+                    bool down = report->dpadDown;
+                    bool left = report->dpadLeft;
+                    bool right = report->dpadRight;
+                    SET_PADS();
+                    usb_host_data->a |= report->a;
+                    usb_host_data->b |= report->b;
+                    usb_host_data->x |= report->x;
+                    usb_host_data->y |= report->y;
+                    usb_host_data->dpadLeft = report->dpadLeft;
+                    usb_host_data->dpadRight = report->dpadRight;
+                    usb_host_data->dpadUp = report->dpadUp;
+                    usb_host_data->dpadDown = report->dpadDown;
+                    usb_host_data->kick1 |= report->leftShoulder;
+                    usb_host_data->kick2 |= report->leftThumbClick;
+                    usb_host_data->back |= report->back;
+                    usb_host_data->start |= report->start;
+                    usb_host_data->guide |= report->guide;
+                    if (usb_host_data->kick1 || usb_host_data->kick2) {
+                        usb_host_data->kickVelocity = 0xFF;
+                    }
+                    if (usb_host_data->green) {
+                        usb_host_data->greenVelocity = 0xFF;
+                    }
+                    if (usb_host_data->greenCymbal) {
+                        usb_host_data->greenCymbalVelocity = 0xFF;
+                    }
+                    if (usb_host_data->red) {
+                        usb_host_data->redVelocity = 0xFF;
+                    }
+                    if (usb_host_data->yellow) {
+                        usb_host_data->yellowVelocity = 0xFF;
+                    }
+                    if (usb_host_data->yellowCymbal) {
+                        usb_host_data->yellowCymbalVelocity = 0xFF;
+                    }
+                    if (usb_host_data->blue) {
+                        usb_host_data->blueVelocity = 0xFF;
+                    }
+                    if (usb_host_data->blueCymbal) {
+                        usb_host_data->blueCymbalVelocity = 0xFF;
                     }
                     break;
+                }
+                case XINPUT_GH_DRUMS: {
+                    XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)data;
+                    usb_host_data->a |= report->a;
+                    usb_host_data->b |= report->b;
+                    usb_host_data->x |= report->x;
+                    usb_host_data->y |= report->y;
+                    usb_host_data->leftShoulder |= report->leftShoulder;
+                    usb_host_data->back |= report->back;
+                    usb_host_data->start |= report->start;
+                    usb_host_data->guide |= report->guide;
+                    usb_host_data->dpadLeft = report->dpadLeft;
+                    usb_host_data->dpadRight = report->dpadRight;
+                    usb_host_data->dpadUp = report->dpadUp;
+                    usb_host_data->dpadDown = report->dpadDown;
+                    usb_host_data->green |= report->a;
+                    usb_host_data->red |= report->b;
+                    usb_host_data->yellow |= report->y;
+                    usb_host_data->blue |= report->x;
+                    usb_host_data->orange |= report->rightShoulder;
+                    usb_host_data->kick1 |= report->leftShoulder;
+                    if (report->greenVelocity) {
+                        usb_host_data->greenVelocity = report->greenVelocity;
+                    }
+                    if (report->redVelocity) {
+                        usb_host_data->redVelocity = report->redVelocity;
+                    }
+                    if (report->yellowVelocity) {
+                        usb_host_data->yellowVelocity = report->yellowVelocity;
+                    }
+                    if (report->blueVelocity) {
+                        usb_host_data->blueVelocity = report->blueVelocity;
+                    }
+                    if (report->orangeVelocity) {
+                        usb_host_data->orangeVelocity = report->orangeVelocity;
+                    }
+                    if (report->kickVelocity) {
+                        usb_host_data->kickVelocity = report->kickVelocity;
+                        usb_host_data->kick1 = true;
+                    }
                 }
                 case XINPUT_GUITAR_HERO_LIVE: {
                     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)data;
@@ -2376,7 +2420,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 
     // give the user 2 second to jump between modes (aka, hold on plug in)
-    if ((millis() - input_start) < 2000) {
+    if ((millis() - input_start) < 2000 && (millis() - input_start) > 100) {
         TICK_DETECTION;
     }
 #ifdef TICK_DETECTION_FESTIVAL
@@ -3565,6 +3609,13 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
                     type->console_type = XBOX360;
                     type->sub_type = XINPUT_GUITAR_WT;
                     break;
+            }
+            break;
+        case XBOX_ONE_CONTROLLER_VID:
+            if (pid >= 0x02e0 && pid <= 0x02eF) {
+                type->console_type = XINPUTCOMPAT;
+                type->sub_type = GAMEPAD;
+                break;
             }
             break;
     }

@@ -395,6 +395,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         case STEPMANIAX:
         case LTEK:
         case LTEK_ID:
+        case XINPUTCOMPAT:
         case STADIA:
             printf("Found Generic controller\r\n");
             usb_host_devices[total_usb_host_devices].type = type;
@@ -520,6 +521,14 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     if (header->type == 0x01 || header->type == 0x03) {
                         memcpy(&usb_host_devices[i].report, report + sizeof(header), len - sizeof(header));
                         usb_host_devices[i].report_length = len - sizeof(header);
+                        if (usb_host_devices[i].type.sub_type == XINPUT_DRUMS) {
+                            XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
+                            if (gamepad->leftThumbClick) {
+                                usb_host_devices[i].type.sub_type = XINPUT_GH_DRUMS;
+                            } else {
+                                usb_host_devices[i].type.sub_type = XINPUT_RB_DRUMS;
+                            }
+                        }
                     }
                     // Link report
                     if (header->type == 0x0f) {
@@ -581,6 +590,16 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
 
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
+            if (usb_host_devices[i].type.console_type == XBOX360 && usb_host_devices[i].type.sub_type == XINPUT_DRUMS) {
+                XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
+                if (gamepad->rsize == sizeof(XInputGamepad_Data_t)) {
+                    if (gamepad->leftThumbClick) {
+                        usb_host_devices[i].type.sub_type = XINPUT_GH_DRUMS;
+                    } else {
+                        usb_host_devices[i].type.sub_type = XINPUT_RB_DRUMS;
+                    }
+                }
+            }
             return;
         }
     }

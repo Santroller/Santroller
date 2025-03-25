@@ -26,7 +26,6 @@
 #define BB_BLUE 0
 #define BB_YELLOW 0
 
-
 typedef struct {
     uint8_t rid;
     uint8_t rsize;
@@ -126,6 +125,38 @@ typedef struct {
     int16_t rightStickY;
     uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGamepad_Data_t;
+
+typedef struct {
+    uint8_t rid;
+    uint16_t leftStickX;
+    uint16_t leftStickY;
+    uint16_t rightStickX;
+    uint16_t rightStickY;
+    uint16_t leftTrigger;
+    uint16_t rightTrigger;
+
+    uint8_t dpad : 4;
+    uint8_t : 4;
+
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t x : 1;
+    uint8_t y : 1;
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t back : 1;
+    uint8_t start : 1;
+
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
+    uint8_t : 6;
+} __attribute__((packed)) XInputCompatGamepad_Data_t;
+
+typedef struct {
+    uint8_t rid;
+    uint8_t guide : 1;
+    uint8_t : 7;
+} __attribute__((packed)) XInputCompatGuide_Data_t;
 typedef struct
 {
     uint8_t rid;
@@ -434,7 +465,7 @@ typedef struct
     int16_t strumBar;
     int16_t tilt;
     int16_t whammy;
-    
+
     uint8_t reserved_1[6];
 } __attribute__((packed)) XInputGHLGuitar_Data_t;
 

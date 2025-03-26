@@ -21,7 +21,7 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
 
 ## Steps
 
-1. Connect pins according to the below table. Note that for anything that isn't the 3.3v Pro Micro or pi pico, you will need to connect these pins using a level shifter.
+1. Connect pins according to the below table.
 
    For beginners we provide a recommended pinout below for each microcontroller. These pinouts are the same pinouts that are used on the old Ardwiino firmware, so if you have an old device, this is the pinout it will be using.
    If these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK, MOSI and MISO need to be from the same channel.

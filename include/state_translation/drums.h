@@ -4,20 +4,7 @@
 #define GREEN 2
 #define BLUE 3
 #define CYMBAL 4
-typedef union {
-    struct {
-        uint8_t yellow : 1;
-        uint8_t red : 1;
-        uint8_t green : 1;
-        uint8_t blue : 1;
 
-        uint8_t yellowCymbal : 1;
-        uint8_t : 1;
-        uint8_t greenCymbal : 1;
-        uint8_t blueCymbal : 1;
-    };
-    uint8_t buttons;
-} USB_RB_Drums_t;
 #define SET_RB_PADS()                                                                                             \
     bool green = report->a;                                                                                       \
     bool red = report->b;                                                                                         \

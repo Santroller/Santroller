@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "reports/dance_pad_reports.h"
-#include "reports/drum_reports.h"
 #include "reports/og_xbox_reports.h"
 #include "reports/pc_reports.h"
 #include "reports/ps2_reports.h"
@@ -308,15 +307,6 @@ typedef struct {
     uint8_t pressureCircle;
     uint8_t pressureCross;
     uint8_t pressureSquare;
-    uint8_t redVelocity;
-    uint8_t yellowVelocity;
-    uint8_t blueVelocity;
-    uint8_t greenVelocity;
-    uint8_t orangeVelocity;
-    uint8_t blueCymbalVelocity;
-    uint8_t yellowCymbalVelocity;
-    uint8_t greenCymbalVelocity;
-    uint8_t kickVelocity;
     uint8_t whammy;
     uint8_t pickup;
     int16_t tilt;
@@ -360,9 +350,6 @@ typedef struct {
     uint16_t genericAxisSlider;
     USB_NKRO_Data_t keyboard;
     USB_Mouse_Boot_Data_t mouse;
-    uint8_t proKeyVelocities[25];
-    uint8_t pedalAnalog;
-    uint8_t touchPad;
     uint8_t lowEFret;
     uint8_t aFret;
     uint8_t dFret;

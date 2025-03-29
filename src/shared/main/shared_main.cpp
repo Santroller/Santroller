@@ -18,6 +18,7 @@
 #include "ps2.h"
 #include "state_translation/pro_guitar.h"
 #include "state_translation/pro_keys.h"
+#include "state_translation/drums.h"
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
@@ -1932,7 +1933,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= report->dpadRight;
                     usb_host_data->dpadUp |= report->dpadUp;
                     usb_host_data->dpadDown |= report->dpadDown;
-                    
+
                     TRANSLATE_PRO_KEYS;
                     break;
                 }
@@ -2087,35 +2088,49 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadUp = report->dpadUp;
                     usb_host_data->dpadDown = report->dpadDown;
                     if (report->greenVelocity) {
-                        usb_host_data->green = true;
-                        usb_host_data->greenVelocity = report->greenVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_GREEN, report->greenVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_GREEN, 0);
                     }
                     if (report->redVelocity) {
-                        usb_host_data->red = true;
-                        usb_host_data->redVelocity = report->redVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_RED, report->redVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_RED, 0);
                     }
                     if (report->yellowVelocity) {
-                        usb_host_data->yellow = true;
-                        usb_host_data->yellowVelocity = report->yellowVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_YELLOW, report->redVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_YELLOW, 0);
                     }
                     if (report->blueVelocity) {
-                        usb_host_data->blue = true;
-                        usb_host_data->blueVelocity = report->blueVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_BLUE, report->redVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_BLUE, 0);
                     }
                     if (report->blueCymbalVelocity) {
-                        usb_host_data->blueCymbal = true;
-                        usb_host_data->blueCymbalVelocity = report->blueCymbalVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, report->redVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, 0);
                     }
                     if (report->yellowCymbalVelocity) {
-                        usb_host_data->yellowCymbal = true;
-                        usb_host_data->yellowCymbalVelocity = report->yellowCymbalVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, report->redVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, 0);
                     }
                     if (report->greenCymbalVelocity) {
-                        usb_host_data->greenCymbal = true;
-                        usb_host_data->greenCymbalVelocity = report->greenCymbalVelocity << 4;
+                        onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, report->redVelocity << 3);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, 0);
                     }
-                    if (report->leftShoulder || report->rightShoulder) {
-                        usb_host_data->kickVelocity = 0xFF;
+                    if (report->leftShoulder) {
+                        onNote(10, RB_MIDI_NOTE_KICK, 0x7F);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_KICK, 0);
+                    }
+                    if (report->rightShoulder) {
+                        onNote(10, RB_MIDI_NOTE_KICK2, 0x7F);
+                    } else {
+                        offNote(10, RB_MIDI_NOTE_KICK2, 0);
                     }
                     break;
                 }
@@ -2285,13 +2300,11 @@ void tick_wiioutput() {
 void bluetooth_connected() {
     input_start = millis();
 }
-USB_RB_Drums_t last_drum_report = {buttons : 0};
 uint8_t rbcount = 0;
 uint8_t lastrbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
-    USB_RB_Drums_t current_drum_report = {buttons : 0};
     bool drumHit = false;
 #if DIGITAL_COUNT
     bool drumSeen[DIGITAL_COUNT] = {false};

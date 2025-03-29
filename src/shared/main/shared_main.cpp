@@ -51,7 +51,6 @@ struct {
         };
     };
 } rtt_t;
-#ifdef INPUT_MIDI
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
@@ -85,7 +84,6 @@ void onPitchBend(uint8_t channel, int pitch) {
     printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
     midiData.midiPitchWheel = pitch << 2;
 }
-#endif
 uint8_t tmp = 0;
 long clone_guitar_timer = 0;
 long clone_guitar_ready_timer = 0;
@@ -279,9 +277,7 @@ void init_main(void) {
 #ifdef TICK_PS2
     ps2_emu_init();
 #endif
-#ifdef INPUT_MIDI
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
-#endif
 #ifdef TICK_WII
     initWiiOutput();
 #endif
@@ -553,7 +549,15 @@ uint8_t tick_xbox_one() {
             return 0;
     }
 }
+static uint8_t xinput_rb_velocity_positive(int16_t velocity) {
+    return (uint8_t)(255 - (uint8_t)(velocity >> 7));
+}
+static uint8_t xinput_rb_velocity_negative(int16_t velocity) {
+    if (velocity == 0)
+        return 255;
 
+    return (uint8_t)(255 - (uint8_t)((~velocity) >> 7));
+}
 long lastTick;
 uint8_t keyboard_report = 0;
 void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_type, USB_Host_Data_t *usb_host_data) {
@@ -874,25 +878,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->blue |= report->x;
                     usb_host_data->orange |= report->rightShoulder;
                     usb_host_data->kick1 |= report->leftShoulder;
-                    if (report->greenVelocity) {
-                        usb_host_data->greenVelocity = report->greenVelocity;
-                    }
-                    if (report->redVelocity) {
-                        usb_host_data->redVelocity = report->redVelocity;
-                    }
-                    if (report->yellowVelocity) {
-                        usb_host_data->yellowVelocity = report->yellowVelocity;
-                    }
-                    if (report->blueVelocity) {
-                        usb_host_data->blueVelocity = report->blueVelocity;
-                    }
-                    if (report->orangeVelocity) {
-                        usb_host_data->orangeVelocity = report->orangeVelocity;
-                    }
-                    if (report->kickVelocity) {
-                        usb_host_data->kickVelocity = report->kickVelocity;
-                        usb_host_data->kick1 = true;
-                    }
+                    SET_GH_PADS();
                     break;
                 }
                 case ROCK_BAND_DRUMS: {
@@ -901,49 +887,20 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->b |= report->b;
                     usb_host_data->x |= report->x;
                     usb_host_data->y |= report->y;
-                    usb_host_data->kick1 |= report->leftShoulder;
-                    usb_host_data->kick2 |= report->rightShoulder;
                     usb_host_data->back |= report->back;
                     usb_host_data->start |= report->start;
                     usb_host_data->guide |= report->guide;
-                    usb_host_data->green |= report->a && report->padFlag;
-                    usb_host_data->red |= report->b && report->padFlag;
-                    usb_host_data->yellow |= report->y && report->padFlag;
-                    usb_host_data->blue |= report->x && report->padFlag;
-                    usb_host_data->greenCymbal |= report->a && report->cymbalFlag;
-                    usb_host_data->blueCymbal |= report->x && report->cymbalFlag && up;
-                    usb_host_data->yellowCymbal |= report->y && report->cymbalFlag && down;
                     usb_host_data->dpadLeft |= left;
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
-                    if (usb_host_data->kick1 || usb_host_data->kick2) {
-                        usb_host_data->kickVelocity = 0xFF;
-                    }
-                    if (report->greenVelocity) {
-                        if (usb_host_data->greenCymbal) {
-                            usb_host_data->greenCymbalVelocity = report->greenVelocity;
-                        } else {
-                            usb_host_data->greenVelocity = report->greenVelocity;
-                        }
-                    }
-                    if (report->redVelocity) {
-                        usb_host_data->redVelocity = report->redVelocity;
-                    }
-                    if (report->yellowVelocity) {
-                        if (usb_host_data->yellowCymbal) {
-                            usb_host_data->yellowCymbalVelocity = report->yellowVelocity;
-                        } else {
-                            usb_host_data->yellowVelocity = report->yellowVelocity;
-                        }
-                    }
-                    if (report->blueVelocity) {
-                        if (usb_host_data->blueCymbal) {
-                            usb_host_data->blueCymbalVelocity = report->blueVelocity;
-                        } else {
-                            usb_host_data->blueVelocity = report->blueVelocity;
-                        }
-                    }
+                    uint8_t redVelocity = report->redVelocity;
+                    uint8_t greenVelocity = report->greenVelocity;
+                    uint8_t yellowVelocity = report->yellowVelocity;
+                    uint8_t blueVelocity = report->blueVelocity;
+                    bool kick1 = report->leftShoulder;
+                    bool kick2 = report->rightShoulder;
+                    SET_RB_PADS();
                     break;
                 }
                 case LIVE_GUITAR: {
@@ -1211,13 +1168,16 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 }
                 case ROCK_BAND_DRUMS: {
                     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
-                    SET_PADS();
+                    uint8_t redVelocity = ~report->redVelocity;
+                    uint8_t greenVelocity = ~report->greenVelocity;
+                    uint8_t yellowVelocity = ~report->yellowVelocity;
+                    uint8_t blueVelocity = ~report->blueVelocity;
+                    bool kick1 = report->leftShoulder;
+                    bool kick2 = report->rightShoulder;
                     usb_host_data->a |= report->a;
                     usb_host_data->b |= report->b;
                     usb_host_data->x |= report->x;
                     usb_host_data->y |= report->y;
-                    usb_host_data->kick1 |= report->leftShoulder;
-                    usb_host_data->kick2 |= report->rightShoulder;
                     usb_host_data->back |= report->back;
                     usb_host_data->start |= report->start;
                     usb_host_data->guide |= report->guide;
@@ -1225,30 +1185,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
-                    if (usb_host_data->kick1 || usb_host_data->kick2) {
-                        usb_host_data->kickVelocity = 0xFF;
-                    }
-                    if (usb_host_data->green) {
-                        usb_host_data->greenVelocity = 0xFF;
-                    }
-                    if (usb_host_data->greenCymbal) {
-                        usb_host_data->greenCymbalVelocity = 0xFF;
-                    }
-                    if (usb_host_data->red) {
-                        usb_host_data->redVelocity = 0xFF;
-                    }
-                    if (usb_host_data->yellow) {
-                        usb_host_data->yellowVelocity = 0xFF;
-                    }
-                    if (usb_host_data->yellowCymbal) {
-                        usb_host_data->yellowCymbalVelocity = 0xFF;
-                    }
-                    if (usb_host_data->blue) {
-                        usb_host_data->blueVelocity = 0xFF;
-                    }
-                    if (usb_host_data->blueCymbal) {
-                        usb_host_data->blueCymbalVelocity = 0xFF;
-                    }
+                    SET_RB_PADS();
                     break;
                 }
                 case GUITAR_HERO_DRUMS: {
@@ -1265,30 +1202,12 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= right;
                     usb_host_data->dpadUp |= up;
                     usb_host_data->dpadDown |= down;
-                    usb_host_data->green |= report->a;
-                    usb_host_data->red |= report->b;
-                    usb_host_data->yellow |= report->y;
-                    usb_host_data->blue |= report->x;
-                    usb_host_data->orange |= report->rightShoulder;
-                    usb_host_data->kick1 |= report->leftShoulder;
-                    if (report->greenVelocity) {
-                        usb_host_data->greenVelocity = report->greenVelocity;
-                    }
-                    if (report->redVelocity) {
-                        usb_host_data->redVelocity = report->redVelocity;
-                    }
-                    if (report->yellowVelocity) {
-                        usb_host_data->yellowVelocity = report->yellowVelocity;
-                    }
-                    if (report->blueVelocity) {
-                        usb_host_data->blueVelocity = report->blueVelocity;
-                    }
-                    if (report->orangeVelocity) {
-                        usb_host_data->orangeVelocity = report->orangeVelocity;
-                    }
-                    if (report->kickVelocity) {
-                        usb_host_data->kickVelocity = report->kickVelocity;
-                        usb_host_data->kick1 = true;
+                    SET_GH_PADS();
+                    // Forward any midi data we get
+                    if ((report->midiByte0 & 0xF0) == 0x90) {
+                        onNote(report->midiByte0 & 0x0F, report->midiByte1, report->midiByte2);
+                    } else if ((report->midiByte0 & 0xF0) == 0x80) {
+                        offNote(report->midiByte0 & 0x0F, report->midiByte1, report->midiByte2);
                     }
                     break;
                 }
@@ -1893,7 +1812,15 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     bool down = report->dpadDown;
                     bool left = report->dpadLeft;
                     bool right = report->dpadRight;
-                    SET_PADS();
+                    bool kick1 = report->leftShoulder;
+                    bool kick2 = report->leftThumbClick;
+
+                    uint8_t redVelocity = xinput_rb_velocity_positive(report->redVelocity);
+                    uint8_t greenVelocity = xinput_rb_velocity_negative(report->greenVelocity);
+                    uint8_t yellowVelocity = xinput_rb_velocity_negative(report->yellowVelocity);
+                    uint8_t blueVelocity = xinput_rb_velocity_positive(report->blueVelocity);
+
+                    SET_RB_PADS();
                     usb_host_data->a |= report->a;
                     usb_host_data->b |= report->b;
                     usb_host_data->x |= report->x;
@@ -1902,35 +1829,9 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight = report->dpadRight;
                     usb_host_data->dpadUp = report->dpadUp;
                     usb_host_data->dpadDown = report->dpadDown;
-                    usb_host_data->kick1 |= report->leftShoulder;
-                    usb_host_data->kick2 |= report->leftThumbClick;
                     usb_host_data->back |= report->back;
                     usb_host_data->start |= report->start;
                     usb_host_data->guide |= report->guide;
-                    if (usb_host_data->kick1 || usb_host_data->kick2) {
-                        usb_host_data->kickVelocity = 0xFF;
-                    }
-                    if (usb_host_data->green) {
-                        usb_host_data->greenVelocity = 0xFF;
-                    }
-                    if (usb_host_data->greenCymbal) {
-                        usb_host_data->greenCymbalVelocity = 0xFF;
-                    }
-                    if (usb_host_data->red) {
-                        usb_host_data->redVelocity = 0xFF;
-                    }
-                    if (usb_host_data->yellow) {
-                        usb_host_data->yellowVelocity = 0xFF;
-                    }
-                    if (usb_host_data->yellowCymbal) {
-                        usb_host_data->yellowCymbalVelocity = 0xFF;
-                    }
-                    if (usb_host_data->blue) {
-                        usb_host_data->blueVelocity = 0xFF;
-                    }
-                    if (usb_host_data->blueCymbal) {
-                        usb_host_data->blueCymbalVelocity = 0xFF;
-                    }
                     break;
                 }
                 case XINPUT_GH_DRUMS: {
@@ -1947,31 +1848,14 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight = report->dpadRight;
                     usb_host_data->dpadUp = report->dpadUp;
                     usb_host_data->dpadDown = report->dpadDown;
-                    usb_host_data->green |= report->a;
-                    usb_host_data->red |= report->b;
-                    usb_host_data->yellow |= report->y;
-                    usb_host_data->blue |= report->x;
-                    usb_host_data->orange |= report->rightShoulder;
-                    usb_host_data->kick1 |= report->leftShoulder;
-                    if (report->greenVelocity) {
-                        usb_host_data->greenVelocity = report->greenVelocity;
+                    SET_GH_PADS();
+                    // Forward any midi data we get
+                    if ((report->midiPacket[0] & 0xF0) == 0x90) {
+                        onNote(report->midiPacket[0] & 0x0F, report->midiPacket[1], report->midiPacket[2]);
+                    } else if ((report->midiPacket[0] & 0xF0) == 0x80) {
+                        offNote(report->midiPacket[0] & 0x0F, report->midiPacket[1], report->midiPacket[2]);
                     }
-                    if (report->redVelocity) {
-                        usb_host_data->redVelocity = report->redVelocity;
-                    }
-                    if (report->yellowVelocity) {
-                        usb_host_data->yellowVelocity = report->yellowVelocity;
-                    }
-                    if (report->blueVelocity) {
-                        usb_host_data->blueVelocity = report->blueVelocity;
-                    }
-                    if (report->orangeVelocity) {
-                        usb_host_data->orangeVelocity = report->orangeVelocity;
-                    }
-                    if (report->kickVelocity) {
-                        usb_host_data->kickVelocity = report->kickVelocity;
-                        usb_host_data->kick1 = true;
-                    }
+                    break;
                 }
                 case XINPUT_GUITAR_HERO_LIVE: {
                     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)data;

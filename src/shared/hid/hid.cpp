@@ -902,12 +902,10 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
         }
-#ifdef INPUT_MIDI
         case COMMAND_READ_MIDI: {
             memcpy(response_buffer, &midiData.midiVelocities, (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities)));
             return (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities));
         }
-#endif
 #ifdef MAX1704X_TWI_PORT
         case COMMAND_READ_MAX170X_VALID:
             response_buffer[0] = max170x_init;

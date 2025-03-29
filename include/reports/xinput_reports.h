@@ -213,16 +213,15 @@ typedef struct
     uint8_t x : 1;  // blue
     uint8_t y : 1;  // yellow
 
-    // TODO: The hi-hat pedal data is probably here somewhere
     uint8_t unused1[2];
     int16_t unused2;
     uint8_t greenVelocity;
-    uint8_t redVelocity;
+    uint8_t redVelocity; // redVelocity stores the velocity for the cymbal if both cymbal and pad of the same colour get hit simultaneously
     uint8_t yellowVelocity;
     uint8_t blueVelocity;
     uint8_t orangeVelocity;
     uint8_t kickVelocity;
-    uint8_t reserved_1[6];
+    uint8_t midiPacket[6]; // 0x99 note, velocity, xxxx
 } __attribute__((packed)) XInputGuitarHeroDrums_Data_t;
 
 typedef struct

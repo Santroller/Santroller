@@ -411,7 +411,7 @@ typedef struct
     uint8_t unused1[8];
 
     uint8_t yellowVelocity;
-    uint8_t redVelocity;
+    uint8_t redVelocity; // If you hit two cymbals at once, it puts the velocity for the cymbal here
     uint8_t greenVelocity;
     uint8_t blueVelocity;
     uint8_t blueCymbalVelocity;
@@ -450,17 +450,24 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[8];
+    uint8_t unused1[2];
+    uint8_t midiByte0;
+    uint8_t unused5[5];
 
     uint8_t yellowVelocity;
     uint8_t redVelocity;
-    uint8_t greenVelocity;
+    uint8_t greenVelocity; 
     uint8_t blueVelocity;
     uint8_t kickVelocity;
     uint8_t orangeVelocity;
 
     uint8_t unused2[2];
-    uint16_t unused3[4];
+    uint8_t midiByte1; // x
+    uint8_t unused3;
+    uint16_t unused4; // z
+    uint8_t midiByte2; // y
+    uint8_t unused7;
+    uint16_t unused6; // gyro
 } __attribute__((packed)) PS3GuitarHeroDrums_Data_t;
 
 typedef struct

@@ -92,6 +92,14 @@ using namespace usbMidi;
 UsbMidiTransport usbMIDITransport(0);
 MidiInterface<UsbMidiTransport> MIDI(usbMIDITransport);
 #endif
+#ifdef INPUT_SERIAL_MIDI
+#if SERIAL_MIDI_PIN == 5 || SERIAL_MIDI_PIN == 9 || SERIAL_MIDI_PIN == 20
+SerialMIDI<HardwareSerial> serialMIDI(Serial2);
+#else
+SerialMIDI<HardwareSerial> serialMIDI(Serial1);
+#endif
+MidiInterface<SerialMIDI<HardwareSerial>> MIDI2(serialMIDI);
+#endif
 bool ready_for_next_packet() {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
 }
@@ -126,8 +134,11 @@ static void tick_usb() {
         tud_remote_wakeup();
     }
     tick();
-#ifdef INPUT_MIDI
+#ifdef USB_HOST_STACK
     MIDI.read();
+#endif
+#ifdef INPUT_SERIAL_MIDI
+    MIDI2.read();
 #endif
     if (!authDone) {
         if (consoleType != XBOXONE && (consoleType != XBOX360 || !xboxAuthValid)) {
@@ -163,6 +174,7 @@ void setup() {
 #if USB_HOST_STACK
     set_sys_clock_khz(120000, true);
 #endif
+    Serial2.setRX(9);
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
         if (SLEEP_PIN != -1) {
@@ -202,12 +214,19 @@ void setup() {
     };
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     tuh_init(TUH_OPT_RHPORT);
-#ifdef INPUT_MIDI
+#ifdef INPUT_USB_HOST
     MIDI.begin(0);
     MIDI.setHandleNoteOn(onNote);
     MIDI.setHandleNoteOff(offNote);
     MIDI.setHandleControlChange(onControlChange);
     MIDI.setHandlePitchBend(onPitchBend);
+#endif
+#ifdef INPUT_SERIAL_MIDI
+    MIDI2.begin(0);
+    MIDI2.setHandleNoteOn(onNote);
+    MIDI2.setHandleNoteOff(offNote);
+    MIDI2.setHandleControlChange(onControlChange);
+    MIDI2.setHandlePitchBend(onPitchBend);
 #endif
 #endif
 }

@@ -52,7 +52,7 @@ struct {
         };
     };
 } rtt_t;
-long lastMidi = 0;
+unsigned long lastMidi = 0;
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
@@ -2999,8 +2999,9 @@ void tick(void) {
     if ((millis() - input_start) < 2000) {
         tick_inputs(NULL, NULL, consoleType);
     }
-    if ((millis() - lastMidi) > 2000) {
+    if ((millis() - lastMidi) > 1000) {
         memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
+        lastMidi = millis();
     }
 
 #ifdef TICK_LED_PERIPHERAL

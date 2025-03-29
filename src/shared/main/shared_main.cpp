@@ -52,20 +52,23 @@ struct {
         };
     };
 } rtt_t;
+long lastMidi = 0;
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
     printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
     velocity = velocity << 1;
-    midiData.midiVelocities[note] = velocity;
     if (velocity > midiData.midiVelocitiesTemp[note]) {
+        midiData.midiVelocities[note] = velocity;
         midiData.midiVelocitiesTemp[note] = velocity;
     }
+    lastMidi = millis();
+
 }
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    midiData.midiVelocities[note] = 0;
+    // midiData.midiVelocities[note] = 0;
     // midiData.midiVelocitiesTemp[note] = 0;
 }
 
@@ -2995,6 +2998,9 @@ void tick(void) {
     // Tick inputs constantly for detection
     if ((millis() - input_start) < 2000) {
         tick_inputs(NULL, NULL, consoleType);
+    }
+    if ((millis() - lastMidi) > 2000) {
+        memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
     }
 
 #ifdef TICK_LED_PERIPHERAL

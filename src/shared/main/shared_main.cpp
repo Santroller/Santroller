@@ -878,7 +878,6 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->yellow |= report->y;
                     usb_host_data->blue |= report->x;
                     usb_host_data->orange |= report->rightShoulder;
-                    usb_host_data->kick1 |= report->leftShoulder;
                     SET_GH_PADS();
                     break;
                 }
@@ -2078,8 +2077,6 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->b |= report->b;
                     usb_host_data->x |= report->x;
                     usb_host_data->y |= report->y;
-                    usb_host_data->kick1 |= report->leftShoulder;
-                    usb_host_data->kick2 |= report->rightShoulder;
                     usb_host_data->back |= report->back;
                     usb_host_data->start |= report->start;
                     usb_host_data->guide |= report->guide;

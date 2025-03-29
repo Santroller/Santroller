@@ -251,47 +251,60 @@ typedef struct {
     uint8_t y : 1;              // triangle
     uint8_t leftShoulder : 1;   // l1
     uint8_t rightShoulder : 1;  // r1
-    uint8_t kick1 : 1;
-    uint8_t kick2 : 1;
-
     uint8_t back : 1;  // select
     uint8_t start : 1;
+
     uint8_t leftThumbClick : 1;   // l3
     uint8_t rightThumbClick : 1;  // r3
     uint8_t guide : 1;            // ps
     uint8_t capture : 1;          // switch capture button
     uint8_t leftBlue : 1;
     uint8_t leftRed : 1;
-
     uint8_t leftGreen : 1;
     uint8_t rightBlue : 1;
+
     uint8_t rightRed : 1;
     uint8_t rightGreen : 1;
     uint8_t soloGreen : 1;
     uint8_t soloRed : 1;
     uint8_t soloYellow : 1;
     uint8_t soloBlue : 1;
-
     uint8_t soloOrange : 1;
     uint8_t green : 1;
+
     uint8_t red : 1;
     uint8_t yellow : 1;
     uint8_t blue : 1;
     uint8_t orange : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
-
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t yellowCymbal : 1;
-    uint8_t blueCymbal : 1;
-    uint8_t greenCymbal : 1;
-    uint8_t overdrive : 1;
-    uint8_t pedalDigital : 1;
-    uint8_t : 1;
 
+    union {
+        struct {
+            uint16_t genericButton1 : 1;
+            uint16_t genericButton2 : 1;
+            uint16_t genericButton3 : 1;
+            uint16_t genericButton4 : 1;
+            uint16_t genericButton5 : 1;
+            uint16_t genericButton6 : 1;
+            uint16_t genericButton7 : 1;
+            uint16_t genericButton8 : 1;
+            uint16_t genericButton9 : 1;
+            uint16_t genericButton10 : 1;
+            uint16_t genericButton11 : 1;
+            uint16_t genericButton12 : 1;
+            uint16_t genericButton13 : 1;
+            uint16_t genericButton14 : 1;
+            uint16_t genericButton15 : 1;
+            uint16_t genericButton16 : 1;
+        };
+        uint16_t genericButtons;
+    };
     uint16_t leftTrigger;
     uint16_t rightTrigger;
+
 
     int16_t leftStickX;
     int16_t leftStickY;
@@ -319,28 +332,6 @@ typedef struct {
     uint16_t accelZ;
     uint16_t accelY;
     uint16_t gyro;
-
-    union {
-        struct {
-            uint16_t genericButton1 : 1;
-            uint16_t genericButton2 : 1;
-            uint16_t genericButton3 : 1;
-            uint16_t genericButton4 : 1;
-            uint16_t genericButton5 : 1;
-            uint16_t genericButton6 : 1;
-            uint16_t genericButton7 : 1;
-            uint16_t genericButton8 : 1;
-            uint16_t genericButton9 : 1;
-            uint16_t genericButton10 : 1;
-            uint16_t genericButton11 : 1;
-            uint16_t genericButton12 : 1;
-            uint16_t genericButton13 : 1;
-            uint16_t genericButton14 : 1;
-            uint16_t genericButton15 : 1;
-            uint16_t genericButton16 : 1;
-        };
-        uint16_t genericButtons;
-    };
     uint16_t genericAxisX;
     uint16_t genericAxisY;
     uint16_t genericAxisZ;

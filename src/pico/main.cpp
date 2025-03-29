@@ -174,7 +174,13 @@ void setup() {
 #if USB_HOST_STACK
     set_sys_clock_khz(120000, true);
 #endif
-    Serial2.setRX(9);
+#ifdef INPUT_SERIAL_MIDI
+#if SERIAL_MIDI_PIN == 5 || SERIAL_MIDI_PIN == 9 || SERIAL_MIDI_PIN == 20
+    Serial2.setRX(SERIAL_MIDI_PIN);
+#else
+    Serial1.setRX(SERIAL_MIDI_PIN);
+#endif
+#endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID) {
         consoleType = persistedConsoleType;
         if (SLEEP_PIN != -1) {

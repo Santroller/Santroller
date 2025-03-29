@@ -1932,6 +1932,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->dpadRight |= report->dpadRight;
                     usb_host_data->dpadUp |= report->dpadUp;
                     usb_host_data->dpadDown |= report->dpadDown;
+                    
                     TRANSLATE_PRO_KEYS;
                     break;
                 }

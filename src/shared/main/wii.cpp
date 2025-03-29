@@ -7,6 +7,7 @@
 #include "config.h"
 #include "controllers.h"
 #include "io.h"
+#include "shared_main.h"
 uint8_t wiiBytes;
 #ifdef INPUT_WII
 uint8_t wiiPointer = 0;
@@ -117,6 +118,7 @@ void initWiiExt(void) {
 }
 bool initialised = false;
 bool lastWiiEuphoriaLed = false;
+bool hadDrum = false;
 bool wiiDataValid() {
     return initialised;
 }
@@ -152,6 +154,21 @@ uint8_t* tickWii() {
     if (s_box) {
         for (int i = 0; i < 8; i++) {
             data[i] = (uint8_t)(((data[i] ^ s_box) + s_box) & 0xFF);
+        }
+    }
+    if (wiiControllerType == WII_GUITAR_HERO_DRUM_CONTROLLER) {
+        // https://wiibrew.org/wiki/Wiimote/Extension_Controllers/Guitar_Hero_World_Tour_(Wii)_Drums
+        uint8_t velocity = ((data[4] & 0b00000001) |
+                            ((data[4] & 0b10000000) >> 6) |
+                            ((data[3] & 0b00000001) << 2) |
+                            ((data[2] & 0b00000001) << 3) |
+                            ((data[3] & (0b11100000)) >> 1));
+        uint8_t note = (data[2] >> 1) & 0x7f;
+        uint8_t channel = ((~data[3]) >> 1) & 0xF;
+        velocity = 0x7F - velocity;
+        note = 0x7F - note;
+        if (velocity || note) {
+            onNote(channel, note, velocity);
         }
     }
     initialised = true;

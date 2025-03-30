@@ -29,7 +29,7 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#ifdef INPUT_USB_HOST
+#if defined(INPUT_USB_HOST) || defined(INPUT_SERIAL_MIDI)
 #include "TUSB-MIDI.hpp"
 #endif
 #if BLUETOOTH
@@ -87,7 +87,7 @@ typedef struct {
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#ifdef USB_HOST_STACK
+#ifdef INPUT_USB_HOST
 using namespace usbMidi;
 UsbMidiTransport usbMIDITransport(0);
 MidiInterface<UsbMidiTransport> MIDI(usbMIDITransport);
@@ -134,7 +134,7 @@ static void tick_usb() {
         tud_remote_wakeup();
     }
     tick();
-#ifdef USB_HOST_STACK
+#ifdef INPUT_USB_HOST
     MIDI.read();
 #endif
 #ifdef INPUT_SERIAL_MIDI

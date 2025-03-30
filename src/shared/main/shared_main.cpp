@@ -22,6 +22,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
+#include "wt_drum.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -2320,6 +2321,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+#include "inputs/wt_drum.h"
 
     TICK_SHARED;
     if (!startedInactivityPulse) {

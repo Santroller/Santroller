@@ -5,6 +5,8 @@
 #include "shared_main.h"
 #ifdef WT_DRUM_SPI_PORT
 static long lastTick = 0;
+static int missing = 0;
+bool wt_drum_found = false;
 void tickWtDrum() {
     if (micros() - lastTick > 500) {
         lastTick = micros();
@@ -14,9 +16,15 @@ void tickWtDrum() {
         uint8_t resp = spi_transfer(WT_DRUM_SPI_PORT, 0xAA);
         delayMicroseconds(50);
         if (resp != 0xAA) {
+            missing++;
+            if (missing > 10) {
+                wt_drum_found = false;
+                missing = 0;
+            }
             WT_DRUM_CS_SET();
             return;
         }
+        wt_drum_found = true;
         // We send 0x55, we get the number of packets waiting in the queue
         resp = spi_transfer(WT_DRUM_SPI_PORT, 0x55);
         delayMicroseconds(50);

@@ -864,7 +864,7 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         }
         case COMMAND_READ_ACCEL: {
             memcpy(response_buffer, &filtered, sizeof(filtered));
-            memcpy(response_buffer+sizeof(filtered), &accel_adc, sizeof(accel_adc));
+            memcpy(response_buffer + sizeof(filtered), &accel_adc, sizeof(accel_adc));
             return sizeof(filtered) + sizeof(accel_adc);
         }
         case COMMAND_ACCEL_VALID: {
@@ -906,6 +906,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &midiData.midiVelocities, (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities)));
             return (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities));
         }
+#ifdef WT_DRUM_SPI_PORT
+        case COMMAND_WT_DRUM_VALID:
+            response_buffer[0] = wt_drum_found;
+            return 1;
+#endif
 #ifdef MAX1704X_TWI_PORT
         case COMMAND_READ_MAX170X_VALID:
             response_buffer[0] = max170x_init;

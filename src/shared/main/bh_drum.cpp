@@ -11,7 +11,7 @@ static int missing = 0;
 bool wt_drum_found = false;
 void tickBhDrum() {
     uint8_t data[8];
-    if (twi_readFromPointer(GH5_TWI_PORT, DRUM_ADDR, BH_DRUM_PTR, sizeof(data), data) && data[0] == BH_DRUM_PTR) {
+    if (twi_readFromPointer(BH_DRUM_TWI_PORT, DRUM_ADDR, BH_DRUM_PTR, sizeof(data), data) && data[0] == BH_DRUM_PTR) {
         uint8_t status = data[1];
         uint8_t type = (status & 0xf0);
         uint8_t channel = status & 0x0f;

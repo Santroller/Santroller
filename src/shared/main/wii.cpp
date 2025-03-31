@@ -8,6 +8,7 @@
 #include "controllers.h"
 #include "io.h"
 #include "shared_main.h"
+#include "commands.h"
 uint8_t wiiBytes;
 #ifdef INPUT_WII
 uint8_t wiiPointer = 0;
@@ -119,13 +120,11 @@ void initWiiExt(void) {
 bool initialised = false;
 bool lastWiiEuphoriaLed = false;
 bool hadDrum = false;
+static uint8_t packetIssueCount = 0; 
 bool wiiDataValid() {
     return initialised;
 }
 uint8_t* tickWii() {
-#ifdef WII_SHARED
-    delayMicroseconds(10);
-#endif
     static uint8_t data[8];
     memset(data, 0, sizeof(data));
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
@@ -146,10 +145,18 @@ uint8_t* tickWii() {
         wiiControllerType == WII_NO_EXTENSION ||
         !twi_readFromPointerSlow(WII_TWI_PORT, WII_ADDR, wiiPointer, wiiBytes, data) ||
         !verifyData(data, wiiBytes)) {
+        if (initialised) {
+            packetIssueCount++;
+            if (packetIssueCount < 10) {
+                return lastSuccessfulWiiPacket;
+            }
+        }
+        packetIssueCount = 0;
         initialised = false;
         initWiiExt();
         return NULL;
     }
+    packetIssueCount = 0;
     // decrypt if encryption is enabled
     if (s_box) {
         for (int i = 0; i < 8; i++) {

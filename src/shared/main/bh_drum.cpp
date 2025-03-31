@@ -10,6 +10,7 @@ static long lastTick = 0;
 static int missing = 0;
 bool wt_drum_found = false;
 void tickBhDrum() {
+    // BH Drum format: 0x10 <midi packet>
     uint8_t data[8];
     if (twi_readFromPointer(BH_DRUM_TWI_PORT, DRUM_ADDR, BH_DRUM_PTR, sizeof(data), data) && data[0] == BH_DRUM_PTR) {
         uint8_t status = data[1];

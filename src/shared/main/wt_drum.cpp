@@ -8,6 +8,7 @@ static long lastTick = 0;
 static int missing = 0;
 bool wt_drum_found = false;
 void tickWtDrum() {
+    // WT Drum format: 0xAA <remaining packet count> <midi packet>
     if (micros() - lastTick > 500) {
         lastTick = micros();
         WT_DRUM_CS_CLEAR();

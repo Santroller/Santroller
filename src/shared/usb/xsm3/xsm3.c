@@ -43,7 +43,7 @@
 static const uint8_t* kv_keys = (const uint8_t*)&KV_KEY_ARRAY;
 uint8_t key_count = KV_KEY_SIZE;
 #else
-static PROGMEM uint8_t kv_keys[] = KV_KEY_ARRAY;
+static const PROGMEM uint8_t kv_keys[] = KV_KEY_ARRAY;
 uint8_t key_count = KV_KEY_SIZE;
 #endif
 #endif

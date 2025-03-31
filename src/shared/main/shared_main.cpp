@@ -23,6 +23,7 @@
 #include "util.h"
 #include "wii.h"
 #include "wt_drum.h"
+#include "bh_drum.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -2314,6 +2315,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/accel.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
+#include "inputs/bh_drum.h"
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
 #include "inputs/slave_tick.h"

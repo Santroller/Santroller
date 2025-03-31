@@ -35,17 +35,18 @@ void tickWtDrum() {
         uint8_t status = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
         delayMicroseconds(50);
         uint8_t type = (status & 0xf0);
+        uint8_t channel = status & 0x0f;
         // TODO: CC and stuff, can the midi lib parse this all for us?
         if (type == 0x90) {
             uint8_t note = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
             delayMicroseconds(50);
             uint8_t velocity = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
-            onNote(status & 0x0f, note, velocity);
+            onNote(channel, note, velocity);
         } else if (type == 0x80) {
             uint8_t note = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
             delayMicroseconds(50);
             uint8_t velocity = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
-            offNote(status & 0x0f, note, velocity);
+            offNote(channel, note, velocity);
         }
         delayMicroseconds(10);
         WT_DRUM_CS_SET();

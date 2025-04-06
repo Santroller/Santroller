@@ -23,9 +23,9 @@
     /* uint8 -> int14 (but only the positive half!) */                                     \
     onPitchBend(0, report->touchPad << 5);                                                 \
     uint32_t keyMask =                                                                     \
-        (report->key1 << 17) |                                                             \
-        (report->key2 << 9) |                                                              \
-        (report->key3 << 1) |                                                              \
+        (report->keys[0] << 17) |                                                          \
+        (report->keys[1] << 9) |                                                           \
+        (report->keys[0] << 1) |                                                           \
         ((report->velocities[0] & 0x80) >> 7);                                             \
                                                                                            \
     int pressed = 0;                       /* Number of keys pressed */                    \

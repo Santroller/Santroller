@@ -431,12 +431,54 @@ typedef struct
     uint8_t pedalDigital : 1;
     uint8_t : 7;
     DPAD;
-    uint8_t key1;
-    uint8_t key2;
-    uint8_t key3;
+    union {
+        struct {
+            uint8_t key8 : 1;
+            uint8_t key7 : 1;
+            uint8_t key6 : 1;
+            uint8_t key5 : 1;
+            uint8_t key4 : 1;
+            uint8_t key3 : 1;
+            uint8_t key2 : 1;
+            uint8_t key1 : 1;
+            uint8_t key16 : 1;
+            uint8_t key15 : 1;
+            uint8_t key14 : 1;
+            uint8_t key13 : 1;
+            uint8_t key12 : 1;
+            uint8_t key11 : 1;
+            uint8_t key10 : 1;
+            uint8_t key9 : 1;
+            uint8_t key24 : 1;
+            uint8_t key23 : 1;
+            uint8_t key22 : 1;
+            uint8_t key21 : 1;
+            uint8_t key20 : 1;
+            uint8_t key19 : 1;
+            uint8_t key18 : 1;
+            uint8_t key17 : 1;
+        };
+        uint8_t keys[3];
+    };
+
     uint8_t pedalAnalog;
     uint8_t touchPad;
-    uint8_t velocities[5];
+    union {
+        struct {
+            uint8_t velocity1 : 7;
+            uint8_t key25 : 1;
+            uint8_t velocity2 : 7;
+            uint8_t : 1;
+            uint8_t velocity3 : 7;
+            uint8_t : 1;
+            uint8_t velocity4 : 7;
+            uint8_t : 1;
+            uint8_t velocity5 : 7;
+            uint8_t : 1;
+        };
+
+        uint8_t velocities[5];
+    };
 } __attribute__((__packed__)) PCRockBandProKeyboard_Data_t;
 typedef struct {
     uint8_t reportTypeId;  // 0x5B

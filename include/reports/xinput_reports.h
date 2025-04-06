@@ -216,12 +216,12 @@ typedef struct
     uint8_t unused1[2];
     int16_t unused2;
     uint8_t greenVelocity;
-    uint8_t redVelocity; // redVelocity stores the velocity for the cymbal if both cymbal and pad of the same colour get hit simultaneously
+    uint8_t redVelocity;  // redVelocity stores the velocity for the cymbal if both cymbal and pad of the same colour get hit simultaneously
     uint8_t yellowVelocity;
     uint8_t blueVelocity;
     uint8_t orangeVelocity;
     uint8_t kickVelocity;
-    uint8_t midiPacket[6]; // 0x99 note, velocity, xxxx
+    uint8_t midiPacket[6];  // 0x99 note, velocity, xxxx
 } __attribute__((packed)) XInputGuitarHeroDrums_Data_t;
 
 typedef struct
@@ -372,12 +372,52 @@ typedef struct
     uint8_t b : 1;  // red
     uint8_t x : 1;  // blue
     uint8_t y : 1;  // yellow
+    union {
+        struct {
+            uint8_t key8 : 1;
+            uint8_t key7 : 1;
+            uint8_t key6 : 1;
+            uint8_t key5 : 1;
+            uint8_t key4 : 1;
+            uint8_t key3 : 1;
+            uint8_t key2 : 1;
+            uint8_t key1 : 1;
+            uint8_t key16 : 1;
+            uint8_t key15 : 1;
+            uint8_t key14 : 1;
+            uint8_t key13 : 1;
+            uint8_t key12 : 1;
+            uint8_t key11 : 1;
+            uint8_t key10 : 1;
+            uint8_t key9 : 1;
+            uint8_t key24 : 1;
+            uint8_t key23 : 1;
+            uint8_t key22 : 1;
+            uint8_t key21 : 1;
+            uint8_t key20 : 1;
+            uint8_t key19 : 1;
+            uint8_t key18 : 1;
+            uint8_t key17 : 1;
+        };
+        uint8_t keys[3];
+    };
 
-    uint8_t key1;
-    uint8_t key2;
-    uint8_t key3;
+    union {
+        struct {
+            uint8_t velocity1 : 7;
+            uint8_t key25 : 1;
+            uint8_t velocity2 : 7;
+            uint8_t : 1;
+            uint8_t velocity3 : 7;
+            uint8_t : 1;
+            uint8_t velocity4 : 7;
+            uint8_t : 1;
+            uint8_t velocity5 : 7;
+            uint8_t : 1;
+        };
 
-    uint8_t velocities[5];
+        uint8_t velocities[5];
+    };
 
     uint8_t : 7;
     uint8_t overdrive : 1;

@@ -43,5 +43,5 @@
         }                                                                                     \
                                                                                               \
         /* Shift the key mask to the next key*/                                               \
-        keyMask >>= 1;                                                                        \
+        keyMask <<= 1;                                                                        \
     }

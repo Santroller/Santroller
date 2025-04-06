@@ -70,8 +70,10 @@ void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    // midiData.midiVelocities[note] = 0;
-    // midiData.midiVelocitiesTemp[note] = 0;
+    #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+        midiData.midiVelocities[note] = 0;
+        midiData.midiVelocitiesTemp[note] = 0;
+    #endif
 }
 
 void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2) {
@@ -3003,10 +3005,12 @@ void tick(void) {
     if ((millis() - input_start) < 2000) {
         tick_inputs(NULL, NULL, consoleType);
     }
+    #if DEVICE_TYPE != ROCK_BAND_PRO_KEYS
     if ((millis() - lastMidi) > 1000) {
         memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
         lastMidi = millis();
     }
+    #endif
 
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when

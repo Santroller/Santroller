@@ -3010,7 +3010,7 @@ void tick(void) {
         memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
         lastMidi = millis();
     }
-    #endif
+#endif
 
 #ifdef TICK_LED_PERIPHERAL
     // If we are controlling peripheral leds, then we need to send the latest state when

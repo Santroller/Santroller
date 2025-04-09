@@ -27,7 +27,7 @@
     usb_host_data->bFret = report->bFret;                         \
     usb_host_data->highEFret = report->highEFret;                 \
                                                                   \
-    usb_host_data->tilt |= report->tilt;                          \
+    usb_host_data->tilt = report->tilt;                           \
     /* TODO: pedalDigital should map to pedalDigital*/            \
     usb_host_data->back |= report->pedal;
 
@@ -38,6 +38,7 @@
     report->gFretVelocity = item.gFretVelocity;         \
     report->bFretVelocity = item.bFretVelocity;         \
     report->highEFretVelocity = item.highEFretVelocity; \
+    report->tilt = item.tilt;                           \
     report->green = item.green;                         \
     report->red = item.red;                             \
     report->yellow = item.yellow;                       \

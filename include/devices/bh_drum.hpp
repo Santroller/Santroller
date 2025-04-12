@@ -1,0 +1,1 @@
+// Implement this by shoving inputs at the midi library, and then that way we can read midi inputs from a single spot

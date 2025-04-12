@@ -13,6 +13,11 @@ class I2CMasterInterface {
     bool writeSingleToPointer(uint8_t address, uint8_t pointer, uint8_t data);
     bool writeToPointer(uint8_t address, uint8_t pointer, uint8_t length,
                         uint8_t *data);
+    virtual bool readFrom(uint8_t address, uint8_t *data, uint8_t length,
+                  uint8_t sendStop) = 0;
+
+    virtual bool writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
+                 uint8_t sendStop) = 0;
 };
 
 class I2CSlaveInterface {

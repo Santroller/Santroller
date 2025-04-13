@@ -1,7 +1,9 @@
 #pragma once
 #include <MIDI.h>
 
+#include "devices/midi.hpp"
 #include "interfaces/i2c.hpp"
+#include "state/base.hpp"
 using namespace MIDI_NAMESPACE;
 #define DRUM_ADDR 0x0D
 #define BH_DRUM_PTR 0x10
@@ -12,42 +14,33 @@ class BHMidiTransport {
     BHMidiTransport(I2CMasterInterface* interface)
         : mInterface(interface) {};
 
-    void begin() {
+    inline void begin() {
     }
 
-    void end() {
+    inline void end() {
     }
+
+    inline void tick(san_base_t* data) {};
 
    protected:
     static const bool thruActivated = false;
     // Read only, we don't ever send
-    bool beginTransmission(MidiType) {
+    inline bool beginTransmission(MidiType) {
         return false;
     };
 
-    void write(byte byte) {
+    inline void write(byte byte) {
 
     };
 
-    void endTransmission() {
+    inline void endTransmission() {
     };
 
-    byte read() {
+    inline byte read() {
         return mBuffer[mBufferIndex];
     };
 
-    unsigned available() {
-        if (mBufferIndex > 0) {
-            mBufferIndex--;
-        } else {
-            uint8_t data[8];
-            if (mInterface->readFromPointer(DRUM_ADDR, BH_DRUM_PTR, sizeof(data), data) && data[0] == BH_DRUM_PTR) {
-                memcpy(mBuffer, data + 1, sizeof(data) - 1);
-                mBufferIndex = sizeof(data) - 1;
-            }
-        }
-        return mBufferIndex;
-    };
+    unsigned available();
 
    private:
     I2CMasterInterface* mInterface;

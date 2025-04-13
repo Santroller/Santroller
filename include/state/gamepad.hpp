@@ -39,10 +39,10 @@ typedef struct {
     uint8_t pressureDpadRight;
     uint8_t pressureDpadLeft;
     uint8_t pressureDpadDown;
-    uint8_t pressureL1;
-    uint8_t pressureR1;
-    uint8_t pressureTriangle;
-    uint8_t pressureCircle;
-    uint8_t pressureCross;
-    uint8_t pressureSquare;
+    uint8_t pressureLeftShoulder;
+    uint8_t pressureRightShoulder;
+    uint8_t pressureA;
+    uint8_t pressureB;
+    uint8_t pressureX;
+    uint8_t pressureY;
 } san_gamepad_pressures_t;

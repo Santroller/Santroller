@@ -24,4 +24,5 @@ typedef struct {
     int8_t y;
     int8_t scrollY;
     int8_t scrollX;
+    int8_t penPressure;
 } san_mouse_t;

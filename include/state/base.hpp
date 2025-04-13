@@ -5,7 +5,9 @@
 #include "live_guitar.hpp"
 #include "midi.hpp"
 #include "pro_guitar.hpp"
+#include "taiko.hpp"
 #include "turntable.hpp"
+#include "wheel.hpp"
 
 typedef struct {
     uint16_t lis3dhAdc[3];
@@ -25,5 +27,7 @@ typedef struct {
     san_midi_t midi;
     san_pro_guitar_t pro_guitar;
     san_turntable_t turntable;
+    san_taiko_t taiko;
+    san_wheel_t wheel;
     san_extra_t extra;
 } san_base_t;

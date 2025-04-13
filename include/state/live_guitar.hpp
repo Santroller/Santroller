@@ -1,7 +1,7 @@
+#pragma once
 #include <stdint.h>
 #include "gamepad.hpp"
 typedef struct {
-    san_gamepad_t gamepad;
     uint8_t black1 : 1;
     uint8_t black2 : 1;
     uint8_t black3 : 1;

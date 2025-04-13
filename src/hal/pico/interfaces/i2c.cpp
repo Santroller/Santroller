@@ -2,7 +2,7 @@
 #include <hardware/i2c.h>
 
 #include <interfaces/core.hpp>
-#include <pico/interfaces/i2c.hpp>
+#include <hal/pico/interfaces/i2c.hpp>
 
 #include "hardware/gpio.h"
 

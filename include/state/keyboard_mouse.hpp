@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include "gamepad.hpp"
 #define SIMULTANEOUS_KEYS 10

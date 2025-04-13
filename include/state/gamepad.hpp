@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 typedef struct {
     uint8_t x : 1;  // square
@@ -34,7 +35,6 @@ typedef struct {
 } san_gamepad_t;
 
 typedef struct {
-    san_gamepad_t gamepad;
     uint8_t pressureDpadUp;
     uint8_t pressureDpadRight;
     uint8_t pressureDpadLeft;
@@ -45,4 +45,4 @@ typedef struct {
     uint8_t pressureCircle;
     uint8_t pressureCross;
     uint8_t pressureSquare;
-} san_gamepad_with_pressures_t;
+} san_gamepad_pressures_t;

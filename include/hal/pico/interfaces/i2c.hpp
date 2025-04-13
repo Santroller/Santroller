@@ -4,7 +4,7 @@
 
 #include <interfaces/i2c.hpp>
 
-class PicoI2CMasterInterface : I2CMasterInterface {
+class PicoI2CMasterInterface : public I2CMasterInterface {
    public:
     bool readFrom(uint8_t address, uint8_t *data, uint8_t length,
                           uint8_t sendStop);

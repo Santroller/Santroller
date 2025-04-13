@@ -161,6 +161,7 @@ typedef enum {
     WII_NO_EXTENSION = 0x180b,
     WII_NOT_INITIALISED = 0xFFFF
 } WiiExtType_t;
+
 typedef enum {
     Announce,
     WaitingDesc1,

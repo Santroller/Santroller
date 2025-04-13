@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "config.h"
 
 typedef struct {
     uint8_t  rid; 

@@ -20,8 +20,6 @@ class BHMidiTransport {
     inline void end() {
     }
 
-    inline void tick(san_base_t* data) {};
-
    protected:
     static const bool thruActivated = false;
     // Read only, we don't ever send

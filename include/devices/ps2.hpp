@@ -2,6 +2,7 @@
 #include "interfaces/gpio.hpp"
 #include "interfaces/spi.hpp"
 #include "state/base.hpp"
+#include "parsers/ps2.hpp"
 
 /** \brief Size of internal communication buffer
  *
@@ -40,19 +41,6 @@
  * edge (us).
  */
 #define ATTN_DELAY 50
-typedef enum {
-    PSX_UNKNOWN_CONTROLLER = 0,
-    PSX_DIGITAL,
-    PSX_DUALSHOCK_1_CONTROLLER,
-    PSX_DUALSHOCK_2_CONTROLLER,
-    PSX_GUITAR_HERO_CONTROLLER,
-    PSX_NEGCON,
-    PSX_JOGCON,
-    PSX_GUNCON,
-    PSX_FLIGHTSTICK,
-    PSX_MOUSE,
-    PSX_NO_DEVICE
-} PsxControllerType_t;
 
 enum MultitapPort { A = 0x01,
                     B = 0x02,
@@ -70,13 +58,10 @@ class PS2Device {
     bool sendCommand(uint8_t port, uint8_t* in, const uint8_t* buf, uint8_t len);
     void noAttention();
     void signalAttention();
-    bool verifyData(const uint8_t* dataIn, uint8_t dataSize);
-    PsxControllerType_t readExtID();
-    void initWiiExt();
     SPIMasterInterface* mInterface;
     GPIOInterface* mCsPin;
     GPIOInterface* mAttPin;
-    PsxControllerType_t mType;
+    PS2Parser mParser;
     bool mFound;
     long last = 0;
     uint8_t invalidCount = 0;

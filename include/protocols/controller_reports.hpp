@@ -2,19 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "reports/dance_pad_reports.h"
-#include "reports/og_xbox_reports.h"
-#include "reports/pc_reports.h"
-#include "reports/ps2_reports.h"
-#include "reports/ps3_reports.h"
-#include "reports/ps4_reports.h"
-#include "reports/ps5_reports.h"
-#include "reports/raphnet_reports.h"
-#include "reports/switch_reports.h"
-#include "reports/wii_reports.h"
-#include "reports/xbox_one_reports.h"
-#include "reports/xinput_reports.h"
-
 #define STREAM_DECK_INPUT_REPORT_ID 1
 #define STADIA_REPORT_ID 3
 #define SIMULTANEOUS_KEYS 6
@@ -216,17 +203,6 @@ typedef struct {
     int8_t scrollY; /** Current scroll Y delta movement on the mouse */
     int8_t scrollX; /** Current scroll X delta movement on the mouse */
 } __attribute__((packed)) USB_Mouse_Boot_Data_t;
-
-typedef union {
-#ifdef TICK_SIXKRO
-    USB_6KRO_Data_t keyboard;
-#else
-    USB_NKRO_Data_t keyboard;
-#endif
-    USB_MIDI_Data_t midi;
-    uint8_t raw[128];
-    USB_Mouse_Data_t mouse;
-} USB_Report_Data_t;
 
 typedef union {
     struct {

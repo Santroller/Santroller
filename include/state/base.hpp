@@ -9,12 +9,16 @@
 #include "turntable.hpp"
 #include "wheel.hpp"
 
+#define PS3_STICK_CENTER 0x80
+#define PS3_ACCEL_CENTER 0x0200
+
 typedef struct {
     uint16_t lis3dhAdc[3];
     uint16_t mpr121Inputs;
     uint16_t adc[8];
     uint32_t gpioBank1;
     uint32_t gpioBank2;
+    uint16_t streamDeckButtons;
 } san_extra_t;
 
 typedef struct {

@@ -1,6 +1,8 @@
 #pragma once
 #include <MIDI.h>
+
 #include "interfaces/i2c.hpp"
+#include "parsers/wii.hpp"
 #include "state/base.hpp"
 using namespace MIDI_NAMESPACE;
 #define WII_ADDR 0x52
@@ -18,26 +20,12 @@ using namespace MIDI_NAMESPACE;
 #define WII_HIGHRES_MODE 0x03
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
-typedef enum {
-    WII_NUNCHUK = 0x0000,
-    WII_CLASSIC_CONTROLLER = 0x0001,
-    WII_CLASSIC_CONTROLLER_PRO = 0x0101,
-    WII_THQ_UDRAW_TABLET = 0xFF12,
-    WII_UBISOFT_DRAWSOME_TABLET = 0xFF13,
-    WII_GUITAR_HERO_GUITAR_CONTROLLER = 0x0003,
-    WII_GUITAR_HERO_DRUM_CONTROLLER = 0x0103,
-    WII_DJ_HERO_TURNTABLE = 0x0303,
-    WII_TAIKO_NO_TATSUJIN_CONTROLLER = 0x0011,
-    WII_MOTION_PLUS = 0x0005,
-    WII_NO_EXTENSION = 0x180b,
-    WII_NOT_INITIALISED = 0xFFFF
-} WiiExtType_t;
 
 class WiiDevice {
     friend class MIDI_NAMESPACE::MidiInterface<WiiDevice>;
 
    public:
-    inline WiiDevice(I2CMasterInterface* interface) : mInterface(interface), mType(WII_NOT_INITIALISED), mAddress(0), mReg(0), mFound(false) {
+    inline WiiDevice(I2CMasterInterface* interface) : mInterface(interface), mFound(false) {
     }
     void tick(san_base_t* data);
     inline void begin() {
@@ -72,16 +60,16 @@ class WiiDevice {
     void initWiiExt();
     void setEuphoriaLed(bool state);
     I2CMasterInterface* mInterface;
-    WiiExtType_t mType;
-    uint8_t mAddress;
-    uint8_t mReg;
+    WiiParser parser;
     bool mFound;
-    bool initialised = false;
     bool nextEuphoriaLedState = false;
     bool ledUpdated = false;
     bool hadDrum = false;
     uint8_t packetIssueCount;
     uint8_t mBufferIndex;
     uint8_t mBuffer[8];
-    bool hasTapBar;
+    long lastTick;
+    uint8_t wiiBytes;
+    uint8_t wiiPointer = 0;
+    uint8_t s_box = 0;
 };

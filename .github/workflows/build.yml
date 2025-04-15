@@ -1,27 +1,27 @@
-name: Build
-on: [push]
-jobs:
-  release:
-    name: Release Build
-    runs-on: [self-hosted, linux]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-          submodules: true
-      - name: Build artifacts
-        run: |
-          git rev-parse HEAD > ../firmware.version
-          rm ardwiino_script_post.py
-          rm -rf .git
-          rm *.md
-          rm LICENSE
-          rm .gitignore
-          rm -r .github
-          mv ardwiino_script_post_tool.py ardwiino_script_post.py
-          cd ..
-          zip -r firmware.zip Santroller
-          mkdir -p ~/artifacts/firmware
-          mv firmware.zip ~/artifacts/firmware
-          mv firmware.version ~/artifacts/firmware
+# name: Build
+# on: [push]
+# jobs:
+#   release:
+#     name: Release Build
+#     runs-on: [self-hosted, linux]
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#         with:
+#           persist-credentials: false
+#           submodules: true
+#       - name: Build artifacts
+#         run: |
+#           git rev-parse HEAD > ../firmware.version
+#           rm ardwiino_script_post.py
+#           rm -rf .git
+#           rm *.md
+#           rm LICENSE
+#           rm .gitignore
+#           rm -r .github
+#           mv ardwiino_script_post_tool.py ardwiino_script_post.py
+#           cd ..
+#           zip -r firmware.zip Santroller
+#           mkdir -p ~/artifacts/firmware
+#           mv firmware.zip ~/artifacts/firmware
+#           mv firmware.version ~/artifacts/firmware

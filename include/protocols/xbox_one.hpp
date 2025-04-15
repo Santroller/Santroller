@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include <vector>
+
 #include "reports/ps3_reports.h"
 #define GIP_CMD_ACKNOWLEDGE 0x01
 #define GIP_ARRIVAL 0x02
@@ -8,14 +10,26 @@
 #define GIP_AUTHENTICATION 0x06
 #define GIP_VIRTUAL_KEYCODE 0x07
 #define GIP_CMD_RUMBLE 0x09
-#define GIP_CMD_LED      0x0a
+#define GIP_CMD_LED 0x0a
 #define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
 #define GHL_HID_OUTPUT 0x22
 #define GIP_VKEY_LEFT_WIN 0x5b
 #define GIP_POWER_ON 0x00
 #define GIP_LED_ON 0x01
-typedef struct
+
+enum XboxResult {
+    /// <summary>The packet was processed successfully.</summary>
+    Success,
+    /// <summary>More packet data is incoming and needs to be received.</summary>
+    Pending,
+    /// <summary>The device was disconnected.</summary>
+    Disconnected,
+    /// <summary>The packet contains an invalid message.</summary>
+    InvalidMessage,
+    /// <summary>The device being connected is not supported.</summary>
+    UnsupportedDevice,
+} typedef struct
 {
     uint8_t command;
     uint8_t client : 4;
@@ -24,8 +38,148 @@ typedef struct
     uint8_t chunkStart : 1;
     uint8_t chunked : 1;
     uint8_t sequence;
-    uint8_t length;
+    uint32_t packet_length;
+    uint32_t chunk_offset;
 } __attribute__((packed)) GipHeader_t;
+
+class XboxChunk {
+   public:
+    std::unique_ptr<uint8_t*> data;
+    XboxResult processChunk(XboxMessage message) {
+        int bufferIndex = header.ChunkIndex;
+
+        // Do nothing with chunks of length 0
+        if (bufferIndex <= 0) {
+            // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
+            bool emptySequence = bufferIndex == 0;
+            Debug.Assert(emptySequence, $ "Negative buffer index {bufferIndex}!");
+            return emptySequence ? Success : InvalidMessage;
+        }
+
+        // Start of the chunk sequence
+        if (Buffer == null || (header.Flags & XboxCommandFlags.ChunkStart) != 0) {
+            // Safety check
+            if ((header.Flags & XboxCommandFlags.ChunkStart) == 0) {
+                // Some devices trigger this condition during authentication,
+                // so we don't fail if it's an auth packet
+                Debug.Assert(header.CommandId == XboxAuthentication.CommandId,
+                             "Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
+                return InvalidMessage;
+            }
+
+            // Buffer index is the total size of the buffer on the starting packet
+            Buffer = new byte[bufferIndex];
+            bufferIndex = 0;
+            BytesUsed = 0;
+        }
+
+        // Validate sequence alignment
+        if (bufferIndex != BytesUsed) {
+            // We don't fail here since this seems to be a consistent issue on devices it affects
+            // Debug.Fail("Invalid chunk sequence ordering! Buffer index is not aligned with the previous chunk");
+            return InvalidMessage;
+        }
+
+        // Buffer index equalling buffer length signals the end of the sequence
+        if (bufferIndex >= Buffer.Length) {
+            // Safety checks
+            if (bufferIndex > Buffer.Length) {
+                Debug.Fail("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer");
+                return InvalidMessage;
+            }
+
+            if (chunkData.Length != 0) {
+                Debug.Fail("Invalid chunk sequence end! Data was provided beyond the end of the buffer");
+                return InvalidMessage;
+            }
+
+            // Send off finished chunk buffer
+            chunkData = Buffer;
+            Buffer = null;
+            BytesUsed = 0;
+
+            // Update header
+            header.DataLength = chunkData.Length;
+            header.Flags &= ~(XboxCommandFlags.ChunkPacket | XboxCommandFlags.ChunkStart);
+            return Success;
+        }
+
+        // Verify chunk data bounds
+        if ((bufferIndex + chunkData.Length) > Buffer.Length) {
+            Debug.Fail($ "Invalid chunk sequence! Data was provided beyond the end of the buffer");
+            return InvalidMessage;
+        }
+
+        // Copy data to buffer
+        chunkData.CopyTo(Buffer.AsSpan(bufferIndex, chunkData.Length));
+        BytesUsed = bufferIndex + chunkData.Length;
+        return Pending;
+    }
+};
+class XboxMessage {
+   public:
+    GipHeader_t header;
+    uint8_t* data;
+    XboxMessage(uint8_t* buffer) {
+        header = *(GipHeader_t*)buffer;
+        int bytesRead = 3;
+        header.packet_length = decodeLEB128(buffer + bytesRead, *bytesRead);
+        if (header.chunked) {
+            header.chunk_offset = decodeLEB128(buffer + bytesRead, *bytesRead);
+        }
+        data = buffer + bytesRead;
+    }
+
+    static int decodeLEB128(uint8_t* data, int* bytesRead) {
+        int result = 0;
+        int byteLength = 0;
+
+        // Decode variable-length length value
+        // Sequence length is limited to 4 bytes
+        uint8_t value;
+        do {
+            value = data[byteLength];
+            result |= (value & 0x7F) << (byteLength * 7);
+            byteLength++;
+        } while ((value & 0x80) != 0 && byteLength < sizeof(int));
+
+        // Detect length sequences longer than 4 bytes
+        if ((value & 0x80) != 0) {
+            printf("Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToHexString(data)}");
+            return -1;
+        }
+        *bytesRead += byteLength;
+        return result;
+    }
+
+    static int encodeLEB128(uint8_t* buffer, int bufferLen, int value) {
+        int byteLength = 0;
+        if (!bufferLen)
+            return false;
+
+        // Encode the given value
+        // Sequence length is limited to 4 bytes
+        uint8_t result;
+        do {
+            result = (uint8_t)(value & 0x7F);
+            if (value > 0x7F) {
+                result |= 0x80;
+                value >>= 7;
+            }
+
+            buffer[byteLength] = result;
+            byteLength++;
+        } while (value > 0x7F && byteLength < sizeof(int));
+
+        // Detect values too large to encode
+        if (value > 0x7F) {
+            printf("Value to encode ({value}) is greater than allowed!");
+            return -1;
+        }
+
+        return byteLength;
+    }
+};
 
 typedef struct
 {
@@ -178,7 +332,6 @@ typedef struct
 
 typedef struct
 {
-    
     GipHeader_t Header;
     uint8_t sync : 1;
     uint8_t guide : 1;
@@ -317,7 +470,7 @@ typedef struct
 
     uint16_t leftTrigger;
     uint16_t rightTrigger;
-    
+
     uint16_t leftGreen : 1;
     uint16_t leftRed : 1;
     uint16_t leftBlue : 1;

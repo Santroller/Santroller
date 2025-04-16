@@ -1,8 +1,7 @@
 #include <stdint.h>
-
+#include "ps3.hpp"
 #include <vector>
 
-#include "reports/ps3_reports.h"
 #define GIP_CMD_ACKNOWLEDGE 0x01
 #define GIP_ARRIVAL 0x02
 #define GIP_DEVICE_DESCRIPTOR 0x04
@@ -29,7 +28,8 @@ enum XboxResult {
     InvalidMessage,
     /// <summary>The device being connected is not supported.</summary>
     UnsupportedDevice,
-} typedef struct
+};
+typedef struct
 {
     uint8_t command;
     uint8_t client : 4;
@@ -42,80 +42,6 @@ enum XboxResult {
     uint32_t chunk_offset;
 } __attribute__((packed)) GipHeader_t;
 
-class XboxChunk {
-   public:
-    std::unique_ptr<uint8_t*> data;
-    XboxResult processChunk(XboxMessage message) {
-        int bufferIndex = header.ChunkIndex;
-
-        // Do nothing with chunks of length 0
-        if (bufferIndex <= 0) {
-            // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
-            bool emptySequence = bufferIndex == 0;
-            Debug.Assert(emptySequence, $ "Negative buffer index {bufferIndex}!");
-            return emptySequence ? Success : InvalidMessage;
-        }
-
-        // Start of the chunk sequence
-        if (Buffer == null || (header.Flags & XboxCommandFlags.ChunkStart) != 0) {
-            // Safety check
-            if ((header.Flags & XboxCommandFlags.ChunkStart) == 0) {
-                // Some devices trigger this condition during authentication,
-                // so we don't fail if it's an auth packet
-                Debug.Assert(header.CommandId == XboxAuthentication.CommandId,
-                             "Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
-                return InvalidMessage;
-            }
-
-            // Buffer index is the total size of the buffer on the starting packet
-            Buffer = new byte[bufferIndex];
-            bufferIndex = 0;
-            BytesUsed = 0;
-        }
-
-        // Validate sequence alignment
-        if (bufferIndex != BytesUsed) {
-            // We don't fail here since this seems to be a consistent issue on devices it affects
-            // Debug.Fail("Invalid chunk sequence ordering! Buffer index is not aligned with the previous chunk");
-            return InvalidMessage;
-        }
-
-        // Buffer index equalling buffer length signals the end of the sequence
-        if (bufferIndex >= Buffer.Length) {
-            // Safety checks
-            if (bufferIndex > Buffer.Length) {
-                Debug.Fail("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer");
-                return InvalidMessage;
-            }
-
-            if (chunkData.Length != 0) {
-                Debug.Fail("Invalid chunk sequence end! Data was provided beyond the end of the buffer");
-                return InvalidMessage;
-            }
-
-            // Send off finished chunk buffer
-            chunkData = Buffer;
-            Buffer = null;
-            BytesUsed = 0;
-
-            // Update header
-            header.DataLength = chunkData.Length;
-            header.Flags &= ~(XboxCommandFlags.ChunkPacket | XboxCommandFlags.ChunkStart);
-            return Success;
-        }
-
-        // Verify chunk data bounds
-        if ((bufferIndex + chunkData.Length) > Buffer.Length) {
-            Debug.Fail($ "Invalid chunk sequence! Data was provided beyond the end of the buffer");
-            return InvalidMessage;
-        }
-
-        // Copy data to buffer
-        chunkData.CopyTo(Buffer.AsSpan(bufferIndex, chunkData.Length));
-        BytesUsed = bufferIndex + chunkData.Length;
-        return Pending;
-    }
-};
 class XboxMessage {
    public:
     GipHeader_t header;
@@ -123,9 +49,9 @@ class XboxMessage {
     XboxMessage(uint8_t* buffer) {
         header = *(GipHeader_t*)buffer;
         int bytesRead = 3;
-        header.packet_length = decodeLEB128(buffer + bytesRead, *bytesRead);
+        header.packet_length = decodeLEB128(buffer + bytesRead, &bytesRead);
         if (header.chunked) {
-            header.chunk_offset = decodeLEB128(buffer + bytesRead, *bytesRead);
+            header.chunk_offset = decodeLEB128(buffer + bytesRead, &bytesRead);
         }
         data = buffer + bytesRead;
     }
@@ -145,7 +71,7 @@ class XboxMessage {
 
         // Detect length sequences longer than 4 bytes
         if ((value & 0x80) != 0) {
-            printf("Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToHexString(data)}");
+            printf("Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToHexString(data)}\r\n");
             return -1;
         }
         *bytesRead += byteLength;
@@ -173,7 +99,7 @@ class XboxMessage {
 
         // Detect values too large to encode
         if (value > 0x7F) {
-            printf("Value to encode ({value}) is greater than allowed!");
+            printf("Value to encode ({%02x}) is greater than allowed!\r\n", value);
             return -1;
         }
 
@@ -181,9 +107,87 @@ class XboxMessage {
     }
 };
 
+class XboxChunk {
+    public:
+     uint8_t data[1024];
+     uint8_t max_len;
+     uint8_t bytes_used;
+     bool valid;
+     XboxResult processChunk(XboxMessage message) {
+         int bufferIndex = message.header.chunk_offset;
+ 
+         // Do nothing with chunks of length 0
+         if (bufferIndex <= 0) {
+             // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
+             bool emptySequence = bufferIndex == 0;
+             if (!emptySequence) {
+                 printf("Negative buffer index %d!\r\n", bufferIndex);
+             }
+             return emptySequence ? Success : InvalidMessage;
+         }
+ 
+         // Start of the chunk sequence
+         if (!valid || message.header.chunkStart) {
+             // Safety check
+             if (!message.header.chunkStart) {
+                 // Some devices trigger this condition during authentication,
+                 // so we don't fail if it's an auth packet
+                 if (message.header.command != GIP_AUTHENTICATION) {
+                     printf("Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet\r\n");
+                 }
+                 return InvalidMessage;
+             }
+ 
+             // Buffer index is the total size of the buffer on the starting packet
+             bufferIndex = 0;
+             bytes_used = 0;
+         }
+ 
+         // Validate sequence alignment
+         if (bufferIndex != bytes_used) {
+             // We don't fail here since this seems to be a consistent issue on devices it affects
+             // Debug.Fail("Invalid chunk sequence ordering! Buffer index is not aligned with the previous chunk");
+             return InvalidMessage;
+         }
+ 
+         // Buffer index equalling buffer length signals the end of the sequence
+         if (bufferIndex >= max_len) {
+             // Safety checks
+             if (bufferIndex > max_len) {
+                 printf("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer\r\n");
+                 return InvalidMessage;
+             }
+ 
+             if (message.header.packet_length != 0) {
+                 printf("Invalid chunk sequence end! Data was provided beyond the end of the buffer\r\n");
+                 return InvalidMessage;
+             }
+ 
+             // Send off finished chunk buffer
+             message.data = data;
+             valid = false;
+             bytes_used = 0;
+ 
+             // Update header
+             message.header.packet_length = max_len;
+             message.header.chunkStart = false;
+             return Success;
+         }
+ 
+         // Verify chunk data bounds
+         if ((bufferIndex + message.header.packet_length) > max_len) {
+             printf("Invalid chunk sequence! Data was provided beyond the end of the buffer\r\n");
+             return InvalidMessage;
+         }
+         memcpy(data, message.data, message.header.packet_length);
+         // Copy data to buffer
+         bytes_used = bufferIndex + message.header.packet_length;
+         return Pending;
+     }
+ };
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t unk1;
     uint8_t innerCommand;
     uint8_t innerClient : 4;
@@ -197,23 +201,23 @@ typedef struct
 } __attribute__((packed)) Gip_Ack_t;
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
 } __attribute__((packed)) Gip_DeviceDescriptorRequest_t;
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t unk1;
     uint8_t unk2;
 } __attribute__((packed)) Gip_Auth_Done_t;
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t unk;
     uint8_t mode;
     uint8_t brightness;
 } __attribute__((packed)) Gip_Led_On_t;
 typedef struct {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -221,7 +225,7 @@ typedef struct {
 } __attribute__((packed)) XboxOneInputHeader_Data_t;
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -253,7 +257,7 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -297,7 +301,7 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -332,7 +336,7 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -415,7 +419,7 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -450,7 +454,7 @@ typedef struct
 // This isnt actually real but by doing this we can get some sane gamepad mappings in turntable mode
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -489,7 +493,7 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     PS3GHLGuitar_Data_t report;
 } __attribute__((packed)) XboxOneGHLGuitar_Data_t;
 typedef struct
@@ -500,14 +504,14 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t sub_command;
     uint8_t data[7];
 } __attribute__((packed)) XboxOneGHLGuitar_Output_t;
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     bool pressed : 1;
     uint8_t : 7;
     uint8_t keycode;
@@ -515,18 +519,18 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t subcommand;
 } __attribute__((packed)) GipPowerMode_t;
 
 typedef struct
 {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t data[];
 } __attribute__((packed)) GipPacket_t;
 
 typedef struct {
-    GipHeader_t Header;
+    GipHeader_t header;
     uint8_t subCommand;  // Assumed based on the descriptor reporting a larger max length than what this uses
     uint8_t flags;
     uint8_t leftTrigger;
@@ -539,11 +543,11 @@ typedef struct {
 } __attribute__((packed)) GipRumble_t;
 
 #define GIP_HEADER(packet, cmd, isInternal, seq) \
-    packet->Header.command = cmd;                \
-    packet->Header.internal = isInternal;        \
-    packet->Header.sequence = seq;               \
-    packet->Header.client = 0;                   \
-    packet->Header.needsAck = 0;                 \
-    packet->Header.chunkStart = 0;               \
-    packet->Header.chunked = 0;                  \
-    packet->Header.length = sizeof(*packet) - sizeof(GipHeader_t);
+    packet->header.command = cmd;                \
+    packet->header.internal = isInternal;        \
+    packet->header.sequence = seq;               \
+    packet->header.client = 0;                   \
+    packet->header.needsAck = 0;                 \
+    packet->header.chunkStart = 0;               \
+    packet->header.chunked = 0;                  \
+    packet->header.length = sizeof(*packet) - sizeof(GipHeader_t);

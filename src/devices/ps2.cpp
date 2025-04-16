@@ -1,7 +1,7 @@
 #include "devices/ps2.hpp"
-#include "parsers/ps2.hpp"
 
 #include "interfaces/core.hpp"
+#include "parsers/ps2.hpp"
 static inline bool isValidReply(const uint8_t *status) {
     return status[1] != 0xFF && (status[2] == 0x5A || status[2] == 0x00);
 }
@@ -232,7 +232,7 @@ void PS2Device::tick(san_base_t *data) {
                 sendCommand(port, ps2Data, commandExitConfig, sizeof(commandExitConfig));
                 autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput));
             }
-            mParser.parse(ps2Data, data);
+            mParser.parse(ps2Data, sizeof(ps2Data), data);
             last = Core::micros();
         } else {
             // Ocassionally, the controller returns a bad packet because it isn't ready. We should ignore that instead of reinitialisng, and

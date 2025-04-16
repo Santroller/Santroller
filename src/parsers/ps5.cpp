@@ -8,6 +8,7 @@
 #include "parsers/prokeys.hpp"
 #include "protocols/ps5.hpp"
 #include "string.h"
+#include "stdint.h"
 // TODO: do we do a seperate parser for each device type?
 void PS5Parser::parse(uint8_t *report, uint8_t len, san_base_t *data) {
     switch (subType) {

@@ -16,7 +16,7 @@ typedef enum {
 class WiiParser : public Parser {
    public:
     virtual void parse(uint8_t* report, uint8_t len, san_base_t* data);
-    virtual void build(san_base_t* data);
+    virtual int build(san_base_t* data, uint8_t* output);
 
     bool hiRes = false;
     bool hasTapBar = false;

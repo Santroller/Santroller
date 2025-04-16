@@ -168,10 +168,10 @@ typedef struct
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t leftThumbClick : 1;  // pedal2
+    uint8_t kick2 : 1;  // pedal2
     uint8_t padFlag : 1;         // right thumb click
 
-    uint8_t leftShoulder : 1;  // pedal1
+    uint8_t kick1 : 1;  // pedal1
     uint8_t cymbalFlag : 1;    // right shoulder click
     uint8_t guide : 1;
     uint8_t : 1;

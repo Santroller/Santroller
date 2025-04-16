@@ -167,8 +167,8 @@ void PS3Parser::parse(uint8_t *report, uint8_t len, san_base_t *data) {
             uint8_t greenVelocity = ~report->greenVelocity;
             uint8_t yellowVelocity = ~report->yellowVelocity;
             uint8_t blueVelocity = ~report->blueVelocity;
-            bool kick1 = report->leftShoulder;
-            bool kick2 = report->rightShoulder;
+            bool kick1 = report->kick1;
+            bool kick2 = report->kick2;
             data->gamepad.a |= report->a;
             data->gamepad.b |= report->b;
             data->gamepad.x |= report->x;

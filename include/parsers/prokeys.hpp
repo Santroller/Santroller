@@ -32,7 +32,7 @@ class ProKeysParser {
 
         int pressed = 0;
         for (int i = 0; i < PRO_KEY_COUNT; i++) {
-            int keyBit = 1 << (KEY_COUNT - 1 - i);
+            int keyBit = 1 << (PRO_KEY_COUNT - 1 - i);
             if (keyMask & keyBit) {
                 if (pressed < 5) {
                     data->midi.midiVelocities[PRO_KEY_FIRST_NOTE + i] = (report->velocities[pressed++] & 0x7F);

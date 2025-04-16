@@ -7,7 +7,7 @@ unsigned USBDevice::available() {
 };
 
 void USBDevice::tick(san_base_t* data) {
-    mParser.parse(mReportData, data);
+    mParser.parse(mReportData, sizeof(mReportData), data);
     if (data->midi.midiPacket[0]) {
         memcpy(mBuffer, data->midi.midiPacket, sizeof(data->midi.midiPacket));
         mBufferIndex += sizeof(mBuffer);

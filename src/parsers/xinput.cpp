@@ -156,8 +156,8 @@ void XInputParser::parse(uint8_t *report, uint8_t len, san_base_t *data) {
             bool down = report->dpadDown;
             bool left = report->dpadLeft;
             bool right = report->dpadRight;
-            bool kick1 = report->leftShoulder;
-            bool kick2 = report->leftThumbClick;
+            bool kick1 = report->kick1;
+            bool kick2 = report->kick2;
 
             uint8_t redVelocity = xinput_rb_velocity_positive(report->redVelocity);
             uint8_t greenVelocity = xinput_rb_velocity_negative(report->greenVelocity);

@@ -151,7 +151,7 @@ void WiiDevice::tick(san_base_t* data) {
             wiiData[i] = (uint8_t)(((wiiData[i] ^ s_box) + s_box) & 0xFF);
         }
     }
-    parser.parse(wiiData, data);
+    parser.parse(wiiData, sizeof(wiiData), data);
     mFound = true;
 }
 

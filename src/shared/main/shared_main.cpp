@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "accel.h"
+#include "bh_drum.h"
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
@@ -16,14 +17,13 @@
 #include "pico_slave.h"
 #include "pin_funcs.h"
 #include "ps2.h"
+#include "state_translation/drums.h"
 #include "state_translation/pro_guitar.h"
 #include "state_translation/pro_keys.h"
-#include "state_translation/drums.h"
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
 #include "wt_drum.h"
-#include "bh_drum.h"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -65,15 +65,14 @@ void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
         midiData.midiVelocitiesTemp[note] = velocity;
     }
     lastMidi = millis();
-
 }
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
-        midiData.midiVelocities[note] = 0;
-        midiData.midiVelocitiesTemp[note] = 0;
-    #endif
+#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+    midiData.midiVelocities[note] = 0;
+    midiData.midiVelocitiesTemp[note] = 0;
+#endif
 }
 
 void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2) {
@@ -2306,6 +2305,12 @@ void bluetooth_connected() {
 }
 uint8_t rbcount = 0;
 uint8_t lastrbcount = 0;
+uint8_t hadCymbal = 0;
+bool greenCymbal;
+bool greenPad;
+bool yellowCymbal;
+bool blueCymbal;
+long lastCymbalOff;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
@@ -2315,17 +2320,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 // Tick Inputs
 #include "inputs/accel.h"
+#include "inputs/bh_drum.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
-#include "inputs/bh_drum.h"
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
 #include "inputs/turntable.h"
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
-#include "inputs/wt_neck.h"
 #include "inputs/wt_drum.h"
+#include "inputs/wt_neck.h"
 
     TICK_SHARED;
     if (!startedInactivityPulse) {
@@ -2531,7 +2536,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
-
         TICK_XINPUT;
 
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
@@ -2564,6 +2568,16 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->leftThumbClick = true;
 #endif
         report_size = packet_size = sizeof(XINPUT_REPORT);
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        if (!report->cymbalFlag && ready_for_next_packet()) {
+            greenCymbal = false;
+            yellowCymbal = false;
+            blueCymbal = false;
+        }
+        if (!report->padFlag && ready_for_next_packet()) {
+            greenPad = false;
+        }
+#endif
     }
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
@@ -2800,6 +2814,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 }
 #endif
 
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+                if (!report->cymbalFlag && ready_for_next_packet()) {
+                    greenCymbal = false;
+                    yellowCymbal = false;
+                    blueCymbal = false;
+                }
+                if (!report->padFlag && ready_for_next_packet()) {
+                    greenPad = false;
+                }
+#endif
+
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
                 bool key25 = report->key25;
                 uint8_t currentVel = 0;
@@ -3005,7 +3030,7 @@ void tick(void) {
     if ((millis() - input_start) < 2000) {
         tick_inputs(NULL, NULL, consoleType);
     }
-    #if DEVICE_TYPE != ROCK_BAND_PRO_KEYS
+#if DEVICE_TYPE != ROCK_BAND_PRO_KEYS
     if ((millis() - lastMidi) > 1000) {
         memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
         lastMidi = millis();

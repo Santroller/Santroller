@@ -87,8 +87,10 @@ typedef struct {
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#ifdef INPUT_USB_HOST
+#if defined(INPUT_USB_HOST) || defined(INPUT_SERIAL_MIDI)
 using namespace usbMidi;
+#endif
+#ifdef INPUT_USB_HOST
 UsbMidiTransport usbMIDITransport(0);
 MidiInterface<UsbMidiTransport> MIDI(usbMIDITransport);
 #endif

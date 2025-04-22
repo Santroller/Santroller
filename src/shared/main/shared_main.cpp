@@ -2545,9 +2545,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #if PRO_GUITAR && USB_HOST_STACK
         TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+        report->autoCal_Light = report->tilt;
+        report->autoCal_Microphone = report->tilt;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
         TRANSLATE_TO_PRO_GUITAR(bt_data)
+        report->autoCal_Light = report->tilt;
+        report->autoCal_Microphone = report->tilt;
 #endif
         asm volatile("" ::
                          : "memory");
@@ -2602,9 +2606,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #if PRO_GUITAR && USB_HOST_STACK
         TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+        report->autoCal_Light = report->tilt;
+        report->autoCal_Microphone = report->tilt;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
         TRANSLATE_TO_PRO_GUITAR(bt_data)
+        report->autoCal_Light = report->tilt;
+        report->autoCal_Microphone = report->tilt;
 #endif
         asm volatile("" ::
                          : "memory");
@@ -2795,9 +2803,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #if PRO_GUITAR && USB_HOST_STACK
                 TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+                report->autoCal_Light = report->tilt;
+                report->autoCal_Microphone = report->tilt;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
                 TRANSLATE_TO_PRO_GUITAR(bt_data)
+                report->autoCal_Light = report->tilt;
+                report->autoCal_Microphone = report->tilt;
 #endif
                 asm volatile("" ::
                                  : "memory");

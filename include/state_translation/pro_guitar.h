@@ -27,26 +27,26 @@
     usb_host_data->bFret = report->bFret;                         \
     usb_host_data->highEFret = report->highEFret;                 \
                                                                   \
-    usb_host_data->tilt = report->tilt;                           \
+    usb_host_data->tilt = report->tilt == 0x7F ? INT16_MAX : 0;   \
     /* TODO: pedalDigital should map to pedalDigital*/            \
     usb_host_data->back |= report->pedal;
 
-#define TRANSLATE_TO_PRO_GUITAR(item)                   \
-    report->lowEFretVelocity = item.lowEFretVelocity;   \
-    report->aFretVelocity = item.aFretVelocity;         \
-    report->dFretVelocity = item.dFretVelocity;         \
-    report->gFretVelocity = item.gFretVelocity;         \
-    report->bFretVelocity = item.bFretVelocity;         \
-    report->highEFretVelocity = item.highEFretVelocity; \
-    report->tilt = item.tilt;                           \
-    report->green = item.green;                         \
-    report->red = item.red;                             \
-    report->yellow = item.yellow;                       \
-    report->blue = item.blue;                           \
-    report->orange = item.orange;                       \
-    report->lowEFret = item.lowEFret;                   \
-    report->aFret = item.aFret;                         \
-    report->dFret = item.dFret;                         \
-    report->gFret = item.gFret;                         \
-    report->bFret = item.bFret;                         \
+#define TRANSLATE_TO_PRO_GUITAR(item)                                  \
+    report->lowEFretVelocity = item.lowEFretVelocity;                  \
+    report->aFretVelocity = item.aFretVelocity;                        \
+    report->dFretVelocity = item.dFretVelocity;                        \
+    report->gFretVelocity = item.gFretVelocity;                        \
+    report->bFretVelocity = item.bFretVelocity;                        \
+    report->highEFretVelocity = item.highEFretVelocity;                \
+    report->tilt = item.tilt == INT16_MAX ? 0x7F : 0x60;               \
+    report->green = item.green;                                        \
+    report->red = item.red;                                            \
+    report->yellow = item.yellow;                                      \
+    report->blue = item.blue;                                          \
+    report->orange = item.orange;                                      \
+    report->lowEFret = item.lowEFret;                                  \
+    report->aFret = item.aFret;                                        \
+    report->dFret = item.dFret;                                        \
+    report->gFret = item.gFret;                                        \
+    report->bFret = item.bFret;                                        \
     report->highEFret = item.highEFret;

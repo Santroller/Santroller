@@ -954,8 +954,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
         // Fakemote sends this, so we know to jump to PS3 mode
         if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && (wIndex == INTERFACE_ID_Device || wIndex == INTERFACE_ID_Config) && request == HID_REQUEST_GET_REPORT && wLength == 0x11) {
-            consoleType = PS3;
-            reset_usb();
+            if (RPCS3_COMPAT) {
+                consoleType = PS3;
+                reset_usb();
+            }
         }
         // RPCS3 sends this. Jump any devices with RPCS3 compat enabled
         if ((consoleType == UNIVERSAL || consoleType == WINDOWS) && wValue == 0x03f2 && wIndex == INTERFACE_ID_Config && request == HID_REQUEST_GET_REPORT) {

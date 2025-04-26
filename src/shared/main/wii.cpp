@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include "Arduino.h"
+#include "commands.h"
 #include "config.h"
 #include "controllers.h"
 #include "io.h"
 #include "shared_main.h"
-#include "commands.h"
 uint8_t wiiBytes;
 #ifdef INPUT_WII
 uint8_t wiiPointer = 0;
@@ -120,7 +120,7 @@ void initWiiExt(void) {
 bool initialised = false;
 bool lastWiiEuphoriaLed = false;
 bool hadDrum = false;
-static uint8_t packetIssueCount = 0; 
+static uint8_t packetIssueCount = 0;
 bool wiiDataValid() {
     return initialised;
 }
@@ -175,7 +175,31 @@ uint8_t* tickWii() {
         velocity = 0x7F - velocity;
         note = 0x7F - note;
         if (velocity || note) {
+            // map gh notes to their rb counterparts in rb mode
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+            switch (note) {
+                case GH_MIDI_NOTE_GREEN:
+                    onNote(channel, RB_MIDI_NOTE_GREEN, velocity);
+                    break;
+                case GH_MIDI_NOTE_RED:
+                    onNote(channel, RB_MIDI_NOTE_RED, velocity);
+                    break;
+                case GH_MIDI_NOTE_YELLOW:
+                    onNote(channel, RB_MIDI_NOTE_YELLOW, velocity);
+                    break;
+                case GH_MIDI_NOTE_BLUE:
+                    onNote(channel, RB_MIDI_NOTE_BLUE, velocity);
+                    break;
+                case GH_MIDI_NOTE_ORANGE:
+                    onNote(channel, RB_MIDI_NOTE_GREEN, velocity);
+                    break;
+                default:
+                    onNote(channel, note, velocity);
+                    break;
+            }
+#else
             onNote(channel, note, velocity);
+#endif
         }
     }
     initialised = true;

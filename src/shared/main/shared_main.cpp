@@ -1174,10 +1174,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 }
                 case ROCK_BAND_DRUMS: {
                     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
-                    uint8_t redVelocity = ~report->redVelocity;
-                    uint8_t greenVelocity = ~report->greenVelocity;
-                    uint8_t yellowVelocity = ~report->yellowVelocity;
-                    uint8_t blueVelocity = ~report->blueVelocity;
+                    uint8_t redVelocity = report->redVelocity;
+                    uint8_t greenVelocity = report->greenVelocity;
+                    uint8_t yellowVelocity = report->yellowVelocity;
+                    uint8_t blueVelocity = report->blueVelocity;
                     bool kick1 = report->leftShoulder;
                     bool kick2 = report->rightShoulder;
                     usb_host_data->a |= report->a;

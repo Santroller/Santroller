@@ -116,7 +116,7 @@ void WiiDevice::tick(san_base_t* data) {
     if (Core::micros() - lastTick < 750) {
         return;
     }
-    lastTick = micros();
+    lastTick = Core::micros();
     static uint8_t wiiData[8];
     memset(wiiData, 0, sizeof(wiiData));
     if (parser.mType == WII_NOT_INITIALISED ||

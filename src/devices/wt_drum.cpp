@@ -22,7 +22,7 @@ unsigned WTMidiTransport::available() {
             mFound = true;
             // 2: Send 0x55, response: packet count in buffer
             resp = mInterface->transfer(0x55);
-            delayMicroseconds(50);
+            Core::delayMicroseconds(50);
             if (!resp) {
                 // no packets in buffer
                 mCsPin->high();
@@ -33,7 +33,7 @@ unsigned WTMidiTransport::available() {
             for (int i = 0; i < 3; i++) {
                 resp = mInterface->transfer(0x00);
                 mBuffer[i] = resp;
-                delayMicroseconds(50);
+                Core::delayMicroseconds(50);
             }
             mCsPin->high();
             mBufferIndex = 3;

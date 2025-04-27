@@ -1,9 +1,8 @@
 #include <stdint.h>
+#include <string.h>
 
 #include <cstdio>
 #include <vector>
-
-#include "ps3.hpp"
 
 #define GIP_CMD_ACKNOWLEDGE 0x01
 #define GIP_ARRIVAL 0x02
@@ -49,7 +48,7 @@ class XboxMessage {
    public:
     GipHeader_t header;
     uint8_t* data;
-    XboxMessage(uint8_t* buffer) {
+    XboxMessage(uint8_t* buffer, uint8_t len) {
         header = *(GipHeader_t*)buffer;
         int bytesRead = 3;
         header.packet_length = decodeLEB128(buffer + bytesRead, &bytesRead);
@@ -57,6 +56,9 @@ class XboxMessage {
             header.chunk_offset = decodeLEB128(buffer + bytesRead, &bytesRead);
         }
         data = buffer + bytesRead;
+        if (header.packet_length != len - bytesRead) {
+            printf("Xbox header length does not match! %d != %d\r\n", len - bytesRead, header.packet_length);
+        }
     }
 
     static int decodeLEB128(uint8_t* data, int* bytesRead) {
@@ -113,9 +115,35 @@ class XboxMessage {
 class XboxChunk {
    public:
     uint8_t data[1024];
-    uint8_t max_len;
-    uint8_t bytes_used;
+    uint16_t max_len;
+    uint16_t bytes_used;
     bool valid;
+    uint8_t currentChunk;
+    XboxResult setChunkData(uint8_t* dataToSend, uint16_t dataLen) {
+        max_len = dataLen;
+        currentChunk = 0;
+        bytes_used = 0;
+        memcpy(data, dataToSend, dataLen);
+    }
+    XboxResult getChunk(XboxMessage message) {
+        if (currentChunk == 0 || (currentChunk + 1) % 5 == 0) {
+            message.header.needsAck = 1;
+        } else {
+            message.header.needsAck = 0;
+        }
+        if (currentChunk == 0) {
+            message.header.chunkStart = 1;
+            message.header.chunk_offset = max_len;
+        } else if (bytes_used == max_len) {
+            // end of packet
+            message.header.needsAck = 0;
+            message.header.packet_length = 0;
+        } else {
+            message.header.chunkStart = 0;
+            message.header.chunk_offset = max_len;
+        }
+        currentChunk++;
+    }
     XboxResult processChunk(XboxMessage message) {
         int bufferIndex = message.header.chunk_offset;
 
@@ -142,8 +170,10 @@ class XboxChunk {
             }
 
             // Buffer index is the total size of the buffer on the starting packet
+            max_len = message.header.chunk_offset;
             bufferIndex = 0;
             bytes_used = 0;
+            valid = true;
         }
 
         // Validate sequence alignment
@@ -226,291 +256,6 @@ typedef struct {
     uint8_t start : 1;  // menu
     uint8_t back : 1;   // view
 } __attribute__((packed)) XboxOneInputHeader_Data_t;
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sync : 1;
-    uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
-
-    uint8_t a : 1;
-    uint8_t b : 1;
-    uint8_t x : 1;
-    uint8_t y : 1;
-
-    uint8_t dpadUp : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-
-    uint8_t leftShoulder : 1;
-    uint8_t rightShoulder : 1;
-    uint8_t leftThumbClick : 1;
-    uint8_t rightThumbClick : 1;
-
-    uint16_t leftTrigger;
-    uint16_t rightTrigger;
-
-    int16_t leftStickX;
-    int16_t leftStickY;
-    int16_t rightStickX;
-    int16_t rightStickY;
-} __attribute__((packed)) XboxOneGamepad_Data_t;
-
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sync : 1;
-    uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
-
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
-
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-
-    uint8_t leftShoulder : 1;  // orange
-    uint8_t : 1;
-    uint8_t solo : 1;  // leftThumbClick
-    uint8_t : 1;
-
-    uint8_t tilt;
-    uint8_t whammy;
-    uint8_t pickup;
-
-    uint8_t green : 1;
-    uint8_t red : 1;
-    uint8_t yellow : 1;
-    uint8_t blue : 1;
-    uint8_t orange : 1;
-    uint8_t : 3;
-
-    uint8_t soloGreen : 1;
-    uint8_t soloRed : 1;
-    uint8_t soloYellow : 1;
-    uint8_t soloBlue : 1;
-    uint8_t soloOrange : 1;
-    uint8_t : 3;
-
-    uint8_t unknown[3];
-} __attribute__((packed)) XboxOneRockBandGuitar_Data_t;
-
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sync : 1;
-    uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
-
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
-
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-
-    uint8_t leftShoulder : 1;  // orange
-    uint8_t : 1;
-    uint8_t solo : 1;  // leftThumbClick
-    uint8_t : 1;
-
-    uint8_t tilt;
-    uint8_t lowEFret;
-    uint8_t aFret;
-
-    uint8_t dFret;
-    uint8_t gFret;
-    uint8_t bFret;
-    uint8_t highEFret;
-
-    uint8_t unknown[1];
-} __attribute__((packed)) XboxOneRockBandProGuitar_Data_t;
-
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sync : 1;
-    uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
-
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
-
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-
-    uint8_t leftShoulder : 1;  // orange
-    uint8_t : 1;
-
-    uint8_t solo : 1;  // leftThumbClick
-    uint8_t : 1;
-
-    uint8_t key8 : 1;
-    uint8_t key7 : 1;
-    uint8_t key6 : 1;
-    uint8_t key5 : 1;
-    uint8_t key4 : 1;
-    uint8_t key3 : 1;
-    uint8_t key2 : 1;
-    uint8_t key1 : 1;
-
-    uint8_t key16 : 1;
-    uint8_t key15 : 1;
-    uint8_t key14 : 1;
-    uint8_t key13 : 1;
-    uint8_t key12 : 1;
-    uint8_t key11 : 1;
-    uint8_t key10 : 1;
-    uint8_t key9 : 1;
-
-    uint8_t key24 : 1;
-    uint8_t key23 : 1;
-    uint8_t key22 : 1;
-    uint8_t key21 : 1;
-    uint8_t key20 : 1;
-    uint8_t key19 : 1;
-    uint8_t key18 : 1;
-    uint8_t key17 : 1;
-
-    union {
-        struct {
-            uint8_t velocity1 : 7;
-            uint8_t key25 : 1;
-
-            uint8_t velocity2 : 7;
-            uint8_t : 1;
-
-            uint8_t velocity3 : 7;
-            uint8_t : 1;
-
-            uint8_t velocity4 : 7;
-            uint8_t : 1;
-
-            uint8_t velocity5 : 7;
-            uint8_t : 1;
-        };
-        uint8_t velocities[5];
-    };
-
-    uint8_t : 7;
-    uint8_t overdrive : 1;
-    uint8_t pedalAnalog : 7;
-    uint8_t pedalDigital : 1;
-
-    uint8_t touchPad : 7;
-    uint8_t : 1;
-
-    uint8_t pedalConnection : 1;  // If this matches PS3 MPA behavior, always 0 with the MIDI Pro Adapter
-    uint8_t : 7;
-} __attribute__((packed)) XboxOneRockBandKeyboard_Data_t;
-
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sync : 1;
-    uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
-
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
-
-    uint8_t dpadUp : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-
-    uint8_t leftShoulder : 1;   // kick1
-    uint8_t rightShoulder : 1;  // kick2
-    uint8_t : 1;
-    uint8_t : 1;
-
-    uint8_t yellowVelocity : 4;
-    uint8_t redVelocity : 4;
-    uint8_t greenVelocity : 4;
-    uint8_t blueVelocity : 4;
-
-    uint8_t blueCymbalVelocity : 4;
-    uint8_t yellowCymbalVelocity : 4;
-    uint8_t : 4;
-    uint8_t greenCymbalVelocity : 4;
-} __attribute__((packed)) XboxOneRockBandDrums_Data_t;
-
-// This isnt actually real but by doing this we can get some sane gamepad mappings in turntable mode
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sync : 1;
-    uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
-
-    uint8_t a : 1;
-    uint8_t b : 1;
-    uint8_t x : 1;
-    uint8_t y : 1;
-
-    uint8_t dpadUp : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t dpadRight : 1;
-
-    uint8_t : 4;
-
-    uint16_t leftTrigger;
-    uint16_t rightTrigger;
-
-    uint16_t leftGreen : 1;
-    uint16_t leftRed : 1;
-    uint16_t leftBlue : 1;
-    uint16_t : 13;
-
-    uint16_t rightGreen : 1;
-    uint16_t rightRed : 1;
-    uint16_t rightBlue : 1;
-    uint16_t : 13;
-
-    int16_t leftTableVelocity;
-    int16_t rightTableVelocity;
-    int16_t effectsKnob;
-    int16_t crossfader;
-} __attribute__((packed)) XboxOneTurntable_Data_t;
-
-typedef struct
-{
-    GipHeader_t header;
-    PS3GHLGuitar_Data_t report;
-} __attribute__((packed)) XboxOneGHLGuitar_Data_t;
-typedef struct
-{
-    XboxOneGHLGuitar_Data_t guitar;
-    XboxOneGamepad_Data_t gamepad;
-} __attribute__((packed)) XboxOneGHLGuitarWithGamepad_Data_t;
-
-typedef struct
-{
-    GipHeader_t header;
-    uint8_t sub_command;
-    uint8_t data[7];
-} __attribute__((packed)) XboxOneGHLGuitar_Output_t;
 
 typedef struct
 {
@@ -554,3 +299,17 @@ typedef struct {
     packet->header.chunkStart = 0;               \
     packet->header.chunked = 0;                  \
     packet->header.length = sizeof(*packet) - sizeof(GipHeader_t);
+
+class XboxOneParser {
+   public:
+    XboxOneParser();
+    void parse(uint8_t* report, uint8_t len);
+
+   private:
+    uint8_t previousReceiveSequence[128];
+    uint8_t previousSendSequence[128];
+    XboxChunk chunk;
+    int descriptorFailCount;
+    Gip_Ack_t ack;
+    bool needsAck = false;
+};

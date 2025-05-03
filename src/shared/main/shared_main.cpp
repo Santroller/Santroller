@@ -58,7 +58,7 @@ unsigned long lastMidi = 0;
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
-    printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
+    // printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
     velocity = velocity << 1;
     if (velocity > midiData.midiVelocitiesTemp[note]) {
         midiData.midiVelocities[note] = velocity;
@@ -68,7 +68,7 @@ void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
 }
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
-    printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
+    // printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
     midiData.midiVelocities[note] = 0;
     midiData.midiVelocitiesTemp[note] = 0;

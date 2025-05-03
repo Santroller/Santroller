@@ -105,8 +105,11 @@ uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits) {
 }
 
 uint8_t matrix_read(uint8_t pin, uint8_t outPin) {
-    gpio_put(outPin, 0);
-    uint8_t ret = gpio_get(pin);
-    gpio_put(outPin, 1);
-    return ret;
+    if (!disable_multiplexer) {
+        gpio_put(outPin, 0);
+        uint8_t ret = gpio_get(pin);
+        gpio_put(outPin, 1);
+        return ret;
+    }
+    return 0;
 }

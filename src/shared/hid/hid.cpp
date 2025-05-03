@@ -911,6 +911,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             response_buffer[0] = wt_drum_found;
             return 1;
 #endif
+#ifdef BH_DRUM_TWI_PORT
+        case COMMAND_BH_DRUM_VALID:
+            response_buffer[0] = bh_drum_found;
+            return 1;
+#endif
 #ifdef MAX1704X_TWI_PORT
         case COMMAND_READ_MAX170X_VALID:
             response_buffer[0] = max170x_init;

@@ -51,6 +51,7 @@ enum SerialCommands {
     COMMAND_ACCEL_VALID,
     COMMAND_READ_BLUETOOTH_INPUTS,
     COMMAND_WT_DRUM_VALID,
+    COMMAND_BH_DRUM_VALID,
     MAX=100
 };
 
@@ -71,6 +72,7 @@ extern bool lastTurntableWasSuccessfulRight;
 extern bool lastWiiWasSuccessful;
 extern bool lastPS2WasSuccessful;
 extern bool wt_drum_found;
+extern bool bh_drum_found;
 extern uint16_t wiiControllerType;
 extern uint8_t ps2ControllerType;
 extern bool overrideR2;

@@ -1,7 +1,7 @@
 ---
 sort: 7
 ---
-# Setting up an Adaptor for a MIDI device (Pro Keys / Drums) (Pi Pico Only)
+# Setting up an Adaptor for a USB MIDI device (Pro Keys / Drums) (Pi Pico Only)
 ## Supplies
 * A Raspberry Pi Pico
 * A USB Extension cable, or a USB breakout

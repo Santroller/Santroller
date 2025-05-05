@@ -1223,13 +1223,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
             }
 #endif
             else if (consoleType == PS4) {
-#if DEVICE_TYPE_IS_INSTRUMENT
-                dev->idVendor = XBOX_REDOCTANE_VID;
-                dev->idProduct = PS4_GHLIVE_DONGLE_PID;
-#else
                 dev->idVendor = PS4_VID;
                 dev->idProduct = PS4_PID;
-#endif
             } else if (consoleType == IOS_FESTIVAL) {
                 dev->idVendor = SONY_VID;
                 dev->idProduct = SONY_DS3_PID;

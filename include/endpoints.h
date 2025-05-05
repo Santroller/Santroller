@@ -32,8 +32,6 @@ enum endpoints_t {
 #define NINTENDO_VID 0x057E
 #define SWITCH_PRO_PID 0x2009
 #define REDOCTANE_VID 0x12ba
-#define PS4_VID 0x03EB
-#define PS4_PID 0x2043
 #define SONY_VID 0x054c
 #define SONY_DS3_PID 0x0268
 #define PS4_DS_PID_1 0x05c4
@@ -41,9 +39,11 @@ enum endpoints_t {
 #define PS4_DS_PID_3 0x0ba0
 #define PS4_STRAT_VID 0x0738
 #define PS4_STRAT_PID 0x8261
+#define MADCATZ_VID 0x0738
 #define PDP_VID 0x0E6F
 #define PS4_JAG_PID 0x0173
 #define PS4_RIFFMASTER_PID 0x024A
+#define PS4_MADCATZ_DRUM_PID 0x8262
 #define XBOX_ONE_RIFFMASTER_PID 0x0248
 #define PS5_DS_PID 0x0ce6
 #define PS5_RIFFMASTER_PID 0x0249

@@ -41,9 +41,6 @@ void xsm3_initialise_state();
 // Sets the identification data to use.
 void xsm3_set_identification_data(const uint8_t id_data[0x1D]);
 
-// Imports the console-specific keys (GetKey index 0x23 and 0x24 for wired controllers) into the current state.
-void xsm3_import_kv_keys(const uint8_t key1[0x10], const uint8_t key2[0x10]);
-
 // Initialises the XSM3 state using information from the challenge init packet (0x82) and places a response in xsm3_challenge_response.
 void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]);
 

@@ -883,7 +883,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         reset_usb();
         return 0;
     }
-#ifdef KV_KEY_ARRAY
+#if SUPPORTS_PICO
     switch (request) {
         case 0x81:
             uint8_t serial[0x0C];
@@ -908,17 +908,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             short state = 2;  // 1 = in-progress, 2 = complete
             memcpy(requestBuffer, &state, sizeof(state));
             return sizeof(state);
-    }
-#elif USB_HOST_STACK
-    switch (request) {
-        case 0x81:
-        case 0x82:
-        case 0x87:
-        case 0x84:
-        case 0x83:
-        case 0x86:
-            USB_Device_Type_t type = get_device_address_for(XBOX360);
-            return transfer_with_usb_controller(type.dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
     }
 #else
     switch (request) {

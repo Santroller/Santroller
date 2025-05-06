@@ -38,16 +38,6 @@
 #define XSM3_printf
 #endif  // XSM3_NO_DEBUGGING
 
-#ifdef KV_KEY_ARRAY
-#ifdef CONFIGURABLE_BLOBS
-static const uint8_t* kv_keys = (const uint8_t*)&KV_KEY_ARRAY;
-uint8_t key_count = KV_KEY_SIZE;
-#else
-static const PROGMEM uint8_t kv_keys[] = KV_KEY_ARRAY;
-uint8_t key_count = KV_KEY_SIZE;
-#endif
-#endif
-
 // constant variables
 uint8_t xsm3_id_data_ms_controller[0x1D] = {
     0x49, 0x4B, 0x00, 0x00, 0x17, 0x41, 0x41, 0x41,
@@ -55,13 +45,22 @@ uint8_t xsm3_id_data_ms_controller[0x1D] = {
     0x00, 0x00, 0x80, 0x02, 0x09, 0x12, 0x82, 0x28,
     0x03, 0x00, 0x01, 0x01, 0x71};
 
-// constant variables (not exposed outside of this module)
+// static global keys from the keyvault (shared across every retail system)
 static const uint8_t xsm3_key_0x1D[0x10] = {
     0xE3, 0x5B, 0xFB, 0x1C, 0xCD, 0xAD, 0x32, 0x5B,
     0xF7, 0x0E, 0x07, 0xFD, 0x62, 0x3D, 0xA7, 0xC4};
 static const uint8_t xsm3_key_0x1E[0x10] = {
     0x8F, 0x29, 0x08, 0x38, 0x0B, 0x5B, 0xFE, 0x68,
     0x7C, 0x26, 0x46, 0x2A, 0x51, 0xF2, 0xBC, 0x19};
+
+// retail keys for generating 0x23/0x24 keys from console ID
+static const uint8_t xsm3_root_key_0x23[0x10] = {
+    0x82, 0x80, 0x78, 0x68, 0x3A, 0x52, 0x3A, 0x98,
+    0x10, 0xF4, 0x0C, 0x12, 0x70, 0x66, 0xDC, 0xBA};
+
+static const uint8_t xsm3_root_key_0x24[0x10] = {
+    0x66, 0x62, 0x1A, 0x78, 0xF8, 0x60, 0x9C, 0x8A,
+    0x26, 0x9A, 0x04, 0xAE, 0xD8, 0x5C, 0x1E, 0xC8};
 
 // response to give to the given challenge command
 uint8_t xsm3_challenge_response[0x30];
@@ -116,7 +115,6 @@ static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
 }
 
 void xsm3_set_vid_pid(const uint8_t serial[0x0C], uint16_t vid, uint16_t pid) {
-
     memcpy(xsm3_id_data_ms_controller + 6, serial, 0x0C);
     uint8_t* id_data = xsm3_id_data_ms_controller;
     // skip over the packet header
@@ -160,10 +158,13 @@ void xsm3_set_identification_data(const uint8_t id_data[0x1D]) {
     memcpy(xsm3_identification_data + 0x16, id_data + 0x14, sizeof(unsigned short));
 }
 
-void xsm3_import_kv_keys(const uint8_t key1[0x10], const uint8_t key2[0x10]) {
-    // copy the provided keys into our buffers
-    memcpy(xsm3_kv_2des_key_1, key1, sizeof(xsm3_kv_2des_key_1));
-    memcpy(xsm3_kv_2des_key_2, key2, sizeof(xsm3_kv_2des_key_2));
+void xsm3_generate_kv_keys(const uint8_t console_id[0x8]) {
+    // make a sha-1 hash of the console id
+    uint8_t console_id_hash[0x14];
+    ExCryptSha(console_id, 0x8, NULL, 0, NULL, 0, console_id_hash, 0x14);
+    // encrypt it with the root keys for 1st party controllers
+    UsbdSecXSM3AuthenticationCrypt(xsm3_root_key_0x23, console_id_hash, 0x10, xsm3_kv_2des_key_1, 1);
+    UsbdSecXSM3AuthenticationCrypt(xsm3_root_key_0x24, console_id_hash + 0x4, 0x10, xsm3_kv_2des_key_2, 1);
 }
 
 void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
@@ -188,17 +189,7 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     if (memcmp(incoming_packet_mac + 4, challenge_packet + 0x5 + 0x18, 0x4) != 0) {
         XSM3_printf("[ MAC failed when validating challenge init! ]\n");
     }
-#ifdef KV_KEY_ARRAY
-    for (int i = 0; i < key_count; i++) {
-        uint8_t* keys = kv_keys + (i * (sizeof(xsm3_kv_2des_key_1) + sizeof(xsm3_kv_2des_key_2) + 5));
-        if (memcmp(keys, xsm3_console_id, 5) == 0) {
-            memcpy(xsm3_kv_2des_key_1, keys + 5, sizeof(xsm3_kv_2des_key_1));
-            memcpy(xsm3_kv_2des_key_2, keys + 5 + sizeof(xsm3_kv_2des_key_1), sizeof(xsm3_kv_2des_key_2));
-            break;
-        }
-    }
-#endif
-    // TODO: somehow..derive the kv keys from the console certificate
+    xsm3_generate_kv_keys(xsm3_console_id);
 
     // the random value is swapped at an 8 byte boundary
     memcpy(xsm3_random_console_data_swap, xsm3_random_console_data + 0x8, 0x8);

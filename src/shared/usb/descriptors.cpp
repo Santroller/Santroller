@@ -888,7 +888,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         case 0x81:
             uint8_t serial[0x0C];
             read_serial(serial, sizeof(serial));
-            xsm3_set_vid_pid(serial, xbox_360_vid, xbox_360_pid);
+            xsm3_set_vid_pid(serial, ARDWIINO_VID, ARDWIINO_PID);
             xsm3_initialise_state();
             xsm3_set_identification_data(xsm3_id_data_ms_controller);
             memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
@@ -1196,8 +1196,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = HORI_VID;
                 dev->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
             } else if (consoleType == XBOX360) {
-                dev->idVendor = xbox_360_vid;
-                dev->idProduct = xbox_360_pid;
+                dev->idVendor = ARDWIINO_VID;
+                dev->idProduct = ARDWIINO_PID;
             } else if (consoleType == OG_XBOX) {
                 dev->idVendor = 0x045E;
                 dev->idProduct = 0x0289;

@@ -119,10 +119,6 @@ bool authDone = false;
 long test3 = 0;
 static void tick_usb() {
 #if USB_HOST_STACK
-    if (consoleType == XBOX360 && !foundXB && xboxAuthValid) {
-        tuh_task();
-        return;
-    }
     if (consoleType == XBOXONE && !foundXB) {
         tuh_task();
         return;
@@ -142,14 +138,6 @@ static void tick_usb() {
 #ifdef INPUT_SERIAL_MIDI
     MIDI2.read();
 #endif
-    if (!authDone) {
-        if (consoleType != XBOXONE && (consoleType != XBOX360 || !xboxAuthValid)) {
-            authReady = millis() > 1000;
-        }
-        if (authReady) {
-            authDone = true;
-        }
-    }
 }
 #if BLUETOOTH_RX
 void tick_bluetooth(const void *buf, uint8_t len, USB_Device_Type_t type) {
@@ -340,15 +328,6 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
             usb_host_devices[total_usb_host_devices].type = type;
             total_usb_host_devices++;
             xinput_controller_connected(host_vid, host_pid);
-            if (consoleType == XBOX360) {
-                foundXB = true;
-                // Reboot the controller and wait for auth
-                if (!xboxAuthValid) {
-                    xboxAuthValid = true;
-                    reset_usb();
-                }
-                printf("found xb\r\n");
-            }
             break;
         case XBOX360_W:
             x360_dev_addr = type;

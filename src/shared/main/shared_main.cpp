@@ -3243,33 +3243,6 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len) {
 void xinput_controller_connected(uint16_t vid, uint16_t pid) {
     handle_player_leds(0);
     if (xbox_360_state == Authenticated) return;
-    xbox_360_vid = vid;
-    xbox_360_pid = pid;
-    // Using the skylander pid on a 360 results in it not being classed as a controller
-    // IDs from the xplorer auth just fine with the portals blobs however
-    if (xbox_360_vid == XBOX_REDOCTANE_VID && xbox_360_pid == 0x1f17) {
-        xbox_360_pid = 0x4748;
-    }
-    // Same thing with disney infinity portals and lego dimensions portals
-    if (xbox_360_vid == XBOX_POWERA_VID && (xbox_360_pid == 0xFA00 || xbox_360_pid == 0xFA01)) {
-        xbox_360_pid = 0x4748;
-    }
-    // Skylanders games require you use the portal vid and pid
-#if DEVICE_TYPE == SKYLANDERS
-    if (xbox_360_vid == XBOX_REDOCTANE_VID) {
-        xbox_360_pid = 0x1f17;
-    }
-#endif
-#if DEVICE_TYPE == DISNEY_INFINITY
-    if (xbox_360_vid == XBOX_POWERA_VID) {
-        xbox_360_pid = 0xFA00;
-    }
-#endif
-#if DEVICE_TYPE == LEGO_DIMENSIONS
-    if (xbox_360_vid == XBOX_POWERA_VID) {
-        xbox_360_pid = 0xFA01;
-    }
-#endif
 }
 
 void xinput_w_controller_connected() {

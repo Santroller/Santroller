@@ -3546,7 +3546,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             }
             break;
         case XBOX_ONE_CONTROLLER_VID:
-            if (pid >= 0x02e0 && pid <= 0x02eF) {
+            if (pid >= 0x02e0 && pid <= 0x02eF && type->console_type != XBOXONE) {
                 type->console_type = XINPUTCOMPAT;
                 type->sub_type = GAMEPAD;
                 break;

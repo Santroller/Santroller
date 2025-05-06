@@ -177,7 +177,7 @@ extern unsigned long millis_at_boot;
 uint8_t *tickPS2() {
     uint8_t *in;
     // PS2 guitars die if you poll them too fast
-    if (ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER && micros() - last < 3000) {
+    if ((ps2ControllerType == PSX_GUITAR_HERO_CONTROLLER || ps2ControllerType == PSX_DUALSHOCK_1_CONTROLLER) && micros() - last < 3000) {
         return inputBuffer;
     }
     // If this is changed to a different port, you can talk to different devices

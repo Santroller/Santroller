@@ -709,13 +709,13 @@ const PROGMEM uint8_t ps3_feature_f8[] = {
 
 // Gyro and accel calibration are in here somewhere!
 const PROGMEM uint8_t ps3_feature_ef[] = {
-    0x00, 0xef, 0x04, 0x00, 0x05, 0x03, 0x01, 0xb0, 
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 
-    0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0xef, 0x04, 0x00, 0x05, 0x03, 0x01, 0xb0,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x03,
+    0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 const PROGMEM uint8_t ps4_feature_config[] = {
@@ -820,7 +820,7 @@ uint8_t ps3_id_id = 4;
 bool cleared_input = false;
 bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer, bool *status) {
-    // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
+    printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
 #if DEVICE_TYPE_IS_GAMEPAD
     if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
         consoleType = OG_XBOX;
@@ -843,7 +843,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
 #endif
 
-    if (consoleType == XBOX360 && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x83) {
         if (xbox_360_state == Auth1) {
             xbox_360_state = Auth2;
         } else if (xbox_360_state == Auth2) {
@@ -851,6 +851,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         } else if (xbox_360_state == Auth3) {
             xbox_360_state = Authenticated;
             handle_auth_led();
+            if (consoleType != XBOX360) {
+                consoleType = XBOX360;
+                reset_after_360 = millis() + 100;
+            }
         }
     }
     if (seen_windows_xb1 && !(requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)) {
@@ -878,11 +882,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     }
 
 #if DEVICE_TYPE_IS_GAMEPAD
-    if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
-        consoleType = XBOX360;
-        reset_usb();
-        return 0;
-    }
 #if SUPPORTS_PICO
     switch (request) {
         case 0x81:
@@ -910,6 +909,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return sizeof(state);
     }
 #else
+    if (consoleType == UNIVERSAL && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 0x81) {
+        consoleType = XBOX360;
+        reset_usb();
+        return 0;
+    }
     switch (request) {
         case 0x81:
         case 0x82:

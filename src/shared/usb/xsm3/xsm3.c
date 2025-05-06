@@ -18,7 +18,7 @@
 */
 
 #include "xsm3.h"
-
+#include "Arduino.h"
 #include <avr/pgmspace.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -116,6 +116,7 @@ static uint8_t xsm3_calculate_checksum(const uint8_t* packet) {
 
 void xsm3_set_vid_pid(const uint8_t serial[0x0C], uint16_t vid, uint16_t pid) {
     memcpy(xsm3_id_data_ms_controller + 6, serial, 0x0C);
+    xsm3_id_data_ms_controller[6] = micros();
     uint8_t* id_data = xsm3_id_data_ms_controller;
     // skip over the packet header
     id_data += 0x5;
@@ -166,7 +167,6 @@ void xsm3_generate_kv_keys(const uint8_t console_id[0x8]) {
     UsbdSecXSM3AuthenticationCrypt(xsm3_root_key_0x23, console_id_hash, 0x10, xsm3_kv_2des_key_1, 1);
     UsbdSecXSM3AuthenticationCrypt(xsm3_root_key_0x24, console_id_hash + 0x4, 0x10, xsm3_kv_2des_key_2, 1);
 }
-
 void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     uint8_t incoming_packet_mac[0x8];
     uint8_t response_packet_mac[0x8];

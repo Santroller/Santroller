@@ -6,6 +6,7 @@ extern Xbox_One_State_t xbox_one_state;
 
 // State of the Xbox 360 controller init
 extern Xbox_360_State_t xbox_360_state;
+extern long reset_after_360;
 
 // Used for passing authentication data between the console and authentication controller
 extern uint8_t data_from_console_size;

@@ -512,6 +512,7 @@ int16_t handle_calibration_turntable_360(int16_t previous, int16_t orig_val, uin
     return previous;
 }
 uint16_t descriptor_index = 0;
+long reset_after_360 = 0;
 uint8_t tick_xbox_one() {
     uint32_t serial = micros();
     switch (xbox_one_state) {
@@ -3033,6 +3034,9 @@ void tick(void) {
 #ifdef TICK_LED_BLUETOOTH
     TICK_LED_BLUETOOTH;
 #endif
+    if (reset_after_360 && millis() > reset_after_360) {
+        reset_usb();
+    }
     // Only sleep if the timeout has passed and we aren't connected over USB
     if (SLEEP_PIN != -1 && SLEEP_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured()) {
         go_to_sleep();

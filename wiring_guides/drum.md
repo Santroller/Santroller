@@ -4,8 +4,6 @@ sort: 3
 
 # Setting up a Drum Kit
 
-If you are new to this, read the [following guide](https://santroller.tangentmc.net/wiring_guides/general.html) for an overview on everything you need to know for modifying a controller.
-
 ## Supplies
 
 - A microcontroller
@@ -67,7 +65,7 @@ To keep the relevant information in this guide easy to find, information is sort
 [![4051](/assets/images/cd4051.png)](/assets/images/cd4051.png)
 [![4067](/assets/images/cd4067.png)](/assets/images/cd4067.png)
 
-1. Wire V<sub>DD</sub> on the multiplexer to 3v3 on the Pico.
+1. Wire V<subCC</sub> on the multiplexer to 3v3 on the Pico.
 2. Wire V<sub>SS</sub> to GND on your Pico
 3. If your multiplexer has a V<sub>EE</sub>, also wire that to ground on the Pi Pico. V<sub>EE</sub> allows for using the multiplexer with negative voltages, but since we aren't doing this we set it to ground to disable that feature.
 4. Also wire INH / Inhibit to ground, if this exists on your multiplexer. This pin disables the I/O if it is driven high, so we ground it to make sure the chip is always enabled.

@@ -47,3 +47,6 @@ You can add LEDs that will light up when a button or analogue input is pressed. 
 11. If you want an analog input (such as whammy) to control an LED, click on it
 12. Configuring analog based LEDs is much the same as digital, but instead of pressed and released being digital, the LEDs will smoothly transition between pressed and released depending on the value of the analog input.
 13. If you would like to respond to game events in supported games, hit the `Add Setting` button and add an `LED Binding`. You can then pick the LED type in question, and configure it, in much the same way as the inputs.
+
+## LED inactivity
+You can turn on the `Turn on LEDs after inactivity` setting to have the leds turn completly off after a timer. This is useful if you have leds on `always on` mode, but wish to have your guitar power its LEDs off after it is unused for a given amount of time.

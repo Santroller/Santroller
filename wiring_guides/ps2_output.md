@@ -8,7 +8,6 @@ sort: 14
 If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
 ```
 
-
 ## Supplies
 
 - A controller built using one of the other guides
@@ -17,13 +16,12 @@ If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](h
 
   - The Pi Pico is recommended, but other 3.3v microcontrollers like the 3.3v pro micro may work. 5v only microcontrollers will NOT work.
 
+- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >10V maximum reverse voltage)
+  - While this isn't strictly necessary, it will protect you from plugging in both the PS2 and USB at the same time, and frying your PS2.
+
 - A PS2 controller plug
 - Some Wire
 - A Soldering Iron
-
-```danger
-NEVER plug in both the usb cable to your computer, and the PS2, it can only ever be plugged into one device at a time!
-```
 
 ## Steps
 
@@ -40,8 +38,7 @@ NEVER plug in both the usb cable to your computer, and the PS2, it can only ever
    | Pro Micro, Leonardo, Micro (Recommended) | 15                 | 16                      | 14                  | 7                   | 10                 |
    | Uno (Recommended)                        | 13                 | 11                      | 12                  | 2                   | 10                 |
    | Mega (Recommended)                       | 52                 | 51                      | 50                  | 2                   | 10                 |
-   | Pi Pico (Advanced, Channel 0)            | GP2, GP6, GP18     | GP0, GP4, GP16, GP20    | GP3, GP7, GP19      | Any                 | Any                |
-   | Pi Pico (Advanced, Channel 1)            | GP10, GP14, GP26   | GP8, GP12, GP28         | GP11, GP15, GP27    | Any                 | Any                |
+   | Pi Pico (Advanced)                       | Any                | Any                     | Any                 | Any                 | Any                |
    | Pro Micro, Leonardo, Micro (Advanced)    | 15                 | 16                      | 14                  | Any                 | Any                |
    | Uno (Advanced)                           | 13                 | 11                      | 12                  | Any                 | Any                |
    | Mega (Advanced)                          | 52                 | 51                      | 50                  | Any                 | Any                |

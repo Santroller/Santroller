@@ -106,7 +106,7 @@ bool ready_for_next_packet() {
 }
 
 bool usb_configured() {
-    return tud_mounted();
+    return tud_ready();
 }
 
 void send_report_to_pc(const void *report, uint8_t len) {
@@ -160,7 +160,7 @@ void go_to_sleep() {
 }
 
 void wakeup_360() {
-    if (tud_mounted()) {
+    if (usb_configured()) {
         return;
     }
     // the 360 will wake up the console if it sees the data lines being driven high and low constantly

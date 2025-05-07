@@ -49,7 +49,6 @@ static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 static uint32_t __uninitialized_ram(xboxAuthValid);
 static uint32_t __uninitialized_ram(pico_is_sleeping);
-bool connected = false;
 #if USB_HOST_STACK
 USB_Device_Type_t xone_dev_addr = {};
 USB_Device_Type_t x360_dev_addr = {};
@@ -107,7 +106,7 @@ bool ready_for_next_packet() {
 }
 
 bool usb_configured() {
-    return connected;
+    return tud_mounted();
 }
 
 void send_report_to_pc(const void *report, uint8_t len) {
@@ -158,6 +157,27 @@ void loop() {
 void go_to_sleep() {
     pico_is_sleeping = true;
     reset_usb();
+}
+
+void wakeup_360() {
+    if (tud_mounted()) {
+        return;
+    }
+    // the 360 will wake up the console if it sees the data lines being driven high and low constantly
+    // save the previous usb state
+    uint32_t prev_direct = usb_hw->phy_direct;
+    uint32_t prev_direct_override = usb_hw->phy_direct_override;
+    // drive both pins high
+    hw_set_bits(&usb_hw->phy_direct_override, USB_USBPHY_DIRECT_OVERRIDE_TX_DM_OE_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DM_OVERRIDE_EN_BITS |
+                                                    USB_USBPHY_DIRECT_OVERRIDE_TX_DP_OE_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DP_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DIFFMODE_OVERRIDE_EN_BITS);
+    hw_set_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DM_OE_BITS | USB_USBPHY_DIRECT_TX_DP_OE_BITS | USB_USBPHY_DIRECT_TX_DIFFMODE_BITS);
+    hw_clear_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DIFFMODE_BITS);
+    hw_set_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DP_BITS | USB_USBPHY_DIRECT_TX_DM_BITS);
+    // wait a bit
+    sleep_ms(50);
+    // revert the pin state
+    usb_hw->phy_direct = prev_direct;
+    usb_hw->phy_direct_override = prev_direct_override;
 }
 
 void setup() {
@@ -276,9 +296,8 @@ void send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t
         tuh_xinput_send_report(dev_addr, instance, report, len);
     }
 }
-void tud_mount_cb(void) {
+extern "C" void tud_mount_cb(void) {
     device_reset();
-    connected = true;
 }
 #if USB_HOST_STACK
 uint8_t get_usb_host_device_count() {

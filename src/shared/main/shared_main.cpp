@@ -3139,8 +3139,9 @@ void tick(void) {
     }
 
     last_poll = micros();
-    // Tick the controller every 5ms if this device is connected to a usb port and usb is not ready
-    if (!INPUT_QUEUE && !ready && usb_configured() && millis() - lastSentPacket >= 5) {
+    // Tick the controller every 5ms if usb is not ready
+    // This is also used for waking up the 360, so it needs to happen even if usb isnt ready
+    if (!INPUT_QUEUE && !ready && millis() - lastSentPacket >= 5) {
         lastSentPacket = millis();
         tick_inputs(NULL, NULL, consoleType);
     }

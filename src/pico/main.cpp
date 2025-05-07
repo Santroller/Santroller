@@ -167,17 +167,22 @@ void wakeup_360() {
     // save the previous usb state
     uint32_t prev_direct = usb_hw->phy_direct;
     uint32_t prev_direct_override = usb_hw->phy_direct_override;
-    // drive both pins high
-    hw_set_bits(&usb_hw->phy_direct_override, USB_USBPHY_DIRECT_OVERRIDE_TX_DM_OE_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DM_OVERRIDE_EN_BITS |
-                                                    USB_USBPHY_DIRECT_OVERRIDE_TX_DP_OE_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DP_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DIFFMODE_OVERRIDE_EN_BITS);
-    hw_set_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DM_OE_BITS | USB_USBPHY_DIRECT_TX_DP_OE_BITS | USB_USBPHY_DIRECT_TX_DIFFMODE_BITS);
-    hw_clear_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DIFFMODE_BITS);
-    hw_set_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DP_BITS | USB_USBPHY_DIRECT_TX_DM_BITS);
-    // wait a bit
-    sleep_ms(50);
-    // revert the pin state
-    usb_hw->phy_direct = prev_direct;
-    usb_hw->phy_direct_override = prev_direct_override;
+    for (int i = 0; i < 2; i++) {
+        // drive both pins high
+        hw_set_bits(&usb_hw->phy_direct_override, USB_USBPHY_DIRECT_OVERRIDE_TX_DM_OE_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DM_OVERRIDE_EN_BITS |
+                                                        USB_USBPHY_DIRECT_OVERRIDE_TX_DP_OE_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DP_OVERRIDE_EN_BITS | USB_USBPHY_DIRECT_OVERRIDE_TX_DIFFMODE_OVERRIDE_EN_BITS);
+        hw_set_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DM_OE_BITS | USB_USBPHY_DIRECT_TX_DP_OE_BITS | USB_USBPHY_DIRECT_TX_DIFFMODE_BITS);
+        hw_clear_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DIFFMODE_BITS);
+        hw_set_bits(&usb_hw->phy_direct, USB_USBPHY_DIRECT_TX_DP_BITS | USB_USBPHY_DIRECT_TX_DM_BITS);
+        // wait a bit
+        sleep_ms(1);
+        // revert the pin state
+        usb_hw->phy_direct = prev_direct;
+        usb_hw->phy_direct_override = prev_direct_override;
+        sleep_ms(1000);
+    }
+    // Reset the pico just to make sure any other state is reset in case this was triggered by usb host
+    reset_usb();
 }
 
 void setup() {

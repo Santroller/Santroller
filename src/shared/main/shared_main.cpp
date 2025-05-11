@@ -236,21 +236,19 @@ uint8_t gh5_mapping[] = {
     0xAE, 0xAC, 0xFF, 0xFB, 0xFD, 0xF9, 0xFE,
     0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
     0xE5, 0xE1, 0xE3, 0xDF};
-void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report, bool state) {
-    if (state) {
-        for (size_t i = 0; i < 6; i++) {
-            if (report->KeyCode[i] == key) {
-                return;
-            }
-            if (!report->KeyCode[i]) {
-                report->KeyCode[i] = key;
-                return;
-            }
+void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report) {
+    for (size_t i = 0; i < 6; i++) {
+        if (report->KeyCode[i] == key) {
+            return;
         }
-        // Too many buttons - flag the overflow condition and clear all key indexes
-        memset(report->KeyCode, KEY_ERR_OVF, sizeof(report->KeyCode));
-        return;
+        if (!report->KeyCode[i]) {
+            report->KeyCode[i] = key;
+            return;
+        }
     }
+    // Too many buttons - flag the overflow condition and clear all key indexes
+    memset(report->KeyCode, KEY_ERR_OVF, sizeof(report->KeyCode));
+    return;
 }
 uint8_t seq = 1;
 void init_main(void) {

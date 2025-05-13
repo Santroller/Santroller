@@ -2585,7 +2585,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 // Guitars and Drums can fall back to their PS3 versions, so don't even include the PS4 version there.
 // DJ Hero was never on ps4, so we can't really implement that either, so just fall back to PS3 there too.
 #if SUPPORTS_PS4
-    if (output_console_type == PS4 || output_console_type == IOS_FESTIVAL) {
+    if (output_console_type == PS4) {
         if (millis() > 450000 && !auth_ps4_controller_found) {
             reset_usb();
         }

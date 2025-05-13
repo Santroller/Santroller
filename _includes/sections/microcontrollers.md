@@ -1,4 +1,4 @@
-<details>
+<details markdown="1">
     <summary>Microcontroller information</summary>    
 
     * Pi Pico

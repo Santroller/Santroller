@@ -4,7 +4,7 @@ sort: 14
 
 # Setting up emulation of a PS2 controller
 
-```danger
+```dangera
 If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
 ```
 

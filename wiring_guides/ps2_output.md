@@ -9,7 +9,8 @@ If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](h
 ```
 
 ```danger
-Be extremely careful with the rumble wire, its very easy to blow the rumble fuse, which will break rumble for all controllers unless it is replaced!
+Be extremely careful with the rumble wire. 
+If your connector has a rumble wire we recommend you make sure it is properly covered up, as you can easily blow the rumble fuse inside the console if the rumble wire touches something it shouldnt!
 ```
 
 ## Supplies

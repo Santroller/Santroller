@@ -18,7 +18,8 @@ sort: 14
 - A boost converter that can step up 3.3v to 5V
 
 ```danger
-Be extremely careful with the rumble wire, its very easy to blow the rumble fuse, which will break rumble for all controllers unless it is replaced!
+Be extremely careful with the rumble wire. 
+If your connector has a rumble wire we recommend you make sure it is properly covered up, as you can easily blow the rumble fuse inside the console if the rumble wire touches something it shouldnt!
 ```
 
 ## Steps

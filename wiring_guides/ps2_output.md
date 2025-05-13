@@ -8,6 +8,10 @@ sort: 14
 If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
 ```
 
+```danger
+Be extremely careful with the rumble wire, its very easy to blow the rumble fuse, which will break rumble for all controllers unless it is replaced!
+```
+
 ## Supplies
 
 - A controller built using one of the other guides

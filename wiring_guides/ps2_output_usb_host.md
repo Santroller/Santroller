@@ -17,6 +17,10 @@ sort: 14
 - A Soldering Iron
 - A boost converter that can step up 3.3v to 5V
 
+```danger
+Be extremely careful with the rumble wire, its very easy to blow the rumble fuse, which will break rumble for all controllers unless it is replaced!
+```
+
 ## Steps
 
 1. If you are using a USB extension cable, cut it in half and expose the four cables. Keep the socket end, as the goal is to plug a controller into this cable.

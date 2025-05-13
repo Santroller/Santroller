@@ -5,16 +5,16 @@ sort: 14
 # Setting up emulation of a PS2 controller
 
 ```danger
-
 If you wish to also use USB Host, follow the [PS2 controller + USB Host guide](https://santroller.tangentmc.net/wiring_guides/ps2_output_usb_host.html)
-
 ```
+
 
 ```danger
 Be extremely careful with the rumble wire. 
 
 If your connector has a rumble wire we recommend you make sure it is properly covered up, as you can easily blow the rumble fuse inside the console if the rumble wire touches something it shouldnt!
 ```
+
 
 ## Supplies
 

@@ -19,6 +19,10 @@ remote_theme: sanjay900/jekyll-rtd-theme@main
 markdown: CommonMarkGhPages
 fluid: true
 lang: en
+debug:
+  compress: false
+  dist: false
+  shortcodes: false
 scss: |
     .content-wrap {max-width:100% !important;}
 readme_index:

@@ -10,7 +10,7 @@ sort: 3
 
   - The Pi Pico is recommended, but click below to see information about other microcontrollers.
 
-  {% include sections/microcontrollers.md %}
+    {% include sections/microcontrollers.md %}
 
 - A 4051 or 4067 based analog multiplexer
   - Only necessary for the Pi Pico, other microcontrollers have enough analog pins

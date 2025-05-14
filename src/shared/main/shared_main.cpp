@@ -60,16 +60,24 @@ void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit
     // printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
     velocity = velocity << 1;
+#if DEVICE_TYPE_IS_DRUM
+    // drums, base inputs on triggers
     if (velocity > midiData.midiVelocitiesTemp[note]) {
         midiData.midiVelocities[note] = velocity;
         midiData.midiVelocitiesTemp[note] = velocity;
     }
+#else
+    // Handle midi normally
+    midiData.midiVelocities[note] = velocity;
+    midiData.midiVelocitiesTemp[note] = velocity;
+#endif
     lastMidi = millis();
 }
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-#if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+    // ignore note off for drums as we handle that ourselves
+#if !(DEVICE_TYPE_IS_DRUM)
     midiData.midiVelocities[note] = 0;
     midiData.midiVelocitiesTemp[note] = 0;
 #endif

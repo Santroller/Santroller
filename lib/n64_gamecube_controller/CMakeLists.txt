@@ -1,0 +1,4 @@
+add_library(n64_gamecube_controller N64Controller.cpp GamecubeController.cpp Controller.cpp)
+target_link_libraries(n64_gamecube_controller pico_stdlib hardware_pio)
+target_include_directories(n64_gamecube_controller PUBLIC ${PROJECT_SOURCE_DIR}/include)
+pico_generate_pio_header(n64_gamecube_controller ${CMAKE_CURRENT_LIST_DIR}/Controller.pio)

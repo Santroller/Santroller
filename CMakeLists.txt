@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.13)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(PICO_EXTRAS_FETCH_FROM_GIT TRUE)
 set(PICO_SDK_FETCH_FROM_GIT TRUE)
 set(PICO_PIO_USB_PATH ${CMAKE_SOURCE_DIR}/lib/pico_pio_usb)
 set(PICO_TINYUSB_PATH ${CMAKE_SOURCE_DIR}/lib/tinyusb)
 set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
+set(PICO_BOARD "pico_w")
+set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
@@ -13,7 +18,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
-
+add_subdirectory(lib)
 find_package(Git)
 execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty --abbrev=7
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -34,13 +39,11 @@ set(TARGET santroller)
 message(STATUS ${TARGET})
 add_executable(
   ${TARGET}
-  src/hal/pico/main.cpp
-  src/hal/pico/xinput_host.cpp
-  lib/midi/MIDI.cpp
+  src/main.cpp
+  src/xinput_host.cpp
 )
 target_include_directories(${TARGET} PUBLIC
   ${SRC}
-  lib/midi
   include
   include/hal/pico)
 
@@ -56,6 +59,27 @@ pico_enable_stdio_usb(${TARGET} 0)
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(
   ${TARGET}
+  midi
+  peripherals
+  accelerometer
+  band_hero_drum
+  crazy_guitar_neck
+  dj_hero_turntable
+  guitar_hero_5_neck
+  matrix
+  max1704x
+  mpr121
+  multiplexer
+  psx_controller
+  secondary_pico
+  wii_extensions
+  world_tour_drum
+  psx_emulation
+  wii_extension_emulation
+  wii_remote_emulation
+  SNESpad
+  n64_gamecube_controller
+  ws2812
   pico_stdlib
   hardware_i2c
   hardware_spi

@@ -1,0 +1,31 @@
+; THIS PIO PROGRAM EXPECTS THE SYSTEM CLOCK TO BE 125MHz
+
+; Input is a succession of optional bools: (value/do we output something)
+; This makes so we can output an arbitrary number of bits without worrying about sizes
+; Useful since the end bit makes it so the output size is always = 1 [8]
+; Clock is / 5 i.e 25MHz
+;  This will crash if fed an output of len == -1 [Z/8Z]
+.program joybus ;
+PUBLIC inmode: ; Code must force a jump here once it's done using the out mode
+    set pindirs, 0 ;
+inagain: ;
+    wait 0 pin 0 [31] ; After the instruction complete we wait 61 cycles and read on the 62th
+    nop [31] ;
+    in pins, 1 ;
+    wait 1 pin 0 ;
+    jmp inagain ; 
+;
+PUBLIC outmode: ; External code must force a jump here in reaction to the RX FIFO contents
+    set pins, 1 ;
+    set pindirs, 1 ;
+outagain: ;
+    pull ifempty block ; On pull 1 et ensuite on l'utilise pour X ET Y ?
+    out X, 1 ; X = what should we output
+    out Y, 1 ; Y = should we output something
+    jmp !Y inmode ; if Y 0, empty the queue
+    set pins, 0 [ 24 ] ;
+    mov pins, X [ 24 ] ;
+    mov pins, X [ 24 ] ;
+    set pins, 1 [ 19 ] ;
+    jmp outagain ;
+;

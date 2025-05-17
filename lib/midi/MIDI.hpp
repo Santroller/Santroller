@@ -849,7 +849,7 @@ bool MidiInterface<Transport, Settings, Platform>::parse()
 
     // Ignore Undefined
     if (extracted == Undefined_FD)
-        return (Settings::Use1ByteParsing) ? false : parse();
+        return false;
 
     if (mPendingMessageIndex == 0)
     {
@@ -962,7 +962,7 @@ bool MidiInterface<Transport, Settings, Platform>::parse()
             mPendingMessageIndex++;
         }
 
-        return (Settings::Use1ByteParsing) ? false : parse();
+        return false;
     }
     else
     {
@@ -1120,7 +1120,7 @@ bool MidiInterface<Transport, Settings, Platform>::parse()
             // Then update the index of the pending message.
             mPendingMessageIndex++;
 
-            return (Settings::Use1ByteParsing) ? false : parse();
+            return false;
         }
     }
 }

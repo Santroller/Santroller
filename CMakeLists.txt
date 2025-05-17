@@ -55,10 +55,9 @@ pico_enable_stdio_uart(${TARGET} 1)
 pico_enable_stdio_usb(${TARGET} 0)
 
 # endif()
-# pico_generate_pio_header(${TARGET} src/pico/lib/spi/spi.pio)
-# Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(
   ${TARGET}
+  pico_stdlib
   midi
   peripherals
   accelerometer
@@ -66,6 +65,7 @@ target_link_libraries(
   crazy_guitar_neck
   dj_hero_turntable
   guitar_hero_5_neck
+  xgip_protocol
   matrix
   max1704x
   mpr121
@@ -80,7 +80,6 @@ target_link_libraries(
   SNESpad
   n64_gamecube_controller
   ws2812
-  pico_stdlib
   hardware_i2c
   hardware_spi
   hardware_adc

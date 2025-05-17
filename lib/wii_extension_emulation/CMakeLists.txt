@@ -1,5 +1,6 @@
-add_library(wii_extension_emulation wii_extension_emulation.cpp)
+add_library(wii_extension_emulation INTERFACE)
 target_include_directories(wii_extension_emulation INTERFACE .)
-target_link_libraries(wii_extension_emulation PUBLIC
+target_link_libraries(wii_extension_emulation INTERFACE
     peripherals
 )
+target_sources(wii_extension_emulation INTERFACE wii_extension_emulation.cpp)

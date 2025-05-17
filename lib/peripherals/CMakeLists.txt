@@ -1,7 +1,8 @@
-add_library(peripherals i2c.cpp spi.cpp)
+add_library(peripherals INTERFACE)
 target_include_directories(peripherals INTERFACE .)
-target_link_libraries(peripherals PUBLIC
+target_link_libraries(peripherals INTERFACE
     hardware_gpio
     hardware_i2c
     hardware_spi
 )
+target_sources(peripherals INTERFACE i2c.cpp spi.cpp)

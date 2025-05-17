@@ -1,5 +1,6 @@
-add_library(accelerometer accelerometer.cpp)
+add_library(accelerometer INTERFACE)
 target_include_directories(accelerometer INTERFACE .)
-target_link_libraries(accelerometer PUBLIC
+target_link_libraries(accelerometer INTERFACE
     peripherals
 )
+target_sources(accelerometer INTERFACE accelerometer.cpp)

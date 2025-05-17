@@ -1,4 +1,7 @@
 #include "MIDIData.hpp"
+MidiData::MidiData() {
+    
+}
 MidiData MidiData::instance = MidiData();
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity) {
     // velocities are 7 bit

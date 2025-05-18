@@ -17,8 +17,31 @@ project(santroller C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+add_compile_options(-Wall
+  -Wtype-limits
+  -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+  -Wno-unused-function # we have some for the docs that aren't called
+)
+
+include(compile_proto.cmake)
+compile_proto()
+
 pico_sdk_init()
+
+add_compile_options(-fdata-sections -ffunction-sections)
+add_link_options(-Wl,--gc-sections)
+
 add_subdirectory(lib)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # Activate some compiler / linker options to aid us with diagnosing stack space issues in Debug builds
+  add_compile_options(-fstack-usage -Wstack-usage=500)
+  add_compile_definitions(PICO_USE_STACK_GUARDS=1)
+endif()
+
+# We want a larger stack of 4kb per core instead of the default 2kb
+add_compile_definitions(PICO_STACK_SIZE=0x1000)
+
 find_package(Git)
 execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty --abbrev=7
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -40,21 +63,27 @@ message(STATUS ${TARGET})
 add_executable(
   ${TARGET}
   src/main.cpp
-  src/xinput_host.cpp
+  ${PROTO_OUTPUT_DIR}/enums.pb.c
+  ${PROTO_OUTPUT_DIR}/peripheral.pb.c
+  ${PROTO_OUTPUT_DIR}/config.pb.c
 )
 target_include_directories(${TARGET} PUBLIC
   ${SRC}
   include
-  include/hal/pico)
+  ${PROTO_OUTPUT_DIR}
+  ${CMAKE_BINARY_DIR}/headers)
 
 # if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
 # pico_enable_stdio_uart(${TARGET} 0)
 # pico_enable_stdio_usb(${TARGET} 0)
 # else()
-pico_enable_stdio_uart(${TARGET} 1)
-pico_enable_stdio_usb(${TARGET} 0)
+# pico_enable_stdio_uart(${TARGET} 1)
+# pico_enable_stdio_usb(${TARGET} 0)
 
 # endif()
+pico_set_program_name(${TARGET} "Santroller")
+pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
+
 target_link_libraries(
   ${TARGET}
   pico_stdlib
@@ -80,6 +109,7 @@ target_link_libraries(
   SNESpad
   n64_gamecube_controller
   ws2812
+  nanopb
   hardware_i2c
   hardware_spi
   hardware_adc

@@ -1,0 +1,47 @@
+syntax = "proto2";
+
+import "nanopb.proto";
+
+enum SubType {
+  option (nanopb_enumopt).long_names = false;
+  Gamepad = 0;
+  Dancepad = 1;
+  GuitarHeroGuitar = 2;
+  RockBandGuitar = 3;
+  GuitarHeroDrums = 4;
+  RockBandDrums = 5;
+  LiveGuitar = 6;
+  DjHeroTurntable = 7;
+  ProGuitarMustang = 8;
+  ProGuitarSquire = 9;
+  ProKeys = 10;
+  Taiko = 11;
+  StageKit = 12;
+  KeyboardMouse = 13;
+  Wheel = 14;
+  DisneyInfinity = 15;
+  Skylanders = 16;
+  LegoDimensions = 17;
+}
+
+enum UsbDeviceType {
+  Generic = 0;
+  Santroller = 1;
+  Xbox360 = 2;
+  Xbox360Wireless = 3;
+  Xbox360BigButton = 4;
+  XboxOne = 5;
+  XboxOG = 6;
+  PS3 = 7;
+  PS4 = 8;
+  PS5 = 9;
+  WiiRockBand = 10;
+  Switch = 11;
+  Raphnet = 12;
+  StreamDeck = 13;
+  LTEK = 14;
+  Stadia = 15;
+  Midi = 16;
+  Keyboard = 17;
+  Mouse = 18;
+}

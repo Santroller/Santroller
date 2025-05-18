@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+import "nanopb.proto";
+import "enums.proto";
+import "peripheral.proto";
+
+message Config { repeated Peripheral peripherals = 1; }

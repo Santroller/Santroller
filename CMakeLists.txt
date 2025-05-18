@@ -64,7 +64,7 @@ add_executable(
   ${TARGET}
   src/main.cpp
   ${PROTO_OUTPUT_DIR}/enums.pb.c
-  ${PROTO_OUTPUT_DIR}/peripheral.pb.c
+  ${PROTO_OUTPUT_DIR}/device.pb.c
   ${PROTO_OUTPUT_DIR}/config.pb.c
 )
 target_include_directories(${TARGET} PUBLIC

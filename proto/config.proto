@@ -1,5 +1,5 @@
 syntax = "proto2";
-package santroller.config;
+package config;
 
 import "enums.proto";
 import "device.proto";

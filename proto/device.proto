@@ -122,16 +122,20 @@ message WiiEmulationDevice {
 }
 message PSXEmulationDevice {
   required int32 id = 1;
-  required int32 dataPin = 1;
-  required int32 commandPin = 2;
-  required int32 attentionPin = 3;
-  required int32 clockPin = 4;
-  required int32 acknowledgePin = 5;
+  required int32 dataPin = 2;
+  required int32 commandPin = 3;
+  required int32 attentionPin = 4;
+  required int32 clockPin = 5;
+  required int32 acknowledgePin = 6;
 }
-message JoybusEmulationDevice { required int32 dataPin = 1; }
+message JoybusEmulationDevice {
+  required int32 id = 1;
+  required int32 dataPin = 2;
+}
 
 message Device {
   oneof device {
+    PeripheralDevice peripheral = 1;
     Adxl345Device adxl = 2;
     Lis3dhDevice lis3dh = 3;
     Mpu6050Device mpu6050 = 4;
@@ -152,6 +156,5 @@ message Device {
     WiiEmulationDevice wiiEmulation = 19;
     PSXEmulationDevice psxEmulation = 20;
     JoybusEmulationDevice joybusEmulation = 21;
-    PeripheralDevice peripheral = 22;
   }
 }

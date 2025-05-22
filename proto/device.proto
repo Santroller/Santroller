@@ -85,27 +85,28 @@ message PSXEmulationDevice {
 message JoybusEmulationDevice { required int32 dataPin = 1; }
 
 message Device {
+  required int32 id = 1;
   oneof device {
-    Adxl345Device adxl = 1;
-    Lis3dhDevice lis3dh = 2;
-    Mpu6050Device mpu6050 = 3;
-    Max1704xDevice max170x = 4;
-    Mpr121Device mpr121 = 5;
-    WiiDevice wii = 6;
-    CrazyGuitarNeckDevice crazyGuitarNeck = 7;
-    GuitarHero5NeckDevice gh5Neck = 8;
-    DJHeroTurntableDevice djhTurntable = 9;
-    BandHeroDrumDevice bhDrum = 10;
-    SerialMidiDevice midiSerial = 11;
-    UsbHostDevice usbHost = 12;
-    MultiplexerDevice multiplexer = 13;
-    WorldTourDrumDevice worldTourDrum = 14;
-    PSXDevice psx = 15;
-    SNESDevice snes = 16;
-    JoybusDevice joybus = 17;
-    WiiEmulationDevice wiiEmulation = 18;
-    PSXEmulationDevice psxEmulation = 19;
-    JoybusEmulationDevice joybusEmulation = 20;
-    PeripheralDevice peripheral = 21;
+    Adxl345Device adxl = 2;
+    Lis3dhDevice lis3dh = 3;
+    Mpu6050Device mpu6050 = 4;
+    Max1704xDevice max170x = 5;
+    Mpr121Device mpr121 = 6;
+    WiiDevice wii = 7;
+    CrazyGuitarNeckDevice crazyGuitarNeck = 8;
+    GuitarHero5NeckDevice gh5Neck = 9;
+    DJHeroTurntableDevice djhTurntable = 10;
+    BandHeroDrumDevice bhDrum = 11;
+    SerialMidiDevice midiSerial = 12;
+    UsbHostDevice usbHost = 13;
+    MultiplexerDevice multiplexer = 14;
+    WorldTourDrumDevice worldTourDrum = 15;
+    PSXDevice psx = 16;
+    SNESDevice snes = 17;
+    JoybusDevice joybus = 18;
+    WiiEmulationDevice wiiEmulation = 19;
+    PSXEmulationDevice psxEmulation = 20;
+    JoybusEmulationDevice joybusEmulation = 21;
+    PeripheralDevice peripheral = 22;
   }
 }

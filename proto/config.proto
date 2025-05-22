@@ -1,6 +1,6 @@
 syntax = "proto2";
+package santroller.config;
 
-import "nanopb.proto";
 import "enums.proto";
 import "device.proto";
 

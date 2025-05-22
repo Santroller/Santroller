@@ -1,9 +1,8 @@
 syntax = "proto2";
+package santroller.config;
 
-import "nanopb.proto";
 
 enum SubType {
-  option (nanopb_enumopt).long_names = false;
   Gamepad = 0;
   Dancepad = 1;
   GuitarHeroGuitar = 2;

@@ -34,7 +34,11 @@ message Mpr121Device {
   required int32 enablePins = 4; // pin enable
 }
 
-message WiiDevice { required I2CDevice i2c = 1; }
+message WiiDevice {
+  required I2CDevice i2c = 1;
+  required MappingMode mappingMode = 2;
+  required FaceButtonMappingMode faceButtonMappingMode = 3;
+}
 
 message CrazyGuitarNeckDevice { required I2CDevice i2c = 1; }
 

@@ -1,6 +1,15 @@
 syntax = "proto2";
 package proto;
 
+enum MappingMode {
+  PerInput = 0; /* Have one set of mappings that covers all extensions */
+  PerExtension = 1; /* Have individual mappings for each input in each extension */ 
+}
+
+enum FaceButtonMappingMode {
+  LegendBased = 1; /* Map face buttons by legend */
+  PositionBased = 2; /* Map face buttons by position */
+}
 
 enum SubType {
   Gamepad = 0;

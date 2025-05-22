@@ -1,5 +1,4 @@
 syntax = "proto2";
-package config;
 
 import "enums.proto";
 
@@ -17,144 +16,95 @@ message SPIDevice {
   required int32 sck = 4;
   required int32 clock = 5;
 }
-message PeripheralDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message PeripheralDevice { required I2CDevice i2c = 1; }
 
-message Adxl345Device {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message Adxl345Device { required I2CDevice i2c = 1; }
 
-message Lis3dhDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message Lis3dhDevice { required I2CDevice i2c = 1; }
 
-message Mpu6050Device {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message Mpu6050Device { required I2CDevice i2c = 1; }
 
-message Max1704xDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message Max1704xDevice { required I2CDevice i2c = 1; }
 
 message Mpr121Device {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-  required int32 touchpadCount = 3;
-  required int32 ddrPins = 4;    // pin data direction register
-  required int32 enablePins = 5; // pin enable
+  required I2CDevice i2c = 1;
+  required int32 touchpadCount = 2;
+  required int32 ddrPins = 3;    // pin data direction register
+  required int32 enablePins = 4; // pin enable
 }
 
-message WiiDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message WiiDevice { required I2CDevice i2c = 1; }
 
-message CrazyGuitarNeckDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message CrazyGuitarNeckDevice { required I2CDevice i2c = 1; }
 
-message GuitarHero5NeckDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message GuitarHero5NeckDevice { required I2CDevice i2c = 1; }
 
-message DJHeroTurntableDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message DJHeroTurntableDevice { required I2CDevice i2c = 1; }
 
-message BandHeroDrumDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
 message SerialMidiDevice {
-  required int32 id = 1;
-  optional int32 tx = 2;
-  optional int32 rx = 3;
+  optional int32 tx = 1;
+  optional int32 rx = 2;
 }
 message UsbHostDevice {
-  required int32 id = 1;
-  required int32 dp = 2;
-  required bool enable5v = 3;
-  required bool dmFirst = 4;
+  required int32 dp = 1;
+  required bool enable5v = 2;
+  required bool dmFirst = 3;
 }
 message MultiplexerDevice {
-  required int32 id = 1;
-  required int32 inputPin = 2;
-  required bool sixteenChannel = 3;
-  required int32 s0Pin = 4;
-  required int32 s1Pin = 5;
-  required int32 s2Pin = 6;
-  optional int32 s3Pin = 7;
+  required int32 inputPin = 1;
+  required bool sixteenChannel = 2;
+  required int32 s0Pin = 3;
+  required int32 s1Pin = 4;
+  required int32 s2Pin = 5;
+  optional int32 s3Pin = 6;
 }
-message WorldTourDrumDevice {
-  required int32 id = 1;
-  required SPIDevice spi = 2;
-}
+message WorldTourDrumDevice { required SPIDevice spi = 1; }
 message PSXDevice {
-  required int32 id = 1;
-  required SPIDevice spi = 2;
-  required int32 attPin = 3;
-  required int32 ackPin = 4;
+  required SPIDevice spi = 1;
+  required int32 attPin = 2;
+  required int32 ackPin = 3;
 }
 message SNESDevice {
-  required int32 id = 1;
-  required int32 clockPin = 2;
-  required int32 latchPin = 3;
-  required int32 dataPin = 4;
+  required int32 clockPin = 1;
+  required int32 latchPin = 2;
+  required int32 dataPin = 3;
 }
-message JoybusDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message JoybusDevice { required int32 dataPin = 1; }
 
-message WiiEmulationDevice {
-  required int32 id = 1;
-  required I2CDevice i2c = 2;
-}
+message WiiEmulationDevice { required I2CDevice i2c = 1; }
 message PSXEmulationDevice {
-  required int32 id = 1;
-  required int32 dataPin = 2;
-  required int32 commandPin = 3;
-  required int32 attentionPin = 4;
-  required int32 clockPin = 5;
-  required int32 acknowledgePin = 6;
+  required int32 dataPin = 1;
+  required int32 commandPin = 2;
+  required int32 attentionPin = 3;
+  required int32 clockPin = 4;
+  required int32 acknowledgePin = 5;
 }
-message JoybusEmulationDevice {
-  required int32 id = 1;
-  required int32 dataPin = 2;
-}
+message JoybusEmulationDevice { required int32 dataPin = 1; }
 
 message Device {
   oneof device {
-    PeripheralDevice peripheral = 1;
-    Adxl345Device adxl = 2;
-    Lis3dhDevice lis3dh = 3;
-    Mpu6050Device mpu6050 = 4;
-    Max1704xDevice max170x = 5;
-    Mpr121Device mpr121 = 6;
-    WiiDevice wii = 7;
-    CrazyGuitarNeckDevice crazyGuitarNeck = 8;
-    GuitarHero5NeckDevice gh5Neck = 9;
-    DJHeroTurntableDevice djhTurntable = 10;
-    BandHeroDrumDevice bhDrum = 11;
-    SerialMidiDevice midiSerial = 12;
-    UsbHostDevice usbHost = 13;
-    MultiplexerDevice multiplexer = 14;
-    WorldTourDrumDevice worldTourDrum = 15;
-    PSXDevice psx = 16;
-    SNESDevice snes = 17;
-    JoybusDevice joybus = 18;
-    WiiEmulationDevice wiiEmulation = 19;
-    PSXEmulationDevice psxEmulation = 20;
-    JoybusEmulationDevice joybusEmulation = 21;
+    Adxl345Device adxl = 1;
+    Lis3dhDevice lis3dh = 2;
+    Mpu6050Device mpu6050 = 3;
+    Max1704xDevice max170x = 4;
+    Mpr121Device mpr121 = 5;
+    WiiDevice wii = 6;
+    CrazyGuitarNeckDevice crazyGuitarNeck = 7;
+    GuitarHero5NeckDevice gh5Neck = 8;
+    DJHeroTurntableDevice djhTurntable = 9;
+    BandHeroDrumDevice bhDrum = 10;
+    SerialMidiDevice midiSerial = 11;
+    UsbHostDevice usbHost = 12;
+    MultiplexerDevice multiplexer = 13;
+    WorldTourDrumDevice worldTourDrum = 14;
+    PSXDevice psx = 15;
+    SNESDevice snes = 16;
+    JoybusDevice joybus = 17;
+    WiiEmulationDevice wiiEmulation = 18;
+    PSXEmulationDevice psxEmulation = 19;
+    JoybusEmulationDevice joybusEmulation = 20;
+    PeripheralDevice peripheral = 21;
   }
 }

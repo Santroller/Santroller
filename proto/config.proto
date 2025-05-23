@@ -4,4 +4,7 @@ package proto;
 import "enums.proto";
 import "device.proto";
 
-message Config { repeated Device devices = 1; }
+message Config {
+  repeated Device devices = 1;
+  required FaceButtonMappingMode faceButtonMappingMode = 2;
+}

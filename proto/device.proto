@@ -3,6 +3,13 @@ syntax = "proto2";
 package proto;
 import "enums.proto";
 
+message UARTDevice {
+  required int32 block = 1;
+  required int32 tx = 2;
+  required int32 rx = 3;
+  required int32 baudrate = 4;
+}
+
 message I2CDevice {
   required int32 block = 1;
   required int32 sda = 2;
@@ -48,11 +55,10 @@ message DJHeroTurntableDevice { required I2CDevice i2c = 1; }
 message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
 message SerialMidiDevice {
-  optional int32 tx = 1;
-  optional int32 rx = 2;
+  required UARTDevice uart = 1;
 }
 message UsbHostDevice {
-  required int32 dp = 1;
+  required int32 firstPin = 1;
   required bool enable5v = 2;
   required bool dmFirst = 3;
 }
@@ -62,7 +68,7 @@ message MultiplexerDevice {
   required int32 s0Pin = 3;
   required int32 s1Pin = 4;
   required int32 s2Pin = 5;
-  optional int32 s3Pin = 6;
+  required int32 s3Pin = 6;
 }
 message WorldTourDrumDevice { required SPIDevice spi = 1; }
 message PSXDevice {

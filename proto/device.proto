@@ -24,7 +24,10 @@ message SPIDevice {
   required int32 sck = 4;
   required int32 clock = 5;
 }
-message PeripheralDevice { required I2CDevice i2c = 1; }
+message PeripheralDevice {
+  required I2CDevice i2c = 1;
+  required int32 address = 2;
+}
 
 message Adxl345Device { required I2CDevice i2c = 1; }
 

@@ -54,13 +54,12 @@ message DJHeroTurntableDevice { required I2CDevice i2c = 1; }
 
 message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
-message SerialMidiDevice {
-  required UARTDevice uart = 1;
-}
+message SerialMidiDevice { required UARTDevice uart = 1; }
 message UsbHostDevice {
   required int32 firstPin = 1;
   required bool enable5v = 2;
   required bool dmFirst = 3;
+  required MappingMode mappingMode = 4;
 }
 message MultiplexerDevice {
   required int32 inputPin = 1;
@@ -75,13 +74,18 @@ message PSXDevice {
   required SPIDevice spi = 1;
   required int32 attPin = 2;
   required int32 ackPin = 3;
+  required MappingMode mappingMode = 4;
 }
 message SNESDevice {
   required int32 clockPin = 1;
   required int32 latchPin = 2;
   required int32 dataPin = 3;
+  required MappingMode mappingMode = 4;
 }
-message JoybusDevice { required int32 dataPin = 1; }
+message JoybusDevice {
+  required int32 dataPin = 1;
+  required MappingMode mappingMode = 2;
+}
 
 message WiiEmulationDevice { required I2CDevice i2c = 1; }
 message PSXEmulationDevice {

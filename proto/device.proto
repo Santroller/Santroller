@@ -92,7 +92,7 @@ message Device {
     Adxl345Device adxl = 1;
     Lis3dhDevice lis3dh = 2;
     Mpu6050Device mpu6050 = 3;
-    Max1704xDevice max170x = 4;
+    Max1704xDevice max1704x = 4;
     Mpr121Device mpr121 = 5;
     WiiDevice wii = 6;
     CrazyGuitarNeckDevice crazyGuitarNeck = 7;

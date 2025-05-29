@@ -1,0 +1,76 @@
+syntax = "proto2";
+
+package proto;
+import "enums.proto";
+import "device.proto";
+
+message GPIOInput {
+  required int32 pin = 1;
+  required PinMode pinMode = 2;
+}
+
+message MPR121Input {
+  required int32 deviceid = 1;
+  required int32 pin = 2;
+  required Mpr121PinMode mode = 3;
+  required PinMode pinMode = 4;
+}
+
+message MidiInput { required int32 note = 1; }
+
+message FixedInput { required int32 value = 1; }
+
+// Use for devices that dont need special handling
+message BasicAnalogDeviceInput {
+  required int32 deviceid = 1;
+  required AxisType axis = 2;
+}
+
+message BasicDigitalDeviceInput {
+  required int32 deviceid = 1;
+  required ButtonType button = 2;
+}
+
+message MouseAxisInput {
+  required int32 deviceid = 1;
+  required MouseAxisType axis = 2;
+}
+
+message MouseButtonInput {
+  required int32 deviceid = 1;
+  required MouseButtonType button = 2;
+}
+
+message KeyboardKeyInput {
+  required int32 deviceid = 1;
+  required int32 key = 2;
+}
+
+message Input {
+  oneof input {
+    GPIOInput gpio = 1;
+    FixedInput fixed = 2;
+    BasicAnalogDeviceInput analogDevice = 3;
+    BasicDigitalDeviceInput digitalDevice = 4;
+    MPR121Input mpr121 = 5;
+    MidiInput midi = 6;
+    MouseAxisInput mouseAxis = 7;
+    MouseButtonInput mpuseButton = 8;
+    KeyboardKeyInput key = 9;
+  }
+}
+
+message ButtonMapping {
+  required ButtonType button = 1;
+  required Input digitalInput = 2;
+  required bool inverted = 3;
+  optional Input pressureInput = 4;
+  optional AnalogToDigitalTriggerType trigger = 5;
+}
+
+message AxisMapping {
+  required AxisType axis = 1;
+  required Input input = 2;
+  optional int32 onValue = 3; // if input is digital, use onValue when its active
+  optional int32 offValue = 4; // and offValue when its inactive
+}

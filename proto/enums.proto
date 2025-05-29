@@ -3,12 +3,12 @@ package proto;
 
 enum MappingMode {
   PerInput = 0; /* Have one set of mappings that covers all extensions */
-  PerExtension = 1; /* Have individual mappings for each input in each extension */ 
+  PerExtension = 1; /* Have individual mappings for each input in each extension */
 }
 
 enum FaceButtonMappingMode {
-  LegendBased = 1; /* Map face buttons by legend */
-  PositionBased = 2; /* Map face buttons by position */
+  LegendBased = 0;   /* Map face buttons by legend */
+  PositionBased = 1; /* Map face buttons by position */
 }
 
 enum SubType {
@@ -32,6 +32,18 @@ enum SubType {
   LegoDimensions = 17;
 }
 
+enum PinMode {
+  PullDown = 0;
+  PullUp = 1;
+  Floating = 2;
+  BusKeep = 3;
+}
+
+enum Mpr121PinMode {
+  Touch = 0;
+  Digital = 1;
+}
+
 enum UsbDeviceType {
   Generic = 0;
   Santroller = 1;
@@ -52,4 +64,108 @@ enum UsbDeviceType {
   Midi = 16;
   Keyboard = 17;
   Mouse = 18;
+}
+
+enum ButtonType {
+  North = 0;
+  East = 1;
+  South = 2;
+  West = 3;
+
+  Back = 4;
+  Start = 5;
+
+  Guide = 6;
+  Capture = 7;
+
+  LeftTrigger = 8;
+  RightTrigger = 9;
+
+  LeftShoulder = 10;
+  RightShoulder = 11;
+
+  LeftThumbClick = 12;
+  RightThumbClick = 13;
+
+  DpadUp = 14;
+  DpadDown = 15;
+  DpadLeft = 16;
+  DpadRight = 17;
+  Green = 18;
+  Red = 19;
+  Yellow = 20;
+  Blue = 21;
+  Orange = 22;
+
+  SoloGreen = 23;
+  SoloRed = 24;
+  SoloYellow = 25;
+  SoloBlue = 26;
+  SoloOrange = 27;
+
+  LeftBlue = 28;
+  LeftRed = 29;
+  LeftGreen = 30;
+  RightBlue = 31;
+  RightRed = 32;
+  RightGreen = 33;
+}
+
+enum AxisType {
+
+  LeftStickX = 0;
+  LeftStickY = 1;
+  RightStickX = 2;
+  RightStickY = 3;
+
+  AccelX = 4;
+  AccelY = 5;
+  AccelZ = 6;
+  Gyro = 7;
+
+  Whammy = 8;
+  Tilt = 9;
+  Pickup = 10;
+  Slider = 11;
+
+  LeftTableVelocity = 12;
+  RightTableVelocity = 13;
+  EffectsKnob = 14;
+  Crossfader = 15;
+
+  LowEFret = 16;
+  AFret = 17;
+  DFret = 18;
+  GFret = 19;
+  BFret = 20;
+  HighEFret = 21;
+  LowEFretVelocity = 22;
+  AFretVelocity = 23;
+  DFretVelocity = 24;
+  GFretVelocity = 25;
+  BFretVelocity = 26;
+  HighEFretVelocity = 27;
+}
+
+enum MidiTriggerType {
+  Normal = 0;
+  Drum = 1;
+}
+
+enum AnalogToDigitalTriggerType {
+  JoyHigh = 0;
+  JoyLow = 1;
+}
+
+enum MouseAxisType {
+  MoveX = 0;
+  MoveY = 1;
+  ScrollX = 2;
+  ScrollY = 3;
+}
+
+enum MouseButtonType {
+  Left = 0;
+  Middle = 1;
+  Right = 2;
 }

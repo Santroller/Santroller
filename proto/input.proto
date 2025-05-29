@@ -55,7 +55,7 @@ message Input {
     MPR121Input mpr121 = 5;
     MidiInput midi = 6;
     MouseAxisInput mouseAxis = 7;
-    MouseButtonInput mpuseButton = 8;
+    MouseButtonInput mouseButton = 8;
     KeyboardKeyInput key = 9;
   }
 }

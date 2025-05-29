@@ -74,3 +74,10 @@ message AxisMapping {
   optional int32 onValue = 3; // if input is digital, use onValue when its active
   optional int32 offValue = 4; // and offValue when its inactive
 }
+
+message Mapping {
+    oneof mapping {
+        ButtonMapping button = 1;
+        AxisMapping axis = 2;
+    }
+}

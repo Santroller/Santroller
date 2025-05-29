@@ -1,10 +1,15 @@
 syntax = "proto2";
 package proto;
 
+import "input.proto"
 import "enums.proto";
 import "device.proto";
+message Profile {
+  repeated Mapping mapping;
+}
 
 message Config {
   repeated Device devices = 1;
   required FaceButtonMappingMode faceButtonMappingMode = 2;
+  repeated Profile profiles = 3;
 }

@@ -6,7 +6,7 @@ import "enums.proto";
 import "device.proto";
 
 message Profile {
-  repeated Mapping mapping;
+  repeated Mapping mapping = 1;
 }
 
 message Config {

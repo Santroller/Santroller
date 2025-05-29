@@ -9,6 +9,7 @@ message Profile {
   repeated Mapping mappings = 1;
   required string name = 2;
   repeated Mapping activationMethod = 3;
+  required SubType deviceToEmulate = 4;
 }
 
 message Config {

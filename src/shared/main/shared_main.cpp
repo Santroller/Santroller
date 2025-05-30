@@ -1117,7 +1117,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                         usb_host_data->soloOrange |= report->leftShoulder;
                     }
                     if (report->whammy) {
-                        usb_host_data->whammy = report->whammy;
+                        usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
                     }
                     if (report->pickup) {
                         usb_host_data->pickup = report->pickup;
@@ -1148,7 +1148,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                         usb_host_data->tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {
-                        usb_host_data->whammy = report->whammy;
+                        usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
                     }
                     // Detect GH5 vs WT. Wait for a neutral input, then use that to detect instrument type
                     if (device_type.sub_type == GUITAR_HERO_GUITAR_WT) {
@@ -1244,7 +1244,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                         usb_host_data->tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
                     }
                     if (report->whammy) {
-                        usb_host_data->whammy = report->whammy << 8;
+                        usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
                     }
                     break;
                 }

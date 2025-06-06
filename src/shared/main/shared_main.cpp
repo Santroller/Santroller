@@ -181,7 +181,7 @@ USB_Host_Data_t bt_data;
 uint8_t rawWt;
 uint8_t rawWtPeripheral;
 bool auth_ps4_controller_found = false;
-bool seen_ps4_console = false;
+bool report_requested = false;
 bool hasFlags = false;
 GipPowerMode_t powerMode;
 Gip_Led_On_t ledOn;
@@ -2610,7 +2610,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         // PS4 does not start using the controller until it sees a PS button press.
-        if (!seen_ps4_console) {
+        if (!report_requested) {
             report->guide = true;
         }
         TICK_PS4;
@@ -2979,16 +2979,22 @@ bool tick_usb(void) {
     }
 #endif
 #if DEVICE_TYPE_IS_GAMEPAD
-    // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
-        // The wii however will configure the usb device before it stops communicating
+    // PS2 / Wii / WiiU / Switch 2 do not read any of the string descriptors.
+    if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !read_any_string && !seen_windows_xb1) {
+        // Switch 2 does read the hid descriptor
+        if (seen_hid_descriptor_read) {
+            set_console_type(SWITCH);
+        } else {
+            // PS2 / Wii / WiiU does not read hid descriptor
+            // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == ROCK_BAND_DRUMS
-        if (usb_configured()) {
-            set_console_type(WII_RB);
-        }
+            if (usb_configured()) {
+                set_console_type(WII_RB);
+            }
 #endif
-        // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-        set_console_type(PS3);
+            // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+            set_console_type(PS3);
+        }
     }
     // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
     if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
@@ -3042,7 +3048,7 @@ bool tick_usb(void) {
         lastSentPacket = millis();  // make 5ms idle ticking wait until 5ms after last report
         send_report_to_pc(&combined_report, size);
     }
-    seen_ps4_console = true;
+    report_requested = true;
     return size;
 }
 #if BLUETOOTH_RX

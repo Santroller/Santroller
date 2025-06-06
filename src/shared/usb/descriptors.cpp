@@ -1264,10 +1264,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
     if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         set_console_type(WINDOWS);
     }
-    // Switch 2 does this
-    if (consoleType == UNIVERSAL && descriptorType == 0x22) {
-        set_console_type(SWITCH);
-    }
 
 #endif
 #endif

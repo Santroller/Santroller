@@ -2983,7 +2983,8 @@ bool tick_usb(void) {
     if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !read_any_string && !seen_windows_xb1) {
         // Switch 2 does read the hid descriptor
         if (seen_hid_descriptor_read) {
-            set_console_type(SWITCH);
+            consoleType = SWITCH;
+            reset_usb();
         } else {
             // PS2 / Wii / WiiU does not read hid descriptor
             // The wii however will configure the usb device before it stops communicating

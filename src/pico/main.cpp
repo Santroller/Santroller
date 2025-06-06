@@ -214,7 +214,6 @@ void setup() {
         xboxAuthValid = false;
         consoleType = UNIVERSAL;
     }
-    // consoleType = ARCADE;
     generateSerialString(&serialstring, consoleType);
     printf("ConsoleType: %d\r\n", consoleType);
     init_main();

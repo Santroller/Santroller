@@ -184,21 +184,32 @@ typedef struct
 
 typedef struct
 {
-    uint8_t report_id;  // Always 0x1d
+    uint8_t always_1d;  // Always 0x1d
+    uint8_t unk1;
+    uint8_t unk2;
+    uint8_t always_ff;  // Always 0xFF
     uint8_t tilt;
-    uint8_t accel_y;
-    uint8_t padding;  // Always 0xFF
-    uint8_t accel_z;
 
-    
-    uint8_t dpad : 4;
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t x : 1;  // square, blue
-    uint8_t y : 1;  // triangle, yellow
+    union {
+        struct {
+            uint8_t dpadUp : 1;
+            uint8_t dpadDown : 1;
+            uint8_t dpadLeft : 1;
+            uint8_t dpadRight : 1;
+            uint8_t a : 1;  // cross, green
+            uint8_t b : 1;  // circle, red
+            uint8_t x : 1;  // square, blue
+            uint8_t y : 1;  // triangle, yellow
+        };
+        struct {
+            uint8_t dpad : 4;
+            uint8_t : 4;
+        };
+    };
 
     uint8_t leftShoulder : 1;  // orange, l1
-    uint8_t : 7;
+    uint8_t : 3;
+    uint8_t side : 4;  // 1 for left, 2 for right
 } __attribute__((packed)) ArcadeGuitarHeroGuitar_Data_t;
 
 // Festivals default mappings suck, so its easiest to set up custom mappings for that here

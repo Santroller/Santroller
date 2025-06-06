@@ -459,6 +459,10 @@ uint16_t handle_calibration_ps3_accel(uint16_t previous, int32_t orig_val, int16
 #endif
     return PS3_ACCEL_CENTER + ret;
 }
+uint8_t handle_calibration_arcade_accel(uint16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, uint16_t deadzone) {
+    int8_t ret = handle_calibration_xbox((previous - 65) << 9, orig_val, min, max, center, deadzone) >> 9;
+    return (uint8_t)(ret + 65);
+}
 long last_zero = 0;
 uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone) {
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
@@ -2738,6 +2742,28 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->dpadLeft = true;
         }
         report->back = false;
+    }
+    if (output_console_type == ARCADE) {
+        report_size = packet_size = sizeof(ArcadeGuitarHeroGuitar_Data_t);
+        ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)report_data;
+        memset(report, 0, sizeof(ArcadeGuitarHeroGuitar_Data_t));
+        report->always_1d = 0x1d;
+        report->always_ff = 0xff;
+        report->side = 0x1;
+        TICK_ARCADE;
+        asm volatile("" ::
+                         : "memory");
+        if (report->dpadUp) {
+            report->dpad = 0;
+        } else if (report->dpadDown) {
+            report->dpad = 2;
+        } else if (report->dpadLeft) {
+            report->dpad = 3;
+        } else if (report->dpadRight) {
+            report->dpad = 1;
+        } else {
+            report->dpad = 0xf;
+        }
     }
 #endif
 // For gamepads, use the PS3 report format on PS3

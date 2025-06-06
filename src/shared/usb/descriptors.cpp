@@ -338,6 +338,7 @@ const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor
             (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500)
     },
+    UnknownDescriptor1 : {0x03, 0x09, 0x00},
     InterfaceHID : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,
@@ -347,7 +348,7 @@ const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor
         bInterfaceClass : HID_INTF,
         bInterfaceSubClass : USB_HID_PROTOCOL_NONE,
         bInterfaceProtocol : USB_HID_PROTOCOL_NONE,
-        iInterface : NO_DESCRIPTOR
+        iInterface : 5
     },
     HIDDescriptor : {
         bLength : sizeof(USB_HID_DESCRIPTOR),
@@ -376,12 +377,12 @@ const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor
         bInterfaceClass : 0xFF,
         bInterfaceSubClass : 0x01,
         bInterfaceProtocol : 0xFF,
-        iInterface : NO_DESCRIPTOR
+        iInterface : 6
     },
     ReportINEndpoint21 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_UNK_IN,
+        bEndpointAddress : 0x82,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x40,
         bInterval : 1,
@@ -389,7 +390,7 @@ const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor
     ReportOUTEndpoint22 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_UNK_OUT,
+        bEndpointAddress : 0x03,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x40,
         bInterval : 1,
@@ -397,7 +398,7 @@ const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor
     ReportINEndpoint23 : {
         bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
-        bEndpointAddress : XINPUT_PLUGIN_MODULE_IN,
+        bEndpointAddress : 0x84,
         bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
         wMaxPacketSize : 0x40,
         bInterval : 1,
@@ -1453,8 +1454,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case USB_DESCRIPTOR_STRING: {
             read_any_string = true;
             const uint8_t *str;
-            if (consoleType == ARCADE && descriptorNumber == 2) {
-                str = (uint8_t *)&rtString;
+            if (descriptorNumber == 5) {
+                str = (uint8_t *)&rtString2;
+            } else if (descriptorNumber == 6) {
+                str = (uint8_t *)&rtString3;
             } else if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;
             } else if (descriptorNumber < 4) {

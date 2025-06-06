@@ -6,6 +6,7 @@
 
 #include "Usb.h"
 #include "commands.h"
+#include <EEPROM.h>
 #include "config.h"
 #include "defines.h"
 #include "descriptors.h"
@@ -116,6 +117,10 @@ bool usb_configured(void) {
 }
 
 void setup() {
+    arcadeSide = EEPROM.read(0);
+    if (arcadeSide > 2) {
+        arcadeSide = 1;
+    }
     // Configure the UART for controller mode
     UBRR0 = SERIAL_2X_UBBRVAL(BAUD);
     UCSR0C = ((1 << UCSZ01) | (1 << UCSZ00));
@@ -132,6 +137,10 @@ void setup() {
         consoleType = 0;
     }
     USB_Device_GetInternalSerialDescriptor();
+}
+void setArcadeSide(uint8_t side) {
+    arcadeSide = side;
+    EEPROM.write(0, side);
 }
 bool ready_for_next_packet() {
     return !has_previous_data;

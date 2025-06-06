@@ -73,6 +73,7 @@ typedef struct {
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
+    uint8_t UnknownDescriptor1[3];
     USB_INTERFACE_DESCRIPTOR InterfaceHID;
     USB_HID_DESCRIPTOR HIDDescriptor;
     USB_ENDPOINT_DESCRIPTOR EndpointInHID;

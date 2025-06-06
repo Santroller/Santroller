@@ -5,6 +5,7 @@
 #include <sleep.h>
 #include <string.h>
 #include <tusb.h>
+#include <EEPROM.h>
 
 #include "commands.h"
 #include "common/tusb_types.h"
@@ -153,6 +154,11 @@ void setup1() {
 void loop() {
     tick_usb();
 }
+void setArcadeSide(uint8_t side) {
+    arcadeSide = side;
+    EEPROM.write(0, side);
+    EEPROM.commit();
+}
 
 void go_to_sleep() {
     pico_is_sleeping = true;
@@ -216,6 +222,12 @@ void setup() {
     }
     generateSerialString(&serialstring, consoleType);
     printf("ConsoleType: %d\r\n", consoleType);
+
+    EEPROM.begin(512);
+    arcadeSide = EEPROM.read(0);
+    if (arcadeSide > 2) {
+        arcadeSide = 1;
+    }
     init_main();
     tud_init(TUD_OPT_RHPORT);
 #if USB_HOST_STACK

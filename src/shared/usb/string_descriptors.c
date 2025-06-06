@@ -33,7 +33,9 @@ const PROGMEM STRING_DESCRIPTOR productString = USB_DESCRIPTOR_STRING_UTF("Santr
 const PROGMEM STRING_DESCRIPTOR xboxString = USB_DESCRIPTOR_STRING_UTF("Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.");
 
 
-const PROGMEM STRING_DESCRIPTOR rtString = USB_DESCRIPTOR_STRING_UTF("RT-GH INPUT ");
+const PROGMEM STRING_DESCRIPTOR rtString = USB_DESCRIPTOR_STRING_UTF("RT GH CONTROLLER ");
+const PROGMEM STRING_DESCRIPTOR rtString2 = USB_DESCRIPTOR_STRING_UTF("RT-GH LED ");
+const PROGMEM STRING_DESCRIPTOR rtString3 = USB_DESCRIPTOR_STRING_UTF("RT-GH INPUT ");
 
 const PROGMEM STRING_DESCRIPTOR *const descriptorStrings[3] = {
     &languageString, &manufacturerString, &productString};

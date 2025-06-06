@@ -6,6 +6,7 @@
 /**
  * Include LUFA.h after LUFAConfig.h
  */
+#include <EEPROM.h>
 #include <LUFA.h>
 #include <LUFA/LUFA/Drivers/Board/LEDs.h>
 #include <LUFA/LUFA/Drivers/USB/Class/CDCClass.h>
@@ -45,6 +46,10 @@ bool usb_configured() {
 }
 
 void setup() {
+    arcadeSide = EEPROM.read(0);
+    if (arcadeSide > 2) {
+        arcadeSide = 1;
+    }
     init_main();
     if (persistedConsoleTypeValid == 0x3A2F) {
         consoleType = persistedConsoleType;
@@ -53,6 +58,10 @@ void setup() {
     }
     GlobalInterruptEnable();  // enable global interrupts
     SetupHardware();          // ask LUFA to setup the hardware
+}
+void setArcadeSide(uint8_t side) {
+    arcadeSide = side;
+    EEPROM.write(0, side);
 }
 
 uint8_t buf[255];

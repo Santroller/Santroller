@@ -338,7 +338,7 @@ const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor
             (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
         bMaxPower : USB_CONFIG_POWER_MA(500)
     },
-    UnknownDescriptor1 : {0x03, 0x09, 0x00},
+    // UnknownDescriptor1 : {0x03, 0x09, 0x00},
     InterfaceHID : {
         bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
         bDescriptorType : USB_DESCRIPTOR_INTERFACE,

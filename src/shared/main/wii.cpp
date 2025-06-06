@@ -172,7 +172,7 @@ uint8_t* tickWii() {
                             ((data[3] & (0b11100000)) >> 1));
         uint8_t note = (data[2] >> 1) & 0x7f;
         uint8_t channel = ((~data[3]) >> 1) & 0xF;
-        velocity = 0x7F - velocity;
+        velocity = (~velocity) & 0x7f;
         note = 0x7F - note;
         if (velocity || note) {
             // map gh notes to their rb counterparts in rb mode

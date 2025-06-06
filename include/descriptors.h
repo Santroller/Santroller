@@ -27,7 +27,6 @@
 #define ENDPOINT_USAGE_FEEDBACK (1 << 4)
 #define ENDPOINT_USAGE_IMPLICIT_FEEDBACK (2 << 4)
 
-
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;
     USB_INTERFACE_DESCRIPTOR InterfaceGamepad;
@@ -71,6 +70,18 @@ typedef struct {
     USB_ENDPOINT_DESCRIPTOR ReportINEndpoint11;
     USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint12;
 } __attribute__((packed)) OG_XBOX_CONFIGURATION_DESCRIPTOR;
+
+typedef struct {
+    USB_CONFIGURATION_DESCRIPTOR Config;
+    uint8_t UnknownDescriptor1[3];
+    USB_INTERFACE_DESCRIPTOR InterfaceHID;
+    USB_HID_DESCRIPTOR HIDDescriptor;
+    USB_ENDPOINT_DESCRIPTOR EndpointInHID;
+    USB_INTERFACE_DESCRIPTOR InterfaceVendor;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint21;
+    USB_ENDPOINT_DESCRIPTOR ReportOUTEndpoint22;
+    USB_ENDPOINT_DESCRIPTOR ReportINEndpoint23;
+} __attribute__((packed)) GH_ARCADE_CONFIGURATION_DESCRIPTOR;
 
 typedef struct {
     USB_CONFIGURATION_DESCRIPTOR Config;

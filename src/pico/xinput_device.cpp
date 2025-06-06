@@ -121,10 +121,18 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         }
         TU_VERIFY(p_xinput, 0);
         uint8_t const *p_desc = (uint8_t const *)itf_desc;
-        if (itf_desc->bInterfaceSubClass == 0x5D &&
-            (itf_desc->bInterfaceProtocol == 0x01 ||
-             itf_desc->bInterfaceProtocol == 0x03 ||
-             itf_desc->bInterfaceProtocol == 0x02)) {
+
+        if (itf_desc->bInterfaceSubClass == 0x00 && itf_desc->bInterfaceProtocol == 0xFF) {
+            p_desc = tu_desc_next(p_desc);
+            TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints,
+                                          TUSB_XFER_INTERRUPT, &p_xinput->ep_out,
+                                          &p_xinput->ep_in),
+                      0);
+            return drv_len;
+        } else if (itf_desc->bInterfaceSubClass == 0x5D &&
+                   (itf_desc->bInterfaceProtocol == 0x01 ||
+                    itf_desc->bInterfaceProtocol == 0x03 ||
+                    itf_desc->bInterfaceProtocol == 0x02)) {
             // Xinput reserved endpoint
             //-------------- Xinput Descriptor --------------//
             p_desc = tu_desc_next(p_desc);
@@ -171,7 +179,6 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
             }
         }
     } else if (0x58 == itf_desc->bInterfaceClass) {
-
         // len = interface + n*endpoints
         drv_len = sizeof(tusb_desc_interface_t) + itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t);
         TU_ASSERT(max_len >= drv_len, 0);

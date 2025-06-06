@@ -325,6 +325,86 @@ const PROGMEM XBOX_360_CONFIGURATION_MULTI_DESCRIPTOR XBOX360MultiConfigurationD
     },
     SecurityDescriptor : {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
+
+const PROGMEM GH_ARCADE_CONFIGURATION_DESCRIPTOR GHArcadeConfigurationDescriptor{
+    Config : {
+        bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_CONFIGURATION,
+        wTotalLength : sizeof(GH_ARCADE_CONFIGURATION_DESCRIPTOR),
+        bNumInterfaces : 2,
+        bConfigurationValue : 1,
+        iConfiguration : NO_DESCRIPTOR,
+        bmAttributes :
+            (USB_CONFIG_ATTRIBUTE_RESERVED | USB_CONFIG_ATTRIBUTE_REMOTEWAKEUP),
+        bMaxPower : USB_CONFIG_POWER_MA(500)
+    },
+    UnknownDescriptor1 : {0x03, 0x09, 0x00},
+    InterfaceHID : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_Device,
+        bAlternateSetting : 0,
+        bNumEndpoints : 1,
+        bInterfaceClass : HID_INTF,
+        bInterfaceSubClass : USB_HID_PROTOCOL_NONE,
+        bInterfaceProtocol : USB_HID_PROTOCOL_NONE,
+        iInterface : NO_DESCRIPTOR
+    },
+    HIDDescriptor : {
+        bLength : sizeof(USB_HID_DESCRIPTOR),
+        bDescriptorType : HID_DESCRIPTOR_HID,
+        bcdHID : USB_VERSION_BCD(1, 0, 0),
+        bCountryCode : 0x00,
+        bNumDescriptors : 1,
+        bDescrType : HID_DESCRIPTOR_REPORT,
+        wDescriptorLength : sizeof(gha_descriptor)
+    },
+    EndpointInHID : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : DEVICE_EPADDR_IN,
+        bmAttributes :
+            (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x40,
+        bInterval : 1
+    },
+    InterfaceVendor : {
+        bLength : sizeof(USB_INTERFACE_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_INTERFACE,
+        bInterfaceNumber : INTERFACE_ID_Padding,
+        bAlternateSetting : 0x00,
+        bNumEndpoints : 3,
+        bInterfaceClass : 0xFF,
+        bInterfaceSubClass : 0x01,
+        bInterfaceProtocol : 0xFF,
+        iInterface : NO_DESCRIPTOR
+    },
+    ReportINEndpoint21 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_UNK_IN,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x40,
+        bInterval : 1,
+    },
+    ReportOUTEndpoint22 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_UNK_OUT,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x40,
+        bInterval : 1,
+    },
+    ReportINEndpoint23 : {
+        bLength : sizeof(USB_ENDPOINT_DESCRIPTOR),
+        bDescriptorType : USB_DESCRIPTOR_ENDPOINT,
+        bEndpointAddress : XINPUT_PLUGIN_MODULE_IN,
+        bmAttributes : (USB_TRANSFER_TYPE_INTERRUPT | ENDPOINT_TATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+        wMaxPacketSize : 0x40,
+        bInterval : 1,
+    },
+};
+
 const PROGMEM OG_XBOX_CONFIGURATION_DESCRIPTOR OGXBOXConfigurationDescriptor = {
     Config : {
         bLength : sizeof(USB_CONFIGURATION_DESCRIPTOR),
@@ -1246,6 +1326,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idProduct = XBOX_ONE_JAG_PID;
             }
 #endif
+            if (consoleType == ARCADE) {
+                dev->idVendor = 0x0c70;
+                dev->idProduct = 0x0777;
+            }
             break;
         }
         case USB_DESCRIPTOR_CONFIGURATION: {
@@ -1269,6 +1353,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             } else if (consoleType == OG_XBOX) {
                 size = sizeof(OG_XBOX_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &OGXBOXConfigurationDescriptor, size);
+            } else if (consoleType == ARCADE) {
+                size = sizeof(GH_ARCADE_CONFIGURATION_DESCRIPTOR);
+                memcpy_P(descriptorBuffer, &GHArcadeConfigurationDescriptor, size);
             } else {
                 size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
@@ -1321,8 +1408,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             address = keyboard_mouse_descriptor;
             size = sizeof(keyboard_mouse_descriptor);
 #elif DEVICE_TYPE_IS_GAMEPAD
-
-            if (consoleType == PS4) {
+            if (consoleType == ARCADE) {
+                address = gha_descriptor;
+                size = sizeof(gha_descriptor);
+            } else if (consoleType == PS4) {
                 address = ps4_descriptor;
                 size = sizeof(ps4_descriptor);
             } else if (consoleType == IOS_FESTIVAL) {
@@ -1365,7 +1454,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
         case USB_DESCRIPTOR_STRING: {
             read_any_string = true;
             const uint8_t *str;
-            if (descriptorNumber == 4) {
+            if (consoleType == ARCADE && descriptorNumber == 2) {
+                str = (uint8_t *)&rtString;
+            } else if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;
             } else if (descriptorNumber < 4) {
                 str = (uint8_t *)pgm_read_pointer(descriptorStrings + descriptorNumber);

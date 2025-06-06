@@ -44,6 +44,7 @@ extern const PROGMEM STRING_DESCRIPTOR xboxString;
 extern const PROGMEM STRING_DESCRIPTOR languageString;
 extern const PROGMEM STRING_DESCRIPTOR manufacturerString;
 extern const PROGMEM STRING_DESCRIPTOR productString;
+extern const PROGMEM STRING_DESCRIPTOR rtString;
 #ifdef __cplusplus
 }
 #endif

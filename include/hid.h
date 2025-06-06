@@ -77,6 +77,7 @@
 extern const uint8_t keyboard_mouse_descriptor[NKRO_SIZE + SIXKRO_SIZE + CONSUMER_SIZE + MOUSE_SIZE];
 extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
+extern const uint8_t gha_descriptor[83];
 extern const uint8_t ps4_descriptor[160];
 extern const uint8_t fnf_descriptor[53];
 extern long last_strobe;

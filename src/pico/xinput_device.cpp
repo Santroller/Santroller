@@ -121,13 +121,21 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         }
         TU_VERIFY(p_xinput, 0);
         uint8_t const *p_desc = (uint8_t const *)itf_desc;
-
-        if (itf_desc->bInterfaceSubClass == 0x00 && itf_desc->bInterfaceProtocol == 0xFF) {
+        
+        if (itf_desc->bInterfaceSubClass == 0x01 && itf_desc->bInterfaceProtocol == 0xFF) {
             p_desc = tu_desc_next(p_desc);
+            printf("Opened: %d\r\n", itf_desc->bNumEndpoints);
             TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints,
                                           TUSB_XFER_INTERRUPT, &p_xinput->ep_out,
                                           &p_xinput->ep_in),
                       0);
+            printf("Opened: %02x %02x\r\n", p_xinput->ep_out, p_xinput->ep_in);
+            if (p_xinput->ep_out) {
+                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf))) {
+                    TU_LOG_FAILED();
+                    TU_BREAKPOINT();
+                }
+            }
             return drv_len;
         } else if (itf_desc->bInterfaceSubClass == 0x5D &&
                    (itf_desc->bInterfaceProtocol == 0x01 ||
@@ -277,6 +285,9 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x40));
 #endif
+        } else if (consoleType == ARCADE) {
+            TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
+                                     0x40));
         } else {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x08));

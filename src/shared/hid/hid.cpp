@@ -559,6 +559,13 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     //         portal_state = 1;
     //     }
     // }
+    if (consoleType == ARCADE) {
+        if (data[0] == 0x03) {
+            // packet sends 0 for left and 1 for right, hid report uses 1 for left and 2 for right
+            setArcadeSide(data[1] + 1);
+        }
+        return;
+    }
 #if DEVICE_TYPE_IS_KEYBOARD
     handle_keyboard_leds(data[0]);
 #endif

@@ -155,6 +155,9 @@ void loop() {
     tick_usb();
 }
 void setArcadeSide(uint8_t side) {
+    if (arcadeSide == side) {
+        return;
+    }
     arcadeSide = side;
     EEPROM.write(0, side);
     EEPROM.commit();

@@ -14,6 +14,7 @@ extern "C" {
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
 extern uint8_t arcadeSide;
+void setArcadeSide(uint8_t side);
 #ifdef CONFIGURABLE_BLOBS
 extern const uint8_t* config;
 extern const uint8_t* config_blobs;

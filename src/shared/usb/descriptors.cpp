@@ -1455,9 +1455,9 @@ uint16_t descriptorRequest(const uint16_t wValue,
             read_any_string = true;
             const uint8_t *str;
             if (descriptorNumber == 5) {
-                str = (uint8_t *)&rtString2;
+                str = (uint8_t *)&rtStringInput;
             } else if (descriptorNumber == 6) {
-                str = (uint8_t *)&rtString3;
+                str = (uint8_t *)&rtStringLED;
             } else if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;
             } else if (descriptorNumber < 4) {

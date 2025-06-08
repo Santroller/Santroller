@@ -45,8 +45,8 @@ extern const PROGMEM STRING_DESCRIPTOR languageString;
 extern const PROGMEM STRING_DESCRIPTOR manufacturerString;
 extern const PROGMEM STRING_DESCRIPTOR productString;
 extern const PROGMEM STRING_DESCRIPTOR rtString;
-extern const PROGMEM STRING_DESCRIPTOR rtString2;
-extern const PROGMEM STRING_DESCRIPTOR rtString3;
+extern const PROGMEM STRING_DESCRIPTOR rtStringLED;
+extern const PROGMEM STRING_DESCRIPTOR rtStringInput;
 #ifdef __cplusplus
 }
 #endif

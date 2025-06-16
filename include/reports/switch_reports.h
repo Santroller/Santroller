@@ -22,7 +22,7 @@ typedef struct
     uint8_t r2 : 1;
     uint8_t rightShoulder : 1;
     uint8_t start : 1;
-    uint8_t : 1;
+    uint8_t rightThumbClick: 1;
 
     uint8_t dpadDown : 1;
     uint8_t dpadRight : 1;
@@ -31,7 +31,7 @@ typedef struct
     uint8_t l2 : 1;
     uint8_t leftShoulder : 1;
     uint8_t back : 1;
-    uint8_t : 1;
+    uint8_t leftThumbClick: 1;
 
     uint8_t guide : 1;
     uint8_t capture : 1;

@@ -740,7 +740,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 {
                     usb_host_devices[i].switch_sent_handshake = true;
                     uint8_t buf[] = { 0x03, 0x91, 0x00, 0x0d, 0x00, 0x08,
-                                       0x00, 0x00, 0x01, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF;
+                                       0x00, 0x00, 0x01, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
                     send_report_to_controller(dev_addr, instance, buf, sizeof(buf));
                 }
 

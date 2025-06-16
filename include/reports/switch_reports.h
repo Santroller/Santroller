@@ -14,7 +14,7 @@ typedef struct
 {
     uint8_t reportId; // 0x0A
     uint8_t packetId; // counts up for each packet
-    uint8_t status; // 0x20
+    uint8_t status;   // 0x20
     uint8_t b : 1;
     uint8_t a : 1;
     uint8_t y : 1;
@@ -30,7 +30,8 @@ typedef struct
     uint8_t dpadUp : 1;
     uint8_t l2 : 1;
     uint8_t leftShoulder : 1;
-    uint8_t : 2;
+    uint8_t back : 1;
+    uint8_t : 1;
 
     uint8_t guide : 1;
     uint8_t capture : 1;

@@ -100,6 +100,7 @@
 #define PS2_ON_PS3 29
 #define STADIA 30
 #define XINPUTCOMPAT 31
+#define SWITCH2 32
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

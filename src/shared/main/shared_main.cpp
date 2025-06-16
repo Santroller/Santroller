@@ -1587,6 +1587,54 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             break;
         }
+        case SWITCH2: {
+            switch (device_type.sub_type) {
+                case GAMEPAD: {
+                    Switch2ProGamepad_Data_t *report = (Switch2ProGamepad_Data_t *)data;
+                    usb_host_data->dpadLeft = report->dpad == 6 || report->dpad == 5 || report->dpad == 7;
+                    usb_host_data->dpadRight = report->dpad == 3 || report->dpad == 2 || report->dpad == 1;
+                    usb_host_data->dpadUp = report->dpad == 0 || report->dpad == 1 || report->dpad == 7;
+                    usb_host_data->dpadDown = report->dpad == 5 || report->dpad == 4 || report->dpad == 3;
+                    usb_host_data->green |= report->a;
+                    usb_host_data->red |= report->b;
+                    usb_host_data->yellow |= report->y;
+                    usb_host_data->blue |= report->x;
+                    usb_host_data->orange |= report->leftShoulder;
+                    usb_host_data->a |= report->a;
+                    usb_host_data->b |= report->b;
+                    usb_host_data->x |= report->x;
+                    usb_host_data->y |= report->y;
+                    usb_host_data->leftShoulder |= report->leftShoulder;
+                    usb_host_data->rightShoulder |= report->rightShoulder;
+                    usb_host_data->back |= report->back;
+                    usb_host_data->start |= report->start;
+                    usb_host_data->guide |= report->guide;
+                    usb_host_data->capture |= report->capture;
+                    usb_host_data->leftThumbClick |= report->leftThumbClick;
+                    usb_host_data->rightThumbClick |= report->rightThumbClick;
+                    if (report->leftTrigger) {
+                        usb_host_data->leftTrigger = report->leftTrigger << 8;
+                    }
+                    if (report->rightTrigger) {
+                        usb_host_data->rightTrigger = report->rightTrigger << 8;
+                    }
+                    if (report->leftStickX != SWITCH_2_STICK_CENTER) {
+                        usb_host_data->leftStickX = (report->leftStickX - SWITCH_2_STICK_CENTER) << 5;
+                    }
+                    if (report->leftStickY != SWITCH_2_STICK_CENTER) {
+                        usb_host_data->leftStickY = (((4096 - report->leftStickY) - SWITCH_2_STICK_CENTER)) << 5;
+                    }
+                    if (report->rightStickX != SWITCH_2_STICK_CENTER) {
+                        usb_host_data->rightStickX = (report->rightStickX - SWITCH_2_STICK_CENTER) << 5;
+                    }
+                    if (report->rightStickY != SWITCH_2_STICK_CENTER) {
+                        usb_host_data->rightStickY = (((4096 - report->rightStickY) - SWITCH_2_STICK_CENTER)) << 5;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
         case OG_XBOX: {
             OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)data;
             usb_host_data->a |= report->a > 0x20;
@@ -3384,6 +3432,22 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case NINTENDO_VID: {
             if (pid == SWITCH_PRO_PID) {
                 type->console_type = SWITCH;
+                type->sub_type = GAMEPAD;
+            }
+            if (pid == SWITCH_2_PRO_PID) {
+                type->console_type = SWITCH2;
+                type->sub_type = GAMEPAD;
+            }
+            if (pid == SWITCH_2_GC_PID) {
+                type->console_type = SWITCH2;
+                type->sub_type = GAMEPAD;
+            }
+            if (pid == SWITCH_2_JOY_R_PID) {
+                type->console_type = SWITCH2;
+                type->sub_type = GAMEPAD;
+            }
+            if (pid == SWITCH_2_JOY_L_PID) {
+                type->console_type = SWITCH2;
                 type->sub_type = GAMEPAD;
             }
             break;

@@ -4113,6 +4113,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case PS3_GH_DRUM_PID:
             type->console_type = PS3;
             type->sub_type = GUITAR_HERO_DRUMS;
+            type->drum_type = DRUM_GH;
             break;
         case PS3_RB_GUITAR_PID:
             type->console_type = PS3;
@@ -4121,6 +4122,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case PS3_RB_DRUM_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_DRUMS;
+            type->drum_type = version == 0x1000 ? DRUM_RB1 : DRUM_RB2;
             break;
         case PS3_DJ_TURNTABLE_PID:
             type->console_type = PS3;
@@ -4167,9 +4169,14 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             break;
 
         case WII_RB_DRUM_PID:
+            type->console_type = PS3;
+            type->sub_type = ROCK_BAND_DRUMS;
+            type->drum_type = DRUM_RB1;
+            break;
         case WII_RB_DRUM_2_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_DRUMS;
+            type->drum_type = DRUM_RB2;
             break;
         case WII_KEYBOARD_PID:
         case WII_MPA_KEYBOARD_PID:
@@ -4220,6 +4227,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case XBOX_ONE_RB_DRUM_PID:
             type->console_type = XBOXONE;
             type->sub_type = ROCK_BAND_DRUMS;
+            type->drum_type = DRUM_RB2;
             break;
         case PS4_STRAT_PID:
             type->console_type = PS4;

@@ -663,14 +663,25 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         usb_host_devices[i].report_length = len - sizeof(header);
                         if (usb_host_devices[i].type.sub_type == XINPUT_DRUMS)
                         {
-                            XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
-                            if (gamepad->leftThumbClick)
+                            if (usb_host_devices[i].type.drum_type == DRUM_UNKNOWN)
                             {
-                                usb_host_devices[i].type.sub_type = XINPUT_GH_DRUMS;
+                                XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
+                                if (gamepad->leftThumbClick)
+                                {
+                                    usb_host_devices[i].type.sub_type = DRUM_GH;
+                                }
+                                else
+                                {
+                                    usb_host_devices[i].type.sub_type = DRUM_RB1;
+                                }
                             }
-                            else
+                            if (usb_host_devices[i].type.drum_type == DRUM_RB1)
                             {
-                                usb_host_devices[i].type.sub_type = XINPUT_RB_DRUMS;
+                                XInputRockBandDrums_Data_t *gamepad = (XInputRockBandDrums_Data_t *)&usb_host_devices[i].report;
+                                if (gamepad->padFlag || gamepad->cymbalFlag)
+                                {
+                                    usb_host_devices[i].type.sub_type = DRUM_RB2;
+                                }
                             }
                         }
                     }
@@ -780,11 +791,11 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     {
                         if (drums->leftThumbClick)
                         {
-                            usb_host_devices[i].type.sub_type = XINPUT_GH_DRUMS;
+                            usb_host_devices[i].type.drum_type = DRUM_GH;
                         }
                         else
                         {
-                            usb_host_devices[i].type.sub_type = XINPUT_RB_DRUMS;
+                            usb_host_devices[i].type.drum_type = DRUM_RB1;
                         }
                     }
                     if (usb_host_devices[i].type.drum_type == DRUM_RB1)
@@ -797,7 +808,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     }
                 }
             }
-            
+
             if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_DRUMS && usb_host_devices[i].type.drum_type == DRUM_RB1)
             {
                 PS3RockBandDrums_Data_t *drums = (PS3RockBandDrums_Data_t *)&usb_host_devices[i].report;

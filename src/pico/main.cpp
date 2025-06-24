@@ -520,6 +520,13 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
                 type.sub_type = GUITAR_HERO_GUITAR_WT;
             }
         }
+        if (host_pid == WII_RB_DRUM_PID) {
+            type.drum_type = DRUM_RB1;
+        }
+        if (host_pid == WII_RB_DRUM_2_PID) {
+            type.drum_type = DRUM_RB2;
+            
+        }
         usb_host_devices[total_usb_host_devices].type = type;
         usb_host_devices[total_usb_host_devices].xone_init_id = millis();
         total_usb_host_devices++;
@@ -672,14 +679,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                                 }
                                 else
                                 {
-                                    usb_host_devices[i].type.sub_type = DRUM_RB1;
-                                }
-                            }
-                            if (usb_host_devices[i].type.drum_type == DRUM_RB1)
-                            {
-                                XInputRockBandDrums_Data_t *gamepad = (XInputRockBandDrums_Data_t *)&usb_host_devices[i].report;
-                                if (gamepad->padFlag || gamepad->cymbalFlag)
-                                {
+                                    // RB2/3 kits are always wireless
                                     usb_host_devices[i].type.sub_type = DRUM_RB2;
                                 }
                             }
@@ -795,15 +795,8 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         }
                         else
                         {
+                            // RB1 kits are always wired
                             usb_host_devices[i].type.drum_type = DRUM_RB1;
-                        }
-                    }
-                    if (usb_host_devices[i].type.drum_type == DRUM_RB1)
-                    {
-                        // RB2 and newer kits set pad flags, so we have a newer kit here
-                        if (drums->padFlag || drums->cymbalFlag)
-                        {
-                            usb_host_devices[i].type.drum_type = DRUM_RB2;
                         }
                     }
                 }

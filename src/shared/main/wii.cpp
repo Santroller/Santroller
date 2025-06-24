@@ -198,7 +198,26 @@ uint8_t* tickWii() {
                     break;
             }
 #else
-            onNote(channel, note, velocity);
+            switch (note) {
+                case GH_MIDI_NOTE_GREEN:
+                    onNote(channel, GH_REM_MIDI_NOTE_GREEN, velocity);
+                    break;
+                case GH_MIDI_NOTE_RED:
+                    onNote(channel, GH_REM_MIDI_NOTE_RED, velocity);
+                    break;
+                case GH_MIDI_NOTE_YELLOW:
+                    onNote(channel, GH_REM_MIDI_NOTE_YELLOW, velocity);
+                    break;
+                case GH_MIDI_NOTE_BLUE:
+                    onNote(channel, GH_REM_MIDI_NOTE_BLUE, velocity);
+                    break;
+                case GH_MIDI_NOTE_ORANGE:
+                    onNote(channel, GH_REM_MIDI_NOTE_ORANGE, velocity);
+                    break;
+                default:
+                    onNote(channel, note, velocity);
+                    break;
+            }
 #endif
         }
     }

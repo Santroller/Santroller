@@ -149,6 +149,11 @@
 #define BTN_END 0x0f
 #define BTN_USAGE(x) 0x09, x
 
+#define DRUM_UNKNOWN 0
+#define DRUM_RB1 1
+#define DRUM_RB2 2
+#define DRUM_GH 3
+
 typedef enum {
     WII_NUNCHUK = 0x0000,
     WII_CLASSIC_CONTROLLER = 0x0001,
@@ -226,3 +231,12 @@ typedef enum {
 #define RB_MIDI_NOTE_YELLOW_CYMBAL 22
 #define RB_MIDI_NOTE_BLUE_CYMBAL 51
 #define RB_MIDI_NOTE_KICK2 44
+
+// Remapped GH midi notes as the standard ones are just not useful
+#define GH_REM_MIDI_NOTE_KICK 36
+#define GH_REM_MIDI_NOTE_RED 38
+#define GH_REM_MIDI_NOTE_GREEN 41
+#define GH_REM_MIDI_NOTE_YELLOW 46
+#define GH_REM_MIDI_NOTE_BLUE 45
+#define GH_REM_MIDI_NOTE_ORANGE 51
+#define GH_REM_MIDI_NOTE_KICK2 100

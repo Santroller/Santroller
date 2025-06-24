@@ -70,7 +70,7 @@
             }                                                                                                     \
         }                                                                                                         \
     }                                                                                                             \
-    if (pad) {                                                                                                    \
+    if (pad || device_type.drum_type == DRUM_RB1) {                                                                                                    \
         if (yellow) {                                                                                             \
             onNote(10, RB_MIDI_NOTE_YELLOW, yellowVelocity >> 1);                                                 \
         }                                                                                                         \
@@ -141,33 +141,33 @@
 #else
 #define SET_GH_PADS()                                             \
     if (report->greenVelocity) {                                  \
-        onNote(10, GH_MIDI_NOTE_GREEN, report->greenVelocity);    \
+        onNote(10, GH_REM_MIDI_NOTE_GREEN, report->greenVelocity);    \
     } else {                                                      \
-        offNote(10, GH_MIDI_NOTE_GREEN, report->greenVelocity);   \
+        offNote(10, GH_REM_MIDI_NOTE_GREEN, report->greenVelocity);   \
     }                                                             \
     if (report->redVelocity) {                                    \
-        onNote(10, GH_MIDI_NOTE_RED, report->redVelocity);        \
+        onNote(10, GH_REM_MIDI_NOTE_RED, report->redVelocity);        \
     } else {                                                      \
-        offNote(10, GH_MIDI_NOTE_RED, report->redVelocity);       \
+        offNote(10, GH_REM_MIDI_NOTE_RED, report->redVelocity);       \
     }                                                             \
     if (report->yellowVelocity) {                                 \
-        onNote(10, GH_MIDI_NOTE_YELLOW, report->yellowVelocity);  \
+        onNote(10, GH_REM_MIDI_NOTE_YELLOW, report->yellowVelocity);  \
     } else {                                                      \
-        offNote(10, GH_MIDI_NOTE_YELLOW, report->yellowVelocity); \
+        offNote(10, GH_REM_MIDI_NOTE_YELLOW, report->yellowVelocity); \
     }                                                             \
     if (report->blueVelocity) {                                   \
-        onNote(10, GH_MIDI_NOTE_BLUE, report->blueVelocity);      \
+        onNote(10, GH_REM_MIDI_NOTE_BLUE, report->blueVelocity);      \
     } else {                                                      \
-        offNote(10, GH_MIDI_NOTE_BLUE, report->blueVelocity);     \
+        offNote(10, GH_REM_MIDI_NOTE_BLUE, report->blueVelocity);     \
     }                                                             \
     if (report->orangeVelocity) {                                 \
-        onNote(10, GH_MIDI_NOTE_ORANGE, report->orangeVelocity);  \
+        onNote(10, GH_REM_MIDI_NOTE_ORANGE, report->orangeVelocity);  \
     } else {                                                      \
-        offNote(10, GH_MIDI_NOTE_ORANGE, report->orangeVelocity); \
+        offNote(10, GH_REM_MIDI_NOTE_ORANGE, report->orangeVelocity); \
     }                                                             \
     if (report->kickVelocity) {                                   \
-        onNote(10, GH_MIDI_NOTE_KICK, report->kickVelocity);      \
+        onNote(10, GH_REM_MIDI_NOTE_KICK, report->kickVelocity);      \
     } else {                                                      \
-        offNote(10, GH_MIDI_NOTE_KICK, report->kickVelocity);     \
+        offNote(10, GH_REM_MIDI_NOTE_KICK, report->kickVelocity);     \
     }
 #endif

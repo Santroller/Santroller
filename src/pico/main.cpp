@@ -401,10 +401,22 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     printf("VID: %04x, PID: %04x \r\n", host_vid, host_pid);
-    USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance};
+    USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance, DRUM_UNKNOWN};
     tuh_descriptor_get_device_sync(dev_addr, buf, sizeof(USB_DEVICE_DESCRIPTOR));
     USB_DEVICE_DESCRIPTOR *desc = (USB_DEVICE_DESCRIPTOR *)buf;
     get_usb_device_type_for(host_vid, host_pid, desc->bcdDevice, &type);
+    // XBOX 360 has other methods for determining drum type, so it inits as unknown
+    if (type.console_type != XBOX360)
+    {
+        if (type.sub_type == ROCK_BAND_DRUMS)
+        {
+            type.drum_type = DRUM_RB1;
+        }
+        if (type.sub_type == GUITAR_HERO_DRUMS)
+        {
+            type.drum_type = DRUM_GH;
+        }
+    }
     switch (type.console_type)
     {
     case XBOX360:
@@ -758,19 +770,41 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
 
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;
+            // Xinput drum detection
             if (usb_host_devices[i].type.console_type == XBOX360 && usb_host_devices[i].type.sub_type == XINPUT_DRUMS)
             {
-                XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
-                if (gamepad->rsize == sizeof(XInputGamepad_Data_t))
+                XInputRockBandDrums_Data_t *drums = (XInputRockBandDrums_Data_t *)&usb_host_devices[i].report;
+                if (drums->rsize == sizeof(XInputRockBandDrums_Data_t))
                 {
-                    if (gamepad->leftThumbClick)
+                    if (usb_host_devices[i].type.drum_type == DRUM_UNKNOWN)
                     {
-                        usb_host_devices[i].type.sub_type = XINPUT_GH_DRUMS;
+                        if (drums->leftThumbClick)
+                        {
+                            usb_host_devices[i].type.sub_type = XINPUT_GH_DRUMS;
+                        }
+                        else
+                        {
+                            usb_host_devices[i].type.sub_type = XINPUT_RB_DRUMS;
+                        }
                     }
-                    else
+                    if (usb_host_devices[i].type.drum_type == DRUM_RB1)
                     {
-                        usb_host_devices[i].type.sub_type = XINPUT_RB_DRUMS;
+                        // RB2 and newer kits set pad flags, so we have a newer kit here
+                        if (drums->padFlag || drums->cymbalFlag)
+                        {
+                            usb_host_devices[i].type.drum_type = DRUM_RB2;
+                        }
                     }
+                }
+            }
+            
+            if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_DRUMS && usb_host_devices[i].type.drum_type == DRUM_RB1)
+            {
+                PS3RockBandDrums_Data_t *drums = (PS3RockBandDrums_Data_t *)&usb_host_devices[i].report;
+                // RB2 and newer kits set pad flags, so we have a newer kit here
+                if (drums->padFlag || drums->cymbalFlag)
+                {
+                    usb_host_devices[i].type.drum_type = DRUM_RB2;
                 }
             }
             return;

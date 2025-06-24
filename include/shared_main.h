@@ -38,6 +38,7 @@ typedef struct {
     uint8_t sub_type;
     uint8_t dev_addr;
     uint8_t instance;
+    uint8_t drum_type;
 } USB_Device_Type_t;
 void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_Device_Type_t *type);
 typedef struct {

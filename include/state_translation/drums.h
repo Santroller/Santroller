@@ -70,7 +70,7 @@
             }                                                                                                     \
         }                                                                                                         \
     }                                                                                                             \
-    if (pad || device_type.drum_type == DRUM_RB1) {                                                                                                    \
+    if (pad) {                                                                                                    \
         if (yellow) {                                                                                             \
             onNote(10, RB_MIDI_NOTE_YELLOW, yellowVelocity >> 1);                                                 \
         }                                                                                                         \

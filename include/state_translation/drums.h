@@ -12,162 +12,277 @@
     bool blue = report->x;                                                                                        \
     bool pad = report->padFlag;                                                                                   \
     bool cymbal = report->cymbalFlag;                                                                             \
-    if (!red) {                                                                                                   \
+    if (!red)                                                                                                     \
+    {                                                                                                             \
         offNote(10, RB_MIDI_NOTE_RED, 0);                                                                         \
     }                                                                                                             \
-    if (!green) {                                                                                                 \
+    if (!green)                                                                                                   \
+    {                                                                                                             \
         offNote(10, RB_MIDI_NOTE_GREEN, 0);                                                                       \
         offNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, 0);                                                                \
     }                                                                                                             \
-    if (!yellow) {                                                                                                \
+    if (!yellow)                                                                                                  \
+    {                                                                                                             \
         offNote(10, RB_MIDI_NOTE_YELLOW, 0);                                                                      \
         offNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, 0);                                                               \
     }                                                                                                             \
-    if (!blue) {                                                                                                  \
+    if (!blue)                                                                                                    \
+    {                                                                                                             \
         offNote(10, RB_MIDI_NOTE_BLUE, 0);                                                                        \
         offNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, 0);                                                                 \
     }                                                                                                             \
-    if (pad && cymbal) {                                                                                          \
+    if (pad && cymbal)                                                                                            \
+    {                                                                                                             \
         /* The d-pad inputs let us resolve the ambiguity of a pad+cymbal hit                                      \
            Only d-pad is checked here since it is the only unique identifier due to hardware bugs                 \
            (sometimes the color flag is released before the d-pad input is, particularly at high polling rates)*/ \
                                                                                                                   \
         /* If you hit both the pad and cymbal of the same colour simultaneously, the velocity for the cymbal      \
             is placed in the redVelocity, but the red button won't be pressed. */                                 \
-        if (!red && redVelocity) {                                                                                \
-            if (up) {                                                                                             \
+        if (!red && redVelocity)                                                                                  \
+        {                                                                                                         \
+            if (up)                                                                                               \
+            {                                                                                                     \
                 onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, redVelocity >> 1);                                         \
                 onNote(10, RB_MIDI_NOTE_YELLOW, yellowVelocity >> 1);                                             \
-            } else if (down) {                                                                                    \
+            }                                                                                                     \
+            else if (down)                                                                                        \
+            {                                                                                                     \
                 onNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, redVelocity >> 1);                                           \
                 onNote(10, RB_MIDI_NOTE_BLUE, blueVelocity >> 1);                                                 \
-            } else {                                                                                              \
+            }                                                                                                     \
+            else                                                                                                  \
+            {                                                                                                     \
                 onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, redVelocity >> 1);                                          \
                 onNote(10, RB_MIDI_NOTE_GREEN, greenVelocity >> 1);                                               \
             }                                                                                                     \
             pad = false;                                                                                          \
             cymbal = false;                                                                                       \
-        } else {                                                                                                  \
+        }                                                                                                         \
+        else                                                                                                      \
+        {                                                                                                         \
             /* Yellow */                                                                                          \
-            if (up) {                                                                                             \
+            if (up)                                                                                               \
+            {                                                                                                     \
                 onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, yellowVelocity >> 1);                                      \
                 yellow = false;                                                                                   \
                 cymbal = false;                                                                                   \
             }                                                                                                     \
                                                                                                                   \
             /* Blue */                                                                                            \
-            if (down) {                                                                                           \
+            if (down)                                                                                             \
+            {                                                                                                     \
                 onNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, blueVelocity >> 1);                                          \
                 blue = false;                                                                                     \
                 cymbal = false;                                                                                   \
             }                                                                                                     \
                                                                                                                   \
             /* Green */                                                                                           \
-            if (!(up || down)) {                                                                                  \
+            if (!(up || down))                                                                                    \
+            {                                                                                                     \
                 onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, blueVelocity >> 1);                                         \
                 green = false;                                                                                    \
                 cymbal = false;                                                                                   \
             }                                                                                                     \
         }                                                                                                         \
     }                                                                                                             \
-    if (pad) {                                                                                                    \
-        if (yellow) {                                                                                             \
+    if (pad)                                                                                                      \
+    {                                                                                                             \
+        if (yellow)                                                                                               \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_YELLOW, yellowVelocity >> 1);                                                 \
         }                                                                                                         \
-        if (blue) {                                                                                               \
+        if (blue)                                                                                                 \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_BLUE, blueVelocity >> 1);                                                     \
         }                                                                                                         \
-        if (red) {                                                                                                \
+        if (red)                                                                                                  \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_RED, redVelocity >> 1);                                                       \
         }                                                                                                         \
-        if (green) {                                                                                              \
+        if (green)                                                                                                \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_GREEN, greenVelocity >> 1);                                                   \
         }                                                                                                         \
     }                                                                                                             \
                                                                                                                   \
-    if (cymbal) {                                                                                                 \
-        if (blue) {                                                                                               \
+    if (cymbal)                                                                                                   \
+    {                                                                                                             \
+        if (blue)                                                                                                 \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, blueVelocity >> 1);                                              \
         }                                                                                                         \
-        if (red) {                                                                                                \
+        if (red)                                                                                                  \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, redVelocity >> 1);                                             \
         }                                                                                                         \
-        if (green) {                                                                                              \
+        if (green)                                                                                                \
+        {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, greenVelocity >> 1);                                            \
         }                                                                                                         \
     }                                                                                                             \
-    if (kick1) {                                                                                                  \
+    if (kick1)                                                                                                    \
+    {                                                                                                             \
         onNote(10, RB_MIDI_NOTE_KICK, 0x7F);                                                                      \
-    } else {                                                                                                      \
+    }                                                                                                             \
+    else                                                                                                          \
+    {                                                                                                             \
         offNote(10, RB_MIDI_NOTE_KICK, 0);                                                                        \
     }                                                                                                             \
-    if (kick2) {                                                                                                  \
+    if (kick2)                                                                                                    \
+    {                                                                                                             \
         onNote(10, RB_MIDI_NOTE_KICK2, 0x7F);                                                                     \
-    } else {                                                                                                      \
+    }                                                                                                             \
+    else                                                                                                          \
+    {                                                                                                             \
         offNote(10, RB_MIDI_NOTE_KICK2, 0);                                                                       \
     }
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
 #define SET_GH_PADS()                                             \
-    if (report->greenVelocity) {                                  \
+    if (report->greenVelocity)                                    \
+    {                                                             \
         onNote(10, RB_MIDI_NOTE_GREEN, report->greenVelocity);    \
-    } else {                                                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
         offNote(10, RB_MIDI_NOTE_GREEN, report->greenVelocity);   \
     }                                                             \
-    if (report->redVelocity) {                                    \
+    if (report->redVelocity)                                      \
+    {                                                             \
         onNote(10, RB_MIDI_NOTE_RED, report->redVelocity);        \
-    } else {                                                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
         offNote(10, RB_MIDI_NOTE_RED, report->redVelocity);       \
     }                                                             \
-    if (report->yellowVelocity) {                                 \
+    if (report->yellowVelocity)                                   \
+    {                                                             \
         onNote(10, RB_MIDI_NOTE_YELLOW, report->yellowVelocity);  \
-    } else {                                                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
         offNote(10, RB_MIDI_NOTE_YELLOW, report->yellowVelocity); \
     }                                                             \
-    if (report->blueVelocity) {                                   \
+    if (report->blueVelocity)                                     \
+    {                                                             \
         onNote(10, RB_MIDI_NOTE_BLUE, report->blueVelocity);      \
-    } else {                                                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
         offNote(10, RB_MIDI_NOTE_BLUE, report->blueVelocity);     \
     }                                                             \
-    if (report->orangeVelocity) {                                 \
-        onNote(10, RB_MIDI_NOTE_GREEN, report->orangeVelocity);  \
-    } else {                                                      \
-        offNote(10, RB_MIDI_NOTE_GREEN, report->orangeVelocity); \
+    if (report->orangeVelocity)                                   \
+    {                                                             \
+        onNote(10, RB_MIDI_NOTE_GREEN, report->orangeVelocity);   \
     }                                                             \
-    if (report->kickVelocity) {                                   \
+    else                                                          \
+    {                                                             \
+        offNote(10, RB_MIDI_NOTE_GREEN, report->orangeVelocity);  \
+    }                                                             \
+    if (report->kickVelocity)                                     \
+    {                                                             \
         onNote(10, RB_MIDI_NOTE_KICK, report->kickVelocity);      \
-    } else {                                                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
         offNote(10, RB_MIDI_NOTE_KICK, report->kickVelocity);     \
     }
 #else
-#define SET_GH_PADS()                                             \
-    if (report->greenVelocity) {                                  \
+#define SET_GH_PADS()                                                 \
+    if (report->greenVelocity)                                        \
+    {                                                                 \
         onNote(10, GH_REM_MIDI_NOTE_GREEN, report->greenVelocity);    \
-    } else {                                                      \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
         offNote(10, GH_REM_MIDI_NOTE_GREEN, report->greenVelocity);   \
-    }                                                             \
-    if (report->redVelocity) {                                    \
+    }                                                                 \
+    if (report->redVelocity)                                          \
+    {                                                                 \
         onNote(10, GH_REM_MIDI_NOTE_RED, report->redVelocity);        \
-    } else {                                                      \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
         offNote(10, GH_REM_MIDI_NOTE_RED, report->redVelocity);       \
-    }                                                             \
-    if (report->yellowVelocity) {                                 \
+    }                                                                 \
+    if (report->yellowVelocity)                                       \
+    {                                                                 \
         onNote(10, GH_REM_MIDI_NOTE_YELLOW, report->yellowVelocity);  \
-    } else {                                                      \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
         offNote(10, GH_REM_MIDI_NOTE_YELLOW, report->yellowVelocity); \
-    }                                                             \
-    if (report->blueVelocity) {                                   \
+    }                                                                 \
+    if (report->blueVelocity)                                         \
+    {                                                                 \
         onNote(10, GH_REM_MIDI_NOTE_BLUE, report->blueVelocity);      \
-    } else {                                                      \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
         offNote(10, GH_REM_MIDI_NOTE_BLUE, report->blueVelocity);     \
-    }                                                             \
-    if (report->orangeVelocity) {                                 \
+    }                                                                 \
+    if (report->orangeVelocity)                                       \
+    {                                                                 \
         onNote(10, GH_REM_MIDI_NOTE_ORANGE, report->orangeVelocity);  \
-    } else {                                                      \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
         offNote(10, GH_REM_MIDI_NOTE_ORANGE, report->orangeVelocity); \
-    }                                                             \
-    if (report->kickVelocity) {                                   \
+    }                                                                 \
+    if (report->kickVelocity)                                         \
+    {                                                                 \
         onNote(10, GH_REM_MIDI_NOTE_KICK, report->kickVelocity);      \
-    } else {                                                      \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
         offNote(10, GH_REM_MIDI_NOTE_KICK, report->kickVelocity);     \
+    }
+#endif
+
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+#define TRANSLATE_GH_MIDI(channel, note, velocity, func)       \
+    switch (note)                                     \
+    {                                                 \
+    case GH_MIDI_NOTE_GREEN:                          \
+        func(channel, RB_MIDI_NOTE_GREEN, velocity);  \
+        break;                                        \
+    case GH_MIDI_NOTE_RED:                            \
+        func(channel, RB_MIDI_NOTE_RED, velocity);    \
+        break;                                        \
+    case GH_MIDI_NOTE_YELLOW:                         \
+        func(channel, RB_MIDI_NOTE_YELLOW, velocity); \
+        break;                                        \
+    case GH_MIDI_NOTE_BLUE:                           \
+        func(channel, RB_MIDI_NOTE_BLUE, velocity);   \
+        break;                                        \
+    case GH_MIDI_NOTE_ORANGE:                         \
+        func(channel, RB_MIDI_NOTE_GREEN, velocity);  \
+        break;                                        \
+    default:                                          \
+        func(channel, note, velocity);                \
+        break;                                        \
+    }
+#else
+#define TRANSLATE_GH_MIDI(note, velocity)                 \
+    switch (note)                                         \
+    {                                                     \
+    case GH_MIDI_NOTE_GREEN:                              \
+        func(channel, GH_REM_MIDI_NOTE_GREEN, velocity);  \
+        break;                                            \
+    case GH_MIDI_NOTE_RED:                                \
+        func(channel, GH_REM_MIDI_NOTE_RED, velocity);    \
+        break;                                            \
+    case GH_MIDI_NOTE_YELLOW:                             \
+        func(channel, GH_REM_MIDI_NOTE_YELLOW, velocity); \
+        break;                                            \
+    case GH_MIDI_NOTE_BLUE:                               \
+        func(channel, GH_REM_MIDI_NOTE_BLUE, velocity);   \
+        break;                                            \
+    case GH_MIDI_NOTE_ORANGE:                             \
+        func(channel, GH_REM_MIDI_NOTE_ORANGE, velocity); \
+        break;                                            \
+    default:                                              \
+        func(channel, note, velocity);                    \
+        break;                                            \
     }
 #endif

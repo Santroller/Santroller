@@ -21,11 +21,11 @@ void tickBhDrum() {
         if (type == 0x90) {
             uint8_t note = data[3];
             uint8_t velocity = data[4];
-            onNote(channel, note, velocity);
+            TRANSLATE_GH_MIDI(channel, note, velocity, onNote);
         } else if (type == 0x80) {
             uint8_t note = data[3];
             uint8_t velocity = data[4];
-            offNote(channel, note, velocity);
+            TRANSLATE_GH_MIDI(channel, note, velocity, offNote);
         }
     }
 }

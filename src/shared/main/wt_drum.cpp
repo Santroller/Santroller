@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include "io.h"
 #include "shared_main.h"
+#include "state_translation/drums.h"
 #ifdef WT_DRUM_SPI_PORT
 static long lastTick = 0;
 static int missing = 0;
@@ -42,12 +43,12 @@ void tickWtDrum() {
             uint8_t note = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
             delayMicroseconds(50);
             uint8_t velocity = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
-            onNote(channel, note, velocity);
+            TRANSLATE_GH_MIDI(channel, note, velocity, onNote);
         } else if (type == 0x80) {
             uint8_t note = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
             delayMicroseconds(50);
             uint8_t velocity = spi_transfer(WT_DRUM_SPI_PORT, 0x00);
-            offNote(channel, note, velocity);
+            TRANSLATE_GH_MIDI(channel, note, velocity, offNote);
         }
         delayMicroseconds(10);
         WT_DRUM_CS_SET();

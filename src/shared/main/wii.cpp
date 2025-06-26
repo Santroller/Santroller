@@ -9,6 +9,7 @@
 #include "controllers.h"
 #include "io.h"
 #include "shared_main.h"
+#include "state_translation/drums.h"
 uint8_t wiiBytes;
 #ifdef INPUT_WII
 uint8_t wiiPointer = 0;
@@ -176,49 +177,7 @@ uint8_t* tickWii() {
         note = 0x7F - note;
         if (velocity || note) {
             // map gh notes to their rb counterparts in rb mode
-#if DEVICE_TYPE == ROCK_BAND_DRUMS
-            switch (note) {
-                case GH_MIDI_NOTE_GREEN:
-                    onNote(channel, RB_MIDI_NOTE_GREEN, velocity);
-                    break;
-                case GH_MIDI_NOTE_RED:
-                    onNote(channel, RB_MIDI_NOTE_RED, velocity);
-                    break;
-                case GH_MIDI_NOTE_YELLOW:
-                    onNote(channel, RB_MIDI_NOTE_YELLOW, velocity);
-                    break;
-                case GH_MIDI_NOTE_BLUE:
-                    onNote(channel, RB_MIDI_NOTE_BLUE, velocity);
-                    break;
-                case GH_MIDI_NOTE_ORANGE:
-                    onNote(channel, RB_MIDI_NOTE_GREEN, velocity);
-                    break;
-                default:
-                    onNote(channel, note, velocity);
-                    break;
-            }
-#else
-            switch (note) {
-                case GH_MIDI_NOTE_GREEN:
-                    onNote(channel, GH_REM_MIDI_NOTE_GREEN, velocity);
-                    break;
-                case GH_MIDI_NOTE_RED:
-                    onNote(channel, GH_REM_MIDI_NOTE_RED, velocity);
-                    break;
-                case GH_MIDI_NOTE_YELLOW:
-                    onNote(channel, GH_REM_MIDI_NOTE_YELLOW, velocity);
-                    break;
-                case GH_MIDI_NOTE_BLUE:
-                    onNote(channel, GH_REM_MIDI_NOTE_BLUE, velocity);
-                    break;
-                case GH_MIDI_NOTE_ORANGE:
-                    onNote(channel, GH_REM_MIDI_NOTE_ORANGE, velocity);
-                    break;
-                default:
-                    onNote(channel, note, velocity);
-                    break;
-            }
-#endif
+            TRANSLATE_GH_MIDI(channel, note, velocity, onNote);
         }
     }
     initialised = true;

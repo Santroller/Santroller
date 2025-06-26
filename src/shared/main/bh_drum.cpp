@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include "io.h"
 #include "shared_main.h"
+#include "state_translation/drums.h"
 #define DRUM_ADDR 0x0D
 #define BH_DRUM_PTR 0x10
 #ifdef BH_DRUM_TWI_PORT

@@ -240,30 +240,30 @@
 #endif
 
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
-#define TRANSLATE_GH_MIDI(channel, note, velocity, func)       \
-    switch (note)                                     \
-    {                                                 \
-    case GH_MIDI_NOTE_GREEN:                          \
-        func(channel, RB_MIDI_NOTE_GREEN, velocity);  \
-        break;                                        \
-    case GH_MIDI_NOTE_RED:                            \
-        func(channel, RB_MIDI_NOTE_RED, velocity);    \
-        break;                                        \
-    case GH_MIDI_NOTE_YELLOW:                         \
-        func(channel, RB_MIDI_NOTE_YELLOW, velocity); \
-        break;                                        \
-    case GH_MIDI_NOTE_BLUE:                           \
-        func(channel, RB_MIDI_NOTE_BLUE, velocity);   \
-        break;                                        \
-    case GH_MIDI_NOTE_ORANGE:                         \
-        func(channel, RB_MIDI_NOTE_GREEN, velocity);  \
-        break;                                        \
-    default:                                          \
-        func(channel, note, velocity);                \
-        break;                                        \
+#define TRANSLATE_GH_MIDI(channel, note, velocity, func) \
+    switch (note)                                        \
+    {                                                    \
+    case GH_MIDI_NOTE_GREEN:                             \
+        func(channel, RB_MIDI_NOTE_GREEN, velocity);     \
+        break;                                           \
+    case GH_MIDI_NOTE_RED:                               \
+        func(channel, RB_MIDI_NOTE_RED, velocity);       \
+        break;                                           \
+    case GH_MIDI_NOTE_YELLOW:                            \
+        func(channel, RB_MIDI_NOTE_YELLOW, velocity);    \
+        break;                                           \
+    case GH_MIDI_NOTE_BLUE:                              \
+        func(channel, RB_MIDI_NOTE_BLUE, velocity);      \
+        break;                                           \
+    case GH_MIDI_NOTE_ORANGE:                            \
+        func(channel, RB_MIDI_NOTE_GREEN, velocity);     \
+        break;                                           \
+    default:                                             \
+        func(channel, note, velocity);                   \
+        break;                                           \
     }
 #else
-#define TRANSLATE_GH_MIDI(note, velocity)                 \
+#define TRANSLATE_GH_MIDI(channel, note, velocity, func)  \
     switch (note)                                         \
     {                                                     \
     case GH_MIDI_NOTE_GREEN:                              \

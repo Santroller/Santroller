@@ -1312,7 +1312,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             else if (consoleType == PS3) {
                 dev->idVendor = REDOCTANE_VID;
                 dev->idProduct = PS3_TYPE;
-                dev->bcdDevice = 0x0108;
             }
 #elif DEVICE_TYPE == GAMEPAD
             else if (consoleType == PS3) {

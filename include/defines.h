@@ -28,13 +28,12 @@
 #define XINPUT_PRO_KEYS 15
 #define XINPUT_ARCADE_PAD 19
 #define XINPUT_TURNTABLE 23
-// Not real, but its easier for us to match this way
-#define XINPUT_GUITAR_HERO_LIVE 24
 #define XINPUT_PRO_GUITAR 25
-// Also not real, but nice for matching
-#define XINPUT_GUITAR_WT 26
 #define XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS 33
 #define XINPUT_SKYLANDERS 36
+// Next few arent real, but its easier for us to match this way
+#define XINPUT_GUITAR_HERO_LIVE 24
+#define XINPUT_GUITAR_WT 26
 
 #define PS4_GAMEPAD 0
 #define PS4_GUITAR 1
@@ -151,6 +150,7 @@
 #define DRUM_RB1 1
 #define DRUM_RB2 2
 #define DRUM_GH 3
+#define GUITAR_CHECK 1
 
 typedef enum {
     WII_NUNCHUK = 0x0000,

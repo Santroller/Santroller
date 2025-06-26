@@ -89,7 +89,7 @@ typedef struct
 } pio_usb_configuration_t;
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 #if defined(INPUT_USB_HOST) || defined(INPUT_SERIAL_MIDI)
 using namespace usbMidi;
 #endif
@@ -662,6 +662,11 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                                 usb_host_devices[i].type.drum_type = DRUM_RB2;
                             }
                         }
+                        if (usb_host_devices[i].type.sub_type == XINPUT_GUITAR_ALTERNATE && usb_host_devices[i].type.drum_type == GUITAR_CHECK) {
+                            // request capabilities
+                            send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
+                            usb_host_devices[i].type.drum_type == DRUM_UNKNOWN;
+                        }
                     }
                     // Link report
                     if (header->type == 0x0f)
@@ -678,10 +683,10 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         // Request capabilities so we can figure out WT guitars
                         if (sub_type == XINPUT_GUITAR_ALTERNATE)
                         {
-                            // request capabilities
-                            send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
+                            usb_host_devices[i].type.drum_type = GUITAR_CHECK;
                         }
                     }
+                    // Capabilities report
                     if (header->type == 0x05)
                     {
                         XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES *)report;

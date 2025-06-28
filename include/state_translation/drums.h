@@ -112,9 +112,9 @@
         {                                                                                                         \
             onNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, blueVelocity >> 1);                                              \
         }                                                                                                         \
-        if (red)                                                                                                  \
+        if (yellow)                                                                                                  \
         {                                                                                                         \
-            onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, redVelocity >> 1);                                             \
+            onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, yellowVelocity >> 1);                                             \
         }                                                                                                         \
         if (green)                                                                                                \
         {                                                                                                         \

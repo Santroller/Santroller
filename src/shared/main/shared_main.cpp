@@ -1876,19 +1876,19 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->leftStickX != SWITCH_2_STICK_CENTER)
             {
-                usb_host_data->leftStickX = (report->leftStickX - SWITCH_2_STICK_CENTER) << 5;
+                usb_host_data->leftStickX = (report->leftStickX - SWITCH_2_STICK_CENTER) << 4;
             }
             if (report->leftStickY != SWITCH_2_STICK_CENTER)
             {
-                usb_host_data->leftStickY = (((4096 - report->leftStickY) - SWITCH_2_STICK_CENTER)) << 5;
+                usb_host_data->leftStickY = ((report->leftStickY - SWITCH_2_STICK_CENTER)) << 4;
             }
             if (report->rightStickX != SWITCH_2_STICK_CENTER)
             {
-                usb_host_data->rightStickX = (report->rightStickX - SWITCH_2_STICK_CENTER) << 5;
+                usb_host_data->rightStickX = (report->rightStickX - SWITCH_2_STICK_CENTER) << 4;
             }
             if (report->rightStickY != SWITCH_2_STICK_CENTER)
             {
-                usb_host_data->rightStickY = (((4096 - report->rightStickY) - SWITCH_2_STICK_CENTER)) << 5;
+                usb_host_data->rightStickY = ((report->rightStickY - SWITCH_2_STICK_CENTER)) << 4;
             }
             break;
         }
@@ -2181,7 +2181,9 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 {
                     usb_host_data->slider = 0xFF;
                 }
-            } else {
+            }
+            else
+            {
                 usb_host_data->slider = slider;
             }
             break;
@@ -4004,27 +4006,22 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         if (pid == SWITCH_PRO_PID)
         {
             type->console_type = SWITCH;
-            type->sub_type = GAMEPAD;
         }
         if (pid == SWITCH_2_PRO_PID)
         {
             type->console_type = SWITCH2;
-            type->sub_type = GAMEPAD;
         }
         if (pid == SWITCH_2_GC_PID)
         {
             type->console_type = SWITCH2;
-            type->sub_type = GAMEPAD;
         }
         if (pid == SWITCH_2_JOY_R_PID)
         {
             type->console_type = SWITCH2;
-            type->sub_type = GAMEPAD;
         }
         if (pid == SWITCH_2_JOY_L_PID)
         {
             type->console_type = SWITCH2;
-            type->sub_type = GAMEPAD;
         }
         break;
     }
@@ -4194,6 +4191,11 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case WII_SQUIRE_MPA_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
+            break;
+        case XBOX_360_ION_ROCKER_VID:
+            type->console_type = XBOX360;
+            type->sub_type = ROCK_BAND_DRUMS;
+            type->drum_type = DRUM_RB2;
             break;
         }
 

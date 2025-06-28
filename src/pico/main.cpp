@@ -136,10 +136,6 @@ static void tick_usb()
 #if USB_HOST_STACK
     tuh_task();
 #endif
-    if (tud_suspended())
-    {
-        tud_remote_wakeup();
-    }
     tick();
 #ifdef INPUT_USB_HOST
     MIDI.read();
@@ -186,6 +182,10 @@ void go_to_sleep()
 
 void wakeup_360()
 {
+    if (tud_suspended())
+    {
+        tud_remote_wakeup();
+    }
     if (usb_configured())
     {
         return;
@@ -486,7 +486,6 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     case STREAM_DECK:
     case PS5:
     case SWITCH:
-    case SWITCH2:
     case UNKNOWN:
     case GENERIC:
     case STEPMANIAX:
@@ -498,6 +497,18 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
         break;
+    case SWITCH2:
+        printf("Found Switch 2 controller\r\n");
+        usb_host_devices[total_usb_host_devices].type = type;
+        total_usb_host_devices++;
+        if (type.sub_type == NON_CONTROLLER)
+        {
+            uint8_t buf[] = {0x03, 0x91, 0x00, 0x0d, 0x00, 0x08,
+                             0x00, 0x00, 0x01, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+            send_report_to_controller(dev_addr, instance, buf, sizeof(buf));
+        }
+        break;
+
     case PS3:
         // GHWT and GH5 guitars have the same vid and pid, but different tap bar functions. We can read the device name to actually determine what it is
         if (type.sub_type == GUITAR_HERO_GUITAR && XFER_RESULT_SUCCESS == tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf)))
@@ -565,6 +576,15 @@ void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const
                 if (xone_controller_send_init_packet(dev_addr, instance, usb_host_devices[i].xone_init_id))
                 {
                     usb_host_devices[i].xone_init_id++;
+                }
+            }
+            if (usb_host_devices[i].type.console_type == SWITCH2 && usb_host_devices[i].type.sub_type == NON_CONTROLLER)
+            {
+                if (!usb_host_devices[i].switch_sent_timeout)
+                {
+                    usb_host_devices[i].switch_sent_timeout = true;
+                    uint8_t buf[] = {0x09, 0x91, 0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0, 0};
+                    send_report_to_controller(dev_addr, instance, buf, sizeof(buf));
                 }
             }
         }
@@ -662,7 +682,8 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                                 usb_host_devices[i].type.drum_type = DRUM_RB2;
                             }
                         }
-                        if (usb_host_devices[i].type.sub_type == XINPUT_GUITAR_ALTERNATE && usb_host_devices[i].type.drum_type == GUITAR_CHECK) {
+                        if (usb_host_devices[i].type.sub_type == XINPUT_GUITAR_ALTERNATE && usb_host_devices[i].type.drum_type == GUITAR_CHECK)
+                        {
                             // request capabilities
                             send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
                             usb_host_devices[i].type.drum_type == DRUM_UNKNOWN;
@@ -742,23 +763,18 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             }
             if (usb_host_devices[i].type.console_type == SWITCH2 && usb_host_devices[i].type.sub_type == GAMEPAD)
             {
-                if (!usb_host_devices[i].switch_sent_handshake)
-                {
-                    usb_host_devices[i].switch_sent_handshake = true;
-                    uint8_t buf[] = {0x03, 0x91, 0x00, 0x0d, 0x00, 0x08,
-                                     0x00, 0x00, 0x01, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-                    send_report_to_controller(dev_addr, instance, buf, sizeof(buf));
-                }
-                else if (!usb_host_devices[i].switch_sent_timeout)
-                {
-                    usb_host_devices[i].switch_sent_timeout = true;
-                    uint8_t buf[] = {0x09, 0x91, 0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0, 0};
-                    send_report_to_controller(dev_addr, instance, buf, sizeof(buf));
-                }
-
                 if (report[0] != SWITCH_2_GC_FULL_REPORT_ID)
                 {
                     continue;
+                }
+            }
+            if (usb_host_devices[i].type.console_type == XBOX360)
+            {
+
+                XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
+                if (len != sizeof(XInputGamepad_Data_t))
+                {
+                    return;
                 }
             }
 
@@ -768,17 +784,14 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             if (usb_host_devices[i].type.console_type == XBOX360 && usb_host_devices[i].type.sub_type == XINPUT_DRUMS && usb_host_devices[i].type.drum_type == DRUM_UNKNOWN)
             {
                 XInputRockBandDrums_Data_t *drums = (XInputRockBandDrums_Data_t *)&usb_host_devices[i].report;
-                if (drums->rsize == sizeof(XInputRockBandDrums_Data_t))
+                if (drums->leftThumbClick)
                 {
-                    if (drums->leftThumbClick)
-                    {
-                        usb_host_devices[i].type.drum_type = DRUM_GH;
-                    }
-                    else
-                    {
-                        // Only RB1 kits are wired
-                        usb_host_devices[i].type.drum_type = DRUM_RB1;
-                    }
+                    usb_host_devices[i].type.drum_type = DRUM_GH;
+                }
+                else
+                {
+                    // Only RB1 kits are wired
+                    usb_host_devices[i].type.drum_type = DRUM_RB1;
                 }
             }
             return;

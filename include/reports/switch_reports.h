@@ -146,14 +146,16 @@ typedef struct
 
     uint8_t dpadUp : 1;   // leftShoulder, orange, l1
     uint8_t dpadDown : 1; // rightShoulder, spPedal, r1
+    uint8_t whammy : 1; // l2
+    uint8_t tilt : 1; // r2
+
     uint8_t back : 1;     // back, select
     uint8_t start : 1;    // start
+    uint8_t : 2;
 
     uint8_t guide : 1; // ps
     uint8_t : 2;
-    uint8_t whammy : 1;
-    uint8_t tilt : 1;
-    uint8_t : 2;
+    
 
     // To make things easier, we use bitfields here, and then we map to a proper hat later
     union

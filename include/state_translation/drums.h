@@ -80,7 +80,7 @@
             /* Green */                                                                                           \
             if (!(up || down))                                                                                    \
             {                                                                                                     \
-                onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, blueVelocity >> 1);                                         \
+                onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, greenVelocity >> 1);                                        \
                 green = false;                                                                                    \
                 cymbal = false;                                                                                   \
             }                                                                                                     \

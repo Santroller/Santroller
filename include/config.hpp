@@ -12,3 +12,5 @@
 
 bool save(proto_Config *config);
 bool load(proto_Config &config);
+uint32_t copy_config(uint8_t* buffer,uint32_t start);
+uint32_t copy_config_info(uint8_t* buffer);

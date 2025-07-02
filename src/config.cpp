@@ -122,6 +122,51 @@ bool save(proto_Config *config)
     return true;
 }
 
+uint32_t copy_config_info(uint8_t* buffer) {
+    const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
+    const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(flashEnd - sizeof(ConfigFooter));
+    proto_ConfigInfo info proto_ConfigInfo_init_zero;
+    info.dataCrc = footer.dataCrc;
+    info.dataSize = footer.dataSize;
+    info.magic = footer.magic;
+    pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
+    if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
+    {
+        return 0;
+    }
+    return outputStream.bytes_written;
+}
+
+
+uint32_t copy_config(uint8_t* buffer,uint32_t start) {
+    const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
+    const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(flashEnd - sizeof(ConfigFooter));
+
+    // Check for presence of magic value
+    if (footer.magic != FOOTER_MAGIC)
+    {
+        return 0;
+    }
+
+    // Check if dataSize exceeds the reserved space
+    if (footer.dataSize + sizeof(ConfigFooter) > EEPROM_SIZE_BYTES)
+    {
+        return 0;
+    }
+
+    const uint8_t *dataPtr = flashEnd - sizeof(ConfigFooter) - footer.dataSize;
+
+    // Verify CRC32 hash
+    if (CRC32::calculate(dataPtr, footer.dataSize) != footer.dataCrc)
+    {
+        return 0;
+    }
+    const uint32_t remaining = footer.dataSize-start;
+    const uint32_t size = remaining > 64 ? 64 : remaining;
+    memcpy(buffer, dataPtr+start, size);
+    return size;
+}
+
 bool load(proto_Config &config)
 {
 

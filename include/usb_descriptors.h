@@ -28,6 +28,7 @@
 enum
 {
     REPORT_ID_CONFIG = 1,
+    REPORT_ID_CONFIG_INFO = 2,
     REPORT_ID_COUNT
 };
 

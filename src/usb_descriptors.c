@@ -68,13 +68,33 @@ uint8_t const *tud_descriptor_device_cb(void)
   return (uint8_t const *)&desc_device;
 }
 
+#define TUD_HID_REPORT_DESC_GENERIC_INFEATURE(report_size, ...)          \
+  HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                            \
+      HID_USAGE(0x01),                                                   \
+      HID_COLLECTION(HID_COLLECTION_APPLICATION), /* Report ID if any */ \
+      __VA_ARGS__                                 /* Input */            \
+          HID_USAGE(0x02),                                               \
+      HID_LOGICAL_MIN(0x00),                                             \
+      HID_LOGICAL_MAX_N(0xff, 2),                                        \
+      HID_REPORT_SIZE(8),                                                \
+      HID_REPORT_COUNT(report_size),                                     \
+      HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), /* Output */  \
+      HID_USAGE(0x03),                                                   \
+      HID_LOGICAL_MIN(0x00),                                             \
+      HID_LOGICAL_MAX_N(0xff, 2),                                        \
+      HID_REPORT_SIZE(8),                                                \
+      HID_REPORT_COUNT(report_size),                                     \
+      HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                \
+      HID_COLLECTION_END
+
 //--------------------------------------------------------------------+
 // HID Report Descriptor
 //--------------------------------------------------------------------+
 
 uint8_t const desc_hid_report[] =
     {
-        TUD_HID_REPORT_DESC_GENERIC_INOUT(64,HID_REPORT_ID(REPORT_ID_CONFIG))};
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(64, HID_REPORT_ID(REPORT_ID_CONFIG)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(64, HID_REPORT_ID(REPORT_ID_CONFIG_INFO))};
 
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor

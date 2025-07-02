@@ -50,7 +50,7 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint16_
   (void) instance;
   (void) len;
 }
-
+uint32_t start = 0;
 // Invoked when received GET_REPORT control request
 // Application must fill buffer report's content and return its length.
 // Return zero will cause the stack to STALL request
@@ -62,6 +62,15 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
   (void) report_type;
   (void) buffer;
   (void) reqlen;
+  if (report_type == HID_REPORT_TYPE_FEATURE && report_id == REPORT_ID_CONFIG) {
+    uint32_t ret = copy_config(buffer, start);
+    start += ret;
+    return ret;
+  }
+  if (report_type == HID_REPORT_TYPE_FEATURE && report_id == REPORT_ID_CONFIG_INFO) {
+    start = 0;
+    return copy_config_info(buffer);
+  }
 
   return 0;
 }

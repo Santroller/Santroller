@@ -3,17 +3,17 @@ package proto;
 
 import "input.proto";
 import "enums.proto";
-import "device.proto";
+import "device.proto"; 
 
 message Profile {
-  repeated Mapping mappings = 1;
-  required string name = 2;
-  repeated Mapping activationMethod = 3;
-  required SubType deviceToEmulate = 4;
-}
+  required FaceButtonMappingMode faceButtonMappingMode = 1;
+  repeated Mapping activationMethod = 2;
+  repeated Mapping mappings = 3;
+  required string name = 4;
+  required SubType deviceToEmulate = 5;
+} 
 
 message Config {
   repeated Device devices = 1;
-  required FaceButtonMappingMode faceButtonMappingMode = 2;
-  repeated Profile profiles = 3;
+  repeated Profile profiles = 2;
 }

@@ -1,3 +1,17 @@
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 2.1.1)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.1.1)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
 cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -63,9 +77,12 @@ message(STATUS ${TARGET})
 add_executable(
   ${TARGET}
   src/main.cpp
+  src/usb_descriptors.c
+  src/config.cpp
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c
   ${PROTO_OUTPUT_DIR}/config.pb.c
+  ${PROTO_OUTPUT_DIR}/input.pb.c
 )
 target_include_directories(${TARGET} PUBLIC
   ${SRC}
@@ -87,6 +104,8 @@ pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
 target_link_libraries(
   ${TARGET}
   pico_stdlib
+  FlashPROM
+  CRC32
   midi
   peripherals
   accelerometer
@@ -122,6 +141,7 @@ target_link_libraries(
   pico_mem_ops
   pico_bootsel_via_double_reset
   tinyusb_host
+  tinyusb_device
   tinyusb_pico_pio_usb
   tinyusb_device_unmarked)
 

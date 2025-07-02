@@ -63,7 +63,7 @@ message Input {
 message ButtonMapping {
   required ButtonType button = 1;
   required bool inverted = 2;
-  optional Input pressureInput = 3;
+  optional Input pressureInput = 3; // if there is no pressureInput, then set the pressures to max when the button is pressed
   optional AnalogToDigitalTriggerType trigger = 4;
 }
 

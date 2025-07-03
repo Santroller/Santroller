@@ -196,6 +196,7 @@ typedef enum {
     PSX_GUNCON,
     PSX_FLIGHTSTICK,
     PSX_MOUSE,
+    PSX_TAIKO,
     PSX_NO_DEVICE
 } PsxControllerType_t;
 

@@ -564,7 +564,6 @@ void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance)
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
 }
-bool wasXb1Input = false;
 void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len)
 {
     // If there are xb1 init packets to send, send them
@@ -620,18 +619,14 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 if (header->command == GIP_VIRTUAL_KEYCODE)
                 {
                     GipKeystroke_t *keystroke = (GipKeystroke_t *)report;
-                    if (wasXb1Input)
-                    {
-                        XboxOneInputHeader_Data_t *gamepad = (XboxOneInputHeader_Data_t *)(&(usb_host_devices[i].report));
-                        gamepad->guide = keystroke->pressed;
-                    }
-                    return;
+                    usb_host_devices[i].type.xone_guide = keystroke->pressed;
+                    printf("%02x %02x\r\n", keystroke->keycode, keystroke->pressed);
+                    continue;
                 }
                 if (header->command != GHL_HID_REPORT && header->command != GIP_INPUT_REPORT)
                 {
-                    return;
+                    continue;
                 }
-                wasXb1Input = header->command == GIP_INPUT_REPORT;
             }
             if ((millis() - usb_host_devices[i].xone_init_id) < 5000)
             {
@@ -651,7 +646,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 // Corrupt report, ignore
                 if (len < sizeof(XBOX_WIRELESS_HEADER))
                 {
-                    return;
+                    continue;
                 }
                 XBOX_WIRELESS_HEADER *header = (XBOX_WIRELESS_HEADER *)report;
                 if (header->id == 0x08)
@@ -696,7 +691,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         XBOX_WIRELESS_LINK_REPORT *linkReport = (XBOX_WIRELESS_LINK_REPORT *)report;
                         if (linkReport->always_0xCC != 0xCC)
                         {
-                            return;
+                            continue;
                         }
                         uint8_t sub_type = linkReport->subtype & ~0x80;
                         usb_host_devices[i].type.sub_type = sub_type;
@@ -714,7 +709,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES *)report;
                         if (caps->always_0x12 != 0x12)
                         {
-                            return;
+                            continue;
                         }
                         printf("Found capabilities: %02x %02x\r\n", dev_addr, instance);
                         if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0)
@@ -724,7 +719,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         }
                     }
                 }
-                return;
+                continue;
             }
             if (usb_host_devices[i].type.console_type == STREAM_DECK && report[0] != STREAM_DECK_INPUT_REPORT_ID)
             {

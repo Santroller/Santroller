@@ -235,7 +235,6 @@ uint8_t *tickPS2() {
     // We only want to reinit if we recevied several bad packets in a row.
     if (initialised) {
         in = autoShiftData(port, commandPollInput, sizeof(commandPollInput));
-
         if (in != NULL) {
             invalidCount = 0;
             if (isConfigReply(in)) {

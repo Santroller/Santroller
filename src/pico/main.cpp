@@ -247,6 +247,7 @@ void setup()
         windows_in_hid = false;
         xboxAuthValid = false;
         consoleType = UNIVERSAL;
+        pico_is_sleeping = false;
     }
     generateSerialString(&serialstring, consoleType);
     printf("ConsoleType: %d\r\n", consoleType);

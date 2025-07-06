@@ -1287,7 +1287,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->whammy)
             {
-                usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER) << 1;
+                usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER);
             }
             if (report->pickup)
             {

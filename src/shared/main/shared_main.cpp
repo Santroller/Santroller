@@ -1032,17 +1032,19 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         case ROCK_BAND_DRUMS:
         {
             PCRockBandDrums_Data_t *report = (PCRockBandDrums_Data_t *)data;
-            usb_host_data->a |= report->a;
-            usb_host_data->b |= report->b;
-            usb_host_data->x |= report->x;
-            usb_host_data->y |= report->y;
+            if (!report->padFlag && !report->cymbalFlag) {
+                usb_host_data->a |= report->a;
+                usb_host_data->b |= report->b;
+                usb_host_data->x |= report->x;
+                usb_host_data->y |= report->y;
+                usb_host_data->dpadLeft |= left;
+                usb_host_data->dpadRight |= right;
+                usb_host_data->dpadUp |= up;
+                usb_host_data->dpadDown |= down;
+            }
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
-            usb_host_data->dpadLeft |= left;
-            usb_host_data->dpadRight |= right;
-            usb_host_data->dpadUp |= up;
-            usb_host_data->dpadDown |= down;
             uint8_t redVelocity = report->redVelocity;
             uint8_t greenVelocity = report->greenVelocity;
             uint8_t yellowVelocity = report->yellowVelocity;
@@ -1384,17 +1386,20 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             uint8_t blueVelocity = ~report->blueVelocity;
             bool kick1 = report->leftShoulder;
             bool kick2 = report->rightShoulder;
-            usb_host_data->a |= report->a;
-            usb_host_data->b |= report->b;
-            usb_host_data->x |= report->x;
-            usb_host_data->y |= report->y;
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
-            usb_host_data->dpadLeft |= left;
-            usb_host_data->dpadRight |= right;
-            usb_host_data->dpadUp |= up;
-            usb_host_data->dpadDown |= down;
+            if (!report->padFlag && !report->cymbalFlag)
+            {
+                usb_host_data->a |= report->a;
+                usb_host_data->b |= report->b;
+                usb_host_data->x |= report->x;
+                usb_host_data->y |= report->y;
+                usb_host_data->dpadLeft |= left;
+                usb_host_data->dpadRight |= right;
+                usb_host_data->dpadUp |= up;
+                usb_host_data->dpadDown |= down;
+            }
             SET_RB_PADS();
             break;
         }
@@ -2232,14 +2237,18 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 uint8_t blueVelocity = xinput_rb_velocity_positive(report->blueVelocity);
 
                 SET_RB_PADS();
-                usb_host_data->a |= report->a;
-                usb_host_data->b |= report->b;
-                usb_host_data->x |= report->x;
-                usb_host_data->y |= report->y;
-                usb_host_data->dpadLeft = report->dpadLeft;
-                usb_host_data->dpadRight = report->dpadRight;
-                usb_host_data->dpadUp = report->dpadUp;
-                usb_host_data->dpadDown = report->dpadDown;
+
+                if (!report->padFlag && !report->cymbalFlag)
+                {
+                    usb_host_data->a |= report->a;
+                    usb_host_data->b |= report->b;
+                    usb_host_data->x |= report->x;
+                    usb_host_data->y |= report->y;
+                    usb_host_data->dpadLeft = report->dpadLeft;
+                    usb_host_data->dpadRight = report->dpadRight;
+                    usb_host_data->dpadUp = report->dpadUp;
+                    usb_host_data->dpadDown = report->dpadDown;
+                }
                 usb_host_data->back |= report->back;
                 usb_host_data->start |= report->start;
                 usb_host_data->guide |= report->guide;

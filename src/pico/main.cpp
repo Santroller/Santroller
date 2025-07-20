@@ -620,7 +620,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 {
                     GipKeystroke_t *keystroke = (GipKeystroke_t *)report;
                     usb_host_devices[i].type.xone_guide = keystroke->pressed;
-                    printf("%02x %02x\r\n", keystroke->keycode, keystroke->pressed);
                     continue;
                 }
                 if (header->command != GHL_HID_REPORT && header->command != GIP_INPUT_REPORT)
@@ -630,7 +629,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             }
             if ((millis() - usb_host_devices[i].xone_init_id) < 5000)
             {
-                if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_PRO_KEYS)
+                if (usb_host_devices[i].type.console_type == PS3 && (usb_host_devices[i].type.sub_type == ROCK_BAND_PRO_KEYS || usb_host_devices[i].type.sub_type == ROCK_BAND_PRO_GUITAR_MUSTANG || usb_host_devices[i].type.sub_type == ROCK_BAND_PRO_GUITAR_SQUIRE))
                 {
                     uint8_t hid_command_enable[40] = {
                         0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
@@ -767,10 +766,11 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             if (usb_host_devices[i].type.console_type == XBOX360)
             {
 
-                XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)&usb_host_devices[i].report;
-                if (len != sizeof(XInputGamepad_Data_t))
+                XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)report;
+                // Drop any corrupted or invalid packets
+                if (len != sizeof(XInputGamepad_Data_t) || gamepad->rsize != len)
                 {
-                    return;
+                    continue;
                 }
             }
 
@@ -790,7 +790,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     usb_host_devices[i].type.drum_type = DRUM_RB1;
                 }
             }
-            return;
         }
     }
 }

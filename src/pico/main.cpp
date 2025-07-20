@@ -283,6 +283,7 @@ void setup()
     MIDI.setHandleNoteOff(offNote);
     MIDI.setHandleControlChange(onControlChange);
     MIDI.setHandlePitchBend(onPitchBend);
+    MIDI.setHandleSystemExclusive(onSysEx);
 #endif
 #ifdef INPUT_SERIAL_MIDI
     MIDI2.begin(0);
@@ -290,6 +291,7 @@ void setup()
     MIDI2.setHandleNoteOff(offNote);
     MIDI2.setHandleControlChange(onControlChange);
     MIDI2.setHandlePitchBend(onPitchBend);
+    MIDI2.setHandleSystemExclusive(onSysEx);
 #endif
 #endif
 }

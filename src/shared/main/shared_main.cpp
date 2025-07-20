@@ -24,6 +24,12 @@
 #include "util.h"
 #include "wii.h"
 #include "wt_drum.h"
+#define UP 1 << 0
+#define DOWN 1 << 1
+#define LEFT 1 << 2
+#define RIGHT 1 << 3
+static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
+static const uint8_t dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RIGHT, DOWN, DOWN | LEFT, LEFT, UP | LEFT};
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
@@ -111,6 +117,76 @@ void onPitchBend(uint8_t channel, int pitch)
     // pitchbend is signed 14 bit
     printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
     midiData.midiPitchWheel = pitch << 2;
+}
+PS3RockBandProGuitar_Data_t sysexGuitar = {0};
+void onSysEx(uint8_t *data, unsigned size)
+{
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+    uint8_t type, fret, velocity;
+    type = data[3];
+    uint8_t string = (size >= 5) ? (data[4] - 1) % 6 : 0;
+    // changes to the fret state
+    if ((type == 0x01) && (size >= 6))
+    {
+        fret = data[5];
+        // offset fret numbers relative to the base note of each string
+        switch (string)
+        {
+        case 0:
+            sysexGuitar.lowEFret = fret - 0x40;
+            break;
+        case 1:
+            sysexGuitar.aFret = fret - 0x3B;
+            break;
+        case 2:
+            sysexGuitar.dFret = fret - 0x37;
+            break;
+        case 3:
+            sysexGuitar.gFret = fret - 0x32;
+            break;
+        case 4:
+            sysexGuitar.bFret = fret - 0x2D;
+            break;
+        case 5:
+            sysexGuitar.highEFret = fret - 0x28;
+            break;
+        }
+    }
+    // picking events
+    else if ((type == 0x05) && (size >= 6))
+    {
+        velocity = data[5];
+        switch (string)
+        {
+        case 0:
+            sysexGuitar.lowEFretVelocity = velocity;
+            break;
+        case 1:
+            sysexGuitar.aFretVelocity = velocity;
+            break;
+        case 2:
+            sysexGuitar.dFretVelocity = velocity;
+            break;
+        case 3:
+            sysexGuitar.gFretVelocity = velocity;
+            break;
+        case 4:
+            sysexGuitar.bFretVelocity = velocity;
+            break;
+        case 5:
+            sysexGuitar.highEFretVelocity = velocity;
+            break;
+        }
+    }
+    // button events
+    else if ((type == 0x08) && (size >= 7))
+    {
+        // PS3 style report starts at byte 4
+        memcpy(&sysexGuitar, data + 4, 3);
+        // tilt however is not in the same spot as a ps3 report
+        sysexGuitar.tilt = (data[6] & 0x40) ? 0x7f : 0x40;
+    }
+#endif
 }
 uint8_t tmp = 0;
 long clone_guitar_timer = 0;
@@ -244,12 +320,6 @@ uint8_t ledStateMpr121 = 0;
 uint8_t ledStateMpr121Select = 0;
 uint8_t lastLedStateMpr121 = 0;
 #endif
-#define UP 1 << 0
-#define DOWN 1 << 1
-#define LEFT 1 << 2
-#define RIGHT 1 << 3
-static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
-static const uint8_t dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RIGHT, DOWN, DOWN | LEFT, LEFT, UP | LEFT};
 
 uint8_t gh5_mapping[] = {
     0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
@@ -1032,7 +1102,8 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         case ROCK_BAND_DRUMS:
         {
             PCRockBandDrums_Data_t *report = (PCRockBandDrums_Data_t *)data;
-            if (!report->padFlag && !report->cymbalFlag) {
+            if (!report->padFlag && !report->cymbalFlag)
+            {
                 usb_host_data->a |= report->a;
                 usb_host_data->b |= report->b;
                 usb_host_data->x |= report->x;
@@ -2799,7 +2870,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wii.h"
 #include "inputs/wt_drum.h"
 #include "inputs/wt_neck.h"
-
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+    convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
+#endif
     TICK_SHARED;
     if (!startedInactivityPulse)
     {
@@ -3641,7 +3714,7 @@ void tick(void)
         reset_usb();
     }
     // Only sleep if the timeout has passed and we aren't connected over USB
-    if (SLEEP_PIN != -1 && SLEEP_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= SLEEP_INACTIVITY_TIMEOUT_MS && !usb_configured())
+    if (SLEEP_PIN != -1 && SLEEP_INACTIVITY_TIMEOUT_SEC && millis() - lastInputActivity >= ((uint32_t)SLEEP_INACTIVITY_TIMEOUT_SEC * 1000) && !usb_configured())
     {
         go_to_sleep();
     }
@@ -3665,7 +3738,7 @@ void tick(void)
     // the device is plugged in again
     if (slave_initted)
     {
-        if (RGB_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS)
+        if (RGB_INACTIVITY_TIMEOUT_SEC && millis() - lastInputActivity >= (((uint32_t)RGB_INACTIVITY_TIMEOUT_SEC) * 1000))
         {
             memset(ledStatePeripheral, 0, sizeof(ledStatePeripheral));
         }
@@ -3681,7 +3754,7 @@ void tick(void)
     }
 #endif
 #ifdef TICK_LED
-    if (RGB_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS)
+    if (RGB_INACTIVITY_TIMEOUT_SEC && millis() - lastInputActivity >= (((uint32_t)RGB_INACTIVITY_TIMEOUT_SEC) * 1000))
     {
         memset(ledState, 0, sizeof(ledState));
     }
@@ -3693,7 +3766,7 @@ void tick(void)
 #endif
 
 #if LED_COUNT_MPR121
-    if (RGB_INACTIVITY_TIMEOUT_MS && millis() - lastInputActivity >= RGB_INACTIVITY_TIMEOUT_MS)
+    if (RGB_INACTIVITY_TIMEOUT_SEC && millis() - lastInputActivity >= (((uint32_t)RGB_INACTIVITY_TIMEOUT_SEC) * 1000))
     {
         ledStateMpr121 = 0;
     }

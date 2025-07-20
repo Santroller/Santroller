@@ -27,6 +27,7 @@ void on_connect(void);
 void set_console_type(uint8_t new_console_type);
 void authentication_successful(void);
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity);
+void onSysEx(uint8_t* array, unsigned size);
 
 void offNote(uint8_t channel, uint8_t note, uint8_t velocity);
 

@@ -123,12 +123,12 @@ void onSysEx(uint8_t *data, unsigned size)
 {
 #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
     uint8_t type, fret, velocity;
-    type = data[3];
-    uint8_t string = (size >= 5) ? (data[4] - 1) % 6 : 0;
+    type = data[5];
+    uint8_t string = (size >= 5) ? (data[6] - 1) % 6 : 0;
     // changes to the fret state
     if ((type == 0x01) && (size >= 6))
     {
-        fret = data[5];
+        fret = data[7];
         // offset fret numbers relative to the base note of each string
         switch (string)
         {
@@ -155,7 +155,7 @@ void onSysEx(uint8_t *data, unsigned size)
     // picking events
     else if ((type == 0x05) && (size >= 6))
     {
-        velocity = data[5];
+        velocity = data[7];
         switch (string)
         {
         case 0:
@@ -182,9 +182,9 @@ void onSysEx(uint8_t *data, unsigned size)
     else if ((type == 0x08) && (size >= 7))
     {
         // PS3 style report starts at byte 4
-        memcpy(&sysexGuitar, data + 4, 3);
+        memcpy(&sysexGuitar, data + 6, 3);
         // tilt however is not in the same spot as a ps3 report
-        sysexGuitar.tilt = (data[6] & 0x40) ? 0x7f : 0x40;
+        sysexGuitar.tilt = (data[8] & 0x40) ? 0x7f : 0x40;
     }
 #endif
 }
@@ -992,7 +992,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->leftStickY != PS3_STICK_CENTER)
             {
-                usb_host_data->leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
+                usb_host_data->leftStickY = (report->leftStickY - PS3_STICK_CENTER) << 8;
             }
             if (report->rightStickX != PS3_STICK_CENTER)
             {
@@ -1000,7 +1000,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->rightStickY != PS3_STICK_CENTER)
             {
-                usb_host_data->rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
+                usb_host_data->rightStickY = (report->rightStickY - PS3_STICK_CENTER) << 8;
             }
             break;
         }
@@ -1358,11 +1358,12 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 usb_host_data->soloBlue |= report->x;
                 usb_host_data->soloOrange |= report->leftShoulder;
             }
-            if (report->whammy)
+            // both whammy and pickup reset to a neutral state when not in use
+            if (report->whammy != 0x7F)
             {
                 usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER);
             }
-            if (report->pickup)
+            if (report->pickup != 0x7F)
             {
                 usb_host_data->pickup = report->pickup;
             }

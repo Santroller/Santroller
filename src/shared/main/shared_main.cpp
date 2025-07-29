@@ -1358,14 +1358,15 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 usb_host_data->soloBlue |= report->x;
                 usb_host_data->soloOrange |= report->leftShoulder;
             }
-            if (report->whammy)
+            // whammy + pickup resets to a neutral state when not in use
+            // so we opt to store the last known state and use that when in neutral
+            if (device_type.whammy)
             {
-                usb_host_data->whammy = (report->whammy - PS3_STICK_CENTER);
+                usb_host_data->whammy = device_type.whammy;
             }
-            // pickup resets to a neutral state when not in use
-            if (report->pickup && report->pickup != 0x7F)
+            if (device_type.pickup)
             {
-                usb_host_data->pickup = report->pickup;
+                usb_host_data->pickup = device_type.pickup;
             }
             break;
         }

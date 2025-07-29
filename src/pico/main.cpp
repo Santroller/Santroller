@@ -775,6 +775,16 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     continue;
                 }
             }
+            if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_GUITAR) {
+                PS3RockBandGuitar_Data_t *guitar = (PS3RockBandGuitar_Data_t *)report;
+                // ignore neutral value from whammy and pickup
+                if (guitar->whammy != 0x7F) {
+                    usb_host_devices[i].type.whammy = guitar->whammy;
+                }
+                if (guitar->pickup != 0x7F) {
+                    usb_host_devices[i].type.pickup = guitar->pickup;
+                }
+            }
 
             memcpy(&usb_host_devices[i].report, report, len);
             usb_host_devices[i].report_length = len;

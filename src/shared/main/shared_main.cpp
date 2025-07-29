@@ -992,7 +992,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->leftStickY != PS3_STICK_CENTER)
             {
-                usb_host_data->leftStickY = (report->leftStickY - PS3_STICK_CENTER) << 8;
+                usb_host_data->leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
             }
             if (report->rightStickX != PS3_STICK_CENTER)
             {
@@ -1000,7 +1000,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->rightStickY != PS3_STICK_CENTER)
             {
-                usb_host_data->rightStickY = (report->rightStickY - PS3_STICK_CENTER) << 8;
+                usb_host_data->rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
             }
             break;
         }

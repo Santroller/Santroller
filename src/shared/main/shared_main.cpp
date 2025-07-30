@@ -2563,7 +2563,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->dpadDown = report->dpadDown;
             if (report->tilt)
             {
-                usb_host_data->tilt = report->tilt << 8;
+                usb_host_data->tilt = report->tilt << 7;
             }
             if (report->whammy)
             {

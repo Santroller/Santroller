@@ -2872,9 +2872,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wii.h"
 #include "inputs/wt_drum.h"
 #include "inputs/wt_neck.h"
-#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
-    convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
-#endif
+// #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+//     convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
+// #endif
     TICK_SHARED;
     if (!startedInactivityPulse)
     {

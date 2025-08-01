@@ -2851,6 +2851,7 @@ bool greenPad;
 bool yellowCymbal;
 bool blueCymbal;
 long lastCymbalOff;
+long lastGreenOff = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type)
 {
     uint8_t packet_size = 0;
@@ -3466,13 +3467,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
                 if (!report->cymbalFlag && ready_for_next_packet())
                 {
+                    if (greenCymbal) {
+                        lastGreenOff = millis();
+                    }
                     greenCymbal = false;
                     yellowCymbal = false;
                     blueCymbal = false;
                 }
-                if (!report->padFlag && ready_for_next_packet())
+                if (!report->padFlag && ready_for_next_packet() && greenPad)
                 {
                     greenPad = false;
+                    lastGreenOff = millis();
                 }
 #endif
 

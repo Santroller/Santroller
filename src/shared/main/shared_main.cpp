@@ -1393,7 +1393,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->dpadDown |= down;
             if (report->tilt != PS3_ACCEL_CENTER)
             {
-                usb_host_data->tilt = (report->tilt - PS3_ACCEL_CENTER) << 6;
+                usb_host_data->tilt = (report->tilt - PS3_ACCEL_CENTER) << 8;
             }
             if (report->whammy)
             {

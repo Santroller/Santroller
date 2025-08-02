@@ -12,7 +12,7 @@ Measured by connecting the controller to a target device over USB, having that t
 | :----------- | :------------- | :----------------- | :----------------- | :------------------- | :---------------------------------- |
 | connectivity | usb            | wireless (adapter) | wireless (adapter) | usb                  | usb                                 |
 | console      | Xbox 360       | PS3                | PS3                | PS3                  | Generic                             |
-| poll rate    | 1 ms           | 10 ms              | 10 ms              | 10 ms                | 1 ms                                |
+| poll rate    | 4 ms           | 10 ms              | 10 ms              | 10 ms                | 1 ms                                |
 | min          | 3.22 ms        | 9.03 ms            | 15.21 ms           | 0.9 ms               | 0.52 ms                             |
 | max          | 12.04 ms       | 36.74 ms           | 44.46 ms           | 29.6 ms              | 31.93 ms                            |
 | avg          | 7.53 ms        | 18.87 ms           | 29.61 ms           | 10.45 ms             | 15.97 ms                            |

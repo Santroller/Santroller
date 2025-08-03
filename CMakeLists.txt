@@ -77,7 +77,15 @@ message(STATUS ${TARGET})
 add_executable(
   ${TARGET}
   src/main.cpp
-  src/usb_descriptors.c
+  src/usb/usb_descriptors.c
+  src/usb/device/xinput_device.cpp
+  src/usb/host/xinput_host.cpp
+  src/usb/device/xone_device.cpp
+  src/usb/host/xone_host.cpp
+  src/usb/device/ogxbox_device.cpp
+  src/usb/device/ps_device.cpp
+  src/usb/host/ogxbox_host.cpp
+  src/usb/device/gh_arcade_device.cpp
   src/config.cpp
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c
@@ -114,6 +122,7 @@ target_link_libraries(
   dj_hero_turntable
   guitar_hero_5_neck
   xgip_protocol
+  xsm3
   matrix
   max1704x
   mpr121

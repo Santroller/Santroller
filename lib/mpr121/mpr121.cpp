@@ -59,8 +59,6 @@ void MPR121::init() {
         interface->writeRegister(MPR121_I2CADDR_DEFAULT, MPR121_GPIOCTL2, 0xFF);
     }
     // enable electrodes and start MPR121
-    uint8_t ECR_SETTING =
-        0b10000000 + touchpadCount;
     interface->writeRegister(MPR121_I2CADDR_DEFAULT, MPR121_ECR, 0b10000000 + touchpadCount);  // 5 bits for baseline tracking & proximity disabled + X
                                                                                                // amount of electrodes running (12)
 }

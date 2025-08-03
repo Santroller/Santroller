@@ -77,11 +77,13 @@ struct ConfigFooter
 };
 
 static const uint32_t FOOTER_MAGIC = 0xd2f1e365;
-bool save_device(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
+bool save_device(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
     // we just have to encode the entire device map by hand here, we write them all at once.
     return true;
 }
-bool save_profile(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
+bool save_profile(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
     // We just have to encode all the profiles by hand here, we write them all at once.
     return true;
 }
@@ -122,7 +124,8 @@ bool save(proto_Config *config)
     return true;
 }
 
-uint32_t copy_config_info(uint8_t* buffer) {
+uint32_t copy_config_info(uint8_t *buffer)
+{
     const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(flashEnd - sizeof(ConfigFooter));
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
@@ -137,8 +140,44 @@ uint32_t copy_config_info(uint8_t* buffer) {
     return outputStream.bytes_written;
 }
 
+bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
+{
+    ConfigFooter* footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    proto_ConfigInfo info proto_ConfigInfo_init_zero;
+    pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
+    if (!pb_decode(&inputStream, proto_ConfigInfo_fields, &info))
+    {
+        printf("Didn't decode info?\r\n");
+        return false;
+    }
+    footer->dataCrc = info.dataCrc;
+    footer->dataSize = info.dataSize;
+    footer->magic = info.magic;
+    return true;
+}
 
-uint32_t copy_config(uint8_t* buffer,uint32_t start) {
+bool write_config(const uint8_t* buffer, uint16_t bufsize, uint32_t start) {
+    const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    memcpy(EEPROM.writeCache+start, buffer, bufsize);
+    if (start+bufsize < footer.dataSize) {
+        printf("writing up to: %d < %d\r\n", start+bufsize, footer.dataSize);
+        return true;
+    }
+    uint32_t crc = CRC32::calculate(EEPROM.writeCache, footer.dataSize);
+    if (crc != footer.dataCrc) {
+        printf("Crc didnt match after writing?\r\n");
+        return false;
+    }
+    printf("Everything matched, saving!\r\n");
+    // Move the encoded data in memory down to the footer
+    memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
+    memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
+    EEPROM.commit();
+    return true;
+}
+
+uint32_t copy_config(uint8_t *buffer, uint32_t start)
+{
     const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(flashEnd - sizeof(ConfigFooter));
 
@@ -161,15 +200,13 @@ uint32_t copy_config(uint8_t* buffer,uint32_t start) {
     {
         return 0;
     }
-    const uint32_t remaining = footer.dataSize-start;
-    const uint32_t size = remaining > 64 ? 64 : remaining;
-    memcpy(buffer, dataPtr+start, size);
+    const uint32_t remaining = footer.dataSize - start;
+    const uint32_t size = remaining > 63 ? 63 : remaining;
+    memcpy(buffer, dataPtr + start, size);
     return size;
 }
-
 bool load(proto_Config &config)
 {
-
     config = proto_Config proto_Config_init_zero;
 
     const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;

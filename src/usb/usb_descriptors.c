@@ -24,7 +24,9 @@
  */
 
 #include "tusb.h"
-#include "usb_descriptors.h"
+#include "usb/usb_descriptors.h"
+#include "hid_reports.h"
+#include <pico/unique_id.h>
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -33,10 +35,6 @@
  *   [MSB]         HID | MSC | CDC          [LSB]
  */
 #define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-#define USB_PID 0x2882
-
-#define USB_VID 0x1209
-#define USB_BCD 0x2882
 
 //--------------------------------------------------------------------+
 // Device Descriptors
@@ -68,33 +66,14 @@ uint8_t const *tud_descriptor_device_cb(void)
   return (uint8_t const *)&desc_device;
 }
 
-#define TUD_HID_REPORT_DESC_GENERIC_INFEATURE(report_size, ...)          \
-  HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                            \
-      HID_USAGE(0x01),                                                   \
-      HID_COLLECTION(HID_COLLECTION_APPLICATION), /* Report ID if any */ \
-      __VA_ARGS__                                 /* Input */            \
-          HID_USAGE(0x02),                                               \
-      HID_LOGICAL_MIN(0x00),                                             \
-      HID_LOGICAL_MAX_N(0xff, 2),                                        \
-      HID_REPORT_SIZE(8),                                                \
-      HID_REPORT_COUNT(report_size),                                     \
-      HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), /* Output */  \
-      HID_USAGE(0x03),                                                   \
-      HID_LOGICAL_MIN(0x00),                                             \
-      HID_LOGICAL_MAX_N(0xff, 2),                                        \
-      HID_REPORT_SIZE(8),                                                \
-      HID_REPORT_COUNT(report_size),                                     \
-      HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                \
-      HID_COLLECTION_END
-
 //--------------------------------------------------------------------+
 // HID Report Descriptor
 //--------------------------------------------------------------------+
 
 uint8_t const desc_hid_report[] =
     {
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(64, HID_REPORT_ID(REPORT_ID_CONFIG)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(64, HID_REPORT_ID(REPORT_ID_CONFIG_INFO))};
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(REPORT_ID_CONFIG)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(REPORT_ID_CONFIG_INFO))};
 
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor
@@ -103,39 +82,6 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
 {
   (void)instance;
   return desc_hid_report;
-}
-
-//--------------------------------------------------------------------+
-// Configuration Descriptor
-//--------------------------------------------------------------------+
-
-enum
-{
-  ITF_NUM_HID,
-  ITF_NUM_TOTAL
-};
-
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
-
-#define EPNUM_HID 0x81
-
-uint8_t const desc_configuration[] =
-    {
-        // Config number, interface count, string index, total length, attribute, power in mA
-        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-
-        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
-        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5)};
-
-// Invoked when received GET CONFIGURATION DESCRIPTOR
-// Application return pointer to descriptor
-// Descriptor contents must exist long enough for transfer to complete
-uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
-{
-  (void)index; // for multiple configurations
-
-  // This example use the same configuration for both high and full speed mode
-  return desc_configuration;
 }
 
 //--------------------------------------------------------------------+
@@ -149,18 +95,54 @@ enum
   STRID_MANUFACTURER,
   STRID_PRODUCT,
   STRID_SERIAL,
+  STRID_XSM3
 };
 
+//--------------------------------------------------------------------+
+// Configuration Descriptor
+//--------------------------------------------------------------------+
+
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XINPUT_GAMEPAD_DESC_LEN + TUD_XINPUT_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
+
+#define EPNUM_HID 0x81
+#define EPNUM_XINPUT_IN 0x82
+#define EPNUM_XINPUT_OUT 0x03
+#define EPNUM_XINPUT_IN2 0x84
+#define EPNUM_XINPUT_OUT2 0x05
+
+uint8_t const desc_configuration[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 1),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, 0x07),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT2, EPNUM_XINPUT_IN2, EPNUM_XINPUT_OUT2, 0x07),
+        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
+
+// Invoked when received GET CONFIGURATION DESCRIPTOR
+// Application return pointer to descriptor
+// Descriptor contents must exist long enough for transfer to complete
+uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
+{
+  (void)index; // for multiple configurations
+
+  // This example use the same configuration for both high and full speed mode
+  return desc_configuration;
+}
+
+static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
 // array of pointer to string descriptors
 char const *string_desc_arr[] =
     {
         (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-        "TinyUSB",                  // 1: Manufacturer
-        "TinyUSB Device",           // 2: Product
-        NULL,                       // 3: Serials will use unique ID if possible
-};
+        "sanjay900",                // 1: Manufacturer
+        "Santroller",               // 2: Product
+        serial,                     // 3: Serials will use unique ID if possible
+        "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved."};
 
-static uint16_t _desc_str[32 + 1];
+static uint16_t _desc_str[100 + 1];
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -177,8 +159,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     break;
 
   case STRID_SERIAL:
-    chr_count = 1;
-    break;
+    pico_get_unique_board_id_string(serial, sizeof(serial));
 
   default:
     // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.

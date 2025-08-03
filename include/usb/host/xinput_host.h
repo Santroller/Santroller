@@ -75,6 +75,7 @@ uint8_t tuh_xinput_interface_protocol(uint8_t dev_addr, uint8_t instance);
 // Parse report descriptor into array of report_info struct and return number of reports.
 // For complicated report, application should write its own parser.
 uint8_t tuh_xinput_parse_report_descriptor(tuh_xinput_report_info_t* reports_info_arr, uint8_t arr_count, uint8_t const* desc_report, uint16_t desc_len) TU_ATTR_UNUSED;
+void fill_generic_report_host(uint8_t dev_addr, uint8_t ep_addr, const uint8_t* report, USB_Host_Data_t* host);
 //--------------------------------------------------------------------+
 // Control Endpoint API
 //--------------------------------------------------------------------+

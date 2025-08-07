@@ -3470,7 +3470,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
-                if (!report->cymbalFlag && ready_for_next_packet())
+                if (!report->cymbalFlag && ready_for_next_packet() && (greenCymbal || yellowCymbal || blueCymbal))
                 {
                     if (greenCymbal) {
                         lastGreenOff = millis();

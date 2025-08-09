@@ -86,6 +86,7 @@ add_executable(
   src/usb/device/ps_device.cpp
   src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
+  src/input/gpio.cpp
   src/config.cpp
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c

@@ -7,6 +7,7 @@ import "device.proto";
 message GPIOInput {
   required int32 pin = 1;
   required PinMode pinMode = 2;
+  required bool analog = 3;
 }
 
 message MPR121Input {
@@ -29,6 +30,16 @@ message BasicAnalogDeviceInput {
 message BasicDigitalDeviceInput {
   required int32 deviceid = 1;
   required ButtonType button = 2;
+}
+
+message WiiAxisInput {
+  required int32 deviceid = 1;
+  required WiiAxisType axis = 2;
+}
+
+message WiiButtonInput {
+  required int32 deviceid = 1;
+  required WiiButtonType button = 2;
 }
 
 message MouseAxisInput {

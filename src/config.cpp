@@ -1,14 +1,18 @@
 #include "config.hpp"
+#include "input/input.hpp"
+#include "input/gpio.hpp"
+#include "mappings/mapping.hpp"
+#include <vector>
 /* TODO
 load_device should construct some form of device and throw it in a map using the dev_id
 
-
-then load_mapping would be able to grab the device by its id when the mapping is constructed
-most devices would use "BasicInput" to handle things, which means we need some virtual method for handling input based on AxisType and another for ButtonType
-then ticking would simply just be looping through each device, updating it and then looping through each mapping and updating it based on state
-
+the easiest way to do this, is we have a class for each device type, mapping type and each input type. when we get the mapping, we construct an instance of each, push it to a list, and then polling is simply walking the list and updating each thing.
+and we would walk the map of devices and poll each device too.
+if that ends up not being performant enough THEN we can think about something more optimal but that feels like the clean method.
 
 */
+std::vector<Input> inputs;
+
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Device device;
@@ -33,6 +37,19 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
+    Input* input;
+    switch (mapping.input.which_input)
+    {
+    case proto_Input_analogDevice_tag:
+        printf("analogDevice %d\r\n", mapping.input.input.analogDevice.deviceid);
+        break;
+    case proto_Input_digitalDevice_tag:
+        printf("digitalDevice %d\r\n", mapping.input.input.digitalDevice.deviceid);
+        break;
+    case proto_Input_gpio_tag:
+        printf("gpio %d %d\r\n", mapping.input.input.gpio.pin, mapping.input.input.gpio.pinMode);
+        input = new GPIOInput(mapping.input.input.gpio);
+    }
     switch (mapping.which_mapping)
     {
     case proto_Mapping_axis_tag:
@@ -142,7 +159,7 @@ uint32_t copy_config_info(uint8_t *buffer)
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
 {
-    ConfigFooter* footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
     pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
     if (!pb_decode(&inputStream, proto_ConfigInfo_fields, &info))
@@ -156,15 +173,18 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     return true;
 }
 
-bool write_config(const uint8_t* buffer, uint16_t bufsize, uint32_t start) {
+bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
+{
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    memcpy(EEPROM.writeCache+start, buffer, bufsize);
-    if (start+bufsize < footer.dataSize) {
-        printf("writing up to: %d < %d\r\n", start+bufsize, footer.dataSize);
+    memcpy(EEPROM.writeCache + start, buffer, bufsize);
+    if (start + bufsize < footer.dataSize)
+    {
+        printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
         return true;
     }
     uint32_t crc = CRC32::calculate(EEPROM.writeCache, footer.dataSize);
-    if (crc != footer.dataCrc) {
+    if (crc != footer.dataCrc)
+    {
         printf("Crc didnt match after writing?\r\n");
         return false;
     }

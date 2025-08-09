@@ -2,171 +2,363 @@ syntax = "proto2";
 package proto;
 
 enum MappingMode {
-  PerInput = 0; /* Have one set of mappings that covers all extensions */
-  PerExtension = 1; /* Have individual mappings for each input in each extension */
+  PerInput = 1; /* Have one set of mappings that covers all extensions */
+  PerExtension = 2; /* Have individual mappings for each input in each extension */
 }
 
 enum FaceButtonMappingMode {
-  LegendBased = 0;   /* Map face buttons by legend */
-  PositionBased = 1; /* Map face buttons by position */
+  LegendBased = 1;   /* Map face buttons by legend */
+  PositionBased = 2; /* Map face buttons by position */
 }
 
 enum SubType {
-  Gamepad = 0;
-  Dancepad = 1;
-  GuitarHeroGuitar = 2;
-  RockBandGuitar = 3;
-  GuitarHeroDrums = 4;
-  RockBandDrums = 5;
-  LiveGuitar = 6;
-  DjHeroTurntable = 7;
-  ProGuitarMustang = 8;
-  ProGuitarSquire = 9;
-  ProKeys = 10;
-  Taiko = 11;
-  StageKit = 12;
-  KeyboardMouse = 13;
-  Wheel = 14;
-  DisneyInfinity = 15;
-  Skylanders = 16;
-  LegoDimensions = 17;
+  Gamepad = 1;
+  Dancepad = 2;
+  GuitarHeroGuitar = 3;
+  RockBandGuitar = 4;
+  GuitarHeroDrums = 5;
+  RockBandDrums = 6;
+  LiveGuitar = 7;
+  DjHeroTurntable = 8;
+  ProGuitarMustang = 9;
+  ProGuitarSquire = 10;
+  ProKeys = 11;
+  Taiko = 12;
+  StageKit = 13;
+  KeyboardMouse = 14;
+  Wheel = 15;
+  DisneyInfinity = 16;
+  Skylanders = 17;
+  LegoDimensions = 18;
 }
 
 enum PinMode {
-  PullDown = 0;
-  PullUp = 1;
-  Floating = 2;
-  BusKeep = 3;
+  PullDown = 1;
+  PullUp = 2;
+  Floating = 3;
+  BusKeep = 4;
 }
 
 enum Mpr121PinMode {
-  Touch = 0;
-  Digital = 1;
+  Touch = 1;
+  Digital = 2;
 }
 
 enum UsbDeviceType {
-  Generic = 0;
-  Santroller = 1;
-  Xbox360 = 2;
-  Xbox360Wireless = 3;
-  Xbox360BigButton = 4;
-  XboxOne = 5;
-  XboxOG = 6;
-  PS3 = 7;
-  PS4 = 8;
-  PS5 = 9;
-  WiiRockBand = 10;
-  Switch = 11;
-  Raphnet = 12;
-  StreamDeck = 13;
-  LTEK = 14;
-  Stadia = 15;
-  Midi = 16;
-  Keyboard = 17;
-  Mouse = 18;
+  Generic = 1;
+  Santroller = 2;
+  Xbox360 = 3;
+  Xbox360Wireless = 4;
+  Xbox360BigButton = 5;
+  XboxOne = 6;
+  XboxOG = 7;
+  PS3 = 8;
+  PS4 = 9;
+  PS5 = 10;
+  WiiRockBand = 11;
+  Switch = 12;
+  Raphnet = 13;
+  StreamDeck = 14;
+  LTEK = 15;
+  Stadia = 16;
+  Midi = 17;
+  Keyboard = 18;
+  Mouse = 19;
 }
 
 enum ButtonType {
-  North = 0;
-  East = 1;
-  South = 2;
-  West = 3;
+  North = 1;
+  East = 2;
+  South = 3;
+  West = 4;
 
-  Back = 4;
-  Start = 5;
+  Back = 5;
+  Start = 6;
 
-  Guide = 6;
-  Capture = 7;
+  Guide = 7;
+  Capture = 8;
 
-  LeftTrigger = 8;
-  RightTrigger = 9;
+  LeftTrigger = 9;
+  RightTrigger = 10;
 
-  LeftShoulder = 10;
-  RightShoulder = 11;
+  LeftShoulder = 11;
+  RightShoulder = 12;
 
-  LeftThumbClick = 12;
-  RightThumbClick = 13;
+  LeftThumbClick = 13;
+  RightThumbClick = 14;
 
-  DpadUp = 14;
-  DpadDown = 15;
-  DpadLeft = 16;
-  DpadRight = 17;
+  DpadUp = 15;
+  DpadDown = 16;
+  DpadLeft = 17;
+  DpadRight = 18;
   
-  Green = 18;
-  Red = 19;
-  Yellow = 20;
-  Blue = 21;
-  Orange = 22;
+  Green = 19;
+  Red = 20;
+  Yellow = 21;
+  Blue = 22;
+  Orange = 23;
 
-  SoloGreen = 23;
-  SoloRed = 24;
-  SoloYellow = 25;
-  SoloBlue = 26;
-  SoloOrange = 27;
+  SoloGreen = 24;
+  SoloRed = 25;
+  SoloYellow = 26;
+  SoloBlue = 27;
+  SoloOrange = 28;
 
-  LeftBlue = 28;
-  LeftRed = 29;
-  LeftGreen = 30;
-  RightBlue = 31;
-  RightRed = 32;
-  RightGreen = 33;
+  LeftBlue = 29;
+  LeftRed = 30;
+  LeftGreen = 31;
+  RightBlue = 32;
+  RightRed = 33;
+  RightGreen = 34;
 }
 
 enum AxisType {
 
-  LeftStickX = 0;
-  LeftStickY = 1;
-  RightStickX = 2;
-  RightStickY = 3;
+  LeftStickX = 1;
+  LeftStickY = 2;
+  RightStickX = 3;
+  RightStickY = 4;
 
-  AccelX = 4;
-  AccelY = 5;
-  AccelZ = 6;
-  Gyro = 7;
+  AccelX = 5;
+  AccelY = 6;
+  AccelZ = 7;
+  Gyro = 8;
 
-  Whammy = 8;
-  Tilt = 9;
-  Pickup = 10;
-  Slider = 11;
+  Whammy = 9;
+  Tilt = 10;
+  Pickup = 11;
+  Slider = 12;
 
-  LeftTableVelocity = 12;
-  RightTableVelocity = 13;
-  EffectsKnob = 14;
-  Crossfader = 15;
+  LeftTableVelocity = 13;
+  RightTableVelocity = 14;
+  EffectsKnob = 15;
+  Crossfader = 16;
 
-  LowEFret = 16;
-  AFret = 17;
-  DFret = 18;
-  GFret = 19;
-  BFret = 20;
-  HighEFret = 21;
-  LowEFretVelocity = 22;
-  AFretVelocity = 23;
-  DFretVelocity = 24;
-  GFretVelocity = 25;
-  BFretVelocity = 26;
-  HighEFretVelocity = 27;
+  LowEFret = 17;
+  AFret = 18;
+  DFret = 19;
+  GFret = 20;
+  BFret = 21;
+  HighEFret = 22;
+  LowEFretVelocity = 23;
+  AFretVelocity = 24;
+  DFretVelocity = 25;
+  GFretVelocity = 26;
+  BFretVelocity = 27;
+  HighEFretVelocity = 28;
 }
 
 enum MidiTriggerType {
-  Normal = 0;
-  Drum = 1;
+  Normal = 1;
+  Drum = 2;
 }
 
 enum AnalogToDigitalTriggerType {
-  JoyHigh = 0;
-  JoyLow = 1;
+  JoyHigh = 1;
+  JoyLow = 2;
 }
 
 enum MouseAxisType {
-  MoveX = 0;
-  MoveY = 1;
-  ScrollX = 2;
-  ScrollY = 3;
+  MoveX = 1;
+  MoveY = 2;
+  ScrollX = 3;
+  ScrollY = 4;
 }
 
 enum MouseButtonType {
-  Left = 0;
-  Middle = 1;
-  Right = 2;
+  Left = 1;
+  Middle = 2;
+  Right = 3;
 }
+
+enum WiiAxisType {
+  WiiAxisClassicLeftStickX= 1;
+  WiiAxisClassicLeftStickY= 2;
+  WiiAxisClassicRightStickX= 3;
+  WiiAxisClassicRightStickY= 4;
+  WiiAxisClassicLeftTrigger= 5;
+  WiiAxisClassicRightTrigger= 6;
+  WiiAxisDrumJoystickX= 7;
+  WiiAxisDrumJoystickY= 8;
+  WiiAxisGuitarJoystickX = 9;
+  WiiAxisGuitarJoystickY= 10;
+  WiiAxisGuitarWhammy= 11;
+  WiiAxisGuitarTapBar= 12;
+  WiiAxisNunchukStickX= 13;
+  WiiAxisNunchukStickY= 14;
+  WiiAxisNunchukAccelerationX= 15;
+  WiiAxisNunchukAccelerationY= 16;
+  WiiAxisNunchukAccelerationZ= 17;
+  WiiAxisNunchukRotationPitch= 18;
+  WiiAxisNunchukRotationRoll= 19;
+  WiiAxisDjTurntableLeft= 20;
+  WiiAxisDjTurntableRight= 21;
+  WiiAxisDjCrossfadeSlider= 22;
+  WiiAxisDjEffectDial= 23;
+  WiiAxisDjStickX= 24;
+  WiiAxisDjStickY= 25;
+  WiiAxisUDrawPenX= 26;
+  WiiAxisUDrawPenY= 27;
+  WiiAxisUDrawPenPressure= 28;
+  WiiAxisDrawsomePenX= 29;
+  WiiAxisDrawsomePenY= 30;
+  WiiAxisDrawsomePenPressure= 31;
+}
+
+
+enum WiiButtonType {    
+  WiiButtonGuitarGreen= 1;
+  WiiButtonGuitarRed= 2;
+  WiiButtonGuitarYellow= 3;
+  WiiButtonGuitarBlue= 4;
+  WiiButtonGuitarOrange= 5;
+  WiiButtonGuitarTapGreen= 6;
+  WiiButtonGuitarTapRed= 7;
+  WiiButtonGuitarTapYellow= 8;
+  WiiButtonGuitarTapBlue= 9;
+  WiiButtonGuitarTapOrange= 10;
+  WiiButtonGuitarMinus= 11;
+  WiiButtonGuitarPlus= 12;
+  WiiButtonGuitarStrumUp= 13;
+  WiiButtonGuitarStrumDown= 14;
+  WiiButtonGuitarPedal= 15;
+  WiiButtonDrumMinus = 16;
+  WiiButtonDrumPlus= 17;
+  WiiButtonNunchukC = 18;
+  WiiButtonNunchukZ= 19;
+  WiiButtonUDrawPenClick= 20;
+  WiiButtonUDrawPenButton1= 21;
+  WiiButtonUDrawPenButton2= 22;
+  WiiButtonTaTaConLeftDrumRim= 23;
+  WiiButtonTaTaConLeftDrumCenter= 24;
+  WiiButtonTaTaConRightDrumRim= 25;
+  WiiButtonTaTaConRightDrumCenter= 26;
+  WiiButtonDjHeroEuphoria= 27;
+  WiiButtonDjHeroLeftGreen= 28;
+  WiiButtonDjHeroLeftRed= 29;
+  WiiButtonDjHeroLeftBlue= 30;
+  WiiButtonDjHeroRightGreen= 31;
+  WiiButtonDjHeroRightRed= 32;
+  WiiButtonDjHeroRightBlue= 33;
+  WiiButtonDjHeroMinus= 34;
+  WiiButtonDjHeroPlus= 35;
+  WiiButtonClassicA= 36;
+  WiiButtonClassicB= 37;
+  WiiButtonClassicX= 38;
+  WiiButtonClassicY= 39;
+  WiiButtonClassicDPadUp= 40;
+  WiiButtonClassicDPadDown= 41;
+  WiiButtonClassicDPadLeft= 42;
+  WiiButtonClassicDPadRight= 43;
+  WiiButtonClassicZl= 44;
+  WiiButtonClassicZr= 45;
+  WiiButtonClassicLt= 46;
+  WiiButtonClassicRt= 47;
+  WiiButtonClassicPlus= 48;
+  WiiButtonClassicMinus= 49;
+  WiiButtonClassicHome= 50;
+}
+
+enum UsbButtonType {
+  UsbButtonX= 1;
+  UsbButtonA= 2;
+  UsbButtonB= 3;
+  UsbButtonY= 4;
+  UsbButtonLeftShoulder= 5;
+  UsbButtonRightShoulder= 6;
+  UsbButtonKick1= 7;
+  UsbButtonKick2= 8;
+  UsbButtonBack= 9;
+  UsbButtonStart= 10;
+  UsbButtonLeftThumbClick= 11;
+  UsbButtonRightThumbClick= 12;
+  UsbButtonGuide= 13;
+  UsbButtonCapture= 14;
+  UsbButtonLeftBlue= 15;
+  UsbButtonLeftRed= 16;
+  UsbButtonLeftGreen= 17;
+  UsbButtonRightBlue= 18;
+  UsbButtonRightRed= 19;
+  UsbButtonRightGreen= 20;
+  UsbButtonSoloGreen= 21;
+  UsbButtonSoloRed= 22;
+  UsbButtonSoloYellow= 23;
+  UsbButtonSoloBlue= 24;
+  UsbButtonSoloOrange= 25;
+  UsbButtonGreen= 26;
+  UsbButtonRed= 27;
+  UsbButtonYellow= 28;
+  UsbButtonBlue= 29;
+  UsbButtonOrange= 30;
+  UsbButtonDpadUp= 31;
+  UsbButtonDpadDown= 32;
+  UsbButtonDpadLeft= 33;
+  UsbButtonDpadRight= 34;
+  UsbButtonGenericButton1= 35;
+  UsbButtonGenericButton2= 36;
+  UsbButtonGenericButton3= 37;
+  UsbButtonGenericButton4= 38;
+  UsbButtonGenericButton5= 39;
+  UsbButtonGenericButton6= 40;
+  UsbButtonGenericButton7= 41;
+  UsbButtonGenericButton8= 42;
+  UsbButtonGenericButton9= 43;
+  UsbButtonGenericButton10= 44;
+  UsbButtonGenericButton11= 45;
+  UsbButtonGenericButton12= 46;
+  UsbButtonGenericButton13= 47;
+  UsbButtonGenericButton14= 48;
+  UsbButtonGenericButton15= 49;
+  UsbButtonGenericButton16= 50;
+}
+
+enum UsbAxisType {
+  UsbAxisLeftTrigger= 1;
+  UsbAxisRightTrigger= 2;
+  UsbAxisLeftStickX= 3;
+  UsbAxisLeftStickY= 4;
+  UsbAxisRightStickX= 5;
+  UsbAxisRightStickY= 6;
+  UsbAxisPressureDpadUp= 7;
+  UsbAxisPressureDpadRight= 8;
+  UsbAxisPressureDpadLeft= 9;
+  UsbAxisPressureDpadDown= 10;
+  UsbAxisPressureL1= 11;
+  UsbAxisPressureR1= 12;
+  UsbAxisPressureTriangle= 13;
+  UsbAxisPressureCircle= 14;
+  UsbAxisPressureCross= 15;
+  UsbAxisPressureSquare= 16;
+  UsbAxisWhammy= 26;
+  UsbAxisTilt= 27;
+  UsbAxisPickup= 28;
+  UsbAxisSlider= 29;
+  UsbAxisLeftTableVelocity= 30;
+  UsbAxisRightTableVelocity= 31;
+  UsbAxisEffectsKnob= 32;
+  UsbAxisCrossfader= 33;
+  UsbAxisAccelX= 34;
+  UsbAxisAccelZ= 35;
+  UsbAxisAccelY= 36;
+  UsbAxisGyro= 37;
+  UsbAxisLowEFret= 41;
+  UsbAxisAFret= 42;
+  UsbAxisDFret= 43;
+  UsbAxisGFret= 44;
+  UsbAxisBFret= 45;
+  UsbAxisHighEFret= 46;
+  UsbAxisLowEFretVelocity= 47;
+  UsbAxisAFretVelocity= 48;
+  UsbAxisDFretVelocity= 49;
+  UsbAxisGFretVelocity= 50;
+  UsbAxisBFretVelocity= 51;
+  UsbAxisHighEFretVelocity= 52;
+  UsbAxisGenericAxisX= 53;
+  UsbAxisGenericAxisY= 54;
+  UsbAxisGenericAxisZ= 55;
+  UsbAxisGenericAxisRx= 56;
+  UsbAxisGenericAxisRy= 57;
+  UsbAxisGenericAxisRz= 58;
+  UsbAxisGenericAxisSlider= 59;
+}
+

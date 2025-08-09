@@ -10,6 +10,7 @@
 #include "FlashPROM.h"
 #include "CRC32.h"
 #include "pico/multicore.h"
+#include "hardware/adc.h"
 #include "config.hpp"
 #include "common/tusb_types.h"
 #include "device/usbd_pvt.h"
@@ -44,6 +45,7 @@ int main()
 {
     multicore_launch_core1(core1);
     stdio_init_all();
+    adc_init();
     EEPROM.start();
 
     proto_Config config;

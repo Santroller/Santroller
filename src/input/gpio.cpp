@@ -13,18 +13,22 @@ bool GPIOInput::tickDigital()
 }
 uint16_t GPIOInput::tickAnalog()
 {
+    if (!m_analog) {
+        return (gpio_get(m_pin) != m_invert) ? 65535 : 0;
+    }
     adc_select_input(m_pin - ADC_BASE_PIN);
     return adc_read() << 4;
 }
 void GPIOInput::setup()
 {
     m_pin = m_input.pin;
-    if (m_analog)
+    if (m_analog && m_pin >= ADC_BASE_PIN)
     {
         adc_gpio_init(m_pin);
     }
     else
     {
+        m_analog = false;
         gpio_init(m_pin);
     }
     switch (m_input.pinMode)

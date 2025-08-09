@@ -23,6 +23,7 @@ public:
 private:
     proto_AxisMapping m_mapping;
     Input &m_input;
+    uint32_t m_lastValue = 0;
 };
 
 class ButtonMapping : public Mapping

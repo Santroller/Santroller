@@ -15,12 +15,11 @@ void ButtonMapping::update(san_base_t *base)
     {
 
         uint8_t buffer[63];
-        proto_Event event = {event: {button: {m_id, val}}};
+        proto_Event event = {which_event : proto_ButtonEvent_id_tag, event : {button : {m_id, val}}};
         pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 63);
         pb_encode(&outputStream, proto_Event_fields, &event);
-        tud_hid_report(REPORT_ID_CONFIG, buffer, sizeof(buffer));
+        tud_hid_report(REPORT_ID_CONFIG, buffer, outputStream.bytes_written);
         m_lastValue = val;
-        printf("done\r\n");
     }
     switch (m_mapping.button)
     {

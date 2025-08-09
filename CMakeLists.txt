@@ -87,11 +87,14 @@ add_executable(
   src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
   src/input/gpio.cpp
+  src/mappings/ButtonMapping.cpp
+  src/mappings/AxisMapping.cpp
   src/config.cpp
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c
   ${PROTO_OUTPUT_DIR}/config.pb.c
   ${PROTO_OUTPUT_DIR}/input.pb.c
+  ${PROTO_OUTPUT_DIR}/events.pb.c
 )
 target_include_directories(${TARGET} PUBLIC
   ${SRC}

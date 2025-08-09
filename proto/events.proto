@@ -1,0 +1,45 @@
+syntax = "proto2";
+package proto;
+
+message ButtonEvent {
+    required int32 id = 1;
+    required bool state = 2;
+}
+
+message AxisEvent {
+    required int32 id = 1;
+    required uint32 state = 2;
+}
+
+message PinDetectionEvent {
+    required int32 pin = 1;
+}
+
+message MidiDetectionEvent {
+    required int32 note = 1;
+}
+
+message UsbDeviceHotplugEvent {
+    required int32 subtype = 1;
+    required string name = 2;
+}
+
+message WiiDeviceHotplugEvent {
+    required int32 type = 1;
+}
+
+message PS2DeviceHotplugEvent {
+    required int32 type = 1;
+}
+
+message Event {
+    oneof event{
+        ButtonEvent button = 1;   
+        AxisEvent axis = 2;
+        PinDetectionEvent pin = 3;
+        MidiDetectionEvent midi = 4;
+        UsbDeviceHotplugEvent usb = 5;
+        WiiDeviceHotplugEvent wii = 6;
+        PS2DeviceHotplugEvent ps2 = 7;
+    };
+}

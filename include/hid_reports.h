@@ -157,294 +157,57 @@
         HID_REPORT_SIZE(8),                     \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
 
-#define TUD_HID_REPORT_DESC_GAME_CONTROLLER(button_usages, axis_usages, button_count, axis_count) \
-    HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                                       \
-        HID_USAGE(HID_USAGE_DESKTOP_GAMEPAD),                                                     \
-        HID_COLLECTION(HID_COLLECTION_APPLICATION),                                               \
-        HID_REPORT_ID(REPORT_ID_GAMEPAD)                                                          \
-            HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                                \
-        HID_LOGICAL_MIN(0),                                                                       \
-        HID_LOGICAL_MAX(1),                                                                       \
-        HID_PHYSICAL_MIN(0),                                                                      \
-        HID_PHYSICAL_MAX(1),                                                                      \
-        HID_REPORT_COUNT(button_count),                                                           \
-        HID_REPORT_SIZE(1),                                                                       \
-        button_usages,                                                                            \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                                        \
-        HID_REPORT_COUNT(8 - (button_count % 8)),                                                 \
-        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                                    \
-        HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP), /* 8 bit DPad/Hat Button Map  */                  \
-        HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),                                                  \
-        HID_LOGICAL_MAX(7),                                                                       \
-        HID_PHYSICAL_MAX_N(315, 2),                                                               \
-        HID_REPORT_COUNT(1),                                                                      \
-        HID_REPORT_SIZE(8),                                                                       \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                                        \
-        HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                                   \
-        axis_usages,                                                                              \
-        HID_LOGICAL_MAX_N(0xff, 2),                                                               \
-        HID_PHYSICAL_MAX_N(0xff, 2),                                                              \
-        HID_REPORT_COUNT(axis_count),                                                             \
-        HID_REPORT_SIZE(8),                                                                       \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                                        \
-        TUD_HID_REPORT_DESC_PS3_VENDOR(),                                                         \
-        TUD_HID_REPORT_DESC_PS3_4_5(),                                                            \
+#define TUD_HID_REPORT_DESC_GAME_CONTROLLER(rid)                                 \
+    HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                      \
+        HID_USAGE(HID_USAGE_DESKTOP_GAMEPAD),                                    \
+        HID_COLLECTION(HID_COLLECTION_APPLICATION),                              \
+        rid                                                                      \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                   \
+        HID_LOGICAL_MIN(0),                                                      \
+        HID_LOGICAL_MAX(1),                                                      \
+        HID_PHYSICAL_MIN(0),                                                     \
+        HID_PHYSICAL_MAX(1),                                                     \
+        HID_REPORT_COUNT(14),                                                    \
+        HID_REPORT_SIZE(1),                                                      \
+        HID_USAGE(BTN_X),                                                        \
+        HID_USAGE(BTN_A),                                                        \
+        HID_USAGE(BTN_B),                                                        \
+        HID_USAGE(BTN_Y),                                                        \
+        HID_USAGE(BTN_TL),                                                       \
+        HID_USAGE(BTN_TR),                                                       \
+        HID_USAGE(BTN_TL2),                                                      \
+        HID_USAGE(BTN_TR2),                                                      \
+        HID_USAGE(BTN_SELECT),                                                   \
+        HID_USAGE(BTN_START),                                                    \
+        HID_USAGE(BTN_THUMBL),                                                   \
+        HID_USAGE(BTN_THUMBR),                                                   \
+        HID_USAGE(BTN_GUIDE),                                                    \
+        HID_USAGE(BTN_C),                                                        \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
+        HID_REPORT_COUNT(2),                                                     \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP), /* 8 bit DPad/Hat Button Map  */ \
+        HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),                                 \
+        HID_LOGICAL_MAX(7),                                                      \
+        HID_PHYSICAL_MAX_N(315, 2),                                              \
+        HID_REPORT_COUNT(1),                                                     \
+        HID_REPORT_SIZE(8),                                                      \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                  \
+        HID_USAGE(HID_USAGE_DESKTOP_X),                                          \
+        HID_USAGE(HID_USAGE_DESKTOP_Y),                                          \
+        HID_USAGE(HID_USAGE_DESKTOP_RX),                                         \
+        HID_USAGE(HID_USAGE_DESKTOP_RY),                                         \
+        HID_USAGE(HID_USAGE_DESKTOP_Z),                                          \
+        HID_USAGE(HID_USAGE_DESKTOP_RZ),                                         \
+        HID_LOGICAL_MAX_N(0xff, 2),                                              \
+        HID_PHYSICAL_MAX_N(0xff, 2),                                             \
+        HID_REPORT_COUNT(6),                                                     \
+        HID_REPORT_SIZE(8),                                                      \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
+        TUD_HID_REPORT_DESC_PS3_VENDOR(),                                        \
+        TUD_HID_REPORT_DESC_PS3_4_5(),                                           \
         HID_COLLECTION_END
-
-#define GAMEPAD_USAGES         \
-    HID_USAGE(BTN_X),          \
-        HID_USAGE(BTN_A),      \
-        HID_USAGE(BTN_B),      \
-        HID_USAGE(BTN_Y),      \
-        HID_USAGE(BTN_TL),     \
-        HID_USAGE(BTN_TR),     \
-        HID_USAGE(BTN_TL2),    \
-        HID_USAGE(BTN_TR2),    \
-        HID_USAGE(BTN_SELECT), \
-        HID_USAGE(BTN_START),  \
-        HID_USAGE(BTN_THUMBL), \
-        HID_USAGE(BTN_THUMBR), \
-        HID_USAGE(BTN_GUIDE),  \
-        HID_USAGE(BTN_C)
-
-#define GAMEPAD_AXIS                     \
-    HID_USAGE(HID_USAGE_DESKTOP_X),      \
-        HID_USAGE(HID_USAGE_DESKTOP_Y),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RX), \
-        HID_USAGE(HID_USAGE_DESKTOP_RY), \
-        HID_USAGE(HID_USAGE_DESKTOP_Z),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RZ)
-
-#define TUD_HID_REPORT_DESC_GENERIC_GAMEPAD() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(GAMEPAD_USAGES, GAMEPAD_AXIS, 14, 6)
-
-#define GUITAR_HERO_GUITAR_USAGES \
-    HID_USAGE(BTN_A),             \
-        HID_USAGE(BTN_B),         \
-        HID_USAGE(BTN_Y),         \
-        HID_USAGE(BTN_X),         \
-        HID_USAGE(BTN_TL),        \
-        HID_USAGE(BTN_TR),        \
-        HID_USAGE(BTN_SELECT),    \
-        HID_USAGE(BTN_START),     \
-        HID_USAGE(BTN_GUIDE),     \
-        HID_USAGE(BTN_C),         \
-        HID_USAGE(BTN_Z),         \
-        HID_USAGE(BTN_TL2),       \
-        HID_USAGE(BTN_TR2)
-
-#define GUITAR_HERO_GUITAR_AXIS         \
-    HID_USAGE(HID_USAGE_DESKTOP_X),     \
-        HID_USAGE(HID_USAGE_DESKTOP_Y), \
-        HID_USAGE(HID_USAGE_DESKTOP_RX)
-
-#define TUD_HID_REPORT_DESC_GUITAR_HERO_GUITAR() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(GUITAR_HERO_GUITAR_USAGES, GUITAR_HERO_GUITAR_AXIS, 13, 3)
-
-#define ROCK_BAND_GUITAR_USAGES \
-    HID_USAGE(BTN_A),           \
-        HID_USAGE(BTN_B),       \
-        HID_USAGE(BTN_Y),       \
-        HID_USAGE(BTN_X),       \
-        HID_USAGE(BTN_TL),      \
-        HID_USAGE(BTN_TR),      \
-        HID_USAGE(BTN_TL2),     \
-        HID_USAGE(BTN_TR2),     \
-        HID_USAGE(BTN_C),       \
-        HID_USAGE(BTN_Z),       \
-        HID_USAGE(BTN_SELECT),  \
-        HID_USAGE(BTN_START),   \
-        HID_USAGE(BTN_GUIDE)
-
-#define ROCK_BAND_GUITAR_AXIS           \
-    HID_USAGE(HID_USAGE_DESKTOP_X),     \
-        HID_USAGE(HID_USAGE_DESKTOP_Y), \
-        HID_USAGE(HID_USAGE_DESKTOP_RX)
-
-#define TUD_HID_REPORT_DESC_ROCK_BAND_GUITAR() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(ROCK_BAND_GUITAR_USAGES, ROCK_BAND_GUITAR_AXIS, 13, 3)
-
-#define ROCK_BAND_PRO_GUITAR_USAGES \
-    HID_USAGE(BTN_X),               \
-        HID_USAGE(BTN_A),           \
-        HID_USAGE(BTN_B),           \
-        HID_USAGE(BTN_Y),           \
-        HID_USAGE(BTN_SELECT),      \
-        HID_USAGE(BTN_START),       \
-        HID_USAGE(BTN_GUIDE),       \
-        HID_USAGE(BTN_TL),          \
-        HID_USAGE(BTN_TR),          \
-        HID_USAGE(BTN_TL2),         \
-        HID_USAGE(BTN_TR2),         \
-        HID_USAGE(BTN_THUMBL),      \
-        HID_USAGE(BTN_THUMBR)
-
-#define ROCK_BAND_PRO_GUITAR_AXIS               \
-    HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2), \
-        HID_USAGE(0x20),                        \
-        HID_USAGE(0x21),                        \
-        HID_USAGE(0x22),                        \
-        HID_USAGE(0x23),                        \
-        HID_USAGE(0x24),                        \
-        HID_USAGE(0x25),                        \
-        HID_USAGE(0x26),                        \
-        HID_USAGE(0x27),                        \
-        HID_USAGE(0x28),                        \
-        HID_USAGE(0x29),                        \
-        HID_USAGE(0x2A),                        \
-        HID_USAGE(0x2B)
-
-#define TUD_HID_REPORT_DESC_ROCK_BAND_PRO_GUITAR() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(ROCK_BAND_PRO_GUITAR_USAGES, ROCK_BAND_PRO_GUITAR_AXIS, 13, 13)
-
-#define ROCK_BAND_PRO_KEYS_USAGES \
-    HID_USAGE(BTN_X),             \
-        HID_USAGE(BTN_A),         \
-        HID_USAGE(BTN_B),         \
-        HID_USAGE(BTN_Y),         \
-        HID_USAGE(BTN_SELECT),    \
-        HID_USAGE(BTN_START),     \
-        HID_USAGE(BTN_GUIDE),     \
-        HID_USAGE(BTN_TL),        \
-        HID_USAGE(BTN_TR),        \
-        HID_USAGE(BTN_C),         \
-        HID_USAGE(BTN_TL2),       \
-        HID_USAGE(BTN_TR2),       \
-        HID_USAGE(BTN_THUMBL),    \
-        HID_USAGE(BTN_THUMBR),    \
-        HID_USAGE(BTN_Z),         \
-        HID_USAGE(BTN_END + 1),   \
-        HID_USAGE(BTN_END + 2),   \
-        HID_USAGE(BTN_END + 3),   \
-        HID_USAGE(BTN_END + 4),   \
-        HID_USAGE(BTN_END + 5),   \
-        HID_USAGE(BTN_END + 6),   \
-        HID_USAGE(BTN_END + 7),   \
-        HID_USAGE(BTN_END + 8),   \
-        HID_USAGE(BTN_END + 9),   \
-        HID_USAGE(BTN_END + 10),  \
-        HID_USAGE(BTN_END + 11),  \
-        HID_USAGE(BTN_END + 12),  \
-        HID_USAGE(BTN_END + 13),  \
-        HID_USAGE(BTN_END + 14),  \
-        HID_USAGE(BTN_END + 15),  \
-        HID_USAGE(BTN_END + 16),  \
-        HID_USAGE(BTN_END + 17),  \
-        HID_USAGE(BTN_END + 18),  \
-        HID_USAGE(BTN_END + 19),  \
-        HID_USAGE(BTN_END + 20)
-
-#define ROCK_BAND_PRO_KEYS_AXIS          \
-    HID_USAGE(HID_USAGE_DESKTOP_X),      \
-        HID_USAGE(HID_USAGE_DESKTOP_Y),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RX), \
-        HID_USAGE(HID_USAGE_DESKTOP_RY), \
-        HID_USAGE(HID_USAGE_DESKTOP_Z),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RZ)
-
-#define TUD_HID_REPORT_DESC_ROCK_BAND_PRO_KEYS() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(ROCK_BAND_PRO_KEYS_USAGES, ROCK_BAND_PRO_KEYS_AXIS, 35, 7)
-
-#define LIVE_GUITAR_USAGES     \
-    HID_USAGE(BTN_A),          \
-        HID_USAGE(BTN_B),      \
-        HID_USAGE(BTN_Y),      \
-        HID_USAGE(BTN_X),      \
-        HID_USAGE(BTN_TL),     \
-        HID_USAGE(BTN_TR),     \
-        HID_USAGE(BTN_SELECT), \
-        HID_USAGE(BTN_START),  \
-        HID_USAGE(BTN_THUMBL), \
-        HID_USAGE(BTN_GUIDE),  \
-        HID_USAGE(BTN_TL2),    \
-        HID_USAGE(BTN_TR2),    \
-        HID_USAGE(BTN_C),      \
-        HID_USAGE(BTN_Z)
-
-#define LIVE_GUITAR_AXIS            \
-    HID_USAGE(HID_USAGE_DESKTOP_X), \
-        HID_USAGE(HID_USAGE_DESKTOP_Y)
-
-#define TUD_HID_REPORT_DESC_LIVE_GUITAR() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(LIVE_GUITAR_USAGES, LIVE_GUITAR_AXIS, 14, 2)
-
-#define GUITAR_HERO_DRUMS_USAGES \
-    HID_USAGE(BTN_A),            \
-        HID_USAGE(BTN_B),        \
-        HID_USAGE(BTN_Y),        \
-        HID_USAGE(BTN_X),        \
-        HID_USAGE(BTN_TL),       \
-        HID_USAGE(BTN_TR),       \
-        HID_USAGE(BTN_SELECT),   \
-        HID_USAGE(BTN_START),    \
-        HID_USAGE(BTN_GUIDE),    \
-        HID_USAGE(BTN_TL2),      \
-        HID_USAGE(BTN_TR2),      \
-        HID_USAGE(BTN_C),        \
-        HID_USAGE(BTN_Z)
-
-#define GUITAR_HERO_DRUMS_AXIS           \
-    HID_USAGE(HID_USAGE_DESKTOP_X),      \
-        HID_USAGE(HID_USAGE_DESKTOP_Y),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RX), \
-        HID_USAGE(HID_USAGE_DESKTOP_RY), \
-        HID_USAGE(HID_USAGE_DESKTOP_Z),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RZ)
-#define TUD_HID_REPORT_DESC_GUITAR_HERO_DRUMS() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(GUITAR_HERO_DRUMS_USAGES, GUITAR_HERO_DRUMS_AXIS, 13, 6)
-
-#define ROCK_BAND_DRUMS_USAGES \
-    HID_USAGE(BTN_A),          \
-        HID_USAGE(BTN_B),      \
-        HID_USAGE(BTN_X),      \
-        HID_USAGE(BTN_Y),      \
-        HID_USAGE(BTN_THUMBR), \
-        HID_USAGE(BTN_TR),     \
-        HID_USAGE(BTN_TL),     \
-        HID_USAGE(BTN_THUMBL), \
-        HID_USAGE(BTN_SELECT), \
-        HID_USAGE(BTN_START),  \
-        HID_USAGE(BTN_GUIDE),  \
-        HID_USAGE(BTN_TL2),    \
-        HID_USAGE(BTN_TR2),    \
-        HID_USAGE(BTN_C),      \
-        HID_USAGE(BTN_Z)
-
-#define ROCK_BAND_DRUMS_AXIS             \
-    HID_USAGE(HID_USAGE_DESKTOP_X),      \
-        HID_USAGE(HID_USAGE_DESKTOP_Y),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RX), \
-        HID_USAGE(HID_USAGE_DESKTOP_RY), \
-        HID_USAGE(HID_USAGE_DESKTOP_Z),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RZ), \
-        HID_USAGE(HID_USAGE_DESKTOP_SLIDER)
-
-#define TUD_HID_REPORT_DESC_ROCK_BAND_DRUMS() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(ROCK_BAND_DRUMS_USAGES, ROCK_BAND_DRUMS_AXIS, 15, 7)
-
-#define DJ_HERO_TURNTABLE_USAGES \
-    HID_USAGE(BTN_A),            \
-        HID_USAGE(BTN_B),        \
-        HID_USAGE(BTN_Y),        \
-        HID_USAGE(BTN_X),        \
-        HID_USAGE(BTN_TL),       \
-        HID_USAGE(BTN_TR),       \
-        HID_USAGE(BTN_TL2),      \
-        HID_USAGE(BTN_TR2),      \
-        HID_USAGE(BTN_C),        \
-        HID_USAGE(BTN_Z),        \
-        HID_USAGE(BTN_SELECT),   \
-        HID_USAGE(BTN_START),    \
-        HID_USAGE(BTN_GUIDE)
-
-#define DJ_HERO_TURNTABLE_AXIS           \
-    HID_USAGE(HID_USAGE_DESKTOP_X),      \
-        HID_USAGE(HID_USAGE_DESKTOP_Y),  \
-        HID_USAGE(HID_USAGE_DESKTOP_RX), \
-        HID_USAGE(HID_USAGE_DESKTOP_RY)
-
-#define TUD_HID_REPORT_DESC_DJ_HERO_TURNTABLE() \
-    TUD_HID_REPORT_DESC_GAME_CONTROLLER(DJ_HERO_TURNTABLE_USAGES, DJ_HERO_TURNTABLE_AXIS, 13, 4)
 
 #define TUD_HID_REPORT_DESC_PS3_THIRDPARTY_GAMEPAD()           \
     HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                    \
@@ -631,7 +394,7 @@
             HID_USAGE(0x48),                                   \
         HID_REPORT_COUNT(63),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
-        HID_REPORT_ID(REPORT_ID_PS4_GET_AUTH_STATUS_PS3_F2)           \
+        HID_REPORT_ID(REPORT_ID_PS4_GET_AUTH_STATUS_PS3_F2)    \
             HID_USAGE(0x49),                                   \
         HID_REPORT_COUNT(15),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \

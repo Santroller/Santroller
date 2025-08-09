@@ -2,7 +2,11 @@
 #include "input/input.hpp"
 #include "input/gpio.hpp"
 #include "mappings/mapping.hpp"
+#include "protocols/hid.hpp"
+#include "tusb.h"
+#include "usb/usb_descriptors.h"
 #include <vector>
+#include <memory>
 /* TODO
 load_device should construct some form of device and throw it in a map using the dev_id
 
@@ -11,12 +15,25 @@ and we would walk the map of devices and poll each device too.
 if that ends up not being performant enough THEN we can think about something more optimal but that feels like the clean method.
 
 */
-std::vector<Input> inputs;
+std::vector<std::unique_ptr<Mapping>> mappings;
+
+void update()
+{
+    san_base_t gamepad = {0};
+    for (auto &mapping : mappings)
+    {
+        mapping->update(&gamepad);
+    }
+    PCGamepad_Data_t out = {0};
+    out.a = gamepad.gamepad.a;
+
+    tud_hid_report(REPORT_ID_GAMEPAD, &out, sizeof(out));
+}
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Device device;
-    uint8_t *dev_id = (uint8_t *)*arg;
+    uint16_t *dev_id = (uint16_t *)*arg;
     pb_decode(stream, proto_Device_fields, &device);
     switch (device.which_device)
     {
@@ -35,9 +52,10 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    uint16_t *mapping_id = (uint16_t *)*arg;
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
-    Input* input;
+    Input *input = nullptr;
     switch (mapping.input.which_input)
     {
     case proto_Input_analogDevice_tag:
@@ -50,15 +68,22 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         printf("gpio %d %d\r\n", mapping.input.input.gpio.pin, mapping.input.input.gpio.pinMode);
         input = new GPIOInput(mapping.input.input.gpio);
     }
+    if (input == nullptr)
+    {
+        return true;
+    }
     switch (mapping.which_mapping)
     {
     case proto_Mapping_axis_tag:
         printf("axis %d\r\n", mapping.mapping.axis.axis);
+        mappings.push_back(std::unique_ptr<Mapping>(new AxisMapping(mapping.mapping.axis, *input, *mapping_id)));
         break;
     case proto_Mapping_button_tag:
         printf("button %d\r\n", mapping.mapping.button.button);
+        mappings.push_back(std::unique_ptr<Mapping>(new ButtonMapping(mapping.mapping.button, *input, *mapping_id)));
         break;
     }
+    *mapping_id += 1;
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -66,6 +91,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_Profile profile;
     profile.mappings.funcs.decode = &load_mapping;
     profile.activationMethod.funcs.decode = &load_mapping;
+    uint16_t mapping_id = 0;
+    profile.mappings.arg = &mapping_id;
     pb_decode(stream, proto_Profile_fields, &profile);
     return true;
 }
@@ -141,6 +168,15 @@ bool save(proto_Config *config)
     return true;
 }
 
+bool inner_load(proto_Config &config, const uint8_t *dataPtr, uint32_t size) {
+    // We are now sufficiently confident that the data is valid so we run the deserialization
+    pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
+    config.devices.funcs.decode = &load_device;
+    uint16_t dev_id = 0;
+    config.devices.arg = &dev_id;
+    config.profiles.funcs.decode = &load_profile;
+    return pb_decode(&inputStream, proto_Config_fields, &config);
+}
 uint32_t copy_config_info(uint8_t *buffer)
 {
     const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
@@ -192,7 +228,9 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     // Move the encoded data in memory down to the footer
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
+    proto_Config config;
     EEPROM.commit();
+    inner_load(config, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize);
     return true;
 }
 
@@ -252,11 +290,5 @@ bool load(proto_Config &config)
         return false;
     }
 
-    // We are now sufficiently confident that the data is valid so we run the deserialization
-    pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, footer.dataSize);
-    config.devices.funcs.decode = &load_device;
-    uint8_t dev_id = 0;
-    config.devices.arg = &dev_id;
-    config.profiles.funcs.decode = &load_profile;
-    return pb_decode(&inputStream, proto_Config_fields, &config);
+    return inner_load(config, dataPtr, footer.dataSize);
 }

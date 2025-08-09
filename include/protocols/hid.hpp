@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "config.h"
 
 // To make things easier, we use bitfields here, and then we map to a proper hat later
 #define DPAD                       \
@@ -17,7 +16,6 @@
         uint8_t dpad;              \
     };
 typedef struct {
-    uint8_t reportId;
     // Button bits
     uint8_t x : 1;  // square
     uint8_t a : 1;  // cross

@@ -9,6 +9,7 @@ class GPIOInput: public Input {
    private:
     void setup();
     bool m_analog;
+    bool m_invert;
     uint8_t m_pin;
     proto_GPIOInput m_input;
 };

@@ -3,13 +3,13 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-GPIOInput::GPIOInput(proto_GPIOInput input) : m_analog(input.analog), m_input(input)
+GPIOInput::GPIOInput(proto_GPIOInput input) : m_analog(input.analog), m_invert(input.pinMode == PinMode_PullUp), m_input(input)
 {
     setup();
 }
 bool GPIOInput::tickDigital()
 {
-    return gpio_get(m_pin);
+    return gpio_get(m_pin) != m_invert;
 }
 uint16_t GPIOInput::tickAnalog()
 {
@@ -22,7 +22,9 @@ void GPIOInput::setup()
     if (m_analog)
     {
         adc_gpio_init(m_pin);
-    } else {
+    }
+    else
+    {
         gpio_init(m_pin);
     }
     switch (m_input.pinMode)

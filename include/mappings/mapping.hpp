@@ -6,15 +6,18 @@
 class Mapping
 {
 public:
-    Mapping() {}
+    Mapping(uint16_t id): m_id(id) {}
     virtual ~Mapping() {}
-    virtual void update(san_base_t *base);
+    virtual void update(san_base_t *base)=0;
+protected:
+    uint16_t m_id;
 };
 
 class AxisMapping : public Mapping
 {
 public:
-    AxisMapping(proto_AxisMapping mapping, Input &input);
+    ~AxisMapping() {}
+    AxisMapping(proto_AxisMapping mapping, Input &input, uint16_t id);
     void update(san_base_t *base);
 
 private:
@@ -25,10 +28,12 @@ private:
 class ButtonMapping : public Mapping
 {
 public:
-    ButtonMapping(proto_ButtonMapping mapping, Input &input);
+    ~ButtonMapping() {}
+    ButtonMapping(proto_ButtonMapping mapping, Input &input, uint16_t id);
     void update(san_base_t *base);
 
 private:
     proto_ButtonMapping m_mapping;
     Input &m_input;
+    bool m_lastValue = false;
 };

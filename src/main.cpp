@@ -35,10 +35,8 @@ void hid_task(void)
 {
     if (!tud_hid_ready())
         return;
-    // for anything we need to send back to the web browser, we should just probuf it and send it as an event.
-    // this means the web browser won't be polling, and everything will be interrupt based.
-    // uint8_t test[63] = {123};
-    // tud_hid_report(REPORT_ID_CONFIG, &test, sizeof(test));
+    
+    update();
 }
 
 ConsoleMode mode = ConsoleMode::Hid;

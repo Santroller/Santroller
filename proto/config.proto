@@ -16,6 +16,7 @@ message Profile {
 message Config {
   repeated Device devices = 1;
   repeated Profile profiles = 2;
+  optional int32 currentProfile = 3;
 }
 
 message ConfigInfo {

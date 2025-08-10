@@ -36,8 +36,8 @@ enum AccelerometerType {
 };
 class Accelerometer {
    public:
-    Accelerometer(I2CMasterInterface* interface)
-        : interface(interface) {};
+    Accelerometer(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
+        : interface(block, sda, scl, clock) {};
     void tick();
     inline bool isConnected() {
         return connected;
@@ -49,7 +49,7 @@ class Accelerometer {
     void initLis3dh();
     void initMPU6050();
     void initADXL345();
-    I2CMasterInterface* interface;
+    I2CMasterInterface interface;
     bool connected;
     AccelerometerType type;
     uint8_t address;

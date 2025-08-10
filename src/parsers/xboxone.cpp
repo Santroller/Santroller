@@ -15,7 +15,7 @@ void XboxOneParser::sendPacket(GipHeader_t header, void* data) {
         memcpy(buffer + bytesRead, (uint8_t*)data, header.packet_length);
         bytesRead += header.packet_length;
     }
-    usbInterface->sendReport(buffer, bytesRead);
+    usbinterface.sendReport(buffer, bytesRead);
 }
 void XboxOneParser::sendACK(GipHeader_t header) {
     Gip_Ack_t ack;

@@ -31,10 +31,10 @@ typedef enum {
     WII_NO_EXTENSION = 0x180b,
     WII_NOT_INITIALISED = 0xFFFF
 } WiiExtType_t;
-class WiiDevice {
+class WiiExtension {
 
    public:
-    inline WiiDevice(I2CMasterInterface* interface) : mInterface(interface), mFound(false) {
+    inline WiiExtension(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock), mFound(false) {
     }
     void tick();
 
@@ -43,7 +43,7 @@ class WiiDevice {
     WiiExtType_t readExtID();
     void initWiiExt();
     void setEuphoriaLed(bool state);
-    I2CMasterInterface* mInterface;
+    I2CMasterInterface mInterface;
     bool mFound;
     bool nextEuphoriaLedState = false;
     bool ledUpdated = false;

@@ -3,4 +3,4 @@ target_include_directories(accelerometer INTERFACE .)
 target_link_libraries(accelerometer INTERFACE
     peripherals
 )
-target_sources(accelerometer INTERFACE accelerometer.cpp)
+target_sources(accelerometer INTERFACE accelerometerlib.cpp)

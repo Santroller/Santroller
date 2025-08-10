@@ -67,10 +67,10 @@ enum UsbDeviceType {
 }
 
 enum ButtonType {
-  North = 1;
-  East = 2;
-  South = 3;
-  West = 4;
+  A = 1;
+  B = 2;
+  X = 3;
+  Y = 4;
 
   Back = 5;
   Start = 6;

@@ -6,15 +6,15 @@
 #define DJ_BUTTONS_PTR 0x12
 class DJHeroTurntable {
    public:
-   DJHeroTurntable(I2CMasterInterface* interface, bool left)
-        : interface(interface), addr(left ? DJLEFT_ADDR: DJRIGHT_ADDR) {};
+   DJHeroTurntable(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, bool left)
+        : interface(block, sda, scl, clock), addr(left ? DJLEFT_ADDR: DJRIGHT_ADDR) {};
     void tick();
     inline bool isConnected() {
         return connected;
     }
 
    private:
-    I2CMasterInterface* interface;
+    I2CMasterInterface interface;
     uint8_t addr;
     bool connected;
     int pollRate;

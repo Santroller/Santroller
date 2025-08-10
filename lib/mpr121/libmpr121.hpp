@@ -55,8 +55,8 @@ enum {
 };
 class MPR121 {
    public:
-    MPR121(I2CMasterInterface* interface)
-        : interface(interface) {};
+    MPR121(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
+        : interface(block, sda, scl, clock) {};
     void tick();
     inline bool isConnected() {
         return connected;
@@ -70,7 +70,7 @@ class MPR121 {
 
    private:
     void init();
-    I2CMasterInterface* interface;
+    I2CMasterInterface interface;
     bool connected;
     int touchpadCount;
     int ddr;     // pin data direction register

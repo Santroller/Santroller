@@ -4,13 +4,13 @@
 #include "events.pb.h"
 #include <pb_encode.h>
 
-ButtonMapping::ButtonMapping(proto_ButtonMapping mapping, Input &input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(input)
+ButtonMapping::ButtonMapping(proto_ButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
 {
 }
 
 void ButtonMapping::update(san_base_t *base)
 {
-    auto val = m_input.tickDigital();
+    auto val = m_input->tickDigital();
     if (val != m_lastValue)
     {
 
@@ -23,7 +23,7 @@ void ButtonMapping::update(san_base_t *base)
     }
     switch (m_mapping.button)
     {
-    case proto_ButtonType::North:
+    case proto_ButtonType::A:
         base->gamepad.a = val;
         break;
     }

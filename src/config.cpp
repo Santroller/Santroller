@@ -1,8 +1,16 @@
 #include "config.hpp"
 #include "input/input.hpp"
 #include "input/gpio.hpp"
+#include "devices/base.hpp"
+#include "devices/accelerometer.hpp"
+#include "devices/wii.hpp"
+#include "devices/bhdrum.hpp"
+#include "devices/crazyneck.hpp"
+#include "devices/djh.hpp"
+#include "devices/gh5neck.hpp"
+#include "devices/max1704x.hpp"
+#include "devices/mpr121.hpp"
 #include "mappings/mapping.hpp"
-#include "protocols/hid.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include <vector>
@@ -16,18 +24,18 @@ if that ends up not being performant enough THEN we can think about something mo
 
 */
 std::vector<std::unique_ptr<Mapping>> mappings;
-
-void update()
+std::map<uint32_t, std::shared_ptr<Device>> devices;
+typedef struct
 {
-    san_base_t gamepad = {0};
+    uint32_t current;
+    uint32_t target;
+} profile_args_t;
+void update(san_base_t* gamepad)
+{
     for (auto &mapping : mappings)
     {
-        mapping->update(&gamepad);
+        mapping->update(gamepad);
     }
-    PCGamepad_Data_t out = {0};
-    out.a = gamepad.gamepad.a;
-
-    tud_hid_report(REPORT_ID_GAMEPAD, &out, sizeof(out));
 }
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -37,11 +45,29 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_Device_fields, &device);
     switch (device.which_device)
     {
-    case proto_Device_adxl_tag:
-        printf("adxl %d %d\r\n", *dev_id, device.device.adxl.i2c.sda);
+    case proto_Device_accelerometer_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new AccelerometerDevice(device.device.accelerometer, *dev_id));
         break;
     case proto_Device_wii_tag:
-        printf("wii %d %d\r\n", *dev_id, device.device.wii.i2c.sda);
+        devices[*dev_id] = std::shared_ptr<Device>(new WiiDevice(device.device.wii, *dev_id));
+        break;
+    case proto_Device_bhDrum_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new BandHeroDrumDevice(device.device.bhDrum, *dev_id));
+        break;
+    case proto_Device_crazyGuitarNeck_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, *dev_id));
+        break;
+    case proto_Device_djhTurntable_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new DjHeroTurntableDevice(device.device.djhTurntable, *dev_id));
+        break;
+    case proto_Device_gh5Neck_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new GH5NeckDevice(device.device.gh5Neck, *dev_id));
+        break;
+    case proto_Device_max1704x_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new Max1704XDevice(device.device.max1704x, *dev_id));
+        break;
+    case proto_Device_mpr121_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new MPR121Device(device.device.mpr121, *dev_id));
         break;
     case proto_Device_usbHost_tag:
         printf("usbhost %d %d\r\n", *dev_id, device.device.usbHost.firstPin, device.device.usbHost.dmFirst);
@@ -55,7 +81,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     uint16_t *mapping_id = (uint16_t *)*arg;
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
-    Input *input = nullptr;
+    std::unique_ptr<Input> input = nullptr;
     switch (mapping.input.which_input)
     {
     case proto_Input_analogDevice_tag:
@@ -66,7 +92,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Input_gpio_tag:
         printf("gpio %d %d\r\n", mapping.input.input.gpio.pin, mapping.input.input.gpio.pinMode);
-        input = new GPIOInput(mapping.input.input.gpio);
+        input = std::unique_ptr<Input>(new GPIOInput(mapping.input.input.gpio));
     }
     if (input == nullptr)
     {
@@ -76,11 +102,11 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
     case proto_Mapping_axis_tag:
         printf("axis %d\r\n", mapping.mapping.axis.axis);
-        mappings.push_back(std::unique_ptr<Mapping>(new AxisMapping(mapping.mapping.axis, *input, *mapping_id)));
+        mappings.push_back(std::unique_ptr<Mapping>(new AxisMapping(mapping.mapping.axis, std::move(input), *mapping_id)));
         break;
     case proto_Mapping_button_tag:
         printf("button %d\r\n", mapping.mapping.button.button);
-        mappings.push_back(std::unique_ptr<Mapping>(new ButtonMapping(mapping.mapping.button, *input, *mapping_id)));
+        mappings.push_back(std::unique_ptr<Mapping>(new ButtonMapping(mapping.mapping.button, std::move(input), *mapping_id)));
         break;
     }
     *mapping_id += 1;
@@ -88,12 +114,25 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    profile_args_t *profile_args = (profile_args_t *)*arg;
     proto_Profile profile;
-    profile.mappings.funcs.decode = &load_mapping;
-    profile.activationMethod.funcs.decode = &load_mapping;
+    // only properly load the current profile
+    if (profile_args->current == profile_args->target)
+    {
+        printf("loading profile: %d\r\n", profile_args->current);
+        profile.mappings.funcs.decode = &load_mapping;
+        profile.activationMethod.funcs.decode = &load_mapping;
+    }
+    else
+    {
+        printf("skipping profile: %d\r\n", profile_args->current);
+        profile.mappings.funcs.decode = nullptr;
+        profile.activationMethod.funcs.decode = nullptr;
+    }
     uint16_t mapping_id = 0;
     profile.mappings.arg = &mapping_id;
     pb_decode(stream, proto_Profile_fields, &profile);
+    profile_args->current++;
     return true;
 }
 // We put a ConfigFooter struct at the end of the flash area reserved for FlashPROM. It contains a magicvalue, the size
@@ -134,10 +173,10 @@ bool save_profile(pb_ostream_t *stream, const pb_field_t *field, void *const *ar
 bool save(proto_Config *config)
 {
     // need to do the opposite of load, aka setting all the encode functions and then encode
-    config->devices.funcs.encode = save_device;
+    config->devices.funcs.encode = save_device; 
     config->profiles.funcs.encode = save_profile;
     pb_ostream_t outputStream = pb_ostream_from_buffer(EEPROM.writeCache, EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    if (!pb_encode(&outputStream, proto_Config_fields, &config))
+    if (!pb_encode(&outputStream, proto_Config_fields, config))
     {
         return false;
     }
@@ -168,13 +207,26 @@ bool save(proto_Config *config)
     return true;
 }
 
-bool inner_load(proto_Config &config, const uint8_t *dataPtr, uint32_t size) {
+bool inner_load(proto_Config &config, const uint8_t *dataPtr, uint32_t size)
+{
     // We are now sufficiently confident that the data is valid so we run the deserialization
+    // load just the current profile to begin with
     pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
+    config.devices.funcs.decode = nullptr;
+    config.profiles.funcs.decode = nullptr;
+    pb_decode(&inputStream, proto_Config_fields, &config);
+    // now actually load the entire config
+    inputStream = pb_istream_from_buffer(dataPtr, size);
     config.devices.funcs.decode = &load_device;
+    profile_args_t args = {
+        current : 0,
+        target : config.currentProfile
+    };
     uint16_t dev_id = 0;
     config.devices.arg = &dev_id;
     config.profiles.funcs.decode = &load_profile;
+    config.profiles.arg = &args;
+    mappings.clear();
     return pb_decode(&inputStream, proto_Config_fields, &config);
 }
 uint32_t copy_config_info(uint8_t *buffer)

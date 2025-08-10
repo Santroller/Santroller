@@ -1,9 +1,9 @@
-#include "max1704x.hpp"
+#include "libmax1704x.hpp"
 
 bool Max1704X::init() {
     write16(REGISTER_COMMAND, RESET_COMMAND);
     uint16_t data;
-    interface->writeRegister(MAX710X_I2C_ADDRESS, REGISTER_CONFIG, sizeof(data), (uint8_t*)&data);
+    interface.writeRegister(MAX710X_I2C_ADDRESS, REGISTER_CONFIG, sizeof(data), (uint8_t*)&data);
     if (data != 0x1C97) {
         return false;
     }
@@ -18,7 +18,7 @@ void Max1704X::tick() {
         return;
     }
     uint8_t raw;
-    if (!interface->readRegister(MAX710X_I2C_ADDRESS, REGISTER_SOC, sizeof(raw), (uint8_t*)&raw)) {
+    if (!interface.readRegister(MAX710X_I2C_ADDRESS, REGISTER_SOC, sizeof(raw), (uint8_t*)&raw)) {
         connected = false;
     }
 #ifdef BLUETOOTH_TX

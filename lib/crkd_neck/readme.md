@@ -1,43 +1,34 @@
-body -> neck (every 10ms)
-A5 01 0A 00 00 00 00 00 00 0E 
+# CRKD Neck
+The CRKD necks use a PY32F002B ARM chip running a firmware that simply sends and receives data over a UART connetion to signal the state of the frets and the other inputs. the LED is simply driven directly from the body, and its assumed its a WS2812 style LED chain.
 
-neck -> body (every 5ms)
-none
-A5 01 0C 00 00 00 80 80 00 01 15 5B 
+the protocol in use is structured like the following:
 
-green
-A5 01 0C 00 00 01 80 80 00 01 15 6C
+```c
 
-red
-A5 01 0C 00 00 02 80 80 00 01 15 35 
+struct NeckToBody {
+    uint8_t header[2] = {0xA5, 0x01};
+    uint8_t len = 0x0C;
+    uint8_t padding[2] = {0x00, 0x00};
+    uint8_t green:1;
+    uint8_t red:1;
+    uint8_t yellow:1;
+    uint8_t blue:1;
+    uint8_t orange:1;
+    uint8_t :3;
+    uint8_t dpadUpDown; // none: 0x80, up: 0x00, down: 0xFF
+    uint8_t dpadLeftRight; // none: 0x80, right: 0x00, left: 0xFF
+    uint8_t footer[3] = {0x00, 0x01, 0x15};
+    uint8_t crc; // CRC-8/MAXIM-DOW
+}
 
-yellow
-A5 01 0C 00 00 04 80 80 00 01 15 87 
+struct BodyToNeck {
+    uint8_t data [] = {0xA5, 0x01, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t crc = 0x0E; // CRC-8/MAXIM-DOW
+}
+```
 
-blue
-A5 01 0C 00 00 08 80 80 00 01 15 FA 
-
-orange
-A5 01 0C 00 00 10 80 80 00 01 15 00 
-
-up
-A5 01 0C 00 00 00 00 80 00 01 15 90
-
-down
-A5 01 0C 00 00 00 FF 80 00 01 15 59 
-
-left
-A5 01 0C 00 00 00 80 FF 00 01 15 69
-
-right
-A5 01 0C 00 00 00 80 00 00 01 15 82 
-
-
-format:
-A5 01   0C     00 00      xx       xx                 xx                 00 01 15    xx
-header  len    padding    frets    dpad up/down       dpad left/right    footer      CRC-8/MAXIM-DOW
-
-feeding in the entire packet to the following will return 0 if the packet isnt corrupt
+For calculating the CRC, one can use the following:
+```c
 unsigned crc8maximdow(unsigned char *data, size_t len) {
     unsigned crc = 0;
     for (size_t i = 0; i < len; i++) {
@@ -47,3 +38,4 @@ unsigned crc8maximdow(unsigned char *data, size_t len) {
     }
     return crc;
 }
+```

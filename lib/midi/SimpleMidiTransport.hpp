@@ -1,3 +1,4 @@
+#pragma once
 #include "MIDI.h"
 #include "MIDIData.hpp"
 BEGIN_MIDI_NAMESPACE
@@ -36,7 +37,7 @@ class SimpleMidiTransport {
 class SimpleMidiInterface {
    public:
     SimpleMidiInterface() : midiInterface(transport) {
-        MidiData::instance.registerInterface(midiInterface);
+        // MidiData::instance.registerInterface(midiInterface);
     }
     void parsePacket(uint8_t* data, uint8_t len) {
         midiInterface.begin();

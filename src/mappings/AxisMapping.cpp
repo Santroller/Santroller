@@ -5,12 +5,12 @@
 #include <pb_encode.h>
 #include <utils.h>
 
-AxisMapping::AxisMapping(proto_AxisMapping mapping, Input& input, uint16_t id): Mapping(id), m_mapping(mapping), m_input(input) {
+AxisMapping::AxisMapping(proto_AxisMapping mapping, std::unique_ptr<Input> input, uint16_t id): Mapping(id), m_mapping(mapping), m_input(std::move(input)) {
 
 }
 
 void AxisMapping::update(san_base_t* base) {
-    auto val = m_input.tickAnalog();
+    auto val = m_input->tickAnalog();
     if (val != m_lastValue)
     {
         uint8_t buffer[63];

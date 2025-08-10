@@ -3,6 +3,7 @@
 #include "input/input.hpp"
 #include "input.pb.h"
 #include "state/base.hpp"
+#include <memory>
 class Mapping
 {
 public:
@@ -17,12 +18,12 @@ class AxisMapping : public Mapping
 {
 public:
     ~AxisMapping() {}
-    AxisMapping(proto_AxisMapping mapping, Input &input, uint16_t id);
+    AxisMapping(proto_AxisMapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update(san_base_t *base);
 
 private:
     proto_AxisMapping m_mapping;
-    Input &m_input;
+    std::unique_ptr<Input> m_input;
     uint32_t m_lastValue = 0;
 };
 
@@ -30,11 +31,11 @@ class ButtonMapping : public Mapping
 {
 public:
     ~ButtonMapping() {}
-    ButtonMapping(proto_ButtonMapping mapping, Input &input, uint16_t id);
+    ButtonMapping(proto_ButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update(san_base_t *base);
 
 private:
     proto_ButtonMapping m_mapping;
-    Input &m_input;
+    std::unique_ptr<Input> m_input;
     bool m_lastValue = false;
 };

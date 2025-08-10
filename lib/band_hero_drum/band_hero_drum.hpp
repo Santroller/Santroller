@@ -9,8 +9,8 @@
 #define BH_DRUM_PTR 0x10
 class BandHeroDrum {
    public:
-    BandHeroDrum(I2CMasterInterface* interface)
-        : interface(interface) {};
+    BandHeroDrum(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
+        : interface(block, sda, scl, clock) {};
     void tick();
     inline bool isConnected() {
         return connected;
@@ -18,6 +18,6 @@ class BandHeroDrum {
 
    private:
     MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
-    I2CMasterInterface* interface;
+    I2CMasterInterface interface;
     bool connected;
 };

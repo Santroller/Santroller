@@ -1,5 +1,6 @@
 // #include "secondary_pico.hpp"
-// // TODO: for this stuff, is there a more reasonable protocol to use here?
+// // TODO: for this stuff, is there a more reasonable protocol to use here? we should really come up with something that validates the packets or something because that would have a lot less issues.
+// i guess for loading pin mappings, we would do something like just looping through all the current mappings and telling them to init again when we see a secondary pico connect, potentially only doing this for secondary pico mappings
 // void secondaryPinMode(uint8_t pin, uint8_t pinMode) {
 //     if (!secondary_initted) {
 //         return;

@@ -89,6 +89,14 @@ add_executable(
   src/input/gpio.cpp
   src/mappings/ButtonMapping.cpp
   src/mappings/AxisMapping.cpp
+  src/devices/wii.cpp
+  src/devices/accelerometer.cpp
+  src/devices/bhdrum.cpp
+  src/devices/crazyneck.cpp
+  src/devices/djh.cpp
+  src/devices/gh5neck.cpp
+  src/devices/max1704x.cpp
+  src/devices/mpr121.cpp
   src/config.cpp
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c

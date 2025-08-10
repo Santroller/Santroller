@@ -28,7 +28,7 @@ void WorldTourDrum::tick() {
     // 3: read the rest of the packet
     // TODO: check if we can handle packets longer than 3?
     uint8_t data[3];
-    for (int i = 0; i < sizeof(data); i++) {
+    for (size_t i = 0; i < sizeof(data); i++) {
         data[i] = mInterface->transfer(0x00);
         sleep_us(50);
     }

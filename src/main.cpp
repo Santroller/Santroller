@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <map>
 #include <stdint.h>
-
+#include "config.hpp"
 #include "config.pb.h"
 #include "pico/stdlib.h"
 #include "FlashPROM.h"
@@ -19,6 +19,7 @@
 #include "usb/device/xone_device.h"
 #include "usb/device/ogxbox_device.h"
 #include "usb/device/ps_device.h"
+#include "protocols/hid.hpp"
 
 #include "tusb.h"
 
@@ -36,8 +37,12 @@ void hid_task(void)
 {
     if (!tud_hid_ready())
         return;
-    
-    update();
+    san_base_t gamepad;
+    update(&gamepad);
+    PCGamepad_Data_t out = {0};
+    out.a = gamepad.gamepad.a;
+
+    tud_hid_report(REPORT_ID_GAMEPAD, &out, sizeof(out));
 }
 
 ConsoleMode mode = ConsoleMode::Hid;

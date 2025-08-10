@@ -6,7 +6,7 @@
 
 class I2CMasterInterface {
    public:
-    void init(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock);
+    I2CMasterInterface(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock);
     bool readRegister(uint8_t address, uint8_t pointer, uint8_t length,
                          uint8_t *data);
     bool readRegisterRepeatedStart(uint8_t address, uint8_t pointer, uint8_t length,

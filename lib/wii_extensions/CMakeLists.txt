@@ -4,4 +4,4 @@ target_link_libraries(wii_extensions INTERFACE
     peripherals
     midi
 )
-target_sources(wii_extensions INTERFACE wii.cpp)
+target_sources(wii_extensions INTERFACE wii_extension.cpp)

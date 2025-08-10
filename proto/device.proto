@@ -29,11 +29,7 @@ message PeripheralDevice {
   required int32 address = 2;
 }
 
-message Adxl345Device { required I2CDevice i2c = 1; }
-
-message Lis3dhDevice { required I2CDevice i2c = 1; }
-
-message Mpu6050Device { required I2CDevice i2c = 1; }
+message AccelerometerDevice { required I2CDevice i2c = 1; }
 
 message Max1704xDevice { required I2CDevice i2c = 1; }
 
@@ -53,7 +49,10 @@ message CrazyGuitarNeckDevice { required I2CDevice i2c = 1; }
 
 message GuitarHero5NeckDevice { required I2CDevice i2c = 1; }
 
-message DJHeroTurntableDevice { required I2CDevice i2c = 1; }
+message DJHeroTurntableDevice { 
+  required I2CDevice i2c = 1; 
+  required bool left = 2;
+}
 
 message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
@@ -102,9 +101,7 @@ message JoybusEmulationDevice { required int32 dataPin = 1; }
 
 message Device {
   oneof device {
-    Adxl345Device adxl = 1;
-    Lis3dhDevice lis3dh = 2;
-    Mpu6050Device mpu6050 = 3;
+    AccelerometerDevice accelerometer = 1;
     Max1704xDevice max1704x = 4;
     Mpr121Device mpr121 = 5;
     WiiDevice wii = 6;

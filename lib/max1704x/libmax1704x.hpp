@@ -14,8 +14,8 @@
 #define QUICKSTART_MODE     0x4000
 class Max1704X {
    public:
-    Max1704X(I2CMasterInterface* interface)
-        : interface(interface) {};
+    Max1704X(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
+        : interface(block, sda, scl, clock) {};
     void tick();
     inline bool isConnected() {
         return connected;
@@ -29,12 +29,12 @@ class Max1704X {
 
    private:
     inline bool write16(uint8_t addr, uint16_t data) {
-        return interface->writeRegister(MAX710X_I2C_ADDRESS, addr, sizeof(data), (uint8_t*)&data);
+        return interface.writeRegister(MAX710X_I2C_ADDRESS, addr, sizeof(data), (uint8_t*)&data);
     }
     inline bool write8(uint8_t addr, uint8_t data) {
-        return interface->writeRegister(MAX710X_I2C_ADDRESS, addr, data);
+        return interface.writeRegister(MAX710X_I2C_ADDRESS, addr, data);
     }
     bool init();
-    I2CMasterInterface* interface;
+    I2CMasterInterface interface;
     bool connected;
 };

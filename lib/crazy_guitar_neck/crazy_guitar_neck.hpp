@@ -5,8 +5,8 @@
 #define CLONE_VALID_PACKET 0x52
 class CrazyGuitarNeck {
    public:
-    CrazyGuitarNeck(I2CMasterInterface* interface)
-        : interface(interface) {};
+    CrazyGuitarNeck(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
+        : interface(block, sda, scl, clock) {};
     void tick();
     inline bool isConnected() {
         return connected;
@@ -23,7 +23,7 @@ class CrazyGuitarNeck {
     bool soloOrange;
 
    private:
-    I2CMasterInterface* interface;
+    I2CMasterInterface interface;
     bool connected;
     bool reading;
 };

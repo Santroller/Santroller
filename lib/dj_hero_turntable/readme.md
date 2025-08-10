@@ -3,6 +3,8 @@
 The DJH turntable platter communicates with the main base via I2C. Each platter has a different I2C address, 0x0E for the left and 0x0D for the right. A read from address 0x12 will give you the state of the platter.
 Note that the platters velocity is a delta from the previous poll, so this gives you a limit on how fast the platter can be polled. If you poll it too slow the values will be very large, and if you poll too quickly, the values will be tiny and you will end up losing a lot of the range, the wii remote polls at 5ms, so this is usually want you want to poll at.
 
+The chip we are talking to is labeled as a HA2003-I/SS, and it is a rebadged PIC16LF722. The firmware for it is stored next to this file as djh-neck-fw.hex.
+
 Format of the data is the following:
 
 ```c

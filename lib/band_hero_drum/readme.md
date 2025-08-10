@@ -6,6 +6,8 @@ This interconnect simply just streams MIDI and thus we treat these devices as MI
 
 The brain has an I2C addres of 0x0D, and data is read in from register 10. The microcontroller is much newer in this, so there doesn't appear to be a poll rate cap.
 
+The chip in question is labeled HA2005-I/SS, and this ends up being a rebadged PIC18F25K20. The firmware from this chip is stored here as bh.hex.
+
 The I2C response is structured like the following:
 ```c
 struct packet {

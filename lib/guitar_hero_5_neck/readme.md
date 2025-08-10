@@ -3,6 +3,8 @@
 The GH5 neck communicates with the body via I2C. It has an I2C address of 0x0D. A read from address 0x12 will give you the state of the buttons and the slider.
 The neck can be polled pretty fast but it has a cap at how fast it actually polls its inputs internally. As a result, There ends up being an average poll rate of around 4ms when using one of these.
 
+The chip we are talking to is labeled as a HA2002-I/SS, and it is a rebadged PIC16LF722. The firmware for it is stored next to this file as gh5-neck-fw.hex.
+
 Format of the data is the following:
 
 ```c

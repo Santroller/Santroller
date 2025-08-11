@@ -39,6 +39,7 @@ void WiiExtension::initWiiExt()
     // Send packets needed to initialise a controller
     if (!mInterface.writeRegister(WII_ADDR, WII_ENCRYPTION_STATE_ID, WII_ENCRYPTION_FINISH_ID))
     {
+        mType = WiiExtType::WiiNoExtension;
         return;
     }
     sleep_us(10);

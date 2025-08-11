@@ -26,12 +26,13 @@ message UsbDeviceHotplugEvent {
 }
 
 message WiiDeviceHotplugEvent {
-    required int32 type = 1;
+    required int32 id = 1;
     required WiiExtType extension = 2;
 }
 
 message PS2DeviceHotplugEvent {
-    required int32 type = 1;
+    required int32 id = 1;
+    required int32 type = 2;
 }
 
 message Event {

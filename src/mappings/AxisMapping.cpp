@@ -2,6 +2,7 @@
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
+#include "main.hpp"
 #include <pb_encode.h>
 #include <utils.h>
 
@@ -9,15 +10,12 @@ AxisMapping::AxisMapping(proto_AxisMapping mapping, std::unique_ptr<Input> input
 
 }
 
-void AxisMapping::update(san_base_t* base) {
+void AxisMapping::update(san_base_t* base, bool resend_events) {
     auto val = m_input->tickAnalog();
-    if (val != m_lastValue)
+    if (val != m_lastValue || resend_events)
     {
-        uint8_t buffer[63];
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val}}};
-        pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 63);
-        pb_encode(&outputStream, proto_Event_fields, &event);
-        tud_hid_report(REPORT_ID_CONFIG, buffer, outputStream.bytes_written);
+        send_event(event);
         m_lastValue = val;
     }
 }

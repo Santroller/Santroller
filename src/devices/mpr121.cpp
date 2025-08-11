@@ -3,6 +3,6 @@ MPR121Device::MPR121Device(proto_Mpr121Device device, uint16_t id) : Device(id),
 {
 }
 
-void MPR121Device::update() {
+void MPR121Device::update(bool resend_events) {
     m_mpr121.tick();
 }

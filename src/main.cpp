@@ -20,6 +20,7 @@
 #include "usb/device/ogxbox_device.h"
 #include "usb/device/ps_device.h"
 #include "protocols/hid.hpp"
+#include "main.hpp"
 
 #include "tusb.h"
 
@@ -43,6 +44,14 @@ void hid_task(void)
     out.a = gamepad.gamepad.a;
 
     tud_hid_report(REPORT_ID_GAMEPAD, &out, sizeof(out));
+}
+
+void send_event(proto_Event event)
+{
+    uint8_t buffer[63];
+    pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 63);
+    pb_encode(&outputStream, proto_Event_fields, &event);
+    tud_hid_report(REPORT_ID_CONFIG, buffer, outputStream.bytes_written);
 }
 
 ConsoleMode mode = ConsoleMode::Hid;

@@ -11,6 +11,21 @@ enum FaceButtonMappingMode {
   PositionBased = 2; /* Map face buttons by position */
 }
 
+enum WiiExtType {
+    WiiNunchuk = 0x0000;
+    WiiClassicController = 0x0001;
+    WiiClassicControllerPro = 0x0101;
+    WiiThqUdrawTablet = 0xFF12;
+    WiiUbisoftDrawsomeTablet = 0xFF13;
+    WiiGuitarHeroGuitar = 0x0003;
+    WiiGuitarHeroDrums = 0x0103;
+    WiiDjHeroTurntable = 0x0303;
+    WiiTaikoNoTatsujinController = 0x0011;
+    WiiMotionPlus = 0x0005;
+    WiiNoExtension = 0x180b;
+    WiiNotInitialised = 0xFFFF;
+} ;
+
 enum SubType {
   Gamepad = 1;
   Dancepad = 2;

@@ -3,6 +3,6 @@ DjHeroTurntableDevice::DjHeroTurntableDevice(proto_DJHeroTurntableDevice device,
 {
 }
 
-void DjHeroTurntableDevice::update() {
+void DjHeroTurntableDevice::update(bool resend_events) {
     m_turntable.tick();
 }

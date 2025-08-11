@@ -9,7 +9,7 @@ class Mapping
 public:
     Mapping(uint16_t id): m_id(id) {}
     virtual ~Mapping() {}
-    virtual void update(san_base_t *base)=0;
+    virtual void update(san_base_t *base, bool resend_events)=0;
 protected:
     uint16_t m_id;
 };
@@ -19,7 +19,7 @@ class AxisMapping : public Mapping
 public:
     ~AxisMapping() {}
     AxisMapping(proto_AxisMapping mapping, std::unique_ptr<Input> input, uint16_t id);
-    void update(san_base_t *base);
+    void update(san_base_t *base, bool resend_events);
 
 private:
     proto_AxisMapping m_mapping;
@@ -32,7 +32,7 @@ class ButtonMapping : public Mapping
 public:
     ~ButtonMapping() {}
     ButtonMapping(proto_ButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id);
-    void update(san_base_t *base);
+    void update(san_base_t *base, bool resend_events);
 
 private:
     proto_ButtonMapping m_mapping;

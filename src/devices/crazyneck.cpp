@@ -3,6 +3,6 @@ CrazyGuitarNeckDevice::CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device,
 {
 }
 
-void CrazyGuitarNeckDevice::update() {
+void CrazyGuitarNeckDevice::update(bool resend_events) {
     m_crazy_guitar_neck.tick();
 }

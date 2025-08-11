@@ -3,6 +3,6 @@ GH5NeckDevice::GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id) : 
 {
 }
 
-void GH5NeckDevice::update() {
+void GH5NeckDevice::update(bool resend_events) {
     m_gh5_neck.tick();
 }

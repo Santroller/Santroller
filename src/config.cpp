@@ -30,11 +30,15 @@ typedef struct
     uint32_t current;
     uint32_t target;
 } profile_args_t;
-void update(san_base_t* gamepad)
+void update(san_base_t *gamepad)
 {
+    for (auto &device : devices)
+    {
+        device.second->update(false);
+    }
     for (auto &mapping : mappings)
     {
-        mapping->update(gamepad);
+        mapping->update(gamepad, false);
     }
 }
 
@@ -173,7 +177,7 @@ bool save_profile(pb_ostream_t *stream, const pb_field_t *field, void *const *ar
 bool save(proto_Config *config)
 {
     // need to do the opposite of load, aka setting all the encode functions and then encode
-    config->devices.funcs.encode = save_device; 
+    config->devices.funcs.encode = save_device;
     config->profiles.funcs.encode = save_profile;
     pb_ostream_t outputStream = pb_ostream_from_buffer(EEPROM.writeCache, EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     if (!pb_encode(&outputStream, proto_Config_fields, config))

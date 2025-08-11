@@ -2,23 +2,19 @@
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
-#include <pb_encode.h>
+#include "main.hpp"
 
 ButtonMapping::ButtonMapping(proto_ButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
 {
 }
 
-void ButtonMapping::update(san_base_t *base)
+void ButtonMapping::update(san_base_t *base, bool resend_events)
 {
     auto val = m_input->tickDigital();
-    if (val != m_lastValue)
+    if (val != m_lastValue || resend_events)
     {
-
-        uint8_t buffer[63];
         proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val}}};
-        pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 63);
-        pb_encode(&outputStream, proto_Event_fields, &event);
-        tud_hid_report(REPORT_ID_CONFIG, buffer, outputStream.bytes_written);
+        send_event(event);
         m_lastValue = val;
     }
     switch (m_mapping.button)

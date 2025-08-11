@@ -7,7 +7,7 @@ class BandHeroDrumDevice : public Device
 public:
     ~BandHeroDrumDevice() {}
     BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t id);
-    void update();
+    void update(bool resend_events);
 
 private:
     proto_WiiDevice m_device;

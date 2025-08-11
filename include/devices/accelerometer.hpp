@@ -7,7 +7,7 @@ class AccelerometerDevice : public Device
 public:
     ~AccelerometerDevice() {}
     AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id);
-    void update();
+    void update(bool resend_events);
 
 private:
     proto_AccelerometerDevice m_device;

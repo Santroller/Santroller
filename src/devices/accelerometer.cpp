@@ -3,6 +3,6 @@ AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint1
 {
 }
 
-void AccelerometerDevice::update() {
+void AccelerometerDevice::update(bool resend_events) {
     m_accelerometer.tick();
 }

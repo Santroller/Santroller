@@ -7,7 +7,7 @@ class GH5NeckDevice : public Device
 public:
     ~GH5NeckDevice() {}
     GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id);
-    void update();
+    void update(bool resend_events);
 
 private:
     proto_GuitarHero5NeckDevice m_device;

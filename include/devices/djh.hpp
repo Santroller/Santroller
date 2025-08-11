@@ -7,7 +7,7 @@ class DjHeroTurntableDevice : public Device
 public:
     ~DjHeroTurntableDevice() {}
     DjHeroTurntableDevice(proto_DJHeroTurntableDevice device, uint16_t id);
-    void update();
+    void update(bool resend_events);
 
 private:
     proto_DJHeroTurntableDevice m_device;

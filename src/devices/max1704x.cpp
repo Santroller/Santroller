@@ -3,6 +3,6 @@ Max1704XDevice::Max1704XDevice(proto_Max1704xDevice device, uint16_t id) : Devic
 {
 }
 
-void Max1704XDevice::update() {
+void Max1704XDevice::update(bool resend_events) {
     m_max1704x.tick();
 }

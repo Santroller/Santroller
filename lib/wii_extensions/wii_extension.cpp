@@ -22,7 +22,7 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 
     return true;
 }
-WiiExtType_t WiiExtension::readExtID()
+WiiExtType WiiExtension::readExtID()
 {
     uint8_t data[WII_ID_LEN];
     memset(data, 0, sizeof(data));
@@ -30,9 +30,9 @@ WiiExtType_t WiiExtension::readExtID()
     sleep_us(200);
     if (!verifyData(data, sizeof(data)))
     {
-        return WII_NOT_INITIALISED;
+        return WiiExtType::WiiNoExtension;
     }
-    return static_cast<WiiExtType_t>(data[0] << 8 | data[5]);
+    return static_cast<WiiExtType>(data[0] << 8 | data[5]);
 }
 void WiiExtension::initWiiExt()
 {
@@ -46,7 +46,7 @@ void WiiExtension::initWiiExt()
     sleep_us(10);
     mType = readExtID();
     sleep_us(10);
-    if (mType == WII_UBISOFT_DRAWSOME_TABLET)
+    if (mType == WiiExtType::WiiUbisoftDrawsomeTablet)
     {
         // Drawsome tablet needs some additional init
         mInterface.writeRegister(WII_ADDR, 0xFB, 0x01);
@@ -56,8 +56,8 @@ void WiiExtension::initWiiExt()
     wiiBytes = 6;
     hiRes = false;
     s_box = 0;
-    if (mType == WII_CLASSIC_CONTROLLER ||
-        mType == WII_CLASSIC_CONTROLLER_PRO)
+    if (mType == WiiExtType::WiiClassicController ||
+        mType == WiiExtType::WiiClassicControllerPro)
     {
         // Enable high-res mode (try a few times, sometimes the controller doesnt
         // pick it up)
@@ -84,7 +84,7 @@ void WiiExtension::initWiiExt()
             hiRes = false;
         }
     }
-    else if (mType == WII_TAIKO_NO_TATSUJIN_CONTROLLER)
+    else if (mType == WiiExtType::WiiTaikoNoTatsujinController)
     {
         // We can cheat a little with these controllers, as most of the bytes that
         // get read back are constant. Hence we start at 0x5 instead of 0x0.
@@ -134,8 +134,8 @@ void WiiExtension::tick()
 {
     static uint8_t wiiData[8];
     memset(wiiData, 0, sizeof(wiiData));
-    if (mType == WII_NOT_INITIALISED ||
-        mType == WII_NO_EXTENSION ||
+    if (mType == WiiExtType::WiiNotInitialised ||
+        mType == WiiExtType::WiiNoExtension ||
         !mInterface.readRegisterSlow(WII_ADDR, wiiPointer, wiiBytes, wiiData) ||
         !verifyData(wiiData, wiiBytes))
     {
@@ -163,7 +163,7 @@ void WiiExtension::tick()
     }
     mFound = true;
     // Update the led if it changes
-    if (mType == WII_DJ_HERO_TURNTABLE && ledUpdated)
+    if (mType == WiiExtType::WiiDjHeroTurntable && ledUpdated)
     {
         ledUpdated = false;
         // encrypt if encryption is enabled
@@ -174,7 +174,7 @@ void WiiExtension::tick()
         }
         mInterface.writeRegister(WII_ADDR, WII_DJ_EUPHORIA, state);
     }
-    if (mType == WII_GUITAR_HERO_DRUM_CONTROLLER)
+    if (mType == WiiExtType::WiiGuitarHeroDrums)
     {
         // https://wiibrew.org/wiki/Wiimote/Extension_Controllers/Guitar_Hero_World_Tour_(Wii)_Drums
         uint8_t velocity = ((wiiData[4] & 0b00000001) |

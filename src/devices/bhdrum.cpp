@@ -3,6 +3,6 @@ BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t
 {
 }
 
-void BandHeroDrumDevice::update() {
+void BandHeroDrumDevice::update(bool resend_events) {
     m_band_hero_drum.tick();
 }

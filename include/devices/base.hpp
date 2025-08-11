@@ -8,4 +8,5 @@ public:
     virtual void update(bool resend_events)=0;
 protected:
     uint16_t m_id;
+    bool m_lastConnected;
 };

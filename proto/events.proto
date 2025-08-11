@@ -49,5 +49,6 @@ message Event {
         UsbDeviceHotplugEvent usb = 5;
         WiiDeviceHotplugEvent wii = 6;
         PS2DeviceHotplugEvent ps2 = 7;
+        DeviceHotplugEvent device = 8;
     };
 }

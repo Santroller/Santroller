@@ -1,4 +1,5 @@
 #include "tusb.h"
+#include "enums.pb.h"
 
 // Button usages as defined in the linux kernel
 #define BTN_A 0x01
@@ -120,7 +121,7 @@
         HID_REPORT_SIZE(8),                                  \
         HID_REPORT_COUNT(8),                                 \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),  \
-        HID_REPORT_ID(REPORT_ID_PS4_FEATURE)                 \
+        HID_REPORT_ID(ReportIdPs4Feature)                 \
             HID_USAGE_N(0x2721, 2),                          \
         HID_REPORT_COUNT(47),                                \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \

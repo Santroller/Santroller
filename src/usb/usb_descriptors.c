@@ -27,6 +27,7 @@
 #include "usb/usb_descriptors.h"
 #include "hid_reports.h"
 #include <pico/unique_id.h>
+#include "enums.pb.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -72,10 +73,10 @@ uint8_t const *tud_descriptor_device_cb(void)
 
 uint8_t const desc_hid_report[] =
     {
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportId::ReportIdConfig)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportId::ReportIdConfigInfo)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportId::ReportIdLoaded)),
-        TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportId::ReportIdGamepad))};
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfigInfo)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded)),
+        TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad))};
 
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor

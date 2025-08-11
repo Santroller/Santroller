@@ -20,6 +20,11 @@ message MidiDetectionEvent {
     required int32 note = 1;
 }
 
+message DeviceHotplugEvent {
+    required int32 id = 1;
+    required bool connected = 2;
+}
+
 message UsbDeviceHotplugEvent {
     required int32 subtype = 1;
     required string name = 2;

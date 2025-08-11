@@ -7,7 +7,7 @@ BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t
 
 void BandHeroDrumDevice::update(bool resend_events) {
     m_band_hero_drum.tick();
-    if (m_lastConnected != m_band_hero_drum.isConnected()) {
+    if (m_lastConnected != m_band_hero_drum.isConnected() || resend_events) {
         m_lastConnected = m_band_hero_drum.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         send_event(event, resend_events);

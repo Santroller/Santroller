@@ -7,7 +7,7 @@ AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint1
 
 void AccelerometerDevice::update(bool resend_events) {
     m_accelerometer.tick();
-    if (m_lastConnected != m_accelerometer.isConnected()) {
+    if (m_lastConnected != m_accelerometer.isConnected() || resend_events) {
         m_lastConnected = m_accelerometer.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         send_event(event, resend_events);

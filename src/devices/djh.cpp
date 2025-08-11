@@ -7,7 +7,7 @@ DjHeroTurntableDevice::DjHeroTurntableDevice(proto_DJHeroTurntableDevice device,
 
 void DjHeroTurntableDevice::update(bool resend_events) {
     m_turntable.tick();
-    if (m_lastConnected != m_turntable.isConnected()) {
+    if (m_lastConnected != m_turntable.isConnected() || resend_events) {
         m_lastConnected = m_turntable.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         send_event(event, resend_events);

@@ -7,7 +7,7 @@ GH5NeckDevice::GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id) : 
 
 void GH5NeckDevice::update(bool resend_events) {
     m_gh5_neck.tick();
-    if (m_lastConnected != m_gh5_neck.isConnected()) {
+    if (m_lastConnected != m_gh5_neck.isConnected() || resend_events) {
         m_lastConnected = m_gh5_neck.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         send_event(event, resend_events);

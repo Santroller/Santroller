@@ -72,9 +72,10 @@ uint8_t const *tud_descriptor_device_cb(void)
 
 uint8_t const desc_hid_report[] =
     {
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(REPORT_ID_CONFIG)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(REPORT_ID_CONFIG_INFO)),
-        TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(REPORT_ID_GAMEPAD))};
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportId::ReportIdConfig)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportId::ReportIdConfigInfo)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportId::ReportIdLoaded)),
+        TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportId::ReportIdGamepad))};
 
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor

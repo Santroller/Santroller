@@ -3,8 +3,10 @@
 #include <pico/time.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 I2CMasterInterface::I2CMasterInterface(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) {
     i2c = _hardwareBlocks[block];
+    printf("%d %d %d\r\n", sda, scl, block);
     i2c_init(i2c, clock);
     gpio_set_function(sda, GPIO_FUNC_I2C);
     gpio_set_function(scl, GPIO_FUNC_I2C);

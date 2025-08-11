@@ -1,5 +1,31 @@
 syntax = "proto2";
 package proto;
+enum ReportId {
+  option allow_alias = true;
+  ReportIdGamepad = 1;
+  ReportIdKeyboard = 2;
+  ReportIdMouse = 3;
+  ReportIdConsumer = 4;
+  ReportIdConfig = 0x22;
+  ReportIdConfigInfo = 0x23;
+  ReportIdLoaded = 0x24;
+  ReportIdPs301 = 0x01;
+  ReportIdPs302 = 0x02;
+  ReportIdPs3EE = 0xEE;
+  ReportIdPs3EF = 0xEF;
+  ReportIdPs3F2 = 0xF2;
+  ReportIdPs3F4 = 0xF4;
+  ReportIdPs3F5 = 0xF5;
+  ReportIdPs3F6 = 0xF6;
+  ReportIdPs3F7 = 0xF7;
+  ReportIdPs3F8 = 0xF8;
+  ReportIdPs4Feature = 0x03;
+  ReportIdPs405 = 0x05;
+  ReportIdPs4SetChallenge = 0xF0;
+  ReportIdPs4GetResponse = 0xF1;
+  ReportIdPs4GetAuthStatus = 0xF2;
+  ReportIdPs4GetAuthPageSize = 0xF3;
+}
 
 enum MappingMode {
   PerInput = 1; /* Have one set of mappings that covers all extensions */

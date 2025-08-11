@@ -15,7 +15,10 @@ void AxisMapping::update(san_base_t* base, bool resend_events) {
     if (val != m_lastValue || resend_events)
     {
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val}}};
-        send_event(event);
+        send_event(event, resend_events);
         m_lastValue = val;
+    }
+    if (base == nullptr) {
+        return;
     }
 }

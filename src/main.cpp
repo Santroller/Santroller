@@ -26,7 +26,6 @@
 
 #include "usb/usb_descriptors.h"
 #include "console_mode.h"
-
 void core1()
 {
     multicore_lockout_victim_init();
@@ -39,19 +38,31 @@ void hid_task(void)
     if (!tud_hid_ready())
         return;
     san_base_t gamepad;
-    update(&gamepad);
+    update(&gamepad, false);
     PCGamepad_Data_t out = {0};
     out.a = gamepad.gamepad.a;
 
-    tud_hid_report(REPORT_ID_GAMEPAD, &out, sizeof(out));
+    tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(out));
 }
 
-void send_event(proto_Event event)
+void send_event(proto_Event event, bool resend_events)
 {
+    if (!tud_hid_ready())
+    {
+        if (resend_events)
+        {
+            sleep_ms(1);
+            tud_task();
+        }
+        if (!tud_hid_ready())
+        {
+            return;
+        }
+    }
     uint8_t buffer[63];
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 63);
     pb_encode(&outputStream, proto_Event_fields, &event);
-    tud_hid_report(REPORT_ID_CONFIG, buffer, outputStream.bytes_written);
+    tud_hid_report(ReportId::ReportIdConfig, buffer, outputStream.bytes_written);
 }
 
 ConsoleMode mode = ConsoleMode::Hid;
@@ -120,13 +131,13 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     case HID_REPORT_TYPE_FEATURE:
         switch (report_id)
         {
-        case REPORT_ID_CONFIG:
+        case ReportId::ReportIdConfig:
         {
             uint32_t ret = copy_config(buffer, start);
             start += ret;
             return ret;
         }
-        case REPORT_ID_CONFIG_INFO:
+        case ReportId::ReportIdConfigInfo:
             start = 0;
             return copy_config_info(buffer);
         }
@@ -155,13 +166,17 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     case HID_REPORT_TYPE_FEATURE:
         switch (report_id)
         {
-        case REPORT_ID_CONFIG:
+        case ReportId::ReportIdConfig:
             write_config(buffer, bufsize, start);
             start += bufsize;
             break;
-        case REPORT_ID_CONFIG_INFO:
+        case ReportId::ReportIdConfigInfo:
             start = 0;
             write_config_info(buffer, bufsize);
+            break;
+        case ReportId::ReportIdLoaded:
+            update(nullptr, true);
+            break;
         }
     case HID_REPORT_TYPE_OUTPUT:
     // TODO: handle vibration and led reports and things like that for just pc hid

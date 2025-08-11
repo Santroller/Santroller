@@ -1,5 +1,6 @@
 #include "usb/device/ps_device.h"
 #include "usb/device/gamepad_device.h"
+#include "enums.pb.h"
 // Kick device into winusb mode on windows for RPCS3 compat
 const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsRPCS3 = {
     TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
@@ -118,25 +119,25 @@ uint16_t tud_hid_ps_get_report_cb(uint8_t instance, ConsoleMode type, uint8_t re
         case ConsoleMode::Ps3:
             switch (report_id)
             {
-            case REPORT_ID_PS4_FEATURE:
+            case ReportId::ReportIdPs4Feature:
                 memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
                 return sizeof(ps4_feature_config);
-            case REPORT_ID_PS4_GET_RESPONSE:
+            case ReportId::ReportIdPs4GetResponse:
                 // try to pass through to ps4 over usb host if one exists
                 return 0;
-            case REPORT_ID_PS3_F2:
+            case ReportId::ReportIdPs3F2:
                 memcpy(buffer, ps3_feature_f2, sizeof(ps3_feature_f2));
                 return sizeof(ps3_feature_f2);
 
-            case REPORT_ID_PS3_F8:
+            case ReportId::ReportIdPs3F8:
                 memcpy(buffer, ps3_feature_f8, sizeof(ps3_feature_f8));
                 buffer[7] = ef_byte;
                 return sizeof(ps3_feature_f8);
 
-            case REPORT_ID_PS3_F7:
+            case ReportId::ReportIdPs3F7:
                 memcpy(buffer, ps3_feature_f7, sizeof(ps3_feature_f7));
                 return sizeof(ps3_feature_f7);
-            case REPORT_ID_PS3_F5:
+            case ReportId::ReportIdPs3F5:
                 memcpy(buffer, ps3_feature_f5, sizeof(ps3_feature_f5));
                 if (f5_state == 0)
                 {
@@ -153,11 +154,11 @@ uint16_t tud_hid_ps_get_report_cb(uint8_t instance, ConsoleMode type, uint8_t re
                     memcpy(buffer + 2, master_bd_addr, sizeof(master_bd_addr));
                 }
                 return sizeof(ps3_feature_f5);
-            case REPORT_ID_PS3_EF:
+            case ReportId::ReportIdPs3EF:
                 memcpy(buffer, ps3_feature_ef, sizeof(ps3_feature_ef));
                 buffer[7] = ef_byte;
                 return sizeof(ps3_feature_ef);
-            case REPORT_ID_GAMEPAD:
+            case ReportId::ReportIdPs301:
                 // PS3 sends this for a gamepad
                 memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
                 return sizeof(ps3_feature_01);
@@ -166,15 +167,15 @@ uint16_t tud_hid_ps_get_report_cb(uint8_t instance, ConsoleMode type, uint8_t re
         case ConsoleMode::Ps4:
             switch (report_id)
             {
-            case REPORT_ID_PS4_FEATURE:
+            case ReportId::ReportIdPs4Feature:
                 memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
                 return sizeof(ps4_feature_config);
-            case REPORT_ID_PS4_GET_RESPONSE:
+            case ReportId::ReportIdPs4GetResponse:
                 // try to pass through to ps4 over usb host if one exists
                 return 0;
-            case REPORT_ID_PS4_GET_AUTH_STATUS:
+            case ReportId::ReportIdPs4GetAuthStatus:
                 // try to pass through to ps4 over usb host if one exists
-            case REPORT_ID_PS4_GET_AUTH_PAGE_SIZE:
+            case ReportId::ReportIdPs4GetAuthPageSize:
                 // try to pass through to ps4 over usb host if one exists
                 // if it is a ds4 the request will fail but we need to return this one in that case
                 memcpy(buffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
@@ -265,10 +266,10 @@ void tud_hid_ps_set_report_cb(uint8_t instance, ConsoleMode type, uint8_t report
         case 0:
 
             return;
-        case REPORT_ID_PS3_EF:
+        case ReportId::ReportIdPs3EF:
             ef_byte = buffer[6];
             return;
-        case REPORT_ID_PS4_SET_CHALLENGE:
+        case ReportId::ReportIdPs4SetChallenge:
             // TODO: pass to ps4 controller for auth
             return;
         }

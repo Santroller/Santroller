@@ -29,6 +29,9 @@ public:
     void tick();
     WiiExtType mType = WiiExtType::WiiNoExtension;
     MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
+    uint16_t readAxis(proto_WiiAxisType type);
+    bool readButton(proto_WiiButtonType type);
+    uint8_t mBuffer[8];
 
 private:
     bool verifyData(const uint8_t *dataIn, uint8_t dataSize);
@@ -42,7 +45,6 @@ private:
     bool hadDrum = false;
     uint8_t packetIssueCount;
     uint8_t mBufferIndex;
-    uint8_t mBuffer[8];
     long lastTick;
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;

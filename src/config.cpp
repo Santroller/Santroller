@@ -1,6 +1,7 @@
 #include "config.hpp"
 #include "input/input.hpp"
 #include "input/gpio.hpp"
+#include "input/wii.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/wii.hpp"
@@ -88,11 +89,11 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     std::unique_ptr<Input> input = nullptr;
     switch (mapping.input.which_input)
     {
-    case proto_Input_analogDevice_tag:
-        printf("analogDevice %d\r\n", mapping.input.input.analogDevice.deviceid);
+    case proto_Input_wiiAxis_tag:
+        input = std::unique_ptr<Input>(new WiiAxisInput(mapping.input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
-    case proto_Input_digitalDevice_tag:
-        printf("digitalDevice %d\r\n", mapping.input.input.digitalDevice.deviceid);
+    case proto_Input_wiiButton_tag:
+        input = std::unique_ptr<Input>(new WiiButtonInput(mapping.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
     case proto_Input_gpio_tag:
         printf("gpio %d %d\r\n", mapping.input.input.gpio.pin, mapping.input.input.gpio.pinMode);

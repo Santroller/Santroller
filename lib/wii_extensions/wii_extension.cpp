@@ -194,4 +194,41 @@ void WiiExtension::tick()
             midiInterface.parsePacket(packet, sizeof(packet));
         }
     }
+    memcpy(mBuffer, wiiData, sizeof(wiiData));
+}
+
+uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
+{
+    switch (mType)
+    {
+    case WiiExtType::WiiClassicController:
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisClassicLeftStickX:
+            return mBuffer[0];
+        }
+        break;
+    }
+    return 0;
+}
+bool WiiExtension::readButton(proto_WiiButtonType type)
+{
+    auto wiiButtonsLow = ~mBuffer[4];
+    auto wiiButtonsHigh = ~mBuffer[5];
+    if (hiRes)
+    {
+        wiiButtonsLow = ~mBuffer[6];
+        wiiButtonsHigh = ~mBuffer[7];
+    }
+    switch (mType)
+    {
+    case WiiExtType::WiiClassicController:
+        switch (type)
+        {
+        case WiiButtonClassicA:
+            return (wiiButtonsHigh) & (1 << 4);
+        }
+        break;
+    }
+    return false;
 }

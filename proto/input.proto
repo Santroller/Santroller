@@ -67,7 +67,9 @@ message Input {
     MidiInput midi = 6;
     MouseAxisInput mouseAxis = 7;
     MouseButtonInput mouseButton = 8;
-    KeyboardKeyInput key = 9;
+    WiiAxisInput wiiAxis = 9;
+    WiiButtonInput wiiButton = 10;
+    KeyboardKeyInput key = 11;
   }
 }
 

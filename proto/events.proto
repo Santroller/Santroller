@@ -40,6 +40,10 @@ message PS2DeviceHotplugEvent {
     required int32 type = 2;
 }
 
+message DebugEvent {
+    repeated int32 data = 1; 
+}
+
 message Event {
     oneof event{
         ButtonEvent button = 1;   
@@ -50,5 +54,6 @@ message Event {
         WiiDeviceHotplugEvent wii = 6;
         PS2DeviceHotplugEvent ps2 = 7;
         DeviceHotplugEvent device = 8;
+        DebugEvent debug = 9;
     };
 }

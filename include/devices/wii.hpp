@@ -8,6 +8,8 @@ public:
     ~WiiDevice() {}
     WiiDevice(proto_WiiDevice device, uint16_t id);
     void update(bool resend_events);
+    uint16_t readAxis(proto_WiiAxisType type);
+    bool readButton(proto_WiiButtonType type);
 
 private:
     proto_WiiDevice m_device;

@@ -40,5 +40,7 @@
 
 #define TWI_BLOCK void*
 #define SPI_BLOCK void*
+#define UART_BLOCK void*
 #define GC_TWI NULL
 #define GC_SPI NULL
+#define GC_UART NULL

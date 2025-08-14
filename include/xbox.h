@@ -2,10 +2,12 @@
 #include "wcid.h"
 #include "reports/xinput_reports.h"
 #include "reports/og_xbox_reports.h"
+// This actually just defines the supported report types!
+// https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-xusbi/3beba8eb-25f9-4f80-bca8-d4665dd5b767
 typedef struct {
     uint8_t bLength; // Length of this descriptor.
     uint8_t bDescriptorType; // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
-    uint8_t reserved[2];
+    uint8_t reserved[2]; //version
     uint8_t subtype;
     uint8_t reserved2;
     uint8_t bEndpointAddressIn;
@@ -15,6 +17,7 @@ typedef struct {
     uint8_t bMaxDataSizeOut;
     uint8_t reserved4[2];
 } __attribute__((packed)) XBOX_ID_DESCRIPTOR;
+
 
 typedef struct {
     uint8_t bLength; // Length of this descriptor.

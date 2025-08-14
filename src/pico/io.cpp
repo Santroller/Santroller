@@ -16,7 +16,8 @@
 #include "pico_slave.h"
 #include "wii.h"
 volatile bool spi_acknowledged = false;
-void spi_begin_output() {
+void spi_begin_output()
+{
 #ifdef SPI_0_OUTPUT
 #ifdef SPI_0_MOSI
     spi_init(spi0, SPI_0_CLOCK);
@@ -50,7 +51,8 @@ void spi_begin_output() {
     spi_set_slave(spi1, true);
 #endif
 }
-void spi_begin() {
+void spi_begin()
+{
 #ifdef SPI_0_MOSI
     spi_init(spi0, SPI_0_CLOCK);
     spi_set_format(spi0, 8, (spi_cpol_t)SPI_0_CPOL,
@@ -84,7 +86,32 @@ void spi_begin() {
     spi_set_slave(spi1, true);
 #endif
 }
-static uint8_t revbits(uint8_t b) {
+void uart_begin()
+{
+#ifdef UART_0_TX
+    uart_init(uart0, 500000);
+    gpio_set_function(UART_0_TX, GPIO_FUNC_UART);
+    gpio_set_function(UART_0_RX, GPIO_FUNC_UART);
+#endif
+}
+bool read_uart(UART_BLOCK uart, uint8_t header, uint8_t size, uint8_t *dest)
+{
+    if (!uart_is_readable(uart))
+    {
+        return false;
+    }
+    while (uart_getc(uart) != header)
+    {
+        if (!uart_is_readable(uart))
+        {
+            return false;
+        }
+    }
+    uart_read_blocking(uart0, dest, size);
+    return true;
+}
+static uint8_t revbits(uint8_t b)
+{
     b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
     b = (b & 0b11001100) >> 2 | (b & 0b00110011) << 2;
     b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;
@@ -94,27 +121,33 @@ static uint8_t revbits(uint8_t b) {
 volatile bool alarm_fired = false;
 #define ALARM_NUM 0
 #define ALARM_IRQ TIMER_IRQ_0
-int64_t alarm_irq(alarm_id_t id, void *user_data) {
+int64_t alarm_irq(alarm_id_t id, void *user_data)
+{
     alarm_fired = true;
     return 0;
 }
-int __not_in_flash_func(spi_write_read_blocking_timeout)(spi_inst_t *spi, const uint8_t src) {
+int __not_in_flash_func(spi_write_read_blocking_timeout)(spi_inst_t *spi, const uint8_t src)
+{
     // For PS2 communication we NEED timeouts. We can fake them by starting an alarm and resetting the SPI
     // hardware if the alarm fires.
     size_t rx_remaining = 1, tx_remaining = 1;
     uint8_t dst;
     alarm_fired = false;
     alarm_id_t alarm = add_alarm_in_us(50, alarm_irq, NULL, false);
-    while (rx_remaining || tx_remaining) {
-        if (tx_remaining && spi_is_writable(spi)) {
+    while (rx_remaining || tx_remaining)
+    {
+        if (tx_remaining && spi_is_writable(spi))
+        {
             spi_get_hw(spi)->dr = (uint32_t)src;
             --tx_remaining;
         }
-        if (rx_remaining && spi_is_readable(spi)) {
+        if (rx_remaining && spi_is_readable(spi))
+        {
             dst = (uint8_t)spi_get_hw(spi)->dr;
             --rx_remaining;
         }
-        if (alarm_fired) {
+        if (alarm_fired)
+        {
             spi_begin_output();
             return 0;
         }
@@ -123,50 +156,62 @@ int __not_in_flash_func(spi_write_read_blocking_timeout)(spi_inst_t *spi, const 
     return dst;
 }
 // SINCE LSB_FIRST isn't supported, we need to invert bits ourselves when its set
-uint8_t spi_transfer(SPI_BLOCK block, uint8_t data) {
+uint8_t spi_transfer(SPI_BLOCK block, uint8_t data)
+{
 #if SPI_0_MSBFIRST == 0
-    if (block == spi0) data = revbits(data);
+    if (block == spi0)
+        data = revbits(data);
 #endif
 #if SPI_1_MSBFIRST == 0
-    if (block == spi1) data = revbits(data);
+    if (block == spi1)
+        data = revbits(data);
 #endif
     uint8_t resp;
 #ifdef SPI_1_OUTPUT
-    if (block == spi1) {
+    if (block == spi1)
+    {
         resp = spi_write_read_blocking_timeout(block, data);
     }
 #endif
 #ifndef SPI_1_OUTPUT
-    if (block == spi1) {
+    if (block == spi1)
+    {
         spi_write_read_blocking(block, &data, &resp, 1);
     }
 #endif
 #ifdef SPI_0_OUTPUT
-    if (block == spi0) {
+    if (block == spi0)
+    {
         resp = spi_write_read_blocking_timeout(block, data);
     }
 #endif
 #ifndef SPI_0_OUTPUT
-    if (block == spi0) {
+    if (block == spi0)
+    {
         spi_write_read_blocking(block, &data, &resp, 1);
     }
 #endif
 #if SPI_0_MSBFIRST == 0
-    if (block == spi0) resp = revbits(resp);
+    if (block == spi0)
+        resp = revbits(resp);
 #endif
 #if SPI_1_MSBFIRST == 0
-    if (block == spi1) resp = revbits(resp);
+    if (block == spi1)
+        resp = revbits(resp);
 #endif
     return resp;
 }
 void spi_high(SPI_BLOCK block) {}
 uint8_t addr;
-void recv(int len) {
+void recv(int len)
+{
     addr = RXWIRE.read();
     // remove addr
     len -= 1;
-    if (len) {
-        for (int i = 0; i < len; i++) {
+    if (len)
+    {
+        for (int i = 0; i < len; i++)
+        {
             recv_data(addr + i, RXWIRE.read());
         }
         recv_end(addr, len);
@@ -174,11 +219,13 @@ void recv(int len) {
 }
 
 // Called when the I2C slave is read from
-void req() {
+void req()
+{
     // Auto increment address for repeated reads
     RXWIRE.write(req_data(addr++));
 }
-void twi_init() {
+void twi_init()
+{
 #ifdef TWI_0_CLOCK
     i2c_init(i2c0, TWI_0_CLOCK);
     gpio_set_function(TWI_0_SDA, GPIO_FUNC_I2C);
@@ -216,20 +263,24 @@ void twi_init() {
 #endif
 }
 bool twi_readFromPointerSlow(TWI_BLOCK block, uint8_t address, uint8_t pointer, uint8_t length,
-                             uint8_t *data) {
-    if (!twi_writeTo(block, address, &pointer, 1, true, true)) return false;
+                             uint8_t *data)
+{
+    if (!twi_writeTo(block, address, &pointer, 1, true, true))
+        return false;
     delayMicroseconds(170);
     return twi_readFrom(block, address, data, length, true);
 }
 bool twi_readFrom(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length,
-                  uint8_t sendStop) {
+                  uint8_t sendStop)
+{
     int ret =
         i2c_read_timeout_us(block, address, data, length, !sendStop, 5000);
     return ret > 0 ? ret : 0;
 }
 
 bool twi_writeTo(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
-                 uint8_t sendStop) {
+                 uint8_t sendStop)
+{
     int ret =
         i2c_write_timeout_us(block, address, data, length, !sendStop, 5000);
     if (ret < 0)
@@ -239,15 +290,18 @@ bool twi_writeTo(TWI_BLOCK block, uint8_t address, uint8_t *data, uint8_t length
 }
 
 #ifdef PS2_ACK
-void callback(uint gpio, uint32_t events) {
+void callback(uint gpio, uint32_t events)
+{
     spi_acknowledged = true;
 }
-void init_ack() {
+void init_ack()
+{
     gpio_set_irq_enabled_with_callback(PS2_ACK, GPIO_IRQ_EDGE_RISE, true, &callback);
 }
 #endif
 
-void read_serial(uint8_t *id, uint8_t len) {
+void read_serial(uint8_t *id, uint8_t len)
+{
     pico_get_unique_board_id_string((char *)id, len);
 }
 
@@ -259,51 +313,63 @@ uint32_t lastWtSum[5] = {0};
 uint32_t lastWtAvg[5][WT_BUFFER] = {0};
 uint8_t nextWt[5] = {0};
 uint32_t initialWt[5] = {0};
-uint32_t readWt(int pin) {
+uint32_t readWt(int pin)
+{
     gpio_put_masked((1 << WT_PIN_S0) | (1 << WT_PIN_S1) | (1 << WT_PIN_S2), ((pin & (1 << 0)) << WT_PIN_S0 - 0) | ((pin & (1 << 1)) << (WT_PIN_S1 - 1)) | ((pin & (1 << 2)) << (WT_PIN_S2 - 2)));
     uint32_t m = rp2040.getCycleCount();
     gpio_put(WT_PIN_INPUT, 1);
     gpio_set_dir(WT_PIN_INPUT, true);
     gpio_set_dir(WT_PIN_INPUT, false);
     gpio_set_pulls(WT_PIN_INPUT, false, false);
-    while (gpio_get(WT_PIN_INPUT)) {
-        if (rp2040.getCycleCount() - m > 10000) {
+    while (gpio_get(WT_PIN_INPUT))
+    {
+        if (rp2040.getCycleCount() - m > 10000)
+        {
             break;
         }
     }
     m = rp2040.getCycleCount() - m;
-    if (pin >= 6) {
+    if (pin >= 6)
+    {
         return m;
     }
     lastWtSum[pin] -= lastWtAvg[pin][nextWt[pin]];
     lastWtAvg[pin][nextWt[pin]] = m;
     lastWtSum[pin] += m;
     nextWt[pin]++;
-    if (nextWt[pin] >= WT_BUFFER) {
+    if (nextWt[pin] >= WT_BUFFER)
+    {
         nextWt[pin] = 0;
     }
     m = lastWtSum[pin] / WT_BUFFER;
     lastWt[pin] = m;
     return m;
 }
-bool checkWt(int pin) {
+bool checkWt(int pin)
+{
     return readWt(pin) > initialWt[pin];
 }
-void initWt() {
+void initWt()
+{
     memset(initialWt, 0, sizeof(initialWt));
-    for (int j = 0; j < 1000; j++) {
-        for (int i = 0; i < 5; i++) {
+    for (int j = 0; j < 1000; j++)
+    {
+        for (int i = 0; i < 5; i++)
+        {
             initialWt[i] += readWt(i);
         }
     }
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++)
+    {
         initialWt[i] /= 1000;
         initialWt[i] += WT_SENSITIVITY;
     }
 }
 static bool wtInit = false;
-uint8_t tickWt() {
-    if (!wtInit) {
+uint8_t tickWt()
+{
+    if (!wtInit)
+    {
         wtInit = true;
         initWt();
     }

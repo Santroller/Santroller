@@ -27,6 +27,8 @@ bool twi_writeSingleToPointer(TWI_BLOCK, uint8_t address, uint8_t pointer, uint8
 bool twi_writeToPointer(TWI_BLOCK, uint8_t address, uint8_t pointer, uint8_t length,
                         uint8_t *data);
 void spi_begin();
+void uart_begin();
+bool read_uart(UART_BLOCK block, uint8_t header, uint8_t size, uint8_t *dest);
 uint8_t spi_transfer(SPI_BLOCK block, uint8_t data);
 void spi_high(SPI_BLOCK block);
 void init_ack();

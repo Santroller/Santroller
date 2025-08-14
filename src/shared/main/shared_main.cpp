@@ -66,6 +66,7 @@ struct
         };
     };
 } rtt_t;
+crkd_neck_t lastCrkd;
 unsigned long lastMidi = 0;
 Midi_Data_t midiData = {0};
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity)
@@ -253,6 +254,7 @@ bool lastTurntableWasSuccessfulLeft = false;
 bool lastTurntableWasSuccessfulRight = false;
 bool lastWiiWasSuccessful = false;
 bool lastPS2WasSuccessful = false;
+bool lastCrkdWasSuccessful = false;
 bool overrideR2 = false;
 bool lastXboxOneGuide = false;
 bool disable_multiplexer = false;
@@ -354,6 +356,7 @@ void init_main(void)
     initPins();
     twi_init();
     spi_begin();
+    uart_begin();
     GIP_HEADER((&powerMode), GIP_POWER_MODE_DEVICE_CONFIG, true, 1);
     powerMode.subcommand = GIP_POWER_ON;
     GIP_HEADER((&ledOn), GIP_CMD_LED, true, 1);
@@ -2690,6 +2693,7 @@ void tick_ps2output()
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+#include "inputs/crkd.h"
 
     TICK_SHARED;
     if (!startedInactivityPulse)
@@ -2873,6 +2877,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wii.h"
 #include "inputs/wt_drum.h"
 #include "inputs/wt_neck.h"
+#include "inputs/crkd.h"
 // #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
 //     convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
 // #endif

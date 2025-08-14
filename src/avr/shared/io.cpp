@@ -40,7 +40,15 @@ static volatile unsigned int twi_reg_addr;
 
 static volatile unsigned char twi_first_addr_flag;  // set address flag
 static volatile unsigned char twi_rw_len;           // length of most recent operation
+void uart_begin() {
+    // TODO: no
+}
 
+bool read_uart(uart_inst_t *uart, uint8_t header, uint8_t size, uint8_t *dest)
+{
+    // TODO: no again
+    return false;
+}
 void spi_begin() {
 #ifdef GC_SPI_CLOCK
     uint8_t clockDiv;

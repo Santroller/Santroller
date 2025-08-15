@@ -75,6 +75,7 @@ message Input {
     WiiAxisInput wiiAxis = 9;
     WiiButtonInput wiiButton = 10;
     KeyboardKeyInput key = 11;
+    CrkdNeckButtonInput crkd = 12;
   }
 }
 

@@ -2,12 +2,14 @@
 #include "input/input.hpp"
 #include "input/gpio.hpp"
 #include "input/wii.hpp"
+#include "input/crkd.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/wii.hpp"
 #include "devices/bhdrum.hpp"
 #include "devices/crazyneck.hpp"
 #include "devices/djh.hpp"
+#include "devices/crkd.hpp"
 #include "devices/gh5neck.hpp"
 #include "devices/max1704x.hpp"
 #include "devices/mpr121.hpp"
@@ -94,6 +96,9 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Input_wiiButton_tag:
         input = std::unique_ptr<Input>(new WiiButtonInput(mapping.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
+        break;
+    case proto_Input_crkd_tag:
+        input = std::unique_ptr<Input>(new CrkdButtonInput(mapping.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
     case proto_Input_gpio_tag:
         printf("gpio %d %d\r\n", mapping.input.input.gpio.pin, mapping.input.input.gpio.pinMode);

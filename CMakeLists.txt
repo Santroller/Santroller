@@ -86,6 +86,7 @@ add_executable(
   src/usb/device/ps_device.cpp
   src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
+  src/input/crkd.cpp
   src/input/gpio.cpp
   src/input/wii.cpp
   src/mappings/ButtonMapping.cpp

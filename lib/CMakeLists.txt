@@ -1,6 +1,7 @@
 add_subdirectory(midi)
 add_subdirectory(peripherals)
 add_subdirectory(band_hero_drum)
+add_subdirectory(crkd_neck)
 add_subdirectory(world_tour_drum)
 add_subdirectory(wii_extensions)
 add_subdirectory(guitar_hero_5_neck)

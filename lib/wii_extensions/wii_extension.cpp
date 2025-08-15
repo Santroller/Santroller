@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "MidiNotes.h"
+#include "main.hpp"
 
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 {

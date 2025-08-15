@@ -57,6 +57,7 @@ message DJHeroTurntableDevice {
 message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
 message SerialMidiDevice { required UARTDevice uart = 1; }
+message CrkdNeckDevice { required UARTDevice uart = 1; }
 message UsbHostDevice {
   required int32 firstPin = 1;
   required bool enable5v = 2;
@@ -120,5 +121,6 @@ message Device {
     PSXEmulationDevice psxEmulation = 19;
     JoybusEmulationDevice joybusEmulation = 20;
     PeripheralDevice peripheral = 21;
+    CrkdNeckDevice crkdNeck = 22;
   }
 }

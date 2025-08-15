@@ -403,3 +403,14 @@ enum UsbAxisType {
   UsbAxisGenericAxisSlider= 59;
 }
 
+enum CrkdNeckButtonType {
+  CrkdGreen = 1;
+  CrkdRed = 2;
+  CrkdYellow = 3;
+  CrkdBlue = 4;
+  CrkdOrange = 5;
+  CrkdDpadUp = 6;
+  CrkdDpadDown = 7;
+  CrkdDpadLeft = 8;
+  CrkdDpadRight = 9;
+}

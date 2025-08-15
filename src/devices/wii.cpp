@@ -15,9 +15,6 @@ void WiiDevice::update(bool resend_events)
         proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
         send_event(event, resend_events);
     }
-    proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : 8}};
-    memcpy(event.event.debug.data, m_extension.mBuffer, 8);
-    send_event(event, resend_events);
 }
 uint16_t WiiDevice::readAxis(proto_WiiAxisType type)
 {

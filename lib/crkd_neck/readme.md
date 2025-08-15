@@ -1,6 +1,8 @@
 # CRKD Neck
 The CRKD necks use a PY32F002B ARM chip running a firmware that simply sends and receives data over a UART connetion to signal the state of the frets and the other inputs. the LED is simply driven directly from the body, and its assumed its a WS2812 style LED chain.
 
+uart is 500000 baud
+
 the protocol in use is structured like the following:
 
 ```c

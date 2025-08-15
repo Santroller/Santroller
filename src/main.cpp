@@ -21,6 +21,7 @@
 #include "usb/device/ps_device.h"
 #include "protocols/hid.hpp"
 #include "main.hpp"
+#include "hardware/uart.h"
 
 #include "tusb.h"
 
@@ -65,11 +66,19 @@ void send_event(proto_Event event, bool resend_events)
     tud_hid_report(ReportId::ReportIdConfig, buffer, outputStream.bytes_written);
 }
 
+void send_debug(uint8_t *data, size_t len)
+{
+    proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : len}};
+    memcpy(event.event.debug.data, data, len);
+    send_event(event, false);
+}
+
 ConsoleMode mode = ConsoleMode::Hid;
 int main()
 {
     multicore_launch_core1(core1);
     stdio_init_all();
+
     adc_init();
     EEPROM.start();
 

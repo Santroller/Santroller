@@ -91,6 +91,7 @@ add_executable(
   src/mappings/ButtonMapping.cpp
   src/mappings/AxisMapping.cpp
   src/devices/wii.cpp
+  src/devices/crkd.cpp
   src/devices/accelerometer.cpp
   src/devices/bhdrum.cpp
   src/devices/crazyneck.cpp
@@ -128,6 +129,7 @@ target_link_libraries(
   FlashPROM
   CRC32
   midi
+  crkd_neck
   peripherals
   accelerometer
   band_hero_drum

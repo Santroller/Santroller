@@ -42,6 +42,11 @@ message WiiButtonInput {
   required WiiButtonType button = 2;
 }
 
+message CrkdNeckButtonInput {
+  required int32 deviceid = 1;
+  required CrkdNeckButtonType button = 2;
+}
+
 message MouseAxisInput {
   required int32 deviceid = 1;
   required MouseAxisType axis = 2;

@@ -89,25 +89,30 @@ void spi_begin()
 void uart_begin()
 {
 #ifdef UART_0_TX
-    uart_init(uart0, 500000);
+    uart_init(uart0, UART_0_CLOCK);
     gpio_set_function(UART_0_TX, GPIO_FUNC_UART);
     gpio_set_function(UART_0_RX, GPIO_FUNC_UART);
 #endif
+#ifdef UART_1_TX
+    uart_init(uart1, UART_1_CLOCK);
+    gpio_set_function(UART_1_TX, GPIO_FUNC_UART);
+    gpio_set_function(UART_1_RX, GPIO_FUNC_UART);
+#endif
 }
-bool read_uart(UART_BLOCK uart, uint8_t header, uint8_t size, uint8_t *dest)
+bool read_uart(UART_BLOCK block, uint8_t header, uint8_t size, uint8_t *dest)
 {
-    if (!uart_is_readable(uart))
+    if (!uart_is_readable(block))
     {
         return false;
     }
-    while (uart_getc(uart) != header)
+    while (uart_getc(block) != header)
     {
-        if (!uart_is_readable(uart))
+        if (!uart_is_readable(block))
         {
             return false;
         }
     }
-    uart_read_blocking(uart0, dest, size);
+    uart_read_blocking(block, dest, size);
     return true;
 }
 

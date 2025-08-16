@@ -110,6 +110,16 @@ bool read_uart(UART_BLOCK uart, uint8_t header, uint8_t size, uint8_t *dest)
     uart_read_blocking(uart0, dest, size);
     return true;
 }
+
+void send_uart(UART_BLOCK block, uint8_t *data, uint8_t size)
+{
+
+    if (!uart_is_writable(block))
+    {
+        return;
+    }
+    uart_write_blocking(block, data, size);
+}
 static uint8_t revbits(uint8_t b)
 {
     b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;

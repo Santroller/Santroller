@@ -44,10 +44,14 @@ void uart_begin() {
     // TODO: no
 }
 
-bool read_uart(uart_inst_t *uart, uint8_t header, uint8_t size, uint8_t *dest)
+bool read_uart(UART_BLOCK block, uint8_t header, uint8_t size, uint8_t *dest)
 {
     // TODO: no again
     return false;
+}
+void send_uart(UART_BLOCK block, uint8_t *data, uint8_t size) {
+
+    // TODO: no again part 2
 }
 void spi_begin() {
 #ifdef GC_SPI_CLOCK

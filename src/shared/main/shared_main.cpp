@@ -279,7 +279,6 @@ Gip_Led_On_t ledOn;
 Gip_Auth_Done_t authDonePacket;
 long last_poll = 0;
 long last_poll_dj_ps3 = 0;
-long last_poll_crkd = 0;
 bool festival_gameplay_mode = false;
 long last_festival_toggle = 0;
 /* Magic data taken from GHLtarUtility:

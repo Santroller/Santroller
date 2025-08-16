@@ -1,6 +1,8 @@
 #include "crkd_neck.hpp"
+#include "main.hpp"
+#include "utils.h"
 void CrkdNeck::tick() {
-    interface.read_uart(0x65, sizeof(m_crkdNeck), (uint8_t*)&m_crkdNeck);
+    interface.read_uart(0xA5, sizeof(m_crkdNeck), (uint8_t*)&m_crkdNeck);
     green = m_crkdNeck.green;
     red = m_crkdNeck.red;
     yellow = m_crkdNeck.yellow;

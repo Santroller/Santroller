@@ -55,6 +55,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_accelerometer_tag:
         devices[*dev_id] = std::shared_ptr<Device>(new AccelerometerDevice(device.device.accelerometer, *dev_id));
         break;
+    case proto_Device_crkdNeck_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new CrkdDevice(device.device.crkdNeck, *dev_id));
+        break;
     case proto_Device_wii_tag:
         devices[*dev_id] = std::shared_ptr<Device>(new WiiDevice(device.device.wii, *dev_id));
         break;

@@ -41,7 +41,7 @@ message PS2DeviceHotplugEvent {
 }
 
 message DebugEvent {
-    repeated int32 data = 1; 
+    repeated uint32 data = 1; 
 }
 
 message Event {

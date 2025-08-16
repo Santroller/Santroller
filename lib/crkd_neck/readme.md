@@ -1,7 +1,7 @@
 # CRKD Neck
 The CRKD necks use a PY32F002B ARM chip running a firmware that simply sends and receives data over a UART connetion to signal the state of the frets and the other inputs. the LED is simply driven directly from the body, and its assumed its a WS2812 style LED chain.
 
-uart is 500000 baud
+uart is 460800 baud
 
 the protocol in use is structured like the following:
 
@@ -22,7 +22,7 @@ struct NeckToBody {
     uint8_t footer[3] = {0x00, 0x01, 0x15};
     uint8_t crc; // CRC-8/MAXIM-DOW
 }
-
+// this is sent by the body to the neck, but its not necessary.
 struct BodyToNeck {
     uint8_t data [] = {0xA5, 0x01, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00 };
     uint8_t crc = 0x0E; // CRC-8/MAXIM-DOW

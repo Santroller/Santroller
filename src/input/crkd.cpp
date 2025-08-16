@@ -23,11 +23,11 @@ bool CrkdButtonInput::tickDigital()
     case CrkdDpadUp:
         return m_device->neck.dpadUp;
     case CrkdDpadDown:
-        return m_device->neck.yellow;
+        return m_device->neck.dpadDown;
     case CrkdDpadLeft:
-        return m_device->neck.blue;
+        return m_device->neck.dpadLeft;
     case CrkdDpadRight:
-        return m_device->neck.orange;
+        return m_device->neck.dpadRight;
     }
     return false;
 }

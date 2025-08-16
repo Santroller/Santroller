@@ -30,9 +30,7 @@ void spi_begin();
 void uart_begin();
 bool read_uart(UART_BLOCK block, uint8_t header, uint8_t size, uint8_t *dest);
 
-void send_uart(UART_BLOCK block, uint8_t *data, uint8_t size) {
-
-}
+void send_uart(UART_BLOCK block, uint8_t *data, uint8_t size);
 uint8_t spi_transfer(SPI_BLOCK block, uint8_t data);
 void spi_high(SPI_BLOCK block);
 void init_ack();

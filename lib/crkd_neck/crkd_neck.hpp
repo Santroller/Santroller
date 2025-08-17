@@ -24,7 +24,7 @@ class CrkdNeck {
         : interface(block, tx, rx, clock) {};
     void tick();
     inline bool isConnected() {
-        return connected;
+        return m_connected;
     }
     bool green;
     bool red;
@@ -38,6 +38,7 @@ class CrkdNeck {
 
    private:
     UARTInterface interface;
-    bool connected;
+    bool m_connected;
     crkd_neck_t m_crkdNeck;
+    long m_lastPoll;
 };

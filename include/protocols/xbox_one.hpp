@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <vector>
 
-#include "interfaces/usb.hpp"
 #include "ps3.hpp"
 
 #define GIP_CMD_ACKNOWLEDGE 0x01

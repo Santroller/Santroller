@@ -21,6 +21,7 @@
 #include "usb/device/ps_device.h"
 #include "protocols/hid.hpp"
 #include "main.hpp"
+#include "utils.h"
 #include "hardware/uart.h"
 
 #include "tusb.h"
@@ -38,27 +39,23 @@ void hid_task(void)
 {
     if (!tud_hid_ready())
         return;
-    san_base_t gamepad;
-    update(&gamepad, false);
+    update(false);
     PCGamepad_Data_t out = {0};
-    out.a = gamepad.gamepad.a;
 
     tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(out));
 }
+long lastKeepAlive = 0;
 
-void send_event(proto_Event event, bool resend_events)
+void send_event(proto_Event event)
 {
-    if (!tud_hid_ready())
+    // Haven't received data from the tool recently so don't send out events for it
+    if (millis() - lastKeepAlive > 20) {
+        return;
+    }
+    // Make sure events are always sent out
+    while (!tud_hid_ready() && tud_ready())
     {
-        if (resend_events)
-        {
-            sleep_ms(1);
-            tud_task();
-        }
-        if (!tud_hid_ready())
-        {
-            return;
-        }
+        tud_task();
     }
     uint8_t buffer[63];
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 63);
@@ -70,7 +67,7 @@ void send_debug(uint8_t *data, size_t len)
 {
     proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : len}};
     memcpy(event.event.debug.data, data, len);
-    send_event(event, false);
+    send_event(event);
 }
 
 ConsoleMode mode = ConsoleMode::Hid;
@@ -184,7 +181,8 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
             write_config_info(buffer, bufsize);
             break;
         case ReportId::ReportIdLoaded:
-            update(nullptr, true);
+            update(true);
+            lastKeepAlive = millis();
             break;
         }
     case HID_REPORT_TYPE_OUTPUT:

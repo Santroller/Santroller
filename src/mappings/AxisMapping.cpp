@@ -10,16 +10,12 @@ AxisMapping::AxisMapping(proto_AxisMapping mapping, std::unique_ptr<Input> input
 
 }
 
-void AxisMapping::update(san_base_t* base, bool resend_events) {
-    // Maybe instead of having a `san_base_t` at all, we just have seperate functions in here that deal with different controller types, and just map everything once.
+void AxisMapping::update(bool full_poll) {
     auto val = m_input->tickAnalog();
-    if (val != m_lastValue || resend_events)
+    if (val != m_lastValue || full_poll)
     {
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val}}};
-        send_event(event, resend_events);
+        send_event(event);
         m_lastValue = val;
-    }
-    if (base == nullptr) {
-        return;
     }
 }

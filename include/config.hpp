@@ -17,4 +17,4 @@ uint32_t copy_config(uint8_t* buffer,uint32_t start);
 uint32_t copy_config_info(uint8_t* buffer);
 bool write_config_info(const uint8_t* buffer, uint16_t bufsize);
 bool write_config(const uint8_t* buffer, uint16_t bufsize, uint32_t start);
-void update(san_base_t* gamepad, bool resend_events);
+void update(bool full_poll);

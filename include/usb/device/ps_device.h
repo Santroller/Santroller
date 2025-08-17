@@ -5,24 +5,6 @@
 
 #include "tusb.h"
 
-typedef struct
-{
-    uint8_t report_id; /* 0x5 */
-    uint8_t valid_flag0;
-    uint8_t valid_flag1;
-
-    uint8_t reserved1;
-
-    uint8_t motor_right;
-    uint8_t motor_left;
-
-    uint8_t lightbar_red;
-    uint8_t lightbar_green;
-    uint8_t lightbar_blue;
-    uint8_t lightbar_blink_on;
-    uint8_t lightbar_blink_off;
-    uint8_t reserved[21];
-} __attribute__((packed)) ps4_output_report;
 #define PS3_RUMBLE_ID 0x01
 #define PS3_LED_ID 0x00
 #define PS4_LED_RUMBLE_ID 0x05

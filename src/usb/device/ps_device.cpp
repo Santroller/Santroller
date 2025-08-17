@@ -1,5 +1,6 @@
 #include "usb/device/ps_device.h"
 #include "usb/device/gamepad_device.h"
+#include "protocols/ps4.hpp"
 #include "enums.pb.h"
 // Kick device into winusb mode on windows for RPCS3 compat
 const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsRPCS3 = {

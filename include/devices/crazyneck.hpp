@@ -7,7 +7,7 @@ class CrazyGuitarNeckDevice : public Device
 public:
     ~CrazyGuitarNeckDevice() {}
     CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device, uint16_t id);
-    void update(bool resend_events);
+    void update(bool full_poll);
 
 private:
     proto_CrazyGuitarNeckDevice m_device;

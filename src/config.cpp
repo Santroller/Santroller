@@ -33,15 +33,15 @@ typedef struct
     uint32_t current;
     uint32_t target;
 } profile_args_t;
-void update(san_base_t *gamepad, bool resend_events)
+void update(bool full_poll)
 {
     for (auto &device : devices)
     {
-        device.second->update(resend_events);
+        device.second->update(full_poll);
     }
     for (auto &mapping : mappings)
     {
-        mapping->update(gamepad, resend_events);
+        mapping->update(full_poll);
     }
 }
 
@@ -242,7 +242,7 @@ bool inner_load(proto_Config &config, const uint8_t *dataPtr, uint32_t size)
     mappings.clear();
     devices.clear();
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
-    update(nullptr, true);
+    update(true);
     return ret;
 }
 uint32_t copy_config_info(uint8_t *buffer)

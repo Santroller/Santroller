@@ -7,7 +7,7 @@ class WiiDevice : public Device
 public:
     ~WiiDevice() {}
     WiiDevice(proto_WiiDevice device, uint16_t id);
-    void update(bool resend_events);
+    void update(bool full_poll);
     uint16_t readAxis(proto_WiiAxisType type);
     bool readButton(proto_WiiButtonType type);
 

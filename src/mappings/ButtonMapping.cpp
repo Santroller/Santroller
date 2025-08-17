@@ -8,22 +8,13 @@ ButtonMapping::ButtonMapping(proto_ButtonMapping mapping, std::unique_ptr<Input>
 {
 }
 
-void ButtonMapping::update(san_base_t *base, bool resend_events)
+void ButtonMapping::update(bool full_poll)
 {
     auto val = m_input->tickDigital();
-    if (val != m_lastValue || resend_events)
+    if (val != m_lastValue || full_poll)
     {
         proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val}}};
-        send_event(event, resend_events);
+        send_event(event);
         m_lastValue = val;
-    }
-    if (base == nullptr) {
-        return;
-    }
-    switch (m_mapping.button)
-    {
-    case proto_ButtonType::A:
-        base->gamepad.a = val;
-        break;
     }
 }

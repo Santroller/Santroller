@@ -89,38 +89,6 @@ typedef struct {
     uint32_t SectionSize;
     OS_EXTENDED_SECTION ExtendedID;
 } __attribute__((packed)) OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR;
-typedef struct {
-    uint8_t type;
-    uint8_t u1;
-    uint8_t size_challenge;
-    uint8_t size_response;
-    uint8_t u4[4];  // crc32?
-} __attribute__((packed)) AuthPageSizeReport;
-
-typedef struct {
-    uint8_t type;      // 0
-    uint8_t seq;       // 1
-    uint8_t page;      // 2
-    uint8_t sbz;       // 3
-    uint8_t data[56];  // 4-59
-    uint32_t crc32;    // 60-63
-} __attribute__((packed)) AuthReport;
-
-typedef struct {
-    uint8_t type;        // 0
-    uint8_t seq;         // 1
-    uint8_t status;      // 2  0x10 = not ready, 0x00 = ready
-    uint8_t padding[9];  // 3-11
-    uint32_t crc32;      // 12-15
-} __attribute__((packed)) AuthStatusReport;
-
-enum BackendAuthState {
-    OK,
-    UNKNOWN_ERR,
-    COMM_ERR,
-    BUSY,
-    NO_TRANSACTION,
-};
 enum
 {
   ITF_NUM_HID,

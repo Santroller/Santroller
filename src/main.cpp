@@ -40,9 +40,6 @@ void hid_task(void)
     if (!tud_hid_ready())
         return;
     update(false);
-    PCGamepad_Data_t out = {0};
-
-    tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(out));
 }
 long lastKeepAlive = 0;
 

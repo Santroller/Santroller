@@ -5,12 +5,15 @@
 #include "state/base.hpp"
 #include "protocols/controller_reports.hpp"
 #include "protocols/hid.hpp"
+#include "protocols/wii.hpp"
 #include "protocols/og_xbox.hpp"
 #include "protocols/ps2.hpp"
 #include "protocols/ps3.hpp"
 #include "protocols/ps4.hpp"
 #include "protocols/xbox_one.hpp"
 #include "protocols/xinput.hpp"
+#include "protocols/switch.hpp"
+#include "console_mode.h"
 #include <memory>
 class Mapping
 {
@@ -18,34 +21,56 @@ public:
     Mapping(uint16_t id): m_id(id) {}
     virtual ~Mapping() {}
     virtual void update(bool full_poll)=0;
-    // virtual void update_hid(PCGamepad_Data_t *report, bool full_poll)=0;
-    // virtual void update_ps3(san_base_t *base, bool full_poll)=0;
+    virtual void update_hid(uint8_t *report)=0;
+    virtual void update_wii(uint8_t *report)=0;
+    virtual void update_switch(uint8_t* report)=0;
+    virtual void update_ps2(uint8_t* report)=0;
+    virtual void update_ps3(uint8_t* report)=0;
+    virtual void update_ps4(uint8_t* report)=0;
+    virtual void update_xinput(uint8_t* report)=0;
+    virtual void update_ogxbox(uint8_t* report)=0;
 protected:
     uint16_t m_id;
 };
 
-class AxisMapping : public Mapping
+class GamepadAxisMapping : public Mapping
 {
 public:
-    ~AxisMapping() {}
-    AxisMapping(proto_AxisMapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    ~GamepadAxisMapping() {}
+    GamepadAxisMapping(proto_GamepadAxisMapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update(bool full_poll);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t* report);
+    void update_ps2(uint8_t* report);
+    void update_ps3(uint8_t* report);
+    void update_ps4(uint8_t* report);
+    void update_xinput(uint8_t* report);
+    void update_ogxbox(uint8_t* report);
 
 private:
-    proto_AxisMapping m_mapping;
+    proto_GamepadAxisMapping m_mapping;
     std::unique_ptr<Input> m_input;
     uint32_t m_lastValue = 0;
 };
 
-class ButtonMapping : public Mapping
+class GamepadButtonMapping : public Mapping
 {
 public:
-    ~ButtonMapping() {}
-    ButtonMapping(proto_ButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    ~GamepadButtonMapping() {}
+    GamepadButtonMapping(proto_GamepadButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update(bool full_poll);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t* report);
+    void update_ps2(uint8_t* report);
+    void update_ps3(uint8_t* report);
+    void update_ps4(uint8_t* report);
+    void update_xinput(uint8_t* report);
+    void update_ogxbox(uint8_t* report);
 
 private:
-    proto_ButtonMapping m_mapping;
+    proto_GamepadButtonMapping m_mapping;
     std::unique_ptr<Input> m_input;
     bool m_lastValue = false;
 };

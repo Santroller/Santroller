@@ -3,6 +3,7 @@
 
 #include "i2c.hpp"
 #include "enums.pb.h"
+#include "input_enums.pb.h"
 #define WII_ADDR 0x52
 #define WII_READ_ID 0xFA
 #define WII_ENCRYPTION_STATE_ID 0xF0

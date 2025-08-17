@@ -2,6 +2,7 @@ syntax = "proto2";
 
 package proto;
 import "enums.proto";
+import "input_enums.proto";
 import "device.proto";
 
 message GPIOInput {
@@ -20,17 +21,6 @@ message MPR121Input {
 message MidiInput { required int32 note = 1; }
 
 message FixedInput { required int32 value = 1; }
-
-// Use for devices that dont need special handling
-message BasicAnalogDeviceInput {
-  required int32 deviceid = 1;
-  required AxisType axis = 2;
-}
-
-message BasicDigitalDeviceInput {
-  required int32 deviceid = 1;
-  required ButtonType button = 2;
-}
 
 message WiiAxisInput {
   required int32 deviceid = 1;
@@ -66,36 +56,59 @@ message Input {
   oneof input {
     GPIOInput gpio = 1;
     FixedInput fixed = 2;
-    BasicAnalogDeviceInput analogDevice = 3;
-    BasicDigitalDeviceInput digitalDevice = 4;
-    MPR121Input mpr121 = 5;
-    MidiInput midi = 6;
-    MouseAxisInput mouseAxis = 7;
-    MouseButtonInput mouseButton = 8;
-    WiiAxisInput wiiAxis = 9;
-    WiiButtonInput wiiButton = 10;
-    KeyboardKeyInput key = 11;
-    CrkdNeckButtonInput crkd = 12;
+    MPR121Input mpr121 = 3;
+    MidiInput midi = 4;
+    MouseAxisInput mouseAxis = 5;
+    MouseButtonInput mouseButton = 6;
+    WiiAxisInput wiiAxis = 7;
+    WiiButtonInput wiiButton = 8;
+    KeyboardKeyInput key = 9;
+    CrkdNeckButtonInput crkd = 10;
   }
 }
 
-message ButtonMapping {
-  required ButtonType button = 1;
+message GamepadButtonMapping {
+  required GamepadButtonType button = 1;
   required bool inverted = 2;
   optional Input pressureInput = 3; // if there is no pressureInput, then set the pressures to max when the button is pressed
   optional AnalogToDigitalTriggerType trigger = 4;
 }
 
-message AxisMapping {
-  required AxisType axis = 1;
+message GamepadAxisMapping {
+  required GamepadAxisType axis = 1;
+  optional int32 onValue = 2; // if input is digital, use onValue when its active
+  optional int32 offValue = 3; // and offValue when its inactive
+}
+
+message GuitarHeroGuitarButtonMapping {
+  required GuitarHeroGuitarButtonType button = 1;
+  required bool inverted = 2;
+  optional AnalogToDigitalTriggerType trigger = 3;
+}
+message GuitarHeroGuitarAxisMapping {
+  required GuitarHeroGuitarAxisType axis = 1;
+  optional int32 onValue = 2; // if input is digital, use onValue when its active
+  optional int32 offValue = 3; // and offValue when its inactive
+}
+message RockBandGuitarButtonMapping {
+  required RockBandGuitarButtonType button = 1;
+  required bool inverted = 2;
+  optional AnalogToDigitalTriggerType trigger = 3;
+}
+message RockBandGuitarAxisMapping {
+  required RockBandGuitarAxisType axis = 1;
   optional int32 onValue = 2; // if input is digital, use onValue when its active
   optional int32 offValue = 3; // and offValue when its inactive
 }
 
 message Mapping {
+  required Input input = 1;
   oneof mapping {
-    ButtonMapping button = 1;
-    AxisMapping axis = 2;
+    GamepadButtonMapping button = 2;
+    GamepadAxisMapping axis = 3;
+    GuitarHeroGuitarButtonMapping ghButton = 4;
+    GuitarHeroGuitarAxisMapping ghAxis = 5;
+    RockBandGuitarButtonMapping rbButton = 6;
+    RockBandGuitarAxisMapping rbAxis = 7;
   }
-  required Input input = 3;
 }

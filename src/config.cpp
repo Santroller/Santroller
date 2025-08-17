@@ -35,6 +35,7 @@ typedef struct
 } profile_args_t;
 void update(bool full_poll)
 {
+    uint8_t out[64] = {0};
     for (auto &device : devices)
     {
         device.second->update(full_poll);
@@ -42,6 +43,10 @@ void update(bool full_poll)
     for (auto &mapping : mappings)
     {
         mapping->update(full_poll);
+        mapping->update_hid(out);
+    }
+    if (tud_hid_ready()) {
+        tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
     }
 }
 
@@ -115,11 +120,11 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
     case proto_Mapping_axis_tag:
         printf("axis %d\r\n", mapping.mapping.axis.axis);
-        mappings.push_back(std::unique_ptr<Mapping>(new AxisMapping(mapping.mapping.axis, std::move(input), *mapping_id)));
+        mappings.push_back(std::unique_ptr<Mapping>(new GamepadAxisMapping(mapping.mapping.axis, std::move(input), *mapping_id)));
         break;
     case proto_Mapping_button_tag:
         printf("button %d\r\n", mapping.mapping.button.button);
-        mappings.push_back(std::unique_ptr<Mapping>(new ButtonMapping(mapping.mapping.button, std::move(input), *mapping_id)));
+        mappings.push_back(std::unique_ptr<Mapping>(new GamepadButtonMapping(mapping.mapping.button, std::move(input), *mapping_id)));
         break;
     }
     *mapping_id += 1;

@@ -24,7 +24,7 @@ function(compile_proto)
 	set(PROTO_OUTPUT_DIR ${PROTO_OUTPUT_DIR} PARENT_SCOPE)
 
 	add_custom_command(
-		DEPENDS ${VENV_FILE} ${NANOPB_GENERATOR} ${CMAKE_SOURCE_DIR}/proto/enums.proto ${CMAKE_SOURCE_DIR}/proto/config.proto ${CMAKE_SOURCE_DIR}/proto/device.proto ${CMAKE_SOURCE_DIR}/proto/input.proto ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto/nanopb.proto ${CMAKE_SOURCE_DIR}/proto/events.proto
+		DEPENDS ${VENV_FILE} ${NANOPB_GENERATOR} ${CMAKE_SOURCE_DIR}/proto/enums.proto ${CMAKE_SOURCE_DIR}/proto/input_enums.proto ${CMAKE_SOURCE_DIR}/proto/config.proto ${CMAKE_SOURCE_DIR}/proto/device.proto ${CMAKE_SOURCE_DIR}/proto/input.proto ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto/nanopb.proto ${CMAKE_SOURCE_DIR}/proto/events.proto
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -E make_directory ${PROTO_OUTPUT_DIR}
 		COMMAND ${VENV_BIN_DIR}/python ${NANOPB_GENERATOR}
@@ -33,6 +33,12 @@ function(compile_proto)
 		-I ${CMAKE_SOURCE_DIR}/proto
 		-I ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto
 		${CMAKE_SOURCE_DIR}/proto/enums.proto
+		COMMAND ${VENV_BIN_DIR}/python ${NANOPB_GENERATOR}
+		-q
+		-D ${PROTO_OUTPUT_DIR}
+		-I ${CMAKE_SOURCE_DIR}/proto
+		-I ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto
+		${CMAKE_SOURCE_DIR}/proto/input_enums.proto
 		COMMAND ${VENV_BIN_DIR}/python ${NANOPB_GENERATOR}
 		-q
 		-D ${PROTO_OUTPUT_DIR}
@@ -57,7 +63,7 @@ function(compile_proto)
 		-I ${CMAKE_SOURCE_DIR}/proto
 		-I ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto
 		${CMAKE_SOURCE_DIR}/proto/events.proto
-		OUTPUT ${PROTO_OUTPUT_DIR}/input.pb.c ${PROTO_OUTPUT_DIR}/input.pb.h ${PROTO_OUTPUT_DIR}/device.pb.c ${PROTO_OUTPUT_DIR}/device.pb.h ${PROTO_OUTPUT_DIR}/config.pb.c ${PROTO_OUTPUT_DIR}/config.pb.h ${PROTO_OUTPUT_DIR}/enums.pb.c ${PROTO_OUTPUT_DIR}/enums.pb.h ${PROTO_OUTPUT_DIR}/events.pb.c ${PROTO_OUTPUT_DIR}/events.pb.h
+		OUTPUT ${PROTO_OUTPUT_DIR}/input.pb.c ${PROTO_OUTPUT_DIR}/input.pb.h ${PROTO_OUTPUT_DIR}/device.pb.c ${PROTO_OUTPUT_DIR}/device.pb.h ${PROTO_OUTPUT_DIR}/config.pb.c ${PROTO_OUTPUT_DIR}/config.pb.h ${PROTO_OUTPUT_DIR}/input_enums.pb.c ${PROTO_OUTPUT_DIR}/input_enums.pb.h ${PROTO_OUTPUT_DIR}/enums.pb.c ${PROTO_OUTPUT_DIR}/enums.pb.h ${PROTO_OUTPUT_DIR}/events.pb.c ${PROTO_OUTPUT_DIR}/events.pb.h
 		COMMENT "Compiling enums.proto and config.proto"
 	)
 endfunction()

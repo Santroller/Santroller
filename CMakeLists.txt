@@ -89,8 +89,8 @@ add_executable(
   src/input/crkd.cpp
   src/input/gpio.cpp
   src/input/wii.cpp
-  src/mappings/ButtonMapping.cpp
-  src/mappings/AxisMapping.cpp
+  src/mappings/GamepadButtonMapping.cpp
+  src/mappings/GamepadAxisMapping.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp
   src/devices/accelerometer.cpp
@@ -101,6 +101,7 @@ add_executable(
   src/devices/max1704x.cpp
   src/devices/mpr121.cpp
   src/config.cpp
+  ${PROTO_OUTPUT_DIR}/input_enums.pb.c
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c
   ${PROTO_OUTPUT_DIR}/config.pb.c

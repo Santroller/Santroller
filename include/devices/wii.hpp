@@ -1,6 +1,7 @@
 #pragma once
 #include "base.hpp"
 #include "device.pb.h"
+#include "input_enums.pb.h"
 #include "wii_extension.hpp"
 class WiiDevice : public Device
 {

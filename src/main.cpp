@@ -181,6 +181,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
             write_config_info(buffer, bufsize);
             break;
         case ReportId::ReportIdLoaded:
+            lastKeepAlive = millis();
             update(true);
             break;
         case ReportId::ReportIdKeepalive:

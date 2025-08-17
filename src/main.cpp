@@ -23,7 +23,7 @@
 #include "main.hpp"
 #include "utils.h"
 #include "hardware/uart.h"
-
+#include "pico/bootrom.h"
 #include "tusb.h"
 
 #include "usb/usb_descriptors.h"
@@ -182,7 +182,12 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
             break;
         case ReportId::ReportIdLoaded:
             update(true);
+            break;
+        case ReportId::ReportIdKeepalive:
             lastKeepAlive = millis();
+            break;
+        case ReportId::ReportIdBootloader:
+            reset_usb_boot(0, 0);
             break;
         }
     case HID_REPORT_TYPE_OUTPUT:

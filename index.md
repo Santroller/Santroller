@@ -86,12 +86,14 @@ This is done using the Santroller Configurator, which can program various microc
   - Pi Pico **Recommended**
     - Some features such as USB inputs and peripheral are Pi Pico only
     - The Pico also has a much more robust programming method, so there is less that can go wrong when programming
-  - Arduino Pro Micro (3.3v)
-  - Arduino Pro Micro (5v)
-  - Arduino Leonardo
-  - Arduino Micro
-  - Arduino Uno R1/2/3
-  - Arduino Mega
+  - Some arduinos **not recommended**
+    - note that you need to downgrade to the [last version of santroller that properly supports these devices](https://github.com/Santroller/Santroller/releases/tag/v10.1.188), and many features are not present in this older build.
+    - Arduino Pro Micro (3.3v)
+    - Arduino Pro Micro (5v)
+    - Arduino Leonardo
+    - Arduino Micro
+    - Arduino Uno R1/2/3
+    - Arduino Mega
 - Support for inputs from various input sources
   - Wii extensions (such as wii guitars, classic controllers or drum kits)
   - PS2 controllers

@@ -24,3 +24,24 @@ bool WiiDevice::readButton(proto_WiiButtonType type)
 {
     return m_extension.readButton(type);
 }
+uint16_t WiiDevice::readMidiNote(uint8_t note)
+{
+    return m_extension.midiInterface.midiVelocities[note] << 8;
+}
+uint16_t WiiDevice::readMidiControlChange(uint8_t cc)
+{
+    switch (cc)
+    {
+    case MIDI_CONTROL_COMMAND_MOD_WHEEL:
+        return m_extension.midiInterface.midiModWheel << 8;
+    case MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL:
+        return m_extension.midiInterface.midiSustainPedal << 8;
+    default:
+        return 0;
+    }
+    return 0;
+}
+int16_t WiiDevice::readMidiPitchBend()
+{
+    return m_extension.midiInterface.midiPitchWheel;
+}

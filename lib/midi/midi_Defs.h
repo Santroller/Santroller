@@ -46,6 +46,9 @@ BEGIN_MIDI_NAMESPACE
 #define MIDI_PITCHBEND_MIN      -8192
 #define MIDI_PITCHBEND_MAX      8191
 
+#define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
+#define MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL 64
+
 /*! Receiving Active Sensing 
 */
 static const uint16_t ActiveSensingTimeout = 300;

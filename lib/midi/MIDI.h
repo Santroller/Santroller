@@ -153,7 +153,11 @@ public:
               DataByte inData1,
               DataByte inData2,
               Channel inChannel);
-
+    bool drumMode = false;
+    uint8_t midiVelocities[128];
+    int16_t midiPitchWheel;
+    uint8_t midiModWheel;
+    uint8_t midiSustainPedal;
     // -------------------------------------------------------------------------
     // MIDI Input
 
@@ -183,54 +187,10 @@ public:
     // Input Callbacks
 
 public:
-    inline MidiInterface& setHandleMessage(void (*fptr)(const MidiMessage&)) { mMessageCallback = fptr; return *this; };
-    inline MidiInterface& setHandleError(ErrorCallback fptr) { mErrorCallback = fptr; return *this; };
-    inline MidiInterface& setHandleNoteOff(NoteOffCallback fptr) { mNoteOffCallback = fptr; return *this; };
-    inline MidiInterface& setHandleNoteOn(NoteOnCallback fptr) { mNoteOnCallback = fptr; return *this; };
-    inline MidiInterface& setHandleAfterTouchPoly(AfterTouchPolyCallback fptr) { mAfterTouchPolyCallback = fptr; return *this; };
-    inline MidiInterface& setHandleControlChange(ControlChangeCallback fptr) { mControlChangeCallback = fptr; return *this; };
-    inline MidiInterface& setHandleProgramChange(ProgramChangeCallback fptr) { mProgramChangeCallback = fptr; return *this; };
-    inline MidiInterface& setHandleAfterTouchChannel(AfterTouchChannelCallback fptr) { mAfterTouchChannelCallback = fptr; return *this; };
-    inline MidiInterface& setHandlePitchBend(PitchBendCallback fptr) { mPitchBendCallback = fptr; return *this; };
-    inline MidiInterface& setHandleSystemExclusive(SystemExclusiveCallback fptr) { mSystemExclusiveCallback = fptr; return *this; };
-    inline MidiInterface& setHandleTimeCodeQuarterFrame(TimeCodeQuarterFrameCallback fptr) { mTimeCodeQuarterFrameCallback = fptr; return *this; };
-    inline MidiInterface& setHandleSongPosition(SongPositionCallback fptr) { mSongPositionCallback = fptr; return *this; };
-    inline MidiInterface& setHandleSongSelect(SongSelectCallback fptr) { mSongSelectCallback = fptr; return *this; };
-    inline MidiInterface& setHandleTuneRequest(TuneRequestCallback fptr) { mTuneRequestCallback = fptr; return *this; };
-    inline MidiInterface& setHandleClock(ClockCallback fptr) { mClockCallback = fptr; return *this; };
-    inline MidiInterface& setHandleStart(StartCallback fptr) { mStartCallback = fptr; return *this; };
-    inline MidiInterface& setHandleTick(TickCallback fptr) { mTickCallback = fptr; return *this; };
-    inline MidiInterface& setHandleContinue(ContinueCallback fptr) { mContinueCallback = fptr; return *this; };
-    inline MidiInterface& setHandleStop(StopCallback fptr) { mStopCallback = fptr; return *this; };
-    inline MidiInterface& setHandleActiveSensing(ActiveSensingCallback fptr) { mActiveSensingCallback = fptr; return *this; };
-    inline MidiInterface& setHandleSystemReset(SystemResetCallback fptr) { mSystemResetCallback = fptr; return *this; };
-
     inline MidiInterface& disconnectCallbackFromType(MidiType inType);
 
 private:
     void launchCallback();
-
-    void (*mMessageCallback)(const MidiMessage& message) = nullptr;
-    ErrorCallback mErrorCallback = nullptr;
-    NoteOffCallback mNoteOffCallback = nullptr;
-    NoteOnCallback mNoteOnCallback = nullptr;
-    AfterTouchPolyCallback mAfterTouchPolyCallback = nullptr;
-    ControlChangeCallback mControlChangeCallback = nullptr;
-    ProgramChangeCallback mProgramChangeCallback = nullptr;
-    AfterTouchChannelCallback mAfterTouchChannelCallback = nullptr;
-    PitchBendCallback mPitchBendCallback = nullptr;
-    SystemExclusiveCallback mSystemExclusiveCallback = nullptr;
-    TimeCodeQuarterFrameCallback mTimeCodeQuarterFrameCallback = nullptr;
-    SongPositionCallback mSongPositionCallback = nullptr;
-    SongSelectCallback mSongSelectCallback = nullptr;
-    TuneRequestCallback mTuneRequestCallback = nullptr;
-    ClockCallback mClockCallback = nullptr;
-    StartCallback mStartCallback = nullptr;
-    TickCallback mTickCallback = nullptr;
-    ContinueCallback mContinueCallback = nullptr;
-    StopCallback mStopCallback = nullptr;
-    ActiveSensingCallback mActiveSensingCallback = nullptr;
-    SystemResetCallback mSystemResetCallback = nullptr;
 
     // -------------------------------------------------------------------------
     // MIDI Soft Thru

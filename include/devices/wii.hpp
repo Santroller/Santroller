@@ -11,6 +11,9 @@ public:
     void update(bool full_poll);
     uint16_t readAxis(proto_WiiAxisType type);
     bool readButton(proto_WiiButtonType type);
+    uint16_t readMidiNote(uint8_t note);
+    uint16_t readMidiControlChange(uint8_t cc);
+    int16_t readMidiPitchBend();
 
 private:
     proto_WiiDevice m_device;

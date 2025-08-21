@@ -27,3 +27,39 @@ private:
     proto_WiiButtonInput m_input;
     std::shared_ptr<WiiDevice> m_device;
 };
+class WiiMidiNoteInput : public Input
+{
+public:
+    WiiMidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<WiiDevice> device);
+    bool tickDigital();
+    uint16_t tickAnalog();
+
+private:
+    void setup();
+    proto_MidiNoteInput m_input;
+    std::shared_ptr<WiiDevice> m_device;
+};
+class WiiMidiControlChangeInput : public Input
+{
+public:
+    WiiMidiControlChangeInput(proto_MidiControlChangeInput input, std::shared_ptr<WiiDevice> device);
+    bool tickDigital();
+    uint16_t tickAnalog();
+
+private:
+    void setup();
+    proto_MidiControlChangeInput m_input;
+    std::shared_ptr<WiiDevice> m_device;
+};
+class WiiMidiPitchBendInput : public Input
+{
+public:
+    WiiMidiPitchBendInput(proto_MidiPitchBendInput input, std::shared_ptr<WiiDevice> device);
+    bool tickDigital();
+    uint16_t tickAnalog();
+
+private:
+    void setup();
+    proto_MidiPitchBendInput m_input;
+    std::shared_ptr<WiiDevice> m_device;
+};

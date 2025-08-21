@@ -8,6 +8,7 @@ GamepadButtonMapping::GamepadButtonMapping(proto_GamepadButtonMapping mapping, s
 {
 }
 
+// deal with debounce and all the other fun things
 void GamepadButtonMapping::update(bool full_poll)
 {
     auto val = m_input->tickDigital();

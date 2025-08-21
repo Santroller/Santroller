@@ -4,6 +4,7 @@
 
 #include "MidiNotes.h"
 #include "main.hpp"
+#include <cmath>
 
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 {
@@ -195,6 +196,70 @@ void WiiExtension::tick()
             midiInterface.parsePacket(packet, sizeof(packet));
         }
     }
+    if (mType == WiiExtType::WiiGuitarHeroGuitar)
+    {
+        auto lastTapWii = (wiiData[2] & 0x1f);
+
+        // GH3 guitars set this bit, while WT and GH5 guitars do not
+        if (!hasTapBar)
+        {
+            if (lastTapWii == 0x0F)
+            {
+                hasTapBar = true;
+            }
+            lastTapWii = 0;
+            lastTap = 0x80;
+        }
+        else if (lastTapWii == 0x0f)
+        {
+            lastTap = 0x80;
+        }
+        else if (lastTapWii < 0x05)
+        {
+            lastTap = 0x15;
+        }
+        else if (lastTapWii < 0x0A)
+        {
+            lastTap = 0x30;
+        }
+        else if (lastTapWii < 0x0C)
+        {
+            lastTap = 0x4D;
+        }
+        else if (lastTapWii < 0x12)
+        {
+            lastTap = 0x66;
+        }
+        else if (lastTapWii < 0x14)
+        {
+            lastTap = 0x9A;
+        }
+        else if (lastTapWii < 0x17)
+        {
+            lastTap = 0xAF;
+        }
+        else if (lastTapWii < 0x1A)
+        {
+            lastTap = 0xC9;
+        }
+        else if (lastTapWii < 0x1F)
+        {
+            lastTap = 0xE6;
+        }
+        else
+        {
+            lastTap = 0xFF;
+        }
+    }
+    if (mType == WiiExtType::WiiDjHeroTurntable)
+    {
+        ltt_t.ltt5 = (wiiData[4] & 1);
+        ltt_t.ltt40 = (wiiData[3] & 0x1F);
+        rtt_t.rtt0 = (wiiData[2] & 0x80) >> 7;
+        rtt_t.rtt21 = (wiiData[1] & 0xC0) >> 6;
+        rtt_t.rtt43 = (wiiData[0] & 0xC0) >> 6;
+        rtt_t.rtt5 = (wiiData[2] & 1);
+    }
     memcpy(mBuffer, wiiData, sizeof(wiiData));
 }
 
@@ -202,13 +267,157 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
 {
     switch (mType)
     {
+    case WiiExtType::WiiClassicControllerPro:
     case WiiExtType::WiiClassicController:
-        switch (type)
+    {
+        if (hiRes)
         {
-        case WiiAxisType::WiiAxisClassicLeftStickX:
-            return mBuffer[0];
+            switch (type)
+            {
+            case WiiAxisType::WiiAxisClassicLeftStickX:
+                return (mBuffer[0] - 0x80) << 8;
+            case WiiAxisType::WiiAxisClassicLeftStickY:
+                return (mBuffer[2] - 0x80) << 8;
+            case WiiAxisType::WiiAxisClassicRightStickX:
+                return (mBuffer[1] - 0x80) << 8;
+            case WiiAxisType::WiiAxisClassicRightStickY:
+                return (mBuffer[3] - 0x80) << 8;
+            case WiiAxisType::WiiAxisClassicLeftTrigger:
+                return mBuffer[4] << 8;
+            case WiiAxisType::WiiAxisClassicRightTrigger:
+                return mBuffer[5] << 8;
+            default:
+                return 0;
+            }
+        }
+        else
+        {
+
+            switch (type)
+            {
+            case WiiAxisType::WiiAxisClassicLeftStickX:
+                return ((mBuffer[0] & 0x3f) - 32) << 10;
+            case WiiAxisType::WiiAxisClassicLeftStickY:
+                return ((mBuffer[1] & 0x3f) - 32) << 10;
+            case WiiAxisType::WiiAxisClassicRightStickX:
+                return ((((mBuffer[0] & 0xc0) >> 3) | ((mBuffer[1] & 0xc0) >> 5) | (mBuffer[2] >> 7)) - 16) << 11;
+            case WiiAxisType::WiiAxisClassicRightStickY:
+                return ((mBuffer[2] & 0x1f) - 16) << 11;
+            case WiiAxisType::WiiAxisClassicLeftTrigger:
+                return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
+            case WiiAxisType::WiiAxisClassicRightTrigger:
+                return (mBuffer[3] & 0x1f) << 11;
+            default:
+                return 0;
+            }
         }
         break;
+    }
+    case WiiExtType::WiiDjHeroTurntable:
+    {
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisDjCrossfadeSlider:
+            return ((mBuffer[2] & 0x1E) >> 1) << 12;
+        case WiiAxisType::WiiAxisDjEffectDial:
+            return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
+        case WiiAxisType::WiiAxisDjStickX:
+            return ((mBuffer[0] & 0x3F) - 0x20) << 10;
+        case WiiAxisType::WiiAxisDjStickY:
+            return ((mBuffer[1] & 0x3F) - 0x20) << 10;
+        case WiiAxisType::WiiAxisDjTurntableLeft:
+            return (ltt_t.ltt << 10);
+        case WiiAxisType::WiiAxisDjTurntableRight:
+            return (rtt_t.rtt << 10);
+        default:
+            return 0;
+        }
+        break;
+    }
+    case WiiExtType::WiiUbisoftDrawsomeTablet:
+    {
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisDrawsomePenPressure:
+            return (mBuffer[4] | (mBuffer[5] & 0x0f) << 8);
+        case WiiAxisType::WiiAxisDrawsomePenX:
+            return (mBuffer[0] | mBuffer[1] << 8);
+        case WiiAxisType::WiiAxisDrawsomePenY:
+            return (mBuffer[2] | mBuffer[3] << 8);
+        default:
+            return 0;
+        }
+        break;
+    }
+    case WiiExtType::WiiThqUdrawTablet:
+    {
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisUDrawPenPressure:
+            return (mBuffer[3]);
+        case WiiAxisType::WiiAxisUDrawPenX:
+            return ((mBuffer[2] & 0x0f) << 8) | mBuffer[0];
+        case WiiAxisType::WiiAxisUDrawPenY:
+            return ((mBuffer[2] & 0xf0) << 4) | mBuffer[1];
+        default:
+            return 0;
+        }
+        break;
+    }
+    case WiiExtType::WiiGuitarHeroGuitar:
+    {
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisGuitarJoystickX:
+            return ((mBuffer[0] & 0x3f) - 32) << 10;
+        case WiiAxisType::WiiAxisGuitarJoystickY:
+            return ((mBuffer[1] & 0x3f) - 32) << 10;
+        case WiiAxisType::WiiAxisGuitarTapBar:
+            return lastTap;
+        case WiiAxisType::WiiAxisGuitarWhammy:
+            return (mBuffer[3] & 0x1f) << 11;
+        default:
+            return 0;
+        }
+        break;
+    }
+    case WiiExtType::WiiGuitarHeroDrums:
+    {
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisDrumJoystickX:
+            return ((mBuffer[0] & 0x3f) - 32) << 10;
+        case WiiAxisType::WiiAxisDrumJoystickY:
+            return ((mBuffer[1] & 0x3f) - 32) << 10;
+        default:
+            return 0;
+        }
+        break;
+    }
+    case WiiExtType::WiiNunchuk:
+    {
+        switch (type)
+        {
+        case WiiAxisType::WiiAxisNunchukAccelerationX:
+            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511;
+        case WiiAxisType::WiiAxisNunchukAccelerationY:
+            return ((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511;
+        case WiiAxisType::WiiAxisNunchukAccelerationZ:
+            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511;
+        case WiiAxisType::WiiAxisNunchukRotationPitch:
+            return std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511);
+        case WiiAxisType::WiiAxisNunchukRotationRoll:
+            return std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511);
+        case WiiAxisType::WiiAxisNunchukStickX:
+            return (mBuffer[0] - 0x80) << 8;
+        case WiiAxisType::WiiAxisNunchukStickY:
+            return (mBuffer[1] - 0x80) << 8;
+        default:
+            return 0;
+        }
+    }
+    default:
+        return 0;
     }
     return 0;
 }
@@ -223,13 +432,167 @@ bool WiiExtension::readButton(proto_WiiButtonType type)
     }
     switch (mType)
     {
+    case WiiExtType::WiiClassicControllerPro:
     case WiiExtType::WiiClassicController:
+    {
         switch (type)
         {
+        case WiiButtonClassicRt:
+            return ((wiiButtonsLow) & (1 << 1));
+        case WiiButtonClassicPlus:
+            return ((wiiButtonsLow) & (1 << 2));
+        case WiiButtonClassicHome:
+            return ((wiiButtonsLow) & (1 << 3));
+        case WiiButtonClassicMinus:
+            return ((wiiButtonsLow) & (1 << 4));
+        case WiiButtonClassicLt:
+            return ((wiiButtonsLow) & (1 << 5));
+        case WiiButtonClassicDPadDown:
+            return ((wiiButtonsLow) & (1 << 6));
+        case WiiButtonClassicDPadRight:
+            return ((wiiButtonsLow) & (1 << 7));
+        case WiiButtonClassicDPadUp:
+            return ((wiiButtonsHigh) & (1 << 0));
+        case WiiButtonClassicDPadLeft:
+            return ((wiiButtonsHigh) & (1 << 1));
+        case WiiButtonClassicZr:
+            return ((wiiButtonsHigh) & (1 << 2));
+        case WiiButtonClassicX:
+            return ((wiiButtonsHigh) & (1 << 3));
         case WiiButtonClassicA:
-            return (wiiButtonsHigh) & (1 << 4);
+            return ((wiiButtonsHigh) & (1 << 4));
+        case WiiButtonClassicY:
+            return ((wiiButtonsHigh) & (1 << 5));
+        case WiiButtonClassicB:
+            return ((wiiButtonsHigh) & (1 << 6));
+        case WiiButtonClassicZl:
+            return ((wiiButtonsHigh) & (1 << 7));
+        default:
+            return 0;
         }
         break;
+    }
+
+    case WiiExtType::WiiDjHeroTurntable:
+    {
+        switch (type)
+        {
+        case WiiButtonDjHeroPlus:
+            return ((wiiButtonsLow) & (1 << 2));
+        case WiiButtonDjHeroMinus:
+            return ((wiiButtonsLow) & (1 << 4));
+        case WiiButtonDjHeroLeftBlue:
+            return ((wiiButtonsHigh) & (1 << 7));
+        case WiiButtonDjHeroLeftRed:
+            return ((wiiButtonsLow) & (1 << 5));
+        case WiiButtonDjHeroLeftGreen:
+            return ((wiiButtonsHigh) & (1 << 3));
+        case WiiButtonDjHeroRightGreen:
+            return ((wiiButtonsHigh) & (1 << 5));
+        case WiiButtonDjHeroRightRed:
+            return ((wiiButtonsLow) & (1 << 1));
+        case WiiButtonDjHeroRightBlue:
+            return ((wiiButtonsHigh) & (1 << 2));
+        case WiiButtonDjHeroEuphoria:
+            return ((wiiButtonsHigh) & (1 << 4));
+        default:
+            return 0;
+        }
+        break;
+    }
+
+    case WiiExtType::WiiGuitarHeroDrums:
+    {
+        switch (type)
+        {
+        case WiiButtonDrumPlus:
+            return ((wiiButtonsLow) & (1 << 2));
+        case WiiButtonDrumMinus:
+            return ((wiiButtonsLow) & (1 << 4));
+        default:
+            return 0;
+        }
+        break;
+    }
+
+    case WiiExtType::WiiGuitarHeroGuitar:
+    {
+        switch (type)
+        {
+        case WiiButtonGuitarPlus:
+            return ((wiiButtonsLow) & (1 << 2));
+        case WiiButtonGuitarMinus:
+            return ((wiiButtonsLow) & (1 << 4));
+        case WiiButtonGuitarStrumDown:
+            return ((wiiButtonsLow) & (1 << 6));
+        case WiiButtonGuitarStrumUp:
+            return ((wiiButtonsHigh) & (1 << 0));
+        case WiiButtonGuitarYellow:
+            return ((wiiButtonsHigh) & (1 << 3));
+        case WiiButtonGuitarGreen:
+            return ((wiiButtonsHigh) & (1 << 4));
+        case WiiButtonGuitarBlue:
+            return ((wiiButtonsHigh) & (1 << 5));
+        case WiiButtonGuitarRed:
+            return ((wiiButtonsHigh) & (1 << 6));
+        case WiiButtonGuitarOrange:
+            return ((wiiButtonsHigh) & (1 << 7));
+        case WiiButtonGuitarPedal:
+            return ((wiiButtonsHigh) & (1 << 2));
+        default:
+            return 0;
+        }
+        break;
+    }
+    case WiiExtType::WiiNunchuk:
+    {
+        switch (type)
+        {
+        case WiiButtonNunchukC:
+            return ((wiiButtonsHigh) & (1 << 1));
+        case WiiButtonNunchukZ:
+            return ((wiiButtonsHigh) & (1 << 0));
+        default:
+            return 0;
+        }
+        break;
+    }
+
+    case WiiExtType::WiiTaikoNoTatsujinController:
+    {
+        switch (type)
+        {
+        case WiiButtonTaTaConRightDrumRim:
+            return ((~mBuffer[0]) & (1 << 3));
+        case WiiButtonTaTaConRightDrumCenter:
+            return ((~mBuffer[0]) & (1 << 4));
+        case WiiButtonTaTaConLeftDrumRim:
+            return ((~mBuffer[0]) & (1 << 5));
+        case WiiButtonTaTaConLeftDrumCenter:
+            return ((~mBuffer[0]) & (1 << 6));
+        default:
+            return 0;
+        }
+        break;
+    }
+
+    case WiiExtType::WiiUbisoftDrawsomeTablet:
+    {
+        switch (type)
+        {
+        case WiiButtonUDrawPenButton1:
+            return ((wiiButtonsHigh) & (1 << 0));
+        case WiiButtonUDrawPenButton2:
+            return ((wiiButtonsHigh) & (1 << 1));
+        case WiiButtonUDrawPenClick:
+            return ((~wiiButtonsHigh) & (1 << 2));
+        default:
+            return 0;
+        }
+        break;
+    }
+    default:
+        return 0;
     }
     return false;
 }

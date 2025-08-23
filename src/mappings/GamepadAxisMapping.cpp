@@ -6,7 +6,7 @@
 #include <pb_encode.h>
 #include <utils.h>
 
-GamepadAxisMapping::GamepadAxisMapping(proto_GamepadAxisMapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
+GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
 {
 }
 
@@ -24,7 +24,7 @@ void GamepadAxisMapping::update(bool full_poll)
 void GamepadAxisMapping::update_hid(uint8_t *buf)
 {
     PCGamepad_Data_t *report = (PCGamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -62,7 +62,7 @@ void GamepadAxisMapping::update_wii(uint8_t *buf)
 {
     // TODO: we have to deal with data formats.
     WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -89,7 +89,7 @@ void GamepadAxisMapping::update_wii(uint8_t *buf)
 void GamepadAxisMapping::update_switch(uint8_t *buf)
 {
     SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -117,7 +117,7 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
 void GamepadAxisMapping::update_ps2(uint8_t *buf)
 {
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -145,7 +145,7 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
     PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -183,7 +183,7 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
 void GamepadAxisMapping::update_ps4(uint8_t *buf)
 {
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -211,7 +211,7 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
 void GamepadAxisMapping::update_xinput(uint8_t *buf)
 {
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;
@@ -238,7 +238,7 @@ void GamepadAxisMapping::update_xinput(uint8_t *buf)
 void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
-    switch (m_mapping.axis)
+    switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
         report->leftStickX = m_lastValue;

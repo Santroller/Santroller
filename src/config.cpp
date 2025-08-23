@@ -118,13 +118,13 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     switch (mapping.which_mapping)
     {
-    case proto_Mapping_axis_tag:
-        printf("axis %d\r\n", mapping.mapping.axis.axis);
-        mappings.push_back(std::unique_ptr<Mapping>(new GamepadAxisMapping(mapping.mapping.axis, std::move(input), *mapping_id)));
+    case proto_Mapping_gamepadAxis_tag:
+        printf("axis %d\r\n", mapping.mapping.gamepadAxis);
+        mappings.push_back(std::unique_ptr<Mapping>(new GamepadAxisMapping(mapping, std::move(input), *mapping_id)));
         break;
-    case proto_Mapping_button_tag:
-        printf("button %d\r\n", mapping.mapping.button.button);
-        mappings.push_back(std::unique_ptr<Mapping>(new GamepadButtonMapping(mapping.mapping.button, std::move(input), *mapping_id)));
+    case proto_Mapping_gamepadButton_tag:
+        printf("button %d\r\n", mapping.mapping.gamepadButton);
+        mappings.push_back(std::unique_ptr<Mapping>(new GamepadButtonMapping(mapping, std::move(input), *mapping_id)));
         break;
     }
     *mapping_id += 1;

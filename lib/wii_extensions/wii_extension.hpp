@@ -54,30 +54,4 @@ private:
 
     bool hiRes = false;
     bool hasTapBar = false;
-    struct
-    {
-        union
-        {
-            signed int ltt : 6;
-            struct
-            {
-                unsigned int ltt40 : 5;
-                unsigned int ltt5 : 1;
-            };
-        };
-    } ltt_t;
-    struct
-    {
-        union
-        {
-            signed int rtt : 6;
-            struct
-            {
-                unsigned int rtt0 : 1;
-                unsigned int rtt21 : 2;
-                unsigned int rtt43 : 2;
-                unsigned int rtt5 : 1;
-            };
-        };
-    } rtt_t;
 };

@@ -251,15 +251,6 @@ void WiiExtension::tick()
             lastTap = 0xFF;
         }
     }
-    if (mType == WiiExtType::WiiDjHeroTurntable)
-    {
-        ltt_t.ltt5 = (wiiData[4] & 1);
-        ltt_t.ltt40 = (wiiData[3] & 0x1F);
-        rtt_t.rtt0 = (wiiData[2] & 0x80) >> 7;
-        rtt_t.rtt21 = (wiiData[1] & 0xC0) >> 6;
-        rtt_t.rtt43 = (wiiData[0] & 0xC0) >> 6;
-        rtt_t.rtt5 = (wiiData[2] & 1);
-    }
     memcpy(mBuffer, wiiData, sizeof(wiiData));
 }
 
@@ -275,13 +266,13 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             switch (type)
             {
             case WiiAxisType::WiiAxisClassicLeftStickX:
-                return (mBuffer[0] - 0x80) << 8;
+                return (mBuffer[0]) << 8;
             case WiiAxisType::WiiAxisClassicLeftStickY:
-                return (mBuffer[2] - 0x80) << 8;
+                return (mBuffer[2]) << 8;
             case WiiAxisType::WiiAxisClassicRightStickX:
-                return (mBuffer[1] - 0x80) << 8;
+                return (mBuffer[1]) << 8;
             case WiiAxisType::WiiAxisClassicRightStickY:
-                return (mBuffer[3] - 0x80) << 8;
+                return (mBuffer[3]) << 8;
             case WiiAxisType::WiiAxisClassicLeftTrigger:
                 return mBuffer[4] << 8;
             case WiiAxisType::WiiAxisClassicRightTrigger:
@@ -296,13 +287,13 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             switch (type)
             {
             case WiiAxisType::WiiAxisClassicLeftStickX:
-                return ((mBuffer[0] & 0x3f) - 32) << 10;
+                return ((mBuffer[0] & 0x3f)) << 10;
             case WiiAxisType::WiiAxisClassicLeftStickY:
-                return ((mBuffer[1] & 0x3f) - 32) << 10;
+                return ((mBuffer[1] & 0x3f)) << 10;
             case WiiAxisType::WiiAxisClassicRightStickX:
-                return ((((mBuffer[0] & 0xc0) >> 3) | ((mBuffer[1] & 0xc0) >> 5) | (mBuffer[2] >> 7)) - 16) << 11;
+                return ((((mBuffer[0] & 0xc0) >> 3) | ((mBuffer[1] & 0xc0) >> 5) | (mBuffer[2] >> 7))) << 11;
             case WiiAxisType::WiiAxisClassicRightStickY:
-                return ((mBuffer[2] & 0x1f) - 16) << 11;
+                return ((mBuffer[2] & 0x1f)) << 11;
             case WiiAxisType::WiiAxisClassicLeftTrigger:
                 return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
             case WiiAxisType::WiiAxisClassicRightTrigger:
@@ -322,13 +313,15 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
         case WiiAxisType::WiiAxisDjEffectDial:
             return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
         case WiiAxisType::WiiAxisDjStickX:
-            return ((mBuffer[0] & 0x3F) - 0x20) << 10;
+            return ((mBuffer[0] & 0x3F)) << 10;
         case WiiAxisType::WiiAxisDjStickY:
-            return ((mBuffer[1] & 0x3F) - 0x20) << 10;
+            return ((mBuffer[1] & 0x3F)) << 10;
         case WiiAxisType::WiiAxisDjTurntableLeft:
-            return (ltt_t.ltt << 10);
-        case WiiAxisType::WiiAxisDjTurntableRight:
-            return (rtt_t.rtt << 10);
+            return ((mBuffer[4] & 1) ? 32 + (0x1F - (mBuffer[3] & 0x1F)) : 32 - (mBuffer[3] & 0x1F)) << 10;
+        case WiiAxisType::WiiAxisDjTurntableRight: {
+            uint8_t rtt = (mBuffer[2] & 0x80) >> 7 | (mBuffer[1] & 0xC0) >> 5 | (mBuffer[0] & 0xC0) >> 3;
+            return ((mBuffer[2] & 1) ? 32 + (0x1F - rtt) : 32 - rtt);
+        }
         default:
             return 0;
         }
@@ -369,9 +362,9 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
         switch (type)
         {
         case WiiAxisType::WiiAxisGuitarJoystickX:
-            return ((mBuffer[0] & 0x3f) - 32) << 10;
+            return ((mBuffer[0] & 0x3f)) << 10;
         case WiiAxisType::WiiAxisGuitarJoystickY:
-            return ((mBuffer[1] & 0x3f) - 32) << 10;
+            return ((mBuffer[1] & 0x3f)) << 10;
         case WiiAxisType::WiiAxisGuitarTapBar:
             return lastTap;
         case WiiAxisType::WiiAxisGuitarWhammy:
@@ -386,9 +379,9 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
         switch (type)
         {
         case WiiAxisType::WiiAxisDrumJoystickX:
-            return ((mBuffer[0] & 0x3f) - 32) << 10;
+            return ((mBuffer[0] & 0x3f)) << 10;
         case WiiAxisType::WiiAxisDrumJoystickY:
-            return ((mBuffer[1] & 0x3f) - 32) << 10;
+            return ((mBuffer[1] & 0x3f)) << 10;
         default:
             return 0;
         }
@@ -399,19 +392,19 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
         switch (type)
         {
         case WiiAxisType::WiiAxisNunchukAccelerationX:
-            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511;
+            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6));
         case WiiAxisType::WiiAxisNunchukAccelerationY:
-            return ((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511;
+            return ((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4));
         case WiiAxisType::WiiAxisNunchukAccelerationZ:
-            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511;
+            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2));
         case WiiAxisType::WiiAxisNunchukRotationPitch:
-            return std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511);
+            return std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)), ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)));
         case WiiAxisType::WiiAxisNunchukRotationRoll:
-            return std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511);
+            return std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)), ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)));
         case WiiAxisType::WiiAxisNunchukStickX:
-            return (mBuffer[0] - 0x80) << 8;
+            return (mBuffer[0]) << 8;
         case WiiAxisType::WiiAxisNunchukStickY:
-            return (mBuffer[1] - 0x80) << 8;
+            return (mBuffer[1]) << 8;
         default:
             return 0;
         }

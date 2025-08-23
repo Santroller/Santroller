@@ -37,7 +37,7 @@ class GamepadAxisMapping : public Mapping
 {
 public:
     ~GamepadAxisMapping() {}
-    GamepadAxisMapping(proto_GamepadAxisMapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update(bool full_poll);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t *report);
@@ -49,7 +49,7 @@ public:
     void update_ogxbox(uint8_t* report);
 
 private:
-    proto_GamepadAxisMapping m_mapping;
+    proto_Mapping m_mapping;
     std::unique_ptr<Input> m_input;
     uint32_t m_lastValue = 0;
 };
@@ -58,7 +58,7 @@ class GamepadButtonMapping : public Mapping
 {
 public:
     ~GamepadButtonMapping() {}
-    GamepadButtonMapping(proto_GamepadButtonMapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update(bool full_poll);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t *report);
@@ -70,7 +70,7 @@ public:
     void update_ogxbox(uint8_t* report);
 
 private:
-    proto_GamepadButtonMapping m_mapping;
+    proto_Mapping m_mapping;
     std::unique_ptr<Input> m_input;
     bool m_lastValue = false;
 };

@@ -5,19 +5,72 @@
 #include "main.hpp"
 #include <pb_encode.h>
 #include <utils.h>
+#include <stdint.h>
 
-GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
+GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input)), m_trigger(mapping.mapping.gamepadAxis == GamepadLeftTrigger || mapping.mapping.gamepadAxis == GamepadRightTrigger)
 {
 }
 
+uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
+{
+    if (trigger)
+    {
+        auto inverted = min > max;
+        if (inverted)
+        {
+            min -= deadzone;
+            if (val > min)
+                return 0;
+            if (val < max)
+                val = max;
+        }
+        else
+        {
+            min += deadzone;
+            if (val < min)
+                return 0;
+            if (val > max)
+                val = max;
+        }
+        val = map(val, min, max, 0, UINT16_MAX);
+    }
+    else
+    {
+
+        if (val < center)
+        {
+            if (center - val < deadzone)
+            {
+                return 0;
+            }
+
+            val = map(val, min, center - deadzone, 0, UINT16_MAX / 2);
+        }
+        else
+        {
+            if (val - center < deadzone)
+            {
+                return 0;
+            }
+
+            val = map(val, center + deadzone, max, UINT16_MAX / 2, UINT16_MAX);
+        }
+    }
+    if (val > UINT16_MAX)
+        val = UINT16_MAX;
+    if (val < 0)
+        val = 0;
+    return val;
+}
 void GamepadAxisMapping::update(bool full_poll)
 {
     auto val = m_input->tickAnalog();
     if (val != m_lastValue || full_poll)
     {
-        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val}}};
-        send_event(event);
         m_lastValue = val;
+        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
+        send_event(event);
     }
 }
 // TODO: gotta deal with calibration and scaling things correctly

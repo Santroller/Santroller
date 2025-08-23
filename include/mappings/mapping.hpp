@@ -52,6 +52,8 @@ private:
     proto_Mapping m_mapping;
     std::unique_ptr<Input> m_input;
     uint32_t m_lastValue = 0;
+    uint32_t m_calibratedValue = 0;
+    bool m_trigger;
 };
 
 class GamepadButtonMapping : public Mapping
@@ -73,4 +75,5 @@ private:
     proto_Mapping m_mapping;
     std::unique_ptr<Input> m_input;
     bool m_lastValue = false;
+    bool m_calibratedValue = false;
 };

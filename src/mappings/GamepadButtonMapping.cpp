@@ -14,7 +14,7 @@ void GamepadButtonMapping::update(bool full_poll)
     auto val = m_input->tickDigital();
     if (val != m_lastValue || full_poll)
     {
-        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val}}};
+        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val, val}}};
         send_event(event);
         m_lastValue = val;
     }

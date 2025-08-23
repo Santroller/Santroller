@@ -101,13 +101,13 @@ message Mapping {
   }
 
   required Input input = 11;
-  required bool inverted = 12;
-  required Input pressureInput = 13; // if there is no pressureInput, then set the pressures to max when the button is pressed
-  required AnalogToDigitalTriggerType trigger = 14;
-  required int32 pressed = 15;
-  required int32 released = 16;
-  required int32 min = 17;
-  required int32 max = 18;
-  required int32 center = 19;
-  required int32 deadzone = 20;
+  optional bool inverted = 12;
+  optional Input pressureInput = 13; // if there is no pressureInput, then set the pressures to max when the button is pressed
+  optional AnalogToDigitalTriggerType trigger = 14;
+  optional int32 pressed = 15;
+  optional int32 released = 16;
+  optional int32 min = 17;
+  optional int32 max = 18;
+  optional int32 center = 19;
+  optional int32 deadzone = 20;
 }

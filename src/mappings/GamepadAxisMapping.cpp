@@ -41,7 +41,7 @@ uint16_t calibrate(float val, float max, float min, float deadzone, float center
         {
             if (center - val < deadzone)
             {
-                return 0;
+                return UINT16_MAX / 2;
             }
 
             val = map(val, min, center - deadzone, 0, UINT16_MAX / 2);
@@ -50,7 +50,7 @@ uint16_t calibrate(float val, float max, float min, float deadzone, float center
         {
             if (val - center < deadzone)
             {
-                return 0;
+                return UINT16_MAX / 2;
             }
 
             val = map(val, center + deadzone, max, UINT16_MAX / 2, UINT16_MAX);
@@ -73,29 +73,28 @@ void GamepadAxisMapping::update(bool full_poll)
         send_event(event);
     }
 }
-// TODO: gotta deal with calibration and scaling things correctly
 void GamepadAxisMapping::update_hid(uint8_t *buf)
 {
     PCGamepad_Data_t *report = (PCGamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadLeftStickY:
-        report->leftStickY = m_lastValue;
+        report->leftStickY = m_calibratedValue >> 8;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_lastValue;
+        report->rightStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_lastValue;
+        report->rightStickY = m_calibratedValue >> 8;
         break;
     case GamepadLeftTrigger:
-        report->leftTrigger = m_lastValue;
+        report->leftTrigger = m_calibratedValue >> 8;
         break;
     case GamepadRightTrigger:
-        report->rightTrigger = m_lastValue;
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     case GamepadAccelX:
         report->accelX = m_lastValue;
@@ -118,22 +117,22 @@ void GamepadAxisMapping::update_wii(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadLeftStickY:
-        report->leftStickY = m_lastValue;
+        report->leftStickY = m_calibratedValue >> 8;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_lastValue;
+        report->rightStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_lastValue;
+        report->rightStickY = m_calibratedValue >> 8;
         break;
     case GamepadLeftTrigger:
-        report->leftTrigger = m_lastValue;
+        report->leftTrigger = m_calibratedValue >> 8;
         break;
     case GamepadRightTrigger:
-        report->rightTrigger = m_lastValue;
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     default:
         break;
@@ -145,16 +144,16 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadLeftStickY:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_lastValue;
+        report->rightStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_lastValue;
+        report->rightStickY = m_calibratedValue >> 8;
         break;
     case GamepadLeftTrigger:
         report->l2 = m_lastValue > 60000;
@@ -173,22 +172,22 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadLeftStickY:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_lastValue;
+        report->rightStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_lastValue;
+        report->rightStickY = m_calibratedValue >> 8;
         break;
     case GamepadLeftTrigger:
-        report->leftTrigger = m_lastValue;
+        report->leftTrigger = m_calibratedValue >> 8;
         break;
     case GamepadRightTrigger:
-        report->rightTrigger = m_lastValue;
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     default:
         break;
@@ -201,22 +200,22 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadLeftStickY:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_lastValue;
+        report->rightStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_lastValue;
+        report->rightStickY = m_calibratedValue >> 8;
         break;
     case GamepadLeftTrigger:
-        report->leftTrigger = m_lastValue;
+        report->leftTrigger = m_calibratedValue >> 8;
         break;
     case GamepadRightTrigger:
-        report->rightTrigger = m_lastValue;
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     case GamepadAccelX:
         report->accelX = m_lastValue;
@@ -239,22 +238,22 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadLeftStickY:
-        report->leftStickX = m_lastValue;
+        report->leftStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_lastValue;
+        report->rightStickX = m_calibratedValue >> 8;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_lastValue;
+        report->rightStickY = m_calibratedValue >> 8;
         break;
     case GamepadLeftTrigger:
-        report->leftTrigger = m_lastValue;
+        report->leftTrigger = m_calibratedValue >> 8;
         break;
     case GamepadRightTrigger:
-        report->rightTrigger = m_lastValue;
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     default:
         break;

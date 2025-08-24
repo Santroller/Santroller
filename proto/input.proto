@@ -94,20 +94,26 @@ message Mapping {
     GuitarHeroGuitarAxisType ghAxis = 4;
     RockBandGuitarButtonType rbButton = 5;
     RockBandGuitarAxisType rbAxis = 6;
-    ProGuitarButtonType proButton = 7;
-    ProGuitarAxisType proAxis = 8;
-    TurntableButtonType djButton = 9;
-    TurntableAxisType djAxis = 10;
+    GuitarHeroDrumButtonType ghDrumButton = 7;
+    GuitarHeroDrumAxisType ghDrumAxis = 8;
+    RockBandDrumButtonType rbDrumButton = 9;
+    RockBandDrumAxisType rbDrumAxis = 10;
+    GuitarHeroLiveGuitarButtonType ghlbutton = 11;
+    GuitarHeroLiveGuitarAxisType ghlAxis = 12;
+    ProGuitarButtonType proButton = 13;
+    ProGuitarAxisType proAxis = 14;
+    TurntableButtonType djButton = 15;
+    TurntableAxisType djAxis = 16;
   }
 
-  required Input input = 11;
-  optional bool inverted = 12;
-  optional Input pressureInput = 13; // if there is no pressureInput, then set the pressures to max when the button is pressed
-  optional AnalogToDigitalTriggerType trigger = 14;
-  optional int32 pressed = 15;
-  optional int32 released = 16;
-  optional int32 min = 17;
-  optional int32 max = 18;
-  optional int32 center = 19;
-  optional int32 deadzone = 20;
+  required Input input = 17;
+  optional bool inverted = 18;
+  optional Input pressureInput = 19; // if there is no pressureInput, then set the pressures to max when the button is pressed
+  optional AnalogToDigitalTriggerType trigger = 20;
+  optional int32 pressed = 21;
+  optional int32 released = 22;
+  optional int32 min = 23;
+  optional int32 max = 24;
+  optional int32 center = 25;
+  optional int32 deadzone = 26;
 }

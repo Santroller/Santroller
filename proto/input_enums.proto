@@ -60,6 +60,31 @@ enum GuitarHeroGuitarAxisType {
   GuitarHeroGuitarLeftStickX = 4;
   GuitarHeroGuitarLeftStickY = 5;
 }
+enum GuitarHeroLiveGuitarButtonType {
+  GuitarHeroLiveGuitarWhite1 = 1;
+  GuitarHeroLiveGuitarWhite2 = 2;
+  GuitarHeroLiveGuitarWhite3 = 3;
+  GuitarHeroLiveGuitarBlack1 = 4;
+  GuitarHeroLiveGuitarBlack2 = 5;
+  GuitarHeroLiveGuitarBlack3 = 6;
+
+  GuitarHeroLiveGuitarBack = 7;
+  GuitarHeroLiveGuitarStart = 8;
+  GuitarHeroLiveGuitarGuide = 9;
+
+  GuitarHeroLiveGuitarStrumUp = 10;
+  GuitarHeroLiveGuitarStrumDown = 11;
+  GuitarHeroLiveGuitarDpadUp = 12;
+  GuitarHeroLiveGuitarDpadDown = 13;
+  GuitarHeroLiveGuitarDpadLeft = 14;
+  GuitarHeroLiveGuitarDpadRight = 15;
+}
+enum GuitarHeroLiveGuitarAxisType {
+  GuitarHeroLiveGuitarWhammy = 1;
+  GuitarHeroLiveGuitarTilt = 2;
+  GuitarHeroLiveGuitarLeftStickX = 3;
+  GuitarHeroLiveGuitarLeftStickY = 4;
+}
 enum RockBandGuitarButtonType {
   RockBandGuitarGreen = 1;
   RockBandGuitarRed = 2;
@@ -88,6 +113,57 @@ enum RockBandGuitarAxisType {
   RockBandGuitarPickup = 3;
   RockBandGuitarLeftStickX = 4;
   RockBandGuitarLeftStickY = 5;
+}
+enum RockBandDrumButtonType {
+  RockBandDrumA = 1;
+  RockBandDrumB = 2;
+  RockBandDrumX = 3;
+  RockBandDrumY = 4;
+
+  RockBandDrumBack = 5;
+  RockBandDrumStart = 6;
+
+  RockBandDrumGuide = 7;
+
+  RockBandDrumDpadUp = 8;
+  RockBandDrumDpadDown = 9;
+  RockBandDrumDpadLeft = 10;
+  RockBandDrumDpadRight = 11;
+  RockBandDrumKick1Pedal = 12;
+  RockBandDrumKick2Pedal = 13;
+}
+enum RockBandDrumAxisType {
+  RockBandDrumRedPad = 1;
+  RockBandDrumYellowPad = 2;
+  RockBandDrumBluePad = 3;
+  RockBandDrumGreenPad = 4;
+  RockBandDrumYellowCymbal = 5;
+  RockBandDrumBlueCymbal = 6;
+  RockBandDrumGreenCymbal = 7;
+}
+enum GuitarHeroDrumButtonType {
+  GuitarHeroDrumA = 1;
+  GuitarHeroDrumB = 2;
+  GuitarHeroDrumX = 3;
+  GuitarHeroDrumY = 4;
+
+  GuitarHeroDrumBack = 5;
+  GuitarHeroDrumStart = 6;
+
+  GuitarHeroDrumGuide = 7;
+
+  GuitarHeroDrumDpadUp = 8;
+  GuitarHeroDrumDpadDown = 9;
+  GuitarHeroDrumDpadLeft = 10;
+  GuitarHeroDrumDpadRight = 11;
+}
+enum GuitarHeroDrumAxisType {
+  GuitarHeroDrumRedPad = 1;
+  GuitarHeroDrumYellowPad = 2;
+  GuitarHeroDrumBluePad = 3;
+  GuitarHeroDrumOrangePad = 4;
+  GuitarHeroDrumGreenPad = 5;
+  GuitarHeroDrumKickPedal = 6;
 }
 enum TurntableButtonType {
   TurntableLeftBlue = 1;

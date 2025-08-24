@@ -26,6 +26,7 @@ and we would walk the map of devices and poll each device too.
 if that ends up not being performant enough THEN we can think about something more optimal but that feels like the clean method.
 
 */
+static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 std::vector<std::unique_ptr<Mapping>> mappings;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
 typedef struct
@@ -46,6 +47,8 @@ void update(bool full_poll)
         mapping->update_hid(out);
     }
     if (tud_hid_ready()) {
+        PCGamepad_Data_t* report = (PCGamepad_Data_t*)out;
+        report->dpad = dpad_bindings[report->dpad];
         tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
     }
 }

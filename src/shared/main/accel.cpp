@@ -14,8 +14,8 @@ void init_lis3dh() {
     uint8_t id = 0;
     lis3dh_address = LIS3DH_ADDRESS;
     twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_WHOAMI, 1, &id);
-    lis3dh_address = LIS3DH_ADDRESS_2;
     if (id != LIS3DH_ID) {
+        lis3dh_address = LIS3DH_ADDRESS_2;
         twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_WHOAMI, 1, &id);
         if (id != LIS3DH_ID) {
             return;

@@ -88,13 +88,14 @@ This is done using the Santroller Configurator, which can program various microc
     - Xbox 360 auth without a modded console is also only available on the Pi Pico.
     - The Pico also has a much more robust programming method, so there is less that can go wrong when programming
   - Some arduinos **not recommended**
-    - note that you need to downgrade to the [last version of santroller that properly supports these devices](https://github.com/Santroller/Santroller/releases/tag/v10.1.188), and many features are not present in this older build.
-    - Arduino Pro Micro (3.3v)
-    - Arduino Pro Micro (5v)
-    - Arduino Leonardo
-    - Arduino Micro
-    - Arduino Uno R1/2/3
-    - Arduino Mega
+    - Arduinos are no longer recommended, and as a result they don't actually function correctly in newer releases, and the support for them will be removed in a future release.
+    - You need to downgrade to the [last version of santroller that properly supports these devices](https://github.com/Santroller/Santroller/releases/tag/v10.1.188), and many features are not present in this older build.
+      - Arduino Pro Micro (3.3v)
+      - Arduino Pro Micro (5v)
+      - Arduino Leonardo
+      - Arduino Micro
+      - Arduino Uno R1/2/3
+      - Arduino Mega
 - Support for inputs from various input sources
   - Wii extensions (such as wii guitars, classic controllers or drum kits)
   - PS2 controllers

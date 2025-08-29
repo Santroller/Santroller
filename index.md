@@ -85,6 +85,7 @@ This is done using the Santroller Configurator, which can program various microc
 - Support for various microcontrollers
   - Pi Pico **Recommended**
     - Some features such as USB inputs and peripheral are Pi Pico only
+    - Xbox 360 auth without a modded console is also only available on the Pi Pico.
     - The Pico also has a much more robust programming method, so there is less that can go wrong when programming
   - Some arduinos **not recommended**
     - note that you need to downgrade to the [last version of santroller that properly supports these devices](https://github.com/Santroller/Santroller/releases/tag/v10.1.188), and many features are not present in this older build.

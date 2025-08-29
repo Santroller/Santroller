@@ -8,7 +8,7 @@ There are currently three ways to trick the console
 
 ## Consoles needing authentication
 - Xbox 360
-    - Usually needs authentication in form of a wired controller, but as of v10.4.0, the Santroller firmware now has authentication for unmodded Xbox 360s built in.
+    - Usually needs authentication in form of a wired controller, but as of v10.4.0, the Santroller firmware now has authentication for unmodded Xbox 360s built in. Only works on the Pi Pico, otherwise you need a modded console.
 - Xbox One and Series S|X, but only if you are not playing Fortnite Festival. 
     - For Fortnite Festival you can follow the [Fortnite Festival](https://santroller.tangentmc.net/tool/fortnite_festival.html) guide.
 - PS4 / PS5, but only if you are not playing Fortnite Festival or Rock Band 4. 

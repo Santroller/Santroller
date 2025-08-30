@@ -109,6 +109,13 @@ message Input {
   }
 }
 
+message ActivationTrigger {
+  required Input input = 1;
+  optional bool inverted = 2;
+  optional AnalogToDigitalTriggerType trigger = 3;
+  optional int32 triggerValue = 4;
+}
+
 message Mapping {
   oneof mapping {
     GamepadButtonType gamepadButton = 1;
@@ -139,4 +146,5 @@ message Mapping {
   optional int32 max = 24;
   optional int32 center = 25;
   optional int32 deadzone = 26;
+  optional int32 triggerValue = 27;
 }

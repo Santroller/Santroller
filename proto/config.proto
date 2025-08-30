@@ -7,7 +7,7 @@ import "device.proto";
 
 message Profile {
   required FaceButtonMappingMode faceButtonMappingMode = 1;
-  repeated Mapping activationMethod = 2;
+  repeated ActivationTrigger activationMethod = 2;
   repeated Mapping mappings = 3;
   required string name = 4;
   required SubType deviceToEmulate = 5;

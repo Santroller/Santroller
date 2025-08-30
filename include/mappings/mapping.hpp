@@ -77,3 +77,16 @@ private:
     bool m_lastValue = false;
     bool m_calibratedValue = false;
 };
+
+
+class ActivationTrigger
+{
+public:
+    ActivationTrigger(proto_ActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id);
+    ~ActivationTrigger() {}
+    void update(bool full_poll);
+protected:
+    proto_ActivationTrigger m_activation_trigger;
+    std::unique_ptr<Input> m_input;
+    uint16_t m_profile_id;
+};

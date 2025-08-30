@@ -24,6 +24,9 @@ bool WiiDevice::readButton(proto_WiiButtonType type)
 {
     return m_extension.readButton(type);
 }
+bool WiiDevice::isExtension(WiiExtType type) {
+    return m_extension.mType == type;
+}
 uint16_t WiiDevice::readMidiNote(uint8_t note)
 {
     return m_extension.midiInterface.midiVelocities[note] << 8;

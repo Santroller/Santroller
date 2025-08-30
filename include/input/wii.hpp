@@ -27,6 +27,18 @@ private:
     proto_WiiButtonInput m_input;
     std::shared_ptr<WiiDevice> m_device;
 };
+class WiiExtensionTypeInput : public Input
+{
+public:
+    WiiExtensionTypeInput(proto_WiiExtensionTypeInput input, std::shared_ptr<WiiDevice> device);
+    bool tickDigital();
+    uint16_t tickAnalog();
+
+private:
+    void setup();
+    proto_WiiExtensionTypeInput m_input;
+    std::shared_ptr<WiiDevice> m_device;
+};
 class WiiMidiNoteInput : public Input
 {
 public:

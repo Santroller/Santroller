@@ -92,6 +92,7 @@ add_executable(
   src/input/wii.cpp
   src/mappings/GamepadButtonMapping.cpp
   src/mappings/GamepadAxisMapping.cpp
+  src/mappings/ActivationTrigger.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp
   src/devices/accelerometer.cpp

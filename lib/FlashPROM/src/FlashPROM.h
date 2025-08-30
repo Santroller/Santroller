@@ -25,6 +25,7 @@ class FlashPROM
 		void start();
 		void commit();
 		void reset();
+		void commit_now();
 
 		static uint8_t writeCache[EEPROM_SIZE_BYTES];
 };

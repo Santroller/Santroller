@@ -16,19 +16,13 @@
 #include "mappings/mapping.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
+#include "hardware/watchdog.h"
 #include <vector>
 #include <memory>
-/* TODO
-load_device should construct some form of device and throw it in a map using the dev_id
-
-the easiest way to do this, is we have a class for each device type, mapping type and each input type. when we get the mapping, we construct an instance of each, push it to a list, and then polling is simply walking the list and updating each thing.
-and we would walk the map of devices and poll each device too.
-if that ends up not being performant enough THEN we can think about something more optimal but that feels like the clean method.
-
-*/
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 std::vector<std::unique_ptr<Mapping>> mappings;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
+std::vector<std::unique_ptr<ActivationTrigger>> triggers;
 typedef struct
 {
     uint32_t current;
@@ -40,6 +34,10 @@ void update(bool full_poll)
     for (auto &device : devices)
     {
         device.second->update(full_poll);
+    }
+    for (auto &trigger : triggers)
+    {
+        trigger->update(full_poll);
     }
     for (auto &mapping : mappings)
     {
@@ -108,6 +106,9 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Input_wiiButton_tag:
         input = std::unique_ptr<Input>(new WiiButtonInput(mapping.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
+    case proto_Input_wiiExtType_tag:
+        input = std::unique_ptr<Input>(new WiiExtensionTypeInput(mapping.input.input.wiiExtType, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
+        break;
     case proto_Input_crkd_tag:
         input = std::unique_ptr<Input>(new CrkdButtonInput(mapping.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
@@ -133,6 +134,34 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     *mapping_id += 1;
     return true;
 }
+bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    uint16_t *profile_id = (uint16_t *)*arg;
+    proto_ActivationTrigger trigger;
+    pb_decode(stream, proto_ActivationTrigger_fields, &trigger);
+    std::unique_ptr<Input> input = nullptr;
+    switch (trigger.input.which_input)
+    {
+    case proto_Input_wiiAxis_tag:
+        input = std::unique_ptr<Input>(new WiiAxisInput(trigger.input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
+        break;
+    case proto_Input_wiiButton_tag:
+        input = std::unique_ptr<Input>(new WiiButtonInput(trigger.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
+        break;
+    case proto_Input_crkd_tag:
+        input = std::unique_ptr<Input>(new CrkdButtonInput(trigger.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
+        break;
+    case proto_Input_gpio_tag:
+        printf("gpio %d %d\r\n", trigger.input.input.gpio.pin, trigger.input.input.gpio.pinMode);
+        input = std::unique_ptr<Input>(new GPIOInput(trigger.input.input.gpio));
+    }
+    if (input == nullptr)
+    {
+        return true;
+    }
+    triggers.push_back(std::unique_ptr<ActivationTrigger>(new ActivationTrigger(trigger, std::move(input), *profile_id)));
+    return true;
+}
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     profile_args_t *profile_args = (profile_args_t *)*arg;
@@ -142,13 +171,15 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         printf("loading profile: %d\r\n", profile_args->current);
         profile.mappings.funcs.decode = &load_mapping;
-        profile.activationMethod.funcs.decode = &load_mapping;
+        profile.activationMethod.arg = profile_args;
+        profile.activationMethod.funcs.decode = &load_activation_method;
     }
     else
     {
         printf("skipping profile: %d\r\n", profile_args->current);
         profile.mappings.funcs.decode = nullptr;
-        profile.activationMethod.funcs.decode = nullptr;
+        profile.activationMethod.arg = profile_args;
+        profile.activationMethod.funcs.decode = &load_activation_method;
     }
     uint16_t mapping_id = 0;
     profile.mappings.arg = &mapping_id;
@@ -171,6 +202,7 @@ struct ConfigFooter
     uint32_t dataSize;
     uint32_t dataCrc;
     uint32_t magic;
+    uint32_t currentProfile;
 
     bool operator==(const ConfigFooter &other) const
     {
@@ -207,6 +239,7 @@ bool save(proto_Config *config)
     newFooter.dataSize = outputStream.bytes_written;
     newFooter.dataCrc = CRC32::calculate(EEPROM.writeCache, newFooter.dataSize);
     newFooter.magic = FOOTER_MAGIC;
+    newFooter.currentProfile = 0;
 
     // The data has changed when the footer content has changed. Only then do we actually need to save.
     const ConfigFooter &oldFooter = *reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
@@ -228,7 +261,7 @@ bool save(proto_Config *config)
     return true;
 }
 
-bool inner_load(proto_Config &config, const uint8_t *dataPtr, uint32_t size)
+bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t size)
 {
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
@@ -241,7 +274,7 @@ bool inner_load(proto_Config &config, const uint8_t *dataPtr, uint32_t size)
     config.devices.funcs.decode = &load_device;
     profile_args_t args = {
         current : 0,
-        target : config.currentProfile
+        target : currentProfile
     };
     uint16_t dev_id = 0;
     config.devices.arg = &dev_id;
@@ -261,12 +294,22 @@ uint32_t copy_config_info(uint8_t *buffer)
     info.dataCrc = footer.dataCrc;
     info.dataSize = footer.dataSize;
     info.magic = footer.magic;
+    info.currentProfile = footer.currentProfile;
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
     if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
     {
         return 0;
     }
     return outputStream.bytes_written;
+}
+
+void set_current_profile(uint32_t profile) {
+    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    if (footer->currentProfile != profile) {
+        footer->currentProfile = profile;
+        EEPROM.commit_now();
+        watchdog_enable(1, false);
+    }
 }
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
@@ -282,6 +325,7 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     footer->dataCrc = info.dataCrc;
     footer->dataSize = info.dataSize;
     footer->magic = info.magic;
+    footer->currentProfile = info.currentProfile;
     return true;
 }
 
@@ -306,7 +350,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     proto_Config config;
     EEPROM.commit();
-    inner_load(config, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize);
+    inner_load(config, footer.currentProfile, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize);
     return true;
 }
 
@@ -366,5 +410,5 @@ bool load(proto_Config &config)
         return false;
     }
 
-    return inner_load(config, dataPtr, footer.dataSize);
+    return inner_load(config, footer.currentProfile, dataPtr, footer.dataSize);
 }

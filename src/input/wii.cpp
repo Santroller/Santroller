@@ -31,6 +31,20 @@ uint16_t WiiButtonInput::tickAnalog()
 void WiiButtonInput::setup()
 {
 }
+WiiExtensionTypeInput::WiiExtensionTypeInput(proto_WiiExtensionTypeInput input, std::shared_ptr<WiiDevice> device) : m_input(input), m_device(device)
+{
+}
+bool WiiExtensionTypeInput::tickDigital()
+{
+    return m_device->isExtension(m_input.ext);
+}
+uint16_t WiiExtensionTypeInput::tickAnalog()
+{
+    return m_device->isExtension(m_input.ext) ? 65535 : 0;
+}
+void WiiExtensionTypeInput::setup()
+{
+}
 WiiMidiNoteInput::WiiMidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<WiiDevice> device) : m_input(input), m_device(device)
 {
 }

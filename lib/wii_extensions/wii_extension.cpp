@@ -5,6 +5,7 @@
 #include "MidiNotes.h"
 #include "main.hpp"
 #include <cmath>
+#include "utils.h"
 
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 {
@@ -135,6 +136,11 @@ void WiiExtension::setEuphoriaLed(bool state)
 }
 void WiiExtension::tick()
 {
+    if (micros() - lastTick > 750) {
+        lastTick = micros();
+    } else {
+        return;
+    }
     static uint8_t wiiData[8];
     memset(wiiData, 0, sizeof(wiiData));
     if (mType == WiiExtType::WiiNotInitialised ||

@@ -38,22 +38,29 @@ void core1()
 }
 void hid_task(void)
 {
-    if (!tud_hid_ready())
-        return;
     update(false);
 }
-long lastKeepAlive = 0;
+uint32_t lastKeepAlive = 0;
+
+bool tool_closed()
+{
+    return millis() - lastKeepAlive > 500;
+}
 
 void send_event(proto_Event event)
 {
     // Haven't received data from the tool recently so don't send out events for it
-    if (millis() - lastKeepAlive > 20)
+    if (tool_closed() || !tud_ready())
     {
         return;
     }
     // Make sure events are always sent out
-    while (!tud_hid_ready() && tud_ready())
+    while (!tud_hid_ready())
     {
+        if (tool_closed() || !tud_ready())
+        {
+            return;
+        }
         tud_task();
     }
     uint8_t buffer[63];
@@ -234,7 +241,6 @@ void tud_ogxbox_set_report_cb(uint8_t instance, uint8_t const *buffer, uint16_t 
     (void)instance;
 }
 
-
 usbd_class_driver_t driver[] = {
     {
 #if CFG_TUSB_DEBUG >= 2
@@ -308,7 +314,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             return true;
         }
     }
-    if (mode == ConsoleMode::Ps3) {
+    if (mode == ConsoleMode::Ps3)
+    {
         return tud_hid_ps3_control_xfer_cb(rhport, stage, request);
     }
     return false;

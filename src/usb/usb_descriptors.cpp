@@ -28,6 +28,7 @@
 #include "hid_reports.h"
 #include <pico/unique_id.h>
 #include "enums.pb.h"
+#include "config.hpp"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -40,7 +41,7 @@
 //--------------------------------------------------------------------+
 // Device Descriptors
 //--------------------------------------------------------------------+
-tusb_desc_device_t const desc_device =
+tusb_desc_device_t desc_device =
     {
         .bLength = sizeof(tusb_desc_device_t),
         .bDescriptorType = TUSB_DESC_DEVICE,
@@ -64,6 +65,7 @@ tusb_desc_device_t const desc_device =
 // Application return pointer to descriptor
 uint8_t const *tud_descriptor_device_cb(void)
 {
+  desc_device.bcdDevice = 0x0100 | current_type;
   return (uint8_t const *)&desc_device;
 }
 

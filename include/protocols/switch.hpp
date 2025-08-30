@@ -122,7 +122,8 @@ typedef struct
         uint8_t dpad;
     };
 
-    uint8_t unused[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t slider;
 } __attribute__((packed)) SwitchFestivalProGuitarLayer_Data_t;
 

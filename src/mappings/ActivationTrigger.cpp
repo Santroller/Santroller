@@ -10,10 +10,15 @@ ActivationTrigger::ActivationTrigger(proto_ActivationTrigger activation_trigger,
 }
 
 // deal with debounce and all the other fun things
-void ActivationTrigger::update(bool full_poll)
+void ActivationTrigger::update(bool tool_closed)
 {
     auto val = m_input->tickDigital();
-    if (val) {
-        set_current_profile(m_profile_id);
+    if (val)
+    {
+        if (tool_closed)
+        {
+            set_current_profile(m_profile_id);
+        }
+        // TODO: can send events so the triggers light up in the tool
     }
 }

@@ -17,12 +17,14 @@
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
+#include "main.hpp"
 #include <vector>
 #include <memory>
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 std::vector<std::unique_ptr<Mapping>> mappings;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::vector<std::unique_ptr<ActivationTrigger>> triggers;
+proto_SubType current_type;
 typedef struct
 {
     uint32_t current;
@@ -35,17 +37,19 @@ void update(bool full_poll)
     {
         device.second->update(full_poll);
     }
+    // If we are configuring, disable triggers
     for (auto &trigger : triggers)
     {
-        trigger->update(full_poll);
+        trigger->update(tool_closed());
     }
-    for (auto &mapping : mappings)
+    if (tud_hid_ready())
     {
-        mapping->update(full_poll);
-        mapping->update_hid(out);
-    }
-    if (tud_hid_ready()) {
-        PCGamepad_Data_t* report = (PCGamepad_Data_t*)out;
+        for (auto &mapping : mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_hid(out);
+        }
+        PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
         report->dpad = dpad_bindings[report->dpad];
         tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
     }
@@ -106,9 +110,6 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Input_wiiButton_tag:
         input = std::unique_ptr<Input>(new WiiButtonInput(mapping.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
-    case proto_Input_wiiExtType_tag:
-        input = std::unique_ptr<Input>(new WiiExtensionTypeInput(mapping.input.input.wiiExtType, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
-        break;
     case proto_Input_crkd_tag:
         input = std::unique_ptr<Input>(new CrkdButtonInput(mapping.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
@@ -125,6 +126,10 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Mapping_gamepadAxis_tag:
         printf("axis %d\r\n", mapping.mapping.gamepadAxis);
         mappings.push_back(std::unique_ptr<Mapping>(new GamepadAxisMapping(mapping, std::move(input), *mapping_id)));
+        break;
+    case proto_Mapping_ghAxis_tag:
+        printf("axis %d\r\n", mapping.mapping.ghAxis);
+        mappings.push_back(std::unique_ptr<Mapping>(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), *mapping_id)));
         break;
     case proto_Mapping_gamepadButton_tag:
         printf("button %d\r\n", mapping.mapping.gamepadButton);
@@ -148,6 +153,9 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
     case proto_Input_wiiButton_tag:
         input = std::unique_ptr<Input>(new WiiButtonInput(trigger.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
         break;
+    case proto_Input_wiiExtType_tag:
+        input = std::unique_ptr<Input>(new WiiExtensionTypeInput(trigger.input.input.wiiExtType, std::static_pointer_cast<WiiDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
+        break;
     case proto_Input_crkd_tag:
         input = std::unique_ptr<Input>(new CrkdButtonInput(trigger.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
         break;
@@ -166,24 +174,26 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     profile_args_t *profile_args = (profile_args_t *)*arg;
     proto_Profile profile;
+    profile.activationMethod.arg = profile_args;
+    profile.activationMethod.funcs.decode = &load_activation_method;
     // only properly load the current profile
     if (profile_args->current == profile_args->target)
     {
         printf("loading profile: %d\r\n", profile_args->current);
         profile.mappings.funcs.decode = &load_mapping;
-        profile.activationMethod.arg = profile_args;
-        profile.activationMethod.funcs.decode = &load_activation_method;
     }
     else
     {
         printf("skipping profile: %d\r\n", profile_args->current);
         profile.mappings.funcs.decode = nullptr;
-        profile.activationMethod.arg = profile_args;
-        profile.activationMethod.funcs.decode = &load_activation_method;
     }
     uint16_t mapping_id = 0;
     profile.mappings.arg = &mapping_id;
     pb_decode(stream, proto_Profile_fields, &profile);
+    if (profile_args->current == profile_args->target)
+    {
+        current_type = profile.deviceToEmulate;
+    }
     profile_args->current++;
     return true;
 }
@@ -303,9 +313,11 @@ uint32_t copy_config_info(uint8_t *buffer)
     return outputStream.bytes_written;
 }
 
-void set_current_profile(uint32_t profile) {
+void set_current_profile(uint32_t profile)
+{
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    if (footer->currentProfile != profile) {
+    if (footer->currentProfile != profile)
+    {
         footer->currentProfile = profile;
         EEPROM.commit_now();
         watchdog_enable(1, false);

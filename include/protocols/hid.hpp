@@ -166,6 +166,8 @@ typedef struct
 
     DPAD;
 
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t whammy;
     uint8_t slider;
     uint8_t tilt;

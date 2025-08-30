@@ -55,6 +55,28 @@ private:
     uint32_t m_calibratedValue = 0;
     bool m_trigger;
 };
+class GuitarHeroGuitarAxisMapping : public Mapping
+{
+public:
+    ~GuitarHeroGuitarAxisMapping() {}
+    GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update(bool full_poll);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t* report);
+    void update_ps2(uint8_t* report);
+    void update_ps3(uint8_t* report);
+    void update_ps4(uint8_t* report);
+    void update_xinput(uint8_t* report);
+    void update_ogxbox(uint8_t* report);
+
+private:
+    proto_Mapping m_mapping;
+    std::unique_ptr<Input> m_input;
+    uint32_t m_lastValue = 0;
+    uint32_t m_calibratedValue = 0;
+    bool m_trigger;
+};
 
 class GamepadButtonMapping : public Mapping
 {
@@ -84,7 +106,7 @@ class ActivationTrigger
 public:
     ActivationTrigger(proto_ActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id);
     ~ActivationTrigger() {}
-    void update(bool full_poll);
+    void update(bool tool_closed);
 protected:
     proto_ActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;

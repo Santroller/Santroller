@@ -498,7 +498,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t whammy;
     uint8_t slider;
 
@@ -545,7 +546,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t whammy;
     uint8_t pickup;
 

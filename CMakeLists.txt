@@ -77,7 +77,7 @@ message(STATUS ${TARGET})
 add_executable(
   ${TARGET}
   src/main.cpp
-  src/usb/usb_descriptors.c
+  src/usb/usb_descriptors.cpp
   src/usb/device/xinput_device.cpp
   src/usb/host/xinput_host.cpp
   src/usb/device/xone_device.cpp
@@ -92,6 +92,7 @@ add_executable(
   src/input/wii.cpp
   src/mappings/GamepadButtonMapping.cpp
   src/mappings/GamepadAxisMapping.cpp
+  src/mappings/GuitarHeroGuitarAxisMapping.cpp
   src/mappings/ActivationTrigger.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp

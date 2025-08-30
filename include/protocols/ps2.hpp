@@ -76,7 +76,8 @@ typedef struct
     uint8_t x : 1;  // square, blue
     uint8_t leftShoulder : 1;   // orange, l1
     
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t slider;
     uint8_t whammy;
 } __attribute__((packed)) PS2GuitarHeroGuitar_Data_t;

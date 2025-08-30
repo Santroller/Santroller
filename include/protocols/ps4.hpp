@@ -101,8 +101,8 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t joystickX;
-    uint8_t joystickY;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t unused[2];
 
     // To make things easier we use bitfields here and them map to dpad later

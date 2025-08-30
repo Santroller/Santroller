@@ -1,4 +1,4 @@
-
+#pragma once
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include <stdint.h>
@@ -19,3 +19,4 @@ bool write_config_info(const uint8_t* buffer, uint16_t bufsize);
 bool write_config(const uint8_t* buffer, uint16_t bufsize, uint32_t start);
 void update(bool full_poll);
 void set_current_profile(uint32_t profile);
+extern proto_SubType current_type;

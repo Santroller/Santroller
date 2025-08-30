@@ -18,7 +18,8 @@
 #include "usb/device/xinput_device.h"
 #include "usb/device/xone_device.h"
 #include "usb/device/ogxbox_device.h"
-#include "usb/device/ps_device.h"
+#include "usb/device/ps3_device.h"
+#include "usb/device/ps4_device.h"
 #include "protocols/hid.hpp"
 #include "main.hpp"
 #include "utils.h"
@@ -46,7 +47,8 @@ long lastKeepAlive = 0;
 void send_event(proto_Event event)
 {
     // Haven't received data from the tool recently so don't send out events for it
-    if (millis() - lastKeepAlive > 20) {
+    if (millis() - lastKeepAlive > 20)
+    {
         return;
     }
     // Make sure events are always sent out
@@ -150,9 +152,14 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     default:
         break;
     }
-    if (mode == ConsoleMode::Ps3 || mode == ConsoleMode::Ps4)
+    // TODO: implement HID drivers too, and then we can handle standard HID the same way
+    if (mode == ConsoleMode::Ps3)
     {
-        return tud_hid_ps_get_report_cb(instance, mode, report_id, report_type, buffer, reqlen);
+        return tud_hid_ps3_get_report_cb(instance, report_id, report_type, buffer, reqlen);
+    }
+    if (mode == ConsoleMode::Ps4)
+    {
+        return tud_hid_ps4_get_report_cb(instance, report_id, report_type, buffer, reqlen);
     }
     return 0;
 }
@@ -160,9 +167,13 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
     printf("set: %d %d\r\n", report_type, report_id);
-    if (mode == ConsoleMode::Ps3 || mode == ConsoleMode::Ps4)
+    if (mode == ConsoleMode::Ps3)
     {
-        tud_hid_ps_set_report_cb(instance, mode, report_id, report_type, buffer, bufsize);
+        tud_hid_ps3_set_report_cb(instance, report_id, report_type, buffer, bufsize);
+    }
+    if (mode == ConsoleMode::Ps4)
+    {
+        tud_hid_ps4_set_report_cb(instance, report_id, report_type, buffer, bufsize);
     }
     switch (report_type)
     {
@@ -223,47 +234,6 @@ void tud_ogxbox_set_report_cb(uint8_t instance, uint8_t const *buffer, uint16_t 
     (void)instance;
 }
 
-bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
-{
-    if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
-    {
-        if (stage == CONTROL_STAGE_SETUP)
-        {
-            if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
-            {
-                if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
-                {
-                    if (request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && request->wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR)
-                    {
-                        tud_control_xfer(rhport, request, (void *)&ExtendedIDs, ExtendedIDs.TotalLength);
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    if (xinputd_control_xfer_cb(rhport, stage, request))
-    {
-        return true;
-    }
-    if (xoned_control_xfer_cb(rhport, stage, request))
-    {
-        return true;
-    }
-    if (ogxboxd_control_xfer_cb(rhport, stage, request))
-    {
-        return true;
-    }
-    if (gh_arcaded_control_xfer_cb(rhport, stage, request))
-    {
-        return true;
-    }
-    if (mode == ConsoleMode::Ps3 || mode == ConsoleMode::Ps4)
-    {
-        return tud_hid_ps_control_xfer_cb(rhport, mode, stage, request);
-    }
-    return false;
-}
 
 usbd_class_driver_t driver[] = {
     {
@@ -311,4 +281,35 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count)
 {
     *driver_count = TU_ARRAY_SIZE(driver);
     return driver;
+}
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
+{
+    if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
+    {
+        if (stage == CONTROL_STAGE_SETUP)
+        {
+            if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
+            {
+                if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+                {
+                    if (request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && request->wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR)
+                    {
+                        tud_control_xfer(rhport, request, (void *)&ExtendedIDs, ExtendedIDs.TotalLength);
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    for (auto &d : driver)
+    {
+        if (d.control_xfer_cb(rhport, stage, request))
+        {
+            return true;
+        }
+    }
+    if (mode == ConsoleMode::Ps3) {
+        return tud_hid_ps3_control_xfer_cb(rhport, stage, request);
+    }
+    return false;
 }

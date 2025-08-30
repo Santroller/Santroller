@@ -88,23 +88,37 @@ enum Mpr121PinMode {
 }
 
 enum UsbDeviceType {
-  Generic = 1;
-  Santroller = 2;
-  Xbox360 = 3;
-  Xbox360Wireless = 4;
-  Xbox360BigButton = 5;
-  XboxOne = 6;
-  XboxOG = 7;
-  PS3 = 8;
-  PS4 = 9;
-  PS5 = 10;
-  WiiRockBand = 11;
-  Switch = 12;
-  Raphnet = 13;
-  StreamDeck = 14;
-  LTEK = 15;
-  Stadia = 16;
-  Midi = 17;
-  Keyboard = 18;
-  Mouse = 19;
+  UsbDeviceTypeGeneric = 1;
+  UsbDeviceTypeSantroller = 2;
+  UsbDeviceTypeXbox360 = 3;
+  UsbDeviceTypeXbox360Wireless = 4;
+  UsbDeviceTypeXbox360BigButton = 5;
+  UsbDeviceTypeXboxOne = 6;
+  UsbDeviceTypeXboxOG = 7;
+  UsbDeviceTypePS3 = 8;
+  UsbDeviceTypePS4 = 9;
+  UsbDeviceTypePS5 = 10;
+  UsbDeviceTypeWiiRockBand = 11;
+  UsbDeviceTypeSwitch = 12;
+  UsbDeviceTypeRaphnet = 13;
+  UsbDeviceTypeStreamDeck = 14;
+  UsbDeviceTypeLTEK = 15;
+  UsbDeviceTypeStadia = 16;
+  UsbDeviceTypeMidi = 17;
+  UsbDeviceTypeKeyboard = 18;
+  UsbDeviceTypeMouse = 19;
+}
+
+
+enum PS2ControllerType {
+  PS2ControllerTypeDigital = 1;
+  PS2ControllerTypeDualshock = 2;
+  PS2ControllerTypeDualshock2 = 3;
+  PS2ControllerTypeGuitar = 4;
+  PS2ControllerTypeNegCon = 5;
+  PS2ControllerTypeJogCon = 6;
+  PS2ControllerTypeGunCon = 7;
+  PS2ControllerTypeFlightStick = 8;
+  PS2ControllerTypeMouse = 9;
+  PS2ControllerTypeTaiko = 10;
 }

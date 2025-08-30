@@ -17,6 +17,7 @@ void GamepadButtonMapping::update(bool full_poll)
         proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val, val}}};
         send_event(event);
         m_lastValue = val;
+        // debouce would just be storing the millis() from the last poll and simply using that as the indication for if the input is active instead of lastValue
     }
 }
 void GamepadButtonMapping::update_hid(uint8_t *buf)

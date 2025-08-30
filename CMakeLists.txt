@@ -83,7 +83,8 @@ add_executable(
   src/usb/device/xone_device.cpp
   src/usb/host/xone_host.cpp
   src/usb/device/ogxbox_device.cpp
-  src/usb/device/ps_device.cpp
+  src/usb/device/ps3_device.cpp
+  src/usb/device/ps4_device.cpp
   src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
   src/input/crkd.cpp

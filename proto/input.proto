@@ -68,6 +68,25 @@ message ShortcutInput {
   repeated Input inputs = 1;
 }
 
+message WiiExtensionTypeInput {
+  required int32 deviceid = 1;
+  required WiiExtType ext = 2;
+}
+message PS2ControllerTypeInput {
+  required int32 deviceid = 1;
+  required PS2ControllerType type = 2;
+}
+message UsbDeviceTypeInput {
+  required int32 deviceid = 1;
+  required UsbDeviceType type = 2;
+  required SubType subtype = 3;
+}
+message BluetoothDeviceTypeInput {
+  required int32 deviceid = 1;
+  required UsbDeviceType type = 2;
+  required SubType subtype = 3;
+}
+
 message Input {
   oneof input {
     GPIOInput gpio = 1;
@@ -83,6 +102,10 @@ message Input {
     KeyboardKeyInput key = 11;
     CrkdNeckButtonInput crkd = 12;
     ShortcutInput shortcut = 13;
+    WiiExtensionTypeInput wiiExtType = 14;
+    PS2ControllerTypeInput ps2Type = 15;
+    UsbDeviceTypeInput usbDevice = 16;
+    BluetoothDeviceTypeInput bluetoothDevice = 17;
   }
 }
 

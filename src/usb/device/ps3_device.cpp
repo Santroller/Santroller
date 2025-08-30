@@ -1,4 +1,4 @@
-#include "usb/device/ps_device.h"
+#include "usb/device/ps3_device.h"
 #include "usb/device/gamepad_device.h"
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
@@ -87,108 +87,57 @@ const uint8_t ps3_feature_ef[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#define PS4_TYPE 0
-const uint8_t ps4_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x91, PS4_TYPE, 0x2c, 0x56,
-    0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
-    0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-AuthPageSizeReport ps4_pagesize_report = {
-    type : 0xF3,
-    u1 : 0x00,
-    size_challenge : 0x38,
-    size_response : 0x38,
-    u4 : {0x00, 0x00, 0x00, 0x00}
-};
-
-uint16_t tud_hid_ps_get_report_cb(uint8_t instance, ConsoleMode type, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+uint16_t tud_hid_ps3_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
     (void)instance;
     (void)report_id;
     (void)report_type;
     (void)buffer;
     (void)reqlen;
-    switch (report_type)
+    if (report_type != HID_REPORT_TYPE_FEATURE)
     {
-    case HID_REPORT_TYPE_FEATURE:
-    {
-        switch (type)
-        {
-        case ConsoleMode::Ps3:
-            switch (report_id)
-            {
-            case ReportId::ReportIdPs4Feature:
-                memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
-                return sizeof(ps4_feature_config);
-            case ReportId::ReportIdPs4GetResponse:
-                // try to pass through to ps4 over usb host if one exists
-                return 0;
-            case ReportId::ReportIdPs3F2:
-                memcpy(buffer, ps3_feature_f2, sizeof(ps3_feature_f2));
-                return sizeof(ps3_feature_f2);
-
-            case ReportId::ReportIdPs3F8:
-                memcpy(buffer, ps3_feature_f8, sizeof(ps3_feature_f8));
-                buffer[7] = ef_byte;
-                return sizeof(ps3_feature_f8);
-
-            case ReportId::ReportIdPs3F7:
-                memcpy(buffer, ps3_feature_f7, sizeof(ps3_feature_f7));
-                return sizeof(ps3_feature_f7);
-            case ReportId::ReportIdPs3F5:
-                memcpy(buffer, ps3_feature_f5, sizeof(ps3_feature_f5));
-                if (f5_state == 0)
-                {
-                    /*
-                     * First request, tell that the bdaddr is not the one of the PS3.
-                     */
-                    f5_state = 1;
-                }
-                else
-                {
-                    /*
-                     * Next requests, tell that the bdaddr is the one of the PS3.
-                     */
-                    memcpy(buffer + 2, master_bd_addr, sizeof(master_bd_addr));
-                }
-                return sizeof(ps3_feature_f5);
-            case ReportId::ReportIdPs3EF:
-                memcpy(buffer, ps3_feature_ef, sizeof(ps3_feature_ef));
-                buffer[7] = ef_byte;
-                return sizeof(ps3_feature_ef);
-            case ReportId::ReportIdPs301:
-                // PS3 sends this for a gamepad
-                memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
-                return sizeof(ps3_feature_01);
-            }
-            break;
-        case ConsoleMode::Ps4:
-            switch (report_id)
-            {
-            case ReportId::ReportIdPs4Feature:
-                memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
-                return sizeof(ps4_feature_config);
-            case ReportId::ReportIdPs4GetResponse:
-                // try to pass through to ps4 over usb host if one exists
-                return 0;
-            case ReportId::ReportIdPs4GetAuthStatus:
-                // try to pass through to ps4 over usb host if one exists
-            case ReportId::ReportIdPs4GetAuthPageSize:
-                // try to pass through to ps4 over usb host if one exists
-                // if it is a ds4 the request will fail but we need to return this one in that case
-                memcpy(buffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
-                return sizeof(ps4_pagesize_report);
-            }
-            break;
-        default:
-            break;
-        }
+        return 0;
     }
-    default:
-        break;
+    switch (report_id)
+    {
+    case ReportId::ReportIdPs3F2:
+        memcpy(buffer, ps3_feature_f2, sizeof(ps3_feature_f2));
+        return sizeof(ps3_feature_f2);
+
+    case ReportId::ReportIdPs3F8:
+        memcpy(buffer, ps3_feature_f8, sizeof(ps3_feature_f8));
+        buffer[7] = ef_byte;
+        return sizeof(ps3_feature_f8);
+
+    case ReportId::ReportIdPs3F7:
+        memcpy(buffer, ps3_feature_f7, sizeof(ps3_feature_f7));
+        return sizeof(ps3_feature_f7);
+    case ReportId::ReportIdPs3F5:
+        memcpy(buffer, ps3_feature_f5, sizeof(ps3_feature_f5));
+        if (f5_state == 0)
+        {
+            /*
+             * First request, tell that the bdaddr is not the one of the PS3.
+             */
+            f5_state = 1;
+        }
+        else
+        {
+            /*
+             * Next requests, tell that the bdaddr is the one of the PS3.
+             */
+            memcpy(buffer + 2, master_bd_addr, sizeof(master_bd_addr));
+        }
+        return sizeof(ps3_feature_f5);
+    case ReportId::ReportIdPs3EF:
+        memcpy(buffer, ps3_feature_ef, sizeof(ps3_feature_ef));
+        buffer[7] = ef_byte;
+        return sizeof(ps3_feature_ef);
+    case ReportId::ReportIdPs301:
+        // PS3 sends this for a gamepad
+        memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
+        return sizeof(ps3_feature_01);
     }
     return 0;
 }
@@ -256,7 +205,7 @@ void handle_player_leds_ps3(uint8_t player_mask)
     }
 }
 
-void tud_hid_ps_set_report_cb(uint8_t instance, ConsoleMode type, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+void tud_hid_ps3_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
     (void)instance;
     switch (report_type)
@@ -270,63 +219,47 @@ void tud_hid_ps_set_report_cb(uint8_t instance, ConsoleMode type, uint8_t report
         case ReportId::ReportIdPs3EF:
             ef_byte = buffer[6];
             return;
-        case ReportId::ReportIdPs4SetChallenge:
-            // TODO: pass to ps4 controller for auth
-            return;
         }
     case HID_REPORT_TYPE_OUTPUT:
+    {
         // rumble / led packets will be here
-        if (type == ConsoleMode::Ps4)
+
+        uint8_t id = buffer[0];
+        if (id == PS3_LED_ID)
         {
-            ps4_output_report *report = (ps4_output_report *)buffer;
-            tud_set_lightbar_led_cb(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
-            tud_set_rumble_cb(report->motor_left, report->motor_right);
-            for (int i = 0; i < 4; i++)
+            handle_player_leds_ds3(buffer[9]);
+            tud_set_rumble_cb(buffer[0x04], buffer[0x02] ? 0xff : 0);
+        }
+        else if (id == PS3_RUMBLE_ID)
+        {
+            // TODO: confirm this
+            // instruments receive player leds over this report id with one format
+            if (bufsize >= 8)
             {
-                if (report->lightbar_red == ps4_colors[i][0] && report->lightbar_green == ps4_colors[i][1] && report->lightbar_blue == ps4_colors[i][2])
-                {
-                    tud_set_player_led_cb(i + 1);
-                }
+                uint8_t player = buffer[3];
+                handle_player_leds_ps3(player);
+            }
+            else
+            {
+                // and DS3s receive rumble, and the packet length is shorter
+                tud_set_rumble_cb(buffer[0x05], buffer[0x03] ? 0xff : 0);
             }
         }
-        if (type == ConsoleMode::Ps3)
+        else if (id == DJ_LED_ID)
         {
-            uint8_t id = buffer[0];
-            if (id == PS3_LED_ID)
-            {
-                handle_player_leds_ds3(buffer[9]);
-                tud_set_rumble_cb(buffer[0x04], buffer[0x02] ? 0xff : 0);
-            }
-            else if (id == PS3_RUMBLE_ID)
-            {
-                // TODO: confirm this
-                // instruments receive player leds over this report id with one format
-                if (bufsize >= 8)
-                {
-                    uint8_t player = buffer[3];
-                    handle_player_leds_ps3(player);
-                }
-                else
-                {
-                    // and DS3s receive rumble, and the packet length is shorter
-                    tud_set_rumble_cb(buffer[0x05], buffer[0x03] ? 0xff : 0);
-                }
-            }
-            else if (id == DJ_LED_ID)
-            {
-                uint8_t euphoria_on = buffer[2] * 0xFF;
-                tud_set_euphoria_led_cb(euphoria_on);
-            }
+            uint8_t euphoria_on = buffer[2] * 0xFF;
+            tud_set_euphoria_led_cb(euphoria_on);
         }
         break;
+    }
     default:
         break;
     }
 }
 
-bool tud_hid_ps_control_xfer_cb(uint8_t rhport, ConsoleMode type, uint8_t stage, tusb_control_request_t const *request)
+bool tud_hid_ps3_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-    if (request->bmRequestType_bit.direction == TUSB_DIR_IN && type == ConsoleMode::Ps3)
+    if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (stage == CONTROL_STAGE_SETUP)
         {

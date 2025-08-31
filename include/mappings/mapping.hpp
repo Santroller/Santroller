@@ -29,6 +29,7 @@ public:
     virtual void update_ps4(uint8_t* report)=0;
     virtual void update_xinput(uint8_t* report)=0;
     virtual void update_ogxbox(uint8_t* report)=0;
+    uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
 protected:
     uint16_t m_id;
 };

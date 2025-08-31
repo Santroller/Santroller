@@ -44,21 +44,26 @@ enum GuitarHeroGuitarButtonType {
   GuitarHeroGuitarBlue = 4;
   GuitarHeroGuitarOrange = 5;
 
-  GuitarHeroGuitarBack = 6;
-  GuitarHeroGuitarStart = 7;
-  GuitarHeroGuitarGuide = 8;
+  GuitarHeroGuitarTapGreen = 6;
+  GuitarHeroGuitarTapRed = 7;
+  GuitarHeroGuitarTapYellow = 8;
+  GuitarHeroGuitarTapBlue = 9;
+  GuitarHeroGuitarTapOrange = 10;
 
-  GuitarHeroGuitarStrumUp = 9;
-  GuitarHeroGuitarStrumDown = 10;
-  GuitarHeroGuitarDpadLeft = 11;
-  GuitarHeroGuitarDpadRight = 12;
+  GuitarHeroGuitarBack = 11;
+  GuitarHeroGuitarStart = 12;
+  GuitarHeroGuitarGuide = 13;
+
+  GuitarHeroGuitarStrumUp = 14;
+  GuitarHeroGuitarStrumDown = 15;
+  GuitarHeroGuitarDpadLeft = 16;
+  GuitarHeroGuitarDpadRight = 17;
 }
 enum GuitarHeroGuitarAxisType {
   GuitarHeroGuitarWhammy = 1;
   GuitarHeroGuitarTilt = 2;
-  GuitarHeroGuitarSlider = 3;
-  GuitarHeroGuitarLeftStickX = 4;
-  GuitarHeroGuitarLeftStickY = 5;
+  GuitarHeroGuitarLeftStickX = 3;
+  GuitarHeroGuitarLeftStickY = 4;
 }
 enum GuitarHeroLiveGuitarButtonType {
   GuitarHeroLiveGuitarWhite1 = 1;
@@ -265,7 +270,6 @@ enum WiiAxisType {
   WiiAxisGuitarJoystickX = 9;
   WiiAxisGuitarJoystickY= 10;
   WiiAxisGuitarWhammy= 11;
-  WiiAxisGuitarTapBar= 12;
   WiiAxisNunchukStickX= 13;
   WiiAxisNunchukStickY= 14;
   WiiAxisNunchukAccelerationX= 15;

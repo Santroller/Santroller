@@ -94,6 +94,7 @@ add_executable(
   src/mappings/GamepadAxisMapping.cpp
   src/mappings/GuitarHeroGuitarAxisMapping.cpp
   src/mappings/ActivationTrigger.cpp
+  src/mappings/Mapping.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp
   src/devices/accelerometer.cpp

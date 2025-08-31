@@ -188,10 +188,12 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
         switch (report_id)
         {
         case ReportId::ReportIdConfig:
+            lastKeepAlive = millis();
             write_config(buffer, bufsize, start);
             start += bufsize;
             break;
         case ReportId::ReportIdConfigInfo:
+            lastKeepAlive = millis();
             start = 0;
             write_config_info(buffer, bufsize);
             break;

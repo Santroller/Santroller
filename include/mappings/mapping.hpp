@@ -56,6 +56,27 @@ private:
     uint32_t m_calibratedValue = 0;
     bool m_trigger;
 };
+class GuitarHeroGuitarButtonMapping : public Mapping
+{
+public:
+    ~GuitarHeroGuitarButtonMapping() {}
+    GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update(bool full_poll);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t* report);
+    void update_ps2(uint8_t* report);
+    void update_ps3(uint8_t* report);
+    void update_ps4(uint8_t* report);
+    void update_xinput(uint8_t* report);
+    void update_ogxbox(uint8_t* report);
+
+private:
+    proto_Mapping m_mapping;
+    std::unique_ptr<Input> m_input;
+    bool m_lastValue = false;
+    bool m_calibratedValue = false;
+};
 class GuitarHeroGuitarAxisMapping : public Mapping
 {
 public:

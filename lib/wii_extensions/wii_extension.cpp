@@ -136,9 +136,12 @@ void WiiExtension::setEuphoriaLed(bool state)
 }
 void WiiExtension::tick()
 {
-    if (micros() - lastTick > 750) {
+    if (micros() - lastTick > 750)
+    {
         lastTick = micros();
-    } else {
+    }
+    else
+    {
         return;
     }
     static uint8_t wiiData[8];
@@ -214,50 +217,19 @@ void WiiExtension::tick()
                 hasTapBar = true;
             }
             lastTapWii = 0;
-            lastTap = 0x80;
-        }
-        else if (lastTapWii == 0x0f)
-        {
-            lastTap = 0x80;
-        }
-        else if (lastTapWii < 0x05)
-        {
-            lastTap = 0x15;
-        }
-        else if (lastTapWii < 0x0A)
-        {
-            lastTap = 0x30;
-        }
-        else if (lastTapWii < 0x0C)
-        {
-            lastTap = 0x4D;
-        }
-        else if (lastTapWii < 0x12)
-        {
-            lastTap = 0x66;
-        }
-        else if (lastTapWii < 0x14)
-        {
-            lastTap = 0x9A;
-        }
-        else if (lastTapWii < 0x17)
-        {
-            lastTap = 0xAF;
-        }
-        else if (lastTapWii < 0x1A)
-        {
-            lastTap = 0xC9;
-        }
-        else if (lastTapWii < 0x1F)
-        {
-            lastTap = 0xE6;
-        }
-        else
-        {
-            lastTap = 0xFF;
         }
     }
     memcpy(mBuffer, wiiData, sizeof(wiiData));
+}
+
+uint16_t atanAxis(uint16_t y, uint16_t x)
+{
+    float theta = std::atan2(y, x);
+    if (theta < 0)
+    {
+        theta += M_PI * 2;
+    }
+    return theta * 65535 / M_PI;
 }
 
 uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
@@ -280,8 +252,19 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             case WiiAxisType::WiiAxisClassicRightStickY:
                 return (mBuffer[3]) << 8;
             case WiiAxisType::WiiAxisClassicLeftTrigger:
+                // compared to a conventional controller, zl is where the trigger is so we need to swap
+                if (mType == WiiClassicControllerPro)
+                {
+
+                    return readButton(WiiButtonClassicZl) ? 65535 : 0;
+                }
                 return mBuffer[4] << 8;
             case WiiAxisType::WiiAxisClassicRightTrigger:
+                if (mType == WiiClassicControllerPro)
+                {
+
+                    return readButton(WiiButtonClassicZr) ? 65535 : 0;
+                }
                 return mBuffer[5] << 8;
             default:
                 return 0;
@@ -301,8 +284,18 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             case WiiAxisType::WiiAxisClassicRightStickY:
                 return ((mBuffer[2] & 0x1f)) << 11;
             case WiiAxisType::WiiAxisClassicLeftTrigger:
+                if (mType == WiiClassicControllerPro)
+                {
+
+                    return readButton(WiiButtonClassicZl) ? 65535 : 0;
+                }
                 return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
             case WiiAxisType::WiiAxisClassicRightTrigger:
+                if (mType == WiiClassicControllerPro)
+                {
+
+                    return readButton(WiiButtonClassicZr) ? 65535 : 0;
+                }
                 return (mBuffer[3] & 0x1f) << 11;
             default:
                 return 0;
@@ -324,7 +317,8 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             return ((mBuffer[1] & 0x3F)) << 10;
         case WiiAxisType::WiiAxisDjTurntableLeft:
             return ((mBuffer[4] & 1) ? 32 + (0x1F - (mBuffer[3] & 0x1F)) : 32 - (mBuffer[3] & 0x1F)) << 10;
-        case WiiAxisType::WiiAxisDjTurntableRight: {
+        case WiiAxisType::WiiAxisDjTurntableRight:
+        {
             uint8_t rtt = (mBuffer[2] & 0x80) >> 7 | (mBuffer[1] & 0xC0) >> 5 | (mBuffer[0] & 0xC0) >> 3;
             return ((mBuffer[2] & 1) ? 32 + (0x1F - rtt) : 32 - rtt);
         }
@@ -371,8 +365,6 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             return ((mBuffer[0] & 0x3f)) << 10;
         case WiiAxisType::WiiAxisGuitarJoystickY:
             return ((mBuffer[1] & 0x3f)) << 10;
-        case WiiAxisType::WiiAxisGuitarTapBar:
-            return lastTap;
         case WiiAxisType::WiiAxisGuitarWhammy:
             return (mBuffer[3] & 0x1f) << 11;
         default:
@@ -398,15 +390,15 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
         switch (type)
         {
         case WiiAxisType::WiiAxisNunchukAccelerationX:
-            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6));
+            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) << 6;
         case WiiAxisType::WiiAxisNunchukAccelerationY:
-            return ((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4));
+            return ((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) << 6;
         case WiiAxisType::WiiAxisNunchukAccelerationZ:
-            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2));
+            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) << 6;
         case WiiAxisType::WiiAxisNunchukRotationPitch:
-            return std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)), ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)));
+            return (std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511.0, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511.0) * 32767 / M_PI) + 32767;
         case WiiAxisType::WiiAxisNunchukRotationRoll:
-            return std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)), ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)));
+            return (-std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511.0, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511.0) * 32767 / M_PI) + 32767;
         case WiiAxisType::WiiAxisNunchukStickX:
             return (mBuffer[0]) << 8;
         case WiiAxisType::WiiAxisNunchukStickY:
@@ -422,6 +414,7 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
 }
 bool WiiExtension::readButton(proto_WiiButtonType type)
 {
+    auto lastTap = hasTapBar ? (mBuffer[2] & 0x1f) : 0x0F;
     auto wiiButtonsLow = ~mBuffer[4];
     auto wiiButtonsHigh = ~mBuffer[5];
     if (hiRes)
@@ -455,6 +448,11 @@ bool WiiExtension::readButton(proto_WiiButtonType type)
         case WiiButtonClassicDPadLeft:
             return ((wiiButtonsHigh) & (1 << 1));
         case WiiButtonClassicZr:
+            // compared to a conventional controller, zr is where the trigger is so we need to swap
+            if (mType == WiiClassicControllerPro)
+            {
+                return ((wiiButtonsLow) & (1 << 1));
+            }
             return ((wiiButtonsHigh) & (1 << 2));
         case WiiButtonClassicX:
             return ((wiiButtonsHigh) & (1 << 3));
@@ -465,6 +463,10 @@ bool WiiExtension::readButton(proto_WiiButtonType type)
         case WiiButtonClassicB:
             return ((wiiButtonsHigh) & (1 << 6));
         case WiiButtonClassicZl:
+            if (mType == WiiClassicControllerPro)
+            {
+                return ((wiiButtonsLow) & (1 << 5));
+            }
             return ((wiiButtonsHigh) & (1 << 7));
         default:
             return 0;
@@ -526,16 +528,26 @@ bool WiiExtension::readButton(proto_WiiButtonType type)
             return ((wiiButtonsLow) & (1 << 6));
         case WiiButtonGuitarStrumUp:
             return ((wiiButtonsHigh) & (1 << 0));
-        case WiiButtonGuitarYellow:
-            return ((wiiButtonsHigh) & (1 << 3));
         case WiiButtonGuitarGreen:
             return ((wiiButtonsHigh) & (1 << 4));
-        case WiiButtonGuitarBlue:
-            return ((wiiButtonsHigh) & (1 << 5));
         case WiiButtonGuitarRed:
             return ((wiiButtonsHigh) & (1 << 6));
+        case WiiButtonGuitarYellow:
+            return ((wiiButtonsHigh) & (1 << 3));
+        case WiiButtonGuitarBlue:
+            return ((wiiButtonsHigh) & (1 << 5));
         case WiiButtonGuitarOrange:
             return ((wiiButtonsHigh) & (1 << 7));
+        case WiiButtonGuitarTapGreen:
+            return lastTap < 0x0A;
+        case WiiButtonGuitarTapRed:
+            return lastTap != 0x0F && lastTap < 0x12 && lastTap >= 0x0A;
+        case WiiButtonGuitarTapYellow:
+            return lastTap < 0x17 && lastTap >= 0x12;
+        case WiiButtonGuitarTapBlue:
+            return lastTap < 0x1F && lastTap >= 0x17;
+        case WiiButtonGuitarTapOrange:
+            return lastTap >= 0x1F;
         case WiiButtonGuitarPedal:
             return ((wiiButtonsHigh) & (1 << 2));
         default:

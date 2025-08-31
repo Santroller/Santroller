@@ -92,6 +92,7 @@ add_executable(
   src/input/wii.cpp
   src/mappings/GamepadButtonMapping.cpp
   src/mappings/GamepadAxisMapping.cpp
+  src/mappings/GuitarHeroGuitarButtonMapping.cpp
   src/mappings/GuitarHeroGuitarAxisMapping.cpp
   src/mappings/ActivationTrigger.cpp
   src/mappings/Mapping.cpp

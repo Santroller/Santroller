@@ -3,45 +3,82 @@
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
 #include "main.hpp"
-#include <pb_encode.h>
-#include <utils.h>
-#include <stdint.h>
 
-GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input)), m_trigger(mapping.mapping.ghAxis == GuitarHeroGuitarWhammy)
+GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
 {
 }
 
-void GuitarHeroGuitarAxisMapping::update(bool full_poll)
+// deal with debounce and all the other fun things
+void GuitarHeroGuitarButtonMapping::update(bool full_poll)
 {
-    auto val = m_input->tickAnalog();
+    auto val = m_input->tickDigital();
     if (val != m_lastValue || full_poll)
     {
-        m_lastValue = val;
-        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
+        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val, val}}};
         send_event(event);
+        m_lastValue = val;
+        // debouce would just be storing the millis() from the last poll and simply using that as the indication for if the input is active instead of lastValue
     }
 }
-void GuitarHeroGuitarAxisMapping::update_hid(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_hid(uint8_t *buf)
 {
     PCGuitarHeroGuitar_Data_t *report = (PCGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.ghButton)
     {
-    case GuitarHeroGuitarLeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
+    case GuitarHeroGuitarGreen:
+        report->a = m_lastValue;
         break;
-    case GuitarHeroGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
+    case GuitarHeroGuitarRed:
+        report->b = m_lastValue;
         break;
-    case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue >> 8;
+    case GuitarHeroGuitarYellow:
+        report->y = m_lastValue;
         break;
-    case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue >> 8;
+    case GuitarHeroGuitarBlue:
+        report->x = m_lastValue;
+        break;
+    case GuitarHeroGuitarOrange:
+        report->leftShoulder = m_lastValue;
+        break;
+    case GuitarHeroGuitarTapGreen:
+        report->tapGreen = m_lastValue;
+        break;
+    case GuitarHeroGuitarTapRed:
+        report->tapRed = m_lastValue;
+        break;
+    case GuitarHeroGuitarTapYellow:
+        report->tapYellow = m_lastValue;
+        break;
+    case GuitarHeroGuitarTapBlue:
+        report->tapBlue = m_lastValue;
+        break;
+    case GuitarHeroGuitarTapOrange:
+        report->tapOrange = m_lastValue;
+        break;
+    case GuitarHeroGuitarBack:
+        report->back = m_lastValue;
+        break;
+    case GuitarHeroGuitarStart:
+        report->start = m_lastValue;
+        break;
+    case GuitarHeroGuitarGuide:
+        report->guide = m_lastValue;
+        break;
+    case GuitarHeroGuitarStrumUp:
+        report->dpadUp = m_lastValue;
+        break;
+    case GuitarHeroGuitarStrumDown:
+        report->dpadDown = m_lastValue;
+        break;
+    case GuitarHeroGuitarDpadLeft:
+        report->dpadLeft = m_lastValue;
+        break;
+    case GuitarHeroGuitarDpadRight:
+        report->dpadRight = m_lastValue;
         break;
     }
 }
-void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_wii(uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
@@ -63,7 +100,7 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
         break;
     }
 }
-void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
@@ -85,7 +122,7 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
     }
 }
 
-void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
 {
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
@@ -107,7 +144,7 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
     }
 }
 
-void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
@@ -127,7 +164,7 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
     }
 }
 
-void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
@@ -149,32 +186,29 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
     }
 }
 
-void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitarLeftStickX:
-        // shove stick on the slider, then it can be used in menus
-        if (m_calibratedValue != 32767)
-        {
-            report->slider = m_calibratedValue - 32767;
-        }
+        // TODO: map to dpad here
+        // report->leftStickX = m_calibratedValue >> 8;
         break;
     case GuitarHeroGuitarLeftStickY:
-        report->unused = m_calibratedValue - 32767;
+        // report->leftStickY = m_calibratedValue >> 8;
         break;
     case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue - 32767;
+        report->whammy = m_calibratedValue >> 8;
         break;
     case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue - 32767;
+        report->tilt = m_calibratedValue >> 8;
         break;
     default:
         break;
     }
 }
-void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
+void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)

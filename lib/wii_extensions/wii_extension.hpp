@@ -50,7 +50,6 @@ private:
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
     uint8_t s_box = 0;
-    uint8_t lastTap;
 
     bool hiRes = false;
     bool hasTapBar = false;

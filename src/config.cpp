@@ -30,6 +30,13 @@ typedef struct
     uint32_t current;
     uint32_t target;
 } profile_args_t;
+
+uint8_t gh5_mapping[] = {
+    0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
+    0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD,
+    0xAE, 0xAC, 0xFF, 0xFB, 0xFD, 0xF9, 0xFE,
+    0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
+    0xE5, 0xE1, 0xE3, 0xDF};
 void update(bool full_poll)
 {
     uint8_t out[64] = {0};
@@ -49,8 +56,15 @@ void update(bool full_poll)
             mapping->update(full_poll);
             mapping->update_hid(out);
         }
+        // convert bitmask dpad to actual hid dpad
         PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
         report->dpad = dpad_bindings[report->dpad];
+        if (current_type == GuitarHeroGuitar)
+        {
+            // convert bitmask slider to actual hid slider
+            PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
+            reportGh->slider = gh5_mapping[reportGh->slider];
+        }
         tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
     }
 }
@@ -130,6 +144,10 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Mapping_ghAxis_tag:
         printf("axis %d\r\n", mapping.mapping.ghAxis);
         mappings.push_back(std::unique_ptr<Mapping>(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), *mapping_id)));
+        break;
+    case proto_Mapping_ghButton_tag:
+        printf("button %d\r\n", mapping.mapping.ghButton);
+        mappings.push_back(std::unique_ptr<Mapping>(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), *mapping_id)));
         break;
     case proto_Mapping_gamepadButton_tag:
         printf("button %d\r\n", mapping.mapping.gamepadButton);

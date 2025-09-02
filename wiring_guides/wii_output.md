@@ -14,7 +14,7 @@ If you wish to also use USB Host, follow the [Wii extension emulation + USB Host
 - A controller built using one of the other guides
 - A microcontroller
 
-  - The Pi Pico 1 and Pi Pico 2, or microcontrollers based on these, are currently the only supported microcontrollers.
+  - The Pi Pico 1, Pi Pico 2, or microcontrollers based on them, are currently the only supported microcontrollers. Previous versions of santroller did support other microcontrollers, and information about that can be found below.
 
     {% include sections/microcontrollers.md %}
 

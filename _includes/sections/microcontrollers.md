@@ -1,5 +1,5 @@
 <details>
-    <summary>Unsupported Microcontrollers</summary>    
+    <summary>Older microcontrollers</summary>    
     
     * The following microcontrollers were previously supported by [v10.1.188](https://github.com/Santroller/Santroller/releases/tag/v10.1.188). They are no longer supported, and while this build will work, it is missing quite a lot of the recent changes and I will not provide support for it if you have issues using it.
       * Sparkfun Pro Micro (5v)

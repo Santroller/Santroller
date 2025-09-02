@@ -10,7 +10,7 @@ sort: 4
 
 - A microcontroller
 
-  - The Pi Pico 1 and Pi Pico 2, or microcontrollers based on these, are currently the only supported microcontrollers.
+  - The Pi Pico 1, Pi Pico 2, or microcontrollers based on them, are currently the only supported microcontrollers. Previous versions of santroller did support other microcontrollers, and information about that can be found below.
 
     {% include sections/microcontrollers.md %}
 

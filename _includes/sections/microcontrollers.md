@@ -1,7 +1,7 @@
 <details>
     <summary>Unsupported Microcontrollers</summary>    
     
-    * Microcontrollers supported by [v10.1.188](https://github.com/Santroller/Santroller/releases/tag/v10.1.188)
+    * The following microcontrollers were previously supported by [v10.1.188](https://github.com/Santroller/Santroller/releases/tag/v10.1.188). They are no longer supported, and while this build will work, it is missing quite a lot of the recent changes and I will not provide support for it if you have issues using it.
       * Sparkfun Pro Micro (5v)
         * The 5V Pro Micro will work fine for direct wiring, but being that it runs at 5V, it will require voltage conversion to build Wii adapters and PS2 adapters and turntables.
       * Sparkfun Pro Micro (3.3v)

@@ -20,7 +20,7 @@ If your connector has a rumble wire we recommend you make sure it is properly co
 
 - A microcontroller
 
-  - The Pi Pico is currently the only supported microcontroller. You will need to use an [older build](https://github.com/Santroller/Santroller/releases/tag/v10.1.188) if you wish to use any of the other microcontrollers listed below, and no support will be provided as this build is very old. This build is also missing quite a few features from the more recent builds, and in the future Santroller will only support the Pi Pico, or other boards based on it. If you do go for one of these, only 3.3v microcontrollers are supported.
+  - The Pi Pico 1 and Pi Pico 2, or microcontrollers based on these, are currently the only supported microcontrollers.
 
     {% include sections/microcontrollers.md %}
 

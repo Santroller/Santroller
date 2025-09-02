@@ -8,7 +8,8 @@ sort: 5
 
 - A microcontroller
 
-  - The Pi Pico is currently the only supported microcontroller. You will need to use an [older build](https://github.com/Santroller/Santroller/releases/tag/v10.1.188) if you wish to use any of the other microcontrollers listed below, and no support will be provided as this build is very old. This build is also missing quite a few features from the more recent builds, and in the future Santroller will only support the Pi Pico, or other boards based on it.
+  - The Pi Pico 1 and Pi Pico 2, or microcontrollers based on these, are currently the only supported microcontrollers.
+
     {% include sections/microcontrollers.md %}
 
 - A Wii extension breakout board or an extension cable, such as [![this](https://www.adafruit.com/product/4836)](https://www.adafruit.com/product/4836). You can also choose to cut the end of the extension and solder your own cables on as well if you perfer.

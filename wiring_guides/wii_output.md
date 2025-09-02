@@ -14,7 +14,9 @@ If you wish to also use USB Host, follow the [Wii extension emulation + USB Host
 - A controller built using one of the other guides
 - A microcontroller
 
-  - The Pi Pico is recommended, but other 3.3v microcontrollers like the 3.3v pro micro may work. 5v only microcontrollers will NOT work.
+  - The Pi Pico is currently the only supported microcontroller. You will need to use an [older build](https://github.com/Santroller/Santroller/releases/tag/v10.1.188) if you wish to use any of the other microcontrollers listed below, and no support will be provided as this build is very old. This build is also missing quite a few features from the more recent builds, and in the future Santroller will only support the Pi Pico, or other boards based on it.
+
+    {% include sections/microcontrollers.md %}
 
 - A Wii extension plug
 - Some Wire

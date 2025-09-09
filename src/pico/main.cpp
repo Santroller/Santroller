@@ -517,7 +517,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         if (type.sub_type == GUITAR_HERO_GUITAR && XFER_RESULT_SUCCESS == tuh_descriptor_get_product_string_sync(dev_addr, 0, buf, sizeof(buf)))
         {
             uint16_t wtProduct[] = {'G', 'u', 'i', 't', 'a', 'r', ' ', 'H', 'e', 'r', 'o', '4'};
-            if (memcmp(wtProduct, buf, sizeof(wtProduct)) || memcmp(wtProduct, buf + 1, sizeof(wtProduct)))
+            if (memcmp(wtProduct, buf, sizeof(wtProduct)) == 0 || memcmp(wtProduct, buf + 1, sizeof(wtProduct)) == 0)
             {
                 type.sub_type = GUITAR_HERO_GUITAR_WT;
             }

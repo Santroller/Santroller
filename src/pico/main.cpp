@@ -62,6 +62,8 @@ typedef struct
     uint8_t report_length;
     bool switch_sent_timeout;
     bool switch_sent_handshake;
+    bool switch_sent_timeout2;
+    bool switch_sent_handshake2;
     uint8_t xone_init_id;
 } Usb_Host_Device_t;
 
@@ -488,7 +490,6 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     case MOUSE:
     case STREAM_DECK:
     case PS5:
-    case SWITCH:
     case UNKNOWN:
     case GENERIC:
     case STEPMANIAX:
@@ -500,6 +501,14 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
         break;
+    case SWITCH: {
+        printf("Found Switch controller\r\n");
+        usb_host_devices[total_usb_host_devices].type = type;
+        total_usb_host_devices++;
+        uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+        send_report_to_controller(dev_addr, instance, buf, 2);
+        break;
+    }
     case SWITCH2:
         printf("Found Switch 2 controller\r\n");
         usb_host_devices[total_usb_host_devices].type = type;
@@ -740,19 +749,30 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             }
             if (usb_host_devices[i].type.console_type == SWITCH && usb_host_devices[i].type.sub_type == GAMEPAD)
             {
-                if (!usb_host_devices[i].switch_sent_handshake)
+                if (report[0] == 0x81 && report[1] == 0x01)
                 {
                     usb_host_devices[i].switch_sent_handshake = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);
                 }
-                else if (!usb_host_devices[i].switch_sent_timeout)
+                else if (!usb_host_devices[i].switch_sent_timeout && report[0] == 0x81 && report[1] == 0x02)
                 {
                     usb_host_devices[i].switch_sent_timeout = true;
+                    uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x03 /* PROCON_USB_ENABLE */};
+                    send_report_to_controller(dev_addr, instance, buf, 2);
+                }
+                else if (report[0] == 0x81 && report[1] == 0x03)
+                {
+                    usb_host_devices[i].switch_sent_handshake2 = true;
+                    uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+                    send_report_to_controller(dev_addr, instance, buf, 2);
+                }
+                else if (report[0] == 0x81 && report[1] == 0x02)
+                {
+                    usb_host_devices[i].switch_sent_timeout2 = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x04 /* PROCON_USB_ENABLE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);
                 }
-
                 if (report[0] != SWITCH_PRO_CON_FULL_REPORT_ID)
                 {
                     continue;
@@ -775,13 +795,16 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                     continue;
                 }
             }
-            if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_GUITAR) {
+            if (usb_host_devices[i].type.console_type == PS3 && usb_host_devices[i].type.sub_type == ROCK_BAND_GUITAR)
+            {
                 PS3RockBandGuitar_Data_t *guitar = (PS3RockBandGuitar_Data_t *)report;
                 // ignore neutral value from whammy and pickup
-                if (guitar->whammy != 0x7F) {
+                if (guitar->whammy != 0x7F)
+                {
                     usb_host_devices[i].type.whammy = guitar->whammy;
                 }
-                if (guitar->pickup != 0x7F) {
+                if (guitar->pickup != 0x7F)
+                {
                     usb_host_devices[i].type.pickup = guitar->pickup;
                 }
             }

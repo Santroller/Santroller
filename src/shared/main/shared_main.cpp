@@ -1835,11 +1835,15 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         {
         case GAMEPAD:
         {
+            for (int i = 0; i < 10; i++) {
+                printf("%02x, ", data[i]);
+            }
+            printf("\r\n");
             SwitchProGamepad_Data_t *report = (SwitchProGamepad_Data_t *)data;
-            usb_host_data->dpadLeft = report->dpad == 6 || report->dpad == 5 || report->dpad == 7;
-            usb_host_data->dpadRight = report->dpad == 3 || report->dpad == 2 || report->dpad == 1;
-            usb_host_data->dpadUp = report->dpad == 0 || report->dpad == 1 || report->dpad == 7;
-            usb_host_data->dpadDown = report->dpad == 5 || report->dpad == 4 || report->dpad == 3;
+            usb_host_data->dpadLeft = report->dpadLeft;
+            usb_host_data->dpadRight = report->dpadRight;
+            usb_host_data->dpadUp = report->dpadUp;
+            usb_host_data->dpadDown = report->dpadDown;
             usb_host_data->green |= report->a;
             usb_host_data->red |= report->b;
             usb_host_data->yellow |= report->y;
@@ -1865,21 +1869,21 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             {
                 usb_host_data->rightTrigger = report->rightTrigger << 8;
             }
-            if (report->leftStickX != PS3_STICK_CENTER)
+            if (report->leftStickX != 0x800)
             {
-                usb_host_data->leftStickX = (report->leftStickX - PS3_STICK_CENTER) << 8;
+                usb_host_data->leftStickX = (report->leftStickX - 0x800) << 4;
             }
-            if (report->leftStickY != PS3_STICK_CENTER)
+            if (report->leftStickY != 0x800)
             {
-                usb_host_data->leftStickY = (((UINT8_MAX - report->leftStickY) - PS3_STICK_CENTER)) << 8;
+                usb_host_data->leftStickY = (((0xFFF - report->leftStickY) - 0x800)) << 4;
             }
-            if (report->rightStickX != PS3_STICK_CENTER)
+            if (report->rightStickX != 0x800)
             {
-                usb_host_data->rightStickX = (report->rightStickX - PS3_STICK_CENTER) << 8;
+                usb_host_data->rightStickX = (report->rightStickX - 0x800) << 4;
             }
-            if (report->rightStickY != PS3_STICK_CENTER)
+            if (report->rightStickY != 0x800)
             {
-                usb_host_data->rightStickY = (((UINT8_MAX - report->rightStickY) - PS3_STICK_CENTER)) << 8;
+                usb_host_data->rightStickY = (((0xFFF - report->rightStickY) - 0x800)) << 4;
             }
             break;
         }

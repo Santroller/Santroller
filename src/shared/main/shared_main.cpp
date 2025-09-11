@@ -1835,10 +1835,6 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         {
         case GAMEPAD:
         {
-            for (int i = 0; i < 10; i++) {
-                printf("%02x, ", data[i]);
-            }
-            printf("\r\n");
             SwitchProGamepad_Data_t *report = (SwitchProGamepad_Data_t *)data;
             usb_host_data->dpadLeft = report->dpadLeft;
             usb_host_data->dpadRight = report->dpadRight;

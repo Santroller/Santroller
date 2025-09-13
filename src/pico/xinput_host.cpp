@@ -239,7 +239,6 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
-                usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             }
             else
             {
@@ -550,6 +549,9 @@ static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance)
 
     // notify usbh that driver enumeration is complete
     usbh_driver_set_config_complete(dev_addr, hid_itf->itf_num);
+    if (hid_itf->ep_in) {
+        usbh_edpt_xfer(dev_addr, hid_itf->ep_in, hid_itf->epin_buf, hid_itf->epin_size);
+    }
 }
 
 //--------------------------------------------------------------------+

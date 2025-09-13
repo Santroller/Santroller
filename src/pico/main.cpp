@@ -61,9 +61,6 @@ typedef struct
     USB_LastReport_Data_t report;
     uint8_t report_length;
     bool switch_sent_timeout;
-    bool switch_sent_handshake;
-    bool switch_sent_timeout2;
-    bool switch_sent_handshake2;
     uint8_t xone_init_id;
 } Usb_Host_Device_t;
 
@@ -501,12 +498,11 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
         break;
-    case SWITCH: {
+    case SWITCH:
+    {
         printf("Found Switch controller\r\n");
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
-        uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
-        send_report_to_controller(dev_addr, instance, buf, 2);
         break;
     }
     case SWITCH2:
@@ -751,7 +747,6 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             {
                 if (report[0] == 0x81 && report[1] == 0x01)
                 {
-                    usb_host_devices[i].switch_sent_handshake = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);
                 }
@@ -763,13 +758,11 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                 }
                 else if (report[0] == 0x81 && report[1] == 0x03)
                 {
-                    usb_host_devices[i].switch_sent_handshake2 = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);
                 }
                 else if (report[0] == 0x81 && report[1] == 0x02)
                 {
-                    usb_host_devices[i].switch_sent_timeout2 = true;
                     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x04 /* PROCON_USB_ENABLE */};
                     send_report_to_controller(dev_addr, instance, buf, 2);
                 }

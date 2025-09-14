@@ -1453,7 +1453,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_STRING: {
-            read_any_string = true;
+            // We only care for actual string reads, not the language id
+            if (descriptorNumber != 0) {
+                read_any_device_string = true;
+            }
             const uint8_t *str;
             if (descriptorNumber == 5) {
                 str = (uint8_t *)&rtStringInput;

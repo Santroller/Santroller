@@ -3619,8 +3619,8 @@ bool tick_usb(void)
     }
 #endif
 #if DEVICE_TYPE_IS_GAMEPAD
-    // PS2 / Wii / WiiU / Switch 2 won't do WCID
-    if (millis_at_boot && (millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && !seen_windows_xb1 && !seen_os_descriptor_read)
+    // PS2 / Wii / WiiU / Switch 2 won't do WCID and wont try to read any actual strings
+    if (millis_at_boot && (millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && !seen_windows_xb1 && !seen_os_descriptor_read && !read_any_device_string)
     {
         // Switch 2 does read the hid descriptor
         if (seen_hid_descriptor_read)

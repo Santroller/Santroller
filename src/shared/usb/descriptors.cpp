@@ -1245,6 +1245,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                            void *descriptorBuffer) {
     const uint8_t descriptorType = (wValue >> 8);
     const uint8_t descriptorNumber = (wValue & 0xFF);
+    // printf("desc: %02x %02x\r\n", descriptorType, descriptorNumber);
 #if DEVICE_TYPE_IS_GAMEPAD
 #if USB_HOST_STACK
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
@@ -1464,6 +1465,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 str = (uint8_t *)pgm_read_pointer(descriptorStrings + descriptorNumber);
             } else if (descriptorNumber == 0xEE) {
                 str = (uint8_t *)&OSDescriptorString;
+                seen_os_descriptor_read = true;
             } else {
                 break;
             }

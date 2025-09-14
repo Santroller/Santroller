@@ -37,6 +37,7 @@ extern bool descriptor_requested;
 // Use for configuring commands that are pc specific
 extern bool seen_windows_xb1;
 extern bool seen_windows;
+extern bool seen_os_descriptor_read;
 extern bool read_any_string;
 
 // Used for detecting any connection at all

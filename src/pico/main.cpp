@@ -356,6 +356,7 @@ void send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t
 }
 extern "C" void tud_mount_cb(void)
 {
+    printf("mounted!\r\n");
     device_reset();
 }
 #if USB_HOST_STACK

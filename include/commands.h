@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "midi_descriptors.h"
+#include "reports/crkd.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

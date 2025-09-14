@@ -14,6 +14,7 @@
 #include "reports/wii_reports.h"
 #include "reports/xbox_one_reports.h"
 #include "reports/xinput_reports.h"
+#include "reports/crkd.h"
 
 #define STREAM_DECK_INPUT_REPORT_ID 1
 #define STADIA_REPORT_ID 3
@@ -401,20 +402,3 @@ typedef struct
     uint8_t leftTrigger;  // pressure_l2
     uint8_t rightTrigger; // pressure_r2
 } __attribute__((packed)) Stadia_Data_t;
-
-typedef struct
-{
-    uint8_t header; // {0xA5, 0x01};, though we are eating the first header byte
-    uint8_t len; // 0x0C;
-    uint8_t padding[2]; //{0x00, 0x00};
-    uint8_t green : 1;
-    uint8_t red : 1;
-    uint8_t yellow : 1;
-    uint8_t blue : 1;
-    uint8_t orange : 1;
-    uint8_t : 3;
-    uint8_t dpadUpDown;    // none: 0x80, up: 0x00, down: 0xFF
-    uint8_t dpadLeftRight; // none: 0x80, right: 0x00, left: 0xFF
-    uint8_t footer[3]; // {0x00, 0x01, 0x15};
-    uint8_t crc; // CRC-8/MAXIM-DOW
-} __attribute__((packed)) crkd_neck_t;

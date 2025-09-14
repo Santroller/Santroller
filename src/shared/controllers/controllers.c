@@ -20,6 +20,7 @@ uint8_t ps4_sequence_number;
 uint8_t portal_state = 0;
 bool seen_windows_xb1 = 0;
 bool seen_os_descriptor_read = 0;
+bool seen_og_xbox = false;
 bool seen_windows = false;
 bool read_any_device_string = false;
 bool read_device_desc = false;

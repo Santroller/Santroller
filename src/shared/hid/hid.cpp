@@ -853,6 +853,12 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             }
             memcpy(response_buffer, &lastSuccessfulClonePacket, sizeof(lastSuccessfulClonePacket));
             return sizeof(lastSuccessfulClonePacket);
+        case COMMAND_READ_CRKD:
+            if (!lastCrkdWasSuccessful) {
+                return 0;
+            }
+            memcpy(response_buffer, &lastCrkd, sizeof(lastCrkd));
+            return sizeof(lastCrkd);            
 #ifdef INPUT_WT_NECK
         case COMMAND_READ_GHWT: {
             volatile uint8_t *data = (volatile uint8_t *)lastWt;

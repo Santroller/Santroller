@@ -52,6 +52,7 @@ enum SerialCommands {
     COMMAND_READ_BLUETOOTH_INPUTS,
     COMMAND_WT_DRUM_VALID,
     COMMAND_BH_DRUM_VALID,
+    COMMAND_READ_CRKD,
     MAX=100
 };
 
@@ -61,12 +62,14 @@ extern uint8_t lastSuccessfulTurntablePacketLeft[3];
 extern uint8_t lastSuccessfulTurntablePacketRight[3];
 extern uint8_t lastSuccessfulGH5Packet[2];
 extern uint8_t lastSuccessfulClonePacket[4];
+extern crkd_neck_t lastCrkd;
 extern uint8_t wiiBytes;
 extern uint32_t lastWt[5];
 extern uint8_t rawWt;
 extern uint8_t rawWtPeripheral;
 extern bool lastGH5WasSuccessful;
 extern bool lastCloneWasSuccessful;
+extern bool lastCrkdWasSuccessful;
 extern bool lastTurntableWasSuccessfulLeft;
 extern bool lastTurntableWasSuccessfulRight;
 extern bool lastWiiWasSuccessful;

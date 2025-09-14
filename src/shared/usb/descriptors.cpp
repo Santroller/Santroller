@@ -902,12 +902,8 @@ bool cleared_output = false;
 uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *requestBuffer, bool *status) {
     // printf("%02x %04x %04x %04x %04x\r\n", requestType, request, wValue, wIndex, wLength);
 #if DEVICE_TYPE_IS_GAMEPAD
-    if (consoleType != OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR) && request == 6 && wValue == 0x4200) {
-        consoleType = OG_XBOX;
-        reset_usb();
-        return 0;
-    }
-    if (consoleType == OG_XBOX && requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+    if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_VENDOR)) {
+        seen_og_xbox = true;
         if (request == 6 && wValue == 0x4200) {
             memcpy_P(requestBuffer, &DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
             return sizeof(DukeXIDDescriptor);

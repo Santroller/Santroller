@@ -2878,9 +2878,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wt_drum.h"
 #include "inputs/wt_neck.h"
 #include "inputs/crkd.h"
-// #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
-//     convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
-// #endif
+    // #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+    //     convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
+    // #endif
     TICK_SHARED;
     if (!startedInactivityPulse)
     {
@@ -3161,7 +3161,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
         if (!report->cymbalFlag && ready_for_next_packet() && (greenCymbal || yellowCymbal || blueCymbal))
         {
-            if (greenCymbal) {
+            if (greenCymbal)
+            {
                 lastGreenOff = millis();
             }
             greenCymbal = false;
@@ -3477,7 +3478,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
                 if (!report->cymbalFlag && ready_for_next_packet() && (greenCymbal || yellowCymbal || blueCymbal))
                 {
-                    if (greenCymbal) {
+                    if (greenCymbal)
+                    {
                         lastGreenOff = millis();
                     }
                     greenCymbal = false;
@@ -3622,25 +3624,28 @@ bool tick_usb(void)
     // PS2 / Wii / WiiU / Switch 2 won't do WCID and wont try to read any actual strings
     if (millis_at_boot && (millis() - millis_at_boot) > 2000 && consoleType == UNIVERSAL && !seen_windows_xb1 && !seen_os_descriptor_read && !read_any_device_string)
     {
+        // og xbox does its own thing
+        if (seen_og_xbox)
+        {
+            consoleType = OG_XBOX;
+            reset_usb();
+        }
         // Switch 2 does read the hid descriptor
         if (seen_hid_descriptor_read)
         {
             consoleType = SWITCH;
             reset_usb();
         }
-        else
-        {
-            // PS2 / Wii / WiiU does not read hid descriptor
-            // The wii however will configure the usb device before it stops communicating
+        // PS2 / Wii / WiiU does not read hid descriptor
+        // The wii however will configure the usb device before it stops communicating
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == ROCK_BAND_DRUMS
-            if (usb_configured())
-            {
-                set_console_type(WII_RB);
-            }
-#endif
-            // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-            set_console_type(PS3);
+        if (usb_configured())
+        {
+            set_console_type(WII_RB);
         }
+#endif
+        // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+        set_console_type(PS3);
     }
     // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
     if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4)

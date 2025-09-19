@@ -2689,7 +2689,6 @@ void tick_ps2output()
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
-#include "inputs/turntable.h"
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
@@ -2725,7 +2724,6 @@ void tick_wiioutput()
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
-#include "inputs/turntable.h"
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
@@ -2872,7 +2870,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
 #include "inputs/slave_tick.h"
-#include "inputs/turntable.h"
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_drum.h"
@@ -3732,6 +3729,8 @@ void tick(void)
 #ifdef TICK_LED_BLUETOOTH
     TICK_LED_BLUETOOTH;
 #endif
+
+#include "inputs/turntable.h"
     if (reset_after_360 && millis() > reset_after_360)
     {
         reset_usb();

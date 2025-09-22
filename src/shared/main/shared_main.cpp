@@ -69,6 +69,13 @@ struct
 crkd_neck_t lastCrkd;
 unsigned long lastMidi = 0;
 Midi_Data_t midiData = {0};
+
+uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
+uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
+int8_t dj_turntable_left = 0;
+int8_t dj_turntable_right = 0;
+bool djLeftValid = true;
+bool djRightValid = true;
 void onNote(uint8_t channel, uint8_t note, uint8_t velocity)
 {
     // velocities are 7 bit
@@ -2727,6 +2734,7 @@ void tick_wiioutput()
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+#include "inputs/turntable.h"
     TICK_SHARED;
     if (!startedInactivityPulse)
     {
@@ -2875,6 +2883,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wt_drum.h"
 #include "inputs/wt_neck.h"
 #include "inputs/crkd.h"
+#include "inputs/turntable.h"
     // #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
     //     convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
     // #endif
@@ -3730,7 +3739,6 @@ void tick(void)
     TICK_LED_BLUETOOTH;
 #endif
 
-#include "inputs/turntable.h"
     if (reset_after_360 && millis() > reset_after_360)
     {
         reset_usb();

@@ -11,6 +11,7 @@
 #include "devices/djh.hpp"
 #include "devices/crkd.hpp"
 #include "devices/gh5neck.hpp"
+#include "devices/usb.hpp"
 #include "devices/max1704x.hpp"
 #include "devices/mpr121.hpp"
 #include "mappings/mapping.hpp"
@@ -18,6 +19,9 @@
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
 #include "main.hpp"
+#include "host/usbh.h"
+#include "pio_usb.h"
+#include "host/usbh_pvt.h"
 #include <vector>
 #include <memory>
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
@@ -104,7 +108,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         devices[*dev_id] = std::shared_ptr<Device>(new MPR121Device(device.device.mpr121, *dev_id));
         break;
     case proto_Device_usbHost_tag:
-        printf("usbhost %d %d\r\n", *dev_id, device.device.usbHost.firstPin, device.device.usbHost.dmFirst);
+        devices[*dev_id] = std::shared_ptr<Device>(new USBDevice(device.device.usbHost, *dev_id));
         break;
     }
     *dev_id += 1;

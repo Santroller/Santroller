@@ -53,7 +53,6 @@ extern "C"
     bool xoned_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event,
                        uint32_t xferred_bytes);
     bool xoned_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request);
-    void tud_xone_set_report_cb(uint8_t interface, uint8_t const *buf, uint16_t len);
 
 #ifdef __cplusplus
 }

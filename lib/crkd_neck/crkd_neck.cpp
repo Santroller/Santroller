@@ -8,6 +8,12 @@ void CrkdNeck::tick() {
     yellow = m_crkdNeck.yellow;
     blue = m_crkdNeck.blue;
     orange = m_crkdNeck.orange;
+    soloGreen = m_crkdNeck.soloGreen;
+    soloRed = m_crkdNeck.soloRed;
+    soloYellow = m_crkdNeck.soloYellow;
+    soloBlue = m_crkdNeck.soloBlue;
+    soloOrange = m_crkdNeck.soloOrange;
+    rb = m_crkdNeck.footer[0] == 0x03;
     dpadUp = m_crkdNeck.dpadUpDown == 0x00;
     dpadDown = m_crkdNeck.dpadUpDown == 0xFF;
     dpadRight = m_crkdNeck.dpadLeftRight == 0x00;

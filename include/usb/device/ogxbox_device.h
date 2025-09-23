@@ -127,7 +127,6 @@ extern "C"
     bool ogxboxd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event,
                          uint32_t xferred_bytes);
     bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request);
-    void tud_ogxbox_set_report_cb(uint8_t interface, uint8_t const *buf, uint16_t len);
 
 #ifdef __cplusplus
 }

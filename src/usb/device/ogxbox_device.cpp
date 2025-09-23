@@ -23,7 +23,6 @@ typedef struct
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];
 } ogxboxd_interface_t;
 
-
 const XID_DESCRIPTOR DukeXIDDescriptor = {
     bLength : sizeof(XID_DESCRIPTOR),
     bDescriptorType : 0x42,
@@ -168,27 +167,33 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
 {
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
-        if (stage == CONTROL_STAGE_SETUP)
+        if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
         {
-            if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
+            if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
             {
-                if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+                if (request->bRequest == 6 && request->wValue == 0x4200)
                 {
-                    if (request->bRequest == 6 && request->wValue == 0x4200)
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
-                        return true;
                     }
-                    if (request->bRequest == 1 && request->wValue == 0x0100)
+                    return true;
+                }
+                if (request->bRequest == 1 && request->wValue == 0x0100)
+                {
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDInputCapabilities, sizeof(DukeXIDInputCapabilities));
-                        return true;
                     }
-                    if (request->bRequest == 1 && request->wValue == 0x0200)
+                    return true;
+                }
+                if (request->bRequest == 1 && request->wValue == 0x0200)
+                {
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDVibrationCapabilities, sizeof(DukeXIDVibrationCapabilities));
-                        return true;
                     }
+                    return true;
                 }
             }
         }

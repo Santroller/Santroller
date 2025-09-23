@@ -10,14 +10,17 @@
 #include "FlashPROM.h"
 #include "CRC32.h"
 #include "pico/multicore.h"
+#include "hardware/clocks.h"
 #include "hardware/adc.h"
 #include "config.hpp"
 #include "common/tusb_types.h"
 #include "device/usbd_pvt.h"
+#include "hardware/structs/usb.h"
 #include "usb/device/gh_arcade_device.h"
 #include "usb/device/xinput_device.h"
 #include "usb/device/xone_device.h"
 #include "usb/device/ogxbox_device.h"
+#include "usb/device/hid_device.h"
 #include "usb/device/ps3_device.h"
 #include "usb/device/ps4_device.h"
 #include "protocols/hid.hpp"
@@ -26,9 +29,17 @@
 #include "hardware/uart.h"
 #include "pico/bootrom.h"
 #include "tusb.h"
+#include "device/dcd.h"
+#include "device/usbd_pvt.h"
+#include "host/usbh.h"
+#include "host/usbh_pvt.h"
+#include "common/tusb_types.h"
+#include "pio_usb.h"
+#include "usb/device/hid_driver.h"
 
 #include "usb/usb_descriptors.h"
 #include "console_mode.h"
+// TODO: do we just throw bt on core1? did that work?
 void core1()
 {
     multicore_lockout_victim_init();
@@ -71,38 +82,13 @@ void send_event(proto_Event event)
 
 void send_debug(uint8_t *data, size_t len)
 {
-    proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : len}};
+    proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : (pb_size_t)len}};
     memcpy(event.event.debug.data, data, len);
     send_event(event);
 }
 
 ConsoleMode mode = ConsoleMode::Hid;
-int main()
-{
-    multicore_launch_core1(core1);
-    stdio_init_all();
-
-    adc_init();
-    EEPROM.start();
-
-    proto_Config config;
-    if (!load(config))
-    {
-        // config was not valid, save a empty config
-        save(&config);
-    }
-
-    // init device stack on configured roothub port
-    tud_init(BOARD_TUD_RHPORT);
-
-    while (1)
-    {
-        tud_task(); // tinyusb device task
-
-        hid_task();
-    }
-    return 0;
-}
+hidd_driver_t *hid_driver = NULL;
 
 const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR ExtendedIDs = {
     TotalLength : sizeof(OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR),
@@ -129,120 +115,78 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_
     (void)len;
 }
 uint32_t start = 0;
+bool send_timeout = false;
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len)
+{
+    printf("report! %d\r\n", len);
+    if (report[0] == 0x81 && report[1] == 0x01)
+    {
+        uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+        tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+        send_timeout = false;
+    }
+    else if (!send_timeout && report[0] == 0x81 && report[1] == 0x02)
+    {
+        send_timeout = true;
+        uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x03 /* PROCON_USB_ENABLE */};
+        tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    }
+    else if (report[0] == 0x81 && report[1] == 0x03)
+    {
+        uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+        tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    }
+    else if (report[0] == 0x81 && report[1] == 0x02)
+    {
+        uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x04 /* PROCON_USB_ENABLE */};
+        tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    }
+    if (report[0] == 0x30)
+    {
+        for (int i = 0; i < len; i++)
+        {
+            printf("%02x, ", report[i]);
+        }
+        printf("\r\n");
+    }
+    tuh_hid_receive_report(dev_addr, idx);
+}
+void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len)
+{
 
-uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
-{
-    printf("get: %d %d\r\n", report_type, report_id);
-    (void)instance;
-    (void)report_id;
-    (void)report_type;
-    (void)buffer;
-    (void)reqlen;
-    switch (report_type)
-    {
-    case HID_REPORT_TYPE_FEATURE:
-        switch (report_id)
-        {
-        case ReportId::ReportIdConfig:
-        {
-            uint32_t ret = copy_config(buffer, start);
-            start += ret;
-            return ret;
-        }
-        case ReportId::ReportIdConfigInfo:
-            start = 0;
-            return copy_config_info(buffer);
-        }
-    case HID_REPORT_TYPE_INPUT:
-        // TODO: return the relevant inputs here
-        return 0;
-    default:
-        break;
-    }
-    // TODO: implement HID drivers too, and then we can handle standard HID the same way
-    if (mode == ConsoleMode::Ps3)
-    {
-        return tud_hid_ps3_get_report_cb(instance, report_id, report_type, buffer, reqlen);
-    }
-    if (mode == ConsoleMode::Ps4)
-    {
-        return tud_hid_ps4_get_report_cb(instance, report_id, report_type, buffer, reqlen);
-    }
-    return 0;
-}
-
-void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
-{
-    printf("set: %d %d\r\n", report_type, report_id);
-    if (mode == ConsoleMode::Ps3)
-    {
-        tud_hid_ps3_set_report_cb(instance, report_id, report_type, buffer, bufsize);
-    }
-    if (mode == ConsoleMode::Ps4)
-    {
-        tud_hid_ps4_set_report_cb(instance, report_id, report_type, buffer, bufsize);
-    }
-    switch (report_type)
-    {
-    case HID_REPORT_TYPE_FEATURE:
-        switch (report_id)
-        {
-        case ReportId::ReportIdConfig:
-            lastKeepAlive = millis();
-            write_config(buffer, bufsize, start);
-            start += bufsize;
-            break;
-        case ReportId::ReportIdConfigInfo:
-            lastKeepAlive = millis();
-            start = 0;
-            write_config_info(buffer, bufsize);
-            break;
-        case ReportId::ReportIdLoaded:
-            lastKeepAlive = millis();
-            update(true);
-            break;
-        case ReportId::ReportIdKeepalive:
-            lastKeepAlive = millis();
-            break;
-        case ReportId::ReportIdBootloader:
-            reset_usb_boot(0, 0);
-            break;
-        }
-    case HID_REPORT_TYPE_OUTPUT:
-    // TODO: handle vibration and led reports and things like that for just pc hid
-    default:
-        break;
-    }
-}
-void tud_set_rumble_cb(uint8_t left, uint8_t right)
-{
-}
-void tud_set_player_led_cb(uint8_t player)
-{
-}
-void tud_set_lightbar_led_cb(uint8_t red, uint8_t green, uint8_t blue)
-{
-}
-void tud_set_euphoria_led_cb(uint8_t led)
-{
-}
-void tud_set_stage_kit_cb(uint8_t command, uint8_t param)
-{
-}
-void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
-{
-    (void)instance;
-    (void)side;
-}
-void tud_xone_set_report_cb(uint8_t instance, uint8_t const *buffer, uint16_t bufsize)
-{
-    (void)instance;
-}
-void tud_ogxbox_set_report_cb(uint8_t instance, uint8_t const *buffer, uint16_t bufsize)
-{
-    (void)instance;
+    printf("mount! %d\r\n", desc_len);
+    tuh_hid_receive_report(dev_addr, idx);
 }
 
+hidd_driver_t hid_drivers[] = {
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "PS3_Device",
+#endif
+        .mode = ConsoleMode::Ps3,
+        .open = NULL,
+        .control_xfer_cb = tud_hid_ps3_control_xfer_cb,
+        .get_report_cb = tud_hid_ps3_get_report_cb,
+        .set_report_cb = tud_hid_ps3_set_report_cb},
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "PS4_Device",
+#endif
+        .mode = ConsoleMode::Ps4,
+        .open = NULL,
+        .control_xfer_cb = NULL,
+        .get_report_cb = tud_hid_ps4_get_report_cb,
+        .set_report_cb = tud_hid_ps4_set_report_cb},
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "Generic_Device",
+#endif
+        .mode = ConsoleMode::Hid,
+        .open = NULL,
+        .control_xfer_cb = tud_hid_generic_control_xfer_cb,
+        .get_report_cb = tud_hid_generic_get_report_cb,
+        .set_report_cb = tud_hid_generic_set_report_cb},
+};
 usbd_class_driver_t driver[] = {
     {
 #if CFG_TUSB_DEBUG >= 2
@@ -292,6 +236,7 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count)
 }
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
+    printf("control req %02x %02x\r\n", request->bRequest, request->wIndex);
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (stage == CONTROL_STAGE_SETUP)
@@ -316,9 +261,142 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             return true;
         }
     }
-    if (mode == ConsoleMode::Ps3)
+    if (hid_driver && hid_driver->control_xfer_cb)
     {
-        return tud_hid_ps3_control_xfer_cb(rhport, stage, request);
+        return hid_driver->control_xfer_cb(rhport, stage, request);
     }
     return false;
+}
+
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+    (void)instance;
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)reqlen;
+    switch (report_type)
+    {
+    case HID_REPORT_TYPE_FEATURE:
+        switch (report_id)
+        {
+        case ReportId::ReportIdConfig:
+        {
+            uint32_t ret = copy_config(buffer, start);
+            start += ret;
+            return ret;
+        }
+        case ReportId::ReportIdConfigInfo:
+            start = 0;
+            return copy_config_info(buffer);
+        }
+    case HID_REPORT_TYPE_INPUT:
+        // TODO: return the relevant inputs here
+        return 1;
+    default:
+        break;
+    }
+    if (hid_driver)
+    {
+        hid_driver->get_report_cb(instance, report_id, report_type, buffer, reqlen);
+    }
+    return 0;
+}
+
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+{
+    if (hid_driver)
+    {
+        hid_driver->set_report_cb(instance, report_id, report_type, buffer, bufsize);
+    }
+    if (report_type == HID_REPORT_TYPE_FEATURE)
+    {
+
+        switch (report_id)
+        {
+        case ReportId::ReportIdConfig:
+            lastKeepAlive = millis();
+            write_config(buffer, bufsize, start);
+            start += bufsize;
+            break;
+        case ReportId::ReportIdConfigInfo:
+            lastKeepAlive = millis();
+            start = 0;
+            write_config_info(buffer, bufsize);
+            break;
+        case ReportId::ReportIdLoaded:
+            lastKeepAlive = millis();
+            update(true);
+            break;
+        case ReportId::ReportIdKeepalive:
+            lastKeepAlive = millis();
+            break;
+        case ReportId::ReportIdBootloader:
+            reset_usb_boot(0, 0);
+            break;
+        }
+    }
+}
+void tud_set_rumble_cb(uint8_t left, uint8_t right)
+{
+}
+void tud_set_player_led_cb(uint8_t player)
+{
+}
+void tud_set_lightbar_led_cb(uint8_t red, uint8_t green, uint8_t blue)
+{
+}
+void tud_set_euphoria_led_cb(uint8_t led)
+{
+}
+void tud_set_stage_kit_cb(uint8_t command, uint8_t param)
+{
+}
+void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
+{
+    (void)instance;
+    (void)side;
+}
+
+void tud_detected_console(ConsoleMode mode) {
+
+}
+void* __dso_handle = 0;
+void* _fini = 0;
+int main()
+{
+    set_sys_clock_khz(120000, true);
+    multicore_launch_core1(core1);
+    stdio_init_all();
+    printf("init %d\r\n", mode);
+
+    adc_init();
+    EEPROM.start();
+
+    proto_Config config;
+    if (!load(config))
+    {
+        // config was not valid, save a empty config
+        save(&config);
+    }
+
+    for (auto &driver : hid_drivers)
+    {
+        if (driver.mode == mode)
+        {
+            hid_driver = &driver;
+        }
+    }
+    
+
+    // init device stack on configured roothub port
+    tud_init(BOARD_TUD_RHPORT);
+
+    while (1)
+    {
+        tud_task(); // tinyusb device task
+        tuh_task();
+        hid_task();
+    }
+    return 0;
 }

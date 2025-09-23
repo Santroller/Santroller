@@ -11,7 +11,7 @@ const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsRPCS3 = {
     Reserved : {0},
     CompatID : {
         {
-            FirstInterfaceNumber : ITF_NUM_HID,
+            FirstInterfaceNumber : 0,
             Reserved : 0x01,
             CompatibleID : "WINUSB",
             SubCompatibleID : {0},
@@ -19,12 +19,6 @@ const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsRPCS3 = {
         }}
 };
 
-static const int ps4_colors[4][3] = {
-    {0x00, 0x00, 0x40}, /* Blue */
-    {0x40, 0x00, 0x00}, /* Red */
-    {0x00, 0x40, 0x00}, /* Green */
-    {0x20, 0x00, 0x20}  /* Pink */
-};
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
 uint8_t f5_state = 0;

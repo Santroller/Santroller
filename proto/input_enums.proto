@@ -270,25 +270,25 @@ enum WiiAxisType {
   WiiAxisGuitarJoystickX = 9;
   WiiAxisGuitarJoystickY= 10;
   WiiAxisGuitarWhammy= 11;
-  WiiAxisNunchukStickX= 13;
-  WiiAxisNunchukStickY= 14;
-  WiiAxisNunchukAccelerationX= 15;
-  WiiAxisNunchukAccelerationY= 16;
-  WiiAxisNunchukAccelerationZ= 17;
-  WiiAxisNunchukRotationPitch= 18;
-  WiiAxisNunchukRotationRoll= 19;
-  WiiAxisDjTurntableLeft= 20;
-  WiiAxisDjTurntableRight= 21;
-  WiiAxisDjCrossfadeSlider= 22;
-  WiiAxisDjEffectDial= 23;
-  WiiAxisDjStickX= 24;
-  WiiAxisDjStickY= 25;
-  WiiAxisUDrawPenX= 26;
-  WiiAxisUDrawPenY= 27;
-  WiiAxisUDrawPenPressure= 28;
-  WiiAxisDrawsomePenX= 29;
-  WiiAxisDrawsomePenY= 30;
-  WiiAxisDrawsomePenPressure= 31;
+  WiiAxisNunchukStickX= 12;
+  WiiAxisNunchukStickY= 13;
+  WiiAxisNunchukAccelerationX= 14;
+  WiiAxisNunchukAccelerationY= 15;
+  WiiAxisNunchukAccelerationZ= 16;
+  WiiAxisNunchukRotationPitch= 17;
+  WiiAxisNunchukRotationRoll= 18;
+  WiiAxisDjTurntableLeft= 19;
+  WiiAxisDjTurntableRight= 20;
+  WiiAxisDjCrossfadeSlider= 21;
+  WiiAxisDjEffectDial= 22;
+  WiiAxisDjStickX= 23;
+  WiiAxisDjStickY= 24;
+  WiiAxisUDrawPenX= 25;
+  WiiAxisUDrawPenY= 26;
+  WiiAxisUDrawPenPressure= 27;
+  WiiAxisDrawsomePenX= 28;
+  WiiAxisDrawsomePenY= 29;
+  WiiAxisDrawsomePenPressure= 30;
 }
 
 
@@ -458,4 +458,9 @@ enum CrkdNeckButtonType {
   CrkdDpadDown = 7;
   CrkdDpadLeft = 8;
   CrkdDpadRight = 9;
+  CrkdSoloGreen = 10;
+  CrkdSoloRed = 11;
+  CrkdSoloYellow = 12;
+  CrkdSoloBlue = 13;
+  CrkdSoloOrange = 14;
 }

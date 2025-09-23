@@ -76,7 +76,7 @@ void xoned_reset(uint8_t rhport)
     tu_memclr(_xoned_itf, sizeof(_xoned_itf));
     sending = false;
 }
-
+uint8_t announce[] = {0x02, 0x20, 0x01, 0x1c, 0x7e, 0xed, 0x81, 1, 1, 1, 0x00, 0x00, 0x38, 0x07, 0x61, 0x41, 0x01, 0x00, 0x00, 0x00, 0xe5, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
 uint16_t xoned_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                     uint16_t max_len)
 {
@@ -114,6 +114,7 @@ uint16_t xoned_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
             TU_BREAKPOINT();
         }
     }
+    usbd_edpt_xfer(rhport, p_xone->ep_in, announce, sizeof(announce));
     //------------- Endpoint Descriptor -------------//
 
     // Config endpoint
@@ -144,6 +145,7 @@ bool xoned_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     }
     if (ep_addr == p_xone->ep_out)
     {
+        printf("xone receive!\r\n");
         // TODO: process the protocol here and specifically parse out things like rumble and leds where necessary
         // tud_xone_set_report_cb(itf, p_xone->epout_buf, xferred_bytes);
         TU_ASSERT(usbd_edpt_xfer(rhport, p_xone->ep_out, p_xone->epout_buf,
@@ -152,6 +154,7 @@ bool xoned_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     else if (ep_addr == p_xone->ep_in)
     {
         sending = false;
+        printf("xone send!\r\n");
     }
     return true;
 }

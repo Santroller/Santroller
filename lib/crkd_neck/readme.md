@@ -19,7 +19,13 @@ struct NeckToBody {
     uint8_t :3;
     uint8_t dpadUpDown; // none: 0x80, up: 0x00, down: 0xFF
     uint8_t dpadLeftRight; // none: 0x80, right: 0x00, left: 0xFF
-    uint8_t footer[3] = {0x00, 0x01, 0x15};
+    uint8_t soloGreen:1;
+    uint8_t soloRed:1;
+    uint8_t soloYellow:1;
+    uint8_t soloBlue:1;
+    uint8_t soloOrange:1;
+    uint8_t :3;
+    uint8_t footer[2] = {0x01, 0x15}; // gh: {0x01, 0x15}, rb: {0x03, 0x20}
     uint8_t crc; // CRC-8/MAXIM-DOW
 }
 // this is sent by the body to the neck, but its not necessary.
@@ -28,6 +34,13 @@ struct BodyToNeck {
     uint8_t crc = 0x0E; // CRC-8/MAXIM-DOW
 }
 ```
+a5 01 0c 00 00 00 80 80 00 03 20 4B
+green solo
+01 03
+red solo
+02 03
+yellow solo
+
 
 For calculating the CRC, one can use the following:
 ```c

@@ -28,7 +28,10 @@
 #define USB_PID 0x2882
 
 #define USB_VID 0x1209
-#define USB_BCD 0x2882
+#define USB_VERSION_BCD(Major, Minor, Revision) \
+    (((Major & 0xFF) << 8) |                    \
+     ((Minor & 0x0F) << 4) |                    \
+     (Revision & 0x0F))
 
 enum descriptors_t {
     DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR = 0x0004,
@@ -61,7 +64,7 @@ typedef struct {
     uint16_t Index;
     uint8_t TotalSections;
     uint8_t Reserved[7];
-    OS_COMPATIBLE_SECTION CompatID[4];
+    OS_COMPATIBLE_SECTION CompatID[2];
 } __attribute__((packed)) OS_COMPATIBLE_ID_DESCRIPTOR;
 
 typedef struct {
@@ -70,7 +73,7 @@ typedef struct {
     uint16_t Index;
     uint8_t TotalSections;
     uint8_t Reserved[7];
-    OS_COMPATIBLE_SECTION CompatID[4];
+    OS_COMPATIBLE_SECTION CompatID[1];
 } __attribute__((packed)) OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE;
 
 typedef struct {
@@ -91,12 +94,14 @@ typedef struct {
 } __attribute__((packed)) OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR;
 enum
 {
+  ITF_NUM_XINPUT_SECURITY,
   ITF_NUM_HID,
-  ITF_NUM_XINPUT,
-  ITF_NUM_XINPUT2,
+  ITF_NUM_XONE=1,
+  // ITF_NUM_XINPUT,
+  // ITF_NUM_XINPUT2,
 //   ITF_NUM_XINPUT_AUDIO,
 //   ITF_NUM_XINPUT_PLUGIN_MODULE,
-  ITF_NUM_XINPUT_SECURITY,
+  // ITF_NUM_OGXBOX,
   ITF_NUM_TOTAL
 };
 
@@ -146,13 +151,63 @@ enum
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1
 
+#define TUD_XINPUT_AUDIO_DESC_LEN    (9 + 27 + 7 + 7 + 7 + 7)
+
+// XInput Audio Descriptor
+#define TUD_XINPUT_AUDIO_DESCRIPTOR(_itfnum, _epin, _epout, _epin2, _epout2) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x03, 0,\
+  /* XInput Audio descriptor */\
+  27, 0x21, 0x00, 0x01, 0x01, 0x01, _epin, 0x40, 0x01, _epout, 0x20, 0x16, _epin2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, _epout2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
+  /* Endpoint In (mic) */\
+  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 2,\
+  /* Endpoint Out (audio out)*/\
+  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4,\
+  /* Endpoint In 2 (unk 1)*/\
+  7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 64,\
+  /* Endpoint Out 2 (unk 2)*/\
+  7, TUSB_DESC_ENDPOINT, _epout2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
+
+#define TUD_XINPUT_PLUGIN_MODULE_DESC_LEN    (9 + 9 + 7)
+
+// XInput Plugin Module Descriptor
+#define TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(_itfnum, _epin) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x02, 0,\
+  /* XInput plugin module descriptor */\
+  9, 0x21, 0x00, 0x01, 0x01, 0x22, _epin, 0x07, 0x00,\
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16,
+
 #define TUD_XINPUT_SECURITY_DESC_LEN    (9 + 6)
 
-// XInput Gamepad Descriptor
+// XInput Security Descriptor
 #define TUD_XINPUT_SECURITY_DESCRIPTOR(_itfnum, _strnum) \
   /* Interface */\
   9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, 0xFF, 0xFD, 0x13, _strnum,\
-  /* XInput Gamepad descriptor */\
-  0x06, 0x41, 0x00, 0x01, 0x01, 0x03\
+  /* XInput Security descriptor */\
+  6, 0x41, 0x00, 0x01, 0x01, 0x03\
+  
+#define TUD_OGXBOX_GAMEPAD_DESC_LEN    (9 +  7 + 7)
+
+// XInput Gamepad Descriptor
+#define TUD_OGXBOX_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0x58, 0x42, 0x00, 0,\
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4,\
+  /* Endpoint Out */\
+  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4
+  
+#define TUD_XONE_GAMEPAD_DESC_LEN    (9 +  7 + 7)
+
+// XOne Gamepad Descriptor
+#define TUD_XONE_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xff, 0x47, 0xd0, 0,\
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
+  /* Endpoint Out */\
+  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
 
 #endif /* USB_DESCRIPTORS_H_ */

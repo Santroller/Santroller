@@ -85,6 +85,7 @@ add_executable(
   src/usb/device/ogxbox_device.cpp
   src/usb/device/ps3_device.cpp
   src/usb/device/ps4_device.cpp
+  src/usb/device/hid_device.cpp
   src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
   src/input/crkd.cpp
@@ -96,6 +97,7 @@ add_executable(
   src/mappings/GuitarHeroGuitarAxisMapping.cpp
   src/mappings/ActivationTrigger.cpp
   src/mappings/Mapping.cpp
+  src/devices/usb.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp
   src/devices/accelerometer.cpp
@@ -129,7 +131,7 @@ target_include_directories(${TARGET} PUBLIC
 # endif()
 pico_set_program_name(${TARGET} "Santroller")
 pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
-
+pico_set_binary_type(${TARGET} no_flash)
 target_link_libraries(
   ${TARGET}
   pico_stdlib

@@ -45,7 +45,7 @@ tusb_desc_device_t desc_device =
     {
         .bLength = sizeof(tusb_desc_device_t),
         .bDescriptorType = TUSB_DESC_DEVICE,
-        .bcdUSB = USB_BCD,
+        .bcdUSB = USB_VERSION_BCD(2, 0, 0),
         .bDeviceClass = 0x00,
         .bDeviceSubClass = 0x00,
         .bDeviceProtocol = 0x00,
@@ -65,7 +65,7 @@ tusb_desc_device_t desc_device =
 // Application return pointer to descriptor
 uint8_t const *tud_descriptor_device_cb(void)
 {
-  desc_device.bcdDevice = 0x0100 | current_type;
+  desc_device.bcdDevice = 0x0400 | current_type;
   return (uint8_t const *)&desc_device;
 }
 
@@ -100,32 +100,32 @@ enum
   STRID_MANUFACTURER,
   STRID_PRODUCT,
   STRID_SERIAL,
-  STRID_XSM3
+  STRID_XSM3,
+  STRID_MSFT
 };
 
 //--------------------------------------------------------------------+
 // Configuration Descriptor
 //--------------------------------------------------------------------+
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
+// #define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XONE_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
 
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
 #define EPNUM_HID 0x81
 #define EPNUM_XINPUT_IN 0x82
 #define EPNUM_XINPUT_OUT 0x03
-#define EPNUM_XINPUT_IN2 0x84
-#define EPNUM_XINPUT_OUT2 0x05
 
 uint8_t const desc_configuration[] =
     {
         // Config number, interface count, string index, total length, attribute, power in mA
         TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-
         // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
         TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 1),
+
         // TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, 0x07),
-        // TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT2, EPNUM_XINPUT_IN2, EPNUM_XINPUT_OUT2, 0x07),
-        // TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)
-};
+        // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 // Application return pointer to descriptor
@@ -146,7 +146,8 @@ char const *string_desc_arr[] =
         "sanjay900",                // 1: Manufacturer
         "Santroller",               // 2: Product
         serial,                     // 3: Serials will use unique ID if possible
-        "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved."};
+        "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.",
+        "MSFT100\x20"};
 
 static uint16_t _desc_str[100 + 1];
 
@@ -156,7 +157,6 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   size_t chr_count;
-
   switch (index)
   {
   case STRID_LANGID:
@@ -168,8 +168,10 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     pico_get_unique_board_id_string(serial, sizeof(serial));
 
   default:
-    // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
-    // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
+    if (index == 0xEE)
+    {
+      index = STRID_MSFT;
+    }
 
     if (!(index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
       return NULL;

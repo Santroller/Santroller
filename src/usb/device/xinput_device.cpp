@@ -61,7 +61,7 @@ XInputInputCapabilities_t XInputInputCapabilities = {
     rightTrigger : 0xff,
     leftThumbX : USB_VID,
     leftThumbY : USB_PID,
-    rightThumbX : USB_BCD,
+    rightThumbX : 0, // TODO: generate bcddevice based on device type
     rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},
     flags : XINPUT_FLAGS_FORCE_FEEDBACK
@@ -74,22 +74,8 @@ static const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs = {
     TotalSections : 1,
     Reserved : {0},
     CompatID : {
-        // {
-        //     FirstInterfaceNumber : ITF_NUM_XINPUT_AUDIO,
-        //     Reserved : 0x01,
-        //     CompatibleID : "XUSB10",
-        //     SubCompatibleID : {0},
-        //     Reserved2 : {0}
-        // },
-        // {
-        //     FirstInterfaceNumber : ITF_NUM_XINPUT_PLUGIN_MODULE,
-        //     Reserved : 0x01,
-        //     CompatibleID : "XUSB10",
-        //     SubCompatibleID : {0},
-        //     Reserved2 : {0}
-        // },
         {
-            FirstInterfaceNumber : ITF_NUM_XINPUT_SECURITY,
+            FirstInterfaceNumber : 0,
             Reserved : 0x01,
             CompatibleID : "XUSB10",
             SubCompatibleID : {0},
@@ -202,6 +188,7 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                 TU_BREAKPOINT();
             }
         }
+        return drv_len;
     }
     else if (itf_desc->bInterfaceSubClass == 0xfD &&
              itf_desc->bInterfaceProtocol == 0x13)
@@ -214,9 +201,9 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         drv_len += x_desc->bLength;
         p_xinput->itf_num = itf_desc->bInterfaceNumber;
         p_xinput->subtype = 0;
+        return drv_len;
     }
-
-    return drv_len;
+    return 0;
 }
 
 bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
@@ -236,18 +223,23 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
     static uint8_t buf[0x22];
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
-        if (stage == CONTROL_STAGE_SETUP)
+        if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
         {
-            if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+            if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
             {
-                if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+                if (request->wValue == VIBRATION_CAPABILITIES_WVALUE)
                 {
-                    if (request->wValue == VIBRATION_CAPABILITIES_WVALUE)
+
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         tud_control_xfer(rhport, request, (void *)&XInputVibrationCapabilities, sizeof(XInputVibrationCapabilities_t));
-                        return true;
                     }
-                    else if (request->wValue == INPUT_CAPABILITIES_WVALUE)
+                    return true;
+                }
+                else if (request->wValue == INPUT_CAPABILITIES_WVALUE)
+                {
+
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         switch (p_xinput->subtype)
                         {
@@ -274,27 +266,36 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                             break;
                         }
                         tud_control_xfer(rhport, request, (void *)&XInputInputCapabilities, sizeof(XInputInputCapabilities_t));
-                        return true;
                     }
+                    return true;
                 }
-                else if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE)
+            }
+            else if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE)
+            {
+                if (request->bRequest == HID_REQ_CONTROL_GET_REPORT && request->wIndex == 0x0000 && request->wValue == SERIAL_NUMBER_WVALUE)
                 {
-                    if (request->bRequest == HID_REQ_CONTROL_GET_REPORT && request->wIndex == 0x0000 && request->wValue == SERIAL_NUMBER_WVALUE)
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         uint32_t serial = to_us_since_boot(get_absolute_time());
                         tud_control_xfer(rhport, request, &serial, sizeof(serial));
-                        return true;
                     }
-                    else if (request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && request->wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)
+                    return true;
+                }
+                else if (request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && request->wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)
+                {
+                    if (stage == CONTROL_STAGE_SETUP)
                     {
                         tud_control_xfer(rhport, request, (void *)&DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-                        return true;
                     }
+                    return true;
                 }
             }
-            switch (request->bRequest)
+        }
+        switch (request->bRequest)
+        {
+        case 0x81:
+            if (stage == CONTROL_STAGE_SETUP)
             {
-            case 0x81:
                 uint8_t serial[0x0C];
                 pico_get_unique_board_id_string((char *)serial, sizeof(serial));
                 serial[0] = to_us_since_boot(get_absolute_time());
@@ -302,40 +303,54 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 xsm3_initialise_state();
                 xsm3_set_identification_data(xsm3_id_data_ms_controller);
                 tud_control_xfer(rhport, request, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
-                return true;
-            case 0x82:
+            }
+            return true;
+        case 0x82:
+            if (stage == CONTROL_STAGE_SETUP)
+            {
                 tud_control_xfer(rhport, request, buf, request->wLength);
                 xsm3_do_challenge_init(buf);
-                return true;
-            case 0x87:
+            }
+            return true;
+        case 0x87:
+            if (stage == CONTROL_STAGE_SETUP)
+            {
                 tud_control_xfer(rhport, request, buf, request->wLength);
                 xsm3_do_challenge_verify(buf);
-                return true;
-            case 0x83:
+            }
+            return true;
+        case 0x83:
+            if (stage == CONTROL_STAGE_SETUP)
+            {
                 tud_control_xfer(rhport, request, xsm3_challenge_response, sizeof(xsm3_challenge_response));
                 return true;
-            case 0x86:
+            }
+        case 0x86:
+            if (stage == CONTROL_STAGE_SETUP)
+            {
                 short state = 2; // 1 = in-progress, 2 = complete
                 tud_control_xfer(rhport, request, &state, sizeof(state));
-                return true;
             }
+            return true;
         }
     }
     else
     {
-        if (stage == CONTROL_STAGE_SETUP)
-        {
-            tud_control_xfer(rhport, request, buf, request->wLength);
-        }
-        if (stage == CONTROL_STAGE_DATA || (stage == CONTROL_STAGE_SETUP && !request->wLength))
+        if (stage == CONTROL_STAGE_DATA || stage == CONTROL_STAGE_SETUP)
         {
             switch (request->bRequest)
             {
             case 0x82:
-                xsm3_do_challenge_init(buf);
+                if (stage == CONTROL_STAGE_DATA)
+                {
+                    xsm3_do_challenge_init(buf);
+                }
                 return true;
             case 0x87:
-                xsm3_do_challenge_verify(buf);
+                if (stage == CONTROL_STAGE_DATA)
+                {
+                    xsm3_do_challenge_verify(buf);
+                }
                 return true;
             case 0x84:
                 return true;

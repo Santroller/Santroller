@@ -1,6 +1,7 @@
 #include "crkd_neck.hpp"
 #include "main.hpp"
 #include "utils.h"
+#include "main.hpp"
 void CrkdNeck::tick() {
     auto connected = interface.read_uart(0xA5, sizeof(m_crkdNeck), (uint8_t*)&m_crkdNeck);
     green = m_crkdNeck.green;

@@ -18,7 +18,7 @@ void Accelerometer::initLis3dh() {
     interface.writeRegister(address, LIS3DH_REG_CTRL1, 0b01110111);  // enable all axis, set data rate to 4000hz
     interface.writeRegister(address, LIS3DH_REG_CTRL4, 0x88);        // High res & BDU enabled
     interface.writeRegister(address, LIS3DH_REG_TEMPCFG, 0x80);      // enable adc
-    reg = MPU6050_REG_ACCEL_OUT;
+    reg = LIS3DH_REG_OUT;
 }
 
 void Accelerometer::initMPU6050() {
@@ -37,7 +37,7 @@ void Accelerometer::initMPU6050() {
     interface.readRegister(address, MPU6050_REG_PWR_MGMT_1, 1, &id);
     id &= ~(1 << 6);
     interface.writeRegister(address, MPU6050_REG_PWR_MGMT_1, id);
-    reg = LIS3DH_REG_OUT;
+    reg = MPU6050_REG_ACCEL_OUT;
 }
 
 void Accelerometer::initADXL345() {

@@ -10,6 +10,10 @@ message GPIOInput {
   required PinMode pinMode = 2;
   required bool analog = 3;
 }
+message ADS1115Input {
+  required int32 deviceid = 1;
+  required int32 channel = 2;
+}
 
 message MPR121Input {
   required int32 deviceid = 1;
@@ -106,6 +110,7 @@ message Input {
     PS2ControllerTypeInput ps2Type = 15;
     UsbDeviceTypeInput usbDevice = 16;
     BluetoothDeviceTypeInput bluetoothDevice = 17;
+    ADS1115Input ads1115 = 18;
   }
 }
 

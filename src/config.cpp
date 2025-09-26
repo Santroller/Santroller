@@ -3,6 +3,7 @@
 #include "input/gpio.hpp"
 #include "input/wii.hpp"
 #include "input/crkd.hpp"
+#include "input/ads1115.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/wii.hpp"
@@ -10,6 +11,7 @@
 #include "devices/crazyneck.hpp"
 #include "devices/djh.hpp"
 #include "devices/crkd.hpp"
+#include "devices/ads1115.hpp"
 #include "devices/gh5neck.hpp"
 #include "devices/usb.hpp"
 #include "devices/max1704x.hpp"
@@ -69,6 +71,7 @@ void update(bool full_poll)
             PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
             reportGh->slider = gh5_mapping[reportGh->slider];
         }
+
         tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
     }
 }
@@ -110,6 +113,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_usbHost_tag:
         devices[*dev_id] = std::shared_ptr<Device>(new USBDevice(device.device.usbHost, *dev_id));
         break;
+    case proto_Device_ads1115_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new ADS1115Device(device.device.ads1115, *dev_id));
+        break;
     }
     *dev_id += 1;
     return true;
@@ -129,11 +135,14 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         input = std::unique_ptr<Input>(new WiiButtonInput(mapping.input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
         break;
     case proto_Input_crkd_tag:
-        input = std::unique_ptr<Input>(new CrkdButtonInput(mapping.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[mapping.input.input.wiiAxis.deviceid])));
+        input = std::unique_ptr<Input>(new CrkdButtonInput(mapping.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[mapping.input.input.crkd.deviceid])));
         break;
     case proto_Input_gpio_tag:
-        printf("gpio %d %d\r\n", mapping.input.input.gpio.pin, mapping.input.input.gpio.pinMode);
         input = std::unique_ptr<Input>(new GPIOInput(mapping.input.input.gpio));
+        break;
+    case proto_Input_ads1115_tag:
+        input = std::unique_ptr<Input>(new ADS1115Input(mapping.input.input.ads1115, std::static_pointer_cast<ADS1115Device>(devices[mapping.input.input.ads1115.deviceid])));
+        break;
     }
     if (input == nullptr)
     {
@@ -182,8 +191,11 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
         input = std::unique_ptr<Input>(new CrkdButtonInput(trigger.input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[trigger.input.input.wiiAxis.deviceid])));
         break;
     case proto_Input_gpio_tag:
-        printf("gpio %d %d\r\n", trigger.input.input.gpio.pin, trigger.input.input.gpio.pinMode);
         input = std::unique_ptr<Input>(new GPIOInput(trigger.input.input.gpio));
+        break;
+    case proto_Input_ads1115_tag:
+        input = std::unique_ptr<Input>(new ADS1115Input(trigger.input.input.ads1115, std::static_pointer_cast<ADS1115Device>(devices[trigger.input.input.ads1115.deviceid])));
+        break;
     }
     if (input == nullptr)
     {

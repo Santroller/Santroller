@@ -4,7 +4,8 @@
 
 typedef struct
 {
-    uint8_t header[2] = {0xA5, 0x01};
+    // uint8_t header0 = 0xa5; byte chomped as its start byte
+    uint8_t header = 0x01; 
     uint8_t len = 0x0C;
     uint8_t padding[2] = {0x00, 0x00};
     uint8_t green:1;

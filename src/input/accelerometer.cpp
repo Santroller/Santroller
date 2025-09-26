@@ -20,16 +20,6 @@ bool CrkdButtonInput::tickDigital()
         return m_device->neck.blue;
     case CrkdOrange:
         return m_device->neck.orange;
-    case CrkdSoloGreen:
-        return m_device->neck.soloGreen;
-    case CrkdSoloRed:
-        return m_device->neck.soloRed;
-    case CrkdSoloYellow:
-        return m_device->neck.soloYellow;
-    case CrkdSoloBlue:
-        return m_device->neck.soloBlue;
-    case CrkdSoloOrange:
-        return m_device->neck.soloOrange;
     case CrkdDpadUp:
         return m_device->neck.dpadUp;
     case CrkdDpadDown:

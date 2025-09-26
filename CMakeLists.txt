@@ -91,6 +91,7 @@ add_executable(
   src/input/crkd.cpp
   src/input/gpio.cpp
   src/input/wii.cpp
+  src/input/ads1115.cpp
   src/mappings/GamepadButtonMapping.cpp
   src/mappings/GamepadAxisMapping.cpp
   src/mappings/GuitarHeroGuitarButtonMapping.cpp
@@ -100,6 +101,7 @@ add_executable(
   src/devices/usb.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp
+  src/devices/ads1115.cpp
   src/devices/accelerometer.cpp
   src/devices/bhdrum.cpp
   src/devices/crazyneck.cpp
@@ -150,6 +152,7 @@ target_link_libraries(
   matrix
   max1704x
   mpr121
+  ads1115
   multiplexer
   psx_controller
   secondary_pico
@@ -167,6 +170,7 @@ target_link_libraries(
   hardware_adc
   hardware_pio
   hardware_gpio
+  hardware_pwm
   hardware_flash
   hardware_timer
   hardware_sleep

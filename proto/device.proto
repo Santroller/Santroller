@@ -39,6 +39,10 @@ message Mpr121Device {
   required int32 ddrPins = 3;    // pin data direction register
   required int32 enablePins = 4; // pin enable
 }
+message ADS1115Device {
+  required I2CDevice i2c = 1;
+  required int32 interrupt = 2;
+}
 
 message WiiDevice {
   required I2CDevice i2c = 1;
@@ -122,5 +126,6 @@ message Device {
     JoybusEmulationDevice joybusEmulation = 20;
     PeripheralDevice peripheral = 21;
     CrkdNeckDevice crkdNeck = 22;
+    ADS1115Device ads1115 = 23;
   }
 }

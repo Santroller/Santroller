@@ -53,9 +53,9 @@ bool I2CMasterInterface::readFrom(uint8_t address, uint8_t *data, uint8_t length
 bool I2CMasterInterface::writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                                  uint8_t sendStop) {
     int ret =
-        i2c_write_timeout_us(i2c, address, data, length, !sendStop, 5000);
+        i2c_write_timeout_us(i2c, address, data, length, !sendStop, 100);
     if (ret < 0)
         ret = i2c_write_timeout_us(i2c, address, data, length, !sendStop,
-                                   5000);
+                                   100);
     return ret > 0;
 }

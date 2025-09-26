@@ -13,7 +13,7 @@
 USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
 {
     pio_usb_configuration_t host_config = {
-        pin_dp : device.firstPin + device.dmFirst,
+        pin_dp : (uint8_t)(device.firstPin + device.dmFirst),
         pio_tx_num : 0,
         sm_tx : 0,
         tx_ch : 0,

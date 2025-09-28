@@ -45,6 +45,8 @@ enum endpoints_t {
 #define PS4_STRAT_PID 0x8261
 #define MADCATZ_VID 0x0738
 #define PDP_VID 0x0E6F
+#define CRKD_VID 0x0351
+#define CRKD_XB_MODE9 0x4161
 #define PS4_JAG_PID 0x0173
 #define PS4_RIFFMASTER_PID 0x024A
 #define PS4_MADCATZ_DRUM_PID 0x8262

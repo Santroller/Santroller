@@ -4310,6 +4310,15 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         }
 
         break;
+    case CRKD_VID:
+        switch (pid)
+        {
+        case CRKD_XB_MODE9:
+            type->console_type = XBOXONE;
+            type->sub_type = ROCK_BAND_GUITAR;
+            break;
+        }
+        break;
     case PDP_VID:
         switch (pid)
         {

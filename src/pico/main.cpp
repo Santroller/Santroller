@@ -784,7 +784,8 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
 
                 XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)report;
                 // Drop any corrupted or invalid packets
-                if (len != sizeof(XInputGamepad_Data_t) || gamepad->rsize != len)
+                // crkd xbox guitars send extra bytes so we have to account for that.
+                if (gamepad->rsize != sizeof(XInputGamepad_Data_t) || (len != sizeof(XInputGamepad_Data_t) && len != 26))
                 {
                     continue;
                 }

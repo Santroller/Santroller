@@ -57,3 +57,59 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
         val = 0;
     return val;
 }
+
+void ButtonMapping::update(bool full_poll)
+{
+    auto calcVal = m_input->tickDigital();
+    if (m_mapping.has_trigger)
+    {
+        auto val = m_input->tickAnalog();
+        calcVal = false;
+        if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyHigh)
+        {
+            calcVal = m_input->tickAnalog() > m_mapping.triggerValue;
+        }
+        else if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyLow)
+        {
+            calcVal = m_input->tickAnalog() < m_mapping.triggerValue;
+        }
+        else if (m_mapping.trigger == AnalogToDigitalTriggerType_Exact)
+        {
+            calcVal = m_input->tickAnalog() == m_mapping.triggerValue;
+        }
+        if (val != m_lastValueTrigger || full_poll)
+        {
+            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};
+            send_event(event);
+            m_lastValueTrigger = val;
+        }
+    }
+    else
+    {
+        if (calcVal != m_lastValue || full_poll)
+        {
+            proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
+            send_event(event);
+        }
+    }
+    if (calcVal)
+    {
+        m_lastPoll = micros();
+        m_lastValue = calcVal;
+    }
+    else if (!m_mapping.has_debounce || (micros() - m_lastPoll) > m_mapping.debounce)
+    {
+        m_lastValue = calcVal;
+    }
+}
+void AxisMapping::update(bool full_poll)
+{
+    auto val = m_input->tickAnalog();
+    if (val != m_lastValue || full_poll)
+    {
+        m_lastValue = val;
+        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
+        send_event(event);
+    }
+}

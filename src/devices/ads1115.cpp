@@ -4,6 +4,7 @@
 ADS1115Device::ADS1115Device(proto_ADS1115Device device, uint16_t id) : Device(id), ads1115(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock, device.interrupt)
 {
 }
+
 void ADS1115Device::update(bool full_poll)
 {
     ads1115.tick();

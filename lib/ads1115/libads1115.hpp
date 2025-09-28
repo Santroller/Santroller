@@ -77,10 +77,11 @@
 #define ADS1115_COMP_QUE_ASSERT2    0x01
 #define ADS1115_COMP_QUE_ASSERT4    0x02
 #define ADS1115_COMP_QUE_DISABLE    0x03 // default
+#define ADS1115_REG_RESET_VAL 0b1100001111100000
 class ADS1115 {
    public:
-    ADS1115(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, uint8_t interrupt)
-        : interface(block, sda, scl, clock), interrupt(interrupt) {};
+    ADS1115(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, uint8_t alert)
+        : interface(block, sda, scl, clock), alert(alert) {};
     void tick();
     inline bool isConnected() {
         return connected;
@@ -89,9 +90,12 @@ class ADS1115 {
 
    private:
     void init();
+    bool writeRegister(uint8_t reg, uint16_t val);
+    uint16_t readRegister(uint8_t reg);
     I2CMasterInterface interface;
-    bool connected;
-    uint8_t interrupt;
+    bool connected = false;
+    uint8_t alert;
     uint8_t current = 0;
-    uint8_t config[2];
+    uint16_t config;
+    // uint8_t config[2];
 };

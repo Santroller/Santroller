@@ -133,7 +133,6 @@ target_include_directories(${TARGET} PUBLIC
 # endif()
 pico_set_program_name(${TARGET} "Santroller")
 pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
-pico_set_binary_type(${TARGET} no_flash)
 target_link_libraries(
   ${TARGET}
   pico_stdlib
@@ -185,5 +184,11 @@ target_link_libraries(
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${TARGET})
 
+if(false)
+  target_compile_definitions(${TARGET} PUBLIC PICO_DEFAULT_UART_RX_PIN=9)
+  target_compile_definitions(${TARGET} PUBLIC PICO_DEFAULT_UART_TX_PIN=8)
+  target_compile_definitions(${TARGET} PUBLIC PICO_DEFAULT_UART=1)
+  pico_set_binary_type(${TARGET} no_flash)
+endif()
 add_custom_target(pico)
 add_dependencies(pico santroller)

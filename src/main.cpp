@@ -362,25 +362,14 @@ void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
 void tud_detected_console(ConsoleMode mode)
 {
 }
-void *__dso_handle = 0;
-void *_fini = 0;
+// void *__dso_handle = 0;
+// void *_fini = 0;
 int main()
 {
     set_sys_clock_khz(120000, true);
     multicore_launch_core1(core1);
     stdio_init_all();
     printf("init %d\r\n", mode);
-    // TODO: gpio pwm support
-    // gpio_init(7);
-    // gpio_set_dir(7, true);
-    // gpio_put(7, true);
-    // gpio_init(6);
-    // gpio_set_dir(6, true);
-    // pwm_config cfg = pwm_get_default_config();
-    // pwm_config_set_wrap(&cfg, 1000);
-    // pwm_init(pwm_gpio_to_slice_num(6), &cfg, true);
-    // gpio_set_function(6, GPIO_FUNC_PWM);
-    // pwm_set_gpio_level(6, 600);
     adc_init();
     EEPROM.start();
 

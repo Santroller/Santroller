@@ -13,6 +13,21 @@ ActivationTrigger::ActivationTrigger(proto_ActivationTrigger activation_trigger,
 void ActivationTrigger::update(bool tool_closed)
 {
     auto val = m_input->tickDigital();
+    if (m_activation_trigger.has_trigger)
+    {
+        if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_JoyHigh)
+        {
+            val = m_input->tickAnalog() > m_activation_trigger.triggerValue;
+        }
+        else if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_JoyLow)
+        {
+            val = m_input->tickAnalog() < m_activation_trigger.triggerValue;
+        }
+        else if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_Exact)
+        {
+            val = m_input->tickAnalog() == m_activation_trigger.triggerValue;
+        }
+    }
     if (val)
     {
         if (tool_closed)

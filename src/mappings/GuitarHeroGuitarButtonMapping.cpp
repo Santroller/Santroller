@@ -4,22 +4,11 @@
 #include "events.pb.h"
 #include "main.hpp"
 
-GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input))
+GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : ButtonMapping(mapping, std::move(input), id)
 {
+    
 }
 
-// deal with debounce and all the other fun things
-void GuitarHeroGuitarButtonMapping::update(bool full_poll)
-{
-    auto val = m_input->tickDigital();
-    if (val != m_lastValue || full_poll)
-    {
-        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, val, val}}};
-        send_event(event);
-        m_lastValue = val;
-        // debouce would just be storing the millis() from the last poll and simply using that as the indication for if the input is active instead of lastValue
-    }
-}
 void GuitarHeroGuitarButtonMapping::update_hid(uint8_t *buf)
 {
     PCGuitarHeroGuitar_Data_t *report = (PCGuitarHeroGuitar_Data_t *)buf;

@@ -1,5 +1,22 @@
 #include "libads1115.hpp"
 #include "main.hpp"
+#include "stdio.h"
+
+bool ADS1115::writeRegister(uint8_t reg, uint16_t val)
+{
+    uint8_t data[] = {(uint8_t)((val >> 8) & 0xFF), (uint8_t)(val & 0xFF)};
+    return interface.writeRegister(ADS1115_ADDRESS_ADDR_GND, reg, sizeof(data), data);
+}
+uint16_t ADS1115::readRegister(uint8_t reg)
+{
+    uint8_t data[2] = {};
+    if (!interface.readRegister(ADS1115_ADDRESS_ADDR_GND, reg, sizeof(data), data))
+    {
+        return 0;
+    }
+    return (data[0] << 8) + data[1];
+}
+static volatile bool rdy[NUM_BANK0_GPIOS];
 void ADS1115::tick()
 {
     if (!connected)
@@ -7,58 +24,45 @@ void ADS1115::tick()
         init();
         return;
     }
-    for (int i = 0; i < 4; i++) {
-        config[1] &= ~(0b111 << 4);
-        config[1] |= (i+4) << 4;
-        connected = interface.writeRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONFIG, sizeof(config), (uint8_t*)&config);
-        while (connected && gpio_get(17)) {
-            tight_loop_contents();
+    config = readRegister(ADS1115_RA_CONFIG);
+    if (rdy[alert])
+    {
+        rdy[alert] = false;
+        inputs[current] = readRegister(ADS1115_RA_CONVERSION) << 1;
+        current++;
+        if (current > 3)
+        {
+            current = 0;
         }
-        uint8_t val[2];
-        connected = interface.readRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONVERSION, sizeof(val), val);
-        inputs[i] = val[0] << 8 | val[1];
-    }
-    
-}
+        config &= ~(0xF000);
+        config |= (0x4000 + (current * 0x1000));
+        config |= 1<<15;
+        connected = writeRegister(ADS1115_RA_CONFIG, config);
 
+    }
+}
+void cb(uint gpio, uint32_t event_mask) {
+    rdy[gpio] = true;
+}
 void ADS1115::init()
 {
-    connected = interface.readRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONFIG, sizeof(config), config);
-    gpio_init(17);
-    gpio_set_dir(17, false);
+    if (alert == 0xFF) {
+        return;
+    }
+    if (!readRegister(ADS1115_RA_CONFIG))
+    {
+        connected = false;
+        return;
+    }
+    connected = true;
+    current = 0;
+    gpio_init(alert);
+    gpio_set_dir(alert, false);
+    gpio_pull_up(alert);
     
+    gpio_set_irq_enabled_with_callback(alert, GPIO_IRQ_EDGE_FALL, true, &cb);
+    config = ADS1115_REG_RESET_VAL;
+    connected = writeRegister(ADS1115_RA_CONFIG, ADS1115_REG_RESET_VAL);
+    connected = writeRegister(ADS1115_RA_LO_THRESH, (0 << 15));
+    connected = writeRegister(ADS1115_RA_HI_THRESH, (1 << 15));
 }
-
-// void ADS1115::tick()
-// {
-//     if (!connected)
-//     {
-//         init();
-//         return;
-//     }
-//     if (!gpio_get(17))
-//     {
-//         uint8_t val[2];
-//         connected = interface.readRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONVERSION, sizeof(val), val);
-//         inputs[current] = val[0] << 8 | val[1];
-//         current++;
-//         if (current > 3) {
-//             current = 0;
-//         }
-//         config[0] &= ~(0b111 << 4);
-//         config[0] |= (current + 4) << 4;
-//         connected = interface.writeRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONFIG, sizeof(config), (uint8_t *)&config);
-//     }
-// }
-
-// void ADS1115::init()
-// {
-//     current = 0;
-//     connected = interface.readRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONFIG, sizeof(config), config);
-//     gpio_init(17);
-//     gpio_set_dir(17, false);
-//     config[0] &= ~(0b111 << 4);
-//     config[0] |= (current + 4) << 4;
-//     config[0] |= 1<<7;
-//     connected = interface.writeRegister(ADS1115_ADDRESS_ADDR_GND, ADS1115_RA_CONFIG, sizeof(config), (uint8_t *)&config);
-// }

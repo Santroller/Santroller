@@ -152,4 +152,5 @@ message Mapping {
   optional int32 center = 25;
   optional int32 deadzone = 26;
   optional int32 triggerValue = 27;
+  optional uint32 debounce = 28;
 }

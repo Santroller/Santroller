@@ -7,21 +7,10 @@
 #include <utils.h>
 #include <stdint.h>
 
-GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : Mapping(id), m_mapping(mapping), m_input(std::move(input)), m_trigger(mapping.mapping.ghAxis == GuitarHeroGuitarWhammy)
+GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, mapping.mapping.ghAxis == GuitarHeroGuitarWhammy)
 {
 }
 
-void GuitarHeroGuitarAxisMapping::update(bool full_poll)
-{
-    auto val = m_input->tickAnalog();
-    if (val != m_lastValue || full_poll)
-    {
-        m_lastValue = val;
-        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
-        send_event(event);
-    }
-}
 void GuitarHeroGuitarAxisMapping::update_hid(uint8_t *buf)
 {
     PCGuitarHeroGuitar_Data_t *report = (PCGuitarHeroGuitar_Data_t *)buf;

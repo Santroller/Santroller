@@ -243,6 +243,7 @@ enum MidiTriggerType {
 enum AnalogToDigitalTriggerType {
   JoyHigh = 1;
   JoyLow = 2;
+  Exact = 3;
 }
 
 enum MouseAxisType {

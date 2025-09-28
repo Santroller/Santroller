@@ -14,6 +14,12 @@ message AxisEvent {
     required uint32 state = 3;
 }
 
+message ActivationTriggerEvent {
+    required int32 id = 1;
+    required uint32 stateRaw = 2;
+    required bool state = 3;
+}
+
 message PinDetectionEvent {
     required int32 pin = 1;
 }
@@ -57,5 +63,6 @@ message Event {
         PS2DeviceHotplugEvent ps2 = 7;
         DeviceHotplugEvent device = 8;
         DebugEvent debug = 9;
+        ActivationTriggerEvent trigger = 10;  
     };
 }

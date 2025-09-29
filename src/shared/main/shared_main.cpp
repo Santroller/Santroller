@@ -4375,6 +4375,10 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->console_type = XBOX360;
             type->sub_type = XINPUT_GUITAR_HERO_LIVE;
             break;
+        case PS4_GHLIVE_DONGLE_PID:
+            type->console_type = PS4;
+            type->sub_type = LIVE_GUITAR;
+            break;
         case XBOX_360_WT_KIOSK_PID:
             type->console_type = XBOX360;
             type->sub_type = XINPUT_GUITAR_WT;

@@ -220,8 +220,8 @@ typedef struct
 
     uint8_t unused1;
     uint8_t strumBar;
-    uint8_t whammy;
     uint8_t tilt;
+    uint8_t whammy;
 
     // To make things easier we use bitfields here and them map to dpad later
     uint8_t dpadUp : 1;

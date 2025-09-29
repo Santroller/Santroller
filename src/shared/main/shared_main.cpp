@@ -1144,6 +1144,12 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->y |= report->y;
             usb_host_data->leftShoulder |= report->leftShoulder;
             usb_host_data->rightShoulder |= report->rightShoulder;
+
+            usb_host_data->green |= report->a;
+            usb_host_data->red |= report->b;
+            usb_host_data->yellow |= report->y;
+            usb_host_data->blue |= report->x;
+            usb_host_data->orange |= report->leftShoulder;
             usb_host_data->leftThumbClick |= report->leftThumbClick;
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
@@ -1522,6 +1528,12 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->y |= report->y;
             usb_host_data->leftShoulder |= report->leftShoulder;
             usb_host_data->rightShoulder |= report->rightShoulder;
+
+            usb_host_data->green |= report->a;
+            usb_host_data->red |= report->b;
+            usb_host_data->yellow |= report->y;
+            usb_host_data->blue |= report->x;
+            usb_host_data->orange |= report->leftShoulder;
             usb_host_data->dpadLeft |= left;
             usb_host_data->dpadRight |= right;
             usb_host_data->dpadUp |= up || report->strumBar == 0x00;
@@ -1727,6 +1739,11 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->leftShoulder |= report->leftShoulder;
             usb_host_data->rightShoulder |= report->rightShoulder;
             usb_host_data->leftThumbClick |= report->leftThumbClick;
+            usb_host_data->green |= report->a;
+            usb_host_data->red |= report->b;
+            usb_host_data->yellow |= report->y;
+            usb_host_data->blue |= report->x;
+            usb_host_data->orange |= report->leftShoulder;
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
@@ -2347,6 +2364,11 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->y |= report->y;
             usb_host_data->leftShoulder |= report->leftShoulder;
             usb_host_data->rightShoulder |= report->rightShoulder;
+            usb_host_data->green |= report->a;
+            usb_host_data->red |= report->b;
+            usb_host_data->yellow |= report->y;
+            usb_host_data->blue |= report->x;
+            usb_host_data->orange |= report->leftShoulder;
             usb_host_data->dpadLeft = report->dpadLeft;
             usb_host_data->dpadRight = report->dpadRight;
             usb_host_data->dpadUp = report->dpadUp;

@@ -2736,10 +2736,12 @@ void tick_ps2output()
         }
     }
     memset(report, 0, sizeof(report));
+#if DEVICE_TYPE == GAMEPAD || DEVICE_TYPE == TAIKO
     report->leftStickX = PS3_STICK_CENTER;
     report->leftStickY = PS3_STICK_CENTER;
     report->rightStickX = PS3_STICK_CENTER;
     report->rightStickY = PS3_STICK_CENTER;
+#endif
 #if DEVICE_TYPE_IS_GUITAR
     report->dpadLeft = true;
     report->whammy = 0x7f;

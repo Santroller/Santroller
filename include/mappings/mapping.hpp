@@ -48,9 +48,6 @@ public:
     void update(bool full_poll);
 
 protected:
-    proto_Mapping m_mapping;
-    std::unique_ptr<Input> m_input;
-    uint32_t m_lastValueTrigger = 0;
     bool m_lastValue = false;
     bool m_calibratedValue = false;
     uint64_t m_lastPoll = 0;

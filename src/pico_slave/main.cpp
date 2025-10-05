@@ -2,6 +2,9 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <hardware/adc.h>
+#include "hardware/pio.h"
+#include "hardware/timer.h"
+#include "quadrature_encoder.pio.h"
 
 #include "io.h"
 #include "pico_slave.h"
@@ -16,10 +19,19 @@ volatile uint32_t mask = 0;
 volatile uint8_t wtS0Pin = 0;
 volatile uint8_t wtS1Pin = 0;
 volatile uint8_t wtS2Pin = 0;
+volatile uint8_t quadAPin = 0;
 volatile uint16_t wt_sensitivity = 0;
 volatile uint8_t rawWt;
 volatile uint32_t lastWt[5] = {0};
+volatile bool wtShouldInit = false;
+volatile bool quadShouldInit = false;
 volatile bool hasInitWt = false;
+volatile bool hasInitQuad = false;
+volatile int quadPollRate = 0;
+volatile int new_value, delta, old_value = 0;
+volatile int last_value = -1, last_delta = -1;
+PIO pio = pio0;
+const uint sm = 0;
 spi_inst_t* hardware;
 void recv(int len) {
     command = WIRE.read();
@@ -106,6 +118,13 @@ void recv(int len) {
             mask = (1 << wtS0Pin) | (1 << wtS1Pin) | (1 << wtS2Pin);
             wt_sensitivity = WIRE.read() << 8 | WIRE.read();
             hasInitWt = false;
+            wtShouldInit = true;
+            break;
+        case SLAVE_COMMAND_INIT_QUAD:
+            quadAPin = WIRE.read();
+            quadPollRate = WIRE.read();
+            hasInitQuad = false;
+            quadShouldInit = true;
             break;
     }
 }
@@ -120,6 +139,10 @@ void req() {
         }
         case SLAVE_COMMAND_GET_WT: {
             WIRE.write((uint8_t*)&rawWt, sizeof(rawWt));
+            break;
+        }
+        case SLAVE_COMMAND_GET_QUAD: {
+            WIRE.write((uint8_t*)&delta, sizeof(delta));
             break;
         }
         case SLAVE_COMMAND_GET_WT_RAW: {
@@ -172,9 +195,9 @@ uint32_t readWtSlave(int pin) {
 bool checkWtSlave(int pin) {
     return readWtSlave(pin) > initialWt[pin];
 }
-
+uint32_t lastQuadPoll = 0;
 void loop() {
-    if (wtS2Pin && !hasInitWt) {
+    if (wtShouldInit && !hasInitWt) {
         hasInitWt = true;
         memset(initialWt, 0, sizeof(initialWt));
         for (int j = 0; j < 1000; j++) {
@@ -187,9 +210,19 @@ void loop() {
             initialWt[i] += wt_sensitivity;
         }
     }
+    if (quadShouldInit && !hasInitQuad) {
+        hasInitQuad = true;
+        quadrature_encoder_program_init(pio, sm, quadAPin, 0);
+    }
     if (hasInitWt) {
         checkWtSlave(6);
         rawWt = checkWtSlave(1) | (checkWtSlave(0) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(3) << 3) | (checkWtSlave(4) << 4);
+    }
+    if (hasInitQuad && (lastQuadPoll - millis()) > quadPollRate) {
+        lastQuadPoll = millis();
+        new_value = quadrature_encoder_get_count(pio, sm);
+        delta = new_value - old_value;
+        old_value = new_value;
     }
 }
 void setup() {
@@ -213,4 +246,5 @@ void setup() {
     WIRE.begin(SLAVE_ADDR);
     WIRE.onReceive(recv);
     WIRE.onRequest(req);
+    pio_add_program(pio, &quadrature_encoder_program);
 }

@@ -92,6 +92,33 @@ void slaveWriteLED(uint8_t data) {
     }
 }
 
+void slaveInitQuad(uint8_t pin, uint8_t rate) {
+    if (!slave_initted) {
+        return;
+    }
+    uint8_t data[] = {pin, rate};
+    for (int i = 0; i < RETRY_COUNT; i++) {
+        slave_initted = twi_writeToPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_INIT_QUAD, sizeof(data), data);
+        if (slave_initted) {
+            return;
+        }
+    }
+}
+int slaveReadQuad() {
+    if (!slave_initted) {
+        return 0;
+    }
+    for (int i = 0; i < RETRY_COUNT; i++) {
+        int data = 0;
+        slave_initted = twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_QUAD, sizeof(data), (uint8_t*)&data);
+
+        if (slave_initted) {
+            return data;
+        }
+    }
+    return 0;
+}
+
 uint8_t slaveReadWt() {
     if (!slave_initted) {
         return 0;

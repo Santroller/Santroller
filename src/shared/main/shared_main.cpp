@@ -420,6 +420,9 @@ void tick_slave()
 #ifdef INPUT_WT_SLAVE_NECK
     slaveInitWt();
 #endif
+#ifdef INPUT_QUAD_SLAVE
+    slaveInitQuad(INPUT_QUAD_SLAVE,1);
+#endif
 }
 #endif
 int16_t adc_i(uint8_t pin)

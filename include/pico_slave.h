@@ -10,6 +10,8 @@
 #define SLAVE_COMMAND_GET_WT              0x0B
 #define SLAVE_COMMAND_GET_WT_RAW          0x0C
 #define SLAVE_COMMAND_INITIALISE          0x0D
+#define SLAVE_COMMAND_INIT_QUAD           0x0E
+#define SLAVE_COMMAND_GET_QUAD            0x0F
 
 #define PIN_MODE_INPUT_PULLUP   0
 #define PIN_MODE_INPUT          1

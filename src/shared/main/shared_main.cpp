@@ -359,7 +359,7 @@ int new_value, delta, old_value = 0;
 int last_value = -1, last_delta = -1;
 PIO pio = pio1;
 const uint sm = 0;
-spi_inst_t* hardware;
+spi_inst_t *hardware;
 uint8_t seq = 1;
 uint32_t lastQuadPoll = 0;
 void init_main(void)
@@ -369,6 +369,7 @@ void init_main(void)
 #endif
 
 #ifdef INPUT_QUAD
+    pio_add_program(pio, &quadrature_encoder_program);
     quadrature_encoder_program_init(pio, sm, INPUT_QUAD, 0);
 #endif
     initPins();
@@ -432,7 +433,7 @@ void tick_slave()
     slaveInitWt();
 #endif
 #ifdef INPUT_QUAD_SLAVE
-    slaveInitQuad(INPUT_QUAD_SLAVE,1);
+    slaveInitQuad(INPUT_QUAD_SLAVE, 1);
 #endif
 }
 #endif

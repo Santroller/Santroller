@@ -1,4 +1,13 @@
 #include "config.h"
+
+#ifdef INPUT_QUAD
+    if ((lastQuadPoll - millis()) > 1) {
+        lastQuadPoll = millis();
+        new_value = quadrature_encoder_get_count(pio, sm);
+        delta = new_value - old_value;
+        old_value = new_value;
+    }
+#endif
 #ifdef INPUT_DJ_TURNTABLE
 uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
 uint8_t *dj_right = lastSuccessfulTurntablePacketRight;

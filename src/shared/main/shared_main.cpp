@@ -24,6 +24,7 @@
 #include "util.h"
 #include "wii.h"
 #include "wt_drum.h"
+#include "quadrature_encoder.pio.h"
 #define UP 1 << 0
 #define DOWN 1 << 1
 #define LEFT 1 << 2
@@ -354,11 +355,21 @@ void setKey(uint8_t id, uint8_t key, USB_6KRO_Data_t *report)
     memset(report->KeyCode, KEY_ERR_OVF, sizeof(report->KeyCode));
     return;
 }
+int new_value, delta, old_value = 0;
+int last_value = -1, last_delta = -1;
+PIO pio = pio1;
+const uint sm = 0;
+spi_inst_t* hardware;
 uint8_t seq = 1;
+uint32_t lastQuadPoll = 0;
 void init_main(void)
 {
 #if !DEVICE_TYPE_IS_GAMEPAD
     consoleType = UNIVERSAL;
+#endif
+
+#ifdef INPUT_QUAD
+    quadrature_encoder_program_init(pio, sm, INPUT_QUAD, 0);
 #endif
     initPins();
     twi_init();

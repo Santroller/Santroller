@@ -442,7 +442,7 @@ int16_t adc_i(uint8_t pin)
     int32_t ret = adc(pin);
     return ret - 32767;
 }
-int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone)
+int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone, uint8_t section)
 {
     int32_t val = orig_val;
     if (val > INT16_MAX)
@@ -453,27 +453,33 @@ int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min,
     {
         val = INT16_MIN;
     }
-    if (val < center)
-    {
-        if ((center - val) < deadzone)
+    if (section == 0) {
+        if (val < center)
         {
-            val = 0;
+            if ((center - val) < deadzone)
+            {
+                val = 0;
+            }
+            else
+            {
+                val = map(val, min, center - deadzone, INT16_MIN, 0);
+            }
         }
         else
         {
-            val = map(val, min, center - deadzone, INT16_MIN, 0);
+            if ((val - center) < deadzone)
+            {
+                val = 0;
+            }
+            else
+            {
+                val = map(val, center + deadzone, max, 0, INT16_MAX);
+            }
         }
-    }
-    else
-    {
-        if ((val - center) < deadzone)
-        {
-            val = 0;
-        }
-        else
-        {
-            val = map(val, center + deadzone, max, 0, INT16_MAX);
-        }
+    } else if (section == 1) {
+        val = map(val, min, max, INT16_MIN, 0);
+    } else if (section == 2) {
+        val = map(val, min, max, 0, INT16_MAX);
     }
     if (val > INT16_MAX)
     {
@@ -594,15 +600,15 @@ uint16_t handle_calibration_drum(uint16_t previous, uint16_t orig_val, uint32_t 
     }
     return previous;
 }
-uint8_t handle_calibration_ps3(uint8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone)
+uint8_t handle_calibration_ps3(uint8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone, uint8_t section)
 {
-    int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, min, max, center, deadzone) >> 8;
+    int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, min, max, center, deadzone, section) >> 8;
     return (uint8_t)(ret + PS3_STICK_CENTER);
 }
 
 int8_t handle_calibration_mouse(int8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone)
 {
-    return handle_calibration_xbox(previous << 8, orig_val, min, max, center, deadzone) >> 8;
+    return handle_calibration_xbox(previous << 8, orig_val, min, max, center, deadzone, 0) >> 8;
 }
 
 uint8_t handle_calibration_ps3_360_trigger(uint8_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone)
@@ -617,13 +623,13 @@ uint16_t handle_calibration_ps3_accel(uint16_t previous, int32_t orig_val, int16
     // Also, the game is looking for the value going negative, not positive
     int16_t ret = (-(handle_calibration_xbox(-((previous - PS3_ACCEL_CENTER) << 8), orig_val, min, max, center, deadzone) >> 8));
 #else
-    int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, min, max, center, deadzone) >> 6;
+    int16_t ret = handle_calibration_xbox((previous - PS3_ACCEL_CENTER) << 6, orig_val, min, max, center, deadzone, 0) >> 6;
 #endif
     return PS3_ACCEL_CENTER + ret;
 }
 uint8_t handle_calibration_arcade_accel(uint16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, uint16_t deadzone)
 {
-    int8_t ret = handle_calibration_xbox((previous - 65) << 9, orig_val, min, max, center, deadzone) >> 9;
+    int8_t ret = handle_calibration_xbox((previous - 65) << 9, orig_val, min, max, center, deadzone, 0) >> 9;
     return (uint8_t)(ret + 65);
 }
 long last_zero = 0;

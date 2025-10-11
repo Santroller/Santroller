@@ -31,6 +31,8 @@
 #include "device/usbd.h"
 #include "gamepad_device.h"
 #include "protocols/xinput.hpp"
+#include "enums.pb.h"
+#include "config.hpp"
 
 #ifndef CFG_TUD_XINPUT_EPSIZE
 #define CFG_TUD_XINPUT_EPSIZE 64
@@ -83,6 +85,45 @@ enum
     XINPUT_SKYLANDERS = 36
 };
 
+inline uint8_t get_subtype(void)
+{
+    switch (current_type)
+    {
+    case Gamepad:
+        return XINPUT_GAMEPAD;
+    case Dancepad:
+        return XINPUT_DANCE_PAD;
+    case LiveGuitar:
+    case GuitarHeroGuitar:
+        return XINPUT_GUITAR_ALTERNATE;
+    case RockBandGuitar:
+        return XINPUT_GUITAR;
+    case GuitarHeroDrums:
+    case RockBandDrums:
+        return XINPUT_DRUMS;
+    case DjHeroTurntable:
+        return XINPUT_TURNTABLE;
+    case ProGuitarMustang:
+    case ProGuitarSquire:
+        return XINPUT_PRO_GUITAR;
+    case ProKeys:
+        return XINPUT_PRO_KEYS;
+    case Taiko:
+        return XINPUT_GAMEPAD;
+    case StageKit:
+        return XINPUT_STAGE_KIT;
+    case KeyboardMouse:
+        return XINPUT_GAMEPAD;
+    case Wheel:
+        return XINPUT_WHEEL;
+    case DisneyInfinity:
+    case LegoDimensions:
+        return XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS;
+    case Skylanders:
+        return XINPUT_SKYLANDERS;
+    }
+    return 1;
+}
 
 #define XINPUT_FLAGS_NO_NAV 0xFFFF
 #define XINPUT_FLAGS_NONE 0x0000

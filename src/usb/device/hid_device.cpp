@@ -89,7 +89,6 @@ uint16_t tud_hid_generic_get_report_cb(uint8_t instance, uint8_t report_id, hid_
 void tud_hid_generic_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
   (void)instance;
-  printf("set report: %02x %02x\r\n", report_id, report_type);
   if (report_id == ReportIdPs3F4)
   {
     newMode = ConsoleMode::Ps3;

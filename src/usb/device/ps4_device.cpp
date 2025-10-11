@@ -3,6 +3,7 @@
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
 #include "main.hpp"
+#include "config.hpp"
 
 static const int ps4_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -10,10 +11,8 @@ static const int ps4_colors[4][3] = {
     {0x00, 0x40, 0x00}, /* Green */
     {0x20, 0x00, 0x20}  /* Pink */
 };
-// TODO: set this correctly
-#define PS4_TYPE 0
-const uint8_t ps4_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x91, PS4_TYPE, 0x2c, 0x56,
+uint8_t ps4_feature_config[] = {
+    0x03, 0x21, 0x27, 0x04, 0x91, /*type*/ 0x00, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
     0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -45,6 +44,24 @@ uint16_t tud_hid_ps4_get_report_cb(uint8_t instance, uint8_t report_id, hid_repo
     case ReportId::ReportIdPs4Feature:
         seenPs4 = true;
         memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
+        switch (current_type)
+        {
+        case Gamepad:
+            buffer[5] = PS4_GAMEPAD;
+            break;
+        case GuitarHeroGuitar:
+        case RockBandGuitar:
+        case LiveGuitar:
+            buffer[5] = PS4_GUITAR;
+            break;
+        case GuitarHeroDrums:
+        case RockBandDrums:
+            buffer[5] = PS4_DRUMS;
+            break;
+        // case ...
+        //     buffer[5] = PS4_FIGHTSTICK;
+        //     break;
+        }
         return sizeof(ps4_feature_config);
     case ReportId::ReportIdPs4GetResponse:
         // try to pass through to ps4 over usb host if one exists

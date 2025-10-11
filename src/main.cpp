@@ -136,13 +136,14 @@ bool seenWindowsXb1 = false;
 bool seenOsDescriptorRead = false;
 bool seenReadAnyDeviceString = false;
 bool seenHidDescriptorRead = false;
+bool reinit = false;
 void hid_task(void)
 {
-    update(false);
-    if (newMode != mode)
+    if (newMode != mode || reinit)
     {
         mode = newMode;
         // TODO: we technically dont _have_ to reset all of these
+        reinit = false;
         seenPs4 = false;
         seenWindowsXb1 = false;
         seenOsDescriptorRead = false;
@@ -160,7 +161,7 @@ void hid_task(void)
         }
         timeSinceMode = millis();
     }
-    if ((millis() - timeSinceMode) > 2000 && mode == ConsoleMode::Hid && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString)
+    if ((millis() - timeSinceMode) > 2000 && mode == ConsoleMode::Hid && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
     {
         // Switch 2 does read the hid descriptor
         if (seenHidDescriptorRead)
@@ -183,6 +184,7 @@ void hid_task(void)
     {
         newMode = ConsoleMode::Ps3;
     }
+    update(false);
 }
 uint32_t lastKeepAlive = 0;
 
@@ -295,7 +297,7 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count)
 }
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-    printf("control req %02x %02x\r\n", request->bRequest, request->wIndex);
+    // printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction,request->bmRequestType_bit.type,request->bmRequestType_bit.recipient, request->bRequest, request->wIndex, request->wValue);
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (stage == CONTROL_STAGE_SETUP)
@@ -341,13 +343,17 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
         {
         case ReportId::ReportIdConfig:
         {
+            buffer[0] = report_id;
+            buffer++;
             uint32_t ret = copy_config(buffer, start);
             start += ret;
-            return ret;
+            return ret+1;
         }
         case ReportId::ReportIdConfigInfo:
+            buffer[0] = report_id;
+            buffer++;
             start = 0;
-            return copy_config_info(buffer);
+            return copy_config_info(buffer)+1;
         }
         break;
     case HID_REPORT_TYPE_INPUT:
@@ -371,7 +377,9 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     }
     if (report_type == HID_REPORT_TYPE_FEATURE)
     {
-
+        // skip over report id
+        buffer++;
+        bufsize--;
         switch (report_id)
         {
         case ReportId::ReportIdConfig:
@@ -469,9 +477,9 @@ int main()
 
     while (1)
     {
+        hid_task();
         tud_task(); // tinyusb device task
         tuh_task();
-        hid_task();
     }
     return 0;
 }

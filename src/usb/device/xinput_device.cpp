@@ -210,21 +210,22 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
     }
     return 0;
 }
-
+static uint8_t lastIntf = 0;
 bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-    uint8_t itf = 0;
-    // windex for security packets is 0x01 interface
+    // TODO: how do we differenciate this for multiple xinput interfaces at once
     xinputd_interface_t *p_xinput = _xinputd_itf;
+    // if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+    // {
+    //     for (;; itf++, p_xinput++)
+    //     {
+    //         if (itf >= TU_ARRAY_SIZE(_xinputd_itf))
+    //             return false;
 
-    for (;; itf++, p_xinput++)
-    {
-        if (itf >= TU_ARRAY_SIZE(_xinputd_itf))
-            return false;
-
-        if ((request->wIndex & 0xff) == p_xinput->itf_num)
-            break;
-    }
+    //         if ((request->wIndex & 0xff) == p_xinput->itf_num)
+    //             break;
+    //     }
+    // }
     static uint8_t buf[0x22];
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
@@ -234,7 +235,6 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
             {
                 if (request->wValue == VIBRATION_CAPABILITIES_WVALUE)
                 {
-
                     if (stage == CONTROL_STAGE_SETUP)
                     {
                         tud_control_xfer(rhport, request, (void *)&XInputVibrationCapabilities, sizeof(XInputVibrationCapabilities_t));
@@ -243,15 +243,15 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 }
                 else if (request->wValue == INPUT_CAPABILITIES_WVALUE)
                 {
-
                     if (stage == CONTROL_STAGE_SETUP)
                     {
+                        XInputInputCapabilities.flags = XINPUT_FLAGS_FORCE_FEEDBACK;
                         switch (p_xinput->subtype)
                         {
                         case XINPUT_GUITAR_ALTERNATE:
                             // TODO: how do we want to pass this here
                             // ghl
-                            XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
+                            // XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
                             break;
                         case XINPUT_PRO_GUITAR:
                         case XINPUT_PRO_KEYS:

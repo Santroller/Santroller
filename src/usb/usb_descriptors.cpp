@@ -25,6 +25,7 @@
 
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
+#include "usb/device/xinput_device.h"
 #include "hid_reports.h"
 #include <pico/unique_id.h>
 #include "enums.pb.h"
@@ -70,6 +71,7 @@ uint8_t const *tud_descriptor_device_cb(void)
   desc_device.bDeviceClass = 0;
   desc_device.bDeviceSubClass = 0;
   desc_device.bDeviceProtocol = 0;
+  // TODO: add the rest of the ids, and is there a nicer way to handle this?
   switch (mode)
   {
   case ConsoleMode::Switch:
@@ -198,7 +200,7 @@ uint8_t const desc_configuration_xone[] =
         TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XBOXONE, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
         TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT)};
 
-uint8_t const desc_configuration_xinput[] =
+uint8_t desc_configuration_xinput[] =
     {
         // Config number, interface count, string index, total length, attribute, power in mA
         TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
@@ -260,7 +262,21 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
     }
     return desc_configuration_ps3;
   case ConsoleMode::Xbox360:
+  {
+    uint8_t tmp[] = {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, get_subtype()),
+        // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
+    printf("subtype: %d\r\n", get_subtype());
+    memcpy(desc_configuration_xinput, tmp, sizeof(tmp));
     return desc_configuration_xinput;
+  }
   case ConsoleMode::XboxOne:
     return desc_configuration_xone;
   case ConsoleMode::OgXbox:

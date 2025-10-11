@@ -82,7 +82,7 @@ void update(bool full_poll)
                 reportGh->slider = gh5_mapping[reportGh->slider];
             }
 
-            tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
+            tud_hid_report(ReportId::ReportIdGamepad, out, sizeof(PCGamepad_Data_t));
         }
         break;
     case ConsoleMode::Switch:
@@ -151,7 +151,7 @@ void update(bool full_poll)
                 reportGh->slider = gh5_mapping[reportGh->slider];
             }
 
-            tud_hid_report(0, &out, sizeof(PS3Dpad_Data_t));
+            tud_hid_report(0, out, sizeof(PS3Dpad_Data_t));
         }
         break;
     case ConsoleMode::Ps4:
@@ -170,7 +170,7 @@ void update(bool full_poll)
             // convert bitmask dpad to actual hid dpad
             gamepad->dpad = dpad_bindings[gamepad->dpad];
 
-            tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PS4Dpad_Data_t));
+            tud_hid_report(ReportId::ReportIdGamepad, out, sizeof(PS4Dpad_Data_t));
         }
         break;
     case ConsoleMode::OgXbox:
@@ -191,7 +191,7 @@ void update(bool full_poll)
                 reportGh->slider = gh5_mapping[reportGh->slider];
             }
 
-            tud_ogxbox_n_report(0, &out, sizeof(XInputGamepad_Data_t));
+            tud_ogxbox_n_report(0, out, sizeof(XInputGamepad_Data_t));
         }
         break;
     case ConsoleMode::Xbox360:
@@ -212,7 +212,7 @@ void update(bool full_poll)
                 reportGh->slider = gh5_mapping[reportGh->slider];
             }
 
-            tud_xinput_n_report(0, &out, sizeof(XInputGamepad_Data_t));
+            tud_xinput_n_report(0, out, sizeof(XInputGamepad_Data_t));
         }
         break;
     case ConsoleMode::XboxOne:
@@ -470,6 +470,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.profiles.arg = &args;
     mappings.clear();
     devices.clear();
+    triggers.clear();
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     update(true);
     return ret;
@@ -498,7 +499,10 @@ void set_current_profile(uint32_t profile)
     {
         footer->currentProfile = profile;
         EEPROM.commit_now();
-        watchdog_enable(1, false);
+        proto_Config config;
+        load(config);
+        reinit = true;
+        printf("profile set!\r\n");
     }
 }
 

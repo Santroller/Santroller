@@ -4,7 +4,9 @@ enum class ConsoleMode {
     OgXbox,
     Xbox360,
     XboxOne,
+    Ps2EmulatorOnPs3,
     Ps3,
     Ps4,
-    WiiRb
+    WiiRb,
+    Switch
 };

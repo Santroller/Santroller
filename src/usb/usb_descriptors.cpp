@@ -29,6 +29,7 @@
 #include <pico/unique_id.h>
 #include "enums.pb.h"
 #include "config.hpp"
+#include "main.hpp"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -66,6 +67,35 @@ tusb_desc_device_t desc_device =
 uint8_t const *tud_descriptor_device_cb(void)
 {
   desc_device.bcdDevice = 0x0400 | current_type;
+  desc_device.bDeviceClass = 0;
+  desc_device.bDeviceSubClass = 0;
+  desc_device.bDeviceProtocol = 0;
+  switch (mode)
+  {
+  case ConsoleMode::Switch:
+    desc_device.idVendor = 0x0f0d;
+    desc_device.idProduct = 0x0092;
+    break;
+  case ConsoleMode::Ps3:
+    desc_device.idVendor = 0x054c;
+    desc_device.idProduct = 0x0268;
+    break;
+  case ConsoleMode::XboxOne:
+    desc_device.idVendor = 0x045e;
+    desc_device.idProduct = 0x02ea;
+    desc_device.bDeviceClass = 0xff;
+    desc_device.bDeviceSubClass = 0x47;
+    desc_device.bDeviceProtocol = 0xd0;
+    break;
+  case ConsoleMode::WiiRb:
+    desc_device.idVendor = 0x1bad;
+    desc_device.idProduct = 0x3010;
+    break;
+  default:
+    desc_device.idVendor = USB_VID;
+    desc_device.idProduct = USB_PID;
+    break;
+  }
   return (uint8_t const *)&desc_device;
 }
 
@@ -80,13 +110,46 @@ uint8_t const desc_hid_report[] =
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded)),
         TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad))};
 
+uint8_t const desc_hid_report_non_gamepad[] =
+    {
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfigInfo)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded))};
+uint8_t const desc_hid_report_ps3[] =
+    {
+        TUD_HID_REPORT_DESC_PS3_THIRDPARTY_GAMEPAD()};
+uint8_t const desc_hid_report_ps3_gamepad[] =
+    {
+        TUD_HID_REPORT_DESC_PS3_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+uint8_t const desc_hid_report_ps4[] =
+    {
+        TUD_HID_REPORT_DESC_PS4_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor
 // Descriptor contents must exist long enough for transfer to complete
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
 {
   (void)instance;
-  return desc_hid_report;
+  switch (mode)
+  {
+  case ConsoleMode::Hid:
+    return desc_hid_report;
+  case ConsoleMode::Ps4:
+    return desc_hid_report_ps4;
+  case ConsoleMode::Ps3:
+    if (current_type == Gamepad)
+    {
+      return desc_hid_report_ps3_gamepad;
+    }
+    return desc_hid_report_ps3;
+  case ConsoleMode::OgXbox:
+  case ConsoleMode::Xbox360:
+  case ConsoleMode::XboxOne:
+    return desc_hid_report_non_gamepad;
+  default:
+    return desc_hid_report_ps3;
+  }
 }
 
 //--------------------------------------------------------------------+
@@ -110,22 +173,71 @@ enum
 
 // #define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XONE_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
-#define EPNUM_HID 0x81
-#define EPNUM_XINPUT_IN 0x82
-#define EPNUM_XINPUT_OUT 0x03
-
-uint8_t const desc_configuration[] =
+#define CONFIG_TOTAL_LEN_XINPUT (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XINPUT_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
+#define CONFIG_TOTAL_LEN_OGXBOX (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_OGXBOX_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
+#define CONFIG_TOTAL_LEN_XBOXONE (TUD_CONFIG_DESC_LEN + TUD_XONE_GAMEPAD_DESC_LEN)
+#define CONFIG_TOTAL_LEN_HID (TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN + TUD_XINPUT_PLUGIN_MODULE_DESC_LEN)
+#define CONFIG_TOTAL_LEN_PS3 (TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
+#define EPNUM_HID_IN 0x81
+#define EPNUM_HID_OUT 0x02
+#define EPNUM_XINPUT_IN 0x83
+#define EPNUM_XINPUT_OUT 0x04
+#define EPNUM_XINPUT_PMD_IN 0x85
+uint8_t const desc_configuration_ogxbox[] =
     {
         // Config number, interface count, string index, total length, attribute, power in mA
-        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_OGXBOX, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
         // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
-        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 1),
+        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+        TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
 
+uint8_t const desc_configuration_xone[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XBOXONE, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT)};
+
+uint8_t const desc_configuration_xinput[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, 0x07),
+        // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
+uint8_t const desc_configuration_hid[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_HID, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID_OUT, EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+        TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_PMD_IN),
         // TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, 0x07),
         // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
+uint8_t const desc_configuration_ps3[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN_PS3, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3), EPNUM_HID_OUT, EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1)};
+uint8_t const desc_configuration_ps3_gamepad[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN_PS3, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3_gamepad), EPNUM_HID_OUT, EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1)};
+uint8_t const desc_configuration_ps4[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN_PS3, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps4), EPNUM_HID_OUT, EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1)};
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 // Application return pointer to descriptor
@@ -133,9 +245,29 @@ uint8_t const desc_configuration[] =
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 {
   (void)index; // for multiple configurations
-
+  printf("Current mode: %d %d\r\n", mode, current_type);
   // This example use the same configuration for both high and full speed mode
-  return desc_configuration;
+  switch (mode)
+  {
+  case ConsoleMode::Hid:
+    return desc_configuration_hid;
+  case ConsoleMode::Ps4:
+    return desc_configuration_ps4;
+  case ConsoleMode::Ps3:
+    if (current_type == Gamepad)
+    {
+      return desc_configuration_ps3_gamepad;
+    }
+    return desc_configuration_ps3;
+  case ConsoleMode::Xbox360:
+    return desc_configuration_xinput;
+  case ConsoleMode::XboxOne:
+    return desc_configuration_xone;
+  case ConsoleMode::OgXbox:
+    return desc_configuration_ogxbox;
+  default:
+    return desc_configuration_ps3;
+  }
 }
 
 static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
@@ -157,6 +289,11 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   size_t chr_count;
+  // We only care about actual reads for this heuristic
+  if (index != STRID_LANGID)
+  {
+    seenReadAnyDeviceString = true;
+  }
   switch (index)
   {
   case STRID_LANGID:
@@ -170,6 +307,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   default:
     if (index == 0xEE)
     {
+      seenOsDescriptorRead = true;
       index = STRID_MSFT;
     }
 

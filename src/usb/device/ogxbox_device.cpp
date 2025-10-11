@@ -9,6 +9,8 @@
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "usb/device/ogxbox_device.h"
+#include "usb/usb_descriptors.h"
+#include "config.hpp"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -118,6 +120,10 @@ void ogxboxd_reset(uint8_t rhport)
 {
     (void)rhport;
     tu_memclr(_ogxboxd_itf, sizeof(_ogxboxd_itf));
+    for (uint8_t i = 0; i < CFG_TUD_OGXBOX; i++)
+    {
+        _ogxboxd_itf[i].itf_num = 0xFF;
+    }
     sending = false;
 }
 
@@ -165,6 +171,20 @@ uint16_t ogxboxd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
 
 bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
+    uint8_t itf = 0;
+    if (mode != ConsoleMode::Hid)
+    {
+        ogxboxd_interface_t *p_ogxbox = _ogxboxd_itf;
+
+        for (;; itf++, p_ogxbox++)
+        {
+            if (itf >= TU_ARRAY_SIZE(_ogxboxd_itf))
+                return false;
+
+            if ((request->wIndex & 0xff) == p_ogxbox->itf_num)
+                break;
+        }
+    }
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
@@ -177,6 +197,7 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
                     }
+                    newMode = ConsoleMode::OgXbox;
                     return true;
                 }
                 if (request->bRequest == 1 && request->wValue == 0x0100)
@@ -185,6 +206,7 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDInputCapabilities, sizeof(DukeXIDInputCapabilities));
                     }
+                    newMode = ConsoleMode::OgXbox;
                     return true;
                 }
                 if (request->bRequest == 1 && request->wValue == 0x0200)
@@ -193,6 +215,7 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDVibrationCapabilities, sizeof(DukeXIDVibrationCapabilities));
                     }
+                    newMode = ConsoleMode::OgXbox;
                     return true;
                 }
             }

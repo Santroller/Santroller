@@ -141,6 +141,7 @@ target_link_libraries(
   midi
   crkd_neck
   peripherals
+  quadrature_encoder
   accelerometer
   band_hero_drum
   crazy_guitar_neck

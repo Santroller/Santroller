@@ -1,5 +1,6 @@
 #include "tusb.h"
 #include "enums.pb.h"
+#include "protocols/ps4.hpp"
 
 // Button usages as defined in the linux kernel
 #define BTN_A 0x01
@@ -121,7 +122,7 @@
         HID_REPORT_SIZE(8),                                  \
         HID_REPORT_COUNT(8),                                 \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),  \
-        HID_REPORT_ID(ReportIdPs4Feature)                 \
+        HID_REPORT_ID(ReportIdPs4Feature)                    \
             HID_USAGE_N(0x2721, 2),                          \
         HID_REPORT_COUNT(47),                                \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
@@ -258,13 +259,13 @@
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
         HID_COLLECTION_END
 
-#define TUD_HID_REPORT_DESC_PS3_FIRSTPARTY_GAMEPAD()           \
+#define TUD_HID_REPORT_DESC_PS3_FIRSTPARTY_GAMEPAD(rid)        \
     HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                    \
         HID_USAGE(HID_USAGE_DESKTOP_JOYSTICK),                 \
         HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
         HID_COLLECTION(HID_COLLECTION_LOGICAL),                \
-        HID_REPORT_ID(REPORT_ID_GAMEPAD)                       \
-            HID_REPORT_SIZE(8),                                \
+        rid                                                   \
+        HID_REPORT_SIZE(8),                                    \
         HID_REPORT_COUNT(1),                                   \
         HID_LOGICAL_MIN(0),                                    \
         HID_LOGICAL_MAX_N(255, 2),                             \
@@ -307,21 +308,21 @@
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
         HID_COLLECTION_END,                                    \
         HID_COLLECTION(HID_COLLECTION_LOGICAL),                \
-        HID_REPORT_ID(REPORT_ID_PS3_02)                        \
+        HID_REPORT_ID(ReportIdPs302)                        \
             HID_REPORT_SIZE(8),                                \
         HID_REPORT_COUNT(48),                                  \
         HID_USAGE(HID_USAGE_DESKTOP_POINTER),                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
         HID_COLLECTION_END,                                    \
         HID_COLLECTION(HID_COLLECTION_LOGICAL),                \
-        HID_REPORT_ID(REPORT_ID_PS3_EE)                        \
+        HID_REPORT_ID(ReportIdPs3EE)                        \
             HID_REPORT_SIZE(8),                                \
         HID_REPORT_COUNT(48),                                  \
         HID_USAGE(HID_USAGE_DESKTOP_POINTER),                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
         HID_COLLECTION_END,                                    \
         HID_COLLECTION(HID_COLLECTION_LOGICAL),                \
-        HID_REPORT_ID(REPORT_ID_PS3_EF)                        \
+        HID_REPORT_ID(ReportIdPs3EF)                        \
             HID_REPORT_SIZE(8),                                \
         HID_REPORT_COUNT(48),                                  \
         HID_USAGE(HID_USAGE_DESKTOP_POINTER),                  \
@@ -329,12 +330,12 @@
         HID_COLLECTION_END,                                    \
         HID_COLLECTION_END
 
-#define TUD_HID_REPORT_DESC_PS4_FIRSTPARTY_GAMEPAD()           \
+#define TUD_HID_REPORT_DESC_PS4_FIRSTPARTY_GAMEPAD(rid)           \
     HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                    \
         HID_USAGE(HID_USAGE_DESKTOP_GAMEPAD),                  \
         HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
-        HID_REPORT_ID(REPORT_ID_GAMEPAD)                       \
-            HID_USAGE(HID_USAGE_DESKTOP_X),                    \
+        rid                                                   \
+        HID_USAGE(HID_USAGE_DESKTOP_X),                        \
         HID_USAGE(HID_USAGE_DESKTOP_Y),                        \
         HID_USAGE(HID_USAGE_DESKTOP_Z),                        \
         HID_USAGE(HID_USAGE_DESKTOP_RZ),                       \
@@ -375,11 +376,11 @@
         HID_USAGE(0x21),                                       \
         HID_REPORT_COUNT(54),                                  \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
-        HID_REPORT_ID(REPORT_ID_PS4_05)                        \
+        HID_REPORT_ID(ReportIdPs405)                        \
             HID_USAGE(0x22),                                   \
         HID_REPORT_COUNT(31),                                  \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),    \
-        HID_REPORT_ID(REPORT_ID_PS4_FEATURE)                   \
+        HID_REPORT_ID(ReportIdPs4Feature)                   \
             HID_USAGE_N(0x2721, 2),                            \
         HID_REPORT_COUNT(47),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
@@ -387,19 +388,19 @@
         HID_USAGE_PAGE_N(0xFFF0, 2),                           \
         HID_USAGE(0x40),                                       \
         HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
-        HID_REPORT_ID(REPORT_ID_PS4_SET_CHALLENGE)             \
+        HID_REPORT_ID(ReportIdPs4SetChallenge)             \
             HID_USAGE(0x47),                                   \
         HID_REPORT_COUNT(63),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
-        HID_REPORT_ID(REPORT_ID_PS4_GET_RESPONSE)              \
+        HID_REPORT_ID(ReportIdPs4GetResponse)              \
             HID_USAGE(0x48),                                   \
         HID_REPORT_COUNT(63),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
-        HID_REPORT_ID(REPORT_ID_PS4_GET_AUTH_STATUS_PS3_F2)    \
+        HID_REPORT_ID(ReportIdPs4GetAuthStatus)    \
             HID_USAGE(0x49),                                   \
         HID_REPORT_COUNT(15),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
-        HID_REPORT_ID(REPORT_ID_PS4_GET_AUTH_PAGE_SIZE)        \
+        HID_REPORT_ID(ReportIdPs4GetAuthPageSize)        \
             HID_USAGE_N(0x4701, 2),                            \
         HID_REPORT_COUNT(7),                                   \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \

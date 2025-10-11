@@ -30,6 +30,7 @@
 #include "common/tusb_common.h"
 #include "device/usbd.h"
 #include "gamepad_device.h"
+#include "protocols/xinput.hpp"
 
 #ifndef CFG_TUD_XINPUT_EPSIZE
 #define CFG_TUD_XINPUT_EPSIZE 64
@@ -61,47 +62,6 @@ typedef struct
     uint8_t bDescriptorType; // XINPUT_SECURITY_DESC_TYPE_RESERVED
     uint8_t reserved[4];
 } __attribute__((packed)) XBOX_SECURITY_DESCRIPTOR;
-typedef struct
-{
-    uint8_t rid;
-    uint8_t rsize;
-    uint8_t led;
-} __attribute__((packed)) XInputLEDReport_t;
-
-typedef struct
-{
-    uint8_t rid;
-    uint8_t rsize;
-    uint8_t unused;
-    uint8_t leftRumble;
-    uint8_t rightRumble;
-    uint8_t unused2[3];
-} __attribute__((packed)) XInputRumbleReport_t;
-
-typedef struct
-{
-    uint8_t rid;
-    uint8_t rsize;
-    uint8_t padding;
-    uint8_t left_motor;
-    uint8_t right_motor;
-    uint8_t padding_2[3];
-} __attribute__((packed)) XInputVibrationCapabilities_t;
-
-typedef struct
-{
-    uint8_t rid;
-    uint8_t rsize;
-    uint16_t buttons;
-    uint8_t leftTrigger;
-    uint8_t rightTrigger;
-    uint16_t leftThumbX;
-    uint16_t leftThumbY;
-    uint16_t rightThumbX;
-    uint16_t rightThumbY;
-    uint8_t reserved[4];
-    uint16_t flags;
-} __attribute__((packed)) XInputInputCapabilities_t;
 
 enum
 {

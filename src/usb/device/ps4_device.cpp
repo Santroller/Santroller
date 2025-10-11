@@ -2,6 +2,7 @@
 #include "usb/device/gamepad_device.h"
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
+#include "main.hpp"
 
 static const int ps4_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -42,6 +43,7 @@ uint16_t tud_hid_ps4_get_report_cb(uint8_t instance, uint8_t report_id, hid_repo
     switch (report_id)
     {
     case ReportId::ReportIdPs4Feature:
+        seenPs4 = true;
         memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
         return sizeof(ps4_feature_config);
     case ReportId::ReportIdPs4GetResponse:

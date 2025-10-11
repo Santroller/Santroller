@@ -18,12 +18,17 @@
 #include "devices/mpr121.hpp"
 #include "mappings/mapping.hpp"
 #include "tusb.h"
+#include "usb/device/xinput_device.h"
+#include "usb/device/ogxbox_device.h"
+#include "usb/device/xone_device.h"
+#include "usb/device/hid_device.h"
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
 #include "main.hpp"
 #include "host/usbh.h"
 #include "pio_usb.h"
 #include "host/usbh_pvt.h"
+#include "quadrature_encoder.h"
 #include <vector>
 #include <memory>
 static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
@@ -31,6 +36,8 @@ std::vector<std::unique_ptr<Mapping>> mappings;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::vector<std::unique_ptr<ActivationTrigger>> triggers;
 proto_SubType current_type;
+ConsoleMode mode = ConsoleMode::Hid;
+ConsoleMode newMode = mode;
 typedef struct
 {
     uint32_t current;
@@ -55,24 +62,161 @@ void update(bool full_poll)
     {
         trigger->update(tool_closed());
     }
-    if (tud_hid_ready())
+    switch (mode)
     {
-        for (auto &mapping : mappings)
+    case ConsoleMode::Hid:
+        if (tud_hid_ready())
         {
-            mapping->update(full_poll);
-            mapping->update_hid(out);
-        }
-        // convert bitmask dpad to actual hid dpad
-        PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
-        report->dpad = dpad_bindings[report->dpad];
-        if (current_type == GuitarHeroGuitar)
-        {
-            // convert bitmask slider to actual hid slider
-            PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
-            reportGh->slider = gh5_mapping[reportGh->slider];
-        }
+            for (auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_hid(out);
+            }
+            // convert bitmask dpad to actual hid dpad
+            PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
+            report->dpad = dpad_bindings[report->dpad];
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = gh5_mapping[reportGh->slider];
+            }
 
-        tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
+            tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PCGamepad_Data_t));
+        }
+        break;
+    case ConsoleMode::Switch:
+    case ConsoleMode::WiiRb:
+    case ConsoleMode::Ps3:
+    case ConsoleMode::Ps2EmulatorOnPs3:
+        if (tud_hid_ready())
+        {
+            if (current_type == Gamepad && mode == ConsoleMode::Ps3)
+            {
+                PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)out;
+                report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->leftStickX = PS3_STICK_CENTER;
+                report->leftStickY = PS3_STICK_CENTER;
+                report->rightStickX = PS3_STICK_CENTER;
+                report->rightStickY = PS3_STICK_CENTER;
+            }
+            else
+            {
+                PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)out;
+                gamepad->accelX = PS3_ACCEL_CENTER;
+                gamepad->accelY = PS3_ACCEL_CENTER;
+                gamepad->accelZ = PS3_ACCEL_CENTER;
+                gamepad->gyro = PS3_ACCEL_CENTER;
+                gamepad->leftStickX = PS3_STICK_CENTER;
+                gamepad->leftStickY = PS3_STICK_CENTER;
+                if (current_type == ProKeys)
+                {
+                    gamepad->rightStickX = 0;
+                    gamepad->rightStickY = 0;
+                }
+                else
+                {
+                    gamepad->rightStickX = PS3_STICK_CENTER;
+                    gamepad->rightStickY = PS3_STICK_CENTER;
+                }
+            }
+            for (auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                if (mode == ConsoleMode::Ps2EmulatorOnPs3)
+                {
+                    // TODO: ps2 on ps3!
+                }
+                else
+                {
+                    mapping->update_ps3(out);
+                }
+            }
+            if (current_type == Gamepad && mode == ConsoleMode::Ps3)
+            {
+                // Gamepads use a totally different report format
+                tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PS3Gamepad_Data_t));
+                break;
+            }
+            // convert bitmask dpad to actual hid dpad
+            PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)out;
+            report->dpad = dpad_bindings[report->dpad];
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = gh5_mapping[reportGh->slider];
+            }
+
+            tud_hid_report(0, &out, sizeof(PS3Dpad_Data_t));
+        }
+        break;
+    case ConsoleMode::Ps4:
+        if (tud_hid_ready())
+        {
+            for (auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_ps4(out);
+            }
+            PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)out;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+            // convert bitmask dpad to actual hid dpad
+            gamepad->dpad = dpad_bindings[gamepad->dpad];
+
+            tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PS4Dpad_Data_t));
+        }
+        break;
+    case ConsoleMode::OgXbox:
+        if (tud_ogxbox_n_ready(0))
+        {
+            OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)out;
+            report->rid = 0;
+            report->rsize = sizeof(OGXboxGamepad_Data_t);
+            for (auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_ogxbox(out);
+            }
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = gh5_mapping[reportGh->slider];
+            }
+
+            tud_ogxbox_n_report(0, &out, sizeof(XInputGamepad_Data_t));
+        }
+        break;
+    case ConsoleMode::Xbox360:
+        if (tud_xinput_n_ready(0))
+        {
+            XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)out;
+            report->rid = 0;
+            report->rsize = sizeof(XInputGamepad_Data_t);
+            for (auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_xinput(out);
+            }
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = gh5_mapping[reportGh->slider];
+            }
+
+            tud_xinput_n_report(0, &out, sizeof(XInputGamepad_Data_t));
+        }
+        break;
+    case ConsoleMode::XboxOne:
+        break;
     }
 }
 

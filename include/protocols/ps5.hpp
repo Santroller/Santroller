@@ -3,7 +3,6 @@
 
 #define PS5_INPUT_REPORT_ID 1
 typedef struct {
-    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t rightStickX;
@@ -39,7 +38,6 @@ typedef struct {
 
 typedef struct
 {
-    uint8_t report_id;
 
     uint8_t joystickX;
     uint8_t joystickY;

@@ -84,6 +84,7 @@ const uint8_t ps3_feature_ef[] = {
 
 uint16_t tud_hid_ps3_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
+    printf("get report: %02x %02x %04x\r\n", report_id, report_type, reqlen);
     (void)instance;
     (void)report_id;
     (void)report_type;
@@ -201,6 +202,7 @@ void handle_player_leds_ps3(uint8_t player_mask)
 
 void tud_hid_ps3_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+    printf("set report: %02x %02x\r\n", report_id, report_type);
     (void)instance;
     switch (report_type)
     {
@@ -212,6 +214,7 @@ void tud_hid_ps3_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
             return;
         case ReportId::ReportIdPs3EF:
             ef_byte = buffer[6];
+        printf("%02x\r\n", ef_byte);
             return;
         }
     case HID_REPORT_TYPE_OUTPUT:

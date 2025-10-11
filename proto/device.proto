@@ -103,6 +103,7 @@ message PSXEmulationDevice {
   required int32 acknowledgePin = 5;
 }
 message JoybusEmulationDevice { required int32 dataPin = 1; }
+message EncoderDevice { required int32 dataPin = 1; }
 
 message Device {
   oneof device {
@@ -127,5 +128,6 @@ message Device {
     PeripheralDevice peripheral = 21;
     CrkdNeckDevice crkdNeck = 22;
     ADS1115Device ads1115 = 23;
+    EncoderDevice encoder = 24;
   }
 }

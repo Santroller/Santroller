@@ -94,10 +94,10 @@ typedef struct {
 } __attribute__((packed)) OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR;
 enum
 {
-  ITF_NUM_XINPUT_SECURITY,
   ITF_NUM_HID,
-  ITF_NUM_XONE=1,
-  // ITF_NUM_XINPUT,
+  // ITF_NUM_XONE=1,
+  ITF_NUM_XINPUT,
+  ITF_NUM_XINPUT_SECURITY,
   // ITF_NUM_XINPUT2,
 //   ITF_NUM_XINPUT_AUDIO,
 //   ITF_NUM_XINPUT_PLUGIN_MODULE,
@@ -173,11 +173,11 @@ enum
 // XInput Plugin Module Descriptor
 #define TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(_itfnum, _epin) \
   /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x02, 0,\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 1, 0xFF, 0x5D, 0x02, 0,\
   /* XInput plugin module descriptor */\
   9, 0x21, 0x00, 0x01, 0x01, 0x22, _epin, 0x07, 0x00,\
   /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16,
+  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
 
 #define TUD_XINPUT_SECURITY_DESC_LEN    (9 + 6)
 

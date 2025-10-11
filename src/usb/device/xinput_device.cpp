@@ -13,6 +13,7 @@
 #include <xsm3.h>
 #include <pico/unique_id.h>
 #include "usb/usb_devices.h"
+#include "config.hpp"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -134,6 +135,10 @@ void xinputd_reset(uint8_t rhport)
 {
     (void)rhport;
     tu_memclr(_xinputd_itf, sizeof(_xinputd_itf));
+    for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++)
+    {
+        _xinputd_itf[i].itf_num = 0xFF;
+    }
     sending = false;
 }
 
@@ -304,6 +309,7 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 xsm3_set_identification_data(xsm3_id_data_ms_controller);
                 tud_control_xfer(rhport, request, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
             }
+            newMode = ConsoleMode::Xbox360;
             return true;
         case 0x82:
             if (stage == CONTROL_STAGE_SETUP)
@@ -345,14 +351,26 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 {
                     xsm3_do_challenge_init(buf);
                 }
+                else
+                {
+                    tud_control_xfer(rhport, request, buf, request->wLength);
+                }
                 return true;
             case 0x87:
                 if (stage == CONTROL_STAGE_DATA)
                 {
                     xsm3_do_challenge_verify(buf);
                 }
+                else
+                {
+                    tud_control_xfer(rhport, request, buf, request->wLength);
+                }
                 return true;
             case 0x84:
+                if (stage == CONTROL_STAGE_SETUP)
+                {
+                    tud_control_xfer(rhport, request, buf, request->wLength);
+                }
                 return true;
             }
         }

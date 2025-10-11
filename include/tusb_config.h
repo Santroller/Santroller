@@ -15,7 +15,7 @@
 // #define CFG_TUSB_DEBUG 2 
 #define CFG_TUH_RPI_PIO_USB 1
 #define CFG_TUH_HUB 1
-#define CFG_TUD_HID 4
+#define CFG_TUD_HID_CUSTOM 4
 #define CFG_TUD_GH_ARCADE 1
 #define CFG_TUD_XONE 1
 #define CFG_TUD_OGXBOX 1

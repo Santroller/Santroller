@@ -914,6 +914,14 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         }
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
+            return 0;
+        }
+
+        case COMMAND_READ_MATRIX: {
+            uint8_t outPin = wValue & 0xff;
+            uint8_t pin = (wValue >> 8);
+            response_buffer[0] = matrix_read(pin, outPin);
+            return 1;
         }
         case COMMAND_READ_MIDI: {
             memcpy(response_buffer, &midiData.midiVelocities, (sizeof(Midi_Data_t) - offsetof(Midi_Data_t, midiVelocities)));

@@ -54,6 +54,7 @@ enum SerialCommands {
     COMMAND_WT_DRUM_VALID,
     COMMAND_BH_DRUM_VALID,
     COMMAND_READ_CRKD,
+    COMMAND_READ_MATRIX,
     MAX=100
 };
 

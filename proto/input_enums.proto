@@ -467,10 +467,10 @@ enum CrkdNeckButtonType {
 }
 
 enum AccelerometerInputType {
-  AccelX = 1;
-  AccelY = 2;
-  AccelX = 3;
-  AccelAdc1 = 4;
-  AccelAdc2 = 5;
-  AccelAdc3 = 6;
+  AccelerometerX = 1;
+  AccelerometerY = 2;
+  AccelerometerX = 3;
+  AccelerometerAdc1 = 4;
+  AccelerometerAdc2 = 5;
+  AccelerometerAdc3 = 6;
 }

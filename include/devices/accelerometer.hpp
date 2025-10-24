@@ -8,9 +8,9 @@ public:
     ~AccelerometerDevice() {}
     AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id);
     void update(bool full_poll);
+    Accelerometer m_accelerometer;
 
 private:
     proto_AccelerometerDevice m_device;
-    Accelerometer m_accelerometer;
     uint32_t m_lastValue = 0;
 };

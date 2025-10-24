@@ -1,40 +1,37 @@
-#include "input/crkd.hpp"
+#include "input/accelerometer.hpp"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "stdio.h"
 
-CrkdButtonInput::CrkdButtonInput(proto_CrkdNeckButtonInput input, std::shared_ptr<CrkdDevice> device) : m_input(input), m_device(device)
+AccelerometerInput::AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device) : m_input(input), m_device(device)
 {
 }
-bool CrkdButtonInput::tickDigital()
+bool AccelerometerInput::tickDigital()
 {
-    switch (m_input.button)
-    {
-    case CrkdGreen:
-        return m_device->neck.green;
-    case CrkdRed:
-        return m_device->neck.red;
-    case CrkdYellow:
-        return m_device->neck.yellow;
-    case CrkdBlue:
-        return m_device->neck.blue;
-    case CrkdOrange:
-        return m_device->neck.orange;
-    case CrkdDpadUp:
-        return m_device->neck.dpadUp;
-    case CrkdDpadDown:
-        return m_device->neck.dpadDown;
-    case CrkdDpadLeft:
-        return m_device->neck.dpadLeft;
-    case CrkdDpadRight:
-        return m_device->neck.dpadRight;
-    }
     return false;
 }
-uint16_t CrkdButtonInput::tickAnalog()
+uint16_t AccelerometerInput::tickAnalog()
 {
-    return tickDigital() ? 32767 : 0;
+    switch (m_input.type)
+    {
+    case AccelerometerX:
+        return m_device->m_accelerometer.accel[0] + INT16_MAX;
+    case AccelerometerY:
+        return m_device->m_accelerometer.accel[1] + INT16_MAX;
+    case AccelerometerZ:
+        return m_device->m_accelerometer.accel[2] + INT16_MAX;
+    case AccelerometerAdc1:
+        return m_device->m_accelerometer.lis3dhAdc[0];
+    case AccelerometerAdc2:
+        return m_device->m_accelerometer.lis3dhAdc[1];
+    case AccelerometerAdc3:
+        return m_device->m_accelerometer.lis3dhAdc[2];
+    
+    default:
+        break;
+    }
+    return 0;
 }
-void CrkdButtonInput::setup()
+void AccelerometerInput::setup()
 {
 }

@@ -4,6 +4,7 @@
 #include "input/wii.hpp"
 #include "input/crkd.hpp"
 #include "input/ads1115.hpp"
+#include "input/accelerometer.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/wii.hpp"
@@ -57,7 +58,7 @@ void update(bool full_poll)
     {
         device.second->update(full_poll);
     }
-    // If we are configuring, disable triggers
+    // // If we are configuring, disable triggers
     for (auto &trigger : triggers)
     {
         trigger->update(tool_closed());
@@ -72,6 +73,7 @@ void update(bool full_poll)
                 mapping->update(full_poll);
                 mapping->update_hid(out);
             }
+            
             // convert bitmask dpad to actual hid dpad
             PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
             report->dpad = dpad_bindings[report->dpad];
@@ -286,6 +288,9 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Input_ads1115_tag:
         input = std::unique_ptr<Input>(new ADS1115Input(mapping.input.input.ads1115, std::static_pointer_cast<ADS1115Device>(devices[mapping.input.input.ads1115.deviceid])));
+        break;
+    case proto_Input_accelerometer_tag:
+        input = std::unique_ptr<Input>(new AccelerometerInput(mapping.input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(devices[mapping.input.input.accelerometer.deviceid])));
         break;
     }
     if (input == nullptr)

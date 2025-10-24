@@ -11,8 +11,12 @@
 #define LIS3DH_ADDRESS 0x18
 #define LIS3DH_ADDRESS_2 0x19
 #define LIS3DH_REG_CTRL1 0x20
+#define LIS3DH_REG_CTRL2 0x21
+#define LIS3DH_REG_CTRL3 0x22
 #define LIS3DH_REG_CTRL4 0x23
 #define LIS3DH_REG_WHOAMI 0x0F
+#define LIS3DH_REG_STATUS 0x27
+#define LIS3DH_REG_STATUS_AUX 0x07
 #define LIS3DH_REG_OUT 0x28 | 0x80  // Set auto increment
 #define LIS3DH_REG_OUTADC1_L 0x08 | 0x80
 #define LIS3DH_REG_OUTADC1_H 0x09 | 0x80
@@ -54,4 +58,5 @@ class Accelerometer {
     AccelerometerType type;
     uint8_t address;
     uint8_t reg;
+    int currentPoll=0;
 };

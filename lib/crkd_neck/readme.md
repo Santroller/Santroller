@@ -8,7 +8,8 @@ the protocol in use is structured like the following:
 ```c
 
 struct NeckToBody {
-    uint8_t header[2] = {0xA5, 0x01};
+    uint8_t header; // 0xA5
+    uint8_t command; // 0x01 
     uint8_t len = 0x0C;
     uint8_t padding[2] = {0x00, 0x00};
     uint8_t green:1;
@@ -25,7 +26,8 @@ struct NeckToBody {
     uint8_t soloBlue:1;
     uint8_t soloOrange:1;
     uint8_t :3;
-    uint8_t footer[2] = {0x01, 0x15}; // gh: {0x01, 0x15}, rb: {0x03, 0x20}
+    uint8_t hw_version; // gh neck: 0x01 or 0x02, rb neck: 0x03
+    uint8_t fw_version; // 
     uint8_t crc; // CRC-8/MAXIM-DOW
 }
 // this is sent by the body to the neck, but its not necessary.

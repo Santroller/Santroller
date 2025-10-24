@@ -24,6 +24,7 @@
 #include "usb/device/hid_device.h"
 #include "usb/device/ps3_device.h"
 #include "usb/device/ps4_device.h"
+#include "uart.hpp"
 #include "protocols/hid.hpp"
 #include "main.hpp"
 #include "utils.h"
@@ -347,13 +348,13 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
             buffer++;
             uint32_t ret = copy_config(buffer, start);
             start += ret;
-            return ret+1;
+            return ret + 1;
         }
         case ReportId::ReportIdConfigInfo:
             buffer[0] = report_id;
             buffer++;
             start = 0;
-            return copy_config_info(buffer)+1;
+            return copy_config_info(buffer) + 1;
         }
         break;
     case HID_REPORT_TYPE_INPUT:
@@ -445,8 +446,8 @@ void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
 void tud_detected_console(ConsoleMode mode)
 {
 }
-// void *__dso_handle = 0;
-// void *_fini = 0;
+
+
 int main()
 {
     newMode = mode;
@@ -474,7 +475,7 @@ int main()
 
     // init device stack on configured roothub port
     tud_init(BOARD_TUD_RHPORT);
-
+    
     while (1)
     {
         hid_task();

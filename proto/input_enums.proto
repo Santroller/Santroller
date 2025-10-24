@@ -465,3 +465,12 @@ enum CrkdNeckButtonType {
   CrkdSoloBlue = 13;
   CrkdSoloOrange = 14;
 }
+
+enum AccelerometerInputType {
+  AccelX = 1;
+  AccelY = 2;
+  AccelX = 3;
+  AccelAdc1 = 4;
+  AccelAdc2 = 5;
+  AccelAdc3 = 6;
+}

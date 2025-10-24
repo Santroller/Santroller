@@ -14,6 +14,10 @@ message ADS1115Input {
   required int32 deviceid = 1;
   required int32 channel = 2;
 }
+message AccelerometerInput {
+  required int32 deviceid = 1;
+  required AccelerometerInputType type = 2;
+}
 
 message MPR121Input {
   required int32 deviceid = 1;
@@ -111,6 +115,7 @@ message Input {
     UsbDeviceTypeInput usbDevice = 16;
     BluetoothDeviceTypeInput bluetoothDevice = 17;
     ADS1115Input ads1115 = 18;
+    AccelerometerInput accelerometer = 19;
   }
 }
 

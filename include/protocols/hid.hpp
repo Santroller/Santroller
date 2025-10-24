@@ -167,7 +167,6 @@ typedef struct
 
 typedef struct
 {
-    uint8_t reportId;
     uint8_t a : 1; // cross, green
     uint8_t b : 1; // circle, red
     uint8_t y : 1; // triangle, yellow

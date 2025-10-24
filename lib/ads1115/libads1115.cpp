@@ -24,7 +24,6 @@ void ADS1115::tick()
         init();
         return;
     }
-    config = readRegister(ADS1115_RA_CONFIG);
     if (rdy[alert])
     {
         rdy[alert] = false;
@@ -37,8 +36,9 @@ void ADS1115::tick()
         config &= ~(0xF000);
         config |= (0x4000 + (current * 0x1000));
         config |= 1<<15;
+        connected = writeRegister(ADS1115_RA_LO_THRESH, 0x0000);
+        connected = writeRegister(ADS1115_RA_HI_THRESH, 1 << 15);
         connected = writeRegister(ADS1115_RA_CONFIG, config);
-
     }
 }
 void cb(uint gpio, uint32_t event_mask) {
@@ -60,9 +60,10 @@ void ADS1115::init()
     gpio_set_dir(alert, false);
     gpio_pull_up(alert);
     
-    gpio_set_irq_enabled_with_callback(alert, GPIO_IRQ_EDGE_FALL, true, &cb);
+    gpio_set_irq_enabled_with_callback(alert, GPIO_IRQ_EDGE_FALL, true, cb);
     config = ADS1115_REG_RESET_VAL;
-    connected = writeRegister(ADS1115_RA_CONFIG, ADS1115_REG_RESET_VAL);
-    connected = writeRegister(ADS1115_RA_LO_THRESH, (0 << 15));
-    connected = writeRegister(ADS1115_RA_HI_THRESH, (1 << 15));
+    connected = writeRegister(ADS1115_RA_LO_THRESH, 0x0000);
+    connected = writeRegister(ADS1115_RA_HI_THRESH, 1 << 15);
+    connected = writeRegister(ADS1115_RA_CONFIG, config);
+    printf("configured %d\r\n", alert);
 }

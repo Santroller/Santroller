@@ -1,4 +1,5 @@
 #include "accelerometerlib.hpp"
+#include "stdio.h"
 void Accelerometer::initLis3dh() {
     if (connected) {
         return;

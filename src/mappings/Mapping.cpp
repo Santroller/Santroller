@@ -32,23 +32,48 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
     else
     {
 
-        if (val < center)
+        auto inverted = min > max;
+        if (inverted)
         {
-            if (center - val < deadzone)
+            if (val < center)
             {
-                return UINT16_MAX / 2;
-            }
+                if (center - val < deadzone)
+                {
+                    return UINT16_MAX / 2;
+                }
 
-            val = map(val, min, center - deadzone, 0, UINT16_MAX / 2);
+                val = map(val, center - deadzone, max, UINT16_MAX / 2, UINT16_MAX);
+            }
+            else
+            {
+                if (val - center < deadzone)
+                {
+                    return UINT16_MAX / 2;
+                }
+
+                val = map(val, min, center + deadzone, 0, UINT16_MAX / 2);
+            }
         }
         else
         {
-            if (val - center < deadzone)
+            if (val < center)
             {
-                return UINT16_MAX / 2;
-            }
+                if (center - val < deadzone)
+                {
+                    return UINT16_MAX / 2;
+                }
 
-            val = map(val, center + deadzone, max, UINT16_MAX / 2, UINT16_MAX);
+                val = map(val, min, center - deadzone, 0, UINT16_MAX / 2);
+            }
+            else
+            {
+                if (val - center < deadzone)
+                {
+                    return UINT16_MAX / 2;
+                }
+
+                val = map(val, center + deadzone, max, UINT16_MAX / 2, UINT16_MAX);
+            }
         }
     }
     if (val > UINT16_MAX)

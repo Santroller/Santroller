@@ -4277,6 +4277,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_GUITAR;
             break;
+        case PS3_MPA_DRUM_PID:
         case PS3_RB_DRUM_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_DRUMS;
@@ -4332,6 +4333,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->drum_type = DRUM_RB1;
             break;
         case WII_RB_DRUM_2_PID:
+        case WII_MPA_DRUMS_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_DRUMS;
             type->drum_type = DRUM_RB2;

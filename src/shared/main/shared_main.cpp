@@ -4358,8 +4358,6 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
             break;
         case XBOX_360_ION_ROCKER_VID:
-            type->console_type = XBOX360;
-            type->sub_type = XINPUT_DRUMS;
             type->drum_type = DRUM_RB2;
             break;
         }

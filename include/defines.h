@@ -150,6 +150,7 @@
 #define DRUM_RB1 1
 #define DRUM_RB2 2
 #define DRUM_GH 3
+#define DRUM_ION 4
 #define GUITAR_CHECK 1
 
 typedef enum {

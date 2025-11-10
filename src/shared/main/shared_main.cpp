@@ -3174,6 +3174,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE_IS_GUITAR || DEVICE_TYPE_IS_LIVE_GUITAR
         report->whammy = INT16_MIN;
 #endif
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+// rb drums have some weird logic so this is what we need to send when nothing is hit
+        report->redVelocity = -1;
+        report->blueVelocity = -1;
+        report->greenVelocity = 0;
+        report->yellowVelocity = 0;
+#endif
         TICK_XINPUT;
 
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
@@ -3499,6 +3506,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             {
 #endif
                 PS3_REPORT *report = (PS3_REPORT *)report_data;
+// rb drums have inverted velocity so they start at 0
+#if DEVICE_TYPE == ROCK_BAND_DRUMS
+        report->redVelocity = 0;
+        report->blueVelocity = 0;
+        report->greenVelocity = 0;
+        report->yellowVelocity = 0;
+#endif
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
                 report->whammy = 0;
 #endif
@@ -4358,7 +4372,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
             break;
         case XBOX_360_ION_ROCKER_VID:
-            type->drum_type = DRUM_RB2;
+            type->drum_type = DRUM_ION;
             break;
         }
 

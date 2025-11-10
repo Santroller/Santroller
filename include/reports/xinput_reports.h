@@ -181,11 +181,11 @@ typedef struct
     uint8_t x : 1;  // blue
     uint8_t y : 1;  // yellow
 
-    uint8_t unused[2];
-    int16_t redVelocity;
-    int16_t yellowVelocity;
-    int16_t blueVelocity;
-    int16_t greenVelocity;
+    uint8_t unused[2]; // trigger
+    int16_t redVelocity; // lx
+    int16_t yellowVelocity; // ly
+    int16_t blueVelocity; // rx
+    int16_t greenVelocity; // ry
     uint8_t reserved_1[6];
 } __attribute__((packed)) XInputRockBandDrums_Data_t;
 

@@ -124,18 +124,14 @@
     if (kick1)                                                                                                    \
     {                                                                                                             \
         onNote(10, RB_MIDI_NOTE_KICK, 0x7F);                                                                      \
-    }                                                                                                             \
-    else                                                                                                          \
+    }                                                                                                                \
+    /*ion kits dont have the second pedal and send out signals like its always on, so ignore that*/               \
+    if (device_type.drum_type != DRUM_ION)                                                                        \
     {                                                                                                             \
-        offNote(10, RB_MIDI_NOTE_KICK, 0);                                                                        \
-    }                                                                                                             \
-    if (kick2)                                                                                                    \
-    {                                                                                                             \
-        onNote(10, RB_MIDI_NOTE_KICK2, 0x7F);                                                                     \
-    }                                                                                                             \
-    else                                                                                                          \
-    {                                                                                                             \
-        offNote(10, RB_MIDI_NOTE_KICK2, 0);                                                                       \
+        if (kick2)                                                                                                \
+        {                                                                                                         \
+            onNote(10, RB_MIDI_NOTE_KICK2, 0x7F);                                                                 \
+        }                                                                                                          \
     }
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
 #define SET_GH_PADS()                                             \

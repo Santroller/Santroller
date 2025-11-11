@@ -11,10 +11,11 @@ class UARTInterface {
     bool send(uint8_t* data, uint8_t size);
     void set_format(uint data_bits, uint stop_bits, uart_parity_t parity);
     bool readable();
-    void setup_interrupts(uint8_t* dest, size_t maxlen);
+    void setup_interrupts(uint8_t* dest,uint8_t start_char, size_t maxlen);
     void disable_interrupts();
     bool transfer_done();
     void reset_transfer();
+    long last_read_time();
 
    private:
     uart_inst_t *uart;

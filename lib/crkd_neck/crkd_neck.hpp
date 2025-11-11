@@ -39,8 +39,8 @@
 
 typedef struct
 {
-    // uint8_t header0 = 0xa5; byte chomped as its start byte
-    uint8_t header = 0x01;
+    uint8_t header = 0xa5;
+    uint8_t cmd = 0x01;
     uint8_t len = 0x0C;
     uint8_t padding[2] = {0x00, 0x00};
     uint8_t green : 1;
@@ -63,8 +63,7 @@ typedef struct
 class CrkdNeck
 {
 public:
-    CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock)
-        : interface(block, tx, rx, clock) {};
+    CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock);
     void tick();
     inline bool isConnected()
     {
@@ -92,6 +91,7 @@ private:
     void readflash(uint32_t addr, uint16_t size, uint8_t *out);
     void erase(uint16_t size);
     void read_info();
+    void tick_updates();
     void read_info_stream(uint8_t cmd, uint8_t *out);
     void send_command(uint8_t cmd);
     bool check_reply();

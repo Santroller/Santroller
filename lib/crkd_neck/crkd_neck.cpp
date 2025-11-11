@@ -7,60 +7,31 @@
 #include "stdint.h"
 #include "hardware/irq.h"
 
-// TODO: we would probably want the tool to send a firmware here, instead of needing to hardcode this into the firmware.
 static uint8_t firmware[10000];
-
+CrkdNeck::CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : interface(block, tx, rx, clock)
+{
+    interface.setup_interrupts((uint8_t *)&m_crkdNeck, 0xA5, sizeof(m_crkdNeck));
+}
 void CrkdNeck::tick()
 {
-    if (m_updating)
-    {
-        if (!m_connected)
-        {
-            uint8_t data = PY_SYNCH;
-            interface.send(&data, sizeof(data));
-            m_connected = interface.readable() && check_reply();
-        }
-        if (m_connected)
-        {
-            read_info();
-            if (!m_error)
-            {
-                erase(sizeof(firmware));
-            }
-            if (!m_error)
-            {
-                writeflash(PY_CODE_ADDR, firmware, sizeof(firmware));
-            }
-            if (!m_error)
-            {
-                readflash(PY_CODE_ADDR, sizeof(firmware), firmware);
-            }
-            m_updating = false;
-            interface.set_format(8, 1, UART_PARITY_NONE);
-        }
-        return;
-    }
-    auto connected = interface.read_uart(0xA5, sizeof(m_crkdNeck), (uint8_t *)&m_crkdNeck);
-    if (connected)
-    {
-        green = m_crkdNeck.green;
-        red = m_crkdNeck.red;
-        yellow = m_crkdNeck.yellow;
-        blue = m_crkdNeck.blue;
-        orange = m_crkdNeck.orange;
-        soloGreen = m_crkdNeck.soloGreen;
-        soloRed = m_crkdNeck.soloRed;
-        soloYellow = m_crkdNeck.soloYellow;
-        soloBlue = m_crkdNeck.soloBlue;
-        soloOrange = m_crkdNeck.soloOrange;
-        rb = m_crkdNeck.footer[0] == 0x03;
-        dpadUp = m_crkdNeck.dpadUpDown == 0x00;
-        dpadDown = m_crkdNeck.dpadUpDown == 0xFF;
-        dpadRight = m_crkdNeck.dpadLeftRight == 0x00;
-        dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
-        m_connected = true;
-        m_lastPoll = millis();
-    }
+    
+    green = m_crkdNeck.green;
+    red = m_crkdNeck.red;
+    yellow = m_crkdNeck.yellow;
+    blue = m_crkdNeck.blue;
+    orange = m_crkdNeck.orange;
+    rb = m_crkdNeck.footer[0] == 0x03;
+    soloGreen = m_crkdNeck.soloGreen && rb;
+    soloRed = m_crkdNeck.soloRed && rb;
+    soloYellow = m_crkdNeck.soloYellow && rb;
+    soloBlue = m_crkdNeck.soloBlue && rb;
+    soloOrange = m_crkdNeck.soloOrange && rb;
+    dpadUp = m_crkdNeck.dpadUpDown == 0x00;
+    dpadDown = m_crkdNeck.dpadUpDown == 0xFF;
+    dpadRight = m_crkdNeck.dpadLeftRight == 0x00;
+    dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
+    m_lastPoll = interface.last_read_time();
+    m_connected = true;
     if (millis() - m_lastSend > 10)
     {
         // kick the neck over to polling at 1ms
@@ -68,10 +39,7 @@ void CrkdNeck::tick()
         interface.send(data, sizeof(data));
         m_lastSend = millis();
     }
-    if (millis() - m_lastPoll > 10)
-    {
-        m_connected = false;
-    }
+    m_connected = millis() - m_lastPoll < 10;
 };
 
 bool CrkdNeck::check_reply()
@@ -172,7 +140,7 @@ void CrkdNeck::erase(uint16_t size)
 void CrkdNeck::readflash(uint32_t addr, uint16_t size, uint8_t *data)
 {
     uint8_t block[PY_BLOCKSIZE];
-    interface.setup_interrupts(block, sizeof(block));
+    interface.setup_interrupts(block, 0, sizeof(block));
     for (int i = 0; i < size; i += PY_BLOCKSIZE)
     {
         interface.reset_transfer();
@@ -237,10 +205,39 @@ void CrkdNeck::writeflash(uint32_t addr, uint8_t *data, uint32_t size)
     }
 }
 
+void CrkdNeck::tick_updates()
+{
+    if (!m_connected)
+    {
+        uint8_t data = PY_SYNCH;
+        interface.send(&data, sizeof(data));
+        m_connected = interface.readable() && check_reply();
+    }
+    if (m_connected)
+    {
+        read_info();
+        if (!m_error)
+        {
+            erase(sizeof(firmware));
+        }
+        if (!m_error)
+        {
+            writeflash(PY_CODE_ADDR, firmware, sizeof(firmware));
+        }
+        if (!m_error)
+        {
+            readflash(PY_CODE_ADDR, sizeof(firmware), firmware);
+        }
+        m_updating = false;
+        interface.set_format(8, 1, UART_PARITY_NONE);
+    }
+}
+
 void CrkdNeck::update_firmware()
 {
     m_error = false;
     m_connected = false;
     m_updating = true;
+    interface.disable_interrupts();
     interface.set_format(8, 1, UART_PARITY_EVEN);
 }

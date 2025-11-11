@@ -32,14 +32,14 @@ void CrkdNeck::tick()
     dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
     m_lastPoll = interface.last_read_time();
     m_connected = true;
-    if (millis() - m_lastSend > 10)
+    m_connected = millis() - m_lastPoll < 10;
+    if (m_connected && millis() - m_lastSend > 10)
     {
         // kick the neck over to polling at 1ms
         uint8_t data[] = {0xA5, 0xC1, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD5};
         interface.send(data, sizeof(data));
         m_lastSend = millis();
     }
-    m_connected = millis() - m_lastPoll < 10;
 };
 
 bool CrkdNeck::check_reply()

@@ -3607,7 +3607,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
     TICK_RESET
     // Some hosts want packets sent every frame
-    if (last_report && output_console_type != ARCADE && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != XBOX360 && !updateHIDSequence)
+    if (last_report && output_console_type != ARCADE && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && !updateHIDSequence)
     {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0)

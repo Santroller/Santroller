@@ -17,16 +17,20 @@ void GuitarHeroGuitarAxisMapping::update_hid(uint8_t *buf)
     switch (m_mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitarLeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
+        // shove stick on the slider, then it can be used in menus
+        if (!m_centered)
+        {
+            report->slider = m_calibratedValue - 32767;
+        }
         break;
     case GuitarHeroGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
+        report->unused = m_calibratedValue - 32767;
         break;
     case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibratedValue - 32767;
         break;
     case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibratedValue - 32767;
         break;
     }
 }
@@ -145,13 +149,13 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
     {
     case GuitarHeroGuitarLeftStickX:
         // shove stick on the slider, then it can be used in menus
-        if (m_calibratedValue != 32767)
+        if (!m_centered)
         {
             report->slider = m_calibratedValue - 32767;
         }
         break;
     case GuitarHeroGuitarLeftStickY:
-        report->unused = m_calibratedValue - 32767;
+        report->leftStickY = m_calibratedValue - 32767;
         break;
     case GuitarHeroGuitarWhammy:
         report->whammy = m_calibratedValue - 32767;
@@ -169,18 +173,20 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitarLeftStickX:
-        // report->leftStickX = m_calibratedValue >> 8;
+        // shove stick on the slider, then it can be used in menus
+        if (!m_centered)
+        {
+            report->slider = m_calibratedValue - 32767;
+        }
         break;
     case GuitarHeroGuitarLeftStickY:
-        // report->leftStickY = m_calibratedValue >> 8;
+        report->unused = m_calibratedValue - 32767;
         break;
     case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibratedValue - 32767;
         break;
     case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue >> 8;
-        break;
-    default:
+        report->tilt = m_calibratedValue - 32767;
         break;
     }
 }

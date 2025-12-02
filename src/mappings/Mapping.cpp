@@ -137,4 +137,6 @@ void AxisMapping::update(bool full_poll)
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
         send_event(event);
     }
+    // TODO: better solution for this probably.
+    m_centered = !m_centered;
 }

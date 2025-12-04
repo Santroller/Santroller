@@ -311,7 +311,6 @@ typedef struct
     uint8_t pickup;
     uint8_t tilt;
 } __attribute__((packed)) PCRockBandGuitar_Data_t;
-
 typedef struct
 {
     uint8_t reportId;

@@ -1063,7 +1063,9 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             {
                 usb_host_data->whammy = report->whammy;
             }
-            usb_host_data->slider = report->slider;
+            if (report->slider != PS3_STICK_CENTER) {
+                usb_host_data->slider = report->slider;
+            }
             break;
         }
         case ROCK_BAND_GUITAR:

@@ -142,6 +142,7 @@ add_executable(
   src/devices/ads1115.cpp
   src/devices/accelerometer.cpp
   src/devices/bhdrum.cpp
+  src/devices/debug.cpp
   src/devices/crazyneck.cpp
   src/devices/djh.cpp
   src/devices/gh5neck.cpp
@@ -223,10 +224,5 @@ target_link_libraries(
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${TARGET})
 
-if(true)
-  target_compile_definitions(${TARGET} PUBLIC PICO_DEFAULT_UART_RX_PIN=9)
-  target_compile_definitions(${TARGET} PUBLIC PICO_DEFAULT_UART_TX_PIN=8)
-  target_compile_definitions(${TARGET} PUBLIC PICO_DEFAULT_UART=1)
-endif()
 add_custom_target(pico)
 add_dependencies(pico santroller)

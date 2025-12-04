@@ -3,15 +3,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
-typedef struct {
-    uint8_t  rid; 
-    uint8_t  rsize;
+typedef struct
+{
+    uint8_t rid;
+    uint8_t rsize;
     uint16_t left;
     uint16_t right;
 } __attribute__((packed)) OGXboxOutput_Report_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t rid;
     uint8_t rsize;
     uint8_t dpadUp : 1;
@@ -19,16 +20,16 @@ typedef struct {
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t start : 1;
-    uint8_t back : 1;  // select
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
+    uint8_t back : 1;            // select
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
     uint8_t padding;
     uint8_t a;
     uint8_t b;
     uint8_t x;
     uint8_t y;
     uint8_t rightShoulder; // black
-    uint8_t leftShoulder; // white
+    uint8_t leftShoulder;  // white
     uint8_t leftTrigger;
     uint8_t rightTrigger;
     int16_t leftStickX;
@@ -37,7 +38,8 @@ typedef struct {
     int16_t rightStickY;
 } __attribute__((packed)) OGXboxGamepad_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t rid;
     uint8_t rsize;
     uint8_t dpadUp : 1;
@@ -45,9 +47,9 @@ typedef struct {
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t start : 1;
-    uint8_t back : 1;  // select
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
+    uint8_t back : 1;            // select
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
     uint8_t padding;
     uint8_t a;
     uint8_t b;
@@ -63,28 +65,27 @@ typedef struct {
     uint16_t rightStickY;
 } __attribute__((packed)) OGXboxGamepadCapabilities_Data_t;
 
-
 typedef struct
 {
     uint8_t rid;
     uint8_t rsize;
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t solo : 1;  // leftThumbClick
-    uint8_t overdrive: 1;
+    uint8_t solo : 1; // leftThumbClick
+    uint8_t overdrive : 1;
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
+    uint8_t a; // green
+    uint8_t b; // red
+    uint8_t x; // blue
+    uint8_t y; // yellow
 
-    uint8_t leftShoulder;  // orange
+    uint8_t leftShoulder; // orange
     uint8_t pedalAnalog : 7;
     uint8_t pedalDigital : 1;
     uint8_t unused;
@@ -116,8 +117,10 @@ typedef struct
     uint8_t key18 : 1;
     uint8_t key17 : 1;
 
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             uint8_t velocity1 : 7;
             uint8_t key25 : 1;
 
@@ -150,17 +153,17 @@ typedef struct
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t leftThumbClick : 1;  // pedal2
-    uint8_t padFlag : 1;         // right thumb click
+    uint8_t kick2 : 1; // pedal2
+    uint8_t padFlag : 1;        // right thumb click
 
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
-    uint8_t leftShoulder;  // pedal1
-    uint8_t cymbalFlag;    // right shoulder click
+    uint8_t a;            // green
+    uint8_t b;            // red
+    uint8_t x;            // blue
+    uint8_t y;            // yellow
+    uint8_t kick1; // pedal1
+    uint8_t cymbalFlag;   // right shoulder click
 
     uint8_t unused[2];
     int16_t redVelocity;
@@ -180,23 +183,30 @@ typedef struct
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t leftThumbClick : 1;  // isGuitarHero
+    uint8_t leftThumbClick : 1; // isGuitarHero
     uint8_t : 1;
-    
+
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
+    uint8_t a; // green
+    uint8_t b; // red
+    uint8_t x; // blue
+    uint8_t y; // yellow
 
-    uint8_t leftShoulder;   // kick
-    uint8_t rightShoulder;  // orange
+    uint8_t leftShoulder;  // kick
+    uint8_t rightShoulder; // orange
 
     uint8_t unused1[2];
-    int16_t unused2;
-    uint8_t greenVelocity;
-    uint8_t redVelocity;
+    int16_t leftStickX;
+    union
+    {
+        struct
+        {
+            uint8_t greenVelocity;
+            uint8_t redVelocity;
+        };
+        int16_t leftStickY;
+    };
     uint8_t yellowVelocity;
     uint8_t blueVelocity;
     uint8_t orangeVelocity;
@@ -207,8 +217,8 @@ typedef struct
 {
     uint8_t rid;
     uint8_t rsize;
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
@@ -216,20 +226,32 @@ typedef struct
     uint8_t back : 1;
     uint8_t : 1;
     uint8_t : 1;
-    
+
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
+    uint8_t a; // green
+    uint8_t b; // red
+    uint8_t x; // blue
+    uint8_t y; // yellow
 
-    uint8_t leftShoulder;   // orange
-    uint8_t rightShoulder;  // pedal
+    uint8_t leftShoulder;  // orange
+    uint8_t rightShoulder; // pedal
 
     uint8_t accelZ;
     uint8_t accelX;
-    uint16_t slider;
+    union
+    {
+        struct
+        {
+            int16_t tapGreen : 1;
+            int16_t tapRed : 1;
+            int16_t tapYellow : 1;
+            int16_t tapBlue : 1;
+            int16_t tapOrange : 1;
+            int16_t : 11;
+        };
+        int16_t slider;
+    };
     int16_t unused;
     int16_t whammy;
     int16_t tilt;
@@ -239,24 +261,24 @@ typedef struct
 {
     uint8_t rid;
     uint8_t rsize;
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t solo : 1;  // leftThumbClick
+    uint8_t solo : 1; // leftThumbClick
     uint8_t : 1;
-    
+
     uint8_t padding;
 
-    uint8_t a;  // green
-    uint8_t b;  // red
-    uint8_t x;  // blue
-    uint8_t y;  // yellow
+    uint8_t a; // green
+    uint8_t b; // red
+    uint8_t x; // blue
+    uint8_t y; // yellow
 
-    uint8_t leftShoulder;  // orange
+    uint8_t leftShoulder; // orange
     uint8_t padding2;
 
     uint8_t pickup;
@@ -276,22 +298,22 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t start : 1;           // start, pause
-    uint8_t back : 1;            // back, heroPower
-    uint8_t leftThumbClick : 1;  // leftThumbClick, ghtv
+    uint8_t start : 1;          // start, pause
+    uint8_t back : 1;           // back, heroPower
+    uint8_t leftThumbClick : 1; // leftThumbClick, ghtv
     uint8_t : 1;
-    
-    uint8_t padding;
-    uint8_t a;  // black1 a
-    uint8_t b;  // black2 b
-    uint8_t x;  // white1 x
-    uint8_t y;  // black3 y
 
-    uint8_t leftShoulder;   // white2 leftShoulder
-    uint8_t rightShoulder;  // white3 rightShoulder
+    uint8_t padding;
+    uint8_t a; // black1 a
+    uint8_t b; // black2 b
+    uint8_t x; // white1 x
+    uint8_t y; // black3 y
+
+    uint8_t leftShoulder;  // white2 leftShoulder
+    uint8_t rightShoulder; // white3 rightShoulder
 
     uint8_t unused1[2];
-    int16_t unused2;
+    int16_t leftStickX;
 
     int16_t strumBar;
     int16_t tilt;
@@ -310,14 +332,13 @@ typedef struct
     uint8_t start : 1;
     uint8_t back : 1;
     uint8_t : 2;
-    
-    uint8_t padding;
 
+    uint8_t padding;
 
     uint8_t a;
     uint8_t b;
     uint8_t x;
-    uint8_t y;  // euphoria
+    uint8_t y; // euphoria
     uint8_t unused[2];
 
     uint8_t leftGreen : 1;
@@ -333,6 +354,61 @@ typedef struct
     int16_t leftTableVelocity;
     int16_t rightTableVelocity;
 
-    int16_t effectsKnob;  // Whether or not this is signed doesn't really matter, as either way it's gonna loop over when it reaches min/max
+    int16_t effectsKnob; // Whether or not this is signed doesn't really matter, as either way it's gonna loop over when it reaches min/max
     int16_t crossfader;
-} __attribute__((packed)) OGXboxTurntable_Data_t;
+} __attribute__((packed)) OGXboxDJHTurntable_Data_t;
+
+typedef struct
+{
+    uint8_t rid;
+    uint8_t rsize;
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+
+    uint8_t start : 1;
+    uint8_t back : 1;
+    uint8_t : 1; // leftThumbClick
+    uint8_t : 1;
+    uint8_t padding;
+    uint8_t a;                // green
+    uint8_t b;                // red
+    uint8_t x;                // blue
+    uint8_t y;                // yellow
+    uint8_t leftShoulder : 1; // orange
+    uint8_t padding2;
+
+    uint16_t lowEFret : 5;
+    uint16_t aFret : 5;
+    uint16_t dFret : 5;
+    uint16_t : 1;
+    uint16_t gFret : 5;
+    uint16_t bFret : 5;
+    uint16_t highEFret : 5;
+    uint16_t solo : 1;
+
+    union
+    {
+        struct
+        {
+            uint16_t lowEFretVelocity : 7;
+            uint16_t green : 1;
+            uint16_t aFretVelocity : 7;
+            uint16_t red : 1;
+            uint16_t dFretVelocity : 7;
+            uint16_t yellow : 1;
+            uint16_t gFretVelocity : 7;
+            uint16_t blue : 1;
+            uint16_t bFretVelocity : 7;
+            uint16_t orange : 1;
+            uint16_t highEFretVelocity : 7;
+            uint16_t : 1;
+        };
+        struct
+        {
+            int16_t leftStickX;
+            int16_t leftStickY;
+        };
+    };
+} __attribute__((packed)) OGXboxRockBandProGuitar_Data_t;

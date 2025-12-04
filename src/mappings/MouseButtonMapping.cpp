@@ -12,7 +12,7 @@ MouseButtonMapping::MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<In
 void MouseButtonMapping::update_hid(uint8_t *buf)
 {
     hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mouseButton)
     {
     case MouseLeft:
         report->buttons |= MOUSE_BUTTON_LEFT;
@@ -36,7 +36,7 @@ void MouseButtonMapping::update_switch(uint8_t *buf)
 
 void MouseButtonMapping::update_ps2(uint8_t *buf)
 {
-    // not a thing
+    // this one is a thing
 }
 
 void MouseButtonMapping::update_ps3(uint8_t *buf)

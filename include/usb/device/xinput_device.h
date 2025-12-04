@@ -90,9 +90,13 @@ inline uint8_t get_subtype(void)
     switch (current_type)
     {
     case Gamepad:
+    case PopNMusic:
+    case ProjectDiva:
+    case DJMax:
         return XINPUT_GAMEPAD;
     case Dancepad:
         return XINPUT_DANCE_PAD;
+    case GuitarFreaks:
     case LiveGuitar:
     case GuitarHeroGuitar:
         return XINPUT_GUITAR_ALTERNATE;
@@ -121,6 +125,10 @@ inline uint8_t get_subtype(void)
         return XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS;
     case Skylanders:
         return XINPUT_SKYLANDERS;
+    case FightStick:
+        return XINPUT_ARCADE_STICK;
+    case FlightStick:
+        return XINPUT_FLIGHT_STICK;
     }
     return 1;
 }

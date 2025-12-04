@@ -62,7 +62,7 @@ XInputInputCapabilities_t XInputInputCapabilities = {
     rightTrigger : 0xff,
     leftThumbX : USB_VID,
     leftThumbY : USB_PID,
-    rightThumbX : 0, // TODO: generate bcddevice based on device type
+    rightThumbX : 0,
     rightThumbY : 0xffc0,
     reserved : {0x00, 0x00, 0x00, 0x00},
     flags : XINPUT_FLAGS_FORCE_FEEDBACK
@@ -245,31 +245,34 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
+                        // TODO: get this somehow
+                        SubType SubType = GuitarHeroGuitar;
                         XInputInputCapabilities.flags = XINPUT_FLAGS_FORCE_FEEDBACK;
-                        switch (p_xinput->subtype)
+                        switch (SubType)
                         {
-                        case XINPUT_GUITAR_ALTERNATE:
-                            // TODO: how do we want to pass this here
-                            // ghl
-                            // XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
+                        case LiveGuitar:
+                            XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
                             break;
-                        case XINPUT_PRO_GUITAR:
-                        case XINPUT_PRO_KEYS:
+                        case ProGuitarMustang:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
                             XInputInputCapabilities.leftThumbX = HARMONIX_VID;
-                            // TODO: how do we want to pass this here
                             XInputInputCapabilities.leftThumbY = XBOX_360_MUSTANG_PID;
+                            break;
+                        case ProGuitarSquire:
+                            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+                            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
                             XInputInputCapabilities.leftThumbY = XBOX_360_SQUIRE_PID;
                             break;
-                        case XINPUT_DRUMS:
-                            // TODO: how do we want to pass this here
-                            // gh
+                        case GuitarHeroDrums:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
                             break;
-                        case XINPUT_TURNTABLE:
+                        case DjHeroTurntable:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+                            break;
+                        default:
                             break;
                         }
+                        XInputInputCapabilities.rightThumbX = USB_VERSION_BCD(SubType, 0, 0);
                         tud_control_xfer(rhport, request, (void *)&XInputInputCapabilities, sizeof(XInputInputCapabilities_t));
                     }
                     return true;

@@ -76,7 +76,7 @@ void RockBandGuitarButtonMapping::update_wii(uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -97,7 +97,7 @@ void RockBandGuitarButtonMapping::update_wii(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -119,7 +119,7 @@ void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps2(uint8_t *buf)
 {
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -141,7 +141,7 @@ void RockBandGuitarButtonMapping::update_ps2(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -161,7 +161,7 @@ void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -183,7 +183,7 @@ void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         // TODO: map to dpad here
@@ -205,7 +205,7 @@ void RockBandGuitarButtonMapping::update_xinput(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.rbAxis)
     {
     case RockBandGuitarLeftStickX:
         // report->leftStickX = m_calibratedValue >> 8;

@@ -405,7 +405,11 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[8];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint8_t unused1[4];
 
     uint8_t yellowVelocity;
     uint8_t redVelocity; // If you hit two cymbals at once, it puts the velocity for the cymbal here
@@ -447,7 +451,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t midiByte0;
     uint8_t unused5[5];
 
@@ -580,7 +585,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
@@ -589,7 +595,7 @@ typedef struct
     uint16_t gFret : 5;
     uint16_t bFret : 5;
     uint16_t highEFret : 5;
-    uint16_t soloFlag : 1;
+    uint16_t solo : 1;
 
     uint16_t lowEFretVelocity : 7;
     uint16_t green : 1;
@@ -653,7 +659,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
 
     uint8_t key1;
     uint8_t key2;
@@ -710,7 +717,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t : 4;
 
-    uint8_t unused1[2];
+    uint8_t leftStickX;
+    uint8_t leftStickY;
     uint8_t leftTableVelocity;
     uint8_t rightTableVelocity;
 
@@ -734,7 +742,7 @@ typedef struct
     uint16_t leftBlue : 1;
     uint16_t : 9;
     uint16_t unused3;
-} __attribute__((packed)) PS3Turntable_Data_t;
+} __attribute__((packed)) PS3DJHTurntable_Data_t;
 typedef struct
 {
     uint8_t x : 1;  // square, white1
@@ -762,7 +770,7 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t : 4;
-    uint8_t unused1;   // leftStickX
+    uint8_t leftStickX;   // leftStickX
     uint8_t strumBar;  // leftStickY
     uint8_t tilt2;     // rightStickX
     uint8_t whammy;    // rightStickY

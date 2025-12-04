@@ -62,6 +62,7 @@ public:
 protected:
     uint32_t m_lastValue = 0;
     uint32_t m_calibratedValue = 0;
+    bool m_centered = false;
     bool m_trigger;
 };
 class GamepadAxisMapping : public AxisMapping
@@ -78,6 +79,394 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
+class DJMaxTurntableButtonMapping : public ButtonMapping
+{
+public:
+    ~DJMaxTurntableButtonMapping() {}
+    DJMaxTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class DJMaxTurntableAxisMapping : public AxisMapping
+{
+public:
+    ~DJMaxTurntableAxisMapping() {}
+    DJMaxTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class GuitarFreaksButtonMapping : public ButtonMapping
+{
+public:
+    ~GuitarFreaksButtonMapping() {}
+    GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class GuitarFreaksAxisMapping : public AxisMapping
+{
+public:
+    ~GuitarFreaksAxisMapping() {}
+    GuitarFreaksAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class GuitarHeroArcadeButtonMapping : public ButtonMapping
+{
+public:
+    ~GuitarHeroArcadeButtonMapping() {}
+    GuitarHeroArcadeButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class GuitarHeroArcadeAxisMapping : public AxisMapping
+{
+public:
+    ~GuitarHeroArcadeAxisMapping() {}
+    GuitarHeroArcadeAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class LiveGuitarButtonMapping : public ButtonMapping
+{
+public:
+    ~LiveGuitarButtonMapping() {}
+    LiveGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class LiveGuitarAxisMapping : public AxisMapping
+{
+public:
+    ~LiveGuitarAxisMapping() {}
+    LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class PopNMusicButtonMapping : public ButtonMapping
+{
+public:
+    ~PopNMusicButtonMapping() {}
+    PopNMusicButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class PopNMusicAxisMapping : public AxisMapping
+{
+public:
+    ~PopNMusicAxisMapping() {}
+    PopNMusicAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class ProGuitarButtonMapping : public ButtonMapping
+{
+public:
+    ~ProGuitarButtonMapping() {}
+    ProGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class ProGuitarAxisMapping : public AxisMapping
+{
+public:
+    ~ProGuitarAxisMapping() {}
+    ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class ProjectDivaButtonMapping : public ButtonMapping
+{
+public:
+    ~ProjectDivaButtonMapping() {}
+    ProjectDivaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class ProjectDivaAxisMapping : public AxisMapping
+{
+public:
+    ~ProjectDivaAxisMapping() {}
+    ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class ProKeysButtonMapping : public ButtonMapping
+{
+public:
+    ~ProKeysButtonMapping() {}
+    ProKeysButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class ProKeysAxisMapping : public AxisMapping
+{
+public:
+    ~ProKeysAxisMapping() {}
+    ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class RockBandDrumsButtonMapping : public ButtonMapping
+{
+public:
+    ~RockBandDrumsButtonMapping() {}
+    RockBandDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class RockBandDrumsAxisMapping : public AxisMapping
+{
+public:
+    ~RockBandDrumsAxisMapping() {}
+    RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class TaikoButtonMapping : public ButtonMapping
+{
+public:
+    ~TaikoButtonMapping() {}
+    TaikoButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class TaikoAxisMapping : public AxisMapping
+{
+public:
+    ~TaikoAxisMapping() {}
+    TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class WheelButtonMapping : public ButtonMapping
+{
+public:
+    ~WheelButtonMapping() {}
+    WheelButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class WheelAxisMapping : public AxisMapping
+{
+public:
+    ~WheelAxisMapping() {}
+    WheelAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class KeyboardButtonMapping : public ButtonMapping
+{
+public:
+    ~KeyboardButtonMapping() {}
+    KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class MouseAxisMapping : public AxisMapping
+{
+public:
+    ~MouseAxisMapping() {}
+    MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class MouseButtonMapping : public ButtonMapping
+{
+public:
+    ~MouseButtonMapping() {}
+    MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+
+
+
+
+
+
+
+
+
+class GuitarHeroDrumsButtonMapping : public ButtonMapping
+{
+public:
+    ~GuitarHeroDrumsButtonMapping() {}
+    GuitarHeroDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class GuitarHeroDrumsAxisMapping : public AxisMapping
+{
+public:
+    ~GuitarHeroDrumsAxisMapping() {}
+    GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+
 class GuitarHeroGuitarButtonMapping : public ButtonMapping
 {
 public:
@@ -97,6 +486,64 @@ class GuitarHeroGuitarAxisMapping : public AxisMapping
 public:
     ~GuitarHeroGuitarAxisMapping() {}
     GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+
+class DJHTurntableButtonMapping : public ButtonMapping
+{
+public:
+    ~DJHTurntableButtonMapping() {}
+    DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class DJHTurntableAxisMapping : public AxisMapping
+{
+public:
+    ~DJHTurntableAxisMapping() {}
+    DJHTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+
+class RockBandGuitarButtonMapping : public ButtonMapping
+{
+public:
+    ~RockBandGuitarButtonMapping() {}
+    RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class RockBandGuitarAxisMapping : public AxisMapping
+{
+public:
+    ~RockBandGuitarAxisMapping() {}
+    RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t *report);
     void update_switch(uint8_t *report);
@@ -133,4 +580,116 @@ protected:
     proto_ActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
     uint16_t m_profile_id;
+};
+class KeyboardManiaButtonMapping : public ButtonMapping
+{
+public:
+    ~KeyboardManiaButtonMapping() {}
+    KeyboardManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class KeyboardManiaAxisMapping : public AxisMapping
+{
+public:
+    ~KeyboardManiaAxisMapping() {}
+    KeyboardManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class BeatManiaButtonMapping : public ButtonMapping
+{
+public:
+    ~BeatManiaButtonMapping() {}
+    BeatManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class BeatManiaAxisMapping : public AxisMapping
+{
+public:
+    ~BeatManiaAxisMapping() {}
+    BeatManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class DrumManiaButtonMapping : public ButtonMapping
+{
+public:
+    ~DrumManiaButtonMapping() {}
+    DrumManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class DrumManiaAxisMapping : public AxisMapping
+{
+public:
+    ~DrumManiaAxisMapping() {}
+    DrumManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class SVDXButtonMapping : public ButtonMapping
+{
+public:
+    ~SVDXButtonMapping() {}
+    SVDXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+};
+class SVDXAxisMapping : public AxisMapping
+{
+public:
+    ~SVDXAxisMapping() {}
+    SVDXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t *report);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
 };

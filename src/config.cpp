@@ -73,7 +73,7 @@ void update(bool full_poll)
                 mapping->update(full_poll);
                 mapping->update_hid(out);
             }
-            
+
             // convert bitmask dpad to actual hid dpad
             PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
             report->dpad = dpad_bindings[report->dpad];
@@ -189,8 +189,8 @@ void update(bool full_poll)
             if (current_type == GuitarHeroGuitar)
             {
                 // convert bitmask slider to actual hid slider
-                PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
-                reportGh->slider = gh5_mapping[reportGh->slider];
+                OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
             }
 
             tud_ogxbox_n_report(0, out, sizeof(XInputGamepad_Data_t));
@@ -211,7 +211,7 @@ void update(bool full_poll)
             {
                 // convert bitmask slider to actual hid slider
                 XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)out;
-                reportGh->slider = gh5_mapping[reportGh->slider];
+                reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
             }
 
             tud_xinput_n_report(0, out, sizeof(XInputGamepad_Data_t));

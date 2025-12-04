@@ -93,12 +93,49 @@ add_executable(
   src/input/gpio.cpp
   src/input/wii.cpp
   src/input/ads1115.cpp
-  src/mappings/GamepadButtonMapping.cpp
-  src/mappings/GamepadAxisMapping.cpp
-  src/mappings/GuitarHeroGuitarButtonMapping.cpp
-  src/mappings/GuitarHeroGuitarAxisMapping.cpp
-  src/mappings/ActivationTrigger.cpp
   src/mappings/Mapping.cpp
+  src/mappings/ActivationTrigger.cpp
+  src/mappings/GamepadAxisMapping.cpp
+  src/mappings/GamepadButtonMapping.cpp
+  src/mappings/KeyboardButtonMapping.cpp
+  src/mappings/MouseAxisMapping.cpp
+  src/mappings/MouseButtonMapping.cpp
+  src/mappings/DJHTurntableAxisMapping.cpp
+  src/mappings/DJHTurntableButtonMapping.cpp
+  src/mappings/DJMaxTurntableButtonMapping.cpp
+  src/mappings/DJMaxTurntableAxisMapping.cpp
+  src/mappings/GuitarFreaksButtonMapping.cpp
+  src/mappings/GuitarFreaksAxisMapping.cpp
+  src/mappings/LiveGuitarAxisMapping.cpp
+  src/mappings/LiveGuitarButtonMapping.cpp
+  src/mappings/GuitarHeroGuitarAxisMapping.cpp
+  src/mappings/GuitarHeroGuitarButtonMapping.cpp
+  src/mappings/GuitarHeroDrumsAxisMapping.cpp
+  src/mappings/GuitarHeroDrumsButtonMapping.cpp
+  src/mappings/RockBandGuitarAxisMapping.cpp
+  src/mappings/RockBandGuitarButtonMapping.cpp
+  src/mappings/RockBandDrumsAxisMapping.cpp
+  src/mappings/RockBandDrumsButtonMapping.cpp
+  src/mappings/ProGuitarAxisMapping.cpp
+  src/mappings/ProGuitarButtonMapping.cpp
+  src/mappings/ProKeysAxisMapping.cpp
+  src/mappings/ProKeysButtonMapping.cpp
+  src/mappings/WheelAxisMapping.cpp
+  src/mappings/WheelButtonMapping.cpp
+  src/mappings/TaikoAxisMapping.cpp
+  src/mappings/TaikoButtonMapping.cpp
+  src/mappings/PopNMusicAxisMapping.cpp
+  src/mappings/PopNMusicButtonMapping.cpp
+  src/mappings/ProjectDivaAxisMapping.cpp
+  src/mappings/ProjectDivaButtonMapping.cpp
+  src/mappings/BeatManiaAxisMapping.cpp
+  src/mappings/BeatManiaButtonMapping.cpp
+  src/mappings/KeyboardManiaAxisMapping.cpp
+  src/mappings/KeyboardButtonMapping.cpp
+  src/mappings/DrumManiaAxisMapping.cpp
+  src/mappings/DrumManiaButtonMapping.cpp
+  src/mappings/SVDXAxisMapping.cpp
+  src/mappings/SVDXButtonMapping.cpp
   src/devices/usb.cpp
   src/devices/wii.cpp
   src/devices/crkd.cpp

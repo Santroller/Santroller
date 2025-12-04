@@ -73,6 +73,12 @@ enum SubType {
   DisneyInfinity = 16;
   Skylanders = 17;
   LegoDimensions = 18;
+  FightStick = 19;
+  FlightStick = 20;
+  GuitarFreaks = 21;
+  PopNMusic = 22;
+  DJMax = 23;
+  ProjectDiva = 24;
 }
 
 enum PinMode {

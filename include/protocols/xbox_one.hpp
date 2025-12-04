@@ -313,7 +313,7 @@ typedef struct
     int16_t rightTableVelocity;
     int16_t effectsKnob;
     int16_t crossfader;
-} __attribute__((packed)) XboxOneTurntable_Data_t;
+} __attribute__((packed)) XboxOneDJHTurntable_Data_t;
 
 typedef struct
 {

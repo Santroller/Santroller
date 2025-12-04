@@ -373,6 +373,7 @@ void __time_critical_func(sel_isr_callback()) {
     /* end of inlined call */
     restart_pio_sm();
 }
+// TODO: instead of having all these pins hardcoded like this, we should compile the pio program on the fly so we can take pin definitions from config
 
 void init_pio() {
     gpio_set_dir(PIN_DAT, false);

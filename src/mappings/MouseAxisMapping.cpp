@@ -14,7 +14,7 @@ MouseAxisMapping::MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input>
 void MouseAxisMapping::update_hid(uint8_t *buf)
 {
     hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mouseAxis)
     {
     case MouseMoveX:
         report->x = (m_calibratedValue - 32767) >> 8;
@@ -41,7 +41,7 @@ void MouseAxisMapping::update_switch(uint8_t *buf)
 
 void MouseAxisMapping::update_ps2(uint8_t *buf)
 {
-    // not a thing
+    // TODO: this does exist
 }
 
 void MouseAxisMapping::update_ps3(uint8_t *buf)

@@ -158,7 +158,10 @@ typedef struct
 
 typedef struct
 {
-    uint8_t unused1[4];
+
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t unused[2];
 
     //     0
     //   7   1
@@ -176,8 +179,8 @@ typedef struct
     uint8_t b : 1;  // red
     uint8_t y : 1;  // yellow
 
-    uint8_t leftShoulder : 1;   // kick1
-    uint8_t rightShoulder : 1;  // kick2
+    uint8_t kick1 : 1;   // kick1
+    uint8_t kick2 : 1;  // kick2
     uint8_t : 2;
     uint8_t back : 1;
     uint8_t start : 1;
@@ -209,7 +212,7 @@ typedef struct
 typedef struct
 {
 
-    uint8_t unused1;
+    uint8_t leftStickX;
     uint8_t strumBar;
     uint8_t whammy;
     uint8_t tilt;

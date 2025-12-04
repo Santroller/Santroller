@@ -24,7 +24,7 @@ void TaikoButtonMapping::update_switch(uint8_t *buf)
 
 void TaikoButtonMapping::update_ps2(uint8_t *buf)
 {
-    
+    // https://github.com/PCSX2/pcsx2/issues/4763#issuecomment-2269081492
 }
 
 void TaikoButtonMapping::update_ps3(uint8_t *buf)

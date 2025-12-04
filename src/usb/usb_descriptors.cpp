@@ -150,7 +150,7 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
   case ConsoleMode::XboxOne:
     return desc_hid_report_non_gamepad;
   default:
-    return desc_hid_report_ps3;
+    return desc_hid_report;
   }
 }
 
@@ -273,7 +273,6 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
         // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
-    printf("subtype: %d\r\n", get_subtype());
     memcpy(desc_configuration_xinput, tmp, sizeof(tmp));
     return desc_configuration_xinput;
   }

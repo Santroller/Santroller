@@ -12,6 +12,9 @@
 
 USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
 {
+    if (device.firstPin == -1) {
+        return;
+    }
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(device.firstPin + device.dmFirst),
         pio_tx_num : 0,
@@ -26,7 +29,7 @@ USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_de
         skip_alarm_pool : false,
         pinout : device.dmFirst ? PIO_USB_PINOUT_DMDP : PIO_USB_PINOUT_DPDM
     };
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
+    tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
     tuh_init(TUH_OPT_RHPORT);
 }
 

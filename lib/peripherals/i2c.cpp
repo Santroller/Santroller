@@ -4,7 +4,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-I2CMasterInterface::I2CMasterInterface(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) {
+I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock)
+{
+    if (sda == -1 || scl == -1)
+    {
+        i2c = nullptr;
+        return;
+    }
     i2c = _hardwareBlocks[block];
     printf("%d %d %d\r\n", sda, scl, block);
     i2c_init(i2c, clock);
@@ -15,27 +21,41 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, uint8_t sda, uint8_t scl, 
     gpio_pull_up(scl);
 }
 bool I2CMasterInterface::readRegisterSlow(uint8_t address, uint8_t pointer, uint8_t length,
-                                             uint8_t *data) {
-    if (!writeTo(address, &pointer, 1, true, true)) return false;
+                                          uint8_t *data)
+{
+    if (!i2c)
+    {
+        return false;
+    }
+    if (!writeTo(address, &pointer, 1, true, true))
+        return false;
     sleep_us(170);
     return readFrom(address, data, length, true);
 }
 
 bool I2CMasterInterface::readRegister(uint8_t address, uint8_t pointer, uint8_t length,
-                                         uint8_t *data) {
+                                      uint8_t *data)
+{
     return writeTo(address, &pointer, 1, true, true) &&
            readFrom(address, data, length, true);
 }
 bool I2CMasterInterface::readRegisterRepeatedStart(uint8_t address, uint8_t pointer, uint8_t length,
-                                                      uint8_t *data) {
+                                                   uint8_t *data)
+{
     return writeTo(address, &pointer, 1, true, false) &&
            readFrom(address, data, length, true);
 }
-bool I2CMasterInterface::writeRegister(uint8_t address, uint8_t pointer, uint8_t data) {
+bool I2CMasterInterface::writeRegister(uint8_t address, uint8_t pointer, uint8_t data)
+{
     return writeRegister(address, pointer, 1, &data);
 }
 bool I2CMasterInterface::writeRegister(uint8_t address, uint8_t pointer, uint8_t length,
-                                        uint8_t *data) {
+                                       uint8_t *data)
+{
+    if (!i2c)
+    {
+        return false;
+    }
     uint8_t data2[length + 1];
     data2[0] = pointer;
     memcpy(data2 + 1, data, length);
@@ -44,14 +64,24 @@ bool I2CMasterInterface::writeRegister(uint8_t address, uint8_t pointer, uint8_t
 }
 
 bool I2CMasterInterface::readFrom(uint8_t address, uint8_t *data, uint8_t length,
-                                  uint8_t sendStop) {
+                                  uint8_t sendStop)
+{
+    if (!i2c)
+    {
+        return false;
+    }
     int ret =
         i2c_read_timeout_us(i2c, address, data, length, !sendStop, 5000);
     return ret > 0;
 }
 
 bool I2CMasterInterface::writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
-                                 uint8_t sendStop) {
+                                 uint8_t sendStop)
+{
+    if (!i2c)
+    {
+        return false;
+    }
     int ret =
         i2c_write_timeout_us(i2c, address, data, length, !sendStop, 200 * length);
     if (ret < 0)

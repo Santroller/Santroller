@@ -143,7 +143,6 @@ void hid_task(void)
     if (newMode != mode || reinit)
     {
         mode = newMode;
-        // TODO: we technically dont _have_ to reset all of these
         reinit = false;
         seenPs4 = false;
         seenWindowsXb1 = false;
@@ -453,8 +452,6 @@ int main()
     newMode = mode;
     set_sys_clock_khz(120000, true);
     multicore_launch_core1(core1);
-    stdio_init_all();
-    printf("init %d\r\n", mode);
     adc_init();
     EEPROM.start();
 
@@ -464,6 +461,7 @@ int main()
         // config was not valid, save a empty config
         save(&config);
     }
+    printf("init %d\r\n", mode);
 
     for (auto &driver : hid_drivers)
     {
@@ -478,9 +476,9 @@ int main()
     
     while (1)
     {
-        hid_task();
         tud_task(); // tinyusb device task
         tuh_task();
+        hid_task();
     }
     return 0;
 }

@@ -5,7 +5,7 @@
 
 class UARTInterface {
    public:
-    UARTInterface(uint8_t block, uint8_t tx, uint8_t rx, uint32_t baudrate);
+    UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t baudrate);
     bool read_uart(uint8_t header, uint8_t size, uint8_t *dest);
     bool read_uart(uint8_t size, uint8_t *dest);
     bool send(uint8_t* data, uint8_t size);

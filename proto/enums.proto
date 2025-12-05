@@ -128,3 +128,27 @@ enum PS2ControllerType {
   PS2ControllerTypeMouse = 9;
   PS2ControllerTypeTaiko = 10;
 }
+
+enum APA102Type {
+  Apa102Rgb=1;
+  Apa102Rbg=2;
+  Apa102Grb=3;
+  Apa102Gbr=4;
+  Apa102Brg=5;
+  Apa102Bgr=6;
+}
+
+enum WS2812Type {
+  Ws2812Rgb = 1;
+  Ws2812Rbg = 2;
+  Ws2812Grb = 3;
+  Ws2812Gbr = 4;
+  Ws2812Brg = 5;
+  Ws2812Bgr = 6;
+  Ws2812Rgbw = 7;
+  Ws2812Rbgw = 8;
+  Ws2812Grbw = 9;
+  Ws2812Gbrw = 10;
+  Ws2812Brgw = 11;
+  Ws2812Bgrw = 12;
+}

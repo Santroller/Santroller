@@ -10,6 +10,7 @@
 #include "devices/wii.hpp"
 #include "devices/bhdrum.hpp"
 #include "devices/crazyneck.hpp"
+#include "devices/debug.hpp"
 #include "devices/djh.hpp"
 #include "devices/crkd.hpp"
 #include "devices/ads1115.hpp"
@@ -261,6 +262,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_ads1115_tag:
         devices[*dev_id] = std::shared_ptr<Device>(new ADS1115Device(device.device.ads1115, *dev_id));
+        break;
+    case proto_Device_debug_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new DebugDevice(device.device.debug, *dev_id));
         break;
     }
     *dev_id += 1;

@@ -52,8 +52,11 @@ void on_uart_rx_1()
         current_1 = 0;
     }
 }
-UARTInterface::UARTInterface(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock)
+UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock)
 {
+    if (tx == -1 || rx == -1) {
+        return;
+    }
     uart = _hardwareBlocks[block];
     uart_init(uart, clock);
     gpio_set_function(tx, GPIO_FUNC_UART);

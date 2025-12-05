@@ -148,6 +148,9 @@ add_executable(
   src/devices/gh5neck.cpp
   src/devices/max1704x.cpp
   src/devices/mpr121.cpp
+  src/devices/ws2812.cpp
+  src/devices/apa102.cpp
+  src/devices/stp16cpc.cpp
   src/config.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c
   ${PROTO_OUTPUT_DIR}/enums.pb.c

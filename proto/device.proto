@@ -106,6 +106,18 @@ message PSXEmulationDevice {
 message JoybusEmulationDevice { required int32 dataPin = 1; }
 message EncoderDevice { required int32 dataPin = 1; }
 
+message WS2812Device { 
+  required int32 pin = 1; 
+  required WS2812Type type = 2; 
+  required int32 count = 3;
+}
+message APA102Device { 
+  required SPIDevice spi = 1; 
+  required APA102Type type = 2; 
+  required int32 count = 3;
+}
+message STP16CPCDevice { required SPIDevice spi = 1; }
+
 message Device {
   oneof device {
     AccelerometerDevice accelerometer = 1;
@@ -131,5 +143,8 @@ message Device {
     ADS1115Device ads1115 = 23;
     EncoderDevice encoder = 24;
     DebugDevice debug = 25;
+    WS2812Device ws2812 = 26;
+    APA102Device apa102 = 27;
+    STP16CPCDevice stp16cpc = 28;
   }
 }

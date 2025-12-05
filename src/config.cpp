@@ -18,6 +18,9 @@
 #include "devices/usb.hpp"
 #include "devices/max1704x.hpp"
 #include "devices/mpr121.hpp"
+#include "devices/ws2812.hpp"
+#include "devices/apa102.hpp"
+#include "devices/stp16cpc.hpp"
 #include "mappings/mapping.hpp"
 #include "tusb.h"
 #include "usb/device/xinput_device.h"
@@ -265,6 +268,15 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_debug_tag:
         devices[*dev_id] = std::shared_ptr<Device>(new DebugDevice(device.device.debug, *dev_id));
+        break;
+    case proto_Device_ws2812_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new WS2812Device(device.device.ws2812, *dev_id));
+        break;
+    case proto_Device_stp16cpc_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new STP16CPCDevice(device.device.stp16cpc, *dev_id));
+        break;
+    case proto_Device_apa102_tag:
+        devices[*dev_id] = std::shared_ptr<Device>(new APA102Device(device.device.apa102, *dev_id));
         break;
     }
     *dev_id += 1;

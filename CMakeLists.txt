@@ -150,6 +150,7 @@ add_executable(
   src/devices/mpr121.cpp
   src/devices/ws2812.cpp
   src/devices/apa102.cpp
+  src/devices/led.cpp
   src/devices/stp16cpc.cpp
   src/config.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c

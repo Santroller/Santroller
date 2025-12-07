@@ -2,7 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "input_enums.pb.h"
-#include "wii_extension.hpp"
+#include "libstp16cpc.hpp"
 class STP16CPCDevice : public LedDevice
 {
 public:
@@ -12,4 +12,5 @@ public:
 
 private:
     proto_STP16CPCDevice m_device;
+    STP16CPC m_stp15cpc;
 };

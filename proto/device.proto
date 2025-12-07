@@ -116,7 +116,12 @@ message APA102Device {
   required APA102Type type = 2; 
   required int32 count = 3;
 }
-message STP16CPCDevice { required SPIDevice spi = 1; }
+message STP16CPCDevice { 
+  required SPIDevice spi = 1;
+  required int32 oe = 2; 
+  required int32 le = 3; 
+  required int32 count = 4;
+}
 
 message Device {
   oneof device {

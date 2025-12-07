@@ -207,6 +207,8 @@ target_link_libraries(
   SNESpad
   n64_gamecube_controller
   ws2812
+  apa102
+  stp16cpc
   nanopb
   hardware_i2c
   hardware_spi

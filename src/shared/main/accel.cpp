@@ -52,9 +52,9 @@ void init_mpu6050() {
     twi_writeSingleToPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, id);
 }
 void init_accel() {
+    init_mpu6050();
     init_lis3dh();
     init_adxl();
-    init_mpu6050();
 }
 void tick_accel() {
     if (!accel_found) {

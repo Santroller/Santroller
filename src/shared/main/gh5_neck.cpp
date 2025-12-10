@@ -14,15 +14,10 @@ void tickGh5Neck()
     uint8_t header[2];
     uint8_t data[2];
     lastGH5WasSuccessful = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(header), header);
-    if (lastGH5WasSuccessful)
+    if (lastGH5WasSuccessful && header[1])
     {
-        // Stream out the rest of the packets byte by byte as the drums lock up otherwise.
-        uint8_t count = header[1] >> 4;
-        for (int i = 0; i < count; i++)
-        {
-            lastGH5WasSuccessful = twi_readFrom(GH5_TWI_PORT, GH5NECK_ADDR, data, sizeof(data), true);
-            memcpy(lastSuccessfulGH5Packet, data, sizeof(data));
-        }
+        lastGH5WasSuccessful = twi_readFrom(GH5_TWI_PORT, GH5NECK_ADDR, data, sizeof(data), true);
+        memcpy(lastSuccessfulGH5Packet, data, sizeof(data));
     }
 }
 #endif

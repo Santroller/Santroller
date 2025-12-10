@@ -6,8 +6,8 @@
 #include "commands.h"
 #define GH5NECK_ADDR 0x0D
 #define GH5NECK_BUTTONS_PTR 0x11
-#ifdef GH5_TWI_PORT
 bool lastGH5WasSuccessful = false;
+#ifdef GH5_TWI_PORT
 void tickGh5Neck()
 {
     uint8_t header;

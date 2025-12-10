@@ -13,7 +13,7 @@ void tickBhDrum()
     // Drum packet starts with some counter, and then the number of packets in the buffer
     uint8_t header[2];
     uint8_t data[3];
-    bh_drum_found = twi_readFromPointer(BH_DRUM_TWI_PORT, DRUM_ADDR, BH_DRUM_PTR, sizeof(header), header);
+    bh_drum_found = twi_readFromPointerRepeatedStart(BH_DRUM_TWI_PORT, DRUM_ADDR, BH_DRUM_PTR, sizeof(header), header);
     if (bh_drum_found)
     {
         // Stream out the rest of the packets byte by byte as the drums lock up otherwise.

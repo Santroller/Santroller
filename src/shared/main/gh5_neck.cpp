@@ -10,10 +10,9 @@
 bool lastGH5WasSuccessful = false;
 void tickGh5Neck()
 {
-    // Drum packet starts with some counter, and then the number of packets in the buffer
     uint8_t header[2];
     uint8_t data[2];
-    lastGH5WasSuccessful = twi_readFromPointer(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(header), header);
+    lastGH5WasSuccessful = twi_readFromPointerRepeatedStart(GH5_TWI_PORT, GH5NECK_ADDR, GH5NECK_BUTTONS_PTR, sizeof(header), header);
     if (lastGH5WasSuccessful && header[1])
     {
         lastGH5WasSuccessful = twi_readFrom(GH5_TWI_PORT, GH5NECK_ADDR, data, sizeof(data), true);

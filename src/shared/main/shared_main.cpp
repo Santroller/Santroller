@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include "accel.h"
 #include "bh_drum.h"
+#include "gh5_neck.h"
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
@@ -37,7 +38,7 @@ static const uint8_t dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RI
 #define GH5NECK_ADDR 0x0D
 #define CLONE_ADDR 0x10
 #define CLONE_VALID_PACKET 0x52
-#define GH5NECK_BUTTONS_PTR 0x12
+#define GH5NECK_BUTTONS_PTR 0x10
 #define BUFFER_SIZE_QUEUE 255
 #define KEY_ERR_OVF 0x01
 #define REQUIRE_LED_DEBOUNCE LED_COUNT || LED_COUNT_PERIPHERAL || LED_COUNT_STP || LED_COUNT_PERIPHERAL_STP || LED_COUNT_WS2812 || LED_COUNT_PERIPHERAL_WS2812 || HAS_LED_OUTPUT || LED_COUNT_MPR121
@@ -256,7 +257,6 @@ uint8_t lastSuccessfulClonePacket[4];
 uint8_t lastSuccessfulTurntablePacketLeft[3];
 uint8_t lastSuccessfulTurntablePacketRight[3];
 long lastSuccessfulGHWTPacket;
-bool lastGH5WasSuccessful = false;
 bool lastCloneWasSuccessful = false;
 bool lastTurntableWasSuccessfulLeft = false;
 bool lastTurntableWasSuccessfulRight = false;

@@ -1,0 +1,1 @@
+void tickGh5Neck(void);

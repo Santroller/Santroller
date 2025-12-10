@@ -3,6 +3,7 @@ void DJHeroTurntable::tick()
 {
     uint8_t start[2] = {0};
     uint8_t data[3];
+    // TODO: need to get a table out and see what happens when its polled fast in this manner
     connected = interface.readRegisterRepeatedStart(addr, DJ_BUTTONS_PTR, sizeof(start), start);
     if (connected && start[1])
     {

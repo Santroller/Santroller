@@ -57,6 +57,11 @@ message CrkdNeckButtonInput {
   required CrkdNeckButtonType button = 2;
 }
 
+message Gh5NeckButtonInput {
+  required int32 deviceid = 1;
+  required Gh5NeckButtonType button = 2;
+}
+
 message MouseAxisInput {
   required int32 deviceid = 1;
   required MouseAxisType axis = 2;
@@ -116,6 +121,7 @@ message Input {
     BluetoothDeviceTypeInput bluetoothDevice = 17;
     ADS1115Input ads1115 = 18;
     AccelerometerInput accelerometer = 19;
+    Gh5NeckButtonInput gh5Neck = 20;
   }
 }
 

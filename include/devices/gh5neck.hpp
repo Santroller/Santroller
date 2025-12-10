@@ -8,6 +8,16 @@ public:
     ~GH5NeckDevice() {}
     GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id);
     void update(bool full_poll);
+    bool green;
+    bool red;
+    bool yellow;
+    bool blue;
+    bool orange;
+    bool tapGreen;
+    bool tapRed;
+    bool tapYellow;
+    bool tapBlue;
+    bool tapOrange;
 
 private:
     proto_GuitarHero5NeckDevice m_device;

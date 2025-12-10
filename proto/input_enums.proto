@@ -590,6 +590,20 @@ enum CrkdNeckButtonType {
   CrkdSoloOrange = 14;
 }
 
+enum Gh5NeckButtonType {
+  Gh5Green = 1;
+  Gh5Red = 2;
+  Gh5Yellow = 3;
+  Gh5Blue = 4;
+  Gh5Orange = 5;
+  Gh5TapGreen = 6;
+  Gh5TapRed = 7;
+  Gh5TapYellow = 8;
+  Gh5TapBlue = 9;
+  Gh5TapOrange = 10;
+}
+
+
 enum AccelerometerInputType {
   AccelerometerX = 1;
   AccelerometerY = 2;

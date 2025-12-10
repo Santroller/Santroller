@@ -7,6 +7,8 @@
 #include "i2c.hpp"
 #define DRUM_ADDR 0x0D
 #define BH_DRUM_PTR 0x10
+#define MAX_PACKETS_IN_BUFFER 0x0F
+#define PACKET_SIZE 3
 class BandHeroDrum {
    public:
     BandHeroDrum(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)

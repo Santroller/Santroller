@@ -5,6 +5,7 @@
 #include "input/crkd.hpp"
 #include "input/ads1115.hpp"
 #include "input/accelerometer.hpp"
+#include "input/gh5.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/wii.hpp"
@@ -307,6 +308,9 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Input_accelerometer_tag:
         input = std::unique_ptr<Input>(new AccelerometerInput(mapping.input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(devices[mapping.input.input.accelerometer.deviceid])));
+        break;
+    case proto_Input_gh5Neck_tag:
+        input = std::unique_ptr<Input>(new Gh5ButtonInput(mapping.input.input.gh5Neck, std::static_pointer_cast<GH5NeckDevice>(devices[mapping.input.input.gh5Neck.deviceid])));
         break;
     }
     if (input == nullptr)

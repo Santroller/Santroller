@@ -21,7 +21,7 @@ set(PICO_SDK_FETCH_FROM_GIT TRUE)
 set(PICO_PIO_USB_PATH ${CMAKE_SOURCE_DIR}/lib/pico_pio_usb)
 set(PICO_TINYUSB_PATH ${CMAKE_SOURCE_DIR}/lib/tinyusb)
 set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
-set(PICO_BOARD "pico_w")
+set(PICO_BOARD pico2_w CACHE STRING "Board type")
 set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 
 include(pico_sdk_import.cmake)

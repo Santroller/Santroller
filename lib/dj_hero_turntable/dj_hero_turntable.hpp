@@ -3,7 +3,7 @@
 #include "i2c.hpp"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
-#define DJ_BUTTONS_PTR 0x12
+#define DJ_BUTTONS_PTR 0x10
 class DJHeroTurntable {
    public:
    DJHeroTurntable(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, bool left)

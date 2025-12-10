@@ -71,7 +71,7 @@ bool I2CMasterInterface::readFrom(uint8_t address, uint8_t *data, uint8_t length
         return false;
     }
     int ret =
-        i2c_read_timeout_us(i2c, address, data, length, !sendStop, 5000);
+        i2c_read_timeout_us(i2c, address, data, length, !sendStop, 5000*length);
     return ret > 0;
 }
 

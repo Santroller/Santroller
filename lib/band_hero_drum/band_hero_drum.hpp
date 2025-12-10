@@ -20,4 +20,6 @@ class BandHeroDrum {
     MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
     I2CMasterInterface interface;
     bool connected;
+    long m_lastTick = 0;
+    uint8_t m_lastCount = 0;
 };

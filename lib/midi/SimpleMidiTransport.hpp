@@ -39,7 +39,7 @@ public:
     uint8_t nextByte;
 };
 
-class SimpleMidiInterface: public MidiInterface<SimpleMidiTransport>
+class SimpleMidiInterface : public MidiInterface<SimpleMidiTransport>
 {
 public:
     SimpleMidiInterface() : MidiInterface(transport) {}
@@ -53,6 +53,11 @@ public:
         }
     }
 
+    bool parseByte(uint8_t data)
+    {
+        transport.nextByte = data;
+        return read();
+    }
 
 private:
     SimpleMidiTransport transport;

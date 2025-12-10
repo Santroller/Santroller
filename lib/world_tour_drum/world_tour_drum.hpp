@@ -18,6 +18,7 @@ class WorldTourDrum {
 
    private:
     SPIMasterInterface* mInterface;
+    MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
     uint8_t mCsPin;
     int missing;
     bool connected;

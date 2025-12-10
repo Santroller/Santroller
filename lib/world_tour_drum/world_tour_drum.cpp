@@ -25,11 +25,11 @@ void WorldTourDrum::tick() {
         gpio_put(mCsPin, true);
         return;
     }
-    // 3: read the rest of the packet
-    // TODO: check if we can handle packets longer than 3?
-    uint8_t data[3];
-    for (size_t i = 0; i < sizeof(data); i++) {
-        data[i] = mInterface->transfer(0x00);
+    // 3: Stream in all data we receive straight to the midi parser
+    uint8_t data;
+    for (size_t i = 0; i < resp; i++) {
+        data = mInterface->transfer(0x00);
+        midiInterface.parsePacket(&data, 1);
         sleep_us(50);
     }
     gpio_put(mCsPin, true);

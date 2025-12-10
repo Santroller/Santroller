@@ -1,8 +1,18 @@
 #include "band_hero_drum.hpp"
-void BandHeroDrum::tick() {
-    uint8_t data[5];
-    connected = interface.readRegister(DRUM_ADDR, BH_DRUM_PTR, sizeof(data), data);
-    if (connected) {
-        midiInterface.parsePacket(data+2, sizeof(data)-2);
+#include "main.hpp"
+#include "utils.h"
+void BandHeroDrum::tick()
+{
+    uint8_t start[2] = {0};
+    uint8_t data[16 * 3] = {0};
+    connected = interface.readRegisterRepeatedStart(DRUM_ADDR, BH_DRUM_PTR, sizeof(start), start);
+    if (connected)
+    {
+        uint8_t numPackets = start[1] >> 4;
+        if (numPackets)
+        {
+            connected = interface.readFrom(DRUM_ADDR, data, numPackets * 3, true);
+            midiInterface.parsePacket(data, numPackets * 3);
+        }
     }
 };

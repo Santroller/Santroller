@@ -11,25 +11,25 @@ bool Gh5ButtonInput::tickDigital()
     switch (m_input.button)
     {
     case Gh5Green:
-        return m_device->green;
+        return m_device->m_gh5_neck.green;
     case Gh5Red:
-        return m_device->red;
+        return m_device->m_gh5_neck.red;
     case Gh5Yellow:
-        return m_device->yellow;
+        return m_device->m_gh5_neck.yellow;
     case Gh5Blue:
-        return m_device->blue;
+        return m_device->m_gh5_neck.blue;
     case Gh5Orange:
-        return m_device->orange;
+        return m_device->m_gh5_neck.orange;
     case Gh5TapGreen:
-        return m_device->tapGreen;
+        return m_device->m_gh5_neck.tapGreen;
     case Gh5TapRed:
-        return m_device->tapRed;
+        return m_device->m_gh5_neck.tapRed;
     case Gh5TapYellow:
-        return m_device->tapYellow;
+        return m_device->m_gh5_neck.tapYellow;
     case Gh5TapBlue:
-        return m_device->tapBlue;
+        return m_device->m_gh5_neck.tapBlue;
     case Gh5TapOrange:
-        return m_device->tapOrange;
+        return m_device->m_gh5_neck.tapOrange;
     }
     return false;
 }

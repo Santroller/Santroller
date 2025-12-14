@@ -131,7 +131,8 @@ void core1()
     {
     }
 }
-uint32_t timeSinceMode = 0;
+uint32_t timeSinceMode = millis();
+bool writing = false;
 bool seenPs4 = false;
 bool seenWindowsXb1 = false;
 bool seenOsDescriptorRead = false;
@@ -140,6 +141,9 @@ bool seenHidDescriptorRead = false;
 bool reinit = false;
 void hid_task(void)
 {
+    if (writing){
+        return;
+    }
     if (newMode != mode || reinit)
     {
         mode = newMode;
@@ -160,22 +164,26 @@ void hid_task(void)
             }
         }
         timeSinceMode = millis();
+        return;
     }
     if ((millis() - timeSinceMode) > 2000 && mode == ConsoleMode::Hid && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
     {
         // Switch 2 does read the hid descriptor
         if (seenHidDescriptorRead)
         {
+            printf("new mode switch!\r\n");
             newMode = ConsoleMode::Switch;
         }
         else if (tud_ready() && (current_type == RockBandGuitar || current_type == RockBandDrums))
         {
+            printf("new mode wiirb!\r\n");
             // PS2 / Wii / WiiU does not read hid descriptor
             // The wii however will configure the usb device before it stops communicating
             newMode = ConsoleMode::WiiRb;
         }
         else
         {
+            printf("new mode ps3!\r\n");
             // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
             newMode = ConsoleMode::Ps3;
         }
@@ -384,7 +392,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
         {
         case ReportId::ReportIdConfig:
             lastKeepAlive = millis();
-            write_config(buffer, bufsize, start);
+            writing = !write_config(buffer, bufsize, start);
             start += bufsize;
             break;
         case ReportId::ReportIdConfigInfo:

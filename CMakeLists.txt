@@ -90,6 +90,7 @@ add_executable(
   src/usb/device/gh_arcade_device.cpp
   src/input/accelerometer.cpp
   src/input/crkd.cpp
+  src/input/gh5.cpp
   src/input/gpio.cpp
   src/input/wii.cpp
   src/input/ads1115.cpp

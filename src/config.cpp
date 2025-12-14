@@ -59,12 +59,12 @@ uint8_t gh5_mapping[] = {
 void update(bool full_poll)
 {
     uint8_t out[64] = {0};
-    for (auto &device : devices)
+    for (const auto &device : devices)
     {
         device.second->update(full_poll);
     }
     // // If we are configuring, disable triggers
-    for (auto &trigger : triggers)
+    for (const auto &trigger : triggers)
     {
         trigger->update(tool_closed());
     }
@@ -73,7 +73,7 @@ void update(bool full_poll)
     case ConsoleMode::Hid:
         if (tud_hid_ready())
         {
-            for (auto &mapping : mappings)
+            for (const auto &mapping : mappings)
             {
                 mapping->update(full_poll);
                 mapping->update_hid(out);
@@ -130,7 +130,7 @@ void update(bool full_poll)
                     gamepad->rightStickY = PS3_STICK_CENTER;
                 }
             }
-            for (auto &mapping : mappings)
+            for (const auto &mapping : mappings)
             {
                 mapping->update(full_poll);
                 if (mode == ConsoleMode::Ps2EmulatorOnPs3)
@@ -164,7 +164,7 @@ void update(bool full_poll)
     case ConsoleMode::Ps4:
         if (tud_hid_ready())
         {
-            for (auto &mapping : mappings)
+            for (const auto &mapping : mappings)
             {
                 mapping->update(full_poll);
                 mapping->update_ps4(out);
@@ -186,7 +186,7 @@ void update(bool full_poll)
             OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)out;
             report->rid = 0;
             report->rsize = sizeof(OGXboxGamepad_Data_t);
-            for (auto &mapping : mappings)
+            for (const auto &mapping : mappings)
             {
                 mapping->update(full_poll);
                 mapping->update_ogxbox(out);
@@ -207,7 +207,7 @@ void update(bool full_poll)
             XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)out;
             report->rid = 0;
             report->rsize = sizeof(XInputGamepad_Data_t);
-            for (auto &mapping : mappings)
+            for (const auto &mapping : mappings)
             {
                 mapping->update(full_poll);
                 mapping->update_xinput(out);
@@ -321,19 +321,19 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
     case proto_Mapping_gamepadAxis_tag:
         printf("axis %d\r\n", mapping.mapping.gamepadAxis);
-        mappings.push_back(std::unique_ptr<Mapping>(new GamepadAxisMapping(mapping, std::move(input), *mapping_id)));
+        mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), *mapping_id));
         break;
     case proto_Mapping_ghAxis_tag:
         printf("axis %d\r\n", mapping.mapping.ghAxis);
-        mappings.push_back(std::unique_ptr<Mapping>(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), *mapping_id)));
+        mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), *mapping_id));
         break;
     case proto_Mapping_ghButton_tag:
         printf("button %d\r\n", mapping.mapping.ghButton);
-        mappings.push_back(std::unique_ptr<Mapping>(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), *mapping_id)));
+        mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), *mapping_id));
         break;
     case proto_Mapping_gamepadButton_tag:
         printf("button %d\r\n", mapping.mapping.gamepadButton);
-        mappings.push_back(std::unique_ptr<Mapping>(new GamepadButtonMapping(mapping, std::move(input), *mapping_id)));
+        mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), *mapping_id));
         break;
     }
     *mapping_id += 1;
@@ -370,7 +370,7 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
     {
         return true;
     }
-    triggers.push_back(std::unique_ptr<ActivationTrigger>(new ActivationTrigger(trigger, std::move(input), *profile_id)));
+    triggers.emplace_back(new ActivationTrigger(trigger, std::move(input), *profile_id));
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -555,7 +555,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     if (start + bufsize < footer.dataSize)
     {
         printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
-        return true;
+        return false;
     }
     uint32_t crc = CRC32::calculate(EEPROM.writeCache, footer.dataSize);
     if (crc != footer.dataCrc)

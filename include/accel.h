@@ -29,6 +29,7 @@ extern "C" {
 #define MPU6050_REG_ACCEL_CONFIG 0x1C
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_ID 0x68
+#define MPU6050_ID2 0x98
 void tick_accel();
 #ifdef __cplusplus
 }

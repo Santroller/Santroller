@@ -41,7 +41,7 @@ void init_adxl() {
 void init_mpu6050() {
     uint8_t id = 0;
     twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I, 1, &id);
-    if (id != MPU6050_ID) {
+    if (id != MPU6050_ID && id != MPU6050_ID2) {
         return;
     }
     type = MPU6050;

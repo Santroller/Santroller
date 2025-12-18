@@ -125,7 +125,7 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (mode == ConsoleMode::Ps3)
+    if (mode == ModePs3)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
         switch (m_mapping.mapping.gamepadAxis)

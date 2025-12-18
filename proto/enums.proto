@@ -152,3 +152,14 @@ enum WS2812Type {
   Ws2812Brgw = 11;
   Ws2812Bgrw = 12;
 }
+
+enum ConsoleMode {
+    ModeHid=1;
+    ModeOgXbox=2;
+    ModeXbox360=3;
+    ModeXboxOne=4;
+    ModePs3=5;
+    ModePs4=6;
+    ModeWiiRb=7;
+    ModeSwitch=8;
+};

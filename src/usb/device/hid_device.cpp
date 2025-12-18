@@ -1,35 +1,17 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * This file is part of the TinyUSB stack.
- */
-
 #include "tusb_option.h"
 #include "usb/device/hid_device.h"
 #include "usb/device/gamepad_device.h"
 #include "enums.pb.h"
 #include "config.hpp"
 #include "main.hpp"
+#include "usb/device/hid_driver.h"
+#include "usb/device/hid_device.h"
+#include "usb/device/ps3_device.h"
+#include "usb/device/ps4_device.h"
+#include "device/usbd.h"
+#include "device/usbd_pvt.h"
+#include "pico/bootrom.h"
+#include "utils.h"
 
 const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDsUniversal = {
   TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR),
@@ -55,6 +37,38 @@ const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDsUniversal = {
   }
 };
 
+hidd_driver_t *hid_driver = NULL;
+
+hidd_driver_t hid_drivers[] = {
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "PS3_Device",
+#endif
+        .mode = ModePs3,
+        .open = NULL,
+        .control_xfer_cb = tud_hid_ps3_control_xfer_cb,
+        .get_report_cb = tud_hid_ps3_get_report_cb,
+        .set_report_cb = tud_hid_ps3_set_report_cb},
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "PS4_Device",
+#endif
+        .mode = ModePs4,
+        .open = NULL,
+        .control_xfer_cb = NULL,
+        .get_report_cb = tud_hid_ps4_get_report_cb,
+        .set_report_cb = tud_hid_ps4_set_report_cb},
+    {
+#if CFG_TUSB_DEBUG >= 2
+        .name = "Generic_Device",
+#endif
+        .mode = ModeHid,
+        .open = NULL,
+        .control_xfer_cb = tud_hid_generic_control_xfer_cb,
+        .get_report_cb = tud_hid_generic_get_report_cb,
+        .set_report_cb = tud_hid_generic_set_report_cb},
+};
+
 uint16_t tud_hid_generic_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
   (void)instance;
@@ -69,17 +83,17 @@ uint16_t tud_hid_generic_get_report_cb(uint8_t instance, uint8_t report_id, hid_
   }
   if (report_id == ReportIdPs3F2)
   {
-    newMode = ConsoleMode::Ps3;
+    newMode = ModePs3;
   }
   if (report_id == ReportIdPs4Feature)
   {
     if (ps4_based())
     {
-      newMode = ConsoleMode::Ps4;
+      newMode = ModePs4;
     }
     else
     {
-      newMode = ConsoleMode::Ps3;
+      newMode = ModePs3;
     }
   }
 
@@ -91,7 +105,7 @@ void tud_hid_generic_set_report_cb(uint8_t instance, uint8_t report_id, hid_repo
   (void)instance;
   if (report_id == ReportIdPs3F4)
   {
-    newMode = ConsoleMode::Ps3;
+    newMode = ModePs3;
   }
 }
 
@@ -119,14 +133,6 @@ bool tud_hid_generic_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control
 }
 
 #if (CFG_TUD_ENABLED && CFG_TUD_HID_CUSTOM)
-
-//--------------------------------------------------------------------+
-// INCLUDE
-//--------------------------------------------------------------------+
-#include "device/usbd.h"
-#include "device/usbd_pvt.h"
-
-#include "usb/device/hid_device.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -184,12 +190,6 @@ TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate)
   (void)instance;
   (void)idle_rate;
   return true;
-}
-
-TU_ATTR_WEAK void tud_hid_clear_feature_cb(uint8_t instance, uint8_t endpoint)
-{
-  (void)instance;
-  (void)endpoint;
 }
 
 TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len)
@@ -341,6 +341,14 @@ void hidd_reset(uint8_t rhport)
 {
   (void)rhport;
   tu_memclr(_hidd_itf, sizeof(_hidd_itf));
+
+  for (auto &driver : hid_drivers)
+  {
+    if (driver.mode == mode)
+    {
+      hid_driver = &driver;
+    }
+  }
 }
 
 uint16_t hidd_open(uint8_t rhport, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
@@ -412,9 +420,13 @@ bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
       if ((request->wIndex == p_hid->ep_out) || (request->wIndex == p_hid->ep_in))
       {
         tud_hid_clear_feature_cb(hid_itf, request->wIndex);
-        return false;
+        return true;
       }
     }
+  }
+  if (hid_driver && hid_driver->control_xfer_cb && hid_driver->control_xfer_cb(rhport, stage, request))
+  {
+    return true;
   }
   TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
 
@@ -597,6 +609,105 @@ bool hidd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_
   }
 
   return true;
+}
+
+uint32_t start = 0;
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  (void)instance;
+  (void)report_id;
+  (void)report_type;
+  (void)buffer;
+  (void)reqlen;
+  switch (report_type)
+  {
+  case HID_REPORT_TYPE_FEATURE:
+    switch (report_id)
+    {
+    case ReportId::ReportIdConfig:
+    {
+      buffer[0] = report_id;
+      buffer++;
+      uint32_t ret = copy_config(buffer, start);
+      start += ret;
+      return ret + 1;
+    }
+    case ReportId::ReportIdConfigInfo:
+      buffer[0] = report_id;
+      buffer++;
+      start = 0;
+      return copy_config_info(buffer) + 1;
+    }
+    break;
+  case HID_REPORT_TYPE_INPUT:
+    // TODO: return the relevant inputs here
+    return 1;
+  default:
+    break;
+  }
+  if (hid_driver)
+  {
+    return hid_driver->get_report_cb(instance, report_id, report_type, buffer, reqlen);
+  }
+  return 0;
+}
+
+uint32_t lastKeepAlive = 0;
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+{
+  if (hid_driver)
+  {
+    hid_driver->set_report_cb(instance, report_id, report_type, buffer, bufsize);
+  }
+  if (report_type == HID_REPORT_TYPE_FEATURE)
+  {
+    // skip over report id
+    buffer++;
+    bufsize--;
+    switch (report_id)
+    {
+    case ReportId::ReportIdConfig:
+      lastKeepAlive = millis();
+      write_config(buffer, bufsize, start);
+      start += bufsize;
+      break;
+    case ReportId::ReportIdConfigInfo:
+      lastKeepAlive = millis();
+      start = 0;
+      write_config_info(buffer, bufsize);
+      break;
+    case ReportId::ReportIdLoaded:
+      lastKeepAlive = millis();
+      update(true);
+      break;
+    case ReportId::ReportIdKeepalive:
+      lastKeepAlive = millis();
+      break;
+    case ReportId::ReportIdBootloader:
+      reset_usb_boot(0, 0);
+      break;
+    }
+  }
+}
+
+bool tool_closed()
+{
+  return millis() - lastKeepAlive > 500;
+}
+
+static bool clearedIn = false;
+static bool clearedOut = false;
+
+void tud_hid_clear_feature_cb(uint8_t instance, uint8_t endpoint)
+{
+  (void)instance;
+  (void)endpoint;
+  clearedIn |= tu_edpt_dir(endpoint) == TUSB_DIR_IN;
+  clearedOut |= tu_edpt_dir(endpoint) == TUSB_DIR_OUT;
+  if (clearedIn && clearedOut)
+  {
+    newMode = ModeSwitch;
+  }
 }
 
 #endif

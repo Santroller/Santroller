@@ -223,7 +223,7 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
 }
 void GamepadButtonMapping::update_ps3(uint8_t *buf)
 {
-    if (mode == ConsoleMode::Ps3)
+    if (mode == ModePs3)
     {
         // TODO: pressures
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;

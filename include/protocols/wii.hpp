@@ -158,8 +158,23 @@ typedef struct
     uint8_t leftStickY : 6;
     uint8_t : 2;
 
-    uint8_t slider : 5;
-    uint8_t : 3;
+    union
+    {
+        struct
+        {
+            uint8_t tapGreen : 1;
+            uint8_t tapRed : 1;
+            uint8_t tapYellow : 1;
+            uint8_t tapBlue : 1;
+            uint8_t tapOrange : 1;
+            uint8_t : 3;
+        };
+        struct
+        {
+            uint8_t slider : 5;
+            uint8_t : 3;
+        };
+    };
 
     uint8_t whammy : 5;
     uint8_t : 3;
@@ -201,7 +216,7 @@ typedef struct
         uint8_t velocity_6_4 : 3;
     };
 
-    uint8_t velocity_0: 1;
+    uint8_t velocity_0 : 1;
     uint8_t : 1;
     uint8_t start : 1;
     uint8_t guide : 1;

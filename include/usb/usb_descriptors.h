@@ -64,7 +64,7 @@ typedef struct {
     uint16_t Index;
     uint8_t TotalSections;
     uint8_t Reserved[7];
-    OS_COMPATIBLE_SECTION CompatID[2];
+    OS_COMPATIBLE_SECTION CompatID[5];
 } __attribute__((packed)) OS_COMPATIBLE_ID_DESCRIPTOR;
 
 typedef struct {
@@ -97,8 +97,10 @@ enum
   ITF_NUM_HID,
   // ITF_NUM_XONE=1,
   ITF_NUM_XINPUT,
+  ITF_NUM_XINPUT2,
+  ITF_NUM_XINPUT3,
+  ITF_NUM_XINPUT4,
   ITF_NUM_XINPUT_SECURITY,
-  // ITF_NUM_XINPUT2,
 //   ITF_NUM_XINPUT_AUDIO,
 //   ITF_NUM_XINPUT_PLUGIN_MODULE,
   // ITF_NUM_OGXBOX,

@@ -503,7 +503,19 @@ typedef struct
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t whammy;
-    uint8_t slider;
+    union
+    {
+        struct
+        {
+            uint8_t tapGreen : 1;
+            uint8_t tapRed : 1;
+            uint8_t tapYellow : 1;
+            uint8_t tapBlue : 1;
+            uint8_t tapOrange : 1;
+            uint8_t : 3;
+        };
+        uint8_t slider;
+    };
 
     uint8_t pressure_dpadRight_yellow;  // yellow
     uint8_t pressure_dpadLeft;

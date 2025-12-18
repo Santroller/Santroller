@@ -32,7 +32,6 @@
 #include "class/hid/hid.h"
 
 #include "usb/usb_descriptors.h"
-#include "console_mode.h"
 
 #include "tusb.h"
 

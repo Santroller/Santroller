@@ -13,7 +13,6 @@
 #include "protocols/xbox_one.hpp"
 #include "protocols/xinput.hpp"
 #include "protocols/switch.hpp"
-#include "console_mode.h"
 #include <memory>
 class Mapping
 {
@@ -430,14 +429,6 @@ public:
     void update_ogxbox(uint8_t *report);
 };
 
-
-
-
-
-
-
-
-
 class GuitarHeroDrumsButtonMapping : public ButtonMapping
 {
 public:
@@ -568,19 +559,6 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
-
-class ActivationTrigger
-{
-public:
-    ActivationTrigger(proto_ActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id);
-    ~ActivationTrigger() {}
-    void update(bool tool_closed);
-
-protected:
-    proto_ActivationTrigger m_activation_trigger;
-    std::unique_ptr<Input> m_input;
-    uint16_t m_profile_id;
-};
 class KeyboardManiaButtonMapping : public ButtonMapping
 {
 public:
@@ -692,4 +670,26 @@ public:
     void update_ps4(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+};
+
+class ActivationTrigger
+{
+public:
+    ActivationTrigger(uint16_t profile_id) : m_profile_id(profile_id) {}
+    ~ActivationTrigger() {}
+    virtual void update(bool tool_closed) = 0;
+
+protected:
+    uint16_t m_profile_id;
+};
+class InputActivationTrigger : public ActivationTrigger
+{
+public:
+    InputActivationTrigger(proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id);
+    ~InputActivationTrigger() {}
+    void update(bool tool_closed);
+
+protected:
+    proto_InputActivationTrigger m_activation_trigger;
+    std::unique_ptr<Input> m_input;
 };

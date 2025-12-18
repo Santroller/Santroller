@@ -124,12 +124,23 @@ message Input {
     Gh5NeckButtonInput gh5Neck = 20;
   }
 }
-
-message ActivationTrigger {
+message InputActivationTrigger {
   required Input input = 1;
   optional bool inverted = 2;
   optional AnalogToDigitalTriggerType trigger = 3;
   optional int32 triggerValue = 4;
+}
+message ConsoleActivationTrigger {
+  required Input input = 1;
+  optional bool inverted = 2;
+  optional AnalogToDigitalTriggerType trigger = 3;
+  optional int32 triggerValue = 4;
+}
+
+message ActivationTrigger {
+  oneof trigger {
+    InputActivationTrigger input = 1; 
+  }
 }
 
 message Mapping {

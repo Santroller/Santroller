@@ -40,89 +40,6 @@
 #include "usb/device/hid_driver.h"
 
 #include "usb/usb_descriptors.h"
-#include "console_mode.h"
-hidd_driver_t *hid_driver = NULL;
-
-hidd_driver_t hid_drivers[] = {
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "PS3_Device",
-#endif
-        .mode = ConsoleMode::Ps3,
-        .open = NULL,
-        .control_xfer_cb = tud_hid_ps3_control_xfer_cb,
-        .get_report_cb = tud_hid_ps3_get_report_cb,
-        .set_report_cb = tud_hid_ps3_set_report_cb},
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "PS4_Device",
-#endif
-        .mode = ConsoleMode::Ps4,
-        .open = NULL,
-        .control_xfer_cb = NULL,
-        .get_report_cb = tud_hid_ps4_get_report_cb,
-        .set_report_cb = tud_hid_ps4_set_report_cb},
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "Generic_Device",
-#endif
-        .mode = ConsoleMode::Hid,
-        .open = NULL,
-        .control_xfer_cb = tud_hid_generic_control_xfer_cb,
-        .get_report_cb = tud_hid_generic_get_report_cb,
-        .set_report_cb = tud_hid_generic_set_report_cb},
-};
-usbd_class_driver_t driver[] = {
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "Hid_Device",
-#endif
-        .init = hidd_init,
-        .reset = hidd_reset,
-        .open = hidd_open,
-        .control_xfer_cb = hidd_control_xfer_cb,
-        .xfer_cb = hidd_xfer_cb,
-        .sof = NULL},
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "XInput_Device",
-#endif
-        .init = xinputd_init,
-        .reset = xinputd_reset,
-        .open = xinputd_open,
-        .control_xfer_cb = xinputd_control_xfer_cb,
-        .xfer_cb = xinputd_xfer_cb,
-        .sof = NULL},
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "XOne_Device",
-#endif
-        .init = xoned_init,
-        .reset = xoned_reset,
-        .open = xoned_open,
-        .control_xfer_cb = xoned_control_xfer_cb,
-        .xfer_cb = xoned_xfer_cb,
-        .sof = NULL},
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "OgXbox_Device",
-#endif
-        .init = ogxboxd_init,
-        .reset = ogxboxd_reset,
-        .open = ogxboxd_open,
-        .control_xfer_cb = ogxboxd_control_xfer_cb,
-        .xfer_cb = ogxboxd_xfer_cb,
-        .sof = NULL},
-    {
-#if CFG_TUSB_DEBUG >= 2
-        .name = "GhArcade_Device",
-#endif
-        .init = gh_arcaded_init,
-        .reset = gh_arcaded_reset,
-        .open = gh_arcaded_open,
-        .control_xfer_cb = gh_arcaded_control_xfer_cb,
-        .xfer_cb = gh_arcaded_xfer_cb,
-        .sof = NULL}};
 // TODO: do we just throw bt on core1? did that work?
 void core1()
 {
@@ -132,7 +49,6 @@ void core1()
     }
 }
 uint32_t timeSinceMode = millis();
-bool writing = false;
 bool seenPs4 = false;
 bool seenWindowsXb1 = false;
 bool seenOsDescriptorRead = false;
@@ -141,7 +57,8 @@ bool seenHidDescriptorRead = false;
 bool reinit = false;
 void hid_task(void)
 {
-    if (writing){
+    if (working)
+    {
         return;
     }
     if (newMode != mode || reinit)
@@ -155,50 +72,33 @@ void hid_task(void)
         seenHidDescriptorRead = false;
         tud_deinit(BOARD_TUD_RHPORT);
         tud_init(BOARD_TUD_RHPORT);
-
-        for (auto &driver : hid_drivers)
-        {
-            if (driver.mode == mode)
-            {
-                hid_driver = &driver;
-            }
-        }
         timeSinceMode = millis();
         return;
     }
-    if ((millis() - timeSinceMode) > 2000 && mode == ConsoleMode::Hid && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
+    if ((millis() - timeSinceMode) > 2000 && mode == ModeHid && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
     {
         // Switch 2 does read the hid descriptor
         if (seenHidDescriptorRead)
         {
-            printf("new mode switch!\r\n");
-            newMode = ConsoleMode::Switch;
+            newMode = ModeSwitch;
         }
         else if (tud_ready() && (current_type == RockBandGuitar || current_type == RockBandDrums))
         {
-            printf("new mode wiirb!\r\n");
             // PS2 / Wii / WiiU does not read hid descriptor
             // The wii however will configure the usb device before it stops communicating
-            newMode = ConsoleMode::WiiRb;
+            newMode = ModeWiiRb;
         }
         else
         {
-            printf("new mode ps3!\r\n");
             // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-            newMode = ConsoleMode::Ps3;
+            newMode = ModePs3;
         }
     }
-    if ((millis() - timeSinceMode) > 2000 && mode == ConsoleMode::Ps4 && !seenPs4)
+    if ((millis() - timeSinceMode) > 2000 && mode == ModePs4 && !seenPs4)
     {
-        newMode = ConsoleMode::Ps3;
+        newMode = ModePs3;
     }
     update(false);
-}
-uint32_t lastKeepAlive = 0;
-
-bool tool_closed()
-{
-    return millis() - lastKeepAlive > 500;
 }
 
 void send_event(proto_Event event)
@@ -230,31 +130,31 @@ void send_debug(uint8_t *data, size_t len)
     send_event(event);
 }
 
-const OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR ExtendedIDs = {
-    TotalLength : sizeof(OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR),
-    Version : 0x0100,
-    Index : DESC_EXTENDED_PROPERTIES_DESCRIPTOR,
-    TotalSections : 1,
-    SectionSize : 132,
-    ExtendedID : {
-        PropertyDataType : 1,
-        PropertyNameLength : 40,
-        PropertyName : {'D', 'e', 'v', 'i', 'c', 'e', 'I', 'n', 't', 'e',
-                        'r', 'f', 'a', 'c', 'e', 'G', 'U', 'I', 'D', '\0'},
-        PropertyDataLength : 78,
-        PropertyData :
-            {'{', 'D', 'F', '5', '9', '0', '3', '7', 'D', '-', '7', 'C', '9',
-             '2', '-', '4', '1', '5', '5', '-', 'A', 'C', '1', '2', '-', '7',
-             'D', '7', '0', '0', 'A', '3', '1', '3', 'D', '7', '9', '}', '\0'}
-    }
-};
-
-void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_t len)
+void tud_set_rumble_cb(uint8_t left, uint8_t right)
+{
+}
+void tud_set_player_led_cb(uint8_t player)
+{
+}
+void tud_set_lightbar_led_cb(uint8_t red, uint8_t green, uint8_t blue)
+{
+}
+void tud_set_euphoria_led_cb(uint8_t led)
+{
+}
+void tud_set_stage_kit_cb(uint8_t command, uint8_t param)
+{
+}
+void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
 {
     (void)instance;
-    (void)len;
+    (void)side;
 }
-uint32_t start = 0;
+
+void tud_detected_console(ConsoleMode mode)
+{
+}
+
 bool send_timeout = false;
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len)
 {
@@ -298,162 +198,180 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc,
     tuh_hid_receive_report(dev_addr, idx);
 }
 
-usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *driver_count)
+static const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
+uint8_t gh5_mapping[] = {
+    0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
+    0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD,
+    0xAE, 0xAC, 0xFF, 0xFB, 0xFD, 0xF9, 0xFE,
+    0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
+    0xE5, 0xE1, 0xE3, 0xDF};
+void update(bool full_poll)
 {
-    *driver_count = TU_ARRAY_SIZE(driver);
-    return driver;
-}
-bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
-{
-    // printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction,request->bmRequestType_bit.type,request->bmRequestType_bit.recipient, request->bRequest, request->wIndex, request->wValue);
-    if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
+    uint8_t out[64] = {0};
+    for (const auto &device : devices)
     {
-        if (stage == CONTROL_STAGE_SETUP)
+        device.second->update(full_poll);
+    }
+    // // If we are configuring, disable triggers
+    for (const auto &trigger : triggers)
+    {
+        trigger->update(tool_closed());
+    }
+    switch (mode)
+    {
+    case ModeHid:
+        if (tud_hid_ready())
         {
-            if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
+            for (const auto &mapping : mappings)
             {
-                if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+                mapping->update(full_poll);
+                mapping->update_hid(out);
+            }
+
+            // convert bitmask dpad to actual hid dpad
+            PCGamepad_Data_t *report = (PCGamepad_Data_t *)out;
+            report->dpad = dpad_bindings[report->dpad];
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = gh5_mapping[reportGh->slider];
+            }
+
+            tud_hid_report(ReportId::ReportIdGamepad, out, sizeof(PCGamepad_Data_t));
+        }
+        break;
+    case ModeSwitch:
+    case ModeWiiRb:
+    case ModePs3:
+        if (tud_hid_ready())
+        {
+            if (current_type == Gamepad && mode == ModePs3)
+            {
+                PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)out;
+                report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
+                report->leftStickX = PS3_STICK_CENTER;
+                report->leftStickY = PS3_STICK_CENTER;
+                report->rightStickX = PS3_STICK_CENTER;
+                report->rightStickY = PS3_STICK_CENTER;
+            }
+            else
+            {
+                PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)out;
+                gamepad->accelX = PS3_ACCEL_CENTER;
+                gamepad->accelY = PS3_ACCEL_CENTER;
+                gamepad->accelZ = PS3_ACCEL_CENTER;
+                gamepad->gyro = PS3_ACCEL_CENTER;
+                gamepad->leftStickX = PS3_STICK_CENTER;
+                gamepad->leftStickY = PS3_STICK_CENTER;
+                if (current_type == ProKeys)
                 {
-                    if (request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && request->wIndex == DESC_EXTENDED_PROPERTIES_DESCRIPTOR)
-                    {
-                        tud_control_xfer(rhport, request, (void *)&ExtendedIDs, ExtendedIDs.TotalLength);
-                        return true;
-                    }
+                    gamepad->rightStickX = 0;
+                    gamepad->rightStickY = 0;
+                }
+                else
+                {
+                    gamepad->rightStickX = PS3_STICK_CENTER;
+                    gamepad->rightStickY = PS3_STICK_CENTER;
                 }
             }
-        }
-    }
-    for (auto &d : driver)
-    {
-        if (d.control_xfer_cb(rhport, stage, request))
-        {
-            return true;
-        }
-    }
-    if (hid_driver && hid_driver->control_xfer_cb)
-    {
-        return hid_driver->control_xfer_cb(rhport, stage, request);
-    }
-    return false;
-}
+            for (const auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_ps3(out);
+            }
+            if (current_type == Gamepad && mode == ModePs3)
+            {
+                // Gamepads use a totally different report format
+                tud_hid_report(ReportId::ReportIdGamepad, &out, sizeof(PS3Gamepad_Data_t));
+                break;
+            }
+            // convert bitmask dpad to actual hid dpad
+            PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)out;
+            report->dpad = dpad_bindings[report->dpad];
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = gh5_mapping[reportGh->slider];
+            }
 
-uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
-{
-    (void)instance;
-    (void)report_id;
-    (void)report_type;
-    (void)buffer;
-    (void)reqlen;
-    switch (report_type)
-    {
-    case HID_REPORT_TYPE_FEATURE:
-        switch (report_id)
-        {
-        case ReportId::ReportIdConfig:
-        {
-            buffer[0] = report_id;
-            buffer++;
-            uint32_t ret = copy_config(buffer, start);
-            start += ret;
-            return ret + 1;
-        }
-        case ReportId::ReportIdConfigInfo:
-            buffer[0] = report_id;
-            buffer++;
-            start = 0;
-            return copy_config_info(buffer) + 1;
+            tud_hid_report(0, out, sizeof(PS3Dpad_Data_t));
         }
         break;
-    case HID_REPORT_TYPE_INPUT:
-        // TODO: return the relevant inputs here
-        return 1;
-    default:
+    case ModePs4:
+        if (tud_hid_ready())
+        {
+            for (const auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_ps4(out);
+            }
+            PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)out;
+            gamepad->leftStickX = PS3_STICK_CENTER;
+            gamepad->leftStickY = PS3_STICK_CENTER;
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+            // convert bitmask dpad to actual hid dpad
+            gamepad->dpad = dpad_bindings[gamepad->dpad];
+
+            tud_hid_report(ReportId::ReportIdGamepad, out, sizeof(PS4Dpad_Data_t));
+        }
+        break;
+    case ModeOgXbox:
+        if (tud_ogxbox_n_ready(0))
+        {
+            OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)out;
+            report->rid = 0;
+            report->rsize = sizeof(OGXboxGamepad_Data_t);
+            for (const auto &mapping : mappings)
+            {
+                mapping->update(full_poll);
+                mapping->update_ogxbox(out);
+            }
+            if (current_type == GuitarHeroGuitar)
+            {
+                // convert bitmask slider to actual hid slider
+                OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)out;
+                reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
+            }
+
+            tud_ogxbox_n_report(0, out, sizeof(XInputGamepad_Data_t));
+        }
+        break;
+    case ModeXbox360:
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (tud_xinput_n_ready(i))
+            {
+                XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)out;
+                report->rid = 0;
+                report->rsize = sizeof(XInputGamepad_Data_t);
+                for (const auto &mapping : mappings)
+                {
+                    mapping->update(full_poll);
+                    mapping->update_xinput(out);
+                }
+                if (current_type == GuitarHeroGuitar)
+                {
+                    // convert bitmask slider to actual hid slider
+                    XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)out;
+                    reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
+                }
+
+                tud_xinput_n_report(i, out, sizeof(XInputGamepad_Data_t));
+            }
+        }
         break;
     }
-    if (hid_driver)
-    {
-        return hid_driver->get_report_cb(instance, report_id, report_type, buffer, reqlen);
-    }
-    return 0;
-}
-
-void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
-{
-    if (hid_driver)
-    {
-        hid_driver->set_report_cb(instance, report_id, report_type, buffer, bufsize);
-    }
-    if (report_type == HID_REPORT_TYPE_FEATURE)
-    {
-        // skip over report id
-        buffer++;
-        bufsize--;
-        switch (report_id)
-        {
-        case ReportId::ReportIdConfig:
-            lastKeepAlive = millis();
-            writing = !write_config(buffer, bufsize, start);
-            start += bufsize;
-            break;
-        case ReportId::ReportIdConfigInfo:
-            lastKeepAlive = millis();
-            start = 0;
-            write_config_info(buffer, bufsize);
-            break;
-        case ReportId::ReportIdLoaded:
-            lastKeepAlive = millis();
-            update(true);
-            break;
-        case ReportId::ReportIdKeepalive:
-            lastKeepAlive = millis();
-            break;
-        case ReportId::ReportIdBootloader:
-            reset_usb_boot(0, 0);
-            break;
-        }
+    case ModeXboxOne:
+        break;
     }
 }
-
-static bool clearedIn = false;
-static bool clearedOut = false;
-
-void tud_hid_clear_feature_cb(uint8_t instance, uint8_t endpoint)
-{
-    (void)instance;
-    (void)endpoint;
-    clearedIn |= tu_edpt_dir(endpoint) == TUSB_DIR_IN;
-    clearedOut |= tu_edpt_dir(endpoint) == TUSB_DIR_OUT;
-    if (clearedIn && clearedOut)
-    {
-        newMode = ConsoleMode::Switch;
-    }
-}
-
-void tud_set_rumble_cb(uint8_t left, uint8_t right)
-{
-}
-void tud_set_player_led_cb(uint8_t player)
-{
-}
-void tud_set_lightbar_led_cb(uint8_t red, uint8_t green, uint8_t blue)
-{
-}
-void tud_set_euphoria_led_cb(uint8_t led)
-{
-}
-void tud_set_stage_kit_cb(uint8_t command, uint8_t param)
-{
-}
-void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
-{
-    (void)instance;
-    (void)side;
-}
-
-void tud_detected_console(ConsoleMode mode)
-{
-}
-
 
 int main()
 {
@@ -471,17 +389,9 @@ int main()
     }
     printf("init %d\r\n", mode);
 
-    for (auto &driver : hid_drivers)
-    {
-        if (driver.mode == mode)
-        {
-            hid_driver = &driver;
-        }
-    }
-
     // init device stack on configured roothub port
     tud_init(BOARD_TUD_RHPORT);
-    
+
     while (1)
     {
         tud_task(); // tinyusb device task

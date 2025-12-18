@@ -5,12 +5,12 @@
 #include "main.hpp"
 #include "config.hpp"
 
-ActivationTrigger::ActivationTrigger(proto_ActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id) : m_activation_trigger(activation_trigger), m_input(std::move(input)), m_profile_id(profile_id)
+InputActivationTrigger::InputActivationTrigger(proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id) : ActivationTrigger(m_profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input))
 {
 }
 
 // deal with debounce and all the other fun things
-void ActivationTrigger::update(bool tool_closed)
+void InputActivationTrigger::update(bool tool_closed)
 {
     auto val = m_input->tickDigital();
     if (m_activation_trigger.has_trigger)

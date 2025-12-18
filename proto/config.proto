@@ -6,12 +6,18 @@ import "enums.proto";
 import "device.proto"; 
 
 message Profile {
+  repeated ActivationTrigger activationMethod = 1;
+  required string name = 2;
+  repeated Mode modes = 3;
+}
+
+message Mode {
   required FaceButtonMappingMode faceButtonMappingMode = 1;
   repeated ActivationTrigger activationMethod = 2;
   repeated Mapping mappings = 3;
   required string name = 4;
   required SubType deviceToEmulate = 5;
-} 
+}
 
 message Config {
   repeated Device devices = 1;

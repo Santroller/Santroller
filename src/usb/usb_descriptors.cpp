@@ -74,22 +74,22 @@ uint8_t const *tud_descriptor_device_cb(void)
   // TODO: add the rest of the ids, and is there a nicer way to handle this?
   switch (mode)
   {
-  case ConsoleMode::Switch:
+  case ModeSwitch:
     desc_device.idVendor = 0x0f0d;
     desc_device.idProduct = 0x0092;
     break;
-  case ConsoleMode::Ps3:
+  case ModePs3:
     desc_device.idVendor = 0x054c;
     desc_device.idProduct = 0x0268;
     break;
-  case ConsoleMode::XboxOne:
+  case ModeXboxOne:
     desc_device.idVendor = 0x045e;
     desc_device.idProduct = 0x02ea;
     desc_device.bDeviceClass = 0xff;
     desc_device.bDeviceSubClass = 0x47;
     desc_device.bDeviceProtocol = 0xd0;
     break;
-  case ConsoleMode::WiiRb:
+  case ModeWiiRb:
     desc_device.idVendor = 0x1bad;
     desc_device.idProduct = 0x3010;
     break;
@@ -135,19 +135,19 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
   (void)instance;
   switch (mode)
   {
-  case ConsoleMode::Hid:
+  case ModeHid:
     return desc_hid_report;
-  case ConsoleMode::Ps4:
+  case ModePs4:
     return desc_hid_report_ps4;
-  case ConsoleMode::Ps3:
+  case ModePs3:
     if (current_type == Gamepad)
     {
       return desc_hid_report_ps3_gamepad;
     }
     return desc_hid_report_ps3;
-  case ConsoleMode::OgXbox:
-  case ConsoleMode::Xbox360:
-  case ConsoleMode::XboxOne:
+  case ModeOgXbox:
+  case ModeXbox360:
+  case ModeXboxOne:
     return desc_hid_report_non_gamepad;
   default:
     return desc_hid_report;
@@ -176,6 +176,7 @@ enum
 // #define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XONE_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
 
 #define CONFIG_TOTAL_LEN_XINPUT (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_XINPUT_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
+#define CONFIG_TOTAL_LEN_XINPUT4 (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + (TUD_XINPUT_GAMEPAD_DESC_LEN * 4) + TUD_XINPUT_SECURITY_DESC_LEN)
 #define CONFIG_TOTAL_LEN_OGXBOX (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_OGXBOX_GAMEPAD_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN)
 #define CONFIG_TOTAL_LEN_XBOXONE (TUD_CONFIG_DESC_LEN + TUD_XONE_GAMEPAD_DESC_LEN)
 #define CONFIG_TOTAL_LEN_HID (TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN + TUD_XINPUT_SECURITY_DESC_LEN + TUD_XINPUT_PLUGIN_MODULE_DESC_LEN)
@@ -184,6 +185,12 @@ enum
 #define EPNUM_HID_OUT 0x02
 #define EPNUM_XINPUT_IN 0x83
 #define EPNUM_XINPUT_OUT 0x04
+#define EPNUM_XINPUT2_IN 0x85
+#define EPNUM_XINPUT2_OUT 0x06
+#define EPNUM_XINPUT3_IN 0x87
+#define EPNUM_XINPUT3_OUT 0x08
+#define EPNUM_XINPUT4_IN 0x89
+#define EPNUM_XINPUT4_OUT 0x09
 #define EPNUM_XINPUT_PMD_IN 0x85
 uint8_t const desc_configuration_ogxbox[] =
     {
@@ -208,6 +215,20 @@ uint8_t desc_configuration_xinput[] =
         TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
 
         TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, 0x07),
+        // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
+uint8_t desc_configuration_xinput4[] =
+    {
+        // Config number, interface count, string index, total length, attribute, power in mA
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, 0x07),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT2, EPNUM_XINPUT2_IN, EPNUM_XINPUT2_OUT, 0x07),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT3, EPNUM_XINPUT3_IN, EPNUM_XINPUT3_OUT, 0x07),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT4, EPNUM_XINPUT4_IN, EPNUM_XINPUT4_OUT, 0x07),
         // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
@@ -251,34 +272,47 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   // This example use the same configuration for both high and full speed mode
   switch (mode)
   {
-  case ConsoleMode::Hid:
+  case ModeHid:
     return desc_configuration_hid;
-  case ConsoleMode::Ps4:
+  case ModePs4:
     return desc_configuration_ps4;
-  case ConsoleMode::Ps3:
+  case ModePs3:
     if (current_type == Gamepad)
     {
       return desc_configuration_ps3_gamepad;
     }
     return desc_configuration_ps3;
-  case ConsoleMode::Xbox360:
+  case ModeXbox360:
   {
+    // uint8_t tmp[] = {
+    //     // Config number, interface count, string index, total length, attribute, power in mA
+    //     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    //     // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+    //     TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+
+    //     TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, get_subtype()),
+    //     // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+    //     // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+    //     TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
     uint8_t tmp[] = {
         // Config number, interface count, string index, total length, attribute, power in mA
-        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT4, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
         // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
         TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
 
         TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, get_subtype()),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT2, EPNUM_XINPUT2_IN, EPNUM_XINPUT2_OUT, XINPUT_PRO_GUITAR),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT3, EPNUM_XINPUT3_IN, EPNUM_XINPUT3_OUT, XINPUT_DRUMS),
+        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT4, EPNUM_XINPUT4_IN, EPNUM_XINPUT4_OUT, XINPUT_PRO_KEYS),
         // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
         TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
-    memcpy(desc_configuration_xinput, tmp, sizeof(tmp));
-    return desc_configuration_xinput;
+    memcpy(desc_configuration_xinput4, tmp, sizeof(tmp));
+    return desc_configuration_xinput4;
   }
-  case ConsoleMode::XboxOne:
+  case ModeXboxOne:
     return desc_configuration_xone;
-  case ConsoleMode::OgXbox:
+  case ModeOgXbox:
     return desc_configuration_ogxbox;
   default:
     return desc_configuration_ps3;
@@ -303,6 +337,7 @@ static uint16_t _desc_str[100 + 1];
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
+  printf("desc %02x %02x\r\n", index, langid);
   size_t chr_count;
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)

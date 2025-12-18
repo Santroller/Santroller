@@ -172,7 +172,7 @@ uint16_t ogxboxd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
 bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
     uint8_t itf = 0;
-    if (mode != ConsoleMode::Hid)
+    if (mode != ModeHid)
     {
         ogxboxd_interface_t *p_ogxbox = _ogxboxd_itf;
 
@@ -197,7 +197,7 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
                     }
-                    newMode = ConsoleMode::OgXbox;
+                    newMode = ModeOgXbox;
                     return true;
                 }
                 if (request->bRequest == 1 && request->wValue == 0x0100)
@@ -206,7 +206,7 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDInputCapabilities, sizeof(DukeXIDInputCapabilities));
                     }
-                    newMode = ConsoleMode::OgXbox;
+                    newMode = ModeOgXbox;
                     return true;
                 }
                 if (request->bRequest == 1 && request->wValue == 0x0200)
@@ -215,7 +215,7 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                     {
                         tud_control_xfer(rhport, request, (void *)&DukeXIDVibrationCapabilities, sizeof(DukeXIDVibrationCapabilities));
                     }
-                    newMode = ConsoleMode::OgXbox;
+                    newMode = ModeOgXbox;
                     return true;
                 }
             }

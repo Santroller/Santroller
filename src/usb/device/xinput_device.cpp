@@ -72,11 +72,39 @@ static const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs = {
     TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR),
     Version : 0x0100,
     Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 1,
+    TotalSections : 5,
     Reserved : {0},
     CompatID : {
         {
-            FirstInterfaceNumber : 0,
+            FirstInterfaceNumber : ITF_NUM_XINPUT,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : ITF_NUM_XINPUT2,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : ITF_NUM_XINPUT3,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : ITF_NUM_XINPUT4,
+            Reserved : 0x01,
+            CompatibleID : "XUSB10",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        },
+        {
+            FirstInterfaceNumber : ITF_NUM_XINPUT_SECURITY,
             Reserved : 0x01,
             CompatibleID : "XUSB10",
             SubCompatibleID : {0},
@@ -84,6 +112,7 @@ static const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDs = {
         }}
 };
 CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_XINPUT];
+static uint8_t lastIntf = 0;
 static volatile bool sending = false;
 /*------------- Helpers -------------*/
 static inline uint8_t get_index_by_itfnum(uint8_t itf_num)
@@ -115,7 +144,6 @@ bool tud_xinput_n_report(uint8_t itf, void const *report,
     // claim endpoint
     TU_VERIFY(usbd_edpt_claim(rhport, p_xinput->ep_in));
 
-    // If report id = 0, skip ID field
     len = tu_min8(len, CFG_TUD_XINPUT_TX_BUFSIZE);
     memcpy(p_xinput->epin_buf, report, len);
     sending = true;
@@ -139,6 +167,7 @@ void xinputd_reset(uint8_t rhport)
     {
         _xinputd_itf[i].itf_num = 0xFF;
     }
+    lastIntf = 0;
     sending = false;
 }
 
@@ -210,33 +239,49 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
     }
     return 0;
 }
-static uint8_t lastIntf = 0;
 bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-    // TODO: how do we differenciate this for multiple xinput interfaces at once
+    auto wIndex = request->wIndex;
+    // On an actual 360, the console always uses wIndex 0x00
+    if (request->wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    {
+        wIndex = _xinputd_itf[lastIntf].itf_num;
+        if (stage == CONTROL_STAGE_ACK) {
+            lastIntf++;
+        }
+    }
+    if (request->wIndex == 0x00 && request->wValue == SERIAL_NUMBER_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    {
+        wIndex = _xinputd_itf[0].itf_num;
+    }
+    if (stage == CONTROL_STAGE_SETUP)
+    {
+        printf("%02x %02x %02x %04x %02x\r\n", request->bmRequestType, request->bRequest, wIndex, request->wValue, request->wLength);
+    }
     xinputd_interface_t *p_xinput = _xinputd_itf;
-    // if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
-    // {
-    //     for (;; itf++, p_xinput++)
-    //     {
-    //         if (itf >= TU_ARRAY_SIZE(_xinputd_itf))
-    //             return false;
+    if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+    {
+        for (size_t itf = 0;; itf++, p_xinput++)
+        {
+            if (itf >= TU_ARRAY_SIZE(_xinputd_itf))
+                return false;
 
-    //         if ((request->wIndex & 0xff) == p_xinput->itf_num)
-    //             break;
-    //     }
-    // }
+            if ((wIndex & 0xff) == p_xinput->itf_num)
+                break;
+        }
+    }
     static uint8_t buf[0x22];
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
-        if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+        if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
         {
-            if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+            if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
             {
                 if (request->wValue == VIBRATION_CAPABILITIES_WVALUE)
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
+                        printf("vibr\r\n");
                         tud_control_xfer(rhport, request, (void *)&XInputVibrationCapabilities, sizeof(XInputVibrationCapabilities_t));
                     }
                     return true;
@@ -245,8 +290,18 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
+                        printf("caps\r\n");
                         // TODO: get this somehow
                         SubType SubType = GuitarHeroGuitar;
+                        if (wIndex == 1) {
+                            SubType = ProGuitarSquire;
+                        }
+                        if (wIndex == 2) {
+                            SubType = GuitarHeroDrums;
+                        }
+                        if (wIndex == 3) {
+                            SubType = ProKeys;
+                        }
                         XInputInputCapabilities.flags = XINPUT_FLAGS_FORCE_FEEDBACK;
                         switch (SubType)
                         {
@@ -284,6 +339,7 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
+                        printf("serial\r\n");
                         uint32_t serial = to_us_since_boot(get_absolute_time());
                         tud_control_xfer(rhport, request, &serial, sizeof(serial));
                     }
@@ -312,7 +368,7 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                 xsm3_set_identification_data(xsm3_id_data_ms_controller);
                 tud_control_xfer(rhport, request, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
             }
-            newMode = ConsoleMode::Xbox360;
+            newMode = ModeXbox360;
             return true;
         case 0x82:
             if (stage == CONTROL_STAGE_SETUP)

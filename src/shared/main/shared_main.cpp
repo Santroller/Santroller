@@ -3104,7 +3104,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     bool updateHIDSequence = false;
     uint8_t proKeyVelocities[25] = {0};
     memset(proKeyVelocities, 0, sizeof(proKeyVelocities));
-#if USB_HOST_STACK
     if (output_console_type == XBOXONE)
     {
         XBOX_ONE_REPORT *report = (XBOX_ONE_REPORT *)buf;
@@ -3118,6 +3117,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         packet_size = sizeof(XBOX_ONE_REPORT);
         report_size = packet_size - sizeof(GipHeader_t);
         memset(buf, 0, packet_size);
+        asm volatile("" ::
+                         : "memory");
+        report->joystickX = 0;
+        report->joystickY = 0;
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         TICK_XBOX_ONE;
         asm volatile("" ::
@@ -3137,6 +3140,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         GipPacket_t *packet = (GipPacket_t *)report;
         report_data = (USB_Report_Data_t *)packet->data;
         updateSequence = true;
+        
 #if DEVICE_TYPE_IS_LIVE_GUITAR
         packet_size = sizeof(XboxOneGHLGuitarWithGamepad_Data_t);
         uint8_t cmp = memcmp(last_report, report_data, report_size);
@@ -3152,7 +3156,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         updateHIDSequence = true;
 #endif
     }
-#endif
     if (output_console_type == OG_XBOX)
     {
         OG_XBOX_REPORT *report = (OG_XBOX_REPORT *)report_data;
@@ -3394,7 +3397,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->tilt = PS3_STICK_CENTER;
 #endif
         report->reportId = GIP_INPUT_REPORT;
-        TICK_XBOX_ONE;
+        // TICK_XBOX_ONE;
         asm volatile("" ::
                          : "memory");
         //  alias tilt to dpad left so that tilt works
@@ -3627,7 +3630,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
 #endif
 
-#if USB_HOST_STACK
 #if DEVICE_TYPE_IS_GAMEPAD
     if (updateSequence)
     {
@@ -3646,7 +3648,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             hid_sequence_number = 1;
         }
     }
-#endif
 #endif
 #endif
 #endif

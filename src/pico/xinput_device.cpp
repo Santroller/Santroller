@@ -279,12 +279,9 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
         if (consoleType == XBOX360 || consoleType == WINDOWS || consoleType == OG_XBOX) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x20));
-
-#if USB_HOST_STACK
         } else if (consoleType == XBOXONE) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x40));
-#endif
         } else if (consoleType == ARCADE) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x40));

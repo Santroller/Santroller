@@ -124,13 +124,6 @@ bool authDone = false;
 long test3 = 0;
 static void tick_usb()
 {
-#if USB_HOST_STACK
-    if (consoleType == XBOXONE && !foundXB)
-    {
-        tuh_task();
-        return;
-    }
-#endif
     tud_task();
 #if USB_HOST_STACK
     tuh_task();

@@ -1172,13 +1172,10 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     } else if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_DEVICE | USB_SETUP_TYPE_VENDOR) && request == REQ_GET_OS_FEATURE_DESCRIPTOR && wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR) {
         seen_windows_xb1 = true;
         memcpy_P(requestBuffer, &DevCompatIDs, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-#if USB_HOST_STACK
         if (consoleType == XBOXONE) {
             memcpy_P(requestBuffer, &DevCompatIDsOne, sizeof(DevCompatIDsOne));
             return sizeof(DevCompatIDsOne);
-        } else
-#endif
-            if (consoleType == WINDOWS || consoleType == XBOX360) {
+        } else if (consoleType == WINDOWS || consoleType == XBOX360) {
             OS_COMPATIBLE_ID_DESCRIPTOR *compat = (OS_COMPATIBLE_ID_DESCRIPTOR *)requestBuffer;
             compat->TotalSections = 4;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
@@ -1243,7 +1240,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
     const uint8_t descriptorNumber = (wValue & 0xFF);
     // printf("desc: %02x %02x\r\n", descriptorType, descriptorNumber);
 #if DEVICE_TYPE_IS_GAMEPAD
-#if USB_HOST_STACK
     if (consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
         seen_windows_desc = true;
     }
@@ -1257,12 +1253,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
             set_console_type(XBOXONE);
         }
     }
-#else
-    if (WINDOWS_USES_XINPUT && consoleType == UNIVERSAL && seen_windows_xb1 && descriptorType != HID_DESCRIPTOR_REPORT) {
-        set_console_type(WINDOWS);
-    }
-
-#endif
 #endif
     descriptor_requested = true;
     uint16_t size = NO_DESCRIPTOR;
@@ -1283,7 +1273,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->idVendor = 0x045E;
                 dev->idProduct = 0x0289;
             }
-#if USB_HOST_STACK
             else if (consoleType == XBOXONE) {
                 dev->idVendor = XBOX_ONE_CONTROLLER_VID;
                 dev->idProduct = XBOX_ONE_CONTROLLER_PID;
@@ -1291,7 +1280,6 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 dev->bDeviceSubClass = 0x47;
                 dev->bDeviceProtocol = 0xd0;
             }
-#endif
             else if (consoleType == PS4) {
                 dev->idVendor = PS4_VID;
                 dev->idProduct = PS4_PID;
@@ -1338,13 +1326,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
 #else
 
-#if USB_HOST_STACK
             if (consoleType == XBOXONE) {
                 size = sizeof(XBOX_ONE_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOXOneConfigurationDescriptor, size);
-            } else
-#endif
-                if (consoleType == WINDOWS || consoleType == XBOX360) {
+            } else if (consoleType == WINDOWS || consoleType == XBOX360) {
                 size = sizeof(XBOX_360_CONFIGURATION_DESCRIPTOR);
                 memcpy_P(descriptorBuffer, &XBOX360ConfigurationDescriptor, size);
             } else if (consoleType == OG_XBOX) {

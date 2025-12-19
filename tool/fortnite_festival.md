@@ -28,14 +28,6 @@ Its easiest to emulate a riffmaster, as this then gives you all the guitar input
 7. Unplug and replug the guitar, holding the input you just configured. Your guitar should show up as a riffmaster in game now.
 8. Play festival
 9. Unplug and replug the guitar without holding a button to go back to normal mode or to configure.
-
-For fortnite festival, it makes the most sense to emulate a keyboard, as this avoids the need for auth on consoles, and avoids a bunch of issues on PC. However, we do see that it is useful to be able to configure both standard guitar inputs and keyboard inputs at the same time.
-To support this, we have a concept of "Mode Bindings". This means you can hold a button on your guitar when plugging it onto a PC / console, and it will emulate a keyboard.
-
-## Console - Native controller (Requires keeping an authentication controller plugged in)
-
-If you wish for your guitar to show up as a native guitar on PS4/5 or Xbox One / Series, you will need to follow the [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) instructions, and then your guitar will just work. Note that this does mean you need to plug a controller in to authenticate, and for PS4/5 the controller will need to stay plugged in, so it isn't as simple as keyboard mode.
-
 ## Console - Keyboard mode (Works on console without authentication)
 
 For festival, its easiest to use keyboard mode on consoles. This is because keyboards don't require auth, so you don't have to deal with plugging in a device for authentication. You will need to add a mode binding to swap to keyboard mode to use this. 
@@ -59,6 +51,10 @@ For festival, its easiest to use keyboard mode on consoles. This is because keyb
 7. Unplug and replug the guitar, holding the input you just configured. Your guitar should show up as a keyboard now.
 8. Play festival
 9.  Unplug and replug the guitar without holding a button to go back to normal mode or to configure.
+
+## Console - Native controller (Requires keeping an authentication controller plugged in)
+
+If you wish for your guitar to show up as a native guitar on PS4/5 or Xbox One / Series, you will need to follow the [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) instructions, and then your guitar will just work. Note that this does mean you need to plug a controller in to authenticate, and for PS4/5 the controller will need to stay plugged in, so it isn't as simple as keyboard mode.
 
 ## iOS
 

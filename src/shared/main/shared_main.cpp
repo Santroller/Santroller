@@ -3119,8 +3119,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(buf, 0, packet_size);
         asm volatile("" ::
                          : "memory");
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
         report->joystickX = 0;
         report->joystickY = 0;
+#endif
         GIP_HEADER(report, GIP_INPUT_REPORT, false, report_sequence_number);
         TICK_XBOX_ONE;
         asm volatile("" ::

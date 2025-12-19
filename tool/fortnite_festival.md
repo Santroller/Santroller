@@ -16,12 +16,12 @@ Its easiest to emulate a riffmaster, as this then gives you all the guitar input
 4. Pick the correct `Input Type` and then configure the rest of the settings as necessary. You are configuring a button that when held will jump to keyboard emulation mode.
    1. For example, on wii you may do something like this:
 
-      [![Console Mode Wii](/assets/images/screenshots/fnf_console_wii.png)](/assets/images/screenshots/fnf_console_wii.png)
+      [![Console Mode Wii](/assets/images/screenshots/xbox_wii.png)](/assets/images/screenshots/fnf_console_wii.png)
 
       This would make it so holding green when pluging in the guitar makes the guitar go into xbox one controller mode.
    2. For direct you may do something like this:
 
-      [![Console Mode Direct](/assets/images/screenshots/fnf_console_direct.png)](/assets/images/screenshots/fnf_console_direct.png)
+      [![Console Mode Direct](/assets/images/screenshots/xbox_direct.png)](/assets/images/screenshots/fnf_console_direct.png)
 
       This would make it so holding the button on pin GP4 when pluging in the guitar makes the guitar go into xbox one controller mode.
 6. Save your settings

@@ -665,7 +665,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
     }
 
 #endif
-#ifdef INPUT_USB_HOST
     // Handle Xbox 360 LEDs and rumble
     // Handle XBOX One Auth
     if ((consoleType == XBOXONE) && report_id != BLUETOOTH_REPORT) {
@@ -704,7 +703,6 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             }
         }
     } else
-#endif
         // Bt reports are ALWAYS hid even if USB is in xinput mode
         if ((consoleType == XBOX360 || consoleType == WINDOWS) && report_id != BLUETOOTH_REPORT) {
             if (id == XBOX_LED_ID) {

@@ -3397,7 +3397,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->tilt = PS3_STICK_CENTER;
 #endif
         report->reportId = GIP_INPUT_REPORT;
-        // TICK_XBOX_ONE;
+        TICK_XBOX_ONE;
         asm volatile("" ::
                          : "memory");
         //  alias tilt to dpad left so that tilt works
@@ -3734,6 +3734,7 @@ bool tick_usb(void)
         send_report_to_controller(type.dev_addr, type.instance, data_from_console, data_from_console_size);
         data_from_console_size = 0;
     }
+#endif
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready)
     {
@@ -3768,7 +3769,6 @@ bool tick_usb(void)
 //     }
 // }
 // #endif
-#endif
     if (!size)
     {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);

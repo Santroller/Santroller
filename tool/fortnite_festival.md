@@ -54,7 +54,7 @@ For festival, its easiest to use keyboard mode on consoles. This is because keyb
 
 ## Console - Native controller (Requires keeping an authentication controller plugged in)
 
-If you wish for your guitar to show up as a native guitar on PS4/5 or Xbox One / Series, you will need to follow the [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) instructions, and then your guitar will just work. Note that this does mean you need to plug a controller in to authenticate, and for PS4/5 the controller will need to stay plugged in, so it isn't as simple as keyboard mode.
+If you wish for your guitar to show up as a native guitar on PS4/5 or Xbox One / Series, you will need to follow the [authentication](https://santroller.tangentmc.net/console_guides/authentication.html) instructions, and then your guitar will just work. Note that this does mean you need to plug a controller in to authenticate, and for PS4/5 the controller will need to stay plugged in, so it isn't as simple as keyboard mode. note that for PS4, you will need to set the ps4 emulation mode to PS4 under USB host, as it defaults to PS3.
 
 ## iOS
 

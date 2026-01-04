@@ -1,38 +1,13 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * This file is part of the TinyUSB stack.
- */
-
-#ifndef _TUSB_XINPUT_DEVICE_H_
-#define _TUSB_XINPUT_DEVICE_H_
+#pragma once
 
 #include "common/tusb_common.h"
 #include "device/usbd.h"
 #include "gamepad_device.h"
 #include "protocols/xinput.hpp"
+#include "device.hpp"
 #include "enums.pb.h"
 #include "config.hpp"
+#include "usb/usb_descriptors.h"
 
 #ifndef CFG_TUD_XINPUT_EPSIZE
 #define CFG_TUD_XINPUT_EPSIZE 64
@@ -84,6 +59,14 @@ enum
     XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS = 33,
     XINPUT_SKYLANDERS = 36
 };
+
+typedef enum
+{
+    Controller,
+    Security,
+    Chatpad,
+    Audio
+} XInputDeviceType;
 
 inline uint8_t get_subtype(void)
 {
@@ -161,4 +144,11 @@ extern "C"
 }
 #endif
 
-#endif /* _TUSB_XINPUT_DEVICE_H_ */
+class XInputDevice : public UsbDevice
+{
+public:
+    XInputDevice();
+    void initialize();
+    void process();
+    OS_COMPATIBLE_SECTION get_compatible_section();
+};

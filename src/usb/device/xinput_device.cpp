@@ -246,7 +246,8 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
     if (request->wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
         wIndex = _xinputd_itf[lastIntf].itf_num;
-        if (stage == CONTROL_STAGE_ACK) {
+        if (stage == CONTROL_STAGE_ACK)
+        {
             lastIntf++;
         }
     }
@@ -293,13 +294,16 @@ bool xinputd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
                         printf("caps\r\n");
                         // TODO: get this somehow
                         SubType SubType = GuitarHeroGuitar;
-                        if (wIndex == 1) {
+                        if (wIndex == 1)
+                        {
                             SubType = ProGuitarSquire;
                         }
-                        if (wIndex == 2) {
+                        if (wIndex == 2)
+                        {
                             SubType = GuitarHeroDrums;
                         }
-                        if (wIndex == 3) {
+                        if (wIndex == 3)
+                        {
                             SubType = ProKeys;
                         }
                         XInputInputCapabilities.flags = XINPUT_FLAGS_FORCE_FEEDBACK;
@@ -495,3 +499,18 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 }
 
 #endif
+
+void XInputDevice::initialize()
+{
+}
+
+OS_COMPATIBLE_SECTION get_compatible_section_descriptor()
+{
+    return {
+        FirstInterfaceNumber : ITF_NUM_XINPUT,
+        Reserved : 0x01,
+        CompatibleID : "XUSB10",
+        SubCompatibleID : {0},
+        Reserved2 : {0}
+    };
+}

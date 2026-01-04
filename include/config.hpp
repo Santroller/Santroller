@@ -14,7 +14,7 @@
 #include "FlashPROM.h"
 #include "CRC32.h"
 #include "state/base.hpp"
-
+class Instance;
 bool save(proto_Config *config);
 bool load(proto_Config &config);
 uint32_t copy_config(uint8_t *buffer, uint32_t start);
@@ -28,9 +28,8 @@ extern ConsoleMode mode;
 extern ConsoleMode newMode;
 extern bool working;
 
-extern std::vector<std::unique_ptr<Mapping>> mappings;
+extern std::vector<std::shared_ptr<Instance>> instances;
 extern std::map<uint32_t, std::shared_ptr<Device>> devices;
-extern std::vector<std::unique_ptr<ActivationTrigger>> triggers;
 inline bool hid_based(void)
 {
     return mode == ModeHid || mode == ModePs3 || mode == ModePs4 || mode == ModeWiiRb || mode == ModeSwitch;
@@ -42,16 +41,15 @@ inline bool ps4_based(void)
     return current_type == Gamepad || current_type == LiveGuitar;
 }
 
-// Instead of having a global mode and mappings, we have a mode and mappings per instance.
-// that would let us handle things like multiple adapters at once.
-// TODO: how do we express the ability to have multiple profiles mapped at once?
 class Instance
 {
 public:
+    bool active;
     uint8_t epin;
     uint8_t epout;
     SubType subtype;
     ConsoleMode mode;
     uint8_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
+    std::vector<std::unique_ptr<ActivationTrigger>> triggers;
 };

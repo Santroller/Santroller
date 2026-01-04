@@ -37,18 +37,12 @@
 #include "quadrature_encoder.h"
 #include <vector>
 #include <memory>
-std::vector<std::unique_ptr<Mapping>> mappings;
+std::vector<std::shared_ptr<Instance>> instances;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
-std::vector<std::unique_ptr<ActivationTrigger>> triggers;
 proto_SubType current_type;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
-typedef struct
-{
-    uint32_t current;
-    uint32_t target;
-} profile_args_t;
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -137,7 +131,7 @@ std::unique_ptr<Input> make_input(proto_Input input)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    uint16_t *mapping_id = (uint16_t *)*arg;
+    Instance* instance = (Instance*)*arg;
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input);
@@ -145,31 +139,31 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         return true;
     }
+    size_t mapping_id = instance->mappings.size();
     switch (mapping.which_mapping)
     {
     case proto_Mapping_gamepadAxis_tag:
         printf("axis %d\r\n", mapping.mapping.gamepadAxis);
-        mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), *mapping_id));
+        instance->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id));
         break;
     case proto_Mapping_ghAxis_tag:
         printf("axis %d\r\n", mapping.mapping.ghAxis);
-        mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), *mapping_id));
+        instance->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id));
         break;
     case proto_Mapping_ghButton_tag:
         printf("button %d\r\n", mapping.mapping.ghButton);
-        mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), *mapping_id));
+        instance->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id));
         break;
     case proto_Mapping_gamepadButton_tag:
         printf("button %d\r\n", mapping.mapping.gamepadButton);
-        mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), *mapping_id));
+        instance->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id));
         break;
     }
-    *mapping_id += 1;
     return true;
 }
 bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    uint16_t *profile_id = (uint16_t *)*arg;
+    Instance* instance = (Instance*)*arg;
     proto_ActivationTrigger trigger;
     pb_decode(stream, proto_ActivationTrigger_fields, &trigger);
     switch (trigger.which_trigger)
@@ -182,7 +176,7 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
         {
             return true;
         }
-        triggers.emplace_back(new InputActivationTrigger(trigger.trigger.input, std::move(input), *profile_id));
+        instance->triggers.emplace_back(new InputActivationTrigger(trigger.trigger.input, std::move(input), instance->profile_id));
         break;
     }
     }
@@ -190,29 +184,16 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    profile_args_t *profile_args = (profile_args_t *)*arg;
+    Instance* instance = new Instance();
+    instance->profile_id = instances.size();
+    instance->active = false;
     proto_Profile profile;
-    profile.activationMethod.arg = profile_args;
+    profile.activationMethod.arg = instance;
     profile.activationMethod.funcs.decode = &load_activation_method;
-    // only properly load the current profile
-    if (profile_args->current == profile_args->target)
-    {
-        printf("loading profile: %d\r\n", profile_args->current);
-        profile.mappings.funcs.decode = &load_mapping;
-    }
-    else
-    {
-        printf("skipping profile: %d\r\n", profile_args->current);
-        profile.mappings.funcs.decode = nullptr;
-    }
-    uint16_t mapping_id = 0;
-    profile.mappings.arg = &mapping_id;
+    profile.mappings.funcs.decode = &load_mapping;
+    profile.mappings.arg = instance;
     pb_decode(stream, proto_Profile_fields, &profile);
-    if (profile_args->current == profile_args->target)
-    {
-        current_type = profile.deviceToEmulate;
-    }
-    profile_args->current++;
+    instances.emplace_back(std::move(instance));
     return true;
 }
 // We put a ConfigFooter struct at the end of the flash area reserved for FlashPROM. It contains a magicvalue, the size
@@ -300,17 +281,11 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     // now actually load the entire config
     inputStream = pb_istream_from_buffer(dataPtr, size);
     config.devices.funcs.decode = &load_device;
-    profile_args_t args = {
-        current : 0,
-        target : currentProfile
-    };
     uint16_t dev_id = 0;
     config.devices.arg = &dev_id;
     config.profiles.funcs.decode = &load_profile;
-    config.profiles.arg = &args;
-    mappings.clear();
     devices.clear();
-    triggers.clear();
+    instances.clear();
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     update(true);
     return ret;

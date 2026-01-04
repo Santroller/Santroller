@@ -54,6 +54,20 @@
  // All max chunks are this size
  #define GIP_MAX_CHUNK_SIZE 0x3A
  
+typedef enum {
+    GIP_ACK_RESPONSE = 0x01,              // Xbox One ACK
+    GIP_ANNOUNCE = 0x02,                  // Xbox One Announce
+    GIP_KEEPALIVE = 0x03,                 // Xbox One Keep-Alive
+    GIP_DEVICE_DESCRIPTOR = 0x04,         // Xbox One Definition
+    GIP_POWER_MODE_DEVICE_CONFIG = 0x05,  // Xbox One Power Mode Config
+    GIP_AUTH = 0x06,                      // Xbox One Authentication
+    GIP_VIRTUAL_KEYCODE = 0x07,           // XBox One Guide button pressed
+    GIP_CMD_RUMBLE = 0x09,                // Xbox One Rumble Command
+    GIP_CMD_LED_ON = 0x0A,                // Xbox One (LED On)
+    GIP_FINAL_AUTH = 0x1E,                // Xbox One (Final auth?)
+    GIP_INPUT_REPORT = 0x20,              // Xbox One Input Report
+    GIP_HID_REPORT = 0x21,                // Xbox One HID Report
+} XboxOneReport;
  typedef struct
  {
      uint8_t command;

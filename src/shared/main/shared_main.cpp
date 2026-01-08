@@ -26,6 +26,7 @@
 #include "wii.h"
 #include "wt_drum.h"
 #include "quadrature_encoder.pio.h"
+#include "protar_neck.h"
 #define UP 1 << 0
 #define DOWN 1 << 1
 #define LEFT 1 << 2

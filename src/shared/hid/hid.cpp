@@ -930,6 +930,11 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             response_buffer[0] = wt_drum_found;
             return 1;
 #endif
+#ifdef MUSTANG_NECK_SPI_PORT
+        case COMMAND_MUSTANG_NECK_VALID:
+            response_buffer[0] = mustang_neck_found;
+            return 1;
+#endif
 #ifdef BH_DRUM_TWI_PORT
         case COMMAND_BH_DRUM_VALID:
             response_buffer[0] = bh_drum_found;

@@ -7,7 +7,7 @@
 #ifdef MUSTANG_NECK_SPI_PORT
 static long lastTick = 0;
 static int missing = 0;
-bool protar_found = false;
+bool mustang_neck_found = false;
 static protarneck_t neck;
 protarneck_t tickMustangNeck() {
     if (micros() - lastTick > 500) {

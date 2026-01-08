@@ -3206,6 +3206,20 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->autoCal_Light = report->tilt;
         report->autoCal_Microphone = report->tilt;
 #endif
+#ifdef MUSTANG_NECK_SPI_PORT
+        report->lowEFret = lastProtar.lowEFret;
+        report->aFret = lastProtar.aFret;
+        report->dFret = lastProtar.dFret;
+        report->gFret = lastProtar.gFret;
+        report->bFret = lastProtar.bFret;
+        report->highEFret = lastProtar.highEFret;
+        report->green = lastProtar.green;
+        report->red = lastProtar.red;
+        report->yellow = lastProtar.yellow;
+        report->blue = lastProtar.blue;
+        report->orange = lastProtar.orange;
+        report->soloFlag = lastProtar.soloFlag;
+#endif
 #if PRO_GUITAR && BLUETOOTH_RX
         TRANSLATE_TO_PRO_GUITAR(bt_data)
         report->autoCal_Light = report->tilt;
@@ -3284,6 +3298,21 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TRANSLATE_TO_PRO_GUITAR(bt_data)
         report->autoCal_Light = report->tilt;
         report->autoCal_Microphone = report->tilt;
+#endif
+
+#ifdef MUSTANG_NECK_SPI_PORT
+        report->lowEFret = lastProtar.lowEFret;
+        report->aFret = lastProtar.aFret;
+        report->dFret = lastProtar.dFret;
+        report->gFret = lastProtar.gFret;
+        report->bFret = lastProtar.bFret;
+        report->highEFret = lastProtar.highEFret;
+        report->green = lastProtar.green;
+        report->red = lastProtar.red;
+        report->yellow = lastProtar.yellow;
+        report->blue = lastProtar.blue;
+        report->orange = lastProtar.orange;
+        report->soloFlag = lastProtar.soloFlag;
 #endif
         asm volatile("" ::
                          : "memory");
@@ -3366,6 +3395,20 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #if PRO_GUITAR && USB_HOST_STACK
             TRANSLATE_TO_PRO_GUITAR(usb_host_data)
+#endif
+
+#ifdef MUSTANG_NECK_SPI_PORT
+        report->lowEFret = lastProtar.lowEFret;
+        report->aFret = lastProtar.aFret;
+        report->dFret = lastProtar.dFret;
+        report->gFret = lastProtar.gFret;
+        report->bFret = lastProtar.bFret;
+        report->highEFret = lastProtar.highEFret;
+        report->green = lastProtar.green;
+        report->red = lastProtar.red;
+        report->yellow = lastProtar.yellow;
+        report->blue = lastProtar.blue;
+        report->orange = lastProtar.orange;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
             TRANSLATE_TO_PRO_GUITAR(bt_data)
@@ -3534,6 +3577,21 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 TRANSLATE_TO_PRO_GUITAR(usb_host_data)
                 report->autoCal_Light = report->tilt;
                 report->autoCal_Microphone = report->tilt;
+#endif
+
+#ifdef MUSTANG_NECK_SPI_PORT
+        report->lowEFret = lastProtar.lowEFret;
+        report->aFret = lastProtar.aFret;
+        report->dFret = lastProtar.dFret;
+        report->gFret = lastProtar.gFret;
+        report->bFret = lastProtar.bFret;
+        report->highEFret = lastProtar.highEFret;
+        report->green = lastProtar.green;
+        report->red = lastProtar.red;
+        report->yellow = lastProtar.yellow;
+        report->blue = lastProtar.blue;
+        report->orange = lastProtar.orange;
+        report->soloFlag = lastProtar.soloFlag;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
                 TRANSLATE_TO_PRO_GUITAR(bt_data)

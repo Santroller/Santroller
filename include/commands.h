@@ -55,6 +55,7 @@ enum SerialCommands {
     COMMAND_BH_DRUM_VALID,
     COMMAND_READ_CRKD,
     COMMAND_READ_MATRIX,
+    COMMAND_MUSTANG_NECK_VALID,
     MAX=100
 };
 
@@ -78,6 +79,7 @@ extern bool lastWiiWasSuccessful;
 extern bool lastPS2WasSuccessful;
 extern bool wt_drum_found;
 extern bool bh_drum_found;
+extern bool mustang_neck_found;
 extern uint16_t wiiControllerType;
 extern uint8_t ps2ControllerType;
 extern bool overrideR2;

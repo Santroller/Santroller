@@ -68,7 +68,9 @@ struct
         };
     };
 } rtt_t;
+unsigned long lastCrkdSend;
 crkd_neck_t lastCrkd;
+protarneck_t lastProtar;
 unsigned long lastMidi = 0;
 Midi_Data_t midiData = {0};
 
@@ -2744,6 +2746,7 @@ void tick_ps2output()
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+#include "inputs/mustang_neck.h"
 #include "inputs/crkd.h"
 
     TICK_SHARED;
@@ -2785,6 +2788,7 @@ void tick_wiioutput()
 #include "inputs/usb_host.h"
 #include "inputs/wii.h"
 #include "inputs/wt_neck.h"
+#include "inputs/mustang_neck.h"
 #include "inputs/turntable.h"
     TICK_SHARED;
     if (!startedInactivityPulse)
@@ -2933,6 +2937,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wii.h"
 #include "inputs/wt_drum.h"
 #include "inputs/wt_neck.h"
+#include "inputs/mustang_neck.h"
 #include "inputs/crkd.h"
 #include "inputs/turntable.h"
     // #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE

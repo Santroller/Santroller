@@ -1,6 +1,5 @@
 #pragma once
 typedef struct {
-    uint8_t header = 0;
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
     uint16_t dFret : 5;

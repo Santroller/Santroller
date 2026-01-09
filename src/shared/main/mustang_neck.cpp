@@ -15,9 +15,11 @@ protarneck_t tickMustangNeck() {
         MUSTANG_NECK_CS_CLEAR();
         uint8_t resp = spi_transfer(MUSTANG_NECK_SPI_PORT, 0x01);
         if (resp != 0x00) {
+            mustang_neck_found = false;
             MUSTANG_NECK_CS_SET();
             return neck;
         }
+        mustang_neck_found = true;
         uint8_t* buf = (uint8_t*)&neck;
         for (int i = 0; i < sizeof(neck); i++) {
             *buf++ = spi_transfer(MUSTANG_NECK_SPI_PORT, 0x42);

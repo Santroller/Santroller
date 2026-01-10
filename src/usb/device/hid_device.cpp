@@ -4,7 +4,6 @@
 #include "enums.pb.h"
 #include "config.hpp"
 #include "main.hpp"
-#include "usb/device/hid_driver.h"
 #include "usb/device/hid_device.h"
 #include "usb/device/ps3_device.h"
 #include "usb/device/ps4_device.h"
@@ -342,6 +341,7 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
 HIDConfigDevice::HIDConfigDevice()
 {
+  HIDConfigDevice::instance = this;
 }
 void HIDConfigDevice::initialize()
 {

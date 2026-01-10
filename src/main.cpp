@@ -37,7 +37,6 @@
 #include "host/usbh_pvt.h"
 #include "common/tusb_types.h"
 #include "pio_usb.h"
-#include "usb/device/hid_driver.h"
 
 #include "usb/usb_descriptors.h"
 // TODO: do we just throw bt on core1? did that work?

@@ -2,7 +2,6 @@
 
 #include "common/tusb_common.h"
 #include "device/usbd.h"
-#include "gamepad_device.h"
 #include "protocols/xinput.hpp"
 #include "device.hpp"
 #include "enums.pb.h"

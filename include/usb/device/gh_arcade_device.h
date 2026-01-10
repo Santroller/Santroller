@@ -25,7 +25,6 @@ extern "C"
     bool gh_arcaded_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event,
                             uint32_t xferred_bytes);
     bool gh_arcaded_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request);
-    void tud_gh_arcade_set_side_cb(uint8_t interface, uint8_t side);
 
 #ifdef __cplusplus
 }

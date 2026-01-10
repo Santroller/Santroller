@@ -77,7 +77,7 @@ bool gh_arcaded_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
     {
         // packet sends 0 for left and 1 for right, hid report uses 1 for left and 2 for right
         uint8_t side = dev->epout_buf[1] + 1;
-        tud_gh_arcade_set_side_cb(0, side);
+        dev->side = side;
     }
     TU_ASSERT(usbd_edpt_xfer(rhport, dev->m_epout, dev->epout_buf,
                              0x40));

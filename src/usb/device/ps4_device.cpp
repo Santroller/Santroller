@@ -1,5 +1,4 @@
 #include "usb/device/ps4_device.h"
-#include "usb/device/gamepad_device.h"
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
 #include "main.hpp"
@@ -165,13 +164,16 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     case HID_REPORT_TYPE_OUTPUT:
     {
         ps4_output_report *report = (ps4_output_report *)buffer;
-        tud_set_lightbar_led_cb(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
-        tud_set_rumble_cb(report->motor_left, report->motor_right);
+        lightbar_red = report->lightbar_red;
+        lightbar_green = report->lightbar_green;
+        lightbar_blue = report->lightbar_blue;
+        rumble_left = report->motor_left;
+        rumble_right = report->motor_right;
         for (int i = 0; i < 4; i++)
         {
             if (report->lightbar_red == ps4_colors[i][0] && report->lightbar_green == ps4_colors[i][1] && report->lightbar_blue == ps4_colors[i][2])
             {
-                tud_set_player_led_cb(i + 1);
+                player_led = i + 1;
             }
         }
         break;

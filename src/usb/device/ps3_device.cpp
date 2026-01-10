@@ -1,5 +1,4 @@
 #include "usb/device/ps3_device.h"
-#include "usb/device/gamepad_device.h"
 #include "protocols/ps4.hpp"
 #include "hid_reports.h"
 #include "enums.pb.h"
@@ -68,67 +67,69 @@ const uint8_t ps3_feature_ef[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 
-void handle_player_leds_ds3(uint8_t player_mask)
+uint8_t handle_player_leds_ds3(uint8_t player_mask)
 {
     if (player_mask == 2)
     {
-        tud_set_player_led_cb(1);
+        return 1;
     }
     if (player_mask == 4)
     {
-        tud_set_player_led_cb(2);
+        return 2;
     }
     if (player_mask == 8)
     {
-        tud_set_player_led_cb(3);
+        return 3;
     }
     if (player_mask == 16)
     {
-        tud_set_player_led_cb(4);
+        return 4;
     }
     if (player_mask == 18)
     {
-        tud_set_player_led_cb(5);
+        return 5;
     }
     if (player_mask == 20)
     {
-        tud_set_player_led_cb(6);
+        return 6;
     }
     if (player_mask == 24)
     {
-        tud_set_player_led_cb(7);
+        return 7;
     }
+    return 0;
 }
-void handle_player_leds_ps3(uint8_t player_mask)
+uint8_t handle_player_leds_ps3(uint8_t player_mask)
 {
     if (player_mask == 1)
     {
-        tud_set_player_led_cb(1);
+        return 1;
     }
     if (player_mask == 2)
     {
-        tud_set_player_led_cb(2);
+        return 2;
     }
     if (player_mask == 4)
     {
-        tud_set_player_led_cb(3);
+        return 3;
     }
     if (player_mask == 8)
     {
-        tud_set_player_led_cb(4);
+        return 4;
     }
     if (player_mask == 9)
     {
-        tud_set_player_led_cb(5);
+        return 5;
     }
     if (player_mask == 10)
     {
-        tud_set_player_led_cb(6);
+        return 6;
     }
     if (player_mask == 12)
     {
-        tud_set_player_led_cb(7);
+        return 7;
     }
+    return 0;
 }
 
 
@@ -326,28 +327,34 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         uint8_t id = buffer[0];
         if (id == PS3_LED_ID)
         {
-            handle_player_leds_ds3(buffer[9]);
-            tud_set_rumble_cb(buffer[0x04], buffer[0x02] ? 0xff : 0);
+            player_led = handle_player_leds_ds3(buffer[9]);
+            rumble_left = buffer[0x04];
+            rumble_right = buffer[0x02] ? 0xff : 0;
         }
         else if (id == PS3_RUMBLE_ID)
         {
-            // TODO: confirm this
             // instruments receive player leds over this report id with one format
             if (bufsize >= 8)
             {
                 uint8_t player = buffer[3];
-                handle_player_leds_ps3(player);
+                player_led = handle_player_leds_ps3(player);
             }
             else
             {
                 // and DS3s receive rumble, and the packet length is shorter
-                tud_set_rumble_cb(buffer[0x05], buffer[0x03] ? 0xff : 0);
+                rumble_left = buffer[0x05];
+                rumble_right = buffer[0x03] ? 0xff : 0;
             }
         }
         else if (id == DJ_LED_ID)
         {
             uint8_t euphoria_on = buffer[2] * 0xFF;
-            tud_set_euphoria_led_cb(euphoria_on);
+            euphoria_led = euphoria_on;
+        }
+        else if (id == SANTROLLER_LED_ID)
+        {
+            stagekit_command = buffer[3];
+            stagekit_param = buffer[2];
         }
         break;
     }

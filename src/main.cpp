@@ -108,31 +108,6 @@ void send_debug(uint8_t *data, size_t len)
     HIDConfigDevice::send_event(event);
 }
 
-void tud_set_rumble_cb(uint8_t left, uint8_t right)
-{
-}
-void tud_set_player_led_cb(uint8_t player)
-{
-}
-void tud_set_lightbar_led_cb(uint8_t red, uint8_t green, uint8_t blue)
-{
-}
-void tud_set_euphoria_led_cb(uint8_t led)
-{
-}
-void tud_set_stage_kit_cb(uint8_t command, uint8_t param)
-{
-}
-void tud_gh_arcade_set_side_cb(uint8_t instance, uint8_t side)
-{
-    (void)instance;
-    (void)side;
-}
-
-void tud_detected_console(ConsoleMode mode)
-{
-}
-
 bool send_timeout = false;
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len)
 {

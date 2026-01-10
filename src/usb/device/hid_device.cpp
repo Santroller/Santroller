@@ -1,6 +1,5 @@
 #include "tusb_option.h"
 #include "usb/device/hid_device.h"
-#include "usb/device/gamepad_device.h"
 #include "enums.pb.h"
 #include "config.hpp"
 #include "main.hpp"

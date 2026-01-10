@@ -1,40 +1,8 @@
 #include "usb/device/switch_device.h"
-#include "usb/device/gamepad_device.h"
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
 #include "hid_reports.h"
 
-void handle_player_leds_switch(uint8_t player_mask)
-{
-    if (player_mask == 1)
-    {
-        tud_set_player_led_cb(1);
-    }
-    if (player_mask == 2)
-    {
-        tud_set_player_led_cb(2);
-    }
-    if (player_mask == 4)
-    {
-        tud_set_player_led_cb(3);
-    }
-    if (player_mask == 8)
-    {
-        tud_set_player_led_cb(4);
-    }
-    if (player_mask == 9)
-    {
-        tud_set_player_led_cb(5);
-    }
-    if (player_mask == 10)
-    {
-        tud_set_player_led_cb(6);
-    }
-    if (player_mask == 12)
-    {
-        tud_set_player_led_cb(7);
-    }
-}
 
 uint8_t const desc_hid_report_ps3[] =
     {

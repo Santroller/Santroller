@@ -16,4 +16,14 @@ public:
     uint8_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTrigger>> triggers;
+    uint8_t rumble_left;
+    uint8_t rumble_right;
+    uint8_t player_led;
+    uint8_t euphoria_led;
+    uint8_t lightbar_red;
+    uint8_t lightbar_green;
+    uint8_t lightbar_blue;
+    uint8_t stagekit_command;
+    uint8_t stagekit_param;
+    bool side;
 };

@@ -321,25 +321,24 @@ bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
         uint8_t player = xbox_players[ledReport->led];
         if (player)
         {
-            tud_set_player_led_cb(player);
+            dev->player_led = player;
         }
     }
     else if (rumbleReport->rid == XBOX_RUMBLE_ID)
     {
         if (dev->subtype == DjHeroTurntable)
         {
-
-            tud_set_euphoria_led_cb(rumbleReport->leftRumble);
+            dev->euphoria_led = rumbleReport->leftRumble;
         }
         else if (dev->subtype == StageKit)
         {
-
-            tud_set_stage_kit_cb(rumbleReport->rightRumble, rumbleReport->leftRumble);
+            dev->stagekit_command = rumbleReport->rightRumble;
+            dev->stagekit_param = rumbleReport->leftRumble;
         }
         else
         {
-
-            tud_set_rumble_cb(rumbleReport->leftRumble, rumbleReport->rightRumble);
+            dev->rumble_left = rumbleReport->leftRumble;
+            dev->rumble_right = rumbleReport->rightRumble;
         }
     }
     TU_ASSERT(usbd_edpt_xfer(rhport, dev->m_epout, dev->epout_buf, 0x20));

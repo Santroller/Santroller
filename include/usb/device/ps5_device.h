@@ -5,8 +5,6 @@
 
 #include "tusb.h"
 
-void tud_set_lightbar_led_cb(uint8_t red, uint8_t green, uint8_t blue);
-
 class PS5GamepadDevice : public HIDDevice
 {
 public:

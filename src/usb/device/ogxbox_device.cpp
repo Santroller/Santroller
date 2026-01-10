@@ -321,4 +321,6 @@ size_t OGXboxGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void OGXboxGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
+    desc->idVendor = 0x045E;
+    desc->idProduct = 0x0289;
 }

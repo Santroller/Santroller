@@ -36,6 +36,11 @@ void DrumManiaAxisMapping::update_ps4(uint8_t *buf)
     // not a thing on ps4
 }
 
+void DrumManiaAxisMapping::update_ps5(uint8_t *buf)
+{
+    // not a thing on ps5
+}
+
 void DrumManiaAxisMapping::update_xinput(uint8_t *buf)
 {
 }

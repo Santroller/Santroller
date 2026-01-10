@@ -184,6 +184,11 @@ void ProGuitarButtonMapping::update_ps4(uint8_t *buf)
     // not a thing
 }
 
+void ProGuitarButtonMapping::update_ps5(uint8_t *buf)
+{
+    // not a thing
+}
+
 void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;

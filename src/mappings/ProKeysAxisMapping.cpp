@@ -33,6 +33,10 @@ void ProKeysAxisMapping::update_ps4(uint8_t *buf)
 {
 }
 
+void ProKeysAxisMapping::update_ps5(uint8_t *buf)
+{
+}
+
 void ProKeysAxisMapping::update_xinput(uint8_t *buf)
 {
 }

@@ -31,6 +31,10 @@ void DJMaxTurntableButtonMapping::update_ps4(uint8_t *buf)
 {
 }
 
+void DJMaxTurntableButtonMapping::update_ps5(uint8_t *buf)
+{
+}
+
 void DJMaxTurntableButtonMapping::update_xinput(uint8_t *buf)
 {
 }

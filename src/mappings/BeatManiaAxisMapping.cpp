@@ -39,6 +39,11 @@ void BeatManiaAxisMapping::update_ps4(uint8_t *buf)
     // not a thing
 }
 
+void BeatManiaAxisMapping::update_ps5(uint8_t *buf)
+{
+    // not a thing
+}
+
 void BeatManiaAxisMapping::update_xinput(uint8_t *buf)
 {
     // not a thing

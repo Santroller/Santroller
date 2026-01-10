@@ -174,43 +174,10 @@ void GuitarHeroDrumsButtonMapping::update_ps3(uint8_t *buf)
 
 void GuitarHeroDrumsButtonMapping::update_ps4(uint8_t *buf)
 {
-    PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
-    {
-    case GuitarHeroDrumsA:
-        report->a |= m_lastValue;
-        break;
-    case GuitarHeroDrumsB:
-        report->b |= m_lastValue;
-        break;
-    case GuitarHeroDrumsX:
-        report->x |= m_lastValue;
-        break;
-    case GuitarHeroDrumsY:
-        report->y |= m_lastValue;
-        break;
-    case GuitarHeroDrumsBack:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroDrumsStart:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroDrumsGuide:
-        report->guide |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    }
+}
+
+void GuitarHeroDrumsButtonMapping::update_ps5(uint8_t *buf)
+{
 }
 
 void GuitarHeroDrumsButtonMapping::update_xinput(uint8_t *buf)

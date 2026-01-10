@@ -139,6 +139,11 @@ void GuitarHeroDrumsAxisMapping::update_ps4(uint8_t *buf)
     // not a thing on ps4
 }
 
+void GuitarHeroDrumsAxisMapping::update_ps5(uint8_t *buf)
+{
+    // not a thing on ps4
+}
+
 void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
     XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)buf;

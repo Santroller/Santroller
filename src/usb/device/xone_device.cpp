@@ -12,6 +12,7 @@
 #include "usb/device/xone_device.h"
 #include "xgip_protocol.h"
 #include <queue>
+#include "usb/usb_devices.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -147,8 +148,10 @@ void xoned_reset(uint8_t rhport)
     tu_memclr(_xoned_itf, sizeof(_xoned_itf));
     sending = false;
 }
-void process_report_queue(uint32_t now) {
-    if ( !report_queue.empty() && (now - lastReportQueue) > REPORT_QUEUE_INTERVAL ) {
+void process_report_queue(uint32_t now)
+{
+    if (!report_queue.empty() && (now - lastReportQueue) > REPORT_QUEUE_INTERVAL)
+    {
         // if ( send_xbone_usb(report_queue.front().report, report_queue.front().len) ) {
         //     memcpy(last_report, &report_queue.front().report, report_queue.front().len);
         //     report_queue.pop();
@@ -317,7 +320,6 @@ bool xoned_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 
 #endif
 
-
 XboxOneGamepadDevice::XboxOneGamepadDevice()
 {
 }
@@ -361,4 +363,9 @@ size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
+    desc->idVendor = XBOX_ONE_CONTROLLER_VID;
+    desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+    desc->bDeviceClass = 0xff;
+    desc->bDeviceSubClass = 0x47;
+    desc->bDeviceProtocol = 0xd0;
 }

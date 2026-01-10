@@ -4,6 +4,7 @@
 #include "main.hpp"
 #include "config.hpp"
 #include "hid_reports.h"
+#include "usb/usb_devices.h"
 
 static const int ps5_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -11,24 +12,20 @@ static const int ps5_colors[4][3] = {
     {0x00, 0x40, 0x00}, /* Green */
     {0x20, 0x00, 0x20}  /* Pink */
 };
-uint8_t ps5_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x91, /*type*/ 0x00, 0x2c, 0x56,
-    0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
-    0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-AuthPageSizeReport ps5_pagesize_report = {
-    type : 0xF3,
-    u1 : 0x00,
-    size_challenge : 0x38,
-    size_response : 0x38,
-    u4 : {0x00, 0x00, 0x00, 0x00}
+
+uint8_t ps5_feature_config[] = {
+    0x03, 0x21, 0x28, 0x03, 0xC3, /*type*/ 0x00, 0x2C, 0x56,
+    0x01, 0x00, 0xD0, 0x07, 0x00, 0x80, 0x04, 0x00,
+    0x00, 0x80, 0x0D, 0x0D, 0x84, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
+
 uint8_t const desc_hid_report_ps5[] =
     {
-        TUD_HID_REPORT_DESC_PS4_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+        TUD_HID_REPORT_DESC_PS5_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
 
 PS5GamepadDevice::PS5GamepadDevice()
 {
@@ -43,10 +40,9 @@ void PS5GamepadDevice::process(bool full_poll)
     for (const auto &mapping : mappings)
     {
         mapping->update(full_poll);
-        // TODO
-        // mapping->update_ps5(epin_buf);
+        mapping->update_ps5(epin_buf);
     }
-    PS5Gamepad_Data_t *gamepad = (PS5Gamepad_Data_t *)epin_buf;
+    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
@@ -59,7 +55,7 @@ void PS5GamepadDevice::process(bool full_poll)
     {
         return;
     }
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS5Gamepad_Data_t));
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS5Dpad_Data_t));
 }
 
 size_t PS5GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -83,8 +79,8 @@ size_t PS5GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void PS5GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    desc->idVendor = 0x0c70;
-    desc->idProduct = 0x0777;
+    desc->idVendor = P5GENERAL_VENDOR_ID;
+    desc->idProduct = P5GENERAL_PRODUCT_ID;
 }
 const uint8_t *PS5GamepadDevice::report_descriptor()
 {
@@ -106,6 +102,39 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         return 0;
     }
 
+    switch (report_id)
+    {
+    case ReportId::ReportIdPs5Feature:
+        seenPs4 = true;
+        memcpy(buffer, ps5_feature_config, sizeof(ps5_feature_config));
+        switch (current_type)
+        {
+        case Gamepad:
+            buffer[5] = PS5_GAMEPAD;
+            break;
+        case GuitarHeroGuitar:
+        case RockBandGuitar:
+        case LiveGuitar:
+            buffer[5] = PS5_GUITAR;
+            break;
+        case GuitarHeroDrums:
+        case RockBandDrums:
+            buffer[5] = PS5_DRUMS;
+            break;
+        case FightStick:
+            buffer[5] = PS5_FIGHTSTICK;
+            break;
+        default:
+            break;
+        }
+        return sizeof(ps5_feature_config);
+    case ReportId::ReportIdPs4GetResponse:
+        // try to pass through to ps4 over usb host if one exists
+        return 0;
+    case ReportId::ReportIdPs4GetAuthStatus:
+        // try to pass through to ps4 over usb host if one exists
+        return 0;
+    }
     return 0;
 }
 

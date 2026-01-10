@@ -150,6 +150,31 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
     }
 }
 
+void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
+{
+    PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
+    switch (m_mapping.mapping.rbAxis)
+    {
+    case RockBandGuitarLeftStickX:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarLeftStickY:
+        report->leftStickY = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarWhammy:
+        report->whammy = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarTilt:
+        report->tilt = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarPickup:
+        report->pickup = pickupUniversal[m_lastValue];
+        break;
+    default:
+        break;
+    }
+}
+
 void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)buf;

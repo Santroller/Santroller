@@ -162,6 +162,53 @@ void RockBandDrumsButtonMapping::update_ps4(uint8_t *buf)
     }
 }
 
+void RockBandDrumsButtonMapping::update_ps5(uint8_t *buf)
+{
+    PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
+    switch (m_mapping.mapping.rbDrumButton)
+    {
+    case RockBandDrumsA:
+        report->a |= m_lastValue;
+        break;
+    case RockBandDrumsB:
+        report->b |= m_lastValue;
+        break;
+    case RockBandDrumsX:
+        report->x |= m_lastValue;
+        break;
+    case RockBandDrumsY:
+        report->y |= m_lastValue;
+        break;
+    case RockBandDrumsKick1Pedal:
+        report->kick1 |= m_lastValue;
+        break;
+    case RockBandDrumsKick2Pedal:
+        report->kick2 |= m_lastValue;
+        break;
+    case RockBandDrumsBack:
+        report->back |= m_lastValue;
+        break;
+    case RockBandDrumsStart:
+        report->start |= m_lastValue;
+        break;
+    case RockBandDrumsGuide:
+        report->guide |= m_lastValue;
+        break;
+    case RockBandDrumsDpadUp:
+        report->dpadUp |= m_lastValue;
+        break;
+    case RockBandDrumsDpadDown:
+        report->dpadDown |= m_lastValue;
+        break;
+    case RockBandDrumsDpadLeft:
+        report->dpadLeft |= m_lastValue;
+        break;
+    case RockBandDrumsDpadRight:
+        report->dpadRight |= m_lastValue;
+        break;
+    }
+}
+
 void RockBandDrumsButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)buf;

@@ -9,7 +9,7 @@
 #define PS4_GAMEPAD 0
 #define PS4_GUITAR 1
 #define PS4_DRUMS 2
-#define PS4_FIGHTSTICK 7 // Useful on PS5?
+#define PS4_FIGHTSTICK 7 
 
 class PS4GamepadDevice : public HIDDevice
 {

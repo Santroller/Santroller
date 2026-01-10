@@ -213,6 +213,11 @@ void DJHTurntableButtonMapping::update_ps4(uint8_t *buf)
     // no ps4 turntable
 }
 
+void DJHTurntableButtonMapping::update_ps5(uint8_t *buf)
+{
+    // no ps5 turntable
+}
+
 void DJHTurntableButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;

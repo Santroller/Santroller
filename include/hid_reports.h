@@ -121,7 +121,13 @@
         HID_REPORT_COUNT(8),                                 \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),  \
         HID_REPORT_ID(ReportIdPs4Feature)                    \
+            HID_USAGE_N(0x2821, 2),                          \
+        HID_REPORT_COUNT(47),                                \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
             HID_USAGE_N(0x2721, 2),                          \
+        HID_REPORT_COUNT(47),                                \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
+            HID_USAGE_N(0x2821, 2),                          \
         HID_REPORT_COUNT(47),                                \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
         HID_USAGE_N(0x2621, 2),                              \
@@ -409,5 +415,72 @@
         HID_REPORT_ID(ReportIdPs4GetAuthPageSize)              \
             HID_USAGE_N(0x4701, 2),                            \
         HID_REPORT_COUNT(7),                                   \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
+        HID_COLLECTION_END
+
+
+#define TUD_HID_REPORT_DESC_PS5_FIRSTPARTY_GAMEPAD(rid)        \
+    HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                    \
+        HID_USAGE(HID_USAGE_DESKTOP_GAMEPAD),                  \
+        HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
+        rid                                                    \
+        HID_USAGE(HID_USAGE_DESKTOP_X),                        \
+        HID_USAGE(HID_USAGE_DESKTOP_Y),                        \
+        HID_USAGE(HID_USAGE_DESKTOP_Z),                        \
+        HID_USAGE(HID_USAGE_DESKTOP_RZ),                       \
+        HID_USAGE(HID_USAGE_DESKTOP_RX),                       \
+        HID_USAGE(HID_USAGE_DESKTOP_RY),                       \
+        HID_LOGICAL_MIN(0x00),                                 \
+        HID_LOGICAL_MAX_N(0xFF, 2),                            \
+        HID_REPORT_COUNT(6),                                   \
+        HID_REPORT_SIZE(8),                                    \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
+        HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),            \
+        HID_USAGE(0x20),                                       \
+        HID_REPORT_COUNT(1),                                   \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
+        HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),               \
+        HID_LOGICAL_MIN(0),                                    \
+        HID_LOGICAL_MAX(7),                                    \
+        HID_PHYSICAL_MAX_N(315, 2),                            \
+        HID_REPORT_COUNT(1),                                   \
+        HID_REPORT_SIZE(4),                                    \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                 \
+        HID_LOGICAL_MIN(0),                                    \
+        HID_LOGICAL_MAX(1),                                    \
+        HID_REPORT_COUNT(14),                                  \
+        HID_REPORT_SIZE(1),                                    \
+        HID_USAGE_MIN(0x01),                                   \
+        HID_USAGE_MAX(14),                                     \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
+        HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),            \
+        HID_USAGE(0x21),                                       \
+        HID_REPORT_COUNT(14),                                  \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
+        HID_REPORT_ID(ReportIdPs502)                           \
+            HID_USAGE(0x22),                                   \
+        HID_REPORT_SIZE(8),                                    \
+        HID_REPORT_COUNT(52),                                  \
+        HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),    \
+        HID_REPORT_ID(ReportIdPs5Feature)                      \
+            HID_USAGE_N(0x2821, 2),                            \
+        HID_REPORT_COUNT(47),                                  \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
+        HID_COLLECTION_END,                                    \
+        HID_USAGE_PAGE_N(0xFFF0, 2),                           \
+        HID_USAGE(0x40),                                       \
+        HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
+        HID_REPORT_ID(ReportIdPs5SetChallenge)                 \
+            HID_USAGE(0x47),                                   \
+        HID_REPORT_COUNT(63),                                  \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
+        HID_REPORT_ID(ReportIdPs5GetResponse)                  \
+            HID_USAGE(0x48),                                   \
+        HID_REPORT_COUNT(63),                                  \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
+        HID_REPORT_ID(ReportIdPs5GetAuthStatus)                \
+            HID_USAGE(0x49),                                   \
+        HID_REPORT_COUNT(15),                                  \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),   \
         HID_COLLECTION_END

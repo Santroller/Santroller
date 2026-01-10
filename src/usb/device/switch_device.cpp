@@ -2,7 +2,7 @@
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
 #include "hid_reports.h"
-
+#include "usb/usb_devices.h"
 
 uint8_t const desc_hid_report_ps3[] =
     {
@@ -59,16 +59,18 @@ size_t SwitchGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void SwitchGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    desc->idVendor = 0x0c70;
-    desc->idProduct = 0x0777;
+    // TODO: emulate an actual switch procon maybe?
+    desc->idVendor = HORI_VID;
+    desc->idProduct = HORI_POKKEN_TOURNAMENT_DX_PRO_PAD_PID;
 }
-const uint8_t * SwitchGamepadDevice::report_descriptor()
+const uint8_t *SwitchGamepadDevice::report_descriptor()
 {
-  return desc_hid_report_ps3;
+    return desc_hid_report_ps3;
 }
 
-uint16_t SwitchGamepadDevice::report_desc_len() {
-  return sizeof(desc_hid_report_ps3);
+uint16_t SwitchGamepadDevice::report_desc_len()
+{
+    return sizeof(desc_hid_report_ps3);
 }
 uint16_t SwitchGamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
@@ -81,7 +83,7 @@ uint16_t SwitchGamepadDevice::get_report(uint8_t report_id, hid_report_type_t re
     {
         return 0;
     }
-    
+
     return 0;
 }
 

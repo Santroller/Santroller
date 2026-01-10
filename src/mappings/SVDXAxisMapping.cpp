@@ -33,6 +33,10 @@ void SVDXAxisMapping::update_ps4(uint8_t *buf)
 {
 }
 
+void SVDXAxisMapping::update_ps5(uint8_t *buf)
+{
+}
+
 void SVDXAxisMapping::update_xinput(uint8_t *buf)
 {
 }

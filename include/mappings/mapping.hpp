@@ -10,6 +10,7 @@
 #include "protocols/ps2.hpp"
 #include "protocols/ps3.hpp"
 #include "protocols/ps4.hpp"
+#include "protocols/ps5.hpp"
 #include "protocols/xbox_one.hpp"
 #include "protocols/xinput.hpp"
 #include "protocols/switch.hpp"
@@ -26,6 +27,7 @@ public:
     virtual void update_ps2(uint8_t *report) = 0;
     virtual void update_ps3(uint8_t *report) = 0;
     virtual void update_ps4(uint8_t *report) = 0;
+    virtual void update_ps5(uint8_t *report) = 0;
     virtual void update_xinput(uint8_t *report) = 0;
     virtual void update_ogxbox(uint8_t *report) = 0;
     void update_digital(bool full_poll);
@@ -75,6 +77,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -89,6 +92,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -103,6 +107,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -117,6 +122,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -131,6 +137,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -145,6 +152,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -159,6 +167,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -173,6 +182,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -187,6 +197,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -201,6 +212,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -215,6 +227,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -229,6 +242,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -243,6 +257,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -257,6 +272,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -271,6 +287,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -285,6 +302,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -299,6 +317,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -313,6 +332,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -327,6 +347,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -341,6 +362,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -355,6 +377,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -369,6 +392,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -383,6 +407,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -397,6 +422,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -411,6 +437,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -425,6 +452,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -440,6 +468,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -454,6 +483,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -469,6 +499,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -483,6 +514,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -498,6 +530,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -512,6 +545,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -527,6 +561,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -541,6 +576,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -556,6 +592,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -570,6 +607,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -584,6 +622,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -598,6 +637,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -612,6 +652,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -626,6 +667,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -640,6 +682,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -654,6 +697,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };
@@ -668,6 +712,7 @@ public:
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);
     void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
 };

@@ -5,6 +5,11 @@
 
 #include "tusb.h"
 
+#define PS5_GAMEPAD 0
+#define PS5_GUITAR 1
+#define PS5_DRUMS 2
+#define PS5_FIGHTSTICK 7 
+
 class PS5GamepadDevice : public HIDDevice
 {
 public:

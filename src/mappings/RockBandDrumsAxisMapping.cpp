@@ -92,7 +92,62 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
 {
-    // not a thing on ps4
+    PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
+    switch (m_mapping.mapping.rbDrumAxis)
+    {
+    case RockBandDrumsRedPad:
+        report->redVelocity = m_calibratedValue >> 8;
+        report->b = true;
+        break;
+    case RockBandDrumsYellowPad:
+        report->yellowVelocity = m_calibratedValue >> 8;
+        report->y = true;
+        break;
+    case RockBandDrumsBluePad:
+        report->blueVelocity = m_calibratedValue >> 8;
+        report->x = true;
+        break;
+    case RockBandDrumsGreenPad:
+        report->greenVelocity = m_calibratedValue >> 8;
+        report->a = true;
+        break;
+    case RockBandDrumsLeftStickX:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case RockBandDrumsLeftStickY:
+        report->leftStickY = m_calibratedValue >> 8;
+        break;
+    }
+}
+
+void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
+{
+    PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
+    switch (m_mapping.mapping.rbDrumAxis)
+    {
+    case RockBandDrumsRedPad:
+        report->redVelocity = m_calibratedValue >> 8;
+        report->b = true;
+        break;
+    case RockBandDrumsYellowPad:
+        report->yellowVelocity = m_calibratedValue >> 8;
+        report->y = true;
+        break;
+    case RockBandDrumsBluePad:
+        report->blueVelocity = m_calibratedValue >> 8;
+        report->x = true;
+        break;
+    case RockBandDrumsGreenPad:
+        report->greenVelocity = m_calibratedValue >> 8;
+        report->a = true;
+        break;
+    case RockBandDrumsLeftStickX:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case RockBandDrumsLeftStickY:
+        report->leftStickY = m_calibratedValue >> 8;
+        break;
+    }
 }
 
 void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)

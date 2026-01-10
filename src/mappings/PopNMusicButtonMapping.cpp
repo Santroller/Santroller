@@ -37,6 +37,11 @@ void PopNMusicButtonMapping::update_ps4(uint8_t *buf)
     // not a thing
 }
 
+void PopNMusicButtonMapping::update_ps5(uint8_t *buf)
+{
+    // not a thing
+}
+
 void PopNMusicButtonMapping::update_xinput(uint8_t *buf)
 {
    // not a thing

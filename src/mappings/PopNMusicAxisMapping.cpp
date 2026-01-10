@@ -36,8 +36,13 @@ void PopNMusicAxisMapping::update_ps3(uint8_t *buf)
 
 void PopNMusicAxisMapping::update_ps4(uint8_t *buf)
 {
-}
     // not a thing
+}
+
+void PopNMusicAxisMapping::update_ps5(uint8_t *buf)
+{
+    // not a thing
+}
 
 void PopNMusicAxisMapping::update_xinput(uint8_t *buf)
 {

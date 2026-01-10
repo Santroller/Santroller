@@ -141,6 +141,27 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
         break;
     }
 }
+void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
+{
+    PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
+    switch (m_mapping.mapping.ghAxis)
+    {
+    case GuitarHeroGuitarLeftStickX:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroGuitarLeftStickY:
+        report->leftStickY = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroGuitarWhammy:
+        report->whammy = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroGuitarTilt:
+        report->tilt = m_calibratedValue >> 8;
+        break;
+    default:
+        break;
+    }
+}
 
 void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 {

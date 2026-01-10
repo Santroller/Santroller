@@ -182,6 +182,34 @@ void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
     }
 }
 
+void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
+{
+    PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.divaAxis)
+    {
+    case ProjectDivaLeftStickX:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case ProjectDivaLeftStickY:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case ProjectDivaRightStickX:
+        report->rightStickX = m_calibratedValue >> 8;
+        break;
+    case ProjectDivaRightStickY:
+        report->rightStickY = m_calibratedValue >> 8;
+        break;
+    case ProjectDivaLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case ProjectDivaRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        break;
+    default:
+        break;
+    }
+}
+
 void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
 {
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;

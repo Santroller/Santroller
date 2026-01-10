@@ -227,6 +227,34 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
     }
 }
 
+void GamepadAxisMapping::update_ps5(uint8_t *buf)
+{
+    PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.gamepadAxis)
+    {
+    case GamepadLeftStickX:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case GamepadLeftStickY:
+        report->leftStickX = m_calibratedValue >> 8;
+        break;
+    case GamepadRightStickX:
+        report->rightStickX = m_calibratedValue >> 8;
+        break;
+    case GamepadRightStickY:
+        report->rightStickY = m_calibratedValue >> 8;
+        break;
+    case GamepadLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case GamepadRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        break;
+    default:
+        break;
+    }
+}
+
 void GamepadAxisMapping::update_xinput(uint8_t *buf)
 {
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;

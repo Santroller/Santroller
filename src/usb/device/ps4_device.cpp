@@ -4,6 +4,7 @@
 #include "main.hpp"
 #include "config.hpp"
 #include "hid_reports.h"
+#include "usb/usb_devices.h"
 
 static const int ps4_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -83,18 +84,16 @@ size_t PS4GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void PS4GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    desc->idVendor = 0x0c70;
-    desc->idProduct = 0x0777;
 }
 const uint8_t *PS4GamepadDevice::report_descriptor()
 {
     return desc_hid_report_ps4;
 }
 
-uint16_t PS4GamepadDevice::report_desc_len() {
-  return sizeof(desc_hid_report_ps4);
+uint16_t PS4GamepadDevice::report_desc_len()
+{
+    return sizeof(desc_hid_report_ps4);
 }
-
 
 uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
@@ -126,9 +125,11 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         case RockBandDrums:
             buffer[5] = PS4_DRUMS;
             break;
-            // case ...
-            //     buffer[5] = PS4_FIGHTSTICK;
-            //     break;
+        case FightStick:
+            buffer[5] = PS4_FIGHTSTICK;
+            break;
+        default:
+            break;
         }
         return sizeof(ps4_feature_config);
     case ReportId::ReportIdPs4GetResponse:

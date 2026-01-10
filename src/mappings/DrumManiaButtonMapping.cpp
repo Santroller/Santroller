@@ -31,6 +31,10 @@ void DrumManiaButtonMapping::update_ps4(uint8_t *buf)
 {
 }
 
+void DrumManiaButtonMapping::update_ps5(uint8_t *buf)
+{
+}
+
 void DrumManiaButtonMapping::update_xinput(uint8_t *buf)
 {
 }

@@ -20,6 +20,7 @@ typedef struct {
 } __attribute__((packed)) ps4_output_report;
 
 typedef struct {
+    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t rightStickX;
@@ -56,6 +57,7 @@ typedef struct {
 } __attribute__((packed)) PS4Dpad_Data_t;
 
 typedef struct {
+    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t rightStickX;
@@ -98,6 +100,7 @@ typedef struct {
 typedef struct
 {
 
+    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t unused[2];
@@ -159,6 +162,7 @@ typedef struct
 typedef struct
 {
 
+    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t unused[2];
@@ -212,6 +216,7 @@ typedef struct
 typedef struct
 {
 
+    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t strumBar;
     uint8_t whammy;

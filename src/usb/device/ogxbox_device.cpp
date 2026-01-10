@@ -9,6 +9,7 @@
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "usb/device/ogxbox_device.h"
+#include "usb/device/hid_device.h"
 #include "usb/usb_descriptors.h"
 #include "config.hpp"
 
@@ -255,3 +256,69 @@ bool ogxboxd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 }
 
 #endif
+
+OGXboxGamepadDevice::OGXboxGamepadDevice()
+{
+}
+void OGXboxGamepadDevice::initialize()
+{
+}
+void OGXboxGamepadDevice::process(bool full_poll)
+{
+    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+        return;
+    OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epout_buf;
+    report->rid = 0;
+    report->rsize = sizeof(OGXboxGamepad_Data_t);
+    memset(epout_buf, 0, sizeof(epout_buf));
+    for (const auto &mapping : mappings)
+    {
+        mapping->update(full_poll);
+        mapping->update_xinput(epout_buf);
+    }
+    if (current_type == GuitarHeroGuitar)
+    {
+        // convert bitmask slider to actual hid slider
+        OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)report;
+        reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
+    }
+
+    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
+    {
+        return;
+    }
+
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));
+}
+
+size_t OGXboxGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
+{
+    OS_COMPATIBLE_SECTION section = {
+        FirstInterfaceNumber : m_interface,
+        Reserved : 0x01,
+        CompatibleID : "XUSB10",
+        SubCompatibleID : {0},
+        Reserved2 : {0}
+    };
+    assert(sizeof(section) <= remaining);
+    memcpy(dest, &section, sizeof(section));
+    return sizeof(section);
+}
+
+size_t OGXboxGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
+{
+    if (!m_eps_assigned)
+    {
+        m_eps_assigned = true;
+        m_epin = next_epin();
+        m_epout = next_epin();
+    }
+    uint8_t desc[] = {TUD_OGXBOX_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
+}
+
+void OGXboxGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
+{
+}

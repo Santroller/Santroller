@@ -142,6 +142,20 @@ enum
 
 #define TUD_XINPUT_GAMEPAD_DESC_LEN    (9 + 17 + 7 + 7)
 
+
+enum
+{
+  STRID_LANGID = 0,
+  STRID_MANUFACTURER,
+  STRID_PRODUCT,
+  STRID_SERIAL,
+  STRID_XSM3,
+  STRID_MSFT,
+  STRID_GHA_LED,
+  STRID_GHA_INPUT,
+};
+
+
 // XInput Gamepad Descriptor
 #define TUD_XINPUT_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout, _subtype) \
   /* Interface */\
@@ -211,5 +225,20 @@ enum
   7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
+
+
+
+#define TUD_GHARCADE_VENDOR_DESC_LEN    (9 +  7 + 7 + 7)
+
+// GHArcade Gamepad Descriptor
+#define TUD_GHARCADE_VENDOR_DESCRIPTOR(_itfnum, _epin1, _epout, _epin2, _strnum) \
+  /* Interface */\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 3, 0xff, 0x01, 0xFF, _strnum,\
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, _epin1, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
+  /* Endpoint Out */\
+  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1, \
+  /* Endpoint In */\
+  7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
 
 #endif /* USB_DESCRIPTORS_H_ */

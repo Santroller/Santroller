@@ -1,34 +1,8 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * This file is part of the TinyUSB stack.
- */
-
-#ifndef _TUSB_XONE_DEVICE_H_
-#define _TUSB_XONE_DEVICE_H_
+#pragma once
 
 #include "common/tusb_common.h"
 #include "device/usbd.h"
+#include "device.hpp"
 
 #ifndef CFG_TUD_XONE_EPSIZE
 #define CFG_TUD_XONE_EPSIZE 64
@@ -58,4 +32,19 @@ extern "C"
 }
 #endif
 
-#endif /* _TUSB_XONE_DEVICE_H_ */
+
+class XboxOneGamepadDevice : public UsbDevice
+{
+public:
+    XboxOneGamepadDevice();
+    void initialize();
+    void process(bool full_poll);
+    size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
+    size_t config_descriptor(uint8_t *desc, size_t remaining);
+    void device_descriptor(tusb_desc_device_t *desc);
+    uint8_t m_epin;
+    uint8_t m_epout;
+
+    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
+    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
+};

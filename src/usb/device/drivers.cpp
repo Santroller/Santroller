@@ -116,3 +116,6 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     }
     return false;
 }
+
+uint8_t UsbDevice::m_last_epin = 0x81;
+uint8_t UsbDevice::m_last_epout = 0x01;

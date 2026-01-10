@@ -1,23 +1,8 @@
 #include "usb/device/ps3_device.h"
 #include "usb/device/gamepad_device.h"
 #include "protocols/ps4.hpp"
+#include "hid_reports.h"
 #include "enums.pb.h"
-// Kick device into winusb mode on windows for RPCS3 compat
-const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsRPCS3 = {
-    TotalLength : sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE),
-    Version : 0x0100,
-    Index : DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR,
-    TotalSections : 1,
-    Reserved : {0},
-    CompatID : {
-        {
-            FirstInterfaceNumber : 0,
-            Reserved : 0x01,
-            CompatibleID : "WINUSB",
-            SubCompatibleID : {0},
-            Reserved2 : {0}
-        }}
-};
 
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
@@ -82,60 +67,6 @@ const uint8_t ps3_feature_ef[] = {
     0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-uint16_t tud_hid_ps3_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
-{
-    printf("get report: %02x %02x %04x\r\n", report_id, report_type, reqlen);
-    (void)instance;
-    (void)report_id;
-    (void)report_type;
-    (void)buffer;
-    (void)reqlen;
-    if (report_type != HID_REPORT_TYPE_FEATURE)
-    {
-        return 0;
-    }
-    switch (report_id)
-    {
-    case ReportId::ReportIdPs3F2:
-        memcpy(buffer, ps3_feature_f2, sizeof(ps3_feature_f2));
-        return sizeof(ps3_feature_f2);
-
-    case ReportId::ReportIdPs3F8:
-        memcpy(buffer, ps3_feature_f8, sizeof(ps3_feature_f8));
-        buffer[7] = ef_byte;
-        return sizeof(ps3_feature_f8);
-
-    case ReportId::ReportIdPs3F7:
-        memcpy(buffer, ps3_feature_f7, sizeof(ps3_feature_f7));
-        return sizeof(ps3_feature_f7);
-    case ReportId::ReportIdPs3F5:
-        memcpy(buffer, ps3_feature_f5, sizeof(ps3_feature_f5));
-        if (f5_state == 0)
-        {
-            /*
-             * First request, tell that the bdaddr is not the one of the PS3.
-             */
-            f5_state = 1;
-        }
-        else
-        {
-            /*
-             * Next requests, tell that the bdaddr is the one of the PS3.
-             */
-            memcpy(buffer + 2, master_bd_addr, sizeof(master_bd_addr));
-        }
-        return sizeof(ps3_feature_f5);
-    case ReportId::ReportIdPs3EF:
-        memcpy(buffer, ps3_feature_ef, sizeof(ps3_feature_ef));
-        buffer[7] = ef_byte;
-        return sizeof(ps3_feature_ef);
-    case ReportId::ReportIdPs301:
-        // PS3 sends this for a gamepad
-        memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
-        return sizeof(ps3_feature_01);
-    }
-    return 0;
-}
 
 void handle_player_leds_ds3(uint8_t player_mask)
 {
@@ -200,9 +131,182 @@ void handle_player_leds_ps3(uint8_t player_mask)
     }
 }
 
-void tud_hid_ps3_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+
+uint8_t const desc_hid_report_ps3[] =
+    {
+        TUD_HID_REPORT_DESC_PS3_THIRDPARTY_GAMEPAD()};
+uint8_t const desc_hid_report_ps3_gamepad[] =
+    {
+        TUD_HID_REPORT_DESC_PS3_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+
+PS3GamepadDevice::PS3GamepadDevice(bool wiirb) : m_wiirb(wiirb)
 {
-    (void)instance;
+}
+void PS3GamepadDevice::initialize()
+{
+}
+void PS3GamepadDevice::process(bool full_poll)
+{
+    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+        return;
+    if (subtype == Gamepad)
+    {
+        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)epin_buf;
+        report->report_id = 1;
+        report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
+        report->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
+        report->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
+        report->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
+        report->leftStickX = PS3_STICK_CENTER;
+        report->leftStickY = PS3_STICK_CENTER;
+        report->rightStickX = PS3_STICK_CENTER;
+        report->rightStickY = PS3_STICK_CENTER;
+    }
+    else
+    {
+        PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)epin_buf;
+        gamepad->accelX = PS3_ACCEL_CENTER;
+        gamepad->accelY = PS3_ACCEL_CENTER;
+        gamepad->accelZ = PS3_ACCEL_CENTER;
+        gamepad->gyro = PS3_ACCEL_CENTER;
+        gamepad->leftStickX = PS3_STICK_CENTER;
+        gamepad->leftStickY = PS3_STICK_CENTER;
+        if (subtype == ProKeys)
+        {
+            gamepad->rightStickX = 0;
+            gamepad->rightStickY = 0;
+        }
+        else
+        {
+            gamepad->rightStickX = PS3_STICK_CENTER;
+            gamepad->rightStickY = PS3_STICK_CENTER;
+        }
+    }
+    for (const auto &mapping : mappings)
+    {
+        mapping->update(full_poll);
+        mapping->update_ps3(epin_buf);
+    }
+
+    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
+    {
+        return;
+    }
+    if (subtype == Gamepad)
+    {
+        usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS3Gamepad_Data_t));
+    }
+    else
+    {
+        // convert bitmask dpad to actual hid dpad
+        PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)epin_buf;
+        report->dpad = dpad_bindings[report->dpad];
+        if (subtype == GuitarHeroGuitar)
+        {
+            // convert bitmask slider to actual hid slider
+            PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)epin_buf;
+            reportGh->slider = gh5_mapping[reportGh->slider];
+        }
+        usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));
+    }
+}
+
+size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
+{
+    OS_COMPATIBLE_SECTION section = {
+        FirstInterfaceNumber : m_interface,
+        Reserved : 0x01,
+        CompatibleID : "WINUSB",
+        SubCompatibleID : {0},
+        Reserved2 : {0}
+    };
+    assert(sizeof(section) <= remaining);
+    memcpy(dest, &section, sizeof(section));
+    return sizeof(section);
+}
+
+size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
+{
+    if (!m_eps_assigned) {
+        m_eps_assigned = true;
+        m_epin = next_epin();
+        m_epout = next_epin();
+    }
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
+}
+
+void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
+{
+    desc->idVendor = 0x0c70;
+    desc->idProduct = 0x0777;
+}
+const uint8_t *PS3GamepadDevice::report_descriptor()
+{
+    return desc_hid_report_ps3;
+}
+
+uint16_t PS3GamepadDevice::report_desc_len() {
+  return sizeof(desc_hid_report_ps3);
+}
+
+uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+    printf("get report: %02x %02x %04x\r\n", report_id, report_type, reqlen);
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)reqlen;
+    if (report_type != HID_REPORT_TYPE_FEATURE)
+    {
+        return 0;
+    }
+    switch (report_id)
+    {
+    case ReportId::ReportIdPs3F2:
+        memcpy(buffer, ps3_feature_f2, sizeof(ps3_feature_f2));
+        return sizeof(ps3_feature_f2);
+
+    case ReportId::ReportIdPs3F8:
+        memcpy(buffer, ps3_feature_f8, sizeof(ps3_feature_f8));
+        buffer[7] = ef_byte;
+        return sizeof(ps3_feature_f8);
+
+    case ReportId::ReportIdPs3F7:
+        memcpy(buffer, ps3_feature_f7, sizeof(ps3_feature_f7));
+        return sizeof(ps3_feature_f7);
+    case ReportId::ReportIdPs3F5:
+        memcpy(buffer, ps3_feature_f5, sizeof(ps3_feature_f5));
+        if (f5_state == 0)
+        {
+            /*
+             * First request, tell that the bdaddr is not the one of the PS3.
+             */
+            f5_state = 1;
+        }
+        else
+        {
+            /*
+             * Next requests, tell that the bdaddr is the one of the PS3.
+             */
+            memcpy(buffer + 2, master_bd_addr, sizeof(master_bd_addr));
+        }
+        return sizeof(ps3_feature_f5);
+    case ReportId::ReportIdPs3EF:
+        memcpy(buffer, ps3_feature_ef, sizeof(ps3_feature_ef));
+        buffer[7] = ef_byte;
+        return sizeof(ps3_feature_ef);
+    case ReportId::ReportIdPs301:
+        // PS3 sends this for a gamepad
+        memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
+        return sizeof(ps3_feature_01);
+    }
+    return 0;
+}
+void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+{
     switch (report_type)
     {
     case HID_REPORT_TYPE_FEATURE:
@@ -250,26 +354,4 @@ void tud_hid_ps3_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     default:
         break;
     }
-}
-
-bool tud_hid_ps3_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
-{
-    if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
-    {
-        if (stage == CONTROL_STAGE_SETUP)
-        {
-            if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR && request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR)
-            {
-                if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE)
-                {
-                    if (request->bRequest == REQ_GET_OS_FEATURE_DESCRIPTOR && request->wIndex == DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR)
-                    {
-                        tud_control_xfer(rhport, request, (void *)&DevCompatIDsRPCS3, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR));
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    return false;
 }

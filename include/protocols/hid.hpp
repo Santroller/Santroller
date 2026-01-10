@@ -18,6 +18,7 @@
     };
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
     uint8_t start : 1;
     uint8_t back : 1;
@@ -51,6 +52,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
     uint8_t start : 1;
     uint8_t back : 1;
@@ -84,6 +86,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
 
     uint8_t start : 1;
@@ -113,6 +116,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
     uint8_t start : 1;
     uint8_t back : 1;
@@ -151,6 +155,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
     uint8_t start : 1;
     uint8_t back : 1;
@@ -192,6 +197,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
 
     uint8_t start : 1;
@@ -222,6 +228,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
 
     uint8_t start : 1;
@@ -261,6 +268,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
     uint8_t start : 1;          // start, pause
     uint8_t back : 1;           // back, heroPower
@@ -289,6 +297,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
     uint8_t start : 1;
     uint8_t back : 1;
@@ -354,6 +363,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     DPAD;
 
     uint8_t start : 1;
@@ -395,6 +405,7 @@ typedef struct
 
 typedef struct
 {
+    uint8_t report_id;
     uint8_t reportTypeId; // 0x5B
     uint8_t stageKitStrobe : 7;
     uint8_t stageKitFog : 1;

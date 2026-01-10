@@ -160,6 +160,8 @@ enum ConsoleMode {
     ModeXboxOne=4;
     ModePs3=5;
     ModePs4=6;
-    ModeWiiRb=7;
-    ModeSwitch=8;
+    ModePs5=7;
+    ModeWiiRb=8;
+    ModeSwitch=9;
+    ModeGuitarHeroArcade = 10;
 };

@@ -6,6 +6,7 @@
 #include <pb_encode.h>
 #include <utils.h>
 #include <stdint.h>
+#include "usb/device/hid_device.h"
 uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
 {
     if (trigger)
@@ -105,7 +106,7 @@ void ButtonMapping::update(bool full_poll)
         if (val != m_lastValueTrigger || full_poll)
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};
-            send_event(event);
+            HIDConfigDevice::send_event(event);
             m_lastValueTrigger = val;
         }
     }
@@ -114,7 +115,7 @@ void ButtonMapping::update(bool full_poll)
         if (calcVal != m_lastValue || full_poll)
         {
             proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-            send_event(event);
+            HIDConfigDevice::send_event(event);
         }
     }
     if (calcVal)
@@ -135,7 +136,7 @@ void AxisMapping::update(bool full_poll)
         m_lastValue = val;
         m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
-        send_event(event);
+        HIDConfigDevice::send_event(event);
     }
     // TODO: better solution for this probably.
     m_centered = !m_centered;

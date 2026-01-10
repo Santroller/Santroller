@@ -4,6 +4,7 @@
 #include "enums.pb.h"
 #include "main.hpp"
 #include "config.hpp"
+#include "hid_reports.h"
 
 static const int ps4_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -27,9 +28,77 @@ AuthPageSizeReport ps4_pagesize_report = {
     u4 : {0x00, 0x00, 0x00, 0x00}
 };
 
-uint16_t tud_hid_ps4_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+uint8_t const desc_hid_report_ps4[] =
+    {
+        TUD_HID_REPORT_DESC_PS4_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+
+PS4GamepadDevice::PS4GamepadDevice()
 {
-    (void)instance;
+}
+void PS4GamepadDevice::initialize()
+{
+}
+void PS4GamepadDevice::process(bool full_poll)
+{
+    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+        return;
+    for (const auto &mapping : mappings)
+    {
+        mapping->update(full_poll);
+        mapping->update_ps4(epin_buf);
+    }
+    PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)epin_buf;
+    gamepad->report_id = 1;
+    gamepad->leftStickX = PS3_STICK_CENTER;
+    gamepad->leftStickY = PS3_STICK_CENTER;
+    gamepad->rightStickX = PS3_STICK_CENTER;
+    gamepad->rightStickY = PS3_STICK_CENTER;
+    // convert bitmask dpad to actual hid dpad
+    gamepad->dpad = dpad_bindings[gamepad->dpad];
+
+    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
+    {
+        return;
+    }
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS4Dpad_Data_t));
+}
+
+size_t PS4GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
+{
+    return 0;
+}
+
+size_t PS4GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
+{
+    if (!m_eps_assigned)
+    {
+        m_eps_assigned = true;
+        m_epin = next_epin();
+        m_epout = next_epin();
+    }
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps4), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
+}
+
+void PS4GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
+{
+    desc->idVendor = 0x0c70;
+    desc->idProduct = 0x0777;
+}
+const uint8_t *PS4GamepadDevice::report_descriptor()
+{
+    return desc_hid_report_ps4;
+}
+
+uint16_t PS4GamepadDevice::report_desc_len() {
+  return sizeof(desc_hid_report_ps4);
+}
+
+
+uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
     (void)report_id;
     (void)report_type;
     (void)buffer;
@@ -58,9 +127,9 @@ uint16_t tud_hid_ps4_get_report_cb(uint8_t instance, uint8_t report_id, hid_repo
         case RockBandDrums:
             buffer[5] = PS4_DRUMS;
             break;
-        // case ...
-        //     buffer[5] = PS4_FIGHTSTICK;
-        //     break;
+            // case ...
+            //     buffer[5] = PS4_FIGHTSTICK;
+            //     break;
         }
         return sizeof(ps4_feature_config);
     case ReportId::ReportIdPs4GetResponse:
@@ -77,9 +146,8 @@ uint16_t tud_hid_ps4_get_report_cb(uint8_t instance, uint8_t report_id, hid_repo
     return 0;
 }
 
-void tud_hid_ps4_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-    (void)instance;
     switch (report_type)
     {
     case HID_REPORT_TYPE_FEATURE:

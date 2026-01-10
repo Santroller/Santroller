@@ -1,6 +1,7 @@
 #include "guitar_hero_5_neck.hpp"
 #include "stdio.h"
 #include "utils.h"
+
 void GuitarHero5Neck::tick() {
     uint8_t start;
     uint8_t gh5Data[4];

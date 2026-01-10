@@ -87,7 +87,9 @@ add_executable(
   src/usb/device/ps3_device.cpp
   src/usb/device/drivers.cpp
   src/usb/device/ps4_device.cpp
+  src/usb/device/ps5_device.cpp
   src/usb/device/hid_device.cpp
+  src/usb/device/switch_device.cpp
   src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
   src/input/accelerometer.cpp

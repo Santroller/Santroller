@@ -130,9 +130,8 @@ uint8_t const desc_hid_report_ps4[] =
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor
 // Descriptor contents must exist long enough for transfer to complete
-uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
+uint8_t const *tud_hid_descriptor_report_cb(uint8_t interface)
 {
-  (void)instance;
   switch (mode)
   {
   case ModeHid:
@@ -159,16 +158,6 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
 //--------------------------------------------------------------------+
 
 // String Descriptor Index
-enum
-{
-  STRID_LANGID = 0,
-  STRID_MANUFACTURER,
-  STRID_PRODUCT,
-  STRID_SERIAL,
-  STRID_XSM3,
-  STRID_MSFT
-};
-
 //--------------------------------------------------------------------+
 // Configuration Descriptor
 //--------------------------------------------------------------------+
@@ -294,20 +283,20 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
     //     // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
     //     // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
     //     TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
-    uint8_t tmp[] = {
-        // Config number, interface count, string index, total length, attribute, power in mA
-        TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT4, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-        // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
-        TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
+    // uint8_t tmp[] = {
+    //     // Config number, interface count, string index, total length, attribute, power in mA
+    //     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN_XINPUT4, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    //     // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+    //     TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), EPNUM_HID_IN, CFG_TUD_HID_EP_BUFSIZE, 1),
 
-        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, get_subtype()),
-        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT2, EPNUM_XINPUT2_IN, EPNUM_XINPUT2_OUT, XINPUT_PRO_GUITAR),
-        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT3, EPNUM_XINPUT3_IN, EPNUM_XINPUT3_OUT, XINPUT_DRUMS),
-        TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT4, EPNUM_XINPUT4_IN, EPNUM_XINPUT4_OUT, XINPUT_PRO_KEYS),
-        // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
-        // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
-        TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
-    memcpy(desc_configuration_xinput4, tmp, sizeof(tmp));
+    //     TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT, get_subtype()),
+    //     TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT2, EPNUM_XINPUT2_IN, EPNUM_XINPUT2_OUT, XINPUT_PRO_GUITAR),
+    //     TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT3, EPNUM_XINPUT3_IN, EPNUM_XINPUT3_OUT, XINPUT_DRUMS),
+    //     TUD_XINPUT_GAMEPAD_DESCRIPTOR(ITF_NUM_XINPUT4, EPNUM_XINPUT4_IN, EPNUM_XINPUT4_OUT, XINPUT_PRO_KEYS),
+    //     // TUD_OGXBOX_GAMEPAD_DESCRIPTOR(ITF_NUM_OGXBOX, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+    //     // TUD_XONE_GAMEPAD_DESCRIPTOR(ITF_NUM_XONE, EPNUM_XINPUT_IN, EPNUM_XINPUT_OUT),
+    //     TUD_XINPUT_SECURITY_DESCRIPTOR(ITF_NUM_XINPUT_SECURITY, STRID_XSM3)};
+    // memcpy(desc_configuration_xinput4, tmp, sizeof(tmp));
     return desc_configuration_xinput4;
   }
   case ModeXboxOne:
@@ -328,7 +317,10 @@ char const *string_desc_arr[] =
         "Santroller",               // 2: Product
         serial,                     // 3: Serials will use unique ID if possible
         "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.",
-        "MSFT100\x20"};
+        "MSFT100\x20",
+        "RT GH CONTROLLER ",
+        "RT-GH LED ",
+        "RT-GH INPUT "};
 
 static uint16_t _desc_str[100 + 1];
 

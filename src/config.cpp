@@ -28,6 +28,11 @@
 #include "usb/device/ogxbox_device.h"
 #include "usb/device/xone_device.h"
 #include "usb/device/hid_device.h"
+#include "usb/device/ps3_device.h"
+#include "usb/device/ps4_device.h"
+#include "usb/device/ps5_device.h"
+#include "usb/device/gh_arcade_device.h"
+#include "usb/device/switch_device.h"
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
 #include "main.hpp"
@@ -38,7 +43,9 @@
 #include <vector>
 #include <memory>
 std::vector<std::shared_ptr<Instance>> instances;
+std::map<uint8_t, std::shared_ptr<Instance>> active_instances;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
+std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 proto_SubType current_type;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -131,7 +138,7 @@ std::unique_ptr<Input> make_input(proto_Input input)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    Instance* instance = (Instance*)*arg;
+    Instance *instance = (Instance *)*arg;
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input);
@@ -163,7 +170,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    Instance* instance = (Instance*)*arg;
+    Instance *instance = (Instance *)*arg;
     proto_ActivationTrigger trigger;
     pb_decode(stream, proto_ActivationTrigger_fields, &trigger);
     switch (trigger.which_trigger)
@@ -184,9 +191,42 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    Instance* instance = new Instance();
+    Instance *instance = nullptr;
+    switch (mode)
+    {
+    case ModeHid:
+        instance = new HIDGamepadDevice();
+        break;
+    case ModeOgXbox:
+        instance = new OGXboxGamepadDevice();
+        break;
+    case ModeXbox360:
+        instance = new XInputGamepadDevice();
+        break;
+    case ModeXboxOne:
+        instance = new XboxOneGamepadDevice();
+        break;
+    case ModeWiiRb:
+        // wii rb is the same as ps3 but different ids
+        instance = new PS3GamepadDevice(true);
+        break;
+    case ModePs3:
+        instance = new PS3GamepadDevice(false);
+        break;
+    case ModePs4:
+        instance = new PS4GamepadDevice();
+        break;
+    case ModePs5:
+        instance = new PS5GamepadDevice();
+        break;
+    case ModeSwitch:
+        instance = new SwitchGamepadDevice();
+        break;
+    case ModeGuitarHeroArcade:
+        instance = new GHArcadeGamepadDevice();
+        break;
+    }
     instance->profile_id = instances.size();
-    instance->active = false;
     proto_Profile profile;
     profile.activationMethod.arg = instance;
     profile.activationMethod.funcs.decode = &load_activation_method;
@@ -194,18 +234,13 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile.mappings.arg = instance;
     pb_decode(stream, proto_Profile_fields, &profile);
     instances.emplace_back(std::move(instance));
+    auto active = active_instances.find(instance->profile_id);
+    if (active != active_instances.end())
+    {
+        active_instances[instance->profile_id] = instances.back();
+    }
     return true;
 }
-// We put a ConfigFooter struct at the end of the flash area reserved for FlashPROM. It contains a magicvalue, the size
-// of the serialized config data and a CRC of that data. This information allows us to both locate and verify the stored
-// data. The serialized data is located directly before the footer:
-//
-//                       FlashPROM block
-// ┌────────────────────────────┴─────────────────────────────┐
-// ┌──────────────┬────────────────────────────────────┬──────┐
-// │Unused memory │Protobuf data                       │Footer│
-// └──────────────┴────────────────────────────────────┴──────┘
-//
 struct ConfigFooter
 {
     uint32_t dataSize;
@@ -286,6 +321,34 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.profiles.funcs.decode = &load_profile;
     devices.clear();
     instances.clear();
+    switch (mode)
+    {
+    case ModeHid:
+    case ModeOgXbox:
+    case ModeXboxOne:
+    case ModeWiiRb:
+    case ModePs3:
+    case ModePs4:
+    case ModePs5:
+    case ModeSwitch:
+        break;
+    case ModeXbox360:
+    {
+        XInputSecurityDevice *secDevice = new XInputSecurityDevice();
+        secDevice->m_interface = instances.size();
+        instances.emplace_back(std::move(secDevice));
+        active_instances[secDevice->m_interface] = instances.back();
+        break;
+    }
+    case ModeGuitarHeroArcade:
+    {
+        GHArcadeVendorDevice *venDevice = new GHArcadeVendorDevice();
+        venDevice->m_interface = instances.size();
+        instances.emplace_back(std::move(venDevice));
+        active_instances[venDevice->m_interface] = instances.back();
+        break;
+    }
+    }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     update(true);
     return ret;

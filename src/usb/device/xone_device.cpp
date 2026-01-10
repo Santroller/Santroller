@@ -316,3 +316,49 @@ bool xoned_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 }
 
 #endif
+
+
+XboxOneGamepadDevice::XboxOneGamepadDevice()
+{
+}
+void XboxOneGamepadDevice::initialize()
+{
+}
+void XboxOneGamepadDevice::process(bool full_poll)
+{
+    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+        return;
+    // TODO: this
+}
+
+size_t XboxOneGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
+{
+    OS_COMPATIBLE_SECTION section = {
+        FirstInterfaceNumber : m_interface,
+        Reserved : 0x01,
+        CompatibleID : "XUSB10",
+        SubCompatibleID : {0},
+        Reserved2 : {0}
+    };
+    assert(sizeof(section) <= remaining);
+    memcpy(dest, &section, sizeof(section));
+    return sizeof(section);
+}
+
+size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
+{
+    if (!m_eps_assigned)
+    {
+        m_eps_assigned = true;
+        m_epin = next_epin();
+        m_epout = next_epin();
+    }
+    uint8_t desc[] = {TUD_XONE_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
+}
+
+void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
+{
+}

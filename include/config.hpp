@@ -14,7 +14,7 @@
 #include "FlashPROM.h"
 #include "CRC32.h"
 #include "state/base.hpp"
-class Instance;
+#include "usb/device/device.hpp"
 bool save(proto_Config *config);
 bool load(proto_Config &config);
 uint32_t copy_config(uint8_t *buffer, uint32_t start);
@@ -29,7 +29,9 @@ extern ConsoleMode newMode;
 extern bool working;
 
 extern std::vector<std::shared_ptr<Instance>> instances;
+extern std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 extern std::map<uint32_t, std::shared_ptr<Device>> devices;
+extern std::map<uint8_t, std::shared_ptr<Instance>> active_instances;
 inline bool hid_based(void)
 {
     return mode == ModeHid || mode == ModePs3 || mode == ModePs4 || mode == ModeWiiRb || mode == ModeSwitch;
@@ -40,16 +42,3 @@ inline bool ps4_based(void)
     // TODO: grab from the current preset too.
     return current_type == Gamepad || current_type == LiveGuitar;
 }
-
-class Instance
-{
-public:
-    bool active;
-    uint8_t epin;
-    uint8_t epout;
-    SubType subtype;
-    ConsoleMode mode;
-    uint8_t profile_id;
-    std::vector<std::unique_ptr<Mapping>> mappings;
-    std::vector<std::unique_ptr<ActivationTrigger>> triggers;
-};

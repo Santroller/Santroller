@@ -94,6 +94,7 @@ typedef struct {
 } __attribute__((packed)) PS3Dpad_Data_t;
 
 typedef struct {
+    uint8_t report_id;
     uint8_t : 8;
     uint8_t back : 1;             // select
     uint8_t leftThumbClick : 1;   // l3

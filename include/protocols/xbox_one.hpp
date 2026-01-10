@@ -6,16 +6,11 @@
 #include <vector>
 
 #include "ps3.hpp"
+#include "xgip_protocol.h"
 
 #define GIP_CMD_ACKNOWLEDGE 0x01
 #define GIP_ARRIVAL 0x02
-#define GIP_DEVICE_DESCRIPTOR 0x04
-#define GIP_POWER_MODE_DEVICE_CONFIG 0x05
 #define GIP_AUTHENTICATION 0x06
-#define GIP_VIRTUAL_KEYCODE 0x07
-#define GIP_CMD_RUMBLE 0x09
-#define GIP_CMD_LED 0x0a
-#define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
 #define GHL_HID_OUTPUT 0x22
 #define GIP_VKEY_LEFT_WIN 0x5b
@@ -34,18 +29,6 @@ enum XboxResult {
     /// <summary>The device being connected is not supported.</summary>
     UnsupportedDevice,
 };
-typedef struct
-{
-    uint8_t command;
-    uint8_t client : 4;
-    uint8_t needsAck : 1;
-    uint8_t internal : 1;
-    uint8_t chunkStart : 1;
-    uint8_t chunked : 1;
-    uint8_t sequence;
-    uint32_t packet_length;
-    uint32_t chunk_offset;
-} __attribute__((packed)) GipHeader_t;
 
 typedef struct
 {
@@ -405,13 +388,3 @@ typedef struct {
     uint8_t delay;     // in deciseconds?
     uint8_t repeat;    // in deciseconds?
 } __attribute__((packed)) GipRumble_t;
-
-#define GIP_HEADER(packet, cmd, isInternal, seq) \
-    packet->header.command = cmd;                \
-    packet->header.internal = isInternal;        \
-    packet->header.sequence = seq;               \
-    packet->header.client = 0;                   \
-    packet->header.needsAck = 0;                 \
-    packet->header.chunkStart = 0;               \
-    packet->header.chunked = 0;                  \
-    packet->header.length = sizeof(*packet) - sizeof(GipHeader_t);

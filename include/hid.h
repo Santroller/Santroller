@@ -79,6 +79,7 @@ extern const uint8_t ps3_descriptor[148];
 extern const uint8_t ps3_instrument_descriptor[137];
 extern const uint8_t gha_descriptor[83];
 extern const uint8_t ps4_descriptor[160];
+extern const uint8_t ps5_descriptor[165];
 extern const uint8_t fnf_descriptor[53];
 extern long last_strobe;
 extern uint8_t stage_kit_millis[5];

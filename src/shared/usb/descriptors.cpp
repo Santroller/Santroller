@@ -814,6 +814,15 @@ AuthPageSizeReport ps4_pagesize_report = {
     u4 : {0x00, 0x00, 0x00, 0x00}
 };
 
+const PROGMEM uint8_t ps5_feature_config[] = {
+    0x03, 0x21, 0x28, 0x03, 0xC3, PS4_TYPE, 0x2C, 0x56,
+    0x01, 0x00, 0xD0, 0x07, 0x00, 0x80, 0x04, 0x00,
+    0x00, 0x80, 0x0D, 0x0D, 0x84, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 uint8_t idle_rate;
 uint8_t protocol_mode = HID_RPT_PROTOCOL;
 bool controlRequestValid(const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength)
@@ -842,9 +851,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
             return true;
         }
     }
-    // Doing this actually *breaks* xb360 on pro micros.
-    // But its necessary on the pico :/
-#if SUPPORTS_PICO
     switch (request)
     {
     case 0x81:
@@ -855,7 +861,6 @@ bool controlRequestValid(const uint8_t requestType, const uint8_t request, const
     case 0x86:
         return true;
     }
-#endif
     if (requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS))
     {
         switch (request)
@@ -1150,8 +1155,6 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303)
         {
             seen_ps4 = true;
-            memcpy_P(requestBuffer, ps4_feature_config, sizeof(ps4_feature_config));
-            return sizeof(ps4_feature_config);
             // PS3 Drums and Guitars get used on both consoles, so we can jump straight to PS3 mode
 #if DEVICE_TYPE_IS_INSTRUMENT && !SUPPORTS_PS4
             consoleType = PS3;
@@ -1208,6 +1211,27 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 #endif
             }
         }
+        if (consoleType == PS5 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT)
+        {
+            switch (wValue)
+            {
+            case 0x0303:
+                seen_ps4 = true;
+                memcpy_P(requestBuffer, ps5_feature_config, sizeof(ps5_feature_config));
+                return sizeof(ps5_feature_config);
+
+#if USB_HOST_STACK
+            case GET_RESPONSE:
+            {
+                return transfer_with_usb_controller(get_device_address_for(PS5).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
+            }
+            case GET_AUTH_STATUS:
+            {
+                return transfer_with_usb_controller(get_device_address_for(PS5).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
+            }
+#endif
+            }
+        }
         if (wValue == 0x0101 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x80)
         {
             return tick_inputs(requestBuffer, NULL, consoleType);
@@ -1224,10 +1248,18 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             return size;
         }
     }
-    else if (request == HID_REQUEST_SET_REPORT && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS))
+    else if (request == HID_REQUEST_SET_REPORT && consoleType == PS4 && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS))
     {
 #if USB_HOST_STACK
         return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
+#else
+        return 0;
+#endif
+    }
+    else if (request == HID_REQUEST_SET_REPORT && consoleType == PS5 && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS))
+    {
+#if USB_HOST_STACK
+        return transfer_with_usb_controller(get_device_address_for(PS5).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
 #else
         return 0;
 #endif
@@ -1431,6 +1463,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
             dev->idVendor = PS4_VID;
             dev->idProduct = PS4_PID;
         }
+        else if (consoleType == PS5)
+        {
+            dev->idVendor = 0x3651;
+            dev->idProduct = 0x1600;
+        }
         else if (consoleType == IOS_FESTIVAL)
         {
             dev->idVendor = SONY_VID;
@@ -1513,6 +1550,13 @@ uint16_t descriptorRequest(const uint16_t wValue,
                 desc->EndpointOutHID.wMaxPacketSize = 64;
                 desc->EndpointInHID.wMaxPacketSize = 64;
             }
+            else if (consoleType == PS5)
+            {
+                desc->HIDDescriptor.wDescriptorLength = sizeof(ps5_descriptor);
+                desc->EndpointOutHID.wMaxPacketSize = 64;
+                desc->EndpointInHID.wMaxPacketSize = 64;
+                desc->HIDDescriptor.bcdHID = 0x0111;
+            }
             else if (consoleType == IOS_FESTIVAL)
             {
                 desc->HIDDescriptor.wDescriptorLength = sizeof(ps3_descriptor);
@@ -1580,6 +1624,11 @@ uint16_t descriptorRequest(const uint16_t wValue,
         {
             address = ps4_descriptor;
             size = sizeof(ps4_descriptor);
+        }
+        else if (consoleType == PS5)
+        {
+            address = ps5_descriptor;
+            size = sizeof(ps5_descriptor);
         }
         else if (consoleType == IOS_FESTIVAL)
         {

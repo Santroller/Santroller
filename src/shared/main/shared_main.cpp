@@ -1790,7 +1790,7 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
     }
     case PS5:
     {
-        PS5Gamepad_Data_t *dpad = (PS5Gamepad_Data_t *)data;
+        PS5Dpad_Data_t *dpad = (PS5Dpad_Data_t *)data;
         usb_host_data->dpadLeft = dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
         usb_host_data->dpadRight = dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
         usb_host_data->dpadUp = dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
@@ -3289,36 +3289,36 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->guide = true;
         }
         TICK_PS4;
-
-#if PRO_GUITAR && USB_HOST_STACK
-        TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-        report->autoCal_Light = report->tilt;
-        report->autoCal_Microphone = report->tilt;
-#endif
-#if PRO_GUITAR && BLUETOOTH_RX
-        TRANSLATE_TO_PRO_GUITAR(bt_data)
-        report->autoCal_Light = report->tilt;
-        report->autoCal_Microphone = report->tilt;
-#endif
-
-#ifdef MUSTANG_NECK_SPI_PORT
-        report->lowEFret = lastProtar.lowEFret;
-        report->aFret = lastProtar.aFret;
-        report->dFret = lastProtar.dFret;
-        report->gFret = lastProtar.gFret;
-        report->bFret = lastProtar.bFret;
-        report->highEFret = lastProtar.highEFret;
-        report->green = lastProtar.green;
-        report->red = lastProtar.red;
-        report->yellow = lastProtar.yellow;
-        report->blue = lastProtar.blue;
-        report->orange = lastProtar.orange;
-        report->soloFlag = lastProtar.soloFlag;
-#endif
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
         report_size = packet_size = sizeof(PS4_REPORT);
+    }
+    if (output_console_type == PS5)
+    {
+        if (millis() > 450000 && !auth_ps4_controller_found)
+        {
+            reset_usb();
+        }
+        PS5_REPORT *report = (PS5_REPORT *)report_data;
+        memset(report, 0, sizeof(PS5_REPORT));
+        PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)report;
+        gamepad->report_id = 0x01;
+        gamepad->leftStickX = PS3_STICK_CENTER;
+        gamepad->leftStickY = PS3_STICK_CENTER;
+        gamepad->rightStickX = PS3_STICK_CENTER;
+        gamepad->rightStickY = PS3_STICK_CENTER;
+        gamepad->data_30_31_0x001a = 0x001a;
+        // PS4 does not start using the controller until it sees a PS button press.
+        if (!report_requested)
+        {
+            report->guide = true;
+        }
+        TICK_PS4;
+        asm volatile("" ::
+                         : "memory");
+        gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+        report_size = packet_size = sizeof(PS5_REPORT);
     }
 #endif
 #ifdef TICK_FESTIVAL
@@ -3678,7 +3678,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
     TICK_RESET
     // Some hosts want packets sent every frame
-    if (last_report && output_console_type != ARCADE && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && !updateHIDSequence)
+    if (last_report && output_console_type != ARCADE && output_console_type != OG_XBOX && output_console_type != PS4  && output_console_type != PS5 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && !updateHIDSequence)
     {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0)
@@ -3693,6 +3693,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     {
         PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
         gamepad->reportCounter = ps4_sequence_number++;
+    }
+    if (output_console_type == PS5)
+    {
+        PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)report_data;
+        gamepad->sequence_number = ps4_sequence_number++;
     }
 #endif
 
@@ -3785,11 +3790,6 @@ bool tick_usb(void)
         // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
         set_console_type(PS3);
     }
-    // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
-    if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4)
-    {
-        set_console_type(PS3);
-    }
 #endif
     if (!ready)
         return 0;
@@ -3811,6 +3811,7 @@ bool tick_usb(void)
             return true;
         }
     }
+    
 // #if DEVICE_TYPE == SKYLANDERS
 //     if (consoleType == XBOX360) {
 //         size = 32;

@@ -54,6 +54,7 @@ static uint32_t __uninitialized_ram(pico_is_sleeping);
 USB_Device_Type_t xone_dev_addr = {};
 USB_Device_Type_t x360_dev_addr = {};
 USB_Device_Type_t ps4_dev_addr = {};
+USB_Device_Type_t ps5_dev_addr = {};
 uint8_t total_usb_host_devices = 0;
 typedef struct
 {
@@ -337,6 +338,10 @@ USB_Device_Type_t get_device_address_for(uint8_t deviceType)
     {
         return ps4_dev_addr;
     }
+    if (deviceType == PS5)
+    {
+        return ps5_dev_addr;
+    }
     return {0};
 }
 #endif
@@ -480,7 +485,6 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
     case KEYBOARD:
     case MOUSE:
     case STREAM_DECK:
-    case PS5:
     case UNKNOWN:
     case GENERIC:
     case STEPMANIAX:
@@ -537,6 +541,22 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
 
             printf("Found PS4 controller\r\n");
             ps4_controller_connected(dev_addr, host_vid, host_pid);
+        }
+        break;
+    case PS5:
+        usb_host_devices[total_usb_host_devices].type = type;
+        total_usb_host_devices++;
+        if (!ps5_dev_addr.dev_addr)
+        {
+            ps5_dev_addr = type;
+
+            printf("Found PS5 controller\r\n");
+            ps4_controller_connected(dev_addr, host_vid, host_pid);
+            if (consoleType == PS4) {
+                consoleType = PS5;
+                reset_usb();
+            }
+
         }
         break;
     }

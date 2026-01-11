@@ -42,6 +42,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define PS5_REPORT PS5Gamepad_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 14
@@ -71,6 +72,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define PS5_REPORT PS5Gamepad_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 14
@@ -100,6 +102,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define PS5_REPORT PS5Gamepad_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 14
@@ -129,6 +132,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define PS5_REPORT PS5Gamepad_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 14
@@ -158,6 +162,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define PS5_REPORT PS5Gamepad_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 14
@@ -187,6 +192,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3SimpleGamepad_Data_t
 #define PS4_REPORT PS4Gamepad_Data_t
+#define PS5_REPORT PS5Gamepad_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 14
@@ -220,6 +226,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2GuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3GuitarHeroGuitar_Data_t
 #define PS4_REPORT PS4RockBandGuitar_Data_t
+#define PS5_REPORT PS5RockBandGuitar_Data_t
 // FFB flag enables support for the tap bar
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x06
@@ -252,6 +259,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2GuitarHeroGuitar_Data_t
 #define PS3_REPORT PS3RockBandGuitar_Data_t
 #define PS4_REPORT PS4RockBandGuitar_Data_t
+#define PS5_REPORT PS5RockBandGuitar_Data_t
 // FFB flag was set on strats
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x06
@@ -283,6 +291,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
+#define PS5_REPORT PS3RockBandProGuitar_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x06
 #define HID_BUTTON_COUNT 13
@@ -313,6 +322,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProGuitar_Data_t
 #define PS4_REPORT PS3RockBandProGuitar_Data_t
+#define PS5_REPORT PS3RockBandProGuitar_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x06
 #define HID_BUTTON_COUNT 13
@@ -343,6 +353,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandProKeyboard_Data_t
 #define PS4_REPORT PS3RockBandProKeyboard_Data_t
+#define PS5_REPORT PS3RockBandProKeyboard_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x06
 #define HID_BUTTON_COUNT 35
@@ -395,6 +406,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3GHLGuitar_Data_t
 #define PS4_REPORT PS4GHLGuitar_Data_t
+#define PS5_REPORT PS5GHLGuitar_Data_t
 // GHL guitars set no navigation
 #define XINPUT_FLAGS XINPUT_FLAGS_NO_NAV
 #define PS3_FLAGS 0x06
@@ -428,6 +440,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3GuitarHeroDrums_Data_t
 #define PS4_REPORT PS4RockBandDrums_Data_t
+#define PS5_REPORT PS5RockBandDrums_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x07
 #define HID_BUTTON_COUNT 13
@@ -459,6 +472,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t
 #define PS4_REPORT PS4RockBandDrums_Data_t
+#define PS5_REPORT PS5RockBandDrums_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_FORCE_FEEDBACK
 #define PS3_FLAGS 0x05
 #define HID_BUTTON_COUNT 15
@@ -489,6 +503,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3Turntable_Data_t
 #define PS4_REPORT PS3Turntable_Data_t
+#define PS5_REPORT PS3Turntable_Data_t
 #define XINPUT_FLAGS XINPUT_FLAGS_NONE
 #define PS3_FLAGS 0x06
 #define HID_BUTTON_COUNT 13
@@ -510,6 +525,9 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #ifndef PS4_TYPE
 #define PS4_TYPE PS4_GAMEPAD
+#endif
+#ifndef PS5_TYPE
+#define PS5_TYPE PS4_GAMEPAD
 #endif
 #if DEVICE_TYPE_IS_GAMEPAD
 #ifndef HID_AXIS_COUNT

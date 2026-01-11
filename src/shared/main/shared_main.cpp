@@ -776,6 +776,9 @@ long lastTick;
 uint8_t keyboard_report = 0;
 void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_type, USB_Host_Data_t *usb_host_data)
 {
+    if (!len) {
+        return;
+    }
     switch (device_type.console_type)
     {
     case STADIA:
@@ -3309,12 +3312,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickX = PS3_STICK_CENTER;
         gamepad->rightStickY = PS3_STICK_CENTER;
         gamepad->data_30_31_0x001a = 0x001a;
-        // PS4 does not start using the controller until it sees a PS button press.
+        // PS5 does not start using the controller until it sees a PS button press.
+        TICK_PS4;
         if (!report_requested)
         {
-            report->guide = true;
+            gamepad->guide = true;
         }
-        TICK_PS4;
         asm volatile("" ::
                          : "memory");
         gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
@@ -3509,11 +3512,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_PS3_WITHOUT_CAPTURE;
         report_size = packet_size = sizeof(PS3Gamepad_Data_t);
     }
-    if (output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4)
+    if (output_console_type != OG_XBOX && output_console_type != WINDOWS && output_console_type != XBOX360 && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE && output_console_type != PS4 && output_console_type != PS5)
     {
 #else
     // For instruments, we instead use the below block, as all other console types use the below format
-    if ((output_console_type != OG_XBOX && output_console_type != ARCADE && output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence)
+    if ((output_console_type != OG_XBOX && output_console_type != ARCADE && output_console_type != WINDOWS && output_console_type != KEYBOARD_MOUSE && output_console_type != IOS_FESTIVAL && output_console_type != FNF && output_console_type != XBOX360 && output_console_type != PS4 && output_console_type != PS5 && output_console_type != BLUETOOTH_REPORT && output_console_type != UNIVERSAL && output_console_type != XBOXONE) || updateHIDSequence)
     {
 #endif
         report_size = sizeof(PS3_REPORT);
@@ -3694,11 +3697,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         PS4Gamepad_Data_t *gamepad = (PS4Gamepad_Data_t *)report_data;
         gamepad->reportCounter = ps4_sequence_number++;
     }
-    if (output_console_type == PS5)
-    {
-        PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)report_data;
-        gamepad->sequence_number = ps4_sequence_number++;
-    }
 #endif
 
 #if DEVICE_TYPE_IS_GAMEPAD
@@ -3811,7 +3809,6 @@ bool tick_usb(void)
             return true;
         }
     }
-    
 // #if DEVICE_TYPE == SKYLANDERS
 //     if (consoleType == XBOX360) {
 //         size = 32;

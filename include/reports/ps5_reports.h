@@ -30,8 +30,8 @@ typedef struct
     uint8_t leftStickY;
     uint8_t rightStickX;
     uint8_t rightStickY;
-    uint8_t leftTrigger : 8;
-    uint8_t rightTrigger : 8;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
 
     uint8_t sequence_number; // 6
 
@@ -80,8 +80,8 @@ typedef struct
     uint8_t leftStickY;
     uint8_t rightStickX;
     uint8_t rightStickY;
-    uint8_t leftTrigger : 8;
-    uint8_t rightTrigger : 8;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
 
     uint8_t sequence_number; // 6
 
@@ -120,11 +120,6 @@ typedef struct
 
     uint8_t unused1[5];
 
-    //     0
-    //   7   1
-    // 6   8   2
-    //   5   3
-    //     4
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
@@ -136,6 +131,7 @@ typedef struct
 
     uint8_t leftShoulder : 1; // orange
     uint8_t : 3;
+
     uint8_t back : 1;  // share
     uint8_t start : 1; // options
     uint8_t solo : 1;
@@ -176,7 +172,6 @@ typedef struct
     uint8_t unused4[11];
     uint64_t checksum;
 } __attribute__((__packed__)) PS5RockBandGuitar_Data_t;
-
 typedef struct
 {
 
@@ -186,11 +181,6 @@ typedef struct
 
     uint8_t unused1[5];
 
-    //     0
-    //   7   1
-    // 6   8   2
-    //   5   3
-    //     4
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
@@ -241,11 +231,6 @@ typedef struct
 
     uint8_t unused1[2];
 
-    //     0
-    //   7   1
-    // 6   8   2
-    //   5   3
-    //     4
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;

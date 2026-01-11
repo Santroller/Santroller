@@ -115,8 +115,31 @@ bool usb_configured()
     return tud_ready();
 }
 
+bool ps5_auth_ready = 0;
+uint8_t hash_pending_buffer[64];
+uint8_t hash_finish_buffer[64];
+
+uint8_t auth_buffer[64];
+bool dongle_ready = false;
+bool hash_pending = false;
+bool hash_ready = false;
+uint32_t hash_timer;
 void send_report_to_pc(const void *report, uint8_t len)
 {
+    if (consoleType == PS5 && ps5_dev_addr.dev_addr)
+    {
+        if (hash_pending) {
+            return;
+        }
+        hash_pending = true;
+        send_report_to_controller(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t*)report, len);
+        return;
+        // if (tuh_xinput_ready(ps5_dev_addr.dev_addr, ps5_dev_addr.instance))
+        // {
+        //     printf("send\r\n");
+        //     tuh_xinput_send_report(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t*)report, len);
+        // }
+    }
     tud_xusb_n_report(0, report, len);
 }
 bool foundXB = false;
@@ -552,11 +575,11 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_typ
 
             printf("Found PS5 controller\r\n");
             ps4_controller_connected(dev_addr, host_vid, host_pid);
-            if (consoleType == PS4) {
+            if (consoleType == PS4)
+            {
                 consoleType = PS5;
                 reset_usb();
             }
-
         }
         break;
     }
@@ -623,6 +646,13 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
     if (dev_addr == xone_dev_addr.dev_addr && instance == xone_dev_addr.instance)
     {
         receive_report_from_controller(report, len);
+    }
+    // receive report from p5general and forward it to the console
+    if (dev_addr == ps5_dev_addr.dev_addr && instance == ps5_dev_addr.instance)
+    {
+        hash_pending = false;
+        tud_xusb_n_report(0, report, len);
+        return;
     }
     // Send player indicator every 10 seconds or so just as a keep alive
     if (millis() - lastPlayerLed > 10000)

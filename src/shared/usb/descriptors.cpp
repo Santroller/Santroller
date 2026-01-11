@@ -1465,8 +1465,8 @@ uint16_t descriptorRequest(const uint16_t wValue,
         }
         else if (consoleType == PS5)
         {
-            dev->idVendor = 0x3651;
-            dev->idProduct = 0x1600;
+            dev->idVendor = 0x2B81;
+            dev->idProduct = 0x0101;
         }
         else if (consoleType == IOS_FESTIVAL)
         {

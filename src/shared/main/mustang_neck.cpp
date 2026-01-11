@@ -15,7 +15,7 @@ protarneck_t tickMustangNeck()
     {
         lastTick = micros();
         MUSTANG_NECK_CS_CLEAR();
-        uint8_t resp = spi_transfer(MUSTANG_NECK_SPI_PORT, 0x01);
+        uint8_t resp = spi_transfer(MUSTANG_NECK_SPI_PORT, 0x80);
         if (resp == 0x00)
         {
             mustang_neck_found = true;
@@ -23,10 +23,9 @@ protarneck_t tickMustangNeck()
             MUSTANG_NECK_CS_SET();
             return neck;
         }
-        if (resp != 0x01)
+        if (resp != 0x80)
         {
             mustang_neck_found = false;
-            memset(&neck, 0, sizeof(neck));
             MUSTANG_NECK_CS_SET();
             return neck;
         }
@@ -34,7 +33,7 @@ protarneck_t tickMustangNeck()
         uint8_t *buf = (uint8_t *)&neck;
         for (int i = 0; i < sizeof(neck); i++)
         {
-            buf[i] = spi_transfer(MUSTANG_NECK_SPI_PORT, 0x48);
+            buf[i] = spi_transfer(MUSTANG_NECK_SPI_PORT, 0x12);
         }
         MUSTANG_NECK_CS_SET();
     }

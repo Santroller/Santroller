@@ -1,4 +1,3 @@
-
 # Using Santroller on Wii / Wii U
 
 The Wii is an interesting case because different games use different types of instruments.

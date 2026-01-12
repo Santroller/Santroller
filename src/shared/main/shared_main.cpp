@@ -1498,10 +1498,14 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         case ROCK_BAND_DRUMS:
         {
             PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
-            uint8_t redVelocity = ~report->redVelocity;
-            uint8_t greenVelocity = ~report->greenVelocity;
-            uint8_t yellowVelocity = ~report->yellowVelocity;
-            uint8_t blueVelocity = ~report->blueVelocity;
+            uint8_t redVelocity = 255-report->redVelocity;
+            uint8_t greenVelocity = 255-report->greenVelocity;
+            uint8_t yellowVelocity = 255-report->yellowVelocity;
+            uint8_t blueVelocity = 255-report->blueVelocity;
+            redVelocity = max(redVelocity, 1);
+            greenVelocity = max(greenVelocity, 1);
+            yellowVelocity = max(yellowVelocity, 1);
+            blueVelocity = max(blueVelocity, 1);
             bool kick1 = report->leftShoulder;
             bool kick2 = report->rightShoulder;
             usb_host_data->back |= report->back;
@@ -2364,6 +2368,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 uint8_t greenVelocity = xinput_rb_velocity_negative(report->greenVelocity);
                 uint8_t yellowVelocity = xinput_rb_velocity_negative(report->yellowVelocity);
                 uint8_t blueVelocity = xinput_rb_velocity_positive(report->blueVelocity);
+                redVelocity = max(redVelocity, 1);
+                greenVelocity = max(greenVelocity, 1);
+                yellowVelocity = max(yellowVelocity, 1);
+                blueVelocity = max(blueVelocity, 1);
 
                 SET_RB_PADS();
 

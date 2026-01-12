@@ -78,14 +78,12 @@ add_executable(
   ${TARGET}
   src/main.cpp
   src/usb/usb_descriptors.cpp
-  src/usb/device/drivers.cpp
   src/usb/device/xinput_device.cpp
   src/usb/host/xinput_host.cpp
   src/usb/device/xone_device.cpp
   src/usb/host/xone_host.cpp
   src/usb/device/ogxbox_device.cpp
   src/usb/device/ps3_device.cpp
-  src/usb/device/drivers.cpp
   src/usb/device/ps4_device.cpp
   src/usb/device/ps5_device.cpp
   src/usb/device/hid_device.cpp

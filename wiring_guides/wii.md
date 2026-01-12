@@ -30,8 +30,8 @@ This guide walks through the hardware and software setup required to use a Wii c
 
 ### Power considerations
 
-- If your Wii Extension breakout does **not** support 3.3 V input and you are using a 5 V microcontroller, you will need a 3.3 V voltage regulator
-- The Adafruit breakout linked above supports both 3.3 V and 5 V input and does not require an external regulator
+- If your Wii Extension breakout does **not** support 3.3V input and you are using a 5V microcontroller, you will need a 3.3V voltage regulator
+- The Adafruit breakout linked above supports both 3.3V and 5V input and does not require an external regulator
 
 ### Optional features
 
@@ -54,9 +54,9 @@ Any of the following options are supported:
   - Tilt is detected using acceleration due to gravity
 
 ```danger
-Never supply 5 V power to the power pin of a Wii Extension. Wii Extensions are not designed for 5 V input.
+Never supply 5V power to the power pin of a Wii Extension. Wii Extensions are not designed for 5V input.
 
-The data pins *are* 5 V tolerant and may be connected directly to microcontroller GPIO pins.
+The data pins *are* 5V tolerant and may be connected directly to microcontroller GPIO pins.
 ```
 
 ---
@@ -101,10 +101,10 @@ Manufacturers use inconsistent coloring. Always verify each wire using the pinou
 ### 2. Connect power (VCC)
 
 - Connect the microcontroller VCC to the breakout VCC
-- If using a 5 V Pro Micro and a breakout that does not support 5 V input, route VCC through a 3.3 V regulator
+- If using a 5V Pro Micro and a breakout that does not support 5V input, route VCC through a 3.3V regulator
 - On the Arduino Uno, use the onboard 3.3 V pin
 - On the Adafruit breakout:
-  - `VIN` accepts both 3.3 V and 5 V input
+  - `VIN` accepts both 3.3V and 5V input
   - The `3V` pin is an output and is not required
 
 ---
@@ -133,7 +133,7 @@ Connect GND on the Wii Extension breakout or cable to GND on the microcontroller
 #### ADXL345 / MPU-6050 / LIS3DH
 
 1. Connect GND to GND
-2. Connect VCC to 3.3 V (use a regulator if required)
+2. Connect VCC to 3.3V (use a regulator if required)
 3. Connect SDA and SCL using the table above
 
 ---

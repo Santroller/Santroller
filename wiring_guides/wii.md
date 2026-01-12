@@ -63,7 +63,7 @@ The data pins *are* 5 V tolerant and may be connected directly to microcontrolle
 
 ## Finished product
 
-
+![Finished Adapter](https://santroller.com/assets/images/adaptor.jpg)
 
 ---
 
@@ -77,6 +77,8 @@ Refer to the image below for the Wii Extension connector pinout.
 
 The Pi Pico allows multiple pin choices for SDA and SCL. Recommended pins are listed below and match the legacy Ardwiino firmware layout. If using different pins, both SDA and SCL **must be from the same I²C channel**.
 
+![Port Pinout](https://santroller.com/assets/images/wii-ext.jpg)
+![Port Schematic](https://santroller.com/assets/images/wii.png)
 &#x20;
 
 ```danger

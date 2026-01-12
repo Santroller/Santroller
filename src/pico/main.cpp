@@ -126,13 +126,15 @@ bool hash_ready = false;
 uint32_t hash_timer;
 void send_report_to_pc(const void *report, uint8_t len)
 {
+#if USB_HOST_STACK
     if (consoleType == PS5 && ps5_dev_addr.dev_addr)
     {
-        if (hash_pending) {
+        if (hash_pending)
+        {
             return;
         }
         hash_pending = true;
-        send_report_to_controller(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t*)report, len);
+        send_report_to_controller(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t *)report, len);
         return;
         // if (tuh_xinput_ready(ps5_dev_addr.dev_addr, ps5_dev_addr.instance))
         // {
@@ -140,6 +142,7 @@ void send_report_to_pc(const void *report, uint8_t len)
         //     tuh_xinput_send_report(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t*)report, len);
         // }
     }
+#endif
     tud_xusb_n_report(0, report, len);
 }
 bool foundXB = false;

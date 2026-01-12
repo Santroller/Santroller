@@ -3,7 +3,7 @@ Some consoles check if a controller is a genuine controller. Our controllers are
 
 There are a few ways you can use an unofficial controller on a console requiring authentication.
 1. Pass through the authentication check to another controller or dongle.
-2. Patch out authentication as a whole, as with [https://github.com/InvoxiPlayGames/UsbdSecPatch](UsbdSecPatch)
+2. Patch out authentication as a whole, as with [UsbdSecPatch](https://github.com/InvoxiPlayGames/UsbdSecPatch)
 3. Some games support input methods that don't need authentication, as on Rock Band 4 on PS4 supporting PS3 instruments or Fortnite on Xbox and PS4/5 supporting keyboard inputs.
 
 ## Consoles needing authentication

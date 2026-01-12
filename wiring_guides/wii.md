@@ -63,7 +63,7 @@ The data pins *are* 5V tolerant and may be connected directly to microcontroller
 
 ## Finished product
 
-![Finished Adapter](/assets/images/adaptor.jpg)
+![Finished Adapter](../assets/images/adaptor.jpg)
 
 ---
 
@@ -77,14 +77,14 @@ Refer to the image below for the Wii Extension connector pinout.
 
 The Pi Pico allows multiple pin choices for SDA and SCL. Recommended pins are listed below and match the legacy Ardwiino firmware layout. If using different pins, both SDA and SCL **must be from the same I²C channel**.
 
-![Port Pinout](/assets/images/wii-ext.jpg)
-![Port Schematic](/assets/images/wii.png)
+![Port Pinout](../assets/images/wii-ext.jpg)
+![Port Schematic](../assets/images/wii.png)
 &#x20;
 
 ```danger
 If you are using a Wii Extension cable, do NOT rely on wire colors.
 
-Manufacturers use inconsistent coloring. Always verify each wire using the pinout above. Some cables have been observed with green as ground and black as 3.3 V.
+Manufacturers use inconsistent coloring. Always verify each wire using the pinout above. Some cables have been observed with green as ground and black as 3.3V.
 ```
 
 | Microcontroller               | SDA                              | SCL                              |
@@ -102,7 +102,7 @@ Manufacturers use inconsistent coloring. Always verify each wire using the pinou
 
 - Connect the microcontroller VCC to the breakout VCC
 - If using a 5V Pro Micro and a breakout that does not support 5V input, route VCC through a 3.3V regulator
-- On the Arduino Uno, use the onboard 3.3 V pin
+- On the Arduino Uno, use the onboard 3.3V pin
 - On the Adafruit breakout:
   - `VIN` accepts both 3.3V and 5V input
   - The `3V` pin is an output and is not required

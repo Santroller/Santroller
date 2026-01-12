@@ -136,11 +136,6 @@ void send_report_to_pc(const void *report, uint8_t len)
         hash_pending = true;
         send_report_to_controller(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t *)report, len);
         return;
-        // if (tuh_xinput_ready(ps5_dev_addr.dev_addr, ps5_dev_addr.instance))
-        // {
-        //     printf("send\r\n");
-        //     tuh_xinput_send_report(ps5_dev_addr.dev_addr, ps5_dev_addr.instance, (const uint8_t*)report, len);
-        // }
     }
 #endif
     tud_xusb_n_report(0, report, len);

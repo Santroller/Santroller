@@ -14,30 +14,8 @@ ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::uniqu
 
 void ProjectDivaAxisMapping::update_hid(uint8_t *buf)
 {
-    PCGamepad_Data_t *report = (PCGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
-    {
-    case ProjectDivaLeftStickX:
-        report->leftStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDivaLeftStickY:
-        report->leftStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDivaRightStickX:
-        report->rightStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDivaRightStickY:
-        report->rightStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDivaLeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDivaRightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        break;
-    default:
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void ProjectDivaAxisMapping::update_wii(uint8_t *buf)
 {

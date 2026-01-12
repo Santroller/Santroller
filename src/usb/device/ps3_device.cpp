@@ -205,7 +205,7 @@ void PS3GamepadDevice::process(bool full_poll)
         if (subtype == GuitarHeroGuitar)
         {
             // convert bitmask slider to actual hid slider
-            PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)epin_buf;
+            PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
             reportGh->slider = gh5_mapping[reportGh->slider];
         }
         usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));

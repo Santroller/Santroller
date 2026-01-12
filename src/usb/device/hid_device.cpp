@@ -273,20 +273,24 @@ void HIDGamepadDevice::process(bool full_poll)
 {
   if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
     return;
-  PCGamepad_Data_t *report = (PCGamepad_Data_t *)epin_buf;
+  PCGamepadDpad_Data_t*report = (PCGamepadDpad_Data_t *)epin_buf;
+  memset(epin_buf, 0, sizeof(epin_buf));
+  report->rid = ReportIdGamepad;
+  report->rsize = sizeof(PCGamepadDpad_Data_t);
   for (const auto &mapping : mappings)
   {
     mapping->update(full_poll);
     mapping->update_hid(epin_buf);
   }
 
+
   // convert bitmask dpad to actual hid dpad
   report->dpad = dpad_bindings[report->dpad];
   if (current_type == GuitarHeroGuitar)
   {
     // convert bitmask slider to actual hid slider
-    PCGuitarHeroGuitar_Data_t *reportGh = (PCGuitarHeroGuitar_Data_t *)report;
-    reportGh->slider = gh5_mapping[reportGh->slider];
+    XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
+    reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
   }
 
   if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
@@ -294,7 +298,7 @@ void HIDGamepadDevice::process(bool full_poll)
     return;
   }
 
-  usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PCGamepad_Data_t));
+  usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));
 }
 
 size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -318,6 +322,8 @@ size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
+  // TODO: if we want to support multiple hid devices at once, this would need to be handled in some other way
+  desc->bcdDevice = 0x0400 | subtype;
 }
 const uint8_t *HIDGamepadDevice::report_descriptor()
 {
@@ -329,12 +335,48 @@ uint16_t HIDGamepadDevice::report_desc_len()
   return sizeof(desc_hid_report);
 }
 
+
 void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+  if (report_type == HID_REPORT_TYPE_FEATURE)
+  {
+    switch (report_id)
+    {
+    case ReportId::ReportIdPs3F4:
+      newMode = ModePs3;
+      break;
+    }
+  }
 }
 
 uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
+  (void)report_id;
+  (void)report_type;
+  (void)buffer;
+  (void)reqlen;
+  if (report_type != HID_REPORT_TYPE_FEATURE)
+  {
+    return 0;
+  }
+
+  switch (report_id)
+  {
+  case ReportId::ReportIdPs3F2:
+    newMode = ModePs3;
+    return 0;
+  case ReportId::ReportIdPs4Feature:
+    if (ps4_based() && reqlen == 0x30)
+    {
+      // TODO: if theres a ps5 dongle plugged in here we shoud just jump straight to PS5 mode here
+      newMode = ModePs4;
+    }
+    else
+    {
+      newMode = ModePs3;
+    }
+    return 0;
+  }
   return 0;
 }
 

@@ -94,10 +94,6 @@ void hid_task(void)
             newMode = ModePs3;
         }
     }
-    if ((millis() - timeSinceMode) > 2000 && mode == ModePs4 && !seenPs4)
-    {
-        newMode = ModePs3;
-    }
     update(false);
 }
 

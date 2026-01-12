@@ -13,70 +13,8 @@ ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_pt
 
 void ProGuitarAxisMapping::update_hid(uint8_t *buf)
 {
-    PCRockBandProGuitar_Data_t *report = (PCRockBandProGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.proAxis)
-    {
-    case ProGuitarLeftStickX:
-        // shove stick on the slider, then it can be used in menus
-        if (!m_centered)
-        {
-            report->leftStickX = m_calibratedValue - 32767;
-        }
-        break;
-    case ProGuitarLeftStickY:
-        if (!m_centered)
-        {
-            report->leftStickY = m_calibratedValue - 32767;
-        }
-        break;
-    case ProGuitarTilt:
-        report->tilt = m_calibratedValue >> 8;
-        report->autoCal_Light = m_calibratedValue >> 8;
-        report->autoCal_Microphone = m_calibratedValue >> 8;
-        break;
-    case ProGuitarAutoCalibrationLight:
-        report->autoCal_Light = m_calibratedValue >> 8;
-        break;
-    case ProGuitarAutoCalibrationMicrophone:
-        report->autoCal_Microphone = m_calibratedValue >> 8;
-        break;
-    case ProGuitarLowEFret:
-        report->lowEFret = m_calibratedValue >> 8;
-        break;
-    case ProGuitarAFret:
-        report->aFret = m_calibratedValue >> 8;
-        break;
-    case ProGuitarDFret:
-        report->dFret = m_calibratedValue >> 8;
-        break;
-    case ProGuitarGFret:
-        report->gFret = m_calibratedValue >> 8;
-        break;
-    case ProGuitarBFret:
-        report->bFret = m_calibratedValue >> 8;
-        break;
-    case ProGuitarHighEFret:
-        report->highEFret = m_calibratedValue >> 8;
-        break;
-    case ProGuitarLowEFretVelocity:
-        report->lowEFretVelocity = m_calibratedValue >> 8;
-        break;
-    case ProGuitarAFretVelocity:
-        report->aFretVelocity = m_calibratedValue >> 8;
-        break;
-    case ProGuitarDFretVelocity:
-        report->dFretVelocity = m_calibratedValue >> 8;
-        break;
-    case ProGuitarGFretVelocity:
-        report->gFretVelocity = m_calibratedValue >> 8;
-        break;
-    case ProGuitarBFretVelocity:
-        report->bFretVelocity = m_calibratedValue >> 8;
-        break;
-    case ProGuitarHighEFretVelocity:
-        report->highEFretVelocity = m_calibratedValue >> 8;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void ProGuitarAxisMapping::update_wii(uint8_t *buf)
 {

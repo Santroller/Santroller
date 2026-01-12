@@ -13,26 +13,8 @@ GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, 
 
 void GuitarHeroGuitarAxisMapping::update_hid(uint8_t *buf)
 {
-    PCGuitarHeroGuitar_Data_t *report = (PCGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
-    {
-    case GuitarHeroGuitarLeftStickX:
-        // shove stick on the slider, then it can be used in menus
-        if (!m_centered)
-        {
-            report->slider = m_calibratedValue - 32767;
-        }
-        break;
-    case GuitarHeroGuitarLeftStickY:
-        report->unused = m_calibratedValue - 32767;
-        break;
-    case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue - 32767;
-        break;
-    case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue - 32767;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
 {

@@ -13,25 +13,8 @@ LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_
 
 void LiveGuitarAxisMapping::update_hid(uint8_t *buf)
 {
-    PCGHLGuitar_Data_t *report = (PCGHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlAxis)
-    {
-    case GuitarHeroLiveGuitarLeftStickX:
-        report->leftStickX = m_calibratedValue - 32767;
-        break;
-    case GuitarHeroLiveGuitarLeftStickY:
-        if (!m_centered)
-        {
-            report->strumBar = m_calibratedValue - 32767;
-        }
-        break;
-    case GuitarHeroLiveGuitarWhammy:
-        report->whammy = m_calibratedValue - 32767;
-        break;
-    case GuitarHeroLiveGuitarTilt:
-        report->tilt = m_calibratedValue - 32767;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void LiveGuitarAxisMapping::update_wii(uint8_t *buf)
 {

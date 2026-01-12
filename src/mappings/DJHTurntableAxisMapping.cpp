@@ -13,28 +13,8 @@ DJHTurntableAxisMapping::DJHTurntableAxisMapping(proto_Mapping mapping, std::uni
 
 void DJHTurntableAxisMapping::update_hid(uint8_t *buf)
 {
-    PCDJHTurntable_Data_t *report = (PCDJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhAxis)
-    {
-    case DJHTurntableLeftStickX:
-        report->leftTableVelocity = m_calibratedValue - 32767;
-        break;
-    case DJHTurntableLeftStickY:
-        report->rightTableVelocity = m_calibratedValue - 32767;
-        break;
-    case DJHTurntableLeftVelocity:
-        report->leftTableVelocity = m_calibratedValue - 32767;
-        break;
-    case DJHTurntableRightVelocity:
-        report->rightTableVelocity = m_calibratedValue - 32767;
-        break;
-    case DJHTurntableEffectsKnob:
-        report->effectsKnob = m_calibratedValue - 32767;
-        break;
-    case DJHTurntableCrossfader:
-        report->crossfader = m_calibratedValue - 32767;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void DJHTurntableAxisMapping::update_wii(uint8_t *buf)
 {

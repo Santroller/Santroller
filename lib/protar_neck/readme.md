@@ -1,11 +1,11 @@
-Pro guitar neck is SPI, cs active low, cpol 0, cpha 0, msb first
+Pro guitar neck is SPI, cs active low, cpol 0, cpha 1, lsb first, 100000hz clock
 
-body -> neck, {0x01, 0x48, 0x48, 0x48, 0x48, 0x48}
+body -> neck, {0x80, 0x12, 0x12, 0x12, 0x12, 0x12}
 
 neck -> body
 
 struct {
-    uint8_t header = 0;
+    uint8_t header = 0x80;
     uint16_t lowEFret : 5;
     uint16_t aFret : 5;
     uint16_t dFret : 5;

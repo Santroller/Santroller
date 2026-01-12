@@ -14,27 +14,8 @@ RockBandGuitarAxisMapping::RockBandGuitarAxisMapping(proto_Mapping mapping, std:
 
 void RockBandGuitarAxisMapping::update_hid(uint8_t *buf)
 {
-    PCRockBandGuitar_Data_t *report = (PCRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.rbAxis)
-    {
-    case RockBandGuitarLeftStickX:
-        report->calibrationSensor = m_calibratedValue - 32767;
-        break;
-    case RockBandGuitarLeftStickY:
-        report->unused2 = m_calibratedValue - 32767;
-        break;
-    case RockBandGuitarWhammy:
-        report->whammy = m_calibratedValue - 32767;
-        break;
-    case RockBandGuitarTilt:
-        report->tilt = m_calibratedValue - 32767;
-        break;
-    case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_lastValue];
-        break;
-    default:
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void RockBandGuitarAxisMapping::update_wii(uint8_t *buf)
 {

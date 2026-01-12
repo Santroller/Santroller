@@ -13,43 +13,8 @@ GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(proto_Mapping mapping, st
 
 void GuitarHeroDrumsAxisMapping::update_hid(uint8_t *buf)
 {
-    PCGuitarHeroDrums_Data_t *report = (PCGuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumAxis)
-    {
-    case GuitarHeroDrumsRedPad:
-        report->redVelocity = m_calibratedValue - 32767;
-        report->b = true;
-        break;
-    case GuitarHeroDrumsYellowPad:
-        report->yellowVelocity = m_calibratedValue - 32767;
-        report->y = true;
-        break;
-    case GuitarHeroDrumsBluePad:
-        report->blueVelocity = m_calibratedValue - 32767;
-        report->x = true;
-        break;
-    case GuitarHeroDrumsOrangePad:
-        report->orangeVelocity = m_calibratedValue - 32767;
-        report->rightShoulder = true;
-        break;
-    case GuitarHeroDrumsGreenPad:
-        report->greenVelocity = m_calibratedValue - 32767;
-        report->a = true;
-        break;
-    case GuitarHeroDrumsKickPedal:
-        report->kickVelocity = m_calibratedValue - 32767;
-        report->leftShoulder = true;
-        break;
-    case GuitarHeroDrumsLeftStickX:
-        report->leftStickX = m_calibratedValue - 32767;
-        break;
-    case GuitarHeroDrumsLeftStickY:
-        if (!m_centered)
-        {
-            report->leftStickY = m_calibratedValue - 32767;
-        }
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void GuitarHeroDrumsAxisMapping::update_wii(uint8_t *buf)
 {

@@ -191,53 +191,59 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    Instance *instance = nullptr;
+    std::shared_ptr<UsbDevice> instance = nullptr;
+    // Instance *instance = nullptr;
     switch (mode)
     {
     case ModeHid:
-        instance = new HIDGamepadDevice();
+        instance = std::make_shared<HIDGamepadDevice>();
         break;
     case ModeOgXbox:
-        instance = new OGXboxGamepadDevice();
+        instance = std::make_shared<OGXboxGamepadDevice>();
         break;
     case ModeXbox360:
-        instance = new XInputGamepadDevice();
+        instance = std::make_shared<XInputGamepadDevice>();
         break;
     case ModeXboxOne:
-        instance = new XboxOneGamepadDevice();
+        instance = std::make_shared<XboxOneGamepadDevice>();
         break;
     case ModeWiiRb:
         // wii rb is the same as ps3 but different ids
-        instance = new PS3GamepadDevice(true);
+        instance = std::make_shared<PS3GamepadDevice>(true);
         break;
     case ModePs3:
-        instance = new PS3GamepadDevice(false);
+        instance = std::make_shared<PS3GamepadDevice>(false);
         break;
     case ModePs4:
-        instance = new PS4GamepadDevice();
+        instance = std::make_shared<PS4GamepadDevice>();
         break;
     case ModePs5:
-        instance = new PS5GamepadDevice();
+        instance = std::make_shared<PS5GamepadDevice>();
         break;
     case ModeSwitch:
-        instance = new SwitchGamepadDevice();
+        instance = std::make_shared<SwitchGamepadDevice>();
         break;
     case ModeGuitarHeroArcade:
-        instance = new GHArcadeGamepadDevice();
+        instance = std::make_shared<GHArcadeGamepadDevice>();
         break;
     }
     instance->profile_id = instances.size();
     proto_Profile profile;
-    profile.activationMethod.arg = instance;
+    profile.activationMethod.arg = instance.get();
     profile.activationMethod.funcs.decode = &load_activation_method;
     profile.mappings.funcs.decode = &load_mapping;
-    profile.mappings.arg = instance;
+    profile.mappings.arg = instance.get();
     pb_decode(stream, proto_Profile_fields, &profile);
-    instances.emplace_back(std::move(instance));
+    instances.push_back(instance);
     auto active = active_instances.find(instance->profile_id);
     if (active != active_instances.end())
     {
-        active_instances[instance->profile_id] = instances.back();
+        active_instances[instance->profile_id] = instance;
+    }
+    if (instance->profile_id == 1) {
+        instance->m_interface = 1;
+        active_instances[instance->profile_id] = instance;
+        usb_instances[usb_instances.size()] = instance;
     }
     return true;
 }
@@ -321,9 +327,19 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.profiles.funcs.decode = &load_profile;
     devices.clear();
     instances.clear();
+    active_instances.clear();
+    usb_instances.clear();
     switch (mode)
     {
     case ModeHid:
+    {
+        auto confDevice = std::make_shared<HIDConfigDevice>();
+        confDevice->m_interface = instances.size();
+        instances.push_back(confDevice);
+        active_instances[confDevice->m_interface] = confDevice;
+        usb_instances[confDevice->m_interface] = confDevice;
+        break;
+    }
     case ModeOgXbox:
     case ModeXboxOne:
     case ModeWiiRb:
@@ -334,18 +350,25 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         break;
     case ModeXbox360:
     {
-        XInputSecurityDevice *secDevice = new XInputSecurityDevice();
+        auto secDevice = std::make_shared<XInputSecurityDevice>();
         secDevice->m_interface = instances.size();
-        instances.emplace_back(std::move(secDevice));
-        active_instances[secDevice->m_interface] = instances.back();
+        instances.push_back(secDevice);
+        active_instances[secDevice->m_interface] = secDevice;
+        usb_instances[secDevice->m_interface] = secDevice;
+        auto confDevice2 = std::make_shared<HIDConfigDevice>();
+        confDevice2->m_interface = instances.size();
+        instances.push_back(confDevice2);
+        active_instances[confDevice2->m_interface] = confDevice2;
+        usb_instances[confDevice2->m_interface] = confDevice2;
         break;
     }
     case ModeGuitarHeroArcade:
     {
-        GHArcadeVendorDevice *venDevice = new GHArcadeVendorDevice();
+        auto venDevice = std::make_shared<GHArcadeVendorDevice>();
         venDevice->m_interface = instances.size();
-        instances.emplace_back(std::move(venDevice));
-        active_instances[venDevice->m_interface] = instances.back();
+        instances.push_back(std::move(venDevice));
+        active_instances[venDevice->m_interface] = std::move(venDevice);
+        usb_instances[venDevice->m_interface] = std::move(venDevice);
         break;
     }
     }

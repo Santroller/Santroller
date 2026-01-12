@@ -10,57 +10,8 @@ LiveGuitarButtonMapping::LiveGuitarButtonMapping(proto_Mapping mapping, std::uni
 
 void LiveGuitarButtonMapping::update_hid(uint8_t *buf)
 {
-    PCGHLGuitar_Data_t *report = (PCGHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
-    {
-    case GuitarHeroLiveGuitarWhite1:
-        report->x |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarWhite2:
-        report->leftShoulder |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarWhite3:
-        report->rightShoulder |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarBlack1:
-        report->a |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarBlack2:
-        report->b |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarBlack3:
-        report->y |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarBack:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarStart:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarGuide:
-        report->guide |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarStrumUp:
-        report->dpadUp |= m_lastValue;
-        report->strumBar = INT16_MAX;
-        break;
-    case GuitarHeroLiveGuitarStrumDown:
-        report->dpadDown |= m_lastValue;
-        report->strumBar = INT16_MIN;
-        break;
-    case GuitarHeroLiveGuitarDpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarDpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarDpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitarDpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void LiveGuitarButtonMapping::update_wii(uint8_t *buf)
 {

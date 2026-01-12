@@ -11,6 +11,8 @@ ProKeysButtonMapping::ProKeysButtonMapping(proto_Mapping mapping, std::unique_pt
 
 void ProKeysButtonMapping::update_hid(uint8_t *buf)
 {
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
     
 }
 void ProKeysButtonMapping::update_wii(uint8_t *buf)

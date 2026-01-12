@@ -10,43 +10,8 @@ GuitarHeroDrumsButtonMapping::GuitarHeroDrumsButtonMapping(proto_Mapping mapping
 
 void GuitarHeroDrumsButtonMapping::update_hid(uint8_t *buf)
 {
-    PCGuitarHeroDrums_Data_t *report = (PCGuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
-    {
-    case GuitarHeroDrumsA:
-        report->a |= m_lastValue;
-        break;
-    case GuitarHeroDrumsB:
-        report->b |= m_lastValue;
-        break;
-    case GuitarHeroDrumsX:
-        report->x |= m_lastValue;
-        break;
-    case GuitarHeroDrumsY:
-        report->y |= m_lastValue;
-        break;
-    case GuitarHeroDrumsBack:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroDrumsStart:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroDrumsGuide:
-        report->guide |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroDrumsDpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void GuitarHeroDrumsButtonMapping::update_wii(uint8_t *buf)
 {

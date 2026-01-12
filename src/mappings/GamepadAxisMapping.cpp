@@ -14,30 +14,8 @@ GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<In
 
 void GamepadAxisMapping::update_hid(uint8_t *buf)
 {
-    PCGamepad_Data_t *report = (PCGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
-    {
-    case GamepadLeftStickX:
-        report->leftStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case GamepadLeftStickY:
-        report->leftStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case GamepadRightStickX:
-        report->rightStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case GamepadRightStickY:
-        report->rightStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case GamepadLeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case GamepadRightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        break;
-    default:
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void GamepadAxisMapping::update_wii(uint8_t *buf)
 {

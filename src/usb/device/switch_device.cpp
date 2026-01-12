@@ -20,8 +20,7 @@ void SwitchGamepadDevice::process(bool full_poll)
     for (const auto &mapping : mappings)
     {
         mapping->update(full_poll);
-        // TODO
-        // mapping->update_switch(epin_buf);
+        mapping->update_switch(epin_buf);
     }
     SwitchProGamepad_Data_t *gamepad = (SwitchProGamepad_Data_t *)epin_buf;
     gamepad->leftStickX = PS3_STICK_CENTER;

@@ -11,67 +11,8 @@ DJHTurntableButtonMapping::DJHTurntableButtonMapping(proto_Mapping mapping, std:
 
 void DJHTurntableButtonMapping::update_hid(uint8_t *buf)
 {
-    PCDJHTurntable_Data_t *report = (PCDJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhButton)
-    {
-    case DJHTurntableLeftGreen:
-        report->a |= m_lastValue;
-        report->leftGreen |= m_lastValue;
-        break;
-    case DJHTurntableLeftRed:
-        report->b |= m_lastValue;
-        report->leftRed |= m_lastValue;
-        break;
-    case DJHTurntableLeftBlue:
-        report->x |= m_lastValue;
-        report->leftBlue |= m_lastValue;
-        break;
-    case DJHTurntableRightGreen:
-        report->a |= m_lastValue;
-        report->rightGreen |= m_lastValue;
-        break;
-    case DJHTurntableRightRed:
-        report->b |= m_lastValue;
-        report->rightRed |= m_lastValue;
-        break;
-    case DJHTurntableRightBlue:
-        report->x |= m_lastValue;
-        report->rightBlue |= m_lastValue;
-        break;
-    case DJHTurntableA:
-        report->a |= m_lastValue;
-        break;
-    case DJHTurntableB:
-        report->b |= m_lastValue;
-        break;
-    case DJHTurntableX:
-        report->x |= m_lastValue;
-        break;
-    case DJHTurntableY:
-        report->y |= m_lastValue;
-        break;
-    case DJHTurntableBack:
-        report->back |= m_lastValue;
-        break;
-    case DJHTurntableStart:
-        report->start |= m_lastValue;
-        break;
-    case DJHTurntableGuide:
-        report->guide |= m_lastValue;
-        break;
-    case DJHTurntableDpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case DJHTurntableDpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case DJHTurntableDpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case DJHTurntableDpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void DJHTurntableButtonMapping::update_wii(uint8_t *buf)
 {

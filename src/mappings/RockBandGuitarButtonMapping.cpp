@@ -11,66 +11,8 @@ RockBandGuitarButtonMapping::RockBandGuitarButtonMapping(proto_Mapping mapping, 
 
 void RockBandGuitarButtonMapping::update_hid(uint8_t *buf)
 {
-    PCRockBandGuitar_Data_t *report = (PCRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
-    {
-    case RockBandGuitarGreen:
-        report->a |= m_lastValue;
-        break;
-    case RockBandGuitarRed:
-        report->b |= m_lastValue;
-        break;
-    case RockBandGuitarYellow:
-        report->y |= m_lastValue;
-        break;
-    case RockBandGuitarBlue:
-        report->x |= m_lastValue;
-        break;
-    case RockBandGuitarOrange:
-        report->leftShoulder |= m_lastValue;
-        break;
-    case RockBandGuitarSoloGreen:
-        report->a |= m_lastValue;
-        report->solo |= m_lastValue;
-        break;
-    case RockBandGuitarSoloRed:
-        report->b |= m_lastValue;
-        report->solo |= m_lastValue;
-        break;
-    case RockBandGuitarSoloYellow:
-        report->y |= m_lastValue;
-        report->solo |= m_lastValue;
-        break;
-    case RockBandGuitarSoloBlue:
-        report->x |= m_lastValue;
-        report->solo |= m_lastValue;
-        break;
-    case RockBandGuitarSoloOrange:
-        report->leftShoulder |= m_lastValue;
-        report->solo |= m_lastValue;
-        break;
-    case RockBandGuitarBack:
-        report->back |= m_lastValue;
-        break;
-    case RockBandGuitarStart:
-        report->start |= m_lastValue;
-        break;
-    case RockBandGuitarGuide:
-        report->guide |= m_lastValue;
-        break;
-    case RockBandGuitarStrumUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case RockBandGuitarStrumDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case RockBandGuitarDpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case RockBandGuitarDpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void RockBandGuitarButtonMapping::update_wii(uint8_t *buf)
 {

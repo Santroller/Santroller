@@ -13,38 +13,8 @@ RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::u
 
 void RockBandDrumsAxisMapping::update_hid(uint8_t *buf)
 {
-    PCRockBandDrums_Data_t *report = (PCRockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
-    {
-    case RockBandDrumsRedPad:
-        report->redVelocity = m_calibratedValue - 32767;
-        report->b = true;
-        break;
-    case RockBandDrumsYellowPad:
-        report->yellowVelocity = m_calibratedValue - 32767;
-        report->y = true;
-        break;
-    case RockBandDrumsBluePad:
-        report->blueVelocity = m_calibratedValue - 32767;
-        report->x = true;
-        break;
-    case RockBandDrumsGreenPad:
-        report->greenVelocity = m_calibratedValue - 32767;
-        report->a = true;
-        break;
-    case RockBandDrumsLeftStickX:
-        if (!m_centered)
-        {
-            report->redVelocity = m_calibratedValue - 32767;
-        }
-        break;
-    case RockBandDrumsLeftStickY:
-        if (!m_centered)
-        {
-            report->yellowVelocity = m_calibratedValue - 32767;
-        }
-        break;
-    }
+    // santroller hid uses an xinput style report descriptor for compatibility reasons
+    return update_xinput(buf);
 }
 void RockBandDrumsAxisMapping::update_wii(uint8_t *buf)
 {

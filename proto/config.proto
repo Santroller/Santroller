@@ -26,3 +26,7 @@ message ConfigInfo {
   required int32 magic = 3;
   required uint32 currentProfile = 4;
 }
+
+message SetProfileCommand {
+  required uint32 profileId = 1;
+}

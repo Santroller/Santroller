@@ -41,9 +41,12 @@
 #include "host/usbh_pvt.h"
 #include "quadrature_encoder.h"
 #include <vector>
+#include <set>
 #include <memory>
 std::vector<std::shared_ptr<Instance>> instances;
-std::map<uint32_t, std::shared_ptr<Instance>> active_instances;
+std::vector<std::shared_ptr<Instance>> active_instances;
+std::map<uint32_t, std::shared_ptr<Instance>> profiles;
+std::set<uint32_t> active_profiles;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 proto_SubType current_type;
@@ -236,15 +239,13 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_Profile_fields, &profile);
     instances.push_back(instance);
     instance->profile_id = profile.uid;
-    auto active = active_instances.find(instance->profile_id);
-    if (active != active_instances.end())
-    {
-        active_instances[instance->profile_id] = instance;
-    }
-    if (profile.defaultProfile && !loadedAny) {
+    profiles[profile.uid] = instance;
+    auto active = active_profiles.find(instance->profile_id);
+    if ((profile.defaultProfile && active_profiles.empty()) || active != active_profiles.end()) {
         loadedAny = true;
         instance->m_interface = active_instances.size();
-        active_instances[instance->profile_id] = instance;
+        active_profiles.insert(instance->profile_id);
+        active_instances.push_back(instance);
         usb_instances[usb_instances.size()] = instance;
         printf("instance: %d\r\n", instance->m_interface);
     }
@@ -339,7 +340,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         auto confDevice = std::make_shared<HIDConfigDevice>();
         confDevice->m_interface = instances.size();
         instances.push_back(confDevice);
-        active_instances[confDevice->m_interface] = confDevice;
+        active_instances.push_back(confDevice);
         usb_instances[confDevice->m_interface] = confDevice;
         break;
     }
@@ -356,12 +357,12 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         auto secDevice = std::make_shared<XInputSecurityDevice>();
         secDevice->m_interface = instances.size();
         instances.push_back(secDevice);
-        active_instances[secDevice->m_interface] = secDevice;
+        active_instances.push_back(secDevice);
         usb_instances[secDevice->m_interface] = secDevice;
         auto confDevice2 = std::make_shared<HIDConfigDevice>();
         confDevice2->m_interface = instances.size();
         instances.push_back(confDevice2);
-        active_instances[confDevice2->m_interface] = confDevice2;
+        active_instances.push_back(confDevice2);
         usb_instances[confDevice2->m_interface] = confDevice2;
         break;
     }
@@ -370,8 +371,8 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         auto venDevice = std::make_shared<GHArcadeVendorDevice>();
         venDevice->m_interface = instances.size();
         instances.push_back(std::move(venDevice));
-        active_instances[venDevice->m_interface] = std::move(venDevice);
-        usb_instances[venDevice->m_interface] = std::move(venDevice);
+        active_instances.push_back(venDevice);
+        usb_instances[venDevice->m_interface] = venDevice;
         break;
     }
     }

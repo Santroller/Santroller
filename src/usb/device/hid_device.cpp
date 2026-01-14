@@ -242,7 +242,6 @@ bool hidd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_
   return true;
 }
 
-
 const uint8_t gh5_mapping[] = {
     0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
     0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD,
@@ -273,7 +272,7 @@ void HIDGamepadDevice::process(bool full_poll)
 {
   if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
     return;
-  PCGamepadDpad_Data_t*report = (PCGamepadDpad_Data_t *)epin_buf;
+  PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
   memset(epin_buf, 0, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
   report->rsize = sizeof(PCGamepadDpad_Data_t);
@@ -282,7 +281,6 @@ void HIDGamepadDevice::process(bool full_poll)
     mapping->update(full_poll);
     mapping->update_hid(epin_buf);
   }
-
 
   // convert bitmask dpad to actual hid dpad
   report->dpad = dpad_bindings[report->dpad];
@@ -334,7 +332,6 @@ uint16_t HIDGamepadDevice::report_desc_len()
 {
   return sizeof(desc_hid_report);
 }
-
 
 void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
@@ -393,7 +390,14 @@ void HIDConfigDevice::process(bool full_poll)
   {
     newMode = ModeSwitch;
   }
-  return;
+  if (tool_closed())
+  {
+    return;
+  }
+  for (auto &mapping : profiles[selected_profile]->mappings)
+  {
+    mapping->update(false);
+  }
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -456,6 +460,22 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
     case ReportId::ReportIdBootloader:
       reset_usb_boot(0, 0);
       break;
+    case ReportId::ReportIdSetActiveProfile:
+    {
+      proto_SetProfileCommand cmd;
+      pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
+      if (!pb_decode(&inputStream, proto_SetProfileCommand_fields, &cmd))
+      {
+        printf("Didn't decode cmd?\r\n");
+        break;
+      }
+      selected_profile = cmd.profileId;
+      for (auto &mapping : profiles[selected_profile]->mappings)
+      {
+        mapping->update(true);
+      }
+      break;
+    }
     case ReportId::ReportIdPs3F4:
       newMode = ModePs3;
       break;
@@ -511,10 +531,22 @@ bool HIDConfigDevice::tool_closed()
   return millis() - lastKeepAlive > 500;
 }
 
+void HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
+{
+
+  HIDConfigDevice *dev = HIDConfigDevice::instance;
+  if (!dev || dev->profile_id != profile_id)
+  {
+    return;
+  }
+  send_event(event);
+}
+
 void HIDConfigDevice::send_event(proto_Event event)
 {
-  HIDConfigDevice* dev = HIDConfigDevice::instance;
-  if (!dev) {
+  HIDConfigDevice *dev = HIDConfigDevice::instance;
+  if (!dev)
+  {
     return;
   }
   // Haven't received data from the tool recently so don't send out events for it
@@ -537,4 +569,4 @@ void HIDConfigDevice::send_event(proto_Event event)
   usbd_edpt_xfer(TUD_OPT_RHPORT, dev->m_epin, dev->epin_buf, outputStream.bytes_written + 1);
 }
 
-HIDConfigDevice* HIDConfigDevice::instance = nullptr;
+HIDConfigDevice *HIDConfigDevice::instance = nullptr;

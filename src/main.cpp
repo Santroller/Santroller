@@ -155,7 +155,7 @@ void update(bool full_poll)
     }
     for (const auto &instance : active_instances)
     {
-        instance.second->process(full_poll);
+        instance->process(full_poll);
     }
 }
 

@@ -13,7 +13,7 @@ public:
     virtual void process(bool full_poll) = 0;
     SubType subtype;
     ConsoleMode mode;
-    uint8_t profile_id;
+    uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTrigger>> triggers;
     uint8_t rumble_left;

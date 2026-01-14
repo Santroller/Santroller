@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-TaikoAxisMapping::TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, false)
+TaikoAxisMapping::TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 

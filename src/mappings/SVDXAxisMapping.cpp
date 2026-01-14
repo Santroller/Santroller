@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-SVDXAxisMapping::SVDXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, true)
+SVDXAxisMapping::SVDXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 

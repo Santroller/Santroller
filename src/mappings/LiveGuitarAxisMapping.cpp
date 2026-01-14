@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, mapping.mapping.ghlAxis == GuitarHeroLiveGuitarWhammy)
+LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghlAxis == GuitarHeroLiveGuitarWhammy)
 {
 }
 

@@ -27,6 +27,11 @@ enum ReportId {
   ReportIdPs4GetResponse = 0xF1;
   ReportIdPs4GetAuthStatus = 0xF2;
   ReportIdPs4GetAuthPageSize = 0xF3;
+  ReportIdPs502 = 0x02;
+  ReportIdPs5Feature = 0x03;
+  ReportIdPs5SetChallenge = 0xF0;
+  ReportIdPs5GetResponse = 0xF1;
+  ReportIdPs5GetAuthStatus = 0xF2;
 }
 
 enum MappingMode {

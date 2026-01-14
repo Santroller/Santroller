@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, mapping.mapping.proAxis != ProGuitarLeftStickX && mapping.mapping.proAxis != ProGuitarLeftStickY && mapping.mapping.proAxis != ProGuitarTilt)
+ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.proAxis != ProGuitarLeftStickX && mapping.mapping.proAxis != ProGuitarLeftStickY && mapping.mapping.proAxis != ProGuitarTilt)
 {
 }
 

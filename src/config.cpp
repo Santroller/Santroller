@@ -43,13 +43,14 @@
 #include <vector>
 #include <memory>
 std::vector<std::shared_ptr<Instance>> instances;
-std::map<uint8_t, std::shared_ptr<Instance>> active_instances;
+std::map<uint32_t, std::shared_ptr<Instance>> active_instances;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 proto_SubType current_type;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
+bool loadedAny = false;
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -151,19 +152,19 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
     case proto_Mapping_gamepadAxis_tag:
         printf("axis %d\r\n", mapping.mapping.gamepadAxis);
-        instance->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id));
+        instance->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghAxis_tag:
         printf("axis %d\r\n", mapping.mapping.ghAxis);
-        instance->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id));
+        instance->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghButton_tag:
         printf("button %d\r\n", mapping.mapping.ghButton);
-        instance->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id));
+        instance->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_gamepadButton_tag:
         printf("button %d\r\n", mapping.mapping.gamepadButton);
-        instance->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id));
+        instance->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     }
     return true;
@@ -227,7 +228,6 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         instance = std::make_shared<GHArcadeGamepadDevice>();
         break;
     }
-    instance->profile_id = instances.size();
     proto_Profile profile;
     profile.activationMethod.arg = instance.get();
     profile.activationMethod.funcs.decode = &load_activation_method;
@@ -235,15 +235,18 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile.mappings.arg = instance.get();
     pb_decode(stream, proto_Profile_fields, &profile);
     instances.push_back(instance);
+    instance->profile_id = profile.uid;
     auto active = active_instances.find(instance->profile_id);
     if (active != active_instances.end())
     {
         active_instances[instance->profile_id] = instance;
     }
-    if (instance->profile_id == 1) {
-        instance->m_interface = 1;
+    if (profile.defaultProfile && !loadedAny) {
+        loadedAny = true;
+        instance->m_interface = active_instances.size();
         active_instances[instance->profile_id] = instance;
         usb_instances[usb_instances.size()] = instance;
+        printf("instance: %d\r\n", instance->m_interface);
     }
     return true;
 }

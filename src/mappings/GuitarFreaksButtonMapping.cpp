@@ -5,7 +5,7 @@
 #include "main.hpp"
 // TODO: this
 // TODO: need to do some special handling of strum here, since there is one strum button
-GuitarFreaksButtonMapping::GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : ButtonMapping(mapping, std::move(input), id)
+GuitarFreaksButtonMapping::GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
     
 }

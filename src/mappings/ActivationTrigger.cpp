@@ -5,7 +5,7 @@
 #include "main.hpp"
 #include "config.hpp"
 
-InputActivationTrigger::InputActivationTrigger(proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint16_t profile_id) : ActivationTrigger(m_profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input))
+InputActivationTrigger::InputActivationTrigger(proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id) : ActivationTrigger(profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input))
 {
 }
 

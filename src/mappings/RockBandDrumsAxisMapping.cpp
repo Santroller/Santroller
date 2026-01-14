@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickX && mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickY)
+RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickX && mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickY)
 {
 }
 

@@ -11,6 +11,8 @@ message Profile {
   repeated Mapping mappings = 3;
   required string name = 4;
   required SubType deviceToEmulate = 5;
+  required bool defaultProfile = 6;
+  required uint32 uid = 7;
 }
 
 message Config {

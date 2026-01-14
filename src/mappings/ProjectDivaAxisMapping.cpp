@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <config.hpp>
 
-ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : AxisMapping(mapping, std::move(input), id, mapping.mapping.divaAxis == ProjectDivaLeftTrigger || mapping.mapping.divaAxis == ProjectDivaRightTrigger)
+ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.divaAxis == ProjectDivaLeftTrigger || mapping.mapping.divaAxis == ProjectDivaRightTrigger)
 {
 }
 

@@ -155,7 +155,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)
   {
-    s eenReadAnyDeviceString = true;
+    seenReadAnyDeviceString = true;
   }
   switch (index)
   {

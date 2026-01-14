@@ -4,7 +4,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 
-DJHTurntableButtonMapping::DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id) : ButtonMapping(mapping, std::move(input), id)
+DJHTurntableButtonMapping::DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
     
 }

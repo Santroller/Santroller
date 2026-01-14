@@ -333,6 +333,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     instances.clear();
     active_instances.clear();
     usb_instances.clear();
+    UsbDevice::reset_ep();
     switch (mode)
     {
     case ModeHid:

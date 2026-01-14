@@ -74,8 +74,8 @@ public:
   uint16_t report_desc_len();
   uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
-  static void send_event(proto_Event event);
-  static void send_event_for(proto_Event event, uint32_t profile_id);
+  static bool send_event(proto_Event event);
+  static bool send_event_for(proto_Event event, uint32_t profile_id);
 
 private:
   uint32_t lastKeepAlive = 0;

@@ -26,6 +26,10 @@ message ConfigInfo {
   required int32 magic = 3;
 }
 
+message GetActiveProfiles {
+  repeated int32 profiles = 1;
+}
+
 message SetProfileCommand {
   required uint32 profileId = 1;
 }

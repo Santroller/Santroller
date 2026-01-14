@@ -12,6 +12,7 @@ enum ReportId {
   ReportIdKeepalive = 0x25;
   ReportIdBootloader = 0x26;
   ReportIdSetActiveProfile = 0x27;
+  ReportIdGetActiveProfiles = 0x28;
   ReportIdPs301 = 0x01;
   ReportIdPs302 = 0x02;
   ReportIdPs3EE = 0xEE;

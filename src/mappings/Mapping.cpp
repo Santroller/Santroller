@@ -103,19 +103,19 @@ void ButtonMapping::update(bool full_poll)
         {
             calcVal = m_input->tickAnalog() == m_mapping.triggerValue;
         }
-        if (val != m_lastValueTrigger || full_poll)
+        if (val != m_lastValueTrigger || full_poll || m_resend)
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};
-            HIDConfigDevice::send_event_for(event, m_profile);
+            m_resend = !HIDConfigDevice::send_event_for(event, m_profile);
             m_lastValueTrigger = val;
         }
     }
     else
     {
-        if (calcVal != m_lastValue || full_poll)
+        if (calcVal != m_lastValue || full_poll || m_resend)
         {
             proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-            HIDConfigDevice::send_event_for(event, m_profile);
+            m_resend = !HIDConfigDevice::send_event_for(event, m_profile);
         }
     }
     if (calcVal)
@@ -131,12 +131,12 @@ void ButtonMapping::update(bool full_poll)
 void AxisMapping::update(bool full_poll)
 {
     auto val = m_input->tickAnalog();
-    if (val != m_lastValue || full_poll)
+    if (val != m_lastValue || full_poll || m_resend)
     {
         m_lastValue = val;
         m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
-            HIDConfigDevice::send_event_for(event, m_profile);
+        m_resend = !HIDConfigDevice::send_event_for(event, m_profile);
     }
     // TODO: better solution for this probably.
     m_centered = !m_centered;

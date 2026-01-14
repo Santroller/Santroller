@@ -250,17 +250,14 @@ const uint8_t gh5_mapping[] = {
     0xE5, 0xE1, 0xE3, 0xDF};
 const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 uint8_t const desc_hid_report[] =
-    {
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfigInfo)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded)),
-        TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad))};
+    {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad))};
 
 uint8_t const desc_hid_report_non_gamepad[] =
     {
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfigInfo)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded))};
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdSetActiveProfile))};
 
 HIDGamepadDevice::HIDGamepadDevice()
 {
@@ -310,9 +307,9 @@ size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
   {
     m_eps_assigned = true;
     m_epin = next_epin();
-    m_epout = next_epin();
+    m_epout = next_epout();
   }
-  uint8_t desc[] = {TUD_HID_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);
@@ -469,6 +466,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
         printf("Didn't decode cmd?\r\n");
         break;
       }
+      printf("Set id: %d\r\n", cmd.profileId);
       selected_profile = cmd.profileId;
       for (auto &mapping : profiles[selected_profile]->mappings)
       {
@@ -481,6 +479,19 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       break;
     }
   }
+}
+
+bool encode_int32_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+  for (auto &profile : active_profiles)
+  {
+    if (!pb_encode_tag_for_field(stream, field))
+      return false;
+
+    if (!pb_encode_varint(stream, profile))
+      return false;
+  }
+  return true;
 }
 
 uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
@@ -504,6 +515,15 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     start += ret;
     return ret + 1;
   }
+  case ReportId::ReportIdGetActiveProfiles:
+    buffer[0] = report_id;
+    buffer++;
+    auto stream = pb_ostream_from_buffer(buffer, sizeof(buffer)-1);
+    proto_GetActiveProfiles resp;
+    resp.profiles.funcs.encode = encode_int32_array;
+    if (!pb_encode(&stream, proto_GetActiveProfiles_fields, &resp))
+        return 1;
+    return stream.bytes_written + 1;
   case ReportId::ReportIdConfigInfo:
     buffer[0] = report_id;
     buffer++;
@@ -531,42 +551,29 @@ bool HIDConfigDevice::tool_closed()
   return millis() - lastKeepAlive > 500;
 }
 
-void HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
+bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
 {
 
   HIDConfigDevice *dev = HIDConfigDevice::instance;
-  if (!dev || dev->profile_id != profile_id)
+  if (!dev || dev->selected_profile != profile_id)
   {
-    return;
+    return false;
   }
-  send_event(event);
+  return HIDConfigDevice::send_event(event);
 }
 
-void HIDConfigDevice::send_event(proto_Event event)
+bool HIDConfigDevice::send_event(proto_Event event)
 {
   HIDConfigDevice *dev = HIDConfigDevice::instance;
-  if (!dev)
+  if (!dev || dev->tool_closed() || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))
   {
-    return;
-  }
-  // Haven't received data from the tool recently so don't send out events for it
-  if (dev->tool_closed() || !tud_ready())
-  {
-    return;
-  }
-  // Make sure events are always sent out
-  while (!usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))
-  {
-    if (dev->tool_closed() || !tud_ready())
-    {
-      return;
-    }
-    tud_task();
+    return false;
   }
   dev->epin_buf[0] = ReportId::ReportIdConfig;
   pb_ostream_t outputStream = pb_ostream_from_buffer(dev->epin_buf + 1, 63);
   pb_encode(&outputStream, proto_Event_fields, &event);
   usbd_edpt_xfer(TUD_OPT_RHPORT, dev->m_epin, dev->epin_buf, outputStream.bytes_written + 1);
+  return true;
 }
 
 HIDConfigDevice *HIDConfigDevice::instance = nullptr;

@@ -388,7 +388,6 @@ uint32_t copy_config_info(uint8_t *buffer)
     info.dataCrc = footer.dataCrc;
     info.dataSize = footer.dataSize;
     info.magic = footer.magic;
-    info.currentProfile = footer.currentProfile;
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
     if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
     {
@@ -399,16 +398,17 @@ uint32_t copy_config_info(uint8_t *buffer)
 
 void set_current_profile(uint32_t profile)
 {
-    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    if (footer->currentProfile != profile)
-    {
-        footer->currentProfile = profile;
-        EEPROM.commit_now();
-        proto_Config config;
-        load(config);
-        reinit = true;
-        printf("profile set!\r\n");
-    }
+    // TODO: this would work pretty differently now
+    // ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    // if (footer->currentProfile != profile)
+    // {
+    //     footer->currentProfile = profile;
+    //     EEPROM.commit_now();
+    //     proto_Config config;
+    //     load(config);
+    //     reinit = true;
+    //     printf("profile set!\r\n");
+    // }
 }
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
@@ -424,7 +424,6 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     footer->dataCrc = info.dataCrc;
     footer->dataSize = info.dataSize;
     footer->magic = info.magic;
-    footer->currentProfile = info.currentProfile;
     return true;
 }
 

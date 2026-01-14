@@ -48,6 +48,8 @@ void core1()
     {
     }
 }
+
+proto_Config config;
 uint32_t timeSinceMode = millis();
 bool seenPs4 = false;
 bool seenWindowsXb1 = false;
@@ -71,6 +73,7 @@ void hid_task(void)
         seenReadAnyDeviceString = false;
         seenHidDescriptorRead = false;
         tud_deinit(BOARD_TUD_RHPORT);
+        load(config);
         tud_init(BOARD_TUD_RHPORT);
         timeSinceMode = millis();
         return;
@@ -167,7 +170,6 @@ int main()
     adc_init();
     EEPROM.start();
 
-    proto_Config config;
     
     if (!load(config))
     {

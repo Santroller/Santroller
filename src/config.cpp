@@ -142,7 +142,7 @@ std::unique_ptr<Input> make_input(proto_Input input)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    Instance *instance = (Instance *)*arg;
+    auto instance = profiles[**(uint32_t**)arg];
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input);
@@ -174,7 +174,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    Instance *instance = (Instance *)*arg;
+    auto instance = profiles[**(uint32_t**)arg];
     proto_ActivationTrigger trigger;
     pb_decode(stream, proto_ActivationTrigger_fields, &trigger);
     switch (trigger.which_trigger)
@@ -202,10 +202,11 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto old = profiles.find(uid);
     if (old != profiles.end())
     {
+        old->second->mappings.clear();
+        old->second->triggers.clear();
         return true;
     }
     std::shared_ptr<UsbDevice> instance = nullptr;
-    // Instance *instance = nullptr;
     switch (mode)
     {
     case ModeHid:
@@ -258,13 +259,13 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile.uid.arg = &uid;
     pb_decode(stream, proto_Profile_fields, &profile);
     auto instance = std::static_pointer_cast<UsbDevice>(profiles[uid]);
-    auto active = active_profiles.find(instance->profile_id);
+    instance->subtype = profile.deviceToEmulate;
     printf("def: %d %d\r\n", profile.defaultProfile, active_profiles.empty());
-    if ((profile.defaultProfile && active_profiles.empty()) || active != active_profiles.end())
+    if ((profile.defaultProfile && active_profiles.empty()))
     {
         loadedAny = true;
         instance->m_interface = active_instances.size();
-        active_profiles.insert(instance->profile_id);
+        active_profiles.insert(uid);
         active_instances.push_back(instance);
         usb_instances[usb_instances.size()] = instance;
         printf("instance: %d\r\n", instance->m_interface);
@@ -348,6 +349,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.profiles.funcs.decode = &load_profile;
     if (!HIDConfigDevice::tool_closed())
     {
+        // if the tool is open, then we won't be changing the console mode and need to keep interfaces the same
         auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
         update(true);
         return ret;

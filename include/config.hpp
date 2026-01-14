@@ -24,7 +24,7 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update(bool full_poll);
 void set_current_profile(uint32_t profile);
-bool first_load();
+void first_load();
 extern proto_SubType current_type;
 extern ConsoleMode mode;
 extern ConsoleMode newMode;

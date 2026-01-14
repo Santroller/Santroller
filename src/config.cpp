@@ -539,7 +539,7 @@ bool load(proto_Config &config)
     return inner_load(config, footer.currentProfile, dataPtr, footer.dataSize);
 }
 
-bool first_load() {
+void first_load() {
     devices.clear();
     instances.clear();
     active_instances.clear();

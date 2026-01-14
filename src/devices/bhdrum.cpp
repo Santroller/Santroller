@@ -8,9 +8,9 @@ BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t
 
 void BandHeroDrumDevice::update(bool full_poll) {
     m_band_hero_drum.tick();
-    if (m_lastConnected != m_band_hero_drum.isConnected() || full_poll) {
+    if (m_lastConnected != m_band_hero_drum.isConnected() || full_poll || resend) {
         m_lastConnected = m_band_hero_drum.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        resend = !HIDConfigDevice::send_event(event);
     }
 }

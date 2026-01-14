@@ -9,12 +9,12 @@ WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : Device(id), m_extens
 void WiiDevice::update(bool full_poll)
 {
     m_extension.tick();
-    if (m_extension.mType != m_lastExtType || full_poll)
+    if (m_extension.mType != m_lastExtType || full_poll || resend)
     {
 
         m_lastExtType = m_extension.mType;
         proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
-        HIDConfigDevice::send_event(event);
+        resend = !HIDConfigDevice::send_event(event);
     }
 }
 uint16_t WiiDevice::readAxis(proto_WiiAxisType type)

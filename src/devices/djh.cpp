@@ -8,9 +8,9 @@ DjHeroTurntableDevice::DjHeroTurntableDevice(proto_DJHeroTurntableDevice device,
 
 void DjHeroTurntableDevice::update(bool full_poll) {
     m_turntable.tick();
-    if (m_lastConnected != m_turntable.isConnected() || full_poll) {
+    if (m_lastConnected != m_turntable.isConnected() || full_poll || resend) {
         m_lastConnected = m_turntable.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        resend = !HIDConfigDevice::send_event(event);
     }
 }

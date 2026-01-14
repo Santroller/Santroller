@@ -10,6 +10,7 @@ public:
 protected:
     uint16_t m_id;
     bool m_lastConnected;
+    bool resend = false;
 };
 
 class LedDevice : public Device

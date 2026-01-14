@@ -8,9 +8,9 @@ CrazyGuitarNeckDevice::CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device,
 
 void CrazyGuitarNeckDevice::update(bool full_poll) {
     m_crazy_guitar_neck.tick();
-    if (m_lastConnected != m_crazy_guitar_neck.isConnected() || full_poll) {
+    if (m_lastConnected != m_crazy_guitar_neck.isConnected() || full_poll || resend) {
         m_lastConnected = m_crazy_guitar_neck.isConnected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        resend = !HIDConfigDevice::send_event(event);
     }
 }

@@ -24,6 +24,7 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update(bool full_poll);
 void set_current_profile(uint32_t profile);
+bool first_load();
 extern proto_SubType current_type;
 extern ConsoleMode mode;
 extern ConsoleMode newMode;
@@ -34,7 +35,7 @@ extern std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 extern std::map<uint32_t, std::shared_ptr<Device>> devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;
 extern std::map<uint32_t, std::shared_ptr<Instance>> profiles;
-std::set<uint32_t> active_profiles;
+extern std::set<uint32_t> active_profiles;
 inline bool hid_based(void)
 {
     return mode == ModeHid || mode == ModePs3 || mode == ModePs4 || mode == ModeWiiRb || mode == ModeSwitch;

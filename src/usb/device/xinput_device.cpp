@@ -353,7 +353,7 @@ void XInputGamepadDevice::initialize()
 }
 void XInputGamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epout_buf;
     report->rid = 0;

@@ -76,7 +76,7 @@ void PS5GamepadDevice::initialize()
 }
 void PS5GamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     gamepad->report_id = 1;

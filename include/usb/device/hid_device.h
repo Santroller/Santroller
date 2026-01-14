@@ -52,8 +52,8 @@ public:
   uint8_t itf_protocol;  // Boot mouse or keyboard
   uint8_t protocol_mode; // Boot (0) or Report protocol (1)
   uint8_t idle_rate;     // up to application to handle idle rate
-  bool clearedIn;
-  bool clearedOut;
+  bool clearedIn = false;
+  bool clearedOut = false;
   virtual const uint8_t *report_descriptor() = 0;
   virtual uint16_t report_desc_len() = 0;
   virtual uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen) = 0;
@@ -66,7 +66,7 @@ public:
   HIDConfigDevice();
   void initialize();
   void process(bool full_poll);
-  bool tool_closed();
+  static bool tool_closed();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
   void device_descriptor(tusb_desc_device_t *desc);
@@ -76,12 +76,14 @@ public:
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   static bool send_event(proto_Event event);
   static bool send_event_for(proto_Event event, uint32_t profile_id);
+  static HIDConfigDevice* instance;
 
 private:
   uint32_t lastKeepAlive = 0;
   uint32_t start = 0;
   uint32_t selected_profile = 0;
-  static HIDConfigDevice* instance;
+  bool tool_seen = false;
+  bool profile_selected = false;
 };
 class HIDGamepadDevice : public HIDDevice
 {

@@ -6,14 +6,15 @@ import "enums.proto";
 import "device.proto"; 
 
 message Profile {
-  required FaceButtonMappingMode faceButtonMappingMode = 1;
-  repeated ActivationTrigger activationMethod = 2;
-  repeated Mapping mappings = 3;
-  required string name = 4;
-  required SubType deviceToEmulate = 5;
-  required bool defaultProfile = 6;
-  required uint32 uid = 7;
+  required uint32 uid = 1;
+  required FaceButtonMappingMode faceButtonMappingMode = 2;
+  repeated ActivationTrigger activationMethod = 3;
+  repeated Mapping mappings = 4;
+  required string name = 5;
+  required SubType deviceToEmulate = 6;
+  required bool defaultProfile = 7;
 }
+
 
 message Config {
   repeated Device devices = 1;

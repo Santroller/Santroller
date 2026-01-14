@@ -148,7 +148,7 @@ void PS3GamepadDevice::initialize()
 }
 void PS3GamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     if (subtype == Gamepad)
     {

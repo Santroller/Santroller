@@ -40,7 +40,7 @@ void PS4GamepadDevice::initialize()
 }
 void PS4GamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     // TODO: if ps5 auth dongle is plugged in, jump to PS5 mode here
     PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)epin_buf;

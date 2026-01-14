@@ -19,6 +19,7 @@ public:
     uint8_t m_interface;
     static inline uint8_t next_epin()
     {
+        printf("epin: %d\r\n", m_last_epin);
         return m_last_epin++;
     }
     static inline uint8_t next_epout()

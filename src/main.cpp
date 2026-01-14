@@ -168,10 +168,12 @@ int main()
     EEPROM.start();
 
     proto_Config config;
+    
     if (!load(config))
     {
         // config was not valid, save a empty config
         save(&config);
+        first_load();
     }
     printf("init %d\r\n", mode);
 

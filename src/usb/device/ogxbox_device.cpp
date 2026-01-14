@@ -265,7 +265,7 @@ void OGXboxGamepadDevice::initialize()
 }
 void OGXboxGamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epout_buf;
     report->rid = 0;

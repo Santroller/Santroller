@@ -193,8 +193,17 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
     }
     return true;
 }
-bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
+bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    uint64_t uid;
+    if (!pb_decode_varint(stream, &uid))
+        return false;
+    **(uint32_t**)arg = uid;
+    auto old = profiles.find(uid);
+    if (old != profiles.end())
+    {
+        return true;
+    }
     std::shared_ptr<UsbDevice> instance = nullptr;
     // Instance *instance = nullptr;
     switch (mode)
@@ -231,17 +240,28 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         instance = std::make_shared<GHArcadeGamepadDevice>();
         break;
     }
+    instance->profile_id = uid;
+    instances.push_back(instance);
+    profiles[uid] = instance;
+    return true;
+}
+bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+
+    uint32_t uid;
     proto_Profile profile;
-    profile.activationMethod.arg = instance.get();
     profile.activationMethod.funcs.decode = &load_activation_method;
     profile.mappings.funcs.decode = &load_mapping;
-    profile.mappings.arg = instance.get();
+    profile.uid.funcs.decode = &load_uid;
+    profile.activationMethod.arg = &uid;
+    profile.mappings.arg = &uid;
+    profile.uid.arg = &uid;
     pb_decode(stream, proto_Profile_fields, &profile);
-    instances.push_back(instance);
-    instance->profile_id = profile.uid;
-    profiles[profile.uid] = instance;
+    auto instance = std::static_pointer_cast<UsbDevice>(profiles[uid]);
     auto active = active_profiles.find(instance->profile_id);
-    if ((profile.defaultProfile && active_profiles.empty()) || active != active_profiles.end()) {
+    printf("def: %d %d\r\n", profile.defaultProfile, active_profiles.empty());
+    if ((profile.defaultProfile && active_profiles.empty()) || active != active_profiles.end())
+    {
         loadedAny = true;
         instance->m_interface = active_instances.size();
         active_profiles.insert(instance->profile_id);
@@ -285,6 +305,7 @@ bool save(proto_Config *config)
     pb_ostream_t outputStream = pb_ostream_from_buffer(EEPROM.writeCache, EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     if (!pb_encode(&outputStream, proto_Config_fields, config))
     {
+        printf("f1\r\n");
         return false;
     }
 
@@ -299,6 +320,7 @@ bool save(proto_Config *config)
     const ConfigFooter &oldFooter = *reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     if (newFooter == oldFooter)
     {
+        printf("f2\r\n");
         // The data has not changed, no saving neccessary.
         return true;
     }
@@ -320,20 +342,21 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
     pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
-    config.devices.funcs.decode = nullptr;
-    config.profiles.funcs.decode = nullptr;
-    pb_decode(&inputStream, proto_Config_fields, &config);
-    // now actually load the entire config
-    inputStream = pb_istream_from_buffer(dataPtr, size);
-    config.devices.funcs.decode = &load_device;
     uint16_t dev_id = 0;
     config.devices.arg = &dev_id;
+    config.devices.funcs.decode = &load_device;
     config.profiles.funcs.decode = &load_profile;
+    if (!HIDConfigDevice::tool_closed())
+    {
+        auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+        update(true);
+        return ret;
+    }
     devices.clear();
     instances.clear();
     active_instances.clear();
     usb_instances.clear();
-    UsbDevice::reset_ep();
+    profiles.clear();
     switch (mode)
     {
     case ModeHid:
@@ -512,4 +535,17 @@ bool load(proto_Config &config)
     }
 
     return inner_load(config, footer.currentProfile, dataPtr, footer.dataSize);
+}
+
+bool first_load() {
+    devices.clear();
+    instances.clear();
+    active_instances.clear();
+    usb_instances.clear();
+    profiles.clear();
+    auto confDevice = std::make_shared<HIDConfigDevice>();
+    confDevice->m_interface = instances.size();
+    instances.push_back(confDevice);
+    active_instances.push_back(confDevice);
+    usb_instances[confDevice->m_interface] = confDevice;
 }

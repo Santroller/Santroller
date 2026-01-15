@@ -543,7 +543,7 @@ static void config_driver_mount_complete(uint8_t dev_addr, uint8_t instance)
 {
     xinputh_interface_t *hid_itf = get_instance(dev_addr, instance);
     // enumeration is complete
-    tuh_xinput_mount_cb(dev_addr, instance, hid_itf->type, hid_itf->subtype);
+    tuh_xinput_mount_cb(dev_addr, instance, hid_itf->itf_num, hid_itf->type, hid_itf->subtype);
 
     // notify usbh that driver enumeration is complete
     usbh_driver_set_config_complete(dev_addr, hid_itf->itf_num);

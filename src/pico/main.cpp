@@ -416,14 +416,14 @@ uint8_t read_usb_host_devices(uint8_t *buf)
     return total_usb_host_devices * 2;
 }
 
-bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t console_type, uint8_t sub_type)
+bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t itf_num, uint8_t console_type, uint8_t sub_type)
 {
     printf("Detected controller: %d (%d) on %d, %d\r\n", console_type, sub_type, dev_addr, instance);
     uint16_t host_vid = 0;
     uint16_t host_pid = 0;
     tuh_vid_pid_get(dev_addr, &host_vid, &host_pid);
     printf("VID: %04x, PID: %04x \r\n", host_vid, host_pid);
-    USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance, DRUM_UNKNOWN};
+    USB_Device_Type_t type = {console_type, sub_type, dev_addr, instance, itf_num, DRUM_UNKNOWN};
     tuh_descriptor_get_device_sync(dev_addr, buf, sizeof(USB_DEVICE_DESCRIPTOR));
     USB_DEVICE_DESCRIPTOR *desc = (USB_DEVICE_DESCRIPTOR *)buf;
     get_usb_device_type_for(host_vid, host_pid, desc->bcdDevice, &type);

@@ -39,6 +39,7 @@ typedef struct {
     uint8_t sub_type;
     uint8_t dev_addr;
     uint8_t instance;
+    uint8_t interface;
     uint8_t drum_type;
     uint8_t pickup;
     uint8_t whammy;

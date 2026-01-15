@@ -19,9 +19,9 @@ for (int i = 0; i < device_count; i++) {
     // Poke any GHL guitars to keep em alive
     if (poke_ghl && device_type.sub_type == LIVE_GUITAR) {
         if (device_type.console_type == PS3) {
-            transfer_with_usb_controller(device_type.dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0201, 0, sizeof(ghl_ps3wiiu_magic_data), ghl_ps3wiiu_magic_data, NULL);
+            transfer_with_usb_controller(device_type, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0201, sizeof(ghl_ps3wiiu_magic_data), ghl_ps3wiiu_magic_data, NULL);
         } else if (device_type.console_type == PS4) {
-            transfer_with_usb_controller(device_type.dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0201, 0, sizeof(ghl_ps4_magic_data), ghl_ps4_magic_data, NULL);
+            transfer_with_usb_controller(device_type, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0201, sizeof(ghl_ps4_magic_data), ghl_ps4_magic_data, NULL);
         } else if (device_type.console_type == XBOXONE) {
             if (ghl_sequence_number_host == 0) {
                 ghl_sequence_number_host = 1;

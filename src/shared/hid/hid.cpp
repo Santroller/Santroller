@@ -258,7 +258,7 @@ void handle_player_leds(uint8_t player) {
                 if (type.sub_type == GAMEPAD) {
                     ps3_output_report *report = &ps3_output_reports[i];
                     report->leds_bitmap |= _BV(player);
-                    transfer_with_usb_controller(type.dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report, NULL);
+                    transfer_with_usb_controller(type, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, sizeof(ps3_output_report), (uint8_t *)report, NULL);
                     // send_report_to_controller(type.dev_addr, (uint8_t *)report, sizeof(report));
                 }
                 return;
@@ -270,7 +270,7 @@ void handle_player_leds(uint8_t player) {
                     report->lightbar_red = ps4_colors[player - 1][0];
                     report->lightbar_green = ps4_colors[player - 1][1];
                     report->lightbar_blue = ps4_colors[player - 1][2];
-                    transfer_with_usb_controller(type.dev_addr, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, 0x00, sizeof(ps4_output_report), (uint8_t *)report, NULL);
+                    transfer_with_usb_controller(type, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0205, sizeof(ps4_output_report), (uint8_t *)report, NULL);
                 }
                 return;
             }
@@ -372,7 +372,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                 ps3_output_report *report = &ps3_output_reports[i];
                 report->rumble.left_motor_force = rumble_left;
                 report->rumble.right_motor_on = rumble_right != 0;
-                transfer_with_usb_controller(i, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, 0x00, sizeof(ps3_output_report), (uint8_t *)report, NULL);
+                transfer_with_usb_controller(type, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0201, sizeof(ps3_output_report), (uint8_t *)report, NULL);
                 return;
             }
             case PS4: {

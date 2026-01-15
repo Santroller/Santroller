@@ -806,7 +806,7 @@ const PROGMEM uint8_t ps4_feature_config[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-AuthPageSizeReport ps4_pagesize_report = {
+const PROGMEM AuthPageSizeReport ps4_pagesize_report = {
     type : 0xF3,
     u1 : 0x00,
     size_challenge : 0x38,
@@ -1185,11 +1185,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             case GET_RESPONSE:
             {
 
-                return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, get_device_address_for(PS4).interface, wLength, requestBuffer, status);
+                return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wLength, requestBuffer, status);
             }
             case GET_AUTH_STATUS:
             {
-                return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, get_device_address_for(PS4).interface, wLength, requestBuffer, status);
+                return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wLength, requestBuffer, status);
             }
             case GET_AUTH_PAGE_SIZE:
             {
@@ -1199,14 +1199,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                     return 0;
                 }
                 // Attempt to read the page size from the connected controller
-                bool auth_read_success = true;
-                uint32_t len = transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_GET_REPORT, GET_AUTH_PAGE_SIZE, get_device_address_for(PS4).interface, sizeof(AuthPageSizeReport), (uint8_t *)&ps4_pagesize_report, &auth_read_success);
-                if (!auth_read_success)
+                uint32_t len = transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wLength, requestBuffer, NULL);
+                if (!len)
                 {
                     // On a DS4, this will fail but we have the default page size report for that scenario.
                     memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
+                    len = sizeof(ps4_pagesize_report);
                 }
-                return sizeof(ps4_pagesize_report);
+                return len;
             }
 #else
             case GET_AUTH_PAGE_SIZE:
@@ -1229,11 +1229,11 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
 #if USB_HOST_STACK
             case GET_RESPONSE:
             {
-                return transfer_with_usb_controller(get_device_address_for(PS5).dev_addr, requestType, request, wValue, get_device_address_for(PS5).interface, wLength, requestBuffer, status);
+                return transfer_with_usb_controller(get_device_address_for(PS5), requestType, request, wValue, wLength, requestBuffer, status);
             }
             case GET_AUTH_STATUS:
             {
-                return transfer_with_usb_controller(get_device_address_for(PS5).dev_addr, requestType, request, wValue, get_device_address_for(PS5).interface, wLength, requestBuffer, status);
+                return transfer_with_usb_controller(get_device_address_for(PS5), requestType, request, wValue, wLength, requestBuffer, status);
             }
 #endif
             }
@@ -1257,7 +1257,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     else if (request == HID_REQUEST_SET_REPORT && consoleType == PS4 && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS))
     {
 #if USB_HOST_STACK
-        return transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
+        return transfer_with_usb_controller(get_device_address_for(PS4), requestType, request, wValue, wLength, requestBuffer, status);
 #else
         return 0;
 #endif
@@ -1265,7 +1265,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     else if (request == HID_REQUEST_SET_REPORT && consoleType == PS5 && wValue == SET_CHALLENGE && requestType == (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS))
     {
 #if USB_HOST_STACK
-        return transfer_with_usb_controller(get_device_address_for(PS5).dev_addr, requestType, request, wValue, wIndex, wLength, requestBuffer, status);
+        return transfer_with_usb_controller(get_device_address_for(PS5), requestType, request, wValue, wLength, requestBuffer, status);
 #else
         return 0;
 #endif

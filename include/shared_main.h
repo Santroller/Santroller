@@ -2,6 +2,17 @@
 #include "reports/controller_reports.h"
 #include "config.h"
 
+typedef struct {
+    uint8_t console_type;
+    uint8_t sub_type;
+    uint8_t dev_addr;
+    uint8_t instance;
+    uint8_t interface;
+    uint8_t drum_type;
+    uint8_t pickup;
+    uint8_t whammy;
+    bool xone_guide;
+} USB_Device_Type_t;
 void init_main(void);
 
 void device_reset(void);
@@ -9,7 +20,7 @@ void tick(void);
 void tick_wiioutput();
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type);
 void reset_usb(void);
-uint32_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool* status);
+uint32_t transfer_with_usb_controller(const USB_Device_Type_t dev, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wLength, uint8_t *buffer, bool *status);
 void send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t *report, uint8_t len);
 void send_report_to_pc(const void *report, uint8_t len);
 bool ready_for_next_packet(void);
@@ -34,17 +45,6 @@ void offNote(uint8_t channel, uint8_t note, uint8_t velocity);
 void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2);
 void onPitchBend(uint8_t channel, int pitch);
 
-typedef struct {
-    uint8_t console_type;
-    uint8_t sub_type;
-    uint8_t dev_addr;
-    uint8_t instance;
-    uint8_t interface;
-    uint8_t drum_type;
-    uint8_t pickup;
-    uint8_t whammy;
-    bool xone_guide;
-} USB_Device_Type_t;
 void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_Device_Type_t *type);
 typedef struct {
     // If this bit is set, then an led effect (like star power) has overridden the leds

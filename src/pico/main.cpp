@@ -468,8 +468,8 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t itf_num, ui
         uint8_t data2[] = {0x06, 0x00, 0x00};
         for (int i = 0; i < 10; i++)
         {
-            transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_SET_REPORT, 0x0300, 1, 3, data2, NULL);
-            transfer_with_usb_controller(dev_addr, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_GET_REPORT, 0x0300, 1, 3, data, NULL);
+            transfer_with_usb_controller(type, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_SET_REPORT, 0x0300, sizeof(data2), data2, NULL);
+            transfer_with_usb_controller(type, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS | USB_SETUP_RECIPIENT_INTERFACE, HID_REQUEST_GET_REPORT, 0x0300, sizeof(data), data, NULL);
             if (data[0])
             {
                 break;
@@ -554,6 +554,14 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t itf_num, ui
         printf("Found PS3 controller\r\n");
         printf("Sub type: %d\r\n", type.sub_type);
         ps3_controller_connected(dev_addr, host_vid, host_pid);
+
+        if (host_vid == SONY_VID && host_pid == SONY_DS3_PID)
+        {
+            // Enable PS3 reports
+            uint8_t hid_command_enable[] = {0x42, 0x0c, 0x00, 0x00};
+            transfer_with_usb_controller(type, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x03F4, sizeof(hid_command_enable), hid_command_enable, NULL);
+            handle_player_leds(0);
+        }
         break;
     case PS4:
         usb_host_devices[total_usb_host_devices].type = type;
@@ -689,7 +697,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
                         0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-                    transfer_with_usb_controller(dev_addr, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0300, 0, sizeof(hid_command_enable), hid_command_enable, NULL);
+                    transfer_with_usb_controller(usb_host_devices[i].type, USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS, HID_REQUEST_SET_REPORT, 0x0300, sizeof(hid_command_enable), hid_command_enable, NULL);
                 }
             }
             if (usb_host_devices[i].type.console_type == XBOX360_W)
@@ -929,9 +937,9 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     return NULL;
 }
 
-uint32_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool *status)
+uint32_t transfer_with_usb_controller(const USB_Device_Type_t dev, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wLength, uint8_t *buffer, bool *status)
 {
-    if (!dev_addr)
+    if (!dev.dev_addr)
     {
         // Device is not connected yet!
         if (status)
@@ -944,11 +952,11 @@ uint32_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requ
         bmRequestType : requestType,
         bRequest : request,
         wValue : wValue,
-        wIndex : wIndex,
+        wIndex : dev.interface,
         wLength : wLength
     };
     tuh_xfer_t xfer = {};
-    xfer.daddr = dev_addr;
+    xfer.daddr = dev.dev_addr;
     xfer.ep_addr = 0;
     xfer.setup = &setup;
     xfer.buffer = buffer;

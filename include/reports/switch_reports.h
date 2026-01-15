@@ -49,6 +49,47 @@ typedef struct
     uint8_t rightTrigger;
     uint8_t imuLength;
     uint8_t motionBuffer[10];
+} __attribute__((packed)) Switch2ProGamepadGC_Data_t;
+
+typedef struct
+{
+    uint8_t reportId; // 0x09
+    uint8_t packetId; // counts up for each packet
+    uint8_t status;   // 0x20
+    uint8_t b : 1;
+    uint8_t a : 1;
+    uint8_t y : 1;
+    uint8_t x : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t r2 : 1;
+    uint8_t start : 1;
+    uint8_t rightThumbClick: 1;
+
+    uint8_t dpadDown : 1;
+    uint8_t dpadRight : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadUp : 1;
+    uint8_t leftShoulder : 1;
+    uint8_t l2 : 1;
+    uint8_t back : 1;
+    uint8_t leftThumbClick: 1;
+
+    uint8_t guide : 1;
+    uint8_t capture : 1;
+    uint8_t gl : 1;
+    uint8_t gr : 1;
+    uint8_t c : 1;
+    uint8_t : 3;
+
+    uint16_t leftStickX : 12;
+    uint16_t leftStickY : 12;
+    uint16_t rightStickX : 12;
+    uint16_t rightStickY : 12;
+    uint8_t vibrationCode;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
+    uint8_t imuLength;
+    uint8_t motionBuffer[10];
 } __attribute__((packed)) Switch2ProGamepad_Data_t;
 
 typedef struct {

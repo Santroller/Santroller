@@ -456,7 +456,8 @@ int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min,
     {
         val = INT16_MIN;
     }
-    if (section == 0) {
+    if (section == 0)
+    {
         if (val < center)
         {
             if ((center - val) < deadzone)
@@ -479,9 +480,13 @@ int16_t handle_calibration_xbox(int16_t previous, int32_t orig_val, int16_t min,
                 val = map(val, center + deadzone, max, 0, INT16_MAX);
             }
         }
-    } else if (section == 1) {
+    }
+    else if (section == 1)
+    {
         val = map(val, min, max, INT16_MIN, 0);
-    } else if (section == 2) {
+    }
+    else if (section == 2)
+    {
         val = map(val, min, max, 0, INT16_MAX);
     }
     if (val > INT16_MAX)
@@ -776,7 +781,8 @@ long lastTick;
 uint8_t keyboard_report = 0;
 void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_type, USB_Host_Data_t *usb_host_data)
 {
-    if (!len) {
+    if (!len)
+    {
         return;
     }
     switch (device_type.console_type)
@@ -1069,7 +1075,8 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             {
                 usb_host_data->whammy = report->whammy;
             }
-            if (report->slider != PS3_STICK_CENTER) {
+            if (report->slider != PS3_STICK_CENTER)
+            {
                 usb_host_data->slider = report->slider;
             }
             break;
@@ -1498,10 +1505,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         case ROCK_BAND_DRUMS:
         {
             PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)data;
-            uint8_t redVelocity = 255-report->redVelocity;
-            uint8_t greenVelocity = 255-report->greenVelocity;
-            uint8_t yellowVelocity = 255-report->yellowVelocity;
-            uint8_t blueVelocity = 255-report->blueVelocity;
+            uint8_t redVelocity = 255 - report->redVelocity;
+            uint8_t greenVelocity = 255 - report->greenVelocity;
+            uint8_t yellowVelocity = 255 - report->yellowVelocity;
+            uint8_t blueVelocity = 255 - report->blueVelocity;
             bool kick1 = report->leftShoulder;
             bool kick2 = report->rightShoulder;
             usb_host_data->back |= report->back;
@@ -1978,51 +1985,103 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         {
         case GAMEPAD:
         {
-            Switch2ProGamepad_Data_t *report = (Switch2ProGamepad_Data_t *)data;
-            usb_host_data->dpadLeft |= report->dpadLeft;
-            usb_host_data->dpadRight |= report->dpadRight;
-            usb_host_data->dpadUp |= report->dpadUp;
-            usb_host_data->dpadDown |= report->dpadDown;
-            usb_host_data->green |= report->a;
-            usb_host_data->red |= report->b;
-            usb_host_data->yellow |= report->y;
-            usb_host_data->blue |= report->x;
-            usb_host_data->orange |= report->leftShoulder;
-            usb_host_data->a |= report->a;
-            usb_host_data->b |= report->b;
-            usb_host_data->x |= report->x;
-            usb_host_data->y |= report->y;
-            usb_host_data->leftShoulder |= report->leftShoulder;
-            usb_host_data->rightShoulder |= report->rightShoulder;
-            usb_host_data->back |= report->back;
-            usb_host_data->start |= report->start;
-            usb_host_data->guide |= report->guide;
-            usb_host_data->capture |= report->capture;
-            usb_host_data->leftThumbClick |= report->leftThumbClick;
-            usb_host_data->rightThumbClick |= report->rightThumbClick;
-            if (report->leftTrigger)
+            if (data[0] == SWITCH_2_GC_FULL_REPORT_ID)
             {
-                usb_host_data->leftTrigger = report->leftTrigger << 8;
+                Switch2ProGamepadGC_Data_t *report = (Switch2ProGamepadGC_Data_t *)data;
+                usb_host_data->dpadLeft |= report->dpadLeft;
+                usb_host_data->dpadRight |= report->dpadRight;
+                usb_host_data->dpadUp |= report->dpadUp;
+                usb_host_data->dpadDown |= report->dpadDown;
+                usb_host_data->green |= report->a;
+                usb_host_data->red |= report->b;
+                usb_host_data->yellow |= report->y;
+                usb_host_data->blue |= report->x;
+                usb_host_data->orange |= report->leftShoulder;
+                usb_host_data->a |= report->a;
+                usb_host_data->b |= report->b;
+                usb_host_data->x |= report->x;
+                usb_host_data->y |= report->y;
+                usb_host_data->leftShoulder |= report->leftShoulder;
+                usb_host_data->rightShoulder |= report->rightShoulder;
+                usb_host_data->back |= report->back;
+                usb_host_data->start |= report->start;
+                usb_host_data->guide |= report->guide;
+                usb_host_data->capture |= report->capture;
+                usb_host_data->leftThumbClick |= report->leftThumbClick;
+                usb_host_data->rightThumbClick |= report->rightThumbClick;
+                if (report->leftTrigger)
+                {
+                    usb_host_data->leftTrigger = report->leftTrigger << 8;
+                }
+                if (report->rightTrigger)
+                {
+                    usb_host_data->rightTrigger = report->rightTrigger << 8;
+                }
+                if (report->leftStickX != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->leftStickX = (report->leftStickX - SWITCH_2_STICK_CENTER) << 4;
+                }
+                if (report->leftStickY != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->leftStickY = ((report->leftStickY - SWITCH_2_STICK_CENTER)) << 4;
+                }
+                if (report->rightStickX != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->rightStickX = (report->rightStickX - SWITCH_2_STICK_CENTER) << 4;
+                }
+                if (report->rightStickY != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->rightStickY = ((report->rightStickY - SWITCH_2_STICK_CENTER)) << 4;
+                }
             }
-            if (report->rightTrigger)
+            else
             {
-                usb_host_data->rightTrigger = report->rightTrigger << 8;
-            }
-            if (report->leftStickX != SWITCH_2_STICK_CENTER)
-            {
-                usb_host_data->leftStickX = (report->leftStickX - SWITCH_2_STICK_CENTER) << 4;
-            }
-            if (report->leftStickY != SWITCH_2_STICK_CENTER)
-            {
-                usb_host_data->leftStickY = ((report->leftStickY - SWITCH_2_STICK_CENTER)) << 4;
-            }
-            if (report->rightStickX != SWITCH_2_STICK_CENTER)
-            {
-                usb_host_data->rightStickX = (report->rightStickX - SWITCH_2_STICK_CENTER) << 4;
-            }
-            if (report->rightStickY != SWITCH_2_STICK_CENTER)
-            {
-                usb_host_data->rightStickY = ((report->rightStickY - SWITCH_2_STICK_CENTER)) << 4;
+                Switch2ProGamepad_Data_t *report = (Switch2ProGamepad_Data_t *)data;
+                usb_host_data->dpadLeft |= report->dpadLeft;
+                usb_host_data->dpadRight |= report->dpadRight;
+                usb_host_data->dpadUp |= report->dpadUp;
+                usb_host_data->dpadDown |= report->dpadDown;
+                usb_host_data->green |= report->a;
+                usb_host_data->red |= report->b;
+                usb_host_data->yellow |= report->y;
+                usb_host_data->blue |= report->x;
+                usb_host_data->orange |= report->leftShoulder;
+                usb_host_data->a |= report->a;
+                usb_host_data->b |= report->b;
+                usb_host_data->x |= report->x;
+                usb_host_data->y |= report->y;
+                usb_host_data->leftShoulder |= report->leftShoulder;
+                usb_host_data->rightShoulder |= report->rightShoulder;
+                usb_host_data->back |= report->back;
+                usb_host_data->start |= report->start;
+                usb_host_data->guide |= report->guide;
+                usb_host_data->capture |= report->capture;
+                usb_host_data->leftThumbClick |= report->leftThumbClick;
+                usb_host_data->rightThumbClick |= report->rightThumbClick;
+                if (report->l2)
+                {
+                    usb_host_data->leftTrigger = 0xFFFF;
+                }
+                if (report->r2)
+                {
+                    usb_host_data->rightTrigger = 0xFFFF;
+                }
+                if (report->leftStickX != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->leftStickX = (report->leftStickX - SWITCH_2_STICK_CENTER) << 4;
+                }
+                if (report->leftStickY != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->leftStickY = ((report->leftStickY - SWITCH_2_STICK_CENTER)) << 4;
+                }
+                if (report->rightStickX != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->rightStickX = (report->rightStickX - SWITCH_2_STICK_CENTER) << 4;
+                }
+                if (report->rightStickY != SWITCH_2_STICK_CENTER)
+                {
+                    usb_host_data->rightStickY = ((report->rightStickY - SWITCH_2_STICK_CENTER)) << 4;
+                }
             }
             break;
         }
@@ -3151,7 +3210,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         GipPacket_t *packet = (GipPacket_t *)report;
         report_data = (USB_Report_Data_t *)packet->data;
         updateSequence = true;
-        
+
 #if DEVICE_TYPE_IS_LIVE_GUITAR
         packet_size = sizeof(XboxOneGHLGuitarWithGamepad_Data_t);
         uint8_t cmp = memcmp(last_report, report_data, report_size);
@@ -3191,7 +3250,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->whammy = INT16_MIN;
 #endif
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
-// rb drums have some weird logic so this is what we need to send when nothing is hit
+        // rb drums have some weird logic so this is what we need to send when nothing is hit
         report->redVelocity = -1;
         report->blueVelocity = -1;
         report->greenVelocity = 0;
@@ -3402,17 +3461,17 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #ifdef MUSTANG_NECK_SPI_PORT
-        report->lowEFret = lastProtar.lowEFret;
-        report->aFret = lastProtar.aFret;
-        report->dFret = lastProtar.dFret;
-        report->gFret = lastProtar.gFret;
-        report->bFret = lastProtar.bFret;
-        report->highEFret = lastProtar.highEFret;
-        report->green = lastProtar.green;
-        report->red = lastProtar.red;
-        report->yellow = lastProtar.yellow;
-        report->blue = lastProtar.blue;
-        report->orange = lastProtar.orange;
+            report->lowEFret = lastProtar.lowEFret;
+            report->aFret = lastProtar.aFret;
+            report->dFret = lastProtar.dFret;
+            report->gFret = lastProtar.gFret;
+            report->bFret = lastProtar.bFret;
+            report->highEFret = lastProtar.highEFret;
+            report->green = lastProtar.green;
+            report->red = lastProtar.red;
+            report->yellow = lastProtar.yellow;
+            report->blue = lastProtar.blue;
+            report->orange = lastProtar.orange;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
             TRANSLATE_TO_PRO_GUITAR(bt_data)
@@ -3567,10 +3626,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 PS3_REPORT *report = (PS3_REPORT *)report_data;
 // rb drums have inverted velocity so they start at 0
 #if DEVICE_TYPE == ROCK_BAND_DRUMS
-        report->redVelocity = 0;
-        report->blueVelocity = 0;
-        report->greenVelocity = 0;
-        report->yellowVelocity = 0;
+                report->redVelocity = 0;
+                report->blueVelocity = 0;
+                report->greenVelocity = 0;
+                report->yellowVelocity = 0;
 #endif
 #if DEVICE_TYPE == ROCK_BAND_GUITAR
                 report->whammy = 0;
@@ -3584,18 +3643,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #ifdef MUSTANG_NECK_SPI_PORT
-        report->lowEFret = lastProtar.lowEFret;
-        report->aFret = lastProtar.aFret;
-        report->dFret = lastProtar.dFret;
-        report->gFret = lastProtar.gFret;
-        report->bFret = lastProtar.bFret;
-        report->highEFret = lastProtar.highEFret;
-        report->green = lastProtar.green;
-        report->red = lastProtar.red;
-        report->yellow = lastProtar.yellow;
-        report->blue = lastProtar.blue;
-        report->orange = lastProtar.orange;
-        report->soloFlag = lastProtar.soloFlag;
+                report->lowEFret = lastProtar.lowEFret;
+                report->aFret = lastProtar.aFret;
+                report->dFret = lastProtar.dFret;
+                report->gFret = lastProtar.gFret;
+                report->bFret = lastProtar.bFret;
+                report->highEFret = lastProtar.highEFret;
+                report->green = lastProtar.green;
+                report->red = lastProtar.red;
+                report->yellow = lastProtar.yellow;
+                report->blue = lastProtar.blue;
+                report->orange = lastProtar.orange;
+                report->soloFlag = lastProtar.soloFlag;
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
                 TRANSLATE_TO_PRO_GUITAR(bt_data)
@@ -3681,7 +3740,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     }
     TICK_RESET
     // Some hosts want packets sent every frame
-    if (last_report && output_console_type != ARCADE && output_console_type != OG_XBOX && output_console_type != PS4  && output_console_type != PS5 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && !updateHIDSequence)
+    if (last_report && output_console_type != ARCADE && output_console_type != OG_XBOX && output_console_type != PS4 && output_console_type != PS5 && output_console_type != IOS_FESTIVAL && output_console_type != PS3 && output_console_type != BLUETOOTH_REPORT && !updateHIDSequence)
     {
         uint8_t cmp = memcmp(last_report, report_data, report_size);
         if (cmp == 0)
@@ -3809,30 +3868,30 @@ bool tick_usb(void)
             return true;
         }
     }
-// #if DEVICE_TYPE == SKYLANDERS
-//     if (consoleType == XBOX360) {
-//         size = 32;
-//         switch (portal_state) {
-//             case 0:
-//                 memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
-//                 break;
-//             case 1:
-//                 memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
-//                 break;
-//         }
-//     }
-// if (consoleType == XBOXONE) {
-//     size = 32;
-//     switch (portal_state) {
-//         case 0:
-//             memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
-//             break;
-//         case 1:
-//             memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
-//             break;
-//     }
-// }
-// #endif
+    // #if DEVICE_TYPE == SKYLANDERS
+    //     if (consoleType == XBOX360) {
+    //         size = 32;
+    //         switch (portal_state) {
+    //             case 0:
+    //                 memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
+    //                 break;
+    //             case 1:
+    //                 memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
+    //                 break;
+    //         }
+    //     }
+    // if (consoleType == XBOXONE) {
+    //     size = 32;
+    //     switch (portal_state) {
+    //         case 0:
+    //             memcpy(&combined_report, init_packet_skylanders, sizeof(init_packet_skylanders));
+    //             break;
+    //         case 1:
+    //             memcpy(&combined_report, version_response_skylanders, sizeof(version_response_skylanders));
+    //             break;
+    //     }
+    // }
+    // #endif
     if (!size)
     {
         size = tick_inputs(&combined_report, &last_report_usb, consoleType);

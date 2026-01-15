@@ -521,12 +521,14 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t itf_num, ui
     {
         printf("Found Switch controller\r\n");
         usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].switch_sent_timeout = false;
         total_usb_host_devices++;
         break;
     }
     case SWITCH2:
         printf("Found Switch 2 controller\r\n");
         usb_host_devices[total_usb_host_devices].type = type;
+        usb_host_devices[total_usb_host_devices].switch_sent_timeout = false;
         total_usb_host_devices++;
         if (type.sub_type == NON_CONTROLLER)
         {
@@ -786,6 +788,10 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             {
                 continue;
             }
+            if (usb_host_devices[i].type.console_type == SWITCH2 && usb_host_devices[i].type.sub_type == NON_CONTROLLER)
+            {
+                continue;
+            }
             if (usb_host_devices[i].type.console_type == SWITCH && usb_host_devices[i].type.sub_type == GAMEPAD)
             {
                 if (report[0] == 0x81 && report[1] == 0x01)
@@ -816,7 +822,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
             }
             if (usb_host_devices[i].type.console_type == SWITCH2 && usb_host_devices[i].type.sub_type == GAMEPAD)
             {
-                if (report[0] != SWITCH_2_GC_FULL_REPORT_ID)
+                if (report[0] != SWITCH_2_GC_FULL_REPORT_ID && report[0] != SWITCH_2_PRO_CON_FULL_REPORT_ID)
                 {
                     continue;
                 }

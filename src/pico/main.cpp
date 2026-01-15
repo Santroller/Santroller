@@ -567,18 +567,18 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t itf_num, ui
     case PS5:
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
-        if (!ps5_dev_addr.dev_addr)
+        // assume ps5 auth if p5general is plugged in
+        if (consoleType == PS4 && host_vid == 0x2b81 && host_pid == 0x0101)
+        {
+            consoleType = PS5;
+            reset_usb();
+        }
+        if (consoleType == PS5 && !ps5_dev_addr.dev_addr)
         {
             ps5_dev_addr = type;
 
             printf("Found PS5 controller\r\n");
             ps4_controller_connected(dev_addr, host_vid, host_pid);
-            // assume ps5 auth if p5general is plugged in
-            if (consoleType == PS4 && host_vid == 0x2b81 && host_pid == 0x0101)
-            {
-                consoleType = PS5;
-                reset_usb();
-            }
         }
         break;
     }

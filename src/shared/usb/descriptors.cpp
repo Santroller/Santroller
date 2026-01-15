@@ -1203,6 +1203,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 uint32_t len = transfer_with_usb_controller(get_device_address_for(PS4).dev_addr, (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_GET_REPORT, GET_AUTH_PAGE_SIZE, get_device_address_for(PS4).interface, sizeof(AuthPageSizeReport), (uint8_t *)&ps4_pagesize_report, &auth_read_success);
                 if (!auth_read_success)
                 {
+                    // On a DS4, this will fail but we have the default page size report for that scenario.
                     memcpy_P(requestBuffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
                 }
                 return sizeof(ps4_pagesize_report);

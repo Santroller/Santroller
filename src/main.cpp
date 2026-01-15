@@ -160,6 +160,16 @@ void update(bool full_poll)
     {
         instance->process(full_poll);
     }
+    if (HIDConfigDevice::tool_closed())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (auto &mapping : profile.second->triggers)
+            {
+                mapping->update(true);
+            }
+        }
+    }
 }
 
 int main()
@@ -170,7 +180,6 @@ int main()
     adc_init();
     EEPROM.start();
 
-    
     if (!load(config))
     {
         // config was not valid, save a empty config

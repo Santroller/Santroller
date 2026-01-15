@@ -16,7 +16,7 @@ public:
     virtual size_t compatible_section_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t config_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual void device_descriptor(tusb_desc_device_t *desc) = 0;
-    uint8_t m_interface;
+    uint8_t m_interface = 0;
     static inline uint8_t next_epin()
     {
         printf("epin: %d\r\n", m_last_epin);
@@ -24,6 +24,7 @@ public:
     }
     static inline uint8_t next_epout()
     {
+        printf("epout: %d\r\n", m_last_epout);
         return m_last_epout++;
     }
     static inline void reset_ep()

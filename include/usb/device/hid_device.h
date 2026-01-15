@@ -42,8 +42,8 @@ void tud_hid_generic_init(void);
 class HIDDevice : public UsbDevice
 {
 public:
-  uint8_t m_epin;
-  uint8_t m_epout;
+  uint8_t m_epin = 0;
+  uint8_t m_epout = 0;
 
   CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];

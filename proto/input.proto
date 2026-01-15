@@ -115,22 +115,12 @@ message Input {
     KeyboardKeyInput key = 11;
     CrkdNeckButtonInput crkd = 12;
     ShortcutInput shortcut = 13;
-    WiiExtensionTypeInput wiiExtType = 14;
-    PS2ControllerTypeInput ps2Type = 15;
-    UsbDeviceTypeInput usbDevice = 16;
-    BluetoothDeviceTypeInput bluetoothDevice = 17;
-    ADS1115Input ads1115 = 18;
-    AccelerometerInput accelerometer = 19;
-    Gh5NeckButtonInput gh5Neck = 20;
+    ADS1115Input ads1115 = 14;
+    AccelerometerInput accelerometer = 15;
+    Gh5NeckButtonInput gh5Neck = 16;
   }
 }
 message InputActivationTrigger {
-  required Input input = 1;
-  optional bool inverted = 2;
-  optional AnalogToDigitalTriggerType trigger = 3;
-  optional int32 triggerValue = 4;
-}
-message ConsoleActivationTrigger {
   required Input input = 1;
   optional bool inverted = 2;
   optional AnalogToDigitalTriggerType trigger = 3;
@@ -140,6 +130,11 @@ message ConsoleActivationTrigger {
 message ActivationTrigger {
   oneof trigger {
     InputActivationTrigger input = 1; 
+    ConsoleMode console = 2; 
+    WiiExtensionTypeInput wii = 3; 
+    PS2ControllerTypeInput ps2 = 4;
+    UsbDeviceTypeInput usb = 5;
+    BluetoothDeviceTypeInput bluetooth = 6;
   }
 }
 

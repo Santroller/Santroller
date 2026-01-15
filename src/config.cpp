@@ -142,7 +142,7 @@ std::unique_ptr<Input> make_input(proto_Input input)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto instance = profiles[**(uint32_t**)arg];
+    auto instance = profiles[**(uint32_t **)arg];
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input);
@@ -174,7 +174,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto instance = profiles[**(uint32_t**)arg];
+    auto instance = profiles[**(uint32_t **)arg];
     proto_ActivationTrigger trigger;
     pb_decode(stream, proto_ActivationTrigger_fields, &trigger);
     switch (trigger.which_trigger)
@@ -198,7 +198,7 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
     uint64_t uid;
     if (!pb_decode_varint(stream, &uid))
         return false;
-    **(uint32_t**)arg = uid;
+    **(uint32_t **)arg = uid;
     auto old = profiles.find(uid);
     if (old != profiles.end())
     {
@@ -260,8 +260,11 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_Profile_fields, &profile);
     auto instance = std::static_pointer_cast<UsbDevice>(profiles[uid]);
     instance->subtype = profile.deviceToEmulate;
-    printf("def: %d %d\r\n", profile.defaultProfile, active_profiles.empty());
-    if ((profile.defaultProfile && active_profiles.empty()))
+    if (profile.defaultProfile && active_profiles.empty())
+    {
+        active_profiles.insert(uid);
+    }
+    if (active_profiles.find(uid) != active_profiles.end())
     {
         loadedAny = true;
         instance->m_interface = active_instances.size();
@@ -351,6 +354,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     {
         // if the tool is open, then we won't be changing the console mode and need to keep interfaces the same
         auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+        printf("partial init\r\n");
         update(true);
         return ret;
     }
@@ -403,6 +407,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     }
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+    printf("full init\r\n");
     update(true);
     return ret;
 }
@@ -424,17 +429,13 @@ uint32_t copy_config_info(uint8_t *buffer)
 
 void set_current_profile(uint32_t profile)
 {
-    // TODO: this would work pretty differently now
-    // ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    // if (footer->currentProfile != profile)
-    // {
-    //     footer->currentProfile = profile;
-    //     EEPROM.commit_now();
-    //     proto_Config config;
-    //     load(config);
-    //     reinit = true;
-    //     printf("profile set!\r\n");
-    // }
+    if (active_profiles.find(profile) != active_profiles.end())
+    {
+        return;
+    }
+    active_profiles.clear();
+    active_profiles.insert(profile);
+    reinit = true;
 }
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
@@ -539,7 +540,8 @@ bool load(proto_Config &config)
     return inner_load(config, footer.currentProfile, dataPtr, footer.dataSize);
 }
 
-void first_load() {
+void first_load()
+{
     devices.clear();
     instances.clear();
     active_instances.clear();

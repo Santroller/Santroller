@@ -280,7 +280,7 @@ void OGXboxGamepadDevice::process(bool full_poll)
     {
         // convert bitmask slider to actual hid slider
         OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)report;
-        reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
+        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
     }
 
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))

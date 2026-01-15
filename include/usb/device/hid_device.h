@@ -22,8 +22,6 @@
 #ifndef CFG_TUD_HID_EP_BUFSIZE
 #define CFG_TUD_HID_EP_BUFSIZE 64
 #endif
-extern const uint8_t gh5_mapping[32];
-extern const uint8_t dpad_bindings[11];
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+

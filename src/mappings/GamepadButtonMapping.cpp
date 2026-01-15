@@ -5,6 +5,7 @@
 #include "main.hpp"
 #include "config.hpp"
 
+const uint8_t GamepadButtonMapping::dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 GamepadButtonMapping::GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }

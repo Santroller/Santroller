@@ -242,13 +242,6 @@ bool hidd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_
   return true;
 }
 
-const uint8_t gh5_mapping[] = {
-    0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
-    0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD,
-    0xAE, 0xAC, 0xFF, 0xFB, 0xFD, 0xF9, 0xFE,
-    0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
-    0xE5, 0xE1, 0xE3, 0xDF};
-const uint8_t dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
 uint8_t const desc_hid_report[] =
     {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad))};
 
@@ -281,12 +274,12 @@ void HIDGamepadDevice::process(bool full_poll)
   }
 
   // convert bitmask dpad to actual hid dpad
-  report->dpad = dpad_bindings[report->dpad];
+  report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
   if (current_type == GuitarHeroGuitar)
   {
     // convert bitmask slider to actual hid slider
     XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
-    reportGh->slider = -((int8_t)((gh5_mapping[reportGh->slider]) ^ 0x80) * -257);
+    reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
   }
 
   if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))

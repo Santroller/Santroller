@@ -90,7 +90,7 @@ void PS5GamepadDevice::process(bool full_poll)
         mapping->update_ps5(epin_buf);
     }
     // convert bitmask dpad to actual hid dpad
-    gamepad->dpad = dpad_bindings[gamepad->dpad];
+    gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
 
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
     {

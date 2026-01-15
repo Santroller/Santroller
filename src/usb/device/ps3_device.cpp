@@ -201,12 +201,12 @@ void PS3GamepadDevice::process(bool full_poll)
     {
         // convert bitmask dpad to actual hid dpad
         PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)epin_buf;
-        report->dpad = dpad_bindings[report->dpad];
+        report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
         if (subtype == GuitarHeroGuitar)
         {
             // convert bitmask slider to actual hid slider
             PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
-            reportGh->slider = gh5_mapping[reportGh->slider];
+            reportGh->slider = GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider];
         }
         usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));
     }

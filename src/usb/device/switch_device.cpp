@@ -28,7 +28,7 @@ void SwitchGamepadDevice::process(bool full_poll)
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
     // convert bitmask dpad to actual hid dpad
-    gamepad->dpad = dpad_bindings[gamepad->dpad];
+    gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
 
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
     {

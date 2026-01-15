@@ -519,6 +519,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    static const uint8_t gh5_slider_mapping[32];
 };
 
 class DJHTurntableButtonMapping : public ButtonMapping
@@ -597,6 +598,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    static const uint8_t dpad_bindings[15];
 };
 class KeyboardManiaButtonMapping : public ButtonMapping
 {
@@ -740,3 +742,5 @@ protected:
     proto_InputActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
 };
+extern const uint8_t gh5_mapping[32];
+extern const uint8_t dpad_bindings[11];

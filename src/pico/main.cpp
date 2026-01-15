@@ -556,7 +556,7 @@ bool tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t itf_num, ui
     case PS4:
         usb_host_devices[total_usb_host_devices].type = type;
         total_usb_host_devices++;
-        if (!ps4_dev_addr.dev_addr)
+        if (consoleType == PS4 && !ps4_dev_addr.dev_addr)
         {
             ps4_dev_addr = type;
 

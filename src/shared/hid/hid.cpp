@@ -461,7 +461,7 @@ void handle_rumble(uint8_t rumble_left, uint8_t rumble_right) {
                     enable : rumble_left != 0,
                     padding : {0}
                 };
-                transfer_with_usb_controller(type, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0200, 0x00, sizeof(report), (uint8_t *)&report, NULL);
+                transfer_with_usb_controller(type, (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS), HID_REQUEST_SET_REPORT, 0x0200,  sizeof(report), (uint8_t *)&report, NULL);
                 return;
             }
         }

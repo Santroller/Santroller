@@ -51,7 +51,7 @@ To keep the relevant information in this guide easy to find, information is sort
 2.  Connect V0 to ground on your microcontroller.
 3.  Connect AT to one of the following pins
 
-    | Microcontroller            | Analog Output Pins     |
+    | Microcontroller            | PWM Pins     |
     | -------------------------- | ---------------------- |
     | Pi Pico (Recommended)      | Any                    |
     | Pro Micro, Leonardo, Micro | 3, 5, 6, 9, 10, 11, 13 |

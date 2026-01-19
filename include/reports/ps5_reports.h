@@ -245,7 +245,7 @@ typedef struct
     uint8_t : 2;
     uint8_t back : 1;  // share
     uint8_t start : 1; // options
-    uint8_t solo : 1;
+    uint8_t leftThumbClick : 1;
     uint8_t p1 : 1;
 
     uint8_t guide : 1;

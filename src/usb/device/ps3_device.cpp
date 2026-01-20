@@ -190,6 +190,7 @@ void PS3GamepadDevice::process(bool full_poll)
         gamepad->gyro = PS3_ACCEL_CENTER;
         if (subtype == PowerGigDrum || subtype == PowerGigGuitar)
         {
+            // powergig has the bytes swapped, much like the ds3
             gamepad->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
             gamepad->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
             gamepad->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);

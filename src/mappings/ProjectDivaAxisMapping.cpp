@@ -23,6 +23,7 @@ void ProjectDivaAxisMapping::update_wii(uint8_t *buf)
 }
 void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
 {
+    // https://github.com/ravinrabbid/DivaCon2040
     SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
     {

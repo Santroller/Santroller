@@ -14,6 +14,9 @@ PopNMusicAxisMapping::PopNMusicAxisMapping(proto_Mapping mapping, std::unique_pt
 void PopNMusicAxisMapping::update_hid(uint8_t *buf)
 {
     // TODO: how does this work for hid
+    // https://github.com/whowechina/popn_pico
+
+    // https://github.com/CrazyRedMachine/UltimatePopnController
 }
 void PopNMusicAxisMapping::update_wii(uint8_t *buf)
 {

@@ -570,6 +570,110 @@ typedef struct
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
 
+
+
+typedef struct
+{
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
+
+    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t tilt : 1;          // tilt, r1
+    uint8_t solo : 1;          // l2
+    uint8_t : 1;               // r2
+
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+    uint8_t : 2;
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t : 4;
+
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t whammy;
+    uint8_t pickup;
+
+    uint8_t pressure_dpadRight;  // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_dpadLeft; // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_dpadUp; // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_dpadDown; // these are REQUIRED here otherwise the dpad wont work
+    uint8_t string_frets[6]; // only 00 - 0C, sometimes the 10 is set and i dont know what that means yet
+    uint8_t unused2[2];
+    // note that compared to the rb and gh reports, the endianness is swapped on these like the DS3 reports
+    uint16_t mode; // 0x0000 - guitar not connected to dongle, 0x0200 - guitar in rb mode, 0x0300 - guitar in pg mode
+    uint16_t unused3[3]; // 0x0200 0x0200 0x0200
+} __attribute__((packed)) PS3PowerGigGuitar_Data_t;
+
+
+typedef struct
+{
+    uint8_t x : 1;  // square, blue
+    uint8_t a : 1;  // cross, green
+    uint8_t b : 1;  // circle, red
+    uint8_t y : 1;  // triangle, yellow
+
+    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t tilt : 1;          // tilt, r1
+    uint8_t solo : 1;          // l2
+    uint8_t : 1;               // r2
+
+    uint8_t back : 1;  // select
+    uint8_t start : 1;
+    uint8_t leftThumbClick : 1;  // velocity present?
+    uint8_t : 1;
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+    uint8_t : 2;
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t : 4;
+
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+
+    uint8_t pressure_dpadRight;  // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_dpadLeft; // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_dpadUp; // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_dpadDown; // these are REQUIRED here otherwise the dpad wont work
+    uint8_t pressure_yellow;
+    uint8_t pressure_red;
+    uint8_t pressure_green;
+    uint8_t pressure_blue;
+    uint8_t unused2[2];
+    uint8_t left_red : 1;  
+    uint8_t right_red : 1;
+    uint8_t left_yellow : 1; 
+    uint8_t right_yellow : 1; 
+    uint8_t left_blue : 1; 
+    uint8_t right_blue : 1;
+    uint8_t left_green : 1; 
+    uint8_t right_green : 1;
+    uint8_t :8;
+    // note that compared to the rb and gh reports, the endianness is swapped on these like the DS3 reports
+    uint16_t mode; // 0x0400 - drum not connected to dongle, 0x0600 - drums in rb mode, 0x0700 - drums in pg mode
+    uint16_t unused3[3]; // 0x0200 0x0200 0x0200
+} __attribute__((packed)) PS3PowerGigDrums_Data_t;
+
+
 typedef struct
 {
     uint8_t x : 1;  // square, blue

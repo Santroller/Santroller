@@ -66,6 +66,25 @@ const uint8_t ps3_feature_ef[] = {
     0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+// PowerGig guitars send a specific response when woken up
+const uint8_t powergig_response[3][8] = {{0xe9, 0x6d, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00},
+                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                         {0x21, 0x26, 0x01, 0x05, 0x00, 0x00, 0x00, 0x00}};
+
+// Pro instruments send specific reports when woken up
+const uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0d, 0x01},
+                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                         {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x82},
+                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                         {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
+
+const uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
+                                        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                        {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
+                                        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                                        {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
+
+const uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
 
 uint8_t handle_player_leds_ds3(uint8_t player_mask)
 {
@@ -131,7 +150,6 @@ uint8_t handle_player_leds_ps3(uint8_t player_mask)
     }
     return 0;
 }
-
 
 uint8_t const desc_hid_report_ps3[] =
     {
@@ -228,7 +246,8 @@ size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (!m_eps_assigned) {
+    if (!m_eps_assigned)
+    {
         m_eps_assigned = true;
         m_epin = next_epin();
         m_epout = next_epin();
@@ -249,8 +268,9 @@ const uint8_t *PS3GamepadDevice::report_descriptor()
     return desc_hid_report_ps3;
 }
 
-uint16_t PS3GamepadDevice::report_desc_len() {
-  return sizeof(desc_hid_report_ps3);
+uint16_t PS3GamepadDevice::report_desc_len()
+{
+    return sizeof(desc_hid_report_ps3);
 }
 
 uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
@@ -300,10 +320,52 @@ uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         buffer[7] = ef_byte;
         return sizeof(ps3_feature_ef);
     case ReportId::ReportIdPs301:
-        // PS3 sends this for a gamepad
+        // PS3 requests this for a gamepad
         memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
         return sizeof(ps3_feature_01);
+    case ReportId::ReportIdPs3Feature:
+        memcpy(buffer, ps3_init, sizeof(ps3_init));
+        switch (subtype)
+        {
+        case GuitarHeroGuitar:
+        case RockBandGuitar:
+        case LiveGuitar:
+        case DjHeroTurntable:
+            buffer[4] = 0x06;
+            break;
+        case RockBandDrums:
+            buffer[4] = 0x05;
+            break;
+        case ProGuitarMustang:
+        case ProGuitarSquire:
+        case ProKeys:
+            // RB Pro instruments follow a slightly different request flow
+            if (m_enabled)
+            {
+                memcpy(buffer, enabled_response[m_pro_id], sizeof(enabled_response[m_pro_id]));
+            }
+            else
+            {
+                memcpy(buffer, disabled_response[m_pro_id], sizeof(disabled_response[m_pro_id]));
+            }
+            m_pro_id++;
+            if (m_pro_id > 4)
+                m_pro_id = 4;
+            break;
+            // as does power gig
+        case PowerGigGuitar:
+        case PowerGigDrum:
+            memcpy(buffer, powergig_response[m_pg_id], sizeof(powergig_response[m_pg_id]));
+            m_pg_id++;
+            if (m_pg_id > 2)
+                m_pg_id = 2;
+            break;
+        default:
+            break;
+        }
+        return sizeof(ps3_init);
     }
+    // TODO: need to do the ps3 feature report
     return 0;
 }
 void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
@@ -313,13 +375,36 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     case HID_REPORT_TYPE_FEATURE:
         switch (report_id)
         {
-        case 0:
-
+        case ReportId::ReportIdPs3Feature:
+            switch (subtype)
+            {
+            case ProGuitarMustang:
+            case ProGuitarSquire:
+            case ProKeys:
+                if (buffer[0] == 0xe9 && buffer[2] == 0x89) {
+                    m_enabled = true;
+                    m_pro_id = 0;
+                }
+                if (buffer[0] == 0xe9 && buffer[2] == 0x81) {
+                    m_enabled = false;
+                    m_pro_id = 0;
+                }
+                break;
+            case PowerGigGuitar:
+            case PowerGigDrum:
+                if (buffer[0] == 0xe9 && buffer[0] == 0x4d) {
+                    m_enabled = true;
+                    m_pg_id = 0;
+                }
+            default:
+                break;
+            }
             return;
         case ReportId::ReportIdPs3EF:
             ef_byte = buffer[6];
             return;
         }
+        break;
     case HID_REPORT_TYPE_OUTPUT:
     {
         // rumble / led packets will be here

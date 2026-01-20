@@ -2,6 +2,7 @@ syntax = "proto2";
 package proto;
 enum ReportId {
   option allow_alias = true;
+  ReportIdPs3Feature = 0;
   ReportIdGamepad = 1;
   ReportIdKeyboard = 2;
   ReportIdMouse = 3;
@@ -86,6 +87,9 @@ enum SubType {
   PopNMusic = 22;
   DJMax = 23;
   ProjectDiva = 24;
+  PowerGigDrum = 25;
+  PowerGigGuitar = 26;
+  RockRevolutionGuitar = 27;
 }
 
 enum PinMode {

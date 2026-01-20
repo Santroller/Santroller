@@ -142,6 +142,7 @@ char const *string_desc_arr[] =
         "RT GH CONTROLLER ",
         "RT-GH LED ",
         "RT-GH INPUT "};
+// TODO: need to implement the fact that for powergig we need to set the name to `Seven45 Drum Controller` or `Seven45 Guitar Controller`
 
 static uint16_t _desc_str[100 + 1];
 

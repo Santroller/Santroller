@@ -188,6 +188,29 @@ void PS3GamepadDevice::process(bool full_poll)
         gamepad->accelY = PS3_ACCEL_CENTER;
         gamepad->accelZ = PS3_ACCEL_CENTER;
         gamepad->gyro = PS3_ACCEL_CENTER;
+        if (subtype == PowerGigDrum || subtype == PowerGigGuitar)
+        {
+            gamepad->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
+            gamepad->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
+            gamepad->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
+            gamepad->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
+            if (m_enabled && subtype == PowerGigGuitar)
+            {
+                gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_PG_MODE);
+            }
+            else if (!m_enabled && subtype == PowerGigGuitar)
+            {
+                gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_RB_COMPAT_MODE);
+            }
+            else if (m_enabled && subtype == PowerGigDrum)
+            {
+                gamepad->accelX = __builtin_bswap16(POWERGIG_DRUM_PG_MODE);
+            }
+            else if (!m_enabled && subtype == PowerGigDrum)
+            {
+                gamepad->accelX = __builtin_bswap16(POWERGIG_DRUM_RB_COMPAT_MODE);
+            }
+        }
         gamepad->leftStickX = PS3_STICK_CENTER;
         gamepad->leftStickY = PS3_STICK_CENTER;
         if (subtype == ProKeys)
@@ -381,18 +404,21 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
             case ProGuitarMustang:
             case ProGuitarSquire:
             case ProKeys:
-                if (buffer[0] == 0xe9 && buffer[2] == 0x89) {
+                if (buffer[0] == 0xe9 && buffer[2] == 0x89)
+                {
                     m_enabled = true;
                     m_pro_id = 0;
                 }
-                if (buffer[0] == 0xe9 && buffer[2] == 0x81) {
+                if (buffer[0] == 0xe9 && buffer[2] == 0x81)
+                {
                     m_enabled = false;
                     m_pro_id = 0;
                 }
                 break;
             case PowerGigGuitar:
             case PowerGigDrum:
-                if (buffer[0] == 0xe9 && buffer[0] == 0x4d) {
+                if (buffer[0] == 0xe9 && buffer[0] == 0x4d)
+                {
                     m_enabled = true;
                     m_pg_id = 0;
                 }

@@ -19,6 +19,12 @@
 #define BTN_THUMBL 0x0e
 #define BTN_THUMBR 0x0f
 #define BTN_END 0x0f
+#define POWERGIG_GUITAR_DISCONNECTED 0x0000
+#define POWERGIG_GUITAR_RB_COMPAT_MODE 0x0200
+#define POWERGIG_GUITAR_PG_MODE 0x0300
+#define POWERGIG_DRUM_DISCONNECTED 0x0400
+#define POWERGIG_DRUM_RB_COMPAT_MODE 0x0600
+#define POWERGIG_DRUM_PG_MODE 0x0700
 
 #define TUD_HID_REPORT_DESC_KEYBOARD_NKRO(...)                                                                     \
     HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                                                        \

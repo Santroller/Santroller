@@ -22,28 +22,10 @@
 #ifndef CFG_TUD_HID_EP_BUFSIZE
 #define CFG_TUD_HID_EP_BUFSIZE 64
 #endif
-//--------------------------------------------------------------------+
-// Internal Class Driver API
-//--------------------------------------------------------------------+
-void hidd_init(void);
-bool hidd_deinit(void);
-void hidd_reset(uint8_t rhport);
 
 class HIDDevice : public UsbDevice
 {
 public:
-  uint8_t m_epin = 0;
-  uint8_t m_epout = 0;
-
-  CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
-  CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
-  CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
-  const tusb_hid_descriptor_hid_t *hid_descriptor;
-  uint8_t itf_protocol;  // Boot mouse or keyboard
-  uint8_t protocol_mode; // Boot (0) or Report protocol (1)
-  uint8_t idle_rate;     // up to application to handle idle rate
-  bool clearedIn = false;
-  bool clearedOut = false;
   virtual const uint8_t *report_descriptor() = 0;
   virtual uint16_t report_desc_len() = 0;
   virtual uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen) = 0;
@@ -51,6 +33,19 @@ public:
   bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
   bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
   uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
+
+protected:
+  const tusb_hid_descriptor_hid_t *hid_descriptor;
+  uint8_t itf_protocol;  // Boot mouse or keyboard
+  uint8_t protocol_mode; // Boot (0) or Report protocol (1)
+  uint8_t idle_rate;     // up to application to handle idle rate
+  bool clearedIn = false;
+  bool clearedOut = false;
+  uint8_t m_epin = 0;
+  uint8_t m_epout = 0;
+  CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
+  CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
+  CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
 };
 
 class HIDConfigDevice : public HIDDevice
@@ -69,7 +64,7 @@ public:
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   static bool send_event(proto_Event event);
   static bool send_event_for(proto_Event event, uint32_t profile_id);
-  static HIDConfigDevice* instance;
+  static HIDConfigDevice *instance;
 
 private:
   uint32_t lastKeepAlive = 0;

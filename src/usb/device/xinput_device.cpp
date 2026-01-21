@@ -245,7 +245,7 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
 size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
     OS_COMPATIBLE_SECTION section = {
-        FirstInterfaceNumber : m_interface,
+        FirstInterfaceNumber : interface_id,
         Reserved : 0x01,
         CompatibleID : "XUSB10",
         SubCompatibleID : {0},
@@ -263,10 +263,10 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
         m_eps_assigned = true;
         m_epin = next_epin();
         m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
-        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     }
-    uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout, get_xinput_subtype(subtype))};
+    uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
@@ -315,7 +315,7 @@ uint16_t XInputSecurityDevice::open(tusb_desc_interface_t const *itf_desc, uint1
 size_t XInputSecurityDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
     OS_COMPATIBLE_SECTION section = {
-        FirstInterfaceNumber : m_interface,
+        FirstInterfaceNumber : interface_id,
         Reserved : 0x01,
         CompatibleID : "XUSB10",
         SubCompatibleID : {0},
@@ -328,7 +328,7 @@ size_t XInputSecurityDevice::compatible_section_descriptor(uint8_t *dest, size_t
 
 size_t XInputSecurityDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    uint8_t desc[] = {TUD_XINPUT_SECURITY_DESCRIPTOR(m_interface, STRID_XSM3)};
+    uint8_t desc[] = {TUD_XINPUT_SECURITY_DESCRIPTOR(interface_id, STRID_XSM3)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

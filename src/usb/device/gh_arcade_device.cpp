@@ -63,11 +63,11 @@ size_t GHArcadeVendorDevice::config_descriptor(uint8_t *dest, size_t remaining)
         m_epin1 = next_epin();
         m_epin2 = next_epin();
         m_epout = next_epin();
-        usb_instances_by_epnum[m_epin1] = usb_instances[m_interface];
-        usb_instances_by_epnum[m_epin2] = usb_instances[m_interface];
-        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epin1] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     }
-    uint8_t desc[] = {TUD_GHARCADE_VENDOR_DESCRIPTOR(m_interface, m_epin1, m_epout, m_epin2, STRID_GHA_LED)};
+    uint8_t desc[] = {TUD_GHARCADE_VENDOR_DESCRIPTOR(interface_id, m_epin1, m_epout, m_epin2, STRID_GHA_LED)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
@@ -112,7 +112,7 @@ size_t GHArcadeGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_
 
 size_t GHArcadeGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    uint8_t desc[] = {TUD_HID_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_arcade), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_arcade), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

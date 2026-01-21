@@ -613,7 +613,7 @@ void XboxOneGamepadDevice::process(bool full_poll)
 size_t XboxOneGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
     OS_COMPATIBLE_SECTION section = {
-        FirstInterfaceNumber : m_interface,
+        FirstInterfaceNumber : interface_id,
         Reserved : 0x01,
         CompatibleID : "XGIP10",
         SubCompatibleID : {0},
@@ -631,10 +631,10 @@ size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
         m_eps_assigned = true;
         m_epin = next_epin();
         m_epout = next_epin();
-        usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
-        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     }
-    uint8_t desc[] = {TUD_XONE_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout)};
+    uint8_t desc[] = {TUD_XONE_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

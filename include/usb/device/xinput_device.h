@@ -118,12 +118,6 @@ inline uint8_t get_xinput_subtype(SubType subtype)
 #define XINPUT_FLAGS_NO_NAV 0xFFFF
 #define XINPUT_FLAGS_NONE 0x0000
 #define XINPUT_FLAGS_FORCE_FEEDBACK 0x000D
-extern "C"
-{
-    void xinputd_init(void);
-    void xinputd_reset(uint8_t rhport);
-}
-
 class XInputSecurityDevice : public UsbDevice
 {
 public:

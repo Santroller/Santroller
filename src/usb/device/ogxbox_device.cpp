@@ -182,10 +182,10 @@ size_t OGXboxGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
         m_eps_assigned = true;
         m_epin = next_epin();
         m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
-        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     }
-    uint8_t desc[] = {TUD_OGXBOX_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout)};
+    uint8_t desc[] = {TUD_OGXBOX_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

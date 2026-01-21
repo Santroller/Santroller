@@ -8,16 +8,6 @@
 #ifndef CFG_TUD_XONE_EPSIZE
 #define CFG_TUD_XONE_EPSIZE 64
 #endif
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-    void xoned_init(void);
-    void xoned_reset(uint8_t rhport);
-
-#ifdef __cplusplus
-}
-#endif
 
 typedef enum
 {

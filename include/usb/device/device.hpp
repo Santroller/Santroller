@@ -9,17 +9,13 @@
 class UsbDevice : public Instance
 {
 public:
-    inline uint8_t interface()
-    {
-        return m_interface;
-    };
+    uint8_t interface_id = 0;
     virtual size_t compatible_section_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t config_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual void device_descriptor(tusb_desc_device_t *desc) = 0;
     virtual bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
     virtual bool control_transfer(uint8_t stage, tusb_control_request_t const *request) = 0;
     virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
-    uint8_t m_interface = 0;
     static inline uint8_t next_epin()
     {
         printf("epin: %d\r\n", m_last_epin);

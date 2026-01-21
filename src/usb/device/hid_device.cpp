@@ -256,10 +256,10 @@ size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     m_eps_assigned = true;
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
-    usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
   }
-  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);
@@ -369,7 +369,7 @@ size_t HIDConfigDevice::config_descriptor(uint8_t *dest, size_t remaining)
     m_eps_assigned = true;
     m_epin = next_epin();
   }
-  uint8_t desc[] = {TUD_HID_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);

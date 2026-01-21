@@ -10,18 +10,6 @@
 #endif
 #define GH_ARCADE_DESC_TYPE_RESERVED 0x21
 #define GH_ARCADE_SECURITY_DESC_TYPE_RESERVED 0x41
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-    void gh_arcaded_init(void);
-    void gh_arcaded_reset(uint8_t rhport);
-
-#ifdef __cplusplus
-}
-
-#endif
-
 class GHArcadeVendorDevice : public UsbDevice
 {
 public:

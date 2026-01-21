@@ -268,11 +268,11 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     if (active_profiles.find(uid) != active_profiles.end())
     {
         loadedAny = true;
-        instance->m_interface = active_instances.size();
+        instance->interface_id = active_instances.size();
         active_profiles.insert(uid);
         active_instances.push_back(instance);
         usb_instances[usb_instances.size()] = instance;
-        printf("instance: %d\r\n", instance->m_interface);
+        printf("instance: %d\r\n", instance->interface_id);
     }
     return true;
 }
@@ -379,24 +379,24 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     case ModeXbox360:
     {
         auto confDevice2 = std::make_shared<HIDConfigDevice>();
-        confDevice2->m_interface = instances.size();
+        confDevice2->interface_id = instances.size();
         instances.push_back(confDevice2);
         active_instances.push_back(confDevice2);
-        usb_instances[confDevice2->m_interface] = confDevice2;
+        usb_instances[confDevice2->interface_id] = confDevice2;
         auto secDevice = std::make_shared<XInputSecurityDevice>();
-        secDevice->m_interface = instances.size();
+        secDevice->interface_id = instances.size();
         instances.push_back(secDevice);
         active_instances.push_back(secDevice);
-        usb_instances[secDevice->m_interface] = secDevice;
+        usb_instances[secDevice->interface_id] = secDevice;
         break;
     }
     case ModeGuitarHeroArcade:
     {
         auto venDevice = std::make_shared<GHArcadeVendorDevice>();
-        venDevice->m_interface = instances.size();
+        venDevice->interface_id = instances.size();
         instances.push_back(std::move(venDevice));
         active_instances.push_back(venDevice);
-        usb_instances[venDevice->m_interface] = venDevice;
+        usb_instances[venDevice->interface_id] = venDevice;
         break;
     }
     }
@@ -542,8 +542,8 @@ void first_load()
     usb_instances.clear();
     profiles.clear();
     auto confDevice = std::make_shared<HIDConfigDevice>();
-    confDevice->m_interface = instances.size();
+    confDevice->interface_id = instances.size();
     instances.push_back(confDevice);
     active_instances.push_back(confDevice);
-    usb_instances[confDevice->m_interface] = confDevice;
+    usb_instances[confDevice->interface_id] = confDevice;
 }

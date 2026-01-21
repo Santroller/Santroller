@@ -1,10 +1,4 @@
 #include "tusb_option.h"
-// Combine together the implementation of ogxbox and hid as they are baiscally the same
-#if (TUSB_OPT_DEVICE_ENABLED && CFG_TUD_OGXBOX)
-
-//--------------------------------------------------------------------+
-// INCLUDE
-//--------------------------------------------------------------------+
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
@@ -12,19 +6,6 @@
 #include "usb/device/hid_device.h"
 #include "usb/usb_descriptors.h"
 #include "config.hpp"
-
-//--------------------------------------------------------------------+
-// MACRO CONSTANT TYPEDEF
-//--------------------------------------------------------------------+
-typedef struct
-{
-    uint8_t itf_num;
-    uint8_t ep_in;
-    uint8_t ep_out;
-
-    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_OGXBOX_TX_BUFSIZE];
-    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];
-} ogxboxd_interface_t;
 
 const XID_DESCRIPTOR DukeXIDDescriptor = {
     bLength : sizeof(XID_DESCRIPTOR),
@@ -70,153 +51,88 @@ const OGXboxOutput_Report_t DukeXIDVibrationCapabilities = {
     right : 0xFFFF
 };
 
-CFG_TUSB_MEM_SECTION static ogxboxd_interface_t _ogxboxd_itf[CFG_TUD_OGXBOX];
-static volatile bool sending = false;
-/*------------- Helpers -------------*/
-static inline uint8_t get_index_by_itfnum(uint8_t itf_num)
-{
-    for (uint8_t i = 0; i < CFG_TUD_OGXBOX; i++)
-    {
-        if (itf_num == _ogxboxd_itf[i].itf_num)
-            return i;
-    }
 
-    return 0xFF;
+OGXboxGamepadDevice::OGXboxGamepadDevice()
+{
 }
-
-//--------------------------------------------------------------------+
-// APPLICATION API
-//--------------------------------------------------------------------+
-bool tud_ogxbox_n_ready(uint8_t itf)
+uint16_t OGXboxGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
 {
-    uint8_t const ep_in = _ogxboxd_itf[itf].ep_in;
-    return tud_ready() && (ep_in != 0) && !usbd_edpt_busy(TUD_OPT_RHPORT, ep_in);
-}
 
-bool tud_ogxbox_n_report(uint8_t itf, void const *report, uint8_t len)
-{
-    uint8_t const rhport = 0;
-    ogxboxd_interface_t *p_ogxbox = &_ogxboxd_itf[itf];
-
-    // claim endpoint
-    TU_VERIFY(usbd_edpt_claim(rhport, p_ogxbox->ep_in));
-
-    // If report id = 0, skip ID field
-    len = tu_min8(len, CFG_TUD_OGXBOX_TX_BUFSIZE);
-    memcpy(p_ogxbox->epin_buf, report, len);
-    sending = true;
-    return usbd_edpt_xfer(TUD_OPT_RHPORT, p_ogxbox->ep_in, p_ogxbox->epin_buf,
-                          len);
-}
-
-//--------------------------------------------------------------------+
-// USBD-CLASS API
-//--------------------------------------------------------------------+
-void ogxboxd_init(void)
-{
-    ogxboxd_reset(TUD_OPT_RHPORT);
-}
-
-void ogxboxd_reset(uint8_t rhport)
-{
-    (void)rhport;
-    tu_memclr(_ogxboxd_itf, sizeof(_ogxboxd_itf));
-    for (uint8_t i = 0; i < CFG_TUD_OGXBOX; i++)
-    {
-        _ogxboxd_itf[i].itf_num = 0xFF;
-    }
-    sending = false;
-}
-
-uint16_t ogxboxd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
-                      uint16_t max_len)
-{
     TU_VERIFY(0x58 == itf_desc->bInterfaceClass, 0);
     uint16_t drv_len = sizeof(tusb_desc_interface_t) +
                        (itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
 
     TU_VERIFY(max_len >= drv_len, 0);
 
-    // Find available interface
-    ogxboxd_interface_t *p_ogxbox = NULL;
-    for (uint8_t i = 0; i < CFG_TUD_OGXBOX; i++)
-    {
-        if (_ogxboxd_itf[i].ep_in == 0 && _ogxboxd_itf[i].ep_out == 0)
-        {
-            p_ogxbox = &_ogxboxd_itf[i];
-            break;
-        }
-    }
-    TU_VERIFY(p_ogxbox, 0);
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     p_desc = tu_desc_next(p_desc);
-    TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &p_ogxbox->ep_out, &p_ogxbox->ep_in), 0);
-
-    p_ogxbox->itf_num = itf_desc->bInterfaceNumber;
+    TU_ASSERT(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epout, &m_epin), 0);
 
     // Prepare for output endpoint
-    if (p_ogxbox->ep_out)
+    if (m_epout)
     {
-        if (!usbd_edpt_xfer(rhport, p_ogxbox->ep_out, p_ogxbox->epout_buf, sizeof(p_ogxbox->epout_buf)))
+        if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf)))
         {
             TU_LOG_FAILED();
             TU_BREAKPOINT();
         }
     }
-    //------------- Endpoint Descriptor -------------//
-
-    // Config endpoint
-
     return drv_len;
 }
 
-bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
+bool OGXboxGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    uint8_t itf = 0;
-    if (mode != ModeHid)
+    if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
     {
-        ogxboxd_interface_t *p_ogxbox = _ogxboxd_itf;
-
-        for (;; itf++, p_ogxbox++)
+        // Input report
+        if (XFER_RESULT_SUCCESS == result)
         {
-            if (itf >= TU_ARRAY_SIZE(_ogxboxd_itf))
-                return false;
-
-            if ((request->wIndex & 0xff) == p_ogxbox->itf_num)
-                break;
         }
     }
+    else
+    {
+        // Output report
+        if (XFER_RESULT_SUCCESS == result)
+        {
+            // TODO: rumble
+            // return dev->interrupt_received(xferred_bytes);
+        }
+
+        // prepare for new transfer
+        TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40));
+    }
+    return true;
+}
+bool OGXboxGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
+{
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
         {
             if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
             {
-                if (request->bRequest == 6 && request->wValue == 0x4200)
-                {
-                    if (stage == CONTROL_STAGE_SETUP)
-                    {
-                        tud_control_xfer(rhport, request, (void *)&DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
-                    }
-                    newMode = ModeOgXbox;
-                    return true;
-                }
                 if (request->bRequest == 1 && request->wValue == 0x0100)
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
-                        tud_control_xfer(rhport, request, (void *)&DukeXIDInputCapabilities, sizeof(DukeXIDInputCapabilities));
+                        tud_control_xfer(TUD_OPT_RHPORT, request, (void *)&DukeXIDInputCapabilities, sizeof(DukeXIDInputCapabilities));
                     }
-                    newMode = ModeOgXbox;
                     return true;
                 }
                 if (request->bRequest == 1 && request->wValue == 0x0200)
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
-                        tud_control_xfer(rhport, request, (void *)&DukeXIDVibrationCapabilities, sizeof(DukeXIDVibrationCapabilities));
+                        tud_control_xfer(TUD_OPT_RHPORT, request, (void *)&DukeXIDVibrationCapabilities, sizeof(DukeXIDVibrationCapabilities));
                     }
-                    newMode = ModeOgXbox;
+                    return true;
+                }
+                if (request->bRequest == 6 && request->wValue == 0x4200)
+                {
+                    if (stage == CONTROL_STAGE_SETUP)
+                    {
+                        tud_control_xfer(TUD_OPT_RHPORT, request, (void *)&DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
+                    }
                     return true;
                 }
             }
@@ -225,41 +141,6 @@ bool ogxboxd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request
     return false;
 }
 
-bool ogxboxd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
-                     uint32_t xferred_bytes)
-{
-    (void)result;
-
-    uint8_t itf = 0;
-    ogxboxd_interface_t *p_ogxbox = _ogxboxd_itf;
-
-    for (;; itf++, p_ogxbox++)
-    {
-        if (itf >= TU_ARRAY_SIZE(_ogxboxd_itf))
-            return false;
-
-        if (ep_addr == p_ogxbox->ep_out || ep_addr == p_ogxbox->ep_in)
-            break;
-    }
-    if (ep_addr == p_ogxbox->ep_out)
-    {
-        // tud_ogxbox_set_report_cb(itf, p_ogxbox->epout_buf, xferred_bytes);
-        // TODO: parse the report here and call rumble and led funcs
-        TU_ASSERT(usbd_edpt_xfer(rhport, p_ogxbox->ep_out, p_ogxbox->epout_buf,
-                                 0x40));
-    }
-    else if (ep_addr == p_ogxbox->ep_in)
-    {
-        sending = false;
-    }
-    return true;
-}
-
-#endif
-
-OGXboxGamepadDevice::OGXboxGamepadDevice()
-{
-}
 void OGXboxGamepadDevice::initialize()
 {
 }
@@ -267,14 +148,14 @@ void OGXboxGamepadDevice::process(bool full_poll)
 {
     if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
-    OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epout_buf;
+    OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epin_buf;
     report->rid = 0;
     report->rsize = sizeof(OGXboxGamepad_Data_t);
-    memset(epout_buf, 0, sizeof(epout_buf));
+    memset(epin_buf, 0, sizeof(epin_buf));
     for (const auto &mapping : mappings)
     {
         mapping->update(full_poll);
-        mapping->update_xinput(epout_buf);
+        mapping->update_ogxbox(epin_buf);
     }
     if (current_type == GuitarHeroGuitar)
     {
@@ -287,22 +168,11 @@ void OGXboxGamepadDevice::process(bool full_poll)
     {
         return;
     }
-
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(OGXboxGamepad_Data_t));
 }
 
 size_t OGXboxGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-    OS_COMPATIBLE_SECTION section = {
-        FirstInterfaceNumber : m_interface,
-        Reserved : 0x01,
-        CompatibleID : "XUSB10",
-        SubCompatibleID : {0},
-        Reserved2 : {0}
-    };
-    assert(sizeof(section) <= remaining);
-    memcpy(dest, &section, sizeof(section));
-    return sizeof(section);
 }
 
 size_t OGXboxGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
@@ -311,7 +181,9 @@ size_t OGXboxGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     {
         m_eps_assigned = true;
         m_epin = next_epin();
-        m_epout = next_epin();
+        m_epout = next_epout();
+        usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
     }
     uint8_t desc[] = {TUD_OGXBOX_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout)};
     assert(sizeof(desc) <= remaining);

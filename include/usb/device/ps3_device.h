@@ -11,6 +11,7 @@
 #define SANTROLLER_LED_ID 0x5A
 #define SANTROLLER_LED_EXPANDED_ID 0x5B
 
+
 class PS3GamepadDevice : public HIDDevice
 {
 public:

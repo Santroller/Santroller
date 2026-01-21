@@ -1,6 +1,7 @@
 #include "usb/device/ps3_device.h"
 #include "protocols/ps4.hpp"
 #include "hid_reports.h"
+#include "config.hpp"
 #include "enums.pb.h"
 
 uint8_t ef_byte = 0;
@@ -275,6 +276,8 @@ size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
         m_eps_assigned = true;
         m_epin = next_epin();
         m_epout = next_epin();
+        usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
     }
     uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
     assert(sizeof(desc) <= remaining);
@@ -389,7 +392,6 @@ uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         }
         return sizeof(ps3_init);
     }
-    // TODO: need to do the ps3 feature report
     return 0;
 }
 void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)

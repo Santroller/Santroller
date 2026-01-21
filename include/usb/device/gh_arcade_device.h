@@ -16,15 +16,6 @@ extern "C"
 #endif
     void gh_arcaded_init(void);
     void gh_arcaded_reset(uint8_t rhport);
-    uint16_t gh_arcaded_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
-                             uint16_t max_len);
-    bool gh_arcaded_control_request(uint8_t rhport,
-                                    tusb_control_request_t const *request);
-    bool gh_arcaded_control_complete(uint8_t rhport,
-                                     tusb_control_request_t const *request);
-    bool gh_arcaded_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event,
-                            uint32_t xferred_bytes);
-    bool gh_arcaded_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request);
 
 #ifdef __cplusplus
 }
@@ -40,6 +31,9 @@ public:
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);
     void device_descriptor(tusb_desc_device_t *desc);
+    bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
+    uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     uint8_t m_epin1;
     uint8_t m_epout;
     uint8_t m_epin2;

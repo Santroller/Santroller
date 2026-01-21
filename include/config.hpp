@@ -32,6 +32,7 @@ extern bool working;
 
 extern std::vector<std::shared_ptr<Instance>> instances;
 extern std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
+extern std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 extern std::map<uint32_t, std::shared_ptr<Device>> devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;
 extern std::map<uint32_t, std::shared_ptr<Instance>> profiles;

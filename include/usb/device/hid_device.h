@@ -28,14 +28,6 @@
 void hidd_init(void);
 bool hidd_deinit(void);
 void hidd_reset(uint8_t rhport);
-uint16_t hidd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc, uint16_t max_len);
-bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request);
-bool hidd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-
-uint16_t tud_hid_generic_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
-void tud_hid_generic_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
-bool tud_hid_generic_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request);
-void tud_hid_generic_init(void);
 
 class HIDDevice : public UsbDevice
 {
@@ -56,6 +48,9 @@ public:
   virtual uint16_t report_desc_len() = 0;
   virtual uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen) = 0;
   virtual void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize) = 0;
+  bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+  bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
+  uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
 };
 
 class HIDConfigDevice : public HIDDevice

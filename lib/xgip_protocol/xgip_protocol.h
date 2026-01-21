@@ -81,14 +81,14 @@ typedef enum {
  } __attribute__((packed)) GipHeader_t;
  
  #define GIP_HEADER(packet, cmd, isInternal, seq) \
-     packet->Header.command = cmd;                \
-     packet->Header.internal = isInternal;        \
-     packet->Header.sequence = seq;               \
-     packet->Header.client = 0;                   \
-     packet->Header.needsAck = 0;                 \
-     packet->Header.chunkStart = 0;               \
-     packet->Header.chunked = 0;                  \
-     packet->Header.length = sizeof(*packet) - sizeof(GipHeader_t);
+     packet->header.command = cmd;                \
+     packet->header.internal = isInternal;        \
+     packet->header.sequence = seq;               \
+     packet->header.client = 0;                   \
+     packet->header.needsAck = 0;                 \
+     packet->header.chunkStart = 0;               \
+     packet->header.chunked = 0;                  \
+     packet->header.length = sizeof(*packet) - sizeof(GipHeader_t);
  
  class XGIPProtocol {
  public:

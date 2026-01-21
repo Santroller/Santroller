@@ -1,6 +1,7 @@
 #include "tusb_option.h"
-// Combine together the implementation of xone and hid as they are baiscally the same
-#if (TUSB_OPT_DEVICE_ENABLED && CFG_TUD_XONE)
+
+#define XBONE_KEEPALIVE_TIMER 15000
+#define XGIP_ACK_WAIT_TIMEOUT 2000
 
 #define REPORT_QUEUE_INTERVAL 35
 //--------------------------------------------------------------------+
@@ -12,43 +13,9 @@
 #include "usb/device/xone_device.h"
 #include "xgip_protocol.h"
 #include <queue>
+#include "config.hpp"
+#include "main.hpp"
 #include "usb/usb_devices.h"
-
-//--------------------------------------------------------------------+
-// MACRO CONSTANT TYPEDEF
-//--------------------------------------------------------------------+
-typedef struct
-{
-    uint8_t itf_num;
-    uint8_t ep_in;
-    uint8_t ep_out;
-
-    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XONE_TX_BUFSIZE];
-    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XONE_RX_BUFSIZE];
-} xoned_interface_t;
-
-typedef enum
-{
-    READY_ANNOUNCE,
-    WAIT_DESCRIPTOR_REQUEST,
-    SEND_DESCRIPTOR,
-    SETUP_AUTH,
-    AUTH_DONE,
-    NOT_READY
-} XboxOneDriverState;
-
-typedef struct
-{
-    uint8_t report[CFG_TUD_XONE_TX_BUFSIZE];
-    uint16_t len;
-} report_queue_t;
-
-// Check report queue every 35 milliseconds
-static uint32_t lastReportQueue = 0;
-
-static std::queue<report_queue_t> report_queue;
-
-static XboxOneDriverState xboneDriverState = NOT_READY;
 
 static uint8_t xb1_guide_on[] = {0x01, 0x5b};
 static uint8_t xb1_guide_off[] = {0x00, 0x5b};
@@ -61,75 +28,139 @@ static uint8_t xboneIdle[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
 // Check if Auth is completed (start is 0x01, 0x01, and invalid is 0x01, 0x07)
 const uint8_t authReady[] = {0x01, 0x00};
 
-// Xbox One Announce
-static uint8_t announcePacket[] = {
-    0x00, 0x2a, 0x00, 0xff, 0xff, 0xff, 0x00, 0x00,
-    0x6f, 0x0e, 0x48, 0x02, 0x01, 0x00, 0x01, 0x00,
-    0x17, 0x01, 0x02, 0x00, 0x01, 0x00, 0x01, 0x00,
-    0x01, 0x00, 0x01, 0x00};
+const uint8_t announce_guitar[] = {
+    0x02, 0x20, 0x01, 0x1c, 0x7e, 0xed, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x6f, 0x0e, 0x48, 0x02,
+    0x01, 0x00, 0x00, 0x00, 0xe5, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_guitar[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF5, 0x00,
+    0xB6, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x75, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
+    0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x02, 0x20, 0x00, 0x4D, 0x61, 0x64, 0x43,
+    0x61, 0x74, 0x7A, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x47, 0x75, 0x69, 0x74, 0x61, 0x72, 0x2E,
+    0x53, 0x74, 0x72, 0x61, 0x74, 0x6F, 0x63, 0x61, 0x73, 0x74, 0x65, 0x72, 0x27, 0x00, 0x57, 0x69,
+    0x6E, 0x64, 0x6F, 0x77, 0x73, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x70, 0x75, 0x74,
+    0x2E, 0x4E, 0x61, 0x76, 0x69, 0x67, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x43, 0x6F, 0x6E, 0x74, 0x72,
+    0x6F, 0x6C, 0x6C, 0x65, 0x72, 0x04, 0x38, 0xE4, 0x2A, 0x0D, 0x7D, 0x7F, 0x33, 0x49, 0x86, 0x93,
+    0x30, 0xFC, 0x55, 0x01, 0x8E, 0x77, 0xE7, 0x1F, 0xF3, 0xB8, 0x86, 0x73, 0xE9, 0x40, 0xA9, 0xF8,
+    0x2F, 0x21, 0x26, 0x3A, 0xCF, 0xB7, 0x56, 0xFF, 0x76, 0x97, 0xFD, 0x9B, 0x81, 0x45, 0xAD, 0x45,
+    0xB6, 0x45, 0xBB, 0xA5, 0x26, 0xD6, 0x77, 0xCE, 0x34, 0x7A, 0xE2, 0x7D, 0xC6, 0x45, 0x8C, 0xA4,
+    0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x02, 0x17, 0x00, 0x20, 0x20, 0x00, 0x01, 0x00, 0x14, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00,
+    0x21, 0x05, 0x00, 0x01, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00};
 
-uint8_t last_report[CFG_TUD_ENDPOINT0_SIZE] = {};
-uint8_t last_report_counter;
-uint32_t keep_alive_timer;
-uint8_t keep_alive_sequence;
-uint8_t virtual_keycode_sequence;
-bool xb1_guide_pressed;
-uint8_t xbone_led_mode;
+const uint8_t announce_drum[] = {
+    0x02, 0x20, 0x01, 0x1c, 0x7e, 0xed, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x38, 0x07, 0x62, 0x42,
+    0x01, 0x00, 0x00, 0x00, 0xe6, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_drum[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD5, 0x00,
+    0xAD, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x6C, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
+    0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x02, 0x17, 0x00, 0x4D, 0x61, 0x64, 0x43,
+    0x61, 0x74, 0x7A, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x44, 0x72, 0x75, 0x6D, 0x73, 0x2E, 0x47,
+    0x6C, 0x61, 0x6D, 0x27, 0x00, 0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0x73, 0x2E, 0x58, 0x62, 0x6F,
+    0x78, 0x2E, 0x49, 0x6E, 0x70, 0x75, 0x74, 0x2E, 0x4E, 0x61, 0x76, 0x69, 0x67, 0x61, 0x74, 0x69,
+    0x6F, 0x6E, 0x43, 0x6F, 0x6E, 0x74, 0x72, 0x6F, 0x6C, 0x6C, 0x65, 0x72, 0x04, 0x93, 0x28, 0x18,
+    0x06, 0xE0, 0xCC, 0x85, 0x4B, 0x92, 0x71, 0x0A, 0x10, 0xDB, 0xAB, 0x7E, 0x07, 0xE7, 0x1F, 0xF3,
+    0xB8, 0x86, 0x73, 0xE9, 0x40, 0xA9, 0xF8, 0x2F, 0x21, 0x26, 0x3A, 0xCF, 0xB7, 0x56, 0xFF, 0x76,
+    0x97, 0xFD, 0x9B, 0x81, 0x45, 0xAD, 0x45, 0xB6, 0x45, 0xBB, 0xA5, 0x26, 0xD6, 0x77, 0xCE, 0x34,
+    0x7A, 0xE2, 0x7D, 0xC6, 0x45, 0x8C, 0xA4, 0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x01, 0x17, 0x00,
+    0x20, 0x0A, 0x00, 0x01, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00};
 
-static bool waiting_ack = false;
-static uint32_t waiting_ack_timeout = 0;
-static uint32_t timer_wait_for_announce;
-static bool xbox_one_powered_on;
-static uint8_t report_led_mode;
-static uint8_t report_led_brightness;
+const uint8_t announce_ghl[] = {
+    0x02, 0x20, 0x01, 0x1C, 0x7B, 0xED, 0x63, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x30, 0x14, 0x9B, 0x07,
+    0x01, 0x00, 0x00, 0x00, 0x10, 0x01, 0x01, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_ghl[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x25, 0x01,
+    0xCF, 0x00, 0x16, 0x00, 0x1F, 0x00, 0x20, 0x00, 0x27, 0x00, 0x2D, 0x00, 0x8E, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+    0x06, 0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x03, 0x19, 0x00,
+    0x41, 0x63, 0x74, 0x69, 0x76, 0x69, 0x73, 0x69, 0x6F, 0x6E, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E,
+    0x49, 0x6E, 0x70, 0x75, 0x74, 0x2E, 0x47, 0x48, 0x37, 0x1A, 0x00, 0x57, 0x69, 0x6E, 0x64, 0x6F,
+    0x77, 0x73, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x70, 0x75, 0x74, 0x2E, 0x47, 0x61,
+    0x6D, 0x65, 0x70, 0x61, 0x64, 0x27, 0x00, 0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0x73, 0x2E, 0x58,
+    0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x70, 0x75, 0x74, 0x2E, 0x4E, 0x61, 0x76, 0x69, 0x67, 0x61,
+    0x74, 0x69, 0x6F, 0x6E, 0x43, 0x6F, 0x6E, 0x74, 0x72, 0x6F, 0x6C, 0x6C, 0x65, 0x72, 0x04, 0xD9,
+    0xFD, 0x12, 0xFD, 0x73, 0x8E, 0xC7, 0x47, 0xA2, 0x31, 0x96, 0x26, 0x8C, 0x38, 0x00, 0x9A, 0x2C,
+    0x40, 0x2E, 0x08, 0xDF, 0x07, 0xE1, 0x45, 0xA5, 0xAB, 0xA3, 0x12, 0x7A, 0xF1, 0x97, 0xB5, 0xE7,
+    0x1F, 0xF3, 0xB8, 0x86, 0x73, 0xE9, 0x40, 0xA9, 0xF8, 0x2F, 0x21, 0x26, 0x3A, 0xCF, 0xB7, 0x77,
+    0xCE, 0x34, 0x7A, 0xE2, 0x7D, 0xC6, 0x45, 0x8C, 0xA4, 0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x03,
+    0x17, 0x00, 0x20, 0x0E, 0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x21, 0x20, 0x00, 0x01, 0x00, 0x10, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00,
+    0x22, 0x08, 0x00, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00};
 
-static XGIPProtocol *outgoingXGIP = nullptr;
-static XGIPProtocol *incomingXGIP = nullptr;
-CFG_TUSB_MEM_SECTION static xoned_interface_t _xoned_itf[CFG_TUD_XONE];
-static volatile bool sending = false;
-/*------------- Helpers -------------*/
-static inline uint8_t get_index_by_itfnum(uint8_t itf_num)
+const uint8_t announce_skylanders[] = {
+    0x02, 0x20, 0x01, 0x1C, 0x5B, 0x9F, 0x9F, 0x96, 0x1B, 0x00, 0x00, 0x00, 0x30, 0x14, 0xAB, 0x09,
+    0x01, 0x00, 0x00, 0x00, 0x32, 0x02, 0x01, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_skylanders[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA6, 0x00,
+    0x7E, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x4D, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
+    0x04, 0x06, 0x1F, 0x05, 0x01, 0x04, 0x05, 0x06, 0x1F, 0x01, 0x21, 0x00, 0x41, 0x63, 0x74, 0x69,
+    0x76, 0x69, 0x73, 0x69, 0x6F, 0x6E, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x53, 0x6B, 0x79, 0x6C,
+    0x61, 0x6E, 0x64, 0x65, 0x72, 0x73, 0x2E, 0x50, 0x6F, 0x72, 0x74, 0x61, 0x6C, 0x03, 0x00, 0xA2,
+    0x88, 0x77, 0x1F, 0x60, 0xB8, 0x40, 0x9B, 0x36, 0x26, 0xEC, 0x56, 0xC7, 0xC4, 0x52, 0x56, 0xFF,
+    0x76, 0x97, 0xFD, 0x9B, 0x81, 0x45, 0xAD, 0x45, 0xB6, 0x45, 0xBB, 0xA5, 0x26, 0xD6, 0x77, 0xCE,
+    0x34, 0x7A, 0xE2, 0x7D, 0xC6, 0x45, 0x8C, 0xA4, 0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x01, 0x17,
+    0x00, 0x21, 0x1E, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+const uint8_t announce_infinity[] = {
+    0x02, 0x20, 0x02, 0x1C, 0x59, 0x80, 0x97, 0x54, 0xF6, 0x9E, 0x00, 0x00, 0x6F, 0x0E, 0x29, 0x02,
+    0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x0C, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_infinity[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9E, 0x00,
+    0x76, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x45, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
+    0x04, 0x06, 0x1F, 0x05, 0x01, 0x04, 0x05, 0x06, 0x1F, 0x01, 0x19, 0x00, 0x44, 0x69, 0x73, 0x6E,
+    0x65, 0x79, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x66, 0x69, 0x6E, 0x69, 0x74, 0x79,
+    0x2E, 0x42, 0x61, 0x73, 0x65, 0x03, 0x3C, 0x17, 0x0D, 0xE9, 0x9B, 0x30, 0xA6, 0x41, 0xA4, 0x77,
+    0x82, 0x6E, 0x2C, 0x97, 0xD8, 0x82, 0x56, 0xFF, 0x76, 0x97, 0xFD, 0x9B, 0x81, 0x45, 0xAD, 0x45,
+    0xB6, 0x45, 0xBB, 0xA5, 0x26, 0xD6, 0x77, 0xCE, 0x34, 0x7A, 0xE2, 0x7D, 0xC6, 0x45, 0x8C, 0xA4,
+    0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x01, 0x17, 0x00, 0x21, 0x20, 0x00, 0x01, 0x00, 0x18, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+const uint8_t announce_ld[] = {
+    0x02, 0x20, 0x02, 0x1C, 0xFA, 0x1F, 0x18, 0x6F, 0x51, 0x54, 0x00, 0x00, 0x6F, 0x0E, 0x41, 0x01,
+    0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x04, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_ld[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA4, 0x00,
+    0x7C, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x4B, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
+    0x04, 0x06, 0x1F, 0x05, 0x01, 0x04, 0x05, 0x06, 0x1F, 0x01, 0x1F, 0x00, 0x54, 0x54, 0x47, 0x61,
+    0x6D, 0x65, 0x73, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x44, 0x69, 0x6D, 0x65, 0x6E, 0x73, 0x69,
+    0x6F, 0x6E, 0x73, 0x2E, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x03, 0x17, 0x36, 0xC0, 0x53,
+    0x67, 0x8C, 0x43, 0x46, 0x9A, 0xA6, 0x3F, 0x5C, 0x22, 0x84, 0xF5, 0x92, 0x56, 0xFF, 0x76, 0x97,
+    0xFD, 0x9B, 0x81, 0x45, 0xAD, 0x45, 0xB6, 0x45, 0xBB, 0xA5, 0x26, 0xD6, 0x77, 0xCE, 0x34, 0x7A,
+    0xE2, 0x7D, 0xC6, 0x45, 0x8C, 0xA4, 0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x01, 0x17, 0x00, 0x21,
+    0x20, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00};
+
+const uint8_t announce_gamepad[] = {
+    0x02, 0x20, 0x02, 0x1c, 0x7e, 0xed, 0x8d, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x5e, 0x04, 0xea, 0x02,
+    0x05, 0x00, 0x11, 0x00, 0x82, 0x0c, 0x00, 0x00, 0x04, 0x05, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_gamepad[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xDA, 0x00,
+    0x9B, 0x00, 0x16, 0x00, 0x1F, 0x00, 0x20, 0x00, 0x27, 0x00, 0x2D, 0x00, 0x4A, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+    0x06, 0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x01, 0x1A, 0x00,
+    0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0x73, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x70,
+    0x75, 0x74, 0x2E, 0x47, 0x61, 0x6D, 0x65, 0x70, 0x61, 0x64, 0x05, 0x56, 0xFF, 0x76, 0x97, 0xFD,
+    0x9B, 0x81, 0x45, 0xAD, 0x45, 0xB6, 0x45, 0xBB, 0xA5, 0x26, 0xD6, 0x2C, 0x40, 0x2E, 0x08, 0xDF,
+    0x07, 0xE1, 0x45, 0xA5, 0xAB, 0xA3, 0x12, 0x7A, 0xF1, 0x97, 0xB5, 0xE7, 0x1F, 0xF3, 0xB8, 0x86,
+    0x73, 0xE9, 0x40, 0xA9, 0xF8, 0x2F, 0x21, 0x26, 0x3A, 0xCF, 0xB7, 0xFE, 0xD2, 0xDD, 0xEC, 0x87,
+    0xD3, 0x94, 0x42, 0xBD, 0x96, 0x1A, 0x71, 0x2E, 0x3D, 0xC7, 0x7D, 0x77, 0xCE, 0x34, 0x7A, 0xE2,
+    0x7D, 0xC6, 0x45, 0x8C, 0xA4, 0x00, 0x42, 0xC0, 0x8B, 0xD9, 0x4A, 0x02, 0x17, 0x00, 0x20, 0x20,
+    0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x17, 0x00, 0x09, 0x3C, 0x00, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+
+XboxOneGamepadDevice::XboxOneGamepadDevice()
 {
-    for (uint8_t i = 0; i < CFG_TUD_XONE; i++)
-    {
-        if (itf_num == _xoned_itf[i].itf_num)
-            return i;
-    }
-
-    return 0xFF;
-}
-
-//--------------------------------------------------------------------+
-// APPLICATION API
-//--------------------------------------------------------------------+
-bool tud_xone_n_ready(uint8_t itf)
-{
-    uint8_t const ep_in = _xoned_itf[itf].ep_in;
-    return tud_ready() && (ep_in != 0) && !usbd_edpt_busy(TUD_OPT_RHPORT, ep_in);
-}
-
-bool tud_xone_n_report(uint8_t itf, void const *report, uint8_t len)
-{
-    uint8_t const rhport = 0;
-    xoned_interface_t *p_xone = &_xoned_itf[itf];
-
-    // claim endpoint
-    TU_VERIFY(usbd_edpt_claim(rhport, p_xone->ep_in));
-
-    // If report id = 0, skip ID field
-    len = tu_min8(len, CFG_TUD_XONE_TX_BUFSIZE);
-    memcpy(p_xone->epin_buf, report, len);
-    sending = true;
-    return usbd_edpt_xfer(TUD_OPT_RHPORT, p_xone->ep_in, p_xone->epin_buf,
-                          len);
-}
-
-//--------------------------------------------------------------------+
-// USBD-CLASS API
-//--------------------------------------------------------------------+
-void xoned_init(void)
-{
-    xoned_reset(TUD_OPT_RHPORT);
     keep_alive_timer = to_ms_since_boot(get_absolute_time());
     keep_alive_sequence = 1; // sequence starts at 1?
     virtual_keycode_sequence = 0;
@@ -142,28 +173,7 @@ void xoned_init(void)
     xbone_led_mode = 0;
 }
 
-void xoned_reset(uint8_t rhport)
-{
-    (void)rhport;
-    tu_memclr(_xoned_itf, sizeof(_xoned_itf));
-    sending = false;
-}
-void process_report_queue(uint32_t now)
-{
-    if (!report_queue.empty() && (now - lastReportQueue) > REPORT_QUEUE_INTERVAL)
-    {
-        // if ( send_xbone_usb(report_queue.front().report, report_queue.front().len) ) {
-        //     memcpy(last_report, &report_queue.front().report, report_queue.front().len);
-        //     report_queue.pop();
-        //     lastReportQueue = now;
-        // } else {
-        //     // THIS IS REQUIRED FOR TIMING ON PC / CONSOLE
-        //     sleep_ms(REPORT_QUEUE_INTERVAL); // sleep while we wait, never happens during input only auth
-        // }
-    }
-}
-uint16_t xoned_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
-                    uint16_t max_len)
+uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass && itf_desc->bInterfaceSubClass == 0x47 &&
                   itf_desc->bInterfaceProtocol == 0xD0,
@@ -173,52 +183,158 @@ uint16_t xoned_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
 
     TU_VERIFY(max_len >= drv_len, 0);
 
-    // Find available interface
-    xoned_interface_t *p_xone = NULL;
-    for (uint8_t i = 0; i < CFG_TUD_XONE; i++)
-    {
-        if (_xoned_itf[i].ep_in == 0 && _xoned_itf[i].ep_out == 0)
-        {
-            p_xone = &_xoned_itf[i];
-            break;
-        }
-    }
-    TU_VERIFY(p_xone, 0);
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     p_desc = tu_desc_next(p_desc);
-    TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &p_xone->ep_out, &p_xone->ep_in), 0);
-
-    p_xone->itf_num = itf_desc->bInterfaceNumber;
+    TU_ASSERT(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epin, &m_epin), 0);
 
     // Prepare for output endpoint
-    if (p_xone->ep_out)
+    if (m_epout)
     {
-        if (!usbd_edpt_xfer(rhport, p_xone->ep_out, p_xone->epout_buf, sizeof(p_xone->epout_buf)))
+        if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf)))
         {
             TU_LOG_FAILED();
             TU_BREAKPOINT();
         }
     }
-    // Setting up XGIPs and driver state
-    if (incomingXGIP != nullptr && outgoingXGIP != nullptr)
-    {
-        xboneDriverState = XboxOneDriverState::READY_ANNOUNCE;
-        incomingXGIP->reset();
-        outgoingXGIP->reset();
-    }
-    //------------- Endpoint Descriptor -------------//
-
-    // Config endpoint
-
+    xboneDriverState = XboxOneDriverState::READY_ANNOUNCE;
+    incomingXGIP->reset();
+    outgoingXGIP->reset();
     return drv_len;
 }
+bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
+{
+    if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
+    {
+        // Input report
+        if (XFER_RESULT_SUCCESS == result)
+        {
+        }
+    }
+    else
+    {
+        // Output report
+        if (XFER_RESULT_SUCCESS == result)
+        {
+            // Parse incoming packet and verify its valid
+            incomingXGIP->parse(epout_buf, xferred_bytes);
 
-bool xoned_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
+            // Setup an ack before we change anything about the incoming packet
+            if (incomingXGIP->ackRequired() == true)
+            {
+                queue_xbone_report((uint8_t *)incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
+            }
+
+            uint8_t command = incomingXGIP->getCommand();
+            if (command == GIP_ACK_RESPONSE)
+            {
+                waiting_ack = false;
+            }
+            else if (command == GIP_DEVICE_DESCRIPTOR)
+            {
+                // setup descriptor packet
+                outgoingXGIP->reset(); // reset if anything was in there
+                outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
+
+                const uint8_t *xboxOneDescriptor = nullptr;
+                switch (subtype)
+                {
+                case Gamepad:
+                case Dancepad:
+                case DjHeroTurntable:
+                case ProKeys:
+                case Taiko:
+                case StageKit:
+                case Wheel:
+                case FlightStick:
+                case FightStick:
+                case PopNMusic:
+                case DJMax:
+                case ProjectDiva:
+                    xboxOneDescriptor = xb1_descriptor_gamepad;
+                    break;
+                case GuitarHeroGuitar:
+                case RockBandGuitar:
+                case ProGuitarMustang:
+                case ProGuitarSquire:
+                case GuitarFreaks:
+                case PowerGigGuitar:
+                case RockRevolutionGuitar:
+                    xboxOneDescriptor = xb1_descriptor_guitar;
+                    break;
+                case GuitarHeroDrums:
+                case RockBandDrums:
+                case PowerGigDrum:
+                    xboxOneDescriptor = xb1_descriptor_drum;
+                    break;
+                case LiveGuitar:
+                    xboxOneDescriptor = xb1_descriptor_ghl;
+                    break;
+                case Skylanders:
+                    xboxOneDescriptor = xb1_descriptor_skylanders;
+                    break;
+                case DisneyInfinity:
+                    xboxOneDescriptor = xb1_descriptor_infinity;
+                    break;
+                case LegoDimensions:
+                    xboxOneDescriptor = xb1_descriptor_ld;
+                    break;
+                }
+                outgoingXGIP->setData(xboxOneDescriptor, sizeof(xboxOneDescriptor));
+                xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
+            }
+            else if (command == GIP_POWER_MODE_DEVICE_CONFIG)
+            {
+                // Power Mode On!
+                xbox_one_powered_on = true;
+            }
+            else if (command == GIP_CMD_LED_ON)
+            {
+                // Set all player LEDs to on
+                report_led_mode = incomingXGIP->getData()[1];       // 1 - turn LEDs on
+                report_led_brightness = incomingXGIP->getData()[2]; // 2 - brightness (ignored for now)
+
+                // If a controller has been seen before, the protocol skips to reading the device descriptor
+                if (xboneDriverState == XboxOneDriverState::WAIT_DESCRIPTOR_REQUEST)
+                {
+                    xboneDriverState = XboxOneDriverState::SETUP_AUTH;
+                }
+                // TODO: leds
+            }
+            else if (command == GIP_CMD_RUMBLE)
+            {
+                // TODO: rumble
+            }
+            else if (command == GIP_AUTH || command == GIP_FINAL_AUTH)
+            {
+                // TODO: auth
+                if (incomingXGIP->getDataLength() == 2 && memcmp(incomingXGIP->getData(), authReady, sizeof(authReady)) == 0)
+                {
+                    xboneDriverState = AUTH_DONE;
+                    auth_completed = true;
+                }
+                if ((incomingXGIP->getChunked() == true && incomingXGIP->endOfChunk() == true) ||
+                    (incomingXGIP->getChunked() == false))
+                {
+                    // xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
+                    //                                          incomingXGIP->getSequence(), incomingXGIP->getCommand());
+                    // xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
+                    incomingXGIP->reset();
+                }
+            }
+        }
+
+        // prepare for new transfer
+        TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE));
+    }
+
+    return true;
+}
+bool XboxOneGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
     return false;
 }
 
-static void queue_xbone_report(void *report, uint16_t report_size)
+void XboxOneGamepadDevice::queue_xbone_report(void *report, uint16_t report_size)
 {
     report_queue_t item;
     memcpy(item.report, report, report_size);
@@ -226,111 +342,272 @@ static void queue_xbone_report(void *report, uint16_t report_size)
     report_queue.push(item);
 }
 
-bool xoned_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
-                   uint32_t xferred_bytes)
+bool XboxOneGamepadDevice::send_xbone_usb(uint8_t const *report, uint16_t report_size)
 {
-    (void)result;
-
-    uint8_t itf = 0;
-    xoned_interface_t *p_xone = _xoned_itf;
-
-    for (;; itf++, p_xone++)
+    if (tud_ready() &&                                              // Is the device ready?
+        (m_epin != 0) && (!usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))) // Is the IN endpoint available?
     {
-        if (itf >= TU_ARRAY_SIZE(_xoned_itf))
-            return false;
+        usbd_edpt_claim(0, m_epin);                                // Take control of IN endpoint
+        usbd_edpt_xfer(0, m_epin, (uint8_t *)report, report_size); // Send report buffer
+        usbd_edpt_release(0, m_epin);                              // Release control of IN endpoint
 
-        if (ep_addr == p_xone->ep_out || ep_addr == p_xone->ep_in)
-            break;
+        // we successfully sent the report
+        return true;
     }
-    if (ep_addr == p_xone->ep_out)
-    {
-        // Parse incoming packet and verify its valid
-        incomingXGIP->parse(p_xone->epout_buf, xferred_bytes);
-
-        // Setup an ack before we change anything about the incoming packet
-        if (incomingXGIP->ackRequired() == true)
-        {
-            queue_xbone_report((uint8_t *)incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
-        }
-
-        // uint8_t command = incomingXGIP->getCommand();
-        // if (command == GIP_ACK_RESPONSE)
-        // {
-        //     waiting_ack = false;
-        // }
-        // else if (command == GIP_DEVICE_DESCRIPTOR)
-        // {
-        //     // setup descriptor packet
-        //     outgoingXGIP->reset(); // reset if anything was in there
-        //     outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
-        //     outgoingXGIP->setData(xboxOneDescriptor, sizeof(xboxOneDescriptor));
-        //     xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
-        // }
-        // else if (command == GIP_POWER_MODE_DEVICE_CONFIG)
-        // {
-        //     // Power Mode On!
-        //     xbox_one_powered_on = true;
-        // }
-        // else if (command == GIP_CMD_LED_ON)
-        // {
-        //     // Set all player LEDs to on
-        //     report_led_mode = incomingXGIP->getData()[1];       // 1 - turn LEDs on
-        //     report_led_brightness = incomingXGIP->getData()[2]; // 2 - brightness (ignored for now)
-
-        //     // If a controller has been seen before, the protocol skips to reading the device descriptor
-        //     if (xboneDriverState == XboxOneDriverState::WAIT_DESCRIPTOR_REQUEST)
-        //     {
-        //         outgoingXGIP->reset(); // reset if anything was in there
-        //         outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
-        //         outgoingXGIP->setData(xboxOneDescriptor, sizeof(xboxOneDescriptor));
-        //         xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
-        //     }
-        // }
-        // else if (command == GIP_CMD_RUMBLE)
-        // {
-        //     // TO-DO
-        // }
-        // else if (command == GIP_AUTH || command == GIP_FINAL_AUTH)
-        // {
-        //     if (incomingXGIP->getDataLength() == 2 && memcmp(incomingXGIP->getData(), authReady, sizeof(authReady)) == 0)
-        //     {
-        //         xboxOneAuthData->authCompleted = true;
-        //         xboneDriverState = AUTH_DONE;
-        //     }
-        //     if ((incomingXGIP->getChunked() == true && incomingXGIP->endOfChunk() == true) ||
-        //         (incomingXGIP->getChunked() == false))
-        //     {
-        //         xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
-        //                                                  incomingXGIP->getSequence(), incomingXGIP->getCommand());
-        //         xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
-        //         incomingXGIP->reset();
-        //     }
-        // }
-
-        TU_ASSERT(usbd_edpt_xfer(rhport, p_xone->ep_out, p_xone->epout_buf,
-                                 sizeof(p_xone->epout_buf)));
-    }
-    else if (ep_addr == p_xone->ep_in)
-    {
-        // Nothing needed
-        sending = false;
-    }
-    return true;
+    return false;
 }
 
-#endif
-
-XboxOneGamepadDevice::XboxOneGamepadDevice()
+void XboxOneGamepadDevice::process_report_queue(uint32_t now)
 {
+    if (!report_queue.empty() && (now - lastReportQueue) > REPORT_QUEUE_INTERVAL)
+    {
+        if (send_xbone_usb(report_queue.front().report, report_queue.front().len))
+        {
+            memcpy(last_report, &report_queue.front().report, report_queue.front().len);
+            report_queue.pop();
+            lastReportQueue = now;
+        }
+        else
+        {
+            // THIS IS REQUIRED FOR TIMING ON PC / CONSOLE
+            sleep_ms(REPORT_QUEUE_INTERVAL); // sleep while we wait, never happens during input only auth
+        }
+    }
 }
 void XboxOneGamepadDevice::initialize()
 {
 }
+void XboxOneGamepadDevice::set_ack_wait()
+{
+    waiting_ack = true;
+    waiting_ack_timeout = to_ms_since_boot(get_absolute_time()); // 2 second time-out
+}
 void XboxOneGamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    uint16_t xboneReportSize = 0;
+
+    // Perform update
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+
+    // Process our report queue
+    process_report_queue(now);
+
+    // Do not add logic until our ACK returns
+    if (waiting_ack == true)
+    {
+        if ((now - waiting_ack_timeout) < XGIP_ACK_WAIT_TIMEOUT)
+        {
+            return;
+        }
+        else
+        { // ACK wait time out
+            waiting_ack = false;
+        }
+    }
+
+    switch (xboneDriverState)
+    {
+    case READY_ANNOUNCE:
+        // Xbox One announce must wait around 0.5s before sending
+        if (now - timer_wait_for_announce > 500)
+        {
+            const uint8_t *announcePacket = nullptr;
+            switch (subtype)
+            {
+            case Gamepad:
+            case Dancepad:
+            case DjHeroTurntable:
+            case ProKeys:
+            case Taiko:
+            case StageKit:
+            case Wheel:
+            case FlightStick:
+            case FightStick:
+            case PopNMusic:
+            case DJMax:
+            case ProjectDiva:
+                announcePacket = announce_gamepad;
+                break;
+            case GuitarHeroGuitar:
+            case RockBandGuitar:
+            case ProGuitarMustang:
+            case ProGuitarSquire:
+            case GuitarFreaks:
+            case PowerGigGuitar:
+            case RockRevolutionGuitar:
+                announcePacket = announce_guitar;
+                break;
+            case GuitarHeroDrums:
+            case RockBandDrums:
+            case PowerGigDrum:
+                announcePacket = announce_drum;
+                break;
+            case LiveGuitar:
+                announcePacket = announce_ghl;
+                break;
+            case Skylanders:
+                announcePacket = announce_skylanders;
+                break;
+            case DisneyInfinity:
+                announcePacket = announce_infinity;
+                break;
+            case LegoDimensions:
+                announcePacket = announce_ld;
+                break;
+            }
+            outgoingXGIP->setAttributes(GIP_ANNOUNCE, 1, 1, 0, 0);
+            outgoingXGIP->setData(announcePacket, sizeof(announcePacket));
+            memcpy((void *)&outgoingXGIP->getData()[3], &now, 3);
+            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+            xboneDriverState = WAIT_DESCRIPTOR_REQUEST;
+        }
+        break;
+    case SEND_DESCRIPTOR:
+        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+        if (outgoingXGIP->endOfChunk() == true)
+        {
+            xboneDriverState = SETUP_AUTH;
+        }
+        if (outgoingXGIP->getPacketAck() == 1)
+        { // ACK can happen at different chunks
+            set_ack_wait();
+        }
+        break;
+    case SETUP_AUTH:
+        // TODO: auth
+        // Received packet from dongle to console / PC
+        // if (xboxOneAuthData->xboneState == GPAuthState::send_auth_dongle_to_console)
+        // {
+        //     uint16_t len = xboxOneAuthData->dongleBuffer.length;
+        //     uint8_t type = xboxOneAuthData->dongleBuffer.type;
+        //     uint8_t sequence = xboxOneAuthData->dongleBuffer.sequence;
+        //     uint8_t *buffer = xboxOneAuthData->dongleBuffer.data;
+        //     bool isChunked = (len > GIP_MAX_CHUNK_SIZE);
+        //     outgoingXGIP->reset();
+        //     outgoingXGIP->setAttributes(type, sequence, 1, isChunked, 1);
+        //     outgoingXGIP->setData(buffer, len);
+        //     xboxOneAuthData->xboneState = wait_auth_dongle_to_console;
+        //     xboxOneAuthData->dongleBuffer.reset();
+        // }
+
+        // // Process auth dongle to console
+        // if (xboxOneAuthData->xboneState == GPAuthState::wait_auth_dongle_to_console)
+        // {
+        //     queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+        //     if (outgoingXGIP->getChunked() == false || outgoingXGIP->endOfChunk() == true)
+        //     {
+        //         xboxOneAuthData->xboneState = GPAuthState::auth_idle_state;
+        //     }
+        //     if (outgoingXGIP->getPacketAck() == 1)
+        //     { // ACK can happen at different chunks
+        //         set_ack_wait();
+        //     }
+        // }
+        break;
+    case AUTH_DONE:
+    case NOT_READY:
+    default:
+        break;
+    };
+
+    XboxOneGamepad_Data_t *xboneReport = (XboxOneGamepad_Data_t *)epout_buf;
+
+    // No input until auth is ready
+    if (auth_completed == false)
+    {
+        GIP_HEADER((xboneReport), GIP_INPUT_REPORT, false, last_report_counter);
+        memcpy(epout_buf + sizeof(GipHeader_t), xboneIdle, sizeof(xboneIdle));
+        xboneReportSize = sizeof(XboxOneGamepad_Data_t);
+        send_xbone_usb((uint8_t *)&xboneReport, xboneReportSize);
         return;
-    // TODO: this
+    }
+
+    // Send Keep-Alive every 15 seconds (keep_alive_timer updates if send is successful)
+    if ((now - keep_alive_timer) > XBONE_KEEPALIVE_TIMER)
+    {
+        memset(&xboneReport->header, 0, sizeof(GipHeader_t));
+        GIP_HEADER((xboneReport), GIP_KEEPALIVE, 1, keep_alive_sequence);
+        xboneReport->header.length = 4;
+        static uint8_t keepAlive[] = {0x80, 0x00, 0x00, 0x00};
+        memcpy(epout_buf + sizeof(GipHeader_t), &keepAlive, sizeof(keepAlive));
+        xboneReportSize = sizeof(GipHeader_t) + sizeof(keepAlive);
+        // If successful, update our keep alive timer/sequence
+        if (send_xbone_usb((uint8_t *)&xboneReport, xboneReportSize) == true)
+        {
+            keep_alive_timer = to_ms_since_boot(get_absolute_time());
+            keep_alive_sequence++; // will rollover
+            if (keep_alive_sequence == 0)
+                keep_alive_sequence = 1;
+        }
+        return;
+    }
+
+    for (const auto &mapping : mappings)
+    {
+        mapping->update(full_poll);
+        mapping->update_xinput(epout_buf);
+    }
+
+    // Virtual Keycode Triggered (Pressed or Released)
+    if (xb1_guide_pressed != xboneReport->guide)
+    {
+        xb1_guide_pressed = xboneReport->guide;
+        uint8_t new_sequence = virtual_keycode_sequence;
+        new_sequence++; // will rollover
+        if (new_sequence == 0)
+            new_sequence = 1;
+        GIP_HEADER((xboneReport), GIP_VIRTUAL_KEYCODE, 1, new_sequence);
+        if (xb1_guide_pressed == false)
+        {
+            xboneReport->header.length = sizeof(xb1_guide_on);
+            memcpy(epout_buf + sizeof(GipHeader_t), &xb1_guide_on, sizeof(xb1_guide_on));
+            xboneReportSize = sizeof(GipHeader_t) + sizeof(xb1_guide_on);
+        }
+        else
+        {
+            xboneReport->header.length = sizeof(xb1_guide_off);
+            memcpy(epout_buf + sizeof(GipHeader_t), &xb1_guide_off, sizeof(xb1_guide_off));
+            xboneReportSize = sizeof(GipHeader_t) + sizeof(xb1_guide_off);
+        }
+        if (send_xbone_usb((uint8_t *)&xboneReport, xboneReportSize) == true)
+        {
+            // On success, update our guide pressed state and virtual key code state
+            virtual_keycode_sequence = new_sequence;
+            xb1_guide_pressed = !xb1_guide_pressed;
+        }
+        return;
+    }
+    // this was set temporarily to make things easier for mapping, so don't actually send it
+    xboneReport->guide = false;
+
+    // Only change xbox one input report if we have different inputs!
+    XboxOneGamepad_Data_t newInputReport;
+
+    memset(&newInputReport, 0, sizeof(XboxOneGamepad_Data_t));
+    GIP_HEADER((&newInputReport), GIP_INPUT_REPORT, false, last_report_counter);
+
+    // We changed inputs since generating our last report, increment last report counter (but don't update until success)
+    if (memcmp(last_report, epout_buf + sizeof(GipHeader_t), sizeof(XboxOneGamepad_Data_t) - sizeof(GipHeader_t)) != 0)
+    {
+        xboneReportSize = sizeof(XboxOneGamepad_Data_t);
+        memcpy(last_report, epout_buf, xboneReportSize);
+        xboneReport->header.sequence = last_report_counter + 1;
+        if (xboneReport->header.sequence == 0)
+            xboneReport->header.sequence = 1;
+
+        // Successfully sent report, actually increment last report counter!
+        if (send_xbone_usb((uint8_t *)&xboneReport, xboneReportSize) == true)
+        {
+            if (memcmp(last_report, epout_buf + sizeof(GipHeader_t), xboneReportSize - sizeof(GipHeader_t)) != 0)
+            {
+                last_report_counter++;
+                if (last_report_counter == 0)
+                    last_report_counter = 1;
+                memcpy(last_report, epout_buf + sizeof(GipHeader_t), xboneReportSize);
+                return;
+            }
+        }
+    }
 }
 
 size_t XboxOneGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -338,7 +615,7 @@ size_t XboxOneGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t
     OS_COMPATIBLE_SECTION section = {
         FirstInterfaceNumber : m_interface,
         Reserved : 0x01,
-        CompatibleID : "XUSB10",
+        CompatibleID : "XGIP10",
         SubCompatibleID : {0},
         Reserved2 : {0}
     };
@@ -354,6 +631,8 @@ size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
         m_eps_assigned = true;
         m_epin = next_epin();
         m_epout = next_epin();
+        usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
+        usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
     }
     uint8_t desc[] = {TUD_XONE_GAMEPAD_DESCRIPTOR(m_interface, m_epin, m_epout)};
     assert(sizeof(desc) <= remaining);

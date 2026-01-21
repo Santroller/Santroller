@@ -65,6 +65,7 @@ void hid_task(void)
     }
     if (newMode != mode || reinit)
     {
+        printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);
         mode = newMode;
         reinit = false;
         seenPs4 = false;
@@ -160,8 +161,9 @@ void update(bool full_poll)
     {
         instance->process(full_poll);
     }
-    if (HIDConfigDevice::tool_closed())
+    if (HIDConfigDevice::tool_closed() && (millis() - timeSinceMode) < 2000)
     {
+        
         for (const auto &profile : profiles)
         {
             for (auto &mapping : profile.second->triggers)

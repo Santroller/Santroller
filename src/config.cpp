@@ -49,6 +49,7 @@ std::map<uint32_t, std::shared_ptr<Instance>> profiles;
 std::set<uint32_t> active_profiles;
 std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
+std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -363,17 +364,9 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     active_instances.clear();
     usb_instances.clear();
     profiles.clear();
+    UsbDevice::reset_ep();
     switch (mode)
     {
-    case ModeHid:
-    {
-        auto confDevice = std::make_shared<HIDConfigDevice>();
-        confDevice->m_interface = instances.size();
-        instances.push_back(confDevice);
-        active_instances.push_back(confDevice);
-        usb_instances[confDevice->m_interface] = confDevice;
-        break;
-    }
     case ModeOgXbox:
     case ModeXboxOne:
     case ModeWiiRb:
@@ -382,18 +375,19 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     case ModePs5:
     case ModeSwitch:
         break;
+    case ModeHid:
     case ModeXbox360:
     {
-        auto secDevice = std::make_shared<XInputSecurityDevice>();
-        secDevice->m_interface = instances.size();
-        instances.push_back(secDevice);
-        active_instances.push_back(secDevice);
-        usb_instances[secDevice->m_interface] = secDevice;
         auto confDevice2 = std::make_shared<HIDConfigDevice>();
         confDevice2->m_interface = instances.size();
         instances.push_back(confDevice2);
         active_instances.push_back(confDevice2);
         usb_instances[confDevice2->m_interface] = confDevice2;
+        auto secDevice = std::make_shared<XInputSecurityDevice>();
+        secDevice->m_interface = instances.size();
+        instances.push_back(secDevice);
+        active_instances.push_back(secDevice);
+        usb_instances[secDevice->m_interface] = secDevice;
         break;
     }
     case ModeGuitarHeroArcade:

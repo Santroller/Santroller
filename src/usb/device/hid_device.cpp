@@ -12,27 +12,8 @@
 #include "pico/bootrom.h"
 #include "utils.h"
 
-static std::map<uint8_t, std::shared_ptr<HIDDevice>> hidDevicesByEpNum;
-static std::map<uint8_t, std::shared_ptr<HIDDevice>> hidDevicesByItf;
 
-void hidd_init(void)
-{
-  hidd_reset(0);
-}
-
-bool hidd_deinit(void)
-{
-  return true;
-}
-
-void hidd_reset(uint8_t rhport)
-{
-  (void)rhport;
-  hidDevicesByEpNum.clear();
-  hidDevicesByItf.clear();
-}
-
-uint16_t hidd_open(uint8_t rhport, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
   TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
 
@@ -42,66 +23,76 @@ uint16_t hidd_open(uint8_t rhport, tusb_desc_interface_t const *desc_itf, uint16
   TU_ASSERT(max_len >= drv_len, 0);
 
   uint8_t const *p_desc = (uint8_t const *)desc_itf;
-
-  std::shared_ptr<HIDDevice> dev = std::static_pointer_cast<HIDDevice>(usb_instances[desc_itf->bInterfaceNumber]);
   //------------- HID descriptor -------------//
   p_desc = tu_desc_next(p_desc);
   TU_ASSERT(HID_DESC_TYPE_HID == tu_desc_type(p_desc), 0);
-  dev->hid_descriptor = (tusb_hid_descriptor_hid_t const *)p_desc;
+  hid_descriptor = (tusb_hid_descriptor_hid_t const *)p_desc;
 
   //------------- Endpoint Descriptor -------------//
   p_desc = tu_desc_next(p_desc);
 
-  TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, desc_itf->bNumEndpoints, TUSB_XFER_INTERRUPT, &dev->m_epout, &dev->m_epin), 0);
+  TU_ASSERT(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, desc_itf->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epout, &m_epin), 0);
 
   if (desc_itf->bInterfaceSubClass == HID_SUBCLASS_BOOT)
   {
-    dev->itf_protocol = desc_itf->bInterfaceProtocol;
+    itf_protocol = desc_itf->bInterfaceProtocol;
   }
 
-  dev->protocol_mode = HID_PROTOCOL_REPORT; // Per Specs: default is report mode
+  protocol_mode = HID_PROTOCOL_REPORT; // Per Specs: default is report mode
 
   // Prepare for output endpoint
-  if (dev->m_epout)
+  if (m_epout)
   {
-    TU_ASSERT(usbd_edpt_xfer(rhport, dev->m_epout, dev->epout_buf, CFG_TUD_HID_EP_BUFSIZE), drv_len);
-    hidDevicesByEpNum[dev->m_epout] = dev;
+    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE), drv_len);
   }
-  if (dev->m_epin)
-  {
-    hidDevicesByEpNum[dev->m_epin] = dev;
-  }
-  hidDevicesByItf[desc_itf->bInterfaceNumber] = dev;
 
   return drv_len;
 }
 
-// Invoked when a control transfer occurred on an interface of this class
-// Driver response accordingly to the request and the transfer stage (setup/data/ack)
-// return false to stall control endpoint (e.g unsupported request)
-bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
+bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
 
+  if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
+  {
+    // Input report
+    if (XFER_RESULT_SUCCESS == result)
+    {
+      // TODO: do we need report_complete at all?
+    }
+  }
+  else
+  {
+    // Output report
+    if (XFER_RESULT_SUCCESS == result)
+    {
+      set_report(0, HID_REPORT_TYPE_OUTPUT, epout_buf, (uint16_t)xferred_bytes);
+    }
+
+    // prepare for new transfer
+    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE));
+  }
+
+  return true;
+}
+bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
+{
   if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_ENDPOINT && request->bRequest == TUSB_REQ_CLEAR_FEATURE)
   {
-
-    auto it = hidDevicesByEpNum.find(request->wIndex);
-    if (it == hidDevicesByEpNum.end())
-    {
-      return false;
-    }
-    auto dev = it->second;
-    dev->clearedIn |= tu_edpt_dir(request->wIndex) == TUSB_DIR_IN;
-    dev->clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
+    clearedIn |= tu_edpt_dir(request->wIndex) == TUSB_DIR_IN;
+    clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
   }
   TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
-  auto it = hidDevicesByItf.find(request->wIndex);
-  if (it == hidDevicesByItf.end())
+  if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
-    return false;
+    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
+    {
+      if (request->bRequest == 6 && request->wValue == 0x4200)
+      {
+        newMode = ModeOgXbox;
+        return false;
+      }
+    }
   }
-
-  auto dev = it->second;
   if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD)
   {
     //------------- STD Request -------------//
@@ -112,12 +103,12 @@ bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
 
       if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESC_TYPE_HID)
       {
-        TU_VERIFY(dev->hid_descriptor);
-        TU_VERIFY(tud_control_xfer(rhport, request, (void *)(uintptr_t)dev->hid_descriptor, dev->hid_descriptor->bLength));
+        TU_VERIFY(hid_descriptor);
+        TU_VERIFY(tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(uintptr_t)hid_descriptor, hid_descriptor->bLength));
       }
       else if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESC_TYPE_REPORT)
       {
-        TU_VERIFY(tud_control_xfer(rhport, request, (void *)(uintptr_t)dev->report_descriptor(), dev->report_desc_len()));
+        TU_VERIFY(tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(uintptr_t)report_descriptor(), report_desc_len()));
       }
       else
       {
@@ -136,13 +127,13 @@ bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
         uint8_t const report_type = tu_u16_high(request->wValue);
         uint8_t const report_id = tu_u16_low(request->wValue);
 
-        uint8_t *report_buf = dev->ctrl_buf;
+        uint8_t *report_buf = ctrl_buf;
         uint16_t req_len = tu_min16(request->wLength, CFG_TUD_HID_EP_BUFSIZE);
         uint16_t xferlen = 0;
 
-        xferlen += dev->get_report(report_id, (hid_report_type_t)report_type, report_buf, req_len);
+        xferlen += get_report(report_id, (hid_report_type_t)report_type, report_buf, req_len);
 
-        tud_control_xfer(rhport, request, dev->ctrl_buf, xferlen);
+        tud_control_xfer(TUD_OPT_RHPORT, request, ctrl_buf, xferlen);
       }
       break;
 
@@ -150,93 +141,56 @@ bool hidd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t 
       if (stage == CONTROL_STAGE_SETUP)
       {
         TU_VERIFY(request->wLength <= CFG_TUD_HID_EP_BUFSIZE);
-        tud_control_xfer(rhport, request, dev->ctrl_buf, request->wLength);
+        tud_control_xfer(TUD_OPT_RHPORT, request, ctrl_buf, request->wLength);
       }
       else if (stage == CONTROL_STAGE_ACK)
       {
         uint8_t const report_type = tu_u16_high(request->wValue);
         uint8_t const report_id = tu_u16_low(request->wValue);
 
-        uint8_t const *report_buf = dev->ctrl_buf;
+        uint8_t const *report_buf = ctrl_buf;
         uint16_t report_len = tu_min16(request->wLength, CFG_TUD_HID_EP_BUFSIZE);
 
-        dev->set_report(report_id, (hid_report_type_t)report_type, report_buf, report_len);
+        set_report(report_id, (hid_report_type_t)report_type, report_buf, report_len);
       }
       break;
 
     case HID_REQ_CONTROL_SET_IDLE:
       if (stage == CONTROL_STAGE_SETUP)
       {
-        dev->idle_rate = tu_u16_high(request->wValue);
-        tud_control_status(rhport, request);
+        idle_rate = tu_u16_high(request->wValue);
+        tud_control_status(TUD_OPT_RHPORT, request);
       }
       break;
 
     case HID_REQ_CONTROL_GET_IDLE:
       if (stage == CONTROL_STAGE_SETUP)
       {
-        tud_control_xfer(rhport, request, &dev->idle_rate, 1);
+        tud_control_xfer(TUD_OPT_RHPORT, request, &idle_rate, 1);
       }
       break;
 
     case HID_REQ_CONTROL_GET_PROTOCOL:
       if (stage == CONTROL_STAGE_SETUP)
       {
-        tud_control_xfer(rhport, request, &dev->protocol_mode, 1);
+        tud_control_xfer(TUD_OPT_RHPORT, request, &protocol_mode, 1);
       }
       break;
 
     case HID_REQ_CONTROL_SET_PROTOCOL:
       if (stage == CONTROL_STAGE_SETUP)
       {
-        tud_control_status(rhport, request);
+        tud_control_status(TUD_OPT_RHPORT, request);
       }
       else if (stage == CONTROL_STAGE_ACK)
       {
-        dev->protocol_mode = (uint8_t)request->wValue;
+        protocol_mode = (uint8_t)request->wValue;
       }
       break;
 
     default:
-      return false; // stall unsupported request
+      return false;
     }
-  }
-  else
-  {
-    return false; // stall unsupported request
-  }
-
-  return true;
-}
-
-bool hidd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
-{
-
-  auto it = hidDevicesByEpNum.find(ep_addr);
-  if (it == hidDevicesByEpNum.end())
-  {
-    return false;
-  }
-  auto dev = it->second;
-
-  if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
-  {
-    // Input report
-    if (XFER_RESULT_SUCCESS == result)
-    {
-      // TODO: do we need report_complete at all?
-    }
-  }
-  else
-  {
-    // Output report
-    if (XFER_RESULT_SUCCESS == result)
-    {
-      dev->set_report(0, HID_REPORT_TYPE_OUTPUT, dev->epout_buf, (uint16_t)xferred_bytes);
-    }
-
-    // prepare for new transfer
-    TU_ASSERT(usbd_edpt_xfer(rhport, dev->m_epout, dev->epout_buf, CFG_TUD_HID_EP_BUFSIZE));
   }
 
   return true;
@@ -302,6 +256,8 @@ size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     m_eps_assigned = true;
     m_epin = next_epin();
     m_epout = next_epout();
+    usb_instances_by_epnum[m_epin] = usb_instances[m_interface];
+    usb_instances_by_epnum[m_epout] = usb_instances[m_interface];
   }
   uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(m_interface, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
@@ -386,11 +342,13 @@ void HIDConfigDevice::process(bool full_poll)
     profile_selected = false;
     return;
   }
-  if (!profile_selected) {
+  if (!profile_selected)
+  {
     return;
   }
   auto selected = profiles.find(selected_profile);
-  if (selected == profiles.end()) {
+  if (selected == profiles.end())
+  {
     return;
   }
   for (auto &mapping : selected->second->mappings)
@@ -477,7 +435,8 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       profile_selected = true;
       selected_profile = cmd.profileId;
       auto selected = profiles.find(selected_profile);
-      if (selected == profiles.end()) {
+      if (selected == profiles.end())
+      {
         break;
       }
       for (auto &mapping : selected->second->mappings)

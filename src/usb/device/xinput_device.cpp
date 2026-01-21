@@ -30,17 +30,13 @@ static const uint8_t xbox_players[] = {
     0, // 0x0C	 Slow blinking*
     0, // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
-
-static uint8_t xinputInterfaces[4];
-static uint8_t lastIntf = 0;
-
 XInputGamepadDevice::XInputGamepadDevice()
-{
-}
-void XInputGamepadDevice::initialize()
 {
     lastIntf = 0;
     memset(xinputInterfaces, 0xFF, sizeof(xinputInterfaces));
+}
+void XInputGamepadDevice::initialize()
+{
 }
 
 uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -85,6 +81,8 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
             if (xinputInterfaces[i] == 0xFF)
             {
                 xinputInterfaces[i] = itf_desc->bInterfaceNumber;
+                printf("assigned: %02x, %02x\r\n", i, itf_desc->bInterfaceNumber);
+                break;
             }
         }
         return drv_len;
@@ -95,10 +93,10 @@ void XInputGamepadDevice::process(bool full_poll)
 {
     if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
+    memset(epin_buf, 0, sizeof(epin_buf));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
     report->rid = 0;
     report->rsize = sizeof(XInputGamepad_Data_t);
-    memset(epin_buf, 0, sizeof(epin_buf));
     for (const auto &mapping : mappings)
     {
         mapping->update(full_poll);
@@ -165,7 +163,6 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
 }
 bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
-    static uint8_t buf[0x22];
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
@@ -202,7 +199,7 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
                             rightTrigger : 0xff,
                             leftThumbX : USB_VID,
                             leftThumbY : USB_PID,
-                            rightThumbX : 0,
+                            rightThumbX : (USB_VERSION_BCD(subtype, 0, 0)),
                             rightThumbY : 0xffc0,
                             reserved : {0x00, 0x00, 0x00, 0x00},
                             flags : XINPUT_FLAGS_FORCE_FEEDBACK
@@ -344,18 +341,6 @@ bool XInputSecurityDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
 }
 bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
-    // On an actual 360, the console always uses wIndex 0x00. This is the security interface so redirect the request to the right place
-    if (request->wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
-    {
-        tusb_control_request_t realRequest;
-        memcpy(&realRequest, request, sizeof(realRequest));
-        realRequest.wIndex = xinputInterfaces[lastIntf];
-        if (stage == CONTROL_STAGE_ACK)
-        {
-            lastIntf++;
-        }
-        return usb_instances[realRequest.wIndex]->control_transfer(stage, &realRequest);
-    }
     static uint8_t buf[0x22];
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
@@ -441,3 +426,6 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
 
     return false;
 }
+
+uint8_t XInputGamepadDevice::xinputInterfaces[] = {};
+uint8_t XInputGamepadDevice::lastIntf = 0;

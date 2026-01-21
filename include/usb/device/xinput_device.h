@@ -148,4 +148,7 @@ public:
 
     CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
+
+    static uint8_t xinputInterfaces[4];
+    static uint8_t lastIntf;
 };

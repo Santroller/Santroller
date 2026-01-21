@@ -20,6 +20,7 @@ uint16_t tud_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                   uint16_t max_len);
 void tud_init(void);
 void tud_reset(uint8_t rhport);
+
 usbd_class_driver_t drivers[] = {
     {
 #if CFG_TUSB_DEBUG >= 2
@@ -230,7 +231,7 @@ void tud_reset(uint8_t rhport)
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-  printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
+  // printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
 
@@ -287,7 +288,22 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
   }
   if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
   {
-    auto it = usb_instances.find(request->wIndex & 0xFF);
+    auto wIndex = request->wIndex & 0xFF;
+    // On an actual 360, the console always uses wIndex 0x00. This is the security interface so redirect the request to the right place
+    if (wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    {
+      wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntf];
+      // caps read, on to the next set for the next read
+      if (stage == CONTROL_STAGE_ACK)
+      {
+        XInputGamepadDevice::lastIntf++;
+      }
+    }
+    if (wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    {
+      wIndex = XInputGamepadDevice::xinputInterfaces[0];
+    }
+    auto it = usb_instances.find(wIndex);
     if (it == usb_instances.end())
     {
       return false;

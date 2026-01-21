@@ -378,16 +378,16 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     case ModeHid:
     case ModeXbox360:
     {
-        auto confDevice2 = std::make_shared<HIDConfigDevice>();
-        confDevice2->interface_id = instances.size();
-        instances.push_back(confDevice2);
-        active_instances.push_back(confDevice2);
-        usb_instances[confDevice2->interface_id] = confDevice2;
         auto secDevice = std::make_shared<XInputSecurityDevice>();
         secDevice->interface_id = instances.size();
         instances.push_back(secDevice);
         active_instances.push_back(secDevice);
         usb_instances[secDevice->interface_id] = secDevice;
+        auto confDevice2 = std::make_shared<HIDConfigDevice>();
+        confDevice2->interface_id = instances.size();
+        instances.push_back(confDevice2);
+        active_instances.push_back(confDevice2);
+        usb_instances[confDevice2->interface_id] = confDevice2;
         break;
     }
     case ModeGuitarHeroArcade:

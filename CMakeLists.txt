@@ -182,6 +182,7 @@ pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
 target_link_libraries(
   ${TARGET}
   pico_stdlib
+  pico_rand
   FlashPROM
   CRC32
   midi

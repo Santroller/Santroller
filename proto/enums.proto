@@ -35,6 +35,14 @@ enum ReportId {
   ReportIdPs5SetChallenge = 0xF0;
   ReportIdPs5GetResponse = 0xF1;
   ReportIdPs5GetAuthStatus = 0xF2;
+  ReportSwitchOutput00 = 0;
+  ReportSwitchFeature = 1;
+  ReportSwitchOutput10 = 0x10;
+  ReportSwitchOutput21 = 0x21;
+  ReportSwitchOutput30 = 0x30;
+  ReportSwitchConfiguration = 0x80;
+  ReportSwitchInput = 0x81;
+  ReportSwitchOutput82 = 0x82;
 }
 
 enum MappingMode {

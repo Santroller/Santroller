@@ -12,7 +12,6 @@
 #include "pico/bootrom.h"
 #include "utils.h"
 
-
 uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
   TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
@@ -48,7 +47,26 @@ uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len
 
   return drv_len;
 }
-
+bool HIDDevice::ready() {
+  return tud_ready() && m_eps_assigned && !usbd_edpt_busy(TUD_OPT_RHPORT, m_epin);
+}
+bool HIDDevice::send_report(uint8_t len, uint8_t report_id, void const *report)
+{
+  if (report_id)
+  {
+    memcpy(epin_buf + 1, report, len);
+    len += 1;
+  }
+  else
+  {
+    memcpy(epin_buf, report, len);
+  }
+  if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
+  {
+    return false;
+  }
+  return usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, len);
+}
 bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
 
@@ -80,6 +98,11 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
   {
     clearedIn |= tu_edpt_dir(request->wIndex) == TUSB_DIR_IN;
     clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
+    if (clearedIn && clearedOut)
+    {
+      newMode = ModeSwitch;
+      return false;
+    }
   }
   TU_VERIFY(request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE);
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)

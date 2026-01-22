@@ -67,7 +67,7 @@ void GamepadButtonMapping::update_wii(uint8_t *buf)
 
 void GamepadButtonMapping::update_switch(uint8_t *buf)
 {
-    SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
+    SwitchInputReport *report = (SwitchInputReport *)buf;
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:

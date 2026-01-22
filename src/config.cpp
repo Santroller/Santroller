@@ -51,7 +51,7 @@ std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;
-ConsoleMode mode = ModeXboxOne;
+ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
 bool loadedAny = false;

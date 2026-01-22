@@ -47,26 +47,26 @@ void GamepadAxisMapping::update_wii(uint8_t *buf)
 }
 void GamepadAxisMapping::update_switch(uint8_t *buf)
 {
-    SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
+    SwitchInputReport *report = (SwitchInputReport *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
+        report->leftStickX = m_calibratedValue >> 2;
         break;
     case GamepadLeftStickY:
-        report->leftStickX = m_calibratedValue >> 8;
+        report->leftStickX = m_calibratedValue >> 2;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
+        report->rightStickX = m_calibratedValue >> 2;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
+        report->rightStickY = m_calibratedValue >> 2;
         break;
     case GamepadLeftTrigger:
-        report->l2 = m_calibratedValue > 60000;
+        report->leftTrigger = m_calibratedValue > 60000;
         break;
     case GamepadRightTrigger:
-        report->r2 = m_calibratedValue > 60000;
+        report->rightTrigger = m_calibratedValue > 60000;
         break;
     default:
         break;

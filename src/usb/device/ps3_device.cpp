@@ -167,7 +167,7 @@ void PS3GamepadDevice::initialize()
 }
 void PS3GamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!ready())
         return;
     if (subtype == Gamepad)
     {
@@ -232,13 +232,9 @@ void PS3GamepadDevice::process(bool full_poll)
         mapping->update_ps3(epin_buf);
     }
 
-    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
-    {
-        return;
-    }
     if (subtype == Gamepad)
     {
-        usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS3Gamepad_Data_t));
+        send_report(sizeof(PS3Gamepad_Data_t), 0, epin_buf);
     }
     else
     {
@@ -251,7 +247,7 @@ void PS3GamepadDevice::process(bool full_poll)
             PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
             reportGh->slider = GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider];
         }
-        usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t));
+        send_report(sizeof(PS3Dpad_Data_t), 0, epin_buf);
     }
 }
 

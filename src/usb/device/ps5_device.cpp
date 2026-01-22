@@ -76,7 +76,7 @@ void PS5GamepadDevice::initialize()
 }
 void PS5GamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!ready())
         return;
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     gamepad->report_id = 1;
@@ -92,11 +92,7 @@ void PS5GamepadDevice::process(bool full_poll)
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
 
-    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
-    {
-        return;
-    }
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS5Dpad_Data_t));
+    send_report(sizeof(PS5Dpad_Data_t), 0, epin_buf);
 }
 
 size_t PS5GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

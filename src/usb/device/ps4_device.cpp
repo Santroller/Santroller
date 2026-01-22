@@ -40,7 +40,7 @@ void PS4GamepadDevice::initialize()
 }
 void PS4GamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!ready())
         return;
     // TODO: if ps5 auth dongle is plugged in, jump to PS5 mode here
     PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)epin_buf;
@@ -56,12 +56,7 @@ void PS4GamepadDevice::process(bool full_poll)
     }
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
-
-    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
-    {
-        return;
-    }
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(PS4Dpad_Data_t));
+    send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);
 }
 
 size_t PS4GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

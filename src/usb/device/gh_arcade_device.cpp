@@ -102,7 +102,18 @@ void GHArcadeGamepadDevice::initialize()
 }
 void GHArcadeGamepadDevice::process(bool full_poll)
 {
-    return;
+    if (!ready())
+        return;
+    ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)epin_buf;
+    memset(epin_buf, 0, sizeof(epin_buf));
+    report->always_1d = 0x1d;
+    report->always_ff = 0xff;
+    for (const auto &mapping : mappings)
+    {
+        mapping->update(full_poll);
+        mapping->update_hid(epin_buf);
+    }
+    send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
 }
 
 size_t GHArcadeGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

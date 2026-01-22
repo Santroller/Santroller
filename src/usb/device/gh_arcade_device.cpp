@@ -1,10 +1,4 @@
 #include "tusb_option.h"
-// Driver for emulate a GH Arcade guitar's vendor interface. This simply just gets called by the game for setting the guitars side.
-// We don't need to care about the input interfaces.
-
-//--------------------------------------------------------------------+
-// INCLUDE
-//--------------------------------------------------------------------+
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"

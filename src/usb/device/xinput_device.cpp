@@ -121,10 +121,6 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
 {
     if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
     {
-        // Input report
-        if (XFER_RESULT_SUCCESS == result)
-        {
-        }
         return true;
     }
 

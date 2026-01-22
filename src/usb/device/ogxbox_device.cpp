@@ -51,7 +51,6 @@ const OGXboxOutput_Report_t DukeXIDVibrationCapabilities = {
     right : 0xFFFF
 };
 
-
 OGXboxGamepadDevice::OGXboxGamepadDevice()
 {
 }
@@ -84,23 +83,17 @@ bool OGXboxGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
 {
     if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
     {
-        // Input report
-        if (XFER_RESULT_SUCCESS == result)
-        {
-        }
+        return true;
     }
-    else
+    // Output report
+    if (XFER_RESULT_SUCCESS == result)
     {
-        // Output report
-        if (XFER_RESULT_SUCCESS == result)
-        {
-            // TODO: rumble
-            // return dev->interrupt_received(xferred_bytes);
-        }
-
-        // prepare for new transfer
-        TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40));
+        // TODO: rumble
+        // return dev->interrupt_received(xferred_bytes);
     }
+
+    // prepare for new transfer
+    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40));
     return true;
 }
 bool OGXboxGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)

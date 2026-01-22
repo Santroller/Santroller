@@ -198,140 +198,134 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
 }
 bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+
     if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
     {
-        // Input report
-        if (XFER_RESULT_SUCCESS == result)
-        {
-        }
+        return true;
     }
-    else
+    // Output report
+    if (XFER_RESULT_SUCCESS == result)
     {
-        // Output report
-        if (XFER_RESULT_SUCCESS == result)
+        // Parse incoming packet and verify its valid
+        incomingXGIP->parse(epout_buf, xferred_bytes);
+
+        uint8_t command = incomingXGIP->getCommand();
+
+        // Setup an ack before we change anything about the incoming packet
+        if (incomingXGIP->ackRequired() == true)
         {
-            GipHeader_t *header = (GipHeader_t *)epout_buf;
-            // Parse incoming packet and verify its valid
-            incomingXGIP->parse(epout_buf, xferred_bytes);
+            queue_xbone_report((uint8_t *)incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
+        }
+        if (command == GIP_ACK_RESPONSE)
+        {
+            waiting_ack = false;
+        }
+        else if (command == GIP_DEVICE_DESCRIPTOR)
+        {
+            // setup descriptor packet
+            outgoingXGIP->reset(); // reset if anything was in there
+            outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
 
-            uint8_t command = incomingXGIP->getCommand();
-
-            // Setup an ack before we change anything about the incoming packet
-            if (incomingXGIP->ackRequired() == true)
+            const uint8_t *xboxOneDescriptor = nullptr;
+            size_t len = 0;
+            switch (subtype)
             {
-                queue_xbone_report((uint8_t *)incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
+            case Gamepad:
+            case Dancepad:
+            case DjHeroTurntable:
+            case ProKeys:
+            case Taiko:
+            case StageKit:
+            case Wheel:
+            case FlightStick:
+            case FightStick:
+            case PopNMusic:
+            case DJMax:
+            case ProjectDiva:
+                xboxOneDescriptor = xb1_descriptor_gamepad;
+                len = sizeof(xb1_descriptor_gamepad);
+                break;
+            case GuitarHeroGuitar:
+            case RockBandGuitar:
+            case ProGuitarMustang:
+            case ProGuitarSquire:
+            case GuitarFreaks:
+            case PowerGigGuitar:
+            case RockRevolutionGuitar:
+                xboxOneDescriptor = xb1_descriptor_guitar;
+                len = sizeof(xb1_descriptor_guitar);
+                break;
+            case GuitarHeroDrums:
+            case RockBandDrums:
+            case PowerGigDrum:
+                xboxOneDescriptor = xb1_descriptor_drum;
+                len = sizeof(xb1_descriptor_drum);
+                break;
+            case LiveGuitar:
+                xboxOneDescriptor = xb1_descriptor_ghl;
+                len = sizeof(xb1_descriptor_ghl);
+                break;
+            case Skylanders:
+                xboxOneDescriptor = xb1_descriptor_skylanders;
+                len = sizeof(xb1_descriptor_skylanders);
+                break;
+            case DisneyInfinity:
+                xboxOneDescriptor = xb1_descriptor_infinity;
+                len = sizeof(xb1_descriptor_infinity);
+                break;
+            case LegoDimensions:
+                xboxOneDescriptor = xb1_descriptor_ld;
+                len = sizeof(xb1_descriptor_ld);
+                break;
             }
-            if (command == GIP_ACK_RESPONSE)
+            outgoingXGIP->setData(xboxOneDescriptor, len);
+            xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
+        }
+        else if (command == GIP_SET_STATE)
+        {
+            // TODO: handle other states
+            switch (incomingXGIP->getData()[0])
             {
-                waiting_ack = false;
+            case GIP_STATE_START:
+                xboneDriverState = XboxOneDriverState::SETUP_AUTH;
+                xbox_one_powered_on = true;
+                break;
+            default:
+                break;
             }
-            else if (command == GIP_DEVICE_DESCRIPTOR)
+            printf("state: %d\r\n", incomingXGIP->getData()[0]);
+        }
+        else if (command == GIP_CMD_LED_ON)
+        {
+            // Set all player LEDs to on
+            report_led_mode = incomingXGIP->getData()[1];       // 1 - turn LEDs on
+            report_led_brightness = incomingXGIP->getData()[2]; // 2 - brightness (ignored for now)
+        }
+        else if (command == GIP_CMD_RUMBLE)
+        {
+            // TODO: rumble
+        }
+        else if (command == GIP_AUTH || command == GIP_FINAL_AUTH)
+        {
+            // TODO: auth
+            if (incomingXGIP->getDataLength() == 2 && memcmp(incomingXGIP->getData(), authReady, sizeof(authReady)) == 0)
             {
-                // setup descriptor packet
-                outgoingXGIP->reset(); // reset if anything was in there
-                outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
-
-                const uint8_t *xboxOneDescriptor = nullptr;
-                size_t len = 0;
-                switch (subtype)
-                {
-                case Gamepad:
-                case Dancepad:
-                case DjHeroTurntable:
-                case ProKeys:
-                case Taiko:
-                case StageKit:
-                case Wheel:
-                case FlightStick:
-                case FightStick:
-                case PopNMusic:
-                case DJMax:
-                case ProjectDiva:
-                    xboxOneDescriptor = xb1_descriptor_gamepad;
-                    len = sizeof(xb1_descriptor_gamepad);
-                    break;
-                case GuitarHeroGuitar:
-                case RockBandGuitar:
-                case ProGuitarMustang:
-                case ProGuitarSquire:
-                case GuitarFreaks:
-                case PowerGigGuitar:
-                case RockRevolutionGuitar:
-                    xboxOneDescriptor = xb1_descriptor_guitar;
-                    len = sizeof(xb1_descriptor_guitar);
-                    break;
-                case GuitarHeroDrums:
-                case RockBandDrums:
-                case PowerGigDrum:
-                    xboxOneDescriptor = xb1_descriptor_drum;
-                    len = sizeof(xb1_descriptor_drum);
-                    break;
-                case LiveGuitar:
-                    xboxOneDescriptor = xb1_descriptor_ghl;
-                    len = sizeof(xb1_descriptor_ghl);
-                    break;
-                case Skylanders:
-                    xboxOneDescriptor = xb1_descriptor_skylanders;
-                    len = sizeof(xb1_descriptor_skylanders);
-                    break;
-                case DisneyInfinity:
-                    xboxOneDescriptor = xb1_descriptor_infinity;
-                    len = sizeof(xb1_descriptor_infinity);
-                    break;
-                case LegoDimensions:
-                    xboxOneDescriptor = xb1_descriptor_ld;
-                    len = sizeof(xb1_descriptor_ld);
-                    break;
-                }
-                outgoingXGIP->setData(xboxOneDescriptor, len);
-                xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
+                xboneDriverState = AUTH_DONE;
+                auth_completed = true;
             }
-            else if (command == GIP_SET_STATE)
+            if ((incomingXGIP->getChunked() == true && incomingXGIP->endOfChunk() == true) ||
+                (incomingXGIP->getChunked() == false))
             {
-                // TODO: handle other states
-                switch (incomingXGIP->getData()[0])
-                {
-                case GIP_STATE_START:
-                    xboneDriverState = XboxOneDriverState::SETUP_AUTH;
-                    xbox_one_powered_on = true;
-                    break;
-                default:
-                    break;
-                }
-                printf("state: %d\r\n", incomingXGIP->getData()[0]);
-            }
-            else if (command == GIP_CMD_LED_ON)
-            {
-                // Set all player LEDs to on
-                report_led_mode = incomingXGIP->getData()[1];       // 1 - turn LEDs on
-                report_led_brightness = incomingXGIP->getData()[2]; // 2 - brightness (ignored for now)
-            }
-            else if (command == GIP_CMD_RUMBLE)
-            {
-                // TODO: rumble
-            }
-            else if (command == GIP_AUTH || command == GIP_FINAL_AUTH)
-            {
-                // TODO: auth
-                if (incomingXGIP->getDataLength() == 2 && memcmp(incomingXGIP->getData(), authReady, sizeof(authReady)) == 0)
-                {
-                    xboneDriverState = AUTH_DONE;
-                    auth_completed = true;
-                }
-                if ((incomingXGIP->getChunked() == true && incomingXGIP->endOfChunk() == true) ||
-                    (incomingXGIP->getChunked() == false))
-                {
-                    // xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
-                    //                                          incomingXGIP->getSequence(), incomingXGIP->getCommand());
-                    // xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
-                    incomingXGIP->reset();
-                }
+                // xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
+                //                                          incomingXGIP->getSequence(), incomingXGIP->getCommand());
+                // xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
+                incomingXGIP->reset();
             }
         }
-
-        // prepare for new transfer
-        TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE));
     }
+
+    // prepare for new transfer
+    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE));
 
     return true;
 }
@@ -547,7 +541,6 @@ void XboxOneGamepadDevice::process(bool full_poll)
         }
         return;
     }
-
 
     memset(epin_buf, 0, sizeof(XboxOneGamepad_Data_t));
     GIP_HEADER((xboneReport), GIP_INPUT_REPORT, false, last_report_counter);

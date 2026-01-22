@@ -75,6 +75,7 @@ typedef enum {
      bool getChunkData(XGIPProtocol & packet);   // Get chunk data from incoming packet
      bool ackRequired();                         // Did our last parsed packet require an ack?
  private:
+     void writeLeb128(uint8_t* dest, uint16_t len);
      GipHeader_t header;             // On-going GIP header
      uint16_t totalChunkLength;      // How big is the chunk?
      uint16_t actualDataReceived;    // How much actual data have we received?

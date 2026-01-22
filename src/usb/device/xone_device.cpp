@@ -298,6 +298,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 default:
                     break;
                 }
+                printf("state: %d\r\n", incomingXGIP->getData()[0]);
             }
             else if (command == GIP_CMD_LED_ON)
             {

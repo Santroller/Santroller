@@ -144,3 +144,7 @@ void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void DJHTurntableAxisMapping::update_xboxone(uint8_t *buf)
+{
+    // not a thing
+}

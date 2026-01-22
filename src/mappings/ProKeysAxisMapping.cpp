@@ -45,3 +45,6 @@ void ProKeysAxisMapping::update_xinput(uint8_t *buf)
 void ProKeysAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void ProKeysAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

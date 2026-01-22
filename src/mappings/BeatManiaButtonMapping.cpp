@@ -70,3 +70,7 @@ void BeatManiaButtonMapping::update_ogxbox(uint8_t *buf)
     // not a thing
     
 }
+void BeatManiaButtonMapping::update_xboxone(uint8_t *buf)
+{
+    // not a thing
+}

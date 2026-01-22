@@ -243,3 +243,6 @@ void ProjectDivaAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void ProjectDivaAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

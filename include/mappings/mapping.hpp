@@ -30,6 +30,7 @@ public:
     virtual void update_ps5(uint8_t *report) = 0;
     virtual void update_xinput(uint8_t *report) = 0;
     virtual void update_ogxbox(uint8_t *report) = 0;
+    virtual void update_xboxone(uint8_t *report) = 0;
     void update_digital(bool full_poll);
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
 
@@ -82,6 +83,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class DJMaxTurntableButtonMapping : public ButtonMapping
 {
@@ -97,6 +99,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class DJMaxTurntableAxisMapping : public AxisMapping
 {
@@ -112,6 +115,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class GuitarFreaksButtonMapping : public ButtonMapping
 {
@@ -127,6 +131,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class GuitarFreaksAxisMapping : public AxisMapping
 {
@@ -142,6 +147,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class GuitarHeroArcadeButtonMapping : public ButtonMapping
 {
@@ -157,6 +163,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class GuitarHeroArcadeAxisMapping : public AxisMapping
 {
@@ -172,6 +179,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class LiveGuitarButtonMapping : public ButtonMapping
 {
@@ -187,6 +195,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class LiveGuitarAxisMapping : public AxisMapping
 {
@@ -202,6 +211,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class PopNMusicButtonMapping : public ButtonMapping
 {
@@ -217,6 +227,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class PopNMusicAxisMapping : public AxisMapping
 {
@@ -232,6 +243,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class ProGuitarButtonMapping : public ButtonMapping
 {
@@ -247,6 +259,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class ProGuitarAxisMapping : public AxisMapping
 {
@@ -262,6 +275,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class ProjectDivaButtonMapping : public ButtonMapping
 {
@@ -277,6 +291,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class ProjectDivaAxisMapping : public AxisMapping
 {
@@ -292,6 +307,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class ProKeysButtonMapping : public ButtonMapping
 {
@@ -307,6 +323,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class ProKeysAxisMapping : public AxisMapping
 {
@@ -322,6 +339,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class RockBandDrumsButtonMapping : public ButtonMapping
 {
@@ -337,6 +355,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class RockBandDrumsAxisMapping : public AxisMapping
 {
@@ -352,6 +371,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class TaikoButtonMapping : public ButtonMapping
 {
@@ -367,6 +387,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class TaikoAxisMapping : public AxisMapping
 {
@@ -382,6 +403,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class WheelButtonMapping : public ButtonMapping
 {
@@ -397,6 +419,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class WheelAxisMapping : public AxisMapping
 {
@@ -412,6 +435,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class KeyboardButtonMapping : public ButtonMapping
 {
@@ -427,6 +451,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class MouseAxisMapping : public AxisMapping
 {
@@ -442,6 +467,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class MouseButtonMapping : public ButtonMapping
 {
@@ -457,6 +483,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 
 class GuitarHeroDrumsButtonMapping : public ButtonMapping
@@ -473,6 +500,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class GuitarHeroDrumsAxisMapping : public AxisMapping
 {
@@ -488,6 +516,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 
 class GuitarHeroGuitarButtonMapping : public ButtonMapping
@@ -504,6 +533,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class GuitarHeroGuitarAxisMapping : public AxisMapping
 {
@@ -519,6 +549,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
     static const uint8_t gh5_slider_mapping[32];
 };
 
@@ -536,6 +567,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class DJHTurntableAxisMapping : public AxisMapping
 {
@@ -551,6 +583,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 
 class RockBandGuitarButtonMapping : public ButtonMapping
@@ -567,6 +600,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class RockBandGuitarAxisMapping : public AxisMapping
 {
@@ -582,6 +616,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 
 class GamepadButtonMapping : public ButtonMapping
@@ -598,6 +633,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
     static const uint8_t dpad_bindings[15];
 };
 class KeyboardManiaButtonMapping : public ButtonMapping
@@ -614,6 +650,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class KeyboardManiaAxisMapping : public AxisMapping
 {
@@ -629,6 +666,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class BeatManiaButtonMapping : public ButtonMapping
 {
@@ -644,6 +682,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class BeatManiaAxisMapping : public AxisMapping
 {
@@ -659,6 +698,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class DrumManiaButtonMapping : public ButtonMapping
 {
@@ -674,6 +714,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class DrumManiaAxisMapping : public AxisMapping
 {
@@ -689,6 +730,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class SVDXButtonMapping : public ButtonMapping
 {
@@ -704,6 +746,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 class SVDXAxisMapping : public AxisMapping
 {
@@ -719,6 +762,7 @@ public:
     void update_ps5(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
 };
 
 class ActivationTrigger

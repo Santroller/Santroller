@@ -417,3 +417,6 @@ void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

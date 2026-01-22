@@ -12,7 +12,7 @@
 typedef enum
 {
     READY_ANNOUNCE,
-    WAIT_DESCRIPTOR_REQUEST,
+    WAIT,
     SEND_DESCRIPTOR,
     SETUP_AUTH,
     AUTH_DONE,

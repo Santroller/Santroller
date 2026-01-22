@@ -37,3 +37,6 @@ void ProjectDivaButtonMapping::update_xinput(uint8_t *buf)
 void ProjectDivaButtonMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void ProjectDivaButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

@@ -1,29 +1,5 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+#pragma once
 
-#ifndef USB_DESCRIPTORS_H_
-#define USB_DESCRIPTORS_H_
 #include <stdint.h>
 #define USB_PID 0x2882
 
@@ -158,8 +134,6 @@ enum
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1
 
-#define TUD_XINPUT_AUDIO_DESC_LEN    (9 + 27 + 7 + 7 + 7 + 7)
-
 // XInput Audio Descriptor
 #define TUD_XINPUT_AUDIO_DESCRIPTOR(_itfnum, _epin, _epout, _epin2, _epout2) \
   /* Interface */\
@@ -174,8 +148,6 @@ enum
   7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 64,\
   /* Endpoint Out 2 (unk 2)*/\
   7, TUSB_DESC_ENDPOINT, _epout2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
-
-#define TUD_XINPUT_PLUGIN_MODULE_DESC_LEN    (9 + 9 + 7)
 
 // XInput Plugin Module Descriptor
 #define TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(_itfnum, _epin) \
@@ -193,9 +165,7 @@ enum
   /* Interface */\
   9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, 0xFF, 0xFD, 0x13, _strnum,\
   /* XInput Security descriptor */\
-  6, 0x41, 0x00, 0x01, 0x01, 0x03\
-  
-#define TUD_OGXBOX_GAMEPAD_DESC_LEN    (9 +  7 + 7)
+  6, 0x41, 0x00, 0x01, 0x01, 0x03
 
 // XInput Gamepad Descriptor
 #define TUD_OGXBOX_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
@@ -205,8 +175,6 @@ enum
   7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4,\
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4
-  
-#define TUD_XONE_GAMEPAD_DESC_LEN    (9 +  7 + 7)
 
 // XOne Gamepad Descriptor
 #define TUD_XONE_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
@@ -216,10 +184,6 @@ enum
   7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
-
-
-
-#define TUD_GHARCADE_VENDOR_DESC_LEN    (9 +  7 + 7 + 7)
 
 // GHArcade Gamepad Descriptor
 #define TUD_GHARCADE_VENDOR_DESCRIPTOR(_itfnum, _epin1, _epout, _epin2, _strnum) \
@@ -232,4 +196,3 @@ enum
   /* Endpoint In */\
   7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
 
-#endif /* USB_DESCRIPTORS_H_ */

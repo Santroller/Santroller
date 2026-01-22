@@ -346,3 +346,6 @@ void RockBandGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

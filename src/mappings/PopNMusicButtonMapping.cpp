@@ -50,3 +50,6 @@ void PopNMusicButtonMapping::update_ogxbox(uint8_t *buf)
 {
     // not a thing
 }
+void PopNMusicButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

@@ -50,3 +50,6 @@ void WheelButtonMapping::update_ogxbox(uint8_t *buf)
 {
     
 }
+void WheelButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

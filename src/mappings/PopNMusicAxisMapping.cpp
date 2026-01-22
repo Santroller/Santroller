@@ -55,3 +55,6 @@ void PopNMusicAxisMapping::update_ogxbox(uint8_t *buf)
 {
     // not a thing
 }
+void PopNMusicAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

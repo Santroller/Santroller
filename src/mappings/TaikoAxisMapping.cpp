@@ -43,3 +43,6 @@ void TaikoAxisMapping::update_xinput(uint8_t *buf)
 void TaikoAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void TaikoAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

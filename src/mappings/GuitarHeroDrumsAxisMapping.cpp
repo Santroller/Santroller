@@ -190,3 +190,6 @@ void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void GuitarHeroDrumsAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

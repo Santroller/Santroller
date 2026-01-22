@@ -147,3 +147,6 @@ void LiveGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void LiveGuitarAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

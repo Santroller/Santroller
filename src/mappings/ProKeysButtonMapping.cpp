@@ -52,3 +52,6 @@ void ProKeysButtonMapping::update_ogxbox(uint8_t *buf)
 {
     
 }
+void ProKeysButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

@@ -51,3 +51,6 @@ void TaikoButtonMapping::update_ogxbox(uint8_t *buf)
 {
     
 }
+void TaikoButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

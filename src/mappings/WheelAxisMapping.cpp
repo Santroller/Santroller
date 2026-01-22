@@ -52,3 +52,6 @@ void WheelAxisMapping::update_ogxbox(uint8_t *buf)
 {
     
 }
+void WheelAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

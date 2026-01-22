@@ -257,3 +257,6 @@ void RockBandDrumsButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

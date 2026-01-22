@@ -268,3 +268,6 @@ void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void ProGuitarButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

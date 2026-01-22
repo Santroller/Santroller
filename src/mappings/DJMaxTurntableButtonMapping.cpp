@@ -41,3 +41,7 @@ void DJMaxTurntableButtonMapping::update_xinput(uint8_t *buf)
 void DJMaxTurntableButtonMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void DJMaxTurntableButtonMapping::update_xboxone(uint8_t *buf)
+{
+    // not a thing
+}

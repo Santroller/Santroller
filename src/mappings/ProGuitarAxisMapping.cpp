@@ -192,3 +192,6 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void ProGuitarAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

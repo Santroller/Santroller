@@ -147,6 +147,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
     const char *str = string_desc_arr[index];
 
+    printf("ret: %s\r\n", str);
     // Cap at max char
     chr_count = strlen(str);
     size_t const max_count = sizeof(_desc_str) / sizeof(_desc_str[0]) - 1; // -1 for string type
@@ -163,7 +164,6 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
   // first byte is length (including header), second byte is string type
   _desc_str[0] = (uint16_t)((TUSB_DESC_STRING << 8) | (2 * chr_count + 2));
-
   return _desc_str;
 }
 
@@ -204,7 +204,6 @@ const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDHeader = {
 bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
                         uint32_t xferred_bytes)
 {
-
   auto it = usb_instances_by_epnum.find(ep_addr);
   if (it == usb_instances_by_epnum.end())
   {
@@ -231,7 +230,7 @@ void tud_reset(uint8_t rhport)
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-  // printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
+  printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
 
@@ -269,6 +268,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             }
             compatible_descriptor->TotalSections = count;
             compatible_descriptor->TotalLength = current;
+            printf("count %02x %02x\r\n", current, count);
             tud_control_xfer(rhport, request, descriptor_buffer, current);
           }
           return true;

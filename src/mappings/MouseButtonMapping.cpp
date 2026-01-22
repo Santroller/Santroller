@@ -62,3 +62,6 @@ void MouseButtonMapping::update_ogxbox(uint8_t *buf)
 {
     // not a thing
 }
+void MouseButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

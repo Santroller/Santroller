@@ -222,3 +222,6 @@ void GuitarHeroDrumsButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void GuitarHeroDrumsButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

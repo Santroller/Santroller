@@ -43,3 +43,7 @@ void DJMaxTurntableAxisMapping::update_xinput(uint8_t *buf)
 void DJMaxTurntableAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void DJMaxTurntableAxisMapping::update_xboxone(uint8_t *buf)
+{
+    // not a thing
+}

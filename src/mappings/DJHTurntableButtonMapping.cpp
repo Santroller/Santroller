@@ -284,3 +284,7 @@ void DJHTurntableButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void DJHTurntableButtonMapping::update_xboxone(uint8_t *buf)
+{
+    // not a thing
+}

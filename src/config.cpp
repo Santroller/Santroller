@@ -51,7 +51,7 @@ std::map<uint32_t, std::shared_ptr<Device>> devices;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;
-ConsoleMode mode = ModeHid;
+ConsoleMode mode = ModeXboxOne;
 ConsoleMode newMode = mode;
 bool working = false;
 bool loadedAny = false;
@@ -401,6 +401,13 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     }
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+    if (active_profiles.empty()) {
+        auto confDevice2 = std::make_shared<HIDConfigDevice>();
+        confDevice2->interface_id = instances.size();
+        instances.push_back(confDevice2);
+        active_instances.push_back(confDevice2);
+        usb_instances[confDevice2->interface_id] = confDevice2;
+    }
     printf("full init\r\n");
     update(true);
     return ret;

@@ -1,53 +1,4 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2024 OpenStickCommunity (gp2040-ce.info)
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
- #ifndef _XGIP_PROTOCOL_
- #define _XGIP_PROTOCOL_
- 
- //
- // XGIP Protocol
- // XGIP10 or Xbox Game Input Protocol (1.0?)
- //  Used in Xbox 360 and Xbox One controller
- //  communication and reporting.
- //  
- //  Documentation comes from various sources
- //  including Santroller (https://github.com/Santroller/Santroller),
- //  GIMX (https://github.com/matlo/GIMX), and other
- //  open-source Github projects.
- //
- //  This is a free, open-source, guess-work
- //  based interpretation of the protocol for
- //  the GP2040-CE controller platform and in
- //  no way reflects any commercial software or
- //  protocols. This implementation is provided
- //  as-is and we are not responsible for
- //  this interpretation corrupting data or sending
- //  invalid packets.
- //
- //  !!!USE AT YOUR OWN RISK!!!
- //
+#pragma once
  
  #include <stdint.h>
  
@@ -59,7 +10,7 @@ typedef enum {
     GIP_ANNOUNCE = 0x02,                  // Xbox One Announce
     GIP_KEEPALIVE = 0x03,                 // Xbox One Keep-Alive
     GIP_DEVICE_DESCRIPTOR = 0x04,         // Xbox One Definition
-    GIP_POWER_MODE_DEVICE_CONFIG = 0x05,  // Xbox One Power Mode Config
+    GIP_SET_STATE = 0x05,                 // Xbox One Power Mode Config
     GIP_AUTH = 0x06,                      // Xbox One Authentication
     GIP_VIRTUAL_KEYCODE = 0x07,           // XBox One Guide button pressed
     GIP_CMD_RUMBLE = 0x09,                // Xbox One Rumble Command
@@ -68,6 +19,16 @@ typedef enum {
     GIP_INPUT_REPORT = 0x20,              // Xbox One Input Report
     GIP_HID_REPORT = 0x21,                // Xbox One HID Report
 } XboxOneReport;
+
+typedef enum {
+    GIP_STATE_START = 0x00,
+    GIP_STATE_STOP = 0x01,
+    GIP_STATE_FULL_POWER = 0x03,
+    GIP_STATE_OFF = 0x04,
+    GIP_STATE_QUIESCE = 0x05,
+    GIP_STATE_RESET = 0x07
+} XboxOneDeviceState;
+
  typedef struct
  {
      uint8_t command;
@@ -128,5 +89,3 @@ typedef enum {
      uint16_t dataLength;            // actual length of data
      bool isValidPacket;             // is this a valid packet or did we get an error?
  };
- 
- #endif

@@ -47,3 +47,6 @@ void DrumManiaAxisMapping::update_xinput(uint8_t *buf)
 void DrumManiaAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void DrumManiaAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

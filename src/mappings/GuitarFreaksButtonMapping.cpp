@@ -71,3 +71,6 @@ void GuitarFreaksButtonMapping::update_xinput(uint8_t *buf)
 void GuitarFreaksButtonMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void GuitarFreaksButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

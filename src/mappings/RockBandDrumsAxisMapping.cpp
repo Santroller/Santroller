@@ -191,3 +191,6 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

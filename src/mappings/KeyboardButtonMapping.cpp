@@ -50,3 +50,6 @@ void KeyboardButtonMapping::update_ogxbox(uint8_t *buf)
 {
     
 }
+void KeyboardButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

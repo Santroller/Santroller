@@ -52,3 +52,6 @@ void GuitarFreaksAxisMapping::update_xinput(uint8_t *buf)
 void GuitarFreaksAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void GuitarFreaksAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

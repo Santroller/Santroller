@@ -75,3 +75,6 @@ void GuitarHeroArcadeButtonMapping::update_xinput(uint8_t *buf)
 void GuitarHeroArcadeButtonMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void GuitarHeroArcadeButtonMapping::update_xboxone(uint8_t *buf)
+{
+}

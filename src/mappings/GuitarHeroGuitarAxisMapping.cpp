@@ -200,3 +200,6 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

@@ -47,3 +47,6 @@ void KeyboardManiaAxisMapping::update_xinput(uint8_t *buf)
 void KeyboardManiaAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
+void KeyboardManiaAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

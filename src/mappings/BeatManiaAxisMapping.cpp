@@ -52,3 +52,7 @@ void BeatManiaAxisMapping::update_ogxbox(uint8_t *buf)
 {
     // not a thing
 }
+void BeatManiaAxisMapping::update_xboxone(uint8_t *buf)
+{
+    // not a thing
+}

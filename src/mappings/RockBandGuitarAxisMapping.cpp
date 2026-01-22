@@ -204,3 +204,6 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
+{
+}

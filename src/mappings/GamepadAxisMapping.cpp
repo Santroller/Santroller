@@ -287,3 +287,30 @@ void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     }
 }
+void GamepadAxisMapping::update_xboxone(uint8_t *buf)
+{
+    XboxOneGamepad_Data_t *report = (XboxOneGamepad_Data_t *)buf;
+    switch (m_mapping.mapping.gamepadAxis)
+    {
+    case GamepadLeftStickX:
+        report->leftStickX = m_calibratedValue - INT16_MAX;
+        break;
+    case GamepadLeftStickY:
+        report->leftStickY = m_calibratedValue - INT16_MAX;
+        break;
+    case GamepadRightStickX:
+        report->rightStickX = m_calibratedValue - INT16_MAX;
+        break;
+    case GamepadRightStickY:
+        report->rightStickY = m_calibratedValue - INT16_MAX;
+        break;
+    case GamepadLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 6;
+        break;
+    case GamepadRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 6;
+        break;
+    default:
+        break;
+    }
+}

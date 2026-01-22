@@ -129,12 +129,15 @@ message InputActivationTrigger {
 
 message ActivationTrigger {
   oneof trigger {
-    InputActivationTrigger input = 1; 
-    ConsoleMode console = 2; 
-    WiiExtensionTypeInput wii = 3; 
-    PS2ControllerTypeInput ps2 = 4;
-    UsbDeviceTypeInput usb = 5;
-    BluetoothDeviceTypeInput bluetooth = 6;
+    InputActivationTrigger input = 1; // Input at startup
+    InputActivationTrigger inputAnyTime = 2; // Input at any time
+    ConsoleMode console = 3; // Console mode
+    WiiExtensionTypeInput wii = 4; // Wii Extension type
+    PS2ControllerTypeInput ps2 = 5; // Ps2 Extension type
+    UsbDeviceTypeInput usb = 6; // Usb device type
+    BluetoothDeviceTypeInput bluetooth = 7; // bluetooth input type
+    uint32 linkedProfile = 8; // linked profile - both profiles will be active at the same time, for mixed inputs
+    uint32 midiChannel = 9; // midi channel of plugged in device
   }
 }
 

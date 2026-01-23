@@ -3,7 +3,7 @@ package proto;
 
 import "input.proto";
 import "enums.proto";
-import "device.proto"; 
+import "device.proto";
 
 message Profile {
   required uint32 uid = 1;
@@ -29,8 +29,4 @@ message ConfigInfo {
 
 message GetActiveProfiles {
   repeated int32 profiles = 1;
-}
-
-message SetProfileCommand {
-  required uint32 profileId = 1;
 }

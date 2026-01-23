@@ -14,7 +14,6 @@
 #include "pico/stdlib.h"
 #include "FlashPROM.h"
 #include "CRC32.h"
-#include "state/base.hpp"
 #include "usb/device/device.hpp"
 bool save(proto_Config *config);
 bool load(proto_Config &config);

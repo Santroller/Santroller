@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include "input/input.hpp"
 #include "input.pb.h"
-#include "state/base.hpp"
 #include "protocols/controller_reports.hpp"
 #include "protocols/hid.hpp"
 #include "protocols/wii.hpp"

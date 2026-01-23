@@ -6,6 +6,7 @@
 #define STADIA_REPORT_ID 3
 #define NKRO_KEYS ((0x73 / 8) + 1)
 #define SIMULTANEOUS_MIDI 12
+#define SIMULTANEOUS_KEYS 6
 #define KEYCODE_F24 115
 
 typedef struct {

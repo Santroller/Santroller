@@ -162,6 +162,7 @@ add_executable(
   ${PROTO_OUTPUT_DIR}/config.pb.c
   ${PROTO_OUTPUT_DIR}/input.pb.c
   ${PROTO_OUTPUT_DIR}/events.pb.c
+  ${PROTO_OUTPUT_DIR}/commands.pb.c
 )
 target_include_directories(${TARGET} PUBLIC
   ${SRC}

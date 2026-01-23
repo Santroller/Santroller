@@ -3,6 +3,7 @@
 
 #include "class/hid/hid.h"
 
+#include "commands.pb.h"
 #include "usb/usb_descriptors.h"
 #include "device.hpp"
 #include "events.pb.h"
@@ -33,7 +34,7 @@ public:
   bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
   bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
   uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
-  bool send_report(uint8_t len, uint8_t report_id, void const * report);
+  bool send_report(uint8_t len, uint8_t report_id, void const *report);
   bool ready();
 
 protected:
@@ -69,6 +70,7 @@ public:
   static HIDConfigDevice *instance;
 
 private:
+  void handle_command(proto_Command command);
   uint32_t lastKeepAlive = 0;
   uint32_t start = 0;
   uint32_t selected_profile = 0;

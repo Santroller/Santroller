@@ -4,8 +4,6 @@
 #include <SimpleMidiTransport.hpp>
 
 #include "i2c.hpp"
-#include "parsers/base.hpp"
-#include "state/base.hpp"
 #include "base.hpp"
 #include "device.pb.h"
 #include "libmpr121.hpp"

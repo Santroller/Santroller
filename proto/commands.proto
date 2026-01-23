@@ -1,0 +1,22 @@
+syntax = "proto2";
+package proto;
+import "device.proto";
+import "enums.proto";
+
+message SetProfileCommand {
+  required uint32 profileId = 1;
+}
+
+message DetectPinCommand {
+  required PinDetectType detectType = 1;
+}
+
+message DetectMidiCommand {
+}
+
+message Command {
+    oneof command {
+        SetProfileCommand setProfile = 1;
+        DetectPinCommand detectPin = 2;
+    }
+}

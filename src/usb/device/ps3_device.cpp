@@ -240,6 +240,14 @@ void PS3GamepadDevice::process(bool full_poll)
     {
         // convert bitmask dpad to actual hid dpad
         PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)epin_buf;
+        if (subtype == PowerGigGuitar || subtype == PowerGigDrum)
+        {
+            PS3PowerGigGuitar_Data_t *reportPg = (PS3PowerGigGuitar_Data_t *)epin_buf;
+            reportPg->pressure_dpadUp = reportPg->dpadUp ? 0xFF : 0x00;
+            reportPg->pressure_dpadDown = reportPg->pressure_dpadDown ? 0xFF : 0x00;
+            reportPg->pressure_dpadLeft = reportPg->pressure_dpadLeft ? 0xFF : 0x00;
+            reportPg->pressure_dpadRight = reportPg->pressure_dpadRight ? 0xFF : 0x00;
+        }
         report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
         if (subtype == GuitarHeroGuitar)
         {

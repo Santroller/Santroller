@@ -108,8 +108,9 @@ char const *string_desc_arr[] =
         "MSFT100\x20",
         "RT GH CONTROLLER ",
         "RT-GH LED ",
-        "RT-GH INPUT "};
-// TODO: need to implement the fact that for powergig we need to set the name to `Seven45 Drum Controller` or `Seven45 Guitar Controller`
+        "RT-GH INPUT ",
+        "Seven45 Guitar Controller",
+        "Seven45 Drum Controller"};
 
 static uint16_t _desc_str[100 + 1];
 
@@ -145,6 +146,12 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     if (!(index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
       return NULL;
 
+    if (mode == ModePs3 && current_type == PowerGigGuitar && index == STRID_PRODUCT) {
+      index = STRID_PG_GUITAR_PRODUCT;
+    }
+    if (mode == ModePs3 && current_type == PowerGigDrum && index == STRID_PRODUCT) {
+      index = STRID_PG_DRUM_PRODUCT;
+    }
     const char *str = string_desc_arr[index];
 
     printf("ret: %s\r\n", str);

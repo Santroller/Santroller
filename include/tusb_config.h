@@ -14,10 +14,11 @@
 #endif
 // #define CFG_TUSB_DEBUG 2 
 #define CFG_TUH_RPI_PIO_USB 1
-#define CFG_TUH_HUB 1
-#define CFG_TUH_XINPUT 0
-#define CFG_TUH_MIDI 1
-#define CFG_TUH_HID 1
+#define CFG_TUH_HUB 4
+// #define CFG_TUH_XINPUT 8
+// #define CFG_TUH_OGXBOX 8
+#define CFG_TUH_MIDI 8
+#define CFG_TUH_HID 8
 #ifndef CFG_TUD_ENDPOINT0_SIZE
 #define CFG_TUD_ENDPOINT0_SIZE    64
 #endif

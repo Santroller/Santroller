@@ -170,18 +170,20 @@ message Mapping {
     MouseAxisType mouseAxis = 25;
     MouseButtonType mouseButton = 26;
     int32 keycode = 27;
+    UsbButtonType usbButton = 28;
+    UsbAxisType usbAdis = 29;
   }
 
-  required Input input = 28;
-  optional bool inverted = 29;
-  optional Input pressureInput = 30; // if there is no pressureInput, then set the pressures to max when the button is pressed
-  optional AnalogToDigitalTriggerType trigger = 31;
-  optional int32 pressed = 32;
-  optional int32 released = 33;
-  optional int32 min = 34;
-  optional int32 max = 35;
-  optional int32 center = 36;
-  optional int32 deadzone = 37;
-  optional int32 triggerValue = 38;
-  optional uint32 debounce = 39;
+  required Input input = 50;
+  optional bool inverted = 51;
+  optional Input pressureInput = 52; // if there is no pressureInput, then set the pressures to max when the button is pressed
+  optional AnalogToDigitalTriggerType trigger = 53;
+  optional int32 pressed = 54;
+  optional int32 released = 55;
+  optional int32 min = 56;
+  optional int32 max = 57;
+  optional int32 center = 58;
+  optional int32 deadzone = 59;
+  optional int32 triggerValue = 60;
+  optional uint32 debounce = 61;
 }

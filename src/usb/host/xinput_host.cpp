@@ -28,13 +28,8 @@
 
 #if (CFG_TUH_ENABLED && CFG_TUH_XINPUT)
 #include "class/hid/hid.h"
-#include "defines.h"
-#include "descriptors.h"
-#include "hid.h"
-#include "hidparser.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/xinput_host.h"
 
 #define INVALID_REPORT_ID -1
 //--------------------------------------------------------------------+

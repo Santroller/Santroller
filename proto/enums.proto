@@ -185,6 +185,20 @@ enum ConsoleMode {
     ModeGuitarHeroArcade = 10;
 };
 
+enum ConsoleType {
+    ConsoleWii_WiiU=1;
+    ConsoleOgXbox=2;
+    ConsoleXbox360=3;
+    ConsoleXboxOne=4;
+    ConsolePS2=5;
+    ConsolePS3=6;
+    ConsolePS4_PS5=7;
+    ConsoleSwitch_Switch2=8;
+    ConsoleWindows=9;
+    ConsoleMacOS=10;
+    ConsoleLinux=11;
+}
+
 enum PinDetectType {
     DetectDigital=1;
     DetectAnalog=2;

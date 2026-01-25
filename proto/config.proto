@@ -11,7 +11,6 @@ message Profile {
   repeated Mapping mappings = 4;
   required string name = 5;
   required SubType deviceToEmulate = 6;
-  required bool defaultProfile = 7;
   repeated ProfileAssignmentInfo assignments = 8;
 }
 

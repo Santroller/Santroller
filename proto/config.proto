@@ -21,24 +21,21 @@ message SpecificUsbDevice {
 }
 
 message ProfileAssignmentInfo {
-  oneof assignment {
-    ConsoleType consoleType = 1;
-    WiiExtType wiiExt = 2;
-    PS2ControllerType ps2Cnt = 3;
-    SubType usbType = 4;
-    SpecificUsbDevice usbDevice = 5;
-    bool catchall = 6;
-  }
-}
-
-message ProfileAssignment {
   required uint32 uid = 1;
+  required uint32 profileId = 2;
+  required bool optional = 3;
+  optional ConsoleType consoleType = 4;
+  optional WiiExtType wiiExt = 5;
+  optional PS2ControllerType ps2Cnt = 6;
+  optional SubType usbType = 7;
+  optional SpecificUsbDevice usbDevice = 8;
+  required bool catchall = 9;
+  optional uint32 parentProfile = 10;
 }
-
 
 message Config {
-  repeated Device devices = 1;
-  repeated ProfileAssignmentInfo info = 2;
+  repeated ProfileAssignmentInfo assignments = 1;
+  repeated Device devices = 2;
   repeated Profile profiles = 3;
 }
 

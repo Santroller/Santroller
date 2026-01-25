@@ -27,3 +27,15 @@ public:
     uint8_t stagekit_param = 0;
     bool side = 0;
 };
+
+class Profile
+{
+public:
+    SubType subtype;
+    ConsoleMode mode;
+    uint32_t profile_id;
+    std::vector<std::unique_ptr<Mapping>> mappings;
+    std::vector<std::unique_ptr<ActivationTrigger>> triggers;
+    std::shared_ptr<Instance> instance;
+    std::map<uint32_t, std::shared_ptr<Device>> devices;
+};

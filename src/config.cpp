@@ -45,9 +45,9 @@
 #include <memory>
 std::vector<std::shared_ptr<Instance>> instances;
 std::vector<std::shared_ptr<Instance>> active_instances;
-std::map<uint32_t, std::shared_ptr<Instance>> profiles;
+std::map<uint32_t, std::shared_ptr<Profile>> profiles;
 std::set<uint32_t> active_profiles;
-std::map<uint32_t, std::shared_ptr<Device>> devices;
+std::vector<std::shared_ptr<Device>> devices;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;
@@ -55,87 +55,102 @@ ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
 bool loadedAny = false;
+bool hasPS2Inputs = false;
+bool hasWiiInputs = false;
+bool hasUSBInputs = false;
+bool hasBluetoothInputs = false;
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    // TODO: devices would be able to be moved to be under profiles, and for most devices we would just use a shared ptr that goes into every profile at once
+    // but then for things like usb devices and multitaps, we would simply only create the relevant entry for a given profile, and each profile would then end up only being assigned a single controller 
     proto_Device device;
     uint16_t *dev_id = (uint16_t *)*arg;
     pb_decode(stream, proto_Device_fields, &device);
     switch (device.which_device)
     {
     case proto_Device_accelerometer_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new AccelerometerDevice(device.device.accelerometer, *dev_id));
+        devices.emplace_back(new AccelerometerDevice(device.device.accelerometer, *dev_id));
         break;
     case proto_Device_crkdNeck_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new CrkdDevice(device.device.crkdNeck, *dev_id));
+        devices.emplace_back(new CrkdDevice(device.device.crkdNeck, *dev_id));
         break;
     case proto_Device_wii_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new WiiDevice(device.device.wii, *dev_id));
+        hasWiiInputs = true;
+        devices.emplace_back(new WiiDevice(device.device.wii, *dev_id));
+        break;
+    case proto_Device_psx_tag:
+        hasWiiInputs = true;
+        // TODO: this
+        // TODO: we could support multitaps here if we wanted, it would be as simple as creating more than one ps2 device, much like we would do with usb
+        // devices.emplace_back(new PS2Device(device.device.psx, *dev_id));
         break;
     case proto_Device_bhDrum_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new BandHeroDrumDevice(device.device.bhDrum, *dev_id));
+        devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, *dev_id));
         break;
     case proto_Device_crazyGuitarNeck_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, *dev_id));
+        devices.emplace_back(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, *dev_id));
         break;
     case proto_Device_djhTurntable_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new DjHeroTurntableDevice(device.device.djhTurntable, *dev_id));
+        devices.emplace_back(new DjHeroTurntableDevice(device.device.djhTurntable, *dev_id));
         break;
     case proto_Device_gh5Neck_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new GH5NeckDevice(device.device.gh5Neck, *dev_id));
+        devices.emplace_back(new GH5NeckDevice(device.device.gh5Neck, *dev_id));
         break;
     case proto_Device_max1704x_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new Max1704XDevice(device.device.max1704x, *dev_id));
+        devices.emplace_back(new Max1704XDevice(device.device.max1704x, *dev_id));
         break;
     case proto_Device_mpr121_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new MPR121Device(device.device.mpr121, *dev_id));
+        devices.emplace_back(new MPR121Device(device.device.mpr121, *dev_id));
         break;
     case proto_Device_usbHost_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new USBDevice(device.device.usbHost, *dev_id));
+        hasUSBInputs = true;
+        // TODO: in this scenario, we would end up creating multiple devices, so we have a single device for each connected usb device
+        devices.emplace_back(new USBDevice(device.device.usbHost, *dev_id));
         break;
     case proto_Device_ads1115_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new ADS1115Device(device.device.ads1115, *dev_id));
+        devices.emplace_back(new ADS1115Device(device.device.ads1115, *dev_id));
         break;
     case proto_Device_debug_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new DebugDevice(device.device.debug, *dev_id));
+        devices.emplace_back(new DebugDevice(device.device.debug, *dev_id));
         break;
     case proto_Device_ws2812_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new WS2812Device(device.device.ws2812, *dev_id));
+        devices.emplace_back(new WS2812Device(device.device.ws2812, *dev_id));
         break;
     case proto_Device_stp16cpc_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new STP16CPCDevice(device.device.stp16cpc, *dev_id));
+        devices.emplace_back(new STP16CPCDevice(device.device.stp16cpc, *dev_id));
         break;
     case proto_Device_apa102_tag:
-        devices[*dev_id] = std::shared_ptr<Device>(new APA102Device(device.device.apa102, *dev_id));
+        devices.emplace_back(new APA102Device(device.device.apa102, *dev_id));
         break;
     }
     *dev_id += 1;
     return true;
 }
-std::unique_ptr<Input> make_input(proto_Input input)
+std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> profile)
 {
     switch (input.which_input)
     {
     case proto_Input_wiiAxis_tag:
-        return std::unique_ptr<Input>(new WiiAxisInput(input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(devices[input.input.wiiAxis.deviceid])));
+        return std::unique_ptr<Input>(new WiiAxisInput(input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiAxis.deviceid])));
         break;
     case proto_Input_wiiButton_tag:
-        return std::unique_ptr<Input>(new WiiButtonInput(input.input.wiiButton, std::static_pointer_cast<WiiDevice>(devices[input.input.wiiAxis.deviceid])));
+        return std::unique_ptr<Input>(new WiiButtonInput(input.input.wiiButton, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiAxis.deviceid])));
         break;
     case proto_Input_crkd_tag:
-        return std::unique_ptr<Input>(new CrkdButtonInput(input.input.crkd, std::static_pointer_cast<CrkdDevice>(devices[input.input.crkd.deviceid])));
+        return std::unique_ptr<Input>(new CrkdButtonInput(input.input.crkd, std::static_pointer_cast<CrkdDevice>(profile->devices[input.input.crkd.deviceid])));
         break;
     case proto_Input_gpio_tag:
         return std::unique_ptr<Input>(new GPIOInput(input.input.gpio));
         break;
     case proto_Input_ads1115_tag:
-        return std::unique_ptr<Input>(new ADS1115Input(input.input.ads1115, std::static_pointer_cast<ADS1115Device>(devices[input.input.ads1115.deviceid])));
+        return std::unique_ptr<Input>(new ADS1115Input(input.input.ads1115, std::static_pointer_cast<ADS1115Device>(profile->devices[input.input.ads1115.deviceid])));
         break;
     case proto_Input_accelerometer_tag:
-        return std::unique_ptr<Input>(new AccelerometerInput(input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(devices[input.input.accelerometer.deviceid])));
+        return std::unique_ptr<Input>(new AccelerometerInput(input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(profile->devices[input.input.accelerometer.deviceid])));
         break;
     case proto_Input_gh5Neck_tag:
-        return std::unique_ptr<Input>(new Gh5ButtonInput(input.input.gh5Neck, std::static_pointer_cast<GH5NeckDevice>(devices[input.input.gh5Neck.deviceid])));
+        return std::unique_ptr<Input>(new Gh5ButtonInput(input.input.gh5Neck, std::static_pointer_cast<GH5NeckDevice>(profile->devices[input.input.gh5Neck.deviceid])));
         break;
     default:
         return nullptr;
@@ -146,7 +161,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto instance = profiles[**(uint32_t **)arg];
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
-    std::unique_ptr<Input> input = make_input(mapping.input);
+    std::unique_ptr<Input> input = make_input(mapping.input, instance);
     if (input == nullptr)
     {
         return true;
@@ -183,7 +198,7 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
     case proto_ActivationTrigger_input_tag:
     {
 
-        std::unique_ptr<Input> input = make_input(trigger.trigger.input.input);
+        std::unique_ptr<Input> input = make_input(trigger.trigger.input.input, instance);
         if (input == nullptr)
         {
             return true;
@@ -194,85 +209,202 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
     }
     return true;
 }
-bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    uint64_t uid;
-    if (!pb_decode_varint(stream, &uid))
-        return false;
-    **(uint32_t **)arg = uid;
-    auto old = profiles.find(uid);
-    if (old != profiles.end())
-    {
-        old->second->mappings.clear();
-        old->second->triggers.clear();
-        return true;
-    }
-    std::shared_ptr<UsbDevice> instance = nullptr;
-    switch (mode)
-    {
-    case ModeHid:
-        instance = std::make_shared<HIDGamepadDevice>();
-        break;
-    case ModeOgXbox:
-        instance = std::make_shared<OGXboxGamepadDevice>();
-        break;
-    case ModeXbox360:
-        instance = std::make_shared<XInputGamepadDevice>();
-        break;
-    case ModeXboxOne:
-        instance = std::make_shared<XboxOneGamepadDevice>();
-        break;
-    case ModeWiiRb:
-        // wii rb is the same as ps3 but different ids
-        instance = std::make_shared<PS3GamepadDevice>(true);
-        break;
-    case ModePs3:
-        instance = std::make_shared<PS3GamepadDevice>(false);
-        break;
-    case ModePs4:
-        instance = std::make_shared<PS4GamepadDevice>();
-        break;
-    case ModePs5:
-        instance = std::make_shared<PS5GamepadDevice>();
-        break;
-    case ModeSwitch:
-        instance = std::make_shared<SwitchGamepadDevice>();
-        break;
-    case ModeGuitarHeroArcade:
-        instance = std::make_shared<GHArcadeGamepadDevice>();
-        break;
-    }
-    instance->profile_id = uid;
-    instances.push_back(instance);
-    profiles[uid] = instance;
-    return true;
-}
+// bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
+// {
+//     uint64_t uid;
+//     if (!pb_decode_varint(stream, &uid))
+//         return false;
+//     **(uint32_t **)arg = uid;
+//     auto old = profiles.find(uid);
+//     if (old != profiles.end())
+//     {
+//         old->second->mappings.clear();
+//         old->second->triggers.clear();
+//         return true;
+//     }
+//     std::shared_ptr<UsbDevice> instance = nullptr;
+//     switch (mode)
+//     {
+//     case ModeHid:
+//         instance = std::make_shared<HIDGamepadDevice>();
+//         break;
+//     case ModeOgXbox:
+//         instance = std::make_shared<OGXboxGamepadDevice>();
+//         break;
+//     case ModeXbox360:
+//         instance = std::make_shared<XInputGamepadDevice>();
+//         break;
+//     case ModeXboxOne:
+//         instance = std::make_shared<XboxOneGamepadDevice>();
+//         break;
+//     case ModeWiiRb:
+//         // wii rb is the same as ps3 but different ids
+//         instance = std::make_shared<PS3GamepadDevice>(true);
+//         break;
+//     case ModePs3:
+//         instance = std::make_shared<PS3GamepadDevice>(false);
+//         break;
+//     case ModePs4:
+//         instance = std::make_shared<PS4GamepadDevice>();
+//         break;
+//     case ModePs5:
+//         instance = std::make_shared<PS5GamepadDevice>();
+//         break;
+//     case ModeSwitch:
+//         instance = std::make_shared<SwitchGamepadDevice>();
+//         break;
+//     case ModeGuitarHeroArcade:
+//         instance = std::make_shared<GHArcadeGamepadDevice>();
+//         break;
+//     }
+//     instance->profile_id = uid;
+//     instances.push_back(instance);
+//     profiles[uid] = instance;
+//     return true;
+// }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
 
-    uint32_t uid;
-    proto_Profile profile;
-    profile.activationMethod.funcs.decode = &load_activation_method;
-    profile.mappings.funcs.decode = &load_mapping;
-    profile.uid.funcs.decode = &load_uid;
-    profile.activationMethod.arg = &uid;
-    profile.mappings.arg = &uid;
-    profile.uid.arg = &uid;
-    pb_decode(stream, proto_Profile_fields, &profile);
-    auto instance = std::static_pointer_cast<UsbDevice>(profiles[uid]);
-    instance->subtype = profile.deviceToEmulate;
-    if (profile.defaultProfile && active_profiles.empty())
+    Profile profile;
+    proto_Profile proto_profile;
+    proto_profile.activationMethod.funcs.decode = &load_activation_method;
+    proto_profile.mappings.funcs.decode = &load_mapping;
+    proto_profile.activationMethod.arg = &profile;
+    proto_profile.mappings.arg = &profile;
+    pb_decode(stream, proto_Profile_fields, &proto_profile);
+    profile.profile_id = proto_profile.uid;
+    profile.subtype = proto_profile.deviceToEmulate;
+    // auto profile = profiles[uid];
+    // profile->subtype = proto_profile.deviceToEmulate;
+    // if (proto_profile.defaultProfile && active_profiles.empty())
+    // {
+    //     active_profiles.insert(uid);
+    // }
+    // if (active_profiles.find(uid) != active_profiles.end())
+    // {
+    //     loadedAny = true;
+    //     profile->interface_id = active_instances.size();
+    //     active_profiles.insert(uid);
+    //     active_instances.push_back(profile);
+    //     usb_instances[usb_instances.size()] = profile;
+    //     printf("instance: %d\r\n", profile->interface_id);
+    // }
+    return true;
+}
+bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    // TODO: for this, we would start with a list of all usb devices, ps2 devices (multitap), snes (multitap) and wii devices
+    // then we would step down the list and create a Profile instance for each assignment thats valid, and remove any devices used by the match
+    proto_ProfileAssignmentInfo assignment;
+    pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
+
+    auto &profile = profiles[assignment.profileId];
+    bool matchingUsb = hasUSBInputs || hasBluetoothInputs;
+    bool matchingWii = hasWiiInputs && assignment.consoleType == ConsoleWii_WiiU;
+    bool matchingPs2 = hasPS2Inputs && assignment.consoleType == ConsolePS2;
+    // catch all wont have any other matches
+    if (assignment.catchall && !active_profiles.empty())
     {
-        active_profiles.insert(uid);
+        matchingUsb = false;
+        matchingWii = false;
+        matchingPs2 = false;
     }
-    if (active_profiles.find(uid) != active_profiles.end())
+    if (assignment.has_ps2Cnt) {
+
+    }
+    if (assignment.has_wiiExt) {
+
+    }
+    if (assignment.has_usbDevice) {
+
+    }
+    if (assignment.has_usbType) {
+
+    }
+    if (assignment.has_parentProfile) {
+    //  in this scenario, this is actually a copiloted gamepad, so if it matches the profile needs to reference the parent profile
+    }
+    if (assignment.has_consoleType)
     {
-        loadedAny = true;
-        instance->interface_id = active_instances.size();
-        active_profiles.insert(uid);
-        active_instances.push_back(instance);
-        usb_instances[usb_instances.size()] = instance;
-        printf("instance: %d\r\n", instance->interface_id);
+        switch (assignment.consoleType)
+        {
+        case ConsoleWii_WiiU:
+            switch (profile->subtype)
+            {
+            case RockBandDrums:
+            case RockBandGuitar:
+            case ProGuitarMustang:
+            case ProGuitarSquire:
+            case ProKeys:
+                // Wii RB is wii
+                if (mode != ModeWiiRb)
+                {
+                    matchingUsb = false;
+                }
+                break;
+            case LiveGuitar:
+                // Wii U used PS3 GHL guitars
+                if (mode != ModePs3)
+                {
+                    matchingUsb = false;
+                }
+                break;
+            default:
+                if (!hasWiiInputs)
+                {
+                    matchingWii = false;
+                }
+            }
+            break;
+        case ConsoleOgXbox:
+            if (mode != ModeOgXbox)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsoleXbox360:
+            if (mode != ModeXbox360)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsoleXboxOne:
+            if (mode != ModeXboxOne)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsolePS3:
+            if (mode != ModePs3)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsolePS4_PS5:
+            if (mode != ModePs4 && mode != ModePs5)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsoleSwitch_Switch2:
+            if (mode != ModeSwitch)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsolePC:
+            if (mode != ModeXbox360 && mode != ModeHid)
+            {
+                matchingUsb = false;
+            }
+            break;
+        case ConsolePS2:
+            if (!hasPS2Inputs)
+            {
+                matchingPs2 = false;
+            }
+            break;
+        }
     }
     return true;
 }
@@ -294,12 +426,14 @@ struct ConfigFooter
 static const uint32_t FOOTER_MAGIC = 0xd2f1e365;
 bool save_device(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
-    // we just have to encode the entire device map by hand here, we write them all at once.
     return true;
 }
 bool save_profile(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
-    // We just have to encode all the profiles by hand here, we write them all at once.
+    return true;
+}
+bool save_assignments(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
     return true;
 }
 bool save(proto_Config *config)
@@ -307,6 +441,7 @@ bool save(proto_Config *config)
     // need to do the opposite of load, aka setting all the encode functions and then encode
     config->devices.funcs.encode = save_device;
     config->profiles.funcs.encode = save_profile;
+    config->assignments.funcs.encode = save_assignments;
     pb_ostream_t outputStream = pb_ostream_from_buffer(EEPROM.writeCache, EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     if (!pb_encode(&outputStream, proto_Config_fields, config))
     {
@@ -351,6 +486,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.devices.arg = &dev_id;
     config.devices.funcs.decode = &load_device;
     config.profiles.funcs.decode = &load_profile;
+    config.assignments.funcs.decode = &load_assignments;
     if (!HIDConfigDevice::tool_closed())
     {
         // if the tool is open, then we won't be changing the console mode and need to keep interfaces the same
@@ -364,6 +500,8 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     active_instances.clear();
     usb_instances.clear();
     profiles.clear();
+    hasPS2Inputs = false;
+    hasWiiInputs = false;
     UsbDevice::reset_ep();
     switch (mode)
     {
@@ -401,7 +539,8 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     }
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
-    if (active_profiles.empty()) {
+    if (active_profiles.empty())
+    {
         auto confDevice2 = std::make_shared<HIDConfigDevice>();
         confDevice2->interface_id = instances.size();
         instances.push_back(confDevice2);

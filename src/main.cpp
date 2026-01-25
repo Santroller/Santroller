@@ -155,7 +155,7 @@ void update(bool full_poll)
 {
     for (const auto &device : devices)
     {
-        device.second->update(full_poll);
+        device->update(full_poll);
     }
     for (const auto &instance : active_instances)
     {

@@ -194,9 +194,7 @@ enum ConsoleType {
     ConsolePS3=6;
     ConsolePS4_PS5=7;
     ConsoleSwitch_Switch2=8;
-    ConsoleWindows=9;
-    ConsoleMacOS=10;
-    ConsoleLinux=11;
+    ConsolePC=9;
 }
 
 enum PinDetectType {

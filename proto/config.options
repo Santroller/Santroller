@@ -1,2 +1,1 @@
 proto.Profile.name max_size:32
-proto.Profile.uid type:FT_CALLBACK

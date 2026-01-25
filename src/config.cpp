@@ -262,35 +262,6 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
 //     profiles[uid] = instance;
 //     return true;
 // }
-bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-
-    Profile profile;
-    proto_Profile proto_profile;
-    proto_profile.activationMethod.funcs.decode = &load_activation_method;
-    proto_profile.mappings.funcs.decode = &load_mapping;
-    proto_profile.activationMethod.arg = &profile;
-    proto_profile.mappings.arg = &profile;
-    pb_decode(stream, proto_Profile_fields, &proto_profile);
-    profile.profile_id = proto_profile.uid;
-    profile.subtype = proto_profile.deviceToEmulate;
-    // auto profile = profiles[uid];
-    // profile->subtype = proto_profile.deviceToEmulate;
-    // if (proto_profile.defaultProfile && active_profiles.empty())
-    // {
-    //     active_profiles.insert(uid);
-    // }
-    // if (active_profiles.find(uid) != active_profiles.end())
-    // {
-    //     loadedAny = true;
-    //     profile->interface_id = active_instances.size();
-    //     active_profiles.insert(uid);
-    //     active_instances.push_back(profile);
-    //     usb_instances[usb_instances.size()] = profile;
-    //     printf("instance: %d\r\n", profile->interface_id);
-    // }
-    return true;
-}
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     // TODO: for this, we would start with a list of all usb devices, ps2 devices (multitap), snes (multitap) and wii devices
@@ -408,6 +379,35 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     return true;
 }
+bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+
+    Profile profile;
+    proto_Profile proto_profile;
+    proto_profile.assignments.funcs.decode = &load_assignments;
+    proto_profile.mappings.funcs.decode = &load_mapping;
+    proto_profile.assignments.arg = &profile;
+    proto_profile.mappings.arg = &profile;
+    pb_decode(stream, proto_Profile_fields, &proto_profile);
+    profile.profile_id = proto_profile.uid;
+    profile.subtype = proto_profile.deviceToEmulate;
+    // auto profile = profiles[uid];
+    // profile->subtype = proto_profile.deviceToEmulate;
+    // if (proto_profile.defaultProfile && active_profiles.empty())
+    // {
+    //     active_profiles.insert(uid);
+    // }
+    // if (active_profiles.find(uid) != active_profiles.end())
+    // {
+    //     loadedAny = true;
+    //     profile->interface_id = active_instances.size();
+    //     active_profiles.insert(uid);
+    //     active_instances.push_back(profile);
+    //     usb_instances[usb_instances.size()] = profile;
+    //     printf("instance: %d\r\n", profile->interface_id);
+    // }
+    return true;
+}
 struct ConfigFooter
 {
     uint32_t dataSize;
@@ -441,7 +441,6 @@ bool save(proto_Config *config)
     // need to do the opposite of load, aka setting all the encode functions and then encode
     config->devices.funcs.encode = save_device;
     config->profiles.funcs.encode = save_profile;
-    config->assignments.funcs.encode = save_assignments;
     pb_ostream_t outputStream = pb_ostream_from_buffer(EEPROM.writeCache, EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     if (!pb_encode(&outputStream, proto_Config_fields, config))
     {
@@ -486,7 +485,6 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.devices.arg = &dev_id;
     config.devices.funcs.decode = &load_device;
     config.profiles.funcs.decode = &load_profile;
-    config.assignments.funcs.decode = &load_assignments;
     if (!HIDConfigDevice::tool_closed())
     {
         // if the tool is open, then we won't be changing the console mode and need to keep interfaces the same

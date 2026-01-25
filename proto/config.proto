@@ -23,7 +23,6 @@ message SpecificUsbDevice {
 message ProfileAssignmentInfo {
   required uint32 uid = 1;
   required uint32 profileId = 2;
-  required bool optional = 3;
   optional ConsoleType consoleType = 4;
   optional WiiExtType wiiExt = 5;
   optional PS2ControllerType ps2Cnt = 6;

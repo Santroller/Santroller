@@ -11,7 +11,7 @@ message Profile {
   repeated Mapping mappings = 4;
   required string name = 5;
   required SubType deviceToEmulate = 6;
-  repeated ProfileAssignmentInfo assignments = 8;
+  repeated ProfileAssignment assignments = 8;
 }
 
 message SpecificUsbDevice {
@@ -20,17 +20,22 @@ message SpecificUsbDevice {
 }
 
 message ProfileAssignmentInfo {
-  required uint32 uid = 1;
-  optional ConsoleType consoleType = 4;
-  optional WiiExtType wiiExt = 5;
-  optional PS2ControllerType ps2Cnt = 6;
-  optional SubType usbType = 7;
-  optional SpecificUsbDevice usbDevice = 8;
-  required bool catchall = 9;
-  optional InputActivationTrigger input = 10; // Input at startup
-  optional InputActivationTrigger inputAnyTime = 11; // Input at any time
-  optional uint32 copilotProfile = 12; // copilot another profile
-  optional uint32 midiChannel = 13;
+  oneof assignment {
+    ConsoleType consoleType = 4;
+    WiiExtType wiiExt = 5;
+    PS2ControllerType ps2Cnt = 6;
+    SubType usbType = 7;
+    SpecificUsbDevice usbDevice = 8;
+    bool catchall = 9;
+    InputActivationTrigger input = 10; // Input at startup
+    InputActivationTrigger inputAnyTime = 11; // Input at any time
+    uint32 copilotProfile = 12; // copilot another profile
+    uint32 midiChannel = 13;
+  }
+}
+
+message ProfileAssignment {
+  repeated ProfileAssignmentInfo assignments = 1;
 }
 
 message Config {

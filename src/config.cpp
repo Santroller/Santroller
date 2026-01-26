@@ -63,7 +63,7 @@ bool hasBluetoothInputs = false;
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     // TODO: devices would be able to be moved to be under profiles, and for most devices we would just use a shared ptr that goes into every profile at once
-    // but then for things like usb devices and multitaps, we would simply only create the relevant entry for a given profile, and each profile would then end up only being assigned a single controller 
+    // but then for things like usb devices and multitaps, we would simply only create the relevant entry for a given profile, and each profile would then end up only being assigned a single controller
     proto_Device device;
     uint16_t *dev_id = (uint16_t *)*arg;
     pb_decode(stream, proto_Device_fields, &device);
@@ -127,7 +127,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     *dev_id += 1;
     return true;
 }
-std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> profile)
+std::unique_ptr<Input> make_input(proto_Input input, Profile* profile)
 {
     switch (input.which_input)
     {
@@ -158,7 +158,7 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto instance = profiles[**(uint32_t **)arg];
+    auto instance = *(Profile **)arg;
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, instance);
@@ -190,7 +190,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto instance = profiles[**(uint32_t **)arg];
+    auto instance = *(Profile **)arg;
     proto_ActivationTrigger trigger;
     pb_decode(stream, proto_ActivationTrigger_fields, &trigger);
     switch (trigger.which_trigger)
@@ -262,42 +262,21 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
 //     profiles[uid] = instance;
 //     return true;
 // }
-bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
+bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    auto profile = *(Profile **)arg;
     // TODO: for this, we would start with a list of all usb devices, ps2 devices (multitap), snes (multitap) and wii devices
     // then we would step down the list and create a Profile instance for each assignment thats valid, and remove any devices used by the match
     proto_ProfileAssignmentInfo assignment;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
 
-    auto &profile = profiles[assignment.profileId];
     bool matchingUsb = hasUSBInputs || hasBluetoothInputs;
-    bool matchingWii = hasWiiInputs && assignment.consoleType == ConsoleWii_WiiU;
-    bool matchingPs2 = hasPS2Inputs && assignment.consoleType == ConsolePS2;
-    // catch all wont have any other matches
-    if (assignment.catchall && !active_profiles.empty())
+    bool matchingWii = false;
+    bool matchingPs2 = false;
+    switch (assignment.which_assignment)
     {
-        matchingUsb = false;
-        matchingWii = false;
-        matchingPs2 = false;
-    }
-    if (assignment.has_ps2Cnt) {
-
-    }
-    if (assignment.has_wiiExt) {
-
-    }
-    if (assignment.has_usbDevice) {
-
-    }
-    if (assignment.has_usbType) {
-
-    }
-    if (assignment.has_parentProfile) {
-    //  in this scenario, this is actually a copiloted gamepad, so if it matches the profile needs to reference the parent profile
-    }
-    if (assignment.has_consoleType)
-    {
-        switch (assignment.consoleType)
+    case proto_ProfileAssignmentInfo_consoleType_tag:
+        switch (assignment.assignment.consoleType)
         {
         case ConsoleWii_WiiU:
             switch (profile->subtype)
@@ -321,10 +300,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 }
                 break;
             default:
-                if (!hasWiiInputs)
-                {
-                    matchingWii = false;
-                }
+                matchingWii = hasWiiInputs;
             }
             break;
         case ConsoleOgXbox:
@@ -370,14 +346,36 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
             }
             break;
         case ConsolePS2:
-            if (!hasPS2Inputs)
-            {
-                matchingPs2 = false;
-            }
+            matchingPs2 = hasPS2Inputs;
             break;
         }
+        break;
+    case proto_ProfileAssignmentInfo_wiiExt_tag:
+        break;
+    case proto_ProfileAssignmentInfo_ps2Cnt_tag:
+        matchingPs2 = hasPS2Inputs && assignment.assignment.consoleType == ConsolePS2;
+        break;
+    case proto_ProfileAssignmentInfo_usbType_tag:
+        break;
+    case proto_ProfileAssignmentInfo_usbDevice_tag:
+        break;
+    case proto_ProfileAssignmentInfo_catchall_tag:
+        // catch all always matches
+        break;
+    case proto_ProfileAssignmentInfo_input_tag:
+        break;
+    case proto_ProfileAssignmentInfo_inputAnyTime_tag:
+        break;
+    case proto_ProfileAssignmentInfo_copilotProfile_tag:
+        break;
+    case proto_ProfileAssignmentInfo_midiChannel_tag:
+        break;
     }
     return true;
+}
+
+bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {

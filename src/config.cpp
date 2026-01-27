@@ -264,13 +264,13 @@ bool load_activation_method(pb_istream_t *stream, const pb_field_t *field, void 
 // }
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(Profile **)arg;
+    auto profile = (Profile *)*arg;
     // TODO: for this, we would start with a list of all usb devices, ps2 devices (multitap), snes (multitap) and wii devices
     // then we would step down the list and create a Profile instance for each assignment thats valid, and remove any devices used by the match
     proto_ProfileAssignmentInfo assignment;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
-
-    bool matchingUsb = hasUSBInputs || hasBluetoothInputs;
+    bool matchingBt = hasBluetoothInputs;
+    bool matchingUsb = hasUSBInputs;
     bool matchingWii = false;
     bool matchingPs2 = false;
     switch (assignment.which_assignment)
@@ -376,12 +376,19 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
 
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    auto profile = (Profile *)*arg;
+    proto_ProfileAssignment proto_assignment;
+    proto_assignment.assignments.funcs.decode = &load_assignment_info;
+    proto_assignment.assignments.arg = profile;
+    pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
+    return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
 
     Profile profile;
     proto_Profile proto_profile;
+    memset(&proto_profile, 0, sizeof(proto_profile));
     proto_profile.assignments.funcs.decode = &load_assignments;
     proto_profile.mappings.funcs.decode = &load_mapping;
     proto_profile.assignments.arg = &profile;

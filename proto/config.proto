@@ -11,7 +11,7 @@ message Profile {
   repeated Mapping mappings = 4;
   required string name = 5;
   required SubType deviceToEmulate = 6;
-  repeated ProfileAssignment assignments = 8;
+  repeated ProfileAssignmentInfo assignments = 8;
 }
 
 message SpecificUsbDevice {

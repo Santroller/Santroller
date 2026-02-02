@@ -65,7 +65,7 @@ class CrkdNeck
 public:
     CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock);
     void tick();
-    inline bool isConnected()
+    inline bool is_connected()
     {
         return m_connected;
     }

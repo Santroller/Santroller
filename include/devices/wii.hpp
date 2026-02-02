@@ -9,7 +9,6 @@ public:
     ~WiiDevice() {}
     WiiDevice(proto_WiiDevice device, uint16_t id);
     void update(bool full_poll);
-    void load_devices();
     uint16_t readAxis(proto_WiiAxisType type);
     bool readButton(proto_WiiButtonType type);
     bool is_wii_extension(WiiExtType type);

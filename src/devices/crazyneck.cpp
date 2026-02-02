@@ -10,15 +10,10 @@ CrazyGuitarNeckDevice::CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device,
 void CrazyGuitarNeckDevice::update(bool full_poll)
 {
     m_crazy_guitar_neck.tick();
-    if (m_lastConnected != m_crazy_guitar_neck.isConnected() || full_poll || resend)
+    if (m_lastConnected != m_crazy_guitar_neck.is_connected() || full_poll || resend)
     {
-        m_lastConnected = m_crazy_guitar_neck.isConnected();
+        m_lastConnected = m_crazy_guitar_neck.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
-}
-
-void CrazyGuitarNeckDevice::load_devices()
-{
-    valid_devices.emplace_back(this);
 }

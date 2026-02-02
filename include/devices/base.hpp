@@ -7,13 +7,13 @@ public:
     Device(uint16_t id) : m_id(id) {}
     virtual ~Device() {}
     virtual void update(bool full_poll) = 0;
-    virtual void load_devices() = 0;
     virtual bool is_wii_extension(WiiExtType type);
     virtual bool is_usb_device(proto_SpecificUsbDevice type);
     virtual bool is_usb_type(SubType type);
     virtual bool is_bluetooth_device(proto_SpecificUsbDevice type);
     virtual bool is_bluetooth_type(SubType type);
     virtual bool is_ps2_device(PS2ControllerType type);
+    virtual void rescan(bool first);
     uint16_t m_id;
 
 protected:

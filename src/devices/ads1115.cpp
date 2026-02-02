@@ -10,13 +10,9 @@ ADS1115Device::ADS1115Device(proto_ADS1115Device device, uint16_t id) : Device(i
 void ADS1115Device::update(bool full_poll)
 {
     ads1115.tick();
-    if (m_lastConnected != ads1115.isConnected() || full_poll || resend) {
-        m_lastConnected = ads1115.isConnected();
+    if (m_lastConnected != ads1115.is_connected() || full_poll || resend) {
+        m_lastConnected = ads1115.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
-}
-
-void ADS1115Device::load_devices() {
-    valid_devices.emplace_back(this);
 }

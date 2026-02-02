@@ -12,7 +12,7 @@ class WorldTourDrum {
     WorldTourDrum(SPIMasterInterface* interface, uint8_t csPin)
         : mInterface(interface), mCsPin(csPin) {};
     void tick();
-    inline bool isConnected() {
+    inline bool is_connected() {
         return connected;
     }
 

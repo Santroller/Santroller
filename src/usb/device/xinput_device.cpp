@@ -37,6 +37,14 @@ XInputGamepadDevice::XInputGamepadDevice()
 }
 void XInputGamepadDevice::initialize()
 {
+    if (!m_eps_assigned)
+    {
+        m_eps_assigned = true;
+        m_epin = next_epin();
+        m_epout = next_epout();
+        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    }
 }
 
 uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -254,14 +262,6 @@ size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t 
 
 size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
     uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));

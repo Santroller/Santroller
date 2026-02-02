@@ -57,6 +57,10 @@ bool seenOsDescriptorRead = false;
 bool seenReadAnyDeviceString = false;
 bool seenHidDescriptorRead = false;
 bool reinit = false;
+bool mode_recently_changed()
+{
+    return (millis() - timeSinceMode) < 2000;
+}
 void hid_task(void)
 {
     if (working)
@@ -112,7 +116,7 @@ bool send_timeout = false;
 
 void update(bool full_poll)
 {
-    for (const auto &device : valid_devices)
+    for (const auto &device : active_devices)
     {
         device->update(full_poll);
     }
@@ -120,9 +124,9 @@ void update(bool full_poll)
     {
         instance->process(full_poll);
     }
-    if (HIDConfigDevice::tool_closed() && (millis() - timeSinceMode) < 2000)
+    if (HIDConfigDevice::tool_closed())
     {
-        
+
         for (const auto &profile : all_profiles)
         {
             for (auto &mapping : profile.second->triggers)

@@ -87,7 +87,7 @@ void Accelerometer::tick()
     if (currentPoll < 3)
     {
         int16_t raw;
-        connected = interface.readRegister(address, reg + (currentPoll * 2), 2, (uint8_t *)&raw);
+        connected = interface.readRegisterRepeatedStart(address, reg + (currentPoll * 2), 2, (uint8_t *)&raw);
         accel[currentPoll] = raw;
         // ADXL345 needs to be scaled
         if (type == ADXL345)
@@ -98,7 +98,7 @@ void Accelerometer::tick()
     else
     {
         uint16_t raw;
-        connected = interface.readRegister(address, (LIS3DH_REG_OUTADC1_L) + (currentPoll - 3) * 2, 2, (uint8_t *)&raw);
+        connected = interface.readRegisterRepeatedStart(address, (LIS3DH_REG_OUTADC1_L) + (currentPoll - 3) * 2, 2, (uint8_t *)&raw);
         lis3dhAdc[currentPoll - 3] = raw;
     }
     currentPoll++;

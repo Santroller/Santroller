@@ -352,6 +352,7 @@ void read_register(struct wiimote_state *state, uint32_t offset, uint16_t size)
       buffer = state->sys.register_b0 + (offset & 0xff);
       break;
     default: //???
+      return;
       break;
   }
 

@@ -8,7 +8,6 @@ public:
     ~BandHeroDrumDevice() {}
     BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t id);
     void update(bool full_poll);
-    void load_devices();
 
 private:
     proto_WiiDevice m_device;

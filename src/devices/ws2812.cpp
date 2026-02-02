@@ -16,6 +16,3 @@ void WS2812Device::update(bool full_poll)
         m_ws2812.putLed(r, g, b);
     }
 }
-void WS2812Device::load_devices() {
-    valid_devices.emplace_back(this);
-}

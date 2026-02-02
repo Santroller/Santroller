@@ -87,6 +87,7 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
 void ButtonMapping::update(bool full_poll)
 {
     auto calcVal = m_input->tickDigital();
+    
     if (m_mapping.has_trigger)
     {
         auto val = m_input->tickAnalog();

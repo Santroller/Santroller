@@ -16,7 +16,3 @@ DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id)
 void DebugDevice::update(bool full_poll)
 {
 }
-
-void DebugDevice::load_devices() {
-    valid_devices.emplace_back(this);
-}

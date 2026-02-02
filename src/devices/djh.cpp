@@ -9,12 +9,9 @@ DjHeroTurntableDevice::DjHeroTurntableDevice(proto_DJHeroTurntableDevice device,
 
 void DjHeroTurntableDevice::update(bool full_poll) {
     m_turntable.tick();
-    if (m_lastConnected != m_turntable.isConnected() || full_poll || resend) {
-        m_lastConnected = m_turntable.isConnected();
+    if (m_lastConnected != m_turntable.is_connected() || full_poll || resend) {
+        m_lastConnected = m_turntable.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
-}
-void DjHeroTurntableDevice::load_devices() {
-    valid_devices.emplace_back(this);
 }

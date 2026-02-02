@@ -375,6 +375,14 @@ void XboxOneGamepadDevice::process_report_queue(uint32_t now)
 }
 void XboxOneGamepadDevice::initialize()
 {
+    if (!m_eps_assigned)
+    {
+        m_eps_assigned = true;
+        m_epin = next_epin();
+        m_epout = next_epout();
+        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    }
 }
 void XboxOneGamepadDevice::set_ack_wait()
 {
@@ -417,6 +425,8 @@ void XboxOneGamepadDevice::process(bool full_poll)
             const uint8_t *announcePacket = nullptr;
             switch (subtype)
             {
+
+            case KeyboardMouse:
             case Gamepad:
             case Dancepad:
             case DjHeroTurntable:
@@ -625,14 +635,6 @@ size_t XboxOneGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t
 
 size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
     uint8_t desc[] = {TUD_XONE_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));

@@ -45,6 +45,7 @@
 
 typedef enum
 {
+    BASE = 0x00,
     A = 0x01,
     B = 0x02,
     C = 0x03,
@@ -55,13 +56,14 @@ class PSXController
 public:
     PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin, MultitapPort port);
     void tick();
-    inline bool isConnected()
+    inline bool is_connected()
     {
         return connected;
     }
     PS2ControllerType type = PS2ControllerTypeUnknown;
     uint16_t readAxis(PS2AxisType type);
     bool readButton(PS2ButtonType type);
+    bool controller_valid(MultitapPort port);
 
 private:
     bool autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out, const uint8_t len);

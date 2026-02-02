@@ -8,7 +8,6 @@ public:
     ~GH5NeckDevice() {}
     GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id);
     void update(bool full_poll);
-    void load_devices();
     GuitarHero5Neck m_gh5_neck;
 
 private:

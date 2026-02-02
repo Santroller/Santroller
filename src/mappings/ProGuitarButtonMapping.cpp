@@ -248,6 +248,8 @@ void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         report->orange |= m_lastValue;
         report->solo |= m_lastValue;
         break;
+    case ProGuitarGuide:
+        break;
     case ProGuitarBack:
         report->back |= m_lastValue;
         break;

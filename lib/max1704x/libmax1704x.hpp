@@ -17,7 +17,7 @@ class Max1704X {
     Max1704X(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
         : interface(block, sda, scl, clock) {};
     void tick();
-    inline bool isConnected() {
+    inline bool is_connected() {
         return connected;
     }
     bool green;

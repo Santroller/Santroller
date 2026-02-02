@@ -67,7 +67,7 @@ public:
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   static bool send_event(proto_Event event);
   static bool send_event_for(proto_Event event, uint32_t profile_id);
-  static HIDConfigDevice *instance;
+  static std::shared_ptr<HIDConfigDevice> instance;
 
 private:
   void handle_command(proto_Command command);

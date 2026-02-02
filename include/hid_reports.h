@@ -183,7 +183,7 @@
         HID_LOGICAL_MAX(1),                                                      \
         HID_PHYSICAL_MIN(0),                                                     \
         HID_PHYSICAL_MAX(1),                                                     \
-        HID_REPORT_COUNT(11),                                                    \
+        HID_REPORT_COUNT(12),                                                    \
         HID_REPORT_SIZE(1),                                                      \
         HID_USAGE(BTN_START),                                                    \
         HID_USAGE(BTN_SELECT),                                                   \
@@ -196,6 +196,7 @@
         HID_USAGE(BTN_A),                                                        \
         HID_USAGE(BTN_B),                                                        \
         HID_USAGE(BTN_X),                                                        \
+        HID_USAGE(BTN_Y),                                                        \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
         HID_REPORT_COUNT(1),                                                     \
         HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \

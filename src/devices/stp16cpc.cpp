@@ -10,7 +10,3 @@ void STP16CPCDevice::update(bool full_poll)
 {
     m_stp15cpc.putLeds((uint8_t *)led_state);
 }
-void STP16CPCDevice::load_devices()
-{
-    valid_devices.emplace_back(this);
-}

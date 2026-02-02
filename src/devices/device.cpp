@@ -23,3 +23,4 @@ bool Device::is_ps2_device(PS2ControllerType type)
 {
     return false;
 }
+void Device::rescan(bool first) {}

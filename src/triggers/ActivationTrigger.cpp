@@ -57,7 +57,7 @@ bool InputActivationTrigger::validate(bool claim_device)
         m_last_val = val;
     }
     // TODO: need to handle things like holding down a button for an amount of time too
-    if (m_any_time && val != m_last_val) {
+    if ((m_any_time || mode_recently_changed()) && val != m_last_val) {
         reload();
     }
     return val;

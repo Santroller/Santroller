@@ -51,10 +51,3 @@ int16_t WiiDevice::readMidiPitchBend()
 {
     return m_extension.midiInterface.midiPitchWheel;
 }
-void WiiDevice::load_devices()
-{
-    valid_devices.emplace_back(this);
-    if (m_lastExtType != WiiNoExtension) {
-       assignable_devices.emplace_back(this);
-    }
-}

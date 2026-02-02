@@ -38,6 +38,16 @@ uint16_t GHArcadeVendorDevice::open(tusb_desc_interface_t const *itf_desc, uint1
 }
 void GHArcadeVendorDevice::initialize()
 {
+    if (!m_eps_assigned)
+    {
+        m_eps_assigned = true;
+        m_epin1 = next_epin();
+        m_epin2 = next_epin();
+        m_epout = next_epin();
+        usb_instances_by_epnum[m_epin1] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
+        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    }
 }
 void GHArcadeVendorDevice::process(bool full_poll)
 {
@@ -51,16 +61,6 @@ size_t GHArcadeVendorDevice::compatible_section_descriptor(uint8_t *dest, size_t
 
 size_t GHArcadeVendorDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin1 = next_epin();
-        m_epin2 = next_epin();
-        m_epout = next_epin();
-        usb_instances_by_epnum[m_epin1] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
     uint8_t desc[] = {TUD_GHARCADE_VENDOR_DESCRIPTOR(interface_id, m_epin1, m_epout, m_epin2, STRID_GHA_LED)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));

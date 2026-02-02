@@ -88,6 +88,7 @@ long UARTInterface::last_read_time()
     {
         return read_time_1;
     }
+    return 0;
 }
 
 bool UARTInterface::transfer_done()

@@ -103,6 +103,8 @@ void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
         case ProjectDivaRightTrigger:
             report->rightTrigger = m_calibratedValue >> 8;
             break;
+        case ProjectDivaSlider:
+            break;
         }
         return;
     }

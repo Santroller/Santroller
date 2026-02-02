@@ -8,7 +8,6 @@ public:
     ~ADS1115Device() {}
     ADS1115Device(proto_ADS1115Device device, uint16_t id);
     void update(bool full_poll);
-    void load_devices();
     ADS1115 ads1115;
 
 private:

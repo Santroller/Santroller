@@ -220,6 +220,14 @@ HIDGamepadDevice::HIDGamepadDevice()
 }
 void HIDGamepadDevice::initialize()
 {
+  if (!m_eps_assigned)
+  {
+    m_eps_assigned = true;
+    m_epin = next_epin();
+    m_epout = next_epout();
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+  }
 }
 void HIDGamepadDevice::process(bool full_poll)
 {
@@ -257,14 +265,6 @@ size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  if (!m_eps_assigned)
-  {
-    m_eps_assigned = true;
-    m_epin = next_epin();
-    m_epout = next_epout();
-    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-  }
   uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
@@ -332,10 +332,11 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
 HIDConfigDevice::HIDConfigDevice()
 {
-  HIDConfigDevice::instance = this;
 }
 void HIDConfigDevice::initialize()
 {
+  m_eps_assigned = true;
+  m_epin = next_epin();
 }
 void HIDConfigDevice::process(bool full_poll)
 {
@@ -372,8 +373,7 @@ size_t HIDConfigDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
   if (!m_eps_assigned)
   {
-    m_eps_assigned = true;
-    m_epin = next_epin();
+    initialize();
   }
   uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_non_gamepad), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
@@ -537,7 +537,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
 
 bool HIDConfigDevice::tool_closed()
 {
-  HIDConfigDevice *dev = HIDConfigDevice::instance;
+  auto dev = HIDConfigDevice::instance;
   if (!dev || !dev->tool_seen)
   {
     return true;
@@ -548,7 +548,7 @@ bool HIDConfigDevice::tool_closed()
 bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
 {
 
-  HIDConfigDevice *dev = HIDConfigDevice::instance;
+  auto dev = HIDConfigDevice::instance;
   if (!dev || dev->selected_profile != profile_id)
   {
     return false;
@@ -558,7 +558,7 @@ bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
 
 bool HIDConfigDevice::send_event(proto_Event event)
 {
-  HIDConfigDevice *dev = HIDConfigDevice::instance;
+  auto dev = HIDConfigDevice::instance;
   if (!dev || !dev->m_eps_assigned || dev->tool_closed() || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))
   {
     return false;
@@ -570,4 +570,4 @@ bool HIDConfigDevice::send_event(proto_Event event)
   return true;
 }
 
-HIDConfigDevice *HIDConfigDevice::instance = nullptr;
+std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

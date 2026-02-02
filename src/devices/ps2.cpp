@@ -3,16 +3,46 @@
 #include "main.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
+#include "utils.h"
 PS2Device::PS2Device(proto_PSXDevice device, uint16_t id, MultitapPort port) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin, port)
 {
 }
-
+void PS2Device::rescan(bool first)
+{
+    uint8_t current_seen_ports = 0;
+    for (int i = 1; i <= 4; i++)
+    {
+        if (m_controller.controller_valid((MultitapPort)i))
+        {
+            current_seen_ports |= 1 << i;
+            if (first)
+            {
+                auto& dev = assignable_devices.emplace_back(new PS2Device(m_device, m_id, (MultitapPort)i));
+                dev->update(false);
+            }
+        }
+    }
+    if (current_seen_ports != m_last_seen_ports)
+    {
+        m_last_seen_ports = current_seen_ports;
+        if (!first)
+        {
+            reload();
+        }
+    }
+}
 void PS2Device::update(bool full_poll)
 {
     m_controller.tick();
+    if (m_port == BASE && (millis() - m_last_scan) > 500)
+    {
+        m_last_scan = millis();
+        rescan(false);
+        return;
+    }
     if (m_controller.type != m_lastControllerType || full_poll || resend)
     {
-        if (m_controller.type != m_lastControllerType)
+        if (m_controller.type != m_lastControllerType && m_lastControllerType != PS2ControllerTypeUnknown)
         {
             reload();
         }
@@ -32,12 +62,4 @@ bool PS2Device::readButton(proto_PS2ButtonType type)
 bool PS2Device::isExtension(PS2ControllerType type)
 {
     return m_controller.type == type;
-}
-void PS2Device::load_devices()
-{
-    valid_devices.emplace_back(this);
-    if (m_lastControllerType != PS2ControllerTypeUnknown)
-    {
-        assignable_devices.emplace_back(this);
-    }
 }

@@ -490,8 +490,17 @@ bool PSXController::readButton(PS2ButtonType buttonType)
     return false;
 }
 extern unsigned long millis_at_boot;
+
+bool PSXController::controller_valid(MultitapPort port)
+{
+    return autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput)) != 0;
+}
 void PSXController::tick()
 {
+    if (m_port == BASE)
+    {
+        return;
+    }
     // PS2 guitars die if you poll them too fast
     if (type == PS2ControllerTypeGuitar && to_us_since_boot(get_absolute_time()) - last < 3000)
     {

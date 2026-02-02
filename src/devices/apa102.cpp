@@ -19,8 +19,3 @@ void APA102Device::update(bool full_poll)
     }
     m_apa102.end();
 }
-
-void APA102Device::load_devices()
-{
-    valid_devices.emplace_back(this);
-}

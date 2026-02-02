@@ -30,9 +30,6 @@ USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_de
 void USBDevice::update(bool full_poll)
 {
 }
-void USBDevice::load_devices() {
-    // at this point, we would have to create a usbdevice for each connected device
-}
 
 
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len)

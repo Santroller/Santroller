@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <vector>
 #include <memory>
@@ -22,19 +23,21 @@ uint32_t copy_config_info(uint8_t *buffer);
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update(bool full_poll);
-void set_current_profile(uint32_t profile);
 void first_load();
+void reload();
 extern proto_SubType current_type;
 extern ConsoleMode mode;
 extern ConsoleMode newMode;
 extern bool working;
 
 extern std::vector<std::shared_ptr<Instance>> instances;
-extern std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
-extern std::map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
-extern std::vector<std::shared_ptr<Device>> devices;
+extern std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
+extern std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
+extern std::vector<std::shared_ptr<Device>> configured_devices;
+extern std::vector<std::shared_ptr<Device>> assignable_devices;
+extern std::vector<std::shared_ptr<Device>> valid_devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;
-extern std::map<uint32_t, std::shared_ptr<Profile>> profiles;
+extern std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 extern std::set<uint32_t> active_profiles;
 inline bool hid_based(void)
 {

@@ -1,6 +1,7 @@
 #include "devices/apa102.hpp"
 #include "events.pb.h"
 #include "main.hpp"
+#include "config.hpp"
 APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(id, true), m_apa102(device.spi.block, device.spi.mosi, device.spi.sck, device.count, device.type)
 {
 }
@@ -17,4 +18,9 @@ void APA102Device::update(bool full_poll)
         m_apa102.putLed(brightness, r, g, b);
     }
     m_apa102.end();
+}
+
+void APA102Device::load_devices()
+{
+    valid_devices.emplace_back(this);
 }

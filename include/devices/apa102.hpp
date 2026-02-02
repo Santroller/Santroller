@@ -9,6 +9,7 @@ public:
     ~APA102Device() {}
     APA102Device(proto_APA102Device device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_APA102Device m_device;

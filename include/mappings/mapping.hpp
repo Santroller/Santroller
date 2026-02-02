@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "input/input.hpp"
 #include "input.pb.h"
+#include "config.pb.h"
 #include "protocols/controller_reports.hpp"
 #include "protocols/hid.hpp"
 #include "protocols/wii.hpp"
@@ -769,21 +770,111 @@ class ActivationTrigger
 public:
     ActivationTrigger(uint32_t profile_id) : m_profile_id(profile_id) {}
     ~ActivationTrigger() {}
-    virtual void update(bool tool_closed) = 0;
+    virtual bool validate(bool claim_device) = 0;
 
 protected:
     uint32_t m_profile_id;
+    bool m_initialised = false;
+    bool m_last_val = false;
 };
 class InputActivationTrigger : public ActivationTrigger
 {
 public:
-    InputActivationTrigger(proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id);
+    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id);
     ~InputActivationTrigger() {}
-    void update(bool tool_closed);
+    bool validate(bool claim_device);
 
 protected:
     proto_InputActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
+    bool m_any_time;
+};
+class ConsoleTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    ConsoleTypeActivationTrigger(proto_ConsoleType type, uint32_t profile_id);
+    ~ConsoleTypeActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_ConsoleType m_type;
+};
+class WiiExtTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id);
+    ~WiiExtTypeActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_WiiExtType m_type;
+};
+class PS2ControllerTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id);
+    ~PS2ControllerTypeActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_PS2ControllerType m_type;
+};
+class UsbTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id);
+    ~UsbTypeActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_SubType m_type;
+};
+class SpecificUsbDeviceActivationTrigger : public ActivationTrigger
+{
+public:
+    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id);
+    ~SpecificUsbDeviceActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_SpecificUsbDevice m_device;
+};
+class BluetoothTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id);
+    ~BluetoothTypeActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_SubType m_type;
+};
+class SpecificBluetoothDeviceActivationTrigger : public ActivationTrigger
+{
+public:
+    SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id);
+    ~SpecificBluetoothDeviceActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    proto_SpecificUsbDevice m_device;
+};
+class CatchAllActivationTrigger : public ActivationTrigger
+{
+public:
+    CatchAllActivationTrigger(uint32_t profile_id);
+    ~CatchAllActivationTrigger() {}
+    bool validate(bool claim_device);
+};
+class MidiChannelActivationTrigger : public ActivationTrigger
+{
+public:
+    MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id);
+    ~MidiChannelActivationTrigger() {}
+    bool validate(bool claim_device);
+
+protected:
+    uint32_t m_channel;
 };
 extern const uint8_t gh5_mapping[32];
 extern const uint8_t dpad_bindings[11];

@@ -2,6 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "usb/device/hid_device.h"
+#include "config.hpp"
 CrkdDevice::CrkdDevice(proto_CrkdNeckDevice device, uint16_t id) : Device(id), neck(device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate)
 {
 }
@@ -14,4 +15,8 @@ void CrkdDevice::update(bool full_poll)
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
+}
+
+void CrkdDevice::load_devices() {
+    valid_devices.emplace_back(this);
 }

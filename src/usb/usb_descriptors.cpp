@@ -119,7 +119,7 @@ static uint16_t _desc_str[100 + 1];
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
-  printf("desc %02x %02x\r\n", index, langid);
+  // printf("desc %02x %02x\r\n", index, langid);
   size_t chr_count;
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)
@@ -153,8 +153,6 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
       index = STRID_PG_DRUM_PRODUCT;
     }
     const char *str = string_desc_arr[index];
-
-    printf("ret: %s\r\n", str);
     // Cap at max char
     chr_count = strlen(str);
     size_t const max_count = sizeof(_desc_str) / sizeof(_desc_str[0]) - 1; // -1 for string type
@@ -237,7 +235,7 @@ void tud_reset(uint8_t rhport)
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-  printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
+  // printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
 
@@ -316,6 +314,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
       return false;
     }
     auto dev = it->second;
+    // printf("xfer\r\n");
     return dev->control_transfer(stage, request);
   }
   else if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_ENDPOINT)
@@ -326,6 +325,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
       return false;
     }
     auto dev = it->second;
+    // printf("xfer\r\n");
     return dev->control_transfer(stage, request);
   }
   return false;

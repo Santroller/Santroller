@@ -9,6 +9,7 @@ public:
     ~STP16CPCDevice() {}
     STP16CPCDevice(proto_STP16CPCDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_STP16CPCDevice m_device;

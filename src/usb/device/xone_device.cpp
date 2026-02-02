@@ -546,12 +546,14 @@ void XboxOneGamepadDevice::process(bool full_poll)
     GIP_HEADER((xboneReport), GIP_INPUT_REPORT, false, last_report_counter);
     xboneReportSize = sizeof(XboxOneGamepad_Data_t);
 
-    for (const auto &mapping : mappings)
+    for (const auto &profile : profiles)
     {
-        mapping->update(full_poll);
-        mapping->update_xboxone(epin_buf);
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_xboxone(epin_buf);
+        }
     }
-
     // Virtual Keycode Triggered (Pressed or Released)
     if (xb1_guide_pressed != xboneReport->guide)
     {

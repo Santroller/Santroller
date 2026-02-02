@@ -28,6 +28,7 @@ public:
     ~USBDevice() {}
     USBDevice(proto_UsbHostDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_UsbHostDevice m_device;

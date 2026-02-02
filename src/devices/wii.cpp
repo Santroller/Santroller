@@ -2,6 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "usb/device/hid_device.h"
+#include "config.hpp"
 WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : Device(id), m_extension(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock)
 {
 }
@@ -25,7 +26,8 @@ bool WiiDevice::readButton(proto_WiiButtonType type)
 {
     return m_extension.readButton(type);
 }
-bool WiiDevice::isExtension(WiiExtType type) {
+bool WiiDevice::is_wii_extension(WiiExtType type)
+{
     return m_extension.mType == type;
 }
 uint16_t WiiDevice::readMidiNote(uint8_t note)
@@ -48,4 +50,11 @@ uint16_t WiiDevice::readMidiControlChange(uint8_t cc)
 int16_t WiiDevice::readMidiPitchBend()
 {
     return m_extension.midiInterface.midiPitchWheel;
+}
+void WiiDevice::load_devices()
+{
+    valid_devices.emplace_back(this);
+    if (m_lastExtType != WiiNoExtension) {
+       assignable_devices.emplace_back(this);
+    }
 }

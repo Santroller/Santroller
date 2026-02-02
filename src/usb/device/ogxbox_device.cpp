@@ -145,10 +145,13 @@ void OGXboxGamepadDevice::process(bool full_poll)
     report->rid = 0;
     report->rsize = sizeof(OGXboxGamepad_Data_t);
     memset(epin_buf, 0, sizeof(epin_buf));
-    for (const auto &mapping : mappings)
+    for (const auto &profile : profiles)
     {
-        mapping->update(full_poll);
-        mapping->update_ogxbox(epin_buf);
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_ogxbox(epin_buf);
+        }
     }
     if (current_type == GuitarHeroGuitar)
     {

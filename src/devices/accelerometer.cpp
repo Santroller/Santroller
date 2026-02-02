@@ -1,4 +1,5 @@
 #include "devices/accelerometer.hpp"
+#include "config.hpp"
 #include "events.pb.h"
 #include "main.hpp"
 #include "usb/device/hid_device.h"
@@ -13,4 +14,8 @@ void AccelerometerDevice::update(bool full_poll) {
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
+}
+
+void AccelerometerDevice::load_devices() {
+    valid_devices.emplace_back(this);
 }

@@ -7,5 +7,6 @@ public:
     ~DebugDevice() {}
     DebugDevice(proto_DebugDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
     uart_inst_t *uart_inst;
 };

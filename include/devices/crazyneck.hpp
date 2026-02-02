@@ -8,6 +8,7 @@ public:
     ~CrazyGuitarNeckDevice() {}
     CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_CrazyGuitarNeckDevice m_device;

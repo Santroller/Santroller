@@ -368,6 +368,7 @@ enum AnalogToDigitalTriggerType {
   JoyHigh = 1;
   JoyLow = 2;
   Exact = 3;
+  Range = 4;
 }
 
 enum MouseAxisType {
@@ -468,6 +469,84 @@ enum WiiButtonType {
   WiiButtonClassicPlus= 48;
   WiiButtonClassicMinus= 49;
   WiiButtonClassicHome= 50;
+}
+
+enum PS2AxisType {
+  PS2AxisGunConHSync = 1;
+  PS2AxisGunConVSync = 2;
+  PS2AxisMouseX = 3;
+  PS2AxisMouseY = 4;
+  PS2AxisNegConTwist = 5;
+  PS2AxisNegConI = 6;
+  PS2AxisNegConIi = 7;
+  PS2AxisNegConL = 8;
+  PS2AxisJogConWheel = 9;
+  PS2AxisGuitarWhammy = 10;
+  PS2AxisLeftStickX = 12;
+  PS2AxisLeftStickY = 13;
+  PS2AxisRightStickX = 14;
+  PS2AxisRightStickY = 15;
+  PS2AxisDualshock2L1 = 16;
+  PS2AxisDualshock2R1 = 17;
+  PS2AxisDualshock2RightButton = 18;
+  PS2AxisDualshock2LeftButton = 19;
+  PS2AxisDualshock2UpButton = 20;
+  PS2AxisDualshock2DownButton = 21;
+  PS2AxisDualshock2Triangle = 22;
+  PS2AxisDualshock2Circle = 23;
+  PS2AxisDualshock2Cross = 24;
+  PS2AxisDualshock2Square = 25;
+  PS2AxisDualshock2L2 = 26;
+  PS2AxisDualshock2R2 = 27;
+}
+
+
+enum PS2ButtonType {    
+ PS2ButtonMouseLeft = 1;
+  PS2ButtonMouseRight = 2;
+  PS2ButtonNegConA = 3;
+  PS2ButtonNegConB = 4;
+  PS2ButtonNegConStart = 5;
+  PS2ButtonNegConR = 6;
+  PS2ButtonGuitarGreen = 7;
+  PS2ButtonGuitarRed = 8;
+  PS2ButtonGuitarYellow = 9;
+  PS2ButtonGuitarBlue = 10;
+  PS2ButtonGuitarOrange = 11;
+  PS2ButtonGuitarStrumUp = 12;
+  PS2ButtonGuitarStrumDown = 13;
+  PS2ButtonGuitarDpadUp = 14;
+  PS2ButtonGuitarDpadDown = 15;
+  PS2ButtonGuitarDpadLeft = 16;
+  PS2ButtonGuitarDpadRight = 17;
+  PS2ButtonGuitarSelect = 18;
+  PS2ButtonGuitarStart = 19;
+  PS2ButtonGuitarTilt = 20;
+  PS2ButtonGuitarTapGreen = 21;
+  PS2ButtonGuitarTapRed = 22;
+  PS2ButtonGuitarTapYellow = 23;
+  PS2ButtonGuitarTapBlue = 24;
+  PS2ButtonGuitarTapOrange = 25;
+  PS2ButtonSelect = 26;
+  PS2ButtonL3 = 27;
+  PS2ButtonR3 = 28;
+  PS2ButtonStart = 29;
+  PS2ButtonDpadUp = 30;
+  PS2ButtonDpadRight = 31;
+  PS2ButtonDpadDown = 32;
+  PS2ButtonDpadLeft = 33;
+  PS2ButtonL2 = 34;
+  PS2ButtonR2 = 35;
+  PS2ButtonL1 = 36;
+  PS2ButtonR1 = 37;
+  PS2ButtonTriangle = 38;
+  PS2ButtonCircle = 39;
+  PS2ButtonCross = 40;
+  PS2ButtonSquare = 41;
+  PS2ButtonTaikoRimLeft = 42;
+  PS2ButtonTaikoRimRight = 43;
+  PS2ButtonTaikoCenterLeft = 44;
+  PS2ButtonTaikoCenterRight = 45;
 }
 
 enum UsbButtonType {

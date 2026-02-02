@@ -226,10 +226,13 @@ void PS3GamepadDevice::process(bool full_poll)
             gamepad->rightStickY = PS3_STICK_CENTER;
         }
     }
-    for (const auto &mapping : mappings)
+    for (const auto &profile : profiles)
     {
-        mapping->update(full_poll);
-        mapping->update_ps3(epin_buf);
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_ps3(epin_buf);
+        }
     }
 
     if (subtype == Gamepad)

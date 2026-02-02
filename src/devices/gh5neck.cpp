@@ -2,6 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "usb/device/hid_device.h"
+#include "config.hpp"
 GH5NeckDevice::GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id) : Device(id), m_gh5_neck(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock)
 {
 }
@@ -13,4 +14,7 @@ void GH5NeckDevice::update(bool full_poll) {
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
+}
+void GH5NeckDevice::load_devices() {
+    valid_devices.emplace_back(this);
 }

@@ -1,6 +1,7 @@
 #include "devices/ws2812.hpp"
 #include "events.pb.h"
 #include "main.hpp"
+#include "config.hpp"
 WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true), m_device(device), m_ws2812(device.pin, device.type)
 {
 }
@@ -14,4 +15,7 @@ void WS2812Device::update(bool full_poll)
         uint8_t b = (led_state[i] >> 16) & 0xff;
         m_ws2812.putLed(r, g, b);
     }
+}
+void WS2812Device::load_devices() {
+    valid_devices.emplace_back(this);
 }

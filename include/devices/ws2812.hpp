@@ -10,6 +10,7 @@ public:
     ~WS2812Device() {}
     WS2812Device(proto_WS2812Device device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_WS2812Device m_device;

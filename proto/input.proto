@@ -81,23 +81,15 @@ message ShortcutInput {
   repeated Input inputs = 1;
 }
 
-message WiiExtensionTypeInput {
+
+message PS2AxisInput {
   required int32 deviceid = 1;
-  required WiiExtType ext = 2;
+  required PS2AxisType axis = 2;
 }
-message PS2ControllerTypeInput {
+
+message PS2ButtonInput {
   required int32 deviceid = 1;
-  required PS2ControllerType type = 2;
-}
-message UsbDeviceTypeInput {
-  required int32 deviceid = 1;
-  required UsbDeviceType type = 2;
-  required SubType subtype = 3;
-}
-message BluetoothDeviceTypeInput {
-  required int32 deviceid = 1;
-  required UsbDeviceType type = 2;
-  required SubType subtype = 3;
+  required PS2ButtonType button = 2;
 }
 
 message Input {
@@ -118,6 +110,8 @@ message Input {
     ADS1115Input ads1115 = 14;
     AccelerometerInput accelerometer = 15;
     Gh5NeckButtonInput gh5Neck = 16;
+    PS2AxisInput ps2Axis = 17;
+    PS2ButtonInput ps2Button = 18;
   }
 }
 message InputActivationTrigger {
@@ -125,20 +119,7 @@ message InputActivationTrigger {
   optional bool inverted = 2;
   optional AnalogToDigitalTriggerType trigger = 3;
   optional int32 triggerValue = 4;
-}
-
-message ActivationTrigger {
-  oneof trigger {
-    InputActivationTrigger input = 1; // Input at startup
-    InputActivationTrigger inputAnyTime = 2; // Input at any time
-    ConsoleMode console = 3; // Console mode
-    WiiExtensionTypeInput wii = 4; // Wii Extension type
-    PS2ControllerTypeInput ps2 = 5; // Ps2 Extension type
-    UsbDeviceTypeInput usb = 6; // Usb device type
-    BluetoothDeviceTypeInput bluetooth = 7; // bluetooth input type
-    uint32 linkedProfile = 8; // linked profile - both profiles will be active at the same time, for mixed inputs
-    uint32 midiChannel = 9; // midi channel of plugged in device
-  }
+  optional int32 maxTriggerValue = 5;
 }
 
 message Mapping {

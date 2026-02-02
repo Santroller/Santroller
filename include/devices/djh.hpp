@@ -8,6 +8,7 @@ public:
     ~DjHeroTurntableDevice() {}
     DjHeroTurntableDevice(proto_DJHeroTurntableDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_DJHeroTurntableDevice m_device;

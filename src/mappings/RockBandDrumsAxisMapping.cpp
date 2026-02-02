@@ -32,30 +32,50 @@ void RockBandDrumsAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
+    // TODO: if pad and cymbal is active for same colour, put cymbal on red pad
     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
     case RockBandDrumsRedPad:
         report->redVelocity = m_calibratedValue >> 8;
         report->b = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsYellowPad:
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsBluePad:
         report->blueVelocity = m_calibratedValue >> 8;
         report->x = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsGreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
         report->a = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsLeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
     case RockBandDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
+        break;
+    case RockBandDrumsYellowCymbal:
+        report->yellowVelocity = m_calibratedValue >> 8;
+        report->y = true;
+        report->cymbalFlag = true;
+        break;
+    case RockBandDrumsBlueCymbal:
+        report->blueVelocity = m_calibratedValue >> 8;
+        report->x = true;
+        report->cymbalFlag = true;
+        break;
+    case RockBandDrumsGreenCymbal:
+        report->greenVelocity = m_calibratedValue >> 8;
+        report->a = true;
+        report->cymbalFlag = true;
         break;
     }
 }
@@ -79,6 +99,18 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
         break;
     case RockBandDrumsGreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
+        report->a = true;
+        break;
+    case RockBandDrumsYellowCymbal:
+        report->yellowCymbalVelocity = m_calibratedValue >> 8;
+        report->y = true;
+        break;
+    case RockBandDrumsBlueCymbal:
+        report->blueCymbalVelocity = m_calibratedValue >> 8;
+        report->x = true;
+        break;
+    case RockBandDrumsGreenCymbal:
+        report->greenCymbalVelocity = m_calibratedValue >> 8;
         report->a = true;
         break;
     case RockBandDrumsLeftStickX:
@@ -109,6 +141,18 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandDrumsGreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
+        report->a = true;
+        break;
+    case RockBandDrumsYellowCymbal:
+        report->yellowCymbalVelocity = m_calibratedValue >> 8;
+        report->y = true;
+        break;
+    case RockBandDrumsBlueCymbal:
+        report->blueCymbalVelocity = m_calibratedValue >> 8;
+        report->x = true;
+        break;
+    case RockBandDrumsGreenCymbal:
+        report->greenCymbalVelocity = m_calibratedValue >> 8;
         report->a = true;
         break;
     case RockBandDrumsLeftStickX:
@@ -142,6 +186,21 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
         report->greenVelocity = m_calibratedValue - 32767;
         report->a = true;
         break;
+    case RockBandDrumsYellowCymbal:
+        report->yellowVelocity = m_calibratedValue - 32767;
+        report->y = true;
+        report->cymbalFlag = true;
+        break;
+    case RockBandDrumsBlueCymbal:
+        report->blueVelocity = m_calibratedValue - 32767;
+        report->x = true;
+        report->cymbalFlag = true;
+        break;
+    case RockBandDrumsGreenCymbal:
+        report->greenVelocity = m_calibratedValue - 32767;
+        report->a = true;
+        report->cymbalFlag = true;
+        break;
     case RockBandDrumsLeftStickX:
         if (!m_centered)
         {
@@ -164,18 +223,37 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
     case RockBandDrumsRedPad:
         report->redVelocity = m_calibratedValue - 32767;
         report->b = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsYellowPad:
         report->yellowVelocity = m_calibratedValue - 32767;
         report->y = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsBluePad:
         report->blueVelocity = m_calibratedValue - 32767;
         report->x = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsGreenPad:
         report->greenVelocity = m_calibratedValue - 32767;
         report->a = true;
+        report->padFlag = true;
+        break;
+    case RockBandDrumsYellowCymbal:
+        report->yellowVelocity = m_calibratedValue - 32767;
+        report->y = true;
+        report->cymbalFlag = true;
+        break;
+    case RockBandDrumsBlueCymbal:
+        report->blueVelocity = m_calibratedValue - 32767;
+        report->x = true;
+        report->cymbalFlag = true;
+        break;
+    case RockBandDrumsGreenCymbal:
+        report->greenVelocity = m_calibratedValue - 32767;
+        report->a = true;
+        report->cymbalFlag = true;
         break;
     case RockBandDrumsLeftStickX:
         if (!m_centered)

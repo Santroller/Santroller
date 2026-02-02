@@ -2,6 +2,8 @@
 #include <stdint.h>
 
 #include "spi.hpp"
+#include "enums.pb.h"
+#include "input_enums.pb.h"
 
 /** \brief Size of internal communication buffer
  *
@@ -41,39 +43,34 @@
  */
 #define ATTN_DELAY 50
 
-typedef enum {
-    PSX_UNKNOWN_CONTROLLER = 0,
-    PSX_DIGITAL,
-    PSX_DUALSHOCK_1_CONTROLLER,
-    PSX_DUALSHOCK_2_CONTROLLER,
-    PSX_GUITAR_HERO_CONTROLLER,
-    PSX_NEGCON,
-    PSX_JOGCON,
-    PSX_GUNCON,
-    PSX_FLIGHTSTICK,
-    PSX_MOUSE,
-    PSX_NO_DEVICE
-} PsxControllerType_t;
-enum MultitapPort { A = 0x01,
-                    B = 0x02,
-                    C = 0x03,
-                    D = 0x04 };
-class PSXController {
-   public:
-    PSXController(SPIMasterInterface* interface, uint8_t csPin, uint8_t attPin, uint8_t ackPin);
+typedef enum
+{
+    A = 0x01,
+    B = 0x02,
+    C = 0x03,
+    D = 0x04
+} MultitapPort;
+class PSXController
+{
+public:
+    PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin, MultitapPort port);
     void tick();
-    inline bool isConnected() {
+    inline bool isConnected()
+    {
         return connected;
     }
+    PS2ControllerType type = PS2ControllerTypeUnknown;
+    uint16_t readAxis(PS2AxisType type);
+    bool readButton(PS2ButtonType type);
 
-   private:
-    bool autoShiftData(uint8_t port, uint8_t* in, const uint8_t* out, const uint8_t len);
-    void shiftDataInOut(const uint8_t* out, uint8_t* in, const uint8_t len);
-    bool sendCommand(uint8_t port, uint8_t* in, const uint8_t* buf, uint8_t len);
+private:
+    bool autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out, const uint8_t len);
+    void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len);
+    bool sendCommand(uint8_t port, uint8_t *in, const uint8_t *buf, uint8_t len);
     void noAttention();
     void signalAttention();
-    SPIMasterInterface* interface;
-    uint8_t csPin;
+    SPIMasterInterface interface;
+    MultitapPort m_port;
     uint8_t attPin;
     uint8_t ackPin;
     int missing;
@@ -81,5 +78,5 @@ class PSXController {
     bool hasTapBar = false;
     long last = 0;
     uint8_t invalidCount = 0;
-    PsxControllerType_t type = PSX_NO_DEVICE;
+    uint8_t ps2Data[BUFFER_SIZE];
 };

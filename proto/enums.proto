@@ -136,16 +136,17 @@ enum UsbDeviceType {
 
 
 enum PS2ControllerType {
-  PS2ControllerTypeDigital = 1;
-  PS2ControllerTypeDualshock = 2;
-  PS2ControllerTypeDualshock2 = 3;
-  PS2ControllerTypeGuitar = 4;
-  PS2ControllerTypeNegCon = 5;
-  PS2ControllerTypeJogCon = 6;
-  PS2ControllerTypeGunCon = 7;
-  PS2ControllerTypeFlightStick = 8;
-  PS2ControllerTypeMouse = 9;
-  PS2ControllerTypeTaiko = 10;
+  PS2ControllerTypeUnknown = 1;
+  PS2ControllerTypeDigital = 2;
+  PS2ControllerTypeDualshock = 3;
+  PS2ControllerTypeDualshock2 = 4;
+  PS2ControllerTypeGuitar = 5;
+  PS2ControllerTypeNegCon = 6;
+  PS2ControllerTypeJogCon = 7;
+  PS2ControllerTypeGunCon = 8;
+  PS2ControllerTypeFlightStick = 9;
+  PS2ControllerTypeMouse = 10;
+  PS2ControllerTypeTaiko = 11;
 }
 
 enum APA102Type {
@@ -195,6 +196,13 @@ enum ConsoleType {
     ConsolePS4_PS5=7;
     ConsoleSwitch_Switch2=8;
     ConsolePC=9;
+}
+
+enum OutputMode {
+    OutputUSB=1;
+    OutputBluetooth=2;
+    OutputPS2=3;
+    OutputWiiExt=4;
 }
 
 enum PinDetectType {

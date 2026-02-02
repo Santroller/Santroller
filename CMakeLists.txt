@@ -96,8 +96,8 @@ add_executable(
   src/input/gpio.cpp
   src/input/wii.cpp
   src/input/ads1115.cpp
+  src/triggers/ActivationTrigger.cpp
   src/mappings/Mapping.cpp
-  src/mappings/ActivationTrigger.cpp
   src/mappings/GamepadAxisMapping.cpp
   src/mappings/GamepadButtonMapping.cpp
   src/mappings/KeyboardButtonMapping.cpp
@@ -141,8 +141,10 @@ add_executable(
   src/mappings/SVDXButtonMapping.cpp
   src/devices/usb.cpp
   src/devices/wii.cpp
+  src/devices/ps2.cpp
   src/devices/crkd.cpp
   src/devices/ads1115.cpp
+  src/devices/device.cpp
   src/devices/accelerometer.cpp
   src/devices/bhdrum.cpp
   src/devices/debug.cpp

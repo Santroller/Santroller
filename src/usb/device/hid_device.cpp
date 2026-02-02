@@ -229,10 +229,14 @@ void HIDGamepadDevice::process(bool full_poll)
   memset(epin_buf, 0, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
   report->rsize = sizeof(PCGamepadDpad_Data_t);
-  for (const auto &mapping : mappings)
+
+  for (const auto &profile : profiles)
   {
-    mapping->update(full_poll);
-    mapping->update_hid(epin_buf);
+    for (const auto &mapping : profile->mappings)
+    {
+      mapping->update(full_poll);
+      mapping->update_hid(epin_buf);
+    }
   }
 
   // convert bitmask dpad to actual hid dpad
@@ -348,8 +352,8 @@ void HIDConfigDevice::process(bool full_poll)
   {
     return;
   }
-  auto selected = profiles.find(selected_profile);
-  if (selected == profiles.end())
+  auto selected = all_profiles.find(selected_profile);
+  if (selected == all_profiles.end())
   {
     return;
   }
@@ -398,8 +402,8 @@ void HIDConfigDevice::handle_command(proto_Command command)
     printf("Set id: %d\r\n", command.command.setProfile.profileId);
     profile_selected = true;
     selected_profile = command.command.setProfile.profileId;
-    auto selected = profiles.find(selected_profile);
-    if (selected == profiles.end())
+    auto selected = all_profiles.find(selected_profile);
+    if (selected == all_profiles.end())
     {
       break;
     }
@@ -449,7 +453,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       tool_seen = true;
       proto_Command cmd;
       pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
-      if (!pb_decode(&inputStream, proto_SetProfileCommand_fields, &cmd))
+      if (!pb_decode(&inputStream, proto_Command_fields, &cmd))
       {
         printf("Didn't decode cmd?\r\n");
         break;

@@ -97,10 +97,13 @@ void XInputGamepadDevice::process(bool full_poll)
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
     report->rid = 0;
     report->rsize = sizeof(XInputGamepad_Data_t);
-    for (const auto &mapping : mappings)
+    for (const auto &profile : profiles)
     {
-        mapping->update(full_poll);
-        mapping->update_xinput(epin_buf);
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_xinput(epin_buf);
+        }
     }
     if (subtype == GuitarHeroGuitar)
     {

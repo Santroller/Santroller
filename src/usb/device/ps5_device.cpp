@@ -84,10 +84,13 @@ void PS5GamepadDevice::process(bool full_poll)
     gamepad->leftStickY = PS3_STICK_CENTER;
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
-    for (const auto &mapping : mappings)
+    for (const auto &profile : profiles)
     {
-        mapping->update(full_poll);
-        mapping->update_ps5(epin_buf);
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_ps5(epin_buf);
+        }
     }
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];

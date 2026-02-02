@@ -8,6 +8,7 @@ public:
     ~Max1704XDevice() {}
     Max1704XDevice(proto_Max1704xDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
 
 private:
     proto_Max1704xDevice m_device;

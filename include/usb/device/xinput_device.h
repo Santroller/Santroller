@@ -81,11 +81,14 @@ inline uint8_t get_xinput_subtype(SubType subtype)
     case GuitarFreaks:
     case LiveGuitar:
     case GuitarHeroGuitar:
+    case RockRevolutionGuitar:
         return XINPUT_GUITAR_ALTERNATE;
     case RockBandGuitar:
+    case PowerGigGuitar:
         return XINPUT_GUITAR;
     case GuitarHeroDrums:
     case RockBandDrums:
+    case PowerGigDrum:
         return XINPUT_DRUMS;
     case DjHeroTurntable:
         return XINPUT_TURNTABLE;

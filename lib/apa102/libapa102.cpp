@@ -50,7 +50,7 @@ void APA102::begin() {
     interface.transfer(0x00);
 }
 void APA102::end() {
-    for (size_t i = 0; i < (m_count + 14)/16; i++)
+    for (uint8_t i = 0; i < (m_count + 14)/16; i++)
     {
         interface.transfer(0x00);
     }

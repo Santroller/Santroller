@@ -8,6 +8,7 @@ public:
     ~AccelerometerDevice() {}
     AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id);
     void update(bool full_poll);
+    void load_devices();
     Accelerometer m_accelerometer;
 
 private:

@@ -102,10 +102,13 @@ void GHArcadeGamepadDevice::process(bool full_poll)
     memset(epin_buf, 0, sizeof(epin_buf));
     report->always_1d = 0x1d;
     report->always_ff = 0xff;
-    for (const auto &mapping : mappings)
+    for (const auto &profile : profiles)
     {
-        mapping->update(full_poll);
-        mapping->update_hid(epin_buf);
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll);
+            mapping->update_hid(epin_buf);
+        }
     }
     send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
 }

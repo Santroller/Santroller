@@ -1,5 +1,6 @@
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
+#include "config.hpp"
 void init() {
 
     gpio_init(7);

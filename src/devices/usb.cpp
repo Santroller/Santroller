@@ -2,13 +2,7 @@
 #include "tusb.h"
 #include "pio_usb.h"
 #include "host/usbh_pvt.h"
-
-// void USBDevice::tick(san_base_t* data) {
-//     mParser.parse(mReportData, sizeof(mReportData), data);
-//     if (data->midi.midiPacket[0]) {
-//         midiInterface.parsePacket(data->midi.midiPacket, sizeof(data->midi.midiPacket));
-//     }
-// }
+#include "config.hpp"
 
 USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
 {
@@ -35,4 +29,50 @@ USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_de
 
 void USBDevice::update(bool full_poll)
 {
+}
+void USBDevice::load_devices() {
+    // at this point, we would have to create a usbdevice for each connected device
+}
+
+
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len)
+{
+    // printf("report! %d\r\n", len);
+    // if (report[0] == 0x81 && report[1] == 0x01)
+    // {
+    //     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+    //     tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    //     send_timeout = false;
+    // }
+    // else if (!send_timeout && report[0] == 0x81 && report[1] == 0x02)
+    // {
+    //     send_timeout = true;
+    //     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x03 /* PROCON_USB_ENABLE */};
+    //     tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    // }
+    // else if (report[0] == 0x81 && report[1] == 0x03)
+    // {
+    //     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x02 /* PROCON_USB_HANDSHAKE */};
+    //     tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    // }
+    // else if (report[0] == 0x81 && report[1] == 0x02)
+    // {
+    //     uint8_t buf[2] = {0x80 /* PROCON_REPORT_SEND_USB */, 0x04 /* PROCON_USB_ENABLE */};
+    //     tuh_hid_send_report(dev_addr, idx, 0, buf, 2);
+    // }
+    // if (report[0] == 0x30)
+    // {
+    //     for (int i = 0; i < len; i++)
+    //     {
+    //         printf("%02x, ", report[i]);
+    //     }
+    //     printf("\r\n");
+    // }
+    // tuh_hid_receive_report(dev_addr, idx);
+}
+void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc, uint16_t desc_len)
+{
+
+    printf("mount! %d\r\n", desc_len);
+    tuh_hid_receive_report(dev_addr, idx);
 }

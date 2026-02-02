@@ -6,6 +6,26 @@
 
 #include "config.pb.h"
 
+
+class ActivationTriggerList
+{
+public:
+    uint32_t profile_id;
+    std::vector<std::unique_ptr<ActivationTrigger>> triggers;
+    bool validate(bool claim_devices);
+};
+
+class Profile
+{
+public:
+    SubType subtype;
+    ConsoleMode mode;
+    OutputMode output;
+    uint32_t profile_id;
+    std::vector<std::unique_ptr<Mapping>> mappings;
+    std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
+    std::map<uint32_t, std::shared_ptr<Device>> devices;
+};
 class Instance
 {
 public:
@@ -13,9 +33,7 @@ public:
     virtual void process(bool full_poll) = 0;
     SubType subtype;
     ConsoleMode mode;
-    uint32_t profile_id;
-    std::vector<std::unique_ptr<Mapping>> mappings;
-    std::vector<std::unique_ptr<ActivationTrigger>> triggers;
+    std::vector<std::shared_ptr<Profile>> profiles;
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;
     uint8_t player_led = 0;
@@ -26,16 +44,4 @@ public:
     uint8_t stagekit_command = 0;
     uint8_t stagekit_param = 0;
     bool side = 0;
-};
-
-class Profile
-{
-public:
-    SubType subtype;
-    ConsoleMode mode;
-    uint32_t profile_id;
-    std::vector<std::unique_ptr<Mapping>> mappings;
-    std::vector<std::unique_ptr<ActivationTrigger>> triggers;
-    std::shared_ptr<Instance> instance;
-    std::map<uint32_t, std::shared_ptr<Device>> devices;
 };

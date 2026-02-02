@@ -66,3 +66,7 @@ message Event {
         ActivationTriggerEvent trigger = 10;  
     };
 }
+
+message EventList {
+    repeated Event event = 1;
+}

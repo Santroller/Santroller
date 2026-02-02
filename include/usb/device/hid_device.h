@@ -1,6 +1,6 @@
 
 #pragma once
-
+#include <queue>
 #include "class/hid/hid.h"
 
 #include "commands.pb.h"
@@ -46,6 +46,7 @@ protected:
   bool clearedOut = false;
   uint8_t m_epin = 0;
   uint8_t m_epout = 0;
+  uint8_t command_queue[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
@@ -74,8 +75,10 @@ private:
   uint32_t lastKeepAlive = 0;
   uint32_t start = 0;
   uint32_t selected_profile = 0;
+  uint8_t current_pos = 1;
   bool tool_seen = false;
   bool profile_selected = false;
+  std::queue<proto_Event> m_event_queue;
 };
 class HIDGamepadDevice : public HIDDevice
 {

@@ -41,6 +41,7 @@ protected:
     uint32_t m_lastValueRaw = 0;
     uint32_t m_lastValueTrigger = 0;
     bool m_resend = false;
+    uint32_t m_last_send = 0;
     std::unique_ptr<Input> m_input;
 };
 

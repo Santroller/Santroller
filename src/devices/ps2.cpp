@@ -42,6 +42,7 @@ void PS2Device::update(bool full_poll)
     }
     if (m_controller.type != m_lastControllerType || full_poll || resend)
     {
+        // don't trigger a reload when the controller is first identified
         if (m_controller.type != m_lastControllerType && m_lastControllerType != PS2ControllerTypeUnknown)
         {
             reload();

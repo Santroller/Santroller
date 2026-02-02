@@ -331,48 +331,11 @@ bool PSXController::readButton(PS2ButtonType buttonType)
     case PS2ControllerTypeGunCon:
     case PS2ControllerTypeJogCon:
     case PS2ControllerTypeDigital:
-        switch (buttonType)
-        {
-        case PS2ButtonSelect:
-            return (~ps2Data[3]) & (1 << 0);
-        case PS2ButtonStart:
-            return (~ps2Data[3]) & (1 << 3);
-        case PS2ButtonDpadUp:
-            return (~ps2Data[3]) & (1 << 4);
-        case PS2ButtonDpadRight:
-            return (~ps2Data[3]) & (1 << 5);
-        case PS2ButtonDpadDown:
-            return (~ps2Data[3]) & (1 << 6);
-        case PS2ButtonDpadLeft:
-            return (~ps2Data[3]) & (1 << 7);
-        case PS2ButtonL2:
-            return (~ps2Data[4]) & (1 << 0);
-        case PS2ButtonR2:
-            return (~ps2Data[4]) & (1 << 1);
-        case PS2ButtonL1:
-            return (~ps2Data[4]) & (1 << 2);
-        case PS2ButtonR1:
-            return (~ps2Data[4]) & (1 << 3);
-        case PS2ButtonTriangle:
-            return (~ps2Data[4]) & (1 << 4);
-        case PS2ButtonCircle:
-            return (~ps2Data[4]) & (1 << 5);
-        case PS2ButtonCross:
-            return (~ps2Data[4]) & (1 << 6);
-        case PS2ButtonSquare:
-            return (~ps2Data[4]) & (1 << 7);
-        default:
-            return 0;
-        }
     case PS2ControllerTypeFlightStick:
     case PS2ControllerTypeDualshock:
     case PS2ControllerTypeDualshock2:
         switch (buttonType)
         {
-        case PS2ButtonL3:
-            return (~ps2Data[3]) & (1 << 1);
-        case PS2ButtonR3:
-            return (~ps2Data[3]) & (1 << 2);
         case PS2ButtonSelect:
             return (~ps2Data[3]) & (1 << 0);
         case PS2ButtonStart:

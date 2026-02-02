@@ -79,9 +79,11 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new WiiDevice(device.device.wii, *dev_id));
         break;
     case proto_Device_psx_tag:
-        auto& ps2Dev = active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id, MultitapPort::BASE));
+    {
+        auto &ps2Dev = active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id, MultitapPort::BASE));
         ps2Dev->rescan(true);
         break;
+    }
     case proto_Device_bhDrum_tag:
         active_devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, *dev_id));
         break;

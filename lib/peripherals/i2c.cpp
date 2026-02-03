@@ -12,8 +12,8 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, ui
         return;
     }
     i2c = _hardwareBlocks[block];
-    printf("%d %d %d\r\n", sda, scl, block);
-    i2c_init(i2c, clock);
+    printf("i2c: %d %d %d %d\r\n", sda, scl, block, clock);
+    i2c_init(i2c, 400000);
     gpio_set_function(sda, GPIO_FUNC_I2C);
     gpio_set_function(scl, GPIO_FUNC_I2C);
 
@@ -83,9 +83,9 @@ bool I2CMasterInterface::writeTo(uint8_t address, uint8_t *data, uint8_t length,
         return false;
     }
     int ret =
-        i2c_write_timeout_us(i2c, address, data, length, !sendStop, 200 * length);
+        i2c_write_timeout_us(i2c, address, data, length, !sendStop, 1000 * length);
     if (ret < 0)
         ret = i2c_write_timeout_us(i2c, address, data, length, !sendStop,
-                                   200 * length);
+                                   1000 * length);
     return ret > 0;
 }

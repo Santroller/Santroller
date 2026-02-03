@@ -362,12 +362,24 @@ void HIDConfigDevice::process(bool full_poll)
   {
     mapping->update(false);
   }
-  proto_EventList list;
-  proto_Event* event = list.event;
-  while (m_event_queue.size() && list.event_count < TU_ARRAY_SIZE(list.event)) {
+
+  if (!m_eps_assigned || m_event_queue.empty() || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+  {
+    return;
+  }
+  list.event_count = 0;
+  while (!m_event_queue.empty() && list.event_count < 4)
+  {
+    list.event[list.event_count] = m_event_queue.front();
     list.event_count++;
-    *event++ = m_event_queue.front();
     m_event_queue.pop();
+  }
+
+  epin_buf[0] = ReportId::ReportIdConfig;
+  pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
+  if (pb_encode(&outputStream, proto_EventList_fields, &list))
+  {
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, outputStream.bytes_written+1);
   }
 }
 
@@ -556,7 +568,7 @@ bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
 {
 
   auto dev = HIDConfigDevice::instance;
-  if (!dev || dev->selected_profile != profile_id)
+  if (!dev || dev->selected_profile != profile_id || tool_closed())
   {
     return false;
   }
@@ -566,22 +578,12 @@ bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
 bool HIDConfigDevice::send_event(proto_Event event)
 {
   auto dev = HIDConfigDevice::instance;
+  if (tool_closed() || dev->m_event_queue.size() > 20)
+  {
+    return false;
+  }
   dev->m_event_queue.push(event);
   return true;
-  // dev->command_queue[0] = ReportId::ReportIdConfig;
-  // pb_ostream_t outputStream = pb_ostream_from_buffer(dev->command_queue + dev->current_pos, 64-dev->current_pos);
-  // if (pb_encode(&outputStream, proto_Event_fields, &event)) {
-  //   dev->current_pos += outputStream.bytes_written;
-  // } 
-  
-  // if (!dev || !dev->m_eps_assigned || dev->tool_closed() || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))
-  // {
-  //   return false;
-  // }
-  // memcpy(dev->epin_buf, dev->command_queue, dev->current_pos);
-  // auto current_pos = dev->current_pos;
-  // dev->current_pos = 1;
-  // return usbd_edpt_xfer(TUD_OPT_RHPORT, dev->m_epin, dev->epin_buf, current_pos);
 }
 
 std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

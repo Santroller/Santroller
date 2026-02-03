@@ -104,9 +104,9 @@ void ButtonMapping::update(bool full_poll)
         {
             calcVal = m_input->tickAnalog() == m_mapping.triggerValue;
         }
-        if (val != m_lastValueTrigger || full_poll || m_resend)
+        if ((val != m_lastValueTrigger || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
         {
-            if (m_last_send - millis() < 10)
+            if (m_last_send - millis() < 50)
             {
                 m_resend = true;
             }
@@ -121,9 +121,9 @@ void ButtonMapping::update(bool full_poll)
     }
     else
     {
-        if (calcVal != m_lastValue || full_poll || m_resend)
+        if ((calcVal != m_lastValue || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
         {
-            if (m_last_send - millis() < 10)
+            if (m_last_send - millis() < 50)
             {
                 m_resend = true;
             }
@@ -148,11 +148,11 @@ void ButtonMapping::update(bool full_poll)
 void AxisMapping::update(bool full_poll)
 {
     auto val = m_input->tickAnalog();
-    if (val != m_lastValue || full_poll || m_resend)
+    m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+    if ((val != m_lastValue || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
     {
         m_lastValue = val;
-        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-        if (m_last_send - millis() < 10)
+        if (m_last_send - millis() < 50)
         {
             m_resend = true;
         }
@@ -164,5 +164,5 @@ void AxisMapping::update(bool full_poll)
         }
     }
     // TODO: better solution for this probably.
-    m_centered = !m_centered;
+    m_centered = !m_calibratedValue;
 }

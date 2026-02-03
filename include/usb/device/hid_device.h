@@ -46,7 +46,6 @@ protected:
   bool clearedOut = false;
   uint8_t m_epin = 0;
   uint8_t m_epout = 0;
-  uint8_t command_queue[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
@@ -72,6 +71,7 @@ public:
 
 private:
   void handle_command(proto_Command command);
+  proto_EventList list;
   uint32_t lastKeepAlive = 0;
   uint32_t start = 0;
   uint32_t selected_profile = 0;

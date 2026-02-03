@@ -278,25 +278,6 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->output = OutputUSB;
     all_profiles[profile->profile_id] = profile;
     std::shared_ptr<UsbDevice> instance = nullptr;
-    // on a partial load, we just update the profile for the existing instance
-    // if (!HIDConfigDevice::tool_closed())
-    // {
-    //     for (auto &instance : active_instances)
-    //     {
-    //         auto it = instance->profiles.begin();
-    //         while (it != instance->profiles.end())
-    //         {
-    //             auto match_profile = *it;
-    //             if (match_profile->profile_id == profile->profile_id)
-    //             {
-    //                 *it = profile;
-    //                 break;
-    //             }
-    //             it++;
-    //         }
-    //     }
-    //     return true;
-    // }
     for (auto &list : profile->triggers)
     {
         if (list->validate(true))

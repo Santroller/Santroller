@@ -4,6 +4,7 @@ class WS2812
 {
 public:
     WS2812(uint8_t pin, WS2812Type type);
+    ~WS2812();
     void putLed(uint8_t a, uint8_t b, uint8_t c);
 
 private:

@@ -64,7 +64,7 @@ bool InputActivationTrigger::validate(bool claim_device)
             HIDConfigDevice::send_event_for(event, m_profile_id);
         }
     }
-    else if (val != m_last_val)
+    else if (val != m_last_val && !HIDConfigDevice::tool_closed())
     {
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
         HIDConfigDevice::send_event_for(event, m_profile_id);

@@ -37,14 +37,10 @@ XInputGamepadDevice::XInputGamepadDevice()
 }
 void XInputGamepadDevice::initialize()
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
+    m_epin = next_epin();
+    m_epout = next_epout();
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
 
 uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -99,7 +95,7 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
 }
 void XInputGamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     memset(epin_buf, 0, sizeof(epin_buf));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;

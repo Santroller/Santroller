@@ -13,7 +13,7 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, ui
     }
     i2c = _hardwareBlocks[block];
     printf("i2c: %d %d %d %d\r\n", sda, scl, block, clock);
-    i2c_init(i2c, 400000);
+    i2c_init(i2c, clock);
     gpio_set_function(sda, GPIO_FUNC_I2C);
     gpio_set_function(scl, GPIO_FUNC_I2C);
 

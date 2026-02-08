@@ -37,14 +37,10 @@ PS4GamepadDevice::PS4GamepadDevice()
 }
 void PS4GamepadDevice::initialize()
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epin();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
+    m_epin = next_epin();
+    m_epout = next_epin();
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
 void PS4GamepadDevice::process(bool full_poll)
 {

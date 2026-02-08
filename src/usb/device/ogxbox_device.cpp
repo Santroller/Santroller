@@ -136,18 +136,14 @@ bool OGXboxGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
 
 void OGXboxGamepadDevice::initialize()
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
+    m_epin = next_epin();
+    m_epout = next_epout();
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
 void OGXboxGamepadDevice::process(bool full_poll)
 {
-    if (!tud_ready() || !m_eps_assigned || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+    if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epin_buf;
     report->rid = 0;

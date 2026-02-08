@@ -83,14 +83,10 @@ SwitchGamepadDevice::SwitchGamepadDevice()
 }
 void SwitchGamepadDevice::initialize()
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epout();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
+    m_epin = next_epin();
+    m_epout = next_epout();
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
 bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, uint16_t reportLength)
 {

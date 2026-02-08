@@ -1,0 +1,270 @@
+#include "tusb_option.h"
+#include "usb/device/hid_device.h"
+#include "commands.pb.h"
+#include "enums.pb.h"
+#include "config.hpp"
+#include "main.hpp"
+#include "usb/device/hid_device.h"
+#include "usb/device/ps3_device.h"
+#include "usb/device/ps4_device.h"
+#include "device/usbd.h"
+#include "hid_reports.h"
+#include "device/usbd_pvt.h"
+#include "pico/bootrom.h"
+#include "utils.h"
+
+uint8_t const desc_hid_report_config[] =
+    {
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfigInfo)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdCommand)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles))};
+
+
+HIDConfigDevice::HIDConfigDevice()
+{
+}
+void HIDConfigDevice::initialize()
+{
+  m_epin = next_epin();
+}
+void HIDConfigDevice::process(bool full_poll)
+{
+  if (clearedIn && clearedOut)
+  {
+    newMode = ModeSwitch;
+  }
+  if (tool_closed())
+  {
+    profile_selected = false;
+    return;
+  }
+  if (!profile_selected)
+  {
+    return;
+  }
+  auto selected = all_profiles.find(selected_profile);
+  if (selected == all_profiles.end())
+  {
+    return;
+  }
+  for (auto &mapping : selected->second->mappings)
+  {
+    mapping->update(false);
+  }
+
+  if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+  {
+    return;
+  }
+
+  epin_buf[0] = ReportId::ReportIdConfig;
+  pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
+  if (pb_encode(&outputStream, proto_EventList_fields, &list))
+  {
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, outputStream.bytes_written+1);
+  } 
+  list.event_count = 0;
+}
+
+size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
+{
+  return 0;
+}
+
+size_t HIDConfigDevice::config_descriptor(uint8_t *dest, size_t remaining)
+{
+  uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_config), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  assert(sizeof(desc) <= remaining);
+  memcpy(dest, desc, sizeof(desc));
+  return sizeof(desc);
+}
+
+void HIDConfigDevice::device_descriptor(tusb_desc_device_t *desc)
+{
+}
+const uint8_t *HIDConfigDevice::report_descriptor()
+{
+  return desc_hid_report_config;
+}
+
+uint16_t HIDConfigDevice::report_desc_len()
+{
+  return sizeof(desc_hid_report_config);
+}
+
+void HIDConfigDevice::handle_command(proto_Command command)
+{
+  switch (command.which_command)
+  {
+  case proto_Command_setProfile_tag:
+    printf("Set id: %d\r\n", command.command.setProfile.profileId);
+    profile_selected = true;
+    selected_profile = command.command.setProfile.profileId;
+    auto selected = all_profiles.find(selected_profile);
+    if (selected == all_profiles.end())
+    {
+      break;
+    }
+    for (auto &mapping : selected->second->mappings)
+    {
+      mapping->update(true);
+    }
+    break;
+  }
+}
+
+void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+{
+  if (report_type == HID_REPORT_TYPE_FEATURE)
+  {
+    // skip over report id
+    buffer++;
+    bufsize--;
+    switch (report_id)
+    {
+    case ReportId::ReportIdConfig:
+      tool_seen = true;
+      lastKeepAlive = millis();
+      write_config(buffer, bufsize, start);
+      start += bufsize;
+      break;
+    case ReportId::ReportIdConfigInfo:
+      lastKeepAlive = millis();
+      tool_seen = true;
+      start = 0;
+      write_config_info(buffer, bufsize);
+      break;
+    case ReportId::ReportIdLoaded:
+      lastKeepAlive = millis();
+      tool_seen = true;
+      update(true);
+      break;
+    case ReportId::ReportIdKeepalive:
+      lastKeepAlive = millis();
+      tool_seen = true;
+      break;
+    case ReportId::ReportIdBootloader:
+      reset_usb_boot(0, 0);
+      break;
+    case ReportId::ReportIdCommand:
+    {
+      tool_seen = true;
+      proto_Command cmd;
+      pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
+      if (!pb_decode(&inputStream, proto_Command_fields, &cmd))
+      {
+        printf("Didn't decode cmd?\r\n");
+        break;
+      }
+      handle_command(cmd);
+      break;
+    }
+    case ReportId::ReportIdPs3F4:
+      newMode = ModePs3;
+      break;
+    }
+  }
+}
+
+bool encode_int32_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+  for (auto &profile : active_profiles)
+  {
+    if (!pb_encode_tag_for_field(stream, field))
+      return false;
+
+    if (!pb_encode_varint(stream, profile))
+      return false;
+  }
+  return true;
+}
+
+uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  (void)report_id;
+  (void)report_type;
+  (void)buffer;
+  (void)reqlen;
+  if (report_type != HID_REPORT_TYPE_FEATURE)
+  {
+    return 0;
+  }
+
+  switch (report_id)
+  {
+  case ReportId::ReportIdConfig:
+  {
+    buffer[0] = report_id;
+    buffer++;
+    uint32_t ret = copy_config(buffer, start);
+    start += ret;
+    return ret + 1;
+  }
+  case ReportId::ReportIdGetActiveProfiles:
+  {
+    buffer[0] = report_id;
+    buffer++;
+    auto stream = pb_ostream_from_buffer(buffer, reqlen);
+    proto_GetActiveProfiles resp;
+    resp.profiles.funcs.encode = encode_int32_array;
+    if (!pb_encode(&stream, proto_GetActiveProfiles_fields, &resp))
+      return 1;
+    return stream.bytes_written + 1;
+  }
+  case ReportId::ReportIdConfigInfo:
+    buffer[0] = report_id;
+    buffer++;
+    start = 0;
+    return copy_config_info(buffer) + 1;
+  case ReportId::ReportIdPs3F2:
+    newMode = ModePs3;
+    return 0;
+  case ReportId::ReportIdPs4Feature:
+    if (ps4_based())
+    {
+      newMode = ModePs4;
+    }
+    else
+    {
+      newMode = ModePs3;
+    }
+    return 0;
+  }
+  return 0;
+}
+
+bool HIDConfigDevice::tool_closed()
+{
+  auto dev = HIDConfigDevice::instance;
+  if (!dev || !dev->tool_seen)
+  {
+    return true;
+  }
+  return millis() - dev->lastKeepAlive > 500;
+}
+
+bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
+{
+
+  auto dev = HIDConfigDevice::instance;
+  if (!dev || dev->selected_profile != profile_id || tool_closed())
+  {
+    return false;
+  }
+  return HIDConfigDevice::send_event(event);
+}
+
+bool HIDConfigDevice::send_event(proto_Event event)
+{
+  auto dev = HIDConfigDevice::instance;
+  if (tool_closed() || dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event))
+  {
+    return false;
+  }
+  dev->list.event[dev->list.event_count++] = event;
+  return true;
+}
+
+std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

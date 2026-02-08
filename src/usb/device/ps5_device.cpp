@@ -73,14 +73,10 @@ PS5GamepadDevice::PS5GamepadDevice()
 }
 void PS5GamepadDevice::initialize()
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin = next_epin();
-        m_epout = next_epin();
-        usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
+    m_epin = next_epin();
+    m_epout = next_epin();
+    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
 void PS5GamepadDevice::process(bool full_poll)
 {

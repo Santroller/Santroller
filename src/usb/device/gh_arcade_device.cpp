@@ -38,16 +38,12 @@ uint16_t GHArcadeVendorDevice::open(tusb_desc_interface_t const *itf_desc, uint1
 }
 void GHArcadeVendorDevice::initialize()
 {
-    if (!m_eps_assigned)
-    {
-        m_eps_assigned = true;
-        m_epin1 = next_epin();
-        m_epin2 = next_epin();
-        m_epout = next_epin();
-        usb_instances_by_epnum[m_epin1] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
-        usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-    }
+    m_epin1 = next_epin();
+    m_epin2 = next_epin();
+    m_epout = next_epin();
+    usb_instances_by_epnum[m_epin1] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
+    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
 void GHArcadeVendorDevice::process(bool full_poll)
 {

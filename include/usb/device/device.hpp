@@ -32,9 +32,6 @@ public:
         m_last_epout = 0x01;
     }
 
-protected:
-    bool m_eps_assigned = false;
-
 private:
     static uint8_t m_last_epin;
     static uint8_t m_last_epout;

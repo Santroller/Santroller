@@ -78,7 +78,6 @@ private:
   uint8_t current_pos = 1;
   bool tool_seen = false;
   bool profile_selected = false;
-  std::queue<proto_Event> m_event_queue;
 };
 class HIDGamepadDevice : public HIDDevice
 {

@@ -8,7 +8,7 @@ public:
     void putLed(uint8_t a, uint8_t b, uint8_t c);
 
 private:
-    uint8_t pin;
+    uint8_t m_pin;
     bool hasW;
     WS2812Type m_type;
     PIO ws2812Pio;

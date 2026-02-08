@@ -33,5 +33,6 @@ public:
 
 protected:
     uint32_t led_state[255];
+    uint32_t prev_led_state[255];
     bool m_supportsColour;
 };

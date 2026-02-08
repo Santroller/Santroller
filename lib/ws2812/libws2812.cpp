@@ -56,11 +56,10 @@ void WS2812::putLed(uint8_t r, uint8_t g, uint8_t b)
                             ((uint32_t)(w)));
 }
 
-WS2812::WS2812(uint8_t pin, WS2812Type type) : pin(pin), hasW(type >= Ws2812Rgbw), m_type(type)
+WS2812::WS2812(uint8_t pin, WS2812Type type) : m_pin(pin), hasW(type >= Ws2812Rgbw), m_type(type)
 {
-
-    pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, pin, 1, true);
-    ws2812_program_init(ws2812Pio, ws2812Sm, ws2812Offset, pin, 800000, hasW);
+    pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, m_pin, 1, true);
+    ws2812_program_init(ws2812Pio, ws2812Sm, ws2812Offset, m_pin, 800000, hasW);
 }
 
 WS2812::~WS2812() {

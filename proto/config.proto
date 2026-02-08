@@ -6,7 +6,7 @@ import "enums.proto";
 import "device.proto";
 
 message Profile {
-  required uint32 uid = 1;
+  required uint32 uid = 1; 
   required FaceButtonMappingMode faceButtonMappingMode = 2;
   repeated Mapping mappings = 4;
   required string name = 5;

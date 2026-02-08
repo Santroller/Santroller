@@ -185,6 +185,14 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         printf("button %d\r\n", mapping.mapping.ghButton);
         instance->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
+    case proto_Mapping_rbAxis_tag:
+        printf("axis %d\r\n", mapping.mapping.rbAxis);
+        instance->mappings.emplace_back(new RockBandGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_rbButton_tag:
+        printf("button %d\r\n", mapping.mapping.rbButton);
+        instance->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
     case proto_Mapping_gamepadButton_tag:
         printf("button %d\r\n", mapping.mapping.gamepadButton);
         instance->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
@@ -262,6 +270,15 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
     return true;
 }
+bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = (Profile *)*arg;
+    uint64_t value;
+    if (!pb_decode_varint(stream, &value))
+        return false;
+    profile->profile_id = value;
+    return true;
+}
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = std::make_shared<Profile>();
@@ -271,9 +288,11 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_profile.mappings.funcs.decode = &load_mapping;
     proto_profile.assignments.arg = profile.get();
     proto_profile.mappings.arg = profile.get();
+    proto_profile.uid.arg = profile.get();
+    proto_profile.uid.funcs.decode = &load_uid;
     pb_decode(stream, proto_Profile_fields, &proto_profile);
-    profile->profile_id = proto_profile.uid;
     profile->subtype = proto_profile.deviceToEmulate;
+    printf("profile loaded: %d\r\n", profile->profile_id);
     // TODO: handle this once we support emulating non usb devices
     profile->output = OutputUSB;
     all_profiles[profile->profile_id] = profile;

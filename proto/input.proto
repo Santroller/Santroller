@@ -167,4 +167,5 @@ message Mapping {
   optional int32 deadzone = 59;
   optional int32 triggerValue = 60;
   optional uint32 debounce = 61;
+  optional int32 maxTriggerValue = 62;
 }

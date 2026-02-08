@@ -104,6 +104,10 @@ void ButtonMapping::update(bool full_poll)
         {
             calcVal = m_input->tickAnalog() == m_mapping.triggerValue;
         }
+        else if (m_mapping.trigger == AnalogToDigitalTriggerType_Range)
+        {
+            calcVal = m_input->tickAnalog() > m_mapping.triggerValue && m_input->tickAnalog() < m_mapping.maxTriggerValue;
+        }
         if ((val != m_lastValueTrigger || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};

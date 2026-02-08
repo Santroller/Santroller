@@ -59,7 +59,7 @@ bool InputActivationTrigger::validate(bool claim_device)
         }
         if ((analog_val != m_last_analog_val) && !HIDConfigDevice::tool_closed())
         {
-            m_last_analog_val = val;
+            m_last_analog_val = analog_val;
             proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
             HIDConfigDevice::send_event_for(event, m_profile_id);
         }
@@ -75,7 +75,7 @@ bool InputActivationTrigger::validate(bool claim_device)
         m_last_val = val;
     }
     // TODO: need to handle things like holding down a button for an amount of time too
-    if ((m_any_time || mode_recently_changed()) && val != m_last_val)
+    if (((m_any_time || mode_recently_changed()) && val != m_last_val) && HIDConfigDevice::tool_closed())
     {
         reload();
     }

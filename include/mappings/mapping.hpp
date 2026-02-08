@@ -20,6 +20,9 @@ class Mapping
 public:
     Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input)) {}
     virtual ~Mapping() {}
+    inline void reload() {
+        m_input->setup();
+    }
     virtual void update(bool full_poll) = 0;
     virtual void update_hid(uint8_t *report) = 0;
     virtual void update_wii(uint8_t *report) = 0;
@@ -777,11 +780,12 @@ protected:
     uint32_t m_profile_id;
     bool m_initialised = false;
     bool m_last_val = false;
+    uint16_t m_last_analog_val = 0; 
 };
 class InputActivationTrigger : public ActivationTrigger
 {
 public:
-    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id);
+    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id);
     ~InputActivationTrigger() {}
     bool validate(bool claim_device);
 
@@ -789,6 +793,7 @@ protected:
     proto_InputActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
     bool m_any_time;
+    uint16_t m_id;
 };
 class ConsoleTypeActivationTrigger : public ActivationTrigger
 {

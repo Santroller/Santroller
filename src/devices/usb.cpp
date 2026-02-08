@@ -73,3 +73,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report_desc,
     printf("mount! %d\r\n", desc_len);
     tuh_hid_receive_report(dev_addr, idx);
 }
+bool USBDevice::using_pin(uint8_t pin)
+{
+    return pin == m_device.firstPin || pin == m_device.firstPin + 1;
+}

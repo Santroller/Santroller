@@ -17,7 +17,7 @@ message AxisEvent {
 message ActivationTriggerEvent {
     required int32 id = 1;
     required uint32 stateRaw = 2;
-    required bool state = 3;
+    required uint32 state = 3;
 }
 
 message PinDetectionEvent {

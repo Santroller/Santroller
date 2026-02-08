@@ -13,10 +13,11 @@ public:
     bool readButton(proto_PS2ButtonType type);
     bool isExtension(PS2ControllerType type);
     void rescan(bool first);
+    bool using_pin(uint8_t pin);
 
 private:
-    proto_PSXDevice m_device;
     PSXController m_controller;
+    proto_PSXDevice m_device;
     uint32_t m_lastValue = 0;
     PS2ControllerType m_lastControllerType = PS2ControllerType::PS2ControllerTypeUnknown;
     uint8_t m_port;

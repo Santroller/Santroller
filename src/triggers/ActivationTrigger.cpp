@@ -4,20 +4,25 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
+#include "usb/device/hid_device.h"
 
-
-
-bool ActivationTriggerList::validate(bool claim_devices) {
-    for (auto& trigger: triggers) {
-        if (!trigger->validate(false)) {
+bool ActivationTriggerList::validate(bool claim_devices)
+{
+    for (auto &trigger : triggers)
+    {
+        if (!trigger->validate(false))
+        {
             return false;
         }
     }
-    if (!claim_devices) {
+    if (!claim_devices)
+    {
         return true;
     }
-    for (auto& trigger: triggers) {
-        if (!trigger->validate(true)) {
+    for (auto &trigger : triggers)
+    {
+        if (!trigger->validate(true))
+        {
             printf("trigger was not valid, this shouldnt happen!\r\n");
             return false;
         }
@@ -25,7 +30,7 @@ bool ActivationTriggerList::validate(bool claim_devices) {
     return true;
 }
 
-InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id) : ActivationTrigger(profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time)
+InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : ActivationTrigger(profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time), m_id(id)
 {
 }
 
@@ -35,6 +40,7 @@ bool InputActivationTrigger::validate(bool claim_device)
     auto val = m_input->tickDigital();
     if (m_activation_trigger.has_trigger)
     {
+        auto analog_val = m_input->tickAnalog();
         if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_JoyHigh)
         {
             val = m_input->tickAnalog() > m_activation_trigger.triggerValue;
@@ -51,15 +57,29 @@ bool InputActivationTrigger::validate(bool claim_device)
         {
             val = m_input->tickAnalog() > m_activation_trigger.triggerValue && m_input->tickAnalog() < m_activation_trigger.maxTriggerValue;
         }
+        if ((analog_val != m_last_analog_val) && !HIDConfigDevice::tool_closed())
+        {
+            m_last_analog_val = val;
+            proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
+            HIDConfigDevice::send_event_for(event, m_profile_id);
+        }
     }
-    if (!m_initialised) {
+    else if (val != m_last_val)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
+        HIDConfigDevice::send_event_for(event, m_profile_id);
+    }
+    if (!m_initialised)
+    {
         m_initialised = true;
         m_last_val = val;
     }
     // TODO: need to handle things like holding down a button for an amount of time too
-    if ((m_any_time || mode_recently_changed()) && val != m_last_val) {
+    if ((m_any_time || mode_recently_changed()) && val != m_last_val)
+    {
         reload();
     }
+    m_last_val = val;
     return val;
 }
 
@@ -70,48 +90,53 @@ ConsoleTypeActivationTrigger::ConsoleTypeActivationTrigger(proto_ConsoleType typ
 bool ConsoleTypeActivationTrigger::validate(bool claim_device)
 {
     auto profile = all_profiles[m_profile_id];
-    if (profile->output == OutputPS2) {
+    if (profile->output == OutputPS2)
+    {
         return m_type == ConsolePS2;
     }
-    if (profile->output == OutputWiiExt) {
+    if (profile->output == OutputWiiExt)
+    {
         return m_type == ConsoleWii_WiiU;
     }
-    switch (profile->mode) {
-        case ModeGuitarHeroArcade:
-        case ModeHid:
-            return m_type == ConsolePC;
-        case ModeOgXbox:
-            return m_type == ConsoleOgXbox;
-        case ModeXbox360:
-            return m_type == ConsoleXbox360;
-        case ModeXboxOne:
-            return m_type == ConsoleXboxOne;
-        case ModePs3:
-            return m_type == ConsolePS3;
-        case ModePs4:
-            return m_type == ConsolePS4_PS5;
-        case ModePs5:
-            return m_type == ConsolePS4_PS5;
-        case ModeWiiRb:
-            return m_type == ConsoleWii_WiiU;
-        case ModeSwitch:
-            return m_type == ConsoleSwitch_Switch2;
+    switch (profile->mode)
+    {
+    case ModeGuitarHeroArcade:
+    case ModeHid:
+        return m_type == ConsolePC;
+    case ModeOgXbox:
+        return m_type == ConsoleOgXbox;
+    case ModeXbox360:
+        return m_type == ConsoleXbox360;
+    case ModeXboxOne:
+        return m_type == ConsoleXboxOne;
+    case ModePs3:
+        return m_type == ConsolePS3;
+    case ModePs4:
+        return m_type == ConsolePS4_PS5;
+    case ModePs5:
+        return m_type == ConsolePS4_PS5;
+    case ModeWiiRb:
+        return m_type == ConsoleWii_WiiU;
+    case ModeSwitch:
+        return m_type == ConsoleSwitch_Switch2;
     }
     return false;
 }
-
 
 WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
 {
 }
 
 bool WiiExtTypeActivationTrigger::validate(bool claim_device)
-{   
+{
     auto it = assignable_devices.begin();
-    while (it != assignable_devices.end()) {
+    while (it != assignable_devices.end())
+    {
         auto device = *it;
-        if (device->is_wii_extension(m_type)) {
-            if (claim_device) {
+        if (device->is_wii_extension(m_type))
+        {
+            if (claim_device)
+            {
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
@@ -121,7 +146,6 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device)
     }
     return false;
 }
-
 
 PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
 {
@@ -130,10 +154,13 @@ PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2
 bool PS2ControllerTypeActivationTrigger::validate(bool claim_device)
 {
     auto it = assignable_devices.begin();
-    while (it != assignable_devices.end()) {
+    while (it != assignable_devices.end())
+    {
         auto device = *it;
-        if (device->is_ps2_device(m_type)) {
-            if (claim_device) {
+        if (device->is_ps2_device(m_type))
+        {
+            if (claim_device)
+            {
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
@@ -143,7 +170,6 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device)
     }
     return false;
 }
-
 
 UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
 {
@@ -152,10 +178,13 @@ UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, uint32_t 
 bool UsbTypeActivationTrigger::validate(bool claim_device)
 {
     auto it = assignable_devices.begin();
-    while (it != assignable_devices.end()) {
+    while (it != assignable_devices.end())
+    {
         auto device = *it;
-        if (device->is_usb_type(m_type)) {
-            if (claim_device) {
+        if (device->is_usb_type(m_type))
+        {
+            if (claim_device)
+            {
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
@@ -165,7 +194,6 @@ bool UsbTypeActivationTrigger::validate(bool claim_device)
     }
     return false;
 }
-
 
 SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id) : ActivationTrigger(profile_id), m_device(device)
 {
@@ -174,10 +202,13 @@ SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_Spe
 bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device)
 {
     auto it = assignable_devices.begin();
-    while (it != assignable_devices.end()) {
+    while (it != assignable_devices.end())
+    {
         auto device = *it;
-        if (device->is_usb_device(m_device)) {
-            if (claim_device) {
+        if (device->is_usb_device(m_device))
+        {
+            if (claim_device)
+            {
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
@@ -187,8 +218,6 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device)
     }
     return false;
 }
-
-
 
 BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
 {
@@ -197,10 +226,13 @@ BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType typ
 bool BluetoothTypeActivationTrigger::validate(bool claim_device)
 {
     auto it = assignable_devices.begin();
-    while (it != assignable_devices.end()) {
+    while (it != assignable_devices.end())
+    {
         auto device = *it;
-        if (device->is_bluetooth_type(m_type)) {
-            if (claim_device) {
+        if (device->is_bluetooth_type(m_type))
+        {
+            if (claim_device)
+            {
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
@@ -210,7 +242,6 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device)
     }
     return false;
 }
-
 
 SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id) : ActivationTrigger(profile_id), m_device(device)
 {
@@ -219,10 +250,13 @@ SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigg
 bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device)
 {
     auto it = assignable_devices.begin();
-    while (it != assignable_devices.end()) {
+    while (it != assignable_devices.end())
+    {
         auto device = *it;
-        if (device->is_bluetooth_device(m_device)) {
-            if (claim_device) {
+        if (device->is_bluetooth_device(m_device))
+        {
+            if (claim_device)
+            {
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
@@ -232,7 +266,6 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device)
     }
     return false;
 }
-
 
 CatchAllActivationTrigger::CatchAllActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
 {
@@ -242,8 +275,6 @@ bool CatchAllActivationTrigger::validate(bool claim_device)
 {
     return true;
 }
-
-
 
 MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id) : ActivationTrigger(profile_id), m_channel(channel)
 {

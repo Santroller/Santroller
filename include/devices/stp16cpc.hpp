@@ -9,8 +9,9 @@ public:
     ~STP16CPCDevice() {}
     STP16CPCDevice(proto_STP16CPCDevice device, uint16_t id);
     void update(bool full_poll);
+    bool using_pin(uint8_t pin);
 
 private:
-    proto_STP16CPCDevice m_device;
     STP16CPC m_stp15cpc;
+    proto_STP16CPCDevice m_device;
 };

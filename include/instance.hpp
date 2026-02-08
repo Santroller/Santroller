@@ -3,6 +3,7 @@
 #include <memory>
 #include "mappings/mapping.hpp"
 #include "devices/base.hpp"
+#include "input/gpio.hpp"
 
 #include "config.pb.h"
 

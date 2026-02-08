@@ -5,7 +5,7 @@
 #include "main.hpp"
 #include "stdio.h"
 #include "config.hpp"
-DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id)
+DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id), m_device(device)
 {
     bi_decl(bi_2pins_with_func(device.uart.tx, device.uart.rx, GPIO_FUNC_UART));
     uart_inst = uart_get_instance(device.uart.block);
@@ -15,4 +15,9 @@ DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id)
 
 void DebugDevice::update(bool full_poll)
 {
+}
+
+bool DebugDevice::using_pin(uint8_t pin)
+{
+    return pin == m_device.uart.rx || pin == m_device.uart.tx;
 }

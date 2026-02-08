@@ -4,7 +4,7 @@
 #include "usb/device/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
-PS2Device::PS2Device(proto_PSXDevice device, uint16_t id, MultitapPort port) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin, port)
+PS2Device::PS2Device(proto_PSXDevice device, uint16_t id, MultitapPort port) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin, port), m_device(device)
 {
 }
 void PS2Device::rescan(bool first)
@@ -63,4 +63,9 @@ bool PS2Device::readButton(proto_PS2ButtonType type)
 bool PS2Device::isExtension(PS2ControllerType type)
 {
     return m_controller.type == type;
+}
+
+bool PS2Device::using_pin(uint8_t pin)
+{
+    return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck  || pin == m_device.ackPin || pin == m_device.attPin;
 }

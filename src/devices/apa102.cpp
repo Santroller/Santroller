@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(id, true), m_apa102(device.spi.block, device.spi.mosi, device.spi.sck, device.count, device.type)
+APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(id, true), m_apa102(device.spi.block, device.spi.mosi, device.spi.sck, device.count, device.type), m_device(device)
 {
 }
 
@@ -18,4 +18,9 @@ void APA102Device::update(bool full_poll)
         m_apa102.putLed(brightness, r, g, b);
     }
     m_apa102.end();
+}
+
+bool APA102Device::using_pin(uint8_t pin)
+{
+    return pin == m_device.spi.mosi || pin == m_device.spi.sck;
 }

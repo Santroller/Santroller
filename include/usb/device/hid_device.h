@@ -72,12 +72,18 @@ public:
 private:
   void handle_command(proto_Command command);
   proto_EventList list;
+  proto_PinDetectType m_detect_type;
+  uint32_t detect_done = 0;
   uint32_t lastKeepAlive = 0;
   uint32_t start = 0;
   uint32_t selected_profile = 0;
   uint8_t current_pos = 1;
+  uint32_t m_valid_pins;
   bool tool_seen = false;
   bool profile_selected = false;
+  bool profile_changed = false;
+  uint16_t last_adc_vals[NUM_ADC_CHANNELS];
+  bool last_digital_vals[NUM_BANK0_GPIOS];
 };
 class HIDGamepadDevice : public HIDDevice
 {

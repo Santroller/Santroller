@@ -8,6 +8,7 @@ public:
     ~AccelerometerDevice() {}
     AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id);
     void update(bool full_poll);
+    bool using_pin(uint8_t pin);
     Accelerometer m_accelerometer;
 
 private:

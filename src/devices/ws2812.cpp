@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true), m_device(device), m_ws2812(device.pin, device.type)
+WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true), m_ws2812(device.pin, device.type), m_device(device)
 {
 }
 
@@ -15,4 +15,9 @@ void WS2812Device::update(bool full_poll)
         uint8_t b = (led_state[i] >> 16) & 0xff;
         m_ws2812.putLed(r, g, b);
     }
+}
+
+bool WS2812Device::using_pin(uint8_t pin)
+{
+    return pin == m_device.pin;
 }

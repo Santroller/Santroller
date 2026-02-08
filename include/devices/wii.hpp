@@ -15,10 +15,11 @@ public:
     uint16_t readMidiNote(uint8_t note);
     uint16_t readMidiControlChange(uint8_t cc);
     int16_t readMidiPitchBend();
+    bool using_pin(uint8_t pin);
 
 private:
-    proto_WiiDevice m_device;
     WiiExtension m_extension;
+    proto_WiiDevice m_device;
     uint32_t m_lastValue = 0;
     WiiExtType m_lastExtType = WiiExtType::WiiNoExtension;
 };

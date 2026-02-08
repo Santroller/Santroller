@@ -8,9 +8,10 @@ public:
     ~Max1704XDevice() {}
     Max1704XDevice(proto_Max1704xDevice device, uint16_t id);
     void update(bool full_poll);
+    bool using_pin(uint8_t pin);
 
 private:
-    proto_Max1704xDevice m_device;
     Max1704X m_max1704x;
+    proto_Max1704xDevice m_device;
     uint32_t m_lastValue = 0;
 };

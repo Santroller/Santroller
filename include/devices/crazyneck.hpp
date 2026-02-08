@@ -8,9 +8,10 @@ public:
     ~CrazyGuitarNeckDevice() {}
     CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device, uint16_t id);
     void update(bool full_poll);
+    bool using_pin(uint8_t pin);
 
 private:
-    proto_CrazyGuitarNeckDevice m_device;
     CrazyGuitarNeck m_crazy_guitar_neck;
+    proto_CrazyGuitarNeckDevice m_device;
     uint32_t m_lastValue = 0;
 };

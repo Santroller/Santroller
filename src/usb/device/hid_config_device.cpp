@@ -12,6 +12,9 @@
 #include "device/usbd_pvt.h"
 #include "pico/bootrom.h"
 #include "utils.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
+#include "math.h"
 
 uint8_t const desc_hid_report_config[] =
     {
@@ -20,7 +23,6 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdLoaded)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdCommand)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles))};
-
 
 HIDConfigDevice::HIDConfigDevice()
 {
@@ -49,11 +51,95 @@ void HIDConfigDevice::process(bool full_poll)
   {
     return;
   }
-  for (auto &mapping : selected->second->mappings)
+  if (detect_done)
   {
-    mapping->update(false);
-  }
 
+    switch (m_detect_type)
+    {
+    case DetectDigital:
+      for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
+      {
+        if (m_valid_pins & (1 << i) && gpio_get(i) != last_digital_vals[i])
+        {
+          printf("detected digital: %d %d %d\r\n", i, gpio_get(i), last_digital_vals[i]);
+          detect_done = 0;
+          proto_Event evt;
+          evt.which_event = proto_Event_pin_tag;
+          evt.event.pin.pin = i;
+          send_event(evt);
+          break;
+        }
+      }
+      break;
+    case DetectAnalog:
+      for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+      {
+        if (m_valid_pins & (1 << i))
+        {
+          adc_select_input(i);
+          if (abs(last_adc_vals[i] - adc_read()) > 100)
+          {
+            // found!
+            printf("detected adc: %d %d %d\r\n", last_adc_vals[i], adc_read(), i + ADC_BASE_PIN);
+            detect_done = 0;
+            proto_Event evt;
+            evt.which_event = proto_Event_pin_tag;
+            evt.event.pin.pin = i + ADC_BASE_PIN;
+            send_event(evt);
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    if (profile_changed || (detect_done && millis() > detect_done))
+    {
+      detect_done = 0;
+    }
+    if (!detect_done)
+    {
+      switch (m_detect_type)
+      {
+      case DetectDigital:
+        for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
+        {
+          if (m_valid_pins & (1 << i))
+          {
+            gpio_init(i);
+            gpio_set_dir(i, false);
+            gpio_set_pulls(i, false, false);
+          }
+        }
+        break;
+      case DetectAnalog:
+        for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+        {
+          if (m_valid_pins & (1 << i))
+          {
+            adc_gpio_init(i + ADC_BASE_PIN);
+            gpio_set_pulls(i + ADC_BASE_PIN, false, false);
+          }
+        }
+        break;
+      }
+      for (auto &mapping : selected->second->mappings)
+      {
+        mapping->reload();
+      }
+    }
+  }
+  else
+  {
+    for (auto &mapping : selected->second->mappings)
+    {
+      mapping->update(false);
+    }
+    for (auto &mapping : selected->second->triggers)
+    {
+      mapping->validate(false);
+    }
+  }
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
   {
     return;
@@ -63,9 +149,11 @@ void HIDConfigDevice::process(bool full_poll)
   pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
   if (pb_encode(&outputStream, proto_EventList_fields, &list))
   {
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, outputStream.bytes_written+1);
-  } 
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, outputStream.bytes_written + 1);
+  }
   list.event_count = 0;
+
+  profile_changed = false;
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -99,8 +187,10 @@ void HIDConfigDevice::handle_command(proto_Command command)
   switch (command.which_command)
   {
   case proto_Command_setProfile_tag:
+  {
     printf("Set id: %d\r\n", command.command.setProfile.profileId);
     profile_selected = true;
+    profile_changed = true;
     selected_profile = command.command.setProfile.profileId;
     auto selected = all_profiles.find(selected_profile);
     if (selected == all_profiles.end())
@@ -111,7 +201,67 @@ void HIDConfigDevice::handle_command(proto_Command command)
     {
       mapping->update(true);
     }
-    break;
+  }
+  break;
+  case proto_Command_detectPin_tag:
+  {
+    // only detect for 10 seconds
+
+    printf("detect: %d\r\n", command.command.detectPin.detectType);
+    detect_done = millis() + 10000;
+    m_valid_pins = 0;
+    m_detect_type = command.command.detectPin.detectType;
+    switch (command.command.detectPin.detectType)
+    {
+    case DetectDigital:
+      for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
+      {
+        bool found = false;
+        for (auto &device : active_devices)
+        {
+          if (device->using_pin(i))
+          {
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+        {
+          m_valid_pins |= 1 << i;
+          gpio_init(i);
+          gpio_set_dir(i, false);
+          gpio_set_pulls(i, true, false);
+          sleep_us(1);
+          last_digital_vals[i] = gpio_get(i);
+        }
+      }
+      break;
+    case DetectAnalog:
+      for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+      {
+        bool found = false;
+        for (auto &device : active_devices)
+        {
+          if (device->using_pin(i + ADC_BASE_PIN))
+          {
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+        {
+          m_valid_pins |= 1 << i;
+          adc_gpio_init(i + ADC_BASE_PIN);
+          gpio_set_pulls(i + ADC_BASE_PIN, true, false);
+          adc_select_input(i);
+          sleep_us(10);
+          last_adc_vals[i] = adc_read();
+        }
+      }
+      break;
+    }
+  }
+  break;
   }
 }
 

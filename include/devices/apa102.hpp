@@ -9,8 +9,9 @@ public:
     ~APA102Device() {}
     APA102Device(proto_APA102Device device, uint16_t id);
     void update(bool full_poll);
+    bool using_pin(uint8_t pin);
 
 private:
-    proto_APA102Device m_device;
     APA102 m_apa102;
+    proto_APA102Device m_device;
 };

@@ -51,3 +51,8 @@ int16_t WiiDevice::readMidiPitchBend()
 {
     return m_extension.midiInterface.midiPitchWheel;
 }
+
+bool WiiDevice::using_pin(uint8_t pin)
+{
+    return pin == m_device.i2c.scl || pin == m_device.i2c.sda;
+}

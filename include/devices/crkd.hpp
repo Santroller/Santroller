@@ -8,6 +8,7 @@ public:
     ~CrkdDevice() {}
     CrkdDevice(proto_CrkdNeckDevice device, uint16_t id);
     void update(bool full_poll);
+    bool using_pin(uint8_t pin);
     CrkdNeck neck;
 
 private:

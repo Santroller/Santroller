@@ -209,7 +209,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), instance->profile_id));
+        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), instance->profile_id, list->triggers.size()));
         break;
     }
     case proto_ProfileAssignmentInfo_inputAnyTime_tag:
@@ -220,7 +220,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), instance->profile_id));
+        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), instance->profile_id, list->triggers.size()));
         break;
     }
     case proto_ProfileAssignmentInfo_consoleType_tag:

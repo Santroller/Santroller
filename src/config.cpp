@@ -174,28 +174,112 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (mapping.which_mapping)
     {
     case proto_Mapping_gamepadAxis_tag:
-        printf("axis %d\r\n", mapping.mapping.gamepadAxis);
+        printf("gamepadAxis %d\r\n", mapping.mapping.gamepadAxis);
         instance->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghAxis_tag:
-        printf("axis %d\r\n", mapping.mapping.ghAxis);
+        printf("ghAxis %d\r\n", mapping.mapping.ghAxis);
         instance->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghButton_tag:
-        printf("button %d\r\n", mapping.mapping.ghButton);
+        printf("ghButton %d\r\n", mapping.mapping.ghButton);
         instance->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_rbAxis_tag:
-        printf("axis %d\r\n", mapping.mapping.rbAxis);
+        printf("rbAxis %d\r\n", mapping.mapping.rbAxis);
         instance->mappings.emplace_back(new RockBandGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_rbButton_tag:
-        printf("button %d\r\n", mapping.mapping.rbButton);
+        printf("rbButton %d\r\n", mapping.mapping.rbButton);
         instance->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_gamepadButton_tag:
-        printf("button %d\r\n", mapping.mapping.gamepadButton);
+        printf("gamepadButton %d\r\n", mapping.mapping.gamepadButton);
         instance->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_ghDrumButton_tag:
+        printf("ghDrumButton %d\r\n", mapping.mapping.ghDrumButton);
+        instance->mappings.emplace_back(new GuitarHeroDrumsButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_ghDrumAxis_tag:
+        printf("ghDrumAxis %d\r\n", mapping.mapping.ghDrumAxis);
+        instance->mappings.emplace_back(new GuitarHeroDrumsAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_rbDrumButton_tag:
+        printf("rbDrumButton %d\r\n", mapping.mapping.rbDrumButton);
+        instance->mappings.emplace_back(new RockBandDrumsButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_rbDrumAxis_tag:
+        printf("rbDrumAxis %d\r\n", mapping.mapping.rbDrumAxis);
+        instance->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_ghlButton_tag:
+        printf("ghlButton %d\r\n", mapping.mapping.ghlButton);
+        instance->mappings.emplace_back(new LiveGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_ghlAxis_tag:
+        printf("ghlAxis %d\r\n", mapping.mapping.ghlAxis);
+        instance->mappings.emplace_back(new LiveGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_proButton_tag:
+        printf("proButton %d\r\n", mapping.mapping.proButton);
+        instance->mappings.emplace_back(new ProGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_proAxis_tag:
+        printf("proAxis %d\r\n", mapping.mapping.proAxis);
+        instance->mappings.emplace_back(new ProGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_djhButton_tag:
+        printf("djhButton %d\r\n", mapping.mapping.djhButton);
+        instance->mappings.emplace_back(new DJHTurntableButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_djhAxis_tag:
+        printf("djhAxis %d\r\n", mapping.mapping.djhAxis);
+        instance->mappings.emplace_back(new DJHTurntableAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_djMaxButton_tag:
+        printf("djMaxButton %d\r\n", mapping.mapping.djMaxButton);
+        instance->mappings.emplace_back(new DJMaxTurntableButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_djMaxAxis_tag:
+        printf("djMaxAxis %d\r\n", mapping.mapping.djMaxAxis);
+        instance->mappings.emplace_back(new DJMaxTurntableAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_divaButton_tag:
+        printf("divaButton %d\r\n", mapping.mapping.divaButton);
+        instance->mappings.emplace_back(new ProjectDivaButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_divaAxis_tag:
+        printf("divaAxis %d\r\n", mapping.mapping.divaAxis);
+        instance->mappings.emplace_back(new ProjectDivaAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_gfAxis_tag:
+        printf("gfAxis %d\r\n", mapping.mapping.gfAxis);
+        instance->mappings.emplace_back(new GuitarFreaksAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_gfButton_tag:
+        printf("gfButton %d\r\n", mapping.mapping.gfButton);
+        instance->mappings.emplace_back(new GuitarFreaksButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_ghaAxis_tag:
+        printf("ghaAxis %d\r\n", mapping.mapping.ghaAxis);
+        instance->mappings.emplace_back(new GuitarHeroArcadeAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_ghaButton_tag:
+        printf("ghaButton %d\r\n", mapping.mapping.ghaButton);
+        instance->mappings.emplace_back(new GuitarHeroArcadeButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_mouseAxis_tag:
+        printf("mouseAxis %d\r\n", mapping.mapping.mouseAxis);
+        instance->mappings.emplace_back(new MouseAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_mouseButton_tag:
+        printf("mouseButton %d\r\n", mapping.mapping.mouseButton);
+        instance->mappings.emplace_back(new MouseButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
+        break;
+    case proto_Mapping_keycode_tag:
+        printf("keycode %d\r\n", mapping.mapping.keycode);
+        instance->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     }
     return true;

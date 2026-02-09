@@ -151,8 +151,6 @@ message Mapping {
     MouseAxisType mouseAxis = 25;
     MouseButtonType mouseButton = 26;
     int32 keycode = 27;
-    UsbButtonType usbButton = 28;
-    UsbAxisType usbAdis = 29;
   }
 
   required Input input = 50;

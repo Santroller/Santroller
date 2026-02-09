@@ -115,6 +115,8 @@ add_executable(
   src/mappings/LiveGuitarButtonMapping.cpp
   src/mappings/GuitarHeroGuitarAxisMapping.cpp
   src/mappings/GuitarHeroGuitarButtonMapping.cpp
+  src/mappings/GuitarHeroArcadeAxisMapping.cpp
+  src/mappings/GuitarHeroArcadeButtonMapping.cpp
   src/mappings/GuitarHeroDrumsAxisMapping.cpp
   src/mappings/GuitarHeroDrumsButtonMapping.cpp
   src/mappings/RockBandGuitarAxisMapping.cpp

@@ -20,15 +20,17 @@ enum USBDeviceType
     XboxOne,
     OGXbox
 };
-// Only for non midi, since we use the standard midi lib here for midi usb already
-// Drum kits (and pro keys) pipe to midi, gh kits pipe to the midi library
-class USBDevice : public Device
+
+class USBDevice : public MidiDevice
 {
 public:
     ~USBDevice() {}
     USBDevice(proto_UsbHostDevice device, uint16_t id);
     void update(bool full_poll);
     bool using_pin(uint8_t pin);
+    uint16_t readMidiNote(uint8_t note);
+    uint16_t readMidiControlChange(uint8_t cc);
+    int16_t readMidiPitchBend();
 
 private:
     proto_UsbHostDevice m_device;

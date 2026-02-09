@@ -22,6 +22,15 @@ protected:
     bool resend = false;
 };
 
+class MidiDevice: public Device
+{
+public:
+    MidiDevice(uint16_t id): Device(id){}
+    virtual uint16_t readMidiNote(uint8_t note) = 0;
+    virtual uint16_t readMidiControlChange(uint8_t cc) = 0;
+    virtual int16_t readMidiPitchBend() = 0;
+};
+
 class LedDevice : public Device
 {
 public:

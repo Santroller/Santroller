@@ -61,12 +61,7 @@ class MPR121 {
     inline bool is_connected() {
         return connected;
     }
-    bool green;
-    bool red;
-    bool yellow;
-    bool blue;
-    bool orange;
-    uint8_t slider;
+    uint16_t inputs;
 
    private:
     void init();
@@ -75,5 +70,4 @@ class MPR121 {
     int touchpadCount;
     int ddr;     // pin data direction register
     int enable;  // pin enable
-    uint16_t inputs;
 };

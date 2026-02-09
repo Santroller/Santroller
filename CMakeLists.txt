@@ -97,6 +97,12 @@ add_executable(
   src/input/gh5.cpp
   src/input/gpio.cpp
   src/input/wii.cpp
+  src/input/shortcut.cpp
+  src/input/usb.cpp
+  src/input/ps2.cpp
+  src/input/midi.cpp
+  src/input/mpr121.cpp
+  src/input/fixed.cpp
   src/input/ads1115.cpp
   src/triggers/ActivationTrigger.cpp
   src/mappings/Mapping.cpp

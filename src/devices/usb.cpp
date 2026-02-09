@@ -4,7 +4,7 @@
 #include "host/usbh_pvt.h"
 #include "config.hpp"
 
-USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
+USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : MidiDevice(id), m_device(device)
 {
     if (device.firstPin == -1) {
         return;
@@ -29,6 +29,27 @@ USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_de
 
 void USBDevice::update(bool full_poll)
 {
+}
+uint16_t USBDevice::readMidiNote(uint8_t note)
+{
+    return midiInterface.midiVelocities[note] << 8;
+}
+uint16_t USBDevice::readMidiControlChange(uint8_t cc)
+{
+    switch (cc)
+    {
+    case MIDI_CONTROL_COMMAND_MOD_WHEEL:
+        return midiInterface.midiModWheel << 8;
+    case MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL:
+        return midiInterface.midiSustainPedal << 8;
+    default:
+        return 0;
+    }
+    return 0;
+}
+int16_t USBDevice::readMidiPitchBend()
+{
+    return midiInterface.midiPitchWheel;
 }
 
 

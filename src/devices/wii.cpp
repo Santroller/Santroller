@@ -3,7 +3,7 @@
 #include "main.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
-WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : Device(id), m_extension(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock)
+WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id), m_extension(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock)
 {
 }
 

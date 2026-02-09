@@ -3,7 +3,7 @@
 #include "device.pb.h"
 #include "input_enums.pb.h"
 #include "wii_extension.hpp"
-class WiiDevice : public Device
+class WiiDevice : public MidiDevice
 {
 public:
     ~WiiDevice() {}

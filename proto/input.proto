@@ -92,6 +92,16 @@ message PS2ButtonInput {
   required PS2ButtonType button = 2;
 }
 
+message USBButtonInput {
+  required int32 deviceid = 1;
+  required UsbButtonType button = 2;
+}
+
+message USBAxisInput {
+  required int32 deviceid = 1;
+  required UsbButtonType axis = 2;
+}
+
 message Input {
   oneof input {
     GPIOInput gpio = 1;
@@ -112,6 +122,8 @@ message Input {
     Gh5NeckButtonInput gh5Neck = 16;
     PS2AxisInput ps2Axis = 17;
     PS2ButtonInput ps2Button = 18;
+    USBButtonInput usbButton = 19;
+    USBAxisInput usbAxis = 20;
   }
 }
 message InputActivationTrigger {

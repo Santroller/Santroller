@@ -1,8 +1,14 @@
 #include "config.hpp"
 #include "input/input.hpp"
 #include "input/gpio.hpp"
+#include "input/fixed.hpp"
 #include "input/wii.hpp"
+#include "input/mpr121.hpp"
+#include "input/ps2.hpp"
+#include "input/midi.hpp"
+#include "input/usb.hpp"
 #include "input/crkd.hpp"
+#include "input/shortcut.hpp"
 #include "input/ads1115.hpp"
 #include "input/accelerometer.hpp"
 #include "input/gh5.hpp"
@@ -124,31 +130,73 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     *dev_id += 1;
     return true;
 }
-std::unique_ptr<Input> make_input(proto_Input input, Profile *profile)
+struct ShortcutArgs
+{
+    ShortcutInput *input;
+    Profile *profile;
+};
+std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream);
+bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    proto_Input input;
+    if (!pb_decode(stream, proto_Input_fields, &input)) {
+        return false;
+    }
+    auto instance = *(ShortcutArgs **)arg;
+    instance->input->inputs.push_back(make_input(input, instance->profile, stream));
+    return true;
+}
+std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream)
 {
     switch (input.which_input)
     {
     case proto_Input_wiiAxis_tag:
         return std::unique_ptr<Input>(new WiiAxisInput(input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiAxis.deviceid])));
-        break;
     case proto_Input_wiiButton_tag:
         return std::unique_ptr<Input>(new WiiButtonInput(input.input.wiiButton, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiAxis.deviceid])));
-        break;
     case proto_Input_crkd_tag:
         return std::unique_ptr<Input>(new CrkdButtonInput(input.input.crkd, std::static_pointer_cast<CrkdDevice>(profile->devices[input.input.crkd.deviceid])));
-        break;
     case proto_Input_gpio_tag:
         return std::unique_ptr<Input>(new GPIOInput(input.input.gpio));
-        break;
     case proto_Input_ads1115_tag:
         return std::unique_ptr<Input>(new ADS1115Input(input.input.ads1115, std::static_pointer_cast<ADS1115Device>(profile->devices[input.input.ads1115.deviceid])));
-        break;
     case proto_Input_accelerometer_tag:
         return std::unique_ptr<Input>(new AccelerometerInput(input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(profile->devices[input.input.accelerometer.deviceid])));
-        break;
     case proto_Input_gh5Neck_tag:
         return std::unique_ptr<Input>(new Gh5ButtonInput(input.input.gh5Neck, std::static_pointer_cast<GH5NeckDevice>(profile->devices[input.input.gh5Neck.deviceid])));
-        break;
+    case proto_Input_fixed_tag:
+        return std::unique_ptr<Input>(new FixedInput(input.input.fixed));
+    case proto_Input_ps2Axis_tag:
+        return std::unique_ptr<Input>(new PS2AxisInput(input.input.ps2Axis, std::static_pointer_cast<PS2Device>(profile->devices[input.input.ps2Axis.deviceid])));
+    case proto_Input_ps2Button_tag:
+        return std::unique_ptr<Input>(new PS2ButtonInput(input.input.ps2Button, std::static_pointer_cast<PS2Device>(profile->devices[input.input.ps2Button.deviceid])));
+    case proto_Input_mpr121_tag:
+        return std::unique_ptr<Input>(new MPR121Input(input.input.mpr121, std::static_pointer_cast<MPR121Device>(profile->devices[input.input.mpr121.deviceid])));
+    case proto_Input_midiNote_tag:
+        return std::unique_ptr<Input>(new MidiNoteInput(input.input.midiNote, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiNote.deviceid])));
+    case proto_Input_midiControlChange_tag:
+        return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midiControlChange, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiControlChange.deviceid])));
+    case proto_Input_midiPitchBend_tag:
+        return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiPitchBend.deviceid])));
+    case proto_Input_mouseAxis_tag:
+        return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<USBDevice>(profile->devices[input.input.mouseAxis.deviceid])));
+    case proto_Input_mouseButton_tag:
+        return std::unique_ptr<Input>(new MouseButtonInput(input.input.mouseButton, std::static_pointer_cast<USBDevice>(profile->devices[input.input.mouseButton.deviceid])));
+    case proto_Input_key_tag:
+        return std::unique_ptr<Input>(new KeyboardKeyInput(input.input.key, std::static_pointer_cast<USBDevice>(profile->devices[input.input.key.deviceid])));
+    case proto_Input_usbButton_tag:
+        return std::unique_ptr<Input>(new USBButtonInput(input.input.usbButton, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbButton.deviceid])));
+    case proto_Input_usbAxis_tag:
+        return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbAxis.deviceid])));
+    case proto_Input_shortcut_tag:
+    {
+        auto c = new ShortcutInput(input.input.shortcut);
+        ShortcutArgs args{input : c, profile : profile};
+        input.input.shortcut.inputs.arg = &args;
+        input.input.shortcut.inputs.funcs.decode = &load_shortcut;
+        pb_decode(stream, proto_ShortcutInput_fields, &input.input.shortcut);
+        return std::unique_ptr<Input>(c);
+    }
     default:
         return nullptr;
     }
@@ -165,7 +213,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     proto_Mapping mapping;
     pb_decode(stream, proto_Mapping_fields, &mapping);
-    std::unique_ptr<Input> input = make_input(mapping.input, instance);
+    std::unique_ptr<Input> input = make_input(mapping.input, instance, stream);
     if (input == nullptr)
     {
         return true;
@@ -174,111 +222,84 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (mapping.which_mapping)
     {
     case proto_Mapping_gamepadAxis_tag:
-        printf("gamepadAxis %d\r\n", mapping.mapping.gamepadAxis);
         instance->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghAxis_tag:
-        printf("ghAxis %d\r\n", mapping.mapping.ghAxis);
         instance->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghButton_tag:
-        printf("ghButton %d\r\n", mapping.mapping.ghButton);
         instance->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_rbAxis_tag:
-        printf("rbAxis %d\r\n", mapping.mapping.rbAxis);
         instance->mappings.emplace_back(new RockBandGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_rbButton_tag:
-        printf("rbButton %d\r\n", mapping.mapping.rbButton);
         instance->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_gamepadButton_tag:
-        printf("gamepadButton %d\r\n", mapping.mapping.gamepadButton);
         instance->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghDrumButton_tag:
-        printf("ghDrumButton %d\r\n", mapping.mapping.ghDrumButton);
         instance->mappings.emplace_back(new GuitarHeroDrumsButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghDrumAxis_tag:
-        printf("ghDrumAxis %d\r\n", mapping.mapping.ghDrumAxis);
         instance->mappings.emplace_back(new GuitarHeroDrumsAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_rbDrumButton_tag:
-        printf("rbDrumButton %d\r\n", mapping.mapping.rbDrumButton);
         instance->mappings.emplace_back(new RockBandDrumsButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_rbDrumAxis_tag:
-        printf("rbDrumAxis %d\r\n", mapping.mapping.rbDrumAxis);
         instance->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghlButton_tag:
-        printf("ghlButton %d\r\n", mapping.mapping.ghlButton);
         instance->mappings.emplace_back(new LiveGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghlAxis_tag:
-        printf("ghlAxis %d\r\n", mapping.mapping.ghlAxis);
         instance->mappings.emplace_back(new LiveGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_proButton_tag:
-        printf("proButton %d\r\n", mapping.mapping.proButton);
         instance->mappings.emplace_back(new ProGuitarButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_proAxis_tag:
-        printf("proAxis %d\r\n", mapping.mapping.proAxis);
         instance->mappings.emplace_back(new ProGuitarAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_djhButton_tag:
-        printf("djhButton %d\r\n", mapping.mapping.djhButton);
         instance->mappings.emplace_back(new DJHTurntableButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_djhAxis_tag:
-        printf("djhAxis %d\r\n", mapping.mapping.djhAxis);
         instance->mappings.emplace_back(new DJHTurntableAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_djMaxButton_tag:
-        printf("djMaxButton %d\r\n", mapping.mapping.djMaxButton);
         instance->mappings.emplace_back(new DJMaxTurntableButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_djMaxAxis_tag:
-        printf("djMaxAxis %d\r\n", mapping.mapping.djMaxAxis);
         instance->mappings.emplace_back(new DJMaxTurntableAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_divaButton_tag:
-        printf("divaButton %d\r\n", mapping.mapping.divaButton);
         instance->mappings.emplace_back(new ProjectDivaButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_divaAxis_tag:
-        printf("divaAxis %d\r\n", mapping.mapping.divaAxis);
         instance->mappings.emplace_back(new ProjectDivaAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_gfAxis_tag:
-        printf("gfAxis %d\r\n", mapping.mapping.gfAxis);
         instance->mappings.emplace_back(new GuitarFreaksAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_gfButton_tag:
-        printf("gfButton %d\r\n", mapping.mapping.gfButton);
         instance->mappings.emplace_back(new GuitarFreaksButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghaAxis_tag:
-        printf("ghaAxis %d\r\n", mapping.mapping.ghaAxis);
         instance->mappings.emplace_back(new GuitarHeroArcadeAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_ghaButton_tag:
-        printf("ghaButton %d\r\n", mapping.mapping.ghaButton);
         instance->mappings.emplace_back(new GuitarHeroArcadeButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_mouseAxis_tag:
-        printf("mouseAxis %d\r\n", mapping.mapping.mouseAxis);
         instance->mappings.emplace_back(new MouseAxisMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_mouseButton_tag:
-        printf("mouseButton %d\r\n", mapping.mapping.mouseButton);
         instance->mappings.emplace_back(new MouseButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     case proto_Mapping_keycode_tag:
-        printf("keycode %d\r\n", mapping.mapping.keycode);
         instance->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, instance->profile_id));
         break;
     }
@@ -296,7 +317,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     case proto_ProfileAssignmentInfo_input_tag:
     {
 
-        std::unique_ptr<Input> input = make_input(assignment.assignment.input.input, instance);
+        std::unique_ptr<Input> input = make_input(assignment.assignment.input.input, instance, stream);
         if (input == nullptr)
         {
             return true;
@@ -307,7 +328,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     case proto_ProfileAssignmentInfo_inputAnyTime_tag:
     {
 
-        std::unique_ptr<Input> input = make_input(assignment.assignment.inputAnyTime.input, instance);
+        std::unique_ptr<Input> input = make_input(assignment.assignment.inputAnyTime.input, instance, stream);
         if (input == nullptr)
         {
             return true;

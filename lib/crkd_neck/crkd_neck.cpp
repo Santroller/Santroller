@@ -31,7 +31,6 @@ void CrkdNeck::tick()
     dpadRight = m_crkdNeck.dpadLeftRight == 0x00;
     dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
     m_lastPoll = interface.last_read_time();
-    m_connected = true;
     m_connected = millis() - m_lastPoll < 10;
     if (m_connected && millis() - m_lastSend > 10)
     {

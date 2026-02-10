@@ -338,6 +338,10 @@ bool PSXController::readButton(PS2ButtonType buttonType)
         {
         case PS2ButtonSelect:
             return (~ps2Data[3]) & (1 << 0);
+        case PS2ButtonL3:
+            return (~ps2Data[3]) & (1 << 1);
+        case PS2ButtonR3:
+            return (~ps2Data[3]) & (1 << 2);
         case PS2ButtonStart:
             return (~ps2Data[3]) & (1 << 3);
         case PS2ButtonDpadUp:

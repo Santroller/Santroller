@@ -83,7 +83,7 @@ This is done using the Santroller Configurator, which can program various microc
   - Setting a guitar to XInput mode will only use XInput mode on windows
   - Using HID mode by default means the controller should work on any device, as HID devices are supported by most operating systems and non console devices.
 - Support for the Pi Pico 1, Pi Pico 2 and any microcontrollers based on them
-  - Support for Arduinos is no longer in current versions of Santroller. You will need to downgrade to [v10.1.188](https://github.com/Santroller/Santroller/releases/tag/v10.1.188), as this was the last version that properly supported these devices. Arduino support is no longer being worked on, so any bugs fixes or new features from later releases will not be supported for them.
+  - Support for Arduinos is no longer in current versions of Santroller. You will need to downgrade to [v10.1.188](https://github.com/Santroller/Santroller/releases/tag/v10.1.188), as this was the last version that properly supported these devices. This version was quite buggy and the guides aren't always going to line up with them, so your on your own if you choose to go this route.
 - Support for inputs from various input sources
   - Wii extensions (such as wii guitars, classic controllers or drum kits)
   - PS2 controllers

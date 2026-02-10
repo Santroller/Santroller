@@ -28,6 +28,11 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
    If these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK, MOSI and MISO need to be from the same channel.
 
    [![pinout](/assets/images/ps2.png)](/assets/images/ps2.png) [![Adapter pinout](/assets/images/ps2-pinout.png)](/assets/images/ps2-pinout.png)
+  
+  ```danger
+  Note that this image is of the plug on the controller, and not looking at the socket. Make sure you have your wiring in the right order.
+  ```
+
 
    | Microcontroller                          | SCK / Clock / Blue | MOSI / Command / Orange | MISO / Data / Brown  | Acknowledge / Green    | Attention / Yellow |
    | ---------------------------------------- | ------------------ | ----------------------- | -------------------- | ---------------------- | ------------------ |
@@ -41,10 +46,10 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
    | Uno (Advanced)                           | 13                 | 11                      | 12                   | 2 or 3                 | Any                |
    | Mega (Advanced)                          | 52                 | 51                      | 50                   | 2, 3, 18, 19, 20 or 21 | Any                |
 
-2. Connect a 1kΩ resistor between MISO and 3.3v.
-3. Connect a 1kΩ resistor between Acknowledge and 3.3v.
-4. Connect the 3.3v pin on the ps2 controller to the 3.3v pin on your microcontroller. For microcontrollers that can output 3.3v natively, you can hook this straight up to 3.3v, but for a 5v only board like the Pro Micro 5v you will need to use a 3.3v voltage regulator to get a stable 3.3v voltage.
-5. Connect the gnd pin on the PS2 controller to the gnd on your microcontroller.
+3. Connect a 1kΩ resistor between MISO and 3.3v.
+4. Connect a 1kΩ resistor between Acknowledge and 3.3v.
+5. Connect the 3.3v pin on the ps2 controller to the 3.3v pin on your microcontroller. For microcontrollers that can output 3.3v natively, you can hook this straight up to 3.3v, but for a 5v only board like the Pro Micro 5v you will need to use a 3.3v voltage regulator to get a stable 3.3v voltage.
+6. Connect the gnd pin on the PS2 controller to the gnd on your microcontroller.
 
 ## Programming
 

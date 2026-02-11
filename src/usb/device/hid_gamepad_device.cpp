@@ -42,6 +42,10 @@ void HIDGamepadDevice::process(bool full_poll)
       mapping->update(full_poll);
       mapping->update_hid(epin_buf);
     }
+    for (const auto &led : profile->leds)
+    {
+      led->update();
+    }
   }
 
   // convert bitmask dpad to actual hid dpad

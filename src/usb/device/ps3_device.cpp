@@ -237,6 +237,10 @@ void PS3GamepadDevice::process(bool full_poll)
             mapping->update(full_poll);
             mapping->update_ps3(epin_buf);
         }
+        for (const auto &led : profile->leds)
+        {
+            led->update();
+        }
     }
 
     if (subtype == Gamepad)

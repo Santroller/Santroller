@@ -60,6 +60,10 @@ void PS4GamepadDevice::process(bool full_poll)
             mapping->update(full_poll);
             mapping->update_ps4(epin_buf);
         }
+        for (const auto &led : profile->leds)
+        {
+            led->update();
+        }
     }
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];

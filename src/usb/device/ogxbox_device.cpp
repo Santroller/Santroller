@@ -156,6 +156,10 @@ void OGXboxGamepadDevice::process(bool full_poll)
             mapping->update(full_poll);
             mapping->update_ogxbox(epin_buf);
         }
+        for (const auto &led : profile->leds)
+        {
+            led->update();
+        }
     }
     if (current_type == GuitarHeroGuitar)
     {

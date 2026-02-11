@@ -30,6 +30,7 @@
 #include "devices/apa102.hpp"
 #include "devices/stp16cpc.hpp"
 #include "mappings/mapping.hpp"
+#include "leds/leds.hpp"
 #include "tusb.h"
 #include "usb/device/xinput_device.h"
 #include "usb/device/ogxbox_device.h"
@@ -139,7 +140,8 @@ std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istrea
 bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Input input;
-    if (!pb_decode(stream, proto_Input_fields, &input)) {
+    if (!pb_decode(stream, proto_Input_fields, &input))
+    {
         return false;
     }
     auto instance = *(ShortcutArgs **)arg;
@@ -384,6 +386,46 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->profile_id = value;
     return true;
 }
+bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = (Profile *)*arg;
+    std::unique_ptr<LedMappingDevice> device = nullptr;
+    proto_Led proto_led;
+    pb_decode(stream, proto_Led_fields, &proto_led);
+    switch (proto_led.which_device)
+    {
+    case proto_Led_rgb_tag:
+        device = std::make_unique<RgbLedDevice>(proto_led.device.rgb, std::static_pointer_cast<LedDevice>(profile->devices[proto_led.device.rgb.deviceId]));
+        break;
+    case proto_Led_gpio_tag:
+        device = std::make_unique<GpioLedDevice>(proto_led.device.gpio);
+        break;
+    case proto_Led_stp16_tag:
+        device = std::make_unique<STP16CPCLedDevice>(proto_led.device.stp16, std::static_pointer_cast<STP16CPCDevice>(profile->devices[proto_led.device.rgb.deviceId]));
+        break;
+    }
+    if (!device)
+    {
+        return false;
+    }
+    std::unique_ptr<LedMapping> mapping = nullptr;
+    switch (proto_led.which_led)
+    {
+    case proto_Led_inputMapping_tag:
+    {
+        auto input = make_input(proto_led.led.inputMapping.input, profile, stream);
+        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.led.inputMapping, std::move(input), profile->leds.size(), profile->profile_id));
+        return true;
+    }
+    case proto_Led_staticMapping_tag:
+        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.led.staticMapping, profile->leds.size(), profile->profile_id));
+        return true;
+    case proto_Led_patternMapping_tag:
+        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.led.patternMapping, profile->leds.size(), profile->profile_id));
+        return true;
+    }
+    return true;
+}
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = std::make_shared<Profile>();
@@ -395,6 +437,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_profile.mappings.arg = profile.get();
     proto_profile.uid.arg = profile.get();
     proto_profile.uid.funcs.decode = &load_uid;
+    proto_profile.leds.arg = profile.get();
+    proto_profile.leds.funcs.decode = &load_leds;
     pb_decode(stream, proto_Profile_fields, &proto_profile);
     profile->subtype = proto_profile.deviceToEmulate;
     printf("profile loaded: %d\r\n", profile->profile_id);

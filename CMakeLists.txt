@@ -104,6 +104,7 @@ add_executable(
   src/input/mpr121.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
+  src/leds/leds.cpp
   src/triggers/ActivationTrigger.cpp
   src/mappings/Mapping.cpp
   src/mappings/GamepadAxisMapping.cpp

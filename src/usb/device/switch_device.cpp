@@ -128,6 +128,10 @@ void SwitchGamepadDevice::process(bool full_poll)
                 mapping->update(full_poll);
                 mapping->update_switch((uint8_t *)&switchReport.inputs);
             }
+            for (const auto &led : profile->leds)
+            {
+                led->update();
+            }
         }
         if ((now - last_report_timer) > SWITCH_PRO_KEEPALIVE_TIMER)
         {

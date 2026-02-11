@@ -559,6 +559,10 @@ void XboxOneGamepadDevice::process(bool full_poll)
             mapping->update(full_poll);
             mapping->update_xboxone(epin_buf);
         }
+        for (const auto &led : profile->leds)
+        {
+            led->update();
+        }
     }
     // Virtual Keycode Triggered (Pressed or Released)
     if (xb1_guide_pressed != xboneReport->guide)

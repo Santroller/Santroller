@@ -105,6 +105,9 @@ void GHArcadeGamepadDevice::process(bool full_poll)
             mapping->update(full_poll);
             mapping->update_hid(epin_buf);
         }
+        for (const auto& led : profile->leds) {
+            led->update();
+        }
     }
     send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
 }

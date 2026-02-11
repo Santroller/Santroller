@@ -108,6 +108,10 @@ void XInputGamepadDevice::process(bool full_poll)
             mapping->update(full_poll);
             mapping->update_xinput(epin_buf);
         }
+        for (const auto &led : profile->leds)
+        {
+            led->update();
+        }
     }
     if (subtype == GuitarHeroGuitar)
     {

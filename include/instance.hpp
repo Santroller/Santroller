@@ -4,6 +4,7 @@
 #include "mappings/mapping.hpp"
 #include "devices/base.hpp"
 #include "input/gpio.hpp"
+#include "leds/leds.hpp"
 
 #include "config.pb.h"
 
@@ -25,6 +26,7 @@ public:
     uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
+    std::vector<std::unique_ptr<LedMapping>> leds;
     std::map<uint32_t, std::shared_ptr<Device>> devices;
 };
 class Instance

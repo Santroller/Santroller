@@ -127,6 +127,10 @@ void HIDConfigDevice::process(bool full_poll)
       {
         mapping->reload();
       }
+      for (auto &led : selected->second->leds)
+      {
+        led->reload();
+      }
     }
   }
   else

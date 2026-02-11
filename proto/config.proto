@@ -12,6 +12,48 @@ message Profile {
   required string name = 5;
   required SubType deviceToEmulate = 6;
   repeated ProfileAssignment assignments = 8;
+  repeated Led leds = 9;
+}
+message InputLedMapping {
+  required Input input = 1;
+  optional int32 min = 2;
+  optional int32 max = 3;
+}
+message PatternLedMapping {
+
+}
+message StaticLedMapping {
+
+}
+message RGBLedDevice {
+  required int32 deviceId = 1;
+  optional int32 startR = 2;
+  optional int32 startG = 3;
+  optional int32 startB = 4;
+  optional int32 endR = 6;
+  optional int32 endG = 7;
+  optional int32 endB = 8;
+  optional int32 activeLed = 10;
+}
+message GpioLedDevice {
+  required int32 pin = 1;
+  required bool analog = 3;
+}
+message STP16CPCLedDevice {
+  required int32 deviceId = 1;
+  optional int32 activeLed = 2;
+}
+message Led {
+  oneof led {
+    InputLedMapping inputMapping = 1;
+    PatternLedMapping patternMapping = 2;
+    StaticLedMapping staticMapping = 3;
+  }
+  oneof device {
+    RGBLedDevice rgb = 4;
+    GpioLedDevice gpio = 5;
+    STP16CPCLedDevice stp16 = 6;
+  }
 }
 
 message SpecificUsbDevice {

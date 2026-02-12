@@ -2,17 +2,41 @@
 #include "stdint.h"
 #include <pico/time.h>
 
-inline uint32_t millis() {
+inline uint32_t millis()
+{
     return to_ms_since_boot(get_absolute_time());
 }
 
-inline uint32_t micros() {
+inline uint32_t micros()
+{
     return to_us_since_boot(get_absolute_time());
 }
-inline float map(float x, float in_min, float in_max, float out_min, float out_max) {
+inline float map(float x, float in_min, float in_max, float out_min, float out_max)
+{
+    float t = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-
+    if (t > out_max)
+    {
+        return out_max;
+    }
+    if (t < out_min)
+    {
+        return out_min;
+    }
+    return t;
+}
+inline uint16_t map_16(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max)
+{
+    int32_t t = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    if (t > out_max)
+    {
+        return out_max;
+    }
+    if (t < out_min)
+    {
+        return out_min;
+    }
+    return t;
 }
 
 inline uint8_t revbits(uint8_t b)

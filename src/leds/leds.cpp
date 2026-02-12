@@ -6,13 +6,7 @@
 void InputLedMapping::update()
 {
     uint16_t raw = m_input->tickAnalog();
-    int32_t curr = map(raw, m_mapping.min, m_mapping.max, 0, UINT16_MAX);
-    if (curr > UINT16_MAX) {
-        curr = UINT16_MAX;
-    }
-    if (curr < 0) {
-        curr = 0;
-    }
+    uint16_t curr = map_16(raw, m_mapping.min, m_mapping.max, 0, UINT16_MAX);
     if ((curr != m_last_val || m_resend) && !HIDConfigDevice::tool_closed())
     {
         m_last_val = curr;
@@ -29,9 +23,9 @@ void StaticLedMapping::update()
 }
 void RgbLedDevice::set_val(uint16_t val)
 {
-    uint16_t r = map(val, 0, UINT16_MAX, m_device.startR, m_device.endR);
-    uint16_t g = map(val, 0, UINT16_MAX, m_device.startG, m_device.endG);
-    uint16_t b = map(val, 0, UINT16_MAX, m_device.startB, m_device.endB);
+    uint16_t r = map_16(val, 0, UINT16_MAX, m_device.startR, m_device.endR);
+    uint16_t g = map_16(val, 0, UINT16_MAX, m_device.startG, m_device.endG);
+    uint16_t b = map_16(val, 0, UINT16_MAX, m_device.startB, m_device.endB);
     m_led_device->set_led(m_device.activeLed, r, g, b);
 }
 void STP16CPCLedDevice::set_val(uint16_t val)

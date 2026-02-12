@@ -7,6 +7,7 @@
 #include "usb/usb_descriptors.h"
 #include "device.hpp"
 #include "events.pb.h"
+#include "ringbuffer.hpp"
 
 #include "tusb.h"
 
@@ -69,6 +70,7 @@ public:
   static bool send_event(proto_Event event);
   static bool send_event_for(proto_Event event, uint32_t profile_id);
   static std::shared_ptr<HIDConfigDevice> instance;
+  Ringbuffer<proto_Event, 64, true, 4, size_t> buffer;
 
 private:
   void handle_command(proto_Command command);

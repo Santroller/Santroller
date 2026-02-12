@@ -2,9 +2,17 @@
 #include "utils.h"
 #include "hardware/pwm.h"
 #include <stdio.h>
+#include "usb/device/hid_device.h"
 void InputLedMapping::update()
 {
-    m_device->set_val(m_input->tickAnalog());
+    uint16_t curr = map(m_input->tickAnalog(), m_mapping.min, m_mapping.max, 0, UINT16_MAX);
+    if ((curr != m_last_val || m_resend) && !HIDConfigDevice::tool_closed())
+    {
+        m_last_val = curr;
+        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, curr, curr}}};
+        m_resend = !HIDConfigDevice::send_event_for(event, m_profile_id);
+    }
+    m_device->set_val(curr);
 }
 void PatternLedMapping::update()
 {
@@ -46,13 +54,16 @@ void GpioLedDevice::setup()
         gpio_set_dir(m_device.pin, true);
     }
 }
-void InputLedMapping::reload() {
+void InputLedMapping::reload()
+{
     m_device->setup();
     m_input->setup();
 }
-void PatternLedMapping::reload() {
+void PatternLedMapping::reload()
+{
     m_device->setup();
 }
-void StaticLedMapping::reload() {
+void StaticLedMapping::reload()
+{
     m_device->setup();
 }

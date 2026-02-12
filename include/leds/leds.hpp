@@ -60,31 +60,36 @@ protected:
 class LedMapping
 {
 public:
-    LedMapping(std::unique_ptr<LedMappingDevice> device) : m_device(std::move(device)) {}
+    LedMapping(std::unique_ptr<LedMappingDevice> device, uint32_t profile_id, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile_id(profile_id) {}
     virtual ~LedMapping() {}
     virtual void update() = 0;
     virtual void reload() = 0;
 
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
+    uint32_t m_id;
+    uint32_t m_profile_id;
 };
 
 class InputLedMapping : public LedMapping
 {
 public:
-    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input) : LedMapping(std::move(device)), m_input(std::move(input)), m_mapping(mapping) {}
+    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_input(std::move(input)), m_mapping(mapping) {}
     void update();
     void reload();
 
 protected:
     std::unique_ptr<Input> m_input;
     proto_InputLedMapping m_mapping;
+private:
+    uint16_t m_last_val = 0;
+    bool m_resend = false;
 };
 
 class PatternLedMapping : public LedMapping
 {
 public:
-    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping) : LedMapping(std::move(device)), m_mapping(mapping) {}
+    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping) {}
     void update();
     void reload();
 
@@ -95,7 +100,7 @@ protected:
 class StaticLedMapping : public LedMapping
 {
 public:
-    StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping) : LedMapping(std::move(device)), m_mapping(mapping) {}
+    StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping) {}
     void update();
     void reload();
 

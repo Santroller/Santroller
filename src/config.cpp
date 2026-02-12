@@ -428,15 +428,15 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (proto_led.mapping.which_led)
     {
     case proto_LedMapping_inputMapping_tag:
-        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.mapping.led.inputMapping, make_input(proto_led.mapping.led.inputMapping.input, profile, stream)));
+        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.mapping.led.inputMapping, make_input(proto_led.mapping.led.inputMapping.input, profile, stream), profile->profile_id, profile->leds.size()));
         printf("loaded led input%d\r\n", profile->leds.size());
         return true;
     case proto_LedMapping_staticMapping_tag:
-        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.mapping.led.staticMapping));
+        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.mapping.led.staticMapping, profile->profile_id, profile->leds.size()));
         printf("loaded led static%d\r\n", profile->leds.size());
         return true;
     case proto_LedMapping_patternMapping_tag:
-        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.mapping.led.patternMapping));
+        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.mapping.led.patternMapping, profile->profile_id, profile->leds.size()));
         printf("loaded led pattern%d\r\n", profile->leds.size());
         return true;
     }

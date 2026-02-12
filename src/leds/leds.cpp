@@ -1,6 +1,7 @@
 #include "leds/leds.hpp"
 #include "utils.h"
 #include "hardware/pwm.h"
+#include <stdio.h>
 void InputLedMapping::update()
 {
     m_device->set_val(m_input->tickAnalog());
@@ -13,9 +14,9 @@ void StaticLedMapping::update()
 }
 void RgbLedDevice::set_val(uint16_t val)
 {
-    auto r = map(val, 0, UINT16_MAX, m_device.startR, m_device.endR);
-    auto g = map(val, 0, UINT16_MAX, m_device.startG, m_device.endG);
-    auto b = map(val, 0, UINT16_MAX, m_device.startB, m_device.endB);
+    uint16_t r = map(val, 0, UINT16_MAX, m_device.startR, m_device.endR);
+    uint16_t g = map(val, 0, UINT16_MAX, m_device.startG, m_device.endG);
+    uint16_t b = map(val, 0, UINT16_MAX, m_device.startB, m_device.endB);
     m_led_device->set_led(m_device.activeLed, r, g, b);
 }
 void STP16CPCLedDevice::set_val(uint16_t val)

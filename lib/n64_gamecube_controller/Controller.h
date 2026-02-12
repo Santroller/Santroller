@@ -18,6 +18,7 @@ typedef struct {
 
 class Controller {
  public:
+  virtual ~Controller() {}
   Controller(InitParams *initParams, uint8_t sizeofControllerState);
   static void initPio(InitParams *initParams);
   void transfer(uint8_t *request, uint8_t requestLength, uint8_t *response,

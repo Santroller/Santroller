@@ -1,10 +1,10 @@
 #pragma once
 #include "base.hpp"
 #include "device.pb.h"
+#include <stdio.h>
 class DebugDevice : public Device
 {
 public:
-    ~DebugDevice() {}
     DebugDevice(proto_DebugDevice device, uint16_t id);
     void update(bool full_poll);
     bool using_pin(uint8_t pin);

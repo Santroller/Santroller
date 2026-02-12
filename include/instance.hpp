@@ -7,6 +7,7 @@
 #include "leds/leds.hpp"
 
 #include "config.pb.h"
+#include <stdio.h>
 
 
 class ActivationTriggerList
@@ -20,6 +21,7 @@ public:
 class Profile
 {
 public:
+    virtual ~Profile() {}
     SubType subtype;
     ConsoleMode mode;
     OutputMode output;
@@ -32,6 +34,7 @@ public:
 class Instance
 {
 public:
+    virtual ~Instance() {}
     virtual void initialize() = 0;
     virtual void process(bool full_poll) = 0;
     SubType subtype;

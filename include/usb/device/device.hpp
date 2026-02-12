@@ -9,6 +9,7 @@
 class UsbDevice : public Instance
 {
 public:
+    virtual ~UsbDevice() {}
     uint8_t interface_id = 0;
     virtual size_t compatible_section_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t config_descriptor(uint8_t *desc, size_t remaining) = 0;

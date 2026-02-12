@@ -9,6 +9,6 @@
 class UsbHost: public Instance
 {
 public:
-
+    virtual ~UsbHost() {};
     virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
 };

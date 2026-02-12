@@ -6,18 +6,20 @@
 #include "devices/base.hpp"
 #include "devices/stp16cpc.hpp"
 #include <memory>
+#include <stdio.h>
 
 class LedMappingDevice
 {
 public:
     LedMappingDevice() {}
+    virtual ~LedMappingDevice() {}
     virtual void set_val(uint16_t val) = 0;
     virtual void setup() = 0;
 };
 class RgbLedDevice : public LedMappingDevice
 {
 public:
-    RgbLedDevice(proto_RGBLedDevice device, std::shared_ptr<LedDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(led_device)
+    RgbLedDevice(proto_RGBLedDevice device, std::shared_ptr<LedDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(std::move(led_device))
     {
         setup();
     }
@@ -44,7 +46,7 @@ protected:
 class STP16CPCLedDevice : public LedMappingDevice
 {
 public:
-    STP16CPCLedDevice(proto_STP16CPCLedDevice device, std::shared_ptr<STP16CPCDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(led_device)
+    STP16CPCLedDevice(proto_STP16CPCLedDevice device, std::shared_ptr<STP16CPCDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(std::move(led_device))
     {
         setup();
     }
@@ -58,21 +60,19 @@ protected:
 class LedMapping
 {
 public:
-    LedMapping(uint16_t id, uint32_t profile, std::unique_ptr<LedMappingDevice> device) : m_id(id), m_profile(profile), m_device(std::move(device)) {}
+    LedMapping(std::unique_ptr<LedMappingDevice> device) : m_device(std::move(device)) {}
     virtual ~LedMapping() {}
     virtual void update() = 0;
     virtual void reload() = 0;
 
 protected:
-    uint16_t m_id;
-    uint32_t m_profile;
     std::unique_ptr<LedMappingDevice> m_device;
 };
 
 class InputLedMapping : public LedMapping
 {
 public:
-    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : LedMapping(id, profile, std::move(device)), m_input(std::move(input)), m_mapping(mapping) {}
+    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input) : LedMapping(std::move(device)), m_input(std::move(input)), m_mapping(mapping) {}
     void update();
     void reload();
 
@@ -84,7 +84,7 @@ protected:
 class PatternLedMapping : public LedMapping
 {
 public:
-    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint16_t id, uint32_t profile) : LedMapping(id, profile, std::move(device)), m_mapping(mapping) {}
+    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping) : LedMapping(std::move(device)), m_mapping(mapping) {}
     void update();
     void reload();
 
@@ -95,7 +95,7 @@ protected:
 class StaticLedMapping : public LedMapping
 {
 public:
-    StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping, uint16_t id, uint32_t profile) : LedMapping(id, profile, std::move(device)), m_mapping(mapping) {}
+    StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping) : LedMapping(std::move(device)), m_mapping(mapping) {}
     void update();
     void reload();
 

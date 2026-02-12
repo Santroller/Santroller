@@ -27,6 +27,7 @@
 class HIDDevice : public UsbDevice
 {
 public:
+  virtual ~HIDDevice() {};
   virtual const uint8_t *report_descriptor() = 0;
   virtual uint16_t report_desc_len() = 0;
   virtual uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen) = 0;

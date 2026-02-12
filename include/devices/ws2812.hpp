@@ -4,10 +4,10 @@
 #include "input_enums.pb.h"
 #include "wii_extension.hpp"
 #include "libws2812.hpp"
+#include <stdio.h>
 class WS2812Device : public LedDevice
 {
 public:
-    ~WS2812Device() {}
     WS2812Device(proto_WS2812Device device, uint16_t id);
     void update(bool full_poll);
     bool using_pin(uint8_t pin);

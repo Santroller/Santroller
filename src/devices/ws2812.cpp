@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true), m_ws2812(device.pin, device.type), m_device(device)
+WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true), m_ws2812(device.pin, device.type), m_device(std::move(device))
 {
 }
 
@@ -10,7 +10,6 @@ void WS2812Device::update(bool full_poll)
 {
     if (memcmp(prev_led_state, led_state, sizeof(led_state)) != 0)
     {
-
         for (int i = 0; i < m_device.count; i++)
         {
             uint8_t r = led_state[i] & 0xff;

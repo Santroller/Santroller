@@ -17,7 +17,10 @@ public:
 class RgbLedDevice : public LedMappingDevice
 {
 public:
-    RgbLedDevice(proto_RGBLedDevice device, std::shared_ptr<LedDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(led_device) {}
+    RgbLedDevice(proto_RGBLedDevice device, std::shared_ptr<LedDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(led_device)
+    {
+        setup();
+    }
     void set_val(uint16_t val);
     void setup();
 
@@ -28,7 +31,10 @@ protected:
 class GpioLedDevice : public LedMappingDevice
 {
 public:
-    GpioLedDevice(proto_GpioLedDevice device) : LedMappingDevice(), m_device(device) {}
+    GpioLedDevice(proto_GpioLedDevice device) : LedMappingDevice(), m_device(device)
+    {
+        setup();
+    }
     void set_val(uint16_t val);
     void setup();
 
@@ -38,7 +44,10 @@ protected:
 class STP16CPCLedDevice : public LedMappingDevice
 {
 public:
-    STP16CPCLedDevice(proto_STP16CPCLedDevice device, std::shared_ptr<STP16CPCDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(led_device) {}
+    STP16CPCLedDevice(proto_STP16CPCLedDevice device, std::shared_ptr<STP16CPCDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(led_device)
+    {
+        setup();
+    }
     void set_val(uint16_t val);
     void setup();
 
@@ -63,7 +72,7 @@ protected:
 class InputLedMapping : public LedMapping
 {
 public:
-    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : LedMapping(id, profile, std::move(device)), m_mapping(mapping) {}
+    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : LedMapping(id, profile, std::move(device)), m_input(std::move(input)), m_mapping(mapping) {}
     void update();
     void reload();
 

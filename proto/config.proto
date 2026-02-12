@@ -43,17 +43,23 @@ message STP16CPCLedDevice {
   required int32 deviceId = 1;
   optional int32 activeLed = 2;
 }
-message Led {
-  oneof led {
-    InputLedMapping inputMapping = 1;
-    PatternLedMapping patternMapping = 2;
-    StaticLedMapping staticMapping = 3;
-  }
+message LedDevice {
   oneof device {
     RGBLedDevice rgb = 4;
     GpioLedDevice gpio = 5;
     STP16CPCLedDevice stp16 = 6;
   }
+}
+message LedMapping {
+  oneof led {
+    InputLedMapping inputMapping = 1;
+    PatternLedMapping patternMapping = 2;
+    StaticLedMapping staticMapping = 3;
+  }
+}
+message Led {
+    required LedDevice device = 1;
+    required LedMapping mapping = 2;
 }
 
 message SpecificUsbDevice {

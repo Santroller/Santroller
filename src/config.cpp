@@ -392,36 +392,41 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     std::unique_ptr<LedMappingDevice> device = nullptr;
     proto_Led proto_led;
     pb_decode(stream, proto_Led_fields, &proto_led);
-    switch (proto_led.which_device)
+    printf("load led%d\r\n", profile->leds.size());
+    switch (proto_led.device.which_device)
     {
-    case proto_Led_rgb_tag:
-        device = std::make_unique<RgbLedDevice>(proto_led.device.rgb, std::static_pointer_cast<LedDevice>(profile->devices[proto_led.device.rgb.deviceId]));
+    case proto_LedDevice_rgb_tag:
+        device = std::make_unique<RgbLedDevice>(proto_led.device.device.rgb, std::static_pointer_cast<LedDevice>(profile->devices[proto_led.device.device.rgb.deviceId]));
+        printf("dev rgb%d\r\n", profile->leds.size());
         break;
-    case proto_Led_gpio_tag:
-        device = std::make_unique<GpioLedDevice>(proto_led.device.gpio);
+    case proto_LedDevice_gpio_tag:
+        device = std::make_unique<GpioLedDevice>(proto_led.device.device.gpio);
+        printf("dev gpio%d\r\n", profile->leds.size());
         break;
-    case proto_Led_stp16_tag:
-        device = std::make_unique<STP16CPCLedDevice>(proto_led.device.stp16, std::static_pointer_cast<STP16CPCDevice>(profile->devices[proto_led.device.rgb.deviceId]));
+    case proto_LedDevice_stp16_tag:
+        device = std::make_unique<STP16CPCLedDevice>(proto_led.device.device.stp16, std::static_pointer_cast<STP16CPCDevice>(profile->devices[proto_led.device.device.stp16.deviceId]));
+        printf("dev stp16%d\r\n", profile->leds.size());
         break;
     }
     if (!device)
     {
+        printf("cant load led%d\r\n", profile->leds.size());
         return false;
     }
     std::unique_ptr<LedMapping> mapping = nullptr;
-    switch (proto_led.which_led)
+    switch (proto_led.mapping.which_led)
     {
-    case proto_Led_inputMapping_tag:
-    {
-        auto input = make_input(proto_led.led.inputMapping.input, profile, stream);
-        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.led.inputMapping, std::move(input), profile->leds.size(), profile->profile_id));
+    case proto_LedMapping_inputMapping_tag:
+        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.mapping.led.inputMapping, make_input(proto_led.mapping.led.inputMapping.input, profile, stream), profile->leds.size(), profile->profile_id));
+        printf("loaded led input%d\r\n", profile->leds.size());
         return true;
-    }
-    case proto_Led_staticMapping_tag:
-        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.led.staticMapping, profile->leds.size(), profile->profile_id));
+    case proto_LedMapping_staticMapping_tag:
+        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.mapping.led.staticMapping, profile->leds.size(), profile->profile_id));
+        printf("loaded led static%d\r\n", profile->leds.size());
         return true;
-    case proto_Led_patternMapping_tag:
-        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.led.patternMapping, profile->leds.size(), profile->profile_id));
+    case proto_LedMapping_patternMapping_tag:
+        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.mapping.led.patternMapping, profile->leds.size(), profile->profile_id));
+        printf("loaded led pattern%d\r\n", profile->leds.size());
         return true;
     }
     return true;

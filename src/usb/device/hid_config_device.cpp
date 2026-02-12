@@ -31,14 +31,6 @@ void HIDConfigDevice::initialize()
 {
   m_epin = next_epin();
 }
-bool encode_dev(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
-  auto& instance = HIDConfigDevice::instance;
-  proto_Event evt;
-  if (instance->buffer.remove(&evt) && pb_encode(stream, proto_Event_fields, &evt)) {
-    return true;
-  }
-  return false;
-}
 void HIDConfigDevice::process(bool full_poll)
 {
   if (clearedIn && clearedOut)
@@ -156,19 +148,19 @@ void HIDConfigDevice::process(bool full_poll)
       led->update();
     }
   }
-  if (buffer.isEmpty() || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+  if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
   {
     return;
   }
 
   epin_buf[0] = ReportId::ReportIdConfig;
   pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
-  list.event.funcs.encode = &encode_dev;
   if (pb_encode(&outputStream, proto_EventList_fields, &list))
   {
-    printf("Written: %d\r\n", outputStream.bytes_written);
     usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, outputStream.bytes_written + 1);
   }
+  list.event_count = 0;
+
   profile_changed = false;
 }
 
@@ -425,11 +417,11 @@ bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
 bool HIDConfigDevice::send_event(proto_Event event)
 {
   auto dev = HIDConfigDevice::instance;
-  if (tool_closed() || dev->buffer.isFull())
+  if (tool_closed() || dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event))
   {
     return false;
   }
-  dev->buffer.insert(event);
+  dev->list.event[dev->list.event_count++] = event;
   return true;
 }
 

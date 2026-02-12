@@ -1,1 +1,2 @@
 proto.DebugEvent.data max_count:32
+proto.EventList.event max_count:4

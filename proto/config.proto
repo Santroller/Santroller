@@ -33,7 +33,7 @@ message RGBLedDevice {
   optional int32 endR = 6;
   optional int32 endG = 7;
   optional int32 endB = 8;
-  optional int32 activeLed = 10;
+  repeated int32 activeLed = 10;
 }
 message GpioLedDevice {
   required int32 pin = 1;
@@ -41,7 +41,7 @@ message GpioLedDevice {
 }
 message STP16CPCLedDevice {
   required int32 deviceId = 1;
-  optional int32 activeLed = 2;
+  repeated int32 activeLed = 2;
 }
 message LedDevice {
   oneof device {

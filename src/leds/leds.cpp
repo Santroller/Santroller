@@ -26,11 +26,15 @@ void RgbLedDevice::set_val(uint16_t val)
     uint16_t r = map_16(val, 0, UINT16_MAX, m_device.startR, m_device.endR);
     uint16_t g = map_16(val, 0, UINT16_MAX, m_device.startG, m_device.endG);
     uint16_t b = map_16(val, 0, UINT16_MAX, m_device.startB, m_device.endB);
-    m_led_device->set_led(m_device.activeLed, r, g, b);
+    for (int i = 0; i < m_device.activeLed_count; i++) {
+        m_led_device->set_led(m_device.activeLed[i], r, g, b);
+    }
 }
 void STP16CPCLedDevice::set_val(uint16_t val)
 {
-    m_led_device->set_led(m_device.activeLed, val, val, val);
+    for (int i = 0; i < m_device.activeLed_count; i++) {
+        m_led_device->set_led(m_device.activeLed[i],  val, val, val);
+    }
 }
 void GpioLedDevice::set_val(uint16_t val)
 {

@@ -67,6 +67,7 @@ void PatternLedMapping::update()
 }
 void StaticLedMapping::update()
 {
+    m_device->set_val(UINT16_MAX);
 }
 void RgbLedDevice::set_val(uint16_t val)
 {

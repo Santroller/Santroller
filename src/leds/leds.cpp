@@ -26,30 +26,33 @@ void PatternLedMapping::update()
         return;
     }
     uint8_t m_leds = m_device->led_count();
+    uint8_t m_brightness = 80;
+    uint8_t section = m_brightness / 3;
+    uint8_t section2 = section * 2;
     if (m_mapping.pattern == PatternRainbow)
     {
         for (int i = 0; i < m_leds; i++)
         {
-            auto pos = (i * 255 / m_leds + m_pos) % 255;
-            if (pos < 85)
+            auto pos = (i * m_brightness / m_leds + m_pos) % m_brightness;
+            if (pos < section)
             {
                 auto g = 0;
                 auto r = pos;
-                auto b = 255 - r;
+                auto b = m_brightness - r;
                 m_device->set_val_raw(i, r, g, b);
             }
-            else if (pos < 170)
+            else if (pos < section2)
             {
-                auto g = pos - 85;
-                auto r = 255 - g;
+                auto g = pos - section;
+                auto r = m_brightness - g;
                 auto b = 0;
                 m_device->set_val_raw(i, r, g, b);
             }
-            else if (pos < 256)
+            else if (pos)
             {
-                auto b = pos - 170;
-                auto g = 255 - b;
-                auto r = 1;
+                auto b = pos - section2;
+                auto g = m_brightness - b;
+                auto r = 0;
                 m_device->set_val_raw(i, r, g, b);
             }
         }

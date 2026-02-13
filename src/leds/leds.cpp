@@ -7,11 +7,14 @@ void InputLedMapping::update()
 {
     uint16_t raw = m_input->tickAnalog();
     uint16_t curr = map_16(raw, m_mapping.min, m_mapping.max, 0, UINT16_MAX);
-    if ((curr != m_last_val || m_resend) && !HIDConfigDevice::tool_closed())
+    if ((curr != m_last_val || m_resend) && (millis() - m_last_poll) > 10 && !HIDConfigDevice::tool_closed())
     {
         m_last_val = curr;
         proto_Event event = {which_event : proto_Event_led_tag, event : {led : {m_id, raw, curr}}};
         m_resend = !HIDConfigDevice::send_event_for(event, m_profile_id);
+        if (!m_resend) {
+            m_last_poll = millis();
+        }
     }
     m_device->set_val(curr);
 }

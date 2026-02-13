@@ -404,7 +404,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     std::unique_ptr<LedMappingDevice> device = nullptr;
     proto_Led proto_led;
     pb_decode(stream, proto_Led_fields, &proto_led);
-    printf("load led%d %d\r\n", profile->leds.size());
+    printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)
     {
     case proto_LedDevice_rgb_tag:

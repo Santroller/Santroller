@@ -84,6 +84,7 @@ protected:
 private:
     uint16_t m_last_val = 0;
     bool m_resend = false;
+    uint32_t m_last_poll = 0;
 };
 
 class PatternLedMapping : public LedMapping

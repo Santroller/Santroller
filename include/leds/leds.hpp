@@ -14,7 +14,9 @@ public:
     LedMappingDevice() {}
     virtual ~LedMappingDevice() {}
     virtual void set_val(uint16_t val) = 0;
+    virtual void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b) = 0;
     virtual void setup() = 0;
+    virtual uint8_t led_count() = 0;
 };
 class RgbLedDevice : public LedMappingDevice
 {
@@ -24,7 +26,9 @@ public:
         setup();
     }
     void set_val(uint16_t val);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
     void setup();
+    uint8_t led_count();
 
 protected:
     proto_RGBLedDevice m_device;
@@ -38,7 +42,9 @@ public:
         setup();
     }
     void set_val(uint16_t val);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
     void setup();
+    uint8_t led_count();
 
 protected:
     proto_GpioLedDevice m_device;
@@ -51,7 +57,9 @@ public:
         setup();
     }
     void set_val(uint16_t val);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
     void setup();
+    uint8_t led_count();
 
 protected:
     proto_STP16CPCLedDevice m_device;
@@ -96,6 +104,8 @@ public:
 
 protected:
     proto_PatternLedMapping m_mapping;
+    uint32_t m_pos = 0;
+    bool m_dir = false;
 };
 
 class StaticLedMapping : public LedMapping

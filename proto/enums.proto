@@ -209,3 +209,8 @@ enum PinDetectType {
     DetectDigital=1;
     DetectAnalog=2;
 }
+
+enum RgbPatternType {
+    PatternRainbow=1;
+    PatternFade=2;
+}

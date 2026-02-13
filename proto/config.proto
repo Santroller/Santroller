@@ -20,7 +20,8 @@ message InputLedMapping {
   optional int32 max = 3;
 }
 message PatternLedMapping {
-
+  required RgbPatternType pattern = 1;
+  optional int32 speed = 2;
 }
 message StaticLedMapping {
 

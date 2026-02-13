@@ -1,4 +1,4 @@
 proto.Profile.name max_size:32
 proto.Profile.uid type:FT_CALLBACK
-proto.RGBLedDevice.activeLed max_count:10
-proto.STP16CPCLedDevice.activeLed max_count:10
+proto.RGBLedDevice.activeLed max_count:255
+proto.STP16CPCLedDevice.activeLed max_count:255

@@ -89,6 +89,7 @@ public:
 protected:
     std::unique_ptr<Input> m_input;
     proto_InputLedMapping m_mapping;
+
 private:
     uint16_t m_last_val = 0;
     bool m_resend = false;
@@ -98,7 +99,7 @@ private:
 class PatternLedMapping : public LedMapping
 {
 public:
-    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping) {}
+    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1) {}
     void update();
     void reload();
 
@@ -106,6 +107,8 @@ protected:
     proto_PatternLedMapping m_mapping;
     uint32_t m_pos = 0;
     bool m_dir = false;
+    uint32_t m_next_poll = 0;
+    uint32_t m_speed = 0;
 };
 
 class StaticLedMapping : public LedMapping

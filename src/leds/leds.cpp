@@ -7,9 +7,9 @@ void InputLedMapping::update()
 {
     uint16_t raw = m_input->tickAnalog();
     uint16_t curr = map_16(raw, m_mapping.min, m_mapping.max, 0, UINT16_MAX);
-    if ((curr != m_last_val || m_resend) && (millis() - m_last_poll) > 10 && !HIDConfigDevice::tool_closed())
+    if ((raw != m_last_val || m_resend) && (millis() - m_last_poll) > 10 && !HIDConfigDevice::tool_closed())
     {
-        m_last_val = curr;
+        m_last_val = raw;
         proto_Event event = {which_event : proto_Event_led_tag, event : {led : {m_id, raw, curr}}};
         m_resend = !HIDConfigDevice::send_event_for(event, m_profile_id);
         if (!m_resend)
@@ -21,49 +21,62 @@ void InputLedMapping::update()
 }
 void PatternLedMapping::update()
 {
+    if (millis() < m_next_poll)
+    {
+        return;
+    }
     uint8_t m_leds = m_device->led_count();
     if (m_mapping.pattern == PatternRainbow)
     {
         for (int i = 0; i < m_leds; i++)
         {
-            auto pos = (i * 256 / m_leds + m_pos) % 256;
+            auto pos = (i * 255 / m_leds + m_pos) % 255;
             if (pos < 85)
             {
                 auto g = 0;
-                auto r = ((float)pos / 85.0f) * 255.0f;
+                auto r = pos;
                 auto b = 255 - r;
                 m_device->set_val_raw(i, r, g, b);
             }
             else if (pos < 170)
             {
-                auto g = ((float)(pos - 85) / 85.0f) * 255.0f;
+                auto g = pos - 85;
                 auto r = 255 - g;
                 auto b = 0;
                 m_device->set_val_raw(i, r, g, b);
             }
             else if (pos < 256)
             {
-                auto b = ((float)(pos - 170) / 85.0f) * 255.0f;
+                auto b = pos - 170;
                 auto g = 255 - b;
                 auto r = 1;
                 m_device->set_val_raw(i, r, g, b);
             }
         }
         m_pos++;
-    } else if (m_mapping.pattern == PatternFade) {
+    }
+    else if (m_mapping.pattern == PatternFade)
+    {
         m_device->set_val(m_pos);
-        if (m_dir) {
-            m_pos--;
-        } else {
-            m_pos++;
+        if (m_dir)
+        {
+            m_pos-=127;
         }
-        if (m_pos == UINT16_MAX && !m_dir) {
+        else
+        {
+            m_pos+=127;
+        }
+        if (m_pos >= UINT16_MAX && !m_dir)
+        {
             m_dir = true;
+            m_pos-=127;
         }
-        if (m_pos == 0 && m_dir) {
+        if (m_pos == 0 && m_dir)
+        {
             m_dir = false;
         }
     }
+    m_next_poll = millis() + m_speed;
 }
 void StaticLedMapping::update()
 {

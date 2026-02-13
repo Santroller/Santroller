@@ -21,7 +21,7 @@ message InputLedMapping {
 }
 message PatternLedMapping {
   required RgbPatternType pattern = 1;
-  optional int32 speed = 2;
+  required int32 speed = 2;
 }
 message StaticLedMapping {
 

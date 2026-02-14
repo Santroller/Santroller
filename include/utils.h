@@ -39,6 +39,18 @@ inline uint16_t map_16(int32_t x, int32_t in_min, int32_t in_max, int32_t out_mi
     return t;
 }
 
+inline int32_t clamp(int32_t x, int32_t min, int32_t max) {
+    if (x > max)
+    {
+        return max;
+    }
+    if (x < min)
+    {
+        return min;
+    }
+    return x;
+}
+
 inline uint8_t revbits(uint8_t b)
 {
     b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;

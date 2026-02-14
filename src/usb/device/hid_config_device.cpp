@@ -42,73 +42,30 @@ void HIDConfigDevice::process()
     profile_selected = false;
     return;
   }
-  if (!profile_selected)
+  if (profile_selected)
   {
-    return;
-  }
-  auto selected = all_profiles.find(selected_profile);
-  if (selected == all_profiles.end())
-  {
-    return;
-  }
-  if (detect_done)
-  {
-
-    switch (m_detect_type)
+    auto selected = all_profiles.find(selected_profile);
+    if (selected == all_profiles.end())
     {
-    case DetectDigital:
-      for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
-      {
-        if (m_valid_pins & (1 << i) && gpio_get(i) != last_digital_vals[i])
-        {
-          printf("detected digital: %d %d %d\r\n", i, gpio_get(i), last_digital_vals[i]);
-          detect_done = 0;
-          proto_Event evt;
-          evt.which_event = proto_Event_pin_tag;
-          evt.event.pin.pin = i;
-          send_event(evt);
-          break;
-        }
-      }
-      break;
-    case DetectAnalog:
-      for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
-      {
-        if (m_valid_pins & (1 << i))
-        {
-          adc_select_input(i);
-          if (abs(last_adc_vals[i] - adc_read()) > 100)
-          {
-            // found!
-            printf("detected adc: %d %d %d\r\n", last_adc_vals[i], adc_read(), i + ADC_BASE_PIN);
-            detect_done = 0;
-            proto_Event evt;
-            evt.which_event = proto_Event_pin_tag;
-            evt.event.pin.pin = i + ADC_BASE_PIN;
-            send_event(evt);
-            break;
-          }
-        }
-      }
-      break;
+      return;
     }
+    if (detect_done)
+    {
 
-    if (profile_changed || (detect_done && millis() > detect_done))
-    {
-      detect_done = 0;
-    }
-    if (!detect_done)
-    {
       switch (m_detect_type)
       {
       case DetectDigital:
         for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
         {
-          if (m_valid_pins & (1 << i))
+          if (m_valid_pins & (1 << i) && gpio_get(i) != last_digital_vals[i])
           {
-            gpio_init(i);
-            gpio_set_dir(i, false);
-            gpio_set_pulls(i, false, false);
+            printf("detected digital: %d %d %d\r\n", i, gpio_get(i), last_digital_vals[i]);
+            detect_done = 0;
+            proto_Event evt;
+            evt.which_event = proto_Event_pin_tag;
+            evt.event.pin.pin = i;
+            send_event(evt);
+            break;
           }
         }
         break;
@@ -117,35 +74,77 @@ void HIDConfigDevice::process()
         {
           if (m_valid_pins & (1 << i))
           {
-            adc_gpio_init(i + ADC_BASE_PIN);
-            gpio_set_pulls(i + ADC_BASE_PIN, false, false);
+            adc_select_input(i);
+            if (abs(last_adc_vals[i] - adc_read()) > 100)
+            {
+              // found!
+              printf("detected adc: %d %d %d\r\n", last_adc_vals[i], adc_read(), i + ADC_BASE_PIN);
+              detect_done = 0;
+              proto_Event evt;
+              evt.which_event = proto_Event_pin_tag;
+              evt.event.pin.pin = i + ADC_BASE_PIN;
+              send_event(evt);
+              break;
+            }
           }
         }
         break;
       }
-      for (auto &mapping : selected->second->mappings)
+
+      if (profile_changed || (detect_done && millis() > detect_done))
       {
-        mapping->reload();
+        detect_done = 0;
       }
-      for (auto &led : selected->second->leds)
+      if (!detect_done)
       {
-        led->reload();
+        switch (m_detect_type)
+        {
+        case DetectDigital:
+          for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
+          {
+            if (m_valid_pins & (1 << i))
+            {
+              gpio_init(i);
+              gpio_set_dir(i, false);
+              gpio_set_pulls(i, false, false);
+            }
+          }
+          break;
+        case DetectAnalog:
+          for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+          {
+            if (m_valid_pins & (1 << i))
+            {
+              adc_gpio_init(i + ADC_BASE_PIN);
+              gpio_set_pulls(i + ADC_BASE_PIN, false, false);
+            }
+          }
+          break;
+        }
+        for (auto &mapping : selected->second->mappings)
+        {
+          mapping->reload();
+        }
+        for (auto &led : selected->second->leds)
+        {
+          led->reload();
+        }
       }
     }
-  }
-  else
-  {
-    for (const auto &mapping : selected->second->mappings)
+    else
     {
-      mapping->update(profile_changed, true);
-    }
-    for (const auto &mapping : selected->second->triggers)
-    {
-      mapping->validate(false, true, true);
-    }
-    for (const auto &led : selected->second->leds)
-    {
-      led->update(true, true);
+      for (const auto &mapping : selected->second->mappings)
+      {
+        mapping->update(profile_changed, true);
+      }
+      for (const auto &mapping : selected->second->triggers)
+      {
+        mapping->validate(false, true, true);
+      }
+      for (const auto &led : selected->second->leds)
+      {
+        led->update(true, true);
+      }
     }
   }
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
@@ -288,6 +287,11 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
     case ReportId::ReportIdLoaded:
       lastKeepAlive = millis();
       tool_seen = true;
+
+      for (const auto &device : active_devices)
+      {
+        device->update(true, true);
+      }
       break;
     case ReportId::ReportIdKeepalive:
       lastKeepAlive = millis();

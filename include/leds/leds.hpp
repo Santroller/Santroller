@@ -39,6 +39,12 @@ protected:
     float scaleG = 0;
     float scaleB = 0;
     float scaleBrightness = 0;
+    uint16_t startR;
+    uint16_t startG;
+    uint16_t startB;
+    uint16_t endR;
+    uint16_t endG;
+    uint16_t endB;
 };
 class GpioLedDevice : public LedMappingDevice
 {

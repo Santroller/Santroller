@@ -113,10 +113,15 @@ WS2812::WS2812(uint8_t pin, uint8_t count, WS2812Type type) : m_pin(pin), hasW(t
 
 WS2812::~WS2812()
 {
+    if (reset_delay_alarm_id)
+    {
+        cancel_alarm(reset_delay_alarm_id);
+    }
     pio_remove_program_and_unclaim_sm(&ws2812_program, ws2812Pio, ws2812Sm, ws2812Offset);
     irq_set_enabled(DMA_IRQ_0, false);
     dma_channel_cleanup(chan);
     dma_channel_unclaim(chan);
+    data = nullptr;
 }
 
 static void pio_irq_handler()

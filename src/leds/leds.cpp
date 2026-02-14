@@ -7,7 +7,7 @@ void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tickAnalog();
     uint16_t curr = map_16(raw, m_mapping.min, m_mapping.max, 0, UINT16_MAX);
-    if (send_events && full_poll || (raw != m_last_val || m_resend) && (millis() - m_last_poll) > 10)
+    if (send_events && ((full_poll || (raw != m_last_val || m_resend)) && (millis() - m_last_poll) > 10))
     {
         m_last_val = raw;
         proto_Event event = {which_event : proto_Event_led_tag, event : {led : {m_id, raw, curr}}};
@@ -29,38 +29,46 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
     {
         return;
     }
-    uint8_t m_leds = m_device->led_count();
-    uint8_t brightness = m_device->supports_brightness() ? 255 : m_brightness;
+    uint32_t speed = m_speed;
+    uint8_t leds = m_device->led_count();
+    // If the led doesn't support brightness, then we just stop each channel at a lower brightness
+    uint8_t pos_per_chan = m_device->supports_brightness() ? 255 : m_brightness;
     if (m_mapping.pattern == PatternRainbow)
     {
-        uint8_t section = brightness / 3;
+        uint8_t section = pos_per_chan / 3;
         uint8_t section2 = section * 2;
-        for (int i = 0; i < m_leds; i++)
+        for (int i = 0; i < leds; i++)
         {
-            auto pos = (i * brightness / m_leds + m_pos) % brightness;
+            auto pos = (i * pos_per_chan / leds + m_pos) % pos_per_chan;
             if (pos < section)
             {
                 auto g = 0;
                 auto r = pos;
-                auto b = brightness - r;
+                auto b = pos_per_chan - r;
                 m_device->set_val_raw(i, r, g, b, m_brightness);
             }
             else if (pos < section2)
             {
                 auto g = pos - section;
-                auto r = brightness - g;
+                auto r = pos_per_chan - g;
                 auto b = 0;
                 m_device->set_val_raw(i, r, g, b, m_brightness);
             }
             else if (pos)
             {
                 auto b = pos - section2;
-                auto g = brightness - b;
+                auto g = pos_per_chan - b;
                 auto r = 0;
                 m_device->set_val_raw(i, r, g, b, m_brightness);
             }
         }
         m_pos++;
+
+        if (!m_device->supports_brightness())
+        {
+            // Speed needs to be scaled in this scenario, as there are less values being looped over
+            m_speed *= 255 / m_brightness;
+        }
     }
     else if (m_mapping.pattern == PatternFade)
     {
@@ -91,10 +99,10 @@ void StaticLedMapping::update(bool full_poll, bool send_events)
 }
 void RgbLedDevice::set_val(uint16_t val)
 {
-    uint16_t r = val * scaleR;
-    uint16_t g = val * scaleG;
-    uint16_t b = val * scaleB;
-    uint16_t w = val * scaleBrightness;
+    uint16_t r = clamp(val * scaleR, startR, endR);
+    uint16_t g = clamp(val * scaleG, startG, endG);
+    uint16_t b = clamp(val * scaleB, startB, endB);
+    uint16_t w = clamp(val * scaleBrightness, m_device.startW, m_device.endW);
     for (int i = 0; i < m_device.activeLed_count; i++)
     {
         m_led_device->set_led(m_device.activeLed[i], r, g, b, w);
@@ -149,35 +157,32 @@ bool GpioLedDevice::supports_brightness()
 }
 void RgbLedDevice::setup()
 {
+    startR = m_device.startR;
+    startG = m_device.startG;
+    startB = m_device.startB;
+    endR = m_device.endR;
+    endG = m_device.endG;
+    endB = m_device.endB;
     if (m_led_device->supports_brightness())
     {
-
-        float startR = m_device.startR;
-        float startG = m_device.startG;
-        float startB = m_device.startB;
         float startW = m_device.startW;
-        float endR = m_device.endR;
-        float endG = m_device.endG;
-        float endB = m_device.endB;
         float endW = m_device.endW;
-        scaleR = (endR - startR) / UINT16_MAX + startR;
-        scaleG = (endG - startG) / UINT16_MAX + startG;
-        scaleB = (endB - startB) / UINT16_MAX + startB;
         scaleBrightness = (endW - startW) / UINT16_MAX + startW;
     }
     else
     {
-        float startR = m_device.startR - (255 - m_device.startW);
-        float startG = m_device.startG - (255 - m_device.startW);
-        float startB = m_device.startB - (255 - m_device.startW);
-        float endR = m_device.endR - (255 - m_device.endW);
-        float endG = m_device.endG - (255 - m_device.endW);
-        float endB = m_device.endB - (255 - m_device.endW);
-        scaleR = (endR - startR) / UINT16_MAX + startR;
-        scaleG = (endG - startG) / UINT16_MAX + startG;
-        scaleB = (endB - startB) / UINT16_MAX + startB;
+
+        startR *= m_device.startW / 255.0f;
+        startG *= m_device.startW / 255.0f;
+        startB *= m_device.startW / 255.0f;
+        endR *= m_device.endW / 255.0f;
+        endG *= m_device.endW / 255.0f;
+        endB *= m_device.endW / 255.0f;
         scaleBrightness = 0;
     }
+    scaleR = (endR - startR) / UINT16_MAX + startR;
+    scaleG = (endG - startG) / UINT16_MAX + startG;
+    scaleB = (endB - startB) / UINT16_MAX + startB;
 }
 void STP16CPCLedDevice::setup()
 {

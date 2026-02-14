@@ -80,6 +80,7 @@ private:
   uint8_t current_pos = 1;
   uint32_t m_valid_pins;
   bool tool_seen = false;
+  bool just_loaded = false;
   bool profile_selected = false;
   bool profile_changed = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];

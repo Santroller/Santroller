@@ -42,6 +42,14 @@ void HIDConfigDevice::process()
     profile_selected = false;
     return;
   }
+  if (just_loaded)
+  {
+    for (const auto &device : active_devices)
+    {
+      device->update(true, true);
+    }
+    just_loaded = false;
+  }
   if (profile_selected)
   {
     auto selected = all_profiles.find(selected_profile);
@@ -287,11 +295,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
     case ReportId::ReportIdLoaded:
       lastKeepAlive = millis();
       tool_seen = true;
-
-      for (const auto &device : active_devices)
-      {
-        device->update(true, true);
-      }
+      just_loaded = true;
       break;
     case ReportId::ReportIdKeepalive:
       lastKeepAlive = millis();

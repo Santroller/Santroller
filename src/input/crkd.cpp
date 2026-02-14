@@ -43,7 +43,7 @@ bool CrkdButtonInput::tickDigital()
 }
 uint16_t CrkdButtonInput::tickAnalog()
 {
-    return tickDigital() ? 32767 : 0;
+    return tickDigital() ? UINT16_MAX : 0;
 }
 void CrkdButtonInput::setup()
 {

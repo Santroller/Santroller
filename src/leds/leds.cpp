@@ -6,7 +6,7 @@
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tickAnalog();
-    uint16_t curr = map_16(raw, m_mapping.min, m_mapping.max, 0, UINT16_MAX);
+    uint16_t curr = (raw -  m_mapping.min) * m_multiplier;
     if (send_events && ((full_poll || (raw != m_last_val || m_resend)) && (millis() - m_last_poll) > 10))
     {
         m_last_val = raw;
@@ -18,6 +18,10 @@ void InputLedMapping::update(bool full_poll, bool send_events)
         }
     }
     m_device->set_val(curr);
+}
+InputLedMapping::InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_input(std::move(input)), m_mapping(mapping)
+{
+    m_multiplier = (UINT16_MAX) / (m_mapping.max - m_mapping.min);
 }
 PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1), m_brightness(mapping.brightness ? mapping.brightness : 1)
 {
@@ -91,7 +95,7 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
             m_dir = false;
         }
     }
-    m_next_poll = millis() + m_speed;
+    m_next_poll = millis() + speed;
 }
 void StaticLedMapping::update(bool full_poll, bool send_events)
 {
@@ -99,10 +103,14 @@ void StaticLedMapping::update(bool full_poll, bool send_events)
 }
 void RgbLedDevice::set_val(uint16_t val)
 {
-    uint16_t r = clamp(val * scaleR, startR, endR);
-    uint16_t g = clamp(val * scaleG, startG, endG);
-    uint16_t b = clamp(val * scaleB, startB, endB);
+    uint16_t r = clamp((val - startR) * scaleR, startR, endR);
+    uint16_t g = clamp((val - startG) * scaleG, startG, endG);
+    uint16_t b = clamp((val - startB) * scaleB, startB, endB);
     uint16_t w = clamp(val * scaleBrightness, m_device.startW, m_device.endW);
+    if (!r && !g && !b)
+    {
+        return;
+    }
     for (int i = 0; i < m_device.activeLed_count; i++)
     {
         m_led_device->set_led(m_device.activeLed[i], r, g, b, w);
@@ -180,9 +188,9 @@ void RgbLedDevice::setup()
         endB *= m_device.endW / 255.0f;
         scaleBrightness = 0;
     }
-    scaleR = (endR - startR) / UINT16_MAX + startR;
-    scaleG = (endG - startG) / UINT16_MAX + startG;
-    scaleB = (endB - startB) / UINT16_MAX + startB;
+    scaleR = ((float)endR - startR) / UINT16_MAX + startR;
+    scaleG = ((float)endG - startG) / UINT16_MAX + startG;
+    scaleB = ((float)endB - startB) / UINT16_MAX + startB;
 }
 void STP16CPCLedDevice::setup()
 {

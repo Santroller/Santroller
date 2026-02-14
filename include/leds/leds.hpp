@@ -45,6 +45,7 @@ protected:
     uint16_t endR;
     uint16_t endG;
     uint16_t endB;
+    uint32_t m_pos = 0;
 };
 class GpioLedDevice : public LedMappingDevice
 {
@@ -96,7 +97,7 @@ protected:
 class InputLedMapping : public LedMapping
 {
 public:
-    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_input(std::move(input)), m_mapping(mapping) {}
+    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id);
     void update(bool full_poll, bool send_events);
     void reload();
 
@@ -108,6 +109,7 @@ private:
     uint16_t m_last_val = 0;
     bool m_resend = false;
     uint32_t m_last_poll = 0;
+    float m_multiplier = 0;
 };
 
 class PatternLedMapping : public LedMapping

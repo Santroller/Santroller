@@ -42,7 +42,7 @@ protected:
     uint16_t m_id;
     uint32_t m_profile;
     uint32_t m_lastValueRaw = 0;
-    uint32_t m_lastValueTrigger = 0;
+    uint32_t m_last_sent_value = 0;
     bool m_resend = false;
     uint32_t m_last_send = 0;
     std::unique_ptr<Input> m_input;
@@ -57,6 +57,7 @@ public:
 
 protected:
     bool m_lastValue = false;
+    bool m_last_sent_value = false;
     bool m_calibratedValue = false;
     uint64_t m_lastPoll = 0;
 };
@@ -68,7 +69,6 @@ public:
     void update(bool full_poll, bool send_events);
 
 protected:
-    uint32_t m_lastValue = 0;
     uint32_t m_calibratedValue = 0;
     bool m_centered = false;
     bool m_trigger;

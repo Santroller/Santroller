@@ -101,7 +101,7 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_lastValue];
+        report->pickup = pickupUniversal[m_calibratedValue];
         break;
     }
 }
@@ -124,7 +124,7 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_lastValue];
+        report->pickup = pickupUniversal[m_calibratedValue];
         break;
     default:
         break;
@@ -149,7 +149,7 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_lastValue];
+        report->pickup = pickupUniversal[m_calibratedValue];
         break;
     default:
         break;
@@ -174,7 +174,7 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
         report->tilt = m_calibratedValue - 32767;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_lastValue];
+        report->pickup = pickupUniversal[m_calibratedValue];
         break;
     default:
         break;
@@ -198,7 +198,7 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_lastValue];
+        report->pickup = pickupUniversal[m_calibratedValue];
         break;
     default:
         break;
@@ -206,4 +206,25 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
+    XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
+    switch (m_mapping.mapping.rbAxis)
+    {
+    case RockBandGuitarLeftStickX:
+        report->joystickX = m_calibratedValue - 32767;
+        break;
+    case RockBandGuitarLeftStickY:
+        report->joystickY = m_calibratedValue - 32767;
+        break;
+    case RockBandGuitarWhammy:
+        report->whammy = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarTilt:
+        report->tilt = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarPickup:
+        report->pickup = pickupUniversal[m_calibratedValue];
+        break;
+    default:
+        break;
+    }
 }

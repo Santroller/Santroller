@@ -102,8 +102,13 @@ typedef struct
     uint8_t soloBlue : 1;
     uint8_t soloOrange : 1;
     uint8_t : 3;
+    
+    uint8_t autocalLight;
+    uint16_t autocalAudio;
+    int16_t joystickX;
+    int16_t joystickY;
 
-    uint8_t unknown[3];
+    uint8_t consoleFunctions[14];
 } __attribute__((packed)) XboxOneRockBandGuitar_Data_t;
 
 typedef struct

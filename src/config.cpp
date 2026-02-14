@@ -129,7 +129,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     *dev_id += 1;
     return true;
 }
-std::unique_ptr<ShortcutInput> last_shortcut = nullptr;
+ShortcutInput* last_shortcut = nullptr;
 std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream)
 {
     switch (input.which_input)
@@ -173,7 +173,11 @@ std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istrea
     case proto_Input_usbAxis_tag:
         return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbAxis.deviceid])));
     case 0:
-        return std::move(last_shortcut);
+    {
+        auto ret = last_shortcut;
+        last_shortcut = nullptr;
+        return std::unique_ptr<Input>(ret);
+    }
     default:
         return nullptr;
     }
@@ -195,8 +199,7 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = *(Profile **)arg;
     printf("found shortcut!\r\n");
-    auto c = new ShortcutInput();
-    last_shortcut = std::unique_ptr<ShortcutInput>(c);
+    last_shortcut = new ShortcutInput();
     proto_ShortcutInput input;
     input.inputs.arg = profile;
     input.inputs.funcs.decode = &load_shortcut_input;
@@ -222,7 +225,6 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     mapping.input.input.shortcut.arg = profile;
     mapping.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_Mapping_fields, &mapping);
-    printf("test: %d\r\n", mapping.input.which_input);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
     if (input == nullptr)
     {
@@ -318,54 +320,56 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto instance = (Profile *)*arg;
-    auto &list = instance->triggers.back();
+    auto profile = (Profile *)*arg;
+    auto &list = profile->triggers.back();
     proto_ProfileAssignmentInfo assignment;
+    assignment.assignment.input.input.input.shortcut.arg = profile;
+    assignment.assignment.input.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
     switch (assignment.which_assignment)
     {
     case proto_ProfileAssignmentInfo_input_tag:
     {
 
-        std::unique_ptr<Input> input = make_input(assignment.assignment.input.input, instance, stream);
+        std::unique_ptr<Input> input = make_input(assignment.assignment.input.input, profile, stream);
         if (input == nullptr)
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), instance->profile_id, list->triggers.size()));
+        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), profile->profile_id, list->triggers.size()));
         break;
     }
     case proto_ProfileAssignmentInfo_inputAnyTime_tag:
     {
 
-        std::unique_ptr<Input> input = make_input(assignment.assignment.inputAnyTime.input, instance, stream);
+        std::unique_ptr<Input> input = make_input(assignment.assignment.inputAnyTime.input, profile, stream);
         if (input == nullptr)
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), instance->profile_id, list->triggers.size()));
+        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile->profile_id, list->triggers.size()));
         break;
     }
     case proto_ProfileAssignmentInfo_consoleType_tag:
-        list->triggers.emplace_back(new ConsoleTypeActivationTrigger(assignment.assignment.consoleType, instance->profile_id));
+        list->triggers.emplace_back(new ConsoleTypeActivationTrigger(assignment.assignment.consoleType, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_wiiExt_tag:
-        list->triggers.emplace_back(new WiiExtTypeActivationTrigger(assignment.assignment.wiiExt, instance->profile_id));
+        list->triggers.emplace_back(new WiiExtTypeActivationTrigger(assignment.assignment.wiiExt, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_ps2Cnt_tag:
-        list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(assignment.assignment.ps2Cnt, instance->profile_id));
+        list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(assignment.assignment.ps2Cnt, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_usbType_tag:
-        list->triggers.emplace_back(new UsbTypeActivationTrigger(assignment.assignment.usbType, instance->profile_id));
+        list->triggers.emplace_back(new UsbTypeActivationTrigger(assignment.assignment.usbType, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_usbDevice_tag:
-        list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, instance->profile_id));
+        list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_catchall_tag:
-        list->triggers.emplace_back(new CatchAllActivationTrigger(instance->profile_id));
+        list->triggers.emplace_back(new CatchAllActivationTrigger(profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_midiChannel_tag:
-        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.consoleType, instance->profile_id));
+        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.consoleType, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_copilotProfile_tag:
         // TODO: how do we handle this
@@ -413,6 +417,8 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     std::unique_ptr<LedMappingDevice> device = nullptr;
     proto_Led proto_led;
+    proto_led.mapping.led.inputMapping.input.input.shortcut.arg = profile;
+    proto_led.mapping.led.inputMapping.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_Led_fields, &proto_led);
     printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)

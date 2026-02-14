@@ -2,11 +2,11 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(id, true), m_apa102(device.spi.block, device.spi.mosi, device.spi.sck, device.count, device.type), m_device(device)
+APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(id, true, true), m_apa102(device.spi.block, device.spi.mosi, device.spi.sck, device.count, device.type), m_device(device)
 {
 }
 
-void APA102Device::update(bool full_poll)
+void APA102Device::update(bool full_poll, bool send_events)
 {
     m_apa102.begin();
     for (int i = 0; i < m_device.count; i++)

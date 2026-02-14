@@ -7,7 +7,7 @@ class ADS1115Device : public Device
 public:
     ~ADS1115Device() {}
     ADS1115Device(proto_ADS1115Device device, uint16_t id);
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     ADS1115 ads1115;
 

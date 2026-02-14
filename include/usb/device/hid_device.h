@@ -57,7 +57,7 @@ class HIDConfigDevice : public HIDDevice
 public:
   HIDConfigDevice();
   void initialize();
-  void process(bool full_poll);
+  void process();
   static bool tool_closed();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
@@ -67,7 +67,6 @@ public:
   uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   static bool send_event(proto_Event event);
-  static bool send_event_for(proto_Event event, uint32_t profile_id);
   static std::shared_ptr<HIDConfigDevice> instance;
 
 private:
@@ -91,7 +90,7 @@ class HIDGamepadDevice : public HIDDevice
 public:
   HIDGamepadDevice();
   void initialize();
-  void process(bool full_poll);
+  void process();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
   void device_descriptor(tusb_desc_device_t *desc);

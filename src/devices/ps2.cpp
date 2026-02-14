@@ -17,8 +17,8 @@ void PS2Device::rescan(bool first)
             current_seen_ports |= 1 << i;
             if (first)
             {
-                auto& dev = assignable_devices.emplace_back(new PS2Device(m_device, m_id, (MultitapPort)i));
-                dev->update(false);
+                auto &dev = assignable_devices.emplace_back(new PS2Device(m_device, m_id, (MultitapPort)i));
+                dev->update(false, false);
             }
         }
     }
@@ -31,7 +31,7 @@ void PS2Device::rescan(bool first)
         }
     }
 }
-void PS2Device::update(bool full_poll)
+void PS2Device::update(bool full_poll, bool send_events)
 {
     m_controller.tick();
     if (m_port == BASE && (millis() - m_last_scan) > 500)
@@ -48,8 +48,11 @@ void PS2Device::update(bool full_poll)
             reload();
         }
         m_lastControllerType = m_controller.type;
-        proto_Event event = {which_event : proto_Event_ps2_tag, event : {ps2 : {m_id, m_lastControllerType}}};
-        resend = !HIDConfigDevice::send_event(event);
+        if (send_events)
+        {
+            proto_Event event = {which_event : proto_Event_ps2_tag, event : {ps2 : {m_id, m_lastControllerType}}};
+            resend = !HIDConfigDevice::send_event(event);
+        }
     }
 }
 uint16_t PS2Device::readAxis(proto_PS2AxisType type)
@@ -67,5 +70,5 @@ bool PS2Device::isExtension(PS2ControllerType type)
 
 bool PS2Device::using_pin(uint8_t pin)
 {
-    return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck  || pin == m_device.ackPin || pin == m_device.attPin;
+    return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck || pin == m_device.ackPin || pin == m_device.attPin;
 }

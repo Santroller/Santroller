@@ -14,8 +14,9 @@ public:
     LedMappingDevice() {}
     virtual ~LedMappingDevice() {}
     virtual void set_val(uint16_t val) = 0;
-    virtual void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b) = 0;
+    virtual void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) = 0;
     virtual void setup() = 0;
+    virtual bool supports_brightness() = 0;
     virtual uint8_t led_count() = 0;
 };
 class RgbLedDevice : public LedMappingDevice
@@ -26,13 +27,18 @@ public:
         setup();
     }
     void set_val(uint16_t val);
-    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
+    bool supports_brightness();
     uint8_t led_count();
 
 protected:
     proto_RGBLedDevice m_device;
     std::shared_ptr<LedDevice> m_led_device;
+    float scaleR = 0;
+    float scaleG = 0;
+    float scaleB = 0;
+    float scaleBrightness = 0;
 };
 class GpioLedDevice : public LedMappingDevice
 {
@@ -42,8 +48,9 @@ public:
         setup();
     }
     void set_val(uint16_t val);
-    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
+    bool supports_brightness();
     uint8_t led_count();
 
 protected:
@@ -57,8 +64,9 @@ public:
         setup();
     }
     void set_val(uint16_t val);
-    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
+    bool supports_brightness();
     uint8_t led_count();
 
 protected:
@@ -70,7 +78,7 @@ class LedMapping
 public:
     LedMapping(std::unique_ptr<LedMappingDevice> device, uint32_t profile_id, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile_id(profile_id) {}
     virtual ~LedMapping() {}
-    virtual void update() = 0;
+    virtual void update(bool full_poll, bool send_events) = 0;
     virtual void reload() = 0;
 
 protected:
@@ -83,7 +91,7 @@ class InputLedMapping : public LedMapping
 {
 public:
     InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_input(std::move(input)), m_mapping(mapping) {}
-    void update();
+    void update(bool full_poll, bool send_events);
     void reload();
 
 protected:
@@ -100,7 +108,7 @@ class PatternLedMapping : public LedMapping
 {
 public:
     PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id);
-    void update();
+    void update(bool full_poll, bool send_events);
     void reload();
 
 protected:
@@ -116,7 +124,7 @@ class StaticLedMapping : public LedMapping
 {
 public:
     StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping) {}
-    void update();
+    void update(bool full_poll, bool send_events);
     void reload();
 
 protected:

@@ -23,7 +23,7 @@ public:
     inline void reload() {
         m_input->setup();
     }
-    virtual void update(bool full_poll) = 0;
+    virtual void update(bool full_poll, bool send_events) = 0;
     virtual void update_hid(uint8_t *report) = 0;
     virtual void update_wii(uint8_t *report) = 0;
     virtual void update_switch(uint8_t *report) = 0;
@@ -53,7 +53,7 @@ class ButtonMapping : public Mapping
 public:
     ~ButtonMapping() {}
     ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : Mapping(mapping, std::move(input), id, profile) {}
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
 
 protected:
     bool m_lastValue = false;
@@ -65,7 +65,7 @@ class AxisMapping : public Mapping
 public:
     ~AxisMapping() {}
     AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
 
 protected:
     uint32_t m_lastValue = 0;
@@ -774,7 +774,7 @@ class ActivationTrigger
 public:
     ActivationTrigger(uint32_t profile_id) : m_profile_id(profile_id) {}
     ~ActivationTrigger() {}
-    virtual bool validate(bool claim_device) = 0;
+    virtual bool validate(bool claim_device, bool full_poll, bool send_events) = 0;
 
 protected:
     uint32_t m_profile_id;
@@ -787,7 +787,7 @@ class InputActivationTrigger : public ActivationTrigger
 public:
     InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id);
     ~InputActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_InputActivationTrigger m_activation_trigger;
@@ -800,7 +800,7 @@ class ConsoleTypeActivationTrigger : public ActivationTrigger
 public:
     ConsoleTypeActivationTrigger(proto_ConsoleType type, uint32_t profile_id);
     ~ConsoleTypeActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_ConsoleType m_type;
@@ -810,7 +810,7 @@ class WiiExtTypeActivationTrigger : public ActivationTrigger
 public:
     WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id);
     ~WiiExtTypeActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_WiiExtType m_type;
@@ -820,7 +820,7 @@ class PS2ControllerTypeActivationTrigger : public ActivationTrigger
 public:
     PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id);
     ~PS2ControllerTypeActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_PS2ControllerType m_type;
@@ -830,7 +830,7 @@ class UsbTypeActivationTrigger : public ActivationTrigger
 public:
     UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id);
     ~UsbTypeActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_SubType m_type;
@@ -840,7 +840,7 @@ class SpecificUsbDeviceActivationTrigger : public ActivationTrigger
 public:
     SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id);
     ~SpecificUsbDeviceActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_SpecificUsbDevice m_device;
@@ -850,7 +850,7 @@ class BluetoothTypeActivationTrigger : public ActivationTrigger
 public:
     BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id);
     ~BluetoothTypeActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_SubType m_type;
@@ -860,7 +860,7 @@ class SpecificBluetoothDeviceActivationTrigger : public ActivationTrigger
 public:
     SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id);
     ~SpecificBluetoothDeviceActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     proto_SpecificUsbDevice m_device;
@@ -870,14 +870,14 @@ class CatchAllActivationTrigger : public ActivationTrigger
 public:
     CatchAllActivationTrigger(uint32_t profile_id);
     ~CatchAllActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 };
 class MidiChannelActivationTrigger : public ActivationTrigger
 {
 public:
     MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id);
     ~MidiChannelActivationTrigger() {}
-    bool validate(bool claim_device);
+    bool validate(bool claim_device, bool full_poll, bool send_events);
 
 protected:
     uint32_t m_channel;

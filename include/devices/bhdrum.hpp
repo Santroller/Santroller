@@ -7,7 +7,7 @@ class BandHeroDrumDevice : public Device
 public:
     ~BandHeroDrumDevice() {}
     BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t id);
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
 
 private:

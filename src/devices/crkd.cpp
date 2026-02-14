@@ -7,10 +7,10 @@ CrkdDevice::CrkdDevice(proto_CrkdNeckDevice device, uint16_t id) : Device(id), n
 {
 }
 
-void CrkdDevice::update(bool full_poll)
+void CrkdDevice::update(bool full_poll, bool send_events)
 {
     neck.tick();
-    if (m_lastConnected != neck.is_connected() || full_poll || resend) {
+    if (send_events && (m_lastConnected != neck.is_connected() || full_poll || resend)) {
         m_lastConnected = neck.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);

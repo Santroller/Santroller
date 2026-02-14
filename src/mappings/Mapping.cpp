@@ -84,7 +84,7 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
     return val;
 }
 
-void ButtonMapping::update(bool full_poll)
+void ButtonMapping::update(bool full_poll, bool send_events)
 {
     auto calcVal = m_input->tickDigital();
 
@@ -108,20 +108,17 @@ void ButtonMapping::update(bool full_poll)
         {
             calcVal = m_input->tickAnalog() > m_mapping.triggerValue && m_input->tickAnalog() < m_mapping.maxTriggerValue;
         }
-        if ((val != m_lastValueTrigger || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
+        if (send_events && (val != m_lastValueTrigger || full_poll || m_resend))
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};
-            m_resend = !HIDConfigDevice::send_event_for(event, m_profile);
+            m_resend = !HIDConfigDevice::send_event(event);
             m_lastValueTrigger = val;
         }
     }
-    else
+    else if (send_events && (calcVal != m_lastValue || full_poll || m_resend))
     {
-        if ((calcVal != m_lastValue || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
-        {
-            proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-            m_resend = !HIDConfigDevice::send_event_for(event, m_profile);
-        }
+        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
+        m_resend = !HIDConfigDevice::send_event(event);
     }
     if (calcVal)
     {
@@ -133,16 +130,15 @@ void ButtonMapping::update(bool full_poll)
         m_lastValue = calcVal;
     }
 }
-void AxisMapping::update(bool full_poll)
+void AxisMapping::update(bool full_poll, bool send_events)
 {
     auto val = m_input->tickAnalog();
     m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-    if ((val != m_lastValue || full_poll || m_resend) && !HIDConfigDevice::tool_closed())
+    if (send_events && (val != m_lastValue || full_poll || m_resend))
     {
         m_lastValue = val;
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, m_lastValue, m_calibratedValue}}};
-        m_resend = !HIDConfigDevice::send_event_for(event, m_profile);
+        m_resend = !HIDConfigDevice::send_event(event);
     }
-    // TODO: better solution for this probably.
     m_centered = !m_calibratedValue;
 }

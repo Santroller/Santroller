@@ -102,7 +102,7 @@ void hid_task(void)
             newMode = ModePs3;
         }
     }
-    update(false);
+    update();
 }
 
 void send_debug(uint8_t *data, size_t len)
@@ -114,15 +114,15 @@ void send_debug(uint8_t *data, size_t len)
 
 bool send_timeout = false;
 
-void update(bool full_poll)
+void update()
 {
     for (const auto &device : active_devices)
     {
-        device->update(full_poll);
+        device->update(false, false);
     }
     for (const auto &instance : active_instances)
     {
-        instance->process(full_poll);
+        instance->process();
     }
     if (HIDConfigDevice::tool_closed())
     {
@@ -131,7 +131,7 @@ void update(bool full_poll)
         {
             for (auto &mapping : profile.second->triggers)
             {
-                mapping->validate(false);
+                mapping->validate(false, false, false);
             }
         }
     }

@@ -464,7 +464,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     std::shared_ptr<UsbDevice> instance = nullptr;
     for (auto &list : profile->triggers)
     {
-        if (list->validate(true))
+        if (list->validate(true, false, false))
         {
             printf("profile assigned! %d\r\n", profile->profile_id);
             if (instance == nullptr)
@@ -652,7 +652,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         usb_instances[confDevice2->interface_id] = confDevice2;
         confDevice2->initialize();
     }
-    update(true);
+    update();
     return ret;
 }
 uint32_t copy_config_info(uint8_t *buffer)

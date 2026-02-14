@@ -7,7 +7,7 @@ class Device
 public:
     Device(uint16_t id) : m_id(id) {}
     virtual ~Device() {}
-    virtual void update(bool full_poll) = 0;
+    virtual void update(bool full_poll, bool send_events) = 0;
     virtual bool is_wii_extension(WiiExtType type);
     virtual bool is_usb_device(proto_SpecificUsbDevice type);
     virtual bool is_usb_type(SubType type);
@@ -36,14 +36,16 @@ public:
 class LedDevice : public Device
 {
 public:
-    LedDevice(uint16_t id, bool supportsColour);
+    LedDevice(uint16_t id, bool supportsColour, bool supports_brightness);
     virtual ~LedDevice() {}
-    virtual void update(bool full_poll) = 0;
-    void set_led(uint8_t idx, uint8_t r, uint8_t g, uint8_t b);
+    virtual void update(bool full_poll, bool send_events) = 0;
+    void set_led(uint8_t idx, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     bool supportsColour() { return m_supportsColour; }
+    bool supports_brightness() { return m_supportsBrightness; }
 
 protected:
     uint32_t led_state[255];
     uint32_t prev_led_state[255];
     bool m_supportsColour;
+    bool m_supportsBrightness;
 };

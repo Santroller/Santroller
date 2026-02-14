@@ -27,7 +27,7 @@ USBDevice::USBDevice(proto_UsbHostDevice device, uint16_t id) : MidiDevice(id), 
     tuh_init(TUH_OPT_RHPORT);
 }
 
-void USBDevice::update(bool full_poll)
+void USBDevice::update(bool full_poll, bool send_events)
 {
 }
 uint16_t USBDevice::readMidiNote(uint8_t note)

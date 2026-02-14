@@ -30,7 +30,7 @@ class XboxOneGamepadDevice : public UsbDevice
 public:
     XboxOneGamepadDevice();
     void initialize();
-    void process(bool full_poll);
+    void process();
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);
     void device_descriptor(tusb_desc_device_t *desc);

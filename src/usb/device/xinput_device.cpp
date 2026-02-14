@@ -93,7 +93,7 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
     }
     return 0;
 }
-void XInputGamepadDevice::process(bool full_poll)
+void XInputGamepadDevice::process()
 {
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
@@ -105,12 +105,12 @@ void XInputGamepadDevice::process(bool full_poll)
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(full_poll);
+            mapping->update(false, false);
             mapping->update_xinput(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update();
+            led->update(false, false);
         }
     }
     if (subtype == GuitarHeroGuitar)
@@ -278,7 +278,7 @@ XInputSecurityDevice::XInputSecurityDevice()
 void XInputSecurityDevice::initialize()
 {
 }
-void XInputSecurityDevice::process(bool full_poll)
+void XInputSecurityDevice::process()
 {
 }
 

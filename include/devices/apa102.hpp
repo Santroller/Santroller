@@ -8,7 +8,7 @@ class APA102Device : public LedDevice
 public:
     ~APA102Device() {}
     APA102Device(proto_APA102Device device, uint16_t id);
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
 
 private:

@@ -38,7 +38,8 @@ void APA102::putLed(uint8_t brightness, uint8_t r, uint8_t g, uint8_t b) {
         z = r;
         break;
     }
-    interface.transfer(brightness | 0xE0);
+    // APA102 brightness is 5 bits, last 3 bits always 111
+    interface.transfer((brightness >> 3) | 0xE0);
     interface.transfer(x);
     interface.transfer(y);
     interface.transfer(z);

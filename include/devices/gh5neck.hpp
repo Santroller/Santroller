@@ -7,7 +7,7 @@ class GH5NeckDevice : public Device
 public:
     ~GH5NeckDevice() {}
     GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id);
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     GuitarHero5Neck m_gh5_neck;
 

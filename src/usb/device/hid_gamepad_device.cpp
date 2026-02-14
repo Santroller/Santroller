@@ -26,7 +26,7 @@ void HIDGamepadDevice::initialize()
   usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
   usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
-void HIDGamepadDevice::process(bool full_poll)
+void HIDGamepadDevice::process()
 {
   if (!ready())
     return;
@@ -39,12 +39,12 @@ void HIDGamepadDevice::process(bool full_poll)
   {
     for (const auto &mapping : profile->mappings)
     {
-      mapping->update(full_poll);
+      mapping->update(false, false);
       mapping->update_hid(epin_buf);
     }
     for (const auto &led : profile->leds)
     {
-      led->update();
+      led->update(false, false);
     }
   }
 

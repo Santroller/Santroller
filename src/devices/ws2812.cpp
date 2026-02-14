@@ -2,11 +2,11 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true), m_ws2812(device.pin, device.count, device.type), m_device(device)
+WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true, false), m_ws2812(device.pin, device.count, device.type), m_device(device)
 {
 }
 
-void WS2812Device::update(bool full_poll)
+void WS2812Device::update(bool full_poll, bool send_events)
 {
     if (memcmp(prev_led_state, led_state, sizeof(led_state)) != 0)
     {

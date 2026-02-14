@@ -45,7 +45,7 @@ void GHArcadeVendorDevice::initialize()
     usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 }
-void GHArcadeVendorDevice::process(bool full_poll)
+void GHArcadeVendorDevice::process()
 {
     return;
 }
@@ -90,7 +90,7 @@ GHArcadeGamepadDevice::GHArcadeGamepadDevice()
 void GHArcadeGamepadDevice::initialize()
 {
 }
-void GHArcadeGamepadDevice::process(bool full_poll)
+void GHArcadeGamepadDevice::process()
 {
     if (!ready())
         return;
@@ -102,11 +102,11 @@ void GHArcadeGamepadDevice::process(bool full_poll)
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(full_poll);
+            mapping->update(false, false);
             mapping->update_hid(epin_buf);
         }
         for (const auto& led : profile->leds) {
-            led->update();
+            led->update(false, false);
         }
     }
     send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);

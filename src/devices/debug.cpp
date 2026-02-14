@@ -13,7 +13,7 @@ DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id), m_
     m_lastConnected = true;
 }
 
-void DebugDevice::update(bool full_poll)
+void DebugDevice::update(bool full_poll, bool send_events)
 {
 }
 

@@ -15,7 +15,7 @@ class ActivationTriggerList
 public:
     uint32_t profile_id;
     std::vector<std::unique_ptr<ActivationTrigger>> triggers;
-    bool validate(bool claim_devices);
+    bool validate(bool claim_devices, bool full_poll, bool send_events);
 };
 
 class Profile
@@ -36,7 +36,7 @@ class Instance
 public:
     virtual ~Instance() {}
     virtual void initialize() = 0;
-    virtual void process(bool full_poll) = 0;
+    virtual void process() = 0;
     SubType subtype;
     ConsoleMode mode;
     std::vector<std::shared_ptr<Profile>> profiles;

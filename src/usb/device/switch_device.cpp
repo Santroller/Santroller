@@ -101,7 +101,7 @@ bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, u
     }
     return response;
 }
-void SwitchGamepadDevice::process(bool full_poll)
+void SwitchGamepadDevice::process()
 {
     uint32_t now = to_ms_since_boot(get_absolute_time());
     reportSent = false;
@@ -125,12 +125,12 @@ void SwitchGamepadDevice::process(bool full_poll)
         {
             for (const auto &mapping : profile->mappings)
             {
-                mapping->update(full_poll);
+                mapping->update(false, false);
                 mapping->update_switch((uint8_t *)&switchReport.inputs);
             }
             for (const auto &led : profile->leds)
             {
-                led->update();
+                led->update(false, false);
             }
         }
         if ((now - last_report_timer) > SWITCH_PRO_KEEPALIVE_TIMER)

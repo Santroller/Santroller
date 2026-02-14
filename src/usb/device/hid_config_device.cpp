@@ -31,7 +31,7 @@ void HIDConfigDevice::initialize()
 {
   m_epin = next_epin();
 }
-void HIDConfigDevice::process(bool full_poll)
+void HIDConfigDevice::process()
 {
   if (clearedIn && clearedOut)
   {
@@ -137,15 +137,15 @@ void HIDConfigDevice::process(bool full_poll)
   {
     for (const auto &mapping : selected->second->mappings)
     {
-      mapping->update(false);
+      mapping->update(profile_changed, true);
     }
     for (const auto &mapping : selected->second->triggers)
     {
-      mapping->validate(false);
+      mapping->validate(false, true, true);
     }
     for (const auto &led : selected->second->leds)
     {
-      led->update();
+      led->update(true, true);
     }
   }
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
@@ -200,15 +200,6 @@ void HIDConfigDevice::handle_command(proto_Command command)
     profile_selected = true;
     profile_changed = true;
     selected_profile = command.command.setProfile.profileId;
-    auto selected = all_profiles.find(selected_profile);
-    if (selected == all_profiles.end())
-    {
-      break;
-    }
-    for (auto &mapping : selected->second->mappings)
-    {
-      mapping->update(true);
-    }
   }
   break;
   case proto_Command_detectPin_tag:
@@ -297,7 +288,6 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
     case ReportId::ReportIdLoaded:
       lastKeepAlive = millis();
       tool_seen = true;
-      update(true);
       break;
     case ReportId::ReportIdKeepalive:
       lastKeepAlive = millis();
@@ -401,17 +391,6 @@ bool HIDConfigDevice::tool_closed()
     return true;
   }
   return millis() - dev->lastKeepAlive > 500;
-}
-
-bool HIDConfigDevice::send_event_for(proto_Event event, uint32_t profile_id)
-{
-
-  auto dev = HIDConfigDevice::instance;
-  if (!dev || dev->selected_profile != profile_id || tool_closed())
-  {
-    return false;
-  }
-  return HIDConfigDevice::send_event(event);
 }
 
 bool HIDConfigDevice::send_event(proto_Event event)

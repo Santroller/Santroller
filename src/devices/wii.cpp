@@ -7,15 +7,18 @@ WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id), m_ex
 {
 }
 
-void WiiDevice::update(bool full_poll)
+void WiiDevice::update(bool full_poll, bool send_events)
 {
     m_extension.tick();
     if (m_extension.mType != m_lastExtType || full_poll || resend)
     {
 
         m_lastExtType = m_extension.mType;
-        proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
-        resend = !HIDConfigDevice::send_event(event);
+        if (send_events)
+        {
+            proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
+            resend = !HIDConfigDevice::send_event(event);
+        }
     }
 }
 uint16_t WiiDevice::readAxis(proto_WiiAxisType type)

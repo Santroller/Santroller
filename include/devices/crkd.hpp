@@ -7,7 +7,7 @@ class CrkdDevice : public Device
 public:
     ~CrkdDevice() {}
     CrkdDevice(proto_CrkdNeckDevice device, uint16_t id);
-    void update(bool full_poll);
+    void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     CrkdNeck neck;
 

@@ -22,7 +22,7 @@ message InputLedMapping {
 message PatternLedMapping {
   required RgbPatternType pattern = 1;
   required int32 speed = 2;
-  optional int32 brightness = 3;
+  required int32 brightness = 3;
 }
 message StaticLedMapping {
 
@@ -32,9 +32,11 @@ message RGBLedDevice {
   optional int32 startR = 2;
   optional int32 startG = 3;
   optional int32 startB = 4;
+  optional int32 startW = 5;
   optional int32 endR = 6;
   optional int32 endG = 7;
   optional int32 endB = 8;
+  optional int32 endW = 9;
   repeated int32 activeLed = 10;
 }
 message GpioLedDevice {

@@ -19,6 +19,10 @@ void InputLedMapping::update()
     }
     m_device->set_val(curr);
 }
+PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1), m_brightness(mapping.brightness ? mapping.brightness : 1)
+{
+    m_speed = 21 - m_speed;
+}
 void PatternLedMapping::update()
 {
     if (millis() < m_next_poll)
@@ -26,11 +30,10 @@ void PatternLedMapping::update()
         return;
     }
     uint8_t m_leds = m_device->led_count();
-    uint8_t m_brightness = 80;
-    uint8_t section = m_brightness / 3;
-    uint8_t section2 = section * 2;
     if (m_mapping.pattern == PatternRainbow)
     {
+        uint8_t section = m_brightness / 3;
+        uint8_t section2 = section * 2;
         for (int i = 0; i < m_leds; i++)
         {
             auto pos = (i * m_brightness / m_leds + m_pos) % m_brightness;
@@ -63,16 +66,16 @@ void PatternLedMapping::update()
         m_device->set_val(m_pos);
         if (m_dir)
         {
-            m_pos-=127;
+            m_pos -= 127;
         }
         else
         {
-            m_pos+=127;
+            m_pos += 127;
         }
         if (m_pos >= UINT16_MAX && !m_dir)
         {
             m_dir = true;
-            m_pos-=127;
+            m_pos -= 127;
         }
         if (m_pos == 0 && m_dir)
         {

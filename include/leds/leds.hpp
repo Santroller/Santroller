@@ -99,7 +99,7 @@ private:
 class PatternLedMapping : public LedMapping
 {
 public:
-    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1) {}
+    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id);
     void update();
     void reload();
 
@@ -109,6 +109,7 @@ protected:
     bool m_dir = false;
     uint32_t m_next_poll = 0;
     uint32_t m_speed = 0;
+    uint32_t m_brightness = 0;
 };
 
 class StaticLedMapping : public LedMapping

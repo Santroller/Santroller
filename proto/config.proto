@@ -29,15 +29,16 @@ message StaticLedMapping {
 }
 message RGBLedDevice {
   required int32 deviceId = 1;
-  optional int32 startR = 2;
-  optional int32 startG = 3;
-  optional int32 startB = 4;
-  optional int32 startW = 5;
-  optional int32 endR = 6;
-  optional int32 endG = 7;
-  optional int32 endB = 8;
-  optional int32 endW = 9;
+  required int32 startR = 2;
+  required int32 startG = 3;
+  required int32 startB = 4;
+  required int32 startW = 5;
+  required int32 endR = 6;
+  required int32 endG = 7;
+  required int32 endB = 8;
+  required int32 endW = 9;
   repeated int32 activeLed = 10;
+  required bool hasStart = 11;
 }
 message GpioLedDevice {
   required int32 pin = 1;

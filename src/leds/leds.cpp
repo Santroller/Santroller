@@ -107,7 +107,7 @@ void RgbLedDevice::set_val(uint16_t val)
     uint16_t g = clamp((val - startG) * scaleG, startG, endG);
     uint16_t b = clamp((val - startB) * scaleB, startB, endB);
     uint16_t w = clamp(val * scaleBrightness, m_device.startW, m_device.endW);
-    if (!m_device.has_startR)
+    if (!m_device.hasStart)
     {
         return;
     }
@@ -168,6 +168,9 @@ void RgbLedDevice::setup()
     startR = m_device.startR;
     startG = m_device.startG;
     startB = m_device.startB;
+    if (!m_device.hasStart) {
+        startR = startG = startB = 0;
+    }
     endR = m_device.endR;
     endG = m_device.endG;
     endB = m_device.endB;

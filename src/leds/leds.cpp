@@ -71,7 +71,7 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
         if (!m_device->supports_brightness())
         {
             // Speed needs to be scaled in this scenario, as there are less values being looped over
-            m_speed *= 255 / m_brightness;
+            speed *= 255 / m_brightness;
         }
     }
     else if (m_mapping.pattern == PatternFade)

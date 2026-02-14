@@ -129,23 +129,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     *dev_id += 1;
     return true;
 }
-struct ShortcutArgs
-{
-    ShortcutInput *input;
-    Profile *profile;
-};
-std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream);
-bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    proto_Input input;
-    if (!pb_decode(stream, proto_Input_fields, &input))
-    {
-        return false;
-    }
-    auto instance = *(ShortcutArgs **)arg;
-    instance->input->inputs.push_back(make_input(input, instance->profile, stream));
-    return true;
-}
+std::unique_ptr<ShortcutInput> last_shortcut = nullptr;
 std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream)
 {
     switch (input.which_input)
@@ -188,18 +172,41 @@ std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istrea
         return std::unique_ptr<Input>(new USBButtonInput(input.input.usbButton, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbButton.deviceid])));
     case proto_Input_usbAxis_tag:
         return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbAxis.deviceid])));
-    case proto_Input_shortcut_tag:
-    {
-        auto c = new ShortcutInput(input.input.shortcut);
-        ShortcutArgs args{input : c, profile : profile};
-        input.input.shortcut.inputs.arg = &args;
-        input.input.shortcut.inputs.funcs.decode = &load_shortcut;
-        pb_decode(stream, proto_ShortcutInput_fields, &input.input.shortcut);
-        return std::unique_ptr<Input>(c);
-    }
+    case 0:
+        return std::move(last_shortcut);
     default:
         return nullptr;
     }
+}
+bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = *(Profile **)arg;
+    proto_Input input;
+    if (!pb_decode(stream, proto_Input_fields, &input))
+    {
+        printf("couldnt decode shortcut input?\r\n");
+        return false;
+    }
+    last_shortcut->inputs.push_back(make_input(input, profile, stream));
+    printf("shortcut added: %d\r\n", last_shortcut->inputs.size());
+    return true;
+}
+bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = *(Profile **)arg;
+    printf("found shortcut!\r\n");
+    auto c = new ShortcutInput();
+    last_shortcut = std::unique_ptr<ShortcutInput>(c);
+    proto_ShortcutInput input;
+    input.inputs.arg = profile;
+    input.inputs.funcs.decode = &load_shortcut_input;
+    if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
+    {
+        printf("couldnt decode shortcut input?\r\n");
+        return false;
+    }
+    printf("loaded shortcut\r\n");
+    return true;
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -212,7 +219,10 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         }
     }
     proto_Mapping mapping;
+    mapping.input.input.shortcut.arg = profile;
+    mapping.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_Mapping_fields, &mapping);
+    printf("test: %d\r\n", mapping.input.which_input);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
     if (input == nullptr)
     {

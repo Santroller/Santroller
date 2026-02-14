@@ -1,14 +1,21 @@
 #include "input/shortcut.hpp"
 
-ShortcutInput::ShortcutInput(proto_ShortcutInput input) : m_input(input)
+ShortcutInput::ShortcutInput()
 {
-    setup();
 }
-void ShortcutInput::setup(){}
+void ShortcutInput::setup()
+{
+    for (auto &input : inputs)
+    {
+        input->setup();
+    }
+}
 bool ShortcutInput::tickDigital()
 {
-    for (auto& input: inputs) {
-        if (!input->tickDigital()) {
+    for (auto &input : inputs)
+    {
+        if (!input->tickDigital())
+        {
             return false;
         }
     }

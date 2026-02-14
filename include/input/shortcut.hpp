@@ -5,11 +5,9 @@
 #pragma once
 class ShortcutInput: public Input {
    public:
-    ShortcutInput(proto_ShortcutInput input);
+    ShortcutInput();
     bool tickDigital();
     uint16_t tickAnalog();
     void setup();
     std::vector<std::unique_ptr<Input>> inputs;
-   private:
-    proto_ShortcutInput m_input;
 };

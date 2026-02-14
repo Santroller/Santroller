@@ -71,7 +71,7 @@ message MouseButtonInput {
   required int32 deviceid = 1;
   required MouseButtonType button = 2;
 }
-
+ 
 message KeyboardKeyInput {
   required int32 deviceid = 1;
   required int32 key = 2;

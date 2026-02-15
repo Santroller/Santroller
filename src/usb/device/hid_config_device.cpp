@@ -229,6 +229,9 @@ void HIDConfigDevice::handle_command(proto_Command command)
     case DetectDigital:
       for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
       {
+        if (i == 23) {
+          continue;
+        }
         bool found = false;
         for (auto &device : active_devices)
         {

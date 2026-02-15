@@ -19,23 +19,27 @@ void InputLedMapping::update(bool full_poll, bool send_events)
     }
     if (m_mapping.has_pattern && m_mapping.pattern == PatternHeatmap)
     {
-        if (curr && m_pos < UINT16_MAX)
+        if (curr)
         {
             if (millis() - m_last_increase > 10)
             {
-                m_pos += 5;
+                m_pos += 2048;
+                if (m_pos > UINT16_MAX)
+                {
+                    m_pos = UINT16_MAX;
+                }
             }
             m_last_increase = millis();
         }
-        if (!curr && millis() - m_last_decay > 400)
+        if (!curr && millis() - m_last_decay > 200)
         {
-            if (m_pos <= 1)
+            if (m_pos <= 2048)
             {
                 m_pos = 0;
             }
             else
             {
-                m_pos -= 1;
+                m_pos -= 1024;
             }
             m_last_decay = millis();
         }
@@ -130,10 +134,10 @@ void StaticLedMapping::update(bool full_poll, bool send_events)
 }
 void RgbLedDevice::set_val(uint16_t val)
 {
-    uint16_t r = clamp((val - startR) * scaleR, startR, endR);
-    uint16_t g = clamp((val - startG) * scaleG, startG, endG);
-    uint16_t b = clamp((val - startB) * scaleB, startB, endB);
-    uint16_t w = clamp(val * scaleBrightness, m_device.startW, m_device.endW);
+    uint16_t r = ((float)val * scaleR) + startR;
+    uint16_t g = ((float)val * scaleG) + startG;
+    uint16_t b = ((float)val * scaleB) + startB;
+    uint16_t w = ((float)val * scaleBrightness) + m_device.startW;
     if (!m_device.hasStart && !r && !g && !b)
     {
         return;
@@ -206,7 +210,7 @@ void RgbLedDevice::setup()
     {
         float startW = m_device.startW;
         float endW = m_device.endW;
-        scaleBrightness = (endW - startW) / UINT16_MAX + startW;
+        scaleBrightness = ((float)endW - startW) / UINT16_MAX;
     }
     else
     {
@@ -219,9 +223,9 @@ void RgbLedDevice::setup()
         endB *= m_device.endW / 255.0f;
         scaleBrightness = 0;
     }
-    scaleR = ((float)endR - startR) / UINT16_MAX + startR;
-    scaleG = ((float)endG - startG) / UINT16_MAX + startG;
-    scaleB = ((float)endB - startB) / UINT16_MAX + startB;
+    scaleR = ((float)endR - startR) / UINT16_MAX;
+    scaleG = ((float)endG - startG) / UINT16_MAX;
+    scaleB = ((float)endB - startB) / UINT16_MAX;
 }
 void STP16CPCLedDevice::setup()
 {

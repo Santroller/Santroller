@@ -141,6 +141,13 @@ void HIDConfigDevice::process()
     }
     else
     {
+      if (profile_changed)
+      {
+        for (const auto &device : active_devices)
+        {
+          device->update(profile_changed, true);
+        }
+      }
       for (const auto &mapping : selected->second->mappings)
       {
         mapping->update(profile_changed, true);

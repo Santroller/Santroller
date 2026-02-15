@@ -110,6 +110,9 @@ private:
     bool m_resend = false;
     uint32_t m_last_poll = 0;
     float m_multiplier = 0;
+    uint32_t m_pos = 0;
+    uint32_t m_last_increase = 0;
+    uint32_t m_last_decay = 0;
 };
 
 class PatternLedMapping : public LedMapping

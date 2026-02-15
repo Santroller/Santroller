@@ -18,6 +18,7 @@ message InputLedMapping {
   required Input input = 1;
   optional int32 min = 2;
   optional int32 max = 3;
+  optional ReactiveRgbPatternType pattern = 4;
 }
 message PatternLedMapping {
   required RgbPatternType pattern = 1;

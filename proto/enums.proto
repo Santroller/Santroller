@@ -214,3 +214,8 @@ enum RgbPatternType {
     PatternRainbow=1;
     PatternFade=2;
 }
+enum ReactiveRgbPatternType {
+    PatternStatic=1;
+    PatternHeatmap=2;
+    PatternSpread=3;
+}

@@ -6,7 +6,7 @@
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tickAnalog();
-    uint16_t curr = (raw -  m_mapping.min) * m_multiplier;
+    uint16_t curr = (raw - m_mapping.min) * m_multiplier;
     if (send_events && ((full_poll || (raw != m_last_val || m_resend)) && (millis() - m_last_poll) > 10))
     {
         m_last_val = raw;
@@ -17,7 +17,34 @@ void InputLedMapping::update(bool full_poll, bool send_events)
             m_last_poll = millis();
         }
     }
-    m_device->set_val(curr);
+    if (m_mapping.has_pattern && m_mapping.pattern == PatternHeatmap)
+    {
+        if (curr && m_pos < UINT16_MAX)
+        {
+            if (millis() - m_last_increase > 10)
+            {
+                m_pos += 5;
+            }
+            m_last_increase = millis();
+        }
+        if (!curr && millis() - m_last_decay > 400)
+        {
+            if (m_pos <= 1)
+            {
+                m_pos = 0;
+            }
+            else
+            {
+                m_pos -= 1;
+            }
+            m_last_decay = millis();
+        }
+        m_device->set_val(m_pos);
+    }
+    else
+    {
+        m_device->set_val(curr);
+    }
 }
 InputLedMapping::InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_input(std::move(input)), m_mapping(mapping)
 {
@@ -168,7 +195,8 @@ void RgbLedDevice::setup()
     startR = m_device.startR;
     startG = m_device.startG;
     startB = m_device.startB;
-    if (!m_device.hasStart) {
+    if (!m_device.hasStart)
+    {
         startR = startG = startB = 0;
     }
     endR = m_device.endR;

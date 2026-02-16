@@ -32,7 +32,7 @@ void CrkdNeck::tick()
     dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
     m_lastPoll = interface.last_read_time();
     m_connected = millis() - m_lastPoll < 10;
-    if (m_connected && millis() - m_lastSend > 10)
+    if (m_connected && millis() - m_lastSend > 500)
     {
         // kick the neck over to polling at 1ms
         uint8_t data[] = {0xA5, 0xC1, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD5};

@@ -336,7 +336,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
   }
 }
 
-bool encode_int32_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
   for (auto &profile : active_profiles)
   {
@@ -376,10 +376,10 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     buffer++;
     auto stream = pb_ostream_from_buffer(buffer, reqlen);
     proto_GetActiveProfiles resp;
-    resp.profiles.funcs.encode = encode_int32_array;
-    if (!pb_encode(&stream, proto_GetActiveProfiles_fields, &resp))
+    resp.profiles.funcs.encode = encode_active_profiles;
+    if (!pb_encode_delimited(&stream, proto_GetActiveProfiles_fields, &resp))
       return 1;
-    return stream.bytes_written + 1;
+    return 64;
   }
   case ReportId::ReportIdConfigInfo:
     buffer[0] = report_id;

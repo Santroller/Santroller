@@ -3,22 +3,34 @@
 #include "main.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
-WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id), m_extension(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock)
+WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id), m_extension(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }
-
+void WiiDevice::rescan(bool first)
+{
+    if (first)
+    {
+        assignable_devices.push_back(active_devices.back());
+        update(false, false);
+        m_has_scanned = true;
+    }
+    else if (m_has_scanned && HIDConfigDevice::tool_closed())
+    {
+        reload();
+    }
+}
 void WiiDevice::update(bool full_poll, bool send_events)
 {
     m_extension.tick();
     if (m_extension.mType != m_lastExtType || full_poll || resend)
     {
-
         m_lastExtType = m_extension.mType;
         if (send_events)
         {
             proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
             resend = !HIDConfigDevice::send_event(event);
         }
+        rescan(false);
     }
 }
 uint16_t WiiDevice::readAxis(proto_WiiAxisType type)

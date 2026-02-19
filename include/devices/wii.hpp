@@ -8,6 +8,7 @@ class WiiDevice : public MidiDevice
 public:
     ~WiiDevice() {}
     WiiDevice(proto_WiiDevice device, uint16_t id);
+    void rescan(bool first);
     void update(bool full_poll, bool send_events);
     uint16_t readAxis(proto_WiiAxisType type);
     bool readButton(proto_WiiButtonType type);
@@ -22,4 +23,5 @@ private:
     proto_WiiDevice m_device;
     uint32_t m_lastValue = 0;
     WiiExtType m_lastExtType = WiiExtType::WiiNoExtension;
+    bool m_has_scanned = false;
 };

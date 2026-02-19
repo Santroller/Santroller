@@ -74,8 +74,6 @@ size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 
 void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-  // TODO: if we want to support multiple hid devices at once, this would need to be handled in some other way
-  desc->bcdDevice = 0x0400 | subtype;
 }
 const uint8_t *HIDGamepadDevice::report_descriptor()
 {

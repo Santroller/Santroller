@@ -81,8 +81,11 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, *dev_id));
         break;
     case proto_Device_wii_tag:
-        active_devices.emplace_back(new WiiDevice(device.device.wii, *dev_id));
+    {
+        auto &wiiDev = active_devices.emplace_back(new WiiDevice(device.device.wii, *dev_id));
+        wiiDev->rescan(true);
         break;
+    }
     case proto_Device_psx_tag:
     {
         auto &ps2Dev = active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id, MultitapPort::BASE));
@@ -129,7 +132,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     *dev_id += 1;
     return true;
 }
-ShortcutInput* last_shortcut = nullptr;
+ShortcutInput *last_shortcut = nullptr;
 std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream)
 {
     switch (input.which_input)
@@ -366,7 +369,10 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_catchall_tag:
-        list->triggers.emplace_back(new CatchAllActivationTrigger(profile->profile_id));
+        if (assignment.assignment.catchall)
+        {
+            list->triggers.emplace_back(new CatchAllActivationTrigger(profile->profile_id));
+        }
         break;
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.consoleType, profile->profile_id));
@@ -618,6 +624,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     usb_instances.clear();
     usb_instances_by_epnum.clear();
     active_devices.clear();
+    active_profiles.clear();
     all_profiles.clear();
     UsbDevice::reset_ep();
     switch (mode)
@@ -668,7 +675,6 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         usb_instances[confDevice2->interface_id] = confDevice2;
         confDevice2->initialize();
     }
-    update();
     return ret;
 }
 uint32_t copy_config_info(uint8_t *buffer)
@@ -711,7 +717,8 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
 {
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    if (bufsize + start > footer.dataSize) {
+    if (bufsize + start > footer.dataSize)
+    {
         bufsize = footer.dataSize - start;
     }
     memcpy(EEPROM.writeCache + start, buffer, bufsize);

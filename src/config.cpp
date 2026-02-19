@@ -697,7 +697,7 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
     pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
-    if (!pb_decode(&inputStream, proto_ConfigInfo_fields, &info))
+    if (!pb_decode_delimited(&inputStream, proto_ConfigInfo_fields, &info))
     {
         printf("Didn't decode info?\r\n");
         return false;
@@ -711,6 +711,9 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
 {
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    if (bufsize + start > footer.dataSize) {
+        bufsize = footer.dataSize - start;
+    }
     memcpy(EEPROM.writeCache + start, buffer, bufsize);
     if (start + bufsize < footer.dataSize)
     {
@@ -721,7 +724,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     uint32_t crc = CRC32::calculate(EEPROM.writeCache, footer.dataSize);
     if (crc != footer.dataCrc)
     {
-        printf("Crc didnt match after writing?\r\n");
+        printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
         return false;
     }
     printf("Everything matched, saving!\r\n");

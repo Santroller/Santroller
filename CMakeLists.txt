@@ -148,8 +148,8 @@ add_executable(
   src/mappings/KeyboardButtonMapping.cpp
   src/mappings/DrumManiaAxisMapping.cpp
   src/mappings/DrumManiaButtonMapping.cpp
-  src/mappings/SVDXAxisMapping.cpp
-  src/mappings/SVDXButtonMapping.cpp
+  src/mappings/SDVXAxisMapping.cpp
+  src/mappings/SDVXButtonMapping.cpp
   src/devices/usb.cpp
   src/devices/wii.cpp
   src/devices/ps2.cpp

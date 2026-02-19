@@ -736,11 +736,11 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
-class SVDXButtonMapping : public ButtonMapping
+class SDVXButtonMapping : public ButtonMapping
 {
 public:
-    ~SVDXButtonMapping() {}
-    SVDXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ~SDVXButtonMapping() {}
+    SDVXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t *report);
     void update_switch(uint8_t *report);
@@ -752,11 +752,11 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
-class SVDXAxisMapping : public AxisMapping
+class SDVXAxisMapping : public AxisMapping
 {
 public:
-    ~SVDXAxisMapping() {}
-    SVDXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ~SDVXAxisMapping() {}
+    SDVXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t *report);
     void update_switch(uint8_t *report);

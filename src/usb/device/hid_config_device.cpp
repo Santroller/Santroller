@@ -321,7 +321,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       tool_seen = true;
       proto_Command cmd;
       pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
-      if (!pb_decode(&inputStream, proto_Command_fields, &cmd))
+      if (!pb_decode_delimited(&inputStream, proto_Command_fields, &cmd))
       {
         printf("Didn't decode cmd?\r\n");
         break;

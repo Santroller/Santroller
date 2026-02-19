@@ -31,14 +31,9 @@ WiiExtType WiiExtension::readExtID()
     memset(data, 0, sizeof(data));
     mInterface.readRegisterSlow(WII_ADDR, WII_READ_ID, WII_ID_LEN, data);
     sleep_us(200);
-    hiRes = false;
     if (!verifyData(data, sizeof(data)))
     {
         return WiiExtType::WiiNoExtension;
-    }
-    if (data[4] == WII_HIGHRES_MODE)
-    {
-        hiRes = true;
     }
     return static_cast<WiiExtType>(data[0] << 8 | data[5]);
 }
@@ -68,37 +63,29 @@ void WiiExtension::initWiiExt()
     if (mType == WiiExtType::WiiClassicController ||
         mType == WiiExtType::WiiClassicControllerPro)
     {
-        if (hiRes)
+        // Enable high-res mode (try a few times, sometimes the controller doesnt
+        // pick it up)
+        for (int i = 0; i < 3; i++)
         {
-            // SNES / NES classic controllers usually only support mode 3
-            mType = WiiExtType::WiiClassicControllerNesSnes;
+            mInterface.writeRegister(WII_ADDR, WII_SET_RES_MODE, WII_HIGHRES_MODE);
+            sleep_us(200);
+        }
+
+        // Some controllers support high res mode, some dont. Some require it, some
+        // dont. When a controller goes into high res mode, its ID will change,
+        // so check.
+
+        uint8_t id[WII_ID_LEN];
+        mInterface.readRegisterSlow(WII_ADDR, WII_READ_ID, WII_ID_LEN, id);
+        sleep_us(200);
+        if (id[4] == WII_HIGHRES_MODE)
+        {
+            hiRes = true;
+            wiiBytes = 8;
         }
         else
         {
-            // Enable high-res mode (try a few times, sometimes the controller doesnt
-            // pick it up)
-            for (int i = 0; i < 3; i++)
-            {
-                mInterface.writeRegister(WII_ADDR, WII_SET_RES_MODE, WII_HIGHRES_MODE);
-                sleep_us(200);
-            }
-
-            // Some controllers support high res mode, some dont. Some require it, some
-            // dont. When a controller goes into high res mode, its ID will change,
-            // so check.
-
-            uint8_t id[WII_ID_LEN];
-            mInterface.readRegisterSlow(WII_ADDR, WII_READ_ID, WII_ID_LEN, id);
-            sleep_us(200);
-            if (id[4] == WII_HIGHRES_MODE)
-            {
-                hiRes = true;
-                wiiBytes = 8;
-            }
-            else
-            {
-                hiRes = false;
-            }
+            hiRes = false;
         }
     }
     else if (mType == WiiExtType::WiiTaikoNoTatsujinController)
@@ -249,7 +236,6 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
 {
     switch (mType)
     {
-    case WiiExtType::WiiClassicControllerNesSnes:
     case WiiExtType::WiiClassicControllerPro:
     case WiiExtType::WiiClassicController:
     {

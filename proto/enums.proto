@@ -59,7 +59,6 @@ enum WiiExtType {
     WiiNunchuk = 0x0000;
     WiiClassicController = 0x0001;
     WiiClassicControllerPro = 0x0101;
-    WiiClassicControllerNesSnes = 0x1234;
     WiiThqUdrawTablet = 0xFF12;
     WiiUbisoftDrawsomeTablet = 0xFF13;
     WiiGuitarHeroGuitar = 0x0003;

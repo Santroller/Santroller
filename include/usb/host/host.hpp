@@ -10,9 +10,13 @@ class UsbHostInterface : public MidiDevice
 {
 public:
     virtual ~UsbHostInterface() {};
-    UsbHostInterface(uint8_t dev_addr, uint8_t interface, uint16_t id) : MidiDevice(id), m_dev_addr(dev_addr), m_interface(interface) {}
+    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id), m_dev_addr(d_addr), m_interface(interface) {}
     virtual bool set_config() = 0;
     virtual bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
+    uint8_t dev_addr()
+    {
+        return m_dev_addr;
+    }
     void rescan(bool first) {}
     virtual bool tick_digital(UsbButtonType type) = 0;
     virtual uint16_t tick_analog(UsbAxisType type) = 0;

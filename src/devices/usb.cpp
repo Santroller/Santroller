@@ -4,7 +4,8 @@
 #include "host/usbh_pvt.h"
 #include "usb/host/xinput_host.h"
 #include "config.hpp"
-std::shared_ptr<USBHostHardwareDevice> USBHostHardwareDevice::instance = nullptr;
+#include <algorithm>
+static uint8_t usb_host_id;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
 {
     if (device.firstPin == -1)
@@ -25,14 +26,16 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
         skip_alarm_pool : false,
         pinout : device.dmFirst ? PIO_USB_PINOUT_DMDP : PIO_USB_PINOUT_DPDM
     };
+    usb_host_id = id;
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
     tuh_init(TUH_OPT_RHPORT);
+    printf("assignable_devices: %d\r\n", assignable_usb_devices.size());
+    assignable_devices.insert(assignable_devices.end(), assignable_usb_devices.begin(), assignable_usb_devices.end());
 }
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 {
 }
-
 
 // void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const *report, uint16_t len)
 // {
@@ -97,10 +100,11 @@ std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHost
 bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
     printf("usbh open %d\r\n", dev_addr);
-    if (host_devices.find(dev_addr) == host_devices.end()) {
-        host_devices[dev_addr] = std::make_unique<UsbHostDevice>(dev_addr, USBHostHardwareDevice::instance->m_id);
+    if (host_devices.find(dev_addr) == host_devices.end())
+    {
+        host_devices[dev_addr] = std::make_unique<UsbHostDevice>(dev_addr, usb_host_id);
     }
-    auto& list = host_devices[dev_addr];
+    auto &list = host_devices[dev_addr];
     for (auto &host_device : host_device_types)
     {
         auto dev = host_device(list, desc_itf, max_len);
@@ -108,6 +112,7 @@ bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *de
         {
             list->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
             list->interfaces.push_back(dev);
+            reload();
             return true;
         }
     }
@@ -127,6 +132,8 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 void usbh_close(uint8_t dev_addr)
 {
     host_devices.erase(dev_addr);
+    assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x) { return x->dev_addr() == dev_addr; }));
+    reload();
 }
 
 usbh_class_driver_t driver_host[] = {

@@ -17,7 +17,6 @@ private:
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
-    SubType m_subtype;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[sizeof(XInputGamepad_Data_t)];
 };
 class XInputAudioHost : public UsbHostInterface

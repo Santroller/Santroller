@@ -16,6 +16,7 @@
 #include "FlashPROM.h"
 #include "CRC32.h"
 #include "usb/device/device.hpp"
+#include "usb/host/host.hpp"
 bool save(proto_Config *config);
 bool load(proto_Config &config);
 uint32_t copy_config(uint8_t *buffer, uint32_t start);
@@ -35,6 +36,7 @@ extern std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 extern std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 extern std::vector<std::shared_ptr<Device>> active_devices;
 extern std::vector<std::shared_ptr<Device>> assignable_devices;
+extern std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;
 extern std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 extern std::set<uint32_t> active_profiles;

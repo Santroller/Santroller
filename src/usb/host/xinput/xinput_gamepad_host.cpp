@@ -19,6 +19,7 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
         XBOX_ID_DESCRIPTOR *x_desc =
             (XBOX_ID_DESCRIPTOR *)p_desc;
         TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, nullptr);
+        intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
         uint8_t endpoints = desc_itf->bNumEndpoints;
         while (endpoints--)
         {
@@ -30,7 +31,6 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
             {
                 intf->m_ep_in = desc_ep->bEndpointAddress;
                 intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-                intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
                 usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
             }
@@ -49,7 +49,8 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
         {
             list->host_devices_by_endpoint[intf->m_ep_in] = intf;
         }
-        assignable_devices.push_back(intf);
+        assignable_usb_devices.push_back(intf);
+        printf("found device: %d\r\n", intf->m_subtype);
         return intf;
     }
     return nullptr;
@@ -69,37 +70,37 @@ bool XInputGamepadHost::tick_digital(UsbButtonType type)
     switch (type)
     {
     case UsbButtonX:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->x;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->x;
     case UsbButtonA:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->a;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->a;
     case UsbButtonB:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->b;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->b;
     case UsbButtonY:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->y;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->y;
     case UsbButtonLeftShoulder:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->leftShoulder;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftShoulder;
     case UsbButtonRightShoulder:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->rightShoulder;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightShoulder;
     case UsbButtonBack:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->back;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->back;
     case UsbButtonStart:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->start;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->start;
     case UsbButtonLeftThumbClick:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->leftThumbClick;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftThumbClick;
     case UsbButtonRightThumbClick:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->rightThumbClick;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightThumbClick;
     case UsbButtonGuide:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->guide;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->guide;
     case UsbButtonCapture:
         return false;
     case UsbButtonDpadUp:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->dpadUp;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadUp;
     case UsbButtonDpadDown:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->dpadDown;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadDown;
     case UsbButtonDpadLeft:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->dpadLeft;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadLeft;
     case UsbButtonDpadRight:
-        return ((XInputGamepad_Data_t*)m_ep_in_buf)->dpadRight;
+        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadRight;
     case UsbButtonKick1:
         return false;
     case UsbButtonKick2:

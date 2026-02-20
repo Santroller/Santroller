@@ -22,11 +22,11 @@ USBButtonInput::USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHo
 }
 bool USBButtonInput::tickDigital()
 {
-    return 0;
+    return m_device->tick_digital(m_input.button);
 }
 uint16_t USBButtonInput::tickAnalog()
 {
-    return 0;
+    return m_device->tick_digital(m_input.button) ? UINT16_MAX : 0;
 }
 void USBButtonInput::setup()
 {

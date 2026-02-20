@@ -30,7 +30,7 @@ public:
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
     std::vector<std::unique_ptr<LedMapping>> leds;
-    std::map<uint32_t, std::shared_ptr<Device>> devices;
+    std::map<uint16_t, std::shared_ptr<Device>> devices;
 };
 class Instance
 {

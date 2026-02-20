@@ -185,6 +185,7 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
             if (claim_device)
             {
                 assignable_devices.erase(it);
+                printf("claimed: %p\r\n", device);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
             return true;

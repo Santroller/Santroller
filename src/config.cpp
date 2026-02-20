@@ -60,6 +60,7 @@ std::set<uint32_t> active_profiles;
 std::vector<std::shared_ptr<Device>> active_devices;
 // devices that have not yet been assigned to a profile
 std::vector<std::shared_ptr<Device>> assignable_devices;
+std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;

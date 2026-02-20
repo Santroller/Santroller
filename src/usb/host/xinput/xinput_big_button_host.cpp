@@ -44,7 +44,7 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
         {
             list->host_devices_by_endpoint[intf->m_ep_in] = intf;
         }
-        assignable_devices.push_back(intf);
+        assignable_usb_devices.push_back(intf);
         return intf;
     }
     return nullptr;

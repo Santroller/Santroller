@@ -66,7 +66,7 @@ std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;
-ConsoleMode mode = ModeXbox360;
+ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
 bool loadedAny = false;

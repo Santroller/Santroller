@@ -91,6 +91,27 @@ bool usbh_init(void)
     return true;
 }
 
+uint32_t UsbHostInterface::send_ctrl_xfer(tusb_control_request_t setup, void *buffer, bool *status)
+{
+    tuh_xfer_t xfer = {};
+    xfer.daddr = m_dev_addr;
+    xfer.ep_addr = 0;
+    xfer.setup = &setup;
+    xfer.buffer = (uint8_t*)buffer;
+    xfer.complete_cb = NULL;
+    xfer.user_data = 0;
+    tuh_control_xfer(&xfer);
+    if (xfer.result != XFER_RESULT_SUCCESS)
+    {
+        if (status)
+        {
+            *status = false;
+        }
+        return false;
+    }
+    return xfer.actual_len;
+}
+
 std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len) = {
     XInputGamepadHost::open,
     XInputAudioHost::open,
@@ -100,7 +121,7 @@ std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHost
 
 bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
-    printf("usbh open %d\r\n", dev_addr);
+    printf("usbh open %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber);
     if (host_devices.find(dev_addr) == host_devices.end())
     {
         host_devices[dev_addr] = std::make_unique<UsbHostDevice>(dev_addr, usb_host_id);

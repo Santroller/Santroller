@@ -3,10 +3,13 @@
 #include <pico/time.h>
 
 #include "stdint.h"
-class Multiplexer {
-    Multiplexer(uint8_t s0, uint8_t s1, uint8_t s2, uint8_t input);
-    Multiplexer(uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3, uint8_t input);
+class Multiplexer
+{
+public:
+    Multiplexer(uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3, uint8_t input, bool sixteen_channel);
     uint16_t read(uint8_t channel);
+
+private:
     uint8_t s0Pin;
     uint8_t s1Pin;
     uint8_t s2Pin;

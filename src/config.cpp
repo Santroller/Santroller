@@ -11,9 +11,11 @@
 #include "input/shortcut.hpp"
 #include "input/ads1115.hpp"
 #include "input/accelerometer.hpp"
+#include "input/multiplexer.hpp"
 #include "input/gh5.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
+#include "devices/multiplexer.hpp"
 #include "devices/wii.hpp"
 #include "devices/bhdrum.hpp"
 #include "devices/crazyneck.hpp"
@@ -64,7 +66,7 @@ std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 proto_SubType current_type;
-ConsoleMode mode = ModeHid;
+ConsoleMode mode = ModeXbox360;
 ConsoleMode newMode = mode;
 bool working = false;
 bool loadedAny = false;
@@ -130,6 +132,10 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_apa102_tag:
         active_devices.emplace_back(new APA102Device(device.device.apa102, *dev_id));
         break;
+    case proto_Device_multiplexer_tag:
+        active_devices.emplace_back(new MultiplexerDevice(device.device.multiplexer, *dev_id));
+        break;
+
     }
     *dev_id += 1;
     return true;

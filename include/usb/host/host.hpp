@@ -68,6 +68,7 @@ protected:
     uint8_t m_dev_addr;
     uint8_t m_interface;
     SubType m_subtype = SubType_Gamepad;
+    uint32_t send_ctrl_xfer(tusb_control_request_t setup, void *buffer, bool *status);
 };
 
 class UsbHostDevice : public Device

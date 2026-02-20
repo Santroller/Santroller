@@ -152,9 +152,9 @@ inline uint8_t get_xinput_subtype(SubType subtype)
     return 1;
 }
 
-#define XINPUT_FLAGS_NO_NAV 0xFFFF
+#define XINPUT_FLAGS_NO_NAV 0x0010
 #define XINPUT_FLAGS_NONE 0x0000
-#define XINPUT_FLAGS_FORCE_FEEDBACK 0x000D
+#define XINPUT_FLAGS_FORCE_FEEDBACK 0x0001
 
 #define LED_OFF 0
 #define LED_ALL_BLINKING 1

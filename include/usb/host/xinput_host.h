@@ -6,7 +6,7 @@ class XInputGamepadHost : public UsbHostInterface
 public:
     ~XInputGamepadHost() {}
     XInputGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
-    bool set_config() { return true; }
+    bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     bool tick_digital(UsbButtonType type);

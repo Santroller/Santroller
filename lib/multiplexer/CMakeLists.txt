@@ -4,4 +4,4 @@ target_link_libraries(multiplexer INTERFACE
     hardware_gpio
     hardware_adc
 )
-target_sources(multiplexer INTERFACE multiplexer.cpp)
+target_sources(multiplexer INTERFACE libmultiplexer.cpp)

@@ -14,6 +14,10 @@ message ADS1115Input {
   required int32 deviceid = 1;
   required int32 channel = 2;
 }
+message MultiplexerInput {
+  required int32 deviceid = 1;
+  required int32 channel = 2;
+}
 message AccelerometerInput {
   required int32 deviceid = 1;
   required AccelerometerInputType type = 2;
@@ -124,6 +128,7 @@ message Input {
     PS2ButtonInput ps2Button = 18;
     USBButtonInput usbButton = 19;
     USBAxisInput usbAxis = 20;
+    MultiplexerInput multiplexer = 21;
   }
 }
 message InputActivationTrigger {

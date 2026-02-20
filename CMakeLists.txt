@@ -108,6 +108,7 @@ add_executable(
   src/input/mpr121.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
+  src/input/multiplexer.cpp
   src/leds/leds.cpp
   src/triggers/ActivationTrigger.cpp
   src/mappings/Mapping.cpp
@@ -164,6 +165,7 @@ add_executable(
   src/devices/bhdrum.cpp
   src/devices/debug.cpp
   src/devices/crazyneck.cpp
+  src/devices/multiplexer.cpp
   src/devices/djh.cpp
   src/devices/gh5neck.cpp
   src/devices/max1704x.cpp

@@ -3,6 +3,7 @@
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
+#include "usb/usb_devices.h"
 #include "config.hpp"
 
 std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
@@ -54,6 +55,81 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
         return intf;
     }
     return nullptr;
+}
+
+bool XInputGamepadHost::set_config()
+{
+    XInputInputCapabilities_t caps;
+    XInputVibrationCapabilities_t caps_vibr;
+    uint32_t serial;
+
+    tusb_control_request_t setup_input_caps = {
+        bmRequestType_bit : {
+            recipient : TUSB_REQ_RCPT_INTERFACE,
+            type : TUSB_REQ_TYPE_VENDOR,
+            direction : TUSB_DIR_IN
+        },
+        bRequest : HID_REQ_CONTROL_GET_REPORT,
+        wValue : INPUT_CAPABILITIES_WVALUE,
+        wIndex : m_interface,
+        wLength : sizeof(XInputInputCapabilities_t)
+    };
+    tusb_control_request_t setup_vibration_caps = {
+        bmRequestType_bit : {
+            recipient : TUSB_REQ_RCPT_INTERFACE,
+            type : TUSB_REQ_TYPE_VENDOR,
+            direction : TUSB_DIR_IN
+        },
+        bRequest : HID_REQ_CONTROL_GET_REPORT,
+        wValue : VIBRATION_CAPABILITIES_WVALUE,
+        wIndex : m_interface,
+        wLength : sizeof(XInputVibrationCapabilities_t)
+    };
+    tusb_control_request_t setup_serial = {
+        bmRequestType_bit : {
+            recipient : TUSB_REQ_RCPT_DEVICE,
+            type : TUSB_REQ_TYPE_VENDOR,
+            direction : TUSB_DIR_IN
+        },
+        bRequest : HID_REQ_CONTROL_GET_REPORT,
+        wValue : SERIAL_NUMBER_WVALUE,
+        wIndex : m_interface,
+        wLength : sizeof(serial)
+    };
+    // request serial, some controllers might expect this
+    send_ctrl_xfer(setup_serial, &serial, nullptr);
+    // request input capabilities, lets us differenciate controllers
+    if (send_ctrl_xfer(setup_input_caps, &caps, nullptr) != 0)
+    {
+        // GHL guitars set no navigation
+        if (m_subtype == GuitarHeroGuitar && caps.flags & XINPUT_FLAGS_NO_NAV)
+        {
+            m_subtype = LiveGuitar;
+        }
+        // GH drums don't set force feedback
+        if (m_subtype == RockBandDrums && (caps.flags & XINPUT_FLAGS_FORCE_FEEDBACK) == 0)
+        {
+            m_subtype = GuitarHeroDrums;
+        }
+        // Pro guitars we have to identify by vid+pid
+        if (caps.leftThumbX == HARMONIX_VID)
+        {
+            switch (caps.leftThumbY)
+            {
+            case XBOX_360_MUSTANG_PID:
+            case XBOX_360_MPA_MUSTANG_PID:
+                m_subtype = ProGuitarMustang;
+                break;
+            case XBOX_360_MPA_SQUIRE_PID:
+            case XBOX_360_SQUIRE_PID:
+                m_subtype = ProGuitarSquire;
+                break;
+            }
+        }
+    }
+    // request vibration caps since some devices expect it
+    send_ctrl_xfer(setup_vibration_caps, &caps_vibr, nullptr);
+    return true;
 }
 
 bool XInputGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)

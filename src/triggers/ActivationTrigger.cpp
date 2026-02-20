@@ -8,6 +8,9 @@
 
 bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool send_events)
 {
+    if (claim_devices && m_claimed) {
+        return true;
+    }
     for (auto &trigger : triggers)
     {
         if (!trigger->validate(false, full_poll, send_events))
@@ -27,6 +30,7 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
             return false;
         }
     }
+    m_claimed = true;
     return true;
 }
 
@@ -179,14 +183,15 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     auto it = assignable_devices.begin();
     while (it != assignable_devices.end())
     {
-        auto device = *it;
+        auto& device = *it;
         if (device->is_usb_type(m_type))
         {
             if (claim_device)
             {
+                auto& profile = all_profiles[m_profile_id];
+                printf("claimed: %p\r\n", profile.get());
+                profile->devices.insert_or_assign(device->m_id, device);
                 assignable_devices.erase(it);
-                printf("claimed: %p\r\n", device);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
             return true;
         }

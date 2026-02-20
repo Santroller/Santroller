@@ -17,6 +17,8 @@ public:
     uint32_t profile_id;
     std::vector<std::unique_ptr<ActivationTrigger>> triggers;
     bool validate(bool claim_devices, bool full_poll, bool send_events);
+private:
+    bool m_claimed = false;
 };
 
 class Profile

@@ -135,7 +135,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     return true;
 }
 ShortcutInput *last_shortcut = nullptr;
-std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istream_t *stream)
+std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> profile, pb_istream_t *stream)
 {
     switch (input.which_input)
     {
@@ -189,7 +189,7 @@ std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istrea
 }
 bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(Profile **)arg;
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     proto_Input input;
     if (!pb_decode(stream, proto_Input_fields, &input))
     {
@@ -202,11 +202,11 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
 }
 bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(Profile **)arg;
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     printf("found shortcut!\r\n");
     last_shortcut = new ShortcutInput();
     proto_ShortcutInput input;
-    input.inputs.arg = profile;
+    input.inputs.arg = &profile;
     input.inputs.funcs.decode = &load_shortcut_input;
     if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
     {
@@ -218,16 +218,9 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(Profile **)arg;
-    if (profile->devices.empty())
-    {
-        for (auto &device : active_devices)
-        {
-            profile->devices.emplace(device->m_id, device);
-        }
-    }
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     proto_Mapping mapping;
-    mapping.input.input.shortcut.arg = profile;
+    mapping.input.input.shortcut.arg = &profile;
     mapping.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
@@ -325,10 +318,10 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = (Profile *)*arg;
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     auto &list = profile->triggers.back();
     proto_ProfileAssignmentInfo assignment;
-    assignment.assignment.input.input.input.shortcut.arg = profile;
+    assignment.assignment.input.input.input.shortcut.arg = &profile;
     assignment.assignment.input.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
     switch (assignment.which_assignment)
@@ -388,34 +381,29 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
 
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = (Profile *)*arg;
-    if (profile->devices.empty())
-    {
-        for (auto &device : active_devices)
-        {
-            profile->devices.emplace(device->m_id, device);
-        }
-    }
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     auto list = new ActivationTriggerList();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
-    proto_assignment.assignments.arg = profile;
+    proto_assignment.assignments.arg = &profile;
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
+    list->validate(true, false, false);
     return true;
 }
 bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = (Profile *)*arg;
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     uint64_t value;
     if (!pb_decode_varint(stream, &value))
         return false;
     profile->profile_id = value;
+    all_profiles[profile->profile_id] = profile;
     return true;
 }
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = (Profile *)*arg;
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
     if (profile->devices.empty())
     {
         for (auto &device : active_devices)
@@ -425,7 +413,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     std::unique_ptr<LedMappingDevice> device = nullptr;
     proto_Led proto_led;
-    proto_led.mapping.led.inputMapping.input.input.shortcut.arg = profile;
+    proto_led.mapping.led.inputMapping.input.input.shortcut.arg = &profile;
     proto_led.mapping.led.inputMapping.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_Led_fields, &proto_led);
     printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
@@ -469,22 +457,26 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = std::make_shared<Profile>();
+    for (auto &device : active_devices)
+    {
+        profile->devices.emplace(device->m_id, device);
+        printf("load mapping: %p %d\r\n", device.get(), device->m_id);
+    }
     proto_Profile proto_profile;
     memset(&proto_profile, 0, sizeof(proto_profile));
     proto_profile.assignments.funcs.decode = &load_assignments;
     proto_profile.mappings.funcs.decode = &load_mapping;
-    proto_profile.assignments.arg = profile.get();
-    proto_profile.mappings.arg = profile.get();
-    proto_profile.uid.arg = profile.get();
+    proto_profile.assignments.arg = &profile;
+    proto_profile.mappings.arg = &profile;
+    proto_profile.uid.arg = &profile;
     proto_profile.uid.funcs.decode = &load_uid;
-    proto_profile.leds.arg = profile.get();
+    proto_profile.leds.arg = &profile;
     proto_profile.leds.funcs.decode = &load_leds;
     pb_decode(stream, proto_Profile_fields, &proto_profile);
     profile->subtype = proto_profile.deviceToEmulate;
     printf("profile loaded: %d\r\n", profile->profile_id);
     // TODO: handle this once we support emulating non usb devices
     profile->output = OutputUSB;
-    all_profiles[profile->profile_id] = profile;
     std::shared_ptr<UsbDevice> instance = nullptr;
     for (auto &list : profile->triggers)
     {

@@ -8,7 +8,7 @@ import "device.proto";
 message Profile {
   required uint32 uid = 1; 
   required FaceButtonMappingMode faceButtonMappingMode = 2;
-  repeated ProfileAssignment assignments = 8;
+  repeated ProfileAssignment assignments = 3;
   repeated Mapping mappings = 4;
   required string name = 5;
   required SubType deviceToEmulate = 6;

@@ -155,6 +155,8 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         return std::unique_ptr<Input>(new GPIOInput(input.input.gpio));
     case proto_Input_ads1115_tag:
         return std::unique_ptr<Input>(new ADS1115Input(input.input.ads1115, std::static_pointer_cast<ADS1115Device>(profile->devices[input.input.ads1115.deviceid])));
+    case proto_Input_multiplexer_tag:
+        return std::unique_ptr<Input>(new MultiplexerInput(input.input.multiplexer, std::static_pointer_cast<MultiplexerDevice>(profile->devices[input.input.multiplexer.deviceid])));
     case proto_Input_accelerometer_tag:
         return std::unique_ptr<Input>(new AccelerometerInput(input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(profile->devices[input.input.accelerometer.deviceid])));
     case proto_Input_gh5Neck_tag:

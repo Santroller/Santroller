@@ -4,6 +4,7 @@
 #include "host/usbh_pvt.h"
 #include "usb/host/xinput_host.h"
 #include "config.hpp"
+#include "usb/device//hid_device.h"
 #include <algorithm>
 static uint8_t usb_host_id;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
@@ -112,7 +113,10 @@ bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *de
         {
             list->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
             list->interfaces.push_back(dev);
-            reload();
+            if (HIDConfigDevice::tool_closed())
+            {
+                reload();
+            }
             return true;
         }
     }
@@ -132,7 +136,8 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 void usbh_close(uint8_t dev_addr)
 {
     host_devices.erase(dev_addr);
-    assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x) { return x->dev_addr() == dev_addr; }));
+    assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x)
+                                                { return x->dev_addr() == dev_addr; }));
     reload();
 }
 

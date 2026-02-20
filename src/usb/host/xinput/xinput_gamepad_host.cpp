@@ -94,7 +94,6 @@ bool XInputGamepadHost::tick_digital(UsbButtonType type)
     case UsbButtonCapture:
         return false;
     case UsbButtonDpadUp:
-        printf("%d\r\n", ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadUp);
         return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadUp;
     case UsbButtonDpadDown:
         return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadDown;

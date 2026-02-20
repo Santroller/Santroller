@@ -79,9 +79,7 @@ add_executable(
   src/main.cpp
   src/usb/usb_descriptors.cpp
   src/usb/device/xinput_device.cpp
-  src/usb/host/xinput_host.cpp
   src/usb/device/xone_device.cpp
-  src/usb/host/xone_host.cpp
   src/usb/device/ogxbox_device.cpp
   src/usb/device/ps3_device.cpp
   src/usb/device/ps4_device.cpp
@@ -90,8 +88,14 @@ add_executable(
   src/usb/device/hid_gamepad_device.cpp
   src/usb/device/hid_config_device.cpp
   src/usb/device/switch_device.cpp
-  src/usb/host/ogxbox_host.cpp
   src/usb/device/gh_arcade_device.cpp
+  src/usb/host/xone_host.cpp
+  src/usb/host/ogxbox_host.cpp
+  src/usb/host/xinput/xinput_audio_host.cpp
+  src/usb/host/xinput/xinput_gamepad_host.cpp
+  src/usb/host/xinput/xinput_big_button_host.cpp
+  src/usb/host/xinput/xinput_plugin_module_host.cpp
+  src/usb/host/xinput/xinput_security_host.cpp
   src/input/accelerometer.cpp
   src/input/crkd.cpp
   src/input/gh5.cpp

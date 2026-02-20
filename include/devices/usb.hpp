@@ -2,7 +2,7 @@
 #include <MIDI.h>
 
 #include <SimpleMidiTransport.hpp>
-
+#include <memory>
 #include "i2c.hpp"
 #include "base.hpp"
 #include "device.pb.h"
@@ -21,20 +21,18 @@ enum USBDeviceType
     OGXbox
 };
 
-class USBDevice : public MidiDevice
+class USBHostHardwareDevice : public Device
 {
 public:
-    ~USBDevice() {}
-    USBDevice(proto_UsbHostDevice device, uint16_t id);
+    static std::shared_ptr<USBHostHardwareDevice> instance;
+    ~USBHostHardwareDevice() {}
+    USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
-    uint16_t readMidiNote(uint8_t note);
-    uint16_t readMidiControlChange(uint8_t cc);
-    int16_t readMidiPitchBend();
 
-private:
+// private:
     proto_UsbHostDevice m_device;
-    MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
-    uint8_t mReportData[128];
+    // MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
+    // uint8_t mReportData[128];
     // Parser &mParser;
 };

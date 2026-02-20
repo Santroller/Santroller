@@ -99,7 +99,7 @@ message USBButtonInput {
 
 message USBAxisInput {
   required int32 deviceid = 1;
-  required UsbButtonType axis = 2;
+  required UsbAxisType axis = 2;
 }
 
 message Input {

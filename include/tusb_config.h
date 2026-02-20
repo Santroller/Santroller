@@ -17,8 +17,8 @@
 #define CFG_TUH_HUB 4
 // #define CFG_TUH_XINPUT 8
 // #define CFG_TUH_OGXBOX 8
-#define CFG_TUH_MIDI 8
-#define CFG_TUH_HID 8
+#define CFG_TUH_MIDI 0
+#define CFG_TUH_HID 0
 #ifndef CFG_TUD_ENDPOINT0_SIZE
 #define CFG_TUD_ENDPOINT0_SIZE    64
 #endif

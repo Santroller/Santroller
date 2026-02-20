@@ -6,6 +6,7 @@
 #include <pb_encode.h>
 #include <utils.h>
 #include <stdint.h>
+#include "class/hid/hid.h"
 
 MouseAxisMapping::MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {

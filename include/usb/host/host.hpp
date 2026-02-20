@@ -1,14 +1,129 @@
 #pragma once
 #include "tusb_config.h"
 #include "tusb.h"
-#include "class/hid/hid.h"
-#include "device/usbd_pvt.h"
-#include "usb/usb_descriptors.h"
-#include "instance.hpp"
+#include "devices/usb.hpp"
+#include <vector>
+#include <unordered_map>
+#include <memory>
 
-class UsbHost: public Instance
+class UsbHostInterface : public MidiDevice
 {
 public:
-    virtual ~UsbHost() {};
-    virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
+    virtual ~UsbHostInterface() {};
+    UsbHostInterface(uint8_t dev_addr, uint8_t interface, uint16_t id) : MidiDevice(id), m_dev_addr(dev_addr), m_interface(interface) {}
+    virtual bool set_config() = 0;
+    virtual bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
+    void rescan(bool first) {}
+    virtual bool tick_digital(UsbButtonType type) = 0;
+    virtual uint16_t tick_analog(UsbAxisType type) = 0;
+    uint16_t readMidiNote(uint8_t note)
+    {
+        return 0;
+    }
+    uint16_t readMidiControlChange(uint8_t cc)
+    {
+        return 0;
+    }
+    int16_t readMidiPitchBend()
+    {
+        return 0;
+    }
+    void update(bool full_poll, bool send_events)
+    {
+    }
+    bool is_wii_extension(WiiExtType type)
+    {
+        return false;
+    }
+    bool is_usb_device(proto_SpecificUsbDevice type)
+    {
+        return false;
+    }
+    bool is_usb_type(SubType type)
+    {
+        return type == m_subtype;
+    }
+    bool is_bluetooth_device(proto_SpecificUsbDevice type)
+    {
+        return false;
+    }
+    bool is_bluetooth_type(SubType type)
+    {
+        return false;
+    }
+    bool is_ps2_device(PS2ControllerType type)
+    {
+        return false;
+    }
+    bool using_pin(uint8_t pin)
+    {
+        return false;
+    }
+
+protected:
+    uint8_t m_dev_addr;
+    uint8_t m_interface;
+    SubType m_subtype = SubType_Gamepad;
+};
+
+class UsbHostDevice : public Device
+{
+public:
+    ~UsbHostDevice() {};
+    UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
+    {
+    }
+    uint8_t dev_addr()
+    {
+        return m_dev_addr;
+    }
+    uint16_t readMidiNote(uint8_t note)
+    {
+        return 0;
+    }
+    uint16_t readMidiControlChange(uint8_t cc)
+    {
+        return 0;
+    }
+    int16_t readMidiPitchBend()
+    {
+        return 0;
+    }
+    void update(bool full_poll, bool send_events)
+    {
+    }
+    bool is_wii_extension(WiiExtType type)
+    {
+        return false;
+    }
+    bool is_usb_device(proto_SpecificUsbDevice type)
+    {
+        return false;
+    }
+    bool is_usb_type(SubType type)
+    {
+        return false;
+    }
+    bool is_bluetooth_device(proto_SpecificUsbDevice type)
+    {
+        return false;
+    }
+    bool is_bluetooth_type(SubType type)
+    {
+        return false;
+    }
+    bool is_ps2_device(PS2ControllerType type)
+    {
+        return false;
+    }
+    bool using_pin(uint8_t pin)
+    {
+        return false;
+    }
+    std::vector<std::shared_ptr<UsbHostInterface>> interfaces;
+    std::unordered_map<uint8_t, std::shared_ptr<UsbHostInterface>> host_devices_by_itf;
+    std::unordered_map<uint8_t, std::shared_ptr<UsbHostInterface>> host_devices_by_endpoint;
+
+protected:
+    uint8_t m_dev_addr;
 };

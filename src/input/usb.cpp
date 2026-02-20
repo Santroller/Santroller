@@ -3,21 +3,21 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<USBDevice> device) : m_input(input), m_device(device)
+USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device) : m_input(input), m_device(device)
 {
 }
 bool USBAxisInput::tickDigital()
 {
-    return 0;
+    return m_device->tick_analog(m_input.axis) != 0;
 }
 uint16_t USBAxisInput::tickAnalog()
 {
-    return 0;
+    return m_device->tick_analog(m_input.axis);
 }
 void USBAxisInput::setup()
 {
 }
-USBButtonInput::USBButtonInput(proto_USBButtonInput input, std::shared_ptr<USBDevice> device) : m_input(input), m_device(device)
+USBButtonInput::USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device) : m_input(input), m_device(device)
 {
 }
 bool USBButtonInput::tickDigital()
@@ -31,7 +31,7 @@ uint16_t USBButtonInput::tickAnalog()
 void USBButtonInput::setup()
 {
 }
-KeyboardKeyInput::KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<USBDevice> device) : m_input(input), m_device(device)
+KeyboardKeyInput::KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device) : m_input(input), m_device(device)
 {
 }
 bool KeyboardKeyInput::tickDigital()
@@ -45,7 +45,7 @@ uint16_t KeyboardKeyInput::tickAnalog()
 void KeyboardKeyInput::setup()
 {
 }
-MouseButtonInput::MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<USBDevice> device) : m_input(input), m_device(device)
+MouseButtonInput::MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<UsbHostInterface> device) : m_input(input), m_device(device)
 {
 }
 bool MouseButtonInput::tickDigital()
@@ -59,7 +59,7 @@ uint16_t MouseButtonInput::tickAnalog()
 void MouseButtonInput::setup()
 {
 }
-MouseAxisInput::MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<USBDevice> device) : m_input(input), m_device(device)
+MouseAxisInput::MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHostInterface> device) : m_input(input), m_device(device)
 {
 }
 bool MouseAxisInput::tickDigital()

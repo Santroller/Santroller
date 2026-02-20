@@ -41,6 +41,7 @@
 #include "usb/device/ps5_device.h"
 #include "usb/device/gh_arcade_device.h"
 #include "usb/device/switch_device.h"
+#include "usb/host/host.hpp"
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
 #include "main.hpp"
@@ -111,7 +112,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new MPR121Device(device.device.mpr121, *dev_id));
         break;
     case proto_Device_usbHost_tag:
-        active_devices.emplace_back(new USBDevice(device.device.usbHost, *dev_id));
+        active_devices.emplace_back(new USBHostHardwareDevice(device.device.usbHost, *dev_id));
         break;
     case proto_Device_ads1115_tag:
         active_devices.emplace_back(new ADS1115Device(device.device.ads1115, *dev_id));
@@ -166,15 +167,15 @@ std::unique_ptr<Input> make_input(proto_Input input, Profile *profile, pb_istrea
     case proto_Input_midiPitchBend_tag:
         return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiPitchBend.deviceid])));
     case proto_Input_mouseAxis_tag:
-        return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<USBDevice>(profile->devices[input.input.mouseAxis.deviceid])));
+        return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseAxis.deviceid])));
     case proto_Input_mouseButton_tag:
-        return std::unique_ptr<Input>(new MouseButtonInput(input.input.mouseButton, std::static_pointer_cast<USBDevice>(profile->devices[input.input.mouseButton.deviceid])));
+        return std::unique_ptr<Input>(new MouseButtonInput(input.input.mouseButton, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseButton.deviceid])));
     case proto_Input_key_tag:
-        return std::unique_ptr<Input>(new KeyboardKeyInput(input.input.key, std::static_pointer_cast<USBDevice>(profile->devices[input.input.key.deviceid])));
+        return std::unique_ptr<Input>(new KeyboardKeyInput(input.input.key, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.key.deviceid])));
     case proto_Input_usbButton_tag:
-        return std::unique_ptr<Input>(new USBButtonInput(input.input.usbButton, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbButton.deviceid])));
+        return std::unique_ptr<Input>(new USBButtonInput(input.input.usbButton, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbButton.deviceid])));
     case proto_Input_usbAxis_tag:
-        return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<USBDevice>(profile->devices[input.input.usbAxis.deviceid])));
+        return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbAxis.deviceid])));
     case 0:
     {
         auto ret = last_shortcut;

@@ -91,6 +91,12 @@ add_executable(
   src/usb/device/gh_arcade_device.cpp
   src/usb/host/xone_host.cpp
   src/usb/host/ogxbox_host.cpp
+  src/usb/host/hid/hid_host.cpp
+  src/usb/host/hid/ps3_host.cpp
+  src/usb/host/hid/ps4_host.cpp
+  src/usb/host/hid/ps5_host.cpp
+  src/usb/host/hid/mouse_host.cpp
+  src/usb/host/hid/keyboard_host.cpp
   src/usb/host/xinput/xinput_audio_host.cpp
   src/usb/host/xinput/xinput_gamepad_host.cpp
   src/usb/host/xinput/xinput_big_button_host.cpp
@@ -234,6 +240,7 @@ target_link_libraries(
   apa102
   stp16cpc
   nanopb
+  hidparser
   hardware_i2c
   hardware_spi
   hardware_adc

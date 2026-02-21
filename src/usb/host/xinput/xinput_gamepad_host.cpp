@@ -143,112 +143,199 @@ bool XInputGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t 
 
 bool XInputGamepadHost::tick_digital(UsbButtonType type)
 {
-    switch (type)
+    switch (m_subtype)
     {
-    case UsbButtonX:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->x;
-    case UsbButtonA:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->a;
-    case UsbButtonB:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->b;
-    case UsbButtonY:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->y;
-    case UsbButtonLeftShoulder:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftShoulder;
-    case UsbButtonRightShoulder:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightShoulder;
-    case UsbButtonBack:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->back;
-    case UsbButtonStart:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->start;
-    case UsbButtonLeftThumbClick:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftThumbClick;
-    case UsbButtonRightThumbClick:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightThumbClick;
-    case UsbButtonGuide:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->guide;
-    case UsbButtonCapture:
+    case GuitarHeroGuitar:
+        switch (type)
+        {
+        case UsbButtonGreen:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonRed:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonYellow:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonBlue:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonOrange:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonBack:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonStrumUp:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadUp;
+        case UsbButtonStrumDown:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadDown;
+        case UsbButtonDpadLeft:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+        case UsbButtonDpadRight:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+        default:
+            return false;
+        }
         return false;
-    case UsbButtonDpadUp:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadUp;
-    case UsbButtonDpadDown:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadDown;
-    case UsbButtonDpadLeft:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadLeft;
-    case UsbButtonDpadRight:
-        return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadRight;
-    case UsbButtonKick1:
+    case RockBandGuitar:
+        switch (type)
+        {
+        case UsbButtonGreen:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonRed:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonYellow:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonBlue:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonOrange:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonBack:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonStrumUp:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->dpadUp;
+        case UsbButtonStrumDown:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->dpadDown;
+        case UsbButtonDpadLeft:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+        case UsbButtonDpadRight:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+        default:
+            return false;
+        }
         return false;
-    case UsbButtonKick2:
+    case LiveGuitar:
+        switch (type)
+        {
+        case UsbButtonBlack1:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonBlack2:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonBlack3:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonWhite1:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonWhite2:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonWhite3:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->rightShoulder;
+        case UsbButtonBack:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonStrumUp:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0x00;
+        case UsbButtonStrumDown:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0xFF;
+        case UsbButtonDpadUp:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+        case UsbButtonDpadDown:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+        case UsbButtonDpadLeft:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+        case UsbButtonDpadRight:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+        default:
+            return false;
+        }
         return false;
-    case UsbButtonLeftBlue:
-        return false;
-    case UsbButtonLeftRed:
-        return false;
-    case UsbButtonLeftGreen:
-        return false;
-    case UsbButtonRightBlue:
-        return false;
-    case UsbButtonRightRed:
-        return false;
-    case UsbButtonRightGreen:
-        return false;
-    case UsbButtonSoloGreen:
-        return false;
-    case UsbButtonSoloRed:
-        return false;
-    case UsbButtonSoloYellow:
-        return false;
-    case UsbButtonSoloBlue:
-        return false;
-    case UsbButtonSoloOrange:
-        return false;
-    case UsbButtonGreen:
-        return false;
-    case UsbButtonRed:
-        return false;
-    case UsbButtonYellow:
-        return false;
-    case UsbButtonBlue:
-        return false;
-    case UsbButtonOrange:
-        return false;
-    case UsbButtonGenericButton1:
-        return false;
-    case UsbButtonGenericButton2:
-        return false;
-    case UsbButtonGenericButton3:
-        return false;
-    case UsbButtonGenericButton4:
-        return false;
-    case UsbButtonGenericButton5:
-        return false;
-    case UsbButtonGenericButton6:
-        return false;
-    case UsbButtonGenericButton7:
-        return false;
-    case UsbButtonGenericButton8:
-        return false;
-    case UsbButtonGenericButton9:
-        return false;
-    case UsbButtonGenericButton10:
-        return false;
-    case UsbButtonGenericButton11:
-        return false;
-    case UsbButtonGenericButton12:
-        return false;
-    case UsbButtonGenericButton13:
-        return false;
-    case UsbButtonGenericButton14:
-        return false;
-    case UsbButtonGenericButton15:
-        return false;
-    case UsbButtonGenericButton16:
+    default:
+        switch (type)
+        {
+        case UsbButtonA:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonB:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonX:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonY:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonLeftShoulder:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonRightShoulder:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightShoulder;
+        case UsbButtonBack:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonLeftThumbClick:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftThumbClick;
+        case UsbButtonRightThumbClick:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightThumbClick;
+        case UsbButtonGuide:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonDpadUp:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadUp;
+        case UsbButtonDpadDown:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadDown;
+        case UsbButtonDpadLeft:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadLeft;
+        case UsbButtonDpadRight:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->dpadRight;
+        default:
+            return false;
+        }
         return false;
     }
-    return true;
+
+    return false;
 }
 uint16_t XInputGamepadHost::tick_analog(UsbAxisType type)
 {
+    switch (m_subtype)
+    {
+    case GuitarHeroGuitar:
+        switch (type)
+        {
+        case UsbAxisWhammy:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->whammy + INT16_MAX;
+        case UsbAxisTilt:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->tilt + INT16_MAX;
+        case UsbAxisSlider:
+            return ((XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf)->slider + INT16_MAX;
+        }
+        break;
+    case LiveGuitar:
+        switch (type)
+        {
+        case UsbAxisWhammy:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->whammy + INT16_MAX;
+        case UsbAxisTilt:
+            return ((XInputGHLGuitar_Data_t *)m_ep_in_buf)->tilt + INT16_MAX;
+        }
+        break;
+    case RockBandGuitar:
+        switch (type)
+        {
+        case UsbAxisWhammy:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->whammy + INT16_MAX;
+        case UsbAxisTilt:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->tilt + INT16_MAX;
+        case UsbAxisPickup:
+            return ((XInputRockBandGuitar_Data_t *)m_ep_in_buf)->pickup + INT16_MAX;
+        }
+    default:
+        switch (type)
+        {
+        case UsbAxisLeftTrigger:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftTrigger << 8;
+        case UsbAxisRightTrigger:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightTrigger << 8;
+        case UsbAxisLeftStickX:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftStickX + INT16_MAX;
+        case UsbAxisLeftStickY:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->leftStickY + INT16_MAX;
+        case UsbAxisRightStickX:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightStickX + INT16_MAX;
+        case UsbAxisRightStickY:
+            return ((XInputGamepad_Data_t *)m_ep_in_buf)->rightStickY + INT16_MAX;
+        }
+    }
+
     return 0;
 }

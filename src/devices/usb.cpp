@@ -3,6 +3,7 @@
 #include "pio_usb.h"
 #include "host/usbh_pvt.h"
 #include "usb/host/xinput_host.h"
+#include "usb/host/hid_host.h"
 #include "config.hpp"
 #include "usb/device//hid_device.h"
 #include <algorithm>
@@ -112,12 +113,13 @@ uint32_t UsbHostInterface::send_ctrl_xfer(tusb_control_request_t setup, void *bu
     return xfer.actual_len;
 }
 
-std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len) = {
+static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len) = {
     XInputGamepadHost::open,
     XInputAudioHost::open,
     XInputModuleHost::open,
     XInputSecurityHost::open,
-    XInputBigButtonHost::open};
+    XInputBigButtonHost::open,
+    HidHost::open};
 
 bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {

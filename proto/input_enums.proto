@@ -600,6 +600,14 @@ enum UsbButtonType {
   UsbButtonGenericButton14= 48;
   UsbButtonGenericButton15= 49;
   UsbButtonGenericButton16= 50;
+  UsbButtonStrumUp= 51;
+  UsbButtonStrumDown= 52;
+  UsbButtonBlack1 = 53;
+  UsbButtonBlack2 = 54;
+  UsbButtonBlack3 = 55;
+  UsbButtonWhite1 = 56;
+  UsbButtonWhite2 = 57;
+  UsbButtonWhite3 = 58;
 }
 
 enum UsbAxisType {

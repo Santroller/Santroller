@@ -11,6 +11,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
 {
     uint8_t dev_addr = list->dev_addr();
 
+    printf("ps5host_open: %02x\r\n", dev_addr);
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     bool isThirdParty = info->foundPS5Usage;
     bool isFirstParty = vid == SONY_VID && (pid == PS5_DS_PID || pid == PS5_DS_EDGE_PID);
@@ -18,7 +19,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
     tusb_control_request_t setup_input_caps = {
         bmRequestType_bit : {
             recipient : TUSB_REQ_RCPT_INTERFACE,
-            type : TUSB_REQ_TYPE_VENDOR,
+            type : TUSB_REQ_TYPE_CLASS,
             direction : TUSB_DIR_IN
         },
         bRequest : HID_REQ_CONTROL_GET_REPORT,
@@ -28,13 +29,14 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
     };
     if (isFirstParty || isThirdParty)
     {
+        USB_FreeReportInfo(info);
         auto intf = std::make_shared<Ps5Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
         intf->m_third_party = isThirdParty;
         if (isThirdParty)
         {
             // request capabilities for 3rd party gamepad
             auto size = intf->send_ctrl_xfer(setup_input_caps, data, nullptr);
-            if (size == sizeof(data) && data[2] == 0x27)
+            if (size == sizeof(data) && data[2] == 0x28)
             {
                 uint8_t capabilities = data[4];
                 uint8_t device_type = data[5];
@@ -101,7 +103,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            printf("%02x, %02x\r\n", TUSB_DESC_ENDPOINT, desc_ep->bDescriptorType);
+            printf("%02x, %02x, %02x, %02x\r\n", TUSB_DESC_ENDPOINT, desc_ep->bDescriptorType, desc_ep->bEndpointAddress, desc_ep->wMaxPacketSize);
             TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
             if (desc_ep->bEndpointAddress & 0x80)
             {
@@ -117,6 +119,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
                 TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             }
         }
+
         if (intf->m_ep_out)
         {
             list->host_devices_by_endpoint[intf->m_ep_out] = intf;
@@ -126,6 +129,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint[intf->m_ep_in] = intf;
         }
         assignable_usb_devices.push_back(intf);
+        USB_FreeReportInfo(info);
         return intf;
     }
     return nullptr;
@@ -147,6 +151,14 @@ bool Ps5Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
 
 bool Ps5Host::tick_digital(UsbButtonType type)
 {
+    PS5Dpad_Data_t *report = (PS5Dpad_Data_t *)m_ep_in_buf;
+    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+    asm volatile("" ::
+                     : "memory");
+    bool up = dpad & UP;
+    bool left = dpad & LEFT;
+    bool down = dpad & DOWN;
+    bool right = dpad & RIGHT;
     switch (m_subtype)
     {
     case RockBandGuitar:
@@ -168,14 +180,16 @@ bool Ps5Host::tick_digital(UsbButtonType type)
             return ((PS5RockBandGuitar_Data_t *)m_ep_in_buf)->start;
         case UsbButtonGuide:
             return ((PS5RockBandGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonDpadUp:
         case UsbButtonStrumUp:
-            return ((PS5RockBandGuitar_Data_t *)m_ep_in_buf)->dpadUp;
+            return up;
+        case UsbButtonDpadDown:
         case UsbButtonStrumDown:
-            return ((PS5RockBandGuitar_Data_t *)m_ep_in_buf)->dpadDown;
+            return down;
         case UsbButtonDpadLeft:
-            return ((PS5RockBandGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return left;
         case UsbButtonDpadRight:
-            return ((PS5RockBandGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return right;
         default:
             return false;
         }
@@ -206,13 +220,13 @@ bool Ps5Host::tick_digital(UsbButtonType type)
         case UsbButtonStrumDown:
             return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0xFF;
         case UsbButtonDpadUp:
-            return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return up;
         case UsbButtonDpadDown:
-            return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return down;
         case UsbButtonDpadLeft:
-            return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return left;
         case UsbButtonDpadRight:
-            return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return right;
         default:
             return false;
         }
@@ -243,14 +257,13 @@ bool Ps5Host::tick_digital(UsbButtonType type)
         case UsbButtonGuide:
             return ((PS5Gamepad_Data_t *)m_ep_in_buf)->guide;
         case UsbButtonDpadUp:
-            return ((PS5Gamepad_Data_t *)m_ep_in_buf)->dpadUp;
+            return up;
         case UsbButtonDpadDown:
-            return ((PS5Gamepad_Data_t *)m_ep_in_buf)->dpadDown;
+            return down;
         case UsbButtonDpadLeft:
-            return ((PS5Gamepad_Data_t *)m_ep_in_buf)->dpadLeft;
+            return left;
         case UsbButtonDpadRight:
-            return ((PS5Gamepad_Data_t *)m_ep_in_buf)->dpadRight;
-        default:
+            return right;
             return false;
         }
         return false;

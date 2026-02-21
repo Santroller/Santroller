@@ -45,6 +45,8 @@ std::shared_ptr<UsbHostInterface> KeyboardHost::open(std::shared_ptr<UsbHostDevi
             list->host_devices_by_endpoint[intf->m_ep_in] = intf;
         }
         assignable_usb_devices.push_back(intf);
+        USB_FreeReportInfo(info);
+        return intf;
     }
     return nullptr;
 }

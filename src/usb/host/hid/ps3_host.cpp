@@ -6,7 +6,6 @@
 #include "usb/usb_devices.h"
 #include "config.hpp"
 #include "hidparser.h"
-
 std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
@@ -109,7 +108,7 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
     }
     if (isValid)
     {
-        auto intf = std::make_shared<Ps3Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, rb2, ion, subtype);
+        auto intf = std::make_shared<Ps3Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, isThirdParty, rb2, ion, subtype);
         uint8_t endpoints = itf_desc->bNumEndpoints;
         p_desc = tu_desc_next(p_desc);
         tusb_hid_descriptor_hid_t *x_desc =
@@ -144,6 +143,7 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint[intf->m_ep_in] = intf;
         }
         assignable_usb_devices.push_back(intf);
+        USB_FreeReportInfo(info);
         return intf;
     }
     return nullptr;
@@ -165,108 +165,8 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
 
 bool Ps3Host::tick_digital(UsbButtonType type)
 {
-    switch (m_subtype)
+    if (!m_third_party)
     {
-    case GuitarHeroGuitar:
-        switch (type)
-        {
-        case UsbButtonGreen:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->a;
-        case UsbButtonRed:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->b;
-        case UsbButtonYellow:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->y;
-        case UsbButtonBlue:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->x;
-        case UsbButtonOrange:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
-        case UsbButtonBack:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->back;
-        case UsbButtonStart:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->start;
-        case UsbButtonGuide:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->guide;
-        case UsbButtonStrumUp:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadUp;
-        case UsbButtonStrumDown:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadDown;
-        case UsbButtonDpadLeft:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
-        case UsbButtonDpadRight:
-            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->dpadRight;
-        default:
-            return false;
-        }
-        return false;
-    case RockBandGuitar:
-        switch (type)
-        {
-        case UsbButtonGreen:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->a;
-        case UsbButtonRed:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->b;
-        case UsbButtonYellow:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->y;
-        case UsbButtonBlue:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->x;
-        case UsbButtonOrange:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
-        case UsbButtonBack:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->back;
-        case UsbButtonStart:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->start;
-        case UsbButtonGuide:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->guide;
-        case UsbButtonStrumUp:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->dpadUp;
-        case UsbButtonStrumDown:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->dpadDown;
-        case UsbButtonDpadLeft:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
-        case UsbButtonDpadRight:
-            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->dpadRight;
-        default:
-            return false;
-        }
-        return false;
-    case LiveGuitar:
-        switch (type)
-        {
-        case UsbButtonBlack1:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->a;
-        case UsbButtonBlack2:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->b;
-        case UsbButtonBlack3:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->y;
-        case UsbButtonWhite1:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->x;
-        case UsbButtonWhite2:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
-        case UsbButtonWhite3:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->rightShoulder;
-        case UsbButtonBack:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->back;
-        case UsbButtonStart:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->start;
-        case UsbButtonGuide:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->guide;
-        case UsbButtonStrumUp:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0x00;
-        case UsbButtonStrumDown:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0xFF;
-        case UsbButtonDpadUp:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
-        case UsbButtonDpadDown:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
-        case UsbButtonDpadLeft:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
-        case UsbButtonDpadRight:
-            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
-        default:
-            return false;
-        }
-        return false;
-    default:
         switch (type)
         {
         case UsbButtonA:
@@ -299,6 +199,156 @@ bool Ps3Host::tick_digital(UsbButtonType type)
             return ((PS3Gamepad_Data_t *)m_ep_in_buf)->dpadLeft;
         case UsbButtonDpadRight:
             return ((PS3Gamepad_Data_t *)m_ep_in_buf)->dpadRight;
+        default:
+            return false;
+        }
+    }
+    PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)m_ep_in_buf;
+    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+    asm volatile("" ::
+                     : "memory");
+    bool up = dpad & UP;
+    bool left = dpad & LEFT;
+    bool down = dpad & DOWN;
+    bool right = dpad & RIGHT;
+    switch (m_subtype)
+    {
+    case GuitarHeroGuitar:
+        switch (type)
+        {
+        case UsbButtonGreen:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonRed:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonYellow:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonBlue:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonOrange:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonBack:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonDpadUp:
+        case UsbButtonStrumUp:
+            return up;
+        case UsbButtonDpadDown:
+        case UsbButtonStrumDown:
+            return down;
+        case UsbButtonDpadLeft:
+            return left;
+        case UsbButtonDpadRight:
+            return right;
+        default:
+            return false;
+        }
+        return false;
+    case RockBandGuitar:
+        switch (type)
+        {
+        case UsbButtonGreen:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonRed:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonYellow:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonBlue:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonOrange:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonBack:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonDpadUp:
+        case UsbButtonStrumUp:
+            return up;
+        case UsbButtonDpadDown:
+        case UsbButtonStrumDown:
+            return down;
+        case UsbButtonDpadLeft:
+            return left;
+        case UsbButtonDpadRight:
+            return right;
+        default:
+            return false;
+        }
+        return false;
+    case LiveGuitar:
+        switch (type)
+        {
+        case UsbButtonBlack1:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonBlack2:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonBlack3:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonWhite1:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonWhite2:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonWhite3:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->rightShoulder;
+        case UsbButtonBack:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonStrumUp:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0x00;
+        case UsbButtonStrumDown:
+            return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0xFF;
+        case UsbButtonDpadUp:
+            return up;
+        case UsbButtonDpadDown:
+            return down;
+        case UsbButtonDpadLeft:
+            return left;
+        case UsbButtonDpadRight:
+            return right;
+        default:
+            return false;
+        }
+        return false;
+    default:
+        switch (type)
+        {
+        case UsbButtonA:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->a;
+        case UsbButtonB:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonX:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonY:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonLeftShoulder:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonRightShoulder:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->rightShoulder;
+        case UsbButtonBack:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonLeftThumbClick:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->leftThumbClick;
+        case UsbButtonRightThumbClick:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->rightThumbClick;
+        case UsbButtonGuide:
+            return ((PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonDpadUp:
+            return up;
+        case UsbButtonDpadDown:
+            return down;
+        case UsbButtonDpadLeft:
+            return left;
+        case UsbButtonDpadRight:
+            return right;
         default:
             return false;
         }

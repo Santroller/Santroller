@@ -55,6 +55,7 @@ endif()
 
 # We want a larger stack of 4kb per core instead of the default 2kb
 add_compile_definitions(PICO_STACK_SIZE=0x1000)
+# add_compile_definitions(PICO_DEBUG_MALLOC=1)
 
 find_package(Git)
 execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty --abbrev=7

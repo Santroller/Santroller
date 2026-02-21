@@ -230,7 +230,7 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
         }
         return;
     }
-    PS3SimpleGamepad_Data_t *report = (PS3SimpleGamepad_Data_t *)buf;
+    PS3ThirdPartyGamepad_Data_t *report = (PS3ThirdPartyGamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:

@@ -125,6 +125,8 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint[intf->m_ep_in] = intf;
         }
         assignable_usb_devices.push_back(intf);
+        USB_FreeReportInfo(info);
+        return intf;
     }
     return nullptr;
 }
@@ -145,6 +147,12 @@ bool Ps4Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
 
 bool Ps4Host::tick_digital(UsbButtonType type)
 {
+    PS4Dpad_Data_t *report = (PS4Dpad_Data_t *)m_ep_in_buf;
+    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+    bool up = dpad & UP;
+    bool left = dpad & LEFT;
+    bool down = dpad & DOWN;
+    bool right = dpad & RIGHT;
     switch (m_subtype)
     {
     case RockBandGuitar:
@@ -166,14 +174,16 @@ bool Ps4Host::tick_digital(UsbButtonType type)
             return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->start;
         case UsbButtonGuide:
             return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonDpadUp:
         case UsbButtonStrumUp:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->dpadUp;
+            return up;
+        case UsbButtonDpadDown:
         case UsbButtonStrumDown:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->dpadDown;
+            return down;
         case UsbButtonDpadLeft:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return left;
         case UsbButtonDpadRight:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return right;
         default:
             return false;
         }
@@ -204,13 +214,13 @@ bool Ps4Host::tick_digital(UsbButtonType type)
         case UsbButtonStrumDown:
             return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0xFF;
         case UsbButtonDpadUp:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return up;
         case UsbButtonDpadDown:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return down;
         case UsbButtonDpadLeft:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return left;
         case UsbButtonDpadRight:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return right;
         default:
             return false;
         }
@@ -241,13 +251,13 @@ bool Ps4Host::tick_digital(UsbButtonType type)
         case UsbButtonGuide:
             return ((PS4Gamepad_Data_t *)m_ep_in_buf)->guide;
         case UsbButtonDpadUp:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->dpadUp;
+            return up;
         case UsbButtonDpadDown:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->dpadDown;
+            return down;
         case UsbButtonDpadLeft:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->dpadLeft;
+            return left;
         case UsbButtonDpadRight:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->dpadRight;
+            return right;
         default:
             return false;
         }

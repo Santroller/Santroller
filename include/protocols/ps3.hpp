@@ -316,7 +316,7 @@ typedef struct {
     uint16_t accelY;  // Up/down acceleration (gravity)
     uint16_t gyro;    // Left/right instantaneous rotation (yaw)
 
-} __attribute__((packed)) PS3SimpleGamepad_Data_t;
+} __attribute__((packed)) PS3ThirdPartyGamepad_Data_t;
 
 // DS1                                     Guitar
 // L2                                      tilt (its digital)

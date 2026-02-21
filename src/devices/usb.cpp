@@ -158,10 +158,10 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
-    host_devices.erase(dev_addr);
-    assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x)
-                                                { return x->dev_addr() == dev_addr; }));
-    reload();
+    // host_devices.erase(dev_addr);
+    // assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x)
+    //                                             { return x->dev_addr() == dev_addr; }));
+    // reload();
 }
 
 usbh_class_driver_t driver_host[] = {

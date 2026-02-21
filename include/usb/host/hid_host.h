@@ -3,19 +3,24 @@
 #include "protocols/xinput.hpp"
 #include "hidparser.h"
 
+#define UP 1 << 0
+#define DOWN 1 << 1
+#define LEFT 1 << 2
+#define RIGHT 1 << 3
 class HidHost : public UsbHostInterface
 {
 public:
     ~HidHost() {}
     HidHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len);
+    static const uint8_t dpad_bindings_reverse[8];
 };
 
 class Ps3Host : public HidHost
 {
 public:
     ~Ps3Host() {}
-    Ps3Host(uint8_t dev_addr, uint8_t interface, uint16_t id, bool rb2, bool ion, SubType subtype) : HidHost(dev_addr, interface, id), m_rb2(rb2), m_ion(ion)
+    Ps3Host(uint8_t dev_addr, uint8_t interface, uint16_t id, bool third_party, bool rb2, bool ion, SubType subtype) : HidHost(dev_addr, interface, id), m_rb2(rb2), m_ion(ion), m_third_party(third_party)
     {
         m_subtype = subtype;
     }
@@ -30,6 +35,7 @@ private:
     bool m_rb2;
     bool m_ion;
     bool m_wt;
+    bool m_third_party;
     uint8_t m_ep_in;
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
@@ -84,7 +90,7 @@ private:
     bool m_vibration_supported;
     bool m_touchpad_supported;
     bool m_third_party;
-    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[sizeof(XInputGamepad_Data_t)];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };
 class KeyboardHost : public HidHost
 {

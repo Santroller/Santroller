@@ -8,7 +8,7 @@
 #include "usb/device//hid_device.h"
 #include <algorithm>
 static uint8_t usb_host_id;
-USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : Device(id), m_device(device)
+USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     if (device.firstPin == -1)
     {
@@ -92,9 +92,10 @@ bool usbh_init(void)
     return true;
 }
 
-bool UsbHostInterface::send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len) {
+bool UsbHostInterface::send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len)
+{
     TU_VERIFY(usbh_edpt_claim(m_dev_addr, endpoint));
-    if (!usbh_edpt_xfer(m_dev_addr, endpoint, (uint8_t*)buffer, len))
+    if (!usbh_edpt_xfer(m_dev_addr, endpoint, (uint8_t *)buffer, len))
     {
         usbh_edpt_release(m_dev_addr, endpoint);
         return false;

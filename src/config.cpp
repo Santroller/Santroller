@@ -135,7 +135,6 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_multiplexer_tag:
         active_devices.emplace_back(new MultiplexerDevice(device.device.multiplexer, *dev_id));
         break;
-
     }
     *dev_id += 1;
     return true;
@@ -412,13 +411,6 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = *(std::shared_ptr<Profile> *)*arg;
-    if (profile->devices.empty())
-    {
-        for (auto &device : active_devices)
-        {
-            profile->devices.emplace(device->m_id, device);
-        }
-    }
     std::unique_ptr<LedMappingDevice> device = nullptr;
     proto_Led proto_led;
     proto_led.mapping.led.inputMapping.input.input.shortcut.arg = &profile;
@@ -468,7 +460,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     for (auto &device : active_devices)
     {
         profile->devices.emplace(device->m_id, device);
-        printf("load mapping: %p %d\r\n", device.get(), device->m_id);
+        printf("load device: %p %d\r\n", device.get(), device->m_id);
     }
     proto_Profile proto_profile;
     memset(&proto_profile, 0, sizeof(proto_profile));

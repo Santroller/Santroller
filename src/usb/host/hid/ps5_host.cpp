@@ -37,7 +37,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             // request capabilities for 3rd party gamepad
             auto size = intf->send_ctrl_xfer(setup_input_caps, data, nullptr);
             printf("%02x %02x %02x\r\n", size, data[2], data[5]);
-            if (size == sizeof(data) && data[2] == 0x28)
+            if (data[2] == 0x28)
             {
                 uint8_t capabilities = data[4];
                 uint8_t device_type = data[5];

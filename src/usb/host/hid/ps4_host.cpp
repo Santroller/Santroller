@@ -34,7 +34,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
         {
             // request capabilities for 3rd party gamepad
             auto size = intf->send_ctrl_xfer(setup_input_caps, data, nullptr);
-            if (size == sizeof(data) && data[2] == 0x27)
+            if (data[2] == 0x27)
             {
                 uint8_t capabilities = data[4];
                 uint8_t device_type = data[5];

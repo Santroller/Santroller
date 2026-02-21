@@ -100,6 +100,8 @@ add_executable(
   src/usb/host/hid/keyboard_host.cpp
   src/usb/host/xinput/xinput_audio_host.cpp
   src/usb/host/xinput/xinput_gamepad_host.cpp
+  src/usb/host/xinput/xinput_wireless_gamepad_host.cpp
+  src/usb/host/xinput/xinput_wireless_audio_host.cpp
   src/usb/host/xinput/xinput_big_button_host.cpp
   src/usb/host/xinput/xinput_plugin_module_host.cpp
   src/usb/host/xinput/xinput_security_host.cpp

@@ -84,11 +84,21 @@ bool USBHostHardwareDevice::using_pin(uint8_t pin)
 {
     return pin == m_device.firstPin || pin == m_device.firstPin + 1;
 }
-static std::unordered_map<uint8_t, std::shared_ptr<UsbHostDevice>> host_devices;
+std::unordered_map<uint8_t, std::shared_ptr<UsbHostDevice>> host_devices;
 bool usbh_init(void)
 {
     printf("usbh init\r\n");
     host_devices.clear();
+    return true;
+}
+
+bool UsbHostInterface::send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len) {
+    TU_VERIFY(usbh_edpt_claim(m_dev_addr, endpoint));
+    if (!usbh_edpt_xfer(m_dev_addr, endpoint, (uint8_t*)buffer, len))
+    {
+        usbh_edpt_release(m_dev_addr, endpoint);
+        return false;
+    }
     return true;
 }
 
@@ -119,6 +129,8 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     XInputModuleHost::open,
     XInputSecurityHost::open,
     XInputBigButtonHost::open,
+    XInputWirelessGamepadHost::open,
+    XInputWirelessAudioHost::open,
     HidHost::open};
 
 bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)

@@ -7,20 +7,9 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "libmpr121.hpp"
-#pragma once
-enum USBDeviceType
-{
-    Santroller,
-    XInput,
-    PS3,
-    PS4,
-    PS5,
-    Raphnet,
-    Switch,
-    XboxOne,
-    OGXbox
-};
-
+#include "usb/host/host.hpp"
+#include <unordered_map>
+extern std::unordered_map<uint8_t, std::shared_ptr<UsbHostDevice>> host_devices;
 class USBHostHardwareDevice : public Device
 {
 public:

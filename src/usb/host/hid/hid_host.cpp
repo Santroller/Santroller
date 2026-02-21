@@ -29,7 +29,7 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
 
     uint16_t vid, pid;
     tuh_vid_pid_get(dev_addr, &vid, &pid);
-    uint8_t temp_buf[512];
+    static uint8_t temp_buf[512];
     tuh_descriptor_get_hid_report(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength, NULL, (uintptr_t)temp_buf);
     // Seems that sometimes we miss the first byte?
     if (!temp_buf[0] || temp_buf[0] == 4)

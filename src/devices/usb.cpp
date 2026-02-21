@@ -98,7 +98,7 @@ uint32_t UsbHostInterface::send_ctrl_xfer(tusb_control_request_t setup, void *bu
     xfer.daddr = m_dev_addr;
     xfer.ep_addr = 0;
     xfer.setup = &setup;
-    xfer.buffer = (uint8_t*)buffer;
+    xfer.buffer = (uint8_t *)buffer;
     xfer.complete_cb = NULL;
     xfer.user_data = 0;
     tuh_control_xfer(&xfer);
@@ -158,13 +158,18 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
-    // host_devices.erase(dev_addr);
-    // assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x)
-    //                                             { return x->dev_addr() == dev_addr; }));
-    // reload();
+    if (host_devices.erase(dev_addr))
+    {
+        assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [&dev_addr](std::shared_ptr<UsbHostInterface> &x)
+                                                    { return x->dev_addr() == dev_addr; }));
+    }
+    if (HIDConfigDevice::tool_closed())
+    {
+        reload();
+    }
 }
 
-usbh_class_driver_t driver_host[] = {
+static const usbh_class_driver_t driver_host[] = {
     {
 #if CFG_TUSB_DEBUG >= 2
         .name = "Santroller_Host",

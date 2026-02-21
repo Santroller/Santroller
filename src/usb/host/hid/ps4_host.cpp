@@ -18,7 +18,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
     tusb_control_request_t setup_input_caps = {
         bmRequestType_bit : {
             recipient : TUSB_REQ_RCPT_INTERFACE,
-            type : TUSB_REQ_TYPE_VENDOR,
+            type : TUSB_REQ_TYPE_CLASS,
             direction : TUSB_DIR_IN
         },
         bRequest : HID_REQ_CONTROL_GET_REPORT,

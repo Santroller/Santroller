@@ -80,6 +80,9 @@ add_compile_definitions("GIT_HASH=\"${GIT_COMMIT}\"")
 
 set(TARGET santroller)
 message(STATUS ${TARGET})
+FILE(WRITE ${CMAKE_BINARY_DIR}/commit.hash
+"${GIT_COMMIT}"
+)
 add_executable(
   ${TARGET}
   src/main.cpp

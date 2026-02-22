@@ -16,6 +16,7 @@
 #include "hardware/adc.h"
 #include "math.h"
 
+static const char version[] = GIT_HASH;
 uint8_t const desc_hid_report_config[] =
     {
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
@@ -24,7 +25,8 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdCommand)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(1, HID_REPORT_ID(ReportIdKeepalive)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdBootloader)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles))};
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion))};
 
 HIDConfigDevice::HIDConfigDevice()
 {
@@ -231,7 +233,8 @@ void HIDConfigDevice::handle_command(proto_Command command)
     case DetectDigital:
       for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
       {
-        if (i == 23) {
+        if (i == 23)
+        {
           continue;
         }
         bool found = false;
@@ -369,6 +372,12 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     uint32_t ret = copy_config(buffer, start);
     start += ret;
     return ret + 1;
+  }
+  case ReportId::ReportIdGetVersion:
+  {
+    buffer[0] = report_id;
+    memcpy(buffer+1, version, sizeof(version));
+    return sizeof(version) + 1;
   }
   case ReportId::ReportIdGetActiveProfiles:
   {

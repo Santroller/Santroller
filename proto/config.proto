@@ -106,3 +106,7 @@ message ConfigInfo {
 message GetActiveProfiles {
   repeated int32 profiles = 1;
 }
+
+message GetVersion {
+  required string version = 1;
+}

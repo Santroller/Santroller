@@ -12,4 +12,4 @@
 	url = https://github.com/ricardoquesada/bluepad32
 [submodule "lib/pico_fota_bootloader"]
 	path = lib/pico_fota_bootloader
-	url = https://github.com/JZimnol/pico_fota_bootloader
+	url = https://github.com/sanjay900/pico_fota_bootloader

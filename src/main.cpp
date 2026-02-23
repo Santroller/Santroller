@@ -40,15 +40,6 @@
 
 #include "usb/usb_descriptors.h"
 #include <pico_fota_bootloader/core.h>
-// TODO: do we just throw bt on core1? did that work?
-
-void core1()
-{
-    multicore_lockout_victim_init();
-    while (1)
-    {
-    }
-}
 
 proto_Config config;
 uint32_t timeSinceMode = millis();
@@ -138,6 +129,14 @@ void update()
     }
 }
 
+void core1()
+{
+    multicore_lockout_victim_init();
+    while (1)
+    {
+    }
+}
+
 int main()
 {
     if (pfb_is_after_firmware_update())
@@ -153,7 +152,6 @@ int main()
     set_sys_clock_khz(120000, true);
     multicore_launch_core1(core1);
     adc_init();
-    EEPROM.start();
 
     if (!load(config))
     {
@@ -161,6 +159,7 @@ int main()
         save(&config);
         first_load();
     }
+    EEPROM.start();
     printf("init %d\r\n", mode);
 
     // init device stack on configured roothub port

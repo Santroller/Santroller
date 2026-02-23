@@ -310,6 +310,8 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       update_state.chunkOffset += 32;
       if (update_state.chunkOffset == 256)
       {
+        printf("starting write %02x\r\n", update_state.offset);
+        multicore_lockout_start_blocking();
         if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, 256))
         {
           printf("failed to write update! %02x\r\n", update_state.offset);
@@ -327,22 +329,26 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
             pfb_perform_update();
           }
         }
+        multicore_lockout_end_blocking();
       }
       break;
     case ReportId::ReportIdUpdateFirmware:
     {
-      pb_istream_t inputStream = pb_istream_from_buffer(buffer+1, bufsize-1);
+      pb_istream_t inputStream = pb_istream_from_buffer(buffer + 1, bufsize - 1);
       if (!pb_decode_delimited(&inputStream, proto_FirmwareUpdate_fields, &update_state))
       {
         printf("Didn't decode fw update?\r\n");
         break;
       }
-      // printf("fw update offset: %02x\r\n", update_state.firmwareSize - update_state.offset);
+      printf("fw update offset: %02x\r\n", update_state.offset);
       tool_seen = true;
       if (update_state.offset == 0)
       {
+        multicore_lockout_start_blocking();
         pfb_initialize_download_slot();
+        multicore_lockout_end_blocking();
       }
+      printf("blocking end\r\n");
       break;
     }
     case ReportId::ReportIdConfigInfo:

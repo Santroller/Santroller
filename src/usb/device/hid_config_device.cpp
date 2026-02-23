@@ -28,7 +28,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdBootloader)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(257, HID_REPORT_ID(ReportIdUploadFirmware)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion))};
 
 HIDConfigDevice::HIDConfigDevice()

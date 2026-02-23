@@ -140,6 +140,46 @@ void OGXboxGamepadDevice::initialize()
     m_epout = next_epout();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+
+    memset(&initialReport, 0, sizeof(initialReport));
+    switch (subtype)
+    {
+    case RockBandDrums:
+    {
+        OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)&initialReport;
+        report->redVelocity = -1;
+        report->blueVelocity = -1;
+        report->greenVelocity = 0;
+        report->yellowVelocity = 0;
+        break;
+    }
+    case GuitarHeroGuitar:
+    {
+        // TODO: santroller 1 has, we should replicate that logic
+        // if (seen_rpcs3)
+        // {
+        //     report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
+        // }
+        OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)&initialReport;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case LiveGuitar:
+    {
+        OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)&initialReport;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case GuitarHeroDrums:
+    {
+        OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)&initialReport;
+        report->leftThumbClick = true;
+        break;
+    }
+    default:
+        break;
+    }
+    initialReport.rsize = sizeof(OGXboxGamepad_Data_t);
 }
 void OGXboxGamepadDevice::process()
 {

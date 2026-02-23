@@ -19,6 +19,10 @@ void RockBandGuitarAxisMapping::update_hid(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_wii(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // TODO: we have to deal with data formats probably
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
     switch (m_mapping.mapping.rbAxis)
@@ -41,6 +45,10 @@ void RockBandGuitarAxisMapping::update_wii(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -63,6 +71,10 @@ void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -85,6 +97,10 @@ void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -108,6 +124,10 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -133,6 +153,10 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -158,6 +182,10 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -182,6 +210,10 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {
@@ -206,6 +238,10 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.rbAxis)
     {

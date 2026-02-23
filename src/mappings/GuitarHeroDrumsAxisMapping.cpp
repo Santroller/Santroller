@@ -18,6 +18,10 @@ void GuitarHeroDrumsAxisMapping::update_hid(uint8_t *buf)
 }
 void GuitarHeroDrumsAxisMapping::update_wii(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // TODO: we have to deal with data formats probably
     // TODO: this one is a bit fun because we can only send one velocity at a time.
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;
@@ -63,6 +67,10 @@ void GuitarHeroDrumsAxisMapping::update_ps2(uint8_t *buf)
 
 void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS3GuitarHeroDrums_Data_t *report = (PS3GuitarHeroDrums_Data_t *)buf;
     switch (m_mapping.mapping.ghDrumAxis)
     {
@@ -111,6 +119,10 @@ void GuitarHeroDrumsAxisMapping::update_ps5(uint8_t *buf)
 
 void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)buf;
 
     switch (m_mapping.mapping.ghDrumAxis)
@@ -152,6 +164,10 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
 }
 void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)buf;
     switch (m_mapping.mapping.ghDrumAxis)
     {

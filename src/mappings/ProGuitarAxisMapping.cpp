@@ -32,6 +32,10 @@ void ProGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void ProGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS3RockBandProGuitar_Data_t *report = (PS3RockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proAxis)
     {
@@ -93,6 +97,10 @@ void ProGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proAxis)
     {
@@ -145,6 +153,10 @@ void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxRockBandProGuitar_Data_t *report = (OGXboxRockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proAxis)
     {

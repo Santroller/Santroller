@@ -25,6 +25,10 @@ void GuitarHeroGuitarAxisMapping::update_hid(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // TODO: we have to deal with data formats probably
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
     switch (m_mapping.mapping.ghAxis)
@@ -47,6 +51,10 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
@@ -69,6 +77,10 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
@@ -91,6 +103,10 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
@@ -111,6 +127,10 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
@@ -132,6 +152,10 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
@@ -154,6 +178,10 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
@@ -179,6 +207,10 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {

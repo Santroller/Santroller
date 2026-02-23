@@ -23,6 +23,10 @@ void ProjectDivaAxisMapping::update_wii(uint8_t *buf)
 }
 void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // https://github.com/ravinrabbid/DivaCon2040
     SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
@@ -52,6 +56,10 @@ void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps2(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
     {
@@ -80,6 +88,10 @@ void ProjectDivaAxisMapping::update_ps2(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     if (mode == ModePs3)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
@@ -137,6 +149,10 @@ void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
     {
@@ -165,6 +181,10 @@ void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
     {
@@ -193,6 +213,10 @@ void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
     {
@@ -220,6 +244,10 @@ void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
 }
 void ProjectDivaAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
     switch (m_mapping.mapping.divaAxis)
     {

@@ -14,6 +14,10 @@ MouseAxisMapping::MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input>
 
 void MouseAxisMapping::update_hid(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
     switch (m_mapping.mapping.mouseAxis)
     {

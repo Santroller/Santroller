@@ -77,17 +77,19 @@ void PS5GamepadDevice::initialize()
     m_epout = next_epin();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-}
-void PS5GamepadDevice::process()
-{
-    if (!ready())
-        return;
-    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
+    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)initialReport;
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
+    gamepad->data_30_31_0x001a = 0x001a;
+}
+void PS5GamepadDevice::process()
+{
+    if (!ready())
+        return;
+    memcpy(epin_buf, &initialReport, sizeof(initialReport));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -100,6 +102,7 @@ void PS5GamepadDevice::process()
             led->update(false, false);
         }
     }
+    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
 

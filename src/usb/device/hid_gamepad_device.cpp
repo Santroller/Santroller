@@ -25,6 +25,46 @@ void HIDGamepadDevice::initialize()
   m_epout = next_epout();
   usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
   usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+  memset(&initialReport, 0, sizeof(initialReport));
+  switch (subtype)
+  {
+  case RockBandDrums:
+  {
+    XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&initialReport;
+    report->redVelocity = -1;
+    report->blueVelocity = -1;
+    report->greenVelocity = 0;
+    report->yellowVelocity = 0;
+    break;
+  }
+  case GuitarHeroGuitar:
+  {
+    // TODO: santroller 1 has, we should replicate that logic
+    // if (seen_rpcs3)
+    // {
+    //     report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
+    // }
+    XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&initialReport;
+    report->whammy = INT16_MIN;
+    break;
+  }
+  case LiveGuitar:
+  {
+    XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&initialReport;
+    report->whammy = INT16_MIN;
+    break;
+  }
+  case GuitarHeroDrums:
+  {
+    XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&initialReport;
+    report->leftThumbClick = true;
+    break;
+  }
+  default:
+    break;
+  }
+  XInputGamepad_Data_t* gamepad = (XInputGamepad_Data_t*)initialReport;
+  gamepad->rsize = sizeof(XInputGamepad_Data_t);
 }
 void HIDGamepadDevice::process()
 {

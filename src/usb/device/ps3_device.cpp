@@ -168,14 +168,10 @@ void PS3GamepadDevice::initialize()
     m_epout = next_epin();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-}
-void PS3GamepadDevice::process()
-{
-    if (!ready())
-        return;
     if (subtype == Gamepad)
     {
-        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)epin_buf;
+        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)initialReport;
+        memset(report, 0, sizeof(PS3Gamepad_Data_t));
         report->report_id = 1;
         report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
         report->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
@@ -185,51 +181,72 @@ void PS3GamepadDevice::process()
         report->leftStickY = PS3_STICK_CENTER;
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
+        return;
     }
-    else
+    PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)initialReport;
+    memset(gamepad, 0, sizeof(PS3Dpad_Data_t));
+
+    asm volatile("" ::
+                     : "memory");
+    gamepad->accelX = PS3_ACCEL_CENTER;
+    gamepad->accelY = PS3_ACCEL_CENTER;
+    gamepad->accelZ = PS3_ACCEL_CENTER;
+    gamepad->gyro = PS3_ACCEL_CENTER;
+    gamepad->leftStickX = PS3_STICK_CENTER;
+    gamepad->leftStickY = PS3_STICK_CENTER;
+    gamepad->rightStickX = PS3_STICK_CENTER;
+    gamepad->rightStickY = PS3_STICK_CENTER;
+
+    switch (subtype)
     {
-        PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)epin_buf;
-        gamepad->accelX = PS3_ACCEL_CENTER;
-        gamepad->accelY = PS3_ACCEL_CENTER;
-        gamepad->accelZ = PS3_ACCEL_CENTER;
-        gamepad->gyro = PS3_ACCEL_CENTER;
-        if (subtype == PowerGigDrum || subtype == PowerGigGuitar)
+    case ProKeys:
+    {
+        gamepad->rightStickX = 0;
+        gamepad->rightStickY = 0;
+        break;
+    }
+
+    case RockBandDrums:
+    {
+        PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)initialReport;
+        report->redVelocity = 0;
+        report->blueVelocity = 0;
+        report->greenVelocity = 0;
+        report->yellowVelocity = 0;
+        break;
+    }
+    case RockBandGuitar:
+    {
+        PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)initialReport;
+        report->whammy = 0;
+        break;
+    }
+    case PowerGigDrum:
+    case PowerGigGuitar:
+    {
+        // powergig has the bytes swapped, much like the ds3
+        gamepad->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
+        gamepad->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
+        gamepad->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
+        gamepad->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
+        if (subtype == PowerGigGuitar)
         {
-            // powergig has the bytes swapped, much like the ds3
-            gamepad->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
-            gamepad->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
-            gamepad->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
-            gamepad->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
-            if (m_enabled && subtype == PowerGigGuitar)
-            {
-                gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_PG_MODE);
-            }
-            else if (!m_enabled && subtype == PowerGigGuitar)
-            {
-                gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_RB_COMPAT_MODE);
-            }
-            else if (m_enabled && subtype == PowerGigDrum)
-            {
-                gamepad->accelX = __builtin_bswap16(POWERGIG_DRUM_PG_MODE);
-            }
-            else if (!m_enabled && subtype == PowerGigDrum)
-            {
-                gamepad->accelX = __builtin_bswap16(POWERGIG_DRUM_RB_COMPAT_MODE);
-            }
-        }
-        gamepad->leftStickX = PS3_STICK_CENTER;
-        gamepad->leftStickY = PS3_STICK_CENTER;
-        if (subtype == ProKeys)
-        {
-            gamepad->rightStickX = 0;
-            gamepad->rightStickY = 0;
+            gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_RB_COMPAT_MODE);
         }
         else
         {
-            gamepad->rightStickX = PS3_STICK_CENTER;
-            gamepad->rightStickY = PS3_STICK_CENTER;
+            gamepad->accelX = __builtin_bswap16(POWERGIG_DRUM_RB_COMPAT_MODE);
         }
     }
+    default:
+        break;
+    }
+}
+void PS3GamepadDevice::process()
+{
+    if (!ready())
+        return;
+    memcpy(epin_buf, &initialReport, sizeof(initialReport));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -431,6 +448,15 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
                 {
                     m_enabled = true;
                     m_pg_id = 0;
+                    PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)initialReport;
+                    if (subtype == PowerGigGuitar)
+                    {
+                        gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_PG_MODE);
+                    }
+                    else
+                    {
+                        gamepad->accelX = __builtin_bswap16(POWERGIG_DRUM_PG_MODE);
+                    }
                 }
             default:
                 break;

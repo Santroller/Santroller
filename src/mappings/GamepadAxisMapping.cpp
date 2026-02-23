@@ -19,6 +19,10 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
 }
 void GamepadAxisMapping::update_wii(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // TODO: we have to deal with data formats.
     WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
@@ -47,6 +51,10 @@ void GamepadAxisMapping::update_wii(uint8_t *buf)
 }
 void GamepadAxisMapping::update_switch(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     SwitchInputReport *report = (SwitchInputReport *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
@@ -75,6 +83,10 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps2(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
@@ -103,6 +115,10 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     if (mode == ModePs3)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
@@ -179,6 +195,10 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
@@ -207,6 +227,10 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
@@ -235,6 +259,10 @@ void GamepadAxisMapping::update_ps5(uint8_t *buf)
 
 void GamepadAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
@@ -262,6 +290,10 @@ void GamepadAxisMapping::update_xinput(uint8_t *buf)
 }
 void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {
@@ -289,6 +321,10 @@ void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void GamepadAxisMapping::update_xboxone(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XboxOneGamepad_Data_t *report = (XboxOneGamepad_Data_t *)buf;
     switch (m_mapping.mapping.gamepadAxis)
     {

@@ -41,18 +41,20 @@ void PS4GamepadDevice::initialize()
     m_epout = next_epin();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
-}
-void PS4GamepadDevice::process()
-{
-    if (!ready())
-        return;
+
     // TODO: if ps5 auth dongle is plugged in, jump to PS5 mode here
-    PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)epin_buf;
+    PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)initialReport;
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
+}
+void PS4GamepadDevice::process()
+{
+    if (!ready())
+        return;
+    memcpy(epin_buf, &initialReport, sizeof(initialReport));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -65,6 +67,7 @@ void PS4GamepadDevice::process()
             led->update(false, false);
         }
     }
+    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
     send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);

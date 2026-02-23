@@ -18,6 +18,10 @@ void DJHTurntableAxisMapping::update_hid(uint8_t *buf)
 }
 void DJHTurntableAxisMapping::update_wii(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // TODO: we have to deal with data formats probably
     WiiTurntableIntermediateFormat3_t *report = (WiiTurntableIntermediateFormat3_t *)buf;
     switch (m_mapping.mapping.djhAxis)
@@ -56,6 +60,10 @@ void DJHTurntableAxisMapping::update_ps2(uint8_t *buf)
 
 void DJHTurntableAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS3DJHTurntable_Data_t *report = (PS3DJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
@@ -92,6 +100,10 @@ void DJHTurntableAxisMapping::update_ps5(uint8_t *buf)
 
 void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
@@ -119,6 +131,10 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
 }
 void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxDJHTurntable_Data_t *report = (OGXboxDJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {

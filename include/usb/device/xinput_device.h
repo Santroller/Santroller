@@ -44,4 +44,7 @@ public:
 
     static uint8_t xinputInterfaces[4];
     static uint8_t lastIntf;
+
+private:
+    XInputGamepad_Data_t initialReport;
 };

@@ -32,6 +32,10 @@ void LiveGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void LiveGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS3GHLGuitar_Data_t *report = (PS3GHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
@@ -55,6 +59,10 @@ void LiveGuitarAxisMapping::update_ps3(uint8_t *buf)
 
 void LiveGuitarAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
@@ -80,6 +88,10 @@ void LiveGuitarAxisMapping::update_ps4(uint8_t *buf)
 
 void LiveGuitarAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS5GHLGuitar_Data_t *report = (PS5GHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
@@ -105,6 +117,10 @@ void LiveGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void LiveGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
@@ -127,6 +143,10 @@ void LiveGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void LiveGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {

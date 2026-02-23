@@ -32,6 +32,10 @@ void RockBandDrumsAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     // TODO: if pad and cymbal is active for same colour, put cymbal on red pad
     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
@@ -82,6 +86,10 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
@@ -124,6 +132,10 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
@@ -166,6 +178,10 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)buf;
 
     switch (m_mapping.mapping.rbDrumAxis)
@@ -217,6 +233,10 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 }
 void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (!m_centered)
+    {
+        return;
+    }
     OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {

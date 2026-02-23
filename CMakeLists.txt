@@ -110,6 +110,13 @@ add_executable(
   src/usb/host/hid/ps5_host.cpp
   src/usb/host/hid/mouse_host.cpp
   src/usb/host/hid/keyboard_host.cpp
+  src/usb/host/hid/generic_host.cpp
+  src/usb/host/hid/ltek_host.cpp
+  src/usb/host/hid/raphnet_host.cpp
+  src/usb/host/hid/stadia_host.cpp
+  src/usb/host/hid/stepmania_host.cpp
+  src/usb/host/hid/streamdeck_host.cpp
+  src/usb/host/hid/switch_host.cpp
   src/usb/host/xinput/xinput_audio_host.cpp
   src/usb/host/xinput/xinput_gamepad_host.cpp
   src/usb/host/xinput/xinput_wireless_gamepad_host.cpp

@@ -134,7 +134,12 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 void AxisMapping::update(bool full_poll, bool send_events)
 {
     auto val = m_input->tickAnalog();
-    m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+    if (m_mapping.has_pressed || m_mapping.has_released) {
+        val = m_input->tickDigital() ? m_mapping.pressed : m_mapping.released;
+    } else {
+        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+    }
+    
     if (send_events && (val != m_last_sent_value || full_poll || m_resend))
     {
         m_last_sent_value = val;

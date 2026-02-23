@@ -65,6 +65,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "protocols/controller_reports.hpp"
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
 extern "C"
@@ -399,7 +400,7 @@ extern "C"
 	 *		  it should be ignored.
 	 */
 	bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem);
-	// void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out);
+	void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out);
 	/** Enum for the different types of HID reports. */
 	enum HID_ReportItemTypes_t
 	{

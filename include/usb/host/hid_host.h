@@ -92,6 +92,142 @@ private:
     bool m_third_party;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };
+
+class SwitchHost : public HidHost
+{
+public:
+    ~SwitchHost() {}
+    SwitchHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+};
+class RaphnetHost : public HidHost
+{
+public:
+    ~RaphnetHost() {}
+    RaphnetHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+};
+class GenericHost : public HidHost
+{
+public:
+    ~GenericHost();
+    GenericHost(uint8_t dev_addr, uint8_t interface, uint16_t id, HID_ReportInfo_t *info) : HidHost(dev_addr, interface, id), m_info(info) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+    HID_ReportInfo_t *m_info;
+    USB_Host_Data_t m_data;
+};
+class LTekHost : public HidHost
+{
+public:
+    ~LTekHost() {}
+    LTekHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+};
+class StepmaniaHost : public HidHost
+{
+public:
+    ~StepmaniaHost() {}
+    StepmaniaHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+};
+class StreamDeckHost : public HidHost
+{
+public:
+    ~StreamDeckHost() {}
+    StreamDeckHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+};
+class StadiaHost : public HidHost
+{
+public:
+    ~StadiaHost() {}
+    StadiaHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+
+    bool set_config();
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
+    bool tick_digital(UsbButtonType type);
+    uint16_t tick_analog(UsbAxisType type);
+
+private:
+    uint8_t m_ep_in;
+    uint8_t m_ep_out;
+    uint8_t m_ep_in_size;
+    uint8_t m_ep_out_size;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+};
 class KeyboardHost : public HidHost
 {
 public:

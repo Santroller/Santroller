@@ -94,68 +94,69 @@ uint16_t GetAxis(HID_ReportItem_t *item)
 	return val;
 }
 
-// void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out) {
-//     if (info != NULL) {
-//         HID_ReportItem_t *item = info->FirstReportItem;
-//         while (item) {
-//             if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
-//                 switch (item->Attributes.Usage.Page) {
-//                     case HID_USAGE_PAGE_DESKTOP:
-//                         switch (item->Attributes.Usage.Usage) {
-//                             case HID_USAGE_DESKTOP_X:
-//                                 out->genericAxisX = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_Y:
-//                                 out->genericAxisY = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_Z:
-//                                 out->genericAxisZ = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_RX:
-//                                 out->genericAxisRx = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_RY:
-//                                 out->genericAxisRy = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_RZ:
-//                                 out->genericAxisRz = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_SLIDER:
-//                                 out->genericAxisSlider = GetAxis(item);
-//                                 break;
-//                             case HID_USAGE_DESKTOP_HAT_SWITCH:
-//                                 out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;
-//                                 out->dpadRight = item->Value == 3 || item->Value == 2 || item->Value == 1;
-//                                 out->dpadUp = item->Value == 0 || item->Value == 1 || item->Value == 7;
-//                                 out->dpadDown = item->Value == 5 || item->Value == 4 || item->Value == 3;
-//                                 break;
-//                             case HID_USAGE_DESKTOP_DPAD_UP:
-//                                 out->dpadUp = 1;
-//                                 break;
-//                             case HID_USAGE_DESKTOP_DPAD_RIGHT:
-//                                 out->dpadRight = 1;
-//                                 break;
-//                             case HID_USAGE_DESKTOP_DPAD_DOWN:
-//                                 out->dpadDown = 1;
-//                                 break;
-//                             case HID_USAGE_DESKTOP_DPAD_LEFT:
-//                                 out->dpadLeft = 1;
-//                                 break;
-//                         }
-//                         break;
-//                     case HID_USAGE_PAGE_BUTTON: {
-//                         uint8_t usage = item->Attributes.Usage.Usage;
-//                         if (usage <= 16 && item->Value) {
-//                             out->genericButtons |= 1 << usage - 1;
-//                         }
-//                         break;
-//                     }
-//                 }
-//             }
-//             item = item->Next;
-//         }
-//     }
-// }
+
+void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out) {
+    if (info != NULL) {
+        HID_ReportItem_t *item = info->FirstReportItem;
+        while (item) {
+            if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
+                switch (item->Attributes.Usage.Page) {
+                    case HID_USAGE_PAGE_DESKTOP:
+                        switch (item->Attributes.Usage.Usage) {
+                            case HID_USAGE_DESKTOP_X:
+                                out->genericAxisX = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_Y:
+                                out->genericAxisY = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_Z:
+                                out->genericAxisZ = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RX:
+                                out->genericAxisRx = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RY:
+                                out->genericAxisRy = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_RZ:
+                                out->genericAxisRz = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_SLIDER:
+                                out->genericAxisSlider = GetAxis(item);
+                                break;
+                            case HID_USAGE_DESKTOP_HAT_SWITCH:
+                                out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;
+                                out->dpadRight = item->Value == 3 || item->Value == 2 || item->Value == 1;
+                                out->dpadUp = item->Value == 0 || item->Value == 1 || item->Value == 7;
+                                out->dpadDown = item->Value == 5 || item->Value == 4 || item->Value == 3;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_UP:
+                                out->dpadUp = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_RIGHT:
+                                out->dpadRight = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_DOWN:
+                                out->dpadDown = 1;
+                                break;
+                            case HID_USAGE_DESKTOP_DPAD_LEFT:
+                                out->dpadLeft = 1;
+                                break;
+                        }
+                        break;
+                    case HID_USAGE_PAGE_BUTTON: {
+                        uint8_t usage = item->Attributes.Usage.Usage;
+                        if (usage <= 16 && item->Value) {
+                            out->genericButtons |= 1 << usage - 1;
+                        }
+                        break;
+                    }
+                }
+            }
+            item = item->Next;
+        }
+    }
+}
 
 bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
 {

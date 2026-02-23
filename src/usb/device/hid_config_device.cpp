@@ -310,7 +310,6 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       update_state.chunkOffset += 32;
       if (update_state.chunkOffset == 256)
       {
-        printf("starting write %02x\r\n", update_state.offset);
         multicore_lockout_start_blocking();
         if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, 256))
         {
@@ -340,7 +339,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
         printf("Didn't decode fw update?\r\n");
         break;
       }
-      printf("fw update offset: %02x\r\n", update_state.offset);
+      // printf("fw update offset: %02x\r\n", update_state.offset);
       tool_seen = true;
       if (update_state.offset == 0)
       {
@@ -348,7 +347,6 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
         pfb_initialize_download_slot();
         multicore_lockout_end_blocking();
       }
-      printf("blocking end\r\n");
       break;
     }
     case ReportId::ReportIdConfigInfo:

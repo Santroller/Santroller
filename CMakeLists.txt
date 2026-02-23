@@ -282,12 +282,11 @@ add_dependencies(pico santroller)
 
 add_custom_target(
         always_run_target ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/commit.hash
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/commit.hash pico_fota_bootloader santroller
 )
 add_custom_command(
         OUTPUT
             ${CMAKE_CURRENT_BINARY_DIR}/commit.hash
-            ${CMAKE_CURRENT_BINARY_DIR}/full_santroller.uf2
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/lib/pico_fota_bootloader/pico_fota_bootloader.uf2 ${CMAKE_CURRENT_BINARY_DIR}/santroller.uf2
+            ${CMAKE_CURRENT_BINARY_DIR}/santroller_fota.uf2
         COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}"
 )

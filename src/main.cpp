@@ -151,7 +151,7 @@ int main()
     pfb_firmware_commit();
     newMode = mode;
     set_sys_clock_khz(120000, true);
-    // multicore_launch_core1(core1);
+    multicore_launch_core1(core1);
     adc_init();
     EEPROM.start();
 

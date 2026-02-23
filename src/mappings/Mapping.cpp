@@ -135,7 +135,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
 {
     auto val = m_input->tickAnalog();
     if (m_mapping.has_pressed || m_mapping.has_released) {
-        val = m_input->tickDigital() ? m_mapping.pressed : m_mapping.released;
+        m_calibratedValue = val = m_input->tickDigital() ? m_mapping.pressed : m_mapping.released;
     } else {
         m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }

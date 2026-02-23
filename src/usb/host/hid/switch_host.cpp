@@ -17,7 +17,7 @@ std::shared_ptr<UsbHostInterface> SwitchHost::open(std::shared_ptr<UsbHostDevice
     {
         return nullptr;
     }
-    auto intf = std::make_shared<SwitchHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, info);
+    auto intf = std::make_shared<SwitchHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
     uint8_t endpoints = itf_desc->bNumEndpoints;
     p_desc = tu_desc_next(p_desc);
     tusb_hid_descriptor_hid_t *x_desc =

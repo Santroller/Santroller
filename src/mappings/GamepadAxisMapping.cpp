@@ -19,7 +19,7 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
 }
 void GamepadAxisMapping::update_wii(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -51,7 +51,7 @@ void GamepadAxisMapping::update_wii(uint8_t *buf)
 }
 void GamepadAxisMapping::update_switch(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -83,7 +83,7 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps2(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -115,7 +115,7 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -195,7 +195,7 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps4(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -227,7 +227,7 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps5(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -259,7 +259,7 @@ void GamepadAxisMapping::update_ps5(uint8_t *buf)
 
 void GamepadAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -290,7 +290,7 @@ void GamepadAxisMapping::update_xinput(uint8_t *buf)
 }
 void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -321,7 +321,7 @@ void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void GamepadAxisMapping::update_xboxone(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

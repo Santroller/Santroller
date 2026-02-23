@@ -19,7 +19,7 @@ void RockBandGuitarAxisMapping::update_hid(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_wii(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -45,7 +45,7 @@ void RockBandGuitarAxisMapping::update_wii(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -71,7 +71,7 @@ void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -97,7 +97,7 @@ void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -124,7 +124,7 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -153,7 +153,7 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -182,7 +182,7 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -210,7 +210,7 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -238,7 +238,7 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

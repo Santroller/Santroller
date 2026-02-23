@@ -23,7 +23,7 @@ void ProjectDivaAxisMapping::update_wii(uint8_t *buf)
 }
 void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -56,7 +56,7 @@ void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps2(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -88,7 +88,7 @@ void ProjectDivaAxisMapping::update_ps2(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -149,7 +149,7 @@ void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -181,7 +181,7 @@ void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -213,7 +213,7 @@ void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
 
 void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -244,7 +244,7 @@ void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
 }
 void ProjectDivaAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

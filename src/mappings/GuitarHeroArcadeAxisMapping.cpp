@@ -13,7 +13,7 @@ GuitarHeroArcadeAxisMapping::GuitarHeroArcadeAxisMapping(proto_Mapping mapping, 
 
 void GuitarHeroArcadeAxisMapping::update_hid(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

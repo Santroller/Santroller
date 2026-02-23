@@ -32,7 +32,7 @@ void RockBandDrumsAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -66,7 +66,7 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -100,7 +100,7 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -134,7 +134,7 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -174,7 +174,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 }
 void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

@@ -43,6 +43,10 @@ void XInputGamepadDevice::initialize()
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 
     memset(&initialReport, 0, sizeof(initialReport));
+    initialReport.leftStickX = 0;
+    initialReport.leftStickY = 0;
+    initialReport.rightStickX = 0;
+    initialReport.rightStickY = 0;
     switch (subtype)
     {
     case RockBandDrums:

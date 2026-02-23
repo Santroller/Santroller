@@ -25,7 +25,7 @@ void GuitarHeroGuitarAxisMapping::update_hid(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -51,7 +51,7 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -77,7 +77,7 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -103,7 +103,7 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -127,7 +127,7 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -152,7 +152,7 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -178,7 +178,7 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -207,7 +207,7 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

@@ -14,7 +14,7 @@ MouseAxisMapping::MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input>
 
 void MouseAxisMapping::update_hid(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

@@ -134,10 +134,10 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 void AxisMapping::update(bool full_poll, bool send_events)
 {
     auto val = m_input->tickAnalog();
-    if (m_mapping.has_released)
+    if (m_mapping.has_pressed)
     {
         m_calibratedValue = val = m_input->tickDigital() ? m_mapping.pressed : m_mapping.released;
-        m_centered = !m_input->tickDigital() && !m_mapping.has_pressed;
+        m_centered = !m_input->tickDigital() && !m_mapping.has_released;
     }
     else
     {

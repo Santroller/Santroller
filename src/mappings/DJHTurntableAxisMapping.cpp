@@ -18,7 +18,7 @@ void DJHTurntableAxisMapping::update_hid(uint8_t *buf)
 }
 void DJHTurntableAxisMapping::update_wii(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -60,7 +60,7 @@ void DJHTurntableAxisMapping::update_ps2(uint8_t *buf)
 
 void DJHTurntableAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -100,7 +100,7 @@ void DJHTurntableAxisMapping::update_ps5(uint8_t *buf)
 
 void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }
@@ -131,7 +131,7 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
 }
 void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (!m_centered)
+    if (m_centered)
     {
         return;
     }

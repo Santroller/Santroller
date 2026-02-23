@@ -298,6 +298,8 @@ uint16_t XInputWirelessGamepadHost::tick_analog(UsbAxisType type)
             return ((XInputGuitarHeroGuitar_Data_t *)m_report_buf)->tilt + INT16_MAX;
         case UsbAxisSlider:
             return ((XInputGuitarHeroGuitar_Data_t *)m_report_buf)->slider + INT16_MAX;
+        default:
+            return 0;
         }
         break;
     case LiveGuitar:
@@ -318,6 +320,8 @@ uint16_t XInputWirelessGamepadHost::tick_analog(UsbAxisType type)
             return ((XInputRockBandGuitar_Data_t *)m_report_buf)->tilt + INT16_MAX;
         case UsbAxisPickup:
             return ((XInputRockBandGuitar_Data_t *)m_report_buf)->pickup + INT16_MAX;
+        default:
+            return 0;
         }
     default:
         switch (type)
@@ -334,6 +338,8 @@ uint16_t XInputWirelessGamepadHost::tick_analog(UsbAxisType type)
             return ((XInputGamepad_Data_t *)m_report_buf)->rightStickX + INT16_MAX;
         case UsbAxisRightStickY:
             return ((XInputGamepad_Data_t *)m_report_buf)->rightStickY + INT16_MAX;
+        default:
+            return 0;
         }
     }
 

@@ -24,6 +24,7 @@ set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
+# set(PFB_WITH_SHA256_HASHING OFF)
 set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
 
 include(pico_sdk_import.cmake)
@@ -53,7 +54,7 @@ add_subdirectory(lib/pico_fota_bootloader)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   # Activate some compiler / linker options to aid us with diagnosing stack space issues in Debug builds
   add_compile_options(-fstack-usage -Wstack-usage=500)
-  add_compile_definitions(PICO_USE_STACK_GUARDS=1)
+  # add_compile_definitions(PICO_USE_STACK_GUARDS=1)
 endif()
 
 # We want a larger stack of 4kb per core instead of the default 2kb
@@ -265,7 +266,6 @@ target_link_libraries(
   hardware_timer
   hardware_sleep
   pico_unique_id
-  pico_mem_ops
   pico_bootsel_via_double_reset
   tinyusb_host
   tinyusb_device
@@ -273,20 +273,11 @@ target_link_libraries(
   pico_fota_bootloader_lib
   tinyusb_device_unmarked)
 
-# create map/bin/hex/uf2 file in addition to ELF.
-pico_add_extra_outputs(${TARGET})
 pfb_compile_with_bootloader(${TARGET})
+pico_add_extra_outputs(${TARGET})
 
-add_custom_target(pico)
-add_dependencies(pico santroller)
-
-add_custom_target(
-        always_run_target ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/commit.hash pico_fota_bootloader santroller
-)
 add_custom_command(
-        OUTPUT
-            ${CMAKE_CURRENT_BINARY_DIR}/commit.hash
-            ${CMAKE_CURRENT_BINARY_DIR}/santroller_fota.uf2
+        TARGET ${TARGET}
+        POST_BUILD
         COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}"
 )

@@ -67,7 +67,8 @@ def convert_uf2_to_binary(uf2s: list[bytearray]) -> bytearray:
     for uf2 in uf2s:
         if len(uf2) % 512 != 0:
             raise ValueError(f"provided binary is length {len(uf2)}, which isn't fully divisible by 512!")
-
+        block_count = 0
+        block_num = 0
         for index in range(0, len(uf2), 512):
             chunk = uf2[index:index+512]
             _, _, _, uf2_addr, bytes_, block_num, block_count, _ = struct.unpack('<LLLLLLLL', chunk[0:32])
@@ -103,3 +104,5 @@ with open(bootloader_filename, 'rb') as bootloader:
 
 with open(os.path.join(out_dir,"santroller_fota.uf2"), "wb") as full_file:
     full_file.write(convert_binary_to_uf2([(0, bootloader_binary)]))
+
+print("Build combined uf2!")

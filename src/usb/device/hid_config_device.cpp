@@ -306,16 +306,18 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       break;
     case ReportId::ReportIdUploadFirmware:
       tool_seen = true;
-      memcpy(fw_update_tmp + update_state.chunkOffset, buffer + 1, bufsize - 1);
-      update_state.chunkOffset += bufsize - 1;
-      if (update_state.chunkOffset >= update_state.chunkSize)
+      memcpy(fw_update_tmp + update_state.chunkOffset, buffer + 1, 32);
+      update_state.chunkOffset += 32;
+      printf("chunk offset %d!\r\n", update_state.chunkOffset);
+      if (update_state.chunkOffset == 256)
       {
-        if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, update_state.chunkSize))
+        if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, 256))
         {
           printf("failed to write update! %02x\r\n", update_state.offset);
         }
-        if ((update_state.offset + update_state.chunkSize) >= update_state.firmwareSize)
+        if ((update_state.offset + update_state.chunkOffset) >= update_state.firmwareSize)
         {
+          printf("fw uploaded! checking\r\n");
           if (pfb_firmware_sha256_check(update_state.firmwareSize))
           {
             printf("sha failed!\r\n");
@@ -330,7 +332,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       break;
     case ReportId::ReportIdUpdateFirmware:
     {
-      pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
+      pb_istream_t inputStream = pb_istream_from_buffer(buffer+1, bufsize-1);
       if (!pb_decode_delimited(&inputStream, proto_FirmwareUpdate_fields, &update_state))
       {
         printf("Didn't decode fw update?\r\n");

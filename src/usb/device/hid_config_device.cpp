@@ -28,7 +28,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdBootloader)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
-        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdUploadFirmware)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(33, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion))};
 
 HIDConfigDevice::HIDConfigDevice()
@@ -308,7 +308,6 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       tool_seen = true;
       memcpy(fw_update_tmp + update_state.chunkOffset, buffer + 1, 32);
       update_state.chunkOffset += 32;
-      printf("chunk offset %d!\r\n", update_state.chunkOffset);
       if (update_state.chunkOffset == 256)
       {
         if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, 256))
@@ -338,7 +337,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
         printf("Didn't decode fw update?\r\n");
         break;
       }
-      printf("fw update offset: %02x\r\n", update_state.offset);
+      // printf("fw update offset: %02x\r\n", update_state.firmwareSize - update_state.offset);
       tool_seen = true;
       if (update_state.offset == 0)
       {

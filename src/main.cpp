@@ -39,6 +39,7 @@
 #include "pio_usb.h"
 
 #include "usb/usb_descriptors.h"
+#include <pico_fota_bootloader/core.h>
 // TODO: do we just throw bt on core1? did that work?
 
 void core1()
@@ -139,6 +140,15 @@ void update()
 
 int main()
 {
+    if (pfb_is_after_firmware_update())
+    {
+        // handle new firmare info if needed
+    }
+    if (pfb_is_after_rollback())
+    {
+        // handle performed rollback if needed
+    }
+    pfb_firmware_commit();
     newMode = mode;
     set_sys_clock_khz(120000, true);
     multicore_launch_core1(core1);

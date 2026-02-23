@@ -110,3 +110,10 @@ message GetActiveProfiles {
 message GetVersion {
   required string version = 1;
 }
+
+message FirmwareUpdate {
+  required int32 firmwareSize = 1;
+  required int32 offset = 2;
+  required int32 chunkOffset = 3;
+  required int32 chunkSize = 4;
+}

@@ -4,9 +4,9 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 2.1.1)
+set(sdkVersion 2.2.0)
 set(toolchainVersion 14_2_Rel1)
-set(picotoolVersion 2.1.1)
+set(picotoolVersion 2.2.0-a4)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -23,6 +23,8 @@ set(PICO_TINYUSB_PATH ${CMAKE_SOURCE_DIR}/lib/tinyusb)
 set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
+set(PFB_WITH_IMAGE_ENCRYPTION OFF)
+set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
 
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
@@ -30,7 +32,7 @@ include(pico_extras_import.cmake)
 project(santroller C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-
+set(PFB_REDIRECT_BOOTLOADER_LOGS_TO_UART ON)
 add_compile_options(-Wall
   -Wtype-limits
   -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
@@ -46,6 +48,7 @@ add_compile_options(-fdata-sections -ffunction-sections)
 add_link_options(-Wl,--gc-sections)
 
 add_subdirectory(lib)
+add_subdirectory(lib/pico_fota_bootloader)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   # Activate some compiler / linker options to aid us with diagnosing stack space issues in Debug builds
@@ -80,7 +83,7 @@ add_compile_definitions("GIT_HASH=\"${GIT_COMMIT}\"")
 
 set(TARGET santroller)
 message(STATUS ${TARGET})
-FILE(WRITE ${CMAKE_BINARY_DIR}/commit.hash
+FILE(WRITE ${CMAKE_BINARY_DIR}/commit.hash.in
 "${GIT_COMMIT}"
 )
 add_executable(
@@ -267,10 +270,24 @@ target_link_libraries(
   tinyusb_host
   tinyusb_device
   tinyusb_pico_pio_usb
+  pico_fota_bootloader_lib
   tinyusb_device_unmarked)
 
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(${TARGET})
+pfb_compile_with_bootloader(${TARGET})
 
 add_custom_target(pico)
 add_dependencies(pico santroller)
+
+add_custom_target(
+        always_run_target ALL
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/commit.hash
+)
+add_custom_command(
+        OUTPUT
+            ${CMAKE_CURRENT_BINARY_DIR}/commit.hash
+            ${CMAKE_CURRENT_BINARY_DIR}/full_santroller.uf2
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/lib/pico_fota_bootloader/pico_fota_bootloader.uf2 ${CMAKE_CURRENT_BINARY_DIR}/santroller.uf2
+        COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}"
+)

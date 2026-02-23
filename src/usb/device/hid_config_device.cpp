@@ -15,6 +15,7 @@
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "math.h"
+#include <pico_fota_bootloader/core.h>
 
 static const char version[] = GIT_HASH;
 uint8_t const desc_hid_report_config[] =
@@ -26,6 +27,8 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(1, HID_REPORT_ID(ReportIdKeepalive)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdBootloader)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
+        TUD_HID_REPORT_DESC_GENERIC_INFEATURE(257, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion))};
 
 HIDConfigDevice::HIDConfigDevice()
@@ -301,6 +304,46 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       write_config(buffer, bufsize, start);
       start += bufsize;
       break;
+    case ReportId::ReportIdUploadFirmware:
+      tool_seen = true;
+      memcpy(fw_update_tmp + update_state.chunkOffset, buffer + 1, bufsize - 1);
+      update_state.chunkOffset += bufsize - 1;
+      if (update_state.chunkOffset >= update_state.chunkSize)
+      {
+        if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, update_state.chunkSize))
+        {
+          printf("failed to write update! %02x\r\n", update_state.offset);
+        }
+        if ((update_state.offset + update_state.chunkSize) >= update_state.firmwareSize)
+        {
+          if (pfb_firmware_sha256_check(update_state.firmwareSize))
+          {
+            printf("sha failed!\r\n");
+          }
+          else
+          {
+            pfb_mark_download_slot_as_valid();
+            pfb_perform_update();
+          }
+        }
+      }
+      break;
+    case ReportId::ReportIdUpdateFirmware:
+    {
+      pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
+      if (!pb_decode_delimited(&inputStream, proto_FirmwareUpdate_fields, &update_state))
+      {
+        printf("Didn't decode fw update?\r\n");
+        break;
+      }
+      printf("fw update offset: %02x\r\n", update_state.offset);
+      tool_seen = true;
+      if (update_state.offset == 0)
+      {
+        pfb_initialize_download_slot();
+      }
+      break;
+    }
     case ReportId::ReportIdConfigInfo:
       lastKeepAlive = millis();
       tool_seen = true;
@@ -376,7 +419,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
   case ReportId::ReportIdGetVersion:
   {
     buffer[0] = report_id;
-    memcpy(buffer+1, version, sizeof(version));
+    memcpy(buffer + 1, version, sizeof(version));
     return sizeof(version) + 1;
   }
   case ReportId::ReportIdGetActiveProfiles:

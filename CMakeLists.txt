@@ -33,7 +33,7 @@ include(pico_extras_import.cmake)
 project(santroller C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-set(PFB_REDIRECT_BOOTLOADER_LOGS_TO_UART ON)
+# set(PFB_REDIRECT_BOOTLOADER_LOGS_TO_UART ON)
 add_compile_options(-Wall
   -Wtype-limits
   -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int

@@ -1062,7 +1062,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     {
 #if DEVICE_TYPE_IS_GAMEPAD
         // PS3s request this as some form of controller id
-        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08)
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT)
         {
             // Pro instruments use a different init flow
 #if DEVICE_TYPE_IS_PRO
@@ -1335,11 +1335,13 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
         }
+        #if DEVICE_TYPE != GUITAR_HERO_GUITAR
         else if (consoleType == PS3 || consoleType == WII_RB)
         {
             memcpy_P(requestBuffer, &DevCompatIDsPS3, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE));
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE);
         }
+        #endif
         else if (consoleType != UNIVERSAL)
         {
             return 0;

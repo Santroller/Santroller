@@ -217,6 +217,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_GUITAR_ALTERNATE
 #define PS3_TYPE PS3_GH_GUITAR_PID
 #define PS4_TYPE PS4_GUITAR
+#define PS4_EXTENDED 0x06
 #define WII_TYPE WII_RB_GUITAR_PID
 #define OG_XBOX_REPORT OGXboxGuitarHeroGuitar_Data_t
 #define XINPUT_REPORT XInputGuitarHeroGuitar_Data_t
@@ -250,6 +251,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_GUITAR
 #define PS3_TYPE PS3_RB_GUITAR_PID
 #define PS4_TYPE PS4_GUITAR
+#define PS4_EXTENDED 0x07
 #define WII_TYPE WII_RB_GUITAR_PID
 #define OG_XBOX_REPORT OGXboxRockBandGuitar_Data_t
 #define XINPUT_REPORT XInputRockBandGuitar_Data_t
@@ -431,6 +433,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_GH_DRUM_PID
 #define PS4_TYPE PS4_DRUMS
+#define PS4_EXTENDED 0x1f
 #define WII_TYPE WII_RB_DRUM_PID
 #define OG_XBOX_REPORT OGXboxGuitarHeroDrums_Data_t
 #define XINPUT_REPORT XInputGuitarHeroDrums_Data_t
@@ -463,6 +466,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define SUB_TYPE XINPUT_DRUMS
 #define PS3_TYPE PS3_RB_DRUM_PID
 #define PS4_TYPE PS4_DRUMS
+#define PS4_EXTENDED 0x1f
 #define WII_TYPE WII_RB_DRUM_PID
 #define OG_XBOX_REPORT OGXboxRockBandDrums_Data_t
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
@@ -525,6 +529,9 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #endif
 #ifndef PS4_TYPE
 #define PS4_TYPE PS4_GAMEPAD
+#endif
+#ifndef PS4_EXTENDED
+#define PS4_EXTENDED 0
 #endif
 #ifndef PS5_TYPE
 #define PS5_TYPE PS4_GAMEPAD

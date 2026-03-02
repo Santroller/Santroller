@@ -10,7 +10,7 @@
 class UsbHostInterface : public MidiDevice
 {
 public:
-    virtual ~UsbHostInterface() {};
+    virtual ~UsbHostInterface() {printf("~UsbHostInterface()\r\n");};
     UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id), m_dev_addr(d_addr), m_interface(interface) {}
     virtual bool set_config() = 0;
     virtual bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
@@ -76,7 +76,7 @@ protected:
 class UsbHostDevice : public Device
 {
 public:
-    ~UsbHostDevice() {};
+    ~UsbHostDevice() {printf("~UsbHostDevice()\r\n");}
     UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
     {
     }
@@ -127,9 +127,9 @@ public:
     {
         return false;
     }
-    std::vector<std::shared_ptr<UsbHostInterface>> interfaces;
     std::unordered_map<uint8_t, std::shared_ptr<UsbHostInterface>> host_devices_by_itf;
-    std::unordered_map<uint8_t, std::shared_ptr<UsbHostInterface>> host_devices_by_endpoint;
+    std::shared_ptr<UsbHostInterface> host_devices_by_endpoint_in[16];
+    std::shared_ptr<UsbHostInterface> host_devices_by_endpoint_out[16];
 
 protected:
     uint8_t m_dev_addr;

@@ -6,6 +6,7 @@
 #include "usb/usb_devices.h"
 #include "config.hpp"
 #include "hidparser.h"
+#include "protocols/dance_pad.hpp"
 
 std::shared_ptr<UsbHostInterface> StepmaniaHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -44,11 +45,11 @@ std::shared_ptr<UsbHostInterface> StepmaniaHost::open(std::shared_ptr<UsbHostDev
     }
     if (intf->m_ep_out)
     {
-        list->host_devices_by_endpoint[intf->m_ep_out] = intf;
+        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
     }
     if (intf->m_ep_in)
     {
-        list->host_devices_by_endpoint[intf->m_ep_in] = intf;
+        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
     assignable_usb_devices.push_back(intf);
     USB_FreeReportInfo(info);
@@ -59,7 +60,9 @@ bool StepmaniaHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xfer
 {
     if (ep_addr & 0x80)
     {
-        // TODO: map as needed
+        if (m_ep_in_buf[0] == STEPMANIA_X_REPORT_ID) {
+            memcpy(&m_last_input_report, m_ep_in_buf, m_ep_in_size);
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -71,7 +74,19 @@ bool StepmaniaHost::set_config()
 }
 bool StepmaniaHost::tick_digital(UsbButtonType type)
 {
-    return false;
+    switch (type)
+    {
+    case UsbButtonDpadUp:
+        return m_last_input_report.dpadUp;
+    case UsbButtonDpadDown:
+        return m_last_input_report.dpadDown;
+    case UsbButtonDpadLeft:
+        return m_last_input_report.dpadLeft;
+    case UsbButtonDpadRight:
+        return m_last_input_report.dpadRight;
+    default:
+        return false;
+    }
 }
 uint16_t StepmaniaHost::tick_analog(UsbAxisType type)
 {

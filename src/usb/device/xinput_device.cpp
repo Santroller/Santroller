@@ -355,7 +355,7 @@ size_t XInputSecurityDevice::compatible_section_descriptor(uint8_t *dest, size_t
     OS_COMPATIBLE_SECTION section = {
         FirstInterfaceNumber : interface_id,
         Reserved : 0x01,
-        CompatibleID : "XUSB10",
+        CompatibleID : "WINUSB",
         SubCompatibleID : {0},
         Reserved2 : {0}
     };

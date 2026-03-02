@@ -6,7 +6,7 @@ class Device
 {
 public:
     Device(uint16_t id) : m_id(id) {}
-    virtual ~Device() {}
+    virtual ~Device() { printf("~Device()\r\n"); }
     virtual void update(bool full_poll, bool send_events) = 0;
     virtual bool is_wii_extension(WiiExtType type);
     virtual bool is_usb_device(proto_SpecificUsbDevice type);
@@ -23,11 +23,11 @@ protected:
     bool resend = false;
 };
 
-class MidiDevice: public Device
+class MidiDevice : public Device
 {
 public:
-    MidiDevice(uint16_t id): Device(id){}
-    virtual ~MidiDevice() {}
+    MidiDevice(uint16_t id) : Device(id) {}
+    virtual ~MidiDevice() {printf("~MidiDevice()\r\n"); }
     virtual uint16_t readMidiNote(uint8_t note) = 0;
     virtual uint16_t readMidiControlChange(uint8_t cc) = 0;
     virtual int16_t readMidiPitchBend() = 0;

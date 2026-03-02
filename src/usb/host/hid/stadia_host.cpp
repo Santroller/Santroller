@@ -44,11 +44,11 @@ std::shared_ptr<UsbHostInterface> StadiaHost::open(std::shared_ptr<UsbHostDevice
     }
     if (intf->m_ep_out)
     {
-        list->host_devices_by_endpoint[intf->m_ep_out] = intf;
+        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
     }
     if (intf->m_ep_in)
     {
-        list->host_devices_by_endpoint[intf->m_ep_in] = intf;
+        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
     assignable_usb_devices.push_back(intf);
     USB_FreeReportInfo(info);
@@ -59,7 +59,10 @@ bool StadiaHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
 {
     if (ep_addr & 0x80)
     {
-        // TODO: map as needed
+        if (m_ep_in_buf[0] == STADIA_REPORT_ID)
+        {
+            memcpy(&m_last_input_report, m_ep_in_buf, m_ep_in_size);
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -71,9 +74,65 @@ bool StadiaHost::set_config()
 }
 bool StadiaHost::tick_digital(UsbButtonType type)
 {
-    return false;
+    uint8_t dpad = m_last_input_report.dpad >= 0x08 ? 0 : dpad_bindings_reverse[m_last_input_report.dpad];
+    asm volatile("" ::
+                     : "memory");
+    bool up = dpad & UP;
+    bool left = dpad & LEFT;
+    bool down = dpad & DOWN;
+    bool right = dpad & RIGHT;
+    switch (type)
+    {
+    case UsbButtonA:
+        return m_last_input_report.a;
+    case UsbButtonB:
+        return m_last_input_report.b;
+    case UsbButtonX:
+        return m_last_input_report.x;
+    case UsbButtonY:
+        return m_last_input_report.y;
+    case UsbButtonLeftShoulder:
+        return m_last_input_report.leftShoulder;
+    case UsbButtonRightShoulder:
+        return m_last_input_report.rightShoulder;
+    case UsbButtonBack:
+        return m_last_input_report.back;
+    case UsbButtonStart:
+        return m_last_input_report.start;
+    case UsbButtonLeftThumbClick:
+        return m_last_input_report.leftThumbClick;
+    case UsbButtonRightThumbClick:
+        return m_last_input_report.rightThumbClick;
+    case UsbButtonGuide:
+        return m_last_input_report.guide;
+    case UsbButtonDpadUp:
+        return up;
+    case UsbButtonDpadDown:
+        return down;
+    case UsbButtonDpadLeft:
+        return left;
+    case UsbButtonDpadRight:
+        return right;
+    default:
+        return false;
+    }
 }
 uint16_t StadiaHost::tick_analog(UsbAxisType type)
 {
+    switch (type)
+    {
+    case UsbAxisLeftTrigger:
+        return m_last_input_report.leftTrigger << 8;
+    case UsbAxisRightTrigger:
+        return m_last_input_report.rightTrigger << 8;
+    case UsbAxisLeftStickX:
+        return m_last_input_report.leftStickX << 8;
+    case UsbAxisLeftStickY:
+        return m_last_input_report.leftStickY << 8;
+    case UsbAxisRightStickX:
+        return m_last_input_report.rightStickX << 8;
+    case UsbAxisRightStickY:
+        return m_last_input_report.rightStickY << 8;
+    }
     return 0;
 }

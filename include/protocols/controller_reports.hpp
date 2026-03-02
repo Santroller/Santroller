@@ -231,24 +231,6 @@ typedef struct {
     uint8_t rightThumbClick : 1;  // r3
     uint8_t guide : 1;            // ps
     uint8_t capture : 1;          // switch capture button
-    uint8_t leftBlue : 1;
-    uint8_t leftRed : 1;
-    uint8_t leftGreen : 1;
-    uint8_t rightBlue : 1;
-
-    uint8_t rightRed : 1;
-    uint8_t rightGreen : 1;
-    uint8_t soloGreen : 1;
-    uint8_t soloRed : 1;
-    uint8_t soloYellow : 1;
-    uint8_t soloBlue : 1;
-    uint8_t soloOrange : 1;
-    uint8_t green : 1;
-
-    uint8_t red : 1;
-    uint8_t yellow : 1;
-    uint8_t blue : 1;
-    uint8_t orange : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
@@ -283,28 +265,6 @@ typedef struct {
     int16_t leftStickY;
     int16_t rightStickX;
     int16_t rightStickY;
-    uint8_t pressureDpadUp;
-    uint8_t pressureDpadRight;
-    uint8_t pressureDpadLeft;
-    uint8_t pressureDpadDown;
-    uint8_t pressureL1;
-    uint8_t pressureR1;
-    uint8_t pressureTriangle;
-    uint8_t pressureCircle;
-    uint8_t pressureCross;
-    uint8_t pressureSquare;
-    uint8_t whammy;
-    uint8_t pickup;
-    int16_t tilt;
-    uint8_t slider;
-    int16_t leftTableVelocity;
-    int16_t rightTableVelocity;
-    int16_t effectsKnob;
-    int16_t crossfader;
-    uint16_t accelX;
-    uint16_t accelZ;
-    uint16_t accelY;
-    uint16_t gyro;
     uint16_t genericAxisX;
     uint16_t genericAxisY;
     uint16_t genericAxisZ;
@@ -312,20 +272,6 @@ typedef struct {
     uint16_t genericAxisRy;
     uint16_t genericAxisRz;
     uint16_t genericAxisSlider;
-    USB_NKRO_Data_t keyboard;
-    USB_Mouse_Boot_Data_t mouse;
-    uint8_t lowEFret;
-    uint8_t aFret;
-    uint8_t dFret;
-    uint8_t gFret;
-    uint8_t bFret;
-    uint8_t highEFret;
-    uint8_t lowEFretVelocity;
-    uint8_t aFretVelocity;
-    uint8_t dFretVelocity;
-    uint8_t gFretVelocity;
-    uint8_t bFretVelocity;
-    uint8_t highEFretVelocity;
 } __attribute__((packed)) USB_Host_Data_t;
 
 

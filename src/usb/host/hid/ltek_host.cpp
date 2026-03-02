@@ -6,13 +6,16 @@
 #include "usb/usb_devices.h"
 #include "config.hpp"
 #include "hidparser.h"
+#include "protocols/dance_pad.hpp"
 
 std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
-    if (itf_desc->bInterfaceProtocol != HID_ITF_PROTOCOL_NONE || vid != LTEK_LUFA_VID || pid != LTEK_LUFA_PID)
+    bool lufa = vid == LTEK_LUFA_VID && pid == LTEK_LUFA_PID;
+    bool normal = vid == LTEK_VID && pid == LTEK_PID;
+    if (itf_desc->bInterfaceProtocol != HID_ITF_PROTOCOL_NONE || !(lufa || normal))
     {
         return nullptr;
     }
@@ -44,12 +47,13 @@ std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> 
     }
     if (intf->m_ep_out)
     {
-        list->host_devices_by_endpoint[intf->m_ep_out] = intf;
+        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
     }
     if (intf->m_ep_in)
     {
-        list->host_devices_by_endpoint[intf->m_ep_in] = intf;
+        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
+    intf->m_has_report_id = lufa;
     assignable_usb_devices.push_back(intf);
     USB_FreeReportInfo(info);
     return intf;
@@ -59,7 +63,6 @@ bool LTekHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_b
 {
     if (ep_addr & 0x80)
     {
-        // TODO: map as needed
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -71,7 +74,30 @@ bool LTekHost::set_config()
 }
 bool LTekHost::tick_digital(UsbButtonType type)
 {
-    return false;
+    // TODO: do we deal with center?
+    LTEK_Report_Data_t *report = (LTEK_Report_Data_t *)m_ep_in_buf;
+    if (m_has_report_id)
+    {
+        // skip report id
+        report = (LTEK_Report_Data_t *)(m_ep_in_buf + 1);
+    }
+    switch (type)
+    {
+    case UsbButtonDpadUp:
+        return report->dpadUp;
+    case UsbButtonDpadDown:
+        return report->dpadDown;
+    case UsbButtonDpadLeft:
+        return report->dpadLeft;
+    case UsbButtonDpadRight:
+        return report->dpadRight;
+    case UsbButtonBack:
+        return report->back;
+    case UsbButtonStart:
+        return report->start;
+    default:
+        return false;
+    }
 }
 uint16_t LTekHost::tick_analog(UsbAxisType type)
 {

@@ -2,6 +2,7 @@
 #include "host.hpp"
 #include "protocols/xinput.hpp"
 #include "hidparser.h"
+#include "protocols/dance_pad.hpp"
 
 #define UP 1 << 0
 #define DOWN 1 << 1
@@ -165,6 +166,7 @@ public:
     uint16_t tick_analog(UsbAxisType type);
 
 private:
+    bool m_has_report_id;
     uint8_t m_ep_in;
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
@@ -189,6 +191,7 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+    StepManiaX_Report_Data_t m_last_input_report;
 };
 class StreamDeckHost : public HidHost
 {
@@ -227,6 +230,7 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+    Stadia_Data_t m_last_input_report;
 };
 class KeyboardHost : public HidHost
 {

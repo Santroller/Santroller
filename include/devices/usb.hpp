@@ -13,7 +13,7 @@ extern std::unordered_map<uint8_t, std::shared_ptr<UsbHostDevice>> host_devices;
 class USBHostHardwareDevice : public UsbHostInterface
 {
 public:
-    ~USBHostHardwareDevice() {}
+    ~USBHostHardwareDevice() {printf("~USBHostHardwareDevice()\r\n");}
     USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);

@@ -47,13 +47,13 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
             }
         }
         if (intf->m_ep_out)
-        {
-            list->host_devices_by_endpoint[intf->m_ep_out] = intf;
-        }
-        if (intf->m_ep_in)
-        {
-            list->host_devices_by_endpoint[intf->m_ep_in] = intf;
-        }
+    {
+        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+    }
+    if (intf->m_ep_in)
+    {
+        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+    }
 
         printf("found device: %d\r\n", intf->m_subtype);
         return intf;
@@ -106,7 +106,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     send_intr_xfer(m_ep_out, capabilitiesRequest, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
                     m_found = true;
-                    assignable_usb_devices.push_back(host_devices[m_dev_addr]->interfaces[m_interface]);
+                    assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     reload();
                 }
             }

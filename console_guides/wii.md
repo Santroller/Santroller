@@ -45,6 +45,13 @@ A module is available that works with USB loaders and allows you to play Guitar 
 
 ### Setting up Santroller Brainslug (USB Loader GX)
 
+```danger
+You need to be running the game from a USB disk!
+
+Booting the game from the SD card locks the SD card, and because of that, brainslug isn't able to load the files it needs.
+```
+
+
 1. Download `sd.zip` from https://github.com/Santroller/santroller-bslug/releases/latest
 2. Extract the contents to the root of your Wii SD card
 3. Rename `RGHE52.dol` to the title ID of the game you want to play

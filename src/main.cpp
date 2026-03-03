@@ -14,6 +14,7 @@
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
 #include "config.hpp"
+#include "devices/debug.hpp"
 #include "common/tusb_types.h"
 #include "device/usbd_pvt.h"
 #include "hardware/structs/usb.h"
@@ -152,14 +153,15 @@ int main()
     set_sys_clock_khz(120000, true);
     multicore_launch_core1(core1);
     adc_init();
+    // stdio_uart_init_full(uart_get_instance(1), 115200, 8, 9);
 
+    EEPROM.start();
     if (!load(config))
     {
         // config was not valid, save a empty config
-        save(&config);
-        first_load();
+        save_empty();
+        load(config);
     }
-    EEPROM.start();
     printf("init %d\r\n", mode);
 
     // init device stack on configured roothub port

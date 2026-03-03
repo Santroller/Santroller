@@ -553,53 +553,16 @@ struct ConfigFooter
 };
 
 static const uint32_t FOOTER_MAGIC = 0xd2f1e365;
-bool save_device(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+bool save_empty()
 {
-    return true;
-}
-bool save_profile(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
-{
-    return true;
-}
-bool save_assignments(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
-{
-    return true;
-}
-bool save(proto_Config *config)
-{
-    // need to do the opposite of load, aka setting all the encode functions and then encode
-    config->devices.funcs.encode = save_device;
-    config->profiles.funcs.encode = save_profile;
-    pb_ostream_t outputStream = pb_ostream_from_buffer(EEPROM.writeCache, EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    if (!pb_encode(&outputStream, proto_Config_fields, config))
-    {
-        return false;
-    }
 
-    // Create the new footer
-    ConfigFooter newFooter;
-    newFooter.dataSize = outputStream.bytes_written;
-    newFooter.dataCrc = CRC32::calculate(EEPROM.writeCache, newFooter.dataSize);
-    newFooter.magic = FOOTER_MAGIC;
-    newFooter.currentProfile = 0;
+    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
 
-    // The data has changed when the footer content has changed. Only then do we actually need to save.
-    const ConfigFooter &oldFooter = *reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    if (newFooter == oldFooter)
-    {
-        // The data has not changed, no saving neccessary.
-        return true;
-    }
-
-    // Write the footer
-    ConfigFooter *cacheFooter = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
-    memcpy(cacheFooter, &newFooter, sizeof(ConfigFooter));
-
-    // Move the encoded data in memory down to the footer
-    memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - newFooter.dataSize, EEPROM.writeCache, newFooter.dataSize);
-    memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - newFooter.dataSize);
-
-    EEPROM.commit();
+    footer->dataSize = 0;
+    footer->dataCrc = CRC32::calculate(EEPROM.writeCache, 0);
+    footer->magic = FOOTER_MAGIC;
+    footer->currentProfile = 0;
+    EEPROM.commit_now();
     return true;
 }
 
@@ -779,6 +742,7 @@ bool load(proto_Config &config)
     // Check for presence of magic value
     if (footer.magic != FOOTER_MAGIC)
     {
+        printf("footer wrong %x != %x\r\n", footer.magic, FOOTER_MAGIC);
         return false;
     }
 

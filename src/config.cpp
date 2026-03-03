@@ -801,6 +801,7 @@ bool load(proto_Config &config)
 
 void first_load()
 {
+    UsbDevice::reset_ep();
     active_devices.clear();
     instances.clear();
     active_instances.clear();
@@ -808,6 +809,7 @@ void first_load()
     all_profiles.clear();
     auto confDevice = std::make_shared<HIDConfigDevice>();
     confDevice->interface_id = instances.size();
+    confDevice->initialize();
     instances.push_back(confDevice);
     active_instances.push_back(confDevice);
     usb_instances[confDevice->interface_id] = confDevice;

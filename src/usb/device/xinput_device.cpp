@@ -383,6 +383,22 @@ bool XInputSecurityDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
 bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
     static uint8_t buf[0x22];
+
+    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS)
+    {
+        switch (request->bRequest)
+        {
+        case HID_REQ_CONTROL_GET_REPORT:
+            if (stage == CONTROL_STAGE_SETUP)
+            {
+                uint8_t const report_type = tu_u16_high(request->wValue);
+                uint8_t const report_id = tu_u16_low(request->wValue);
+                if (report_id == 0xF2)
+                    newMode = ModePs3;
+            }
+            break;
+        }
+    }
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         switch (request->bRequest)

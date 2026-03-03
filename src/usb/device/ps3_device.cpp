@@ -290,21 +290,24 @@ void PS3GamepadDevice::process()
 
 size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-    OS_COMPATIBLE_SECTION section = {
-        FirstInterfaceNumber : interface_id,
-        Reserved : 0x01,
-        CompatibleID : "WINUSB",
-        SubCompatibleID : {0},
-        Reserved2 : {0}
-    };
-    assert(sizeof(section) <= remaining);
-    memcpy(dest, &section, sizeof(section));
-    return sizeof(section);
+    if (subtype != GuitarHeroGuitar)
+    {
+        OS_COMPATIBLE_SECTION section = {
+            FirstInterfaceNumber : interface_id,
+            Reserved : 0x01,
+            CompatibleID : "WINUSB",
+            SubCompatibleID : {0},
+            Reserved2 : {0}
+        };
+        assert(sizeof(section) <= remaining);
+        memcpy(dest, &section, sizeof(section));
+        return sizeof(section);
+    }
+    return 0;
 }
 
 size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    printf("subtype: %02x\r\n", subtype);
     if (subtype == Gamepad)
     {
 

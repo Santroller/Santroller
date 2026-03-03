@@ -4,7 +4,7 @@
 #include "usb/device/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
-PS2Device::PS2Device(proto_PSXDevice device, uint16_t id, MultitapPort port) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin, port), m_device(device)
+PS2Device::PS2Device(proto_PSXDevice device, uint16_t id, MultitapPort port) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin, port), m_device(device), m_port(port)
 {
 }
 void PS2Device::rescan(bool first)

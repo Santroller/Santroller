@@ -96,6 +96,10 @@ void attentionInterrupt(uint gpio, uint32_t events)
 }
 PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin, MultitapPort port) : interface(block, SPI_CPHA_1, SPI_CPOL_1, sck, mosi, miso, false, clock), m_port(port), attPin(attPin), ackPin(ackPin), connected(false)
 {
+    gpio_init(attPin);
+    gpio_set_dir(attPin, true);
+    gpio_init(ackPin);
+    gpio_set_dir(ackPin, false);
     gpio_set_irq_enabled_with_callback(ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
 }
 void PSXController::noAttention(void)
@@ -132,6 +136,7 @@ void PSXController::shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_
         }
     }
 }
+#include <stdio.h>
 bool PSXController::autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out, const uint8_t len)
 {
     uint8_t *ret = nullptr;
@@ -457,7 +462,6 @@ bool PSXController::readButton(PS2ButtonType buttonType)
     return false;
 }
 extern unsigned long millis_at_boot;
-
 bool PSXController::controller_valid(MultitapPort port)
 {
     return autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput)) != 0;

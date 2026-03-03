@@ -71,7 +71,7 @@ void HIDGamepadDevice::process()
   if (!ready())
     return;
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
-  memset(epin_buf, 0, sizeof(epin_buf));
+  memcpy(epin_buf, initialReport, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
   report->rsize = sizeof(PCGamepadDpad_Data_t);
 

@@ -524,6 +524,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                     instances.push_back(instance);
                     instance->profiles.push_back(profile);
                     instance->interface_id = active_instances.size();
+                    instance->subtype = profile->subtype;
                     active_instances.push_back(instance);
                     usb_instances[usb_instances.size()] = instance;
                     instance->initialize();

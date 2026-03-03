@@ -900,7 +900,7 @@ typedef struct
 
     uint8_t unused3[12];
 
-    // Reminder that this value is 10-bit in range
+    // Reminder that this value is 10-bit in range, though GHL only cares about 0-0xff
     uint16_t tilt;
 
     uint16_t unused4[3];

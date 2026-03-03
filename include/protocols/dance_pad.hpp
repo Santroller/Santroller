@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #define STEPMANIA_X_REPORT_ID 3
 typedef struct {

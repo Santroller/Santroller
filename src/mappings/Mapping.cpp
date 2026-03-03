@@ -142,7 +142,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
     else
     {
         m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-        m_centered = m_calibratedValue != m_mapping.center;
+        m_centered = m_calibratedValue == m_mapping.center;
     }
 
     if (send_events && (val != m_last_sent_value || full_poll || m_resend))

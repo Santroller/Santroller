@@ -3,6 +3,7 @@
 #include "hid_reports.h"
 #include "config.hpp"
 #include "enums.pb.h"
+#include "usb/usb_devices.h"
 
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
@@ -152,7 +153,7 @@ uint8_t handle_player_leds_ps3(uint8_t player_mask)
     return 0;
 }
 
-uint8_t const desc_hid_report_ps3[] =
+uint8_t const desc_hid_report_ps3_thirdparty[] =
     {
         TUD_HID_REPORT_DESC_PS3_THIRDPARTY_GAMEPAD()};
 uint8_t const desc_hid_report_ps3_gamepad[] =
@@ -165,7 +166,7 @@ PS3GamepadDevice::PS3GamepadDevice(bool wiirb) : m_wiirb(wiirb)
 void PS3GamepadDevice::initialize()
 {
     m_epin = next_epin();
-    m_epout = next_epin();
+    m_epout = next_epout();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     if (subtype == Gamepad)
@@ -303,25 +304,113 @@ size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
-    assert(sizeof(desc) <= remaining);
-    memcpy(dest, desc, sizeof(desc));
-    return sizeof(desc);
+    printf("subtype: %02x\r\n", subtype);
+    if (subtype == Gamepad)
+    {
+
+        uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3_gamepad), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+        assert(sizeof(desc) <= remaining);
+        memcpy(dest, desc, sizeof(desc));
+        return sizeof(desc);
+    }
+    else
+    {
+        uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3_thirdparty), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+        assert(sizeof(desc) <= remaining);
+        memcpy(dest, desc, sizeof(desc));
+        return sizeof(desc);
+    }
 }
 
 void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    desc->idVendor = 0x0c70;
-    desc->idProduct = 0x0777;
+    switch (subtype)
+    {
+    case Dancepad:
+    case StageKit:
+    case KeyboardMouse:
+    case Wheel:
+    case DisneyInfinity:
+    case Skylanders:
+    case LegoDimensions:
+    case FightStick:
+    case FlightStick:
+    case GuitarFreaks:
+    case PopNMusic:
+    case DJMax:
+    case ProjectDiva:
+    case RockRevolutionGuitar:
+        return;
+    case Gamepad:
+        desc->idVendor = SONY_VID;
+        desc->idProduct = SONY_DS3_PID;
+        return;
+    case GuitarHeroGuitar:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_GH_GUITAR_PID;
+        return;
+    case PowerGigGuitar:
+    case RockBandGuitar:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_RB_GUITAR_PID;
+        return;
+    case GuitarHeroDrums:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_GH_DRUM_PID;
+        return;
+    case PowerGigDrum:
+    case RockBandDrums:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_RB_DRUM_PID;
+        return;
+    case LiveGuitar:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3WIIU_GHLIVE_DONGLE_PID;
+        return;
+    case DjHeroTurntable:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_DJ_TURNTABLE_PID;
+        return;
+    case ProGuitarMustang:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_MUSTANG_PID;
+        return;
+    case ProGuitarSquire:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_SQUIRE_PID;
+        return;
+    case ProKeys:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_KEYBOARD_PID;
+        return;
+    case Taiko:
+        desc->idVendor = REDOCTANE_VID;
+        desc->idProduct = PS3_KEYBOARD_PID;
+        return;
+    }
 }
 const uint8_t *PS3GamepadDevice::report_descriptor()
 {
-    return desc_hid_report_ps3;
+    if (subtype == Gamepad)
+    {
+        return desc_hid_report_ps3_gamepad;
+    }
+    else
+    {
+        return desc_hid_report_ps3_thirdparty;
+    }
 }
 
 uint16_t PS3GamepadDevice::report_desc_len()
 {
-    return sizeof(desc_hid_report_ps3);
+    if (subtype == Gamepad)
+    {
+        return sizeof(desc_hid_report_ps3_gamepad);
+    }
+    else
+    {
+        return sizeof(desc_hid_report_ps3_thirdparty);
+    }
 }
 
 uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)

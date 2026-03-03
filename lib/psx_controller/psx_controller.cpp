@@ -136,7 +136,6 @@ void PSXController::shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_
         }
     }
 }
-#include <stdio.h>
 bool PSXController::autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out, const uint8_t len)
 {
     uint8_t *ret = nullptr;

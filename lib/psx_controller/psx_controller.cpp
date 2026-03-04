@@ -476,15 +476,10 @@ void PSXController::tick()
     {
         return;
     }
-    if (to_us_since_boot(get_absolute_time()) - last < 1000)
-    {
-        return;
-    }
     if (!connected)
     {
         if (!autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput)))
         {
-            last = to_us_since_boot(get_absolute_time());
             return;
         }
         if (sendCommand(ps2Data, commandEnterConfig, sizeof(commandEnterConfig)))
@@ -550,7 +545,6 @@ void PSXController::tick()
         }
         connected = true;
         invalidCount = 0;
-        printf("found ps2 %d\r\n", type);
     }
     if (connected)
     {

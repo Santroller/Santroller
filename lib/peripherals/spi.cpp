@@ -25,9 +25,10 @@ uint8_t SPIMasterInterface::transfer(uint8_t data)
     if (!m_msbfirst) {
         data = revbits(data);
     }
-    spi_write_read_blocking(spi, &data, &data, 1);
+    uint8_t ret = 0;
+    spi_write_read_blocking(spi, &data, &ret, 1);
     if (!m_msbfirst) {
-        data = revbits(data);
+        ret = revbits(ret);
     }
-    return data;
+    return ret;
 }

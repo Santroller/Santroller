@@ -150,6 +150,7 @@ enum PS2ControllerType {
   PS2ControllerTypeFlightStick = 9;
   PS2ControllerTypeMouse = 10;
   PS2ControllerTypeTaiko = 11;
+  PS2ControllerTypePopNMusic = 12;
 }
 
 enum APA102Type {

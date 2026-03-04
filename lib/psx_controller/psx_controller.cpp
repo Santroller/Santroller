@@ -1,6 +1,7 @@
 #include "psx_controller.hpp"
 #include <hardware/gpio.h>
 #include <pico/time.h>
+#include <stdio.h>
 
 static inline bool isValidReply(const uint8_t *status)
 {
@@ -94,22 +95,23 @@ void attentionInterrupt(uint gpio, uint32_t events)
 {
     spiAcknowledged = true;
 }
-PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin, MultitapPort port) : interface(block, SPI_CPHA_1, SPI_CPOL_1, sck, mosi, miso, false, clock), m_port(port), attPin(attPin), ackPin(ackPin), connected(false)
+PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin, MultitapPort port) : interface(block, SPI_CPHA_1, SPI_CPOL_1, sck, mosi, miso, false, clock), m_port(port), m_attPin(attPin), m_ackPin(ackPin), connected(false)
 {
     gpio_init(attPin);
     gpio_set_dir(attPin, true);
     gpio_init(ackPin);
     gpio_set_dir(ackPin, false);
     gpio_set_irq_enabled_with_callback(ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
+    spiAcknowledged = false;
 }
 void PSXController::noAttention(void)
 {
-    gpio_put(attPin, true);
+    gpio_put(m_attPin, true);
     sleep_us(ATTN_DELAY);
 }
 void PSXController::signalAttention(void)
 {
-    gpio_put(attPin, false);
+    gpio_put(m_attPin, false);
     sleep_us(ATTN_DELAY);
 }
 void PSXController::shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len)
@@ -136,9 +138,10 @@ void PSXController::shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_
         }
     }
 }
-bool PSXController::autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out, const uint8_t len)
+bool PSXController::autoShiftData(uint8_t *in, const uint8_t *out, const uint8_t len)
 {
     uint8_t *ret = nullptr;
+    uint8_t port = m_port;
 
     if (len >= 2 && len <= BUFFER_SIZE)
     {
@@ -175,7 +178,7 @@ bool PSXController::autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out,
     }
     return ret;
 }
-bool PSXController::sendCommand(uint8_t port, uint8_t *in, const uint8_t *buf, uint8_t len)
+bool PSXController::sendCommand(uint8_t *in, const uint8_t *buf, uint8_t len)
 {
     bool ret = false;
     unsigned long start = to_ms_since_boot(get_absolute_time());
@@ -185,7 +188,7 @@ bool PSXController::sendCommand(uint8_t port, uint8_t *in, const uint8_t *buf, u
          * we get out of config mode, so let's just be happy if we get a few
          * consecutive valid replies
          */
-        if (autoShiftData(port, in, buf, len))
+        if (autoShiftData(in, buf, len))
         {
             if (buf == commandEnterConfig)
             {
@@ -335,6 +338,7 @@ bool PSXController::readButton(PS2ButtonType buttonType)
     case PS2ControllerTypeGunCon:
     case PS2ControllerTypeJogCon:
     case PS2ControllerTypeDigital:
+    case PS2ControllerTypePopNMusic:
     case PS2ControllerTypeFlightStick:
     case PS2ControllerTypeDualshock:
     case PS2ControllerTypeDualshock2:
@@ -461,45 +465,47 @@ bool PSXController::readButton(PS2ButtonType buttonType)
     return false;
 }
 extern unsigned long millis_at_boot;
-bool PSXController::controller_valid(MultitapPort port)
+bool PSXController::controller_valid(MultitapPort m_port)
 {
-    return autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput)) != 0;
+    return autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput)) != 0;
 }
 void PSXController::tick()
 {
-    if (m_port == BASE)
-    {
-        return;
-    }
     // PS2 guitars die if you poll them too fast
     if (type == PS2ControllerTypeGuitar && to_us_since_boot(get_absolute_time()) - last < 3000)
     {
         return;
     }
-    uint8_t port = m_port;
+    if (to_us_since_boot(get_absolute_time()) - last < 1000)
+    {
+        return;
+    }
     if (!connected)
     {
-        if (!autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput)))
+        if (!autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput)))
         {
+            last = to_us_since_boot(get_absolute_time());
             return;
         }
-        if (sendCommand(port, ps2Data, commandEnterConfig, sizeof(commandEnterConfig)))
+        if (sendCommand(ps2Data, commandEnterConfig, sizeof(commandEnterConfig)))
         {
             // Enable analog sticks
-            sendCommand(port, ps2Data, commandSetMode, sizeof(commandSetMode));
+            sendCommand(ps2Data, commandSetMode, sizeof(commandSetMode));
             // Enable pressure sensitive buttons
-            sendCommand(port, ps2Data, commandSetPressures, sizeof(commandSetPressures));
-            sendCommand(port, ps2Data, commandExitConfig, sizeof(commandExitConfig));
+            sendCommand(ps2Data, commandSetPressures, sizeof(commandSetPressures));
+            sendCommand(ps2Data, commandExitConfig, sizeof(commandExitConfig));
         }
-        if (!autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput)))
-        {
-            return;
-        }
+        autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput));
         if (isDualShock2Reply(ps2Data))
         {
-            // Check if dpad left is held
-            if ((~ps2Data[3]) & (1 << 7))
+            if ((~ps2Data[3]) & (1 << 7) && (~ps2Data[3]) & (1 << 5) && (~ps2Data[3]) & (1 << 6))
             {
+                // Check if dpad left right down is held
+                type = PS2ControllerTypePopNMusic;
+            }
+            else if ((~ps2Data[3]) & (1 << 7))
+            {
+                // Check if dpad left is held
                 type = PS2ControllerTypeGuitar;
             }
             else
@@ -544,17 +550,18 @@ void PSXController::tick()
         }
         connected = true;
         invalidCount = 0;
+        printf("found ps2 %d\r\n", type);
     }
     if (connected)
     {
-        if (autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput)))
+        if (autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput)))
         {
             invalidCount = 0;
             if (isConfigReply(ps2Data))
             {
                 // We're stuck in config mode, try to get out
-                sendCommand(port, ps2Data, commandExitConfig, sizeof(commandExitConfig));
-                autoShiftData(port, ps2Data, commandPollInput, sizeof(commandPollInput));
+                sendCommand(ps2Data, commandExitConfig, sizeof(commandExitConfig));
+                autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput));
             }
             last = to_us_since_boot(get_absolute_time());
         }

@@ -45,7 +45,6 @@
 
 typedef enum
 {
-    BASE = 0x00,
     A = 0x01,
     B = 0x02,
     C = 0x03,
@@ -66,15 +65,15 @@ public:
     bool controller_valid(MultitapPort port);
 
 private:
-    bool autoShiftData(uint8_t port, uint8_t *in, const uint8_t *out, const uint8_t len);
+    bool autoShiftData(uint8_t *in, const uint8_t *out, const uint8_t len);
     void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len);
-    bool sendCommand(uint8_t port, uint8_t *in, const uint8_t *buf, uint8_t len);
+    bool sendCommand(uint8_t *in, const uint8_t *buf, uint8_t len);
     void noAttention();
     void signalAttention();
     SPIMasterInterface interface;
     MultitapPort m_port;
-    uint8_t attPin;
-    uint8_t ackPin;
+    uint8_t m_attPin;
+    uint8_t m_ackPin;
     int missing;
     bool connected;
     bool hasTapBar = false;

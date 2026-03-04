@@ -86,7 +86,7 @@
             }                                                                                                     \
         }                                                                                                         \
     }                                                                                                             \
-    if (pad)                                                                                                      \
+    if (pad || device_type.drum_type == DRUM_RB1)                                                                                                      \
     {                                                                                                             \
         if (yellow)                                                                                               \
         {                                                                                                         \

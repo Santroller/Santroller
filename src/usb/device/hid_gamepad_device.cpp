@@ -82,6 +82,10 @@ void HIDGamepadDevice::process()
       mapping->update(false, false);
       mapping->update_hid(epin_buf);
     }
+    if (invert_y_axis_hid && current_type == Gamepad) {
+      report->leftStickY = 65535 - report->leftStickY;
+      report->rightStickY = 65535 - report->rightStickY;
+    }
     for (const auto &led : profile->leds)
     {
       led->update(false, false);

@@ -27,6 +27,7 @@ public:
     virtual ~Profile() {}
     SubType subtype;
     bool xinput_on_windows;
+    bool invert_y_axis_hid;
     ConsoleMode mode;
     OutputMode output;
     uint32_t profile_id;
@@ -44,6 +45,7 @@ public:
     SubType subtype;
     ConsoleMode mode;
     bool xinput_on_windows;
+    bool invert_y_axis_hid;
     std::vector<std::shared_ptr<Profile>> profiles;
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;

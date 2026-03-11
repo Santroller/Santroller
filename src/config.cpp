@@ -477,6 +477,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_Profile_fields, &proto_profile);
     profile->subtype = proto_profile.deviceToEmulate;
     profile->xinput_on_windows = proto_profile.has_xinputOnWindows && proto_profile.xinputOnWindows;
+    profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;
     printf("profile loaded: %d\r\n", profile->profile_id);
     // TODO: handle this once we support emulating non usb devices
     profile->output = OutputUSB;
@@ -529,6 +530,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                     instance->interface_id = active_instances.size();
                     instance->subtype = profile->subtype;
                     instance->xinput_on_windows = profile->xinput_on_windows;
+                    instance->invert_y_axis_hid = profile->invert_y_axis_hid;
                     active_instances.push_back(instance);
                     usb_instances[usb_instances.size()] = instance;
                     instance->initialize();

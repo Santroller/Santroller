@@ -14,6 +14,7 @@ message Profile {
   required SubType deviceToEmulate = 6;
   repeated Led leds = 9;
   optional bool xinputOnWindows = 10;
+  optional bool invertYAxisHid = 11;
 }
 message InputLedMapping {
   required Input input = 1;

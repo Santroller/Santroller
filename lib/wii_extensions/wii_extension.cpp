@@ -246,11 +246,11 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             case WiiAxisType::WiiAxisClassicLeftStickX:
                 return (mBuffer[0]) << 8;
             case WiiAxisType::WiiAxisClassicLeftStickY:
-                return (mBuffer[2]) << 8;
+                return 65535 - ((mBuffer[2]) << 8);
             case WiiAxisType::WiiAxisClassicRightStickX:
                 return (mBuffer[1]) << 8;
             case WiiAxisType::WiiAxisClassicRightStickY:
-                return (mBuffer[3]) << 8;
+                return 65535 - ((mBuffer[3]) << 8);
             case WiiAxisType::WiiAxisClassicLeftTrigger:
                 // compared to a conventional controller, zl is where the trigger is so we need to swap
                 if (mType == WiiClassicControllerPro)
@@ -278,11 +278,11 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
             case WiiAxisType::WiiAxisClassicLeftStickX:
                 return ((mBuffer[0] & 0x3f)) << 10;
             case WiiAxisType::WiiAxisClassicLeftStickY:
-                return ((mBuffer[1] & 0x3f)) << 10;
+                return 65535 - (((mBuffer[1] & 0x3f)) << 10);
             case WiiAxisType::WiiAxisClassicRightStickX:
                 return ((((mBuffer[0] & 0xc0) >> 3) | ((mBuffer[1] & 0xc0) >> 5) | (mBuffer[2] >> 7))) << 11;
             case WiiAxisType::WiiAxisClassicRightStickY:
-                return ((mBuffer[2] & 0x1f)) << 11;
+                return 65535 - (((mBuffer[2] & 0x1f)) << 11);
             case WiiAxisType::WiiAxisClassicLeftTrigger:
                 if (mType == WiiClassicControllerPro)
                 {

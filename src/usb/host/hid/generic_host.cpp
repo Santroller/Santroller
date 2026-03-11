@@ -140,6 +140,8 @@ bool GenericHost::tick_digital(UsbButtonType type)
         return m_data.genericButton15;
     case UsbButtonGenericButton16:
         return m_data.genericButton16;
+    default:
+        return false;
     }
     return false;
 }
@@ -173,6 +175,8 @@ uint16_t GenericHost::tick_analog(UsbAxisType type)
         return m_data.genericAxisRz;
     case UsbAxisGenericAxisSlider:
         return m_data.genericAxisSlider;
+    default:
+        return 0;
     }
     return 0;
 }

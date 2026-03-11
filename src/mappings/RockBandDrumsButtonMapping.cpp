@@ -71,6 +71,8 @@ void RockBandDrumsButtonMapping::update_ps3(uint8_t *buf)
     case RockBandDrumsDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 
@@ -118,6 +120,8 @@ void RockBandDrumsButtonMapping::update_ps4(uint8_t *buf)
     case RockBandDrumsDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 
@@ -164,6 +168,8 @@ void RockBandDrumsButtonMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandDrumsDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }
@@ -254,6 +260,8 @@ void RockBandDrumsButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case RockBandDrumsDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }

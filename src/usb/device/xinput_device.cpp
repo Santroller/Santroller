@@ -248,7 +248,7 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
                             rightTrigger : 0xff,
                             leftThumbX : USB_VID,
                             leftThumbY : USB_PID,
-                            rightThumbX : (USB_VERSION_BCD(subtype, 0, 0)),
+                            rightThumbX : (uint16_t)(USB_VERSION_BCD(subtype, 0, 0)),
                             rightThumbY : 0xffc0,
                             reserved : {0x00, 0x00, 0x00, 0x00},
                             flags : XINPUT_FLAGS_FORCE_FEEDBACK
@@ -388,10 +388,10 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
     {
         switch (request->bRequest)
         {
+        // RPCS3 will send this, so jump to PS3 mode
         case HID_REQ_CONTROL_GET_REPORT:
             if (stage == CONTROL_STAGE_SETUP)
             {
-                uint8_t const report_type = tu_u16_high(request->wValue);
                 uint8_t const report_id = tu_u16_low(request->wValue);
                 if (report_id == 0xF2)
                     newMode = ModePs3;

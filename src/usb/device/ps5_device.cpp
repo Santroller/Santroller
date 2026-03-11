@@ -152,7 +152,7 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     {
     case ReportId::ReportIdPs5Feature:
         memcpy(buffer, ps5_feature_config, sizeof(ps5_feature_config));
-        switch (current_type)
+        switch (subtype)
         {
         case Gamepad:
             buffer[5] = PS5_GAMEPAD;

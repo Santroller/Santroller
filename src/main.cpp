@@ -83,17 +83,18 @@ void hid_task(void)
         {
             newMode = ModeSwitch;
         }
-        else if (tud_ready() && (current_type == RockBandGuitar || current_type == RockBandDrums))
-        {
-            // PS2 / Wii / WiiU does not read hid descriptor
-            // The wii however will configure the usb device before it stops communicating
-            newMode = ModeWiiRb;
-        }
-        else
-        {
-            // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-            newMode = ModePs3;
-        }
+        // TODO: do this right
+        // else if (tud_ready() && (current_type == RockBandGuitar || current_type == RockBandDrums))
+        // {
+        //     // PS2 / Wii / WiiU does not read hid descriptor
+        //     // The wii however will configure the usb device before it stops communicating
+        //     newMode = ModeWiiRb;
+        // }
+        // else
+        // {
+        //     // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+        //     newMode = ModePs3;
+        // }
     }
     update();
 }

@@ -65,7 +65,6 @@ std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
-proto_SubType current_type;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
@@ -478,7 +477,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->subtype = proto_profile.deviceToEmulate;
     profile->xinput_on_windows = proto_profile.has_xinputOnWindows && proto_profile.xinputOnWindows;
     profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;
-    printf("profile loaded: %d\r\n", profile->profile_id);
+    profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
+    printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     // TODO: handle this once we support emulating non usb devices
     profile->output = OutputUSB;
     std::shared_ptr<UsbDevice> instance = nullptr;
@@ -531,6 +531,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                     instance->subtype = profile->subtype;
                     instance->xinput_on_windows = profile->xinput_on_windows;
                     instance->invert_y_axis_hid = profile->invert_y_axis_hid;
+                    instance->supports_ps4 = profile->supports_ps4;
                     active_instances.push_back(instance);
                     usb_instances[usb_instances.size()] = instance;
                     instance->initialize();

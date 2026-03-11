@@ -220,6 +220,8 @@ void GuitarHeroDrumsButtonMapping::update_ogxbox(uint8_t *buf)
     case GuitarHeroDrumsDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 void GuitarHeroDrumsButtonMapping::update_xboxone(uint8_t *buf)

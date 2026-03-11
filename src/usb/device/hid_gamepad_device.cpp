@@ -82,19 +82,19 @@ void HIDGamepadDevice::process()
       mapping->update(false, false);
       mapping->update_hid(epin_buf);
     }
-    if (invert_y_axis_hid && current_type == Gamepad) {
-      report->leftStickY = 65535 - report->leftStickY;
-      report->rightStickY = 65535 - report->rightStickY;
-    }
     for (const auto &led : profile->leds)
     {
       led->update(false, false);
     }
   }
+  if (invert_y_axis_hid && subtype == Gamepad) {
+    report->leftStickY = -report->leftStickY;
+    report->rightStickY = -report->rightStickY;
+  }
 
   // convert bitmask dpad to actual hid dpad
   report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
-  if (current_type == GuitarHeroGuitar)
+  if (subtype == GuitarHeroGuitar)
   {
     // convert bitmask slider to actual hid slider
     XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
@@ -159,7 +159,7 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     newMode = ModePs3;
     return 0;
   case ReportId::ReportIdPs4Feature:
-    if (ps4_based() && reqlen == 0x30)
+    if (supports_ps4 && reqlen == 0x30)
     {
       // TODO: if theres a ps5 dongle plugged in here we shoud just jump straight to PS5 mode here
       newMode = ModePs4;

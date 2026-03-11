@@ -72,6 +72,8 @@ void DJHTurntableButtonMapping::update_wii(uint8_t *buf)
     case DJHTurntableDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 void DJHTurntableButtonMapping::update_switch(uint8_t *buf)
@@ -145,6 +147,8 @@ void DJHTurntableButtonMapping::update_ps3(uint8_t *buf)
         break;
     case DJHTurntableDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }
@@ -221,6 +225,8 @@ void DJHTurntableButtonMapping::update_xinput(uint8_t *buf)
     case DJHTurntableDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 void DJHTurntableButtonMapping::update_ogxbox(uint8_t *buf)
@@ -281,6 +287,8 @@ void DJHTurntableButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case DJHTurntableDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }

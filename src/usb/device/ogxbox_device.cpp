@@ -201,7 +201,7 @@ void OGXboxGamepadDevice::process()
             led->update(false, false);
         }
     }
-    if (current_type == GuitarHeroGuitar)
+    if (subtype == GuitarHeroGuitar)
     {
         // convert bitmask slider to actual hid slider
         OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)report;

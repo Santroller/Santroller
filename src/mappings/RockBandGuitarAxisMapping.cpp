@@ -144,7 +144,7 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_calibratedValue];
+        report->pickup = m_calibratedValue;
         break;
     default:
         break;
@@ -173,7 +173,7 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_calibratedValue];
+        report->pickup = m_calibratedValue;
         break;
     default:
         break;
@@ -258,7 +258,7 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
         report->tilt = m_calibratedValue >> 8;
         break;
     case RockBandGuitarPickup:
-        report->pickup = pickupUniversal[m_calibratedValue];
+        report->pickup = pickupXb1[m_calibratedValue];
         break;
     default:
         break;

@@ -28,6 +28,7 @@ public:
     SubType subtype;
     bool xinput_on_windows;
     bool invert_y_axis_hid;
+    bool supports_ps4;
     ConsoleMode mode;
     OutputMode output;
     uint32_t profile_id;
@@ -46,6 +47,7 @@ public:
     ConsoleMode mode;
     bool xinput_on_windows;
     bool invert_y_axis_hid;
+    bool supports_ps4;
     std::vector<std::shared_ptr<Profile>> profiles;
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;

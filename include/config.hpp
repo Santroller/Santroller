@@ -26,7 +26,6 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update();
 void first_load();
 void reload();
-extern proto_SubType current_type;
 extern ConsoleMode mode;
 extern ConsoleMode newMode;
 extern bool working;
@@ -43,10 +42,4 @@ extern std::set<uint32_t> active_profiles;
 inline bool hid_based(void)
 {
     return mode == ModeHid || mode == ModePs3 || mode == ModePs4 || mode == ModeWiiRb || mode == ModeSwitch;
-}
-
-inline bool ps4_based(void)
-{
-    // TODO: grab from the current preset too.
-    return current_type == Gamepad || current_type == LiveGuitar;
 }

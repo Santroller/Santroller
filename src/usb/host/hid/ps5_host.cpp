@@ -35,8 +35,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         if (isThirdParty)
         {
             // request capabilities for 3rd party gamepad
-            auto size = intf->send_ctrl_xfer(setup_input_caps, data, nullptr);
-            printf("%02x %02x %02x\r\n", size, data[2], data[5]);
+            intf->send_ctrl_xfer(setup_input_caps, data, nullptr);
             if (data[2] == 0x28)
             {
                 uint8_t capabilities = data[4];
@@ -122,13 +121,13 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         }
 
         if (intf->m_ep_out)
-    {
-        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
-    }
-    if (intf->m_ep_in)
-    {
-        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-    }
+        {
+            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+        }
+        if (intf->m_ep_in)
+        {
+            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+        }
         assignable_usb_devices.push_back(intf);
         USB_FreeReportInfo(info);
         return intf;
@@ -265,6 +264,7 @@ bool Ps5Host::tick_digital(UsbButtonType type)
             return left;
         case UsbButtonDpadRight:
             return right;
+        default:
             return false;
         }
         return false;
@@ -283,6 +283,8 @@ uint16_t Ps5Host::tick_analog(UsbAxisType type)
             return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->whammy << 8;
         case UsbAxisTilt:
             return ((PS5GHLGuitar_Data_t *)m_ep_in_buf)->tilt << 2;
+        default:
+            return 0;
         }
     case RockBandGuitar:
         switch (type)

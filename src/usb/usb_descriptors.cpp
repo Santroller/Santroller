@@ -76,7 +76,6 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t interface)
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 {
   (void)index; // for multiple configurations
-  printf("Current mode: %d %d\r\n", mode, current_type);
   tusb_desc_configuration_t *config = (tusb_desc_configuration_t *)descriptor_buffer;
   size_t current = sizeof(tusb_desc_configuration_t);
   size_t interfaces = 0;
@@ -120,6 +119,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   // printf("desc %02x %02x\r\n", index, langid);
+  
   size_t chr_count;
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)
@@ -145,12 +145,18 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
     if (!(index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
       return NULL;
-
-    if (mode == ModePs3 && current_type == PowerGigGuitar && index == STRID_PRODUCT) {
-      index = STRID_PG_GUITAR_PRODUCT;
-    }
-    if (mode == ModePs3 && current_type == PowerGigDrum && index == STRID_PRODUCT) {
-      index = STRID_PG_DRUM_PRODUCT;
+    if (mode == ModePs3 && index == STRID_PRODUCT) {
+      for (auto &instance : usb_instances)
+      {
+        if (instance.second->subtype == PowerGigGuitar) {
+          index = STRID_PG_GUITAR_PRODUCT;
+          break;
+        }
+        if (instance.second->subtype == PowerGigDrum) {
+          index = STRID_PG_DRUM_PRODUCT;
+          break;
+        }
+      }
     }
     const char *str = string_desc_arr[index];
     // Cap at max char

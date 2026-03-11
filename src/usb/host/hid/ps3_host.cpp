@@ -370,6 +370,8 @@ uint16_t Ps3Host::tick_analog(UsbAxisType type)
             return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->tilt << 2;
         case UsbAxisSlider:
             return ((PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf)->slider << 8;
+        default:
+            return 0;
         }
         break;
     case LiveGuitar:
@@ -379,6 +381,8 @@ uint16_t Ps3Host::tick_analog(UsbAxisType type)
             return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->whammy << 8;
         case UsbAxisTilt:
             return ((PS3GHLGuitar_Data_t *)m_ep_in_buf)->tilt << 2;
+        default:
+            return 0;
         }
         break;
     case RockBandGuitar:
@@ -390,6 +394,8 @@ uint16_t Ps3Host::tick_analog(UsbAxisType type)
             return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->tilt << 8;
         case UsbAxisPickup:
             return ((PS3RockBandGuitar_Data_t *)m_ep_in_buf)->pickup << 8;
+        default:
+            return 0;
         }
     default:
         switch (type)
@@ -406,6 +412,8 @@ uint16_t Ps3Host::tick_analog(UsbAxisType type)
             return ((PS3Gamepad_Data_t *)m_ep_in_buf)->rightStickX << 8;
         case UsbAxisRightStickY:
             return ((PS3Gamepad_Data_t *)m_ep_in_buf)->rightStickY << 8;
+        default:
+            return 0;
         }
     }
 

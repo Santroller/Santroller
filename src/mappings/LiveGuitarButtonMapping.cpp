@@ -79,6 +79,8 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
     case GuitarHeroLiveGuitarDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 
@@ -133,6 +135,8 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitarDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }
@@ -189,6 +193,8 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
     case GuitarHeroLiveGuitarDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 
@@ -244,6 +250,8 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
     case GuitarHeroLiveGuitarDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
@@ -294,6 +302,8 @@ void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitarDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }

@@ -198,7 +198,6 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
 }
 bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-
     if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
     {
         return true;
@@ -230,6 +229,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             size_t len = 0;
             switch (subtype)
             {
+            case KeyboardMouse:
             case Gamepad:
             case Dancepad:
             case DjHeroTurntable:

@@ -326,6 +326,8 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         break;
     case PS2ControllerTypeTaiko:
         return 0;
+    case PS2ControllerTypePopNMusic:
+        return 0;
     }
     return 0;
 }

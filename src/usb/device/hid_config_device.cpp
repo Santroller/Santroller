@@ -386,9 +386,6 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       handle_command(cmd);
       break;
     }
-    case ReportId::ReportIdPs3F4:
-      newMode = ModePs3;
-      break;
     }
   }
 }
@@ -449,19 +446,6 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     buffer++;
     start = 0;
     return copy_config_info(buffer) + 1;
-  case ReportId::ReportIdPs3F2:
-    newMode = ModePs3;
-    return 0;
-  case ReportId::ReportIdPs4Feature:
-    if (ps4_based())
-    {
-      newMode = ModePs4;
-    }
-    else
-    {
-      newMode = ModePs3;
-    }
-    return 0;
   }
   return 0;
 }

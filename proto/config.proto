@@ -15,6 +15,7 @@ message Profile {
   repeated Led leds = 9;
   optional bool xinputOnWindows = 10;
   optional bool invertYAxisHid = 11;
+  optional bool ps4OrPs5Mode = 12;
 }
 message InputLedMapping {
   required Input input = 1;

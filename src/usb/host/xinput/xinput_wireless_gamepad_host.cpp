@@ -309,6 +309,8 @@ uint16_t XInputWirelessGamepadHost::tick_analog(UsbAxisType type)
             return ((XInputGHLGuitar_Data_t *)m_report_buf)->whammy + INT16_MAX;
         case UsbAxisTilt:
             return ((XInputGHLGuitar_Data_t *)m_report_buf)->tilt + INT16_MAX;
+        default:
+            return 0;
         }
         break;
     case RockBandGuitar:

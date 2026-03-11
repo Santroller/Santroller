@@ -114,7 +114,7 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     {
     case ReportId::ReportIdPs4Feature:
         memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
-        switch (current_type)
+        switch (subtype)
         {
         case Gamepad:
             buffer[5] = PS4_GAMEPAD;

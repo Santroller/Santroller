@@ -103,6 +103,8 @@ void ProGuitarButtonMapping::update_ps3(uint8_t *buf)
     case ProGuitarDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 
@@ -193,6 +195,8 @@ void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
     case ProGuitarDpadRight:
         report->dpadRight |= m_lastValue;
         break;
+    default:
+        break;
     }
 }
 void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
@@ -267,6 +271,8 @@ void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case ProGuitarDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    default:
         break;
     }
 }

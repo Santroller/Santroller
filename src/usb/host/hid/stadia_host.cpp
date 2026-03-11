@@ -133,6 +133,8 @@ uint16_t StadiaHost::tick_analog(UsbAxisType type)
         return m_last_input_report.rightStickX << 8;
     case UsbAxisRightStickY:
         return m_last_input_report.rightStickY << 8;
+    default:
+        return 0;
     }
     return 0;
 }

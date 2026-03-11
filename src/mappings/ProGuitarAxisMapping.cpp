@@ -84,6 +84,8 @@ void ProGuitarAxisMapping::update_ps3(uint8_t *buf)
     case ProGuitarTilt:
         report->tilt = m_calibratedValue >> 8;
         break;
+    default:
+        break;
     }
 }
 
@@ -149,6 +151,8 @@ void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
     case ProGuitarTilt:
         report->tilt = m_calibratedValue >> 8;
         break;
+    default:
+        break;
     }
 }
 void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
@@ -201,6 +205,8 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         break;
     case ProGuitarHighEFretVelocity:
         report->highEFretVelocity = m_calibratedValue >> 8;
+        break;
+    default:
         break;
     }
 }

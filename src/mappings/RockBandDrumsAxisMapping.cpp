@@ -127,6 +127,8 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
     case RockBandDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
+    default:
+        break;
     }
 }
 
@@ -172,6 +174,8 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
+        break;
+    default:
         break;
     }
 }
@@ -228,6 +232,8 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
         {
             report->yellowVelocity = m_calibratedValue - 32767;
         }
+        break;
+    default:
         break;
     }
 }
@@ -286,6 +292,8 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         {
             report->yellowVelocity = m_calibratedValue - 32767;
         }
+        break;
+    default:
         break;
     }
 }

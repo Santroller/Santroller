@@ -11,17 +11,15 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     if (claim_devices && m_claimed) {
         return true;
     }
-    bool seen = false;
+    if (triggers.empty()) {
+        return false;
+    }
     for (auto &trigger : triggers)
     {
-        seen = true;
         if (!trigger->validate(false, full_poll, send_events))
         {
             return false;
         }
-    }
-    if (!seen) {
-        return false;
     }
     if (!claim_devices)
     {

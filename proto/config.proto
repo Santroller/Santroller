@@ -13,6 +13,7 @@ message Profile {
   required string name = 5;
   required SubType deviceToEmulate = 6;
   repeated Led leds = 9;
+  optional bool xinputOnWindows = 10;
 }
 message InputLedMapping {
   required Input input = 1;

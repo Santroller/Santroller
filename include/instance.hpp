@@ -26,6 +26,7 @@ class Profile
 public:
     virtual ~Profile() {}
     SubType subtype;
+    bool xinput_on_windows;
     ConsoleMode mode;
     OutputMode output;
     uint32_t profile_id;
@@ -42,6 +43,7 @@ public:
     virtual void process() = 0;
     SubType subtype;
     ConsoleMode mode;
+    bool xinput_on_windows;
     std::vector<std::shared_ptr<Profile>> profiles;
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;

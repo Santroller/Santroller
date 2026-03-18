@@ -22,7 +22,6 @@ uint8_t const desc_hid_report_config[] =
     {
 
         HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),
-        HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),
         HID_USAGE(0x01),
         HID_COLLECTION(HID_COLLECTION_APPLICATION),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),

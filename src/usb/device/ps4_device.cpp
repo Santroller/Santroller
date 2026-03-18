@@ -5,6 +5,7 @@
 #include "config.hpp"
 #include "hid_reports.h"
 #include "usb/usb_devices.h"
+#include "usb/host/hid_host.h"
 
 static const int ps4_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -109,6 +110,13 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     {
         return 0;
     }
+    bool status;
+    std::shared_ptr<HidHost> host_device = nullptr;
+    auto auth_device = auth_devices.find(ModePs4);
+    if (auth_device != auth_devices.end())
+    {
+        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+    }
 
     switch (report_id)
     {
@@ -119,14 +127,22 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         case Gamepad:
             buffer[5] = PS4_GAMEPAD;
             break;
-        case GuitarHeroGuitar:
         case RockBandGuitar:
+            buffer[5] = PS4_GUITAR;
+            buffer[24] = 0x07;
+            break;
+        case GuitarHeroGuitar:
         case LiveGuitar:
             buffer[5] = PS4_GUITAR;
+            buffer[24] = 0x06;
             break;
         case GuitarHeroDrums:
+            buffer[5] = PS4_DRUMS;
+            buffer[24] = 0x1f;
+            break;
         case RockBandDrums:
             buffer[5] = PS4_DRUMS;
+            buffer[24] = 0x1f;
             break;
         case FightStick:
             buffer[5] = PS4_FIGHTSTICK;
@@ -136,11 +152,23 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         }
         return sizeof(ps4_feature_config);
     case ReportId::ReportIdPs4GetResponse:
-        // try to pass through to ps4 over usb host if one exists
-        return 0;
     case ReportId::ReportIdPs4GetAuthStatus:
-        // try to pass through to ps4 over usb host if one exists
+        if (host_device != nullptr)
+        {
+            return host_device->get_report(report_id, report_type, buffer, reqlen, nullptr);
+        }
+        return 0;
     case ReportId::ReportIdPs4GetAuthPageSize:
+
+        if (host_device != nullptr)
+        {
+            status = false;
+            reqlen = host_device->get_report(report_id, report_type, buffer, reqlen, &status);
+            if (status)
+            {
+                return reqlen;
+            }
+        }
         // try to pass through to ps4 over usb host if one exists
         // if it is a ds4 the request will fail but we need to return this one in that case
         memcpy(buffer, &ps4_pagesize_report, sizeof(ps4_pagesize_report));
@@ -151,6 +179,12 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
 void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+    std::shared_ptr<HidHost> host_device = nullptr;
+    auto auth_device = auth_devices.find(ModePs4);
+    if (auth_device != auth_devices.end())
+    {
+        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+    }
     switch (report_type)
     {
     case HID_REPORT_TYPE_FEATURE:
@@ -160,7 +194,10 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         case 0:
             return;
         case ReportId::ReportIdPs4SetChallenge:
-            // TODO: pass to ps4 controller for auth
+            if (host_device != nullptr)
+            {
+                host_device->set_report(report_id, report_type, (uint8_t*)buffer, bufsize, nullptr);
+            }
             return;
         }
         break;

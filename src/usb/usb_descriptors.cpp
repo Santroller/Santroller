@@ -241,7 +241,7 @@ void tud_reset(uint8_t rhport)
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-  // printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
+  printf("control req %02x %02x %02x %02x %04x %04x\r\n", request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue);
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
 

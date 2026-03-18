@@ -117,13 +117,17 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             }
         }
         if (intf->m_ep_out)
-    {
-        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
-    }
-    if (intf->m_ep_in)
-    {
-        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-    }
+        {
+            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+        }
+        if (intf->m_ep_in)
+        {
+            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+        }
+        if (auth_devices.find(ModePs4) == auth_devices.end())
+        {
+            auth_devices.emplace(ModePs4, intf);
+        }
         assignable_usb_devices.push_back(intf);
         USB_FreeReportInfo(info);
         return intf;

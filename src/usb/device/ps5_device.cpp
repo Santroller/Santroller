@@ -5,6 +5,7 @@
 #include "config.hpp"
 #include "hid_reports.h"
 #include "usb/usb_devices.h"
+#include "usb/host/hid_host.h"
 
 static const int ps5_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -106,7 +107,21 @@ void PS5GamepadDevice::process()
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
 
-    send_report(sizeof(PS5Dpad_Data_t), 0, epin_buf);
+    // send_report(sizeof(PS5Dpad_Data_t), 0, epin_buf);
+    std::shared_ptr<Ps5Host> host_device = nullptr;
+    auto auth_device = auth_devices.find(ModePs5);
+    if (auth_device != auth_devices.end())
+    {
+        host_device = std::static_pointer_cast<Ps5Host>(auth_device->second);
+        if (!host_device->received_packet)
+        {
+            return;
+        }
+        printf("received packet!\r\n");
+        send_report(sizeof(PS5Dpad_Data_t), 0, host_device->m_ep_in_buf);
+        host_device->send_intr_report(epin_buf, sizeof(PS5Dpad_Data_t));
+        host_device->received_packet = false;
+    }
 }
 
 size_t PS5GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -158,13 +173,21 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
             buffer[5] = PS5_GAMEPAD;
             break;
         case GuitarHeroGuitar:
-        case RockBandGuitar:
         case LiveGuitar:
             buffer[5] = PS5_GUITAR;
+            buffer[24] = 0x06;
+            break;
+        case RockBandGuitar:
+            buffer[5] = PS5_GUITAR;
+            buffer[24] = 0x07;
             break;
         case GuitarHeroDrums:
+            buffer[5] = PS5_DRUMS;
+            buffer[24] = 0x1f;
+            break;
         case RockBandDrums:
             buffer[5] = PS5_DRUMS;
+            buffer[24] = 0x1f;
             break;
         case FightStick:
             buffer[5] = PS5_FIGHTSTICK;

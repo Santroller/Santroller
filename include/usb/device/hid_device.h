@@ -51,6 +51,7 @@ protected:
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
   uint8_t initialReport[CFG_TUD_XINPUT_TX_BUFSIZE];
+  uint8_t lastReport[CFG_TUD_XINPUT_TX_BUFSIZE];
 };
 
 class HIDConfigDevice : public HIDDevice
@@ -102,4 +103,12 @@ public:
   uint16_t report_desc_len();
   uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+
+private:
+  int _FFB_effect_index;
+  int _FFB_effect_duration;
+  int _loop_count;
+  int periodic_magnitude;
+  int constant_force;
+  int vibration_on;
 };

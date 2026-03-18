@@ -39,6 +39,7 @@ extern std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;
 extern std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 extern std::set<uint32_t> active_profiles;
+extern std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
 inline bool hid_based(void)
 {
     return mode == ModeHid || mode == ModePs3 || mode == ModePs4 || mode == ModeWiiRb || mode == ModeSwitch;

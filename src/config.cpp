@@ -63,6 +63,7 @@ std::vector<std::shared_ptr<Device>> active_devices;
 // devices that have not yet been assigned to a profile
 std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
+std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
 std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
 ConsoleMode mode = ModeHid;
@@ -91,7 +92,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     case proto_Device_psx_tag:
     {
-        for (int i = A; i <=D; i++) {
+        for (int i = A; i <= D; i++)
+        {
             auto &ps2Dev = active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id, (MultitapPort)i));
             ps2Dev->rescan(true);
         }
@@ -591,6 +593,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     active_devices.clear();
     active_profiles.clear();
     all_profiles.clear();
+    auth_devices.clear();
     UsbDevice::reset_ep();
     switch (mode)
     {
@@ -611,12 +614,6 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         active_instances.push_back(secDevice);
         usb_instances[secDevice->interface_id] = secDevice;
         secDevice->initialize();
-        auto confDevice2 = HIDConfigDevice::instance;
-        confDevice2->interface_id = instances.size();
-        instances.push_back(confDevice2);
-        active_instances.push_back(confDevice2);
-        usb_instances[confDevice2->interface_id] = confDevice2;
-        confDevice2->initialize();
         break;
     }
     case ModeGuitarHeroArcade:
@@ -631,7 +628,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     }
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
-    if (active_instances.empty())
+    if (active_instances.empty() || mode == ModeHid || mode == ModeXbox360)
     {
         auto confDevice2 = HIDConfigDevice::instance;
         confDevice2->interface_id = instances.size();
@@ -778,6 +775,7 @@ void first_load()
     active_instances.clear();
     usb_instances.clear();
     all_profiles.clear();
+    auth_devices.clear();
     auto confDevice = std::make_shared<HIDConfigDevice>();
     confDevice->interface_id = instances.size();
     confDevice->initialize();

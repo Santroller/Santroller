@@ -51,3 +51,34 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
     USB_FreeReportInfo(info);
     return nullptr;
 }
+
+uint32_t HidHost::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen, bool *status)
+{
+    tusb_control_request_t get_report = {
+        bmRequestType_bit : {
+            recipient : TUSB_REQ_RCPT_INTERFACE,
+            type : TUSB_REQ_TYPE_CLASS,
+            direction : TUSB_DIR_IN
+        },
+        bRequest : HID_REQ_CONTROL_GET_REPORT,
+        wValue : tu_u16(report_type, report_id),
+        wIndex : m_interface,
+        wLength : reqlen
+    };
+    return send_ctrl_xfer(get_report, buffer, status);
+}
+uint32_t HidHost::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t bufsize, bool *status)
+{
+    tusb_control_request_t set_report = {
+        bmRequestType_bit : {
+            recipient : TUSB_REQ_RCPT_INTERFACE,
+            type : TUSB_REQ_TYPE_CLASS,
+            direction : TUSB_DIR_OUT
+        },
+        bRequest : HID_REQ_CONTROL_SET_REPORT,
+        wValue : tu_u16(report_type, report_id),
+        wIndex : m_interface,
+        wLength : bufsize
+    };
+    return send_ctrl_xfer(set_report, buffer, status);
+}

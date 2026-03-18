@@ -128,11 +128,28 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         {
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
+
+        if (auth_devices.find(ModePs5) == auth_devices.end() && vid == 0x2b81 && pid == 0x0101)
+        {
+            auth_devices.emplace(ModePs5, intf);
+        }
         assignable_usb_devices.push_back(intf);
         USB_FreeReportInfo(info);
         return intf;
     }
     return nullptr;
+}
+
+
+bool Ps5Host::send_intr_report(const void *buffer, uint8_t len)
+{
+    TU_VERIFY(usbh_edpt_claim(m_dev_addr, m_ep_out));
+    if (!usbh_edpt_xfer(m_dev_addr, m_ep_out, (uint8_t *)buffer, len))
+    {
+        usbh_edpt_release(m_dev_addr, m_ep_out);
+        return false;
+    }
+    return true;
 }
 
 bool Ps5Host::set_config()

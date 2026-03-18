@@ -1,6 +1,7 @@
 #pragma once
 #include "host.hpp"
 #include "protocols/xinput.hpp"
+#include "class/hid/hid.h"
 #include "hidparser.h"
 #include "protocols/dance_pad.hpp"
 
@@ -15,6 +16,11 @@ public:
     HidHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     static const uint8_t dpad_bindings_reverse[8];
+    uint32_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen, bool* status);
+    uint32_t set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t bufsize, bool* status);
+    virtual bool send_intr_report(const void *buffer, uint8_t len) {
+        return false;
+    }
 };
 
 class Ps3Host : public HidHost
@@ -76,22 +82,24 @@ public:
     Ps5Host(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
 
     bool set_config();
+    bool send_intr_report(const void *buffer, uint8_t len);
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
     bool tick_digital(UsbButtonType type);
     uint16_t tick_analog(UsbAxisType type);
-
-private:
     uint8_t m_ep_in;
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
+    bool received_packet = true;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+
+private:
     bool m_sensors_supported;
     bool m_lightbar_supported;
     bool m_vibration_supported;
     bool m_touchpad_supported;
     bool m_third_party;
-    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };
 
 class SwitchHost : public HidHost

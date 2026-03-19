@@ -593,7 +593,6 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     active_devices.clear();
     active_profiles.clear();
     all_profiles.clear();
-    auth_devices.clear();
     UsbDevice::reset_ep();
     switch (mode)
     {

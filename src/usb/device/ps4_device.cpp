@@ -31,7 +31,7 @@ AuthPageSizeReport ps4_pagesize_report = {
 
 uint8_t const desc_hid_report_ps4[] =
     {
-        TUD_HID_REPORT_DESC_PS4_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+        TUD_HID_REPORT_DESC_PS4_THIRDPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
 
 PS4GamepadDevice::PS4GamepadDevice()
 {
@@ -39,17 +39,17 @@ PS4GamepadDevice::PS4GamepadDevice()
 void PS4GamepadDevice::initialize()
 {
     m_epin = next_epin();
-    m_epout = next_epin();
+    m_epout = next_epout();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 
-    // TODO: if ps5 auth dongle is plugged in, jump to PS5 mode here
     PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)initialReport;
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
+    gamepad->reportCounter = 1;
 }
 void PS4GamepadDevice::process()
 {
@@ -72,6 +72,11 @@ void PS4GamepadDevice::process()
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
     send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);
+    PS4Dpad_Data_t *initial = (PS4Dpad_Data_t *)initialReport;
+    initial->reportCounter++;
+    if (initial->reportCounter == 0) {
+        initial->reportCounter = 1;
+    }
 }
 
 size_t PS4GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -196,7 +201,7 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         case ReportId::ReportIdPs4SetChallenge:
             if (host_device != nullptr)
             {
-                host_device->set_report(report_id, report_type, (uint8_t*)buffer, bufsize, nullptr);
+                host_device->set_report(report_id, report_type, (uint8_t *)buffer, bufsize, nullptr);
             }
             return;
         }

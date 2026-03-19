@@ -91,7 +91,7 @@ public:
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
-    bool received_packet = true;
+    bool received_packet = false;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 
 private:

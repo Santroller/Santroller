@@ -8,7 +8,7 @@
 #define PS5_GAMEPAD 0
 #define PS5_GUITAR 1
 #define PS5_DRUMS 2
-#define PS5_FIGHTSTICK 7 
+#define PS5_FIGHTSTICK 7
 
 class PS5GamepadDevice : public HIDDevice
 {
@@ -23,4 +23,9 @@ public:
     uint16_t report_desc_len();
     uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
     void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+
+private:
+    bool m_report_ready = true;
+    uint8_t report_sequence_number = 1;
+    bool got_feature = false;
 };

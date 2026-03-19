@@ -15,59 +15,16 @@ static const int ps5_colors[4][3] = {
 };
 
 uint8_t ps5_feature_config[] = {
-    0x03,
-    0x21,
-    0x28,
-    0x03,
-    0xC3,
-    /*type*/ 0x00,
-    0x2C,
-    0x56,
-    0x01,
-    0x00,
-    0xD0,
-    0x07,
-    0x00,
-    0x80,
-    0x04,
-    0x00,
-    0x00,
-    0x80,
-    0x0D,
-    0x0D,
-    0x84,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-};
+    0x03, 0x21, 0x28, 0x03, 0xC3, 0x00 /*type*/, 0x2C, 0x56,
+    0x01, 0x00, 0xD0, 0x07, 0x00, 0x80, 0x04, 0x00,
+    0x00, 0x80, 0x0D, 0x0D, 0x84, 0x00, 0x00, 0x00,
+    0x00 /*extended type*/, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 uint8_t const desc_hid_report_ps5[] =
     {
-        TUD_HID_REPORT_DESC_PS5_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+        TUD_HID_REPORT_DESC_PS5_THIRDPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
 
 PS5GamepadDevice::PS5GamepadDevice()
 {
@@ -75,10 +32,11 @@ PS5GamepadDevice::PS5GamepadDevice()
 void PS5GamepadDevice::initialize()
 {
     m_epin = next_epin();
-    m_epout = next_epin();
+    m_epout = next_epout();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)initialReport;
+    memset(initialReport, 0, sizeof(initialReport));
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
@@ -88,7 +46,7 @@ void PS5GamepadDevice::initialize()
 }
 void PS5GamepadDevice::process()
 {
-    if (!ready())
+    if (!ready() || !got_feature)
         return;
     memcpy(epin_buf, &initialReport, sizeof(initialReport));
     for (const auto &profile : profiles)
@@ -106,21 +64,25 @@ void PS5GamepadDevice::process()
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
-
+    // gamepad->guide = true;
     // send_report(sizeof(PS5Dpad_Data_t), 0, epin_buf);
     std::shared_ptr<Ps5Host> host_device = nullptr;
     auto auth_device = auth_devices.find(ModePs5);
     if (auth_device != auth_devices.end())
     {
         host_device = std::static_pointer_cast<Ps5Host>(auth_device->second);
+        if (m_report_ready)
+        {
+            m_report_ready = false;
+            host_device->send_intr_report(epin_buf, sizeof(PS5Dpad_Data_t));
+        }
         if (!host_device->received_packet)
         {
             return;
         }
-        printf("received packet!\r\n");
-        send_report(sizeof(PS5Dpad_Data_t), 0, host_device->m_ep_in_buf);
-        host_device->send_intr_report(epin_buf, sizeof(PS5Dpad_Data_t));
         host_device->received_packet = false;
+        send_report(sizeof(PS5Dpad_Data_t), 0, host_device->m_ep_in_buf);
+        m_report_ready = true;
     }
 }
 
@@ -163,6 +125,13 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         return 0;
     }
 
+    std::shared_ptr<HidHost> host_device = nullptr;
+    auto auth_device = auth_devices.find(ModePs5);
+    if (auth_device != auth_devices.end())
+    {
+        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+    }
+
     switch (report_id)
     {
     case ReportId::ReportIdPs5Feature:
@@ -195,19 +164,60 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         default:
             break;
         }
+        got_feature = true;
         return sizeof(ps5_feature_config);
     case ReportId::ReportIdPs5GetResponse:
-        // try to pass through to ps4 over usb host if one exists
-        return 0;
     case ReportId::ReportIdPs5GetAuthStatus:
-        // try to pass through to ps4 over usb host if one exists
+        if (host_device != nullptr)
+        {
+            return host_device->get_report(report_id, report_type, buffer, reqlen, nullptr);
+        }
         return 0;
+    }
+    return 0;
+}
+
+uint8_t handle_player_leds_ps5(uint8_t player_mask)
+{
+    if (player_mask == 1)
+    {
+        return 1;
+    }
+    if (player_mask == 2)
+    {
+        return 2;
+    }
+    if (player_mask == 4)
+    {
+        return 3;
+    }
+    if (player_mask == 8)
+    {
+        return 4;
+    }
+    if (player_mask == 9)
+    {
+        return 5;
+    }
+    if (player_mask == 10)
+    {
+        return 6;
+    }
+    if (player_mask == 12)
+    {
+        return 7;
     }
     return 0;
 }
 
 void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+    std::shared_ptr<HidHost> host_device = nullptr;
+    auto auth_device = auth_devices.find(ModePs5);
+    if (auth_device != auth_devices.end())
+    {
+        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+    }
     switch (report_type)
     {
     case HID_REPORT_TYPE_FEATURE:
@@ -217,27 +227,33 @@ void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         case 0:
             return;
         case ReportId::ReportIdPs5SetChallenge:
-            // TODO: pass to ps5 controller for auth
+            if (host_device != nullptr)
+            {
+                host_device->set_report(report_id, report_type, (uint8_t *)buffer, bufsize, nullptr);
+            }
             return;
         }
         break;
     }
     case HID_REPORT_TYPE_OUTPUT:
     {
-        ps4_output_report *report = (ps4_output_report *)buffer;
-        lightbar_red = report->lightbar_red;
-        lightbar_green = report->lightbar_green;
-        lightbar_blue = report->lightbar_blue;
-        rumble_left = report->motor_left;
-        rumble_right = report->motor_right;
-        for (int i = 0; i < 4; i++)
+        ps5_output_report *report = (ps5_output_report *)buffer;
+        if (report->light_bar_flag)
         {
-            if (report->lightbar_red == ps5_colors[i][0] && report->lightbar_green == ps5_colors[i][1] && report->lightbar_blue == ps5_colors[i][2])
-            {
-                player_led = i + 1;
-                break;
-            }
+            lightbar_red = report->lightbar_red;
+            lightbar_green = report->lightbar_green;
+            lightbar_blue = report->lightbar_blue;
         }
+        if (report->vibration_flag)
+        {
+            rumble_left = report->motor_left;
+            rumble_right = report->motor_right;
+        }
+        if (report->player_indicator_flag)
+        {
+            player_led = handle_player_leds_ps5(report->player_indicator);
+        }
+
         break;
     }
     default:

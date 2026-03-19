@@ -65,7 +65,6 @@ bool HIDDevice::send_report(uint8_t len, uint8_t report_id, void const *report)
 }
 bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-
   if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
   {
     return true;
@@ -77,7 +76,6 @@ bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t x
   }
 
   TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE));
-
   return true;
 }
 bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)

@@ -11,7 +11,7 @@ typedef struct
     uint8_t data[3];
 } __attribute__((packed)) TouchpadXY;
 
-typedef struct 
+typedef struct
 {
     TouchpadXY p1;
     TouchpadXY p2;
@@ -23,8 +23,37 @@ typedef struct
     int16_t y;
     int16_t z;
 } __attribute__((packed)) PSSensor;
-typedef struct {
-     uint8_t report_id;
+
+typedef struct
+{
+    uint8_t report_id; /* 0x2 */
+    uint8_t vibration_flag : 1;
+    uint8_t : 3;
+    uint8_t headphone_flag : 1;
+    uint8_t speaker_flag : 1;
+    uint8_t microphone_flag : 1;
+    uint8_t : 1;
+    uint8_t : 2;
+    uint8_t light_bar_flag : 1;
+    uint8_t : 1;
+    uint8_t player_indicator_flag : 1;
+    uint8_t : 3;
+
+    uint8_t motor_right;
+    uint8_t motor_left;
+    uint8_t headphone_volume;
+    uint8_t speaker_volume;
+    uint8_t microphone_volume;
+    uint8_t reserved[31];
+    uint8_t player_indicator;
+    uint8_t lightbar_red;
+    uint8_t lightbar_green;
+    uint8_t lightbar_blue;
+} __attribute__((packed)) ps5_output_report;
+
+typedef struct
+{
+    uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t rightStickX;
@@ -32,7 +61,7 @@ typedef struct {
     uint8_t leftTrigger;
     uint8_t rightTrigger;
 
-    uint8_t sequence_number; // 6
+    uint8_t reserved;
 
     uint8_t dpad : 4;
     uint8_t x : 1; // square
@@ -72,7 +101,8 @@ typedef struct {
     uint8_t hash[8];
 
 } __attribute__((packed)) PS5Dpad_Data_t;
-typedef struct {
+typedef struct
+{
     uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
@@ -81,33 +111,31 @@ typedef struct {
     uint8_t leftTrigger : 8;
     uint8_t rightTrigger : 8;
 
-    uint8_t sequence_number;  // 6
+    uint8_t reserved;
 
-    
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t x : 1;  // square
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
 
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t l2 : 1;            // l2
+    uint8_t r2 : 1;            // r2
 
-    
-    uint8_t back : 1;             // share
-    uint8_t start : 1;            // options
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
+    uint8_t back : 1;            // share
+    uint8_t start : 1;           // options
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
 
     uint8_t guide : 1;
     uint8_t touchpad : 1;
     uint8_t mic : 1;
-    uint8_t dummy : 5;  // 7-9
+    uint8_t dummy : 5; // 7-9
 
 } __attribute__((packed)) PS5Gamepad_Data_t;
 
@@ -129,15 +157,15 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t x : 1;  // blue
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t y : 1;  // yellow
+    uint8_t x : 1; // blue
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t y : 1; // yellow
 
-    uint8_t leftShoulder : 1;   // orange
+    uint8_t leftShoulder : 1; // orange
     uint8_t : 3;
-    uint8_t back : 1;             // share
-    uint8_t start : 1;            // options
+    uint8_t back : 1;  // share
+    uint8_t start : 1; // options
     uint8_t solo : 1;
     uint8_t p1 : 1;
 
@@ -176,7 +204,6 @@ typedef struct
     uint64_t checksum;
 } __attribute__((__packed__)) PS5RockBandGuitar_Data_t;
 
-
 typedef struct
 {
 
@@ -195,16 +222,16 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t x : 1;  // blue
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t y : 1;  // yellow
+    uint8_t x : 1; // blue
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t y : 1; // yellow
 
-    uint8_t kick1 : 1;   // orange
-    uint8_t kick2 : 1;   // orange
+    uint8_t kick1 : 1; // orange
+    uint8_t kick2 : 1; // orange
     uint8_t : 2;
-    uint8_t back : 1;             // share
-    uint8_t start : 1;            // options
+    uint8_t back : 1;  // share
+    uint8_t start : 1; // options
     uint8_t : 2;
 
     uint8_t guide : 1;
@@ -232,7 +259,7 @@ typedef struct
 {
 
     uint8_t report_id;
-    
+
     uint8_t leftStickX;
     uint8_t strumBar;
     uint8_t whammy;
@@ -249,16 +276,16 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t x : 1;  // blue
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t y : 1;  // yellow
+    uint8_t x : 1; // blue
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t y : 1; // yellow
 
-    uint8_t leftShoulder : 1;   // orange
-    uint8_t rightShoulder : 1;   // orange
+    uint8_t leftShoulder : 1;  // orange
+    uint8_t rightShoulder : 1; // orange
     uint8_t : 2;
-    uint8_t back : 1;             // share
-    uint8_t start : 1;            // options
+    uint8_t back : 1;  // share
+    uint8_t start : 1; // options
     uint8_t solo : 1;
     uint8_t p1 : 1;
 

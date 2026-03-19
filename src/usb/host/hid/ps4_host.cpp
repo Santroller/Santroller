@@ -124,6 +124,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
         {
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
+        printf("ps4 auth found\r\n");
         if (auth_devices.find(ModePs4) == auth_devices.end())
         {
             auth_devices.emplace(ModePs4, intf);

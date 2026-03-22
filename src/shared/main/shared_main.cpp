@@ -1162,13 +1162,47 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
-            uint8_t redVelocity = report->redVelocity;
-            uint8_t greenVelocity = report->greenVelocity;
-            uint8_t yellowVelocity = report->yellowVelocity;
-            uint8_t blueVelocity = report->blueVelocity;
             bool kick1 = report->leftShoulder;
             bool kick2 = report->rightShoulder;
-            SET_RB_PADS();
+            if (report->yellowVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_YELLOW, report->yellowVelocity >> 1);
+            }
+            if (report->blueVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_BLUE, report->blueVelocity >> 1);
+            }
+
+            if (report->redVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_RED, report->redVelocity >> 1);
+            }
+
+            if (report->greenVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_GREEN, report->greenVelocity >> 1);
+            }
+            if (report->blueCymbalVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_YELLOW, report->blueCymbalVelocity >> 1);
+            }
+            if (report->yellowCymbalVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_BLUE, report->yellowCymbalVelocity >> 1);
+            }
+
+            if (report->greenCymbalVelocity)
+            {
+                onNote(10, RB_MIDI_NOTE_RED, report->greenCymbalVelocity >> 1);
+            }
+            if (kick1)
+            {
+                onNote(10, RB_MIDI_NOTE_KICK, 0x7F);
+            }
+            if (kick2)
+            {
+                onNote(10, RB_MIDI_NOTE_KICK2, 0x7F);
+            }
             break;
         }
         case LIVE_GUITAR:

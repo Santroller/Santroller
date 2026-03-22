@@ -1184,16 +1184,16 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             }
             if (report->blueCymbalVelocity)
             {
-                onNote(10, RB_MIDI_NOTE_YELLOW, report->blueCymbalVelocity >> 1);
+                onNote(10, RB_MIDI_NOTE_BLUE_CYMBAL, report->blueCymbalVelocity >> 1);
             }
             if (report->yellowCymbalVelocity)
             {
-                onNote(10, RB_MIDI_NOTE_BLUE, report->yellowCymbalVelocity >> 1);
+                onNote(10, RB_MIDI_NOTE_YELLOW_CYMBAL, report->yellowCymbalVelocity >> 1);
             }
 
             if (report->greenCymbalVelocity)
             {
-                onNote(10, RB_MIDI_NOTE_RED, report->greenCymbalVelocity >> 1);
+                onNote(10, RB_MIDI_NOTE_GREEN_CYMBAL, report->greenCymbalVelocity >> 1);
             }
             if (kick1)
             {
